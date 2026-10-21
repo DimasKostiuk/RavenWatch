@@ -1,0 +1,241 @@
+[boss] {name}, {boss_gen} is down! Odin nearly jumped off his throne.
+[boss] {name}, glory to you! They'll write a song about {boss_gen}. A crooked one, but a song.
+[boss] Kraa! {name}, that was fierce. For a moment I even forgot it was you.
+[death_many] {name}, dead {times} in a few minutes. The valkyries know you by name now.
+[death_many] {name}, you again? Hel will issue you a permanent pass soon.
+[death_many] {name}, that many deaths at once isn't bad luck anymore, it's a style.
+[death_creature] {name}, {killer_gen} killed you. I saw it all and wrote it down — no embellishment.
+[death_creature] {name}, {killer_gen} sends its regards. And it has your stuff.
+[death_creature] {name}, next time hit {killer_gen} with the pointy end.
+[death_fall] {name}, the ground is hard, isn't it? Wings aren't your thing.
+[death_fall] {name}, nice flight. The landing — a C minus.
+[death_drown] {name}, glub-glub. Are we learning to swim, or walking the bottom again?
+[death_drown] {name}, water is wet and deep. Write that down.
+[death_fire] {name}, smells like barbecue. Yours.
+[death_fire] {name}, you burned so bright I could see you from Asgard.
+[death_poison] {name}, how's the stomach? Poison isn't a seasoning.
+[death_cold] {name}, you make a fine icicle. A warrior — not so much.
+[death_tree] {name}, the tree won. Lumberjack of the year, no doubt.
+[death] {name}, oh, you poor thing. Get up, it's not over.
+[death] {name}, death suits you. But you look better alive.
+[near_death] {name}, that was close, huh? I'd already folded my wings in mourning.
+[near_death] {name}, one more hair and — hello, valkyries.
+[near_death] {name}, {attacker_gen} nearly made lunch out of you.
+[level] {name}, you've grown stronger. Feel it?
+[level] {name}, a new level! Now you die a little slower.
+[friendly] {name}, they're ours! Or can't you tell friends from enemies?
+[friendly] {name}, hitting friends is a bad tactic. Even for a viking.
+[kill_many] {name}, you really got carried away! A whole mountain of bodies.
+[kill_many] {name}, a massacre. The ravens are grateful — I'll pass it on.
+[escaped] {name}, {prey_gen} got away. Lunch waved its tail goodbye.
+[escaped] {name}, oops, somebody got away. Hunter of the year.
+[flee] {name}, a tactical retreat, right? I'll write it down that way.
+[flee] {name}, running from {foe_gen}? Legs are your main weapon.
+[biome] {name}, you're {biome_in} now. Everything bites harder here.
+[biome] {name}, new lands — new ways to die.
+[dungeon] {name}, you reek of the crypt. Come out into the light.
+[dungeon] {name}, out of the dungeon alive? Unexpected.
+[fall] {name}, thud! I heard it from here. Legs in one piece?
+[build] {name}, the knocking can be heard all the way to Asgard. Nice building.
+[build] {name}, a builder! Just don't forget the roof.
+[fish] {name}, biting? Save me a little fish.
+[hungry] {name}, when did you last eat? Your stomach is growling for the whole forest.
+[encumbered] {name}, you crawl like a snail with a house on its back. Throw out half.
+[swim] {name}, soaked to the bone. Never tried a boat?
+[kill] {name}, cleanly done. Almost.
+[kill] {name}, not a bad scrap. I'd applaud, but wings.
+[sail] {name}, captain! Don't sink the tub.
+[chop] {name}, lumberjack! The forest fears you already.
+[mine] {name}, dust up to your ears. The dwarves would take you for one of their own.
+[portal] {name}, don't the portals make your head spin?
+[cook] {name}, I smell food! And for me?
+[craft] {name}, a master at work. I won't distract you.
+[sleep] {name}, good morning, sleepyhead.
+[pick] {name}, pockets full of berries? Will you share?
+[travel] {name}, you've run {km}. Where's the rush?
+[loot] {name}, rummaging through chests again? Found anything besides spiders?
+[pet] {name}, who's a good one? Not me, of course.
+[night] {name}, it's night out. The smart ones are by the fire already. And you?
+[weather_storm] {name}, Thor is thundering and you're standing there like a lightning rod.
+[weather_rain] {name}, wet. My feathers are soaked through, but you don't care, do you?
+[weather_snow] {name}, cold as Hel's armpit. Put something on.
+[weather_fog] {name}, fog thick as milk. Watch who you're hugging.
+[here] {name}, was flying {biome_here_in}. Decided to say hi.
+[death_creature] {name}, you fell to {killer_gen}. And you've already got {killer_kills} {killer_genpl} to your name. I'm ashamed before Odin.
+[death_creature] {name}, that's {deaths_all} in your whole life. Do the valkyries give you a discount?
+[death_creature] {name}, enemies have killed you {cause_times} already. Maybe take a shield?
+[death_many] {name}, {deaths_all} in your whole life, and a few of them right now. A record better not repeated.
+[death_fall] {name}, you've fallen to your death {cause_times} already. Maybe build some stairs?
+[death_drown] {name}, you've drowned {cause_times} already. The fish know you by face.
+[death_fire] {name}, you've burned {cause_times} already. What are you, firewood?
+[death_poison] {name}, poison has got you {cause_times} already. Stop licking everything.
+[death_cold] {name}, you've frozen to death {cause_times} already. A fur coat is nothing to be ashamed of.
+[death_tree] {name}, trees have killed you {cause_times} already. The forest remembers every axe.
+[death] {name}, you've opened your own tombstone {tombs_times} already. A habit, huh?
+[death] {name}, that's {deaths_all} now. I'm keeping count, don't worry.
+[boss] {name}, {boss_gen} is down, and you've got {bosses_all} bosses to your name. Odin is pleased.
+[kill_many] {name}, you've killed {top_kills} {top_genpl} already. They tell scary stories about you.
+[kill_many] {name}, enemies in your whole life — {kills_all}. The ravens have plenty to eat, thanks.
+[kill] {name}, that's {top_kills} {top_genpl} for you already. A little more and they'll go extinct.
+[near_death] {name}, your record without dying is {streak_max}. Today it nearly started over.
+[level] {name}, {kills_all} enemies to your name already. No wonder the level went up.
+[travel] {name}, {km_all} over all your travels. Are your legs made of iron?
+[fall] {name}, {air_km} in the air over your whole life. And the landings still limp.
+[build] {name}, {built_all} pieces to your name already. You'll rebuild all of Asgard.
+[build] {name}, {base_hours} of your life spent at your base. A homebody, viking or not.
+[chop] {name}, {trees_all} trees felled already. The forest hates you.
+[mine] {name}, {mines_all} rocks smashed already. The dwarves are jealous.
+[fish] {name}, {fish_all} fish to your name. And {fish_lost} more got off the hook.
+[fish] {name}, {fish_all} fish caught already. Angler of the year, no joke.
+[portal] {name}, {portals_times} through portals already. Haven't you come apart yet?
+[sail] {name}, {sail_km} by sea already. A true jarl of the waves.
+[sleep] {name}, {sleep_all} nights slept already. A seasoned sleepyhead.
+[hungry] {name}, {food_all} meals eaten already, and your belly still growls.
+[cook] {name}, {food_all} meals eaten already. Cook and eater in one.
+[pick] {name}, {berries_all} berries picked already. A bear would be jealous.
+[idle] {name}, {jumps_all} jumps to your name already. Are you a warrior or a grasshopper?
+[idle] {name}, peace and quiet. Don't get used to it.
+[light] {name}, here's some light. Now at least you can see where you're stepping.
+[light] I brought a wisp, {name}. Don't try to catch it, it bites.
+[light] {name}, in the dark you walk like a blind kitten. Here, I'll light the way.
+[light] There's light. Now no more excuses, {name}.
+[light] {name}, Odin sees everything. And now you see a little too.
+[lightstep] Breathe evenly, {name}, I'll give you the rhythm. Your legs will tire less.
+[lightstep] Easy, {name}. Run at my pace and your strength will last.
+[lightstep] {name}, don't waste your breath. I'll lead, and you rest on the move.
+[lightstep] In for two steps, out for two. Like that, {name}, and you won't lose your breath.
+[lightstep] {name}, keep my rhythm and the tiredness won't catch you.
+[lightstep] I see an easier path, {name}. Run it and your strength comes back faster.
+[lightstep] {name}, shoulders loose, step soft. That way you'll breathe and run.
+[lightstep] No hurry to get winded, {name}. I'm counting the steps for you.
+[fed] Thank you, {name}. Tasty, and above all — from you.
+[fed] Oh, tasty. Though there's one thing I like more. Can you guess?
+[fed] Yum. {name}, traveling with you gets nicer and nicer.
+[fed] You're feeding Odin's raven, {name}. He'll find out. From me.
+[fed] A little more and I'll start trusting you. Kidding. I already do.
+[awake] I'm awake, {name}. Eikthyr was tasty. Now I'm yours.
+[awake] What's this... warmth? Ah, it's you, {name}. I'm with you.
+[awake] Eyes open, wings at hand. Lead the way, {name}.
+[levelup] {name}, now I'm truly with you.
+[levelup] The trophies are eaten, the oath is given. I'm yours, {name}.
+[levelup] Odin sees: we are one now, {name}.
+[levelup] I feel the strength. Thank you for not abandoning me, {name}.
+[levelup] One more step to full trust. Lead the way, {name}.
+[loyal] I'm here, {name}. I never left.
+[loyal] The valkyries called me to come along. I said I had business. You.
+[loyal] A grave is no place for Odin's raven, {name}. Let's go.
+[loyal] You fell, and I stayed. That's how it should be.
+[loyal] Thought I'd leave you? Not today, {name}.
+[loyal] I saw you go. And I waited for you to come back.
+[lastchance] Not today! Run while I hold on!
+[lastchance] {name}, the valkyries can wait. Run!
+[lastchance] I won't give you up! Get out of here, fast!
+[lastchance] {name}, that was close. Very close. Run!
+[lastchance] It's not time yet, {name}! Get up and run!
+[lastchance] Odin says: too early. So run, {name}!
+[lastchance] {name}, I bargained you a moment. Don't waste it!
+[lastchance] Hold on to me, {name}! Out of here!
+[sh_here] {name}, from your shoulder you can see farther {biome_here_in} than you think. You can't, of course.
+[sh_here] Sitting on your shoulder {biome_here_in} keeping watch. Someone has to, {name}.
+[sh_here] {name}, I'm watching the bushes {biome_here_in}. You watch the path.
+[sh_here] From up here on your shoulder everything {biome_here_in} is in plain sight, {name}. Even your mistakes — in advance.
+[sh_here] {name}, I'm comfortable here {biome_here_in}. It'd be even nicer if you didn't run like a scared boar.
+[sh_idle] {name}, I'm sitting and keeping watch. And what are you doing? Besides standing.
+[sh_idle] Quiet. I've had time to clean my feathers, think up three sagas and lose faith in you, {name}.
+[sh_idle] {name}, from your shoulder I can see everything. Nothing interesting. You included.
+[sh_idle] You haven't forgotten I'm here, {name}? I'm here.
+[sh_idle] {name}, your shoulder is warm. Probably the best thing about you.
+[sh_kill] I saw it all from your shoulder, {name}. Clean. Hardly embarrassing.
+[sh_kill] {name}, you swung so hard I nearly took off.
+[sh_kill] One fewer, {name}. I held on tight — with you there's no other way.
+[sh_kill_many] {name}, I've lost count. Good thing I sit up high.
+[sh_kill_many] So much blood, {name}... Spatters on my feathers, and fewer and fewer pages left in the chronicle.
+[sh_near_death] {name}, you staggered so hard I was already writing your obituary in my head. A short one.
+[sh_near_death] I clung to you with all I've got, {name}. Not for your sake — falling is unpleasant.
+[sh_boss] {name}, I saw it all from the front row. Incredible. Honestly, I'd bet on the other guy.
+[sh_boss] We did it, {name}! Well, you did, and I watched.
+[sh_build] {name}, from up here I can see the corner's crooked. Don't worry, your descendants will decide it was on purpose.
+[sh_sail] Wind in my feathers, {name}. Lovely. If only the helmsman knew where he was going.
+[sh_swim] {name}, keep your head up. I can't swim, and neither can you, I see.
+[sh_fall] {name}, next time warn me when you jump. I nearly fell off.
+[sh_weather_rain] {name}, I'm getting soaked on your shoulder. Smart birds are under a roof right now. I'm clearly not one of them.
+[see_enemy] {name}, I see it: {seen_enemy} nearby. Don't say later I didn't warn you.
+[see_enemy] Careful, {name}: {seen_enemy}. Enemies around — {seen_count}.
+[see_enemy] {name}, {seen_enemy} is looking at you. Not in a friendly way, it seems.
+[see_enemy] From above I can see it: {seen_enemy}, very close, {name}.
+[see_enemy] {name}, {seen_enemy} is nearby. Keep your weapon ready.
+[see_enemy] Enemies nearby — {seen_count}, {name}. The nearest is {seen_enemy}.
+[see_hurt] {name}, you're barely standing. Eat something, please.
+[see_hurt] There's blood on you, {name}. Maybe it's time to fall back?
+[see_hurt] {name}, your health is low. I don't want to look for a new shoulder.
+[see_hurt] {name}, careful. The valkyries are already taking a look.
+[see_hurt] {name}, rest by the fire before it's too late.
+[leap] {name}, jump while the spell holds. Just watch the time.
+[leap] Jump, {name}, and see the world through my eyes.
+[leap] {name}, you have no wings, so I'll lend you a little of my sky.
+[leap] Jump, {name}. The ground isn't going anywhere, I promise.
+[leap] {name}, only look down while the spell still holds.
+[leap] {name}, from up there the map looks better. Check it.
+[leap] {name}, legs light as feathers. Count the seconds while the spell holds.
+[leap] {name}, the wind is under you. Don't flap your arms, it won't help.
+[shadow] {name}, I've covered you with my wing. Now nobody can see you.
+[shadow] Quieter, {name}. Come at them from behind, like a true viking... well, almost.
+[shadow] {name}, you're a shadow. Just don't sneeze.
+[shadow] Nobody sees you, {name}. Use it while I hold it.
+[shadow] {name}, softer steps. The first strike is the sweetest.
+[shadow] Vanish, {name}. And then — one strike.
+[shadow] {name}, I've hidden you under my feathers. The enemy won't even notice where it came from.
+[shadow] The shadow is yours, {name}. Don't waste it on the bushes.
+[dome] ~2 {name}, get under the wing. Let them wait.
+[dome] ~2 It's quiet under my wing, {name}. Let those sniff at the edge.
+[dome] ~2 {name}, breathe. They'll circle, but they won't get in.
+[dome] ~23 Catch your breath, {name}. Just remember: wings don't last forever.
+[dome] ~2 {name}, no fighting here. Not you, not them.
+[dome] ~2 Wait it out, {name}. When the dome falls — be ready.
+[dome] ~23 {name}, I've covered you with runes. Think about what you'll do next.
+[dome] ~2 See them walking in circles, {name}? Waiting. Let them wait.
+[dome] ~1 Fine, {name}, get under the wing. Just don't get used to it.
+[dome] ~1 I'm holding it. But not for long and no thanks needed, {name}.
+[dome] ~1 {name}, hide already. Watching them chase you is embarrassing even for me.
+[dome] ~1 Here's your dome. And don't say later that Hugin does nothing.
+[dome] ~1 Under the wing, {name}. Just don't think it's friendship.
+[dome] ~3 Come here, {name}, under the wing. I'll cover you.
+[dome] ~3 Rest, {name}. While I'm here, nobody touches you.
+[dome] ~3 {name}, I'm right here, just above you. Gather your thoughts.
+[dome] ~3 Quiet, {name}. Let them wait, and you catch your breath.
+[dome] ~3 For you — always, {name}. Get under the wing.
+[dome_back] ~1 Finally. My wings went numb, {name}.
+[dome_back] ~1 Wings folded. Next time get yourself out of it, {name}.
+[dome_back] ~1 {name}, I'm back. Don't thank me, you don't know how anyway.
+[dome_back] ~2 Wings folded. Together again, {name}.
+[dome_back] ~2 I'm back, {name}. What's next?
+[dome_back] ~2 The dome is down, {name}. Be ready.
+[dome_back] ~3 I'm with you again, {name}. Let's go.
+[dome_back] ~3 Wings folded, {name}. If need be, I'll spread them a hundred times more.
+[dome_back] ~3 I'm back, {name}. Good that you're in one piece.
+[dome_end] ~1 That's it, {name}, my wings aren't made of iron. You're on your own.
+[dome_end] ~1 The dome fell. Run or fight, {name} — I don't care.
+[dome_end] ~2 The dome is falling, {name}. They're coming.
+[dome_end] ~2 That's it, {name}, my wings are tired. Hold on.
+[dome_end] ~3 Sorry, {name}, I couldn't hold it longer. But I'm close.
+[dome_end] ~3 The dome fell, {name}. No matter, we'll fight them off together.
+[light] {name}, it's dark as a troll's stomach. Here's a wisp for you.
+[light] My little friend will light the way, {name}. Be nice to it.
+[light] {name}, without light you'd have tripped three times already. Yes, I'm counting.
+[scout] Off to have a look, {name}. Don't go anywhere without me.
+[scout] {name}, I'll check from above who's hiding there.
+[scout] I'll be right back with news, {name}. Watch the map.
+[scout] {name}, keep the map ready. I'll be quick.
+[scout] Whoever hides in the bushes won't fool me. Off I go.
+[scout] {name}, don't be sad. I'm just going to circle a little.
+[scout] Scouting, {name}! Odin would be proud.
+[scout] {name}, while I'm gone, don't get into a fight.
+[stranger_peck] {name}, you're not my master. Here's a reminder.
+[stranger_peck] Strangers' shoulders are too tight for me, {name}. Here, have some beak.
+[stranger_peck] {name}, I miss the one who woke me. And you — I peck.
+[asleep_talk] Step away. I don't know you.
+[asleep_talk] Who are you to call me?
+[asleep_talk] Hush. I'm thinking, and not about you.
+[asleep_talk] Bring me a sign that you've beaten Eikthyr. Then maybe I'll listen.
+[asleep_talk] At the Sacrificial Stones you'll prove what you're worth. Not here.
+[idle] {name}, just checking if you're alive. You are. Good.

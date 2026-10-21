@@ -1,0 +1,42 @@
+RavenWatch 1.7.0 — RavenTest flight template build
+
+This bundle is prepared specifically for the RavenTest profile:
+D:\Thunderstore\Valheim\profiles\RavenTest
+
+To install manually:
+1. Close Valheim.
+2. Extract the archive into the RavenTest profile folder above and allow the
+   BepInEx folders to merge.
+3. Start RavenTest and open `raven test` > `Шаблони` > `Перечитати файли`.
+
+This test bundle includes the current RavenWatch 1.7.0 plugin build and nine
+starter flight templates. The DLL embeds all 26 built-in icon PNGs; raven
+avatar and perch UI also fall back to the raven's model icon if an individual
+icon cannot be loaded. It updates only RavenWatch.dll under
+BepInEx\plugins\Ko4erga-RavenWatch and adds the templates under
+BepInEx\config\RavenWatch\templates.
+
+Every flight leaving the shoulder (scouting, following, circles, hovering,
+orders, strikes, and the dome gift) uses a shared shoulder-specific crouch,
+leg push, body pitch, and deep wing beat alongside the motor's upward,
+route-directed impulse. The take-off pose ends by itself; airborne handoffs do
+not restart it. Calm flights use a slower speed ramp; attacks and tricks use a
+quicker ramp.
+Level glides slow the wingbeat without pausing the sampled clip, so the wings
+cannot be held at the bottom of a stroke. The game's landing clip and in-air
+handoffs are unchanged. The vanilla landing clip is retained, with a small
+independent ±6% playback-speed variation per landing; the motor still maps its
+progress to the shoulder approach.
+The shoulder raven's jump and landing balance flap is a short, eased, staggered
+wing wave with individual timing and strength, rather than a fixed-angle beat.
+
+The `Шаблони` editor also has a one-button in-game dive test for the selected
+template. It applies only to the commanded dive and can isolate the authored
+wing pose from the motor's adaptive dive fold while you tune the ten beat keys.
+
+The archive is a manual profile overlay, not a Thunderstore package. Do not
+install it into another profile. Back up the RavenWatch DLL before replacing
+it; remove only the nine numbered test template files to remove these presets.
+
+For guidance on previewing presets versus the flight director, see
+flight-templates-test\README.md in the archive.

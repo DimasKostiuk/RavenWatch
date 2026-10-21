@@ -1,0 +1,13 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Проста жердина
+note: Дерев’яна жердина зі свічкою й віночком — найпростіше місце, де ворон може перепочити
+use: perch
+id: prosta_zherdyna
+cost: Wood:10 Resin:4
+perday: 30
+pose: -50 90 -45 0 -50 90 -45 -1 0 -34 -33
+stand: 0 0 0 0 0 0 0 0 0 -34 -33
+part asset/Жердини/PerchSimple pos 0 1.095 0 rot 0 0 0 scale 1.15 1.15 1.15  # Проста жердина (Meshy), 2,2 м
+part @seat pos -0.58 1.94 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos 0.58 1.96 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part fx/Candle_resin_bogwitch pos 0 2.27 0 rot 0 0 0 scale 0.5 0.5 0.5  # полум'я свічки на гноті (полум'я ефекту саме стає в цю точку)

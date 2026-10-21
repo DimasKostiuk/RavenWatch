@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- The Book of ravens' empty book (cover, pages, gutter, frames, runes, leaves, ribbons), cut from the design
+     (Desktop\book-export, «Книга воронів - всі сторінки.dc.html», lines 36-56) without its tilt: the game tilts it.
+     Two equal pages (?lw= changes the left one, 582 by default). Rendered by tools/book_chrome.ps1. -->
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Runic&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:transparent;overflow:hidden}</style>
+</head>
+<body>
+<div id="book" style="position:absolute;left:50px;top:50px;width:1200px;height:680px"></div>
+<script>
+const lw = +(new URLSearchParams(location.search).get('lw') || 582), rw = 1164 - lw, gx = 20 + lw - 18, leafX = 20 + lw - 34;
+const lcp = `path('M0,18 Q${lw / 2},-6 ${lw},12 L${lw},648 Q${lw / 2},632 0,648 Z')`, rcp = `path('M0,12 Q${rw / 2},-6 ${rw},18 L${rw},648 Q${rw / 2},632 0,648 Z')`;
+const orn = [[36, 24], [1150, 24], [36, 632], [1150, 632]].map(([x, y]) => `<div style="position:absolute;left:${x}px;top:${y}px;font-family:'Noto Sans Runic',serif;font-size:18px;color:rgba(122,90,50,.55)">ᛟ</div>`).join('');
+document.getElementById('book').innerHTML = `
+<div style="position:absolute;left:20px;right:20px;bottom:-20px;height:40px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.75),transparent 70%)"></div>
+<div style="position:absolute;inset:0;border-radius:22px;background:radial-gradient(circle at 0 0,rgba(200,160,110,.35),transparent 7%),radial-gradient(circle at 100% 0,rgba(200,160,110,.35),transparent 7%),radial-gradient(circle at 0 100%,rgba(200,160,110,.3),transparent 7%),radial-gradient(circle at 100% 100%,rgba(200,160,110,.3),transparent 7%),repeating-radial-gradient(circle at 30% 40%,transparent 0 3px,rgba(0,0,0,.06) 3px 4px),linear-gradient(90deg,#3e1612,#24100c 46%,#14181e 54%,#16263a);box-shadow:0 22px 40px rgba(0,0,0,.75),inset 0 0 0 2px #0a0604,inset 0 0 0 6px #E6C77C33,inset 0 0 0 9px rgba(0,0,0,.35),inset 0 0 0 10px rgba(230,199,124,.18)"></div>
+<div style="position:absolute;left:20px;right:20px;top:26px;bottom:6px;border-radius:14px;background:repeating-linear-gradient(180deg,#d8c497 0 1px,#b89c66 1px 3px)"></div>
+<div style="position:absolute;left:20px;top:14px;width:${lw}px;height:654px;background:radial-gradient(ellipse at 50% 45%,#efe0bc,#d6bd8a 72%,#b89c6a);clip-path:${lcp};box-shadow:inset -60px 0 60px -26px rgba(0,0,0,.45)"></div>
+<div style="position:absolute;right:20px;top:14px;width:${rw}px;height:654px;background:radial-gradient(ellipse at 50% 45%,#efe0bc,#d6bd8a 72%,#b89c6a);clip-path:${rcp};box-shadow:inset 60px 0 60px -26px rgba(0,0,0,.35)"></div>
+<div style="position:absolute;left:20px;right:20px;top:14px;height:654px;pointer-events:none;background:radial-gradient(ellipse 60% 55% at 22% 18%,rgba(255,236,190,.38),transparent 70%),radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(60,32,10,.32) 100%),repeating-linear-gradient(7deg,transparent 0 3px,rgba(90,60,30,.035) 3px 4px),repeating-linear-gradient(97deg,transparent 0 5px,rgba(90,60,30,.03) 5px 6px);clip-path:path('M0,18 Q291,-6 582,12 Q873,-6 1164,18 L1164,648 Q873,632 582,648 Q291,632 0,648 Z')"></div>
+<div style="position:absolute;left:44px;top:34px;width:${lw - 50}px;height:610px;box-sizing:content-box;border:1.5px solid rgba(58,36,20,.28);outline:1px solid rgba(58,36,20,.18);outline-offset:4px;border-radius:6px"></div>
+<div style="position:absolute;right:44px;top:34px;width:${rw - 50}px;height:610px;box-sizing:content-box;border:1.5px solid rgba(58,36,20,.28);outline:1px solid rgba(58,36,20,.18);outline-offset:4px;border-radius:6px"></div>
+${orn}
+<div style="position:absolute;right:80px;bottom:46px;width:46px;height:20px;border-radius:0 100% 0 100%;transform:rotate(-24deg);background:linear-gradient(135deg,#a8743a,#6a3a14 70%);box-shadow:0 2px 3px rgba(40,20,6,.4);opacity:.8"></div>
+<div style="position:absolute;right:112px;bottom:38px;width:34px;height:15px;border-radius:0 100% 0 100%;transform:rotate(38deg);background:linear-gradient(135deg,#c08a40,#7a4a1a 70%);box-shadow:0 2px 3px rgba(40,20,6,.4);opacity:.75"></div>
+<div style="position:absolute;left:${leafX}px;top:22px;width:40px;height:17px;border-radius:0 100% 0 100%;transform:rotate(70deg);background:linear-gradient(135deg,#9a6a2a,#5a3010 70%);opacity:.7"></div>
+<div style="position:absolute;left:66px;bottom:52px;width:40px;height:44px;transform:rotate(-18deg);opacity:.16">
+<div style="position:absolute;left:18px;top:4px;width:4px;height:22px;border-radius:2px;background:#2a1408"></div>
+<div style="position:absolute;left:18px;top:20px;width:4px;height:20px;border-radius:2px;background:#2a1408;transform-origin:50% 0;transform:rotate(-40deg)"></div>
+<div style="position:absolute;left:18px;top:20px;width:4px;height:20px;border-radius:2px;background:#2a1408;transform-origin:50% 0;transform:rotate(40deg)"></div>
+<div style="position:absolute;left:18px;top:20px;width:4px;height:18px;border-radius:2px;background:#2a1408"></div>
+</div>
+<div style="position:absolute;left:${gx}px;top:8px;bottom:10px;width:32px;background:linear-gradient(90deg,transparent,rgba(20,10,4,.55) 45%,rgba(20,10,4,.55) 55%,transparent)"></div>
+<div style="position:absolute;left:230px;bottom:-22px;width:12px;height:56px;background:#C2503A;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)"></div>
+<div style="position:absolute;left:958px;bottom:-22px;width:12px;height:56px;background:#6FA8D6;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)"></div>`;
+</script>
+</body>
+</html>

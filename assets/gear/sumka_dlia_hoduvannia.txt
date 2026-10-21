@@ -1,0 +1,10 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Сумка для годування
+note: Шкіряна торба з великим секретом: у ній їжа. Ворон знає про секрет. Ворон завжди знає про секрет.
+use: gear
+id: sumka_dlia_hoduvannia
+cost: LeatherScraps:6 DeerHide:2 Resin:2
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: back
+part asset/RPG_предмети/Bag pos 0 0.2535 0 rot -70 -177 0 scale 0.1269 0.1269 0.1269 tint 131614  # Bag (RPG_предмети)
+part TrinketIronStamina pos 0 0.2435 0.09 rot -2 -180 0 scale 0.7259 0.8145 1.2034 tint 402B1F  # Браслет на ногу

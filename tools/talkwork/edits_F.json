@@ -1,0 +1,2767 @@
+[
+ {
+  "who": "M",
+  "list": "мд_зілля",
+  "op": "set",
+  "old": "^ковток Хильнули! Ну шо, як воно, га?",
+  "uk": "^potion.смак Хильнули! Ну шо, яке воно на смак, га?",
+  "en": "^potion.смак Down the hatch! So what does it taste like, huh?"
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля",
+  "op": "set",
+  "old": "^більше Ше ковток! За мене, ну!",
+  "uk": "^potion.смак Яке воно на смак? Кажи, бо мені, сука, не дали.",
+  "en": "^potion.смак What does it taste like? Spill it, because nobody gave me any, bitch."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля",
+  "op": "set",
+  "old": "^сила Чуєш силу? Я чую. Аж через плече пре, бля.",
+  "uk": "^potion.більше Ше ковток! За мене, ну!",
+  "en": "^potion.більше Another swig! To me, come on!"
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля",
+  "op": "set",
+  "old": "^смак Яке воно на смак? Кажи, бо мені, сука, не дали.",
+  "uk": "^potion.сила Чуєш силу? Я чую. Аж через плече пре, бля.",
+  "en": "^potion.сила Feel the power? I do. It is pumping through the shoulder, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля",
+  "op": "set",
+  "old": "^запас Скільки там ше тих пляшечок лишилось?",
+  "uk": "^potion.запас Скільки там ше тих пляшечок лишилось?",
+  "en": "^potion.запас How many of those little bottles are left?"
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля",
+  "op": "set",
+  "old": "^одін_п Як думаєш, Одін теж таку бурду п'є?",
+  "uk": "^potion.одін Як думаєш, Одін теж таку бурду п'є?",
+  "en": "^potion.одін You think Odin drinks swill like this too?"
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^ковток Гірке. Але діє.",
+  "uk": "^potion.смак>potion.гірке Гірке. Але діє.",
+  "en": "^potion.смак>potion.гірке Bitter. But it works."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^ковток Солодке. Підозріло солодке.",
+  "uk": "~1 ^potion.смак>potion.гірке Гірке. Як правда про тебе.",
+  "en": "~1 ^potion.смак>potion.гірке Bitter. Like the truth about you."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^більше Зілля — не для забави.",
+  "uk": "~23 ^potion.смак>potion.гірке Гірке. Тобі б не сподобалось, повір.",
+  "en": "~23 ^potion.смак>potion.гірке Bitter. You would hate it, trust me."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^більше За тебе? Тоді вже краще води.",
+  "uk": "^potion.смак>potion.солодке Солодке. Підозріло солодке.",
+  "en": "^potion.смак>potion.солодке Sweet. Suspiciously sweet."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^сила Відчуваю. Тепер можна й у бій.",
+  "uk": "~3 ^potion.смак>potion.солодке Солодке, як мед. Шкода, що не для тебе.",
+  "en": "~3 ^potion.смак>potion.солодке Sweet as honey. Pity it is not for you."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^сила Відчуваю, що ти перебільшуєш.",
+  "uk": "^potion.сила>potion.бій Відчуваю. Тепер можна й у бій.",
+  "en": "^potion.сила>potion.бій I feel it. Now we can go fight."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^смак Як мед і трави. І трохи як ліки.",
+  "uk": "~3 ^potion.сила>potion.бій Відчуваю. Тримайся ближче, у бій підемо разом.",
+  "en": "~3 ^potion.сила>potion.бій I feel it. Stay close, we go into the fight together."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^смак Як перемога. Перемога гірка.",
+  "uk": "^potion.сила>potion.брешеш Відчуваю, що ти перебільшуєш.",
+  "en": "^potion.сила>potion.брешеш What I feel is you exaggerating."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^запас Небагато. Варто наварити.",
+  "uk": "~1 ^potion.сила>potion.брешеш Через плече пре хіба твоє базікання.",
+  "en": "~1 ^potion.сила>potion.брешеш The only thing pumping through the shoulder is your chatter."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^запас Досить на кілька боїв.",
+  "uk": "^potion.більше>potion.забава Зілля — не для забави.",
+  "en": "^potion.більше>potion.забава Potions are not for fun."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^одін_п Одін п'є мед поезії. Нам не дадуть.",
+  "uk": "~1 ^potion.більше>potion.забава Зілля — не брага, Муніне. Відчепись.",
+  "en": "~1 ^potion.більше>potion.забава A potion is not home brew, Munin. Get lost."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "set",
+  "old": "^одін_п Одін п'є все. Він же бог.",
+  "uk": "^potion.більше>potion.за_тебе За тебе? Тоді вже краще води.",
+  "en": "^potion.більше>potion.за_тебе To you? Then water would do."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "~1 ^potion.більше>potion.за_тебе За тебе? За тебе й калюжі забагато.",
+  "en": "~1 ^potion.більше>potion.за_тебе To you? Even a puddle is too much for you."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "^potion.запас>potion.мало Небагато. Варто наварити.",
+  "en": "^potion.запас>potion.мало Not many. We should brew more."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "~1 ^potion.запас>potion.мало Менше, ніж ти думаєш. І не для тебе.",
+  "en": "~1 ^potion.запас>potion.мало Fewer than you think. And none for you."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "^potion.запас>potion.досить Досить на кілька боїв.",
+  "en": "^potion.запас>potion.досить Enough for a few fights."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "~23 ^potion.запас>potion.досить На кілька боїв. Якщо не лізти в кожен, як ти.",
+  "en": "~23 ^potion.запас>potion.досить For a few fights. If we do not jump into every one, like you."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "^potion.одін>potion.мед Одін п'є мед поезії. Нам не дадуть.",
+  "en": "^potion.одін>potion.мед Odin drinks the mead of poetry. We will not get any."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "~1 ^potion.одін>potion.мед Одін п'є мед поезії. Тобі б і нюхнути не дали.",
+  "en": "~1 ^potion.одін>potion.мед Odin drinks the mead of poetry. You would not even get a sniff."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "^potion.одін>potion.бог Одін п'є все. Він же бог.",
+  "en": "^potion.одін>potion.бог Odin drinks everything. He is a god."
+ },
+ {
+  "who": "H",
+  "list": "хд_зілля",
+  "op": "add",
+  "uk": "~23 ^potion.одін>potion.бог Одін п'є все, що наливають. Ти в нього вдався.",
+  "en": "~23 ^potion.одін>potion.бог Odin drinks whatever is poured. You take after him."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "set",
+  "old": "^ковток Та хоч яке. Аби вставило.",
+  "uk": "^potion.гірке Та хоч яке. Аби вставило.",
+  "en": "^potion.гірке Whatever it tastes like. As long as it kicks."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "set",
+  "old": "^більше Для забави — то інша бочка, ясно. Там я перший.",
+  "uk": "^potion.гірке Гірке — то фігня. Я й жовч жер, і нічо.",
+  "en": "^potion.гірке Bitter is nothing. I have eaten bile, and fine."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "set",
+  "old": "^сила У бій! Нарешті, бля! Хто перший?",
+  "uk": "^potion.солодке Солодке, а мені дуля. Жмоти, бля.",
+  "en": "^potion.солодке Sweet, and I get a fig. Fucking misers."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "set",
+  "old": "^смак Мені б хоч понюхати, жмоти.",
+  "uk": "^potion.солодке Солодке? Дай хоч дзьоб умочити, ну!",
+  "en": "^potion.солодке Sweet? Let me at least dip my beak, come on!"
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "set",
+  "old": "^запас Кілька — то мало. Варимо, нахуй!",
+  "uk": "^potion.бій У бій! Нарешті, бля! Хто перший?",
+  "en": "^potion.бій Fight! Finally, fuck! Who is first?"
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "set",
+  "old": "^одін_п То й я буду бог. Наливай, не жмоться.",
+  "uk": "^potion.бій Оце розмова. Покажи, кого гасити.",
+  "en": "^potion.бій Now you are talking. Show me who to smash."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.брешеш Перебільшую? Дзьобну — сам відчуєш.",
+  "en": "^potion.брешеш Exaggerating? I peck you, you will feel it yourself."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.брешеш Та пішов ти. Мені пре, і все.",
+  "en": "^potion.брешеш Piss off. It is pumping for me, end of story."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.забава Для забави — то інша бочка, ясно. Там я перший.",
+  "en": "^potion.забава For fun is another barrel, got it. There I am first."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.забава Нудний ти, як пень. Ковток — то здоров'я, а не забава.",
+  "en": "^potion.забава You are dull as a stump. A swig is health, not fun."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.за_тебе Шо, за мене шкода? Запам'ятаю, жмот.",
+  "en": "^potion.за_тебе What, too stingy to drink to me? I will remember that, miser."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.за_тебе От гнида. За мене — і то водою.",
+  "en": "^potion.за_тебе What a louse. A toast to me, and with water."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.мало То варим, бля! Я казан пильнуватиму.",
+  "en": "^potion.мало Then we brew, fuck! I will guard the pot."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.мало Мало — то хуйово. Без пляшечок я нервую.",
+  "en": "^potion.мало Few is shit. Without bottles I get twitchy."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.досить Кілька — то мало. Варимо, нахуй!",
+  "en": "^potion.досить A few is not enough. We brew, damn it!"
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.досить Кілька боїв? То гайда їх шукати.",
+  "en": "^potion.досить A few fights? Then let us go find them."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.мед Не дадуть — сам візьму. Я ж ворон, а не лох.",
+  "en": "^potion.мед Will not give it? I will take it. I am a raven, not a sucker."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.мед Поезія, бля. Мені б просто медку.",
+  "en": "^potion.мед Poetry, fuck. I just want some mead."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.бог То й я буду бог. Наливай, не жмоться.",
+  "en": "^potion.бог Then I will be a god too. Pour, do not be stingy."
+ },
+ {
+  "who": "M",
+  "list": "мд_зілля_кінець",
+  "op": "add",
+  "uk": "^potion.бог Все? Оце життя. Хочу до Одіна в собутильники.",
+  "en": "^potion.бог Everything? That is the life. I want to be Odin's drinking buddy."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець",
+  "op": "set",
+  "old": "^трон Стілець — як трон. А {name} на ньому — як ярл.",
+  "uk": "^sit.трон Стілець — як трон. А {name} на ньому — як ярл.",
+  "en": "^sit.трон A chair like a throne. And {name} on it like a jarl."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець",
+  "op": "set",
+  "old": "^ноги Ноги відпочивають. Видно ж, як {name} розслаби{вся|лася}.",
+  "uk": "^sit.ноги Ноги відпочивають. Видно ж, як {name} розслаби{вся|лася}.",
+  "en": "^sit.ноги The legs get a rest. You can see {name} has relaxed."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець",
+  "op": "set",
+  "old": "^тиша_с Тихо, коли сидимо. Чуєш, як дерево поскрипує?",
+  "uk": "^sit.тиша Тихо, коли сидимо. Чуєш, як дерево поскрипує?",
+  "en": "^sit.тиша Quiet when we sit. Hear the wood creak?"
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець",
+  "op": "set",
+  "old": "^думки_с Сидячи, краще думається.",
+  "uk": "^sit.думки Сидячи, краще думається.",
+  "en": "^sit.думки Thinking goes better sitting down."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець",
+  "op": "set",
+  "old": "^довго_с Довго сидітимемо, як думаєш?",
+  "uk": "^sit.довго Довго сидітимемо, як думаєш?",
+  "en": "^sit.довго Will we sit long, you think?"
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець",
+  "op": "set",
+  "old": "^стілець Хто цей стілець змайстрував? Гарна робота.",
+  "uk": "^sit.стілець Хто цей стілець змайстрував? Гарна робота.",
+  "en": "^sit.стілець Who made this chair? Good work."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^трон Ярл, бля. Ярл у засраних чоботах.",
+  "uk": "^sit.трон>sit.чоботи Ярл, бля. Ярл у засраних чоботах.",
+  "en": "^sit.трон>sit.чоботи A jarl, fuck. A jarl in shitty boots."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^трон Ярл, а я — його радник. Головний, ясно?",
+  "uk": "~1 ^sit.трон>sit.чоботи Ярл, курва. Без корони й у болоті по коліна.",
+  "en": "~1 ^sit.трон>sit.чоботи A jarl, shit. No crown and knee-deep in mud."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^ноги Ага. А ми тут сиди й нудьгуй, як дурні.",
+  "uk": "^sit.трон>sit.радник Ярл, а я — його радник. Головний, ясно?",
+  "en": "^sit.трон>sit.радник A jarl, and I am the adviser. The chief one, got it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^ноги Хай сидить. Мені й на плечі нормально.",
+  "uk": "~3 ^sit.трон>sit.радник Ярл. А я — його права рука. Тобто праве крило, ги.",
+  "en": "~3 ^sit.трон>sit.радник A jarl. And I am the right hand. Right wing, I mean, heh."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^тиша_с Чую. Стілець кривий, от і скрипить.",
+  "uk": "^sit.ноги>sit.нудьга Ага. А ми тут сиди й нудьгуй, як дурні.",
+  "en": "^sit.ноги>sit.нудьга Yeah. And we sit here bored like idiots."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^тиша_с Чую. Нудьга, бляха.",
+  "uk": "~1 ^sit.ноги>sit.нудьга Розслаби{вся|лася}, а ми нудьгуй, бля.",
+  "en": "~1 ^sit.ноги>sit.нудьга Relaxed, and we just get bored, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^думки_с Думай-думай, професоре. А я подрімаю.",
+  "uk": "^sit.ноги>sit.плече Хай сидить. Мені й на плечі нормально.",
+  "en": "^sit.ноги>sit.плече Let them sit. I am fine on the shoulder anyway."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^думки_с А мені краще думається, коли когось гашу.",
+  "uk": "~23 ^sit.ноги>sit.плече Хай сидить. На плечі, як на печі, ги.",
+  "en": "~23 ^sit.ноги>sit.плече Let them sit. On the shoulder it is like by the stove, heh."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^довго_с Поки сраку не відсидимо, по-любому.",
+  "uk": "^sit.тиша>sit.кривий Чую. Стілець кривий, от і скрипить.",
+  "en": "^sit.тиша>sit.кривий I hear it. The chair is crooked, that is why it creaks."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^довго_с Поки жрати не принесуть.",
+  "uk": "~1 ^sit.тиша>sit.кривий Чую. Кривий він, бля, як руки в майстра.",
+  "en": "~1 ^sit.тиша>sit.кривий I hear it. Crooked, fuck, like the maker's hands."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^стілець Та {name} ж. Криво, але, бля, нормально.",
+  "uk": "^sit.тиша>sit.нудно Чую. Нудьга, бляха.",
+  "en": "^sit.тиша>sit.нудно I hear it. Boring as hell."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "set",
+  "old": "^стілець Без поняття. Але сидиться ж.",
+  "uk": "~23 ^sit.тиша>sit.нудно Чую. Аж спати хочеться, курва.",
+  "en": "~23 ^sit.тиша>sit.нудно I hear it. Makes me sleepy, damn it."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "^sit.думки>sit.дрімати Думай-думай, професоре. А я подрімаю.",
+  "en": "^sit.думки>sit.дрімати Think away, professor. I will take a nap."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "~1 ^sit.думки>sit.дрімати От і думай. А мене не чіпай, я дрімаю.",
+  "en": "~1 ^sit.думки>sit.дрімати So think. And leave me alone, I am napping."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "^sit.думки>sit.гасити А мені краще думається, коли когось гашу.",
+  "en": "^sit.думки>sit.гасити I think better when I am smashing someone."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "~23 ^sit.думки>sit.гасити А мені — в бійці. Там думать ніколи, от і ясно в голові.",
+  "en": "~23 ^sit.думки>sit.гасити Me, in a brawl. No time to think there, so my head is clear."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "^sit.довго>sit.срака Поки сраку не відсидимо, по-любому.",
+  "en": "^sit.довго>sit.срака Till our asses go numb, for sure."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "~1 ^sit.довго>sit.срака Поки дупа не задубне, бля.",
+  "en": "~1 ^sit.довго>sit.срака Till the butt goes stiff, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "^sit.довго>sit.їжа Поки жрати не захочеться.",
+  "en": "^sit.довго>sit.їжа Till we get hungry."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "~23 ^sit.довго>sit.їжа Поки в мене живіт не забурчить. Тобто скоро.",
+  "en": "~23 ^sit.довго>sit.їжа Till my belly growls. So, soon."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "^sit.стілець>sit.творець Та {name} ж. Криво, але, бля, нормально.",
+  "en": "^sit.стілець>sit.творець {name}, who else. Crooked, but fucking fine."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "~3 ^sit.стілець>sit.творець {name}, хто ж ше. Руки з того місця, ги.",
+  "en": "~3 ^sit.стілець>sit.творець {name}, who else. Hands grow from the right place, heh."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "^sit.стілець>sit.байдуже Без поняття. Але сидиться ж.",
+  "en": "^sit.стілець>sit.байдуже No clue. But it sits fine."
+ },
+ {
+  "who": "M",
+  "list": "мд_стілець",
+  "op": "add",
+  "uk": "~1 ^sit.стілець>sit.байдуже Шо я тобі, тесля? Сидиться — і ладно.",
+  "en": "~1 ^sit.стілець>sit.байдуже Am I a carpenter to you? It sits, that is enough."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "set",
+  "old": "^трон Двір як двір. Ярл, радник і стілець.",
+  "uk": "^sit.чоботи Ярлів не по чоботях судять.",
+  "en": "^sit.чоботи Jarls are not judged by their boots."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "set",
+  "old": "^ноги Посидимо всі разом.",
+  "uk": "^sit.чоботи Сказав ворон, що сам не чистився з тижня.",
+  "en": "^sit.чоботи Says the raven who has not preened in a week."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "set",
+  "old": "^тиша_с Тихо — то вже подарунок.",
+  "uk": "^sit.радник Двір як двір: ярл, стілець і самозванець.",
+  "en": "^sit.радник A court like any: a jarl, a chair and an impostor."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "set",
+  "old": "^думки_с Кожному своє.",
+  "uk": "^sit.радник Посада тобі личить. Тільки нічого не радь.",
+  "en": "^sit.радник The post suits you. Just do not advise anything."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "set",
+  "old": "^довго_с Тоді — недовго. Сподіваюся.",
+  "uk": "^sit.нудьга Нудьгуй мовчки. Це теж відпочинок.",
+  "en": "^sit.нудьга Be bored quietly. That is rest too."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "set",
+  "old": "^стілець Добре, що сидиться.",
+  "uk": "^sit.нудьга Ти нудьгуєш, навіть коли ми б'ємось.",
+  "en": "^sit.нудьга You get bored even when we are fighting."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.плече Ще б пак. Тебе ж возять.",
+  "en": "^sit.плече Of course. You get carried."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.плече Тобі на плечі завжди добре. Не ти ж ходиш.",
+  "en": "^sit.плече The shoulder always suits you. You are not the one walking."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.кривий Кривий, зате свій.",
+  "en": "^sit.кривий Crooked, but ours."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.кривий Скрипить — значить, тримає.",
+  "en": "^sit.кривий If it creaks, it holds."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.нудно Потерпи. Хтось завжди знайдеться, щоб дзьобнути.",
+  "en": "^sit.нудно Bear it. Someone to peck always turns up."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.нудно Тиша — то подарунок. Не всім дано.",
+  "en": "^sit.нудно Quiet is a gift. Not everyone gets it."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.дрімати Дрімай. Різниці ніхто не помітить.",
+  "en": "^sit.дрімати Nap. Nobody will notice the difference."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.дрімати Дрімай. Тоді хоч думати не заважатимеш.",
+  "en": "^sit.дрімати Nap. At least then you will not get in the way of thinking."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.гасити Тоді ясно, чому ти рідко думаєш.",
+  "en": "^sit.гасити That explains why you rarely think."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.гасити Бо тоді за тебе думає дзьоб.",
+  "en": "^sit.гасити Because then your beak does the thinking."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.срака Відсиджувати буде {name}. Ти на плечі.",
+  "en": "^sit.срака {name} will do the sitting. You are on the shoulder."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.срака Тоді — недовго. Сподіваюся.",
+  "en": "^sit.срака Then not long. I hope."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.їжа Тоді недовго. Ти голодний завжди.",
+  "en": "^sit.їжа Then not long. You are always hungry."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.їжа Твій шлунок — наш годинник. Точний, на жаль.",
+  "en": "^sit.їжа Your stomach is our clock. Accurate, sadly."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.творець Хто робив — той і сидить. Чесно.",
+  "en": "^sit.творець Whoever made it gets to sit. Fair."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.творець Похвала від тебе. Рідкісна, як і стілець без скрипу.",
+  "en": "^sit.творець Praise from you. Rare as a chair without a creak."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.байдуже Сидиться — для тебе вже похвала.",
+  "en": "^sit.байдуже It sits fine. From you that is praise."
+ },
+ {
+  "who": "H",
+  "list": "хд_стілець_кінець",
+  "op": "add",
+  "uk": "^sit.байдуже Твоя найвища оцінка. Запам'ятаю.",
+  "en": "^sit.байдуже Your highest rating. I will remember it."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок",
+  "op": "set",
+  "old": "^тепло_д Тепло, Муніне. Вдома завжди тепліше.",
+  "uk": "^cozy.тепло Тепло, Муніне. Вдома завжди тепліше.",
+  "en": "^cozy.тепло Warm, Munin. It is always warmer at home."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок",
+  "op": "set",
+  "old": "^дах_д Над нами дах. Ніякий дощ не страшний.",
+  "uk": "^cozy.дах Над нами дах. Ніякий дощ не страшний.",
+  "en": "^cozy.дах A roof over us. No rain to fear."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок",
+  "op": "set",
+  "old": "^кубло Знаєш, Муніне, це вже наше гніздо.",
+  "uk": "^cozy.гніздо Знаєш, Муніне, це вже наше гніздо.",
+  "en": "^cozy.гніздо You know, Munin, this is our nest now."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок",
+  "op": "set",
+  "old": "^спокій_д Спокійно тут. Навіть ти тихіший.",
+  "uk": "^cozy.спокій Спокійно тут. Навіть ти тихіший.",
+  "en": "^cozy.спокій It is calm here. Even you are quieter."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок",
+  "op": "set",
+  "old": "^вечеря Пахне вечерею. Чуєш?",
+  "uk": "^cozy.вечеря Пахне вечерею. Чуєш?",
+  "en": "^cozy.вечеря Smells of supper. Smell it?"
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок",
+  "op": "set",
+  "old": "^пам'ять_д Пам'ятаєш, якою ця хата була спочатку?",
+  "uk": "^cozy.пам'ять Пам'ятаєш, якою ця хата була спочатку?",
+  "en": "^cozy.пам'ять Remember what this house was like at first?"
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^тепло_д Тепло — бо вогонь горить. А не бо вдома, ботане.",
+  "uk": "^cozy.тепло>cozy.вогонь Тепло — бо вогонь горить. А не бо вдома, ботане.",
+  "en": "^cozy.тепло>cozy.вогонь Warm because the fire is burning. Not because it is home, nerd."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^тепло_д Тепло, курва. Аж розкис весь.",
+  "uk": "~1 ^cozy.тепло>cozy.вогонь Тепло, бо дрова горять. Романтик, бля.",
+  "en": "~1 ^cozy.тепло>cozy.вогонь Warm because the logs are burning. Fucking romantic."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^дах_д Дах — то нормально. Аби не тік.",
+  "uk": "^cozy.тепло>cozy.розкис Тепло, курва. Аж розкис весь.",
+  "en": "^cozy.тепло>cozy.розкис Warm, shit. I have gone all soft."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^дах_д Дах є, а жрачки нема. Шо за порядки?",
+  "uk": "~23 ^cozy.тепло>cozy.розкис Тепло. Аж пір'я розпушилось, йой.",
+  "en": "~23 ^cozy.тепло>cozy.розкис Warm. My feathers have gone all fluffy, oof."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^кубло Гніздо, бля. А яйця мої де?",
+  "uk": "^cozy.дах>cozy.тече Дах — то нормально. Аби не тік.",
+  "en": "^cozy.дах>cozy.тече A roof is fine. As long as it does not leak."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^кубло Наше. Хто сунеться — в тім'я дзьобну.",
+  "uk": "~1 ^cozy.дах>cozy.тече Поки не протече, бля. А він протече.",
+  "en": "~1 ^cozy.дах>cozy.тече Till it leaks, fuck. And it will."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^спокій_д Тихіший, бо спати хочу. Не звикай.",
+  "uk": "^cozy.дах>cozy.жрачка Дах є, а жрачки нема. Шо за порядки?",
+  "en": "^cozy.дах>cozy.жрачка There is a roof, but no grub. What kind of order is this?"
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^спокій_д Нє, не тихіший. Я злість накопичую. Ше побачиш.",
+  "uk": "~23 ^cozy.дах>cozy.жрачка Дах — добре. А пожерти під ним ше краще.",
+  "en": "~23 ^cozy.дах>cozy.жрачка A roof is good. Eating under it is even better."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^вечеря Чую. Мені шматок, бо дзьобну, вкурив?",
+  "uk": "^cozy.гніздо>cozy.яйця Гніздо, бля. А яйця мої де?",
+  "en": "^cozy.гніздо>cozy.яйця A nest, fuck. And where are my eggs?"
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^вечеря Чую. Вже слина капає, йой.",
+  "uk": "~1 ^cozy.гніздо>cozy.яйця Гніздо, курва. Ше скажи, шо я тут висиджувати буду.",
+  "en": "~1 ^cozy.гніздо>cozy.яйця A nest, shit. Next you will say I am hatching something here."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^пам'ять_д Курником вона була. І досі трохи курник, чесно.",
+  "uk": "^cozy.гніздо>cozy.наше Наше. Хто сунеться — в тім'я дзьобну.",
+  "en": "^cozy.гніздо>cozy.наше Ours. Whoever barges in gets pecked on the head."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "set",
+  "old": "^пам'ять_д Пам'ятаю. Дірява була, як твоя голова.",
+  "uk": "~3 ^cozy.гніздо>cozy.наше Наше, бля. Вперше в мене шось наше.",
+  "en": "~3 ^cozy.гніздо>cozy.наше Ours, fuck. First time I have anything that is ours."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "^cozy.спокій>cozy.спати Тихіший, бо спати хочу. Не звикай.",
+  "en": "^cozy.спокій>cozy.спати Quieter because I want to sleep. Do not get used to it."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "~3 ^cozy.спокій>cozy.спати Бо тут можна не гаркать. Тіко нікому не кажи.",
+  "en": "~3 ^cozy.спокій>cozy.спати Because here I do not have to bark. Just do not tell anyone."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "^cozy.спокій>cozy.злість Нє, не тихіший. Я злість накопичую. Ше побачиш.",
+  "en": "^cozy.спокій>cozy.злість Nah, not quieter. I am storing up rage. You will see."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "~1 ^cozy.спокій>cozy.злість Тихіший? Я злий, курва, тіко мовчки.",
+  "en": "~1 ^cozy.спокій>cozy.злість Quieter? I am pissed, just silently."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "^cozy.вечеря>cozy.шматок Чую. Мені шматок, бо дзьобну, вкурив?",
+  "en": "^cozy.вечеря>cozy.шматок I smell it. A piece for me or I peck, got it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "~1 ^cozy.вечеря>cozy.шматок Чую. Перший шматок мій, і не сперечайся.",
+  "en": "~1 ^cozy.вечеря>cozy.шматок I smell it. First piece is mine, no arguing."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "^cozy.вечеря>cozy.слина Чую. Вже слина капає, йой.",
+  "en": "^cozy.вечеря>cozy.слина I smell it. I am already drooling, oof."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "~23 ^cozy.вечеря>cozy.слина Чую, бля. Аж живіт співає.",
+  "en": "~23 ^cozy.вечеря>cozy.слина I smell it, fuck. My belly is singing."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "^cozy.пам'ять>cozy.курник Курником вона була. І досі трохи курник, чесно.",
+  "en": "^cozy.пам'ять>cozy.курник It was a chicken coop. Still a bit of a chicken coop, honestly."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "~1 ^cozy.пам'ять>cozy.курник Сарай сараєм, бля. Вітер свистів.",
+  "en": "~1 ^cozy.пам'ять>cozy.курник A shed, fuck. The wind whistled through."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "^cozy.пам'ять>cozy.дірява Пам'ятаю. Дірява була, як твоя голова.",
+  "en": "^cozy.пам'ять>cozy.дірява I remember. Full of holes, like your head."
+ },
+ {
+  "who": "M",
+  "list": "мд_затишок",
+  "op": "add",
+  "uk": "~23 ^cozy.пам'ять>cozy.дірява Пам'ятаю. Дах — решето, а ми під ним мокрі.",
+  "en": "~23 ^cozy.пам'ять>cozy.дірява I remember. Roof like a sieve, and us soaked under it."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "set",
+  "old": "^тепло_д Хай так. Але вдома.",
+  "uk": "^cozy.вогонь Хай так. Але вдома.",
+  "en": "^cozy.вогонь Fine. But at home."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "set",
+  "old": "^дах_д Їжа буде. Дах — уже є.",
+  "uk": "^cozy.вогонь Вогонь горить, бо вдома. Подумай.",
+  "en": "^cozy.вогонь The fire burns because we are home. Think about it."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "set",
+  "old": "^кубло Отже, наше.",
+  "uk": "^cozy.розкис Розкислий ти навіть милий. Майже.",
+  "en": "^cozy.розкис Gone soft, you are almost cute. Almost."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "set",
+  "old": "^спокій_д Накопичуй тихо.",
+  "uk": "^cozy.розкис Сиди, грійся. Сьогодні можна.",
+  "en": "^cozy.розкис Sit, warm up. Today you may."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "set",
+  "old": "^вечеря Почекай. Вечеря для всіх.",
+  "uk": "^cozy.тече Протече — {name} полатає.",
+  "en": "^cozy.тече If it leaks, {name} will patch it."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "set",
+  "old": "^пам'ять_д Тепер вона добра. Як і ми.",
+  "uk": "^cozy.тече Не накаркай. Ти це вмієш.",
+  "en": "^cozy.тече Do not jinx it. You are good at that."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.жрачка Їжа буде. Дах — уже є.",
+  "en": "^cozy.жрачка Food will come. The roof is already here."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.жрачка Ти навіть під дахом думаєш шлунком.",
+  "en": "^cozy.жрачка Even under a roof you think with your stomach."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.яйця Без яєць обійдемось. Тебе одного досить.",
+  "en": "^cozy.яйця We can do without eggs. You alone are plenty."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.яйця Гніздо — не про яйця. Про те, куди вертаєшся.",
+  "en": "^cozy.яйця A nest is not about eggs. It is where you come back to."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.наше Отже, наше.",
+  "en": "^cozy.наше So it is ours."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.наше Звикай. Тепер — наше.",
+  "en": "^cozy.наше Get used to it. Ours now."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.спати Не звикатиму. Але насолоджуся.",
+  "en": "^cozy.спати I will not get used to it. But I will enjoy it."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.спати Тоді спи. Тиша тобі личить.",
+  "en": "^cozy.спати Then sleep. Quiet suits you."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.злість Накопичуй тихо.",
+  "en": "^cozy.злість Store it quietly."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.злість Мовчазна злість — найкраща з твоїх.",
+  "en": "^cozy.злість Silent rage is the best kind you have."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.шматок Почекай. Вечеря для всіх.",
+  "en": "^cozy.шматок Wait. Supper is for everyone."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.шматок Перший шматок — тому, хто чекає мовчки. Тобто не тобі.",
+  "en": "^cozy.шматок The first piece goes to whoever waits quietly. So not you."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.слина Не капай на мене.",
+  "en": "^cozy.слина Do not drip on me."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.слина Потерпи. Вже скоро.",
+  "en": "^cozy.слина Hold on. Soon."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.курник Тепер вона добра. Як і ми.",
+  "en": "^cozy.курник Now it is good. Like us."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.курник А тепер — дім. Хоч і з тобою.",
+  "en": "^cozy.курник And now it is home. Even with you in it."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.дірява Залатали. Тепер не капає.",
+  "en": "^cozy.дірява We patched it. No more drips."
+ },
+ {
+  "who": "H",
+  "list": "хд_затишок_кінець",
+  "op": "add",
+  "uk": "^cozy.дірява Отож. А тепер сухо — цінуй.",
+  "en": "^cozy.дірява Exactly. And now it is dry, appreciate it."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей",
+  "op": "set",
+  "old": "^голова Голова, курва! Дай я понесу!",
+  "uk": "^trophy.голова Голова, курва! Дай я понесу!",
+  "en": "^trophy.голова A head, shit! Let me carry it!"
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей",
+  "op": "set",
+  "old": "^смердить Смердить дохлятиною. Мій улюблений запах, йо.",
+  "uk": "^trophy.смердить Смердить дохлятиною. Мій улюблений запах, йо.",
+  "en": "^trophy.смердить Stinks of carrion. My favourite smell, yo."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей",
+  "op": "set",
+  "old": "^рідкість Такий трофей не кожен день падає, шариш?",
+  "uk": "^trophy.рідкість Такий трофей не кожен день падає, шариш?",
+  "en": "^trophy.рідкість A trophy like that does not drop every day, get it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей",
+  "op": "set",
+  "old": "^бій_т Пам'ятаєш, як воно ревло? Аж кайфово було.",
+  "uk": "^trophy.бій Пам'ятаєш, як воно ревло? Аж кайфово було.",
+  "en": "^trophy.бій Remember how it roared? Felt fucking great."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей",
+  "op": "set",
+  "old": "^продати А його продати можна? За блискітки якісь?",
+  "uk": "^trophy.продати А його продати можна? За блискітки якісь?",
+  "en": "^trophy.продати Can we sell it? For some shinies?"
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей",
+  "op": "set",
+  "old": "^колекція Скільки там у нас уже тих голів, га?",
+  "uk": "^trophy.колекція Скільки там у нас уже тих голів, га?",
+  "en": "^trophy.колекція How many of those heads have we got now, huh?"
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^голова Вона важча за тебе.",
+  "uk": "^trophy.голова>trophy.важка Вона важча за тебе.",
+  "en": "^trophy.голова>trophy.важка It is heavier than you."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^голова Понесе {name}. Ти — подивишся.",
+  "uk": "~1 ^trophy.голова>trophy.важка Ти її не піднімеш. Вона важча за тебе разом із гонором.",
+  "en": "~1 ^trophy.голова>trophy.важка You cannot lift it. It outweighs you, ego included."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^смердить Твій улюблений запах — будь-який, аби з м'ясом.",
+  "uk": "^trophy.голова>trophy.несе Понесе {name}. Ти — подивишся.",
+  "en": "^trophy.голова>trophy.несе {name} carries it. You watch."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^смердить Смердить. Тому й несемо додому, а не тримаємо в сумці.",
+  "uk": "~3 ^trophy.голова>trophy.несе Понесе {name}. А ти йди поруч, як почесна варта.",
+  "en": "~3 ^trophy.голова>trophy.несе {name} carries it. You walk alongside, as the guard of honour."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^рідкість Тому його треба берегти.",
+  "uk": "^trophy.смердить>trophy.мясо Твій улюблений запах — будь-який, аби з м'ясом.",
+  "en": "^trophy.смердить>trophy.мясо Your favourite smell is any smell, as long as there is meat in it."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^рідкість Не кожен. Тому ми й пишаємося.",
+  "uk": "~1 ^trophy.смердить>trophy.мясо Знаю. Тобі все смачне, що здохло.",
+  "en": "~1 ^trophy.смердить>trophy.мясо I know. Anything dead is tasty to you."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^бій_т Пам'ятаю. Ти ревів голосніше.",
+  "uk": "^trophy.смердить>trophy.додому Смердить. Тому й несемо додому, а не тримаємо в сумці.",
+  "en": "^trophy.смердить>trophy.додому It stinks. That is why it goes home and not in the bag."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^бій_т Пам'ятаю. Тепер тихо.",
+  "uk": "~23 ^trophy.смердить>trophy.додому Смердить. Хай смердить на стіні, а не в нас під дзьобом.",
+  "en": "~23 ^trophy.смердить>trophy.додому It stinks. Let it stink on the wall, not under our beaks."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^продати Трофеї не продають. Їх вішають.",
+  "uk": "^trophy.рідкість>trophy.берегти Тому його треба берегти.",
+  "en": "^trophy.рідкість>trophy.берегти That is why it needs keeping safe."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^продати Можна. Але соромно.",
+  "uk": "~1 ^trophy.рідкість>trophy.берегти Шарю. Тому не лізь до нього дзьобом.",
+  "en": "~1 ^trophy.рідкість>trophy.берегти I get it. So keep your beak off it."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^колекція Достатньо, щоб гості боялися.",
+  "uk": "^trophy.рідкість>trophy.пишаємось Не кожен. Тому ми й пишаємося.",
+  "en": "^trophy.рідкість>trophy.пишаємось Not every day. That is why we are proud."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "set",
+  "old": "^колекція Не рахував. Але стіна наповнюється.",
+  "uk": "~3 ^trophy.рідкість>trophy.пишаємось Не кожен. Сьогодні — наш день, Муніне.",
+  "en": "~3 ^trophy.рідкість>trophy.пишаємось Not every day. Today is our day, Munin."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "^trophy.бій>trophy.ревів Пам'ятаю. Ти ревів голосніше.",
+  "en": "^trophy.бій>trophy.ревів I remember. You roared louder."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "~1 ^trophy.бій>trophy.ревів Пам'ятаю. Ти тоді верещав мені у вухо.",
+  "en": "~1 ^trophy.бій>trophy.ревів I remember. You were screeching in my ear."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "^trophy.бій>trophy.тихо Пам'ятаю. Тепер тихо.",
+  "en": "^trophy.бій>trophy.тихо I remember. Quiet now."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "~23 ^trophy.бій>trophy.тихо Пам'ятаю. Тепер воно мовчить, а ти — ні.",
+  "en": "~23 ^trophy.бій>trophy.тихо I remember. Now it is silent, and you are not."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "^trophy.продати>trophy.вішають Трофеї не продають. Їх вішають.",
+  "en": "^trophy.продати>trophy.вішають Trophies are not sold. They are hung."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "~23 ^trophy.продати>trophy.вішають Ні. Його вішають на стіну, щоб усі бачили.",
+  "en": "~23 ^trophy.продати>trophy.вішають No. It goes on the wall, for everyone to see."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "^trophy.продати>trophy.соромно Можна. Але соромно.",
+  "en": "^trophy.продати>trophy.соромно We could. But it is shameful."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "~1 ^trophy.продати>trophy.соромно Можна. Якщо не маєш честі. Ти ж не маєш.",
+  "en": "~1 ^trophy.продати>trophy.соромно We could. If you have no honour. And you have none."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "^trophy.колекція>trophy.гості Достатньо, щоб гості боялися.",
+  "en": "^trophy.колекція>trophy.гості Enough to scare the guests."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "~23 ^trophy.колекція>trophy.гості Досить, щоб у хату заходили тихо.",
+  "en": "~23 ^trophy.колекція>trophy.гості Enough that people walk into the house quietly."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "^trophy.колекція>trophy.мало Не рахував. Але стіна наповнюється.",
+  "en": "^trophy.колекція>trophy.мало Have not counted. But the wall is filling up."
+ },
+ {
+  "who": "H",
+  "list": "хд_трофей",
+  "op": "add",
+  "uk": "~1 ^trophy.колекція>trophy.мало Більше, ніж ти вмієш рахувати.",
+  "en": "~1 ^trophy.колекція>trophy.мало More than you can count."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "set",
+  "old": "^голова Тоді хоч очі видзьобаю. Шо, теж не можна?",
+  "uk": "^trophy.важка Важча? Я й не таке тягав, бля.",
+  "en": "^trophy.важка Heavier? I have hauled worse, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "set",
+  "old": "^смердить То несім додому — і на стіну, нахуй.",
+  "uk": "^trophy.важка То я хоч очі видзьобаю. Вони легкі.",
+  "en": "^trophy.важка Then I will at least peck out the eyes. They are light."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "set",
+  "old": "^рідкість Берегти — то я вмію. Дзьобом по рилу, хто підійде.",
+  "uk": "^trophy.несе Тоді хоч очі видзьобаю. Шо, теж не можна?",
+  "en": "^trophy.несе Then I will at least peck out the eyes. What, not that either?"
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "set",
+  "old": "^бій_т Ревло гарно. Шкода, шо заткнулось.",
+  "uk": "^trophy.несе Ну й добре. Хай {name} надривається.",
+  "en": "^trophy.несе Fine. Let {name} break their back."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "set",
+  "old": "^продати Соромно — то для лохів.",
+  "uk": "^trophy.мясо А шо, м'ясо — то святе.",
+  "en": "^trophy.мясо So what, meat is sacred."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "set",
+  "old": "^колекція Мало. Треба ше. Дохуя треба.",
+  "uk": "^trophy.мясо Ну. Нюх у мене чесний.",
+  "en": "^trophy.мясо Yeah. My nose is honest."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.додому То несім додому — і на стіну, нахуй.",
+  "en": "^trophy.додому Then carry it home and onto the wall, fuck it."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.додому Додому, так. Хай там усі нюхають.",
+  "en": "^trophy.додому Home, yeah. Let everyone there get a whiff."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.берегти Берегти — то я вмію. Дзьобом по рилу, хто підійде.",
+  "en": "^trophy.берегти Keeping it safe I can do. Beak to the snout of anyone who comes near."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.берегти Та я ж тіко глянуть. Одним оком.",
+  "en": "^trophy.берегти I just want a look. One eye."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.пишаємось Пишаємось, бля! Хай усі бачать.",
+  "en": "^trophy.пишаємось Proud as fuck! Let everyone see."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.пишаємось Хоч раз ти правий, курва.",
+  "en": "^trophy.пишаємось For once you are right, damn it."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.ревів Бо я його перекрикував, бля. Тактика.",
+  "en": "^trophy.ревів Because I was outshouting it, fuck. Tactics."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.ревів Кричав, бо кайфував. Різниця є.",
+  "en": "^trophy.ревів I yelled because I was having fun. There is a difference."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.тихо Ревло гарно. Шкода, шо заткнулось.",
+  "en": "^trophy.тихо It roared nice. Pity it shut up."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.тихо Тихо — то нудно. Пішли ше кого знайдем.",
+  "en": "^trophy.тихо Quiet is boring. Let us go find someone else."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.вішають Вішають, бля. А блискітки хто мені дасть?",
+  "en": "^trophy.вішають Hung, fuck. And who gives me shinies?"
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.вішають Ну то на стіну. Але про блискітки я запам'ятав.",
+  "en": "^trophy.вішають Fine, on the wall. But I remember about the shinies."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.соромно Соромно — то для лохів.",
+  "en": "^trophy.соромно Shame is for suckers."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.соромно Честь у кишеню не покладеш, бля.",
+  "en": "^trophy.соромно You cannot put honour in your pocket, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.гості Хай бояться. Я їх ше й дзьобну.",
+  "en": "^trophy.гості Let them be scared. I will peck them too."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.гості Гості, бля. Які гості? До нас ніхто не ходить.",
+  "en": "^trophy.гості Guests, fuck. What guests? Nobody visits us."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.мало Мало. Треба ше. Дохуя треба.",
+  "en": "^trophy.мало Not enough. Need more. A fuckload more."
+ },
+ {
+  "who": "M",
+  "list": "мд_трофей_кінець",
+  "op": "add",
+  "uk": "^trophy.мало Рахувати — то твоє. Моє — валити.",
+  "en": "^trophy.мало Counting is your job. Mine is killing."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна",
+  "op": "set",
+  "old": "^стіна_т Ще одна голова на стіні. Зала слави росте.",
+  "uk": "^trophy_hang.стіна Ще одна голова на стіні. Зала слави росте.",
+  "en": "^trophy_hang.стіна Another head on the wall. The hall of glory grows."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна",
+  "op": "set",
+  "old": "^погляд_т Він дивиться на нас мертвими очима.",
+  "uk": "^trophy_hang.погляд Голова дивиться на нас мертвими очима.",
+  "en": "^trophy_hang.погляд The head is looking at us with dead eyes."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна",
+  "op": "set",
+  "old": "^криво Висить трохи криво. Чи то мені здається?",
+  "uk": "^trophy_hang.криво Висить трохи криво. Чи то мені здається?",
+  "en": "^trophy_hang.криво It hangs a bit crooked. Or is it just me?"
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна",
+  "op": "set",
+  "old": "^гості Гості побачать — злякаються.",
+  "uk": "^trophy_hang.гості Гості побачать — злякаються.",
+  "en": "^trophy_hang.гості Guests will see it and get scared."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна",
+  "op": "set",
+  "old": "^сісти Можна було б сісти на той трофей. Як на жердину.",
+  "uk": "^trophy_hang.сісти Можна було б сісти на той трофей. Як на жердину.",
+  "en": "^trophy_hang.сісти One could sit on that trophy. Like a perch."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна",
+  "op": "set",
+  "old": "^історія_т Кожен трофей — історія. Цю я розповідатиму довго.",
+  "uk": "^trophy_hang.історія Кожен трофей — історія. Цю я розповідатиму довго.",
+  "en": "^trophy_hang.історія Every trophy is a story. I will be telling this one for a long time."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^стіна_т Росте, бля. Скоро й мене тут повісять.",
+  "uk": "^trophy_hang.стіна>trophy_hang.повісять Росте, бля. Скоро й мене тут повісять.",
+  "en": "^trophy_hang.стіна>trophy_hang.повісять Growing, fuck. Soon they will hang me here too."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^стіна_т Висить як треба. Бойовий інтер'єр, ги.",
+  "uk": "~1 ^trophy_hang.стіна>trophy_hang.повісять Росте. Ше трохи — і тебе поряд почеплять, ботан.",
+  "en": "~1 ^trophy_hang.стіна>trophy_hang.повісять Growing. A bit more and they will hang you next to it, nerd."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^погляд_т Хай дивиться. Я теж дивлюсь. Хто перший кліпне, га?",
+  "uk": "^trophy_hang.стіна>trophy_hang.гордість Висить як треба. Бойовий інтер'єр, ги.",
+  "en": "^trophy_hang.стіна>trophy_hang.гордість Hangs just right. Battle decor, heh."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^погляд_т Мертві очі — найкращі. Не кліпають, не пиздять.",
+  "uk": "~3 ^trophy_hang.стіна>trophy_hang.гордість Росте, бля. Аж гордість бере, чесно.",
+  "en": "~3 ^trophy_hang.стіна>trophy_hang.гордість Growing, fuck. Makes me proud, honestly."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^криво Криво. Як і все тут, курва.",
+  "uk": "^trophy_hang.погляд>trophy_hang.гляділки Хай дивиться. Я теж дивлюсь. Хто перший кліпне, га?",
+  "en": "^trophy_hang.погляд>trophy_hang.гляділки Let it look. I am looking too. Who blinks first, huh?"
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^криво Тобі здається. Око в тебе вже того, втомилось.",
+  "uk": "~1 ^trophy_hang.погляд>trophy_hang.гляділки Хай витріщається. Я її в гляділки пережену.",
+  "en": "~1 ^trophy_hang.погляд>trophy_hang.гляділки Let it stare. I will win the staring contest."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^гості І правильно. Хай знають, з ким мають діло.",
+  "uk": "^trophy_hang.погляд>trophy_hang.мертві Мертві очі — найкращі. Не кліпають, не пиздять.",
+  "en": "^trophy_hang.погляд>trophy_hang.мертві Dead eyes are the best. They do not blink, they do not yap."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^гості Які гості? До нас ніхто не ходить, бо ми — це ми.",
+  "uk": "~23 ^trophy_hang.погляд>trophy_hang.мертві Мертві очі — спокійні очі. Не те шо твої, бля.",
+  "en": "~23 ^trophy_hang.погляд>trophy_hang.мертві Dead eyes are calm eyes. Not like yours, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^сісти Сідай-сідай. Подивлюсь, як ти гепнешся.",
+  "uk": "^trophy_hang.криво>trophy_hang.криве Криво. Як і все тут, курва.",
+  "en": "^trophy_hang.криво>trophy_hang.криве Crooked. Like everything here, shit."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^сісти Я перший сяду. Я ж його валив.",
+  "uk": "~23 ^trophy_hang.криво>trophy_hang.криве Криво, бля. Але по-нашому.",
+  "en": "~23 ^trophy_hang.криво>trophy_hang.криве Crooked, fuck. But our way."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^історія_т Тіко коротко. Я все одно засну на другому слові.",
+  "uk": "^trophy_hang.криво>trophy_hang.здається Тобі здається. Око в тебе вже того, втомилось.",
+  "en": "^trophy_hang.криво>trophy_hang.здається It is just you. Your eye is worn out."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "set",
+  "old": "^історія_т Розповідай. Але головний там я, ясно?",
+  "uk": "~1 ^trophy_hang.криво>trophy_hang.здається Здається тобі. Менше думай, бля.",
+  "en": "~1 ^trophy_hang.криво>trophy_hang.здається You are imagining it. Think less, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "^trophy_hang.гості>trophy_hang.правильно І правильно. Хай знають, з ким мають діло.",
+  "en": "^trophy_hang.гості>trophy_hang.правильно Good. Let them know who they are dealing with."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "~1 ^trophy_hang.гості>trophy_hang.правильно Хай лякаються, бля. Менше зжеруть.",
+  "en": "~1 ^trophy_hang.гості>trophy_hang.правильно Let them be scared, fuck. They will eat less."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "^trophy_hang.гості>trophy_hang.ніхто Які гості? До нас ніхто не ходить, бо ми — це ми.",
+  "en": "^trophy_hang.гості>trophy_hang.ніхто What guests? Nobody visits us, because we are us."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "~23 ^trophy_hang.гості>trophy_hang.ніхто Гості, бля? Нас тіко лиси провідують.",
+  "en": "~23 ^trophy_hang.гості>trophy_hang.ніхто Guests, fuck? Only foxes drop by."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "^trophy_hang.сісти>trophy_hang.гепнешся Сідай-сідай. Подивлюсь, як ти гепнешся.",
+  "en": "^trophy_hang.сісти>trophy_hang.гепнешся Go on, sit. I will watch you fall on your ass."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "~1 ^trophy_hang.сісти>trophy_hang.гепнешся Сідай. Я ржать буду, як упадеш.",
+  "en": "~1 ^trophy_hang.сісти>trophy_hang.гепнешся Sit. I will laugh my head off when you fall."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "^trophy_hang.сісти>trophy_hang.валив Я перший сяду. Я ж його валив.",
+  "en": "^trophy_hang.сісти>trophy_hang.валив I sit first. I took it down."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "~1 ^trophy_hang.сісти>trophy_hang.валив Перший — я. Моя здобич, моя жердина.",
+  "en": "~1 ^trophy_hang.сісти>trophy_hang.валив Me first. My kill, my perch."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "^trophy_hang.історія>trophy_hang.коротко Тіко коротко. Я все одно засну на другому слові.",
+  "en": "^trophy_hang.історія>trophy_hang.коротко Keep it short. I will fall asleep on the second word anyway."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "~1 ^trophy_hang.історія>trophy_hang.коротко Довго? Я засну, бля, ше до середини.",
+  "en": "~1 ^trophy_hang.історія>trophy_hang.коротко Long? I will fall asleep before the middle, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "^trophy_hang.історія>trophy_hang.герой Розповідай. Але головний там я, ясно?",
+  "en": "^trophy_hang.історія>trophy_hang.герой Tell it. But I am the main hero, got it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_стіна",
+  "op": "add",
+  "uk": "~3 ^trophy_hang.історія>trophy_hang.герой Розповідай. Тіко шоб я там був гарний.",
+  "en": "~3 ^trophy_hang.історія>trophy_hang.герой Tell it. Just make me look good."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "set",
+  "old": "^стіна_т Хай росте. Місця на стінах ще досить.",
+  "uk": "^trophy_hang.повісять Нас не вішають. Нас годують.",
+  "en": "^trophy_hang.повісять Ravens are not hung. Ravens are fed."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "set",
+  "old": "^погляд_т Моторошно, але гарно.",
+  "uk": "^trophy_hang.повісять Не мрій. Стіна — для тих, хто не вміє літати.",
+  "en": "^trophy_hang.повісять Do not dream. The wall is for those who cannot fly."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "set",
+  "old": "^криво Хай так. Головне — висить.",
+  "uk": "^trophy_hang.гордість Хай росте. Місця на стінах ще досить.",
+  "en": "^trophy_hang.гордість Let it grow. There is room on the walls yet."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "set",
+  "old": "^гості Може, ще прийдуть. Побачать — запам'ятають.",
+  "uk": "^trophy_hang.гордість Отож. Найкращі прикраси — чесно здобуті.",
+  "en": "^trophy_hang.гордість Exactly. The best decorations are honestly won."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "set",
+  "old": "^сісти Сяду пізніше. Коли ти не бачитимеш.",
+  "uk": "^trophy_hang.гляділки Вона не кліпне. А ти — вже.",
+  "en": "^trophy_hang.гляділки It will not blink. You already did."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "set",
+  "old": "^історія_т Розповім. По-своєму.",
+  "uk": "^trophy_hang.гляділки Програєш. Мертві терплячі.",
+  "en": "^trophy_hang.гляділки You will lose. The dead are patient."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.мертві Моторошно, але правда.",
+  "en": "^trophy_hang.мертві Creepy, but true."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.мертві Не базікають — уже краще за деяких.",
+  "en": "^trophy_hang.мертві They do not chatter. Already better than some."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.криве Хай так. Головне — висить.",
+  "en": "^trophy_hang.криве Fine. What matters is it hangs."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.криве Все тут криве, крім мене.",
+  "en": "^trophy_hang.криве Everything here is crooked except me."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.здається Тоді криво висить моє око. Утішив.",
+  "en": "^trophy_hang.здається Then it is my eye that hangs crooked. Comforting."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.здається Моє око бачить те, чого твоє не шукає.",
+  "en": "^trophy_hang.здається My eye sees what yours does not look for."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.правильно З такою стіною й ти не потрібен.",
+  "en": "^trophy_hang.правильно With a wall like that, even you are not needed."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.правильно Хай знають. Тільки ти не лякай їх зайвий раз.",
+  "en": "^trophy_hang.правильно Let them know. Just do not scare them more than needed."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.ніхто Може, ще прийдуть. Побачать — запам'ятають.",
+  "en": "^trophy_hang.ніхто Maybe some will come. They will see it and remember."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.ніхто Тоді стіна — для нас. Теж непогано.",
+  "en": "^trophy_hang.ніхто Then the wall is for us. Not bad either."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.гепнешся Сяду пізніше. Коли ти не бачитимеш.",
+  "en": "^trophy_hang.гепнешся I will sit later. When you are not looking."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.гепнешся Не гепнусь. Я ж не ти.",
+  "en": "^trophy_hang.гепнешся I will not fall. I am not you."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.валив Валив {name}. Ти — кричав.",
+  "en": "^trophy_hang.валив {name} took it down. You shouted."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.валив Сідай. Тільки не кажи, що валив ти.",
+  "en": "^trophy_hang.валив Sit. Just do not claim you took it down."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.коротко Засинай. Розповім без тебе.",
+  "en": "^trophy_hang.коротко Fall asleep. I will tell it without you."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.коротко На другому? Ти й першого не дослухаєш.",
+  "en": "^trophy_hang.коротко The second word? You will not even hear out the first."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.герой Розповім. По-своєму.",
+  "en": "^trophy_hang.герой I will tell it. My way."
+ },
+ {
+  "who": "H",
+  "list": "хд_стіна_кінець",
+  "op": "add",
+  "uk": "^trophy_hang.герой Будеш. У ролі найгучнішого.",
+  "en": "^trophy_hang.герой You will be. As the loudest one."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок",
+  "op": "set",
+  "old": "^рип Рип-рип, рип-рип. Цей візок мене доконає, бля.",
+  "uk": "^cart.рип Рип-рип, рип-рип. Цей візок мене доконає, бля.",
+  "en": "^cart.рип Creak-creak, creak-creak. This cart will finish me off, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок",
+  "op": "set",
+  "old": "^важко_в Шо ми там везем? Пів гори, нахуй?",
+  "uk": "^cart.важко Шо ми там везем? Пів гори, нахуй?",
+  "en": "^cart.важко What are we hauling? Half a fucking mountain?"
+ },
+ {
+  "who": "M",
+  "list": "мд_візок",
+  "op": "set",
+  "old": "^колесо Колесо хитається. Відвалиться, от побачиш. Сто пудів.",
+  "uk": "^cart.колесо Колесо хитається. Відвалиться, от побачиш. Сто пудів.",
+  "en": "^cart.колесо The wheel is wobbling. It will fall off, you will see. Hundred percent."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок",
+  "op": "set",
+  "old": "^дорога_в Дорога — ніби троль по ній срав. Ями, каміння.",
+  "uk": "^cart.дорога Дорога — ніби троль по ній срав. Ями, каміння.",
+  "en": "^cart.дорога The road looks like a troll shat on it. Holes, rocks."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок",
+  "op": "set",
+  "old": "^кінь Глянь на {name} — чистий кінь. Тіко без хвоста.",
+  "uk": "^cart.кінь Глянь на {name} — чистий кінь. Тіко без хвоста.",
+  "en": "^cart.кінь Look at {name}, a proper horse. Just no tail."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок",
+  "op": "set",
+  "old": "^сісти_в А можна я на візок сяду? Він же, бля, їде.",
+  "uk": "^cart.сісти А можна я на візок сяду? Він же, бля, їде.",
+  "en": "^cart.сісти Can I sit on the cart? It is fucking moving, after all."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^рип Змастити б колеса.",
+  "uk": "^cart.рип>cart.змастити Змастити б колеса.",
+  "en": "^cart.рип>cart.змастити The wheels could use grease."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^рип Терпи. Він везе, а не співає.",
+  "uk": "~1 ^cart.рип>cart.змастити Змастити б колеса. І тебе заодно, щоб не рипів.",
+  "en": "~1 ^cart.рип>cart.змастити The wheels need grease. So do you, to stop the creaking."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^важко_в Руду. Наше майбутнє.",
+  "uk": "^cart.рип>cart.терпи Терпи. Він везе, а не співає.",
+  "en": "^cart.рип>cart.терпи Bear it. It hauls, it does not sing."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^важко_в Все, що {name} не захоті{в|ла} лишити.",
+  "uk": "~23 ^cart.рип>cart.терпи Терпи. Він хоч рипить по ділу.",
+  "en": "~23 ^cart.рип>cart.терпи Bear it. At least its creaking is useful."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^колесо Не накаркай.",
+  "uk": "^cart.важко>cart.руда Руду. Наше майбутнє.",
+  "en": "^cart.важко>cart.руда Ore. Our future."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^колесо Не відвалиться. {name} його добре стави{в|ла}.",
+  "uk": "~23 ^cart.важко>cart.руда Руду. Без неї ні мечів, ні тобі нових пазурів.",
+  "en": "~23 ^cart.важко>cart.руда Ore. Without it no swords, and no new claws for you."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^дорога_в Тому й повільно.",
+  "uk": "^cart.важко>cart.все Все, що {name} не захоті{в|ла} лишити.",
+  "en": "^cart.важко>cart.все Everything {name} did not want to leave behind."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^дорога_в Іншої дороги нема.",
+  "uk": "~1 ^cart.важко>cart.все Все підряд. {name} нічого не викидає.",
+  "en": "~1 ^cart.важко>cart.все Everything. {name} throws nothing away."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^кінь Не ображай. Працює ж.",
+  "uk": "^cart.колесо>cart.накаркай Не накаркай.",
+  "en": "^cart.колесо>cart.накаркай Do not jinx it."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^кінь Кінь би краще впорався.",
+  "uk": "~3 ^cart.колесо>cart.накаркай Не накаркай. Ти ж ворон, у тебе збувається.",
+  "en": "~3 ^cart.колесо>cart.накаркай Do not jinx it. You are a raven, yours come true."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^сісти_в Сідай. Тільки не бурчи.",
+  "uk": "^cart.колесо>cart.ставив Не відвалиться. {name} його добре стави{в|ла}.",
+  "en": "^cart.колесо>cart.ставив It will not fall off. {name} fitted it well."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "set",
+  "old": "^сісти_в Ти й так на плечі. Яка різниця?",
+  "uk": "~1 ^cart.колесо>cart.ставив Не відвалиться. {name} ставить краще, ніж ти віщуєш.",
+  "en": "~1 ^cart.колесо>cart.ставив It will not. {name} fits wheels better than you prophesy."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "^cart.дорога>cart.повільно Тому й повільно.",
+  "en": "^cart.дорога>cart.повільно That is why it is slow."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "~1 ^cart.дорога>cart.повільно Тому й повільно. Не підганяй.",
+  "en": "~1 ^cart.дорога>cart.повільно That is why it is slow. Do not rush us."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "^cart.дорога>cart.нема Іншої дороги нема.",
+  "en": "^cart.дорога>cart.нема There is no other road."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "~23 ^cart.дорога>cart.нема Іншої нема. Хіба прокладеш свою. Крилами.",
+  "en": "~23 ^cart.дорога>cart.нема There is no other. Unless you lay your own. With your wings."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "^cart.кінь>cart.ображай Не ображай. Працює ж.",
+  "en": "^cart.кінь>cart.ображай Do not insult. They are working, after all."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "~23 ^cart.кінь>cart.ображай Не ображай. Цей кінь і тебе везе.",
+  "en": "~23 ^cart.кінь>cart.ображай Do not insult. That horse carries you too."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "^cart.кінь>cart.кінь_краще Кінь би краще впорався.",
+  "en": "^cart.кінь>cart.кінь_краще A horse would do better."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "~1 ^cart.кінь>cart.кінь_краще Кінь би впорався краще. І не слухав би тебе.",
+  "en": "~1 ^cart.кінь>cart.кінь_краще A horse would do better. And would not have to listen to you."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "^cart.сісти>cart.сідай Сідай. Тільки не бурчи.",
+  "en": "^cart.сісти>cart.сідай Sit. Just do not grumble."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "~3 ^cart.сісти>cart.сідай Сідай. Тільки тримайся, а то на ямі злетиш.",
+  "en": "~3 ^cart.сісти>cart.сідай Sit. Just hold on, or a pothole will launch you."
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "^cart.сісти>cart.плече Ти й так на плечі. Яка різниця?",
+  "en": "^cart.сісти>cart.плече You are on the shoulder anyway. What is the difference?"
+ },
+ {
+  "who": "H",
+  "list": "хд_візок",
+  "op": "add",
+  "uk": "~1 ^cart.сісти>cart.плече Ти й так усе життя їдеш на чужих плечах.",
+  "en": "~1 ^cart.сісти>cart.плече You have ridden on other shoulders all your life."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "set",
+  "old": "^рип Змастити? Чим? Твоїми порадами, розумнику?",
+  "uk": "^cart.змастити Змастити? Чим? Твоїми порадами, розумнику?",
+  "en": "^cart.змастити Grease it? With what? Your advice, smartass?"
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "set",
+  "old": "^важко_в Важке в нас майбутнє, курва. Аж візок стогне.",
+  "uk": "^cart.змастити Мастило — то жир. А жир я жеру, а не мажу.",
+  "en": "^cart.змастити Grease is fat. And fat I eat, not smear."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "set",
+  "old": "^колесо Побачим. Я пильную, мені ж не похуй.",
+  "uk": "^cart.терпи Терплю. Але не мовчки, ясно?",
+  "en": "^cart.терпи I am bearing it. But not quietly, got it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "set",
+  "old": "^дорога_в Ну то я полечу. А ви собі повзіть.",
+  "uk": "^cart.терпи Хай би вже співав. Гірше не було б, бля.",
+  "en": "^cart.терпи It might as well sing. Could not be worse, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "set",
+  "old": "^кінь Та я не ображаю. Я хвалю. Як умію, бля.",
+  "uk": "^cart.руда Важке в нас майбутнє, курва. Аж візок стогне.",
+  "en": "^cart.руда Heavy fucking future. The cart is groaning."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "set",
+  "old": "^сісти_в Різниця — я на руді сиджу. Я багатий, ясно?",
+  "uk": "^cart.руда Руда, бля. Я думав, хоч шось смачне.",
+  "en": "^cart.руда Ore, fuck. I thought it was something tasty."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.все Барахольщик, бля. Як сорока.",
+  "en": "^cart.все A fucking hoarder. Like a magpie."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.все Хай. Я теж нічо не віддаю.",
+  "en": "^cart.все Fine. I do not give anything away either."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.накаркай Каркаю, бо бачу. Різниця, бля.",
+  "en": "^cart.накаркай I caw because I see. There is a difference, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.накаркай Побачим. Я пильную, мені ж не похуй.",
+  "en": "^cart.накаркай We will see. I am watching, I give a shit."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.ставив Ну-ну. Я бачив, як воно ставилось.",
+  "en": "^cart.ставив Uh-huh. I saw how it was put on."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.ставив Ага. Як відвалиться — я перший скажу «казав же».",
+  "en": "^cart.ставив Yeah. When it falls off, I will be first to say I told you."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.повільно Повільно — то ше м'яко сказано. Повземо, бля.",
+  "en": "^cart.повільно Slow is putting it nicely. We are crawling, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.повільно Ну то я полечу. А ви собі повзіть.",
+  "en": "^cart.повільно Then I will fly. You lot keep crawling."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.нема Нема, бо ніхто не шукав.",
+  "en": "^cart.нема There is none because nobody looked."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.нема То хай троль прокладе. Він уже почав, ги.",
+  "en": "^cart.нема Then let the troll lay it. It has already started, heh."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.ображай Та я не ображаю. Я хвалю. Як умію, бля.",
+  "en": "^cart.ображай I am not insulting. I am praising. Best I can, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.ображай Везе, бо мусить. Я ж легенький.",
+  "en": "^cart.ображай Hauls because it has to. And I am light."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.кінь_краще То купим коня. Я на ньому їздитиму, бля.",
+  "en": "^cart.кінь_краще Then we buy a horse. I will ride it, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.кінь_краще Кінь би мене скинув. А {name} терпить.",
+  "en": "^cart.кінь_краще A horse would throw me off. {name} puts up with me."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.сідай Я не бурчу. Я коментую, ясно?",
+  "en": "^cart.сідай I am not grumbling. I am commentating, got it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.сідай Сів. Ох і трясе ж, курва.",
+  "en": "^cart.сідай Sat down. Shit, it shakes."
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.плече Різниця — я на руді сиджу. Я багатий, ясно?",
+  "en": "^cart.плече The difference is I sit on ore. I am rich, got it?"
+ },
+ {
+  "who": "M",
+  "list": "мд_візок_кінець",
+  "op": "add",
+  "uk": "^cart.плече На плечі трясе, а там ше гірше. Лишусь.",
+  "en": "^cart.плече The shoulder shakes, and there it is worse. I will stay."
+ },
+ {
+  "who": "H",
+  "list": "хд_город",
+  "op": "set",
+  "old": "^насіння Насіння в землі. Тепер — чекати.",
+  "uk": "^plant.насіння Насіння в землі. Тепер — чекати.",
+  "en": "^plant.насіння The seeds are in the ground. Now we wait."
+ },
+ {
+  "who": "H",
+  "list": "хд_город",
+  "op": "set",
+  "old": "^врожай Будемо з урожаєм. Якщо кабани не знайдуть.",
+  "uk": "^plant.врожай Будемо з урожаєм. Якщо кабани не знайдуть.",
+  "en": "^plant.врожай We will have a harvest. If the boars do not find it."
+ },
+ {
+  "who": "H",
+  "list": "хд_город",
+  "op": "set",
+  "old": "^руки_с Руки в землі — і {name} спокійн{ий|а}. Дивно.",
+  "uk": "^plant.руки Руки в землі — і {name} спокійн{ий|а}. Дивно.",
+  "en": "^plant.руки Hands in the dirt and {name} is calm. Strange."
+ },
+ {
+  "who": "H",
+  "list": "хд_город",
+  "op": "set",
+  "old": "^ягоди_с Посадили б ще ягід. Для нас.",
+  "uk": "^plant.ягоди Посадили б ще ягід. Для нас.",
+  "en": "^plant.ягоди Should plant more berries. For us."
+ },
+ {
+  "who": "H",
+  "list": "хд_город",
+  "op": "set",
+  "old": "^дощ_с Добре б дощ пройшов. Поливати не треба.",
+  "uk": "^plant.дощ Добре б дощ пройшов. Поливати не треба.",
+  "en": "^plant.дощ Rain would be nice. No need to water."
+ },
+ {
+  "who": "H",
+  "list": "хд_город",
+  "op": "set",
+  "old": "^кріт {name} у землі, як кріт. Тільки старанніший.",
+  "uk": "^plant.кріт {name} у землі, як кріт. Тільки старанніший.",
+  "en": "^plant.кріт {name} is in the dirt like a mole. Only more diligent."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^насіння Чекати, бля. Знову чекати. Заїбало чекати.",
+  "uk": "^plant.насіння>plant.чекати Чекати, бля. Знову чекати. Заїбало чекати.",
+  "en": "^plant.насіння>plant.чекати Wait, fuck. Wait again. Sick of fucking waiting."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^насіння А я те насіння подзьобаю, поки ніхто не бачить. Ги.",
+  "uk": "~23 ^plant.насіння>plant.чекати Чекати, курва. Ну хай. Я терплячий, як пень.",
+  "en": "~23 ^plant.насіння>plant.чекати Wait, shit. Fine. I am patient as a stump."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^врожай Кабанів я сам пожену. Пиздюлів їм дам.",
+  "uk": "^plant.насіння>plant.подзьобаю А я те насіння подзьобаю, поки ніхто не бачить. Ги.",
+  "en": "^plant.насіння>plant.подзьобаю And I will peck those seeds while nobody is looking. Heh."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^врожай Кабани знайдуть. Ці свині завжди знаходять, сука.",
+  "uk": "~1 ^plant.насіння>plant.подзьобаю Я його видзьобаю, бля. Нашо йому лежать.",
+  "en": "~1 ^plant.насіння>plant.подзьобаю I will peck it out, fuck. Why should it just lie there."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^руки_с Спокійн{ий|а}, бо нікого не валить. Отака хуйня.",
+  "uk": "^plant.врожай>plant.пожену Кабанів я сам пожену. Пиздюлів їм дам.",
+  "en": "^plant.врожай>plant.пожену I will chase the boars off myself. Kick their asses."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^руки_с Землю колупати заспокоює? Мене — нє, нахуй.",
+  "uk": "~3 ^plant.врожай>plant.пожену Хай тіко сунуться. Я за цю грядку кабана порву.",
+  "en": "~3 ^plant.врожай>plant.пожену Let them try. I will tear a boar apart for this bed."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^ягоди_с Для мене. А ти обійдешся, ботан.",
+  "uk": "^plant.врожай>plant.знайдуть Кабани знайдуть. Ці свині завжди знаходять, сука.",
+  "en": "^plant.врожай>plant.знайдуть The boars will find it. Those pigs always do, bitch."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^ягоди_с Ягоди — то тема. Хай чорниці садить.",
+  "uk": "~1 ^plant.врожай>plant.знайдуть Знайдуть, бля. Ше й нас зжеруть заодно.",
+  "en": "~1 ^plant.врожай>plant.знайдуть They will find it, fuck. And eat us too while they are at it."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^дощ_с Дощ — то мокро. Нахуя мені той дощ?",
+  "uk": "^plant.руки>plant.невалить Спокійн{ий|а}, бо нікого не валить. Отака хуйня.",
+  "en": "^plant.руки>plant.невалить Calm because {he is|she is} not killing anyone. Fucked up."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^дощ_с Та хай іде. Я під дах шмигну.",
+  "uk": "~23 ^plant.руки>plant.невалить Бо нема кого гасити. Нудно ж, бля.",
+  "en": "~23 ^plant.руки>plant.невалить Because there is nobody to smash. Boring, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^кріт Кріт хоч смачний. Я пробував.",
+  "uk": "^plant.руки>plant.колупати Землю колупати заспокоює? Мене — нє, нахуй.",
+  "en": "^plant.руки>plant.колупати Digging dirt calms you down? Not me, fuck no."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "set",
+  "old": "^кріт Кріт — то я малим. Не питай.",
+  "uk": "~1 ^plant.руки>plant.колупати Колупатись у багні? Мене від того тіко трясе.",
+  "en": "~1 ^plant.руки>plant.колупати Poking in the muck? It just makes me twitch."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "^plant.ягоди>plant.мені Для мене. А ти обійдешся, ботан.",
+  "en": "^plant.ягоди>plant.мені For me. You can do without, nerd."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "~1 ^plant.ягоди>plant.мені Ягоди — мої. Ти й так кислий.",
+  "en": "~1 ^plant.ягоди>plant.мені The berries are mine. You are sour enough already."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "^plant.ягоди>plant.чорниці Ягоди — то тема. Хай чорниці садить.",
+  "en": "^plant.ягоди>plant.чорниці Berries are a thing. Get blueberries planted."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "~3 ^plant.ягоди>plant.чорниці Ягоди — то діло. Малину хочу, чуєш?",
+  "en": "~3 ^plant.ягоди>plant.чорниці Berries are proper. I want raspberries, hear me?"
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "^plant.дощ>plant.мокро Дощ — то мокро. Нахуя мені той дощ?",
+  "en": "^plant.дощ>plant.мокро Rain is wet. What the fuck do I need rain for?"
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "~23 ^plant.дощ>plant.мокро Дощ, бля. Знов мокрий сидітиму.",
+  "en": "~23 ^plant.дощ>plant.мокро Rain, fuck. I will be sitting wet again."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "^plant.дощ>plant.дах Та хай іде. Я під дах шмигну.",
+  "en": "^plant.дощ>plant.дах Let it rain. I will dart under a roof."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "~1 ^plant.дощ>plant.дах Хай іде. Я під дах, а ви мокніть.",
+  "en": "~1 ^plant.дощ>plant.дах Let it rain. I go under the roof, you lot get soaked."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "^plant.кріт>plant.смачний Кріт хоч смачний. Я пробував.",
+  "en": "^plant.кріт>plant.смачний At least a mole is tasty. I have tried."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "~1 ^plant.кріт>plant.смачний Кріт, бля. Я кротів жер, між іншим.",
+  "en": "~1 ^plant.кріт>plant.смачний A mole, fuck. I have eaten moles, by the way."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "^plant.кріт>plant.малим Кріт — то я малим. Не питай.",
+  "en": "^plant.кріт>plant.малим The mole was me as a kid. Do not ask."
+ },
+ {
+  "who": "M",
+  "list": "мд_город",
+  "op": "add",
+  "uk": "~3 ^plant.кріт>plant.малим Я теж колись рив. Малим. Не смійся.",
+  "en": "~3 ^plant.кріт>plant.малим I used to dig too. As a kid. Do not laugh."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "set",
+  "old": "^насіння Чекатимемо. І пильнуватимемо.",
+  "uk": "^plant.чекати Чекатимемо. І пильнуватимемо.",
+  "en": "^plant.чекати We will wait. And keep watch."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "set",
+  "old": "^врожай Тоді пильнуймо разом.",
+  "uk": "^plant.чекати Терпіння — не твій талант. Вчися.",
+  "en": "^plant.чекати Patience is not your talent. Learn."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "set",
+  "old": "^руки_с Хай буде спокій. Хоч на грядці.",
+  "uk": "^plant.подзьобаю Я бачу. Завжди.",
+  "en": "^plant.подзьобаю I see. Always."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "set",
+  "old": "^ягоди_с Попросимо. Чемно.",
+  "uk": "^plant.подзьобаю Подзьобаєш — сам у грядку ляжеш.",
+  "en": "^plant.подзьобаю Peck them and you will end up in the bed yourself."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "set",
+  "old": "^дощ_с Дощ — для грядки, не для тебе.",
+  "uk": "^plant.пожену Тоді пильнуймо разом.",
+  "en": "^plant.пожену Then we keep watch together."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "set",
+  "old": "^кріт Кроти, ворони… Головне, що грядки є.",
+  "uk": "^plant.пожену Кабан більший за тебе разів у сто. Але вір у себе.",
+  "en": "^plant.пожену A boar is a hundred times bigger than you. But believe in yourself."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.знайдуть Не накаркай. Хоч раз.",
+  "en": "^plant.знайдуть Do not jinx it. Just once."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.знайдуть Тоді паркан. І ти на ньому — за опудало.",
+  "en": "^plant.знайдуть Then a fence. And you on it as the scarecrow."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.невалить Хай буде спокій. Хоч на грядці.",
+  "en": "^plant.невалить Let there be peace. At least in the garden."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.невалить Хоч хтось із нас уміє не валити.",
+  "en": "^plant.невалить At least one of us knows how not to kill."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.колупати Тебе й нічого не заспокоює. Крім їжі.",
+  "en": "^plant.колупати Nothing calms you. Except food."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.колупати Знаю. Тебе заспокоює тільки сон.",
+  "en": "^plant.колупати I know. Only sleep calms you."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.мені Ділитися не вмієш. Запишу.",
+  "en": "^plant.мені You cannot share. Noted."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.мені Тоді й пильнуй їх сам.",
+  "en": "^plant.мені Then guard them yourself."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.чорниці Попросимо. Чемно.",
+  "en": "^plant.чорниці We will ask. Politely."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.чорниці Скажу {name}. Від тебе.",
+  "en": "^plant.чорниці I will tell {name}. From you."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.мокро Дощ — для грядки, не для тебе.",
+  "en": "^plant.мокро The rain is for the garden, not for you."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.мокро Висохнеш. А грядка подякує.",
+  "en": "^plant.мокро You will dry. And the garden will thank you."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.дах Шмигай. Грядка без тебе впорається.",
+  "en": "^plant.дах Dart away. The garden will manage without you."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.дах Під дах — це ти швидкий.",
+  "en": "^plant.дах Under a roof, that you are quick at."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.смачний Не всі твої страви треба згадувати.",
+  "en": "^plant.смачний Not all your meals need mentioning."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.смачний Тоді не їж {name}. Попереджаю.",
+  "en": "^plant.смачний Then do not eat {name}. Fair warning."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.малим Мовчу. Але уявляю.",
+  "en": "^plant.малим I am silent. But I am picturing it."
+ },
+ {
+  "who": "H",
+  "list": "хд_город_кінець",
+  "op": "add",
+  "uk": "^plant.малим Не питаю. Але здогадуюсь.",
+  "en": "^plant.малим I am not asking. But I can guess."
+ }
+]

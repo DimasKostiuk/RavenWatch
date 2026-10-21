@@ -1,0 +1,18 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Вороняче дерево (горіле)
+note: Обвуглене дерево Попелястих земель: у тріщинах ще жевріє вогонь, на ланцюгах дзенькають рунні таблички
+use: tree
+id: voroniache_derevo_horile
+cost: Wood:1
+perday: 30
+part asset/Дерева/TreeAsh pos 0 3.7 0 rot 0 0 0 scale 4.2 4.2 4.2  # горіле дерево (Meshy), 8 м
+part @box:bowl pos 0 0.35 0 rot 0 0 0 scale 3.6 1 3.2  # зона «коріння» (E — змішати руни)
+part @box:top pos 0 3.4 0 rot 0 0 0 scale 1.7 4.8 1.7  # зона «верх»: стовбур (E — посадити / забрати воронів)
+part @seat pos -1.05 7.26 -0.2 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
+part @seat pos -0.6 7.24 -0.19 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
+part @seat pos 0.45 7.25 -0.16 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
+part fx/bow_projectile_fire pos 0.1 2.4 0.95 rot 0 0 0 scale 0.8 0.8 0.8  # вогник у тріщині стовбура
+part fx/bow_projectile_fire pos 0 4.12 0.46 rot 0 0 0 scale 0.6 0.6 0.6  # вогник вище
+part fx/bow_projectile_fire pos 1.6 1.18 0 rot 0 0 0 scale 0.7 0.7 0.7  # жар біля коріння
+part @light pos 0 2.7 1.2 rot 0 0 0 scale 10 1.6 0.2 tint FF6A20  # тепле світло жару
+part fx/MushroomSmokePuff pos 0 6.7 0 rot 0 0 0 scale 1 1 1 tint 4A4038  # легкий дим над кроною

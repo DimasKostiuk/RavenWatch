@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фрази воронів</title>
+<style>
+:root {
+  --bg: #14161b; --panel: #1c1f26; --card: #22262e; --line: #313642; --ink: #e4e6ea; --soft: #9aa3ad; --dim: #6b7380;
+  --hugin: #6ec1ff; --munin: #ff6a55; --gold: #e6c77c; --name: #d9c7a0; --edit: #2b3a2b; --warn: #ffb35a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 "Segoe UI", system-ui, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+header h1 { font-size: 17px; margin: 0 8px 0 0; color: var(--gold); font-weight: 600; }
+header label { color: var(--soft); font-size: 13px; display: flex; gap: 6px; align-items: center; }
+select, input[type=text], input[type=search] { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; font: inherit; font-size: 13px; }
+input[type=text] { width: 96px; }
+button { background: #2c323d; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+button:hover { border-color: var(--gold); }
+button.main { background: #3a3220; border-color: #6d5a2e; color: var(--gold); }
+.layout { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 54px); }
+nav { border-right: 1px solid var(--line); padding: 10px; overflow-y: auto; max-height: calc(100vh - 54px); position: sticky; top: 54px; }
+nav .grp { color: var(--gold); font-size: 13px; margin: 12px 4px 4px; text-transform: uppercase; letter-spacing: .04em; }
+nav a { display: block; color: var(--soft); text-decoration: none; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+nav a:hover, nav a.on { background: var(--card); color: var(--ink); }
+nav a .n { color: var(--dim); float: right; }
+main { padding: 14px 18px 60px; }
+.tag { background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin: 0 0 14px; padding: 12px 14px; }
+.tag h3 { margin: 0 0 4px; font-size: 15px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.tag h3 code { color: var(--gold); }
+.tag h3 .file { color: var(--dim); font-size: 12px; font-weight: normal; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.col h4 { margin: 6px 0; font-size: 13px; }
+.col.h h4 { color: var(--hugin); } .col.m h4 { color: var(--munin); }
+.samples { margin: 6px 0; padding: 0; list-style: none; }
+.samples li { padding: 4px 8px; border-left: 3px solid var(--line); margin: 3px 0; background: #1a1d23; border-radius: 0 6px 6px 0; }
+.col.h .samples li { border-left-color: #2f5d80; } .col.m .samples li { border-left-color: #803a30; }
+.samples li .ph { color: var(--warn); }
+.samples li .nm { color: var(--name); }
+.tpl { font: 12px/1.4 Consolas, monospace; color: var(--soft); margin: 4px 0; white-space: pre-wrap; }
+details { margin: 6px 0; }
+summary { cursor: pointer; color: var(--soft); font-size: 13px; }
+textarea { width: 100%; min-height: 90px; background: #15181d; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px; font: 12.5px/1.45 Consolas, monospace; resize: vertical; }
+textarea.changed { border-color: #5a8a3a; background: var(--edit); }
+.listname { color: var(--gold); font: 12px Consolas, monospace; margin-top: 8px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.talk { background: #191c22; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+.talk div { margin: 3px 0; }
+.talk .who-h { color: var(--hugin); font-weight: 600; } .talk .who-m { color: var(--munin); font-weight: 600; }
+.note { color: var(--dim); font-size: 12.5px; }
+#exportBox { position: fixed; inset: 8% 10%; background: var(--panel); border: 1px solid var(--gold); border-radius: 10px; padding: 14px; display: none; z-index: 10; flex-direction: column; gap: 8px; }
+#exportBox textarea { flex: 1; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } nav { position: static; max-height: 240px; border-right: 0; border-bottom: 1px solid var(--line); } .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Фрази воронів</h1>
+  <label>Пошук <input type="search" id="q" placeholder="тег, список або слово"></label>
+  <label>Довіра <select id="tier"><option value="1">1–3 (~1)</option><option value="2" selected>4–5 (~2)</option><option value="3">6–7 (~3)</option></select></label>
+  <label>Ти <select id="gMe"><option value="0">він</option><option value="1">вона</option></select> <input type="text" id="nMe" value="Костя"></label>
+  <label>Інш. <select id="gFr"><option value="0">він</option><option value="1">вона</option></select> <input type="text" id="nFr" value="Валя"></label>
+  <button class="main" id="again">Нові приклади</button>
+  <button id="export">Копіювати зміни <span id="nChanged"></span></button>
+  <span class="note" id="built"></span>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+<div id="exportBox">
+  <div class="row"><b style="color:var(--gold)">Твої зміни у форматі файлів фраз</b><span class="note">Скопіюй і надішли мені — я перенесу їх у код.</span>
+  <button id="copy">Копіювати</button><button id="reset">Скинути всі зміни</button><button id="close">Закрити</button></div>
+  <textarea id="exportText" readonly></textarea>
+</div>
+<script>
+const DATA = /*DATA*/null;
+const STORE = 'rw-phrasebook-v3';
+let edits = {};
+try { edits = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { edits = {}; }
+function saveEdits() { try { localStorage.setItem(STORE, JSON.stringify(edits)); } catch (e) {} updateCount(); }
+const R = { h: DATA.hugin, m: DATA.munin };
+function lists(r) { return R[r].lists; }
+function tpls(r) { return R[r].tpl; }
+function curList(r, name) { const k = r + '@' + name; return edits[k] ? edits[k].split('\n').map(s => s.trim()).filter(Boolean) : (lists(r)[name] || []); }
+function curTpl(r, tag) { const k = r + '[' + tag; return edits[k] ? edits[k].split('\n').map(s => s.trim()).filter(Boolean) : (tpls(r)[tag] || []); }
+
+// ---- groups
+const GROUPS = [
+  ['Про гравця, на якого дивишся', t => t.startsWith('about_')],
+  ['Розмови між гравцями', t => t.startsWith('x_')],
+  ['Прізвиська', t => t.startsWith('nick_')],
+  ['Розмови Хугіна й Муніна', t => t.startsWith('dlg_')],
+  ['Жердина', t => t.startsWith('perch')],
+  ['Думка: що бачить', t => t.startsWith('see_')],
+  ['З плеча', t => t.startsWith('sh_')],
+  ['Удари', t => /strike/.test(t)],
+  ['Накази й прогулянки', t => t.startsWith('order_') || t.startsWith('out_')],
+  ['Примхи й норов', t => t.startsWith('quirk_') || t.startsWith('char_') || t.startsWith('knack_')],
+  ['Пам\'ять', t => t.startsWith('mem_')],
+  ['Чужий ворон', t => t.startsWith('stranger')],
+  ['Світ', t => t.startsWith('world_')],
+  ['Дари: Крила, Обманка, Звір, Заслона', t => /^(hflight|hdecoy|beast|ward)/.test(t)],
+  ['Доручення Одіна', t => t.startsWith('errand_')],
+  ['Емоції гравця', t => t.startsWith('emote_')],
+  ['Де ти зараз', t => t.startsWith('here_') || t === 'afk'],
+  ['Знову те саме', t => /(^again_|_again$)/.test(t)],
+  ['Миті: руда, злам, приручення, мороз, отрута, вогонь', t => /^(portal_ore|broke|tame|freezing|poisoned|burning)$/.test(t)],
+  ['Усе інше', t => true],
+];
+const allTags = [];
+for (const r of ['h', 'm']) for (const t of R[r].order) if (!allTags.includes(t)) allTags.push(t);
+function groupOf(t) { for (const [n, f] of GROUPS) if (f(t)) return n; }
+
+// ---- the composer (as Patterns.cs: tone marks, optional parts, one level of nested lists, threads)
+const SWEARS = ['матюк', 'м_лайка', 'м_вигук', 'м_слівце'];
+let threadWant = null, threadGot = null, threadNext = null; // ^this>next: a chain moves the talk on
+function tier() { return document.getElementById('tier').value; }
+function toneOk(x) { const m = /^~(\d+) /.exec(x); return !m || m[1].includes(tier()); }
+function strip(x) { return x.replace(/^~\d+ /, ''); }
+// a template tried only N times in a hundred (%N), as in Patterns.Chance
+function chanceOk(x) { const m = /^%(\d+) /.exec(x); return !m || Math.random() * 100 < +m[1]; }
+function unchance(x) { return x.replace(/^%\d+ /, ''); }
+function takeThread(x) { if (!x.startsWith('^')) return [null, x]; const sp = x.indexOf(' '); return [x.slice(1, sp > 0 ? sp : undefined), sp > 0 ? x.slice(sp + 1).trim() : '']; }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+function nested(r, part) {
+  return part.replace(/\{([^{}]+)\}/g, (m, name) => {
+    const opt = name.endsWith('?'), bare = opt ? name.slice(0, -1) : name;
+    const l = curList(r, bare);
+    if (!l.length) return m;
+    if (opt && Math.random() >= (SWEARS.includes(bare) ? 0.75 : 0.5)) return '';
+    const fit = l.filter(toneOk).map(strip).filter(x => x.indexOf('{') < 0);
+    return fit.length ? pick(fit) : m;
+  });
+}
+function expand(r, template) {
+  return template.replace(/\{([^{}]+)\}/g, (m, name) => {
+    const opt = name.endsWith('?'), bare = opt ? name.slice(0, -1) : name;
+    const l = curList(r, bare);
+    if (!l.length) return m; // a placeholder
+    if (opt && Math.random() >= (SWEARS.includes(bare) ? 0.75 : 0.5)) return '';
+    const fit = [], loose = [], marks = new Map();
+    let threaded = false;
+    for (const raw of l) {
+      if (!toneOk(raw)) continue;
+      let [th, x] = takeThread(strip(raw));
+      x = nested(r, x);
+      if (th == null) { loose.push(x); continue; }
+      threaded = true;
+      // topic.point: answered by that point or by the bare topic (Patterns.Answers)
+      if (threadWant != null && !th.split('>')[0].split('|').some(a => a === threadWant || (threadWant.includes('.') && a === threadWant.slice(0, threadWant.indexOf('.'))))) continue;
+      fit.push(x); marks.set(x, th);
+    }
+    let use = threadWant == null ? fit.concat(loose) : (fit.length ? fit : (threaded ? [] : loose)); // mid-talk an unmarked line is never a fallback
+    if (!use.length) return opt ? '' : '⟨нічого не підійшло: ' + bare + '⟩';
+    const p = pick(use);
+    if (threadGot == null && marks.has(p)) { const mk = marks.get(p), a = mk.indexOf('>'); threadGot = (a < 0 ? mk : mk.slice(0, a)).split('|')[0]; if (a >= 0) threadNext = mk.slice(a + 1); }
+    return p;
+  });
+}
+function values(extra) {
+  const v = {
+    name: val('nMe'), friend: val('nFr'), raven: 'Шибеник', addr: 'Шибенику', me: 'Сивопер', kin: 'Мунін',
+    fraven: 'Смердюк', fraven_kin: 'Мунін', since: '12 днів тому', mboss: 'Кістянку', m_when: 'учора', helmet: 'Бронзовий шолом',
+    weapon: 'Залізний меч', nick: 'Тарганобій', boss: 'Ейктюр', boss_gen: 'Ейктюра', boss_ins: 'Ейктюром', food: 'Мед',
+    seen: 'Троль', target: 'Троль', seen_gen: 'Троля', seen_ins: 'Тролем', seen_count: '3', target_gen: 'Троля', target_ins: 'Тролем',
+    biome_here: 'Чорнолісся', biome_here_in: 'у Чорноліссі', from: 'Луки', from_in: 'на Луках', owner: 'Валя', gift: 'Думка',
+    trick: 'Свічку', coins: '10 монет', stranger: 'Олег',
+  };
+  return Object.assign(v, extra || {});
+}
+function val(id) { return document.getElementById(id).value || '…'; }
+function fill(text, extra, swapGender) {
+  const me = document.getElementById('gMe').value === '1', fr = document.getElementById('gFr').value === '1';
+  const own = swapGender ? fr : me, other = swapGender ? me : fr;
+  let t = text.replace(/\{>([^{}|]*)\|([^{}|]*)\}/g, (m, a, b) => other ? b : a).replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (m, a, b) => own ? b : a);
+  const v = values(extra);
+  if (swapGender) { const n = v.name; v.name = v.friend; v.friend = n; if (!(extra && extra.me)) v.me = v.fraven; } // the other side speaks: its raven is the one spoken of
+  t = t.replace(/\{([\wЀ-ӿ_]+)\}/g, (m, k) => v[k] != null ? '\u0001' + v[k] + '\u0002' : '\u0003' + m + '\u0004');
+  t = t.replace(/\s+/g, ' ').replace(/\s+([,.!?…:;])/g, '$1').trim();
+  t = t.replace(/([.!?…]\s+)([a-zа-яіїєґ'])/g, (m, a, b) => a + b.toUpperCase());
+  if (t.length) t = t[0].toUpperCase() + t.slice(1);
+  return esc(t).replace(/\u0001/g, '<span class="nm">').replace(/\u0002/g, '</span>').replace(/\u0003/g, '<span class="ph">').replace(/\u0004/g, '</span>');
+}
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function compose(r, tag, keepThread) {
+  const ts = curTpl(r, tag).filter(toneOk).map(strip).filter(chanceOk).map(unchance);
+  if (!ts.length) return null;
+  if (!keepThread) threadWant = null;
+  threadGot = null; threadNext = null;
+  return expand(r, pick(ts));
+}
+
+// ---- the page
+function render() {
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const nav = document.getElementById('nav'), main = document.getElementById('main');
+  nav.innerHTML = ''; main.innerHTML = '';
+  const byGroup = {};
+  for (const t of allTags) {
+    if (q && !matches(t, q)) continue;
+    (byGroup[groupOf(t)] = byGroup[groupOf(t)] || []).push(t);
+  }
+  for (const [g] of GROUPS) {
+    const list = byGroup[g];
+    if (!list) continue;
+    const h = document.createElement('div'); h.className = 'grp'; h.textContent = g; nav.appendChild(h);
+    for (const t of list) {
+      const a = document.createElement('a'); a.href = '#t-' + t; a.innerHTML = esc(t);
+      nav.appendChild(a);
+      main.appendChild(card(t));
+    }
+  }
+  if (!main.children.length) main.innerHTML = '<p class="note">Нічого не знайдено.</p>';
+}
+function matches(t, q) {
+  if (t.toLowerCase().includes(q)) return true;
+  for (const r of ['h', 'm']) {
+    for (const x of curTpl(r, t)) { if (x.toLowerCase().includes(q)) return true; for (const n of listsIn(x)) if (n.toLowerCase().includes(q) || curList(r, n).some(l => l.toLowerCase().includes(q))) return true; }
+  }
+  return false;
+}
+function listsIn(template) { const out = []; template.replace(/\{([^{}|]+)\}/g, (m, n) => { n = n.replace(/\?$/, ''); out.push(n); }); return out; }
+function card(t) {
+  const d = document.createElement('section'); d.className = 'tag'; d.id = 't-' + t;
+  const file = R.h.fileOf[t] || R.m.fileOf[t] || '';
+  d.innerHTML = '<h3><code>' + esc(t) + '</code><span class="file">' + esc(file) + '</span></h3>';
+  const cols = document.createElement('div'); cols.className = 'cols';
+  for (const r of ['h', 'm']) cols.appendChild(col(t, r));
+  d.appendChild(cols);
+  const row = document.createElement('div'); row.className = 'row';
+  if (t.startsWith('about_') && !t.startsWith('about_back_')) { const b = btn('Перепалка', () => spat(d, t)); row.appendChild(b); }
+  const xk = /^x_(\w+?)_open$/.exec(t);
+  if (xk) for (const n of [2, 3, 4]) row.appendChild(btn('Зіграти: ' + n + ' ворони', () => scene(d, xk[1], n)));
+  if (row.children.length) d.appendChild(row);
+  return d;
+}
+function btn(text, f) { const b = document.createElement('button'); b.textContent = text; b.onclick = f; return b; }
+function col(t, r) {
+  const c = document.createElement('div'); c.className = 'col ' + r;
+  const ts = curTpl(r, t);
+  c.innerHTML = '<h4>' + (r === 'h' ? 'Хугін' : 'Мунін') + (ts.length ? '' : ' — нема') + '</h4>';
+  if (!ts.length) return c;
+  const ul = document.createElement('ul'); ul.className = 'samples';
+  // four different ones (as the game avoids saying the same again soon), tried a few times each
+  const got = new Set();
+  for (let tries = 0; tries < 40 && got.size < 4; tries++) {
+    const s = compose(r, t);
+    if (s == null) break;
+    const html = fill(s, null, t.startsWith('about_back_'));
+    if (got.has(html)) continue;
+    got.add(html);
+    const li = document.createElement('li'); li.innerHTML = html; ul.appendChild(li);
+  }
+  if (!got.size) { const li = document.createElement('li'); li.innerHTML = '<span class="note">нема для цього рівня довіри</span>'; ul.appendChild(li); }
+  c.appendChild(ul);
+  const n = coreCount(r, t);
+  if (n) { const note = document.createElement('div'); note.className = 'note'; note.textContent = 'основних рядків для цього рівня довіри: ' + n.fit + ' з ' + n.all + (n.fit < 5 ? ' — тонко' : ''); c.appendChild(note); }
+  const det = document.createElement('details');
+  det.innerHTML = '<summary>Шаблони і частини (редагувати)</summary>';
+  det.appendChild(editor(r, '[' + t, ts.join('\n'), 'шаблони [' + t + ']', () => (tpls(r)[t] || []).join('\n')));
+  const seen = new Set();
+  for (const x of ts) for (const n of listsIn(x)) {
+    if (seen.has(n) || !lists(r)[n] && !edits[r + '@' + n]) continue;
+    seen.add(n);
+    det.appendChild(editor(r, '@' + n, curList(r, n).join('\n'), '@' + n, () => (lists(r)[n] || []).join('\n')));
+  }
+  c.appendChild(det);
+  return c;
+}
+// the main list of a template (its first part without "?"): how many of its lines this trust level may say
+function coreCount(r, t) {
+  const ts = curTpl(r, t);
+  if (!ts.length) return null;
+  let best = null;
+  for (const x of ts) { const m = /\{([^{}?|]+)\}/.exec(x.replace(/\{[^{}]*\?\}/g, '')); if (m && curList(r, m[1]).length) { best = m[1]; break; } }
+  if (!best) return null;
+  const l = curList(r, best);
+  return { all: l.length, fit: l.filter(toneOk).length };
+}
+function editor(r, key, text, label, original) {
+  const w = document.createElement('div');
+  w.innerHTML = '<div class="listname">' + esc(label) + '</div>';
+  const ta = document.createElement('textarea'); ta.value = text;
+  const k = r + key;
+  if (edits[k] != null) ta.classList.add('changed');
+  ta.oninput = () => {
+    if (ta.value.trim() === original().trim()) { delete edits[k]; ta.classList.remove('changed'); }
+    else { edits[k] = ta.value; ta.classList.add('changed'); }
+    saveEdits();
+  };
+  w.appendChild(ta);
+  return w;
+}
+
+// a thought and the answer of the other player's raven (AboutTalk): your raven, then theirs
+const BACK = { about_hurt: 'hurt', about_sleep: 'sleep', about_boss: 'boss', about_raven: 'raven', about_raven_gold: 'raven', about_raven_legend: 'raven', about_new: 'new',
+  about_pals: 'friend', about_known: 'friend', about_since: 'friend', about_helmet: 'helmet', about_nohelmet: 'helmet', about_axe: 'work', about_pick: 'work',
+  about_weapon: 'weapon', about_close: 'close', about_ship: 'ship', about_night: 'night', about_storm: 'night', about_envy: 'envy', about_youhit: 'hit', about_hityou: 'hit' };
+function spat(d, t) {
+  const box = talkBox(d);
+  for (const [a, b] of [['h', 'm'], ['m', 'h'], ['m', 'm'], ['h', 'h']]) {
+    const s1 = compose(a, t);
+    const back = 'about_back_' + (BACK[t] || 'any');
+    const s2 = compose(b, back) || compose(b, 'about_back_any');
+    if (!s1 || !s2) continue;
+    const theirs = b === 'h' ? 'Сивопер' : 'Смердюк'; // their raven, by its kind (in the game: its own nickname)
+    box.innerHTML += '<div><span class="who-' + a + '">' + (a === 'h' ? 'Хугін' : 'Мунін') + ' (' + esc(val('nMe')) + '):</span> ' + fill(s1, { fraven: theirs })
+      + '<br><span class="who-' + b + '">' + theirs + ' (' + esc(val('nFr')) + '):</span> ' + fill(s2, { me: theirs, addr: a === 'h' ? 'Хугіне' : 'Муніне', raven: a === 'h' ? 'Хугін' : 'Мунін' }, true) + '</div><hr style="border-color:var(--line)">';
+  }
+}
+// a talk between players' ravens (CrossTalk): open, reply, close, with the threads
+// a talk between players' ravens as the game plans it (CrossTalk.Plan): two ravens — open, answer, (last word);
+// three — and a third joins in on the thread and is answered; four — and a fourth joins in too
+const PEOPLE = () => [
+  { owner: val('nMe'), female: document.getElementById('gMe').value === '1' },
+  { owner: val('nFr'), female: document.getElementById('gFr').value === '1' },
+  { owner: 'Оля', female: true },
+  { owner: 'Тарас', female: false },
+];
+const NICKS = { h: ['Сивопер', 'Всезнайко', 'Мудрагель', 'Пушок'], m: ['Шибеник', 'Смердюк', 'Кусака', 'Батяр'] };
+const CALLS = { 'Сивопер': 'Сивопере', 'Всезнайко': 'Всезнайку', 'Мудрагель': 'Мудрагелю', 'Пушок': 'Пушку', 'Шибеник': 'Шибенику', 'Смердюк': 'Смердюче', 'Кусака': 'Кусако', 'Батяр': 'Батяре' };
+function chattyOf(kind) { return kind === 'fire' ? 0.75 : kind === 'intro' || kind === 'pals' ? 0.65 : 0.55; }
+function planOf(kind, n) {
+  const p = [{ who: 0, to: 1, tag: 'x_' + kind + '_open', chance: 1 }, { who: 1, to: 0, tag: 'x_' + kind + '_reply', chance: 1 }];
+  if (n >= 3) {
+    p.push({ who: 2, to: Math.random() < 0.5 ? 0 : 1, tag: 'x_' + kind + '_join', chance: 0.85 });
+    if (n >= 4) p.push({ who: 3, to: Math.random() < 0.5 ? 2 : (Math.random() < 0.5 ? 0 : 1), tag: 'x_' + kind + '_join', chance: 0.75 });
+    p.push({ who: Math.random() < 0.5 ? 0 : 1, to: -1, tag: 'x_join_reply', chance: chattyOf(kind) });
+  }
+  p.push({ who: 0, to: 1, tag: 'x_' + kind + '_close', chance: chattyOf(kind) });
+  return p;
+}
+function fillFor(text, sp, ad) {
+  let t = text.replace(/\{>([^{}|]*)\|([^{}|]*)\}/g, (m, x, y) => ad.female ? y : x).replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (m, x, y) => sp.female ? y : x);
+  const v = values({ name: sp.owner, friend: ad.owner, raven: ad.nick, addr: CALLS[ad.nick] || ad.nick, me: sp.nick, kin: ad.kind === 'h' ? 'Хугін' : 'Мунін' });
+  t = t.replace(/\{([\w\u0400-\u04FF_]+)\}/g, (m, k) => v[k] != null ? '\u0001' + v[k] + '\u0002' : '\u0003' + m + '\u0004');
+  t = t.replace(/\s+/g, ' ').replace(/\s+([,.!?…:;])/g, '$1').trim();
+  t = t.replace(/([.!?…]\s+)([a-zа-яіїєґ'])/g, (m, x, y) => x + y.toUpperCase());
+  if (t.length) t = t[0].toUpperCase() + t.slice(1);
+  return esc(t).replace(/\u0001/g, '<span class="nm">').replace(/\u0002/g, '</span>').replace(/\u0003/g, '<span class="ph">').replace(/\u0004/g, '</span>');
+}
+function scene(d, kind, n) {
+  const box = talkBox(d);
+  for (let run = 0; run < 3; run++) {
+    const people = PEOPLE();
+    const ravens = [];
+    for (let i = 0; i < n; i++) { const k = Math.random() < 0.5 ? 'h' : 'm'; ravens.push(Object.assign({ kind: k, nick: NICKS[k][i] }, people[i])); }
+    let html = '', thread = null, joined = -1; const said = [];
+    threadWant = null;
+    for (const st of planOf(kind, n)) {
+      const join = st.tag.endsWith('_join'), answer = st.tag === 'x_join_reply';
+      if (answer && joined < 0) continue;
+      if (Math.random() > st.chance) { if (join || answer) continue; break; }
+      const to = answer ? joined : st.to;
+      if (to === st.who) continue;
+      const sp = ravens[st.who], ad = ravens[to];
+      threadWant = thread; threadGot = null; threadNext = null;
+      const ts = curTpl(sp.kind, st.tag).filter(toneOk).map(strip).filter(chanceOk).map(unchance);
+      if (!ts.length) continue;
+      let line = expand(sp.kind, pick(ts));
+      for (let tries = 0; tries < 4 && said.includes(line); tries++) { threadGot = null; threadNext = null; line = expand(sp.kind, pick(ts)); } // as the game: not the same words twice in a talk
+      said.push(line);
+      if (threadNext != null) thread = threadNext; else if (thread == null && threadGot != null) thread = threadGot;
+      html += '<div><span class="who-' + sp.kind + '">' + sp.nick + ' (' + esc(sp.owner) + ')</span> <span class="note">→ ' + ad.nick + ':</span> ' + fillFor(line, sp, ad) + '</div>';
+      if (join) joined = st.who;
+    }
+    box.innerHTML += html + '<div class="note">тема: ' + esc(thread || '—') + '</div><hr style="border-color:var(--line)">';
+  }
+  threadWant = null;
+}
+function talkBox(d) {
+  let box = d.querySelector('.talk');
+  if (!box) { box = document.createElement('div'); box.className = 'talk'; d.appendChild(box); }
+  box.innerHTML = '';
+  return box;
+}
+
+// ---- the changes, in the phrase files' format
+function exportText() {
+  const out = [];
+  for (const r of ['h', 'm']) {
+    const mine = Object.keys(edits).filter(k => k[0] === r);
+    if (!mine.length) continue;
+    out.push('# ===== ' + (r === 'h' ? 'Хугін (hugin_patterns.txt)' : 'Мунін (munin_patterns.txt)'));
+    for (const k of mine) {
+      const key = k.slice(1);
+      if (key[0] === '[') { const tag = key.slice(1); for (const l of edits[k].split('\n').map(s => s.trim()).filter(Boolean)) out.push('[' + tag + '] ' + l); }
+      else { out.push(key); for (const l of edits[k].split('\n').map(s => s.trim()).filter(Boolean)) out.push(l); }
+      out.push('');
+    }
+  }
+  return out.length ? out.join('\n') : '(змін нема)';
+}
+function updateCount() { const n = Object.keys(edits).length; document.getElementById('nChanged').textContent = n ? '(' + n + ')' : ''; }
+
+document.getElementById('built').textContent = 'зібрано ' + DATA.built;
+document.getElementById('q').oninput = () => render();
+for (const id of ['tier', 'gMe', 'gFr', 'nMe', 'nFr']) document.getElementById(id).onchange = () => render();
+document.getElementById('again').onclick = () => render();
+document.getElementById('export').onclick = () => { document.getElementById('exportText').value = exportText(); document.getElementById('exportBox').style.display = 'flex'; };
+document.getElementById('close').onclick = () => { document.getElementById('exportBox').style.display = 'none'; };
+document.getElementById('copy').onclick = () => { const t = document.getElementById('exportText'); t.select(); navigator.clipboard ? navigator.clipboard.writeText(t.value) : document.execCommand('copy'); };
+document.getElementById('reset').onclick = () => { if (confirm('Скинути всі твої зміни?')) { edits = {}; saveEdits(); render(); document.getElementById('exportText').value = exportText(); } };
+updateCount();
+render();
+</script>
+</body>
+</html>

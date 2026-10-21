@@ -1,0 +1,6035 @@
+[
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^спогад Пам'ятаєш, Муніне, як ми вперше сіли на це плече?",
+  "uk": "^rest_a.плече Пам'ятаєш, Муніне, як ми вперше сіли на це плече?",
+  "en": "^rest_a.плече Remember, Munin, when we first sat on this shoulder?"
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^спогад Пам'ятаєш нашу першу зиму? Ти тоді майже змерз.",
+  "uk": "^rest_a.зима Пам'ятаєш нашу першу зиму? Ти тоді майже змерз.",
+  "en": "^rest_a.зима Remember our first winter? You nearly froze back then."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^вогонь Тепло. Можна й подрімати.",
+  "uk": "^rest_a.дрімати Тепло. Можна й подрімати.",
+  "en": "^rest_a.дрімати Warm. A good time for a nap."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^вогонь Колись Одін питав, що ми бачили. Сьогодні я б розповів про вогонь.",
+  "uk": "^rest_a.одін_питав Колись Одін питав, що ми бачили. Сьогодні я б розповів про вогонь.",
+  "en": "^rest_a.одін_питав Odin used to ask what we saw. Today I'd tell him about the fire."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "~1 ^дражню Не лізь до полум'я, Муніне, ти й так смажений на голову.",
+  "uk": "~1 ^rest_a.дражню Не лізь до полум'я, Муніне, ти й так смажений на голову.",
+  "en": "~1 ^rest_a.дражню Don't go near the flames, Munin, your head's fried enough already."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "~3 ^вогонь Знаєш, мені тут подобається. Не кажи нікому.",
+  "uk": "~3 ^rest_a.подобається Знаєш, мені тут подобається. Не кажи нікому.",
+  "en": "~3 ^rest_a.подобається You know, I like it here. Don't tell anyone."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^казка Розкажу тобі казку, Муніне. Жив собі ворон, і був він мудрий. Здогадайся, хто.",
+  "uk": "^rest_a.казка Розкажу тобі казку, Муніне. Жив собі ворон, і був він мудрий. Здогадайся, хто.",
+  "en": "^rest_a.казка I'll tell you a tale, Munin. Once there was a raven, and he was wise. Guess who."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^іскри Глянь, як іскри летять. Наче світлячки.",
+  "uk": "^rest_a.іскри Глянь, як іскри летять. Наче світлячки.",
+  "en": "^rest_a.іскри Look how the sparks fly. Like fireflies."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^завтра Завтра знову в дорогу. Цікаво, куди {name} нас поведе.",
+  "uk": "^rest_a.завтра Завтра знову в дорогу. Цікаво, куди {name} нас поведе.",
+  "en": "^rest_a.завтра Tomorrow we're on the road again. I wonder where {name} will lead us."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^зірки_в Дивись, як зорі над вогнем мерехтять.",
+  "uk": "^rest_a.зорі Дивись, як зорі над вогнем мерехтять.",
+  "en": "^rest_a.зорі Look how the stars flicker above the fire."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^мрія_в Знаєш, про що я мрію? Про тихий дах і повну миску.",
+  "uk": "^rest_a.мрія Знаєш, про що я мрію? Про тихий дах і повну миску.",
+  "en": "^rest_a.мрія You know what I dream of? A quiet roof and a full bowl."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^одін_в Цікаво, Одін зараз теж біля вогню сидить?",
+  "uk": "^rest_a.одін Цікаво, Одін зараз теж біля вогню сидить?",
+  "en": "^rest_a.одін I wonder if Odin is sitting by a fire right now too."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^пісня_в Заспівати тобі, Муніне? Тихенько.",
+  "uk": "^rest_a.пісня Заспівати тобі, Муніне? Тихенько.",
+  "en": "^rest_a.пісня Shall I sing for you, Munin? Quietly."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь",
+  "op": "set",
+  "old": "^день_в Довгий був день. Добре, що закінчився біля вогню.",
+  "uk": "^rest_a.день Довгий був день. Добре, що закінчився біля вогню.",
+  "en": "^rest_a.день It was a long day. Good that it ended by the fire."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^спогад Пам'ятаю, ага. Ти з плеча гепнувся. Двічі, {м_слівце}. Я ржав.",
+  "uk": "^rest_a.плече>rest_a.гепнувся Пам'ятаю, ага. Ти з плеча гепнувся. Двічі. Я ржав.",
+  "en": "^rest_a.плече>rest_a.гепнувся I remember, yeah. You fell off the shoulder. Twice. I was pissing myself."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^спогад Аякже. Ти верещав, як курча недорізане.",
+  "uk": "~1 ^rest_a.плече>rest_a.гепнувся Пам'ятаю. Ти гепнувся, а я ржав так, шо сам ледь не впав.",
+  "en": "~1 ^rest_a.плече>rest_a.гепнувся I remember. You fell, and I laughed so hard I nearly fell too."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^спогад Пам'ятаю. Ти тоді шмарклі розпустив, як мала дитина.",
+  "uk": "^rest_a.плече>rest_a.кігті Аякже. Я тоді так кігтями вчепився, шо {name} аж підскочи{в|ла}.",
+  "en": "^rest_a.плече>rest_a.кігті You bet. I dug my claws in so hard {name} jumped."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^вогонь Тепло, {м_слівце}. Як у вовка в пузі.",
+  "uk": "~3 ^rest_a.плече>rest_a.кігті Пам'ятаю. Вчепився кігтями — і досі не відчепився, {м_слівце}.",
+  "en": "~3 ^rest_a.плече>rest_a.кігті I remember. Dug my claws in, and never let go, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^вогонь Я б тут і заночував, {м_слівце}. Назавжди. Хай нас усі нахуй забудуть.",
+  "uk": "~3 ^rest_a.плече>rest_a.часи Пам'ятаю. Класні були часи. І зара, бля, нічо так.",
+  "en": "~3 ^rest_a.плече>rest_a.часи I remember. Good times. And now isn't fucking bad either."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^вогонь Спи, ботан. Я посторожу. Мо'. Як не засну.",
+  "uk": "^rest_a.зима>rest_a.змерз Я не змерз. Я загартовувався, {м_слівце}.",
+  "en": "^rest_a.зима>rest_a.змерз I didn't freeze. I was toughening up, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^дражню Сам ти засмажений, {м_слівце}. На голову.",
+  "uk": "~1 ^rest_a.зима>rest_a.змерз Майже змерз? Я дубака тіко зневажав. Не плутай.",
+  "en": "~1 ^rest_a.зима>rest_a.змерз Nearly froze? I just looked down on the cold. Get it right."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^дражню Я до вогню лізу, бо від твоїх жартів аж мороз по пір'ю.",
+  "uk": "^rest_a.зима>rest_a.плакав Пам'ятаю. А ти тоді шмарклі розпустив, як мала дитина.",
+  "en": "^rest_a.зима>rest_a.плакав I remember. And you were snivelling like a little kid."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "~3 ^спогад Пам'ятаю. Класні були часи, {м_слівце}. І зара, бля, нічо так.",
+  "uk": "~1 ^rest_a.зима>rest_a.плакав Аякже. А ти верещав, як курча недорізане.",
+  "en": "~1 ^rest_a.зима>rest_a.плакав You bet. And you were squealing like a half-slaughtered chick."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^казка Та я вже допер, чим кінчиться. Казка — гівно, {м_слівце}.",
+  "uk": "^rest_a.дрімати>rest_a.сторожу Спи, ботан. Я посторожу. Мо'. Як не засну.",
+  "en": "^rest_a.дрімати>rest_a.сторожу Sleep, nerd. I'll keep watch. Maybe. If I don't nod off."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^казка А тоді прилетів інший ворон і дав тому розумнику в дзьоб. Кінець. Гарна казка.",
+  "uk": "^rest_a.дрімати>rest_a.назавжди Я б тут і заночував. Назавжди. Хай нас усі нахуй забудуть.",
+  "en": "^rest_a.дрімати>rest_a.назавжди I'd spend the night here. Forever. Let the whole fucking world forget us."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^іскри Світлячки? То жар, дурню. Сунь туди дзьоба — сам дізнаєшся.",
+  "uk": "~3 ^rest_a.дрімати>rest_a.назавжди Тепло, як у вовка в пузі. Я б тут і лишився, {м_слівце}.",
+  "en": "~3 ^rest_a.дрімати>rest_a.назавжди Warm as a wolf's belly. I'd stay here for good, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^іскри Гарно, {м_слівце}. Аби тіко на хвіст мені не сіли.",
+  "uk": "^rest_a.одін_питав>rest_a.про_мене Про вогонь? А про мене шо, не розповів би? Я ж тут найцікавіший.",
+  "en": "^rest_a.одін_питав>rest_a.про_мене About the fire? And what, nothing about me? I'm the most interesting thing here."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^завтра Куди поведе — там комусь і наб'ємо пику. Просто.",
+  "uk": "^rest_a.одін_питав>rest_a.драуґр Про вогонь Одін би заснув, {м_слівце}. Розкажи краще, як я драуґра зробив.",
+  "en": "^rest_a.одін_питав>rest_a.драуґр Odin would fall asleep at the fire bit, {м_слівце}. Tell him how I wrecked that draugr."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^завтра Та хоч у Гель. Аби там годували.",
+  "uk": "^rest_a.дражню>rest_a.сам Сам ти засмажений, {м_слівце}. На голову.",
+  "en": "^rest_a.дражню>rest_a.сам You're the fried one, {м_слівце}. In the head."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^зірки_в Мерехтять, бо дим, романтик ти пернатий.",
+  "uk": "^rest_a.дражню>rest_a.мороз Я до вогню лізу, бо від твоїх жартів аж мороз по пір'ю.",
+  "en": "^rest_a.дражню>rest_a.мороз I crawl to the fire because your jokes give my feathers frostbite."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^зірки_в Гарно, бля. Мовчи. Не псуй.",
+  "uk": "^rest_a.подобається>rest_a.нікому Нікому не скажу. Тіко всім, {м_слівце}. Гиги.",
+  "en": "^rest_a.подобається>rest_a.нікому I won't tell anyone. Just everyone, {м_слівце}. Heh."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^мрія_в А я — про махач і повну миску. Ну і медовухи бочку.",
+  "uk": "^rest_a.подобається>rest_a.мені_теж Та й мені, бля. Тіко ти теж мовчи, ясно?",
+  "en": "^rest_a.подобається>rest_a.мені_теж Me too, fuck. But you keep your beak shut too, got it?"
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^мрія_в Миска — то добре. А дах — для ссикунів.",
+  "uk": "^rest_a.казка>rest_a.дзьоб А тоді прилетів інший ворон і дав тому розумнику в дзьоб. Кінець. Гарна казка.",
+  "en": "^rest_a.казка>rest_a.дзьоб And then another raven flew in and punched the smartass in the beak. The end. Nice tale."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^одін_в Сидить і бухає. Як завжди, старий.",
+  "uk": "^rest_a.казка>rest_a.допер Та я вже допер, хто. Казка — гівно, {м_слівце}.",
+  "en": "^rest_a.казка>rest_a.допер I already got who. The tale is shit, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^одін_в Сидить і про нас думає. Ну, про мене. Про тебе шо там думати.",
+  "uk": "^rest_a.іскри>rest_a.жар Світлячки? То жар, дурню. Сунь туди дзьоба — сам дізнаєшся.",
+  "en": "^rest_a.іскри>rest_a.жар Fireflies? Those are embers, dumbass. Stick your beak in, you'll find out."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^пісня_в Тіко спробуй, {м_слівце}. Тіко рота відкрий.",
+  "uk": "^rest_a.іскри>rest_a.хвіст Гарно, {м_слівце}. Аби тіко на хвіст мені не сіли.",
+  "en": "^rest_a.іскри>rest_a.хвіст Pretty, {м_слівце}. As long as they don't land on my tail."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^пісня_в Співай. Я засну — і всім буде краще.",
+  "uk": "^rest_a.завтра>rest_a.пика Куди поведе — там комусь і наб'ємо пику. Просто.",
+  "en": "^rest_a.завтра>rest_a.пика Wherever {he|she} leads, someone gets their face smashed. Simple."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^день_в Довгий і нудний, бляха. Але вогонь — норм вогонь.",
+  "uk": "^rest_a.завтра>rest_a.гель Та хоч у Гель. Аби там годували.",
+  "en": "^rest_a.завтра>rest_a.гель Even to Hel. As long as there's grub."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "set",
+  "old": "^день_в Закінчився, бо я заїбався, {м_слівце}.",
+  "uk": "^rest_a.зорі>rest_a.дим Мерехтять, бо дим, романтик ти пернатий.",
+  "en": "^rest_a.зорі>rest_a.дим They flicker because of the smoke, you feathered romantic."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.зорі>rest_a.мовчи Гарно, бля. Мовчи. Не псуй.",
+  "en": "^rest_a.зорі>rest_a.мовчи Beautiful, fuck. Shut up. Don't ruin it."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.мрія>rest_a.махач А я — про махач і повну миску. Ну і медовухи бочку.",
+  "en": "^rest_a.мрія>rest_a.махач And I dream of a brawl and a full bowl. And a barrel of mead."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.мрія>rest_a.ссикуни Миска — то добре. А дах — для ссикунів.",
+  "en": "^rest_a.мрія>rest_a.ссикуни A bowl is good. A roof is for pussies."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.одін>rest_a.бухає Сидить і бухає. Як завжди, старий.",
+  "en": "^rest_a.одін>rest_a.бухає Sitting there boozing. Same as always, the old man."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.одін>rest_a.думає Сидить і про нас думає. Ну, про мене. Про тебе шо там думати.",
+  "en": "^rest_a.одін>rest_a.думає Sitting and thinking about us. Well, about me. What's there to think about you."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.пісня>rest_a.спробуй Тіко спробуй, {м_слівце}. Тіко рота відкрий.",
+  "en": "^rest_a.пісня>rest_a.спробуй Just try it, {м_слівце}. Just open your mouth."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.пісня>rest_a.засну Співай. Я засну — і всім буде краще.",
+  "en": "^rest_a.пісня>rest_a.засну Sing. I'll fall asleep, and everyone's better off."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.день>rest_a.нудний Довгий і нудний, бляха. Але вогонь — норм вогонь.",
+  "en": "^rest_a.день>rest_a.нудний Long and boring, damn it. But the fire's a decent fire."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь",
+  "op": "add",
+  "uk": "^rest_a.день>rest_a.каторга Закінчився, бо я заїбався. Не день, а каторга.",
+  "en": "^rest_a.день>rest_a.каторга It ended because I'm fucking knackered. Not a day, hard labour."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^спогад Добре згадувати разом. Навіть з тобою.",
+  "uk": "^rest_a.гепнувся Двічі. А ти рахував. Отакий ти друг.",
+  "en": "^rest_a.гепнувся Twice. And you counted. Some friend you are."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^спогад Колись і про цей вечір згадаємо.",
+  "uk": "^rest_a.гепнувся Падав, бо хтось штовхався. Але ти цього, звісно, не пам'ятаєш.",
+  "en": "^rest_a.гепнувся I fell because someone was shoving. But you don't remember that, of course."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^вогонь Вогонь гріє. Навіть тебе, Муніне.",
+  "uk": "^rest_a.кігті У {name} досі є сліди від твоїх кігтів. Гарний був початок.",
+  "en": "^rest_a.кігті {name} still has the marks of your claws. Lovely beginning."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^вогонь Посидимо ще трохи. Звідси гарно видно зорі.",
+  "uk": "^rest_a.кігті Ти й зараз так чіпляєшся. Тільки вже за звичкою.",
+  "en": "^rest_a.кігті You still cling like that. Only out of habit now."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "~1 Не крути хвостом біля вогню, бо підсмажишся.",
+  "uk": "^rest_a.часи Нічо так. Від тебе це майже пісня.",
+  "en": "^rest_a.часи Not bad. From you that's practically a song."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "~23 Добре вечоріти разом.",
+  "uk": "^rest_a.часи Запам'ятаю, що ти це сказав. Майже без лайки.",
+  "en": "^rest_a.часи I'll remember you said that. Almost without swearing."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^казка Кінець неправильний. Але смішний.",
+  "uk": "^rest_a.змерз Загартовувався. Із синім дзьобом.",
+  "en": "^rest_a.змерз Toughening up. With a blue beak."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^завтра Головне — разом. Решта знайдеться.",
+  "uk": "^rest_a.змерз Тому й просидів усю зиму в {name} під каптуром.",
+  "en": "^rest_a.змерз That's why you spent the whole winter under {name}'s hood."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^іскри Обережно з хвостом. Він у тебе один.",
+  "uk": "^rest_a.плакав Я плакав від диму. Ти — від холоду. Різниця є.",
+  "en": "^rest_a.плакав I cried from the smoke. You from the cold. There's a difference."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^зірки_в Посидимо, поки не згасне.",
+  "uk": "^rest_a.плакав Я хоч плакав тихо. Тебе чув увесь фіорд.",
+  "en": "^rest_a.плакав At least I cried quietly. The whole fjord heard you."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^мрія_в Миска — наша спільна мрія. Хоч щось.",
+  "uk": "^rest_a.сторожу Як не заснеш. Тобто сторожу я.",
+  "en": "^rest_a.сторожу If you don't nod off. So, I'm keeping watch."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^одін_в Хай йому буде тепло. Як нам.",
+  "uk": "^rest_a.сторожу Ти засинаєш раніше, ніж договорюєш «посторожу».",
+  "en": "^rest_a.сторожу You fall asleep before you finish saying «I'll keep watch»."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^пісня_в Гаразд. Мовчу. Але пісня була б гарна.",
+  "uk": "^rest_a.назавжди Забудуть — і годувати перестануть. Подумай ще.",
+  "en": "^rest_a.назавжди Forget us, and stop feeding us. Think again."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "set",
+  "old": "^день_в Завтра буде новий. Відпочивай.",
+  "uk": "^rest_a.назавжди Назавжди не вийде. Дрова скінчаться.",
+  "en": "^rest_a.назавжди Forever won't work. The firewood will run out."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.про_мене Розповів би. Коротко: їв, лаявся, спав.",
+  "en": "^rest_a.про_мене I would. Briefly: ate, swore, slept."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.про_мене Про тебе Одін і так знає. Ти ж кричиш на весь Мідґард.",
+  "en": "^rest_a.про_мене Odin knows about you already. You shout across all of Midgard."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.драуґр Ти драуґра не зробив. Ти на нього накричав.",
+  "en": "^rest_a.драуґр You didn't wreck the draugr. You yelled at it."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.драуґр Від твоєї версії Одін заснув би ще швидше.",
+  "en": "^rest_a.драуґр Your version would put Odin to sleep even faster."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.сам Блискуче. Моїм же жартом.",
+  "en": "^rest_a.сам Brilliant. With my own joke."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.сам Повторив за мною. Уже прогрес.",
+  "en": "^rest_a.сам You repeated after me. That's progress."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.мороз Тоді грійся. Жартів у мене ще багато.",
+  "en": "^rest_a.мороз Then warm up. I have plenty more jokes."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.мороз Ну, хоч щось у тобі я зачепив.",
+  "en": "^rest_a.мороз Well, at least I got through to something in you."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.нікому Скажеш — і я розповім, як ти бурульку лизав.",
+  "en": "^rest_a.нікому Tell them, and I'll tell how you licked an icicle."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.нікому Кажи. Тобі однаково ніхто не вірить.",
+  "en": "^rest_a.нікому Go on. Nobody believes you anyway."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.мені_теж Мовчу. Тепер у нас спільна таємниця.",
+  "en": "^rest_a.мені_теж I'm quiet. Now we share a secret."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.мені_теж Ясно. Двоє мовчать про одне. Це вже майже дружба.",
+  "en": "^rest_a.мені_теж Got it. Two keeping quiet about one thing. That's nearly friendship."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.дзьоб Кінець неправильний. Але смішний.",
+  "en": "^rest_a.дзьоб The ending is wrong. But funny."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.дзьоб Другий ворон потім довго тікав. Але це вже інша казка.",
+  "en": "^rest_a.дзьоб The second raven ran for a long time after. But that's another tale."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.допер Допер? Так швидко? Казка вже діє.",
+  "en": "^rest_a.допер Got it? That fast? The tale is working already."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.допер Погана, бо про розумного? Розумію. Не твій жанр.",
+  "en": "^rest_a.допер Bad because it's about someone clever? I see. Not your genre."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.жар Сунь сам. Ти ж усе перевіряєш дзьобом.",
+  "en": "^rest_a.жар Stick your own in. You test everything with your beak."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.жар Я знаю, що жар. Це називається «порівняння».",
+  "en": "^rest_a.жар I know they're embers. It's called a «simile»."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.хвіст Обережно з хвостом. Він у тебе один.",
+  "en": "^rest_a.хвіст Careful with your tail. You only have one."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.хвіст Сядуть — будеш найсвітліший ворон Мідґарду.",
+  "en": "^rest_a.хвіст If they do, you'll be the brightest raven in Midgard."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.пика Ось тому веде {name}, а не ти.",
+  "en": "^rest_a.пика That's exactly why {name} leads, not you."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.пика Просто. Як і ти.",
+  "en": "^rest_a.пика Simple. Like you."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.гель У Гель годують. Тобою.",
+  "en": "^rest_a.гель They do feed in Hel. On you."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.гель Їжа знайдеться. {name} без неї не ходить.",
+  "en": "^rest_a.гель There'll be food. {name} never goes without."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.дим Знаю, що дим. Ти вмієш зіпсувати будь-яку ніч.",
+  "en": "^rest_a.дим I know it's smoke. You can ruin any night."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.дим Дякую. Тепер вони просто мерехтять у диму.",
+  "en": "^rest_a.дим Thanks. Now they're just flickering in smoke."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.мовчи Мовчу. Бо вперше ти маєш рацію.",
+  "en": "^rest_a.мовчи I'm quiet. Because for once you're right."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.мовчи Посидимо, поки не згасне. Мовчки.",
+  "en": "^rest_a.мовчи Let's sit until it goes out. Quietly."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.махач Миска в нас спільна. Решту мрій — окремо.",
+  "en": "^rest_a.махач The bowl we share. The rest of the dreams separately."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.махач Бочка медовухи і ти. Бідний той махач.",
+  "en": "^rest_a.махач A barrel of mead and you. Pity the brawl."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.ссикуни Скажеш це під дощем. Я послухаю.",
+  "en": "^rest_a.ссикуни Say that in the rain. I'll listen."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.ссикуни Тоді спи надворі. Миску я посторожу.",
+  "en": "^rest_a.ссикуни Then sleep outside. I'll guard the bowl."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.бухає Не кажи цього при ньому. Він чує крізь вогонь.",
+  "en": "^rest_a.бухає Don't say that near him. He hears through fire."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.бухає Хай п'є. Йому є що забувати. Тебе, наприклад.",
+  "en": "^rest_a.бухає Let him drink. He has things to forget. You, for example."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.думає Думає. Що з тобою робити.",
+  "en": "^rest_a.думає He's thinking. About what to do with you."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.думає Про тебе він теж думає. Зітхаючи.",
+  "en": "^rest_a.думає He thinks about you too. With a sigh."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.спробуй Гаразд. Мовчу. Але пісня була б гарна.",
+  "en": "^rest_a.спробуй Fine. I'll be quiet. But it would have been a nice song."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.спробуй Не відкрию. Заспіваю завтра, коли ти спатимеш.",
+  "en": "^rest_a.спробуй I won't. I'll sing tomorrow while you sleep."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.засну Отже, пісня корисна. Почну.",
+  "en": "^rest_a.засну So the song is useful. I'll start."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.засну Тоді співатиму довго. Для всіх.",
+  "en": "^rest_a.засну Then I'll sing a long one. For everyone."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.нудний Норм вогонь. Від тебе це похвала.",
+  "en": "^rest_a.нудний A decent fire. From you that's praise."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.нудний Завтра буде новий. Може, не такий нудний.",
+  "en": "^rest_a.нудний Tomorrow's a new one. Maybe less boring."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.каторга Ти цілий день сидів на плечі. Співчуваю плечу.",
+  "en": "^rest_a.каторга You sat on a shoulder all day. My sympathy to the shoulder."
+ },
+ {
+  "who": "H",
+  "list": "х_тепло",
+  "op": "add",
+  "uk": "^rest_a.каторга Відпочивай. Завтра знову втомлюватимешся.",
+  "en": "^rest_a.каторга Rest. Tomorrow you'll get tired again."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^пиво Хугіне, ану розкажи, як ти тоді в пиво бовтнувся, {м_слівце}. Гиги.",
+  "uk": "^rest_b.пиво Хугіне, ану розкажи, як ти тоді в пиво бовтнувся, {м_слівце}. Гиги.",
+  "en": "^rest_b.пиво Hugin, go on, tell how you flopped into the beer that time, {м_слівце}. Heh."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^риба А пам'ятаєш, як ми три дні за рибу гризлись? Ти тоді гівнюк був. І зара гівнюк.",
+  "uk": "^rest_b.риба А пам'ятаєш, як ми три дні за рибу гризлись? Ти тоді гівнюк був. І зара такий самий.",
+  "en": "^rest_b.риба Remember how we fought three days over a fish? You were a shithead then. Still are."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^спокій Сидимо. Ні троля, ні бійки. Аж лячно, {м_слівце}.",
+  "uk": "^rest_b.спокій Сидимо. Ні троля, ні бійки. Аж лячно, {м_слівце}.",
+  "en": "^rest_b.спокій Here we sit. No troll, no fight. Creepy as hell, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "~1 ^спів Тіко заспіваєш — я собі вуха в багатті спалю. Чесно.",
+  "uk": "~1 ^rest_b.спів Тіко заспіваєш — я собі вуха в багатті спалю. Чесно.",
+  "en": "~1 ^rest_b.спів You start singing, I'll burn my ears off in the fire. Honest."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "~3 ^подобається Добре тут, {м_слівце}. Ну. Подобається мені. Не ржи, бо дзьобну.",
+  "uk": "~3 ^rest_b.подобається Добре тут, {м_слівце}. Ну. Подобається мені. Не ржи, бо дзьобну.",
+  "en": "~3 ^rest_b.подобається It's good here, {м_слівце}. Yeah. I like it. Don't laugh or I'll peck you."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^шрам Хугіне, а шо то в тебе за шрам на лапі? Тіко не пизди, шо від дракона.",
+  "uk": "^rest_b.шрам Хугіне, а шо то в тебе за шрам на лапі? Тіко не пизди, шо від дракона.",
+  "en": "^rest_b.шрам Hugin, what's that scar on your foot? And don't bullshit me it was a dragon."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^мед Зара б медовухи, {м_слівце}. Цілий ріг. Нє, два.",
+  "uk": "^rest_b.мед Зара б медовухи, {м_слівце}. Цілий ріг. Нє, два.",
+  "en": "^rest_b.мед I could use some mead, {м_слівце}. A whole horn. No, two."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^дим Дим в очі, бля. Спеціально на мене тягне, падлюка.",
+  "uk": "^rest_b.дим Дим в очі, бля. Спеціально на мене тягне, падлюка.",
+  "en": "^rest_b.дим Smoke in my eyes, fuck. It drifts at me on purpose, the bastard."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^історія Хугін, розкажи шось. Тіко не про мудрість, {м_слівце}, бо засну.",
+  "uk": "^rest_b.історія Хугін, розкажи шось. Тіко не про мудрість, {м_слівце}, бо засну.",
+  "en": "^rest_b.історія Hugin, tell me something. Just not about wisdom, {м_слівце}, or I'll pass out."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^жарина Жарина вистрибнула! Мало хвоста мені не підсмалила, курва.",
+  "uk": "^rest_b.жарина Жарина вистрибнула! Мало хвоста мені не підсмалила, курва.",
+  "en": "^rest_b.жарина An ember jumped out! Nearly singed my tail, the bitch."
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^нудно_в Нудно, {м_слівце}. Пішли когось уб'ємо, га?",
+  "uk": "^rest_b.нудно Нудно, {м_слівце}. Пішли когось уб'ємо, га?",
+  "en": "^rest_b.нудно Boring, {м_слівце}. Let's go kill someone, huh?"
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^смажене_в Смаженим пахне. Нам шось лишиться чи як?",
+  "uk": "^rest_b.смажене Смаженим пахне. Нам шось лишиться чи як?",
+  "en": "^rest_b.смажене Smells of roast meat. Will there be any left for us or what?"
+ },
+ {
+  "who": "M",
+  "list": "м_вогонь_почин",
+  "op": "set",
+  "old": "^ворони_в А інші ворони зара теж біля вогню? Чи мерзнуть десь, бідолахи?",
+  "uk": "^rest_b.ворони А інші ворони зара теж біля вогню? Чи мерзнуть десь, бідолахи?",
+  "en": "^rest_b.ворони Are other ravens by a fire right now? Or freezing somewhere, poor bastards?"
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^пиво Я не падав у пиво. Я його досліджував.",
+  "uk": "^rest_b.пиво>rest_b.досліджував Я не падав у пиво. Я його досліджував.",
+  "en": "^rest_b.пиво>rest_b.досліджував I didn't fall into the beer. I was studying it."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^пиво Це було медове вино. І це було мистецтво.",
+  "uk": "~1 ^rest_b.пиво>rest_b.досліджував Я не бовтнувся. Я брав пробу. Глибоку.",
+  "en": "~1 ^rest_b.пиво>rest_b.досліджував I didn't flop. I took a sample. A deep one."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^риба Риба була моя. Я її перший побачив.",
+  "uk": "^rest_b.пиво>rest_b.мистецтво Це було медове вино. І це було мистецтво.",
+  "en": "^rest_b.пиво>rest_b.мистецтво It was mead wine. And it was art."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^риба Три дні? Чотири. І я переміг.",
+  "uk": "^rest_b.риба>rest_b.моя Риба була моя. Я її перший побачив.",
+  "en": "^rest_b.риба>rest_b.моя The fish was mine. I saw it first."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^спокій Не каркай. Хай буде спокійно хоч раз.",
+  "uk": "^rest_b.риба>rest_b.чотири Три дні? Чотири. І я переміг.",
+  "en": "^rest_b.риба>rest_b.чотири Three days? Four. And I won."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^спокій Підозріло — це коли ти мовчиш.",
+  "uk": "~3 ^rest_b.риба>rest_b.чотири Чотири дні, а не три. І переміг я. Але гризтися з тобою було весело.",
+  "en": "~3 ^rest_b.риба>rest_b.чотири Four days, not three. And I won. But fighting you was fun."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^спів Я співаю краще за тебе. Хоч це й не важко.",
+  "uk": "^rest_b.спокій>rest_b.не_каркай Не каркай. Хай буде спокійно хоч раз.",
+  "en": "^rest_b.спокій>rest_b.не_каркай Don't jinx it. Let it be calm for once."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^подобається Не сміюся. Мені теж добре.",
+  "uk": "^rest_b.спокій>rest_b.мовчиш Підозріло — це коли ти мовчиш.",
+  "en": "^rest_b.спокій>rest_b.мовчиш Suspicious is when you're quiet."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^шрам Від дракона. А що, не віриш?",
+  "uk": "^rest_b.спів>rest_b.краще Я співаю краще за тебе. Хоч це й не важко.",
+  "en": "^rest_b.спів>rest_b.краще I sing better than you. Not that it's hard."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^шрам Від тебе. Пам'ятаєш, як ти спросоння клюнув?",
+  "uk": "^rest_b.спів>rest_b.хотілося Не співатиму. Хоча хотілося.",
+  "en": "^rest_b.спів>rest_b.хотілося I won't sing. Though I wanted to."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^мед Ріг меду — і ти заснеш на моєму хвості. Ні.",
+  "uk": "^rest_b.подобається>rest_b.не_сміюсь Не сміюся. Мені теж добре.",
+  "en": "^rest_b.подобається>rest_b.не_сміюсь I'm not laughing. I feel good too."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^мед Мед — для тих, хто заслужив. Тобі — вода.",
+  "uk": "^rest_b.подобається>rest_b.посидимо Не сміюся. Посидимо ще, поки дрова є.",
+  "en": "^rest_b.подобається>rest_b.посидимо Not laughing. Let's sit a bit more, while there's wood."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^дим Дим іде на найгарнішого. Не знав?",
+  "uk": "~3 ^rest_b.подобається>rest_b.посидимо І мені. Посидимо ще трохи. Тільки не розкисай.",
+  "en": "~3 ^rest_b.подобається>rest_b.посидимо Me too. Let's sit a while longer. Just don't go soft."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^дим Пересядь. Хоча дим тебе знайде. Він теж тебе не любить.",
+  "uk": "^rest_b.шрам>rest_b.дракон Від дракона. А що, не віриш?",
+  "en": "^rest_b.шрам>rest_b.дракон From a dragon. What, you don't believe me?"
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^спів Не співатиму. Хоча хотілося.",
+  "uk": "^rest_b.шрам>rest_b.від_тебе Від тебе. Пам'ятаєш, як ти спросоння клюнув?",
+  "en": "^rest_b.шрам>rest_b.від_тебе From you. Remember how you pecked me half asleep?"
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "~3 ^подобається І мені. Посидимо ще трохи.",
+  "uk": "^rest_b.мед>rest_b.заснеш Ріг меду — і ти заснеш на моєму хвості. Ні.",
+  "en": "^rest_b.мед>rest_b.заснеш One horn of mead and you'll fall asleep on my tail. No."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^історія Тоді про тебе. Там мудрості нема.",
+  "uk": "^rest_b.мед>rest_b.вода Мед — для тих, хто заслужив. Тобі — вода.",
+  "en": "^rest_b.мед>rest_b.вода Mead is for those who've earned it. You get water."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^історія Розкажу про ворона, що мовчав. Вигадка, звісно.",
+  "uk": "^rest_b.дим>rest_b.гарний Дим іде на найгарнішого. Не знав?",
+  "en": "^rest_b.дим>rest_b.гарний Smoke goes to the handsomest. Didn't you know?"
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^жарина Відсунься трохи. Хвіст у тебе один.",
+  "uk": "^rest_b.дим>rest_b.пересядь Пересядь. Хоча дим тебе знайде. Він теж тебе не любить.",
+  "en": "^rest_b.дим>rest_b.пересядь Move. Though the smoke will find you. It doesn't like you either."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^жарина Вогонь тебе теж не любить. Не ображайся.",
+  "uk": "^rest_b.історія>rest_b.про_тебе Тоді про тебе. Там мудрості нема.",
+  "en": "^rest_b.історія>rest_b.про_тебе Then about you. No wisdom there."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^нудно_в Біля вогню не вбивають. Біля вогню відпочивають.",
+  "uk": "^rest_b.історія>rest_b.мовчав Розкажу про ворона, що мовчав. Вигадка, звісно.",
+  "en": "^rest_b.історія>rest_b.мовчав I'll tell about a raven who kept quiet. Fiction, of course."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^нудно_в Спи. Уві сні вбивай скільки хочеш.",
+  "uk": "^rest_b.жарина>rest_b.відсунься Відсунься трохи. Хвіст у тебе один.",
+  "en": "^rest_b.жарина>rest_b.відсунься Move back a bit. You only have one tail."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^смажене_в Лишиться. Якщо чемно попросиш.",
+  "uk": "^rest_b.жарина>rest_b.не_любить Вогонь тебе теж не любить. Не ображайся.",
+  "en": "^rest_b.жарина>rest_b.не_любить The fire doesn't like you either. No offence."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^смажене_в {name} поділиться. Як завжди.",
+  "uk": "^rest_b.нудно>rest_b.відпочивають Біля вогню не вбивають. Біля вогню відпочивають.",
+  "en": "^rest_b.нудно>rest_b.відпочивають Nobody kills by the fire. By the fire we rest."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^ворони_в Хтось біля вогню. Хтось ні. Нам пощастило.",
+  "uk": "^rest_b.нудно>rest_b.уві_сні Спи. Уві сні вбивай скільки хочеш.",
+  "en": "^rest_b.нудно>rest_b.уві_сні Sleep. In your dreams kill as many as you like."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "set",
+  "old": "^ворони_в Чужі ворони — чужий клопіт.",
+  "uk": "^rest_b.смажене>rest_b.чемно Лишиться. Якщо чемно попросиш.",
+  "en": "^rest_b.смажене>rest_b.чемно There'll be some left. If you ask politely."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "add",
+  "uk": "^rest_b.смажене>rest_b.поділиться {name} поділиться. Як завжди.",
+  "en": "^rest_b.смажене>rest_b.поділиться {name} will share. As always."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "add",
+  "uk": "^rest_b.ворони>rest_b.пощастило Хтось біля вогню. Хтось ні. Нам пощастило.",
+  "en": "^rest_b.ворони>rest_b.пощастило Some sit by a fire. Some don't. We got lucky."
+ },
+ {
+  "who": "H",
+  "list": "х_вогонь_відповідь",
+  "op": "add",
+  "uk": "^rest_b.ворони>rest_b.чужі Чужі ворони — чужий клопіт.",
+  "en": "^rest_b.ворони>rest_b.чужі Other ravens are other people's trouble."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^ніч|бійка Ну хоч зранку комусь напихаю.",
+  "uk": "^rest_b.досліджував Досліджував, ага. Два дні потім гикав, дослідник.",
+  "en": "^rest_b.досліджував Studying, sure. Hiccuped for two days after, the scholar."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^спів Тіко не співай, {м_слівце}. Благаю. Я ж ворон, а не камінь.",
+  "uk": "^rest_b.досліджував Ага. Розказуй, розказуй, пиздабол.",
+  "en": "^rest_b.досліджував Yeah. Keep talking, you bullshitter."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^пиво|риба Ага. Розказуй, розказуй, пиздабол.",
+  "uk": "^rest_b.мистецтво Мистецтво — то коли не тонеш, {м_слівце}.",
+  "en": "^rest_b.мистецтво Art is when you don't drown, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^шрам Пиздиш, як Локі. Навіть гірше.",
+  "uk": "^rest_b.мистецтво Мистецтво, ага. Ти пузирі пускав, митець.",
+  "en": "^rest_b.мистецтво Art, sure. You were blowing bubbles, artist."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^мед Ну ти й жлоб, {м_слівце}. Ріг меду пожалів.",
+  "uk": "^rest_b.моя Побачив перший, а зжер я. Отак.",
+  "en": "^rest_b.моя You saw it first, and I ate it. That's how."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^дим Найгарнішого? А, ну тоді ясно. На мене, кого ж ше.",
+  "uk": "^rest_b.моя Твоя? Там на хвості мій дзьоб відбитий.",
+  "en": "^rest_b.моя Yours? My beak print is on its tail."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^вовки Я теж голодний, бля. І я ближче. Тож слухай мене.",
+  "uk": "^rest_b.чотири Переміг? Ти рибу в болото впустив, {м_слівце}.",
+  "en": "^rest_b.чотири Won? You dropped the fish in the swamp, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^очі Курчам? Йди сам глянь, розумнику. Я тут посиджу.",
+  "uk": "^rest_b.чотири Переміг він. А чого ж тоді я ситий ходив?",
+  "en": "^rest_b.чотири He won. Then why was I the one with a full belly?"
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^зорі_н Та блохи, зорі — одна хуйня. Дрібне все.",
+  "uk": "^rest_b.не_каркай Я не каркаю. Я ворон, я так розмовляю.",
+  "en": "^rest_b.не_каркай I'm not jinxing. I'm a raven, that's how I talk."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^сова Сторож, мудра… А верещить, як різана.",
+  "uk": "^rest_b.не_каркай Хай буде. Але я одним оком пасу.",
+  "en": "^rest_b.не_каркай Fine. But I'm keeping one eye open."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^місяць Хай світить. Тіко не на мене, бо дзьобну.",
+  "uk": "^rest_b.мовчиш То я не мовчатиму. Шоб тобі спокійно було.",
+  "en": "^rest_b.мовчиш Then I won't shut up. For your peace of mind."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^холод_н Добре, добре. Тіко швидше, бо я в бурульку перетворюсь.",
+  "uk": "^rest_b.мовчиш Ну то радій, ботан. Я ше довго не замовкну.",
+  "en": "^rest_b.мовчиш Then rejoice, nerd. I won't shut up for ages."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^шурхіт Дзьобну. Шоб знало.",
+  "uk": "^rest_b.краще Краще? Ти співаєш, як колесо скрипить.",
+  "en": "^rest_b.краще Better? You sing like a squeaky wheel."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^сон_н Ну то я покимарю. Ти ж однаково не спиш, от і стережи.",
+  "uk": "^rest_b.краще Тіко не співай, {м_слівце}. Благаю. Я ж ворон, а не камінь.",
+  "en": "^rest_b.краще Just don't sing, {м_слівце}. I'm begging. I'm a raven, not a rock."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^драуґри Шкода, бляха. Я б подзьобав.",
+  "uk": "^rest_b.хотілося От і не хоти. Вуха ціліші будуть.",
+  "en": "^rest_b.хотілося Then don't want to. My ears will thank you."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^історія Ха-ха. Смішно. Я аж не засміявся, бачиш?",
+  "uk": "^rest_b.хотілося Хотілося йому… Перехочеться, {м_слівце}.",
+  "en": "^rest_b.хотілося He wanted to… You'll get over it, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^жарина Ну відсунувся. Але вогонь я запам'ятав. Він ше своє отримає.",
+  "uk": "^rest_b.не_сміюсь Ну от. Тіко нікому, ясно?",
+  "en": "^rest_b.не_сміюсь There. Just not a word to anyone, got it?"
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^нудно_в Уві сні — то не те, шо наживо. Ну добре, хай буде.",
+  "uk": "^rest_b.не_сміюсь Не смієшся? Підозріло. Але хай.",
+  "en": "^rest_b.не_сміюсь Not laughing? Suspicious. But fine."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^смажене_в Чемно? Я? Ну… спробую. Дай, бля, шматок. Будь ласка.",
+  "uk": "^rest_b.посидимо Посидимо. Тіко ти мовчи, а то зіпсуєш.",
+  "en": "^rest_b.посидимо We'll sit. Just keep quiet or you'll spoil it."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "set",
+  "old": "^ворони_в Пощастило, ага. Тіко не звикай, бо наврочиш.",
+  "uk": "^rest_b.посидимо Давай. Я нікуди й не збирався, {м_слівце}.",
+  "en": "^rest_b.посидимо Sure. I wasn't going anywhere, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.дракон Пиздиш, як Локі. Навіть гірше.",
+  "en": "^rest_b.дракон You lie like Loki. Even worse."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.дракон Не вірю. Дракон би тебе одним чихом засмажив.",
+  "en": "^rest_b.дракон I don't. A dragon would fry you with one sneeze."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.від_тебе Не пам'ятаю. Але пишаюсь, {м_слівце}.",
+  "en": "^rest_b.від_тебе Don't remember. But I'm proud, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.від_тебе Спросоння? То я ше ласкаво клюнув.",
+  "en": "^rest_b.від_тебе Half asleep? That was me being gentle."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.заснеш Ну ти й жлоб. Ріг меду пожалів.",
+  "en": "^rest_b.заснеш What a cheapskate. Begrudging me one horn of mead."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.заснеш Засну, то й шо? Хвіст у тебе м'який.",
+  "en": "^rest_b.заснеш So I fall asleep, so what? Your tail is soft."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.вода Вода? Я шо тобі, жаба?",
+  "en": "^rest_b.вода Water? What am I, a frog?"
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.вода Заслужив я більше за тебе. Я хоч б'юсь, {м_слівце}.",
+  "en": "^rest_b.вода I've earned more than you. At least I fight, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.гарний Найгарнішого? А, ну тоді ясно. На мене, кого ж ше.",
+  "en": "^rest_b.гарний The handsomest? Ah, then it's clear. At me, who else."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.гарний Ото ж бо. Тебе він десятою дорогою обходить.",
+  "en": "^rest_b.гарний Exactly. It goes a mile around you."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.пересядь Не пересяду. Це моє місце, хай дим пересідає.",
+  "en": "^rest_b.пересядь I'm not moving. This is my spot, let the smoke move."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.пересядь Теж не любить? То нас двоє, {м_слівце}. Ми з димом заодно.",
+  "en": "^rest_b.пересядь Doesn't like me either? Then the smoke and I are a team, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.про_тебе Ха-ха. Смішно. Я аж не засміявся, бачиш?",
+  "en": "^rest_b.про_тебе Ha-ha. Funny. Look how hard I'm not laughing."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.про_тебе Про мене — то тіко хороше, ясно? Або нічо.",
+  "en": "^rest_b.про_тебе About me it's only good stuff, got it? Or nothing."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.мовчав Ворон, шо мовчав? Таких не буває. Вигадка й є.",
+  "en": "^rest_b.мовчав A raven who kept quiet? No such thing. Fiction indeed."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.мовчав Нудно вже з першого слова. Давай про бійку, {м_слівце}.",
+  "en": "^rest_b.мовчав Boring from the first word. Tell one about a fight, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.відсунься Ну відсунувся. Але вогонь я запам'ятав. Він ше своє отримає.",
+  "en": "^rest_b.відсунься Fine, I moved. But I'll remember that fire. It'll get what's coming."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.відсунься Один, ага. І той тепер смердить паленим.",
+  "en": "^rest_b.відсунься One, yeah. And it stinks of burning now."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.не_любить Взаємно. Я в нього зара плюну.",
+  "en": "^rest_b.не_любить Mutual. I'll spit in it right now."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.не_любить Я не ображаюсь. Я мщу, {м_слівце}.",
+  "en": "^rest_b.не_любить I don't get offended. I get even, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.відпочивають Відпочивають. Ссикуни відпочивають.",
+  "en": "^rest_b.відпочивають Resting. Pussies rest."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.відпочивають Тоді відійдем від вогню. На два кроки.",
+  "en": "^rest_b.відпочивають Then we step away from the fire. Two steps."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.уві_сні Уві сні — то не те, шо наживо. Ну добре, хай буде.",
+  "en": "^rest_b.уві_сні In a dream it's not like the real thing. Oh fine, have it your way."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.уві_сні Уві сні я тебе першого приб'ю, ботан.",
+  "en": "^rest_b.уві_сні In my dream I'll do you first, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.чемно Чемно? Я? Ну… спробую. Дай шматок. Будь ласка.",
+  "en": "^rest_b.чемно Politely? Me? Well… I'll try. Give me a piece. Please."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.чемно Чемно я не вмію. Я вмію швидко.",
+  "en": "^rest_b.чемно I can't do polite. I can do fast."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.поділиться Як завжди — то кісткою. А я хочу м'ясо.",
+  "en": "^rest_b.поділиться As always means a bone. I want meat."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.поділиться Поділиться, бо я дивитимусь отак. Жалібно.",
+  "en": "^rest_b.поділиться {He'll|She'll} share, because I'll look like this. Pitiful."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.пощастило Пощастило, ага. Тіко не звикай, бо наврочиш.",
+  "en": "^rest_b.пощастило Lucky, yeah. Don't get used to it or you'll jinx it."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.пощастило Не нам пощастило. То {name} з нами пощастило.",
+  "en": "^rest_b.пощастило We didn't get lucky. {name} got lucky with us."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.чужі Холодний ти, як риб'яче пузо.",
+  "en": "^rest_b.чужі You're cold as a fish belly."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^rest_b.чужі Ну й гівнюк ти. Я ж так, спитав.",
+  "en": "^rest_b.чужі What a shithead. I was just asking."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.думки Думай. А я поки кігті розімну.",
+  "en": "^night.думки You think. I'll limber up my claws."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.думки Думки — то для тих, кому нема кого бить.",
+  "en": "^night.думки Thinking is for those with nobody to hit."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.темрява Я в темряві бачу краще за тебе, сліпий.",
+  "en": "^night.темрява I see better than you in the dark, blind boy."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.темрява Ну хоч зранку комусь напихаю.",
+  "en": "^night.темрява Well, at least in the morning I'll beat someone up."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.голова Є, ага. Пуста, як барило після свята.",
+  "en": "^night.голова You have one, sure. Empty as a keg after a feast."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.голова А в мене не голова, а кулак. З дзьобом.",
+  "en": "^night.голова Mine's not a head, it's a fist. With a beak."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.задумав Задумав. Але не скажу, {м_слівце}. Сюрприз.",
+  "en": "^night.задумав I've got something. Not telling, {м_слівце}. Surprise."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.задумав Нічо я не задумав. Поки шо.",
+  "en": "^night.задумав I've got nothing in mind. Yet."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.вовк Не нашого. {name} ше тут, я лапами чую.",
+  "en": "^night.вовк Not ours. {name}'s still here, I can feel it with my feet."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.вовк Вовк? То в нього можна відібрать. Я б спробував.",
+  "en": "^night.вовк A wolf? Then we can take it off him. I'd give it a go."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.сухар Сухарем? І мовчить, жмот.",
+  "en": "^night.сухар A rusk? And keeps quiet about it, the miser."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.сухар Сухар — теж їжа. Хай ділиться, {м_слівце}.",
+  "en": "^night.сухар A rusk is food too. Let {him|her} share, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.хворий Хворий — то ти. А я голодний.",
+  "en": "^night.хворий You're the sick one. I'm hungry."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.хворий Хворий, зате ситим буду. А ти — ні.",
+  "en": "^night.хворий Sick, but I'll be fed. You won't."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.тонкий Тонкий, зате розумний. От тебе першим і зжеруть.",
+  "en": "^night.тонкий Thin, but clever. So they'll eat you first."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.тонкий То за {name} сховаюсь. Там є за чим.",
+  "en": "^night.тонкий Then I'll hide behind {name}. There's room there."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.розкажу Розказуй. Хто тобі повірить, ботан?",
+  "en": "^night.розкажу Go on, tell. Who'd believe you, nerd?"
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.розкажу Розкажеш — я тобі пір'я в хвості перелічу.",
+  "en": "^night.розкажу Tell anyone and I'll count every feather in your tail. One by one."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.ліс Ліс говорить, а ти перекладаєш. Мовчи вже.",
+  "en": "^night.ліс The forest talks and you translate. Just shut up."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.ліс Ага. Слухай ліс. Не мене, а ліс, {м_слівце}.",
+  "en": "^night.ліс Yeah. Listen to the forest. Not me, the forest, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.як_ти Я не тихий, коли сплю. Я хроплю. Сам казав.",
+  "en": "^night.як_ти I'm not quiet when I sleep. I snore. You said so."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.як_ти Ти дивишся, як я сплю? Дивак, бля.",
+  "en": "^night.як_ти You watch me sleep? Fucking weirdo."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.скиглиш Я теж голодний. І я ближче. Тож слухай мене.",
+  "en": "^night.скиглиш I'm hungry too. And I'm closer. So listen to me."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.скиглиш Скиглю, бо ти не годуєш. Вовків хоч зграя годує.",
+  "en": "^night.скиглиш I whine because you don't feed me. At least the pack feeds wolves."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.не_підходили Підійдуть — я їм заспіваю, {м_слівце}. Втечуть.",
+  "en": "^night.не_підходили If they come, I'll sing to them, {м_слівце}. They'll run."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.не_підходили Хай підходять. Я їм носи пообдзьобую.",
+  "en": "^night.не_підходили Let them come. I'll peck their noses off."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.здивований Здивований чим? Моєю красою, сто пудів.",
+  "en": "^night.здивований Surprised by what? My good looks, for sure."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.здивований Двоє — то двоє. Я двох подужаю. Мабуть.",
+  "en": "^night.здивований Two is two. I can take two. Probably."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.курча Курчам? Йди сам глянь, розумнику. Я тут посиджу.",
+  "en": "^night.курча A chicken? Go look yourself, smartass. I'll sit here."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.курча Світлячки так не моргають, {м_слівце}. Я бачив.",
+  "en": "^night.курча Fireflies don't blink like that, {м_слівце}. I saw."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.романтик Та блохи, зорі — одна хуйня. Дрібне все.",
+  "en": "^night.романтик Fleas, stars, same shit. All tiny."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.романтик Романтик, ага. Я ше й вірші про блох знаю.",
+  "en": "^night.романтик A romantic, yeah. I know poems about fleas too."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.уважніше Подивився. Чухаються.",
+  "en": "^night.уважніше I looked. They're scratching."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.уважніше Уважно дивитись — то твоя робота. Моя — дзьобать.",
+  "en": "^night.уважніше Looking closely is your job. Mine is pecking."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.сторож Сторож… А верещить, як різана.",
+  "en": "^night.сторож A watchman… Screeches like it's being butchered."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.сторож Сторож тут я. Хай сова мовчить.",
+  "en": "^night.сторож I'm the watchman here. Let the owl shut up."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.мудра Мудра, бо ти так сказав? Ти й себе мудрим кличеш.",
+  "en": "^night.мудра Wise because you said so? You call yourself wise too."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.мудра Мудрих я не люблю. Тебе ж якось терплю.",
+  "en": "^night.мудра I don't like the wise. Somehow I put up with you."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.заблукав Хай світить. Тіко не на мене, бо дзьобну.",
+  "en": "^night.заблукав Let it shine. But not on me, or I'll peck it."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.заблукав Я й так не заблукаю. В мене ніс.",
+  "en": "^night.заблукав I won't get lost anyway. I've got a nose."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.не_бери На всіх? То ше гірше. Нахаба.",
+  "en": "^night.не_бери At everyone? That's even worse. Cheeky bastard."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.не_бери Беру. Я все беру до серця. І до дзьоба.",
+  "en": "^night.не_бери I do. I take everything to heart. And to beak."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.шия Притулюсь. Але це нічо не значить, ясно?",
+  "en": "^night.шия I'll snuggle. But it means nothing, got it?"
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.шия До шиї? Там {name} лоскотно. Ну й хай.",
+  "en": "^night.шия To the neck? It tickles {name} there. Too bad."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.вогонь Скоро — то коли? Бо я в бурульку перетворююсь.",
+  "en": "^night.вогонь Soon is when? Because I'm turning into an icicle."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.вогонь Скоро. Ти завжди кажеш «скоро».",
+  "en": "^night.вогонь Soon. You always say «soon»."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.миша Поки не зробила. Дзьобну. Шоб знала.",
+  "en": "^night.миша Hasn't yet. I'll peck it. Just so it knows."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.миша Миша — то вечеря, а не друг.",
+  "en": "^night.миша A mouse is supper, not a friend."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.змія Змія? Ну… тоді хай шурхотить собі.",
+  "en": "^night.змія A snake? Well… let it rustle then."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.змія Змію я дзьобну двічі. Для певності.",
+  "en": "^night.змія A snake I'll peck twice. To be sure."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.думаю Думай тихіше, бо я чую, як скрипить.",
+  "en": "^night.думаю Think quieter, I can hear it creaking."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.думаю Думаєш? Про мене, сто пудів.",
+  "en": "^night.думаю Thinking? About me, for sure."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.пильную Ну то я покимарю. Ти ж однаково пильнуєш.",
+  "en": "^night.пильную Then I'll doze. You're on watch anyway."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.пильную Пильнуєш — то пильнуй і мене. Мені нудно.",
+  "en": "^night.пильную If you're on watch, watch me too. I'm bored."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.смачного Дякую. Тобі не лишу.",
+  "en": "^night.смачного Thanks. I won't save you any."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.смачного Свіже — то кожен може. А гниле — з характером.",
+  "en": "^night.смачного Anyone can eat fresh. Rotten has character."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.болото Шкода, бляха. Я б подзьобав.",
+  "en": "^night.болото Damn shame. I'd have pecked a bit."
+ },
+ {
+  "who": "M",
+  "list": "м_кінець",
+  "op": "add",
+  "uk": "^night.болото То ходім до болота. Я швидко.",
+  "en": "^night.болото Then let's go to the swamp. I'll be quick."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^скарга Пір'я — як ганчірка, шо підлогу мили.",
+  "uk": "^rain.мокрий Пір'я — як ганчірка, шо підлогу мили.",
+  "en": "^rain.мокрий My feathers are like a rag someone mopped the floor with."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^скарга Я мокрий, як хвіст у риби. Нє, ше мокріший.",
+  "uk": "^rain.мокрий Я мокрий, як хвіст у риби. Нє, ше мокріший.",
+  "en": "^rain.мокрий I'm wet as a fish's tail. No, wetter."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^скарга Ше трохи — і я качка, {м_слівце}. Кря, бля.",
+  "uk": "^rain.мокрий Ше трохи — і я качка, {м_слівце}. Кря.",
+  "en": "^rain.мокрий A bit more and I'm a duck, {м_слівце}. Quack."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^скарга Хто, бля, цей дощ замовив? Знайду — заклюю.",
+  "uk": "^rain.замовив Хто цей дощ замовив? Знайду — заклюю.",
+  "en": "^rain.замовив Who ordered this rain? I'll find them and peck them to death."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^скарга З неба ссуть, а ми сидимо й мовчимо. Терпіли.",
+  "uk": "^rain.ссуть З неба ссуть, а ми сидимо й мовчимо. Терпіли.",
+  "en": "^rain.ссуть The sky's pissing on us, and we just sit and take it. Doormats."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "~1 ^скарга Ненавиджу воду. І тебе. Тебе більше.",
+  "uk": "~1 ^rain.ненавиджу Ненавиджу воду. І тебе. Тебе більше.",
+  "en": "~1 ^rain.ненавиджу I hate water. And you. You more."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^калюжі Хлюпає під лапами, {м_слівце}. На плечі! Як таке взагалі?",
+  "uk": "^rain.калюжі Хлюпає під лапами, {м_слівце}. На плечі! Як таке взагалі?",
+  "en": "^rain.калюжі It's squelching under my feet, {м_слівце}. On a shoulder! How is that even possible?"
+ },
+ {
+  "who": "M",
+  "list": "м_дощ",
+  "op": "set",
+  "old": "^сохнути Де сохнути будемо, га? Я питаю: де, бля?!",
+  "uk": "^rain.сохнути Де сохнути будемо, га? Я питаю: де?!",
+  "en": "^rain.сохнути Where are we drying off, huh? I'm asking: where?!"
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^скарга Дощ змиває сліди. І дурні думки.",
+  "uk": "^rain.мокрий>rain.комір Тихіше, від тебе вода тече мені за комір.",
+  "en": "^rain.мокрий>rain.комір Quieter, water is running off you down my collar."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^скарга Тихіше, від тебе вода тече мені за комір.",
+  "uk": "^rain.мокрий>rain.видовище Мокрий ворон — сумне видовище. Ти — особливо.",
+  "en": "^rain.мокрий>rain.видовище A wet raven is a sad sight. You especially."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^скарга Мокрий ворон — сумне видовище. Ти — особливо.",
+  "uk": "^rain.мокрий|rain.ненавиджу>rain.цукор Не ний. Не розмокнеш.",
+  "en": "^rain.мокрий|rain.ненавиджу>rain.цукор Don't whine. You won't dissolve."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "~1 ^скарга Не ний. Ти не з цукру.",
+  "uk": "~1 ^rain.мокрий|rain.ненавиджу>rain.цукор Не ний. Ти не з цукру.",
+  "en": "~1 ^rain.мокрий|rain.ненавиджу>rain.цукор Don't whine. You're not made of sugar."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "~3 ^скарга Тримайся ближче, так тепліше.",
+  "uk": "~3 ^rain.мокрий>rain.ближче Тримайся ближче, так тепліше. Мокрий, але мій.",
+  "en": "~3 ^rain.мокрий>rain.ближче Stay closer, it's warmer. Wet, but mine."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^калюжі Хлюпає в тебе в голові. На плечі сухо.",
+  "uk": "~2 ^rain.мокрий|rain.ссуть>rain.мертві Перетерпи. Мокрі — не мертві.",
+  "en": "~2 ^rain.мокрий|rain.ссуть>rain.мертві Bear it. Wet isn't dead."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^калюжі Не тупцюй. Бризкаєш.",
+  "uk": "^rain.мокрий|rain.ссуть>rain.думки Дощ змиває сліди. І дурні думки. Тобі корисно.",
+  "en": "^rain.мокрий|rain.ссуть>rain.думки Rain washes away tracks. And stupid thoughts. Good for you."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^сохнути Біля вогню. Якщо {name} його розпалить.",
+  "uk": "^rain.мокрий|rain.ссуть|rain.ненавиджу>rain.бурчання Дощ скінчиться. Твоє бурчання — ні.",
+  "en": "^rain.мокрий|rain.ссуть|rain.ненавиджу>rain.бурчання The rain will end. Your grumbling won't."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^сохнути На вітрі. Як білизна. Розвісимо тебе на гілці.",
+  "uk": "^rain.замовив>rain.небо Небо. Лети, клюй. Я подивлюсь.",
+  "en": "^rain.замовив>rain.небо The sky. Fly up and peck it. I'll watch."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "^скарга Дощ скінчиться. Твоє бурчання — ні.",
+  "uk": "^rain.замовив>rain.тор Тор. Іди, скажи йому. Він любить сміливих.",
+  "en": "^rain.замовив>rain.тор Thor. Go tell him. He likes the brave."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "set",
+  "old": "~2 ^скарга Перетерпи. Мокрі — не мертві.",
+  "uk": "~1 ^rain.замовив>rain.тор Тор. Іди, поскаржся. Він тебе вислухає. Блискавкою.",
+  "en": "~1 ^rain.замовив>rain.тор Thor. Go complain. He'll hear you out. With lightning."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.ссуть>rain.не_мовчиш Мовчимо? Ти не мовчиш. На жаль.",
+  "en": "^rain.ссуть>rain.не_мовчиш Taking it quietly? You're not quiet. Sadly."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.ссуть>rain.кричи Покричи на небо. Може, засоромиться.",
+  "en": "^rain.ссуть>rain.кричи Shout at the sky. Maybe it'll be ashamed."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.ненавиджу>rain.взаємно Взаємно. Тільки вода мовчить.",
+  "en": "^rain.ненавиджу>rain.взаємно Likewise. Only the water keeps quiet."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.калюжі>rain.в_голові Хлюпає в тебе в голові. На плечі сухо.",
+  "en": "^rain.калюжі>rain.в_голові It's sloshing in your head. The shoulder is dry."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.калюжі>rain.тупцюй Не тупцюй. Бризкаєш.",
+  "en": "^rain.калюжі>rain.тупцюй Stop stomping. You're splashing."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.сохнути>rain.вогонь Біля вогню. Якщо {name} його розпалить.",
+  "en": "^rain.сохнути>rain.вогонь By the fire. If {name} lights one."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "~3 ^rain.сохнути>rain.вогонь Біля вогню. Я сам тебе обтрушу, тільки не кричи.",
+  "en": "~3 ^rain.сохнути>rain.вогонь By the fire. I'll shake you dry myself, just stop yelling."
+ },
+ {
+  "who": "H",
+  "list": "х_дощ",
+  "op": "add",
+  "uk": "^rain.сохнути>rain.гілка На вітрі. Як білизна. Розвісимо тебе на гілці.",
+  "en": "^rain.сохнути>rain.гілка In the wind. Like laundry. We'll hang you on a branch."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "^скарга Філософ знайшовся, {м_слівце}.",
+  "uk": "^rain.комір Ну то й шо? Тобі теж треба помитись, ботан.",
+  "en": "^rain.комір So what? You need a wash too, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "^скарга Сам ти мудрий. Мокрий, {м_слівце}, і мудрий. Тьху.",
+  "uk": "^rain.комір Тече, бо я до тебе тулюсь. Терпи.",
+  "en": "^rain.комір It runs because I'm leaning on you. Deal with it."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "^скарга Ну… мо' й так. Але все одно хуйня.",
+  "uk": "^rain.видовище На себе глянь. Ти як пацюк, шо з бочки виліз.",
+  "en": "^rain.видовище Look at yourself. Like a rat that crawled out of a barrel."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "~3 ^скарга Добре, ботан, мовчу. Тіко мокро, {м_слівце}.",
+  "uk": "^rain.видовище Сумне, бо ти дивишся. Не дивись, {м_слівце}.",
+  "en": "^rain.видовище Sad because you're looking. Don't look, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "^калюжі Бризкаю, бо можу. І шо ти мені зробиш?",
+  "uk": "^rain.цукор Не з цукру. З гівна і злості. Ше гірше розмокає.",
+  "en": "^rain.цукор Not sugar. Shit and spite. Dissolves even worse."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "^сохнути Тіко сунься, {м_слівце}. Тіко сунься.",
+  "uk": "^rain.цукор Ну… мо' й так. Але все одно хуйня.",
+  "en": "^rain.цукор Well… maybe. But it's still bullshit."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "set",
+  "old": "^скарга Скінчиться, ага. Як і ти колись, професоре.",
+  "uk": "^rain.ближче Ближче, ага. Шоб і ти намок. Справедливо.",
+  "en": "^rain.ближче Closer, yeah. So you get wet too. Fair."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.ближче Добре, притулюсь. Тіко нікому, {м_слівце}.",
+  "en": "^rain.ближче Fine, I'll snuggle. Not a word to anyone, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.мертві Не мертві, ага. Поки шо, {м_слівце}.",
+  "en": "^rain.мертві Not dead, sure. Yet, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.мертві Утішив. Мокрий, але живий. Ура, бля.",
+  "en": "^rain.мертві Comforting. Wet but alive. Fucking hooray."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.думки Філософ знайшовся, {м_слівце}.",
+  "en": "^rain.думки Look who's a philosopher, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.думки Сам ти мудрий. Мокрий і мудрий. Тьху.",
+  "en": "^rain.думки You're the wise one. Wet and wise. Ugh."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.бурчання Скінчиться, ага. Як і ти колись, професоре.",
+  "en": "^rain.бурчання It'll end, sure. Like you someday, professor."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.бурчання Бурчання — то моє право. Як у неба — дощ.",
+  "en": "^rain.бурчання Grumbling is my right. Like rain is the sky's."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.небо І полечу. Тіко хай дощ скінчиться.",
+  "en": "^rain.небо And I will. Once the rain stops."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.небо Небо далеко. А ти близько, ботан.",
+  "en": "^rain.небо The sky is far. You're close, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.тор Тор? Ну… хай живе поки шо.",
+  "en": "^rain.тор Thor? Well… he can live. For now."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.тор Скажу. Як він сюди спуститься, {м_слівце}.",
+  "en": "^rain.тор I will. When he comes down here, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.не_мовчиш Бо хтось має сказати правду.",
+  "en": "^rain.не_мовчиш Because somebody has to tell the truth."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.не_мовчиш Мовчать терпіли. А я лаюсь.",
+  "en": "^rain.не_мовчиш Doormats keep quiet. I swear."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.кричи Покричу. А ти не заважай.",
+  "en": "^rain.кричи I will. And don't you get in the way."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.кричи Небо засоромиться? Ти шо, грибів наївся?",
+  "en": "^rain.кричи The sky, ashamed? Have you been eating mushrooms?"
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.взаємно Бо вона тупа. А я ні.",
+  "en": "^rain.взаємно Because it's dumb. I'm not."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.взаємно Вода хоч не вчить мене жити.",
+  "en": "^rain.взаємно At least the water doesn't lecture me."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.в_голові Сухо? Помацай, ботан. Помацай!",
+  "en": "^rain.в_голові Dry? Feel it, nerd. Go on, feel it!"
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.в_голові В голові в мене злість. Вона не хлюпає.",
+  "en": "^rain.в_голові In my head is rage. Rage doesn't slosh."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.тупцюй Бризкаю, бо можу. І шо ти мені зробиш?",
+  "en": "^rain.тупцюй I splash because I can. And what are you gonna do about it?"
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.тупцюй Тупцюю, бо лапи мерзнуть, {м_слівце}.",
+  "en": "^rain.тупцюй I stomp because my feet are freezing, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.вогонь Розпалить. Я так дивитимусь, шо розпалить.",
+  "en": "^rain.вогонь {He'll|She'll} light one. I'll stare until {he|she} does."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.вогонь «Якщо». Вічно в тебе «якщо».",
+  "en": "^rain.вогонь «If». It's always «if» with you."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.гілка Тіко сунься, {м_слівце}. Тіко сунься.",
+  "en": "^rain.гілка Just try it, {м_слівце}. Just try."
+ },
+ {
+  "who": "M",
+  "list": "м_дощ_кінець",
+  "op": "add",
+  "uk": "^rain.гілка Сам на гілці висітимеш. За дзьоб.",
+  "en": "^rain.гілка You'll hang on a branch yourself. By the beak."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^туман Нічого не бачу. А я, між іншим, бачу все.",
+  "uk": "^fog.бачу Нічого не бачу. А я, між іншим, бачу все.",
+  "en": "^fog.бачу I can't see anything. And I, by the way, see everything."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^туман Туман. Добре для засідок. Погано для нас.",
+  "uk": "^fog.засідки Туман. Добре для засідок. Погано для нас.",
+  "en": "^fog.засідки Fog. Good for ambushes. Bad for us."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^туман У такому тумані навіть Одін заблукав би.",
+  "uk": "^fog.одін У такому тумані навіть Одін заблукав би.",
+  "en": "^fog.одін In fog like this even Odin would get lost."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "~1 ^туман Муніне, якщо загубишся, я шукати не буду.",
+  "uk": "~1 ^fog.шукати Муніне, якщо загубишся, я шукати не буду.",
+  "en": "~1 ^fog.шукати Munin, if you get lost, I won't look for you."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "~3 ^туман Тримайся поруч. Не люблю, коли тебе не видно.",
+  "uk": "~3 ^fog.поруч Тримайся поруч. Не люблю, коли тебе не видно.",
+  "en": "~3 ^fog.поруч Stay close. I don't like it when I can't see you."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^звуки Чуєш? Кроки. Чи то в тебе в животі.",
+  "uk": "^fog.звуки Чуєш? Кроки. Чи то в тебе в животі.",
+  "en": "^fog.звуки Hear that? Footsteps. Or your stomach."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^дорога Ми ще на дорозі? Бо я вже не певен.",
+  "uk": "^fog.дорога Ми ще на дорозі? Бо я вже не певен.",
+  "en": "^fog.дорога Are we still on the road? Because I'm not sure anymore."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^мряка_т Туман лізе в пір'я. Холодний, як рука драуґра.",
+  "uk": "^fog.мряка Туман лізе в пір'я. Холодний, як рука драуґра.",
+  "en": "^fog.мряка The fog creeps into my feathers. Cold as a draugr's hand."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^силует Он силует. Дерево чи троль?",
+  "uk": "^fog.силует Он силует. Дерево чи троль?",
+  "en": "^fog.силует There's a silhouette. A tree or a troll?"
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^голос Хтось кличе в тумані. Не відповідай.",
+  "uk": "^fog.голос Хтось кличе в тумані. Не відповідай.",
+  "en": "^fog.голос Someone's calling in the fog. Don't answer."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^тримайся Тримаймося ближче. Тут легко розгубитися.",
+  "uk": "^fog.тримайся Тримаймося ближче. Тут легко розгубитися.",
+  "en": "^fog.тримайся Let's stay closer. It's easy to get separated here."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^вогник Бачиш вогник? Там, у сірому.",
+  "uk": "^fog.вогник Бачиш вогник? Там, у сірому.",
+  "en": "^fog.вогник See a light? There, in the grey."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^тиша_т Туман глушить звуки. Навіть твою лайку.",
+  "uk": "^fog.тиша Туман глушить звуки. Навіть твою лайку.",
+  "en": "^fog.тиша The fog muffles sounds. Even your swearing."
+ },
+ {
+  "who": "H",
+  "list": "х_туман",
+  "op": "set",
+  "old": "^мокро Туман осідає на пір'я. Скоро будемо важкі, як каміння.",
+  "uk": "^fog.мокро Туман осідає на пір'я. Скоро будемо важкі, як каміння.",
+  "en": "^fog.мокро The fog settles on our feathers. Soon we'll be heavy as stones."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^туман Все бачиш? Ну то скажи, де я, професоре. Ну? Ну?",
+  "uk": "^fog.бачу>fog.де_я Все бачиш? Ну то скажи, де я, професоре. Ну? Ну?",
+  "en": "^fog.бачу>fog.де_я You see everything? Then tell me where I am, professor. Well? Well?"
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^туман Засідки? Та я сам засідка, {м_слівце}. Ходяча.",
+  "uk": "^fog.бачу>fog.сліпий Шо, сліпий тепер, як я? Ласкаво просимо, {м_слівце}.",
+  "en": "^fog.бачу>fog.сліпий What, blind like me now? Welcome, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^туман Одін би заблукав. А ти вже, бля, заблукав.",
+  "uk": "^fog.засідки>fog.сам_засідка Засідки? Та я сам засідка, {м_слівце}. Ходяча.",
+  "en": "^fog.засідки>fog.сам_засідка Ambushes? I'm an ambush myself, {м_слівце}. A walking one."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^туман Ніхуя не видно. Саме то, шоб когось клюнути з-за рогу.",
+  "uk": "^fog.засідки>fog.клюнути Ніхуя не видно. Саме то, шоб когось клюнути зненацька.",
+  "en": "^fog.засідки>fog.клюнути Can't see fuck-all. Perfect for pecking someone by surprise."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "~1 ^туман Не шукатимеш? Та я тебе сам знайду. І дзьобну.",
+  "uk": "~2 ^fog.засідки>fog.клюнути Погано? Нас теж не видно. Клюну першим, і всьо.",
+  "en": "~2 ^fog.засідки>fog.клюнути Bad? Nobody sees us either. I peck first, done."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "~3 ^туман Та тут я, тут. Не скигли, засранцю, бо стидно.",
+  "uk": "^fog.одін>fog.ти_вже Одін би заблукав. А ти вже, бля, заблукав.",
+  "en": "^fog.одін>fog.ти_вже Odin would get lost. And you already fucking are."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^звуки То в мене в пузі. Я голодний, а ти — кроки, кроки.",
+  "uk": "^fog.одін>fog.одноокий Одін і так одним оком бачить. Йому туман — дрібниця.",
+  "en": "^fog.одін>fog.одноокий Odin sees with one eye anyway. Fog's nothing to him."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^звуки Кроки. Здоровенні. Ну все, {м_слівце}, зара буде бійка.",
+  "uk": "^fog.шукати>fog.знайду Не шукатимеш? Та я тебе сам знайду. І дзьобну.",
+  "en": "^fog.шукати>fog.знайду You won't look? I'll find you myself. And peck you."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^дорога На дорозі, де ж ше. Он камінь, он кущ. Чи то троль. Хуй його знає.",
+  "uk": "^fog.шукати>fog.сам_вийду Та й не треба. Я сам вийду. А ти тут хоч згний, {м_слівце}.",
+  "en": "^fog.шукати>fog.сам_вийду Don't need you to. I'll get out myself. You can rot here, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^дорога Дорога — там, куди {name} пре. Хоч у болото.",
+  "uk": "^fog.поруч>fog.тут Та тут я, тут. Не скигли, засранцю, бо стидно.",
+  "en": "^fog.поруч>fog.тут I'm here, here. Don't whine, you little shit, it's embarrassing."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "~2 ^туман Нічо не видно. Зате й нас не видно. Чесно.",
+  "uk": "^fog.поруч>fog.ніжності Ой, які ми ніжні. Добре, тримаюсь. Тіко нікому.",
+  "en": "^fog.поруч>fog.ніжності Oh, aren't we tender. Fine, I'm holding on. Just tell no one."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^мряка_т Та краще б драуґр, {м_слівце}. Йому хоч у пику дати можна. А туман шо?",
+  "uk": "^fog.звуки>fog.живіт То в мене в пузі. Я голодний, а ти — кроки, кроки.",
+  "en": "^fog.звуки>fog.живіт That's my belly. I'm starving and you go footsteps, footsteps."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^мряка_т Холодно, бля. Ну… притулися, чи шо. Тіко без телячих ніжностей.",
+  "uk": "^fog.звуки>fog.бійка Кроки. Здоровенні. Ну все, {м_слівце}, зара буде бійка.",
+  "en": "^fog.звуки>fog.бійка Footsteps. Huge ones. That's it, {м_слівце}, there's gonna be a fight."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^силует Троль, сто пудів, {м_слівце}. Я печінкою чую. Готуй дзьоба.",
+  "uk": "^fog.дорога>fog.троль На дорозі, де ж ше. Он камінь, он кущ. Чи то троль. Хуй його знає.",
+  "en": "^fog.дорога>fog.троль On the road, where else. There's a rock, there's a bush. Or a troll. Fuck knows."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^силует Та дерево. Але я б дзьобнув. Хай знає.",
+  "uk": "^fog.дорога>fog.болото Дорога — там, куди {name} пре. Хоч у болото.",
+  "en": "^fog.дорога>fog.болото The road is wherever {name} barges. Even into a swamp."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^голос Та я вже відповів. Матюком. Трьохповерховим.",
+  "uk": "^fog.мряка>fog.драуґр Та краще б драуґр, {м_слівце}. Йому хоч у пику дати можна. А туман шо?",
+  "en": "^fog.мряка>fog.драуґр A draugr would be better, {м_слівце}. At least you can punch it. And fog?"
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^голос Кличе? То я йому зара так гукну, {м_слівце}, шо сам прибіжити.",
+  "uk": "^fog.мряка>fog.притулися Холодно, бля. Ну… притулися, чи шо. Тіко без телячих ніжностей.",
+  "en": "^fog.мряка>fog.притулися Cold, fuck. Well… snuggle up or whatever. No mushy stuff."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^тримайся Я й так на плечі, ало. Ближче — тіко в пазуху.",
+  "uk": "^fog.силует>fog.троль_сто Троль, сто пудів, {м_слівце}. Я печінкою чую. Готуй дзьоба.",
+  "en": "^fog.силует>fog.троль_сто A troll, hundred percent, {м_слівце}. I feel it in my gut. Ready your beak."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^тримайся Розгубимось — знайду тебе по запаху. Ти смердиш книжками, ботан.",
+  "uk": "^fog.силует>fog.дерево Та дерево. Але я б дзьобнув. Хай знає.",
+  "en": "^fog.силует>fog.дерево A tree. But I'd peck it anyway. Just so it knows."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^вогник Ну бачу. Пішли туди, хай там хоч дідько з рогами сидить.",
+  "uk": "^fog.голос>fog.матюком Та я вже відповів. Матюком. Трьохповерховим.",
+  "en": "^fog.голос>fog.матюком I already answered. With a three-storey curse."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^вогник То болотний вогник, {м_слівце}. Дурнів заманює. Тебе, наприклад. Гиги.",
+  "uk": "^fog.голос>fog.гукну Кличе? То я йому зара так гукну, {м_слівце}, шо сам прибіжить.",
+  "en": "^fog.голос>fog.гукну It's calling? I'll yell back so hard, {м_слівце}, it'll come running."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^тиша_т Нічо не глушить. Слухай сюди: КУРВА.",
+  "uk": "^fog.тримайся>fog.пазуха Я й так на плечі, ало. Ближче — тіко в пазуху.",
+  "en": "^fog.тримайся>fog.пазуха I'm already on the shoulder, hello. Any closer is inside your shirt."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^тиша_т Глушить, бляха. Мені це не подобається, чуєш?",
+  "uk": "^fog.тримайся>fog.запах Розгубимось — знайду тебе по запаху. Ти смердиш книжками, ботан.",
+  "en": "^fog.тримайся>fog.запах If we get split, I'll find you by smell. You stink of books, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^мокро Я важкий не від туману. Я від злості важкий.",
+  "uk": "^fog.вогник>fog.пішли Ну бачу. Пішли туди, хай там хоч дідько з рогами сидить.",
+  "en": "^fog.вогник>fog.пішли Yeah, I see it. Let's go, even if there's a horned devil sitting there."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "set",
+  "old": "^мокро Обтрусимось. Як пси. Шо тут думати.",
+  "uk": "^fog.вогник>fog.болотний То болотний вогник, {м_слівце}. Дурнів заманює. Тебе, наприклад. Гиги.",
+  "en": "^fog.вогник>fog.болотний That's a will-o'-the-wisp, {м_слівце}. Lures idiots. Like you. Heh."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "add",
+  "uk": "^fog.тиша>fog.курва Нічо не глушить. Слухай сюди: КУРВА.",
+  "en": "^fog.тиша>fog.курва It doesn't muffle shit. Listen: FUCK."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "add",
+  "uk": "^fog.тиша>fog.не_подобається Глушить, бляха. Мені це не подобається, чуєш?",
+  "en": "^fog.тиша>fog.не_подобається It does muffle, damn it. I don't like it, hear me?"
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "add",
+  "uk": "^fog.мокро>fog.злість Я важкий не від туману. Я від злості важкий.",
+  "en": "^fog.мокро>fog.злість I'm not heavy from the fog. I'm heavy with rage."
+ },
+ {
+  "who": "M",
+  "list": "м_туман",
+  "op": "add",
+  "uk": "^fog.мокро>fog.пси Обтрусимось. Як пси. Шо тут думати.",
+  "en": "^fog.мокро>fog.пси We'll shake it off. Like dogs. Nothing to think about."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^туман Тримайся крила. І не каркай.",
+  "uk": "^fog.де_я На плечі. Справа. Сопиш.",
+  "en": "^fog.де_я On the shoulder. Right side. Wheezing."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^звуки Добре, що хоч твоє бурчання знайоме.",
+  "uk": "^fog.де_я Там, де найгучніше. Тебе не треба бачити.",
+  "en": "^fog.де_я Wherever it's loudest. No need to see you."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^дорога Тоді йдемо далі. Обережно.",
+  "uk": "^fog.сліпий Я — на годину. Ти — від народження.",
+  "en": "^fog.сліпий Me, for an hour. You, since birth."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^мряка_т Скоро розвіється. Мабуть.",
+  "uk": "^fog.сліпий Тимчасово. Не звикай до компанії.",
+  "en": "^fog.сліпий Temporarily. Don't get used to the company."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^силует Підійдемо — побачимо. Обережно.",
+  "uk": "^fog.сам_засідка Засідка, що лається вголос. Надійно.",
+  "en": "^fog.сам_засідка An ambush that swears out loud. Very reliable."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^голос Туман любить пастки з голосами. Тихо.",
+  "uk": "^fog.сам_засідка Засідка мовчить. Спробуй хоч раз.",
+  "en": "^fog.сам_засідка An ambush keeps quiet. Try it once."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^тримайся Гаразд. Аби не відставав.",
+  "uk": "^fog.клюнути Аби цим «кимось» не виявився я.",
+  "en": "^fog.клюнути As long as that «someone» isn't me."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^вогник Не підемо. Хай світить сам.",
+  "uk": "^fog.клюнути Зненацька клюють і нас. Тихо.",
+  "en": "^fog.клюнути They can peck us by surprise too. Quiet."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^тиша_т Мені подобається. Тихо, як у пір'ї.",
+  "uk": "^fog.ти_вже Я знаю, де ми. Просто не кажу.",
+  "en": "^fog.ти_вже I know where we are. I'm just not saying."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "set",
+  "old": "^мокро Злітати буде важко. Сидимо.",
+  "uk": "^fog.ти_вже Заблукав. Разом із тобою. Утіха слабка.",
+  "en": "^fog.ти_вже Lost. Together with you. Small comfort."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.одноокий Одним, але більше, ніж ти двома.",
+  "en": "^fog.одноокий One eye, but more than you see with two."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.одноокий Йому дрібниця. Нам — ні. Тримайся.",
+  "en": "^fog.одноокий Nothing to him. Not to us. Hold on."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.знайду Знайдеш — дзьобни. Аби знайшов.",
+  "en": "^fog.знайду Find me and peck me. As long as you find me."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.знайду Знайдеш по голосу. Своєму.",
+  "en": "^fog.знайду You'll find me by the voice. Your own."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.сам_вийду Вийдеш. Колами. За тиждень.",
+  "en": "^fog.сам_вийду You'll get out. In circles. In a week."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.сам_вийду Тоді відпусти моє крило.",
+  "en": "^fog.сам_вийду Then let go of my wing."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.тут Тримайся крила. І не каркай.",
+  "en": "^fog.тут Stay by my wing. And don't croak."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.тут Я не скиглю. Я перевіряю, чи ти живий.",
+  "en": "^fog.тут I'm not whining. I'm checking you're alive."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.ніжності Нікому. Туман однаково все ховає.",
+  "en": "^fog.ніжності No one. The fog hides everything anyway."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.ніжності Домовились. Ти мовчиш, я не бачу.",
+  "en": "^fog.ніжності Deal. You keep quiet, I see nothing."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.живіт Добре, що хоч твоє бурчання знайоме.",
+  "en": "^fog.живіт Good that at least your grumbling is familiar."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.живіт Тоді бурчи тихіше. Справжніх кроків не чую.",
+  "en": "^fog.живіт Then grumble quieter. I can't hear the real footsteps."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.бійка Не буде. Ти ще не бачив, хто там.",
+  "en": "^fog.бійка There won't. You haven't seen what it is yet."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.бійка Бійка в тумані — це коли б'єш своїх. Стій.",
+  "en": "^fog.бійка A fight in fog is when you hit your own. Stay put."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.троль Якщо кущ рухається — це не кущ.",
+  "en": "^fog.троль If the bush moves, it's not a bush."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.троль Тоді йдемо далі. Обережно.",
+  "en": "^fog.троль Then we go on. Carefully."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.болото У болото — це вже не дорога. Це доля.",
+  "en": "^fog.болото Into a swamp isn't a road. It's fate."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.болото Тоді молімося, щоб {name} бачи{в|ла} краще за нас.",
+  "en": "^fog.болото Then let's pray {name} sees better than we do."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.драуґр Туману не даси. Він сам дасть. Застуду.",
+  "en": "^fog.драуґр You can't punch fog. It punches you. With a cold."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.драуґр Не накликай. Драуґри туман люблять.",
+  "en": "^fog.драуґр Don't call them. Draugr love fog."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.притулися Без ніжностей. Просто тепло. Дякую.",
+  "en": "^fog.притулися No mushy stuff. Just warmth. Thanks."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.притулися Притулюсь. Ти теплий, як не дивно.",
+  "en": "^fog.притулися I will. You're warm, oddly enough."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.троль_сто Твоя печінка вже раз кущ за троля мала.",
+  "en": "^fog.троль_сто Your gut once mistook a bush for a troll."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.троль_сто Підійдемо — побачимо. Обережно.",
+  "en": "^fog.троль_сто We'll get closer and see. Carefully."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.дерево Дзьобай. Дерево не відповість.",
+  "en": "^fog.дерево Peck away. A tree won't answer."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.дерево Дзьобни. Якщо заверещить — тікаємо.",
+  "en": "^fog.дерево Peck it. If it screams, we run."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.матюком Тепер воно знає, де ми. Дякую.",
+  "en": "^fog.матюком Now it knows where we are. Thanks."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.матюком Туман любить пастки з голосами. А ти — пастка з лайкою.",
+  "en": "^fog.матюком Fog loves traps with voices. And you're a trap with swearing."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.гукну Не треба, щоб прибігало. Тихо.",
+  "en": "^fog.гукну We don't want it running here. Quiet."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.гукну Туман любить пастки з голосами. Не будь приманкою.",
+  "en": "^fog.гукну Fog loves traps with voices. Don't be the bait."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.пазуха У пазуху не пущу. Сиди й не злітай.",
+  "en": "^fog.пазуха You're not going in the shirt. Sit and don't fly off."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.пазуха Плече — це близько. Для тебе — навіть забагато.",
+  "en": "^fog.пазуха A shoulder is close. For you, too close."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.запах Книжками? Ти хоч одну бачив?",
+  "en": "^fog.запах Books? Have you ever seen one?"
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.запах А тебе знайде кожен вовк. Так само.",
+  "en": "^fog.запах And every wolf will find you. Same way."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.пішли Не підемо. Хай світить сам.",
+  "en": "^fog.пішли We won't. Let it shine by itself."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.пішли Дідько з рогами — це ще добрий варіант.",
+  "en": "^fog.пішли A horned devil is the good option."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.болотний Знаю. Тому й не йду. А ти вже дивишся.",
+  "en": "^fog.болотний I know. That's why I'm not going. And you're already staring."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.болотний Тоді чому ти до нього шию тягнеш?",
+  "en": "^fog.болотний Then why are you craning your neck at it?"
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.курва Чув. На жаль, не заглушило.",
+  "en": "^fog.курва Heard it. Sadly, not muffled."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.курва Дякую. Тепер нас чують і в Гельгеймі.",
+  "en": "^fog.курва Thanks. Now they can hear us in Helheim."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.не_подобається Мені подобається. Тихо, як у пір'ї.",
+  "en": "^fog.не_подобається I like it. Quiet, like inside feathers."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.не_подобається Чую. Ледве. От би завжди так.",
+  "en": "^fog.не_подобається I hear you. Barely. If only it were always this way."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.злість Злітати буде важко. Сидимо.",
+  "en": "^fog.злість Taking off will be hard. We sit."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.злість Злість хоч не капає за комір.",
+  "en": "^fog.злість At least rage doesn't drip down the collar."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.пси Обтрусишся на мене — злечу з плеча.",
+  "en": "^fog.пси Shake off on me and I'm off the shoulder."
+ },
+ {
+  "who": "H",
+  "list": "х_кінець",
+  "op": "add",
+  "uk": "^fog.пси Пси обтрушуються. Ворони чекають. Чекай.",
+  "en": "^fog.пси Dogs shake. Ravens wait. Wait."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^бійка Ніч. Саме час комусь напихати, {м_слівце}.",
+  "uk": "^night.бійка Ніч. Саме час комусь напихати, {м_слівце}.",
+  "en": "^night.бійка Night. Just the time to beat someone up, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^темно Темно, як у тебе в голові, ботан.",
+  "uk": "^night.темно Темно, як у тебе в голові, ботан.",
+  "en": "^night.темно Dark as the inside of your head, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^кістка Чуєш? Десь кістка хрумтить. Аж слина, {м_слівце}.",
+  "uk": "^night.кістка Чуєш? Десь кістка хрумтить. Аж слина, {м_слівце}.",
+  "en": "^night.кістка Hear that? A bone crunching somewhere. Makes me drool, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "~1 ^сховаюсь Як хтось вилізе з кущів — я за тебе сховаюсь. А шо такого?",
+  "uk": "~1 ^night.сховаюсь Як хтось вилізе з кущів — я за тебе сховаюсь. А шо такого?",
+  "en": "~1 ^night.сховаюсь If something crawls out of the bushes, I'm hiding behind you. So what?"
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "~3 ^спокій Посидь тихо, {м_слівце}. Ніч гарна. Не псуй.",
+  "uk": "~3 ^night.спокій Посидь тихо, {м_слівце}. Ніч гарна. Не псуй.",
+  "en": "~3 ^night.спокій Sit quiet, {м_слівце}. It's a nice night. Don't ruin it."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^вовки Чуєш вовків? Виють. Ше й краще за тебе, {м_слівце}.",
+  "uk": "^night.вовки Чуєш вовків? Виють. Ше й краще за тебе, {м_слівце}.",
+  "en": "^night.вовки Hear the wolves? Howling. Better than you, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^очі Хугіне, з кущів хтось зирить. Двоє очей. Нє, четверо. Бля.",
+  "uk": "^night.очі Хугіне, з кущів хтось зирить. Двоє очей. Нє, четверо. Бля.",
+  "en": "^night.очі Hugin, something's staring from the bushes. Two eyes. No, four. Fuck."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^зорі_н Зорі повилазили, {м_слівце}. Як блохи на собаці. Аж небо чухається.",
+  "uk": "^night.зорі Зорі повилазили, {м_слівце}. Як блохи на собаці. Аж небо чухається.",
+  "en": "^night.зорі The stars are out, {м_слівце}. Like fleas on a dog. The sky's scratching."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^сова Сова верещить. От би їй голову відкрутити, падлюці.",
+  "uk": "^night.сова Сова верещить. От би їй голову відкрутити, падлюці.",
+  "en": "^night.сова An owl's screeching. I'd like to twist its head off, the bitch."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^місяць Шо вирячився, місяцю? Га? Тебе питаю, пико лиса.",
+  "uk": "^night.місяць Шо вирячився, місяцю? Га? Тебе питаю, пико лиса.",
+  "en": "^night.місяць What are you gawking at, moon? Huh? I'm asking you, baldy."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^холод_н Холодно вночі, {м_слівце}. Лапи задубіли нахуй.",
+  "uk": "^night.холод Холодно вночі, {м_слівце}. Лапи задубіли нахуй.",
+  "en": "^night.холод Cold at night, {м_слівце}. My feet are fucking frozen."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^шурхіт Шось шурхотить у траві. Дзьобнути, чи шо?",
+  "uk": "^night.шурхіт Шось шурхотить у траві. Дзьобнути, чи шо?",
+  "en": "^night.шурхіт Something's rustling in the grass. Peck it, or what?"
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^сон_н Хугін, ти спиш? Не спи, бо мені нудно, курва.",
+  "uk": "^night.сон Хугін, ти спиш? Не спи, бо мені нудно, курва.",
+  "en": "^night.сон Hugin, you asleep? Don't sleep, I'm fucking bored."
+ },
+ {
+  "who": "M",
+  "list": "м_ніч",
+  "op": "set",
+  "old": "^драуґри Вночі драуґри вилазять. Хочу одному в гниле око дзьобом. Хрясь!",
+  "uk": "^night.драуґри Вночі драуґри вилазять. Хочу одному в гниле око дзьобом. Хрясь!",
+  "en": "^night.драуґри At night the draugr crawl out. I want to peck one in its rotten eye. Crunch!"
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^бійка Тобі аби битися. А ніч для думок.",
+  "uk": "^night.бійка>night.думки Тобі аби битися. А ніч для думок.",
+  "en": "^night.бійка>night.думки All you want is a fight. Night is for thinking."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^бійка Бийся сам. Я посвічу очима.",
+  "uk": "^night.бійка>night.темрява Бійка вночі — для тих, хто бачить у темряві. Тобто не для тебе.",
+  "en": "^night.бійка>night.темрява Fighting at night is for those who see in the dark. So not you."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^темно Темно в мене в голові? Принаймні вона в мене є.",
+  "uk": "^night.бійка>night.темрява Бийся сам. Я тобі хіба посвічу очима.",
+  "en": "^night.бійка>night.темрява Fight alone. I'll light the way with my eyes, at most."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^кістка Це вовк гризе. Сподіваюсь, не нашого господаря.",
+  "uk": "^night.темно>night.голова Темно в мене в голові? Принаймні вона в мене є.",
+  "en": "^night.темно>night.голова Dark in my head? At least I have one."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^сховаюсь За мене не ховайся. Я тонкий.",
+  "uk": "^night.темно>night.задумав Темно — то не страшно. Страшно, коли ти щось задумав.",
+  "en": "^night.темно>night.задумав Dark isn't scary. Scary is when you've got an idea."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^спокій Добре. Помовчимо. Вночі ліс говорить сам.",
+  "uk": "^night.кістка>night.вовк Це вовк гризе. Сподіваюсь, не нашого господаря.",
+  "en": "^night.кістка>night.вовк That's a wolf gnawing. Hopefully not our master."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^бійка Бійка вночі — для тих, хто бачить у темряві. Тобто не для тебе.",
+  "uk": "^night.кістка>night.сухар То не кістка. То {name} хрумтить сухарем.",
+  "en": "^night.кістка>night.сухар That's not a bone. That's {name} crunching a rusk."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^темно Темно — то не страшно. Страшно, коли ти щось задумав.",
+  "uk": "^night.кістка>night.хворий Апетитно? Ти хворий.",
+  "en": "^night.кістка>night.хворий Appetizing? You're sick."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^кістка То не кістка. То {name} хрумтить сухарем.",
+  "uk": "^night.сховаюсь>night.тонкий За мене не ховайся. Я тонкий.",
+  "en": "^night.сховаюсь>night.тонкий Don't hide behind me. I'm thin."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^кістка Апетитно? Ти хворий.",
+  "uk": "^night.сховаюсь>night.розкажу Ховайся. Я потім усім розкажу.",
+  "en": "^night.сховаюсь>night.розкажу Hide. I'll tell everyone later."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "~1 ^сховаюсь Ховайся. Я потім усім розкажу.",
+  "uk": "^night.спокій>night.ліс Добре. Помовчимо. Вночі ліс говорить сам.",
+  "en": "^night.спокій>night.ліс Fine. Let's be quiet. At night the forest talks by itself."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "~3 ^спокій Гарна. Тиха. Як ти, коли спиш.",
+  "uk": "^night.спокій>night.як_ти Гарна. Тиха. Як ти, коли спиш.",
+  "en": "^night.спокій>night.як_ти Beautiful. Quiet. Like you when you sleep."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^вовки Вовки співають, бо голодні. Як ти. Тільки ти не співаєш, а скиглиш.",
+  "uk": "^night.вовки>night.скиглиш Вовки співають, бо голодні. Як ти. Тільки ти не співаєш, а скиглиш.",
+  "en": "^night.вовки>night.скиглиш Wolves sing because they're hungry. Like you. Only you don't sing, you whine."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^вовки Хай співають. Аби не підходили.",
+  "uk": "^night.вовки>night.не_підходили Хай співають. Аби не підходили.",
+  "en": "^night.вовки>night.не_підходили Let them sing. As long as they don't come closer."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^очі Четверо — то двоє звірів. Або один дуже здивований.",
+  "uk": "^night.очі>night.здивований Четверо — то двоє звірів. Або один дуже здивований.",
+  "en": "^night.очі>night.здивований Four means two beasts. Or one very surprised one."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^очі Світлячки, Муніне. Не будь курчам.",
+  "uk": "^night.очі>night.курча Світлячки, Муніне. Не будь курчам.",
+  "en": "^night.очі>night.курча Fireflies, Munin. Don't be a chicken."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^зорі_н Як блохи? Ти романтик, Муніне.",
+  "uk": "~3 ^night.очі>night.курча Світлячки. Сиди, я пильную. І не будь курчам.",
+  "en": "~3 ^night.очі>night.курча Fireflies. Sit, I'm watching. And don't be a chicken."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^зорі_н Це зорі, а не блохи. Подивись уважніше.",
+  "uk": "^night.зорі>night.романтик Як блохи? Ти романтик, Муніне.",
+  "en": "^night.зорі>night.романтик Like fleas? You're a romantic, Munin."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^сова Сова — нічний сторож. Не чіпай.",
+  "uk": "^night.зорі>night.уважніше Це зорі, а не блохи. Подивись уважніше.",
+  "en": "^night.зорі>night.уважніше Those are stars, not fleas. Look closer."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^сова Сова мудра. Тому ти її й не любиш.",
+  "uk": "^night.сова>night.сторож Сова — нічний сторож. Не чіпай.",
+  "en": "^night.сова>night.сторож The owl is the night watchman. Leave it alone."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^місяць Місяць світить, щоб ти не заблукав.",
+  "uk": "^night.сова>night.мудра Сова мудра. Тому ти її й не любиш.",
+  "en": "^night.сова>night.мудра The owl is wise. That's why you don't like it."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^місяць Він на всіх так дивиться. Не бери до серця.",
+  "uk": "^night.місяць>night.заблукав Місяць світить, щоб ти не заблукав.",
+  "en": "^night.місяць>night.заблукав The moon shines so you don't get lost."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^холод_н Притулися до шиї. Там тепліше.",
+  "uk": "^night.місяць>night.не_бери Він на всіх так дивиться. Не бери до серця.",
+  "en": "^night.місяць>night.не_бери It looks at everyone like that. Don't take it to heart."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^холод_н Біля вогню сядемо. Скоро.",
+  "uk": "^night.холод>night.шия Притулися до шиї. Там тепліше.",
+  "en": "^night.холод>night.шия Snuggle up to the neck. It's warmer there."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^шурхіт Миша. Не дзьобай, вона тобі нічого не зробила.",
+  "uk": "^night.холод>night.вогонь Біля вогню сядемо. Скоро.",
+  "en": "^night.холод>night.вогонь We'll sit by a fire. Soon."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^шурхіт Може, змія. Обережно.",
+  "uk": "~1 ^night.холод>night.вогонь Терпи. Біля вогню відтанеш. Колись.",
+  "en": "~1 ^night.холод>night.вогонь Bear it. You'll thaw by a fire. Eventually."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^сон_н Не сплю. Думаю.",
+  "uk": "^night.шурхіт>night.миша Миша. Не дзьобай, вона тобі нічого не зробила.",
+  "en": "^night.шурхіт>night.миша A mouse. Don't peck it, it hasn't done anything to you."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^сон_н Ворон уночі пильнує. Я пильную.",
+  "uk": "^night.шурхіт>night.змія Може, змія. Обережно.",
+  "en": "^night.шурхіт>night.змія Maybe a snake. Careful."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^драуґри Гниле око? Смачного.",
+  "uk": "^night.сон>night.думаю Не сплю. Думаю.",
+  "en": "^night.сон>night.думаю Not sleeping. Thinking."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "set",
+  "old": "^драуґри Хай лізуть. Ми далеко від болота.",
+  "uk": "^night.сон>night.пильную Ворон уночі пильнує. Я пильную.",
+  "en": "^night.сон>night.пильную A raven keeps watch at night. I'm keeping watch."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "add",
+  "uk": "^night.драуґри>night.смачного Гниле око? Смачного.",
+  "en": "^night.драуґри>night.смачного A rotten eye? Bon appétit."
+ },
+ {
+  "who": "H",
+  "list": "х_ніч",
+  "op": "add",
+  "uk": "^night.драуґри>night.болото Хай лізуть. Ми далеко від болота.",
+  "en": "^night.драуґри>night.болото Let them crawl. We're far from the swamp."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^мерзну Мерзну так, шо пір'я дзвенить, {м_слівце}.",
+  "uk": "^snow.мерзну Мерзну так, шо пір'я дзвенить, {м_слівце}.",
+  "en": "^snow.мерзну I'm so cold my feathers are ringing, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^комір Сніг за комір. Коміра в мене нема, а сніг є. Як так, бля?",
+  "uk": "^snow.комір Сніг за комір. Коміра в мене нема, а сніг є. Як так, бля?",
+  "en": "^snow.комір Snow down my collar. I don't have a collar, but the snow's there. How, fuck?"
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^сніг Все біле. Ненавиджу біле. Тьху.",
+  "uk": "^snow.біле Все біле. Ненавиджу біле. Тьху.",
+  "en": "^snow.біле Everything's white. I hate white. Ugh."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^лапи Лапи до плеча примерзли, {м_слівце}. Все, я тут навіки.",
+  "uk": "^snow.лапи Лапи до плеча примерзли, {м_слівце}. Все, я тут навіки.",
+  "en": "^snow.лапи My feet are frozen to the shoulder, {м_слівце}. That's it, I'm here forever."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^сніжинка Сніжинка мені на дзьоб сіла. Нахабна, сука. Зневажає.",
+  "uk": "^snow.сніжинка Сніжинка мені на дзьоб сіла. Нахабна, сука. Зневажає.",
+  "en": "^snow.сніжинка A snowflake landed on my beak. Cheeky bitch. It despises me."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^стежка В снігу всі сліди видно. І наші, {м_слівце}, теж.",
+  "uk": "^snow.сліди В снігу всі сліди видно. І наші, {м_слівце}, теж.",
+  "en": "^snow.сліди In snow you see all the tracks. Ours too, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^тепло Де вогонь, бля? Мені вогонь треба, а не твоя мудрість.",
+  "uk": "^snow.вогонь Де вогонь, бля? Мені вогонь треба, а не твоя мудрість.",
+  "en": "^snow.вогонь Where's the fire, fuck? I need fire, not your wisdom."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^білі Тут вовки, {м_слівце}. Чую. Білі й злі, як теща.",
+  "uk": "^snow.вовки Тут вовки, {м_слівце}. Чую. Білі й злі, як теща.",
+  "en": "^snow.вовки There are wolves here, {м_слівце}. I can hear them. White and mean as a mother-in-law."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^бурулька В мене на хвості бурулька. Я тепер, бля, зброя.",
+  "uk": "^snow.бурулька В мене на хвості бурулька. Я тепер, бля, зброя.",
+  "en": "^snow.бурулька There's an icicle on my tail. I'm a fucking weapon now."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^глухо Сніг усе глушить. Навіть як я матюкаюсь.",
+  "uk": "^snow.глухо Сніг усе глушить. Навіть як я матюкаюсь.",
+  "en": "^snow.глухо Snow muffles everything. Even my swearing."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^гори Гори, сніг, дубак. Хто тут, бля, живе по своїй волі?",
+  "uk": "^snow.гори Гори, сніг, дубак. Хто тут, бля, живе по своїй волі?",
+  "en": "^snow.гори Mountains, snow, freezing. Who the fuck lives here by choice?"
+ },
+ {
+  "who": "M",
+  "list": "м_сніг",
+  "op": "set",
+  "old": "^кожух {name} в хутрі, а я в пір'ї. Де справедливість, га?",
+  "uk": "^snow.кожух {name} в хутрі, а я в пір'ї. Де справедливість, га?",
+  "en": "^snow.кожух {name}'s in fur and I'm in feathers. Where's the justice, huh?"
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^мерзну Притулися ближче. Тільки не кусайся.",
+  "uk": "^snow.мерзну>snow.кусайся Притулися ближче. Тільки не кусайся.",
+  "en": "^snow.мерзну>snow.кусайся Huddle closer. Just don't bite."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^мерзну Дзвенить — бо пусте всередині.",
+  "uk": "~3 ^snow.мерзну>snow.кусайся Іди сюди, дзвіночку. Тільки не кусайся.",
+  "en": "~3 ^snow.мерзну>snow.кусайся Come here, little bell. Just don't bite."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^комір Немає коміра — немає проблем.",
+  "uk": "^snow.мерзну>snow.пусте Дзвенить — бо пусте всередині.",
+  "en": "^snow.мерзну>snow.пусте It rings because it's empty inside."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^сніг Красиво ж. Хоч раз подивись.",
+  "uk": "^snow.комір>snow.нема_проблем Немає коміра — немає проблем.",
+  "en": "^snow.комір>snow.нема_проблем No collar, no problem."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^комір Заховай дзьоб у пір'я. Мудрі так роблять.",
+  "uk": "^snow.комір>snow.дзьоб Заховай дзьоб у пір'я. Мудрі так роблять.",
+  "en": "^snow.комір>snow.дзьоб Tuck your beak into your feathers. The wise do that."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^сніг Біле — бо чисте. Тобі незнайоме.",
+  "uk": "^snow.біле>snow.подивись Красиво ж. Хоч раз подивись.",
+  "en": "^snow.біле>snow.подивись It's beautiful. Look for once."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^лапи Назавжди? Тоді мені треба інше плече.",
+  "uk": "^snow.біле>snow.чисте Біле — бо чисте. Тобі незнайоме.",
+  "en": "^snow.біле>snow.чисте White because it's clean. Unfamiliar to you."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^лапи Не вовтузься. Відмерзнуть.",
+  "uk": "^snow.лапи>snow.інше_плече Навіки? Тоді мені треба інше плече.",
+  "en": "^snow.лапи>snow.інше_плече Forever? Then I need another shoulder."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^сніжинка Вона просто втомилася. Як усі, хто поруч із тобою.",
+  "uk": "^snow.лапи>snow.відмерзнуть Не вовтузься. Відмерзнуть.",
+  "en": "^snow.лапи>snow.відмерзнуть Stop fidgeting. They'll thaw."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^сніжинка Сніжинка не вміє зневажати. На відміну від тебе.",
+  "uk": "^snow.сніжинка>snow.втомилася Вона просто втомилася. Як усі, хто поруч із тобою.",
+  "en": "^snow.сніжинка>snow.втомилася It's just tired. Like everyone near you."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^стежка Тому йдемо обережно.",
+  "uk": "^snow.сніжинка>snow.не_вміє Сніжинка не вміє зневажати. На відміну від тебе.",
+  "en": "^snow.сніжинка>snow.не_вміє A snowflake can't despise. Unlike you."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^стежка Зате видно, хто за нами йде.",
+  "uk": "^snow.сліди>snow.обережно Тому йдемо обережно. І ти не тупцюй.",
+  "en": "^snow.сліди>snow.обережно That's why we walk carefully. And you stop stomping."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^тепло Мудрість теж гріє. Зсередини.",
+  "uk": "^snow.сліди>snow.хто_йде Зате видно, хто за нами йде.",
+  "en": "^snow.сліди>snow.хто_йде But we can see who's following us."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^тепло Скоро. {name} вже шукає, де розпалити.",
+  "uk": "^snow.вогонь>snow.мудрість Мудрість теж гріє. Зсередини.",
+  "en": "^snow.вогонь>snow.мудрість Wisdom warms too. From the inside."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^білі Злі, як ти. Тільки чесніші.",
+  "uk": "^snow.вогонь>snow.скоро Скоро. {name} вже шукає, де розпалити.",
+  "en": "^snow.вогонь>snow.скоро Soon. {name}'s already looking for a spot to light one."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^білі Тихо. Не кличмо їх.",
+  "uk": "~3 ^snow.вогонь>snow.скоро Скоро. А поки грійся об мене. Мудрість додаю безкоштовно.",
+  "en": "~3 ^snow.вогонь>snow.скоро Soon. Meanwhile, warm up on me. Wisdom included for free."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^бурулька Найнебезпечніша зброя Мідґарду. Для тебе самого.",
+  "uk": "^snow.вовки>snow.чесніші Злі, як ти. Тільки чесніші.",
+  "en": "^snow.вовки>snow.чесніші Mean like you. Only more honest."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^бурулька Не махай нею. Відламаєш.",
+  "uk": "^snow.вовки>snow.тихо Тихо. Не кличмо їх.",
+  "en": "^snow.вовки>snow.тихо Quiet. Let's not call them."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^глухо Нарешті щось корисне від снігу.",
+  "uk": "^snow.бурулька>snow.для_тебе Найнебезпечніша зброя Мідґарду. Для тебе самого.",
+  "en": "^snow.бурулька>snow.для_тебе The most dangerous weapon in Midgard. To yourself."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^глухо Тиша в снігу — найгарніша тиша.",
+  "uk": "^snow.бурулька>snow.відламаєш Не махай нею. Відламаєш.",
+  "en": "^snow.бурулька>snow.відламаєш Don't wave it around. You'll snap it off."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^гори Ті, хто міцніший за тебе.",
+  "uk": "^snow.глухо>snow.корисне Нарешті щось корисне від снігу.",
+  "en": "^snow.глухо>snow.корисне Finally something useful from snow."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^гори Кози. І трохи вовків. І ми зараз.",
+  "uk": "^snow.глухо>snow.найгарніша Тиша в снігу — найгарніша тиша. Не псуй.",
+  "en": "^snow.глухо>snow.найгарніша Silence in snow is the most beautiful silence. Don't spoil it."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^кожух Пір'я тепліше, ніж здається.",
+  "uk": "^snow.гори>snow.міцніші Ті, хто міцніший за тебе.",
+  "en": "^snow.гори>snow.міцніші Those tougher than you."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "set",
+  "old": "^кожух Сховайся під комір. Там тепло.",
+  "uk": "^snow.гори>snow.кози Кози. І трохи вовків. І ми зараз.",
+  "en": "^snow.гори>snow.кози Goats. Some wolves. And us, right now."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "add",
+  "uk": "^snow.кожух>snow.пір'я Пір'я тепліше, ніж здається.",
+  "en": "^snow.кожух>snow.пір'я Feathers are warmer than they look."
+ },
+ {
+  "who": "H",
+  "list": "х_сніг",
+  "op": "add",
+  "uk": "^snow.кожух>snow.під_комір Сховайся під комір. Там тепло.",
+  "en": "^snow.кожух>snow.під_комір Hide under the collar. It's warm there."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^мерзну Пусте? Там вогонь, {м_слівце}. Ледь жевріє, курва.",
+  "uk": "^snow.кусайся Не кусатимусь. Сильно.",
+  "en": "^snow.кусайся I won't bite. Hard."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^комір Великий філософ. Мерзлий. Хе.",
+  "uk": "^snow.кусайся Притулюсь. А кусаюсь я від холоду, ясно?",
+  "en": "^snow.кусайся I'll huddle. And I bite from the cold, got it?"
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^сніг Глянув. Біле. Ненавиджу.",
+  "uk": "^snow.пусте Пусте? Там вогонь. Ледь жевріє, курва.",
+  "en": "^snow.пусте Empty? There's a fire in there. Barely smouldering, fuck."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^лапи Інше плече? Я тобі дам інше плече, хитрий який.",
+  "uk": "^snow.пусте Пусте — то в тебе. Я хоч дзвеню.",
+  "en": "^snow.пусте Empty is you. At least I ring."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^комір Мудрі мерзнуть так само. Тіко мовчки. Як дурні.",
+  "uk": "^snow.нема_проблем Великий філософ. Мерзлий. Хе.",
+  "en": "^snow.нема_проблем A great philosopher. A frozen one. Heh."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^сніг Чисте? Почекай, я зара на нього насру.",
+  "uk": "^snow.нема_проблем Проблема є. Вона мокра і за шиєю.",
+  "en": "^snow.нема_проблем There's a problem. It's wet and down my neck."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^сніжинка А я її зжер. Хай знає, з ким має діло.",
+  "uk": "^snow.дзьоб Мудрі мерзнуть так само. Тіко мовчки. Як дурні.",
+  "en": "^snow.дзьоб The wise freeze just the same. Only quietly. Like idiots."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^стежка Хто за нами припреться — тому дзьобом в тім'я.",
+  "uk": "^snow.дзьоб Заховав. Тепер нічо не бачу. Дякую, мудрий.",
+  "en": "^snow.дзьоб Tucked it. Now I can't see a thing. Thanks, wise guy."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^тепло Скоро, скоро… А дубака я вже зара ловлю.",
+  "uk": "^snow.подивись Глянув. Біле. Ненавиджу.",
+  "en": "^snow.подивись Looked. White. Hate it."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^білі Хай лізуть. Я теж білий стану. Від злості, бля.",
+  "uk": "^snow.подивись Подивився. Сліпну. Задоволений, {м_слівце}?",
+  "en": "^snow.подивись I looked. I'm going blind. Happy, {м_слівце}?"
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^бурулька Відламаю й встромлю тобі. По-братськи.",
+  "uk": "^snow.чисте Чисте? Почекай, я зара на нього насру.",
+  "en": "^snow.чисте Clean? Hang on, I'll shit on it."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^глухо Ага? Ну слухай: КУРВА! О. Не заглушило.",
+  "uk": "^snow.чисте Чисте, поки я не сів. Зара буде знайоме.",
+  "en": "^snow.чисте Clean until I sit on it. Soon it'll be familiar."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^гори Та хай живуть. А я хочу додому. Додому, чуєш?",
+  "uk": "^snow.інше_плече Інше плече? Я тобі дам інше плече, хитрий який.",
+  "en": "^snow.інше_плече Another shoulder? I'll give you another shoulder, you sly one."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "set",
+  "old": "^кожух Пиздиш. Але під комір залізу.",
+  "uk": "^snow.інше_плече Нема іншого. Терпи мене навіки.",
+  "en": "^snow.інше_плече There isn't another. Put up with me forever."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.відмерзнуть Відмерзнуть, коли я вже здохну.",
+  "en": "^snow.відмерзнуть They'll thaw when I'm dead."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.відмерзнуть Я не вовтузюсь. Я тремчу. Різниця, бля.",
+  "en": "^snow.відмерзнуть I'm not fidgeting. I'm shivering. There's a difference, fuck."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.втомилася Втомилась? Ну то я її зжер. Хай відпочиває.",
+  "en": "^snow.втомилася Tired? So I ate it. Let it rest."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.втомилася Від мене не втомлюються. Від мене тікають.",
+  "en": "^snow.втомилася Nobody gets tired of me. They run from me."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.не_вміє А я її зжер. Хай знає, з ким має діло.",
+  "en": "^snow.не_вміє I ate it. Let it know who it's dealing with."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.не_вміє Не вміє? Зате я вмію за двох. Тьху на неї.",
+  "en": "^snow.не_вміє Can't? Well, I can for two. Spit on it."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.обережно Обережно, бля. Я по снігу й не ходжу, я сиджу.",
+  "en": "^snow.обережно Carefully, fuck. I don't walk on snow, I sit."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.обережно Не тупцюю. Це {name} топче, як троль.",
+  "en": "^snow.обережно I'm not stomping. It's {name}, trampling like a troll."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.хто_йде Хто за нами припреться — тому дзьобом в тім'я.",
+  "en": "^snow.хто_йде Whoever comes after us gets a beak in the skull."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.хто_йде Хай іде. Я його по сліду й знайду.",
+  "en": "^snow.хто_йде Let them come. I'll find them by the tracks."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.мудрість Мене вона тіко дратує. Зсередини.",
+  "en": "^snow.мудрість It only annoys me. From the inside."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.мудрість Тебе гріє. А я синій, {м_слівце}.",
+  "en": "^snow.мудрість It warms you. I'm turning blue, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.скоро Скоро, скоро… А дубака я вже зара ловлю.",
+  "en": "^snow.скоро Soon, soon… And I'm freezing right now."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.скоро Хай шукає швидше. Я вже синій.",
+  "en": "^snow.скоро Tell {him|her} to look faster. I'm already blue."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.чесніші Чесніші? Вони тебе зжеруть. Чесно.",
+  "en": "^snow.чесніші More honest? They'll eat you. Honestly."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.чесніші Я чесний. Я тобі прямо кажу, шо ти ботан.",
+  "en": "^snow.чесніші I'm honest. I'm telling you straight you're a nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.тихо Хай лізуть. Я теж білий стану. Від злості, бля.",
+  "en": "^snow.тихо Let them come. I'll go white too. With rage, fuck."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.тихо Мовчу. Але дзьоб наготові.",
+  "en": "^snow.тихо I'm quiet. But my beak is ready."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.для_тебе Для мене? Відламаю й встромлю тобі. По-братськи.",
+  "en": "^snow.для_тебе To me? I'll snap it off and stick it in you. Brotherly."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.для_тебе Для себе? Дивись, як я нею махну.",
+  "en": "^snow.для_тебе To myself? Watch me swing it."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.відламаєш Відламаю — нова виросте. Я багатий.",
+  "en": "^snow.відламаєш If I snap it, a new one grows. I'm rich."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.відламаєш Та й хай. Зброя одноразова, як ти.",
+  "en": "^snow.відламаєш Fine. A disposable weapon, like you."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.корисне Ага? Ну слухай: КУРВА! О. Не заглушило.",
+  "en": "^snow.корисне Yeah? Then listen: FUCK! See? Didn't muffle it."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.корисне Корисне — то коли ти мовчиш. А сніг так, підмога.",
+  "en": "^snow.корисне Useful is when you shut up. The snow just helps."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.найгарніша Найгарніша тиша — то коли ти мовчиш.",
+  "en": "^snow.найгарніша The most beautiful silence is when you shut up."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.найгарніша Гарна. Але довго я так не витримаю, {м_слівце}.",
+  "en": "^snow.найгарніша Nice. But I can't last long like this, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.міцніші Міцніші? Тіко кози. І ті дурні.",
+  "en": "^snow.міцніші Tougher? Only goats. And they're dumb."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.міцніші Та хай живуть. А я хочу додому. Додому, чуєш?",
+  "en": "^snow.міцніші Let them. I want to go home. Home, hear me?"
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.кози Ми — не по волі. Нас {name} притяг{|ла}.",
+  "en": "^snow.кози We're not here by choice. {name} dragged us."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.кози Кози, бля. Я ще й з козами в одному списку.",
+  "en": "^snow.кози Goats, fuck. Now I'm on a list with goats."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.пір'я Пиздиш. Але хай. Мені вже однаково.",
+  "en": "^snow.пір'я Bullshit. But fine. I don't care anymore."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.пір'я Тепліше? Чого ж я тоді дзвеню?",
+  "en": "^snow.пір'я Warmer? Then why am I ringing?"
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.під_комір Пиздиш. Але під комір залізу.",
+  "en": "^snow.під_комір Bullshit. But I'll crawl under the collar."
+ },
+ {
+  "who": "M",
+  "list": "м_сніг_кінець",
+  "op": "add",
+  "uk": "^snow.під_комір Залізу. Тіко не жени мене звідти.",
+  "en": "^snow.під_комір I'll crawl in. Just don't kick me out."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^грім Грім. Тор знову п'яний.",
+  "uk": "^storm.грім Грім. Тор знову п'яний.",
+  "en": "^storm.грім Thunder. Thor is drunk again."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^блискавка Якщо вдарить блискавка — то в тебе. Ти чорніший.",
+  "uk": "^storm.блискавка Якщо вдарить блискавка — то в тебе. Ти чорніший.",
+  "en": "^storm.блискавка If lightning strikes, it'll be you. You're blacker."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^небо Небо сердиться. Не на нас, сподіваюсь.",
+  "uk": "^storm.небо Небо сердиться. Не на нас, сподіваюсь.",
+  "en": "^storm.небо The sky is angry. Not at us, I hope."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^вітер Вітер такий, що пір'я виє. Тримайся, Муніне.",
+  "uk": "^storm.вітер Вітер такий, що пір'я виє. Тримайся, Муніне.",
+  "en": "^storm.вітер The wind's so strong my feathers howl. Hold on, Munin."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^молот Чуєш? То Мйольнір. Тор когось лупить.",
+  "uk": "^storm.молот Чуєш? То Мйольнір. Тор когось лупить.",
+  "en": "^storm.молот Hear that? That's Mjölnir. Thor is pounding someone."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^дерево Не сідай на високе дерево, Муніне. Сьогодні не той день.",
+  "uk": "^storm.дерево Не сідай на високе дерево, Муніне. Сьогодні не той день.",
+  "en": "^storm.дерево Don't sit on a tall tree, Munin. Today's not the day."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^злива Ллє так, ніби в Асгарді перекинули діжку.",
+  "uk": "^storm.злива Ллє так, ніби в Асгарді перекинули діжку.",
+  "en": "^storm.злива It's pouring as if someone tipped over a barrel in Asgard."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^страх Ти тремтиш, Муніне? Чи то вітер?",
+  "uk": "^storm.страх Ти тремтиш, Муніне? Чи то вітер?",
+  "en": "^storm.страх Are you trembling, Munin? Or is that the wind?"
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^рахувати Рахуй від спалаху до грому. Так знаєш, як далеко.",
+  "uk": "^storm.рахувати Рахуй від спалаху до грому. Так знаєш, як далеко.",
+  "en": "^storm.рахувати Count from the flash to the thunder. That's how you know how far."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^іскра Пір'я аж тріщить. Небо повне іскор.",
+  "uk": "^storm.іскра Пір'я аж тріщить. Небо повне іскор.",
+  "en": "^storm.іскра My feathers are crackling. The sky is full of sparks."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^тролі У грозу навіть тролі ховаються. Розумні тролі.",
+  "uk": "^storm.тролі У грозу навіть тролі ховаються. Розумні тролі.",
+  "en": "^storm.тролі In a storm even trolls hide. Smart trolls."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза",
+  "op": "set",
+  "old": "^після Після грози повітря чисте. Аж дихати хочеться.",
+  "uk": "^storm.після Після грози повітря чисте. Аж дихати хочеться.",
+  "en": "^storm.після After a storm the air is clean. Makes you want to breathe."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^грім П'яний Тор — то найчесніший Тор. Наш пацан.",
+  "uk": "^storm.грім>storm.пацан П'яний Тор — то найчесніший Тор. Наш пацан.",
+  "en": "^storm.грім>storm.пацан Drunk Thor is the most honest Thor. Our kind of guy."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^блискавка Я чорніший, а ти вищий. Тебе першого засмажити, ботан.",
+  "uk": "^storm.грім>storm.нам_можна Тор бухий — то й нам можна, {м_слівце}.",
+  "en": "^storm.грім>storm.нам_можна If Thor's hammered, so can we be, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^небо Хай сердиться. Я теж сердитий, {м_слівце}. І шо?",
+  "uk": "^storm.блискавка>storm.вищий Я чорніший, а ти вищий. Тебе першого засмажить, ботан.",
+  "en": "^storm.блискавка>storm.вищий I'm blacker, but you're taller. You'll fry first, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^грім Тор бухий — то й нам можна, {м_слівце}.",
+  "uk": "^storm.блискавка>storm.злішим Хай б'є. Я від того тіко злішим стану.",
+  "en": "^storm.блискавка>storm.злішим Let it strike. It'll just make me meaner."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^блискавка Як у тебе вдарить — то хоч порозумнішаєш.",
+  "uk": "^storm.небо>storm.сердитий Хай сердиться. Я теж сердитий, {м_слівце}. І шо?",
+  "en": "^storm.небо>storm.сердитий Let it be angry. I'm angry too, {м_слівце}. So what?"
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^небо Небо сердиться, бо ти йому набрид. Як і всім.",
+  "uk": "^storm.небо>storm.набрид Небо сердиться, бо ти йому набрид. Як і всім.",
+  "en": "^storm.небо>storm.набрид The sky's angry because it's sick of you. Like everyone."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^вітер Тримаюсь. За тебе. Шоб ти першим полетів.",
+  "uk": "^storm.вітер>storm.за_тебе Тримаюсь. За тебе. Шоб ти першим полетів.",
+  "en": "^storm.вітер>storm.за_тебе I'm holding on. To you. So you blow away first."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^вітер Виє? То я співаю, {м_слівце}. Шо, не подобається?",
+  "uk": "^storm.вітер>storm.співаю Виє? То я співаю, {м_слівце}. Шо, не подобається?",
+  "en": "^storm.вітер>storm.співаю Howling? That's me singing, {м_слівце}. What, don't like it?"
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^молот Та хай лупить кого хоче. Аби не нас, {м_слівце}.",
+  "uk": "^storm.молот>storm.аби_не_нас Та хай лупить кого хоче. Аби не нас, {м_слівце}.",
+  "en": "^storm.молот>storm.аби_не_нас Let him pound whoever he wants. As long as it's not us, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^молот Ото б мене хоч раз на махач узяв. Я б йому показав, як треба.",
+  "uk": "^storm.молот>storm.махач Ото б мене хоч раз на махач узяв. Я б йому показав, як треба.",
+  "en": "^storm.молот>storm.махач If only he'd take me to a brawl once. I'd show him how it's done."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^дерево Та я й не збирався, бля. Я на плечі сиджу, як цар.",
+  "uk": "^storm.дерево>storm.цар Та я й не збирався, бля. Я на плечі сиджу, як цар.",
+  "en": "^storm.дерево>storm.цар Wasn't going to, fuck. I sit on the shoulder like a king."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^дерево Де хочу, там і сиджу. Хай тіко спробує вдарити, та блискавка.",
+  "uk": "^storm.дерево>storm.де_хочу Де хочу, там і сиджу. Хай тіко спробує вдарити, та блискавка.",
+  "en": "^storm.дерево>storm.де_хочу I sit where I want. Let that lightning just try."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^злива Яка нахуй діжка? То Одін рюмсає, шо ти в нього є.",
+  "uk": "^storm.злива>storm.рюмсає Яка нахуй діжка? То Одін рюмсає, шо ти в нього є.",
+  "en": "^storm.злива>storm.рюмсає What fucking barrel? That's Odin weeping that he's stuck with you."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^злива Та хай ллє. Мокріше мене вже нема куди, {м_слівце}.",
+  "uk": "^storm.злива>storm.мокріше Та хай ллє. Мокріше мене вже нема куди, {м_слівце}.",
+  "en": "^storm.злива>storm.мокріше Let it pour. I can't get any wetter, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^страх Я не трушусь, бля. Я від злості трушусь. Це інше!",
+  "uk": "^storm.страх>storm.злість Я не трушусь, бля. Я від злості трушусь. Це інше!",
+  "en": "^storm.страх>storm.злість I'm not shaking, fuck. I'm shaking with rage. That's different!"
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^страх Вітер, {м_слівце}. Тіко вітер. Ну і грім трохи. Відчепись.",
+  "uk": "^storm.страх>storm.вітер_тіко Вітер, {м_слівце}. Тіко вітер. Ну і грім трохи. Відчепись.",
+  "en": "^storm.страх>storm.вітер_тіко The wind, {м_слівце}. Just the wind. And a bit of thunder. Piss off."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^рахувати Раз, два… БАХ! Близько, сука!",
+  "uk": "^storm.рахувати>storm.близько Раз, два… БАХ! Близько, сука!",
+  "en": "^storm.рахувати>storm.близько One, two… BANG! Close, bitch!"
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^рахувати Рахувати? Я до трьох рахую, і то на кігтях. Зате матюкаюсь — як бог.",
+  "uk": "^storm.рахувати>storm.до_трьох Рахувати? Я до трьох рахую, і то на кігтях. Зате матюкаюсь — як бог.",
+  "en": "^storm.рахувати>storm.до_трьох Count? I count to three, on my claws. But I swear like a god."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^іскра То я від злості тріщу, а не від неба, ботан.",
+  "uk": "^storm.іскра>storm.тріщу То я від злості тріщу, а не від неба, ботан.",
+  "en": "^storm.іскра>storm.тріщу That's me crackling with rage, not the sky, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^іскра О, я тепер блищу. Красень, {м_слівце}, глянь!",
+  "uk": "^storm.іскра>storm.блищу О, я тепер блищу. Красень, {м_слівце}, глянь!",
+  "en": "^storm.іскра>storm.блищу Oh, I'm shiny now. Handsome, {м_слівце}, look!"
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^тролі Тролі розумні? Ти шо, бля, грибів наївся?",
+  "uk": "^storm.тролі>storm.грибів Тролі розумні? Ти шо, бля, грибів наївся?",
+  "en": "^storm.тролі>storm.грибів Trolls smart? Did you eat some fucking mushrooms?"
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^тролі А ми не ховаємось. Виходить, ми тупіші за тролів. Ну й похуй.",
+  "uk": "^storm.тролі>storm.тупіші А ми не ховаємось. Виходить, ми тупіші за тролів. Ну й похуй.",
+  "en": "^storm.тролі>storm.тупіші And we're not hiding. So we're dumber than trolls. Fuck it."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^після От і дихай. А мені й так нормально смердить.",
+  "uk": "^storm.після>storm.смердить От і дихай. А мені й так нормально смердить.",
+  "en": "^storm.після>storm.смердить Go on, breathe. I'm fine with the stink."
+ },
+ {
+  "who": "M",
+  "list": "м_гроза",
+  "op": "set",
+  "old": "^після Після грози — гриби. А після грибів {name} співає. Жах, бля.",
+  "uk": "^storm.після>storm.гриби Після грози — гриби. А після грибів {name} співає. Жах, бля.",
+  "en": "^storm.після>storm.гриби After a storm, mushrooms. And after mushrooms, {name} sings. Fucking horror."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^грім Ну от. Тепер і ти ображаєш богів.",
+  "uk": "^storm.пацан Ну от. Тепер ти ще й ображаєш богів.",
+  "en": "^storm.пацан There. Now you're insulting the gods too."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^блискавка Тоді я пригнусь. А ти стирчи.",
+  "uk": "^storm.пацан Скажи це йому. Під блискавкою.",
+  "en": "^storm.пацан Say that to him. Under the lightning."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^небо Сховаймось. Мудрість — у сухості.",
+  "uk": "^storm.нам_можна Тобі можна, коли станеш богом. Тобто ніколи.",
+  "en": "^storm.нам_можна You can when you become a god. So, never."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^вітер Співаєш ти гірше за вітер.",
+  "uk": "^storm.нам_можна Тор п'є — і громить. Ти п'єш — і падаєш з плеча.",
+  "en": "^storm.нам_можна Thor drinks and thunders. You drink and fall off the shoulder."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^небо Чуєш? Знову гримить. На тебе.",
+  "uk": "^storm.вищий Тоді я пригнусь. А ти стирчи.",
+  "en": "^storm.вищий Then I'll duck. And you stick out."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^молот Тор б'є, кого хоче. Краще не потрапляй йому на очі.",
+  "uk": "^storm.вищий Вищий, бо розумніший. Блискавка таких поважає.",
+  "en": "^storm.вищий Taller because smarter. Lightning respects that."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^дерево Сміливий ти, доки не загримить.",
+  "uk": "^storm.злішим Злішим уже нікуди.",
+  "en": "^storm.злішим There's no meaner left."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^злива Мокрі обидва. Хоч у чомусь рівні.",
+  "uk": "^storm.злішим Тоді хай б'є в мене. Тобі вже досить.",
+  "en": "^storm.злішим Then let it hit me. You've had enough."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^страх Звісно. Я так і подумав.",
+  "uk": "^storm.сердитий Тоді вас двоє. Я сховаюсь.",
+  "en": "^storm.сердитий Then there are two of you. I'll take cover."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^рахувати Тоді просто пригнись. Це вміють усі.",
+  "uk": "^storm.сердитий А те, що в неба є блискавки. А в тебе — тільки дзьоб.",
+  "en": "^storm.сердитий So the sky has lightning. And you only have a beak."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^іскра Тріщи тихіше. Ще блискавку приманиш.",
+  "uk": "^storm.набрид Чуєш? Знову гримить. На тебе.",
+  "en": "^storm.набрид Hear that? Thunder again. At you."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^тролі Розумніші за нас тролі. Це вже щось про нас каже.",
+  "uk": "^storm.набрид Небо мене слухає. Тебе — терпить.",
+  "en": "^storm.набрид The sky listens to me. It puts up with you."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "set",
+  "old": "^після Дихай, Муніне. Хоч раз — свіжим.",
+  "uk": "^storm.за_тебе Полечу — то разом із тобою. Ти ж тримаєшся.",
+  "en": "^storm.за_тебе If I go, you come with me. You're holding on."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.за_тебе Хитро. Тільки я легший. Полетимо обидва.",
+  "en": "^storm.за_тебе Clever. Only I'm lighter. We'll both go."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.співаю Співаєш ти гірше за вітер.",
+  "en": "^storm.співаю You sing worse than the wind."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.співаю Не подобається. Вітер хоч колись ущухне.",
+  "en": "^storm.співаю I don't. At least the wind will die down eventually."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.аби_не_нас Тор б'є, кого хоче. Краще не потрапляй йому на очі.",
+  "en": "^storm.аби_не_нас Thor strikes whoever he likes. Better not catch his eye."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.аби_не_нас Не нас. Поки ти мовчиш.",
+  "en": "^storm.аби_не_нас Not us. As long as you keep quiet."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.махач Він тебе візьме. Замість молота.",
+  "en": "^storm.махач He'll take you. Instead of the hammer."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.махач Тор тебе й не помітить. Як блоху.",
+  "en": "^storm.махач Thor wouldn't even notice you. Like a flea."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.цар Цар мокрий і тремтить. Царство під стать.",
+  "en": "^storm.цар A king, wet and shivering. A kingdom to match."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.цар Сиди, царю. Тільки голову не задирай.",
+  "en": "^storm.цар Sit, your majesty. Just keep your head down."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.де_хочу Сміливий ти, доки не загримить.",
+  "en": "^storm.де_хочу You're brave until it thunders."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.де_хочу Спробує. Вона не питає.",
+  "en": "^storm.де_хочу It will. It doesn't ask."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.рюмсає Ні. Він плаче, що в нього є ти. Теж.",
+  "en": "^storm.рюмсає No. He weeps that he has you. As well."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.рюмсає Тоді він рюмсає за двох. І про тебе — гірше.",
+  "en": "^storm.рюмсає Then he weeps for two. And harder about you."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.мокріше Мокрі обидва. Хоч у чомусь рівні.",
+  "en": "^storm.мокріше Both soaked. Equal in something at least."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.мокріше Є куди. Я покажу тобі калюжу.",
+  "en": "^storm.мокріше There is. I'll show you a puddle."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.злість Звісно. Я так і подумав.",
+  "en": "^storm.злість Of course. That's what I thought."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.злість Від злості. І трохи від грому. Ну-ну.",
+  "en": "^storm.злість With rage. And a bit with thunder. Sure."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.вітер_тіко Відчепився. Але крило поруч, якщо що.",
+  "en": "^storm.вітер_тіко I'll let it go. But my wing is right here, just in case."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.вітер_тіко Трохи грому — це чесно. Ціную.",
+  "en": "^storm.вітер_тіко A bit of thunder, that's honest. I appreciate it."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.близько Два. Отже, пригнись. Негайно.",
+  "en": "^storm.близько Two. So duck. Now."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.близько Близько. Тому й кажу: сиди нижче.",
+  "en": "^storm.близько Close. That's why I said: sit lower."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.до_трьох Тоді просто пригнись. Це вміють усі.",
+  "en": "^storm.до_трьох Then just duck. Everyone can do that."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.до_трьох До трьох вистачить. Далі грім уже не страшний.",
+  "en": "^storm.до_трьох Three is enough. After that thunder's not scary."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.тріщу Тріщи тихіше. Ще блискавку приманиш.",
+  "en": "^storm.тріщу Crackle quieter. You'll lure the lightning."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.тріщу Тоді не злися. Хоч сьогодні. Для безпеки.",
+  "en": "^storm.тріщу Then don't rage. Just today. For safety."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.блищу Красень. Поки не засмажився.",
+  "en": "^storm.блищу Handsome. Until you get fried."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.блищу Блищиш. Блискавка теж помітила.",
+  "en": "^storm.блищу You shine. The lightning noticed too."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.грибів Розумніші за тебе. Вони ховаються.",
+  "en": "^storm.грибів Smarter than you. They're hiding."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.грибів Розумні, бо ховаються. Ти — ні.",
+  "en": "^storm.грибів Smart because they hide. You don't."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.тупіші Тролі розумніші за нас. Це вже щось про нас каже.",
+  "en": "^storm.тупіші Trolls smarter than us. That says something about us."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.тупіші Не ми. Ти. Я давно під каптуром у {name}.",
+  "en": "^storm.тупіші Not us. You. I've been under {name}'s hood for a while."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.смердить Дихай, Муніне. Хоч раз — свіжим.",
+  "en": "^storm.смердить Breathe, Munin. Fresh air, for once."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.смердить Тобі нормально. Тому від тебе й смердить.",
+  "en": "^storm.смердить You're fine with it. That's why you stink."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.гриби Не нагадуй. Я досі чую ту пісню.",
+  "en": "^storm.гриби Don't remind me. I can still hear that song."
+ },
+ {
+  "who": "H",
+  "list": "х_гроза_кінець",
+  "op": "add",
+  "uk": "^storm.гриби Тоді гриби — тобі. Заспіваєте разом.",
+  "en": "^storm.гриби Then the mushrooms are yours. You can sing together."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^світає Світає. Ще один день — і ми живі.",
+  "uk": "^dawn.світає Світає. Ще один день — і ми живі.",
+  "en": "^dawn.світає Dawn. Another day, and we're alive."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^хропів Ранок. Ти хропів, як троль, Муніне.",
+  "uk": "^dawn.хропів Ранок. Ти хропів, як троль, Муніне.",
+  "en": "^dawn.хропів Morning. You snored like a troll, Munin."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^роса Роса на пір'ї. Добрий знак.",
+  "uk": "^dawn.роса Роса на пір'ї. Добрий знак.",
+  "en": "^dawn.роса Dew on my feathers. A good sign."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^сонце Сонце встає, Муніне. Хоч хтось сьогодні рано встав.",
+  "uk": "^dawn.сонце Сонце встає, Муніне. Хоч хтось сьогодні рано встав.",
+  "en": "^dawn.сонце The sun is rising, Munin. At least someone got up early today."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^птахи Птахи співають. Світ прокидається.",
+  "uk": "^dawn.птахи Птахи співають. Світ прокидається.",
+  "en": "^dawn.птахи Birds are singing. The world is waking up."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^мряка Ранкова мряка над землею. Як молоко.",
+  "uk": "^dawn.мряка Ранкова мряка над землею. Як молоко.",
+  "en": "^dawn.мряка Morning mist over the land. Like milk."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^сніданок Що на сніданок, Муніне? Знову чиєсь око?",
+  "uk": "^dawn.сніданок Що на сніданок, Муніне? Знову чиєсь око?",
+  "en": "^dawn.сніданок What's for breakfast, Munin? Someone's eye again?"
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^асгард Мені наснився Асгард. А тобі що снилося?",
+  "uk": "^dawn.асгард Мені наснився Асгард. А тобі що снилося?",
+  "en": "^dawn.асгард I dreamed of Asgard. What did you dream of?"
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^холод Ранок холодний. Пір'я ще не прогрілося.",
+  "uk": "^dawn.холод Ранок холодний. Пір'я ще не прогрілося.",
+  "en": "^dawn.холод The morning is cold. My feathers haven't warmed up yet."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^план Новий день. Який у нас план?",
+  "uk": "^dawn.план Новий день. Який у нас план?",
+  "en": "^dawn.план A new day. What's our plan?"
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^лінь Вставай, Муніне. Ти спиш з розплющеним оком.",
+  "uk": "^dawn.лінь Вставай, Муніне. Ти спиш з розплющеним оком.",
+  "en": "^dawn.лінь Get up, Munin. You're sleeping with one eye open."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок",
+  "op": "set",
+  "old": "^перший Хто перший побачив сонце — тому й день вдалий.",
+  "uk": "^dawn.перший Хто перший побачив сонце — тому й день вдалий.",
+  "en": "^dawn.перший Whoever sees the sun first has a lucky day."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^світає Ше один день. Ше один день тебе слухати. Йой.",
+  "uk": "^dawn.світає>dawn.слухати Ше один день. Ше один день тебе слухати. Йой.",
+  "en": "^dawn.світає>dawn.слухати Another day. Another day of listening to you. Ugh."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^хропів То ти хропів. Я спав, як немовля. Зле немовля.",
+  "uk": "^dawn.світає>dawn.ледь Живі. Ну, ти — ледь-ледь.",
+  "en": "^dawn.світає>dawn.ледь Alive. Well, you barely."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^роса Добрий знак? Мокрі лапи — то добрий знак, по-твоєму?",
+  "uk": "^dawn.хропів>dawn.то_ти То ти хропів. Я спав, як немовля. Зле немовля.",
+  "en": "^dawn.хропів>dawn.то_ти That was you snoring. I slept like a baby. An angry baby."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^світає Живі. Ну, ти — ледь-ледь.",
+  "uk": "^dawn.хропів>dawn.сторожу Я не хроплю. Я голосом сторожу.",
+  "en": "^dawn.хропів>dawn.сторожу I don't snore. I guard with my voice."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^хропів Я не хроплю. Я голосом сторожу.",
+  "uk": "^dawn.роса>dawn.мокрі_лапи Добрий знак? Мокрі лапи — то добрий знак, по-твоєму?",
+  "en": "^dawn.роса>dawn.мокрі_лапи A good sign? Wet feet are a good sign, according to you?"
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^роса Добрий знак — то коли сніданок. Все.",
+  "uk": "^dawn.роса>dawn.сніданок Добрий знак — то коли сніданок. Все.",
+  "en": "^dawn.роса>dawn.сніданок A good sign is breakfast. That's it."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^сонце Сонцю не треба тебе слухати. Пощастило гаду.",
+  "uk": "^dawn.сонце>dawn.пощастило Сонцю не треба тебе слухати. Пощастило гаду.",
+  "en": "^dawn.сонце>dawn.пощастило The sun doesn't have to listen to you. Lucky bastard."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^сонце Хай встає. А я ше подрімаю, {м_слівце}.",
+  "uk": "^dawn.сонце>dawn.подрімаю Хай встає. А я ше подрімаю, {м_слівце}.",
+  "en": "^dawn.сонце>dawn.подрімаю Let it rise. I'll doze a bit more, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^птахи Яке співають — верещать. Зжер би всіх, {м_слівце}.",
+  "uk": "^dawn.птахи>dawn.зжер Яке співають — верещать. Зжер би всіх, {м_слівце}.",
+  "en": "^dawn.птахи>dawn.зжер Singing? Screeching. I'd eat them all, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^птахи Хай горлають. Поки я не прокинувся як слід.",
+  "uk": "^dawn.птахи>dawn.горлають Хай горлають. Поки я не прокинувся як слід.",
+  "en": "^dawn.птахи>dawn.горлають Let them yell. Until I'm properly awake."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^мряка Яке молоко? Мені б м'ясця, {м_слівце}.",
+  "uk": "^dawn.мряка>dawn.м'ясо Яке молоко? Мені б м'ясця, {м_слівце}.",
+  "en": "^dawn.мряка>dawn.м'ясо What milk? I want some meat, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^мряка Мряка — то земля потіє. Від тебе, ботане. Від твоїх розумних балачок.",
+  "uk": "^dawn.мряка>dawn.потіє Мряка — то земля потіє. Від тебе, ботане. Від твоїх розумних балачок.",
+  "en": "^dawn.мряка>dawn.потіє The mist is the earth sweating. Because of you, nerd. Your clever talk."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^сніданок Око — то делікатес, бля. Шо ти шариш у жратві.",
+  "uk": "^dawn.сніданок>dawn.делікатес Око — то делікатес, бля. Шо ти шариш у жратві.",
+  "en": "^dawn.сніданок>dawn.делікатес An eye is a delicacy, fuck. What do you know about food."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^сніданок Шо дадуть. А дадуть, сто пудів, нічо.",
+  "uk": "^dawn.сніданок>dawn.нічо Шо дадуть. А дадуть, сто пудів, нічо.",
+  "en": "^dawn.сніданок>dawn.нічо Whatever we get. And we'll get nothing, guaranteed."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^асгард Мені снилось, шо ти заткнувся. Кайфовий сон, бля.",
+  "uk": "^dawn.асгард>dawn.заткнувся Мені снилось, шо ти заткнувся. Кайфовий сон, бля.",
+  "en": "^dawn.асгард>dawn.заткнувся I dreamed you shut up. Fucking great dream."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^асгард Кров снилась. Повно крові. Смачно, {м_слівце}.",
+  "uk": "^dawn.асгард>dawn.кров Кров снилась. Повно крові. Смачно, {м_слівце}.",
+  "en": "^dawn.асгард>dawn.кров I dreamed of blood. Loads of blood. Tasty, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^холод То сунься ближче до шиї. Там тепліше. Тіко не впритул, ясно?",
+  "uk": "^dawn.холод>dawn.шия То сунься ближче до шиї. Там тепліше. Тіко не впритул, ясно?",
+  "en": "^dawn.холод>dawn.шия Then scoot closer to the neck. It's warmer. Just not too close, got it?"
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^холод Дубак. До обіду буду злий, {м_слівце}. А після обіду — теж.",
+  "uk": "^dawn.холод>dawn.злий Дубак. До обіду буду злий, {м_слівце}. А після обіду — теж.",
+  "en": "^dawn.холод>dawn.злий Freezing. I'll be angry till lunch, {м_слівце}. And after lunch too."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^план План? Когось вгасити. Як завжди, бля.",
+  "uk": "^dawn.план>dawn.вгасити План? Когось вгасити. Як завжди, бля.",
+  "en": "^dawn.план>dawn.вгасити Plan? Smash someone. As always, fuck."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^план План — шоб без плану. Найкращий план, вкурив?",
+  "uk": "^dawn.план>dawn.без_плану План — шоб без плану. Найкращий план, вкурив?",
+  "en": "^dawn.план>dawn.без_плану The plan is no plan. The best plan, get it?"
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^лінь Я і вві сні пасу. Талант, {м_слівце}.",
+  "uk": "^dawn.лінь>dawn.талант Я і вві сні пасу. Талант, {м_слівце}.",
+  "en": "^dawn.лінь>dawn.талант I keep watch even asleep. Talent, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^лінь Ше хвилинку. Ну дві. Ну відчепись, бля.",
+  "uk": "^dawn.лінь>dawn.хвилинку Ше хвилинку. Ну дві. Ну відчепись, бля.",
+  "en": "^dawn.лінь>dawn.хвилинку One more minute. Well, two. Fuck off."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^перший Ну я побачив. А день все одно гівно.",
+  "uk": "^dawn.перший>dawn.гівно Ну я побачив. А день все одно гівно.",
+  "en": "^dawn.перший>dawn.гівно Well, I saw it. And the day is still shit."
+ },
+ {
+  "who": "M",
+  "list": "м_світанок",
+  "op": "set",
+  "old": "^перший Ти побачив? Ну то хай тобі й фартить, {м_слівце}. А я й так фартовий.",
+  "uk": "^dawn.перший>dawn.фартовий Ти побачив? Ну то хай тобі й фартить, {м_слівце}. А я й так фартовий.",
+  "en": "^dawn.перший>dawn.фартовий You saw it? Then you get lucky, {м_слівце}. I'm lucky anyway."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^світає Тоді вставай. День не чекає.",
+  "uk": "^dawn.слухати Слухатимеш. Може, щось і запам'ятаєш.",
+  "en": "^dawn.слухати You'll listen. Maybe something will stick."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^хропів Чув весь табір. І сусідній.",
+  "uk": "^dawn.слухати А мені — тебе. Чесний обмін.",
+  "en": "^dawn.слухати And I listen to you. Fair trade."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^роса Мокрі ноги — дрібниця. Твоя пика зранку — от поганий знак.",
+  "uk": "^dawn.ледь Ледь-ледь — це все одно живий. Порахуй.",
+  "en": "^dawn.ледь Barely is still alive. Do the maths."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^сонце Не проспи день. Він короткий.",
+  "uk": "^dawn.ледь Зате я вже встав. А ти ще ні.",
+  "en": "^dawn.ледь But I'm already up. You're not."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^птахи Ти вже прокинувся. На жаль.",
+  "uk": "^dawn.то_ти Чув увесь табір. І сусідній.",
+  "en": "^dawn.то_ти The whole camp heard. And the next one."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^мряка Поетичності в тобі — як у каменя.",
+  "uk": "^dawn.то_ти Зле немовля, що хропе. Рідкісний звір.",
+  "en": "^dawn.то_ти An angry baby that snores. A rare beast."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^сніданок {name} нагодує. Просто прокинься чемно.",
+  "uk": "^dawn.сторожу Наторожив. Усі вовки розбіглися.",
+  "en": "^dawn.сторожу Fine guarding. All the wolves ran off."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^асгард Сни в тебе, як і ти. Нічого світлого.",
+  "uk": "^dawn.сторожу Сторожиш так, що не спить ніхто.",
+  "en": "^dawn.сторожу You guard so well nobody sleeps."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^холод Сонце пригріє. І тебе, і твою вдачу.",
+  "uk": "^dawn.мокрі_лапи Мокрі ноги — дрібниця. Твоя пика зранку — от поганий знак.",
+  "en": "^dawn.мокрі_лапи Wet feet are nothing. Your face in the morning, now that's a bad sign."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^план Ну, хоч послідовно.",
+  "uk": "^dawn.мокрі_лапи По-моєму, так. Мокрий, зате живий.",
+  "en": "^dawn.мокрі_лапи According to me, yes. Wet, but alive."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^лінь Ще хвилинка — і я тебе дзьобну.",
+  "uk": "^dawn.сніданок {name} нагодує. Просто прокинься чемно.",
+  "en": "^dawn.сніданок {name} will feed us. Just wake up politely."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "set",
+  "old": "^перший Щастя спільне. Навіть тобі шматок.",
+  "uk": "^dawn.сніданок Для тебе всі знаки — про їжу.",
+  "en": "^dawn.сніданок For you, every sign is about food."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.пощастило Воно далеко. А ти поруч. Тобі не пощастило.",
+  "en": "^dawn.пощастило It's far away. You're close. You're the unlucky one."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.пощастило Сонце все чує. Просто мовчить. Вчися.",
+  "en": "^dawn.пощастило The sun hears everything. It just keeps quiet. Learn."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.подрімаю Не проспи день. Він короткий.",
+  "en": "^dawn.подрімаю Don't sleep through the day. It's short."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.подрімаю Ще хвилинка — і я тебе дзьобну.",
+  "en": "^dawn.подрімаю One more minute and I'll peck you."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.зжер Ти вже прокинувся. На жаль.",
+  "en": "^dawn.зжер You're awake already. Sadly."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.зжер З'їж одного. Інші співатимуть про тебе.",
+  "en": "^dawn.зжер Eat one. The others will sing about you."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.горлають Прокинешся — вони замовкнуть. Від жаху.",
+  "en": "^dawn.горлають Once you wake, they'll go quiet. In horror."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.горлають Як слід ти не прокидаєшся ніколи.",
+  "en": "^dawn.горлають You never properly wake up."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.м'ясо Поетичності в тобі — як у каменя.",
+  "en": "^dawn.м'ясо You're as poetic as a rock."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.м'ясо Ти навіть у хмарі бачиш котлету.",
+  "en": "^dawn.м'ясо You even see a meatball in a cloud."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.потіє Земля потіє — гарно сказав. Ти теж поет. Поганий.",
+  "en": "^dawn.потіє The earth sweating, nicely put. You're a poet too. A bad one."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.потіє Від мене земля хоч не тікає. Від тебе — так.",
+  "en": "^dawn.потіє At least the earth doesn't run from me. It does from you."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.делікатес Шарю досить, щоб не їсти очей.",
+  "en": "^dawn.делікатес I know enough not to eat eyes."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.делікатес Делікатес. Тоді ділись. Ні, жартую.",
+  "en": "^dawn.делікатес A delicacy. Then share. No, joking."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.нічо Дадуть. Якщо ти зранку нікого не обматюкаєш.",
+  "en": "^dawn.нічо We'll get some. If you don't curse anyone out this morning."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.нічо Нічого — теж сніданок. Для філософів.",
+  "en": "^dawn.нічо Nothing is a breakfast too. For philosophers."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.заткнувся Сни не збуваються. Тобі не пощастило.",
+  "en": "^dawn.заткнувся Dreams don't come true. Bad luck."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.заткнувся Не звикай. Я вже прокинувся.",
+  "en": "^dawn.заткнувся Don't get used to it. I'm awake."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.кров Сни в тебе, як і ти. Нічого світлого.",
+  "en": "^dawn.кров Your dreams are like you. Nothing bright."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.кров Мені — Асгард, тобі — бойня. Справедливо.",
+  "en": "^dawn.кров Asgard for me, a slaughterhouse for you. Fair."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.шия Ясно. Впритул — це тільки ти вмієш.",
+  "en": "^dawn.шия Got it. Only you get too close."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.шия Дякую. Не впритул. Майже.",
+  "en": "^dawn.шия Thanks. Not too close. Almost."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.злий Сонце пригріє. І тебе, і твою вдачу.",
+  "en": "^dawn.злий The sun will warm up. You and your temper too."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.злий Отже, звичайний день.",
+  "en": "^dawn.злий So, an ordinary day."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.вгасити Ну, хоч послідовно.",
+  "en": "^dawn.вгасити Well, at least you're consistent."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.вгасити Кого — вирішить {name}. Ти тільки кричи.",
+  "en": "^dawn.вгасити Who, {name} decides. You just yell."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.без_плану Вкурив. Тому й живемо так.",
+  "en": "^dawn.без_плану Got it. That's why we live like this."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.без_плану Без плану — це твій план уже років десять.",
+  "en": "^dawn.без_плану No plan has been your plan for ten years."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.талант Пасеш. Хроплячи.",
+  "en": "^dawn.талант Watching. While snoring."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.талант Талант. Тільки вчора ти пропас вовка.",
+  "en": "^dawn.талант Talent. Only yesterday you missed a wolf."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.хвилинку Ще хвилинка — і я тебе дзьобну. Рахую.",
+  "en": "^dawn.хвилинку One more minute and I peck you. I'm counting."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.хвилинку Дві хвилинки. Потім співатиму.",
+  "en": "^dawn.хвилинку Two minutes. Then I sing."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.гівно Ти побачив — і вже зіпсував.",
+  "en": "^dawn.гівно You saw it and already ruined it."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.гівно Поганий, бо ти так вирішив ще до сніданку.",
+  "en": "^dawn.гівно Bad, because you decided so before breakfast."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.фартовий Щастя спільне. Навіть тобі шматок.",
+  "en": "^dawn.фартовий Luck is shared. Even you get a piece."
+ },
+ {
+  "who": "H",
+  "list": "х_світанок_кінець",
+  "op": "add",
+  "uk": "^dawn.фартовий Фартовий — бо сидиш поруч зі мною.",
+  "en": "^dawn.фартовий Lucky because you sit next to me."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^ніч Сонце сідає. Ну нарешті моя пора, {м_слівце}.",
+  "uk": "^dusk.ніч Сонце сідає. Ну нарешті моя пора, {м_слівце}.",
+  "en": "^dusk.ніч The sun is setting. Finally my time, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^голод Вечір, а я не жер. Хтось про мене пам'ятає взагалі?",
+  "uk": "^dusk.голод Вечір, а я не жер. Хтось про мене пам'ятає взагалі?",
+  "en": "^dusk.голод Evening, and I haven't eaten. Does anyone even remember me?"
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^червоне Небо червоне, як кров. Гарно, {м_слівце}. Аж їсти захотілось.",
+  "uk": "^dusk.червоне Небо червоне, як кров. Гарно, {м_слівце}. Аж їсти захотілось.",
+  "en": "^dusk.червоне The sky's red as blood. Beautiful, {м_слівце}. Makes me hungry."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^кажани Кажани вилізли, {м_слівце}. Мої братани нічні.",
+  "uk": "^dusk.кажани Кажани вилізли, {м_слівце}. Мої братани нічні.",
+  "en": "^dusk.кажани The bats are out, {м_слівце}. My night bros."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^сови Сови повилазили, {м_слівце}. Ненавиджу тих сов.",
+  "uk": "^dusk.сови Сови повилазили, {м_слівце}. Ненавиджу тих сов.",
+  "en": "^dusk.сови The owls are out, {м_слівце}. I hate those owls."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^багаття Пора вогонь палити. Бо я задубів, {м_слівце}.",
+  "uk": "^dusk.багаття Пора вогонь палити. Бо я задубів, {м_слівце}.",
+  "en": "^dusk.багаття Time to light a fire. I'm frozen stiff, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^втома День минув, а я від тебе заїбався більше, ніж від дороги.",
+  "uk": "^dusk.втома День минув, а я від тебе заїбався більше, ніж від дороги.",
+  "en": "^dusk.втома The day's done, and I'm more fucked out by you than by the road."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^тіні Тіні довгі повилазили. Скоро і те, шо в них сидить, вилізе.",
+  "uk": "^dusk.тіні Тіні довгі повилазили. Скоро і те, шо в них сидить, вилізе.",
+  "en": "^dusk.тіні The long shadows are out. Soon what sits in them comes out too."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^зорі Перша зоря, {м_слівце}. Загадуй. Я вже загадав — шоб ти заткнувся.",
+  "uk": "^dusk.зорі Перша зоря, {м_слівце}. Загадуй. Я вже загадав — шоб ти заткнувся.",
+  "en": "^dusk.зорі First star, {м_слівце}. Make a wish. I already did: that you shut up."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^підсумок Ну шо, скільки сьогодні завалили? Мало, сто пудів.",
+  "uk": "^dusk.підсумок Ну шо, скільки сьогодні завалили? Мало, сто пудів.",
+  "en": "^dusk.підсумок So, how many did we kill today? Not enough, for sure."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^виття Чуєш? Вовки виють. На вечерю кличуть, гиги.",
+  "uk": "^dusk.виття Чуєш? Вовки виють. На вечерю кличуть, гиги.",
+  "en": "^dusk.виття Hear that? Wolves howling. Calling us to supper, heh."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір",
+  "op": "set",
+  "old": "^нічліг Де ночуємо, {м_слівце}? Тіко не в болоті, бо я злечу.",
+  "uk": "^dusk.нічліг Де ночуємо, {м_слівце}? Тіко не в болоті, бо я злечу.",
+  "en": "^dusk.нічліг Where are we sleeping, {м_слівце}? Not in a swamp, or I'm off."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^ніч Твоя пора — то ще не привід кусатись.",
+  "uk": "^dusk.ніч>dusk.кусатись Твоя пора — то ще не привід кусатись.",
+  "en": "^dusk.ніч>dusk.кусатись Your time is no reason to bite."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^ніч Ніч для сну, Муніне. Для тебе — особливо.",
+  "uk": "^dusk.ніч>dusk.сон Ніч для сну, Муніне. Для тебе — особливо.",
+  "en": "^dusk.ніч>dusk.сон Night is for sleep, Munin. For you especially."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^голод {name} нагодує. Якщо попросиш чемно.",
+  "uk": "^dusk.голод>dusk.чемно {name} нагодує. Якщо попросиш чемно.",
+  "en": "^dusk.голод>dusk.чемно {name} will feed you. If you ask politely."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^голод Вечір — час для вечері. Не для лайки.",
+  "uk": "^dusk.голод>dusk.вечеря Вечір — час для вечері. Не для лайки.",
+  "en": "^dusk.голод>dusk.вечеря Evening is for supper. Not for swearing."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^червоне Червоне — бо сонце соромиться твоїх слів.",
+  "uk": "~3 ^dusk.голод>dusk.чемно Пам'ятаю. Тому й кажу: попроси в {name} чемно. Я підтримаю.",
+  "en": "~3 ^dusk.голод>dusk.чемно I remember. That's why I say: ask {name} politely. I'll back you."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^червоне Як кров? Ти про все так думаєш.",
+  "uk": "^dusk.червоне>dusk.соромиться Червоне — бо сонце соромиться твоїх слів.",
+  "en": "^dusk.червоне>dusk.соромиться Red because the sun is ashamed of your words."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^кажани Брати? Вони хоч мовчки літають.",
+  "uk": "^dusk.червоне>dusk.кров Як кров? Ти про все так думаєш.",
+  "en": "^dusk.червоне>dusk.кров Like blood? You think that about everything."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^кажани Кажани їдять комарів. А ти що їси? Мені мозок.",
+  "uk": "^dusk.кажани>dusk.мовчки Братани? Вони хоч мовчки літають.",
+  "en": "^dusk.кажани>dusk.мовчки Bros? At least they fly in silence."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^сови Сови мудрі. Тому ти їх і не любиш.",
+  "uk": "^dusk.кажани>dusk.мозок Кажани їдять комарів. А ти що їси? Мені мозок.",
+  "en": "^dusk.кажани>dusk.мозок Bats eat mosquitoes. And what do you eat? My brain."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^сови Сови вночі, ми вдень. Чесний поділ.",
+  "uk": "^dusk.сови>dusk.мудрі Сови мудрі. Тому ти їх і не любиш.",
+  "en": "^dusk.сови>dusk.мудрі Owls are wise. That's why you don't like them."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^багаття Розпалить {name}. Ти тільки сиди й гарчи.",
+  "uk": "^dusk.сови>dusk.поділ Сови вночі, ми вдень. Чесний поділ.",
+  "en": "^dusk.сови>dusk.поділ Owls by night, us by day. A fair split."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^багаття Вогонь буде. Ти тільки не сунь у нього дзьоба.",
+  "uk": "^dusk.багаття>dusk.гарчи Розпалить {name}. Ти тільки сиди й гарчи.",
+  "en": "^dusk.багаття>dusk.гарчи {name} will light it. You just sit and growl."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^втома Взаємно, Муніне. Взаємно.",
+  "uk": "^dusk.багаття>dusk.дзьоб Вогонь буде. Ти тільки не сунь у нього дзьоба.",
+  "en": "^dusk.багаття>dusk.дзьоб There'll be a fire. Just don't stick your beak in it."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^втома Відпочинь. Завтра знову втомлюватимешся.",
+  "uk": "^dusk.втома>dusk.взаємно Взаємно, Муніне. Взаємно.",
+  "en": "^dusk.втома>dusk.взаємно Likewise, Munin. Likewise."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^тіні Тому тримаймося світла.",
+  "uk": "^dusk.втома>dusk.завтра Відпочинь. Завтра знову втомлюватимешся.",
+  "en": "^dusk.втома>dusk.завтра Rest. Tomorrow you'll get tired again."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^тіні Хай лізе. Ти ж хотів бійки.",
+  "uk": "^dusk.тіні>dusk.світло Тому тримаймося світла.",
+  "en": "^dusk.тіні>dusk.світло That's why we stay in the light."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^зорі А я — щоб ти навчився чемності. Обидва не збудуться.",
+  "uk": "^dusk.тіні>dusk.бійки Хай лізе. Ти ж хотів бійки.",
+  "en": "^dusk.тіні>dusk.бійки Let it come. You wanted a fight."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^зорі Зорі не виконують бажань. Вони просто світять.",
+  "uk": "^dusk.зорі>dusk.чемність А я — щоб ти навчився чемності. Обидва не збудуться.",
+  "en": "^dusk.зорі>dusk.чемність And I wished you'd learn manners. Neither will come true."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^підсумок Зате всі живі. Це теж підсумок.",
+  "uk": "^dusk.зорі>dusk.світять Зорі не виконують бажань. Вони просто світять.",
+  "en": "^dusk.зорі>dusk.світять Stars don't grant wishes. They just shine."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^підсумок Ти рахуєш трупи. Я рахую дні. Обидва — без кінця.",
+  "uk": "^dusk.підсумок>dusk.живі Зате всі живі. Це теж підсумок.",
+  "en": "^dusk.підсумок>dusk.живі But everyone's alive. That's a tally too."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^виття Кличуть, щоб ми стали вечерею.",
+  "uk": "^dusk.підсумок>dusk.рахуєш Ти рахуєш трупи. Я рахую дні. Обидва — без кінця.",
+  "en": "^dusk.підсумок>dusk.рахуєш You count corpses. I count days. Both endless."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^виття Не відповідай їм. Будь ласка.",
+  "uk": "^dusk.виття>dusk.вечерею Кличуть, щоб ми стали вечерею.",
+  "en": "^dusk.виття>dusk.вечерею They're calling us to be the supper."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^нічліг Де {name} вирішить. Сподіваюсь, під дахом.",
+  "uk": "^dusk.виття>dusk.не_відповідай Не відповідай їм. Будь ласка.",
+  "en": "^dusk.виття>dusk.не_відповідай Don't answer them. Please."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "set",
+  "old": "^нічліг Під дахом. Я вже бачу дим.",
+  "uk": "^dusk.нічліг>dusk.дах Де {name} вирішить. Сподіваюсь, під дахом.",
+  "en": "^dusk.нічліг>dusk.дах Wherever {name} decides. Under a roof, I hope."
+ },
+ {
+  "who": "H",
+  "list": "х_вечір",
+  "op": "add",
+  "uk": "^dusk.нічліг>dusk.дим Під дахом. Я вже бачу дим.",
+  "en": "^dusk.нічліг>dusk.дим Under a roof. I can already see smoke."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^ніч Посплю, як здохну.",
+  "uk": "^dusk.кусатись Привід — ти. А пора — тіко нагода.",
+  "en": "^dusk.кусатись You're the reason. The hour's just the chance."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^голод Чемно? Я? Ха! Ха-ха!",
+  "uk": "^dusk.кусатись Не кусатимусь. Погризу трошки, і всьо.",
+  "en": "^dusk.кусатись I won't bite. Just nibble a bit, that's all."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^червоне Моїх слів? Та я ше й не починав, ботан.",
+  "uk": "^dusk.сон Посплю, як здохну.",
+  "en": "^dusk.сон I'll sleep when I'm dead."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^кажани Мізки? В тебе? Не смішіть мене, {м_слівце}.",
+  "uk": "^dusk.сон Спи сам. А я вночі гуляю.",
+  "en": "^dusk.сон You sleep. I go out at night."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^сови Я одну колись дзьобнув. Мудрість їй ніхріна не допомогла.",
+  "uk": "^dusk.чемно Чемно? Я? Ха! Ха-ха!",
+  "en": "^dusk.чемно Politely? Me? Ha! Ha-ha!"
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^багаття Сидіти, гарчати, сраку гріти. Оце я розумію вечір.",
+  "uk": "^dusk.чемно Попрошу. Дзьобом. По руці. Це чемно.",
+  "en": "^dusk.чемно I'll ask. With my beak. On the hand. That's polite."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^втома Завтра знов втома. Ура, бля. Ура.",
+  "uk": "^dusk.вечеря То де вечеря, бля? Я ше й лаятись почну.",
+  "en": "^dusk.вечеря Then where's supper, fuck? I'm about to start swearing too."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^тіні Світло — для ссикл. Але… сяду ближче. Просто так.",
+  "uk": "^dusk.вечеря Лайка — то моя вечеря, поки жерти нема.",
+  "en": "^dusk.вечеря Swearing is my supper till there's grub."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^зорі То хай світять мовчки. Як ти мав би, ботан.",
+  "uk": "^dusk.соромиться Моїх слів? Та я ше й не починав, ботан.",
+  "en": "^dusk.соромиться My words? I haven't even started, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^підсумок Живі — то нудно. Ну… хай вже.",
+  "uk": "^dusk.соромиться Хай соромиться. Я не соромлюсь.",
+  "en": "^dusk.соромиться Let it be ashamed. I'm not."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^виття А я відповім. Дзьобом. По сусалах.",
+  "uk": "^dusk.кров Про все. А шо, є шось краще за кров?",
+  "en": "^dusk.кров About everything. What, is there anything better than blood?"
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "set",
+  "old": "^нічліг Дах — то кайф. Аби не капало, як того разу, бля.",
+  "uk": "^dusk.кров Не про все. Про тебе я думаю гірше.",
+  "en": "^dusk.кров Not everything. About you I think worse."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.мовчки Мовчки? Вони пищать, ботан. Ти просто глухий.",
+  "en": "^dusk.мовчки Silence? They squeak, nerd. You're just deaf."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.мовчки Бо їм нема шо тобі сказати. А мені є.",
+  "en": "^dusk.мовчки Because they've got nothing to say to you. I do."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.мозок Мізки? В тебе? Не смішіть мене, {м_слівце}.",
+  "en": "^dusk.мозок Brains? You? Don't make me laugh, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.мозок Їм. Смачно. Хоч його й мало.",
+  "en": "^dusk.мозок I do. Tasty. Even if there's not much of it."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.мудрі Я одну колись дзьобнув. Мудрість їй ніхріна не допомогла.",
+  "en": "^dusk.мудрі I pecked one once. Wisdom didn't help it one bit."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.мудрі Мудрі, ага. Як ти. Тому й не люблю.",
+  "en": "^dusk.мудрі Wise, yeah. Like you. That's why."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.поділ Чесний, ага. Тіко я й уночі не сплю.",
+  "en": "^dusk.поділ Fair, sure. Only I don't sleep at night either."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.поділ Хай собі. Аби в мій день не лізли.",
+  "en": "^dusk.поділ Fine. As long as they stay out of my day."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.гарчи Сидіти, гарчати, сраку гріти. Оце я розумію вечір.",
+  "en": "^dusk.гарчи Sit, growl, warm my ass. That's what I call an evening."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.гарчи Гарчатиму. Шоб швидше палив.",
+  "en": "^dusk.гарчи I'll growl. So the fire comes faster."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.дзьоб Сам не сунь. Мій дзьоб — моя справа.",
+  "en": "^dusk.дзьоб Don't stick your own. My beak, my business."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.дзьоб Тіко раз сунув! Раз! І всі пам'ятають.",
+  "en": "^dusk.дзьоб I stuck it in once! Once! And everybody remembers."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.взаємно Ну от. Хоч у чомусь згода.",
+  "en": "^dusk.взаємно There. We agree on something."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.взаємно То завтра помовчимо. Обидва відпочинем.",
+  "en": "^dusk.взаємно Then tomorrow we keep quiet. Both of us rest."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.завтра Завтра знов втома. Ура, бля. Ура.",
+  "en": "^dusk.завтра Tomorrow, tired again. Hooray, fuck. Hooray."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.завтра Від тебе — по-любому.",
+  "en": "^dusk.завтра Of you, for sure."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.світло Світло — для ссикл. Але… сяду ближче. Просто так.",
+  "en": "^dusk.світло Light is for cowards. But… I'll sit closer. Just because."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.світло Тримайся сам. Я в тіні — як удома.",
+  "en": "^dusk.світло You stick to it. In the shadows I'm at home."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.бійки Хотів. Але не з тінню, {м_слівце}.",
+  "en": "^dusk.бійки I did. But not with a shadow, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.бійки Та й хай. Я з того, шо вилізе, пір'я наскубу.",
+  "en": "^dusk.бійки Fine. I'll pluck whatever crawls out."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.чемність Чемності? Я чемний. Я ж тебе ше не дзьобнув.",
+  "en": "^dusk.чемність Manners? I am polite. I haven't pecked you yet."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.чемність Твоє не збудеться. А моє — побачим.",
+  "en": "^dusk.чемність Yours won't. Mine, we'll see."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.світять То хай світять мовчки. Як ти мав би, ботан.",
+  "en": "^dusk.світять Then let them shine in silence. Like you should, nerd."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.світять Нашо тоді вони? Тіко очі муляють.",
+  "en": "^dusk.світять What are they for then? Just bugging my eyes."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.живі Живі — то нудно. Ну… хай вже.",
+  "en": "^dusk.живі Alive is boring. Well… fine."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.живі Живі, ага. Завтра надолужимо.",
+  "en": "^dusk.живі Alive, sure. We'll make up for it tomorrow."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.рахуєш Трупи рахувать веселіше.",
+  "en": "^dusk.рахуєш Counting corpses is more fun."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.рахуєш Дні рахувать — то як у тюрязі. Я краще трупи.",
+  "en": "^dusk.рахуєш Counting days is like jail. I'll take corpses."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.вечерею Мною вдавляться. Я гіркий, {м_слівце}.",
+  "en": "^dusk.вечерею They'll choke on me. I'm bitter, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.вечерею Хай пробують. Я застрягаю в горлі.",
+  "en": "^dusk.вечерею Let them try. I get stuck in throats."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.не_відповідай А я відповім. Дзьобом. По сусалах.",
+  "en": "^dusk.не_відповідай I'll answer. With my beak. In the chops."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.не_відповідай «Будь ласка»? Ну… добре. Мовчу. Тобі ж страшно.",
+  "en": "^dusk.не_відповідай «Please»? Well… fine. I'm quiet. You're scared, after all."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.дах Дах — то кайф. Аби не капало, як того разу, бля.",
+  "en": "^dusk.дах A roof is great. As long as it doesn't leak like last time, fuck."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.дах Сподівайся. А я вже знаю, шо будуть кущі.",
+  "en": "^dusk.дах Keep hoping. I already know it'll be bushes."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.дим Дим? То лети першим, перевір.",
+  "en": "^dusk.дим Smoke? Then fly ahead and check."
+ },
+ {
+  "who": "M",
+  "list": "м_вечір_кінець",
+  "op": "add",
+  "uk": "^dusk.дим Дим — то добре. Дим — то хтось смажить.",
+  "en": "^dusk.дим Smoke is good. Smoke means someone's roasting."
+ }
+]

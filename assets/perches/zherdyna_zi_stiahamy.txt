@@ -1,0 +1,41 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Жердина зі стягами
+note: Хрестовина зі стягами на кам’яному колі — більше для краси, але й ворону місце знайдеться. Яйце вгорі гаряче, не чіпати
+use: perch
+id: zherdyna_zi_stiahamy
+cost: Wood:10 Stone:8 LeatherScraps:4
+perday: 30
+ready: Ігор 2026-10-15
+pose: 0 0 0 -6 0 0 0 -6 0 -27 -27
+stand: 0 0 0 0 0 0 0 0 0 -27 -27
+part ashwood_beam_2m pos -0.28 0.93 -0.17 rot 0 0 90 scale 0.9 0.28 0.3 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos -0.28 1.5 -0.17 rot 0 0 90 scale 0.9 0.28 0.3 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0 1.9 -0.17 rot 0 0 -180 scale 1 0.16 0.2 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0 1.9 -0.17 rot 0 90 -180 scale 1 0.16 0.2 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0 1.9 -0.6 rot 0 0 -180 scale 0.5 0.15 0.16 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0.5 1.9 -0.15 rot 0 90 -180 scale 0.5 0.15 0.16 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos -0.5 1.9 -0.15 rot 0 90 -180 scale 0.5 0.15 0.16 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0 1.9 0.3 rot 0 0 -180 scale 0.5 0.15 0.16 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0 1.9 -0.15 rot 0 138 -180 scale 0.6446 0.1381 0.1473 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0 1.9 -0.15 rot 0 -139 -180 scale 0.6446 0.1381 0.1473 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos -0.35 1.77 0.15 rot 0 -134 -150 scale 0.401 0.1108 0.1182 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0.35 1.77 0.15 rot 0 134 150 scale 0.401 0.1108 0.1182 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos 0.3 1.77 -0.5 rot 0 -136 150 scale 0.401 0.1108 0.1182 mat Iron  # Балка з попелистої деревини 2 м
+part ashwood_beam_2m pos -0.3 1.77 -0.4 rot 0 -36 150 scale 0.401 0.1108 0.1182 mat Iron  # Балка з попелистої деревини 2 м
+part TrinketIronHealth pos 1 2.05 -0.19 rot 0 -180 90 scale 0.8 4 1  # Залізна брошка
+part TrinketIronHealth pos -0.01 2.05 0.8 rot 0 90 90 scale 0.8 4 1  # Залізна брошка
+part TrinketIronHealth pos 0 2.05 -1.2 rot 0 -90 90 scale 0.8 4 1  # Залізна брошка
+part TrinketIronHealth pos -1.08 2.05 -0.19 rot 0 0 90 scale 0.8 4 1  # Залізна брошка
+part ChickenEgg pos 0 2.39 -0.19 rot 0 0 0 scale 1 1 1 mat MemorialCoal  # Яйце
+part @seat pos 0.8 2.09 -0.19 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos -0.8 2.09 -0.19 rot 0 0 0 scale 1 1 1  # місце ворона
+part piece_banner11 pos -0.5 2.04 0.33 rot 0 45 0 scale 0.4 0.4 0.4  # Білий стяг
+part piece_banner11 pos -0.5 2.04 -0.65 rot 0 142 0 scale 0.4 0.4 0.4  # Білий стяг
+part piece_banner11 pos 0.5 2.04 -0.64 rot 0 35 0 scale 0.4 0.4 0.4  # Білий стяг
+part piece_banner11 pos 0.5 2.04 0.36 rot 0 140 0 scale 0.4 0.4 0.4  # Білий стяг
+part fx/bow_projectile_fire pos 0 2.5 -0.18 rot 0 0 0 scale 1 1 1  # fx/bow_projectile_fire
+part stone_floor_2x2 pos -0.05 0.13 -0.18 rot 0 0 0 scale 0.5 0.2688 0.5  # Кам’яна підлога 2х2 м
+part piece_blackwood_bench01 pos 0.45 0.05 -0.43 rot 0 0 0 scale 0.5 0.5 0.5  # Лава з попелистої деревини
+part piece_blackwood_bench01 pos -0.4 0.05 -0.43 rot 0 90 0 scale 0.5 0.5 0.5  # Лава з попелистої деревини
+part piece_blackwood_bench01 pos -0.4 0.05 0.28 rot 0 -180 0 scale 0.5 0.5 0.5  # Лава з попелистої деревини
+part piece_blackwood_bench01 pos 0.45 0.05 0.28 rot 0 -90 0 scale 0.5 0.5 0.5  # Лава з попелистої деревини

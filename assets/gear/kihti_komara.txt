@@ -1,0 +1,12 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Кігті комара
+note: Жала смертокомарів на воронячих лапах. Комарів ніхто не питав. Тепер ворон кусає, як вони: швидко, здалеку й не вчасно.
+use: gear
+id: kihti_komara
+cost: Needle:6 Silver:2 LeatherScraps:2 TrophyDeathsquito:1
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: legs
+part Needle pos 0.02 -0.07 0.09 rot 15 9 -46 scale 0.1638 0.1249 0.0835  # Жало
+part Needle pos -0.02 -0.07 0.09 rot 15 0 -45 scale 0.1638 0.1249 0.0835  # Жало
+part Needle pos 0 -0.07 0.09 rot 15 5 -44 scale 0.1638 0.1249 0.0835  # Жало
+part TrinketIronStamina pos 0.01 -0.055 0.05 rot 0 0 0 scale 0.4234 0.331 0.2192 tint 4C99A6  # Браслет на ногу

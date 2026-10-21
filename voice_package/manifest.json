@@ -1,0 +1,10 @@
+{
+  "name": "RavenWatch_Voice",
+  "version_number": "1.0.0",
+  "website_url": "https://discord.gg/XM5kuwpAUU",
+  "description": "Optional voice for RavenWatch: Hugin and Munin say their lines aloud, each in a voice that fits his character. Offline speech synthesis on your PC. Ukrainian lines for now. Needs RavenWatch.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2351",
+    "Ko4erga-RavenWatch-2.3.1"
+  ]
+}

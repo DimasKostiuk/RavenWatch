@@ -1,0 +1,8 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Камінь долі
+note: 
+use: item
+id: kamin_doli
+cost: Wood:10
+replaces: RavenWatch_FateStone
+part asset/Предмети/FateStone pos 0 0 0 rot 0 0 0 scale 0.17 0.17 0.17  # Камінь долі (Meshy), ~0,3 м

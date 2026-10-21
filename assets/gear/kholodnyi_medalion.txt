@@ -1,0 +1,11 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Холодний медальйон
+note: У сріблі горить крижаний вогонь із серця гори. Ворону не холодно й не мокро, а тому, кого він дзьобне, — дуже. Не лизати.
+use: gear
+id: kholodnyi_medalion
+cost: Silver:4 FreezeGland:3 Crystal:2 DragonTear:1
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: neck
+follow: body
+part SilverNecklace pos 0 0.4473 -0.05 rot 71 0 0 scale 0.2774 0.3235 0.3576 tint FFFFFF  # Срібне намисто
+part OrbFrostFire pos 0 0.3173 0 rot 0 0 0 scale 0.4314 0.4357 0.141 tint FFFFFF  # Вогнекрижна сутність

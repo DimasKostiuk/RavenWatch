@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Корона відьом
+note: Сплетена відьмами з кісток, гілля й чужих снів. Одін подарував її з дивною усмішкою — відтоді ворон каркає вві сні рунами.
+use: gear
+id: korona_vidom
+slot: head
+part TrinketBloodGoldStamina pos 0 0.002 0 rot 0 0 0 scale 1 1 1 tint B87340  # Корона відьом

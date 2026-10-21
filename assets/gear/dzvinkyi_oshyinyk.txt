@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Дзвінкий ошийник
+note: Дзвіночок із кози, що першою чула вовків. Коза не вижила, дзвіночок — так. Дзенькає, щойно хтось у кущах вирішив тебе з’їсти.
+use: gear
+id: dzvinkyi_oshyinyk
+cost: Bronze:2 LeatherScraps:2 Feathers:2 TrophyGreydwarfShaman:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: neck
+part TrinketScaleStaminaDamage pos 0 -0.01 0.04 rot 30 0 0 scale 0.8802 0.8802 0.8802 tint ABFF33  # Дзвінкий браслет на ногу

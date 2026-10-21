@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Спіраль захисту
+note: Вирізала віщунка, що побачила твою смерть і вирішила: краще б ні. Підсилює все, чим ворон тебе береже.
+use: gear
+id: spiral_zakhystu
+cost: Eitr:4 Silver:2 Crystal:2 BlackCore:1
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: legs
+part TrinketFlametalEitr pos 0 -0.0688 0 rot 0 0 0 scale 0.2847 0.4152 0.2423 mat GemstoneBlue  # Йормунній

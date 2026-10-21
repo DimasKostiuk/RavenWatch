@@ -1,0 +1,13 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Окута жердина
+note: Дві тесані колоди, окуті залізом, і перекладина між ними: міцніша за просту жердину
+use: perch
+id: zalizna_zherdyna
+cost: Wood:10 Iron:4 Bronze:2
+perday: 60
+station: forge
+pose: -50 90 -45 16 -50 90 -45 16 0 -15 -10
+stand: 0 0 0 0 0 0 0 0 0 -15 -10
+part asset/Жердини/PerchIron pos 0 1.076 0 rot 0 0 0 scale 1.13 1.13 1.13  # Окута жердина (Meshy), 2,15 м
+part @seat pos -0.3 1.94 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos 0.3 1.94 0 rot 0 0 0 scale 1 1 1  # місце ворона

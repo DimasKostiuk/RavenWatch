@@ -1,0 +1,15 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Вартовий ліхтар
+note: Кований стовп із ліхтарем-кліткою на ланцюгу: ворони сідають на руку й стережуть вогник
+use: perch
+id: kovana_shybenytsia
+cost: Iron:6 Tin:2 Chain:1 Wood:4
+station: forge
+perday: 60
+pose: 0 0 0 -6 0 0 0 -6 0 -27 -27
+stand: 0 0 0 0 0 0 0 0 0 -27 -27
+part asset/Жердини/PerchGallows pos 0 1.119 0 rot 0 0 0 scale 2.35 2.35 2.35  # Вартовий ліхтар (Meshy), 2,24 м
+part @seat pos -0.19 2.09 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos 0.28 2.09 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @light pos 0.635 1.17 0 rot 0 0 0 scale 6 1.4 0.15  # світло ліхтаря-клітки (дальність 6 м)
+part fx/Candle_resin_bogwitch pos 0.635 1.13 0 rot 0 0 0 scale 0.3 0.3 0.3  # вогник у клітці

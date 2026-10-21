@@ -1,0 +1,10 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Монета на удачу
+note: Знайдена в найглибшому місці троля — краще не питати, якому. Відмили. Майже. Відтоді щастить усім, крім того троля.
+use: gear
+id: moneta_na_udachu
+cost: Coins:50 AmberPearl:1 LeatherScraps:1 TrophyFrostTroll:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: neck
+follow: body
+part asset/RPG_предмети/Coin pos 0 -0.06 0.15 rot 0 0 0 scale 0.0853 0.0853 0.0853  # Coin (RPG_предмети)

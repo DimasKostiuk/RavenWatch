@@ -1,0 +1,8 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Простий воронячий стіл
+note: Дошки, на яких ворон уже посидів, подзьобав і позначив своє. Тут роблять торби, ошийники й обереги. Крихти не змітати — це плата майстрові.
+use: station
+id: prostyi_voroniachyi_stil
+cost: FineWood:10 BronzeNails:10 Feathers:6 Resin:4 TrollHide:2
+station: forge
+part asset/Столи/RavenTable pos 0 0.8 0 rot 0 0 0 scale 0.84 0.84 0.84  # Простий воронячий стіл (Meshy), 2026-10-18: стільниця ~1 м

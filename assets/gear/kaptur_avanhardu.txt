@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Каптур авангарду
+note: Каптур тих, хто першим іде у ворожі ворота. Поки ворон у ньому в бою, вороги дивляться на нього, а не на тебе.
+use: gear
+id: kaptur_avanhardu
+cost: LinenThread:8 Carapace:2 Feathers:4 TrophySeeker:1
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: neck
+part HelmetDNMediumHood pos 0 0 0 rot 90 0 0 scale 0.9039 2.5478 0.7322 tint A61F1A  # Каптур авангарду

@@ -1,0 +1,8 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Просунутий стіл ворона
+note: Чорний мармур і деревина Іґґдрасіля — не соромно й Одіновим воронам. Тут роблять речі, від яких у ворогів тремтять коліна.
+use: station
+id: prosunytyi_stil_vorona
+cost: BlackMarble:10 YggdrasilWood:8 Eitr:4 Ruby:2 Feathers:6
+station: piece_magetable
+part asset/Столи/RavenTableRunic pos 0 1.023 0 rot 0 0 0 scale 1.14 1.14 1.14  # Рунний стіл ворона (Meshy), ×1,5 від 2026-10-18: стільниця ~1,4 м, руни світяться

@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Захисний ошейник
+note: Подвійна кабаняча шкіра й пряжка від коваля, в якого ворон колись поцупив обід. Коваль досі не пробачив, а ворон у ньому легше пробачає тобі дурну смерть.
+use: gear
+id: zakhysnyi_osheinyk
+cost: TrollHide:2 Iron:2 LeatherScraps:2 TrophyDraugr:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: neck
+part IceSkates pos 0 -0.04 0.04 rot 36 0 0 scale 0.226 0.2503 0.2941 mat ArmorBronzeLegs  # IceSkates

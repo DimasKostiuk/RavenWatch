@@ -1,0 +1,15 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Вороняче гніздо
+note: Гніздо на високій жердині, де ворони чекають слова від Одіна
+use: nest
+id: voroniache_hnizdo
+cost: Wood:10 Resin:4 Feathers:20 HardAntler:2
+perday: 30
+pose: -50 90 -45 0 -50 90 -45 -1 0 -34 -33
+stand: 0 0 0 0 0 0 0 0 0 -34 -33
+part asset/Гніздо/RavenNest pos 0 1.75 0 rot 0 0 0 scale 3.684 3.684 3.684  # Вороняче гніздо (RavenNest), 3,5 м
+part @seat pos 0.5 3.3 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos -0.5 3.3 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @box:top pos 0 2.05 0 rot 0 0 0 scale 1.1 1.3 1.1  # зона «верх»: стовбур вище 1,4 м (E — посадити / забрати воронів)
+part @box:top pos 0 3.1 0 rot 0 0 0 scale 2.2 0.8 1.5  # зона «верх»: гніздо
+part @box:bowl pos 0 0.7 0.1 rot 0 0 0 scale 2.3 1.4 2.3  # зона «чаша»: основа, чаша й низ стовбура до 1,4 м (E — вікно гнізда)

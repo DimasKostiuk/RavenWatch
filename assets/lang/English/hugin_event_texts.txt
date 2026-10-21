@@ -1,0 +1,163 @@
+[death_creature] Your killer: {killer_gen}. I'd applaud, but I've got wings, not hands.
+[death_creature] I saw you charge {killer_gen} with a face like you had a plan. There was no damn plan.
+[death_creature] Score: {killer_gen} — one, you — zero. The rematch is yours, but eat something this time.
+[death_creature] Now {killer_gen} will tell all its friends how it dealt with a great warrior. Well, a warrior.
+[death_creature] I'll write in the saga that you “strategically withdrew” from {killer_gen}. Straight into the grave.
+[death_creature] Don't sweat {killer_gen}. Everyone dies of some crap eventually. You just do it more often.
+[death_creature] {killer_gen} isn't the scariest thing in these lands. But it was enough for you, apparently.
+[death_many] You died {times} in a few minutes. The valkyries know you by name now and don't even ask.
+[death_many] {times} into the grave in no time at all… Did you buy a season pass down there?
+[death_many] Your grave has neighbors already. A little more and it'll be a whole village.
+[death_many] I'm tired of counting your deaths, and I have eternity to spare, mind you.
+[death_many] {times}, damn it. Maybe rest a bit before running back the same way?
+[death_fall] You've proved gravity works. Odin thanks you for your research.
+[death_fall] Jumping was brave. Landing — not so much.
+[death_fall] Next time climb down like a normal person. Not ass first.
+[death_drown] The sea took you, then spat you back out. Even it didn't want you.
+[death_drown] Swimming with a bag full of stones — a bold choice. Stupid, but bold.
+[death_drown] The fish are already discussing who came to visit without an invitation.
+[death_fire] Fire is for the hearth, not for your ass. Remember that.
+[death_fire] You got roasted evenly, with a nice crispy crust. Surtr would have licked his lips.
+[death_fire] You were warm, no argument there. Way too warm, damn it.
+[death_poison] Poison isn't a seasoning. Not even in the swamp.
+[death_poison] You turned green as swamp slime. Poison resistance mead isn't there for decoration.
+[death_cold] You froze like an icicle up a troll's ass. Warm clothes aren't a luxury.
+[death_cold] The mountains don't forgive light clothing. Next time — fur and a fire.
+[death_tree] You chopped a tree. The tree chopped you. Fair trade.
+[death_tree] They say trees fall where the smartest one is standing. As you can see, they lie.
+[death] Death is only a lesson. You seem to be a very diligent student.
+[death] Your soul knows the way back by now. Don't make a habit of it, all right?
+[near_death] You were a hair's breadth from Hel, and {attacker_gen} a hair's breadth from victory.
+[near_death] I watched you dance with death. It stepped on your toes, and you stepped on its nerves.
+[near_death] Alive! Barely, but alive. Maybe you'll eat something now, {hero|heroine}?
+[near_death] After a fight like that with {attacker_gen}, normal warriors sit by the fire and drink. A lot.
+[near_death] Your heart must still be pounding like a hammer in a forge. Good thing it's pounding.
+[boss] You beat {boss_gen}! Tonight the skalds will sing about you. Loudly and off-key.
+[boss] {boss_gen} has fallen. Odin smiled, and that, believe me, happens less often than the sun in the Mistlands.
+[boss] Beating {boss_gen} is no small thing. You've earned your mead. Two of them.
+[level] Level {level}! You're growing faster than moss on a stone.
+[level] Level {level}. Open the tree while the strength is overflowing.
+[level] Another level. Soon even the boars will fear you. Well, some of them.
+[afk] You've stood here so long the flies started landing on you. I checked — you're alive.
+[afk] Lost in thought? Or asleep with your eyes open? The world is waiting, traveler.
+[afk] You stood still as a statue. A little longer and people would have started bringing you offerings.
+[afk] I thought you'd been cursed. But you just froze up, damn it.
+[afk] Hey! The greylings are already betting on whether you move at all.
+[afk] If you stepped away to take a piss — say hi. If not — what the hell are you doing?
+[afk] You've stood so long some cheeky magpie will build a nest on you soon. Not me, I promise.
+[afk] I flew across the whole forest and you didn't even twitch. Damn, that's a record.
+[afk] Odin asks if you're still in the game, or just your body is.
+[afk] Should I wake you? Oh, sorry, you're not asleep. You're just… standing.
+[afk] Did you see a vision? Or are you meditating? Meditation is for monks, and you're a viking.
+[afk] Know how many trees you could have chopped in this time? I counted. Lots, damn it.
+[afk] Even the rocks nearby are more active. And they are, mind you, rocks.
+[afk] You stand like a stump. I was about to sit on you for a rest.
+[afk] If this is an ambush, it's the worst ambush in Midgard's history. You can be seen a mile away.
+[afk] Trolls walked past and didn't even stop. They thought you were decoration.
+[friendly] You hit one of your own. They say it's brave to hit those who won't hit back. For now.
+[friendly] Friends are for standing beside, not for training on, damn it.
+[friendly] Careful with that weapon. Your own aren't targets, even if they're really asking for it.
+[friendly] Hit one of your own again and your grave will read “killed in revenge.”
+[kill_many] The count in a few minutes — {count}, mostly {top_genpl}. You're not a reaper, you're a damn combine harvester.
+[kill_many] {count} corpses behind you already. The forest is whispering your name. And not kindly.
+[kill_many] I haven't seen that many {top_genpl} even in their nest. Did you do some spring cleaning?
+[kill_many] The skalds can't keep up. Slow down, their hands are falling off.
+[kill] I saw you deal with {top_gen}. Neatly. Almost.
+[kill] {top_gen} won't bother these lands anymore. Your work, well done.
+[kill] A small scrap, but a nice one. You're slowly becoming dangerous. Slowly, damn it.
+[kill] Another enemy in the ground. Though the ground didn't ask for it.
+[escaped] The prey got away: {prey_gen}. Probably still laughing somewhere in the bushes.
+[escaped] You wounded {prey_gen}, and the prey just walked off. Lunch on legs, and you without lunch.
+[escaped] {prey_gen} is faster than you. Don't worry, beasts just train more.
+[escaped] Next time aim at {prey_gen}, not at the air next to it. The air did nothing wrong.
+[escaped] The prey got away and is now telling the whole forest what a lousy shot you are.
+[escaped] You chased it so hard I started to wonder who was the hunter and who was the prey.
+[flee] I saw you run from {foe_gen}. Nice pace, really. Almost like a deer.
+[flee] You retreated from {foe_gen} so fast the grass got flattened. Wise. Probably.
+[flee] {foe_gen} is still standing there wondering where its opponent went.
+[flee] Sometimes running away is the best tactic. The skalds don't sing about it, though.
+[flee] A warrior who ran lives to fight another day. So say those who ran. That is, you.
+[biome] So you're {biome_in} now. Careful, everything here bites harder than at home.
+[biome] {biome}… Bold. I hope you brought more food than usual, not a handful of berries.
+[biome] New lands, new dangers. The {biome} doesn't forgive haste. Or stupidity.
+[dungeon] You crawled out of the dungeon and you're even alive. Crypts don't like that.
+[dungeon] Underground it's dark, damp and full of dead things. A perfect place to relax, huh?
+[dungeon] You smell like an old crypt. Wash up, because even I can smell it.
+[fall] You hit the ground so hard I jumped. Legs in one piece?
+[fall] Jumping from heights is an art. You're still at the “oh shit” stage.
+[fall] The ground said hello. Quite loudly, actually.
+[build] Pieces placed: {count}. A little more and it might even look like a house.
+[build] I see you're building. One question: will there be a roof? The rain is asking.
+[build] You're a handy builder. Just keep the fire inside, not instead of a wall.
+[build] So much knocking that even the greylings came to see what crap you're putting up.
+[build] Your architecture, I'll be honest, is bold. A troll will appreciate it when it comes to smash it.
+[fish] Fish in the basket: {fish}. Fishing is a warrior's path too, just wetter.
+[fish] The fish come to you on their own. Or you to them. As long as it tastes good.
+[fish] A fisherman's patience is a rare virtue. Pity you don't have it in a fight.
+[hungry] You're running around without food. A hungry warrior is a dead warrior, and a dead warrior is a sad raven.
+[hungry] Your stomach is as empty as nests in autumn. Eat something, damn it, please.
+[hungry] Even I, a raven, eat more often than you. And I eat things you'd better not ask about.
+[encumbered] You're carrying so much the ground is sagging. Maybe a cart instead of your spine?
+[encumbered] You're crawling like a lox after lunch. Drop some stones, for crying out loud.
+[encumbered] Greed is a fine quality in a trader. In a traveler — who the hell knows.
+[swim] You've swum so much the fish think you're one of them.
+[swim] There's a ship for swimming. Unless you're training to be bait.
+[sail] I saw you at the helm. The reefs fear you less than they should.
+[sail] You're not a bad captain. Just remember where the shore is and where the serpent is.
+[sail] Waves, wind, salty spray… and not a single serpent. Not yet, damn it.
+[chop] You've chopped so much the forest is already complaining to Odin.
+[chop] The ring of your axe can be heard all the way to the mountains. There'll be wood, but the trees… well, they'll grow back someday.
+[mine] You dug so hard it looks like you'll come out in Hel soon. From the top.
+[mine] Ore is good. Just don't forget how to get out of that pit.
+[portal] You flew through the portal like it pays you for it. Ore, I remind you, won't go through.
+[portal] Portals are strange magic. Just hope there's no troll with a club waiting on the other side.
+[cook] Smells so good even I'm hungry. Will you save a bite for an old raven?
+[cook] You're a better cook than a warrior. Don't be offended — it's a compliment to your cauldron.
+[craft] I see you're crafting. Good gear protects better than prayers.
+[craft] You've made so much stuff you'll soon run out of chests. And room in the house.
+[sleep] Sleep well? Dreams of Valhalla, I bet? Or of mead?
+[sleep] Sleep is strength. You're as fresh as a young wolf now. Well, an old wolf.
+[pick] You've stripped the bushes so bare the bears will come to complain.
+[pick] Berries, mushrooms, flowers… Are you sure you're a warrior and not the herb woman from the next farm?
+[travel] You've run {km}. Your legs must be buzzing like a beehive.
+[travel] You run so much even the wind can't keep up. Where's the rush?
+[loot] Rummaging through chests like a hungry fuling. Found anything valuable besides spiders?
+[loot] So many chests opened… I hope at least one of them wasn't someone else's.
+[pet] I saw you petting your animal. Even a stern warrior has a soft heart.
+[pet] Your animal loves you. Don't let it down, feed it on time, or it'll eat you.
+[night] It's night out and you're still wandering. Darkness isn't for strolls.
+[night] At night the forest wakes up. And it's hungry, damn it. Get to the fire.
+[weather_storm] Thor is pounding his hammer overhead and you're standing there like a lightning rod. Brave. Stupid, but brave.
+[weather_storm] In a storm like this even a troll stays in its cave. And you're outside. Which of you is smarter is an open question.
+[weather_storm] Lightning looks for the tallest dumb head around. Duck, just in case.
+[weather_rain] It's pouring like from a leaky bucket. I'm wet, you're wet, and only the frogs are happy.
+[weather_rain] Wet bowstring, wet pants, wet raven. A wonderful day for adventure, damn it.
+[weather_rain] In the rain your stamina melts like snow in spring. Maybe under a roof and by the fire, huh?
+[weather_snow] Snow crunching underfoot, nose red, and you're still heading somewhere. Dress warmer, icicle.
+[weather_snow] It's so cold even my thoughts froze. And you didn't have many to begin with.
+[weather_fog] In fog like this you could hug a troll thinking it's a tree. Watch who you're hugging.
+[weather_fog] The fog is so thick I flew into a pine three times. Don't repeat my mistake.
+[weather_fog] Can't see past your nose. Perfect weather for something big to sneak up behind you.
+[here] Was flying {biome_here_in}, and look — a familiar face. Decided to say hi while you're alive.
+[here] You're {biome_here_in} right now. Just saying, so you know where to look for you later.
+[here] Odin asked how you're doing. I'll say all is quiet {biome_here_in}. For now.
+[here_meadows] The Meadows — even a child would survive here. So if you die here, I'll tell everyone, damn it.
+[here_meadows] Deer, piglets, sunshine. The calmest place in this world. Enjoy it before you go farther.
+[here_blackforest] In the Black Forest every bush is watching you. And half of them are greylings.
+[here_blackforest] Dark, damp, a troll thumping somewhere. The Black Forest, as hospitable as ever.
+[here_swamp] The swamp stinks so bad I'm staying above the clouds. And you stroll here like at a fair.
+[here_swamp] Leeches, draugr, mud up to the knees. Who even thought of coming here? Ah, you.
+[here_mountain] In the Mountains the wind is tearing the feathers off me. You do have a frost resistance mead, I hope?
+[here_mountain] Wolves, drakes, snow in your pants. The Mountains love only those who dress warm.
+[here_plains] The Plains. A lovely view, flies the size of a boar and fulings who hate everyone.
+[here_plains] Every fly here can kill you. Seriously, damn it. Don't laugh.
+[here_mistlands] In the Mistlands I barely found you. Next time hang a lantern on yourself.
+[here_mistlands] Spiders, mist and something clicking in the dark. I wouldn't nest here.
+[here_ashlands] In the Ashlands even my ass is burning, and I fly high. How are you not roasted yet?
+[here_ashlands] The ground burns here, the sky burns, and my feathers are starting to smolder. Don't linger.
+[here_deepnorth] The Deep North. Even I'm cold here, and I'm Odin's raven, damn it.
+[here_ocean] Nothing but water around. I hope your tub doesn't leak.
+[here_ocean] The serpents in the Ocean are hungry. Don't lean over the side to see who's swimming down there.
+[idle] Quiet moments are part of the saga too. Rest while you can.
+[idle] Nothing happened? Sometimes that's the best news of the day.
+[idle] So quiet you can hear the grass grow. And you thinking. Quietly.

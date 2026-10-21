@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Голова валькірії
+note: Валькірія з нею нізащо б не розлучилася, але її не питали. Ворон носить трофей, ніби сам її повалив.
+use: gear
+id: holova_valkirii
+slot: head
+part TrophyFallenValkyrie pos 0 0 0 rot 0 -180 0 scale 0.2003 0.2003 0.2003 tint 8C8C8C  # Голова занепалої валькірії

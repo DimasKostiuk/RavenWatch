@@ -1,0 +1,8 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Пергамент
+note: 
+use: item
+id: perhament
+cost: Wood:1
+replaces: RavenWatch_Letter
+part asset/Предмети/Parchment pos 0 0 0 rot 90 0 0 scale 0.3 0.3 0.3  # Пергамент (Meshy), ~0,22 × 0,29 м, лежить плазом

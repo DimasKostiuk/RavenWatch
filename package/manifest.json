@@ -1,0 +1,9 @@
+{
+  "name": "RavenWatch",
+  "version_number": "1.2.0",
+  "website_url": "https://discord.gg/XM5kuwpAUU",
+  "description": "Hugin and Munin live on your shoulder: they fly, fight, fetch, carry mail and roast you for every death. Trust rituals, gifts, Odin's errands and runes. English & Ukrainian. NSFW: Munin swears. Works on vanilla.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2351"
+  ]
+}

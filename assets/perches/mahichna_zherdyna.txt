@@ -1,0 +1,14 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Магічна жердина
+note: Жердина з гілок Іґґдрасіля з самоцвітом, у якій дрімає давня сила
+use: perch
+id: mahichna_zherdyna
+cost: YggdrasilWood:10 Eitr:5
+perday: 100
+station: piece_magetable
+pose: -50 90 -45 16 -50 90 -45 16 0 -15 -10
+stand: 0 0 0 0 0 0 0 0 0 -15 -10
+part asset/Жердини/PerchMagic pos 0 1.112 0 rot 0 0 0 scale 1.2 1.2 1.2  # Магічна жердина (Meshy), 2,2 м
+part @seat pos -0.48 2.17 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos 0.48 2.16 0 rot 0 0 0 scale 1 1 1  # місце ворона
+part @light pos -0.98 2.14 0 rot 0 0 0 scale 5 1.2 0 tint 66B3FF  # блакитне сяйво кристала

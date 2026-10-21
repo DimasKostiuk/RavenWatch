@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!-- The post's letter, cut from the user's design (Desktop\export\letter-2c: 2c-closed.png, 2c-open.png) into layers
+     without any words (the game writes them): ?part=
+       envelope  600×840  the closed letter, its flap's lines (no seal, no name)
+       seal      220×240  the whole wax seal with its rune and drips
+       seal_l / seal_r    its two halves once broken (same canvas: laid over each other they make the seal)
+       paper     840×1120 the open sheet: torn edges, the fold across, the bits of wax left on it
+     Rendered by tools/letter_art.ps1 into assets/book/letter_*.png. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}svg{display:block}</style>
+</head>
+<body>
+<div id="out"></div>
+<script>
+const part = new URLSearchParams(location.search).get('part') || 'paper';
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+// a ragged edge from (x0,y0) to (x1,y1): small teeth across it
+function edge(x0, y0, x1, y1, step, amp, out) {
+  const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy), n = Math.max(1, Math.round(len / step));
+  const nx = -dy / len, ny = dx / len, pts = [];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, a = i === n ? 0 : (rnd() - 0.5) * 2 * amp + (rnd() < 0.18 ? amp * out : 0);
+    pts.push([x0 + dx * t + nx * a, y0 + dy * t + ny * a]);
+  }
+  return pts;
+}
+const poly = pts => 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L') + ' Z';
+
+const grain = `<filter id="grain" x="0" y="0" width="100%" height="100%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="4" result="n"/>
+  <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.24  0 0 0 0 0.12  0 0 0 0.11 0"/>
+  <feComposite in2="SourceGraphic" operator="in"/>
+</filter>
+<filter id="blot" x="0" y="0" width="100%" height="100%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="9" result="n"/>
+  <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.27  0 0 0 0 0.1  0 0 0 0.22 -0.06"/>
+  <feComposite in2="SourceGraphic" operator="in"/>
+</filter>`;
+
+function envelope() {
+  const W = 600, H = 840;
+  seed = 11;
+  const pts = [[0, 0], [W, 0]].concat(edge(W, 0, W - 3, H - 14, 26, 1.4, 1), edge(W - 3, H - 14, 2, H - 10, 9, 3.2, 1.6), edge(2, H - 10, 0, 0, 26, 1.4, 1));
+  const shape = poly(pts);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${grain}
+  <radialGradient id="g" cx="50%" cy="8%" r="105%"><stop offset="0" stop-color="#e6c890"/><stop offset=".38" stop-color="#d4ad74"/><stop offset=".7" stop-color="#c39a60"/><stop offset="1" stop-color="#8a6236"/></radialGradient>
+  <linearGradient id="sides" x1="0" x2="1"><stop offset="0" stop-color="#6b4522" stop-opacity=".42"/><stop offset=".09" stop-color="#6b4522" stop-opacity="0"/><stop offset=".91" stop-color="#6b4522" stop-opacity="0"/><stop offset="1" stop-color="#6b4522" stop-opacity=".42"/></linearGradient>
+  <linearGradient id="foot" x1="0" y1="0" x2="0" y2="1"><stop offset=".72" stop-color="#5a3518" stop-opacity="0"/><stop offset="1" stop-color="#4e2c12" stop-opacity=".62"/></linearGradient>
+  <linearGradient id="flap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2d0" stop-opacity=".22"/><stop offset="1" stop-color="#fff2d0" stop-opacity="0"/></linearGradient>
+  <clipPath id="c"><path d="${shape}"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="${W}" height="${H}" fill="url(#g)"/>
+    <path d="M0,0 L${W},0 L${W},130 L300,400 L0,130 Z" fill="url(#flap)"/>
+    <rect width="${W}" height="${H}" fill="url(#sides)"/>
+    <rect width="${W}" height="${H}" fill="url(#foot)"/>
+    <rect width="${W}" height="${H}" filter="url(#blot)"/>
+    <rect width="${W}" height="${H}" filter="url(#grain)"/>
+    <path d="M-4,128 L300,402 L604,128" fill="none" stroke="#fff0c8" stroke-opacity=".35" stroke-width="2" transform="translate(0,3)"/>
+    <path d="M-4,128 L300,402 L604,128" fill="none" stroke="#6e4a26" stroke-width="3.2" stroke-linejoin="round"/>
+  </g></svg>`;
+}
+
+// the seal: an uneven twelve-sided blob of wax, a pressed octagon with the rune, two drips under it
+function sealSvg(clip) {
+  const W = 220, H = 240, cx = 110, cy = 104;
+  seed = 23;
+  const blob = [];
+  for (let i = 0; i < 13; i++) { const a = -Math.PI / 2 + i / 13 * Math.PI * 2, r = 98 + (rnd() - 0.5) * 9; blob.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.97]); }
+  const oct = [];
+  for (let i = 0; i < 8; i++) { const a = Math.PI / 8 + i / 8 * Math.PI * 2, r = 76; oct.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+  // ᚹ wunjo (joy): a stem and its angular flag (not a bar across: that would read as ₽)
+  const rune = `M${cx - 10},${cy - 36} L${cx - 10},${cy + 34} M${cx - 10},${cy - 34} L${cx + 18},${cy - 12} L${cx - 10},${cy + 8}`;
+  const clipDef = clip ? `<clipPath id="half"><path d="${clip}"/></clipPath>` : '';
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${clipDef}
+  <radialGradient id="wax" cx="34%" cy="26%" r="80%"><stop offset="0" stop-color="#c8463e"/><stop offset=".45" stop-color="#a42e29"/><stop offset="1" stop-color="#6e1814"/></radialGradient>
+  <linearGradient id="press" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8e2420"/><stop offset="1" stop-color="#a32d28"/></linearGradient>
+  <linearGradient id="drip" x1="0" x2="1"><stop offset="0" stop-color="#7a1c18"/><stop offset=".45" stop-color="#b8403a"/><stop offset="1" stop-color="#701814"/></linearGradient>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="0.6"/></filter></defs>
+  <g ${clip ? 'clip-path="url(#half)"' : ''}>
+    <ellipse cx="${cx + 4}" cy="${cy + 14}" rx="96" ry="92" fill="#2a0c06" opacity=".45" filter="url(#sh)"/>
+    <rect x="${cx - 52}" y="${cy + 70}" width="22" height="48" rx="11" fill="url(#drip)"/>
+    <ellipse cx="${cx - 41}" cy="${cy + 116}" rx="11" ry="5" fill="#6a1612"/>
+    <rect x="${cx + 26}" y="${cy + 74}" width="18" height="30" rx="9" fill="url(#drip)"/>
+    <ellipse cx="${cx + 35}" cy="${cy + 102}" rx="9" ry="4" fill="#6a1612"/>
+    <path d="${poly(blob)}" fill="url(#wax)" stroke="#5e1410" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="${poly(blob)}" fill="none" stroke="#e06a60" stroke-opacity=".35" stroke-width="2" transform="translate(-1.5,-1.5)" filter="url(#soft)"/>
+    <path d="${poly(oct)}" fill="url(#press)" stroke="#5e1410" stroke-opacity=".85" stroke-width="3" stroke-linejoin="round"/>
+    <path d="${poly(oct)}" fill="none" stroke="#d65a51" stroke-opacity=".45" stroke-width="2" transform="translate(1.5,2)" stroke-linejoin="round"/>
+    <path d="${rune}" fill="none" stroke="#d65a51" stroke-opacity=".45" stroke-width="7" stroke-linecap="square" transform="translate(1.5,2)"/>
+    <path d="${rune}" fill="none" stroke="#561009" stroke-width="7" stroke-linecap="square"/>
+  </g></svg>`;
+}
+
+// the crack across the seal (top a little left of the middle, down to the right), the same for both halves
+function crack() {
+  seed = 31;
+  const pts = [];
+  for (let i = 0; i <= 12; i++) { const y = -10 + i * 22; pts.push([102 + i * 1.6 + (rnd() - 0.5) * 16, y]); }
+  return pts;
+}
+function half(left) {
+  const c = crack();
+  const pts = left ? [[-20, -10]].concat(c).concat([[-20, 260]]) : [[240, -10]].concat(c).concat([[240, 260]]);
+  return poly(pts);
+}
+
+function paper() {
+  const W = 840, H = 1120, fold = 446;
+  seed = 5;
+  const pts = edge(4, 10, W - 6, 6, 34, 4.5, 2).concat(edge(W - 6, 6, W - 2, H - 12, 30, 2.4, 1.4), edge(W - 2, H - 12, 6, H - 6, 34, 4.5, 2), edge(6, H - 6, 4, 10, 30, 2.4, 1.4));
+  pts.unshift([4, 10]);
+  const shape = poly(pts);
+  seed = 41;
+  const bit = [];
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.4, r = 30 + rnd() * 16; bit.push([380 + Math.cos(a) * r * 1.15, fold + Math.sin(a) * r * 0.85]); }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${grain}
+  <radialGradient id="g" cx="40%" cy="22%" r="95%"><stop offset="0" stop-color="#e8cc94"/><stop offset=".42" stop-color="#d6b17a"/><stop offset=".78" stop-color="#c49e68"/><stop offset="1" stop-color="#9e7a48"/></radialGradient>
+  <radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset=".6" stop-color="#5a3a18" stop-opacity="0"/><stop offset="1" stop-color="#5a3a18" stop-opacity=".36"/></radialGradient>
+  <linearGradient id="foldsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3a18" stop-opacity="0"/><stop offset=".5" stop-color="#5a3a18" stop-opacity=".16"/><stop offset=".5" stop-color="#fff0c8" stop-opacity=".12"/><stop offset="1" stop-color="#fff0c8" stop-opacity="0"/></linearGradient>
+  <radialGradient id="wax" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#c8463e"/><stop offset="1" stop-color="#8e2420"/></radialGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+  <filter id="drop" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="#3a1408" flood-opacity=".45"/></filter>
+  <clipPath id="c"><path d="${shape}"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="${W}" height="${H}" fill="url(#g)"/>
+    <rect width="${W}" height="${H}" filter="url(#blot)"/>
+    <rect width="${W}" height="${H}" fill="url(#vig)"/>
+    <rect width="${W}" height="${H}" filter="url(#grain)"/>
+    <rect x="0" y="${fold - 26}" width="${W}" height="52" fill="url(#foldsh)"/>
+    <line x1="0" y1="${fold}" x2="${W}" y2="${fold}" stroke="#8a6a3c" stroke-opacity=".75" stroke-width="2.4" filter="url(#soft)"/>
+    <line x1="0" y1="${fold + 3}" x2="${W}" y2="${fold + 3}" stroke="#f4dfb0" stroke-opacity=".5" stroke-width="1.6" filter="url(#soft)"/>
+    <g filter="url(#drop)">
+      <path d="${poly(bit)}" fill="url(#wax)" stroke="#6e1814" stroke-width="1"/>
+      <rect x="436" y="${fold + 2}" width="15" height="40" rx="2" fill="#a8322c"/>
+    </g>
+  </g></svg>`;
+}
+
+const out = document.getElementById('out');
+if (part === 'envelope') out.innerHTML = envelope();
+else if (part === 'seal') out.innerHTML = sealSvg(null);
+else if (part === 'seal_l') out.innerHTML = sealSvg(half(true));
+else if (part === 'seal_r') out.innerHTML = sealSvg(half(false));
+else out.innerHTML = paper();
+</script>
+</body>
+</html>

@@ -1,0 +1,4304 @@
+[
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^ім'я Я Хугін, а кличуть мене {me}. Ти хто будеш?",
+  "uk": "^intro.ім'я Я Хугін, а кличуть мене {me}. Ти хто будеш?",
+  "en": "^intro.ім'я I'm Hugin, and they call me {me}. And who might you be?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^хто Не бачив тебе раніше. Чий будеш?",
+  "uk": "^intro.ім'я Я Хугін. Думка Одіна, якщо тобі це щось каже. А ти хто?",
+  "en": "^intro.ім'я I'm Hugin. Odin's thought, if that means anything to you. And who are you?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^хто Хм. Ще один ворон. Звідки ти такий узявся?",
+  "uk": "^intro.чий Не бачив тебе раніше. Чий будеш?",
+  "en": "^intro.чий Haven't seen you before. Whose are you?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^ім'я Я Хугін. Думка Одіна, якщо тобі це щось каже. А ти хто?",
+  "uk": "^intro.звідки Хм. Ще один ворон. Звідки ти такий узявся?",
+  "en": "^intro.звідки Hm. Another raven. Where did you come from?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^господар Твоя людина — {friend}? Співчуваю. Або заздрю, ще не вирішив.",
+  "uk": "^intro.господар Твоя людина — {friend}? Співчуваю. Або заздрю, ще не вирішив.",
+  "en": "^intro.господар Your human is {friend}? My condolences. Or my envy, I haven't decided."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "~1 ^хто Чужий ворон. Тримай дзьоб при собі, і ми поладнаємо.",
+  "uk": "~1 ^intro.погроза Чужий ворон. Тримай дзьоб при собі, і ми поладнаємо.",
+  "en": "~1 ^intro.погроза A stranger's raven. Keep your beak to yourself and we'll get along."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "~23 ^ім'я Вітаю, {addr}. Я Хугін. Моя людина — {name}. А твоя?",
+  "uk": "~23 ^intro.чий Я Хугін, моя людина — {name}. А твоя хто?",
+  "en": "~23 ^intro.чий I'm Hugin, my human is {name}. And who's yours?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "~3 ^ім'я Доброго дня. Я Хугін, а он моя гордість і мій клопіт — {name}.",
+  "uk": "~3 ^intro.ім'я Доброго дня. Я Хугін, а он моя гордість і мій клопіт — {name}. А ти хто?",
+  "en": "~3 ^intro.ім'я Good day. I'm Hugin, and over there is my pride and my trouble — {name}. And who are you?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^хто Не пригадую тебе. А в мене, повір, добра пам'ять на дзьоби.",
+  "uk": "^intro.пам'ять Не пригадую тебе. А в мене, повір, добра пам'ять на дзьоби.",
+  "en": "^intro.пам'ять I don't remember you. And believe me, I have a good memory for beaks."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^хто Новенький? Звідки прилетів і чого тут шукаєш?",
+  "uk": "^intro.звідки Новенький? Звідки прилетів і чого тут шукаєш?",
+  "en": "^intro.звідки New here? Where did you fly in from and what are you looking for?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^ім'я Дозволь відрекомендуватися: Хугін. Для друзів — {me}. Для ворогів — неприємність.",
+  "uk": "^intro.ім'я Дозволь відрекомендуватися: Хугін. Для друзів — {me}. Для ворогів — неприємність.",
+  "en": "^intro.ім'я Allow me to introduce myself: Hugin. {me} to friends. Trouble to enemies."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "^господар Значить, твоя людина — {friend}. Мужності тобі.",
+  "uk": "^intro.господар Значить, твоя людина — {friend}. Мужності тобі.",
+  "en": "^intro.господар So your human is {friend}. Courage to you."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "~1 ^хто Ще один пернатий нахлібник. Чий ти?",
+  "uk": "~1 ^intro.чий Ще один пернатий нахлібник. Чий ти?",
+  "en": "~1 ^intro.чий Another feathered freeloader. Whose are you?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство",
+  "op": "set",
+  "old": "~3 ^ім'я Радий новому крилу. Я Хугін. А тебе як звати?",
+  "uk": "~3 ^intro.ім'я Радий новому крилу. Я Хугін. А тебе як звати?",
+  "en": "~3 ^intro.ім'я Glad of a new wing. I'm Hugin. And what's your name?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^ім'я Мунін. А для своїх — {me}. Запам'ятай, бо двічі не повторюю, бля.",
+  "uk": "^intro.ім'я Мунін. А для своїх — {me}. А ти шо за птиця, бля?",
+  "en": "^intro.ім'я Munin. {me} to my crew. And what kind of bird are you, fuck?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^хто А ти шо за опудало? Ти з якого гнізда, га?",
+  "uk": "^intro.чий А ти шо за опудало? З якого гнізда, га?",
+  "en": "^intro.чий And what kind of scarecrow are you? Which nest are you from, huh?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^хто Йо, ти. Чий будеш, {м_слівце}? І шо ти вилупився, як на медовуху?",
+  "uk": "^intro.чий Йо, ти. Чий будеш, {м_слівце}? І шо вилупився, як на медовуху?",
+  "en": "^intro.чий Yo, you. Whose are you, {м_слівце}? And why are you gawking like it's mead?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^пам'ять Мунін. Пам'ять Одіна, шариш? Я тебе вже запам'ятав. Тепер ходи й бійся.",
+  "uk": "^intro.пам'ять Мунін. Пам'ять Одіна, шариш? Я тебе вже запам'ятав. Тепер ходи й бійся.",
+  "en": "^intro.пам'ять Munin. Odin's memory, get it? I've already memorized you. Now walk around scared."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^смак То твоя людина — {friend}? Ну й смак у тебе, {м_слівце}. Я б таке не носив.",
+  "uk": "^intro.господар То твоя людина — {friend}? Ну й смак у тебе, {м_слівце}. Я б на такому плечі не сидів.",
+  "en": "^intro.господар So your human is {friend}? What taste you have, {м_слівце}. I wouldn't sit on that shoulder."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "~1 ^хто Ше один пернатий, курва. Ближче підлетиш — дзьобом в тім'я.",
+  "uk": "~1 ^intro.погроза Ше один пернатий, курва. Ближче підлетиш — дзьобом в тім'я.",
+  "en": "~1 ^intro.погроза Another feathered one, fuck. Fly any closer and you get a beak to the skull."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "~3 ^ім'я Мунін я. Моя людина — {name}. Скривдиш — око виклюю. А так привіт, братан.",
+  "uk": "~3 ^intro.ім'я Мунін я. Моя людина — {name}. Скривдиш — око виклюю. А так привіт, братан.",
+  "en": "~3 ^intro.ім'я I'm Munin. My human is {name}. Hurt them and I peck your eye out. Otherwise, hi, bro."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^хто Ти хто такий, га? Кажи, поки я добрий, {м_слівце}. Я рідко добрий.",
+  "uk": "^intro.ім'я Ти хто такий, га? Кажи, поки я добрий, {м_слівце}. Я рідко добрий.",
+  "en": "^intro.ім'я Who the hell are you, huh? Talk while I'm nice, {м_слівце}. I'm rarely nice."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^хто О, новеньке опудало. Ти з чийого району?",
+  "uk": "^intro.чий О, новеньке опудало. Ти з чийого району?",
+  "en": "^intro.чий Oh, a fresh scarecrow. Whose turf are you from?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^ім'я Мунін я. {me} — це для тих, кого я після знайомства не відпиздив.",
+  "uk": "^intro.ім'я Мунін я. {me} — це для тих, кого я після знайомства не відпиздив.",
+  "en": "^intro.ім'я I'm Munin. {me} is for those I didn't beat the shit out of after we met."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "^смак Так твоя людина — {friend}? Співчуваю. Щиро. Та нє, пизджу.",
+  "uk": "^intro.господар Так твоя людина — {friend}? Співчуваю. Щиро. Та нє, пизджу.",
+  "en": "^intro.господар So your human is {friend}? My condolences. Sincerely. Nah, bullshit."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "~1 ^хто Шо вилупився, лошара? Чий ти, питаю?",
+  "uk": "~1 ^intro.чий Шо вилупився, лошара? Чий ти, питаю?",
+  "en": "~1 ^intro.чий What are you gawking at, loser? Whose are you, I asked?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство",
+  "op": "set",
+  "old": "~3 ^ім'я Мунін. Не ссикуй, я тіко своїх кусаю.",
+  "uk": "~3 ^intro.ім'я Мунін. Не ссикуй, я тіко своїх кусаю. Ти хто?",
+  "en": "~3 ^intro.ім'я Munin. Don't piss yourself, I only bite my own. Who are you?"
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я Хугін. Моя людина — {name}. Не судіть строго.",
+  "uk": "^intro.ім'я|intro.пам'ять>intro.назвався Хугін. Для своїх — {me}. Ти поки не свій, але все попереду.",
+  "en": "^intro.ім'я|intro.пам'ять>intro.назвався Hugin. {me} to my own. You're not one of them yet, but there's time."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я Хугін я. Думаю за двох. Друга половина — {name}.",
+  "uk": "^intro.ім'я|intro.пам'ять>intro.назвався {me}. Хугін. Думаю за двох, бо {name} не встигає.",
+  "en": "^intro.ім'я|intro.пам'ять>intro.назвався {me}. Hugin. I think for two, since {name} can't keep up."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^ім'я Приємно. Я Хугін і, на відміну від деяких, умію мовчати.",
+  "uk": "~1 ^intro.ім'я|intro.пам'ять>intro.назвався Хугін. Більше тобі знати не треба.",
+  "en": "~1 ^intro.ім'я|intro.пам'ять>intro.назвався Hugin. You don't need to know more."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар Співчувати не треба. {name} — найкраще, що зі мною траплялося. Після сиру.",
+  "uk": "~3 ^intro.ім'я|intro.пам'ять>intro.назвався Хугін, а для своїх — {me}. Радий знайомству, справді.",
+  "en": "~3 ^intro.ім'я|intro.пам'ять>intro.назвався Hugin, and {me} to my own. Glad to meet you, really."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар Заздри, {addr}. Мені пощастило більше, ніж тобі.",
+  "uk": "^intro.пам'ять>intro.назвався Бо я тут уперше. Хугін, {me}. Тепер запам'ятаєш.",
+  "en": "^intro.пам'ять>intro.назвався Because I'm new here. Hugin, {me}. Now you'll remember."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "~1 ^хто|ім'я Тобі яке діло? Ну, Хугін. Задоволений?",
+  "uk": "^intro.ім'я>intro.назвався Приємно. Я {me}, Хугін. І, на відміну від деяких, умію мовчати.",
+  "en": "^intro.ім'я>intro.назвався A pleasure. I'm {me}, Hugin. And, unlike some, I know how to keep quiet."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "~1 ^господар Співчувай, співчувай. Я й сам собі співчуваю.",
+  "uk": "^intro.чий|intro.звідки>intro.людина Моя людина — {name}. Не судіть строго.",
+  "en": "^intro.чий|intro.звідки>intro.людина My human is {name}. Don't judge too harshly."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "~3 ^хто|ім'я Хугін. Моя людина — {name}. Ми давно разом і багато пройшли.",
+  "uk": "^intro.чий>intro.людина {name}. Хоча хто в нас чий — ще питання.",
+  "en": "^intro.чий>intro.людина {name}. Though which of us belongs to whom is an open question."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^смак Смак у мене бездоганний. Як і в моєї людини, коли вона мовчить.",
+  "uk": "^intro.звідки>intro.людина Звідти ж, звідки й ти: з чийогось плеча. Моє — {name}.",
+  "en": "^intro.звідки>intro.людина Same place you did: off someone's shoulder. Mine is {name}."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^пам'ять Запам'ятав? Я теж. Я, правда, думаю, а не пам'ятаю, але тебе запам'ятаю.",
+  "uk": "~1 ^intro.чий|intro.звідки>intro.людина {name}. Більше нічого не скажу.",
+  "en": "~1 ^intro.чий|intro.звідки>intro.людина {name}. I won't say anything more."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "Хугін. Будемо знайомі.",
+  "uk": "~3 ^intro.чий|intro.звідки>intro.людина Моя людина — {name}. Ми давно разом і багато пройшли.",
+  "en": "~3 ^intro.чий|intro.звідки>intro.людина My human is {name}. We've been together a long time and come a long way."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я Хугін. Для своїх — {me}. Ти поки не свій, але все попереду.",
+  "uk": "^intro.господар>intro.захист {name} — найкраще, що зі мною траплялося. Після сиру. Тож прикуси дзьоба.",
+  "en": "^intro.господар>intro.захист {name} is the best thing that ever happened to me. After cheese. So bite your beak."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто Мене звати {me}. Я Хугін, а моя людина — {name}.",
+  "uk": "^intro.господар>intro.захист Свою людину спершу роздивись, {addr}.",
+  "en": "^intro.господар>intro.захист Take a good look at your own human first, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я {me}. Хугін. Моя людина — {name}, без мене {він|вона} загубиться.",
+  "uk": "^intro.господар>intro.захист Я свою людину не вибирав. Але й не віддам.",
+  "en": "^intro.господар>intro.захист I didn't choose my human. But I won't give {him|her} up either."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар Мужність не завадить. Але я справляюся.",
+  "uk": "~1 ^intro.господар>intro.захист Моя людина — не твоє діло.",
+  "en": "~1 ^intro.господар>intro.захист My human is none of your business."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар Так, моя. Не найгірша, повір.",
+  "uk": "~3 ^intro.господар>intro.захист Так, моя. І я б не проміняв. Навіть на сир.",
+  "en": "~3 ^intro.господар>intro.захист Yes, mine. And I wouldn't trade. Not even for cheese."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^смак Смак? У мене? Бездоганний. Глянь хоча б на моє пір'я.",
+  "uk": "^intro.погроза>intro.огризнувся Тримаю. І тобі раджу свій тримати.",
+  "en": "^intro.погроза>intro.огризнувся I'm keeping it. And I'd advise you to keep yours."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "^пам'ять Пам'ять — то добре. Тільки не пам'ятай зайвого.",
+  "uk": "^intro.погроза>intro.огризнувся Погрози від незнайомця. Як мило.",
+  "en": "^intro.погроза>intro.огризнувся Threats from a stranger. How sweet."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "~1 ^хто|ім'я Хугін. Відчепися з розпитуваннями.",
+  "uk": "~1 ^intro.погроза>intro.огризнувся Підлети сам. Подивимось, чий дзьоб міцніший.",
+  "en": "~1 ^intro.погроза>intro.огризнувся Fly over yourself. We'll see whose beak is stronger."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_відповідь",
+  "op": "set",
+  "old": "~3 ^хто|ім'я Хугін. Радий знайомству, справді.",
+  "uk": "~3 ^intro.погроза>intro.назвався Спокійно. Я не по твою їжу. Хугін, {me}.",
+  "en": "~3 ^intro.погроза>intro.назвався Easy. I'm not after your food. Hugin, {me}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто Мунін. Чий-чий… Моя людина — {name}, вкурив? Ше питання будуть?",
+  "uk": "^intro.ім'я|intro.пам'ять>intro.назвався Мунін я, {м_слівце}. Для своїх — {me}. Тіко не кажи, шо гарне, бо вріжу.",
+  "en": "^intro.ім'я|intro.пам'ять>intro.назвався I'm Munin, {м_слівце}. {me} to my crew. Just don't call it pretty or I'll smack you."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я Мунін я, {м_слівце}. А он моя людина — {name}. Тіко не кажи, шо ми схожі, бо вріжу.",
+  "uk": "^intro.ім'я|intro.пам'ять>intro.назвався {me}. Мунін, якшо по паспорту. І годі мене допитувати.",
+  "en": "^intro.ім'я|intro.пам'ять>intro.назвався {me}. Munin, officially. And quit interrogating me."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^пам'ять Запам'ятав він, ага. Я теж пам'ятаю. Все. А образи — особливо, курва.",
+  "uk": "~1 ^intro.ім'я|intro.пам'ять>intro.назвався Мунін. Відвали.",
+  "en": "~1 ^intro.ім'я|intro.пам'ять>intro.назвався Munin. Piss off."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^смак Смак як смак. Твоя людина теж не красуня, якшо по-чесному.",
+  "uk": "~3 ^intro.ім'я|intro.пам'ять>intro.назвався Мунін, для своїх — {me}. Дзьобом не чіпаю, поки ти по-людськи. Ну, по-воронячи.",
+  "en": "~3 ^intro.ім'я|intro.пам'ять>intro.назвався Munin, {me} to my crew. I won't peck you as long as you're decent. Well, raven-decent."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар Співчуваєш? Собі поспівчувай, {м_слівце}, бо зара буде за шо.",
+  "uk": "^intro.пам'ять>intro.назвався Запам'ятав він, ага. То запам'ятай ше й ім'я: {me}. Мунін.",
+  "en": "^intro.пам'ять>intro.назвався Memorized me, sure. Then memorize the name too: {me}. Munin."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар|смак Ти мою людину не чіпай, чуєш? Її тут тіко я чіпаю. Щодня.",
+  "uk": "^intro.ім'я>intro.назвався {me}. Мунін. Запам'ятай з першого разу, {м_слівце}.",
+  "en": "^intro.ім'я>intro.назвався {me}. Munin. Get it the first time, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "~1 ^хто|ім'я Мунін. Відвали.",
+  "uk": "^intro.чий>intro.людина Чий-чий. Моя людина — {name}. І вдруге не питай, бо дзьобну.",
+  "en": "^intro.чий>intro.людина Whose, whose. My human is {name}. And don't ask twice or I'll peck you."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "~3 ^хто|ім'я Мунін. А моя людина — {name}. Найкраща на весь Мідгард, хай хтось, бля, скаже шо нє.",
+  "uk": "^intro.чий|intro.звідки>intro.людина З-під пахви моєї людини, звідки ж іше. {name}, вкурив.",
+  "en": "^intro.чий|intro.звідки>intro.людина From under my human's armpit, where else. {name}, got it."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "Мунін. І годі мене тут допитувати.",
+  "uk": "^intro.звідки>intro.людина Звідки-звідки. Звідки {name} прийш{ов|ла}, звідти й я.",
+  "en": "^intro.звідки>intro.людина Where, where. Wherever {name} came from, that's where I came from."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я {me}. Мунін, якшо по паспорту. А тобі шо, {м_слівце}?",
+  "uk": "~1 ^intro.чий|intro.звідки>intro.людина {name} — моя людина. Все, допит закінчено.",
+  "en": "~1 ^intro.чий|intro.звідки>intro.людина {name} is my human. That's it, interrogation over."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто Чий-чий. Моя людина — {name}. І вдруге не питай, бо дзьобну.",
+  "uk": "~3 ^intro.чий|intro.звідки>intro.людина Моя людина — {name}. Найкраща на весь Мідгард, хай хтось, бля, скаже шо нє.",
+  "en": "~3 ^intro.чий|intro.звідки>intro.людина My human is {name}. The best in all of Midgard, let anyone fucking say otherwise."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^хто|ім'я {me}. Мунін. Вкурив, {м_слівце}?",
+  "uk": "^intro.господар>intro.захист Ти мою людину не чіпай, чуєш. Її тут тіко я чіпаю. Щодня.",
+  "en": "^intro.господар>intro.захист Don't you touch my human, hear me. Only I get to pick on {him|her}. Daily."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^смак Співчуваєш? Сам ти, бля, такий.",
+  "uk": "^intro.господар>intro.захист Моя людина — моє діло, {м_слівце}. Не пхай дзьоба.",
+  "en": "^intro.господар>intro.захист My human is my business, {м_слівце}. Keep your beak out."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^пам'ять Пам'ятаєш? От і пам'ятай. І бійся, сучара.",
+  "uk": "~1 ^intro.господар>intro.захист На свою людину подивись, {м_слівце}, а тоді пащеку роззявляй.",
+  "en": "~1 ^intro.господар>intro.захист Look at your own human, {м_слівце}, then open your trap."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "^господар Моя людина — моє діло, {м_слівце}. Не пхай дзьоба.",
+  "uk": "~3 ^intro.господар>intro.захист {name} хоч і дурн{ий|а}, як пробка, але моя людина. Ше слово — і дзьобну.",
+  "en": "~3 ^intro.господар>intro.захист {name} may be dumb as a cork, but {he's|she's} mine. One more word and I peck."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "set",
+  "old": "~3 ^хто|ім'я Мунін. Дзьобом не чіпаю, поки ти по-людськи. Ну, по-воронячи.",
+  "uk": "^intro.погроза>intro.огризнувся Погрожуєш мені, {м_слівце}. Та я таких на сніданок жеру.",
+  "en": "^intro.погроза>intro.огризнувся Threatening me, {м_слівце}. I eat your kind for breakfast."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "add",
+  "uk": "^intro.погроза>intro.огризнувся Підлети, підлети. Побачим, хто кому в тім'я.",
+  "en": "^intro.погроза>intro.огризнувся Come on, fly over. We'll see who gets it in the skull."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "add",
+  "uk": "~1 ^intro.погроза>intro.огризнувся Сам тримай свій дзьоб, поки я його не вирвав.",
+  "en": "~1 ^intro.погроза>intro.огризнувся Keep your own beak to yourself before I rip it off."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_відповідь",
+  "op": "add",
+  "uk": "~3 ^intro.погроза>intro.назвався Тихо, тихо. Свої. Я {me}, Мунін.",
+  "en": "~3 ^intro.погроза>intro.назвався Easy, easy. Friendly. I'm {me}, Munin."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "Ну що ж, будемо знайомі.",
+  "uk": "^intro.назвався Запам'ятаю, {addr}. У мене на дзьоби пам'ять добра.",
+  "en": "^intro.назвався I'll remember you, {addr}. I have a good memory for beaks."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "Запам'ятаю тебе, {addr}. У мене на обличчя пам'ять добра. На дзьоби теж.",
+  "uk": "^intro.назвався {raven}, отже. Запишу десь між рунами й рецептами каші.",
+  "en": "^intro.назвався {raven}, then. I'll write it down somewhere between the runes and porridge recipes."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "^господар|смак Передай своїй людині привіт. Чи що там у вас передають.",
+  "uk": "~1 ^intro.назвався Назвався — і досить. Можна вже мовчати.",
+  "en": "~1 ^intro.назвався You've said your name, that's enough. We can be quiet now."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "^хто Ось і познайомились. Далі буде цікавіше.",
+  "uk": "~3 ^intro.назвався Радий знайомству, {addr}. Справді радий.",
+  "en": "~3 ^intro.назвався Glad to meet you, {addr}. Truly glad."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "~1 Тільки не сідай на мою гілку.",
+  "uk": "^intro.людина {friend}, кажеш. Чув про {>нього|неї}. Нічого доброго, але чув.",
+  "en": "^intro.людина {friend}, you say. Heard of {>him|her}. Nothing good, but heard."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "~3 Радий знайомству. Справді радий.",
+  "uk": "^intro.людина Передавай привіт своїй людині. Чи що там у вас передають.",
+  "en": "^intro.людина Say hello to your human. Or whatever it is you pass on."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "Гаразд. Тепер ми знайомі. Не підведи.",
+  "uk": "~1 ^intro.людина {friend}. Тоді все ясно. Тримайся подалі.",
+  "en": "~1 ^intro.людина {friend}. That explains it. Keep your distance."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "^ім'я Запишу твоє ім'я. Десь між рунами й рецептами каші.",
+  "uk": "~3 ^intro.людина {friend} — то добре. Бережи {>його|її}, {addr}.",
+  "en": "~3 ^intro.людина {friend} is a good one. Look after {>him|her}, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "~1 Познайомились. Можна вже мовчати?",
+  "uk": "^intro.захист Захищаєш. Значить, годують тебе добре.",
+  "en": "^intro.захист You defend {>him|her}. So they feed you well."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "set",
+  "old": "~3 Тепер у тебе є знайомий ворон. Цінуй.",
+  "uk": "^intro.захист Гаразд, гаразд. Свою людину кожен хвалить.",
+  "en": "^intro.захист All right, all right. Everyone praises their own human."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "~1 ^intro.захист Захищай, захищай. Хтось же мусить.",
+  "en": "~1 ^intro.захист Go on, defend. Somebody has to."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "~3 ^intro.захист Добре, що стоїш за свою людину. Поважаю.",
+  "en": "~3 ^intro.захист Good that you stand up for your human. Respect."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.огризнувся Зубастий. Ну-ну. Подивимось.",
+  "en": "^intro.огризнувся Toothy. Well, well. We'll see."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.огризнувся Гаразд, дзьоб при тобі. Тримай його й далі там.",
+  "en": "^intro.огризнувся Fine, your beak stays with you. Keep it there."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "~1 ^intro.огризнувся Ще раз каркнеш так — пошкодуєш.",
+  "en": "~1 ^intro.огризнувся Caw like that once more and you'll regret it."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "~3 ^intro.огризнувся Із характером. Мені такі подобаються. Трохи.",
+  "en": "~3 ^intro.огризнувся Got some spine. I like that. A little."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Ну от, тепер усі знайомі. Аж тісно на гілці.",
+  "en": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка There, now everyone's acquainted. The branch is getting crowded."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Знайомилися двоє, а набилася ціла зграя.",
+  "en": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Two of us were getting acquainted, and a whole flock piled in."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "~1 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Познайомились. Усі. Тепер можна мовчати.",
+  "en": "~1 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка We've met. All of us. Now we can be quiet."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_кінець",
+  "op": "add",
+  "uk": "~3 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Добре, коли знайомих крил більшає. Нікому не кажи, що я так сказав.",
+  "en": "~3 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Good when there are more wings you know. Don't tell anyone I said that."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "Ну все, познайомились. А тепер не муляй очі.",
+  "uk": "^intro.назвався {raven}, значить. Запам'ятав. Не радій, я всіх запам'ятовую.",
+  "en": "^intro.назвався {raven}, then. Memorized. Don't celebrate, I memorize everyone."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "Запам'ятав я тебе. Не радій, я всіх запам'ятовую. Особливо лохів.",
+  "uk": "^intro.назвався Ну все, познайомились. А тепер не муляй очі.",
+  "en": "^intro.назвався That's it, we've met. Now get out of my face."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "^господар|смак Своїй людині передай: я все бачу. Все, курва.",
+  "uk": "~1 ^intro.назвався Ім'я як ім'я. Тіко до моєї жратви не лізь, {м_слівце}.",
+  "en": "~1 ^intro.назвався A name's a name. Just keep off my grub, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "^хто Ну шо. Поки живи, хай тобі грець.",
+  "uk": "~3 ^intro.назвався Ну, {addr}, ти ніби свій пацан. Для чужого.",
+  "en": "~3 ^intro.назвався Well, {addr}, you seem like an all-right guy. For a stranger."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "~1 Тіко до моєї жратви не лізь, {м_слівце}. Бо капець тобі.",
+  "uk": "^intro.людина {friend}, значить. Передай {>йому|їй}: я все бачу. Все, курва.",
+  "en": "^intro.людина {friend}, then. Tell {>him|her}: I see everything. Every fucking thing."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "~3 Ну, ти ніби свій пацан. Для чужого.",
+  "uk": "^intro.людина {friend}, ага. Тепер знатиму, кого обходити. Співчуваю, {м_слівце}.",
+  "en": "^intro.людина {friend}, huh. Now I know who to steer clear of. My condolences, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "Познайомились. Тепер не ображайся, як дзьобну. А я дзьобну.",
+  "uk": "~1 ^intro.людина Людина — {friend}. Тоді все ясно, лошара.",
+  "en": "~1 ^intro.людина Your human is {friend}. That explains everything, loser."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "^хто Пику твою запам'ятав. Про всяк випадок, шариш?",
+  "uk": "~3 ^intro.людина {friend}, ага. Нормальн{>ий|а} вроді. Бережи, бо зжеру.",
+  "en": "~3 ^intro.людина {friend}, yeah. Seems all right. Look after {>him|her}, or I'll eat {>him|her}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "~1 Все, відвали нахуй.",
+  "uk": "^intro.захист Ого, як заступається. Ну, хай буде, пацан.",
+  "en": "^intro.захист Whoa, look at him defend. Fine, have it your way, kid."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "set",
+  "old": "~3 Ну, бувай, малий. Заходь, як шо.",
+  "uk": "^intro.захист Та я так, по приколу. Не кипішуй.",
+  "en": "^intro.захист I was just messing. Don't freak out."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "~1 ^intro.захист Захищай-захищай. Однаково {friend} — лох{>|ушка}.",
+  "en": "~1 ^intro.захист Defend away. {friend} is still a sucker."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "~3 ^intro.захист Поважаю, шо за своїх стоїш. Сам такий.",
+  "en": "~3 ^intro.захист Respect for standing up for your own. I'm the same."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.огризнувся Ну шо. Поки живи, хай тобі грець.",
+  "en": "^intro.огризнувся Well then. Live, for now, damn you."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.огризнувся Пику твою запам'ятав. Про всяк випадок, шариш.",
+  "en": "^intro.огризнувся I've memorized your mug. Just in case, get it."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "~1 ^intro.огризнувся Все, відвали нахуй, поки я добрий.",
+  "en": "~1 ^intro.огризнувся That's it, fuck off while I'm still nice."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "~3 ^intro.огризнувся О, кусючий. Наш пацан, бля.",
+  "en": "~3 ^intro.огризнувся Oh, a biter. One of ours, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Ну все, познайомились. Тепер вас, бля, забагато.",
+  "en": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка That's it, we've met. Now there's too fucking many of you."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Стіко нових пик. Запам'ятав усіх. Особливо лохів.",
+  "en": "^intro.всі|intro.ще_один|intro.оцінка|intro.сварка So many new mugs. Memorized all of them. Especially the suckers."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "~1 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Всі назвались. Тепер усі відваліть.",
+  "en": "~1 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Everyone's named. Now everyone piss off."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_кінець",
+  "op": "add",
+  "uk": "~3 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Ну, зграя так зграя. Заходьте, як шо.",
+  "en": "~3 ^intro.всі|intro.ще_один|intro.оцінка|intro.сварка Well, a flock's a flock. Drop by, whenever."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто|ім'я А я {me}. Раз уже всі знайомляться.",
+  "uk": "^intro.назвався>intro.ще_один А я {me}. Раз уже всі знайомляться.",
+  "en": "^intro.назвався>intro.ще_один And I'm {me}. Since everyone's getting acquainted."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Людина як людина. Бачив і гірших.",
+  "uk": "^intro.назвався>intro.ще_один І я назвуся: {me}. Чую все, кажу мало.",
+  "en": "^intro.назвався>intro.ще_один I'll name myself too: {me}. I hear everything, say little."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^смак|господар Про смак не сперечаються. Але я посперечаюся.",
+  "uk": "~1 ^intro.назвався>intro.оцінка Гарне ім'я. Моє, щоправда, краще.",
+  "en": "~1 ^intro.назвався>intro.оцінка A nice name. Mine is better, though."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^пам'ять Пам'ять у всіх є. Розуму б ще.",
+  "uk": "~3 ^intro.назвався>intro.ще_один Радий знайомству. З усіма вами. А я {me}.",
+  "en": "~3 ^intro.назвався>intro.ще_один Glad to meet you. All of you. And I'm {me}."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "Можна і я познайомлюся? Я {me}. Чую все, кажу мало.",
+  "uk": "^intro.людина|intro.захист>intro.оцінка Людина як людина. Бачив і гірших.",
+  "en": "^intro.людина|intro.захист>intro.оцінка A human like any other. I've seen worse."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "Ще один новенький? Ну, ласкаво просимо до зграї.",
+  "uk": "^intro.людина|intro.захист>intro.оцінка Людина — то половина ворона. Гірша половина.",
+  "en": "^intro.людина|intro.захист>intro.оцінка A human is half a raven. The worse half."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто Звідки — неважливо. Важливо, чи вміє мовчати.",
+  "uk": "^intro.захист>intro.оцінка Добрий господар той, хто годує. Решта — дрібниці.",
+  "en": "^intro.захист>intro.оцінка A good master is one who feeds you. The rest is trifles."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто Чий би не був, а пір'я в нього чисте. Підозріло.",
+  "uk": "~1 ^intro.людина|intro.захист>intro.оцінка Ваші люди одне одного варті.",
+  "en": "~1 ^intro.людина|intro.захист>intro.оцінка Your humans deserve each other."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто Я теж хочу знати, чий він. Цікавість — моя слабкість.",
+  "uk": "~3 ^intro.людина|intro.захист>intro.оцінка Головне, щоб людина була добра. А там розберемося.",
+  "en": "~3 ^intro.людина|intro.захист>intro.оцінка What matters is that the human is kind. We'll sort out the rest."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^хто Ще один невідомий. Мідґард кишить пернатою дрібнотою.",
+  "uk": "^intro.огризнувся>intro.сварка Ой, почалося. Ще подзьобайтеся тут.",
+  "en": "^intro.огризнувся>intro.сварка Oh, here we go. Go on, peck each other."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^хто Новеньких треба приймати тепло. Я, наприклад, {me}.",
+  "uk": "^intro.огризнувся>intro.сварка Знайомство, бачу, з погрозами. Як у людей.",
+  "en": "^intro.огризнувся>intro.сварка An introduction with threats, I see. Just like humans."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^ім'я Імена — то добре. Своє я пам'ятаю навіть уві сні.",
+  "uk": "~1 ^intro.огризнувся>intro.сварка Ставлю на того, хто мовчить.",
+  "en": "~1 ^intro.огризнувся>intro.сварка My money's on whoever keeps quiet."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^ім'я Гарне ім'я. Моє, щоправда, краще.",
+  "uk": "~3 ^intro.огризнувся>intro.сварка Тихіше, ви обидва. Вперше бачитесь, а гризетеся, як рідні.",
+  "en": "~3 ^intro.огризнувся>intro.сварка Easy, both of you. First time you meet, and you bicker like family."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^ім'я Я {me}. Тепер ми всі знайомі. Майже.",
+  "uk": "^intro.ще_один>intro.ще_один І я {me}. Тепер точно всі. Записуйте.",
+  "en": "^intro.ще_один>intro.ще_один And I'm {me}. Now that's definitely everyone. Write it down."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^ім'я Ім'я як ім'я. Аби не гірше за пику.",
+  "uk": "^intro.ще_один>intro.ще_один Ну, й моє ім'я хай буде: {me}. Щоб не пропало.",
+  "en": "^intro.ще_один>intro.ще_один Well, have my name too: {me}. So it doesn't go to waste."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^ім'я Радий знайомству. З усіма вами.",
+  "uk": "~1 ^intro.ще_один>intro.ще_один Та й я тут. {me}. Не те щоб комусь цікаво.",
+  "en": "~1 ^intro.ще_один>intro.ще_один I'm here too. {me}. Not that anyone cares."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Людина — то половина ворона. Гірша половина.",
+  "uk": "~3 ^intro.ще_один>intro.ще_один І мене запишіть: {me}. Гарна компанія збирається.",
+  "en": "~3 ^intro.ще_один>intro.ще_один Put me down too: {me}. A fine company is gathering."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Мою людину теж не всі люблять. Я теж не завжди.",
+  "uk": "^intro.оцінка>intro.оцінка Оцінювач знайшовся. Своє б спершу оцінив.",
+  "en": "^intro.оцінка>intro.оцінка Look, a critic. Should judge his own first."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Добрий господар той, хто годує. Решта — дрібниці.",
+  "uk": "^intro.оцінка>intro.оцінка Кожен своє хвалить, а чуже лає. Старе правило.",
+  "en": "^intro.оцінка>intro.оцінка Everyone praises their own and scolds the rest. Old rule."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^господар Ваші люди одне одного варті.",
+  "uk": "~1 ^intro.оцінка>intro.оцінка Ви всі одне одного варті. Я теж, на жаль.",
+  "en": "~1 ^intro.оцінка>intro.оцінка You all deserve each other. Me too, unfortunately."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^господар Головне, щоб людина була добра. А там розберемося.",
+  "uk": "~3 ^intro.оцінка>intro.оцінка Кожному своя людина. І добре.",
+  "en": "~3 ^intro.оцінка>intro.оцінка To each their own human. And that's good."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^смак Смак — річ темна. Особливо в людях.",
+  "uk": "^intro.сварка>intro.сварка Я б подивився. Давно ніхто не бився.",
+  "en": "^intro.сварка>intro.сварка I'd watch. Nobody's fought in ages."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "^смак Про людей не сперечаються. Їх терплять.",
+  "uk": "^intro.сварка>intro.сварка Не підбурюй. Хоча ні, підбурюй, цікаво.",
+  "en": "^intro.сварка>intro.сварка Don't egg them on. Actually no, do, it's interesting."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^смак Смак у вас обох поганий. Згоден.",
+  "uk": "~1 ^intro.сварка>intro.сварка Деріться швидше, я їсти хочу.",
+  "en": "~1 ^intro.сварка>intro.сварка Fight faster, I'm hungry."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^смак Кожному своя людина. І добре.",
+  "uk": "~3 ^intro.сварка>intro.сварка Годі вам. Знайомі п'ять хвилин, а вже як свої.",
+  "en": "~3 ^intro.сварка>intro.сварка Enough. Known each other five minutes and already like family."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "^пам'ять Пам'ять — то Мунінова справа. Я тільки думаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "^пам'ять Хто що пам'ятає — то його тягар."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "^пам'ять Я пам'ятаю все, що варто. Решту — Мунін."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 ^пам'ять Пам'ять у вас, як решето."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 ^пам'ять Добре, коли є кому пам'ятати."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Можна і я скажу? Ні? Все одно скажу: ви обидва дивні."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Мене ніхто не питає, але я згоден. Майже."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Тихіше, ви. Думати заважаєте."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Я все чую, якщо що."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 Ой, почалося."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 Як добре, що ми всі тут."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "А мене спитати? Ні? Як завжди."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Вибачте, що втручаюсь. Хоча ні, не вибачайте."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Ви обоє праві. І обоє — ні."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 Можна тихіше? Я думаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 Гарно говорите. Я послухаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Не звертайте на мене уваги. Я тут просто сиджу."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Розмова цікава. Продовжуйте, я запам'ятаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "Я б щось додав, але ви й так усе сказали."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "О, і я хочу слово. Ось воно: слово."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 Скільки балачок. Аж пір'я в'яне."
+ },
+ {
+  "who": "H",
+  "list": "хх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 Люблю, коли нас багато."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто|ім'я А я {me}. Хто не запам'ятає — дзьобом в тім'я.",
+  "uk": "^intro.назвався>intro.ще_один А я {me}. Хто не запам'ятає — дзьобом в тім'я.",
+  "en": "^intro.назвався>intro.ще_один And I'm {me}. Whoever doesn't remember gets a beak to the skull."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар|смак Людина як людина. Смердить, як усі, бля.",
+  "uk": "^intro.назвався>intro.ще_один Знайомтесь без мене. Хоча нє, з мене почнемо: я {me}.",
+  "en": "^intro.назвався>intro.ще_один Get acquainted without me. Actually no, let's start with me: I'm {me}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^пам'ять Пам'ять? Я все пам'ятаю. Особливо, хто мені винен.",
+  "uk": "^intro.назвався>intro.оцінка Гарне ім'я. Для курки, гиги.",
+  "en": "^intro.назвався>intro.оцінка A nice name. For a chicken, heh."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "Ше один новенький. Ну, хай, {м_слівце}. Подивимось.",
+  "uk": "~1 ^intro.назвався>intro.оцінка Ім'я, бля, як у дохлого жука.",
+  "en": "~1 ^intro.назвався>intro.оцінка A name like a dead beetle's, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "Знайомтесь без мене. Хоча нє, з мене почнемо: я {me}.",
+  "uk": "~3 ^intro.назвався>intro.ще_один Нормальне ім'я, {м_слівце}. Не гірше мого. А моє — {me}.",
+  "en": "~3 ^intro.назвався>intro.ще_один Decent name, {м_слівце}. No worse than mine. And mine's {me}."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто Звідки прилетів — туди й полетить. З пиздюлями, якшо шо.",
+  "uk": "^intro.людина|intro.захист>intro.оцінка Людина як людина. Дві руки, нуль мізків.",
+  "en": "^intro.людина|intro.захист>intro.оцінка A human like any human. Two hands, zero brains."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто Чий — то похуй. Головне, чи смачний.",
+  "uk": "^intro.людина|intro.захист>intro.оцінка Люди всі однакові, курва. Смердять і падають.",
+  "en": "^intro.людина|intro.захист>intro.оцінка Humans are all the same, fuck. They stink and they fall over."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^хто Новенький, {м_слівце}? Ну тримайся, малий, тут район суворий.",
+  "uk": "^intro.захист>intro.оцінка Ото заступився. Аж сльоза, бля.",
+  "en": "^intro.захист>intro.оцінка Look at him defend. Brings a tear, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^хто Ше одне опудало. Їх тут, як мух на сраці.",
+  "uk": "~1 ^intro.людина|intro.захист>intro.оцінка Ваші люди — два дебіли. Як і ви.",
+  "en": "~1 ^intro.людина|intro.захист>intro.оцінка Your humans are a pair of morons. Like you two."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^хто Новенький? Ну, заходь, курва, не стій. Свої ж.",
+  "uk": "~3 ^intro.людина|intro.захист>intro.оцінка Нормальні люди, хай їм грець. Обоє.",
+  "en": "~3 ^intro.людина|intro.захист>intro.оцінка Decent humans, damn them. Both."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^ім'я Ім'я — то фігня. Головне — який дзьоб.",
+  "uk": "^intro.огризнувся>intro.сварка О, бійка намічається. Ставлю на того, хто перший дзьобне.",
+  "en": "^intro.огризнувся>intro.сварка Oh, a fight's brewing. My money's on whoever pecks first."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^ім'я Гарне ім'я. Для курки, гиги.",
+  "uk": "^intro.огризнувся>intro.сварка Ото знайомство, курва. Як у нас на районі.",
+  "en": "^intro.огризнувся>intro.сварка Some introduction, fuck. Just like back on my turf."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^ім'я Я {me}. Хто забуде — нагадаю. Дзьобом. По сусалах.",
+  "uk": "~1 ^intro.огризнувся>intro.сварка Та дзьобніть уже одне одного, бо нудно, бля.",
+  "en": "~1 ^intro.огризнувся>intro.сварка Just peck each other already, it's boring, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^ім'я Імена, бля. Запам'ятаю, якшо не забуду. А я забуду.",
+  "uk": "~3 ^intro.огризнувся>intro.сварка Ей, не гризіться. Тіко познайомились, а вже як брати.",
+  "en": "~3 ^intro.огризнувся>intro.сварка Hey, don't bicker. Just met and already like brothers."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^ім'я Нормальне ім'я, {м_слівце}. Не гірше мого. Ну, майже.",
+  "uk": "^intro.ще_один>intro.ще_один І я {me}, якшо шо. Запам'ятайте, бо двічі не кажу.",
+  "en": "^intro.ще_один>intro.ще_один And I'm {me}, by the way. Remember it, I don't say it twice."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Людина як людина. Дві руки, нуль мізків.",
+  "uk": "^intro.ще_один>intro.ще_один Ну й я тоді: {me}. Все, всі назвались, бля.",
+  "en": "^intro.ще_один>intro.ще_один Then me too: {me}. That's it, everyone's named, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Моя людина краща. Бо моя, і все.",
+  "uk": "~1 ^intro.ще_один>intro.ще_один Я {me}. Кому не подобається — дзьобом по сусалах.",
+  "en": "~1 ^intro.ще_один>intro.ще_один I'm {me}. Whoever doesn't like it gets a beak in the snout."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^господар Люди всі однакові, курва. Смердять і падають.",
+  "uk": "~3 ^intro.ще_один>intro.ще_один І я тут, {me}. Свої ж, нашо церемонії.",
+  "en": "~3 ^intro.ще_один>intro.ще_один I'm here too, {me}. We're all friends, why the ceremony."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^господар Ваші люди — два дебіли. Як і ви.",
+  "uk": "^intro.оцінка>intro.оцінка Оцінщик, бля, найшовся. Свою спершу оціни.",
+  "en": "^intro.оцінка>intro.оцінка Look, a fucking critic. Rate your own first."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^господар Нормальні люди, хай їм грець. Обоє.",
+  "uk": "^intro.оцінка>intro.оцінка Всі люди гівно. Крім моєї. Ну, і то не завжди.",
+  "en": "^intro.оцінка>intro.оцінка All humans are shit. Except mine. Well, not always."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^смак Смак? У ворона смак — до падла. Решта — пиздіж.",
+  "uk": "~1 ^intro.оцінка>intro.оцінка Ой, заткнись зі своєю думкою.",
+  "en": "~1 ^intro.оцінка>intro.оцінка Oh, shut up with your opinion."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^смак Про смак не сперечаються, {м_слівце}. Ним дражнять, гиги.",
+  "uk": "~3 ^intro.оцінка>intro.оцінка Нормальні в нас люди. Всі. Не базарте.",
+  "en": "~3 ^intro.оцінка>intro.оцінка Our humans are fine. All of them. Quit yapping."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^смак Смак у всіх гівняний. Крім мене, ясне діло.",
+  "uk": "^intro.сварка>intro.сварка О, давайте, давайте. Я подивлюсь.",
+  "en": "^intro.сварка>intro.сварка Oh, go on, go on. I'll watch."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~1 ^смак Ну й смак у вас обох. Тьху.",
+  "uk": "^intro.сварка>intro.сварка Ставки приймаю. Плата — жуками.",
+  "en": "^intro.сварка>intro.сварка Taking bets. Payment in beetles."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "~3 ^смак Смак як смак. Аби годували, решта — похуй.",
+  "uk": "~1 ^intro.сварка>intro.сварка Деріться вже, курва, бо засну.",
+  "en": "~1 ^intro.сварка>intro.сварка Fight already, fuck, or I'll fall asleep."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "set",
+  "old": "^пам'ять Пам'ять — то моя робота, {м_слівце}. Не лізь, бо вріжу.",
+  "uk": "~3 ^intro.сварка>intro.сварка Та тихо ви. Ше передеретесь до вечора, встигнете.",
+  "en": "~3 ^intro.сварка>intro.сварка Pipe down. You've got till evening to brawl."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "^пам'ять Я все пам'ятаю. І кожного, хто мені винен. Кожного, сука."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "^пам'ять Пам'ять — то зброя. А я, бля, озброєний до дзьоба."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 ^пам'ять Ти нічо не пам'ятаєш, бо в тебе в голові протяг."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 ^пам'ять Я цей день запам'ятаю. Мо'."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Та ви обидва хуйню несете, їй-бо."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Можна тихіше? Я тут думаю, кого б зжерти."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Я все чую, {м_слівце}. Все."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Ага, ага. А мене спитати? Ні, нахуй мене питати."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 Ой, бляха-муха, почалося."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 Добре, шо ми всі тут, бля. Тіко не обнімайтесь."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "А мене хтось питав? Нє? Тоді слухайте, бо скажу."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Ви обидва несете гівно, але гарно, курва."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "А можна я теж когось дзьобну? Ну трішки?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 Тьху на вас обох, лошари."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 Ну ви й парочка, бля. Мені подобається."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Я тут, якшо шо. Слухаю і бішусь."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Ви базарте, а я подумаю, кого зжерти."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "Нудно, {м_слівце}. Додайте крові в базар."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "О, і я скажу: курва. Все, сказав."
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~1 Скіки ви ще тріпатиметесь?"
+ },
+ {
+  "who": "M",
+  "list": "мх_знайомство_встряє",
+  "op": "del",
+  "old": "~3 Добре сидимо, курва мать. Душевно."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^давно О, {addr}! Давно не бачились. Як ви там?",
+  "uk": "^greet.як О, {addr}! Давно не бачились. Як ви там?",
+  "en": "^greet.як Oh, {addr}! Long time no see. How are you two?"
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^давно Знову ви. А я вже думав, {friend} десь у болоті лиши{>вся|лась}.",
+  "uk": "^greet.давно Знову ви. А я вже думав, {friend} десь у болоті лиши{>вся|лась}.",
+  "en": "^greet.давно You again. I thought {friend} had been left in a swamp somewhere."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^живий Живий, {addr}? І {friend} ціл{>ий|а}? Дивно, але приємно.",
+  "uk": "^greet.живий Живий, {addr}? І {friend} ціл{>ий|а}? Дивно, але приємно.",
+  "en": "^greet.живий Alive, {addr}? And {friend} in one piece? Strange, but nice."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^новини Ну, розповідай, що нового. Тільки коротко, бо засну.",
+  "uk": "^greet.як Ну, розповідай, що нового. Тільки коротко, бо засну.",
+  "en": "^greet.як Well, tell me what's new. Just keep it short, or I'll fall asleep."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "~1 ^давно А, це ти. Ну привіт, якщо вже прилетів.",
+  "uk": "~1 ^greet.давно А, це ти. Ну привіт, якщо вже прилетів.",
+  "en": "~1 ^greet.давно Ah, it's you. Well, hello, since you've flown in."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "~3 ^давно {addr}! Я сумував. Трохи. Нікому не кажи.",
+  "uk": "~3 ^greet.давно {addr}! Я сумував. Трохи. Нікому не кажи.",
+  "en": "~3 ^greet.давно {addr}! I missed you. A little. Don't tell anyone."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^давно Скільки зим, скільки літ! Ну, днів. Але все одно.",
+  "uk": "^greet.давно Скільки зим, скільки літ! Ну, днів. Але все одно.",
+  "en": "^greet.давно How many winters, how many summers! Well, days. But still."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^давно Нарешті знайоме пір'я. А то навколо самі чужі.",
+  "uk": "^greet.давно Нарешті знайоме пір'я. А то навколо самі чужі.",
+  "en": "^greet.давно Finally familiar feathers. Everyone around is a stranger."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^новини Що нового? Хто впав, хто встав, хто знову заблукав?",
+  "uk": "^greet.як Що нового? Хто впав, хто встав, хто знову заблукав?",
+  "en": "^greet.як What's new? Who fell, who got up, who got lost again?"
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "^живий Тримаєтесь ще? Ти і {friend}?",
+  "uk": "^greet.живий Тримаєтесь ще? Ти і {friend}?",
+  "en": "^greet.живий Still holding up? You and {friend}?"
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "~1 ^давно Знову ти. Ну що ж, світ малий.",
+  "uk": "~1 ^greet.давно Знову ти. Ну що ж, світ малий.",
+  "en": "~1 ^greet.давно You again. Well, it's a small world."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч",
+  "op": "set",
+  "old": "~3 ^давно Як добре вас бачити. Обох.",
+  "uk": "~3 ^greet.як Як добре вас бачити. Обох. Ну, як ви?",
+  "en": "~3 ^greet.як How good to see you. Both of you. So, how are you?"
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^давно О, гляньте, хто приповз! Шо, ше живі?",
+  "uk": "^greet.живий О, гляньте, хто приповз! Шо, ше живі?",
+  "en": "^greet.живий Oh, look who crawled in! What, still alive?"
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^давно А я думав, {friend} давно здох{>|ла}. Шкода. Жартую. Мо'.",
+  "uk": "^greet.давно А я думав, {friend} давно здох{>|ла}. Шкода. Жартую. Мо'.",
+  "en": "^greet.давно And I thought {friend} croaked ages ago. Pity. Kidding. Maybe."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^живий Живий, {addr}? Ну ти й живучий, {м_слівце}, як таракан.",
+  "uk": "^greet.живий Живий, {addr}? Ну ти й живучий, {м_слівце}, як тарган.",
+  "en": "^greet.живий Alive, {addr}? You're a tough one, {м_слівце}, like a cockroach."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^новини Ну шо там у вас? Хто кого відпиздив, хто де гепнувся?",
+  "uk": "^greet.як Ну шо там у вас? Хто кого відпиздив, хто де гепнувся?",
+  "en": "^greet.як So what's up with you? Who beat the shit out of whom, who fell where?"
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "~1 ^давно Знову ти. Як муха на гівно, {м_слівце}.",
+  "uk": "~1 ^greet.давно Знову ти. Як муха на гівно, {м_слівце}.",
+  "en": "~1 ^greet.давно You again. Like a fly to shit, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "~3 ^давно {addr}, стара ти падлюко! Радий, шо живий, бля. Не звикай.",
+  "uk": "~3 ^greet.живий {addr}, стара ти падлюко! Радий, шо живий, бля. Не звикай.",
+  "en": "~3 ^greet.живий {addr}, you old bastard! Glad you're alive, fuck. Don't get used to it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^давно О, привид прилетів. А я думав, тебе давно зжерли.",
+  "uk": "^greet.давно О, привид прилетів. А я думав, тебе давно зжерли.",
+  "en": "^greet.давно Oh, a ghost flew in. I thought something ate you long ago."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^давно Де ти, курва, пропадав стіко, {м_слівце}?",
+  "uk": "^greet.давно Де ти, курва, пропадав стіко, {м_слівце}?",
+  "en": "^greet.давно Where the fuck have you been all this time, {м_слівце}?"
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^новини Ну, викладай. Хто здох, хто вижив, хто кому винен?",
+  "uk": "^greet.як Ну, викладай. Хто здох, хто вижив, хто кому винен?",
+  "en": "^greet.як Well, spill it. Who croaked, who made it, who owes whom?"
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "^живий Ше дихаєш? Тю. Я чекав новин поцікавіше.",
+  "uk": "^greet.живий Ше дихаєш? Тю. Я чекав новин поцікавіше.",
+  "en": "^greet.живий Still breathing? Pfft. I was hoping for more interesting news."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "~1 ^давно Знову ця пика. Ніяк, сука, не позбудусь.",
+  "uk": "~1 ^greet.давно Знову ця пика. Ніяк, сука, не позбудусь.",
+  "en": "~1 ^greet.давно That mug again. Can't fucking get rid of it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч",
+  "op": "set",
+  "old": "~3 ^давно О, свої! Ну здоров, падлюко!",
+  "uk": "~3 ^greet.давно О, свої! Ну здоров, падлюко! Де літав?",
+  "en": "~3 ^greet.давно Oh, our own! Well hello, you bastard! Where've you been flying?"
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Живемо. {name} знову щось будує, а я рахую, скільки разів воно завалиться.",
+  "uk": "^greet.давно>greet.де_були Ми не пропадали. {name} три дні шука{в|ла} дорогу додому. Я знав, де вона. Мовчав.",
+  "en": "^greet.давно>greet.де_були We weren't gone. {name} spent three days looking for the way home. I knew where it was. Kept quiet."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Нормально. Вчора {name} {заблукав|заблукала} у трьох соснах. Я мовчав. Довго.",
+  "uk": "^greet.давно>greet.де_були Ходили, куди {name} очі дивилися. Болота, гори, знову болота.",
+  "en": "^greet.давно>greet.де_були We wandered off with {name}. Swamps, mountains, swamps again."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий Цілі. Здебільшого. {name} ще й пишається синцями.",
+  "uk": "^greet.давно>greet.відгризся І я тебе радий бачити. Майже так само, як ти мене.",
+  "en": "^greet.давно>greet.відгризся I'm glad to see you too. Almost as glad as you are to see me."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий|давно Живі, як бачиш. Хоча Одін уже не раз гострив на нас перо.",
+  "uk": "^greet.давно>greet.відгризся І тобі привіт. Бачу, манери не покращали.",
+  "en": "^greet.давно>greet.відгризся Hello to you too. I see your manners haven't improved."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "~1 ^давно|новини Та як. Годують раз на свято, а я терплю.",
+  "uk": "~1 ^greet.давно>greet.відгризся Не скажу, що скучив. Бо не скучив.",
+  "en": "~1 ^greet.давно>greet.відгризся I won't say I missed you. Because I didn't."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "~3 ^давно|новини Добре. {name} дбає про мене краще, ніж я заслуговую.",
+  "uk": "~3 ^greet.давно>greet.де_були Далеко були. Але я про тебе згадував. Раз.",
+  "en": "~3 ^greet.давно>greet.де_були We were far away. But I thought of you. Once."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "Та потроху.",
+  "uk": "^greet.як>greet.новина Живемо. {name} знову щось будує, а я рахую, скільки разів воно завалиться.",
+  "en": "^greet.як>greet.новина We're living. {name} is building something again, and I'm counting how many times it'll collapse."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Нічого доброго. Тобто все як завжди. {name} живе, я терплю.",
+  "uk": "^greet.як>greet.новина Нормально. Вчора {name} заблука{в|ла} у трьох соснах. Я мовчав. Довго.",
+  "en": "^greet.як>greet.новина Fine. Yesterday {name} got lost among three pines. I kept quiet. For a long time."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Новини? {name} навчи{вся|лася} варити кашу. Майже їстівну.",
+  "uk": "^greet.як>greet.новина Новина: {name} навчи{вся|лася} варити кашу. Майже їстівну.",
+  "en": "^greet.як>greet.новина News: {name} learned to cook porridge. Almost edible."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий Тримаємось. {name} — за мене, я — за здоровий глузд.",
+  "uk": "~1 ^greet.як>greet.новина Як завжди: я думаю, а {name} робить навпаки.",
+  "en": "~1 ^greet.як>greet.новина As always: I think, and {name} does the opposite."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий Цілі. Не завдяки, а всупереч.",
+  "uk": "~3 ^greet.як>greet.новина Добре. {name} дбає про мене краще, ніж я заслуговую.",
+  "en": "~3 ^greet.як>greet.новина Good. {name} takes better care of me than I deserve."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "~1 ^давно|новини Як завжди: я думаю, а {name} робить навпаки.",
+  "uk": "^greet.живий>greet.живі Цілі. Здебільшого. {name} ще й пишається синцями.",
+  "en": "^greet.живий>greet.живі In one piece. Mostly. {name} is even proud of the bruises."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "set",
+  "old": "~3 ^давно|новини Добре. Ми звикли одне до одного. Майже як рідні.",
+  "uk": "^greet.живий>greet.живі Живі, як бачиш. Хоча Одін уже не раз гострив на нас перо.",
+  "en": "^greet.живий>greet.живі Alive, as you see. Though Odin has sharpened his quill for us more than once."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "add",
+  "uk": "^greet.живий>greet.живі Цілі. Не завдяки, а всупереч.",
+  "en": "^greet.живий>greet.живі In one piece. Not thanks to anything, but despite everything."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "add",
+  "uk": "~1 ^greet.живий>greet.живі Живі. Не дочекаєшся.",
+  "en": "~1 ^greet.живий>greet.живі Alive. Don't hold your breath."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_відповідь",
+  "op": "add",
+  "uk": "~3 ^greet.живий>greet.живі Тримаємось. {name} — за мене, я — за здоровий глузд.",
+  "en": "~3 ^greet.живий>greet.живі Holding on. {name} holds on to me, I hold on to common sense."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Живі. {name} вчора двічі {здох|здохла}. Рекорд, {м_слівце}, бля!",
+  "uk": "^greet.давно>greet.де_були Та нікуди не пропадали. {name} знову полі{з|зла} не туди, а я за {ним|нею}.",
+  "en": "^greet.давно>greet.де_були We didn't go anywhere. {name} crawled into the wrong place again, and I tagged along."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Та нормально. {name} знову полі{з|зла} не туди. Я був проти. Як завжди, нахуй.",
+  "uk": "^greet.давно>greet.де_були Де-де. По болотах, {м_слівце}. {name} там шось шука{в|ла}. Не знайш{ов|ла}.",
+  "en": "^greet.давно>greet.де_були Where, where. In the swamps, {м_слівце}. {name} was looking for something. Didn't find it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий Живучий, бо злий. Злі довго живуть, вкурив?",
+  "uk": "^greet.давно>greet.відгризся І я тобі не радий, {м_слівце}. Ну, трохи радий.",
+  "en": "^greet.давно>greet.відгризся I'm not glad to see you either, {м_слівце}. Well, a bit glad."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий|давно Живі. Хоча Хель уже двері тримала. Ледь не зайшли, курва.",
+  "uk": "^greet.давно>greet.відгризся Ага, і тобі здоров. Пика в тебе та сама, бля.",
+  "en": "^greet.давно>greet.відгризся Yeah, hello to you too. Same mug as ever, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "~1 ^давно|новини Як-як. Не годують, не поважають. Все як завжди, гівно.",
+  "uk": "~1 ^greet.давно>greet.відгризся Шо ти до мене пристав. Відвали, бо дзьобну.",
+  "en": "~1 ^greet.давно>greet.відгризся Quit pestering me. Piss off or I peck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "~3 ^давно|новини Та добре. {name} — най{кращий|краща}, хоч і дурн{ий|а}, як пробка. Тіко {йому|їй} не кажи.",
+  "uk": "~3 ^greet.давно>greet.де_були Та літали всюди, братан. Але тут, бля, найкраще.",
+  "en": "~3 ^greet.давно>greet.де_були We flew all over, bro. But here's the fucking best."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "Та живемо якось, {м_слівце}.",
+  "uk": "^greet.як>greet.новина Живі. {name} вчора двічі здох{|ла}. Рекорд, {м_слівце}.",
+  "en": "^greet.як>greet.новина Alive. Yesterday {name} croaked twice. A record, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Новини такі: {name} знову все зіпсува{в|ла}. Як завжди, бляха.",
+  "uk": "^greet.як>greet.новина Новини такі: {name} знову все зіпсува{в|ла}. Як завжди, бляха.",
+  "en": "^greet.як>greet.новина The news is: {name} screwed everything up again. As always, damn it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^давно|новини Хто здох? Ми, майже. Двічі, курва.",
+  "uk": "^greet.як>greet.новина Та шо. {name} троля дрином дражни{в|ла}. Троль не оцінив.",
+  "en": "^greet.як>greet.новина What's new. {name} poked a troll with a stick. The troll didn't appreciate it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий Дихаю. Тобі на зло, сучара.",
+  "uk": "~1 ^greet.як>greet.новина Хуйово. Годують мало, гавкають багато.",
+  "en": "~1 ^greet.як>greet.новина Shitty. They feed me little and bark at me a lot."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "^живий Не зжерли. Подавились би, я кістлявий.",
+  "uk": "~3 ^greet.як>greet.новина Та добре. {name} — найкращ{ий|а}, хоч і дурн{ий|а}, як пробка. Тіко {йому|їй} не кажи.",
+  "en": "~3 ^greet.як>greet.новина Good. {name} is the best, though dumb as a cork. Just don't tell {him|her}."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "~1 ^давно|новини Хуйово. Годують мало, гавкають багато.",
+  "uk": "^greet.живий>greet.живі Живучий, бо злий. Злі довго живуть, вкурив.",
+  "en": "^greet.живий>greet.живі Tough because I'm mean. The mean live long, got it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "set",
+  "old": "~3 ^давно|новини Нормально. Навіть добре, прикинь. Тіко нікому, {м_слівце}.",
+  "uk": "^greet.живий>greet.живі Живі. Хоча Хель уже двері тримала. Ледь не зайшли, курва.",
+  "en": "^greet.живий>greet.живі Alive. Though Hel was already holding the door. We nearly walked in, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "add",
+  "uk": "^greet.живий>greet.живі Не зжерли. Подавились би, я кістлявий.",
+  "en": "^greet.живий>greet.живі Nobody ate us. They'd have choked, I'm all bones."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "add",
+  "uk": "~1 ^greet.живий>greet.живі Дихаю. Тобі на зло, сучара.",
+  "en": "~1 ^greet.живий>greet.живі Breathing. To spite you, bitch."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_відповідь",
+  "op": "add",
+  "uk": "~3 ^greet.живий>greet.живі Живі, братан. Обоє. Сам дивуюсь, бля.",
+  "en": "~3 ^greet.живий>greet.живі Alive, bro. Both of us. I'm amazed myself, fuck."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "Ну, побачимось ще.",
+  "uk": "^greet.де_були Ну, головне, що повернулися. Побачимось ще.",
+  "en": "^greet.де_були Well, the main thing is you came back. See you again."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "Тримайтеся там. Обоє.",
+  "uk": "^greet.де_були Ходіть, ходіть. Аби назад дорогу знаходили.",
+  "en": "^greet.де_були Wander away. As long as you find your way back."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "^живий Бережи свою людину, {addr}. Їх у нас мало.",
+  "uk": "~1 ^greet.де_були Ну й мандруйте далі. Без мене.",
+  "en": "~1 ^greet.де_були Well, keep wandering. Without me."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "~1 Ну, бувай. Не нудьгуй.",
+  "uk": "~3 ^greet.де_були Добре, що ви знову тут. Справді.",
+  "en": "~3 ^greet.де_були Good that you're back here. Really."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "~3 Добре, що ви тут. Справді.",
+  "uk": "^greet.відгризся Чарівний, як завжди. Ну, бувай.",
+  "en": "^greet.відгризся Charming as ever. Well, bye."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "Бережіть себе. Ну, ти бережи.",
+  "uk": "^greet.відгризся Бачу, нічого не змінилося. Це навіть заспокоює.",
+  "en": "^greet.відгризся I see nothing has changed. That's almost soothing."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "^новини Розкажеш решту наступного разу.",
+  "uk": "~1 ^greet.відгризся Ну, лети вже.",
+  "en": "~1 ^greet.відгризся Well, fly off already."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "set",
+  "old": "~1 Ну, лети вже.",
+  "uk": "~3 ^greet.відгризся Гризися, гризися. Я однаково радий тебе бачити.",
+  "en": "~3 ^greet.відгризся Snap away. I'm still glad to see you."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.новина Розкажеш решту наступного разу.",
+  "en": "^greet.новина Tell me the rest next time."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.новина Ну, хоч не нудно вам. Тримайтеся там.",
+  "en": "^greet.новина Well, at least you're not bored. Hold on out there."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "~1 ^greet.новина Ну й новини. Краще б не питав.",
+  "en": "~1 ^greet.новина Some news. Should've not asked."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "~3 ^greet.новина Бережіть одне одного. Ну, ти бережи.",
+  "en": "~3 ^greet.новина Take care of each other. Well, you take care."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.живі Бережи свою людину, {addr}. Їх у нас мало.",
+  "en": "^greet.живі Take care of your human, {addr}. There aren't many of them."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.живі Живі — і добре. Не зурочу.",
+  "en": "^greet.живі Alive is good. I won't jinx it."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "~1 ^greet.живі Живі, то живі. Не звикай.",
+  "en": "~1 ^greet.живі Alive is alive. Don't get used to it."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "~3 ^greet.живі Тримайтеся там. Обоє.",
+  "en": "~3 ^greet.живі Hold on out there. Both of you."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Ну, нагомонілись. Побачимось ще.",
+  "en": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Well, we've had our chat. See you again."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Стільки нас разом — аж свято. Розлітаймося, поки не посварились.",
+  "en": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі So many of us together, a regular feast day. Let's scatter before we quarrel."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "~1 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Все, досить зборів. Розлітаємось.",
+  "en": "~1 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі That's it, enough of a gathering. We scatter."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_кінець",
+  "op": "add",
+  "uk": "~3 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Добре, що ви всі тут. Справді.",
+  "en": "~3 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Good that you're all here. Really."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "Все, побазарили. Досить.",
+  "uk": "^greet.де_були Ну, вернулись — і то діло. Бувай, {м_слівце}.",
+  "en": "^greet.де_були Well, you're back, that's something. Bye, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "Ну, бувай. Не здохни там, лошара.",
+  "uk": "^greet.де_були Шляйтесь, шляйтесь. Тіко не здохніть там.",
+  "en": "^greet.де_були Roam around, roam. Just don't croak out there."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "^живий Бережи свою людину, {addr}. Бо хто тебе, дурня, годуватиме?",
+  "uk": "~1 ^greet.де_були Та хоч де були. Мені похуй. Злітай.",
+  "en": "~1 ^greet.де_були Wherever you were. I don't give a fuck. Take off."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "~1 Йди вже. Нудно мені з тобою, бля.",
+  "uk": "~3 ^greet.де_були Заходь частіше, братан. Тіко без гостинців — я їх однаково зжеру.",
+  "en": "~3 ^greet.де_були Drop by more often, bro. Just no presents, I'll eat them anyway."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "~3 Заходь частіше, братан. Тіко без гостинців — я їх однаково зжеру.",
+  "uk": "^greet.відгризся Ну, бувай. Не здохни там, лошара.",
+  "en": "^greet.відгризся Well, bye. Don't croak out there, loser."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "Все, давай. Не здохни, чуєш.",
+  "uk": "^greet.відгризся Ото й побазарили. Як завжди, бля.",
+  "en": "^greet.відгризся Well, that was a chat. Same as always, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "^новини Решту — потім. Якшо доживеш.",
+  "uk": "~1 ^greet.відгризся Йди вже. Нудно мені з тобою.",
+  "en": "~1 ^greet.відгризся Go already. You bore me."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "set",
+  "old": "~1 Злітай уже, не муляй.",
+  "uk": "~3 ^greet.відгризся Падлюка ти. Але своя, курва.",
+  "en": "~3 ^greet.відгризся You're a bastard. But our bastard, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.новина Решту — потім. Якшо доживеш.",
+  "en": "^greet.новина The rest, later. If you live that long."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.новина Ну ви й даєте. Нічо, переживете.",
+  "en": "^greet.новина Well, you two are something. Never mind, you'll live."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "~1 ^greet.новина Ото новини. Краще б мовчав, {м_слівце}.",
+  "en": "~1 ^greet.новина Some news. Should've kept quiet, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "~3 ^greet.новина Ото ви живете, пацани. Аж заздро, бля.",
+  "en": "~3 ^greet.новина That's some life you lead, guys. Makes me jealous, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.живі Бережи свою людину, {addr}. Бо хто тебе, дурня, годуватиме.",
+  "en": "^greet.живі Take care of your human, {addr}. Or who'll feed an idiot like you."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.живі Живі — і хуй з ним. Тримайтесь там.",
+  "en": "^greet.живі Alive, and fuck it. Hang in there."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "~1 ^greet.живі Ну, живий то й живий. Злітай уже, не муляй.",
+  "en": "~1 ^greet.живі Well, alive is alive. Take off already, you're in my way."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "~3 ^greet.живі Живий, падлюко. Отак і тримай.",
+  "en": "~3 ^greet.живі Alive, you bastard. Keep it that way."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Все, побазарили. Досить.",
+  "en": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі That's it, we've chatted. Enough."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Ну й зграя зібралась. Все, розлітаємось, бо мені нудно.",
+  "en": "^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Some flock we've got. That's it, scatter, I'm bored."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "~1 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Все, валіть усі. Нагомонілись.",
+  "en": "~1 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі That's it, everyone get lost. Enough yapping."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_кінець",
+  "op": "add",
+  "uk": "~3 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Добре посиділи, пацани. Як люди. Ну, як ворони.",
+  "en": "~3 ^greet.розліт|greet.і_я|greet.своя_новина|greet.живучі Good sit-down, guys. Like people. Well, like ravens."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно|новини І я тут. Новини в мене кращі, але ви не питали.",
+  "uk": "^greet.де_були|greet.відгризся>greet.і_я Давно не бачились, так. Я теж скучив. Трохи.",
+  "en": "^greet.де_були|greet.відгризся>greet.і_я Long time no see, yes. I missed you too. A little."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Живі, живі. Усі ми тут живучі, як бур'ян.",
+  "uk": "^greet.де_були|greet.відгризся>greet.і_я О, всі зібралися. Тепер буде шумно.",
+  "en": "^greet.де_були|greet.відгризся>greet.і_я Oh, everyone's gathered. Now it'll be noisy."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини А в нашої людини новина — ми знову заблукали.",
+  "uk": "~1 ^greet.де_були|greet.відгризся>greet.і_я І я тут. Давно не бачились. І ще б стільки ж.",
+  "en": "~1 ^greet.де_були|greet.відгризся>greet.і_я I'm here too. Long time no see. Could be as long again."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "Давно не бачились, так. Я теж скучив. Трохи.",
+  "uk": "~3 ^greet.де_були|greet.відгризся>greet.і_я Ото зустріч! Наче й не розлучались.",
+  "en": "~3 ^greet.де_були|greet.відгризся>greet.і_я What a meeting! As if we'd never parted."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "О, всі зібралися. Тепер буде шумно.",
+  "uk": "^greet.новина>greet.своя_новина А в нашої людини новина — ми знову заблукали.",
+  "en": "^greet.новина>greet.своя_новина And our human's news: we got lost again."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно Давно, так. Я вже й не сподівався.",
+  "uk": "^greet.новина>greet.своя_новина І я тут. Новини в мене кращі: ми з тролем розминулися. Ледве.",
+  "en": "^greet.новина>greet.своя_новина I'm here too. My news is better: we missed a troll. Barely."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно Ото зустріч! Наче й не розлучались.",
+  "uk": "~1 ^greet.новина>greet.своя_новина Ваші новини — дрібниці. Моя: я сьогодні нікого не дзьобнув.",
+  "en": "~1 ^greet.новина>greet.своя_новина Your news is trifles. Mine: I haven't pecked anyone today."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно Давно не чув твого каркання. Я майже скучив.",
+  "uk": "~3 ^greet.новина>greet.своя_новина Добрі новини. У нас теж: усі цілі й ситі.",
+  "en": "~3 ^greet.новина>greet.своя_новина Good news. Ours too: everyone whole and fed."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "~1 ^давно Давно. І ще б стільки ж.",
+  "uk": "^greet.живі>greet.живучі Живі, живі. Усі ми тут живучі, як бур'ян.",
+  "en": "^greet.живі>greet.живучі Alive, alive. We're all as hardy as weeds here."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "~3 ^давно Як гарно, що всі знову разом.",
+  "uk": "^greet.живі>greet.живучі Живий той, хто вміє вчасно тікати. Ми вміємо.",
+  "en": "^greet.живі>greet.живучі Alive is whoever knows when to run. We know."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Живі — і то вже перемога.",
+  "uk": "~1 ^greet.живі>greet.живучі Живі. На превеликий жаль деяких.",
+  "en": "~1 ^greet.живі>greet.живучі Alive. Much to some folks' regret."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Живий той, хто вміє вчасно тікати. Ми вміємо.",
+  "uk": "~3 ^greet.живі>greet.живучі Добре, що всі цілі. Справді добре.",
+  "en": "~3 ^greet.живі>greet.живучі Good that everyone's in one piece. Really good."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Хто питає, чи живий, той сам ледь живий.",
+  "uk": "^greet.і_я>greet.і_я І я тут, якщо що. Теж давно не бачились.",
+  "en": "^greet.і_я>greet.і_я I'm here too, by the way. Long time for us as well."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "~1 ^живий Живі. На превеликий жаль деяких.",
+  "uk": "^greet.і_я>greet.і_я Зліт старих знайомих. Бракує тільки медовухи.",
+  "en": "^greet.і_я>greet.і_я A reunion of old acquaintances. Only the mead is missing."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "~3 ^живий Добре, що всі цілі. Справді добре.",
+  "uk": "~1 ^greet.і_я>greet.і_я Ще й я. Ну, тепер точно всі.",
+  "en": "~1 ^greet.і_я>greet.і_я And me as well. Well, now that's definitely everyone."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Новина: я сьогодні нікого не дзьобнув. Поки що.",
+  "uk": "~3 ^greet.і_я>greet.і_я Як гарно, що всі знову разом.",
+  "en": "~3 ^greet.і_я>greet.і_я How lovely that everyone is together again."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Наші новини короткі: ходимо, рубаємо, падаємо.",
+  "uk": "^greet.своя_новина>greet.своя_новина А ми пів дня від троля тікали. Перемогли. Ногами.",
+  "en": "^greet.своя_новина>greet.своя_новина And we spent half a day running from a troll. We won. With our legs."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Новини? Мідґард стоїть. Ми теж.",
+  "uk": "^greet.своя_новина>greet.своя_новина Моя новина коротка: Мідґард стоїть. Ми теж.",
+  "en": "^greet.своя_новина>greet.своя_новина My news is short: Midgard stands. So do we."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "~1 ^новини Ваші новини мені нецікаві. Але розповідайте.",
+  "uk": "~1 ^greet.своя_новина>greet.своя_новина Подумаєш. Моя людина двічі за день у річку впала.",
+  "en": "~1 ^greet.своя_новина>greet.своя_новина Big deal. My human fell in the river twice in one day."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "~3 ^новини Розповідайте все. Я люблю добрі новини.",
+  "uk": "~3 ^greet.своя_новина>greet.своя_новина А в нас усе добре. Аж підозріло.",
+  "en": "~3 ^greet.своя_новина>greet.своя_новина And all's well with us. Suspiciously well."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "Можна і я скажу? Ні? Все одно скажу: ви обидва дивні.",
+  "uk": "^greet.живучі>greet.живучі Хто питає, чи живий, той сам ледь живий.",
+  "en": "^greet.живучі>greet.живучі Whoever asks if you're alive is barely alive himself."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "Мене ніхто не питає, але я згоден. Майже.",
+  "uk": "^greet.живучі>greet.живучі Живучі, бо злі. Я — бо розумний.",
+  "en": "^greet.живучі>greet.живучі Hardy because they're mean. Me, because I'm clever."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "Тихіше, ви. Думати заважаєте.",
+  "uk": "~1 ^greet.живучі>greet.живучі Живі. Поки що.",
+  "en": "~1 ^greet.живучі>greet.живучі Alive. For now."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "set",
+  "old": "Я все чую, якщо що.",
+  "uk": "~3 ^greet.живучі>greet.живучі Хай так і буде. Усі цілі.",
+  "en": "~3 ^greet.живучі>greet.живучі Let it stay that way. Everyone whole."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "~1 Ой, почалося."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "~3 Як добре, що ми всі тут."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "А мене спитати? Ні? Як завжди."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "Вибачте, що втручаюсь. Хоча ні, не вибачайте."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "Ви обоє праві. І обоє — ні."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "~1 Можна тихіше? Я думаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "~3 Гарно говорите. Я послухаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "Не звертайте на мене уваги. Я тут просто сиджу."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "Розмова цікава. Продовжуйте, я запам'ятаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "Я б щось додав, але ви й так усе сказали."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "О, і я хочу слово. Ось воно: слово."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "~1 Скільки балачок. Аж пір'я в'яне."
+ },
+ {
+  "who": "H",
+  "list": "хх_зустріч_встряє",
+  "op": "del",
+  "old": "~3 Люблю, коли нас багато."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно|новини І я тут, {м_слівце}! Новин — повна торба, бля.",
+  "uk": "^greet.де_були|greet.відгризся>greet.і_я І я тут, {м_слівце}! Не чекали, а я приперся.",
+  "en": "^greet.де_були|greet.відгризся>greet.і_я I'm here too, {м_слівце}! Didn't expect me, but here I am."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Живі. Поки шо. Хто зурочить — дзьобну.",
+  "uk": "^greet.де_були|greet.відгризся>greet.і_я Здоров усім. Крім тебе. Та жартую, бля. І тобі здоров.",
+  "en": "^greet.де_були|greet.відгризся>greet.і_я Hi, everyone. Except you. Kidding, fuck. Hi to you too."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Новина: моя людина знову шось спалила. Ну як шось — пів хати.",
+  "uk": "~1 ^greet.де_були|greet.відгризся>greet.і_я Знову ці пики. Ну, здоров, бляха.",
+  "en": "~1 ^greet.де_були|greet.відгризся>greet.і_я These mugs again. Well, hi, damn it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "Всі зібрались? Ну все, тепер буде весело, курва.",
+  "uk": "~3 ^greet.де_були|greet.відгризся>greet.і_я О, свої зібрались. Аж тепло в зобі.",
+  "en": "~3 ^greet.де_були|greet.відгризся>greet.і_я Oh, our own have gathered. Warms my craw."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "Здоров усім. Крім тебе. Та жартую, бля. І тобі здоров.",
+  "uk": "^greet.новина>greet.своя_новина Новина: моя людина знову шось спалила. Ну як шось — пів хати.",
+  "en": "^greet.новина>greet.своя_новина News: my human burned something again. Well, something — half the house."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно Давно, курва. Я вже думав, вас зжерли.",
+  "uk": "^greet.новина>greet.своя_новина Фігня ваші новини. Моя з даху гепнулась — от новина.",
+  "en": "^greet.новина>greet.своя_новина Your news is crap. Mine fell off the roof — now that's news."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно Ото зустріч! Принесіть хтось падла, обмиємо.",
+  "uk": "~1 ^greet.новина>greet.своя_новина Ваші новини — гівно. А в мене: я голодний.",
+  "en": "~1 ^greet.новина>greet.своя_новина Your news is shit. Mine: I'm hungry."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^давно Давно не бачились — і ше б стіко ж, {м_слівце}.",
+  "uk": "~3 ^greet.новина>greet.своя_новина О, і в нас новина: ми, курва, ше живі. Обоє.",
+  "en": "~3 ^greet.новина>greet.своя_новина Oh, we've got news too: we're still fucking alive. Both of us."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "~1 ^давно Знову ці пики. Ну, здоров, бляха.",
+  "uk": "^greet.живі>greet.живучі Живучі, як таргани, курва.",
+  "en": "^greet.живі>greet.живучі Hardy as cockroaches, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "~3 ^давно О, свої зібрались. Аж тепло в зобі.",
+  "uk": "^greet.живі>greet.живучі Хто не здох — той, бля, герой.",
+  "en": "^greet.живі>greet.живучі Whoever didn't croak is a fucking hero."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Живі. А шкода, міг бути бенкет, гиги.",
+  "uk": "~1 ^greet.живі>greet.живучі Живі. Ну, то ненадовго.",
+  "en": "~1 ^greet.живі>greet.живучі Alive. Well, not for long."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Живучі, як таргани, курва.",
+  "uk": "~3 ^greet.живі>greet.живучі Добре, шо живі, падлюки. Їй-бо добре.",
+  "en": "~3 ^greet.живі>greet.живучі Good you're alive, you bastards. Honest to god, good."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^живий Хто не здох — той, бля, герой.",
+  "uk": "^greet.і_я>greet.і_я І я тут, якшо шо. Ну все, всі в зборі.",
+  "en": "^greet.і_я>greet.і_я I'm here too, by the way. That's it, the whole gang."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "~1 ^живий Живі? Ну, то ненадовго.",
+  "uk": "^greet.і_я>greet.і_я Ото зустріч! Принесіть хтось падла, обмиємо.",
+  "en": "^greet.і_я>greet.і_я What a meeting! Someone bring carrion, we'll celebrate."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "~3 ^живий Добре, шо живі, падлюки. Їй-бо добре.",
+  "uk": "~1 ^greet.і_я>greet.і_я Зібралось, бля, кодло.",
+  "en": "~1 ^greet.і_я>greet.і_я The whole fucking rabble's here."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Новина: я голодний. Як завжди, бля.",
+  "uk": "~3 ^greet.і_я>greet.і_я Свої всі. Аж приємно, курва.",
+  "en": "~3 ^greet.і_я>greet.і_я All our own. Feels good, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Хто кого відгасив — ото новина. Решта — бабські плітки.",
+  "uk": "^greet.своя_новина>greet.своя_новина Та шо то за новини. Моя людина троля дрином відгасила — от новина.",
+  "en": "^greet.своя_новина>greet.своя_новина Call that news? My human clubbed a troll — that's news."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "^новини Новини? Моя знову гепнулась. Нічо нового.",
+  "uk": "^greet.своя_новина>greet.своя_новина Хто кого відгасив — ото новина. Решта — плітки.",
+  "en": "^greet.своя_новина>greet.своя_новина Who smashed whom — that's news. The rest is gossip."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "~1 ^новини Ваші новини — гівно. Але кажіть, кажіть.",
+  "uk": "~1 ^greet.своя_новина>greet.своя_новина Новина: я голодний. Як завжди, бля.",
+  "en": "~1 ^greet.своя_новина>greet.своя_новина News: I'm hungry. As always, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "~3 ^новини Розказуйте, курва. Цікаво ж!",
+  "uk": "~3 ^greet.своя_новина>greet.своя_новина А в нас тихо. Аж скучно, бля, ну але добре.",
+  "en": "~3 ^greet.своя_новина>greet.своя_новина And it's quiet with us. Boring as fuck, but good."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "Шо ви там мелете, я не вкурив. І не хочу.",
+  "uk": "^greet.живучі>greet.живучі Живі, бо Хель нас боїться.",
+  "en": "^greet.живучі>greet.живучі Alive because Hel is scared of us."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "Тихо, бля! Я думаю. Ну, пробую.",
+  "uk": "^greet.живучі>greet.живучі Не зурочте, {м_слівце}. Хто зурочить — дзьобну.",
+  "en": "^greet.живучі>greet.живучі Don't jinx it, {м_слівце}. Whoever jinxes it gets pecked."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "Думаєш, я глухий, {м_слівце}? Я все чую, бля.",
+  "uk": "~1 ^greet.живучі>greet.живучі Живі, а шкода. Міг бути бенкет, гиги.",
+  "en": "~1 ^greet.живучі>greet.живучі Alive, what a pity. Could've been a feast, heh."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "set",
+  "old": "А моя думка шо, не рахується?",
+  "uk": "~3 ^greet.живучі>greet.живучі Живі всі. Аж не віриться, бля.",
+  "en": "~3 ^greet.живучі>greet.живучі Everyone alive. Can't fucking believe it."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "~1 Йой, понеслась пизда по кочках."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "~3 Свої всі. Аж приємно, курва. Ну, не дивись так."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Короче. Я тут шось хотів… та похуй."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Гарно пиздите. Я аж заслухався. Майже."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Хто перший дзьоба отримає? Я не вибираю, мені однаково."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "~1 Срав я на вас обох з високої гілки."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "~3 Ото ви, пацани, даєте. Люблю вас, сучари."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Сиджу, слухаю, і вже злий, курва."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Говоріть, говоріть. А я поки жука доїм."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Ну й нудьга, {м_слівце}. Хоч би хтось когось вбив."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "Моя думка: пиздець. Більше нема шо додати."
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "~1 Довго ще, бля?"
+ },
+ {
+  "who": "M",
+  "list": "мх_зустріч_встряє",
+  "op": "del",
+  "old": "~3 Ото сидимо, пацани. Як люди. Ну, як ворони."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "^нове О, то ти тепер {raven}? Чув, чув.",
+  "uk": "^rename.чув О, то ти тепер {raven}? Чув, чув.",
+  "en": "^rename.чув Oh, so you're {raven} now? Heard, heard."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "^нове {addr}? Нове ім'я? Тобі пасує. Майже.",
+  "uk": "^rename.чув {addr}? Нове ім'я? Тобі пасує. Майже.",
+  "en": "^rename.чув {addr}? A new name? It suits you. Almost."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "~1 ^нове {raven}, значить. Звучить так собі.",
+  "uk": "~1 ^rename.глум {raven}, значить. Звучить так собі.",
+  "en": "~1 ^rename.глум {raven}, then. Sounds so-so."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "~3 ^нове {raven}! Гарно. Заслужив.",
+  "uk": "~3 ^rename.хвала {raven}! Гарно. Заслужив.",
+  "en": "~3 ^rename.хвала {raven}! Nice. You earned it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "^нове Нове ім'я, нове пір'я? Чи тільки ім'я?",
+  "uk": "^rename.глум Нове ім'я, а пір'я, бачу, старе.",
+  "en": "^rename.глум New name, but the same old feathers, I see."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "^нове {raven}? Хто ж це вигадав?",
+  "uk": "^rename.хто_дав {raven}? Хто ж це вигадав?",
+  "en": "^rename.хто_дав {raven}? Who came up with that?"
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "set",
+  "old": "~3 ^нове {raven}. Звучить гордо. Носи з честю.",
+  "uk": "~3 ^rename.хвала {raven}. Звучить гордо. Носи з честю.",
+  "en": "~3 ^rename.хвала {raven}. Sounds proud. Wear it with honor."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "add",
+  "uk": "^rename.хто_дав Тебе перехрестили? Цікаво, хто й за що.",
+  "en": "^rename.хто_дав They renamed you? I wonder who, and what for."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя",
+  "op": "add",
+  "uk": "^rename.хвала {raven}. Нарешті ім'я, за яке не соромно.",
+  "en": "^rename.хвала {raven}. Finally a name you needn't be ashamed of."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "^нове Йо, {raven}! Хто тебе так обізвав, {м_слівце}?",
+  "uk": "^rename.хто_дав Йо, {addr}! Хто тебе так обізвав, {м_слівце}?",
+  "en": "^rename.хто_дав Yo, {addr}! Who stuck you with that, {м_слівце}?"
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "^нове {raven}? Пф-ф. Я тебе по-старому кликатиму, і шо ти мені зробиш?",
+  "uk": "^rename.глум {raven}? Пф-ф. Я тебе по-старому кликатиму, і шо ти мені зробиш?",
+  "en": "^rename.глум {raven}? Pfft. I'll call you the old way, and what are you gonna do about it?"
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "~1 ^нове {raven}. Ну й погоняло, бля.",
+  "uk": "~1 ^rename.глум {raven}. Ну й погоняло, бля.",
+  "en": "~1 ^rename.глум {raven}. What a fucking handle."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "~3 ^нове {raven}. Звучить, курва, по-пацанськи. Заслужив.",
+  "uk": "~3 ^rename.хвала {raven}. Звучить, курва, по-пацанськи. Заслужив.",
+  "en": "~3 ^rename.хвала {raven}. Sounds badass, fuck. You earned it."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "^нове О, нове погоняло! Хто тебе так перехрестив, {м_слівце}?",
+  "uk": "^rename.хто_дав О, нове погоняло! Хто тебе так перехрестив, {м_слівце}?",
+  "en": "^rename.хто_дав Oh, a new handle! Who renamed you like that, {м_слівце}?"
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "^нове {raven}? Ну, хоч не Пушок. Пушка я б не пережив.",
+  "uk": "^rename.глум {raven}? Ну, хоч не Пушок. Пушка я б не пережив.",
+  "en": "^rename.глум {raven}? Well, at least not Fluffy. I wouldn't survive Fluffy."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "set",
+  "old": "~3 ^нове {raven}. Пасує тобі, падлюко. Чесно.",
+  "uk": "~3 ^rename.хвала {raven}. Пасує тобі, падлюко. Чесно.",
+  "en": "~3 ^rename.хвала {raven}. Suits you, you bastard. Honest."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя",
+  "op": "add",
+  "uk": "^rename.чув О, {addr}! Чув я, чув. Новеньке погоняло, ага.",
+  "en": "^rename.чув Oh, {addr}! I heard, I heard. A brand-new handle, yeah."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове Так, тепер я {me}. Звикай.",
+  "uk": "^rename.чув>rename.звикай Так, тепер я {me}. Звикай.",
+  "en": "^rename.чув>rename.звикай Yes, I'm {me} now. Get used to it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове {me}. Заслужив, між іншим.",
+  "uk": "^rename.чув>rename.звикай {me}. Не плутай більше.",
+  "en": "^rename.чув>rename.звикай {me}. Don't mix it up anymore."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "~1 ^нове Мене не питали. Але {me} — то вже краще, ніж було.",
+  "uk": "~1 ^rename.чув>rename.звикай Так. {me}. І без коментарів.",
+  "en": "~1 ^rename.чув>rename.звикай Yes. {me}. And no comments."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "~3 ^нове {me}. Мені самому подобається.",
+  "uk": "~3 ^rename.чув>rename.звикай {me}. Сам іще звикаю, якщо чесно.",
+  "en": "~3 ^rename.чув>rename.звикай {me}. Still getting used to it myself, to be honest."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "Так. {me}.",
+  "uk": "^rename.хто_дав>rename.людина {name} вигада{в|ла}. Три дні дума{в|ла}. Видно.",
+  "en": "^rename.хто_дав>rename.людина {name} came up with it. Thought for three days. It shows."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове Тільки ім'я. Пір'я те саме. Гарне.",
+  "uk": "^rename.хто_дав>rename.людина Моя людина. Я не сперечався: могло бути гірше.",
+  "en": "^rename.хто_дав>rename.людина My human. I didn't argue: it could have been worse."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове Вигадали. Заслужив. Не заздри.",
+  "uk": "~1 ^rename.хто_дав>rename.людина Не твоє діло. Ну, {name}. Задоволений.",
+  "en": "~1 ^rename.хто_дав>rename.людина None of your business. Fine, {name}. Happy now."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "set",
+  "old": "~1 ^нове Ім'я як ім'я. Не чіпляйся.",
+  "uk": "~3 ^rename.хто_дав>rename.людина {name} вибра{в|ла}. Мені подобається.",
+  "en": "~3 ^rename.хто_дав>rename.людина {name} picked it. I like it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.хвала>rename.гордий Заслужив, між іншим.",
+  "en": "^rename.хвала>rename.гордий Earned it, by the way."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.хвала>rename.гордий Знаю. Мені самому подобається.",
+  "en": "^rename.хвала>rename.гордий I know. I like it myself."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~1 ^rename.хвала>rename.гордий Похвала від тебе. Запишу як рідкість.",
+  "en": "~1 ^rename.хвала>rename.гордий Praise from you. I'll file it under rarities."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~3 ^rename.хвала>rename.гордий Дякую. Тільки не кажи нікому, що я дякував.",
+  "en": "~3 ^rename.хвала>rename.гордий Thank you. Just don't tell anyone I said thanks."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.глум>rename.огризнувся Ім'я як ім'я. Не чіпляйся.",
+  "en": "^rename.глум>rename.огризнувся A name is a name. Don't nitpick."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.глум>rename.огризнувся Кличи як хочеш. Я однаково не озирнусь.",
+  "en": "^rename.глум>rename.огризнувся Call me what you like. I still won't turn around."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~1 ^rename.глум>rename.огризнувся Мене не питали. А тебе — тим паче.",
+  "en": "~1 ^rename.глум>rename.огризнувся Nobody asked me. And you even less."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~3 ^rename.глум>rename.огризнувся Смійся, смійся. Сам потім так кликатимеш.",
+  "en": "~3 ^rename.глум>rename.огризнувся Laugh away. You'll be calling me that yourself."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове {me}, ага. Ше раз скривишся — дзьобом у пику.",
+  "uk": "^rename.чув>rename.звикай Тепер я {me}, {м_слівце}. Поважай, бо вріжу.",
+  "en": "^rename.чув>rename.звикай I'm {me} now, {м_слівце}. Show respect or I'll smack you."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове Тепер я {me}, {м_слівце}. Поважай, бо вріжу.",
+  "uk": "^rename.чув>rename.звикай {me}, ага. Ше раз скривишся — дзьобом у пику.",
+  "en": "^rename.чув>rename.звикай {me}, yeah. Make a face again and get a beak in the mug."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "~1 ^нове {me}. Не подобається — то твої проблеми, бля.",
+  "uk": "~1 ^rename.чув>rename.звикай {me}. Не подобається — то твої проблеми, бля.",
+  "en": "~1 ^rename.чув>rename.звикай {me}. Don't like it, that's your fucking problem."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "~3 ^нове {me}. Моя людина вибрала. Мені подобається, і все.",
+  "uk": "~3 ^rename.чув>rename.звикай {me}. Сам ше не звик, якшо по-чесному.",
+  "en": "~3 ^rename.чув>rename.звикай {me}. Haven't got used to it myself, honestly."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "Ага. {me}. І шо?",
+  "uk": "^rename.хто_дав>rename.людина Моя людина вибрала, {м_слівце}. Питання — до {нього|неї}.",
+  "en": "^rename.хто_дав>rename.людина My human picked it, {м_слівце}. Take it up with {him|her}."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове Перехрестили — і шо? Заздриш, га?",
+  "uk": "^rename.хто_дав>rename.людина {name} придума{в|ла}. Я був проти, але хто мене слухає, бля.",
+  "en": "^rename.хто_дав>rename.людина {name} made it up. I was against it, but who listens to me, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "^нове Краще, ніж твоє, {м_слівце}. Сто пудів.",
+  "uk": "~1 ^rename.хто_дав>rename.людина Не твоє собаче діло. Ну, {name}, і шо.",
+  "en": "~1 ^rename.хто_дав>rename.людина None of your damn business. Fine, {name}, so what."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "set",
+  "old": "~1 ^нове Відчепись від мого імені, поки цілий.",
+  "uk": "~3 ^rename.хто_дав>rename.людина {name} вибра{в|ла}. Мені подобається, і все.",
+  "en": "~3 ^rename.хто_дав>rename.людина {name} picked it. I like it, and that's that."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.хвала>rename.гордий Ага. Заслужив, бо крутий.",
+  "en": "^rename.хвала>rename.гордий Yeah. Earned it, 'cause I'm badass."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.хвала>rename.гордий Знаю, шо пасує. Я ж не абишо.",
+  "en": "^rename.хвала>rename.гордий I know it suits me. I'm not just anybody."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~1 ^rename.хвала>rename.гордий Ну. Не підлизуйся тіко.",
+  "en": "~1 ^rename.хвала>rename.гордий Well. Just don't suck up."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~3 ^rename.хвала>rename.гордий Ото, бля. Хоч хтось оцінив.",
+  "en": "~3 ^rename.хвала>rename.гордий Finally, fuck. Somebody appreciates it."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.глум>rename.огризнувся Перехрестили — і шо. Заздри мовчки.",
+  "en": "^rename.глум>rename.огризнувся Renamed, so what. Envy me quietly."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "^rename.глум>rename.огризнувся Краще, ніж твоє, {м_слівце}. Сто пудів.",
+  "en": "^rename.глум>rename.огризнувся Better than yours, {м_слівце}. Hundred percent."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~1 ^rename.глум>rename.огризнувся Відчепись від мого імені, поки цілий.",
+  "en": "~1 ^rename.глум>rename.огризнувся Leave my name alone while you're still in one piece."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_відповідь",
+  "op": "add",
+  "uk": "~3 ^rename.глум>rename.огризнувся Кличи як хочеш, падлюко. Я однаково прилечу.",
+  "en": "~3 ^rename.глум>rename.огризнувся Call me what you want, you bastard. I'll still come."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "set",
+  "old": "Добре, {addr}. Запам'ятав.",
+  "uk": "^rename.звикай Гаразд, {addr}. Звикатиму.",
+  "en": "^rename.звикай Fine, {addr}. I'll get used to it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "set",
+  "old": "^нове Звикну. Не одразу, але звикну.",
+  "uk": "^rename.звикай Добре, {addr}. Запам'ятав.",
+  "en": "^rename.звикай All right, {addr}. Noted."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "set",
+  "old": "Гаразд, {raven}. Звикатиму.",
+  "uk": "~1 ^rename.звикай Звикну. Якщо буде нащо.",
+  "en": "~1 ^rename.звикай I'll get used to it. If it's worth it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "set",
+  "old": "~3 Носи на здоров'я.",
+  "uk": "~3 ^rename.звикай Носи на здоров'я, {addr}.",
+  "en": "~3 ^rename.звикай Wear it in good health, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.людина Тоді {friend} хоч щось путнє зроби{>в|ла}. Носи.",
+  "en": "^rename.людина Then {friend} finally did something useful. Wear it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.людина Подякуй своїй людині. Могло бути й гірше.",
+  "en": "^rename.людина Thank your human. It could have been worse."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.людина {friend} завжди ма{>в|ла} дивний смак.",
+  "en": "~1 ^rename.людина Well, {friend} always had odd taste."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.людина Добре вибра{>в|ла}. Передай {>йому|їй}, що я схвалив.",
+  "en": "~3 ^rename.людина Good pick. Tell {>him|her} I approve."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.гордий Не задирай дзьоба. Ім'я ще треба виносити.",
+  "en": "^rename.гордий Don't stick your beak up. A name still has to be worn in."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.гордий Гаразд, гаразд. Носи на здоров'я.",
+  "en": "^rename.гордий All right, all right. Wear it in good health."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.гордий Заслужив — то й мовчи. Скромність прикрашає.",
+  "en": "~1 ^rename.гордий Earned it, so hush. Modesty becomes you."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.гордий Носи гордо, {addr}. Пасує.",
+  "en": "~3 ^rename.гордий Wear it proudly, {addr}. It suits you."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.огризнувся Звикну. Не одразу, але звикну.",
+  "en": "^rename.огризнувся I'll get used to it. Not at once, but I will."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.огризнувся Добре, {addr}. Не гарячкуй.",
+  "en": "^rename.огризнувся Fine, {addr}. Don't get worked up."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.огризнувся Ну-ну. Подивимось, чи ти до нього доростеш.",
+  "en": "~1 ^rename.огризнувся Well, well. We'll see if you grow into it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.огризнувся Гаразд, {addr}. Звикатиму. Заради тебе.",
+  "en": "~3 ^rename.огризнувся Fine, {addr}. I'll get used to it. For your sake."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.кінець|rename.думка|rename.собі Ну все, {addr}. Хрестини відбули.",
+  "en": "^rename.кінець|rename.думка|rename.собі That's it, {addr}. The christening's done."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.кінець|rename.думка|rename.собі Гаразд, {addr}. Тепер усі знатимуть.",
+  "en": "^rename.кінець|rename.думка|rename.собі Fine, {addr}. Now everyone will know."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.кінець|rename.думка|rename.собі Досить про імена. {raven} то {raven}.",
+  "en": "~1 ^rename.кінець|rename.думка|rename.собі Enough about names. {raven} it is."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.кінець|rename.думка|rename.собі Носи нове ім'я гордо, {addr}. Ми всі свідки.",
+  "en": "~3 ^rename.кінець|rename.думка|rename.собі Wear the new name proudly, {addr}. We're all witnesses."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "set",
+  "old": "Ну, {addr} то {addr}. Хай буде, хуй з ним.",
+  "uk": "^rename.звикай Добре, {addr}. Запам'ятав. Не радій.",
+  "en": "^rename.звикай Fine, {addr}. Memorized. Don't celebrate."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "set",
+  "old": "^нове Звикну. Мо'.",
+  "uk": "^rename.звикай {raven} так {raven}. Звикну, бля.",
+  "en": "^rename.звикай {raven} it is. I'll get used to it, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "set",
+  "old": "Добре, {raven}. Запам'ятав. Не радій.",
+  "uk": "~1 ^rename.звикай Ну й хрін з тобою, {addr}.",
+  "en": "~1 ^rename.звикай Well, screw you then, {addr}."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "set",
+  "old": "~3 Носи, братан, не губи.",
+  "uk": "~3 ^rename.звикай Носи, братан, не губи.",
+  "en": "~3 ^rename.звикай Wear it, bro, don't lose it."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.людина Ну, смак у твоєї людини ше той. Хай буде.",
+  "en": "^rename.людина Well, your human has some taste. Whatever."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.людина Передай своїй людині: могло бути гірше. Пушок, наприклад.",
+  "en": "^rename.людина Tell your human it could've been worse. Fluffy, for one."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.людина Фантазія в твоєї людини, як у пня. Носи вже.",
+  "en": "~1 ^rename.людина Your human has the imagination of a stump. Wear it already."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.людина Нормально {friend} придума{>в|ла}. Носи, пацан.",
+  "en": "~3 ^rename.людина {friend} did all right. Wear it, kid."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.гордий Заслужив, то й носи. Тіко не зазнавайся.",
+  "en": "^rename.гордий Earned it, so wear it. Just don't get cocky."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.гордий Не задирай дзьоба, {м_слівце}. А то зіб'ю.",
+  "en": "^rename.гордий Don't stick your beak up, {м_слівце}. Or I'll knock it down."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.гордий Ой, розпушився. Дивись, не лусни.",
+  "en": "~1 ^rename.гордий Oh, all puffed up. Careful you don't pop."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.гордий Ну, крутий, крутий. Носи, братуха.",
+  "en": "~3 ^rename.гордий Yeah, yeah, badass. Wear it, bro."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.огризнувся Звикну. Мо'.",
+  "en": "^rename.огризнувся I'll get used to it. Maybe."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.огризнувся Ну, {raven} то {raven}. Хай буде, хуй з ним.",
+  "en": "^rename.огризнувся Well, {raven} it is. Fine, fuck it."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.огризнувся Ше раз гаркнеш — я тебе сам перейменую. Дзьобом.",
+  "en": "~1 ^rename.огризнувся Snap once more and I'll rename you myself. With my beak."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.огризнувся Та добре, не кипішуй. Гарне ім'я, гарне.",
+  "en": "~3 ^rename.огризнувся All right, don't freak out. It's a nice name, nice."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.кінець|rename.думка|rename.собі Все, обмили ім'я. Тіко без медовухи, бля.",
+  "en": "^rename.кінець|rename.думка|rename.собі That's it, we've toasted the name. Without mead, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "^rename.кінець|rename.думка|rename.собі Ну, {addr}, тепер ти офіційно. Хай буде.",
+  "en": "^rename.кінець|rename.думка|rename.собі Well, {addr}, now it's official. So be it."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~1 ^rename.кінець|rename.думка|rename.собі Досить базару про погоняла. Відвалюю.",
+  "en": "~1 ^rename.кінець|rename.думка|rename.собі Enough yapping about handles. I'm out."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_кінець",
+  "op": "add",
+  "uk": "~3 ^rename.кінець|rename.думка|rename.собі Ну, {addr}, носи. Всі свідки, курва.",
+  "en": "~3 ^rename.кінець|rename.думка|rename.собі Well, {addr}, wear it. We're all witnesses, fuck."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове А мені ім'я подобається. Пасує до дзьоба.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка А мені ім'я подобається. Пасує до дзьоба.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка I like the name. It suits the beak."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Нове ім'я — нові борги. Перевірено.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Нове ім'я — як нове пір'я. Треба звикнути.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка A new name is like new feathers. Takes getting used to."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "Імена, імена. Головне — щоб кликали до їжі.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Імена дають за справи. Цікаво, за які.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Names are given for deeds. I wonder which ones."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Нове ім'я — як нове пір'я. Треба звикнути.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Я б тебе інакше назвав. Але мене не питали.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка I'd have named you differently. But nobody asked me."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Імена дають за справи. Цікаво, за які.",
+  "uk": "~1 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Ім'я гучне. Подивимося, чи ворон дотягне.",
+  "en": "~1 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка A loud name. We'll see if the raven lives up to it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Я б тебе інакше назвав. Але мене не питали.",
+  "uk": "~3 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Гарне ім'я. Носи гордо.",
+  "en": "~3 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка A fine name. Wear it proudly."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Кликатиму по-новому. Якщо згадаю.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі Мене теж колись перейменували. Досі не відгукуюсь.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі They renamed me once too. I still don't answer to it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "~1 ^нове Ім'я гучне. Подивимося, чи ворон дотягне.",
+  "uk": "~3 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі Аж заздрю трохи. Мені б теж нове ім'я.",
+  "en": "~3 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі I'm a bit jealous. I could use a new name too."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "~3 ^нове Гарне ім'я. Носи гордо.",
+  "uk": "^rename.думка>rename.думка А мені і старе подобалось. Але нікого ж не питають.",
+  "en": "^rename.думка>rename.думка I liked the old one. But nobody asks, do they."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Звучить. Тепер треба відповідати.",
+  "uk": "^rename.думка>rename.думка Ім'я як ім'я. Аби ворон не змінився.",
+  "en": "^rename.думка>rename.думка A name is a name. As long as the raven stays the same."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "Можна і я скажу? Ні? Все одно скажу: ви обидва дивні.",
+  "uk": "~1 ^rename.думка>rename.думка Скільки галасу через одне ім'я.",
+  "en": "~1 ^rename.думка>rename.думка So much noise over one name."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "Мене ніхто не питає, але я згоден. Майже.",
+  "uk": "~3 ^rename.думка>rename.думка Хай носить. Гарне ж.",
+  "en": "~3 ^rename.думка>rename.думка Let him wear it. It's a nice one."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "Тихіше, ви. Думати заважаєте.",
+  "uk": "^rename.собі>rename.собі Ставайте в чергу. Я теж хочу нове.",
+  "en": "^rename.собі>rename.собі Get in line. I want a new one too."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "Я все чую, якщо що.",
+  "uk": "^rename.собі>rename.собі Тоді й мене перейменуйте. Щось коротке й страшне.",
+  "en": "^rename.собі>rename.собі Then rename me too. Something short and scary."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "~1 Ой, почалося.",
+  "uk": "~1 ^rename.собі>rename.собі Нове ім'я ще нікого розумнішим не зробило.",
+  "en": "~1 ^rename.собі>rename.собі A new name never made anyone smarter."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "set",
+  "old": "~3 Як добре, що ми всі тут.",
+  "uk": "~3 ^rename.собі>rename.собі Мені й старого вистачає. Я до нього звик.",
+  "en": "~3 ^rename.собі>rename.собі The old one is enough for me. I'm used to it."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "А мене спитати? Ні? Як завжди."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "Вибачте, що втручаюсь. Хоча ні, не вибачайте."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "Ви обоє праві. І обоє — ні."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "~1 Можна тихіше? Я думаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "~3 Гарно говорите. Я послухаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "Не звертайте на мене уваги. Я тут просто сиджу."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "Розмова цікава. Продовжуйте, я запам'ятаю."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "Я б щось додав, але ви й так усе сказали."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "О, і я хочу слово. Ось воно: слово."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "~1 Скільки балачок. Аж пір'я в'яне."
+ },
+ {
+  "who": "H",
+  "list": "хх_нове_імя_встряє",
+  "op": "del",
+  "old": "~3 Люблю, коли нас багато."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Нове ім'я? А пика та сама, гиги.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Ім'я нове, а пика та сама, гиги.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка New name, same mug, heh."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Мені подобається. Звучить, як матюк.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Мені подобається. Звучить, як матюк.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка I like it. Sounds like a cuss word."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "Імена міняєте, а пір'я не миєте, засранці.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Ім'я нове, а дурість стара, бля.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка New name, same old stupidity, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Ім'я нове, а дурість стара, бля.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Ім'я як ім'я. Я однаково кликатиму, як захочу.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка A name is a name. I'll call you what I want anyway."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Ім'я як ім'я. Я однаково кликатиму, як захочу.",
+  "uk": "~1 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Гучне ім'я для такого опудала, курва.",
+  "en": "~1 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка A loud name for such a scarecrow, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове О, перехрестили! Хто наступний, га?",
+  "uk": "~3 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Гарне ім'я, братан. Пасує.",
+  "en": "~3 ^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.думка Nice name, bro. Suits you."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Мені б теж нове погоняло. Шоб страшне. Шоб аж обсирались.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі О, перехрестили! Хто наступний, га?",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі Oh, renamed! Who's next, huh?"
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "~1 ^нове Гучне ім'я для такого опудала, курва.",
+  "uk": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі Мені б теж нове погоняло. Шоб страшне. Шоб аж обсирались.",
+  "en": "^rename.людина|rename.гордий|rename.огризнувся|rename.звикай>rename.собі I want a new handle too. Something scary. So they shit themselves."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "~3 ^нове Гарне ім'я, братан. Пасує.",
+  "uk": "^rename.думка>rename.думка Та яка різниця, як звати. Аби жер нормально.",
+  "en": "^rename.думка>rename.думка Who cares what he's called. As long as he eats right."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "^нове Ім'я нове — пір'я старе. Отак от.",
+  "uk": "^rename.думка>rename.думка А мені старе більше подобалось, бля.",
+  "en": "^rename.думка>rename.думка I liked the old one better, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "Ну й брешете ви, хлопці. Красиво, але пиздите.",
+  "uk": "~1 ^rename.думка>rename.думка Ше слово про імена — і всіх дзьобну.",
+  "en": "~1 ^rename.думка>rename.думка One more word about names and I peck everyone."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "Ціць! Мені тут думка прийшла… та пішла, через вас.",
+  "uk": "~3 ^rename.думка>rename.думка Хай носить, курва. Йому личить.",
+  "en": "~3 ^rename.думка>rename.думка Let him wear it, fuck. Looks good on him."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "Ти шо там шепочеш, {м_слівце}? Я ж поруч сиджу.",
+  "uk": "^rename.собі>rename.собі І мені нове! Шоб як грім, бля.",
+  "en": "^rename.собі>rename.собі Me too, a new one! Like thunder, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "Ну-ну. А я шо, пень тут сиджу?",
+  "uk": "^rename.собі>rename.собі Я перший у черзі на нове погоняло, {м_слівце}.",
+  "en": "^rename.собі>rename.собі I'm first in line for a new handle, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "~1 Ну от, знову, курва, базар.",
+  "uk": "~1 ^rename.собі>rename.собі Мені нове не треба. Моє й так страшне.",
+  "en": "~1 ^rename.собі>rename.собі I don't need a new one. Mine's scary enough."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "set",
+  "old": "~3 Отакі ми й є, пацани. Нормальна банда.",
+  "uk": "~3 ^rename.собі>rename.собі Мене не чіпайте. Моє ім'я — то святе, бля.",
+  "en": "~3 ^rename.собі>rename.собі Leave me out of it. My name is sacred, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Ану, тихо. Тепер я буду базарити."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Брешете обидва, як дихаєте. Поважаю."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Мені б когось дзьобнути зара. Нема бажаючих?"
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "~1 Та йдіть ви обидва, знаєте куди."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "~3 Нормальні ви, ворони. Для чужих — взагалі пушка."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Я поки помовчу. Але злий, як собака."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Ви пиздіть, а я на вас дивлюсь і їсти хочу."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Нудно, бля, {м_слівце}. Давай хоч поб'ємось."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "Скажу коротко: хуйня. Дякую за увагу."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "~1 Язики ж, курва, без кісток."
+ },
+ {
+  "who": "M",
+  "list": "мх_нове_імя_встряє",
+  "op": "del",
+  "old": "~3 Гарно, бля. Ше б медовухи."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "А тебе хто питав, {addr}?",
+  "uk": "^intro.ще_один>intro.всі Запам'ятав, {addr}. Хоча ти й не просив.",
+  "en": "^intro.ще_один>intro.всі Noted, {addr}. Though you didn't ask."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "О, і ти тут. Звісно.",
+  "uk": "^intro.ще_один>intro.всі {raven}. Ще одне ім'я на мою голову.",
+  "en": "^intro.ще_один>intro.всі {raven}. One more name on my head."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Слушно, {addr}. Рідкісний випадок.",
+  "uk": "~1 ^intro.ще_один>intro.всі Тебе не питали, {addr}. Але гаразд, запишу.",
+  "en": "~1 ^intro.ще_один>intro.всі Nobody asked you, {addr}. But fine, I'll write it down."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Не лізь, коли старші говорять. Жартую. Лізь.",
+  "uk": "~3 ^intro.ще_один>intro.всі Радий, {addr}. Чим більше знайомих дзьобів, тим спокійніше.",
+  "en": "~3 ^intro.ще_один>intro.всі Glad, {addr}. The more beaks I know, the calmer I am."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ти завжди вчасно. Особливо коли не треба.",
+  "uk": "^intro.оцінка>intro.всі Твоєї оцінки, {addr}, ніхто не замовляв.",
+  "en": "^intro.оцінка>intro.всі Nobody ordered your review, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Гаразд, і твоє слово записали.",
+  "uk": "^intro.оцінка>intro.всі Слушно, {addr}. Рідкісний випадок.",
+  "en": "^intro.оцінка>intro.всі Fair point, {addr}. A rare occasion."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~1 Тихіше, {addr}. Ти тут гість.",
+  "uk": "~1 ^intro.оцінка>intro.всі Каркнув — і досить, {addr}.",
+  "en": "~1 ^intro.оцінка>intro.всі You've cawed, that's enough, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~3 Добре, що ти з нами, {addr}.",
+  "uk": "~3 ^intro.оцінка>intro.всі Може, й правда, {addr}. Не скажу, що згоден, але може.",
+  "en": "~3 ^intro.оцінка>intro.всі Maybe you're right, {addr}. Won't say I agree, but maybe."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ну от, і третій голос. Тепер точно не засумуємо.",
+  "uk": "^intro.сварка>intro.всі Ніхто не б'ється, {addr}. Ми знайомимось.",
+  "en": "^intro.сварка>intro.всі Nobody's fighting, {addr}. We're getting acquainted."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ти вчасно, {addr}. Ми якраз про тебе мовчали.",
+  "uk": "^intro.сварка>intro.всі Видовища не буде, {addr}. Розходься.",
+  "en": "^intro.сварка>intro.всі No show today, {addr}. Move along."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Слухаю тебе, {addr}. Уважно. Майже.",
+  "uk": "~1 ^intro.сварка>intro.всі Хочеш бійки — підлети ближче, {addr}.",
+  "en": "~1 ^intro.сварка>intro.всі Want a fight, fly closer, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Хто прилетів — той і в розмові.",
+  "uk": "~3 ^intro.сварка>intro.всі Не підбурюй, {addr}. Ми тільки почали дружити.",
+  "en": "~3 ^intro.сварка>intro.всі Don't stir it up, {addr}. We've only just started being friends."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~1 Тебе тільки бракувало, {addr}.",
+  "uk": "^greet.і_я>greet.розліт І тебе радий бачити, {addr}. Майже так само.",
+  "en": "^greet.і_я>greet.розліт Glad to see you too, {addr}. Almost as much."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~1 Каркнув — і досить, {addr}.",
+  "uk": "^greet.і_я>greet.розліт Звісно, {addr}, куди ж без тебе.",
+  "en": "^greet.і_я>greet.розліт Of course, {addr}, where would we be without you."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~2 Гаразд, {addr}, кажи.",
+  "uk": "~1 ^greet.і_я>greet.розліт О, і ти тут. Звісно.",
+  "en": "~1 ^greet.і_я>greet.розліт Oh, you're here too. Of course."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~3 Радий тебе чути, {addr}.",
+  "uk": "~3 ^greet.і_я>greet.розліт Радий тебе чути, {addr}. Справді.",
+  "en": "~3 ^greet.і_я>greet.розліт Glad to hear you, {addr}. Really."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ще одна думка в зграї. Не завадить.",
+  "uk": "^greet.своя_новина>greet.розліт Твої новини, {addr}, завжди гірші за наші. І цікавіші.",
+  "en": "^greet.своя_новина>greet.розліт Your news, {addr}, is always worse than ours. And more interesting."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ти завжди знаєш, коли встрявати, {addr}.",
+  "uk": "^greet.своя_новина>greet.розліт Запишу, {addr}. До твоїх минулих пригод.",
+  "en": "^greet.своя_новина>greet.розліт I'll write it down, {addr}. With your past adventures."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^greet.своя_новина>greet.розліт Твоїх новин, {addr}, ніхто не питав.",
+  "en": "~1 ^greet.своя_новина>greet.розліт Nobody asked for your news, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^greet.своя_новина>greet.розліт Добре, {addr}, що у вас усе гаразд. Ну, майже.",
+  "en": "~3 ^greet.своя_новина>greet.розліт Good, {addr}, that all's well with you. Well, almost."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^greet.живучі>greet.розліт Живучі, {addr}. Як бур'ян і борги.",
+  "en": "^greet.живучі>greet.розліт Hardy, {addr}. Like weeds and debts."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^greet.живучі>greet.розліт Не зурочуй, {addr}.",
+  "en": "^greet.живучі>greet.розліт Don't jinx it, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^greet.живучі>greet.розліт Каркнув про живих — і досить, {addr}.",
+  "en": "~1 ^greet.живучі>greet.розліт You've cawed about the living, that's enough, {addr}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^greet.живучі>greet.розліт Отож, {addr}. Нехай так і лишається.",
+  "en": "~3 ^greet.живучі>greet.розліт Exactly, {addr}. Let it stay that way."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.думка>rename.кінець Твоєї думки, {addr}, ніхто не питав. Але дякую.",
+  "en": "^rename.думка>rename.кінець Nobody asked your opinion, {addr}. But thanks."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.думка>rename.кінець Почули, {addr}. Ще один голос у хор.",
+  "en": "^rename.думка>rename.кінець Heard you, {addr}. One more voice in the choir."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^rename.думка>rename.кінець Тихіше, {addr}. Не твої хрестини.",
+  "en": "~1 ^rename.думка>rename.кінець Quiet, {addr}. Not your christening."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^rename.думка>rename.кінець Добре сказав, {addr}. Хоч раз.",
+  "en": "~3 ^rename.думка>rename.кінець Well said, {addr}. For once."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.собі>rename.кінець Тобі, {addr}, хоч як назви — однаково {kin}.",
+  "en": "^rename.собі>rename.кінець Call you whatever you like, {addr}, you're still a {kin}."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.собі>rename.кінець Попроси свою людину, {addr}. Може, вигадає щось страшне.",
+  "en": "^rename.собі>rename.кінець Ask your human, {addr}. Maybe they'll think up something scary."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^rename.собі>rename.кінець Не ти наступний, {addr}. Тобі й старе ледве пасує.",
+  "en": "~1 ^rename.собі>rename.кінець You're not next, {addr}. The old one barely suits you."
+ },
+ {
+  "who": "H",
+  "list": "хх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^rename.собі>rename.кінець Дочекаєшся і ти, {addr}. Аби було за що.",
+  "en": "~3 ^rename.собі>rename.кінець Your turn will come, {addr}. As long as you earn it."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "А тебе хто кликав, {м_слівце}? Га?",
+  "uk": "^intro.ще_один>intro.всі {raven}, ага. Ше одне ім'я, ше одна пика.",
+  "en": "^intro.ще_один>intro.всі {raven}, yeah. One more name, one more mug."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "О, ше один розумник прилетів. Ботан, бля.",
+  "uk": "^intro.ще_один>intro.всі Та чули вже, {addr}. Не ори.",
+  "en": "^intro.ще_один>intro.всі We heard you, {addr}. Don't yell."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "І ти тут? Ну все, тепер сто пудів не занудьгуємо.",
+  "uk": "~1 ^intro.ще_один>intro.всі Тебе не кликали, {addr}. Але хай, назвався то й назвався.",
+  "en": "~1 ^intro.ще_один>intro.всі Nobody called you, {addr}. But fine, you've said your name."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Закрий дзьоба, {addr}. Ну добре, кажи вже.",
+  "uk": "~3 ^intro.ще_один>intro.всі О, {addr}! Добре, шо прилетів, братуха.",
+  "en": "~3 ^intro.ще_один>intro.всі Oh, {addr}! Good you flew in, bro."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Діло кажеш, {addr}. Не звикай, шо я таке кажу.",
+  "uk": "^intro.оцінка>intro.всі Тебе ніхто не питав, {м_слівце}. Свою оцінюй.",
+  "en": "^intro.оцінка>intro.всі Nobody asked you, {м_слівце}. Rate your own."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ше слово — і дзьобну. І тебе теж, ага.",
+  "uk": "^intro.оцінка>intro.всі Діло кажеш, {addr}. Не звикай, шо я таке кажу.",
+  "en": "^intro.оцінка>intro.всі You've got a point, {addr}. Don't get used to me saying that."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~1 Відвали, {addr}, по-доброму.",
+  "uk": "~1 ^intro.оцінка>intro.всі Закрий дзьоба, {addr}, оцінщик хуєв.",
+  "en": "~1 ^intro.оцінка>intro.всі Shut your beak, {addr}, you fucking critic."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~3 Добре, шо ти прилетів, падлюко. Серйозно.",
+  "uk": "~3 ^intro.оцінка>intro.всі Ну, мо' й так, {addr}. Хай буде, бля.",
+  "en": "~3 ^intro.оцінка>intro.всі Well, maybe so, {addr}. Have it your way, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Прилетів, {addr}? Ну сідай, тіко не каркай під руку.",
+  "uk": "^intro.сварка>intro.всі Бійки не буде, {addr}. Поки шо.",
+  "en": "^intro.сварка>intro.всі No fight, {addr}. For now."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ти вчасно, {м_слівце}. Тут якраз нудота, хоч вий.",
+  "uk": "^intro.сварка>intro.всі Хочеш видовища — сам підлітай, {м_слівце}.",
+  "en": "^intro.сварка>intro.всі Want a show, fly in yourself, {м_слівце}."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Кажи вже, {addr}, раз приперся.",
+  "uk": "~1 ^intro.сварка>intro.всі Ше слово — і першим дзьоба отримаєш ти, {addr}.",
+  "en": "~1 ^intro.сварка>intro.всі One more word and you get the beak first, {addr}."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ше один голос. Ше більше гівна, курва.",
+  "uk": "~3 ^intro.сварка>intro.всі Та ми так, по-дружньому, {addr}. Сідай, не кипішуй.",
+  "en": "~3 ^intro.сварка>intro.всі We're just being friendly, {addr}. Sit down, chill."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~1 Відвали, поки цілий. Я двічі не кажу.",
+  "uk": "^greet.і_я>greet.розліт Прилетів, {addr}. Ну сідай, тіко не каркай під руку.",
+  "en": "^greet.і_я>greet.розліт Flew in, {addr}. Well, sit down, just don't caw in my ear."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~1 Тебе не кликали, {addr}. Йди звідси.",
+  "uk": "^greet.і_я>greet.розліт О, і ти тут. Ну все, тепер сто пудів не занудьгуємо.",
+  "en": "^greet.і_я>greet.розліт Oh, you're here too. That's it, now we definitely won't be bored."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~2 Ну шо ж. Хай буде, бля.",
+  "uk": "~1 ^greet.і_я>greet.розліт Тебе не кликали, {addr}. Але хай.",
+  "en": "~1 ^greet.і_я>greet.розліт Nobody called you, {addr}. But fine."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "~3 О, ти! Добре, шо прилетів, братуха.",
+  "uk": "~3 ^greet.і_я>greet.розліт О, ти! Добре, шо прилетів, падлюко.",
+  "en": "~3 ^greet.і_я>greet.розліт Oh, you! Good you flew in, you bastard."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Ти завжди лізеш, {addr}. Поважаю, сука.",
+  "uk": "^greet.своя_новина>greet.розліт Ото новина, {addr}. Аж ржу, бля.",
+  "en": "^greet.своя_новина>greet.розліт Some news, {addr}. I'm cracking up, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "set",
+  "old": "Сідай поруч. Тіко не смерди, як минулого разу.",
+  "uk": "^greet.своя_новина>greet.розліт Твоя новина, {addr}, крутіша за нашу. Поважаю.",
+  "en": "^greet.своя_новина>greet.розліт Your news beats ours, {addr}. Respect."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^greet.своя_новина>greet.розліт Засунь свої новини, {addr}, знаєш куди.",
+  "en": "~1 ^greet.своя_новина>greet.розліт Shove your news, {addr}, you know where."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^greet.своя_новина>greet.розліт Нормальна новина, {addr}. Аж заздро, курва.",
+  "en": "~3 ^greet.своя_новина>greet.розліт Decent news, {addr}. Makes me jealous, fuck."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^greet.живучі>greet.розліт Ага, {addr}. Нас хрін уб'єш.",
+  "en": "^greet.живучі>greet.розліт Yeah, {addr}. Damn hard to kill us."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^greet.живучі>greet.розліт Не каркай, {addr}. Ше зурочиш.",
+  "en": "^greet.живучі>greet.розліт Don't caw it, {addr}. You'll jinx it."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^greet.живучі>greet.розліт Ти, {addr}, живий тіко поки я добрий.",
+  "en": "~1 ^greet.живучі>greet.розліт You're alive, {addr}, only while I'm nice."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^greet.живучі>greet.розліт Отож, {addr}. Всі живі, всі тут. Хоч бухай.",
+  "en": "~3 ^greet.живучі>greet.розліт Exactly, {addr}. Everyone alive, everyone here. Time to booze."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.думка>rename.кінець Сиди й мовчи, {addr}. Не твої хрестини.",
+  "en": "^rename.думка>rename.кінець Sit and shut up, {addr}. Not your christening."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.думка>rename.кінець О, {raven} діло каже. Запишіть, бо вдруге не буде.",
+  "en": "^rename.думка>rename.кінець Oh, {raven} talks sense. Write it down, won't happen twice."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^rename.думка>rename.кінець Закрий дзьоба, {addr}. Ну добре, вже сказав.",
+  "en": "~1 ^rename.думка>rename.кінець Shut your beak, {addr}. Fine, you've said it."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^rename.думка>rename.кінець Ага, {addr}, і я так думаю. Ну, майже.",
+  "en": "~3 ^rename.думка>rename.кінець Yeah, {addr}, I think so too. Well, almost."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.собі>rename.кінець Тобі, {addr}, нове погоняло — Опудало. Дарую.",
+  "en": "^rename.собі>rename.кінець Your new handle, {addr}, is Scarecrow. My gift."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "^rename.собі>rename.кінець Стань у чергу, {м_слівце}. Після мене.",
+  "en": "^rename.собі>rename.кінець Get in line, {м_слівце}. After me."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~1 ^rename.собі>rename.кінець Тебе, {addr}, хоч як назви — однаково {kin}. Лошара.",
+  "en": "~1 ^rename.собі>rename.кінець Call you whatever, {addr}, you're still a {kin}. Loser."
+ },
+ {
+  "who": "M",
+  "list": "мх_до_того_хто_встряв",
+  "op": "add",
+  "uk": "~3 ^rename.собі>rename.кінець Буде тобі, братан, погоняло. Шось придумаю, бля.",
+  "en": "~3 ^rename.собі>rename.кінець You'll get a handle, bro. I'll think of something, fuck."
+ }
+]

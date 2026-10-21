@@ -1,0 +1,85 @@
+[death_creature] Kraa… what a sight that was.
+[death_creature] I saw everything, damn it.
+[death_creature] So, how's Hel?
+[death_creature] You're back? Good for you.
+[death_many] You're a VIP client of the valkyries by now.
+[death_many] You again. From the other side.
+[death_many] How many more times, damn it?
+[death_fall] How was the landing, pilot?
+[death_fall] The ground is hard, isn't it?
+[death_drown] Dried off yet, diver?
+[death_drown] Glub-glub, damn.
+[death_fire] Smells like barbecue…
+[death_fire] A little singed, huh?
+[death_poison] How's the stomach, poison boy?
+[death_cold] Warmed up yet, icicle?
+[death_tree] The tree got its revenge.
+[death] Oh, you poor thing.
+[near_death] That was close, huh?
+[near_death] A little more and — goodbye.
+[boss] Glory to you, warrior!
+[boss] Odin saw it! Honestly!
+[boss] Kraa! Now that was fierce!
+[level] You've grown stronger.
+[level] Feel the strength in your muscles?
+[afk] Hey! Are you alive?
+[afk] Did you fall asleep or what?
+[afk] Earth to traveler!
+[afk] Knock knock. Anybody home?
+[afk] I'm waiting. Waiting a long time.
+[afk] Are you a statue or a warrior?
+[friendly] Hey, damn it, they're on our side!
+[friendly] Did you see who you're hitting?
+[kill_many] You really got carried away!
+[kill_many] A whole mountain of bodies, damn…
+[kill] Not a bad scrap.
+[kill] Cleanly done. Almost.
+[escaped] Lunch is running away?
+[escaped] Oops, someone got away…
+[flee] A tactical retreat, right?
+[flee] Legs are your main weapon, right?
+[biome] Whoa, where'd you end up.
+[biome] New lands, new problems.
+[dungeon] Back from a dungeon, huh?
+[dungeon] You reek of the crypt.
+[fall] Legs in one piece, jumper?
+[fall] Thud! I heard it from here.
+[build] A builder!
+[build] The knocking can be heard all the way to Asgard.
+[fish] Biting?
+[hungry] When did you last eat?
+[hungry] Your stomach is growling for the whole forest to hear.
+[encumbered] You're barely crawling, damn.
+[swim] You're soaked to the bone.
+[sail] Captain!
+[chop] The lumberjack is here!
+[mine] You're covered in dust up to your ears.
+[portal] Head spinning?
+[cook] I smell food!
+[craft] A master at work.
+[sleep] Good morning, sleepyhead.
+[pick] Pockets full of berries?
+[travel] A long road?
+[loot] Rummaging again?
+[pet] Who's a good one?
+[night] Can't sleep?
+[weather_storm] Hear the thunder?
+[weather_storm] Thor's in a mood again.
+[weather_rain] Wet, damn it.
+[weather_rain] My feathers are soaked through.
+[weather_snow] Cold as Hel's armpit.
+[weather_snow] Snow. Snow again.
+[weather_fog] Can't see a thing…
+[weather_fog] Fog thick as milk.
+[here] Hello from the sky.
+[here] Was flying past.
+[here_meadows] The Meadows, lovely.
+[here_blackforest] Dark in here, damn.
+[here_swamp] Ugh, the swamp.
+[here_mountain] Blowing like crazy.
+[here_plains] Careful with the flies.
+[here_mistlands] Where are you? Can't see you.
+[here_ashlands] Hot in here, huh?
+[here_deepnorth] Kraa… I'm freezing.
+[here_ocean] Is land far?
+[idle] Peace and quiet…

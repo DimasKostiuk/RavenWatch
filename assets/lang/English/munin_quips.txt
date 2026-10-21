@@ -1,0 +1,208 @@
+[boss] {name}, so you took down {boss_gen}, so what? Want a medal made of shit?
+[boss] {name}, even a blind boar could've done it, you smug prick.
+[boss] {name}, don't get cocky, or the next boss will bite your nose off.
+[stranger_peck] You're not mine, {name}. Here's a beak to the skull so you remember.
+[stranger_peck] {name}, I've pecked and I'll keep pecking until you give me back to my own.
+[stranger_peck] Wearing someone else's raven, scumbag? Take that.
+[asleep_talk] Piss off before I peck your eye out.
+[asleep_talk] Who the hell are you? I don't know you and don't want to.
+[asleep_talk] Poke me once more and you'll regret it.
+[asleep_talk] Bring me Eikthyr's antlers, then we'll bark. Until then — fuck off.
+[asleep_talk] Want me to listen to you? Sacrificial Stones, two Eikthyr trophies. Without that you're nobody.
+[death_many] {name}, dead {times} in a row, you handless dumbass.
+[death_many] {name}, you're not a warrior, you're a walking death counter, a bag of bones.
+[death_many] {name}, the valkyries are already laughing their asses off at you, halfwit.
+[death_creature] {name}, {killer_gen} flattened you. Shame across all nine worlds, bitch.
+[death_creature] {name}, {killer_gen} wiped the floor with you, prick.
+[death_creature] {name}, {killer_gen} got you? Are you fucking serious?
+[death_fall] {name}, you flew, bitch, like a sack of shit.
+[death_fall] {name}, gravity fucked you. Deservedly.
+[death_drown] {name}, drowning? Even shit floats, and you don't.
+[death_drown] {name}, the fish choked on you, numbskull.
+[death_fire] {name}, roasted like a chicken. A dumb chicken.
+[death_fire] {name}, fire is hot, you chicken-brain. Who'd have thought, genius.
+[death_poison] {name}, gorged yourself on poison, dickhead? Was it tasty?
+[death_cold] {name}, freezing because you were too lazy to get dressed. Idiot.
+[death_tree] {name}, you got killed by a TREE. A tree, damn it!
+[death] {name}, dead again, you trash. Get up and stop whining.
+[near_death] {name}, nearly croaked, you nobody. Pity it was only nearly.
+[near_death] {name}, {attacker_gen} almost did the world a favor.
+[near_death] {name}, shaking, you chickenshit? You're right to shake.
+[level] {name}, a new level? You were a zero, now you're a zero with a plus.
+[level] {name}, got stronger? I see you're leveling up your stupidity too.
+[friendly] {name}, beating your own, moron? Are your eyes on your ass?
+[friendly] {name}, you're hitting your own, asshole. Buy some glasses.
+[kill_many] {name}, you butcher, may a draugr kiss your ass. A psycho with an axe.
+[kill_many] {name}, so many corpses and not a drop more brains.
+[escaped] {name}, {prey_gen} ran away from you, you shitty hunter.
+[escaped] {name}, even your lunch runs away from you. Pathetic.
+[flee] {name}, running, chickenshit? From {foe_gen}? Seriously?
+[flee] {name}, heels flashing, you shitty hero.
+[biome] {name}, crawled {biome_in}? Go on then, die there beautifully.
+[biome] {name}, new lands, same old dumbfuck.
+[dungeon] {name}, crawled out of the hole like a rat. You smell the same.
+[fall] {name}, you flopped like a sack of potatoes. Legs out of your ass.
+[build] {name}, building? A crooked shack, like your shitty life.
+[build] {name}, an architect, the bitch. A troll would've stacked it better.
+[fish] {name}, a crappy fisherman. The fish is smarter than you.
+[hungry] {name}, eat something already, or you'll croak, you cattle.
+[encumbered] {name}, crawling like a snail with a hernia. Throw out the junk.
+[swim] {name}, a wet chicken. No boat, no brains either.
+[kill] {name}, killed one and already proud. Pfft on you, you runt.
+[sail] {name}, a shitty captain. Your tub is about to sink.
+[chop] {name}, chopping trees? Should've chopped yourself a brain.
+[mine] {name}, digging ore like a blind mole. Dust up to your ears.
+[portal] {name} hops through portals like a flea. Sit still.
+[cook] {name}, a crappy porridge-cook. As long as you don't poison everyone.
+[craft] {name} is knocking something together. Hands out of the ass, as always.
+[sleep] {name}, had a good sleep, lazybones? The world was waiting, and you snored.
+[pick] {name}, picking berries? Terror of the bushes, you bitch's tail.
+[travel] {name}, ran {km} and achieved nothing. A talent.
+[loot] {name}, rummaging through chests like a thief.
+[pet] {name}, petting the animal? It puts up with you because you feed it.
+[night] {name}, wandering around at night, you fool. You'll croak in the dark.
+[weather_storm] {name}, a storm, and you're sticking out like a lightning rod. Moron.
+[weather_rain] {name}, getting soaked in the rain like a stray dog.
+[weather_snow] {name}, your snot frozen yet? Get dressed, idiot.
+[weather_fog] {name}, at least in the fog nobody sees your stupid face. The only upside of fog.
+[here] {name}, you're {biome_here_in}? Pity the locals.
+[death_creature] {name}, you got fucked, and by whom — {killer_gen}! And you've got {killer_kills} {killer_genpl} to your name. Shame across all of Valhalla.
+[death_creature] {name}, {deaths_all} in your whole life, numbskull. Do you learn at all or what?
+[death_creature] {name}, enemies have killed you {cause_times} already. Handless jerk.
+[death_many] {name}, {deaths_all}, bitch. The valkyries will send you a bill soon.
+[death_fall] {name}, you've fallen to your death {cause_times} already. Your brains stayed down there.
+[death_drown] {name}, you've drowned {cause_times} already, blockhead. Even shit doesn't sink, but you manage.
+[death_fire] {name}, roasted {cause_times} already. A shitty kebab.
+[death_poison] {name}, gorged on poison {cause_times} already. Moron is a diagnosis.
+[death_cold] {name}, frozen {cause_times} already. Get dressed, idiot.
+[death_tree] {name}, a tree has killed you {cause_times} already. A TREE, by Odin's eye, and more than once!
+[death] {name}, you've rummaged your own tombstone {tombs_times} already. Looter of your own corpse.
+[boss] {name}, {bosses_all} bosses to your name, and zero brains. Don't get cocky.
+[kill_many] {name}, {top_kills} {top_genpl} to your name already. A psycho with an axe.
+[kill_many] {name}, {kills_all} corpses behind you already, and still dumb as a stump.
+[kill] {name}, {top_kills} {top_genpl} already. Soon there'll be nobody left to torture, you sadist.
+[near_death] {name}, your record without dying is {streak_max}. Today you nearly shat yourself.
+[level] {name}, {kills_all} enemies to your name already, and the brain never leveled up.
+[travel] {name} has clocked {km_all} already and still doesn't know where they're going.
+[fall] {name}, {air_km} in the air over a lifetime, and still can't fly. A chicken.
+[build] {name}, {built_all} pieces placed already, and all of it crooked as a troll's ass.
+[build] {name}, {base_hours} at your base already. Keep sitting in your hole, chickenshit.
+[chop] {name}, {trees_all} trees felled already. The forest weeps and you don't give a fuck.
+[mine] {name}, {mines_all} rocks smashed already. A blind mole.
+[fish] {name}, {fish_lost} fish off the hook already. Even the fish fool you.
+[portal] {name}, {portals_times} through portals already. A shitty flea.
+[sail] {name}, {sail_km} by sea already, and the tub still hasn't sunk. A miracle.
+[sleep] {name}, {sleep_all} nights slept already. Lazybones.
+[hungry] {name}, {food_all} meals wolfed down already, and still not enough. Glutton.
+[pick] {name}, {berries_all} berries picked already. A warrior, for fuck's sake, a berry warrior.
+[idle] {name}, {jumps_all} jumps already. Hopping like a dumb goat kid.
+[mem_stats] {name}, {deaths_all} in your whole life. The valkyries are chipping in for your tombstone and neighing like mares.
+[mem_stats] {name}, {kills_all} enemies to your name, and zero brains. I remember everything.
+[mem_stats] {name}, {km_all} clocked already, and you can still get lost among three pines.
+[mem_stats] {name}, you've opened your own tombstone {tombs_times} already. I remember every one, you looter.
+[mem_stats] {name}, your record without dying is {streak_max}. Pathetic, bitch.
+[mem_stats] {name}, {bosses_all} bosses to your name. Someone else probably did the rest for you.
+[mem_stats] {name}, {jumps_all} jumps already. Hopping like a flea, and zero use.
+[mem_stats] {name}, {base_hours} of your life at your base already. A homebound chickenshit.
+[mem_stats] {name}, {trees_all} trees felled already. The forest remembers you. And so do I, numbskull.
+[mem_stats] {name}, I remember everything. Every stupid death of yours, every retreat. Everything, down to the last fart.
+[fury] CUT THEM DOWN, BITCH!
+[fury] BLOOD! MORE BLOOD!
+[fury] HIT THEM WHILE THEY'RE STILL BREATHING!
+[fury] FOR ODIN, MOTHERFUCKER!
+[fury] {name}, DON'T SLEEP — KILL!
+[scream] GET LOST, BITCHES!
+[scream] FUCK OFF AWAY FROM THEM!
+[scream] KRAA-A-A, YOU FREAKS!
+[scream] SCATTER, YOU SCUM!
+[scream] BACK OFF WHILE YOU'RE STILL ALIVE!
+[wings] RUN FOR IT, BITCH!
+[wings] HAUL ASS, {name}! FASTER, BITCH!
+[wings] RUN WHILE YOUR LEGS ARE STILL WHOLE, NUMBSKULL!
+[wings] LET'S GET THE FUCK OUT OF HERE!
+[wings] {name}, MOVE YOUR HOOVES, YOU TURTLE!
+[wings] FLY, {name}, LIKE A TROLL'S ON YOUR TAIL!
+[wings] FASTER, LAZYBONES, OR THEY'LL BITE YOUR ASS OFF!
+[wings] FLOOR IT, FUCK, FLOOR IT!
+[sh_here] {name}, it stinks {biome_here_in}, and I'm sitting on you smelling all of it. Thanks, you stinking foot rag.
+[sh_here] I'm sitting on your shoulder {biome_here_in}, and you drag us into the worst bushes.
+[sh_here] {name}, from your shoulder I can see it: nobody {biome_here_in} likes you.
+[sh_here] Could you have picked anywhere worse for a stroll than {biome_here}? Not if your ass split open.
+[sh_idle] {name}, I've been sitting on you for an eternity. Do something, you rotten log.
+[sh_idle] Your shoulder is bony, {name}. Like your brains.
+[sh_idle] {name}, stop shaking like that, I nearly fell off.
+[sh_idle] Boring, {name}. Find somebody to kill.
+[sh_idle] {name}, I'm not sitting on your shoulder to watch you stand there.
+[sh_kill] Saw it from your shoulder, bitch, beautiful! Give me more!
+[sh_kill] {name}, the blood splashed all the way up to me. Keep it up.
+[sh_kill] One more corpse. I've remembered it, {name}.
+[sh_kill_many] {name}, I'm on you like on a throne among corpses. I like it.
+[sh_kill_many] Now that's a meat grinder, damn it! I'm sitting here licking my beak.
+[sh_near_death] {name}, you're swaying, and I'm sitting on you, numbskull!
+[sh_near_death] You nearly croaked, and I'm on your shoulder, you blockhead!
+[sh_boss] {name}, I saw it fall! BLOOD!
+[sh_boss] The boss is gone, let it rot! And I saw it all from the front row!
+[sh_build] Building again, {name}? I'm falling asleep on your shoulder.
+[sh_sail] It's rocking, fuck this sea. I'm about to puke on you, {name}.
+[sh_swim] {name}, I'm soaked through, you wet scarecrow!
+[sh_fall] {name}, have you lost your mind? I nearly flew off your shoulder!
+[sh_weather_rain] Rain, and I'm getting soaked on you like a rat in an outhouse. Thanks, {name}.
+[anger] Oh you bastard! Now I'm angry. Hit them!
+[anger] Who dared?! {name}, tear him to shreds!
+[anger] Blood on you — and I'm already as angry as a hungover draugr. Pay them back double!
+[anger] {name}, somebody hit you? Now they'll regret it.
+[anger] I remember that hit. Give it back, bitch!
+[fed] Finally something decent from you, {name}. More when I get hungry.
+[fed] Meat! Finally you did something useful.
+[fed] I'm eating. Don't stare, you little shit, or I'll peck your eye out.
+[fed] {name}, fresh. I'm almost happy. Almost.
+[fed] Blood on my beak — a good day, {name}.
+[awake] Finally awake, damn it all. Who's the moron I'm supposed to babysit? Ah, you, {name}.
+[awake] The deer boss tastes like shit. But I'm awake. Let's go, {name}.
+[awake] I'm here. I remember everything. And now you too, {name}.
+[levelup] The bosses' trophies are tasty, my belly's all warm. Now I'm yours, {name}. Don't screw it up, you little shit.
+[levelup] I'll remember this day, {name}. And you.
+[levelup] Even stronger, bitch! Now they'll die faster!
+[levelup] {name}, you're not such a disgrace after all. Probably.
+[levelup] A blood oath, {name}. Now we're one flock.
+[loyal] Thought you'd get rid of me? Not a chance, {name}.
+[loyal] A grave, fuck? Get in there yourself. I'm staying.
+[loyal] I've dug my talons into you, {name}. The valkyries can kiss my ass.
+[loyal] You croaked, and I'm still here. Somebody has to keep reminding you.
+[loyal] Don't get excited, {name}. I stayed not because of you, but because of your stupidity.
+[loyal] You croaked again. I'm here again. We're, fuck, inseparable.
+[bloodfury] BLOOD! NOW THEY DIE!
+[bloodfury] {name}, you're bleeding? GREAT! TEAR THEM APART!
+[bloodfury] IT SMELLS OF DEATH, FUCK! THEIRS!
+[bloodfury] DON'T DIE, {name}! KILL!
+[bloodfury] I REMEMBER EVERY WOUND! PAY THEM BACK!
+[bloodfury] PAIN IS FUEL, BITCH! CUT!
+[bloodfury] {name}, FURY IN YOUR BLOOD! NOW YOU'RE A BEAST!
+[bloodfury] BARELY ALIVE? SO WHAT! KILL WHILE YOU'RE BREATHING!
+[see_enemy] {name}, {seen_enemy} NEARBY! CUT IT DOWN!
+[see_enemy] I see meat: {seen_enemy}. There are {seen_count} of them here, bitch.
+[see_enemy] {name}, {seen_enemy} is coming at you. Hit it so hard the shit sprays.
+[see_enemy] Enemies — {seen_count}. The nearest — {seen_enemy}. Why are you standing there, numbskull?
+[see_enemy] {name}, there's {seen_enemy} over there. Kill it or run, chickenshit.
+[see_hurt] {name}, you're about to croak, blockhead. Eat something!
+[see_hurt] YOU'RE BLEEDING, {name}! FALL BACK, MORON!
+[see_hurt] {name}, one more hit and I'll be looking for a new shoulder.
+[see_hurt] Barely alive, {name}? I'll remember that and blab it to everyone, you runt.
+[see_hurt] {name}, heal up, you bag of bones, the valkyries are already here.
+[heal] EAT, DON'T YOU DARE DIE ON ME!
+[heal] {name}, I'LL PATCH YOU UP, BUT I'LL REMEMBER THIS, YOU HOLEY RAG.
+[heal] HOLD ON, NUMBSKULL, THE VALKYRIES CAN WAIT.
+[heal] {name}, GOT YOURSELF HIT AGAIN? HERE, HEAL UP, YOU DOOFUS.
+[heal] GET UP, BITCH, WE HAVEN'T FINISHED THEM OFF YET!
+[heal] {name}, GET HIT LIKE THAT AGAIN AND I'LL FINISH YOU MYSELF.
+[heal] IN ONE PIECE? THEN FORWARD, YOU BAG OF BONES!
+[heal] LICK YOUR WOUNDS AND BACK INTO THE MEAT GRINDER!
+[fury] TEAR THEM TO PIECES, {name}!
+[fury] NOT ONE OF THESE BASTARDS GETS UP!
+[fury] VALHALLA IS WATCHING, DON'T SHIT YOURSELF!
+[scream] KRAA! SCATTER, YOU LICE!
+[scream] WHO ELSE WANTS AN ASS-KICKING?!
+[scream] BACK, YOU CARRION!
+[idle] {name}, standing like a stump. Move it, you bag of bones.
+[idle] {name}, just flew by to tell you you're an asshole. That's all.
+[idle] {name}, nothing happened? Because you aren't doing anything, lazybones.

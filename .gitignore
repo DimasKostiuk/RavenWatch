@@ -1,0 +1,27 @@
+# Builds and release zips
+*.zip
+build/
+package/plugins/
+
+# Voice research and the voice host (huge models, exe)
+voice-proto/
+voicehost/
+
+# Personal: character saves, profile backups
+save-backups/
+profile-backup-1.2/
+
+# Old / removed / work in progress
+src_1.0.1_stable/
+removed/
+lang_wip/
+samples.txt
+
+# Internal plans (unreleased features)
+*-plan.md
+book-redesign-brief.md
+
+# Misc
+*.exe
+*.pdb
+node_modules/

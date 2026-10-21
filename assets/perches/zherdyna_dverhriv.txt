@@ -1,0 +1,15 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Жердина двергрів
+note: Темне дерево з різьбленим круком, двергрські ліхтарі й крижані серця: від неї віє морозом
+use: perch
+id: zherdyna_dverhriv
+cost: YggdrasilWood:8 Eitr:4 FreezeGland:4
+station: piece_magetable
+perday: 100
+pose: 0 0 0 -6 0 0 0 -6 0 -27 -27
+stand: 0 0 0 0 0 0 0 0 0 -27 -27
+part asset/Жердини/PerchDvergr pos 0 1.0 0 rot 0 0 0 scale 2.1 2.1 2.1  # Жердина двергрів (Meshy), 2 м
+part @seat pos 0.42 1.53 -0.21 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos -0.27 0.91 0.44 rot 0 90 0 scale 1 1 1  # місце ворона
+part @light pos 0.49 1.15 -0.21 rot 0 0 0 scale 6 1.4 0.12  # світло двергрського ліхтаря
+part fx/Candle_resin_bogwitch pos 0.49 1.12 -0.21 rot 0 0 0 scale 0.25 0.25 0.25  # вогник у ліхтарі
