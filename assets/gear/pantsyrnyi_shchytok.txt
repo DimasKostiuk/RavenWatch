@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Панцирний щиток
+note: Пластина з панцира, знята з туманного жука, і два ремінці. Ворон навчився підставляти спину під удар, призначений тобі, і дуже цим пишається.
+use: gear
+id: pantsyrnyi_shchytok
+cost: Carapace:10 Iron:4 LeatherScraps:4 TrophyTick:2 RavenWatch_item_chornylo_vishchuna:2
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: back
+part asset/Спорядження/GearCarapace pos 0 0 0 rot 0 0 0 scale 0.13 0.13 0.13  # Панцирний щиток (Meshy), ~12 см

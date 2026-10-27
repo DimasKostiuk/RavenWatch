@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Срібні кільця
+note: Три срібні кільця з рунами й жмутком вовчого хутра. Срібло пам'ятає, де лежать мертві, і не дає їм устати вдруге. Ворон із ними дзьобає нежить так, ніби має до неї давні рахунки.
+use: gear
+id: sribni_kiltsia
+cost: Silver:3 WolfPelt:1 LeatherScraps:2 TrophyFenring:1 RavenWatch_item_dvergrski_skoby:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: legs
+part asset/Спорядження/GearSilverRings pos 0 -0.04 0 rot 0 0 0 scale 0.06 0.06 0.06  # Срібні кільця (Meshy)

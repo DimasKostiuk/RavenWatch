@@ -52,6 +52,10 @@ namespace HuginWhispers
         // marked for the mod: "perch" = a raven perch piece for the hammer (Perches.cs); its prefab id and its cost
         internal string Use = "", Id = "", Cost = "";
         internal float PerDay; // a perch's strength a game day for each raven (0: the config's default)
+        internal float Feed;   // a feeder: how much more the same food fills from it (0 or 1: as it is)
+        // an item Haldor sells (use: item): its price, and the key (a boss beaten: defeated_eikthyr…) that opens it; such an item is not made anywhere
+        internal int Sell;
+        internal string SellAfter = "";
         internal string Station = ""; // the crafting station it is built at (a piece's prefab: piece_workbench, forge, piece_magetable…); empty: the workbench
         internal string Slot = "";  // a thing for a raven (use: gear): "back" or "legs" (RavenGear)
         // an item (use: item, WsItems): the item whose look it becomes (empty: a new item), a new one's stack and weight
@@ -111,6 +115,7 @@ namespace HuginWhispers
             if (!string.IsNullOrEmpty(m.Id)) sb.Append("id: ").Append(m.Id).Append('\n');
             if (!string.IsNullOrEmpty(m.Cost)) sb.Append("cost: ").Append(m.Cost.Replace("\n", " ")).Append('\n');
             if (m.PerDay > 0f) sb.Append("perday: ").Append(F(m.PerDay)).Append('\n');
+            if (m.Feed > 0f) sb.Append("feed: ").Append(F(m.Feed)).Append('\n');
             if (!string.IsNullOrEmpty(m.Station)) sb.Append("station: ").Append(m.Station).Append('\n');
             if (!string.IsNullOrEmpty(m.Mount)) sb.Append("mount: ").Append(m.Mount).Append('\n');
             if (!string.IsNullOrEmpty(m.Slot)) sb.Append("slot: ").Append(m.Slot).Append('\n');
@@ -119,6 +124,7 @@ namespace HuginWhispers
             if (!string.IsNullOrEmpty(m.Ready)) sb.Append("ready: ").Append(m.Ready.Replace("\n", " ")).Append('\n');
             if (m.Stack > 0) sb.Append("stack: ").Append(m.Stack).Append('\n');
             if (m.Weight > 0f) sb.Append("weight: ").Append(F(m.Weight)).Append('\n');
+            if (m.Sell > 0) sb.Append("sell: ").Append(m.Sell).Append(m.SellAfter.Length > 0 ? " " + m.SellAfter : "").Append('\n');
             bool posed = false;
             foreach (float v in m.Pose) if (Mathf.Abs(v) > 0.001f) posed = true;
             if (posed)
@@ -170,6 +176,8 @@ namespace HuginWhispers
                 if (line.StartsWith("weight:")) { float.TryParse(line.Substring(7).Trim(), NumberStyles.Float, C, out m.Weight); continue; }
                 if (line.StartsWith("station:")) { m.Station = line.Substring(8).Trim(); continue; }
                 if (line.StartsWith("perday:")) { float.TryParse(line.Substring(7).Trim(), NumberStyles.Float, C, out m.PerDay); continue; }
+                if (line.StartsWith("feed:")) { float.TryParse(line.Substring(5).Trim(), NumberStyles.Float, C, out m.Feed); continue; }
+                if (line.StartsWith("sell:")) { string[] sw = line.Substring(5).Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); if (sw.Length > 0) int.TryParse(sw[0], out m.Sell); m.SellAfter = sw.Length > 1 ? sw[1] : ""; continue; }
                 if (line.StartsWith("stand:"))
                 {
                     string[] sw = line.Substring(6).Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1859,9 +1867,9 @@ namespace HuginWhispers
             switch (tab)
             {
                 case 1: return use == RavenGear.Use;
-                case 2: return use == Perches.Use || use == Perches.TableUse;
+                case 2: return Perches.IsPerchUse(use) || use == Perches.TableUse || use == Perches.FeederUse;
                 case 3: return use == WsItems.Use;
-                case 4: return use != RavenGear.Use && use != Perches.Use && use != Perches.TableUse && use != WsItems.Use;
+                case 4: return use != RavenGear.Use && !Perches.IsPerchUse(use) && use != Perches.TableUse && use != Perches.FeederUse && use != WsItems.Use;
                 default: return true;
             }
         }
@@ -1963,8 +1971,8 @@ namespace HuginWhispers
         private static readonly string[] StationIds = { "piece_workbench", "forge", "piece_stonecutter", "piece_magetable", "blackforge" };
         private static readonly string[] StationNames = { "Верстак", "Кузня", "Каменетес", "Стіл ґалдра", "Чорна кузня" };
         // what the model is for in the mod
-        private static readonly string[] UseIds = { "", Perches.Use, Perches.TableUse, RavenGear.Use, WsItems.Use };
-        private static readonly string[] UseNames = { "Ні", "Жердина", "Стіл ворона", "Річ для ворона", "Предмет" };
+        private static readonly string[] UseIds = { "", Perches.Use, Perches.GuardUse, Perches.FeederUse, Perches.TableUse, RavenGear.Use, WsItems.Use };
+        private static readonly string[] UseNames = { "Ні", "Жердина", "Вартова жердина", "Годівниця", "Стіл ворона", "Річ для ворона", "Предмет" };
 
         private void SetUse(string use)
         {
@@ -1974,7 +1982,8 @@ namespace HuginWhispers
             if (use.Length > 0 && string.IsNullOrEmpty(_m.Cost)) _m.Cost = Perches.DefaultCost;
             if (use == RavenGear.Use) { _m.Mount = ""; if (string.IsNullOrEmpty(_m.Slot)) _m.Slot = RavenGear.Back; }
             WsStage.RavenAgain();
-            _note = use == Perches.Use ? (_m.Seats == 0 ? "Жердині потрібне місце ворона: «+ Місце ворона» праворуч." : "Жердина.")
+            _note = Perches.IsPerchUse(use) ? (_m.Seats == 0 ? "Жердині потрібне місце ворона: «+ Місце ворона» праворуч." : use == Perches.GuardUse ? "Вартова жердина: ворона лишають на ній на варті (R), він б'є ворогів далі, ніж зі звичайної." : "Жердина.")
+                : use == Perches.FeederUse ? "Годівниця: скринька біля жердин, з якої їдять ворони, що лишились удома; туди ж вони кладуть знахідки. «+ Місце ворона» — куди ворон сідає їсти (до двох)."
                 : use == Perches.TableUse ? "Стіл ворона: у грі E відкриває меню, де майструють речі для воронів."
                 : use == RavenGear.Use ? "Річ для ворона: ворон на картинці, точка 0 — його кістка (спина, шия, ліва лапа чи голова для шапки). Зменш модель («Уся модель»), щоб пасувала."
                 : use == WsItems.Use ? "Предмет: новий (з рецептом) або новий вигляд наявного (як-от Камінь долі). Модель лягає так, як на картинці; її середина — там, де предмет лежить."
@@ -1983,7 +1992,7 @@ namespace HuginWhispers
 
         private void PerchBox()
         {
-            bool perch = _m.Use == Perches.Use, table = _m.Use == Perches.TableUse, gear = _m.Use == RavenGear.Use, item = _m.Use == WsItems.Use;
+            bool perch = Perches.IsPerchUse(_m.Use), table = _m.Use == Perches.TableUse, gear = _m.Use == RavenGear.Use, item = _m.Use == WsItems.Use;
             bool newItem = item && string.IsNullOrEmpty(_m.Replaces);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Для мода", GUILayout.Width(70f));
@@ -1994,12 +2003,19 @@ namespace HuginWhispers
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            if (perch || table || gear || newItem)
+            if (perch || table || gear || newItem || _m.Use == Perches.FeederUse)
             {
                 GUILayout.Label("Ціна", GUILayout.Width(36f));
                 GUI.SetNextControlName("ws_cost");
                 string c = GUILayout.TextField(_m.Cost ?? "");
                 if (c != _m.Cost) { _m.Cost = c; _dirty = true; }
+                if (_m.Use == Perches.FeederUse)
+                {
+                    GUILayout.Label("Ощадливість ×", GUILayout.Width(90f));
+                    float was = _m.Feed > 0f ? _m.Feed : 1f;
+                    float fd = Num("feed", was);
+                    if (Mathf.Abs(fd - was) > 0.001f) { _m.Feed = Mathf.Clamp(Mathf.Round(fd * 100f) / 100f, 1f, 3f); _dirty = true; }
+                }
                 if (perch)
                 {
                     GUILayout.Label("Сили/день", GUILayout.Width(70f));
@@ -2030,7 +2046,8 @@ namespace HuginWhispers
                 GUILayout.Label("<color=#9A9A9A>" + (slot == RavenGear.Head ? "Декоративна шапка: іде в пул шапок книги (відкривається довірою чи дарунком Одіна), не майструється. Точка 0 — голова ворона (череп із дзьобом), шапка повертається з нею" : "Майструється на столі ворона. Точка 0 — " + (slot == RavenGear.Legs ? "ліва лапа (на праву — дзеркально, сама)" : slot == RavenGear.Neck ? "основа шиї ворона" : "спина ворона")) + "; ворон — найбільшого розміру (найвища довіра), менші носять пропорційно менше.</color>", _small);
             }
             if (item) ItemBox(newItem);
-            if (perch || table)
+            bool feeder = _m.Use == Perches.FeederUse;
+            if (perch || table || feeder)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Де будувати", GUILayout.Width(90f));
@@ -2049,7 +2066,7 @@ namespace HuginWhispers
             GUILayout.EndHorizontal();
             }
             if (perch && _m.Seats == 0) GUILayout.Label("<color=#FF7A7A>Нема місця ворона — у грі цієї жердини не буде. Додай «+ Місце ворона» праворуч.</color>", _small);
-            if (perch || table) GUILayout.Label("<color=#9A9A9A>id " + _m.Id + " · ціна: предмет:кількість через пробіл (Wood:10 Iron:2) · у молотку з'явиться після перезаходу у світ (у конфігу «Perches from workshop files» = true)</color>", _small);
+            if (perch || table || feeder) GUILayout.Label("<color=#9A9A9A>id " + _m.Id + " · ціна: предмет:кількість через пробіл (Wood:10 Iron:2) · у молотку з'явиться після перезаходу у світ (у конфігу «Perches from workshop files» = true)</color>", _small);
             if (gear) GUILayout.Label("<color=#9A9A9A>id " + _m.Id + " · ціна: предмет:кількість через пробіл (Feathers:5 Iron:2)</color>", _small);
         }
 

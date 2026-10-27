@@ -13,7 +13,7 @@ namespace HuginWhispers
     //  - looks: about now and then, at the other raven, at players who come near (its owner gets a caw; a stranger is
     //    watched, Munin puffs up at him), at an enemy (alert: wings half open, Munin caws at it).
     // Nothing of it runs with nobody within Near m: there it just sits.
-    internal class PerchLife : MonoBehaviour, ISitBird
+    internal partial class PerchLife : MonoBehaviour, ISitBird
     {
         // ---------------------------------------------------------------- the sitting system on a perch
         // With the sitting system on, what it does here is the sitting director's (the same templates as on a shoulder:
@@ -80,26 +80,67 @@ namespace HuginWhispers
         void ISitBird.BirdMood(out bool alert, out bool drowsy) { alert = _foe != null; drowsy = _asleep; }
 
         // now and then it gets up on the bar for a while (its body's, not a template: the perch's own sitting and standing)
+        private long _standSec = -1, _standLast = -100000;
         private void StandUp()
         {
-            if (_sitWant < 1f || _standUntil >= 0f || _asleep || _foe != null || _turnAt >= 0f || !May(5, StandRest) || Random.value > 0.08f) return;
-            _last[5] = Time.time;
-            _sitWant = 0f; _standUntil = Time.time + Random.Range(StandMin, StandMax);
+            if (_sitWant < 1f || _standUntil >= 0f || _asleep || _foe != null || _turnAt >= 0f) return;
+            long s = Second;
+            if (s == _standSec || s - _standLast < (long)(StandRest * (Munin ? 0.6f : 1.3f) / Nerves)) return; // (once a second, the same second's roll in every game; a rest after the last)
+            _standSec = s;
+            if (Dice(1, s) > 0.16f) return;
+            _standLast = s;
+            _sitWant = 0f; _standUntil = Time.time + Dice(2, s, StandMin, StandMax);
         }
+
+        // ---- the same in every game: what it picks by itself is rolled from this bird, its seat and the
+        // world's clock, so every game that sees it rolls the same with nothing sent; a second as the slot for what it
+        // does now and then, a minute for how long (what starts it may reach the games a moment apart)
+        private static long Second { get { return (long)SitNet.Seconds; } }
+        private static long Minute { get { return (long)(SitNet.Seconds / 60.0); } }
+        private float Dice(int what, long slot)
+        {
+            unchecked
+            {
+                ulong h = (ulong)(Owner * 73856093L ^ (Munin ? 19349663L : 83492791L) ^ (Seat + 1) * 2654435761L ^ what * 40503L ^ slot * 6700417L);
+                h ^= h >> 33; h *= 0xff51afd7ed558ccdUL; h ^= h >> 33; h *= 0xc4ceb9fe1a85ec53UL; h ^= h >> 33;
+                return (h % 100000UL) / 100000f;
+            }
+        }
+        private float Dice(int what, long slot, float min, float max) { return min + Dice(what, slot) * (max - min); }
 
         // a template begins here, 'age' s in: its clip, its shake or its step along the bar, its caw
         void ISitBird.BirdPlay(SitRun r, float age)
         {
             if (_skel != null && r.Clip >= 0) _skel.Play((SitClip)r.Clip, SitSystem.FadeIn, age);
-            if (r.T.Shake) { _act = Act.Shake; _actAt = Time.time - age; _actLen = 0.45f; }
+            System.Random own = new System.Random(r.Seed * 31 + 7);
+            float kind = Munin ? ShoulderLife.MuninPace : ShoulderLife.HuginPace;
+            float size = r.Amp * (1f + ShoulderLife.MannerSize * (float)(own.NextDouble() * 2.0 - 1.0)) * (Munin ? 1.08f : 0.95f);
+            float pace = kind * (1f + ShoulderLife.MannerPace * (float)(own.NextDouble() * 2.0 - 1.0));
+            float len = (1f + ShoulderLife.MannerPace * (float)(own.NextDouble() * 2.0 - 1.0)) / kind; // (as on a shoulder: ShoulderLife.Manner)
+            if (r.T.Flick) { _act = Act.Shake; _actAt = Time.time - age; _actLen = ShoulderLife.FlickSeconds * len; _shHz = ShoulderLife.FlickHz * pace; _shAmp = ShoulderLife.FlickAmp * size; _shBody = 0f; }
+            else if (r.T.Shake) { _act = Act.Shake; _actAt = Time.time - age; _actLen = ShoulderLife.ShakeSeconds * (0.5f + 0.5f * r.T.ShakeAmp) * len; _shHz = ShoulderLife.ShakeHz * pace; _shAmp = r.T.ShakeAmp * size; _shBody = 1f; }
             else if (r.T.Step)
             {
                 _act = Act.Step; _actAt = Time.time - age;
                 _stepFrom = _stepX;
-                _stepWant = Mathf.Clamp(_stepX + (r.Seed % 2 == 0 ? -1f : 1f) * 0.03f * r.Amp, -0.05f, 0.05f);
+                float way = r.Seed % 2 == 0 ? -1f : 1f, by = 0.03f * Mathf.Max(0.6f, r.Amp);
+                if (Mathf.Abs(_stepX + way * by) > 0.05f) way = -way; // at the bar's end of its seat: the other way
+                _stepWant = Mathf.Clamp(_stepX + way * by, -0.05f, 0.05f);
                 _walkSteps = Mathf.Clamp(Mathf.CeilToInt(Mathf.Abs(_stepWant - _stepFrom) / WalkStride), 2, 4);
-                _actLen = _walkSteps * WalkStepSeconds;
+                _actLen = _walkSteps * WalkStepSeconds * len;
+                _walkLift = WalkLift * size;
             }
+            if (r.T.Reach > 0f && Mates())
+            {
+                float stay = Mathf.Max(1f, r.Seconds - age) + SidleBack;
+                SidleFor(stay, r.Seed, age);
+                ISitBird me = this;
+                PerchLife p = me.BirdPartner as PerchLife;
+                if (p != null) p.SidleFor(stay, r.Seed, age);
+            }
+            // what the perch's holder started it with, done here too (its Moments run only there)
+            if (r.T.Name == "Грім") { _asleep = false; _wakeUntil = Mathf.Max(_wakeUntil, Time.time + Dice(20, r.Seed, 6f, 12f)); }
+            else if (r.T.Name == "Голодний") { Transform f = NearestFeeder(); if (f != null) { _look = f; _lookEnd = Second + 4; } }
             if (r.Caw && age < 0.25f) Caw(r.CawPitch, r.T.CawVolume);
         }
 
@@ -107,11 +148,13 @@ namespace HuginWhispers
         internal int Level = 1;
         internal long Owner;
         internal int VoiceCode = -1; // its own voice (Voice), from the seat's record
+        internal int Timbre = -1;    // its kept speaking timbre (RavenVoice.TimbreKey), from the seat's record
         internal PerchView View;
         internal int Seat;
         internal PerchPose Pose;
 
         internal static float Near = 30f, OwnerNear = 8f, StrangerNear = 6f, FoeNear = 15f;
+        internal static int Count { get { return Object.FindObjectsByType<PerchLife>(FindObjectsSortMode.None).Length; } } // (raven perf: once, at the report)
         internal static float RestHugin = 14f, RestMunin = 6f;
         internal static float HeadEaseHugin = 0.28f, HeadEaseMunin = 0.05f;
         internal static float AlertWing = 25f, SleepHead = 35f, SleepHunch = 15f;
@@ -119,7 +162,7 @@ namespace HuginWhispers
         private float Nerves { get { return Mathf.Lerp(1.35f, 0.8f, Mathf.Clamp01((Level - 1) / 6f)); } }
 
         private sealed class Bone { public Transform T; public Quaternion Rest; }
-        private Bone _neck, _jaw, _spine, _wingL, _wingR, _handL, _handR;
+        private Bone _neck, _jaw, _spine, _wingL, _wingR, _handL, _handR, _tail;
         private bool _found;
         private Bone[] _all;
         internal bool Active { get { return _active; } }
@@ -127,16 +170,142 @@ namespace HuginWhispers
         private enum Act { None, Shake, Step } // a sitting template's shake or step along the bar, as it plays
         private Act _act;
         private float _actAt, _actLen, _lastAny = -999f;
-        private readonly float[] _last = { -999f, -999f, -999f, -999f, -999f, -999f };
         private float _stepX, _stepWant, _stepFrom;
         private int _walkSteps = 2;
         // along the bar: side-steps (the foot on the side it goes to first, the other drawn after), the body moving on
         // while a foot is up, its weight over the standing one
         internal static float WalkStride = 0.012f, WalkStepSeconds = 0.32f, WalkLift = 0.7f, WalkRoll = 4f;
+        // walking up to the other raven along the bar for a lean-over act (a preen, a nudge) and back after (2026-10-22):
+        // only when both sit on one bar (the same height, the bar between them); each goes half the way, to this gap
+        internal static float SidleGap = 0.26f, SidleMax = 0.6f, SidleBack = 0.4f, SidleLevel = 0.12f, SidleMaxApart = 1.5f;
+        private float _sidleNow, _sidleWant, _sidleUntil = -1f;
+        // the other raven sits on the same bar as this one: level with it, the bar running towards it
+        internal bool Mates()
+        {
+            Transform nb = View != null ? View.Neighbour(Seat) : null;
+            Transform seat = transform.parent;
+            if (nb == null || seat == null) return false;
+            Vector3 d = nb.position - transform.position;
+            if (Mathf.Abs(d.y) > SidleLevel) return false;
+            Vector3 flat = Vector3.ProjectOnPlane(d, Vector3.up);
+            float apart = flat.magnitude;
+            if (apart < 0.05f || apart > SidleMaxApart) return false;
+            return Mathf.Abs(Vector3.Dot(flat / apart, Vector3.ProjectOnPlane(seat.right, Vector3.up).normalized)) > 0.85f;
+        }
+        internal static bool CanMeet(ISitBird b) { PerchLife p = b as PerchLife; return p != null && p.Mates(); }
+        // seed: the template's (the same in every game), with this bird's own share of it
+        private int _sidleSeed;
+        private System.Random SidleDice(int seed, int way) { return new System.Random(seed * 131 + (Munin ? 17 : 3) + Seat * 7 + way * 1009); }
+        private static float Roll(System.Random d, float min, float max) { return min + (float)d.NextDouble() * (max - min); }
+        internal void SidleFor(float seconds, int seed, float age)
+        {
+            Transform nb = View != null ? View.Neighbour(Seat) : null;
+            if (nb == null) return;
+            float apart = Vector3.ProjectOnPlane(nb.position - transform.position, Vector3.up).magnitude + Mathf.Abs(_sidleNow) * 2f; // (from the seats, not from where they stand now)
+            _sidleWant = Mathf.Clamp((apart - SidleGap) * 0.5f, 0f, SidleMax);
+            _sidleSeed = seed;
+            System.Random d = SidleDice(seed, 0);
+            float delay = Munin ? Roll(d, 0f, 0.25f) : Roll(d, 0.2f, 0.7f); // (never the two together: Munin is off first, as a rule)
+            float took = Gait(_sidleNow, _sidleWant, delay - age, d) + age; // (a game that picked the template up late: as far into the walk)
+            _sidleTurn = (Munin ? SidleTurnM : SidleTurnH) * Roll(d, 0.75f, 1.25f);
+            _sidleUntil = Time.time + took + seconds;
+            _sidleBack = false;
+        }
+
+        // A walk along the bar, its own each time (2026-10-22: the two used to glide in step): steps of their own length
+        // and time, now and then a pause, the body rising and swaying with each; Munin quick and short-stepped, often
+        // the last bit in one hop with a flick of the wings, Hugin slower, longer, steadier.
+        internal static float GaitStrideH = 0.075f, GaitStrideM = 0.05f, GaitStepH = 0.34f, GaitStepM = 0.2f, GaitPause = 0.25f, GaitBob = 0.007f, GaitHopM = 0.4f, GaitHopH = 0.1f;
+        private readonly List<float> _gEnd = new List<float>();   // when each step ends (s from the walk's start)
+        private readonly List<float> _gAt = new List<float>();    // where each step ends (m along)
+        private readonly List<bool> _gHop = new List<bool>();     // that step is a hop
+        private float _gStart, _gFrom, _sidleWings;
+        private bool _sidleBack;
+        private float Gait(float from, float to, float delay, System.Random d)
+        {
+            _gEnd.Clear(); _gAt.Clear(); _gHop.Clear();
+            _gFrom = from; _gStart = Time.time + delay;
+            float dist = Mathf.Abs(to - from);
+            if (dist < 0.005f) { _gEnd.Add(0.01f); _gAt.Add(to); _gHop.Add(false); return delay + 0.01f; }
+            float stride = (Munin ? GaitStrideM : GaitStrideH) * Roll(d, 0.8f, 1.2f);
+            float step = (Munin ? GaitStepM : GaitStepH) * Roll(d, 0.85f, 1.2f);
+            bool hop = dist > stride * 1.5f && Roll(d, 0f, 1f) < (Munin ? GaitHopM : GaitHopH); // the last part in one hop
+            float hopFrom = hop ? to - (to - from) * Roll(d, 0.35f, 0.6f) : to;
+            float t = 0f, at = from, dir = Mathf.Sign(to - from);
+            while (Mathf.Abs(hopFrom - at) > 0.002f)
+            {
+                float len = Mathf.Min(Mathf.Abs(hopFrom - at), stride * Roll(d, 0.7f, 1.25f));
+                at += dir * len;
+                t += step * Roll(d, 0.8f, 1.25f) * Mathf.Lerp(0.7f, 1f, len / stride);
+                _gEnd.Add(t); _gAt.Add(at); _gHop.Add(false);
+                if (Roll(d, 0f, 1f) < (Munin ? 0.12f : 0.25f)) t += GaitPause * Roll(d, 0.5f, 1.6f); // a pause: it looks over, makes up its mind
+            }
+            if (hop) { t += 0.32f; _gEnd.Add(t); _gAt.Add(to); _gHop.Add(true); }
+            return delay + t;
+        }
+
+        // where it walks to now, along the bar towards the other raven (+); its feet stepping as it goes
+        private Vector3 Sidle(Vector3 along, float dt)
+        {
+            if (!_sidleBack && _sidleUntil > 0f && Time.time >= _sidleUntil && _sidleWant > 0f)
+            {
+                _sidleBack = true;
+                System.Random d = SidleDice(_sidleSeed, 1);
+                Gait(_sidleNow, 0f, Munin ? Roll(d, 0f, 0.3f) : Roll(d, 0.1f, 0.6f), d); // back to its seat, its own way again
+            }
+            _sidleWings = Mathf.MoveTowards(_sidleWings, 0f, dt * 90f);
+            if (_gEnd.Count == 0 || (_sidleNow == 0f && _sidleBack && Time.time - _gStart > _gEnd[_gEnd.Count - 1]))
+            {
+                if (_sidleBack) { _gEnd.Clear(); _sidleWant = 0f; _sidleUntil = -1f; _sidleBack = false; }
+                return Vector3.zero;
+            }
+            float u = Time.time - _gStart, prev = 0f, prevAt = _gFrom, bob = 0f;
+            int i = 0;
+            while (i < _gEnd.Count && u > _gEnd[i]) { prev = _gEnd[i]; prevAt = _gAt[i]; i++; }
+            float lift = 0f, roll = 0f;
+            bool hop = false, left = true;
+            if (u <= 0f || i >= _gEnd.Count) _sidleNow = i >= _gEnd.Count ? _gAt[_gAt.Count - 1] : _gFrom;
+            else
+            {
+                // this step: from where the last ended; a pause before it is the time between (the move takes the step's own time)
+                float stepLen = _gEnd[i] - prev;
+                hop = _gHop[i];
+                float moveTime = Mathf.Min(stepLen, (Munin ? GaitStepM : GaitStepH) * 1.25f + (hop ? 0.32f : 0f));
+                float k = Mathf.Clamp01((u - (_gEnd[i] - moveTime)) / moveTime);
+                float e = k * k * (3f - 2f * k);
+                _sidleNow = Mathf.Lerp(prevAt, _gAt[i], e);
+                float up = k > 0f && k < 1f ? Mathf.Sin(k * Mathf.PI) : 0f;
+                left = i % 2 == 0;
+                if (hop) { lift = up * 0.9f; bob = up * 0.035f; if (k > 0.05f && k < 0.2f) _sidleWings = 30f; }
+                else { lift = up * WalkLift; bob = up * GaitBob; roll = WalkRoll * up * (left ? 1f : -1f) * (Munin ? 1.3f : 0.9f); }
+            }
+            Transform nb = View != null ? View.Neighbour(Seat) : null;
+            float sign = nb != null && Vector3.Dot(nb.position - transform.position, along) < 0f ? -1f : 1f;
+            if (Pose != null && _act != Act.Step && _turnAt < 0f)
+            {
+                Pose.StepL = hop ? lift : left ? lift : 0f; Pose.StepR = hop ? lift : left ? 0f : lift; Pose.Roll = Mathf.Abs(roll);
+            }
+            // together: the body turned a little towards the other (each its own share), straight again on the way back
+            float there = _sidleWant > 0.01f && !_sidleBack ? Mathf.Clamp01(1f - Mathf.Abs(_sidleWant - _sidleNow) / _sidleWant) : 0f;
+            float wantYaw = 0f;
+            if (there > 0f && nb != null)
+            {
+                float to = Vector3.SignedAngle(Vector3.Cross(along, Vector3.up), // (from the seat's own facing, not the turned body)
+                     Vector3.ProjectOnPlane(nb.position - transform.position, Vector3.up), Vector3.up);
+                wantYaw = Mathf.Clamp(to, -_sidleTurn, _sidleTurn) * there;
+            }
+            _sidleYaw = Mathf.MoveTowards(_sidleYaw, wantYaw, dt * 60f);
+            if (Pose != null && _turnAt < 0f) Pose.Yaw = _sidleYaw;
+            return along * (sign * _sidleNow) + Vector3.up * bob;
+        }
+        private float _sidleYaw, _sidleTurn = 30f;
+        internal static float SidleTurnH = 28f, SidleTurnM = 38f; // how far it turns to the other, about (each time ±25%)
+        private float _walkLift = 0.7f; // this walk's own (ShoulderLife.Manner)
         // asleep on the bar: deeper into its legs, fluffed up, the head low and turned a little to its back; now and
         // then it half wakes (the head up a moment) and sinks back
         internal static float SleepCrouch = 0.35f, SleepPuff = 0.7f, SleepYaw = 28f, PeekMin = 25f, PeekMax = 50f;
-        private float _sleepW, _sleepSide = 1f, _peekAt = -1f, _peekUntil = -1f;
+        private float _sleepW, _sleepSide = 1f;
+        private long _peekSec = -1, _peekEnd = -1, _glanceSec = -1, _cawSec = -1;
 
         private float _nextScan;
         private bool _active, _asleep, _ownerWasNear;
@@ -155,13 +324,13 @@ namespace HuginWhispers
             return edge * (0.55f + 0.45f * Mathf.Abs(Mathf.Sin(t * PeckHz * Mathf.PI)));
         }
         private Vector3 _glance;          // a point it glances at by itself, in the seat's frame
-        private float _nextGlance, _lookUntil;
+        private long _lookEnd; // the world's second its look ends (whole seconds: every game picks the next look on the same one)
         private Character _foe;
         private Player _stranger;
         private float _yaw, _pitch, _yawMid, _pitchMid;
         private readonly Saccade _sac = new Saccade(); // the head's jumps from look to look
-        private float _jawUntil, _jawLen = 0.3f, _nextFoeCaw;
-        private float _puff, _lookUp;
+        private float _jawUntil, _jawLen = 0.3f;
+        private float _puff, _lookUp, _warm, _warmWant, _warmAt;
         private Transform _lookWas;
         internal static float WakeMin = 15f, WakeMax = 30f; // s awake after somebody comes close at night
         private float _wakeUntil;
@@ -196,7 +365,9 @@ namespace HuginWhispers
         {
             transform.SetParent(face, true);
             _stepX = -_stepX; _stepWant = -_stepWant; _glance.x = -_glance.x; _glance.z = -_glance.z; // the seat's frame turned round
-            _turnSign = Random.value < 0.5f ? 1f : -1f; // left or right about
+            _sidleUntil = -1f; _gEnd.Clear(); _sidleNow = 0f; _sidleBack = false; // (back to its seat)
+            Perches.Occupant o = View != null ? View.At(Seat) : null; // left or right about: by the way it ends up facing (the perch's, alike in every game)
+            _turnSign = Dice(3, o != null && o.Flip ? 1 : 0) < 0.5f ? 1f : -1f;
             _preview = false;
             _turnAt = Time.time;
             if (Pose != null) Pose.Yaw = _turnSign * 180f;
@@ -290,7 +461,8 @@ namespace HuginWhispers
             _faceCheckAt = Time.time + FaceCheckAfter;
             if (Pose != null) Pose.Sit = 0f;
             _sitWant = 0f;
-            _standUntil = Time.time + Random.Range(StandAfterLandMin, StandAfterLandMax);
+            _standUntil = Time.time + Dice(21, Minute, StandAfterLandMin, StandAfterLandMax);
+            _standLast = Second; // (its own stand-ups wait their rest from here: no game rolls one sooner)
             Settle();
         }
 
@@ -300,8 +472,13 @@ namespace HuginWhispers
             if (Pose != null) Pose.Rate = Mathf.MoveTowards(Pose.Rate, _asleep ? 0f : 1f, dt * 0.7f);
             float sw = _sleepW;
             _sleepW = Mathf.MoveTowards(_sleepW, _asleep ? 1f : 0f, dt / (_asleep ? 3f : 0.8f));
-            if (sw <= 0f && _sleepW > 0f) { _sleepSide = ((Owner + Seat + (EnvMan.instance != null ? EnvMan.instance.GetDay() : 0)) & 1) == 0 ? -1f : 1f; _peekAt = Time.time + Random.Range(PeekMin, PeekMax); }
-            if (_asleep && _peekAt > 0f && Time.time >= _peekAt) { _peekUntil = Time.time + Random.Range(1.2f, 2.5f); _peekAt = Time.time + Random.Range(PeekMin, PeekMax); }
+            if (sw <= 0f && _sleepW > 0f) { _sleepSide = ((Owner + Seat + (EnvMan.instance != null ? EnvMan.instance.GetDay() : 0)) & 1) == 0 ? -1f : 1f; }
+            // a peek now and then (about once in PeekMin..PeekMax s), from and to the same world seconds in every game
+            if (_asleep)
+            {
+                long s = Second;
+                if (s != _peekSec && s >= _peekEnd) { _peekSec = s; if (Dice(4, s) < 2f / (PeekMin + PeekMax)) _peekEnd = s + Mathf.RoundToInt(Dice(5, s, 1.2f, 2.5f)); }
+            }
             float want = _sitWant;
             if (_standUntil >= 0f && Time.time >= _standUntil) { _standUntil = -1f; _sitWant = want = 1f; }
             if (_foe != null) want = 0f;
@@ -312,12 +489,13 @@ namespace HuginWhispers
         private void Find()
         {
             _found = true;
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 string n = t.name;
                 if (_neck == null && (n == "Neck" || n.ToLowerInvariant() == "head")) _neck = Make(t);
                 else if (_jaw == null && n == "Jaw") _jaw = Make(t);
                 else if (_spine == null && n == "Spine1") _spine = Make(t);
+                else if (_tail == null && n == "Tail") _tail = Make(t);
                 else if (_wingL == null && n.ToLowerInvariant() == "wing1.l") _wingL = Make(t);
                 else if (_wingR == null && n.ToLowerInvariant() == "wing1.r") _wingR = Make(t);
                 else if (_handL == null && n.ToLowerInvariant() == "wing3.l") _handL = Make(t);
@@ -331,7 +509,7 @@ namespace HuginWhispers
         internal void ResetBones()
         {
             if (!_found) Find();
-            if (_all == null) _all = new[] { _neck, _jaw, _spine, _wingL, _wingR, _handL, _handR };
+            if (_all == null) _all = new[] { _neck, _jaw, _spine, _wingL, _wingR, _handL, _handR, _tail };
             foreach (Bone b in _all) if (b != null) b.T.localRotation = b.Rest;
         }
 
@@ -355,7 +533,7 @@ namespace HuginWhispers
         {
             if (speaker == null || _asleep) return;
             _look = speaker;
-            _lookUntil = Time.time + Mathf.Clamp(seconds, 1f, 8f);
+            _lookEnd = Second + Mathf.CeilToInt(Mathf.Clamp(seconds, 1f, 8f));
         }
 
         private void LandSay()
@@ -370,8 +548,16 @@ namespace HuginWhispers
 
         private void Update()
         {
+            long t0 = Perf.On ? Perf.Now : 0;
+            Live();
+            if (Perf.On) Perf.Add(t0, Perf.Perch);
+        }
+
+        private void Live()
+        {
             if (Stage) { _active = true; _glance = new Vector3(0f, 0.2f, 3f); return; }
             LandSay();
+            BathTick();
             // a turn is over in its time even when nobody here sees the bird (the pose runs only when seen)
             if (_turnAt >= 0f && !_preview && Time.time - _turnAt > PerchTurn.Seconds + 0.5f && Pose != null) { _turnAt = -1f; Pose.Yaw = 0f; Pose.Lift = 0f; Pose.LeanAdd = 0f; Pose.StepL = 0f; Pose.StepR = 0f; Pose.Roll = 0f; }
             if (Time.time < _nextScan) return;
@@ -382,7 +568,7 @@ namespace HuginWhispers
             if (!_active) { _act = Act.None; return; }
             Scan();
             if (_act != Act.None && Time.time - _actAt >= _actLen) _act = Act.None;
-            if (Composes) { _sitDir.Tick(this); StandUp(); } // the sitting system decides what it does
+            if (Composes) { _sitDir.Tick(this); StandUp(); if (View != null && View.Owner) Moments(); } // the sitting system decides what it does (and the perch's holder, its life here: PerchMoments)
         }
 
         // A perch facing a wall: whoever is in front of the raven is behind that wall, unseen (it would stare into it).
@@ -423,8 +609,9 @@ namespace HuginWhispers
             // people: its owner and anybody else close
             Player owner = PerchView.PlayerOf(Owner);
             bool ownerNear = owner != null && Vector3.Distance(owner.transform.position, at) < OwnerNear && !Unseen(owner.transform.position);
-            if (ownerNear && !_ownerWasNear && _foe == null) { Greet(owner); _wakeUntil = Time.time + Random.Range(WakeMin, WakeMax); }
+            if (ownerNear && !_ownerWasNear && _foe == null) { Greet(owner); _wakeUntil = Time.time + Dice(7, Minute, WakeMin, WakeMax); Welcome(); }
             if (_foe != null && foeWas == null && View != null) View.Say(Seat, "perch_foe", null, 0.6f); // an enemy turned up
+            if (_ownerWasNear && !ownerNear) _ownerGoneAt = Time.time;
             _ownerWasNear = ownerNear;
             _stranger = null;
             float sb = StrangerNear;
@@ -438,41 +625,51 @@ namespace HuginWhispers
             // a stranger coming close wakes it too; then, all calm, it dozes off again (you standing by included)
             if (_stranger != null && _stranger != _strangerWas)
             {
-                _wakeUntil = Mathf.Max(_wakeUntil, Time.time + Random.Range(WakeMin, WakeMax));
+                _wakeUntil = Mathf.Max(_wakeUntil, Time.time + Dice(8, Minute, WakeMin, WakeMax));
                 if (View != null) View.Say(Seat, "perch_stranger", new Dictionary<string, string> { { "stranger", _stranger.GetPlayerName() } }, 0.5f);
             }
             _strangerWas = _stranger;
             bool night = EnvMan.instance != null && EnvMan.IsNight();
             if (_foe != null) _wakeUntil = Time.time + WakeMin;
             bool was = _asleep;
-            _asleep = night && _foe == null && Time.time >= _wakeUntil;
-            if (was && !_asleep) _wakeUntil = Mathf.Max(_wakeUntil, Time.time + Random.Range(WakeMin, WakeMax));
+            bool sleepy = night && SleepsNow(); // (on guard it never quite sleeps; two left here keep watch by turns)
+            if (sleepy && !_sleepy) Drowse();
+            else if (!sleepy && _sleepy && night) Then("Струшується", 0.5f); // its turn to watch: shaken awake
+            _sleepy = sleepy;
+            _asleep = sleepy && _foe == null && Time.time >= _wakeUntil && Time.time >= _drowseUntil;
+            if (was && !_asleep) _wakeUntil = Mathf.Max(_wakeUntil, Time.time + Dice(9, Minute, WakeMin, WakeMax));
             _puff = Mathf.MoveTowards(_puff, Munin && _stranger != null ? 1f : 0f, 0.5f);
+            if (Time.time >= _warmAt) { _warmAt = Time.time + 2f; _warmWant = EffectArea.IsPointInsideArea(transform.position, EffectArea.Type.Heat, 0.5f) != null ? 1f : 0f; }
+            _warm = Mathf.MoveTowards(_warm, _warmWant, 0.25f); // (by a fire: puffed up, eased)
 
-            // what it looks at (asleep: nothing; the head stays tucked)
-            if (_asleep) { _look = null; _lookUntil = 0f; }
+            // what it looks at (asleep: nothing; the head stays tucked); rolled on the second, alike in every game
+            long sec = Second;
+            if (_asleep) { _look = null; _lookEnd = 0; }
             else if (_foe != null) _look = _foe.transform;
-            else if (Time.time < _lookUntil && _look != null) { }
-            else if (_stranger != null && Random.value < 0.6f) { _look = _stranger.transform; _lookUntil = Time.time + Random.Range(2f, 5f); }
-            else if (ownerNear && Random.value < 0.35f) { _look = owner.transform; _lookUntil = Time.time + Random.Range(2f, 4f); }
+            else if (sec < _lookEnd && _look != null) { }
+            else if (_stranger != null && Dice(10, sec) < 0.6f) { _look = _stranger.transform; _lookEnd = sec + Mathf.RoundToInt(Dice(11, sec, 2f, 5f)); }
+            else if (ownerNear && Dice(12, sec) < 0.35f) { _look = owner.transform; _lookEnd = sec + Mathf.RoundToInt(Dice(13, sec, 2f, 4f)); }
             else
             {
                 Transform nb = View != null ? View.Neighbour(Seat) : null;
-                if (nb != null && Random.value < 0.15f) { _look = nb; _lookUntil = Time.time + Random.Range(1.5f, 3f); }
-                else if (Time.time >= _lookUntil) _look = null;
+                if (nb != null && Dice(14, sec) < 0.15f) { _look = nb; _lookEnd = sec + Mathf.RoundToInt(Dice(15, sec, 1.5f, 3f)); }
+                else if (sec >= _lookEnd) _look = null;
             }
-            if (_look == null && !_asleep && Time.time >= _nextGlance)
+            // a glance of its own about every 2..6 s (Munin quicker)
+            if (_look == null && !_asleep && sec != _glanceSec)
             {
-                _nextGlance = Time.time + Random.Range(2f, 6f) * (Munin ? 0.6f : 1.2f);
-                _glance = new Vector3(Random.Range(-1f, 1f), Random.Range(-0.3f, 0.25f), Random.Range(0.2f, 1f)) * 3f;
+                _glanceSec = sec;
+                if (Dice(16, sec) < 1f / (4f * (Munin ? 0.6f : 1.2f)))
+                    _glance = new Vector3(Dice(17, sec, -1f, 1f), Dice(18, sec, -0.3f, 0.25f), Dice(19, sec, 0.2f, 1f)) * 3f;
             }
-            if (_foe != null && Munin && Time.time >= _nextFoeCaw) { _nextFoeCaw = Time.time + Random.Range(4f, 8f); Caw(0.8f, 0.55f); }
+            // Munin's caw at an enemy, about every 4..8 s
+            if (_foe != null && Munin && sec != _cawSec) { _cawSec = sec; if (Dice(22, sec) < 1f / 6f) Caw(0.8f, 0.55f); }
         }
 
         private void Greet(Player owner)
         {
             _look = owner.transform;
-            _lookUntil = Time.time + Random.Range(2.5f, 4f);
+            _lookEnd = Second + Mathf.RoundToInt(Dice(23, Minute, 2.5f, 4f));
             Caw(Munin ? 0.85f : 1.15f, 0.5f);
             if (View != null) View.Say(Seat, _asleep ? "perch_wake" : "perch_greet", null, 0.6f); // woken by you, or glad (or not) to see you
         }
@@ -484,11 +681,6 @@ namespace HuginWhispers
             ScreamFx.CawAt(transform, head, pitch, volume, true, VoiceCode);
         }
 
-        private bool May(int kind, float sameRest)
-        {
-            float k = (Munin ? 0.6f : 1.3f) / Nerves;
-            return Time.time - _last[kind] >= sameRest * k;
-        }
 
         // ---------------------------------------------------------------- the moves (each frame, after the legs)
 
@@ -505,11 +697,20 @@ namespace HuginWhispers
             Vector3 dir = along * Mathf.Sign(_stepWant - _stepFrom);
             bool leadLeft = Pose.LeftFootToward(dir);
             bool left = i % 2 == 0 ? leadLeft : !leadLeft;
-            float lift = u >= 1f ? 0f : up * WalkLift;
+            float lift = u >= 1f ? 0f : up * _walkLift;
             Pose.StepL = left ? lift : 0f;
             Pose.StepR = left ? 0f : lift;
             Pose.Roll = WalkRoll * (u >= 1f ? 0f : up);
         }
+
+        // the feather shake's swing at a place along the body (lag: s behind the neck), as on a shoulder
+        private float ShakeWave(float lag)
+        {
+            float st = Time.time - _actAt - lag, len = _actLen;
+            if (st <= 0f || st >= len) return 0f;
+            return Mathf.Sin(st * _shHz * Mathf.PI * 2f) * Mathf.Sin(st / len * Mathf.PI) * _shAmp;
+        }
+        private float _shHz = 8f, _shAmp = 1f, _shBody = 1f; // this shake's pace, size, the body's share (0: a flick of the head)
 
         private float Env(float len)
         {
@@ -533,8 +734,9 @@ namespace HuginWhispers
             Vector3 along = seat != null ? seat.right : side;
             if (_act == Act.Step) Walk(along);
             else if (_turnAt < 0f && Pose != null && (Pose.StepL > 0f || Pose.StepR > 0f || Pose.Roll > 0f)) { Pose.StepL = 0f; Pose.StepR = 0f; Pose.Roll = 0f; }
-            Vector3 move = along * _stepX;
-            float reach = Composes && _sitDir.Run != null ? _sitDir.Run.T.Reach * SitW : 0f;
+            if (_act != Act.Step) TuckFoot();
+            Vector3 move = along * _stepX + Sidle(along, dt);
+            float reach = Composes && _sitDir.Run != null ? _sitDir.Run.T.Reach * SitW * (_sidleWant > 0.01f && !_sidleBack ? Mathf.Clamp01(1f - Mathf.Abs(_sidleWant - _sidleNow) / _sidleWant) : 1f) : 0f; // (leans over once it is there)
             if (reach > 0.0001f)
             {
                 Transform nb = View != null ? View.Neighbour(Seat) : null;
@@ -551,16 +753,17 @@ namespace HuginWhispers
                 float hunch = (Munin ? 8f : -4f) + (_asleep ? SleepHunch : 0f) + (_foe != null ? 6f : 0f) + _puff * 4f;
                 hunch += Mathf.Sin(Time.time * breathHz * Mathf.PI * 2f) * breathDeg;
                 _spine.T.rotation = Quaternion.AngleAxis(hunch, side) * _spine.T.rotation;
-                if (_act == Act.Shake) _spine.T.rotation = Quaternion.AngleAxis(Mathf.Sin((Time.time - _actAt) * 5f * Mathf.PI * 2f) * 7f * Env(_actLen), fwd) * _spine.T.rotation;
-                float fluff = Mathf.Max(_puff, _sleepW * SleepPuff); // (asleep: fluffed up against the cold)
+                if (_act == Act.Shake) _spine.T.rotation = Quaternion.AngleAxis(ShoulderLife.ShakeDeg * _shBody * ShakeWave(ShoulderLife.ShakeLag), fwd) * _spine.T.rotation;
+                float fluff = Mathf.Max(Mathf.Max(_puff, _warm), _sleepW * SleepPuff); // (asleep: fluffed up against the cold; by a fire: warming)
                 if (fluff > 0.01f) _spine.T.localScale = Vector3.one * (1f + fluff * 0.06f);
                 else if (_spine.T.localScale != Vector3.one) _spine.T.localScale = Vector3.one;
             }
 
             // the wings: half open when alert, and as the turn's keys say (a sitting template's go on after)
-            float alert = (_foe != null ? AlertWing : 0f) + _turnWings;
+            float alert = (_foe != null ? AlertWing : 0f) + _turnWings + _sidleWings; // (a hop along the bar: a flick of the wings)
             Wing(_wingL, _handL, alert, up, fwd, 1f);
             Wing(_wingR, _handR, alert, up, fwd, -1f);
+            BathPose(up, fwd, side); // (in the water: crouched, beating its wings)
 
             // the head: at what it watches, or its own glances; asleep tucked down; eased (Hugin slow, Munin quick)
             float wantYaw = 0f, wantPitch = 0f;
@@ -583,9 +786,10 @@ namespace HuginWhispers
             }
             if (_asleep && !has)
             {
-                bool peek = Time.time < _peekUntil; // half awake a moment: the head up, then down again
-                wantYaw = peek ? 0f : _sleepSide * SleepYaw * _sleepW;
-                wantPitch = peek ? 8f : Mathf.Lerp(0f, SleepHead, _sleepW);
+                bool peek = Second < _peekEnd; // half awake a moment: the head up, then down again
+                float tucked = sr != null && sr.T.Name == SitDirector.TuckHead ? SitW : 0f; // (the head into its back: not the sleep's own droop as well)
+                wantYaw = (peek ? 0f : _sleepSide * SleepYaw * _sleepW) * (1f - tucked);
+                wantPitch = (peek ? 8f : Mathf.Lerp(0f, SleepHead, _sleepW)) * (1f - tucked);
             }
             else if (_neck != null)
             {
@@ -617,6 +821,11 @@ namespace HuginWhispers
                 float yaw = _yaw * (1f - peck) + _turnHead;
                 Vector3 headSide = Quaternion.AngleAxis(yaw, up) * side;
                 _neck.T.rotation = Quaternion.AngleAxis(Mathf.Lerp(_pitch, PeckDip, peck), headSide) * Quaternion.AngleAxis(yaw, up) * _neck.T.rotation;
+            }
+            if (_act == Act.Shake)
+            {
+                if (_neck != null) _neck.T.rotation = Quaternion.AngleAxis(ShoulderLife.ShakeNeckDeg * ShakeWave(0f), fwd) * _neck.T.rotation;
+                if (_tail != null) _tail.T.rotation = Quaternion.AngleAxis(ShoulderLife.ShakeTailDeg * _shBody * ShakeWave(ShoulderLife.ShakeLag * 2f), up) * _tail.T.rotation;
             }
             if (_jaw != null && peck > 0.6f) _jaw.T.rotation = Quaternion.AngleAxis((peck - 0.6f) / 0.4f * PeckOpen, side) * _jaw.T.rotation; // the beak open at the bottom of a dip
 

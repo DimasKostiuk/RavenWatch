@@ -43,7 +43,7 @@ namespace HuginWhispers
                 Shared.RemoveExclamation(src, model);
                 foreach (Animator a in model.GetComponentsInChildren<Animator>(true)) a.enabled = false; // hold the pose
                 if (perched == null)
-                    foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+                    foreach (Transform t in RavenBones.Of(model.transform, false))
                         if (t != model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
                 foreach (Collider c in model.GetComponentsInChildren<Collider>(true)) UnityEngine.Object.Destroy(c);
 

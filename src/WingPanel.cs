@@ -86,7 +86,7 @@ namespace HuginWhispers
         internal static Transform[] FindBody(Transform root)
         {
             Transform[] t = new Transform[BodyBones];
-            foreach (Transform x in root.GetComponentsInChildren<Transform>(true))
+            foreach (Transform x in RavenBones.Of(root, false))
             {
                 if (t[0] == null && x.name == "Spine") t[0] = x;
                 else if (t[1] == null && x.name == "Neck") t[1] = x;
@@ -221,7 +221,7 @@ namespace HuginWhispers
         {
             l = new Transform[Bones]; r = new Transform[Bones];
             string[] names = { "wing1", "wing2", "wing3" };
-            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(root, false))
             {
                 string n = t.name.ToLowerInvariant();
                 for (int i = 0; i < Bones; i++)
@@ -385,10 +385,11 @@ namespace HuginWhispers
             List<Transform> roots = new List<Transform>();
             foreach (Transform t in _model.GetComponentsInChildren<Transform>(true))
             {
-                if (t != _model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
+                bool own = RavenBones.Is(t, _model.transform, false); // (not a worn thing's part)
+                if (own && t != _model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
                 t.gameObject.layer = layer;
                 string n = t.name.ToLowerInvariant();
-                if (n == "armature" || n == "hip" || n == "hips" || n == "root" || n == "body") roots.Add(t);
+                if (own && (n == "armature" || n == "hip" || n == "hips" || n == "root" || n == "body")) roots.Add(t);
             }
             _meshes.Clear();
             foreach (Renderer r in _model.GetComponentsInChildren<Renderer>(true))

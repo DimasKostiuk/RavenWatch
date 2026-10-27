@@ -13,8 +13,8 @@ namespace HuginWhispers
     internal static class Orders
     {
         internal const int None = 0, Follow = 1, Circle = 2, Scout = 3, Roll = 4, Loop = 5, Dive = 6,
-            Eight = 7, Candle = 8, Leaf = 9, Immelmann = 10, Hammer = 11, Skim = 12, Waves = 13, Chase = 14, Fetch = 15;
-        internal const int Count = 16; // (Fetch: «Принести», given by «Туди» on a thing you look at: RavenFetch)
+            Eight = 7, Candle = 8, Leaf = 9, Immelmann = 10, Hammer = 11, Skim = 12, Waves = 13, Chase = 14, Fetch = 15, Ship = 16, Beast = 17;
+        internal const int Count = 18; // (Fetch: «Принести», given by «Туди» on a thing you look at: RavenFetch)
         // one raven's figures (TrickPlan), in the menu's order; the chase is for both together
         internal static readonly int[] Tricks = { Roll, Loop, Dive, Eight, Candle, Leaf, Immelmann, Hammer, Skim, Waves };
         internal const string KeyH = "RavenWatch_OrdH", KeyM = "RavenWatch_OrdM";
@@ -26,7 +26,7 @@ namespace HuginWhispers
         internal static float Cost = 1f, ScoutCost = 10f;
         internal static float HungerStay = 2.5f, HungerTrick = 1.25f, HungerChase = 5f; // satiety: beside / circling (5 min), a figure, the chase (each)
         internal static float CostOf(bool munin, int order) { return (order == Scout ? ScoutCost : Cost) * Norov.CostMul(Trust.Worn(munin)); }
-        internal static float HungerOf(int order) { return order == Follow || order == Circle ? HungerStay : order == Chase ? HungerChase : IsTrick(order) || order == Fetch ? HungerTrick : 0f; }
+        internal static float HungerOf(int order) { return order == Follow || order == Circle ? HungerStay : order == Chase ? HungerChase : order == Beast ? HungerTrick * 2f : IsTrick(order) || order == Fetch ? HungerTrick : 0f; }
         // "1 сили · ситість −1,8 · чекати 5 с" (the food: its own and the strength's share, as it will come off)
         internal static string PriceText(bool munin, int order)
         {
@@ -37,29 +37,30 @@ namespace HuginWhispers
         internal static float LastSeconds = 300f;        // beside / circling: 5 min unless called back
         // the scouting: out as far as its training lets it fly (Strike.RangeOf), straight on; where it turns it sees the
         // enemies and the ways under the ground ahead of you within ScoutRange, marked for ScoutMarkSeconds; then home
-        internal static float ScoutRange = 95f, ScoutMarkSeconds = 10f, ScoutPace = 7f; // (ScoutPace: m/s at least, for its time limit)
+        internal static float ScoutRange = 95f, ScoutMarkSeconds = 25f, ScoutPace = 7f; // (ScoutPace: m/s at least, for its time limit)
         internal const string DistH = "RavenWatch_OrdDH", DistM = "RavenWatch_OrdDM";
         private static readonly Vector3[] ScoutDir = new Vector3[2];
-        internal static float ScoutWait = 180f, TrickWait = 5f, ChaseWait = 120f; // (tricks: not a button to hammer)
+        internal static float ScoutWait = 180f, TrickWait = 5f, ChaseWait = 120f, BeastWait = 60f; // (tricks: not a button to hammer)
         internal static float ChaseMin = 90f, ChaseMax = 150f; // «Догонялки»: about two minutes, the same for both
         internal static float ChaseTalk = 0.4f, ChaseTalkGap = 20f; // a word at a catch: this often, never sooner than this (both)
         private static float _chaseSaidAt = -100f;
         private static float _chaseFor;
+        private static bool _play; // the chase going now is their own play (Play), not your order: no corner line at its end
 
         internal static string[] Names { get { return Lang.Arr(NamesSrc); } } // (translated on every read)
-        internal static readonly string[] NamesSrc = Lang.Keys("", "Лети поруч", "Кружляй наді мною", "Облетіти", "Бочка", "Петля", "Пікірування", "Вісімка", "Свічка", "Падаючий лист", "Імельман", "Гірка", "Бриючий проліт", "Хвилі", "Догонялки", "Принести");
+        internal static readonly string[] NamesSrc = Lang.Keys("", "Лети поруч", "Кружляй наді мною", "Облетіти", "Бочка", "Петля", "Пікірування", "Вісімка", "Свічка", "Падаючий лист", "Імельман", "Гірка", "Бриючий проліт", "Хвилі", "Догонялки", "Принести", "За кормою", "Гратися зі звіром");
         // what each order does, in a line (the orders menu's line under the circle)
         internal static string[] Desc { get { return Lang.Arr(DescSrc); } } // (translated on every read)
-        private static readonly string[] DescSrc = Lang.Keys("", "Летить поруч, трохи позаду й вище свого плеча, скільки триває наказ або доки не скажеш «Повернись».", "Кружляє над тобою, скільки триває наказ або доки не скажеш «Повернись».", "Облітає місцину: летить майже по прямій туди, куди ти дивишся, так далеко, як дозволяє вишкіл, і плавно повертається на плече. Вороги й входи під землю попереду — на карті на 10 с.", "Бочка: летить уздовж твого шляху, обертаючись навколо себе.", "Повне коло вгору й через голову.", "Злітає високо, круто пірнає перед тобою й виходить над самою землею.", "Вісімка над тобою, з креном у кожному повороті.", "Тугою спіраллю вгору метрів на дванадцять, а тоді довго ширяє донизу широким колом.", "Падає з висоти, гойдаючись з боку в бік, як листок, і перед самою землею ловить повітря.", "Півпетлі вгору й переворот нагорі: летить назад, вище, ніж був.", "Стрімко вгору до зупинки, розворот на місці, донизу й назад до тебе.", "Низько над землею далеко вперед, розворот із підйомом і назад до тебе.", "Кружляє довкола тебе низько, пірнаючи й злітаючи, як на гойдалці.", "Обидва ворони грають у квача довкола тебе: хто наздогнав — розвертається й тікає, тепер ловлять його. Близько двох хвилин.", "Летить до дрібниці, на яку ти дивишся, хапає одну штуку й приносить тобі в сумку.");
+        private static readonly string[] DescSrc = Lang.Keys("", "Летить поруч, трохи позаду й вище свого плеча, скільки триває наказ або доки не скажеш «Повернись».", "Кружляє над тобою, скільки триває наказ або доки не скажеш «Повернись».", "Облітає місцину: летить майже по прямій туди, куди ти дивишся, так далеко, як дозволяє вишкіл, і плавно повертається на плече. Вороги й входи під землю попереду — на карті на 10 с.", "Бочка: летить уздовж твого шляху, обертаючись навколо себе.", "Повне коло вгору й через голову.", "Злітає високо, круто пірнає перед тобою й виходить над самою землею.", "Вісімка над тобою, з креном у кожному повороті.", "Тугою спіраллю вгору метрів на дванадцять, а тоді довго ширяє донизу широким колом.", "Падає з висоти, гойдаючись з боку в бік, як листок, і перед самою землею ловить повітря.", "Півпетлі вгору й переворот нагорі: летить назад, вище, ніж був.", "Стрімко вгору до зупинки, розворот на місці, донизу й назад до тебе.", "Низько над землею далеко вперед, розворот із підйомом і назад до тебе.", "Кружляє довкола тебе низько, пірнаючи й злітаючи, як на гойдалці.", "Обидва ворони грають у квача довкола тебе: хто наздогнав — розвертається й тікає, тепер ловлять його. Близько двох хвилин.", "Летить до дрібниці, на яку ти дивишся, хапає одну штуку й приносить тобі в сумку.", "Граються парою за кормою корабля: три фігури, а тоді додому.", "Грається з твоїм прирученим звіром у квача: смикає за хвіст, тікає, тоді сам ганяється за звіром.");
         internal static readonly string[] Plans = { "", "слідом", "коло", "розвідка", "бочка", "петля", "пікірування",
-            "вісімка", "свічка", "лист", "імельман", "гірка", "бриючий", "хвилі", "догонялки", "принести" };
+            "вісімка", "свічка", "лист", "імельман", "гірка", "бриючий", "хвилі", "догонялки", "принести", "за кормою", "гра зі звіром" };
         // a line in the corner from this raven, with its picture (the corner card has a place for one)
         private static void Say(Player p, bool munin, string text) { if (p != null) p.Message(MessageHud.MessageType.TopLeft, Grammar.Fix(text, p), 0, RavenItem.Icon(munin)); }
 
         // hungry or starving (satiety up to the hungry mark): no orders
         private static bool Hungry(ItemDrop.ItemData item) { return Satiety.Zone(Satiety.Value(item)) <= Satiety.Hungry; }
 
-        internal static bool IsTrick(int o) { return o >= Roll && o < Count && o != Chase && o != Fetch; } // (the chase is a game of its own: ChasePlan)
+        internal static bool IsTrick(int o) { return o >= Roll && o < Count && o != Chase && o != Fetch && o != Ship && o != Beast; } // (the chase is a game of its own: ChasePlan)
 
         // the raven's own word on an order (assembled from parts, Patterns: order_*): not more often than SpeakGap per
         // raven, a trick only now and then (they are given one after another)
@@ -90,22 +91,17 @@ namespace HuginWhispers
         internal static float TimeShare(bool munin) { int i = munin ? 1 : 0; return Mathf.Clamp01(TimeLeft(munin) / Mathf.Max(0.01f, Span[i])); }
         private static readonly Dictionary<int, float> ReadyAt = new Dictionary<int, float>(); // (raven, order) → when it may be given again
 
-        internal static int Of(Player p, bool munin)
-        {
-            ZDO z = NetFlag.Zdo(p, false);
-            return z != null ? z.GetInt(munin ? KeyM : KeyH, None) : None;
-        }
+        internal static int Of(Player p, bool munin) { return NetFlag.Mode(p, munin ? KeyM : KeyH); }
+        internal static float RingOf(Player p, bool munin) { return NetFlag.Ring(p, munin ? KeyM : KeyH); } // (its figure, the same in every game)
 
         private static void Set(Player p, bool munin, int order)
         {
-            ZDO z = NetFlag.Zdo(p, true);
-            string key = munin ? KeyM : KeyH;
-            if (z != null && z.GetInt(key, None) != order) z.Set(key, order);
+            NetFlag.SetMode(p, munin ? KeyM : KeyH, order);
         }
 
         private static int Slot(bool munin, int order) { return (munin ? 100 : 0) + order; }
 
-        internal static float WaitOf(int order) { return order == Scout ? ScoutWait : order == Chase ? ChaseWait : IsTrick(order) || order == Fetch ? TrickWait : 0f; }
+        internal static float WaitOf(int order) { return order == Scout ? ScoutWait : order == Chase ? ChaseWait : order == Beast ? BeastWait : IsTrick(order) || order == Fetch ? TrickWait : 0f; }
 
         internal static float LeftOf(bool munin, int order)
         {
@@ -155,6 +151,7 @@ namespace HuginWhispers
                 return false;
             }
             if (!Power.Spend(p, munin, CostOf(munin, order))) return false;
+            _play = false;
             if (Quirks.Willful(p, munin, order)) return false; // «Свавільний»: not done, the strength spent
             if (order == Scout) Nicks.OnScout(p, munin); // a deed for its nickname
             Satiety.Flew(munin, HungerOf(order)); // the flying makes it hungry
@@ -176,15 +173,33 @@ namespace HuginWhispers
             }
             bool leftChase = order != Chase && Of(p, munin) == Chase;
             Set(p, munin, order);
-            if (leftChase) Return(p, !munin, false); // taken off the game by another order: no tag alone
+            if (leftChase) NoTagAlone(p, munin); // taken off the game by another order: no tag alone
             Outing.LastAt = Time.time; // it has just been out on your word: the director counts its own outings from here
             Until[munin ? 1 : 0] = Time.time + figure + (order == Follow || order == Circle ? LastSeconds : order == Scout ? 8f + reach / ScoutPace : order == Chase ? _chaseFor : order == Fetch ? RavenFetch.Seconds(p, munin) : TrickPlan.Seconds(order));
             Span[munin ? 1 : 0] = Until[munin ? 1 : 0] - Time.time;
             float wait = WaitOf(order);
             if (wait > 0f) ReadyAt[Slot(munin, order)] = Time.time + wait;
             Say(p, munin, Plugin.RavenName(munin) + ": " + Names[order]); // which order it took
-            if (order != Chase && order != Fetch) Voice(p, munin, order); // and its own word on it (the chase: one of the two, GiveBoth; the fetching: none yet)
+            PlayerAnims.Gesture(p, munin, order == Circle ? "order_circle_" : order == Follow ? "order_follow_" : "order_send_"); // your hand: round overhead, by your side, or off ahead
+            if (order != Chase && order != Fetch && order != Beast) Voice(p, munin, order); // and its own word on it (the chase: one of the two, GiveBoth; the fetching: none yet)
             return true;
+        }
+
+        // an order for a time set from outside (JointPlay: the chase with another player's raven lasts the game's time)
+        internal static bool GiveFor(Player p, bool munin, int order, float seconds)
+        {
+            if (!Give(p, munin, order)) return false;
+            Until[munin ? 1 : 0] = Time.time + seconds;
+            Span[munin ? 1 : 0] = seconds;
+            return true;
+        }
+
+        // the chase alone with its pair gone is no game: the other raven of yours goes home too — but not when this one
+        // plays with another player's raven (yours may be busy with anything)
+        private static void NoTagAlone(Player p, bool munin)
+        {
+            if (JointPlay.InGame(p, munin)) return;
+            if (Of(p, !munin) == Chase) Return(p, !munin, false);
         }
 
         // «Догонялки»: both ravens at once, or neither (each pays its own strength)
@@ -206,6 +221,36 @@ namespace HuginWhispers
             return true;
         }
 
+        // «Самі граються» (the user, 2026-10-22): the two start a few rounds of tag by themselves, in a calm moment
+        // (AnimDirector.Schedule, instead of an outing). The very chase of the order (ChasePlan, synced as ever), but their
+        // own idea: free (no strength, no wait, no deed), shorter, a little hungrier, no corner line — maybe a word,
+        // when the dialogue director lets it. Any order or «Повернись» ends it as it would the chase.
+        internal static float PlayMin = 30f, PlayMax = 60f, PlayHunger = 2f;
+        internal static bool Play(Player p)
+        {
+            if (p == null || !ReferenceEquals(p, Player.m_localPlayer) || Of(p, false) != None || Of(p, true) != None) return false;
+            // both sitting quietly on the shoulder, awake, not stuffed or sulking, and you somewhere they may fly (as an outing)
+            if (!Outing.CanGo(p) || !Outing.ReadyRaven(p, false) || !Outing.ReadyRaven(p, true)) return false;
+            for (int i = 0; i < 2; i++)
+            {
+                ItemDrop.ItemData it = RavenSeat.On(p, i == 1);
+                if (it == null || Hungry(it) || Trust.Stranger(it, p)) return false;
+            }
+            float len = Random.Range(PlayMin, PlayMax);
+            for (int i = 0; i < 2; i++)
+            {
+                bool munin = i == 1;
+                Satiety.Flew(munin, PlayHunger);
+                Set(p, munin, Chase);
+                Until[i] = Time.time + len + (munin ? Random.Range(0f, 2f) : 0f);
+                Span[i] = Until[i] - Time.time;
+            }
+            _play = true;
+            Outing.LastAt = Time.time;
+            if (Director.May(Director.Voice.Shoulder)) { Speak(p, Random.value < 0.5f, "order_chase", null, 1f); Director.Spoke(Director.Voice.Shoulder, 4f); }
+            return true;
+        }
+
         // a catch in the chase (ChaseGame, your own ravens): now and then one of them has its say, the one that caught or
         // the one caught (chase_caught / chase_got), over itself in the air
         internal static void ChaseCaught(Player p, bool catcherMunin)
@@ -216,9 +261,32 @@ namespace HuginWhispers
             Speak(p, caught ? !catcherMunin : catcherMunin, caught ? "chase_got" : "chase_caught", null, 1f);
         }
 
+        // «За кормою» (ShipPlay): their own play behind the ship, free, for its time (no word in the corner, no wait)
+        internal static void StartShip(Player p, bool munin, float seconds)
+        {
+            if (p == null) return;
+            Set(p, munin, Ship);
+            Until[munin ? 1 : 0] = Time.time + seconds;
+            Span[munin ? 1 : 0] = seconds;
+            Outing.LastAt = Time.time;
+        }
+
+        // «Гра зі звіром» (BeastPlay) by its own idea: free, for its time, no word in the corner
+        internal static void StartBeast(Player p, bool munin, float seconds)
+        {
+            if (p == null) return;
+            Set(p, munin, Beast);
+            Until[munin ? 1 : 0] = Time.time + seconds;
+            Span[munin ? 1 : 0] = seconds;
+            Outing.LastAt = Time.time;
+        }
+
         // «Крила Одіна»: the raven flies at your back for the flight, free (no strength, no food, no word); the gift
         // ends it itself when you land
-        internal static void FlyWith(Player p, bool munin, float seconds)
+        internal static void FlyWith(Player p, bool munin, float seconds) { FlyWith(p, munin, seconds, Follow); }
+
+        // the same for another flight round you (a paired gift: beside you with the load, circling over the clouds)
+        internal static void FlyWith(Player p, bool munin, float seconds, int order)
         {
             if (p == null) return;
             string who = munin ? Lang.T("Мунін") : Lang.T("Хугін");
@@ -228,15 +296,16 @@ namespace HuginWhispers
             ShoulderPin pin = model != null ? model.GetComponent<ShoulderPin>() : null;
             if (pin == null || !pin.enabled || AnimDirector.Of(model) > RavenAct.Command) { FlyNote(munin, Lang.F("{0} не летить за спину: {1}", who, (pin == null ? Lang.T("нема моделі") : !pin.enabled ? Lang.T("зайнятий") : Lang.F("зайнятий ({0})", AnimDirector.Of(model))))); return; }
             FlyNote(munin, Lang.F("{0} летить за спину", who));
-            Set(p, munin, Follow);
+            Set(p, munin, order);
             Until[munin ? 1 : 0] = Time.time + seconds;
             Span[munin ? 1 : 0] = seconds;
             Outing.LastAt = Time.time;
         }
 
-        internal static void FlyWithEnd(Player p, bool munin)
+        internal static void FlyWithEnd(Player p, bool munin) { FlyWithEnd(p, munin, Follow); }
+        internal static void FlyWithEnd(Player p, bool munin, int order)
         {
-            if (p == null || Of(p, munin) != Follow) return;
+            if (p == null || Of(p, munin) != order) return;
             Set(p, munin, None);
             Until[munin ? 1 : 0] = 0f;
         }
@@ -247,6 +316,7 @@ namespace HuginWhispers
 
         // «Повернись»: home now, free
         internal static void Return(Player p, bool munin) { Return(p, munin, true); }
+        internal static void ReturnQuiet(Player p, bool munin) { Return(p, munin, false); } // (something else has its say: JointPlay's result)
         private static void Return(Player p, bool munin, bool speak)
         {
             if (p == null) return;
@@ -275,7 +345,7 @@ namespace HuginWhispers
             if (o == None) return;
             Set(p, munin, None); Until[munin ? 1 : 0] = 0f;
             if (!IsTrick(o)) Ended(p, munin, o, Lang.F("перервано — {0}", what));
-            if (o == Chase) Return(p, !munin, false); // no tag alone
+            if (o == Chase) NoTagAlone(p, munin); // no tag alone
         }
 
         // a stronger act took the bird: the order is over, and you are told why
@@ -287,7 +357,7 @@ namespace HuginWhispers
             Set(pin.Player, pin.Munin, None);
             Until[pin.Munin ? 1 : 0] = 0f;
             if (o == None || IsTrick(o)) return; // a trick is over in a moment anyway
-            if (o == Chase) Return(pin.Player, !pin.Munin, false); // no tag alone
+            if (o == Chase) NoTagAlone(pin.Player, pin.Munin); // no tag alone
             Ended(pin.Player, pin.Munin, o, Lang.F("перервано — {0}", (by == RavenAct.Strike ? Lang.T("лечу в атаку") : by == RavenAct.Dome ? Lang.T("кружляю над куполом") : by == RavenAct.FlyOff ? Lang.T("відлітаю") : by.ToString())));
         }
 
@@ -312,13 +382,14 @@ namespace HuginWhispers
             else if (Senses.Jumped) why = Lang.T("ти раптом далеко");
             else if (Senses.Swimming) why = Lang.T("ти плаваєш");
             else if (Senses.Sleeping) why = Lang.T("ти спиш");
+            bool offShip = !Senses.OnShip; // («За кормою»: no ship, no play — quietly home)
             bool chaseSaid = false;
             for (int i = 0; i < 2; i++)
             {
                 bool munin = i == 1;
                 int o = Of(p, munin);
                 if (o == None) continue;
-                if (why == null && Time.time < Until[i]) continue;
+                if (why == null && Time.time < Until[i] && !(o == Ship && offShip)) continue;
                 Set(p, munin, None);
                 if (why != null)
                 {
@@ -327,7 +398,7 @@ namespace HuginWhispers
                 }
                 else if (o == Scout) Report(p, munin); // (never got there in time: what is ahead all the same)
                 else if (o == Fetch) { RavenFetch.Missed(munin); Ended(p, munin, o, Lang.T("— не дістав, повертаюсь")); }
-                else if (o == Chase) { if (!chaseSaid) Say(p, munin, Lang.F("{0} — повертаємось на плечі", Names[o])); chaseSaid = true; }
+                else if (o == Chase) { if (!chaseSaid && !_play) Say(p, munin, Lang.F("{0} — повертаємось на плечі", Names[o])); chaseSaid = true; }
                 else if (o == Follow || o == Circle) { Ended(p, munin, o, Lang.T("— повертаюсь на плече")); Speak(p, munin, "order_end", null, 0.6f); }
             }
         }

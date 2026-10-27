@@ -416,6 +416,7 @@ namespace HuginWhispers
             ParticleSystem ps = Make(holder.transform, "RavenWatch_LeapTrail", Vector3.up * 0.15f);
             if (ps == null) { UnityEngine.Object.Destroy(holder); return null; }
             holder.AddComponent<Follow>().Target = p.transform;
+            Shadow.Outside(holder, p); // (hidden with you in Hugin's shadow)
             ParticleSystem.MainModule main = ps.main;
             main.loop = true;
             main.duration = 5f;

@@ -44,8 +44,7 @@ namespace HuginWhispers
             foreach (Transform t in raven.GetComponentsInChildren<Transform>(true)) if (t.name == "RavenWatch_Aura") return; // it has one already (the same bird back from a perch)
             try
             {
-                Transform body = null;
-                foreach (Transform t in raven.GetComponentsInChildren<Transform>(true)) if (t.name == "Spine1") { body = t; break; }
+                Transform body = RavenBones.Find(raven.transform, "Spine1");
                 if (body == null) body = raven.transform;
                 GameObject g = new GameObject("RavenWatch_Aura");
                 g.transform.SetParent(body, false);

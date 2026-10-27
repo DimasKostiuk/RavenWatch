@@ -185,7 +185,13 @@ namespace HuginWhispers
             if (!h && !m) return;
             _pending = false;
             NextLook(Time.time);
-            if (h && m && Random.value < BothChance && !Senses.Traveling) { Outing.StartBoth(p); return; }
+            if (h && m && Random.value < BothChance && !Senses.Traveling)
+            {
+                // both free: now and then a few rounds of tag of their own (Orders.Play), else circling together
+                if (!Senses.Sailing && Random.value < PlayChance && Orders.Play(p)) return;
+                Outing.StartBoth(p);
+                return;
+            }
             // which one: the more eager by its character (Norov) goes more often
             float wh = Norov.OutChance(RavenSeat.On(p, false)), wm = Norov.OutChance(RavenSeat.On(p, true));
             bool munin = h && m ? Random.value * (wh + wm) < wm : m;
@@ -233,6 +239,7 @@ namespace HuginWhispers
         }
 
         internal static float HuntChance = 0.6f; // Munin's outing with a bird of the game near: a hunt
+        internal static float PlayChance = 0.4f; // both going out together: a game of tag of their own instead (Orders.Play)
         private static float _retry;
         private static void NextLook(float from) { Vector2 g = Gap(); _nextLook = from + Random.Range(g.x, g.y) * 60f; }
         internal static string NextLookText { get { return _nextLook < 0f ? "—" : _pending ? "чекає нагоди" : Mathf.Max(0f, (_nextLook - Time.time) / 60f).ToString("0.0") + " хв"; } }

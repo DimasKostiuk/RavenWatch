@@ -560,8 +560,8 @@ namespace HuginWhispers
             if (t.State == 0) { t.State = 2; Refund(p, t); } // no answer at all
             string what = t.Kind == Letter ? Lang.T("лист") : Lang.T("посилка"); // (the subject: «посилка — у Valentina»)
             if (t.State == 1) RavenMsg.Center(p, Lang.F("{0} повернувся: {1} — у {2}.", Plugin.RavenName(munin), what, t.TargetName));
-            else RavenMsg.Center(p, t.Kind == Letter ? Lang.F("{0} повернувся з листом: {1} його не взяв. Пергамент знову в тебе.", Plugin.RavenName(munin), t.TargetName)
-                : Lang.F("{0} повернувся з посилкою: {1} її не взяв. Річ знову в тебе.", Plugin.RavenName(munin), t.TargetName));
+            else RavenMsg.Center(p, t.Kind == Letter ? Lang.F("{0} повернувся з листом: {1} його не приймає. Пергамент знову в тебе.", Plugin.RavenName(munin), t.TargetName)
+                : Lang.F("{0} повернувся з посилкою: {1} її не приймає. Річ знову в тебе.", Plugin.RavenName(munin), t.TargetName));
         }
 
         // what the book and hover say while it is off with the post

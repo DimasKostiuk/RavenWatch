@@ -7,12 +7,28 @@ namespace HuginWhispers
     // The Fate stone is the game's Thunderstone, made violet (Hugin's blue and Munin's red together): its glow, its own
     // particles and its light, plus slow violet sparks rising from it while it lies on the ground. Done once on the
     // stone's template, so every stone in the world and in hands looks the same; the real Thunderstone is untouched.
+    // Odin's feather (an errand's, CarryStep) is dressed the same way in its own style: the game's feathers made black,
+    // a faint gold glow, a gold light and a few gold sparks.
     internal static class FateStoneLook
     {
         internal static Color Violet = new Color(0.62f, 0.25f, 1f);
         private static Material _spark;
 
-        internal static void Dress(GameObject go)
+        // a look: the colour of its glow, light and sparks; its body tinted toward Body by BodyMix; Lit lights a body that
+        // has no glow of its own (Glow × Lit); the light's reach and strength; sparks a second
+        internal sealed class Style
+        {
+            public string Name;
+            public Color Glow, Body;
+            public float BodyMix, Lit, Range, Power, Sparks;
+        }
+
+        internal static readonly Style Fate = new Style { Name = "fate", Glow = Violet, Body = Violet, BodyMix = 0.35f, Lit = 0f, Range = 2f, Power = 1.2f, Sparks = 6f };
+        internal static readonly Style Odin = new Style { Name = "odin", Glow = new Color(1f, 0.74f, 0.25f), Body = new Color(0.035f, 0.03f, 0.04f), BodyMix = 0.85f, Lit = 0.18f, Range = 1.2f, Power = 0.7f, Sparks = 2.5f };
+
+        internal static void Dress(GameObject go) { Dress(go, Fate); }
+
+        internal static void Dress(GameObject go, Style st)
         {
             if (go == null) return;
             try
@@ -23,35 +39,36 @@ namespace HuginWhispers
                     if (r is ParticleSystemRenderer) continue;
                     Material[] list = r.sharedMaterials;
                     Material[] made = new Material[list.Length];
-                    for (int i = 0; i < list.Length; i++) { made[i] = Recolor(list[i], ref glows); if (made[i] != null) mats++; }
+                    for (int i = 0; i < list.Length; i++) { made[i] = Recolor(list[i], st, ref glows); if (made[i] != null) mats++; }
                     r.sharedMaterials = made;
                 }
                 foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
                 {
                     ParticleSystem.MainModule main = ps.main;
-                    main.startColor = new ParticleSystem.MinMaxGradient(Violet, Color.Lerp(Violet, Color.white, 0.4f));
+                    main.startColor = new ParticleSystem.MinMaxGradient(st.Glow, Color.Lerp(st.Glow, Color.white, 0.4f));
                     parts++;
                 }
-                foreach (Light l in go.GetComponentsInChildren<Light>(true)) { l.color = Violet; lights++; }
-                if (lights == 0) AddLight(go);
-                AddSparks(go);
-                if (Plugin.Instance != null) Plugin.Instance.Log("Fate stone: violet, materials " + mats + " (glowing " + glows + "), particles " + parts + ", lights " + (lights > 0 ? lights.ToString() : "added"));
+                foreach (Light l in go.GetComponentsInChildren<Light>(true)) { l.color = st.Glow; lights++; }
+                if (lights == 0) AddLight(go, st);
+                AddSparks(go, st);
+                if (Plugin.Instance != null) Plugin.Instance.Log("Look «" + st.Name + "»: materials " + mats + " (glowing " + glows + "), particles " + parts + ", lights " + (lights > 0 ? lights.ToString() : "added"));
             }
-            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Fate stone look failed: " + e.Message); }
+            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Look «" + st.Name + "» failed: " + e.Message); }
         }
 
-        // a copy with a violet glow: the glow picture turned grey first, or its own colour would mix with the violet
-        private static Material Recolor(Material m, ref int glows)
+        // a copy in the look's glow: the glow picture turned grey first, or its own colour would mix with the new one
+        private static Material Recolor(Material m, Style st, ref int glows)
         {
             if (m == null) return null;
             Material c = new Material(m);
-            c.name = m.name + " (fate)";
+            c.name = m.name + " (" + st.Name + ")";
             c.hideFlags = HideFlags.HideAndDontSave;
             if (c.HasProperty("_EmissionColor"))
             {
                 Color e = m.GetColor("_EmissionColor");
                 float k = Mathf.Max(e.r, Mathf.Max(e.g, e.b));
-                if (k > 0.01f) { c.SetColor("_EmissionColor", Violet * k); glows++; }
+                if (k > 0.01f) { c.SetColor("_EmissionColor", st.Glow * k); glows++; }
+                else if (st.Lit > 0f) { c.SetColor("_EmissionColor", st.Glow * st.Lit); c.EnableKeyword("_EMISSION"); glows++; } // (no glow of its own: a faint one)
             }
             if (c.HasProperty("_EmissionMap"))
             {
@@ -62,7 +79,7 @@ namespace HuginWhispers
             if (c.HasProperty("_Color"))
             {
                 Color col = m.color;
-                Color tinted = Color.Lerp(col, Violet, 0.35f);
+                Color tinted = Color.Lerp(col, st.Body, st.BodyMix);
                 tinted.a = col.a;
                 c.color = tinted;
             }
@@ -96,23 +113,23 @@ namespace HuginWhispers
             finally { RenderTexture.active = prev; if (rt != null) RenderTexture.ReleaseTemporary(rt); }
         }
 
-        private static void AddLight(GameObject go)
+        private static void AddLight(GameObject go, Style st)
         {
-            GameObject g = new GameObject("RavenWatch_FateLight");
+            GameObject g = new GameObject("RavenWatch_" + st.Name + "Light");
             g.transform.SetParent(go.transform, false);
             g.transform.localPosition = new Vector3(0f, 0.15f, 0f);
             Light l = g.AddComponent<Light>();
             l.type = LightType.Point;
-            l.color = Violet;
-            l.range = 2f;
-            l.intensity = 1.2f;
+            l.color = st.Glow;
+            l.range = st.Range;
+            l.intensity = st.Power;
             l.shadows = LightShadows.None;
         }
 
-        // slow violet sparks drifting up from the stone
-        private static void AddSparks(GameObject go)
+        // slow sparks of its glow drifting up from it
+        private static void AddSparks(GameObject go, Style st)
         {
-            GameObject g = new GameObject("RavenWatch_FateSparks");
+            GameObject g = new GameObject("RavenWatch_" + st.Name + "Sparks");
             g.transform.SetParent(go.transform, false);
             g.transform.localPosition = new Vector3(0f, 0.05f, 0f);
             ParticleSystem ps = g.AddComponent<ParticleSystem>();
@@ -124,12 +141,12 @@ namespace HuginWhispers
             main.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 2f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.1f, 0.35f);
             main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.06f);
-            main.startColor = new ParticleSystem.MinMaxGradient(Violet, Color.Lerp(Violet, Color.white, 0.5f));
+            main.startColor = new ParticleSystem.MinMaxGradient(st.Glow, Color.Lerp(st.Glow, Color.white, 0.5f));
             main.gravityModifier = -0.04f; // they float up
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.maxParticles = 40;
             ParticleSystem.EmissionModule em = ps.emission;
-            em.rateOverTime = 6f;
+            em.rateOverTime = st.Sparks;
             ParticleSystem.ShapeModule sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Sphere;
             sh.radius = 0.12f;

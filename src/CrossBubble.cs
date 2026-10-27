@@ -53,7 +53,7 @@ namespace HuginWhispers
                 if (me < 0) continue;
                 int at = me == l.Who ? l.To : l.Who;
                 if (at == me) return null;
-                GameObject g = Shoulder.ModelOf(b._whos[at].P, b._whos[at].Munin);
+                GameObject g = (Shoulder.ModelOf(b._whos[at].P, b._whos[at].Munin) ?? Gathering.Bird(b._whos[at].P, b._whos[at].Munin));
                 return g != null ? g.transform : null;
             }
             return null;
@@ -378,7 +378,7 @@ namespace HuginWhispers
             _next++;
             _at = Time.time + TalkBubble.After(l.Text, _next >= _lines.Count, Slower);
             CrossTalk.Who w = _whos[l.Who];
-            GameObject model = Shoulder.ModelOf(w.P, w.Munin);
+            GameObject model = (Shoulder.ModelOf(w.P, w.Munin) ?? Gathering.Bird(w.P, w.Munin));
             if (_clip != null) // its voice, from the raven saying it; the next line only after it is over
             {
                 GameObject from = model != null ? model : w.P != null ? w.P.gameObject : null;
@@ -576,7 +576,7 @@ namespace HuginWhispers
         private Vector3 SpeakerAt(CrossTalk.Line l)
         {
             CrossTalk.Who w = _whos[l.Who];
-            GameObject model = Shoulder.ModelOf(w.P, w.Munin);
+            GameObject model = (Shoulder.ModelOf(w.P, w.Munin) ?? Gathering.Bird(w.P, w.Munin));
             return model != null ? model.transform.position : w.P != null ? w.P.transform.position : Middle();
         }
 

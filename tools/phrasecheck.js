@@ -82,4 +82,4 @@ for (const who of ['Hugin', 'Munin']) {
   }
 }
 console.log('built', built, 'problems', problems);
-fs.writeFileSync(process.argv[2] || 'samples.txt', Object.entries(samples).map(([k, s]) => k + ' (' + s.size + ')\n  ' + [...s].slice(0, 4).join('\n  ')).join('\n'));
+fs.writeFileSync(process.argv[2] || require('path').join(__dirname, '..', 'build', 'samples.txt'), Object.entries(samples).map(([k, s]) => k + ' (' + s.size + ')\n  ' + [...s].slice(0, 4).join('\n  ')).join('\n'));

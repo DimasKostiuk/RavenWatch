@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>bind icon</title></head>
+<body>
+<!-- The в'язь's medallion (assets/icons/bind.png) in the gifts' own style: the frame of «heal» (gold rim, rune ring),
+     its red turned to amber (the в'язь is neither Hugin's blue nor Munin's red), a valknut — three woven triangles —
+     in the middle. Made by tools/bind_icon.js (headless Chrome). -->
+<canvas id="c" width="256" height="256"></canvas>
+<pre id="out"></pre>
+<script>
+const img = new Image();
+img.onload = () => {
+  const c = document.getElementById('c'), g = c.getContext('2d');
+  g.drawImage(img, 0, 0, 256, 256);
+  // red → amber (the gold rim and the cream stay)
+  const d = g.getImageData(0, 0, 256, 256), p = d.data;
+  for (let i = 0; i < p.length; i += 4) {
+    const r = p[i] / 255, gr = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, gr, b), mn = Math.min(r, gr, b);
+    if (mx - mn < 0.08) continue;
+    let h; const dl = mx - mn;
+    if (mx === r) h = ((gr - b) / dl) % 6; else if (mx === gr) h = (b - r) / dl + 2; else h = (r - gr) / dl + 4;
+    h *= 60; if (h < 0) h += 360;
+    if (!(h > 330 || h < 22)) continue;
+    const l = (mx + mn) / 2, s = dl / (1 - Math.abs(2 * l - 1) || 1);
+    let nh = (h > 330 ? h - 360 : h) + 24;
+    const C = (1 - Math.abs(2 * l - 1)) * s, X = C * (1 - Math.abs((nh / 60) % 2 - 1)), m = l - C / 2;
+    let rr, gg, bb;
+    if (nh < 60) { rr = C; gg = X; bb = 0; } else { rr = X; gg = C; bb = 0; }
+    p[i] = (rr + m) * 255; p[i + 1] = (gg + m) * 255; p[i + 2] = (bb + m) * 255;
+  }
+  g.putImageData(d, 0, 0);
+  // the middle anew: a warm glow
+  const cx = 128, cy = 132, R = 84;
+  const rg = g.createRadialGradient(cx, cy - 6, 6, cx, cy, R);
+  rg.addColorStop(0, '#9a5a14'); rg.addColorStop(0.55, '#5e300a'); rg.addColorStop(1, '#2c1404');
+  g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.fillStyle = rg; g.fill();
+  // the valknut: three triangles, each pointing up, set round the middle
+  const side = 66, h = side * Math.sqrt(3) / 2, off = 17;
+  const tri = (ox, oy) => { const t = oy - h * 2 / 3, bt = oy + h / 3; return [[ox, t], [ox - side / 2, bt], [ox + side / 2, bt]]; };
+  const tris = [60, 180, 300].map(a => { const r = a * Math.PI / 180; return tri(cx + Math.sin(r) * off, cy + 4 - Math.cos(r) * off); });
+  const path = t => { g.beginPath(); g.moveTo(t[0][0], t[0][1]); g.lineTo(t[1][0], t[1][1]); g.lineTo(t[2][0], t[2][1]); g.closePath(); };
+  g.lineJoin = 'round';
+  for (const t of tris) { path(t); g.lineWidth = 15; g.strokeStyle = '#3a1a04'; g.stroke(); }   // the dark edge
+  for (const t of tris) { path(t); g.lineWidth = 10; g.strokeStyle = '#F4C04E'; g.stroke(); }   // the gold band
+  for (const t of tris) { path(t); g.lineWidth = 3; g.strokeStyle = '#FFF0C0'; g.stroke(); }    // its light middle
+  // a few sparks, like the other medallions
+  g.fillStyle = '#FFB347';
+  for (const [x, y, r] of [[82, 78, 3.5], [172, 74, 3], [186, 112, 2.5], [70, 116, 2.5]]) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+  document.getElementById('out').textContent = 'bind ' + c.toDataURL('image/png');
+};
+img.src = '../assets/icons/heal.png';
+</script>
+</body></html>

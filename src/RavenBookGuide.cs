@@ -50,6 +50,7 @@ namespace HuginWhispers
             ScrollRect sr = view.gameObject.AddComponent<ScrollRect>();
             sr.viewport = view; sr.content = list; sr.horizontal = false; sr.vertical = true;
             sr.movementType = ScrollRect.MovementType.Clamped; sr.scrollSensitivity = 120f;
+            ScrollArrow(view, sr, 26f);
             foreach (KeyValuePair<string, string> t in told)
             {
                 RectTransform one = Rect("Topic", list);

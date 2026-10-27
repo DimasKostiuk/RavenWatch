@@ -23,26 +23,26 @@ namespace HuginWhispers
         internal static float ScoutSeconds = 30f;
         internal static float ScoutAwaySeconds = 12f;
         internal static float ScoutRevealRadius = 300f, ScoutRevealRadiusTop = 450f; // at trust level 1 and at the top level
-        internal static float RevealRadius() { return Trust.Lerp(false, ScoutRevealRadius, ScoutRevealRadiusTop) * GiftUp.Power("scout"); } // (golden runes: level I)
+        internal static float RevealRadius() { return Trust.Lerp(false, ScoutRevealRadius, ScoutRevealRadiusTop) * GiftUp.Power("scout") * Habits.ScoutMul(Trust.Worn(false)); } // (golden runes: level I)
         internal static float DungeonRadius() { return Trust.Lerp(false, ScoutDungeonRadius, ScoutDungeonRadiusTop) * GiftUp.Power("scout"); }
         internal static float ScoutOreRadius = 100f;
         internal static float ScoutOreMinutes = 5f;
         internal static float ScoutEnemyRadius = 100f;
         internal static float ScreamCooldown = 2400f, ScreamCooldownTop = 1500f;
         internal static float ScreamRadius = 6f;
-        internal static float LightCooldown = 300f;
+        internal static float LightCooldown = 600f;
         internal static float WingsCooldown = 1200f, WingsCooldownTop = 600f;
         internal static float LeapCooldown = 1800f, LeapCooldownTop = 1440f;
         internal static float ShadowCooldown = 2400f, ShadowCooldownTop = 1200f;
         internal static float DomeCooldown = 600f, DomeCooldownTop = 420f;
         internal static float HealCooldown = 1800f, HealCooldownTop = 600f;
-        internal static float WardCooldown = 600f, WardCooldownTop = 600f;
-        internal static float FlightCooldown = 1200f, BeastCooldown = 1800f;
+        internal static float WardCooldown = 600f, WardCooldownTop = 360f;
+        internal static float FlightCooldown = 2400f, BeastCooldown = 1800f;
         private const float HearRange = 100f;
         internal static bool Animations = true;
         private static readonly FieldInfo ZAnim = AccessTools.Field(typeof(Character), "m_zanim");
         // how long words stay over the head: long enough to read them (about 20 letters a second), 6 to 18 s
-        private static float SaySeconds(string line) { return Mathf.Max(Mathf.Clamp(4f + (line != null ? line.Length : 0) / 20f, 6f, 18f), RavenSpeech.ReadSeconds(line)); }
+        internal static float SaySeconds(string line) { return Mathf.Max(Mathf.Clamp(4f + (line != null ? line.Length : 0) / 20f, 6f, 18f), RavenSpeech.ReadSeconds(line)); }
 
         private static readonly Dictionary<string, float> ReadyAt = new Dictionary<string, float>(); // ability id -> when it can be used again
         // kept in the character too (world time), so leaving and loading the world again does not make them ready
@@ -75,6 +75,11 @@ namespace HuginWhispers
             ReadyAt.Clear(); // read again from the character when asked
             RavenAura.Reset();
             Satiety.Reset();
+            Share.Reset();
+            BondLog.Reset();
+            Pack.Reset();
+            People.Reset();
+            Gathering.Reset();
             RavenPouch.Reset();
             Post.Reset();
             Fury.Reset();
@@ -84,15 +89,23 @@ namespace HuginWhispers
             WingsFx.Reset();
             Fear.Reset();
             Decoy.Reset();
+            JointPlay.Reset();
             LastChance.Reset();
             Leap.Reset();
             Dome.Reset();
             Ward.Reset();
             OdinWings.Reset();
             Beast.Reset();
+            BloodRevenge.Reset();
+            Tame.Reset();
+            Omen.Reset();
+            PairGifts.Reset();
+            ShipPlay.Reset();
+            BeastPlay.Reset();
             PlayerAnims.Reset();
             Strike.ResetFights();
             Marks.Reset();
+            Mastery.Reset();
             RavenFx.Forget();
             Shadow.Reset();
             Shadow.ResetLook();
@@ -108,9 +121,15 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             Plugin plugin = Plugin.Instance;
             if (a == null || a.Passive || p == null || plugin == null || p.IsDead()) return;
+            if (a.Pair) { try { PairGifts.Use(p, a); } catch (Exception e) { RavenMsg.Center(p, Lang.F("{0}: щось пішло не так, дар не вдався.", a.Name)); plugin.LogError("Gift " + a.Id + " failed: " + e); } return; } // (both ravens: PairGifts)
+            // pressed again while it goes on: it ends — before any other check, so a lit button always does what it shows (Ends)
             if (a.Id == "light" && RavenLight.On(p)) { RavenLight.Stop(p); return; } // the light again: it goes out
             if (a.Id == "hflight" && OdinWings.Flying()) { OdinWings.Sink(p); return; } // the wings again: down gently
             if (a.Id == "mberserk" && Beast.On()) { Beast.End(p, false); return; } // the beast again: back to yourself now
+            if (a.Id == "hdecoy" && Decoy.Mine()) { Decoy.Recall(p); return; } // Hugin gives it up and comes home
+            if (a.Id == "mtame" && Tame.Mine()) { Tame.Recall(p); return; } // Munin leaves the beast and comes home
+            if (a.Id == "dome" && Dome.Mine()) { Dome.Lower(); Animate(p, "comehere"); DomeSay("dome_back", Lang.T("Склав крила. Тепер знову разом.")); return; } // you call him back: a beckoning wave
+            if (a.Id == "leap" && Leap.On(p) && !Leap.Stopping(p)) { Leap.Stop(p); RavenMsg.Center(p, Leap.On(p) ? Lang.T("Злет Хугіна скінчиться, щойно приземлишся") : Lang.T("Злет Хугіна зупинено")); return; }
             // in flight Hugin carries you, and nobody strikes from up there
             string wingsNo = GiftBlock(a); // gifts out of place with the wings on or the beast awake (the strikes and the rest stay)
             if (wingsNo != null) { RavenMsg.Center(p, wingsNo); return; }
@@ -119,29 +138,29 @@ namespace HuginWhispers
             if ((a.Munin ? mun : hugin) == null) { RavenMsg.Center(p, Lang.F("{0} зараз не на тобі", Plugin.RavenName(a.Munin))); return; }
             if (!Shoulder.Arrived(p, a.Munin)) { RavenMsg.Center(p, Lang.F("{0} ще летить до тебе", Plugin.RavenName(a.Munin))); return; } // just in the world: not before it sits
             // off on a strike: nothing of that raven's until it is back on the shoulder
-            if (a.Id == "hdecoy" && Decoy.Mine()) { Decoy.Recall(p); return; } // pressed again: Hugin gives it up and comes home
             if (!a.Munin && Decoy.Mine()) { RavenMsg.Center(p, Lang.T("Хугін дражнить ворога — зараз повернеться")); return; }
+            if (a.Munin && Tame.Mine()) { RavenMsg.Center(p, Lang.T("Мунін приборкує звіра.\nНатисни «Приборкання» ще раз — і він повернеться.")); return; }
             if (Strike.Busy(p, a.Munin)) { RavenMsg.Center(p, Lang.F("{0} в атаці — зараз повернеться", Plugin.RavenName(a.Munin))); return; }
             // carrying out an order: a gift that sends it flying takes it from there (a strike or the dome take the bird
             // and end the order, AnimDirector → Orders.Interrupted; the scouting ends it itself)
             // Hugin is off scouting: nothing of his until he is back
             if (!a.Munin && Scouting()) { RavenMsg.Center(p, Lang.F("Хугін на розвідці.\nПовернеться за {0}.", RavenAbilities.Span(ScoutLeft()))); return; }
-            // Hugin is up holding the dome: the dome's own button calls him back, the rest wait
-            if (!a.Munin && Dome.Mine())
-            {
-                if (a.Id == "dome") { Dome.Lower(); Animate(p, "comehere"); DomeSay("dome_back", Lang.T("Склав крила. Тепер знову разом.")); } // you call him back: a beckoning wave
-                else RavenMsg.Center(p, Lang.T("Хугін тримає над тобою купол.\nНатисни «Під крилом» ще раз — і він повернеться."));
-                return;
-            }
+            // Hugin is up holding the dome: the dome's own button calls him back (above), the rest wait
+            if (!a.Munin && Dome.Mine()) { RavenMsg.Center(p, Lang.T("Хугін тримає над тобою купол.\nНатисни «Під крилом» ще раз — і він повернеться.")); return; }
             if (Trust.Away(a.Munin ? mun : hugin)) { RavenMsg.Center(p, Trust.AwayText(a.Munin, a.Munin ? mun : hugin)); return; }
             if (!Trust.Active(a.Munin ? mun : hugin) && (a.Id == "thought" || a.Id == "mthought")) { AsleepThought(p, a.Munin); return; }
+            if (Trust.Hostile(a.Munin ? mun : hugin) && a.Id != "thought" && a.Id != "mthought") { RavenMsg.Center(p, Lang.F("{0} не твій — його дари не для тебе", Plugin.RavenName(a.Munin))); return; } // (a stranger's raven only talks, and rudely)
             if (Trust.Active(a.Munin ? mun : hugin) && !RavenAbilities.Unlocked(a)) { RavenMsg.Center(p, Lang.F("{0}: відкриється на {1}-му рівні довіри", a.Name, RavenAbilities.UnlockLevel(a))); return; }
             if (!Trust.Active(a.Munin ? mun : hugin)) { RavenMsg.Center(p, a.Munin ? Lang.F("Мунін спить і клав на тебе.\nНеси {0} до каменів.", Trust.WakeText()) : Lang.F("Хугін спить і тебе не чує.\nПринеси {0} до каменів.", Trust.WakeText())); return; }
             string quirk = Quirks.Blocks(p, a.Munin, a.Id); // its quirk: sulking (nothing), asleep at night (no scouting)
             if (quirk != null) { RavenMsg.Center(p, quirk + "."); if (a.Id == "scout" && Quirks.Sulk(p, a.Munin) == null) Quirks.SaySleepy(p, a.Munin); return; } // (asleep, not sulking: its sleepy word)
+            string habit = Habits.Blocks(p, a); // «Хатній»: just away from home, two gifts it will not give
+            if (habit != null) { RavenMsg.Center(p, habit); return; }
             // a gift that throws (an odd creature, another mod in the way) must not just do nothing: it says so, the log says why
             try
             {
+                ShoulderLife.WakeUp(p, a.Munin); // (asked for a gift, it does not do it asleep)
+                FightJudge.Acted(a.Munin); // (in a fight: the more active raven judges it)
                 switch (a.Id)
                 {
                     case "thought": Thought(plugin, p, false); break;
@@ -161,6 +180,7 @@ namespace HuginWhispers
                     case "hflight": FlightAbility(p); break;
                     case "hdecoy": DecoyAbility(p, hugin); break;
                     case "mberserk": BeastAbility(p); break;
+                    case "mtame": TameAbility(p, mun); break;
                 }
             }
             catch (Exception e)
@@ -173,10 +193,12 @@ namespace HuginWhispers
         // "−10 сили (є 40) · готова" / "… · ще 2 хв 30 с": under an ability in the radial menu, in the book and tooltips
         internal static string Status(RavenAbility a)
         {
+            if (a.Pair) return PairGifts.Status(a);
             if (a.Id == "light" && RavenLight.On(Player.m_localPlayer)) return Lang.T("<color=#FFD54F><b>світляк світить · натисни, щоб погасити</b></color>"); // the press always works
+            if (a.Id == "leap" && Leap.On(Player.m_localPlayer)) return Leap.Stopping(Player.m_localPlayer) ? Lang.T("<color=#FFD54F><b>скінчиться, щойно приземлишся</b></color>") : Lang.T("<color=#FFD54F><b>злет діє · натисни, щоб зупинити</b></color>");
             if (a.Id == "mberserk" && Beast.On()) return Lang.F("<color=#FFD54F><b>звір лютує · ще {0} · натисни, щоб вгамувати · потім втома</b></color>", RavenAbilities.Span(Beast.Left()));
             if (a.Id == "hflight" && OdinWings.Flying()) return "<color=#FFD54F><b>" + (OdinWings.Sinking() ? Lang.T("опускаєшся") : OdinWings.OnGround() ? Lang.F("на землі · пробіл — злетіти · ще {0} · натисни, щоб завершити", RavenAbilities.Span(OdinWings.Left())) : Lang.F("летиш · ще {0} · натисни, щоб сісти", RavenAbilities.Span(OdinWings.Left()))) + "</b></color>";
-            if (GiftBlock(a) != null) return "<color=#FF5A5A><b>" + (OdinWings.InAir() ? Lang.T("не в польоті") : Lang.T("не з крилами Одіна")) + "</b></color>";
+            if (GiftBlock(a) != null) return "<color=#FF5A5A><b>" + (OdinWings.InAir() ? Lang.T("не в польоті") : OdinWings.Flying() ? Lang.T("не з крилами Одіна") : PairGifts.Blocks(a) != null ? Lang.LowerFirst(PairGifts.Blocks(a)) : GreatBlock(a) != null ? Lang.LowerFirst(GreatBlock(a)) : Lang.T("не зі звіром")) + "</b></color>";
             if (!a.Passive)
             {
                 string quirk = Quirks.Blocks(Player.m_localPlayer, a.Munin, a.Id);
@@ -184,6 +206,7 @@ namespace HuginWhispers
             }
             if (Trust.Worn(a.Munin) != null && !Shoulder.Arrived(Player.m_localPlayer, a.Munin)) return Lang.T("<color=#FF5A5A><b>летить до тебе</b></color>");
             ItemDrop.ItemData raven = Trust.Worn(a.Munin);
+            if (a.Munin && Tame.Mine()) return a.Id == "mtame" ? Lang.F("<color=#FFD54F><b>приборкує звіра · ще {0} · натисни, щоб повернути</b></color>", RavenAbilities.Span(Tame.Left())) : Lang.T("<color=#FF5A5A><b>Мунін приборкує звіра</b></color>");
             if (!a.Munin && Decoy.Mine()) return a.Id == "hdecoy" ? Lang.F("<color=#FFD54F><b>дражнить ворога · ще {0} · натисни, щоб повернути</b></color>", RavenAbilities.Span(Decoy.Left())) : Lang.T("<color=#FF5A5A><b>Хугін дражнить ворога</b></color>");
             if (Strike.Busy(Player.m_localPlayer, a.Munin)) return Lang.T("<color=#FF5A5A><b>в атаці · зараз повернеться</b></color>");
             if (!a.Munin && Scouting()) return Lang.F("<color=#FF5A5A><b>на розвідці · повернеться за {0}</b></color>", RavenAbilities.Span(ScoutLeft()));
@@ -191,7 +214,7 @@ namespace HuginWhispers
             if (!a.Munin && Dome.Mine()) return a.Id == "dome" ? Lang.T("<color=#FFD54F><b>купол стоїть · натисни, щоб повернути Хугіна</b></color>") : Lang.T("<color=#FF5A5A><b>Хугін тримає купол</b></color>");
             if (RavenAbilities.Stub(a)) return Lang.T("<color=#9a9a9a>ще в роботі</color>");
             if (raven != null && Trust.Away(raven)) return "<color=#FF5A5A><b>" + (Perches.On(raven) && Trust.AwayLeft(raven) <= 0f ? Trust.BackIn(raven) : Trust.AwayWhy(raven) == Post.Why ? Trust.AwayWord(a.Munin, raven) : Trust.AwayWord(a.Munin, raven) + ", " + Trust.BackIn(raven)) + "</b></color>";
-            if (Loyal.Is(a)) return RavenAbilities.Unlocked(a) ? Lang.F("без сили · {0}", RavenAbilities.PassiveReady(a)) : RavenAbilities.LockedText(a);
+            if (RavenAbilities.Free(a)) return RavenAbilities.Unlocked(a) ? Lang.F("без сили · {0}", RavenAbilities.PassiveReady(a)) : RavenAbilities.LockedText(a);
             if (a.Passive) return RavenAbilities.Unlocked(a) ? Lang.F("−{0} сили{1} (є {2}) · {3}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(a.Munin), Power.Current(a.Munin), RavenAbilities.PassiveReady(a)) : RavenAbilities.LockedText(a);
             bool thought = a.Id == "thought" || a.Id == "mthought";
             if (raven != null && !Trust.Active(raven) && thought)
@@ -200,6 +223,7 @@ namespace HuginWhispers
             if (raven != null && !Trust.Active(raven))
                 return "<color=#FF5A5A><b>" + (a.Munin ? Lang.T("Мунін спить і клав на тебе — спершу обряд") : Lang.T("Хугін спить — дар відкриється після обряду")) + "</b></color>";
             if (!RavenAbilities.Unlocked(a)) return RavenAbilities.LockedText(a);
+            if (!thought && Trust.Hostile(raven)) return Lang.T("<color=#FF5A5A><b>чужий ворон · не слухає</b></color>");
             float left = Left(a.Id);
             string cost = Lang.F("−{0} сили{1} (є {2}) · ", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(a.Munin), Power.Current(a.Munin));
             if (left <= 0f && Power.Current(a.Munin) < Mathf.RoundToInt(a.Cost()))
@@ -208,12 +232,31 @@ namespace HuginWhispers
         }
 
         // can it be used this very moment (for the radial menu: the ones that cannot are drawn dim)
+        // it goes on now and a press ends it (light, wings, beast, decoy, dome, leap, the pair's): lit, its cooldown not shown over it
+        internal static bool Ends(RavenAbility a)
+        {
+            Player p = Player.m_localPlayer;
+            if (a == null || a.Passive || p == null) return false;
+            if (a.Pair) return PairGifts.Ends(a);
+            switch (a.Id)
+            {
+                case "light": return RavenLight.On(p);
+                case "hflight": return OdinWings.Flying() && !OdinWings.Sinking();
+                case "mberserk": return Beast.On();
+                case "hdecoy": return Decoy.Mine();
+                case "mtame": return Tame.Mine();
+                case "dome": return Dome.Mine();
+                case "leap": return Leap.On(p) && !Leap.Stopping(p);
+            }
+            return false;
+        }
+
         internal static bool UsableNow(RavenAbility a)
         {
             if (a == null || a.Passive) return false;
-            if (a.Id == "light" && RavenLight.On(Player.m_localPlayer)) return true; // pressing it puts the light out
-            if (a.Id == "hflight" && OdinWings.Flying()) return !OdinWings.Sinking(); // pressing it lands you
-            if (a.Id == "mberserk" && Beast.On()) return true; // pressing it calms the beast
+            if (Ends(a)) return true; // pressing it ends it
+            if (a.Pair) return PairGifts.Usable(a);
+            if (a.Id == "hflight" && OdinWings.Flying()) return false; // (already coming down)
             if (GiftBlock(a) != null) return false;
             ItemDrop.ItemData raven = Trust.Worn(a.Munin);
             if (raven == null || Trust.Away(raven) || RavenAbilities.Stub(a)) return false;
@@ -224,6 +267,7 @@ namespace HuginWhispers
             if (Quirks.Blocks(Player.m_localPlayer, a.Munin, a.Id) != null) return false;
             bool thought = a.Id == "thought" || a.Id == "mthought";
             if (!Trust.Active(raven)) return thought && Left(AsleepId(a.Munin)) <= 0f;
+            if (!thought && Trust.Hostile(raven)) return false;
             return RavenAbilities.Unlocked(a) && Left(a.Id) <= 0f && Power.Current(a.Munin) >= Mathf.RoundToInt(a.Cost());
         }
 
@@ -244,13 +288,14 @@ namespace HuginWhispers
         internal static int Dot(RavenAbility a)
         {
             if (a == null || a.Passive || RavenAbilities.Stub(a)) return DotNone;
-            if (a.Id == "light" && RavenLight.On(Player.m_localPlayer)) return DotReady; // pressing it puts the light out
-            if (a.Id == "hflight" && OdinWings.Flying()) return DotReady;
-            if (a.Id == "mberserk" && Beast.On()) return DotReady;
+            if (Ends(a)) return DotReady; // pressing it ends it
+            if (a.Pair) return PairGifts.Dot(a);
+            if (a.Id == "hflight" && OdinWings.Flying()) return DotWait; // (already coming down)
             if (GiftBlock(a) != null) return DotWait;
             if (Trust.Worn(a.Munin) != null && !Shoulder.Arrived(Player.m_localPlayer, a.Munin)) return DotWait;
             ItemDrop.ItemData raven = Trust.Worn(a.Munin);
             if (raven == null || Trust.Away(raven) || !Trust.Active(raven) || !RavenAbilities.Unlocked(a)) return DotNone;
+            if (Trust.Hostile(raven) && a.Id != "thought" && a.Id != "mthought") return DotNone;
             if (Strike.Busy(Player.m_localPlayer, a.Munin)) return DotWait;
             if (Quirks.Blocks(Player.m_localPlayer, a.Munin, a.Id) != null) return DotWait;
             if (!a.Munin && Scouting()) return DotWait;
@@ -288,7 +333,7 @@ namespace HuginWhispers
         }
 
         // how long an ability waits now, with the trust of the worn raven
-        internal static float CooldownSeconds(string id) { return Mathf.Round(CooldownBase(id) * GiftUp.CooldownMul(id) * RuneStars.CooldownMulOf(id)); } // (golden runes: level II; «Попіл»)
+        internal static float CooldownSeconds(string id) { return Mathf.Round(CooldownBase(id) * GiftUp.CooldownMul(id) * RuneStars.CooldownMulOf(id) * Habits.CooldownMul(id)); } // (golden runes: level II; «Попіл»)
 
         private static float CooldownBase(string id)
         {
@@ -298,19 +343,23 @@ namespace HuginWhispers
                 case "mthought": return Trust.Sooner(true, Mathf.Max(1f, MuninThoughtCooldown));
                 case "scout": return Trust.Sooner(false, ScoutCooldown);
                 case "light": return Trust.Sooner(false, LightCooldown);
-                case "leap": return Trust.RoundTime(Trust.Lerp(false, LeapCooldown, LeapCooldownTop));
-                case "shadow": return Trust.RoundTime(Trust.Lerp(false, ShadowCooldown, ShadowCooldownTop));
-                case "dome": return Trust.RoundTime(Trust.Lerp(false, DomeCooldown, DomeCooldownTop) * GearFx.GuardCooldownMul(false)); // (Спіраль захисту)
+                case "leap": return Trust.RoundTime(Trust.LerpGift("leap", LeapCooldown, LeapCooldownTop));
+                case "shadow": return Trust.RoundTime(Trust.LerpGift("shadow", ShadowCooldown, ShadowCooldownTop));
+                case "dome": return Trust.RoundTime(Trust.LerpGift("dome", DomeCooldown, DomeCooldownTop) * GearFx.GuardCooldownMul(false)); // (Спіраль захисту)
                 case "hstrike": return Trust.Sooner(false, Strike.HuginCooldown * Norov.CooldownMul(Trust.Worn(false)) * GearFx.StrikeCooldownMul(Trust.Worn(false))); // (its knack «Швидке крило», «Кігті комара»)
                 case "mstrike": return Trust.Sooner(true, Strike.MuninCooldown * Norov.CooldownMul(Trust.Worn(true)) * GearFx.StrikeCooldownMul(Trust.Worn(true)));
-                case "scream": return Trust.RoundTime(Trust.Lerp(true, ScreamCooldown, ScreamCooldownTop));
-                case "fury": return Trust.RoundTime(Trust.Lerp(true, FuryCooldown, FuryCooldownTop));
-                case "wings": return Trust.RoundTime(Trust.Lerp(true, WingsCooldown, WingsCooldownTop));
-                case "heal": return Trust.RoundTime(Trust.Lerp(true, HealCooldown, HealCooldownTop) * GearFx.GuardCooldownMul(true));
+                case "scream": return Trust.RoundTime(Trust.LerpGift("scream", ScreamCooldown, ScreamCooldownTop));
+                case "fury": return Trust.RoundTime(Trust.LerpGift("fury", FuryCooldown, FuryCooldownTop));
+                case "wings": return Trust.RoundTime(Trust.LerpGift("wings", WingsCooldown, WingsCooldownTop));
+                case "heal": return Trust.RoundTime(Trust.LerpGift("heal", HealCooldown, HealCooldownTop) * GearFx.GuardCooldownMul(true));
                 case "hflight": return Trust.RoundTime(FlightCooldown);
                 case "hdecoy": return Trust.RoundTime(Trust.LerpFrom(false, RavenAbilities.UnlockLevel(RavenAbilities.Find("hdecoy")), Decoy.Cooldown, Decoy.CooldownTop)); // (from the gift's own first level)
                 case "mberserk": return Trust.RoundTime(BeastCooldown);
-                case "ward": return Trust.RoundTime(Trust.Lerp(true, WardCooldown, WardCooldownTop) * GearFx.GuardCooldownMul(true)); // (Спіраль захисту)
+                case "mtame": return Trust.RoundTime(Trust.LerpGift("mtame", Tame.CooldownMinutes * 60f, Tame.CooldownMinutesTop * 60f));
+                case "ward": return Trust.RoundTime(Trust.LerpGift("ward", WardCooldown, WardCooldownTop) * GearFx.GuardCooldownMul(true)); // (Спіраль захисту)
+                case "pwhirl": return Trust.RoundTime(Whirl.Cooldown);
+                case "pload": return Trust.RoundTime(Load.Cooldown);
+                case "pclear": return Trust.RoundTime(ClearSky.Cooldown);
             }
             return 5f;
         }
@@ -333,6 +382,8 @@ namespace HuginWhispers
             if (p != null) WorldTime.Set(p.m_customData, CooldownKey + id, Mathf.Max(0f, left));
         }
 
+        internal static void StartCooldown(string id) { Cooldown(id); } // (the paired gifts: PairGifts)
+
         private static void Cooldown(string id)
         {
             float seconds = Mathf.Max(1f, CooldownSeconds(id));
@@ -345,6 +396,12 @@ namespace HuginWhispers
         {
             ZRoutedRpc.instance.Register<ZPackage>(RpcSay, new Action<long, ZPackage>(OnSay));
             RavenTalk.Register();
+            Victim.Register();
+            Breeds.Register();
+            Bonds.Register();
+            NearCast.Register();
+            Pack.Register();
+            JointPlay.Register();
             CrossTalk.Register();
             PassTalk.Register();
             Fury.Register();
@@ -358,9 +415,16 @@ namespace HuginWhispers
             ShoulderLife.Register();
             GearDress.Register();
             Fear.Register();
+            WorldVisit.Register();
+            GraveRavens.Register();
+            ChaseGame.Register();
+            Share.Register();
+            People.Register();
+            Gathering.Register();
             Decoy.Register();
             Champions.Register();
             BindRun.Register();
+            BindFx.Register();
             Facets.Register();
             ErrandNet.Register();
             Post.Register();
@@ -372,6 +436,12 @@ namespace HuginWhispers
             PlayerAnims.Register();
             Strike.Register();
             Marks.Register();
+            SiegeNet.Register();
+            ShipPlay.Register();
+            BloodRevenge.Register();
+            Tame.Register();
+            OmenFate.Register();
+            KillCredit.Register();
         }
 
         // from the plugin's Update
@@ -387,42 +457,51 @@ namespace HuginWhispers
 
         internal static void Update(Plugin plugin)
         {
-            try { RavenItem.TickIcons(); } catch (Exception e) { Fault("RavenItem.TickIcons", e); }
-            try { Shoulder.Tick(); } catch (Exception e) { Fault("Shoulder.Tick", e); }
-            try { Slow.Frame(); } catch (Exception e) { Fault("Slow.Frame", e); }
-            try { RavenLight.Tick(); } catch (Exception e) { Fault("RavenLight.Tick", e); }
-            try { WingsFx.Tick(); } catch (Exception e) { Fault("WingsFx.Tick", e); }
-            try { RavenBook.Update(); } catch (Exception e) { Fault("RavenBook.Update", e); }
-            try { Facets.Frame(); } catch (Exception e) { Fault("Facets.Frame", e); }
-            try { RavenKeys.Update(); } catch (Exception e) { Fault("RavenKeys.Update", e); }
-            try { DropLook.Tick(); } catch (Exception e) { Fault("DropLook.Tick", e); }
-            try { Shadow.TickOthers(); } catch (Exception e) { Fault("Shadow.TickOthers", e); }
-            try { Dome.Tick(); } catch (Exception e) { Fault("Dome.Tick", e); }
-            try { Ward.Tick(); } catch (Exception e) { Fault("Ward.Tick", e); }
-            try { OdinWings.Tick(); } catch (Exception e) { Fault("OdinWings.Tick", e); }
-            try { Decoy.Tick(); } catch (Exception e) { Fault("Decoy.Tick", e); }
-            try { Beast.Tick(); } catch (Exception e) { Fault("Beast.Tick", e); }
-            try { PlayerAnims.Tick(); } catch (Exception e) { Fault("PlayerAnims.Tick", e); }
-            try { Marks.Tick(); } catch (Exception e) { Fault("Marks.Tick", e); }
-            try { if (_scoutUntil > 0f) TickScout(); } catch (Exception e) { Fault("TickScout", e); }
-            try { if (_orePinsUntil > 0f && Time.time >= _orePinsUntil) ClearOre(); } catch (Exception e) { Fault("ClearOre", e); }
+            { long ts = Perf.On ? Perf.Now : 0; try { RavenItem.TickIcons(); } catch (Exception e) { Fault("RavenItem.TickIcons", e); } if (Perf.On) Perf.Step("RavenItem.TickIcons", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Shoulder.Tick(); } catch (Exception e) { Fault("Shoulder.Tick", e); } if (Perf.On) Perf.Step("Shoulder.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Slow.Frame(); } catch (Exception e) { Fault("Slow.Frame", e); } if (Perf.On) Perf.Step("Slow.Frame", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { RavenLight.Tick(); } catch (Exception e) { Fault("RavenLight.Tick", e); } if (Perf.On) Perf.Step("RavenLight.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { WingsFx.Tick(); } catch (Exception e) { Fault("WingsFx.Tick", e); } if (Perf.On) Perf.Step("WingsFx.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { RavenBook.Update(); } catch (Exception e) { Fault("RavenBook.Update", e); } if (Perf.On) Perf.Step("RavenBook.Update", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Facets.Frame(); } catch (Exception e) { Fault("Facets.Frame", e); } if (Perf.On) Perf.Step("Facets.Frame", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { RavenKeys.Update(); } catch (Exception e) { Fault("RavenKeys.Update", e); } if (Perf.On) Perf.Step("RavenKeys.Update", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { DropLook.Tick(); } catch (Exception e) { Fault("DropLook.Tick", e); } if (Perf.On) Perf.Step("DropLook.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Shadow.TickOthers(); } catch (Exception e) { Fault("Shadow.TickOthers", e); } if (Perf.On) Perf.Step("Shadow.TickOthers", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Dome.Tick(); } catch (Exception e) { Fault("Dome.Tick", e); } if (Perf.On) Perf.Step("Dome.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Ward.Tick(); } catch (Exception e) { Fault("Ward.Tick", e); } if (Perf.On) Perf.Step("Ward.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { OdinWings.Tick(); } catch (Exception e) { Fault("OdinWings.Tick", e); } if (Perf.On) Perf.Step("OdinWings.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Decoy.Tick(); } catch (Exception e) { Fault("Decoy.Tick", e); } if (Perf.On) Perf.Step("Decoy.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Beast.Tick(); } catch (Exception e) { Fault("Beast.Tick", e); } if (Perf.On) Perf.Step("Beast.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { PairGifts.Tick(); } catch (Exception e) { Fault("PairGifts.Tick", e); } if (Perf.On) Perf.Step("PairGifts.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { PlayerAnims.Tick(); } catch (Exception e) { Fault("PlayerAnims.Tick", e); } if (Perf.On) Perf.Step("PlayerAnims.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Marks.Tick(); } catch (Exception e) { Fault("Marks.Tick", e); } if (Perf.On) Perf.Step("Marks.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Studio.Tick(); } catch (Exception e) { Fault("Studio.Tick", e); } if (Perf.On) Perf.Step("Studio.Tick", ts); } // (asleep without its folder)
+            { long ts = Perf.On ? Perf.Now : 0; try { Pet.Tick(); } catch (Exception e) { Fault("Pet.Tick", e); } if (Perf.On) Perf.Step("Pet.Tick", ts); } // (standing a while: a stroke for a raven now and then)
+            { long ts = Perf.On ? Perf.Now : 0; try { Mead.Tick(); } catch (Exception e) { Fault("Mead.Tick", e); } if (Perf.On) Perf.Step("Mead.Tick", ts); } // (a raven tipsy on your mead)
+            { long ts = Perf.On ? Perf.Now : 0; try { Mastery.Tick(Player.m_localPlayer); } catch (Exception e) { Fault("Mastery.Tick", e); } if (Perf.On) Perf.Step("Mastery.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { if (_scoutUntil > 0f) TickScout(); } catch (Exception e) { Fault("TickScout", e); } if (Perf.On) Perf.Step("TickScout", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { if (_orePinsUntil > 0f && Time.time >= _orePinsUntil) ClearOre(); } catch (Exception e) { Fault("ClearOre", e); } if (Perf.On) Perf.Step("ClearOre", ts); }
             Player p = Player.m_localPlayer;
             if (p == null) return;
-            try { Leap.Tick(p); } catch (Exception e) { Fault("Leap.Tick", e); }
-            try { Shadow.Tick(p); } catch (Exception e) { Fault("Shadow.Tick", e); }
-            try { WeakPassive.Tick(p); } catch (Exception e) { Fault("WeakPassive.Tick", e); }
+            { long ts = Perf.On ? Perf.Now : 0; try { ShipPlay.Frame(); } catch (Exception e) { Fault("ShipPlay.Frame", e); } if (Perf.On) Perf.Step("ShipPlay.Frame", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Leap.Tick(p); } catch (Exception e) { Fault("Leap.Tick", e); } if (Perf.On) Perf.Step("Leap.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { Shadow.Tick(p); } catch (Exception e) { Fault("Shadow.Tick", e); } if (Perf.On) Perf.Step("Shadow.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; try { WeakPassive.Tick(p); } catch (Exception e) { Fault("WeakPassive.Tick", e); } if (Perf.On) Perf.Step("WeakPassive.Tick", ts); }
 
             ItemDrop.ItemData hugin, munin;
             RavenItem.Worn(p, out hugin, out munin);
             if (Time.time >= _nextSync)
             {
                 _nextSync = Time.time + 0.5f;
-                try { RavenItem.KeepSingle(p); } catch (Exception e) { Fault("RavenItem.KeepSingle", e); }
-                try { Perks.Sync(p); } catch (Exception e) { Fault("Perks.Sync", e); }
-                try { Power.Tick(p); } catch (Exception e) { Fault("Power.Tick", e); }
-                try { Perks.ShoulderName(p); } catch (Exception e) { Fault("Perks.ShoulderName", e); }
-                try { Strike.Watch(p); } catch (Exception e) { Fault("Strike.Watch", e); }
-                try { Perches.Tick(p); } catch (Exception e) { Fault("Perches.Tick", e); } // ravens on perches: strength, sent off, called back
+                { long ts = Perf.On ? Perf.Now : 0; try { RavenItem.KeepSingle(p); } catch (Exception e) { Fault("RavenItem.KeepSingle", e); } if (Perf.On) Perf.Step("RavenItem.KeepSingle", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Perks.Sync(p); } catch (Exception e) { Fault("Perks.Sync", e); } if (Perf.On) Perf.Step("Perks.Sync", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { PerkFx.Tick(p); } catch (Exception e) { Fault("PerkFx.Tick", e); } if (Perf.On) Perf.Step("PerkFx.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Power.Tick(p); } catch (Exception e) { Fault("Power.Tick", e); } if (Perf.On) Perf.Step("Power.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Perks.ShoulderName(p); } catch (Exception e) { Fault("Perks.ShoulderName", e); } if (Perf.On) Perf.Step("Perks.ShoulderName", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Strike.Watch(p); } catch (Exception e) { Fault("Strike.Watch", e); } if (Perf.On) Perf.Step("Strike.Watch", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { ShipPlay.Tick(p); } catch (Exception e) { Fault("ShipPlay.Tick", e); } if (Perf.On) Perf.Step("ShipPlay.Tick", ts); } // «За кормою»: a play behind the ship now and then
+                { long ts = Perf.On ? Perf.Now : 0; try { EndOrphaned(p, hugin, munin); } catch (Exception e) { Fault("EndOrphaned", e); } if (Perf.On) Perf.Step("EndOrphaned", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Perches.Tick(p); } catch (Exception e) { Fault("Perches.Tick", e); } if (Perf.On) Perf.Step("Perches.Tick", ts); } // ravens on perches: strength, sent off, called back
                 try
                 {
                     Shoulder.Publish(p, hugin != null && !Trust.Away(hugin), // over the dome he is still "on you": his own model flies it (DomeRaven)
@@ -430,25 +509,62 @@ namespace HuginWhispers
                         hugin != null ? Trust.ShownLevel(false, hugin) : 0, munin != null ? Trust.ShownLevel(true, munin) : 0);
                 }
                 catch (Exception e) { Fault("Shoulder.Publish", e); }
-                try { RavenLight.Publish(p); } catch (Exception e) { Fault("RavenLight.Publish", e); }
-                try { WingsFx.Publish(p); } catch (Exception e) { Fault("WingsFx.Publish", e); }
-                try { Shadow.Publish(p); } catch (Exception e) { Fault("Shadow.Publish", e); }
-                try { Fury.Publish(p); } catch (Exception e) { Fault("Fury.Publish", e); }
-                try { Outfits.Publish(p, hugin, munin); } catch (Exception e) { Fault("Outfits.Publish", e); }
-                try { RavenWear.Publish(p, hugin, munin); } catch (Exception e) { Fault("RavenWear.Publish", e); }
-                try { Norov.Publish(p, hugin, munin); } catch (Exception e) { Fault("Norov.Publish", e); } // each raven's character: every game flies it so
-                try { Voice.Publish(p, hugin, munin); } catch (Exception e) { Fault("Voice.Publish", e); } // and its own voice and manner
-                try { Gossip.Publish(p, hugin, munin); } catch (Exception e) { Fault("Gossip.Publish", e); } // and a few fresh facts for the others' ravens to gossip about
-                try { RavenSeat.Tick(p); } catch (Exception e) { Fault("RavenSeat.Tick", e); }
-                try { Loyal.Tick(p); } catch (Exception e) { Fault("Loyal.Tick", e); }
-                try { RavenTalk.Tick(p); } catch (Exception e) { Fault("RavenTalk.Tick", e); }
-                try { EmoteTalk.Tick(p); } catch (Exception e) { Fault("EmoteTalk.Tick", e); } // a word about your dance, bow, wave...
-                try { CrossTalk.Tick(p); } catch (Exception e) { Fault("CrossTalk.Tick", e); } // with other players' ravens
-                try { Nicks.Tick(p); } catch (Exception e) { Fault("Nicks.Tick", e); } // their nicknames: the deeds counted, new ones opened, the chosen one shown to others
-                try { Trust.Tick(p); } catch (Exception e) { Fault("Trust.Tick", e); }
-                try { Backup.Tick(p); } catch (Exception e) { Fault("Backup.Tick", e); }
-                try { MuninDeeds.Tick(p); } catch (Exception e) { Fault("MuninDeeds.Tick", e); }
-                try { Cozy.Tick(p); } catch (Exception e) { Fault("Cozy.Tick", e); }
+                { long ts = Perf.On ? Perf.Now : 0; try { RavenLight.Publish(p); } catch (Exception e) { Fault("RavenLight.Publish", e); } if (Perf.On) Perf.Step("RavenLight.Publish", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { WingsFx.Publish(p); } catch (Exception e) { Fault("WingsFx.Publish", e); } if (Perf.On) Perf.Step("WingsFx.Publish", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Shadow.Publish(p); } catch (Exception e) { Fault("Shadow.Publish", e); } if (Perf.On) Perf.Step("Shadow.Publish", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Fury.Publish(p); } catch (Exception e) { Fault("Fury.Publish", e); } if (Perf.On) Perf.Step("Fury.Publish", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Outfits.Publish(p, hugin, munin); } catch (Exception e) { Fault("Outfits.Publish", e); } if (Perf.On) Perf.Step("Outfits.Publish", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { RavenWear.Publish(p, hugin, munin); } catch (Exception e) { Fault("RavenWear.Publish", e); } if (Perf.On) Perf.Step("RavenWear.Publish", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Norov.Publish(p, hugin, munin); } catch (Exception e) { Fault("Norov.Publish", e); } if (Perf.On) Perf.Step("Norov.Publish", ts); } // each raven's character: every game flies it so
+                { long ts = Perf.On ? Perf.Now : 0; try { Voice.Publish(p, hugin, munin); } catch (Exception e) { Fault("Voice.Publish", e); } if (Perf.On) Perf.Step("Voice.Publish", ts); } // and its own voice and manner
+                { long ts = Perf.On ? Perf.Now : 0; try { Gossip.Publish(p, hugin, munin); } catch (Exception e) { Fault("Gossip.Publish", e); } if (Perf.On) Perf.Step("Gossip.Publish", ts); } // and a few fresh facts for the others' ravens to gossip about
+                { long ts = Perf.On ? Perf.Now : 0; try { RavenSeat.Tick(p); } catch (Exception e) { Fault("RavenSeat.Tick", e); } if (Perf.On) Perf.Step("RavenSeat.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Loyal.Tick(p); } catch (Exception e) { Fault("Loyal.Tick", e); } if (Perf.On) Perf.Step("Loyal.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Tame.Tick(p); } catch (Exception e) { Fault("Tame.Tick", e); } if (Perf.On) Perf.Step("Tame.Tick", ts); } // Munin's «Приборкання»: on the beast
+                { long ts = Perf.On ? Perf.Now : 0; try { BloodRevenge.Tick(p); } catch (Exception e) { Fault("BloodRevenge.Tick", e); } if (Perf.On) Perf.Step("BloodRevenge.Tick", ts); } // Munin's «Кровна помста»: the marked killer
+                { long ts = Perf.On ? Perf.Now : 0; try { Omen.Tick(p); Omen.TickLate(p); } catch (Exception e) { Fault("Omen.Tick", e); } if (Perf.On) Perf.Step("Omen.Tick", ts); } // Hugin's «Віщування»: the morning, the sea
+                { long ts = Perf.On ? Perf.Now : 0; try { RavenTalk.Tick(p); } catch (Exception e) { Fault("RavenTalk.Tick", e); } if (Perf.On) Perf.Step("RavenTalk.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { EmoteTalk.Tick(p); } catch (Exception e) { Fault("EmoteTalk.Tick", e); } if (Perf.On) Perf.Step("EmoteTalk.Tick", ts); } // a word about your dance, bow, wave...
+                { long ts = Perf.On ? Perf.Now : 0; try { Victim.Tick(p); } catch (Exception e) { Fault("Victim.Tick", e); } if (Perf.On) Perf.Step("Victim.Tick", ts); } // «Жертва»: a spell of mockery now and then
+                { long ts = Perf.On ? Perf.Now : 0; try { Breeds.Tick(p); } catch (Exception e) { Fault("Breeds.Tick", e); } if (Perf.On) Perf.Step("Breeds.Tick", ts); } // a raven's breed: rolled once, shown when it wakes
+                { long ts = Perf.On ? Perf.Now : 0; try { BreedTraits.Tick(p); } catch (Exception e) { Fault("BreedTraits.Tick", e); } if (Perf.On) Perf.Step("BreedTraits.Tick", ts); } // its trait's senses and its own words
+                { long ts = Perf.On ? Perf.Now : 0; try { FightJudge.Tick(p); } catch (Exception e) { Fault("FightJudge.Tick", e); } if (Perf.On) Perf.Step("FightJudge.Tick", ts); } // «Суддя бою»: a fight worth it over, judged
+                { long ts = Perf.On ? Perf.Now : 0; try { NewGear.Tick(p); } catch (Exception e) { Fault("NewGear.Tick", e); } if (Perf.On) Perf.Step("NewGear.Tick", ts); } // «Оглядає обнову»: a thing never worn before, looked over
+                { long ts = Perf.On ? Perf.Now : 0; try { Habits.Tick(p); } catch (Exception e) { Fault("Habits.Tick", e); } if (Perf.On) Perf.Step("Habits.Tick", ts); } // «Звички»: the day's doings counted, weighed at dawn
+                { long ts = Perf.On ? Perf.Now : 0; try { Bath.Tick(p); } catch (Exception e) { Fault("Bath.Tick", e); } if (Perf.On) Perf.Step("Bath.Tick", ts); } // «Купання»: the dirt, the shake on you after
+                { long ts = Perf.On ? Perf.Now : 0; try { BeastPlay.Tick(p); } catch (Exception e) { Fault("BeastPlay.Tick", e); } if (Perf.On) Perf.Step("BeastPlay.Tick", ts); } // «Гра зі звіром»: the beast steered, a game by itself now and then
+                { long ts = Perf.On ? Perf.Now : 0; try { JointPlay.Tick(p); } catch (Exception e) { Fault("JointPlay.Tick", e); } if (Perf.On) Perf.Step("JointPlay.Tick", ts); } // games with other players' ravens: invitations, the end
+                { long ts = Perf.On ? Perf.Now : 0; try { Bonds.Tick(p); } catch (Exception e) { Fault("Bonds.Tick", e); } if (Perf.On) Perf.Step("Bonds.Tick", ts); } // how its ravens get along with the others' ravens near
+                { long ts = Perf.On ? Perf.Now : 0; try { Pack.Tick(p); } catch (Exception e) { Fault("Pack.Tick", e); } if (Perf.On) Perf.Step("Pack.Tick", ts); } // friend ravens at a foe together
+                { long ts = Perf.On ? Perf.Now : 0; try { People.Tick(p); } catch (Exception e) { Fault("People.Tick", e); } if (Perf.On) Perf.Step("People.Tick", ts); } // how its ravens take to the other players near
+                { long ts = Perf.On ? Perf.Now : 0; try { Share.Tick(p); } catch (Exception e) { Fault("Share.Tick", e); } if (Perf.On) Perf.Step("Share.Tick", ts); } // a fed raven gives a hungry one a bite
+                { long ts = Perf.On ? Perf.Now : 0; try { Gathering.Tick(p); } catch (Exception e) { Fault("Gathering.Tick", e); } if (Perf.On) Perf.Step("Gathering.Tick", ts); } // the ravens' evening gathering by a fire
+                { long ts = Perf.On ? Perf.Now : 0; try { CrossTalk.Tick(p); } catch (Exception e) { Fault("CrossTalk.Tick", e); } if (Perf.On) Perf.Step("CrossTalk.Tick", ts); } // with other players' ravens
+                { long ts = Perf.On ? Perf.Now : 0; try { Nicks.Tick(p); } catch (Exception e) { Fault("Nicks.Tick", e); } if (Perf.On) Perf.Step("Nicks.Tick", ts); } // their nicknames: the deeds counted, new ones opened, the chosen one shown to others
+                { long ts = Perf.On ? Perf.Now : 0; try { Trust.Tick(p); } catch (Exception e) { Fault("Trust.Tick", e); } if (Perf.On) Perf.Step("Trust.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Backup.Tick(p); } catch (Exception e) { Fault("Backup.Tick", e); } if (Perf.On) Perf.Step("Backup.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { MuninDeeds.Tick(p); } catch (Exception e) { Fault("MuninDeeds.Tick", e); } if (Perf.On) Perf.Step("MuninDeeds.Tick", ts); }
+                { long ts = Perf.On ? Perf.Now : 0; try { Cozy.Tick(p); } catch (Exception e) { Fault("Cozy.Tick", e); } if (Perf.On) Perf.Step("Cozy.Tick", ts); }
+            }
+        }
+
+        // a gift goes on only while its raven is with you: taken off, or gone (the nest, a letter, a perch, a flight of
+        // its own) — what it holds up ends (the wings set you down gently)
+        private static void EndOrphaned(Player p, ItemDrop.ItemData hugin, ItemDrop.ItemData munin)
+        {
+            bool h = hugin != null && !Trust.Away(hugin), m = munin != null && !Trust.Away(munin);
+            if (!h)
+            {
+                if (OdinWings.Flying() && !OdinWings.Sinking()) OdinWings.Sink(p);
+                if (Dome.Mine()) Dome.Lower();
+                if (Decoy.Mine()) Decoy.Recall(p);
+                if (RavenLight.On(p)) RavenLight.Stop(p);
+            }
+            if (!m && Beast.On()) Beast.End(p, true);
+            if (!h || !m)
+            {
+                if (Load.On()) Load.End(p, false);
+                if (ClearSky.Mine()) ClearSky.End(p, false);
             }
         }
 
@@ -502,7 +618,7 @@ namespace HuginWhispers
             if (!Ready(p, id, munin ? Lang.T("Мунін ще чистить кігті") : Lang.T("Хугін ще переводить подих"))) return;
             // it always flies: at the one in your sights if it can, else the nearest (a word in the corner why not yours)
             string aimNote;
-            List<Character> targets = Strike.Targets(p, munin, Strike.RangeOf(item), out aimNote);
+            List<Character> targets = Strike.Targets(p, munin, Strike.RangeOf(item), out aimNote, item);
             string scared = Quirks.TimidRefuses(p, munin, targets); // «Боязкий»: not at a fresh boss (nothing spent)
             if (scared != null) { RavenMsg.Center(p, scared); return; }
             float cost = Strike.CostOf(munin, item) * GiftUp.CostMul(id);
@@ -511,6 +627,28 @@ namespace HuginWhispers
             if (aimNote != null) p.Message(MessageHud.MessageType.TopLeft, Plugin.RavenName(munin) + ": " + aimNote + (targets.Count > 0 ? Lang.T(" · бере найближчу") : ""));
             Strike.Launch(p, munin, item, Power.Price(munin, cost), targets); // its words come when it is back on the shoulder
             _nextSync = 0f; // the book and the shoulder see the flight at once
+        }
+
+        // a strike nobody pressed for («Відплата»: after a parry): only when the gift itself could fly now, and quietly —
+        // no word when it cannot, no strength, no pause of the gift
+        internal static bool FreeStrike(Player p, bool munin, Character target)
+        {
+            if (p == null || p.IsDead() || target == null || !Strike.Prey(p, target)) return false;
+            ItemDrop.ItemData hugin, mun;
+            RavenItem.Worn(p, out hugin, out mun);
+            ItemDrop.ItemData item = munin ? mun : hugin;
+            RavenAbility a = RavenAbilities.Find(munin ? "mstrike" : "hstrike");
+            if (item == null || a == null || GiftBlock(a) != null || !Shoulder.Arrived(p, munin) || Strike.Busy(p, munin)) return false;
+            if (Trust.Away(item) || !Trust.Active(item) || Trust.Stranger(item, p) || !RavenAbilities.Unlocked(a) || Quirks.Blocks(p, munin, a.Id) != null || Strike.Refused(p) != null) return false;
+            if (!munin && (Decoy.Mine() || Scouting() || Dome.Mine())) return false;
+            string off;
+            if (OffShoulder(p, munin, out off)) return false;
+            if (Vector3.Distance(p.transform.position, target.transform.position) > Strike.RangeOf(item) || !Strike.Seen(p, target)) return false;
+            List<Character> one = new List<Character> { target };
+            if (Quirks.TimidRefuses(p, munin, one) != null) return false; // («Боязкий»: not at a fresh boss, as when pressed)
+            Strike.Launch(p, munin, item, 0f, one);
+            _nextSync = 0f;
+            return true;
         }
 
         // a raven about its strikes, in the tone of its trust (no line: it just flies)
@@ -536,10 +674,13 @@ namespace HuginWhispers
 
         private static void Speak(Player p, bool munin, string line)
         {
+            line = Words.Season(p, munin, line); // now and then a word you taught it
+            line = Mead.Slur(p, munin, line);    // tipsy: a hiccup into it
             Cozy.Quiet(SaySeconds(line)); // the other raven, and the fireside story, wait for these words
             line = Grammar.Fix(line, p);
             if (munin) line = Beast.Rabid(p, line); // the beast awake: Munin yells it, with a curse
             Say(p, munin, line);
+            PlayerAnims.Listen(p, munin); // you turn your head to it
             Animator anim = Shoulder.LocalAnimator(munin);
             ShoulderLife.TalkOn(anim);
             ShoulderLife life = Shoulder.LocalLife(munin);
@@ -578,6 +719,8 @@ namespace HuginWhispers
                 {
                     if (Shadow.Flagged(other)) return; // in the shadow: no words over an unseen head, nor in the chat
                     Say(other, munin, line);
+                    ShoulderLife life = Shoulder.LifeOf(other, munin); // its beak and head as it speaks, as on its owner's game
+                    if (life != null) { life.Talk(); life.Wake(4f); }
                     speaker = other;
                     break;
                 }
@@ -849,17 +992,23 @@ namespace HuginWhispers
             int n = 0;
             foreach (Container box in UnityEngine.Object.FindObjectsByType<Container>(FindObjectsSortMode.None))
             {
-                if (box == null || (box.transform.position - at).sqrMagnitude > radius * radius) continue;
-                Piece pc = box.GetComponent<Piece>();
-                if (pc != null && pc.GetCreator() != 0L) continue; // someone's own
-                if (box.GetComponent<TombStone>() != null) continue; // a player's grave
-                if (box.GetComponentInParent<Ship>() != null || box.GetComponentInParent<Vagon>() != null) continue;
+                if (box == null || (box.transform.position - at).sqrMagnitude > radius * radius || !WorldChest(box)) continue;
                 Minimap.PinData pin = Minimap.instance.AddPin(box.transform.position, ScoutPin, Lang.T("скриня"), false, false, 0L, default(Splatform.PlatformUserID));
                 if (coin != null) Icon(pin, coin);
                 OrePins.Add(pin);
                 n++;
             }
             if (n > 0 && _orePinsUntil <= 0f) _orePinsUntil = Time.time + Mathf.Max(0.5f, ScoutOreMinutes) * 60f;
+        }
+
+        // a chest nobody built (the world's, a dungeon's): not someone's own, not a grave, not a ship's or a cart's hold,
+        // not ours on a player (the pouch, a parcel). The scouting and «Нюх на скарби» (PerkFx) both ask
+        internal static bool WorldChest(Container box)
+        {
+            Piece pc = box.GetComponentInParent<Piece>();
+            if (pc != null && pc.GetCreator() != 0L) return false; // someone's own
+            if (box.GetComponent<TombStone>() != null) return false; // a player's grave
+            return box.GetComponentInParent<Ship>() == null && box.GetComponentInParent<Vagon>() == null && box.GetComponentInParent<Player>() == null;
         }
 
         // The ways under the ground loaded within 'radius' of 'at' (only those ahead along 'ahead', when it is given),
@@ -948,6 +1097,38 @@ namespace HuginWhispers
             found.Add(n);
         }
 
+        // the nearest ore deposit within reach (the breed «Іржавий»: BreedTraits), skipping the heaps near any of skip
+        internal static bool NearestOre(Vector3 at, float reach, List<Vector3> skip, out Vector3 pos, out ItemDrop ore)
+        {
+            pos = Vector3.zero; ore = null;
+            float best = reach * reach;
+            try
+            {
+                foreach (MineRock5 r in UnityEngine.Object.FindObjectsByType<MineRock5>(FindObjectsSortMode.None)) Nearer(at, r.transform.position, Ore(r.m_dropItems), skip, ref best, ref pos, ref ore);
+                foreach (MineRock r in UnityEngine.Object.FindObjectsByType<MineRock>(FindObjectsSortMode.None)) Nearer(at, r.transform.position, Ore(r.m_dropItems), skip, ref best, ref pos, ref ore);
+                foreach (DropOnDestroyed d in UnityEngine.Object.FindObjectsByType<DropOnDestroyed>(FindObjectsSortMode.None)) Nearer(at, d.transform.position, Ore(d.m_dropWhenDestroyed), skip, ref best, ref pos, ref ore);
+            }
+            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Raven could not look for ore: " + e.Message); }
+            return ore != null;
+        }
+
+        private static void Nearer(Vector3 at, Vector3 p, ItemDrop it, List<Vector3> skip, ref float best, ref Vector3 pos, ref ItemDrop ore)
+        {
+            if (it == null || !OreKnown(it)) return;
+            float d = (at - p).sqrMagnitude;
+            if (d >= best) return;
+            if (skip != null) foreach (Vector3 v in skip) if ((v - p).sqrMagnitude < 64f) return; // (that heap was shown already)
+            best = d; pos = p; ore = it;
+        }
+
+        // a map pin with the ore's own picture (who made it removes it)
+        internal static Minimap.PinData AddOrePin(Vector3 pos, ItemDrop ore, string name)
+        {
+            Minimap.PinData pin = Minimap.instance.AddPin(pos, ScoutPin, name, false, false, 0L, default(Splatform.PlatformUserID));
+            Icon(pin, ore.m_itemData.GetIcon());
+            return pin;
+        }
+
         private static ItemDrop Ore(DropTable table)
         {
             if (table == null || table.m_drops == null) return null;
@@ -1003,7 +1184,7 @@ namespace HuginWhispers
 
         private static void LeapAbility(Player p)
         {
-            if (Leap.On(p)) { RavenMsg.Center(p, Lang.T("Злет Хугіна ще діє: стрибай")); return; }
+            if (Leap.On(p)) { RavenMsg.Center(p, Lang.T("Злет Хугіна скінчиться, щойно приземлишся")); return; } // (pressed again while it waits for the landing)
             if (!Ready(p, "leap", Lang.T("Хугін ще не готовий підкинути тебе"))) return;
             if (!Power.Spend(p, false, Power.LeapCost * GiftUp.CostMul("leap"))) return;
             Cooldown("leap");
@@ -1083,7 +1264,28 @@ namespace HuginWhispers
         }
 
         // a gift out of place now (the wings on, the beast awake), or null
-        internal static string GiftBlock(RavenAbility a) { return OdinWings.Blocks(a) ?? Beast.Blocks(a); }
+        internal static string GiftBlock(RavenAbility a) { return OdinWings.Blocks(a) ?? Beast.Blocks(a) ?? PairGifts.Blocks(a) ?? GreatBlock(a); }
+
+        // one great gift at a time (the user, 2026-10-24): while Odin's wings, the beast or a paired gift goes on, the
+        // other great ones wait (the one on stays pressable: it ends it)
+        private static readonly string[] Great = { "hflight", "mberserk", "pwhirl", "pload", "pclear" };
+        internal static string GreatOn()
+        {
+            if (OdinWings.Flying()) return "hflight";
+            if (Beast.On()) return "mberserk";
+            if (Whirl.On()) return "pwhirl";
+            if (Load.On()) return "pload";
+            if (ClearSky.Mine()) return "pclear";
+            return null;
+        }
+        internal static string GreatBlock(RavenAbility a)
+        {
+            if (a == null || Array.IndexOf(Great, a.Id) < 0) return null;
+            string on = GreatOn();
+            if (on == null || on == a.Id) return null;
+            RavenAbility g = RavenAbilities.Find(on);
+            return Lang.F("Вже діє «{0}»", g != null ? g.Name : on);
+        }
 
         private static void BeastAbility(Player p)
         {
@@ -1095,6 +1297,12 @@ namespace HuginWhispers
             Beast.Start(p); // (its own waking pose: Beast.WakeClip)
             string line = Plugin.Instance != null ? Plugin.Instance.ComposeTagged(p, true, "beast") : null;
             Speak(p, true, string.IsNullOrEmpty(line) ? Lang.T("ПРОКИДАЙСЯ, ЗВІРЕ! РВИ ЇХ!") : line);
+        }
+
+        private static void TameAbility(Player p, ItemDrop.ItemData munin)
+        {
+            if (!Ready(p, "mtame", Lang.T("Мунін ще не відійшов від минулої худоби"))) return;
+            Tame.Begin(p, munin);
         }
 
         private static void DecoyAbility(Player p, ItemDrop.ItemData hugin)
@@ -1158,12 +1366,13 @@ namespace HuginWhispers
             Shadow.Reveal(p, false); // a scream gives you away
             int hit = 0;
             List<Character> scared = new List<Character>();
+            float reach = ScreamRadius * Trust.Mul(true, 0.05f) * GearFx.ScreamMul() * GiftUp.Power("scream"); // (Дзвінкий ошийник: further)
             foreach (Character c in Character.GetAllCharacters())
             {
                 if (c == null || c.IsPlayer() || c.IsDead() || c.IsTamed()) continue;
                 if (!BaseAI.IsEnemy(p, c)) continue;
                 Vector3 d = c.transform.position - p.transform.position;
-                if (d.magnitude > ScreamRadius * Trust.Mul(true, 0.05f) * GearFx.ScreamMul() * GiftUp.Power("scream")) continue; // (Дзвінкий ошийник: further)
+                if (d.sqrMagnitude > reach * reach) continue;
                 c.Stagger(d.normalized);
                 if (!c.IsBoss() && Facets.On("scream")) Push(p, c, d); // («Крик» III: thrown back)
                 if (!c.IsBoss()) scared.Add(c); // bosses are not frightened

@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Шолом вороної валькірії
+note: Срібні крила обабіч, золото на гребені. Ворон певен, що валькірії підгледіли фасон у нього.
+use: gear
+id: sholom_voronoi_valkirii
+slot: head
+part asset/Шапки/HatCrowValkyrie pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatCrowValkyrie (Шапки)

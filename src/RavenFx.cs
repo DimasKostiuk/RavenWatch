@@ -10,7 +10,7 @@ namespace HuginWhispers
     // and materials that have to go when their effect goes.
     internal static class RavenFx
     {
-        private const float HearRange = 100f;
+        internal const float HearRange = 100f;
 
         // ---------------------------------------------------------------- seen by everyone nearby
 
@@ -255,18 +255,27 @@ namespace HuginWhispers
         }
     }
 
-    // "raven perf": for a few seconds the mod's own work each frame is timed (its main loop, the shoulder ravens,
-    // and what the monsters ask about the shadow), then the average and the worst frame are told.
+    // "raven perf": for a few seconds the mod's own work each frame is timed (its main loop, every raven on a shoulder
+    // or in the air, the perches, the players' animation layers, what the monsters ask about the shadow), then the
+    // average and the worst frame are told, and each part's share.
     internal static class Perf
     {
+        internal const int Main = 0, Shoulder = 1, Perch = 2, Anim = 3, Shadow = 4;
+        private static readonly string[] PartNames = Lang.Keys("головний цикл", "ворони на плечах і в польоті", "жердини", "анімації гравців", "Тінь (вороги)");
+        private static readonly long[] PartTicks = new long[5], PartFrame = new long[5], PartWorst = new long[5];
+        private static readonly Dictionary<string, long> StepWorst = new Dictionary<string, long>(); // the slowest single run of each step
         internal static bool On;
         private static long _ticks, _frameTicks, _worst;
-        private static int _frames, _lastFrame = -1;
+        private static int _frames, _lastFrame = -1, _gcSeen;
+        private static bool _worstGc;
         private static float _until;
 
         internal static string Start(float seconds)
         {
-            _ticks = 0; _frameTicks = 0; _worst = 0; _frames = 0; _lastFrame = Time.frameCount;
+            _ticks = 0; _frameTicks = 0; _worst = 0; _frames = 0; _lastFrame = Time.frameCount; _worstGc = false;
+            _gcSeen = GC.CollectionCount(0);
+            for (int i = 0; i < PartTicks.Length; i++) { PartTicks[i] = 0; PartFrame[i] = 0; PartWorst[i] = 0; }
+            StepWorst.Clear();
             _until = Time.realtimeSinceStartup + seconds;
             On = true;
             return Lang.F("Міряю {0} с, грай як зазвичай…", Mathf.RoundToInt(seconds));
@@ -274,12 +283,32 @@ namespace HuginWhispers
 
         internal static long Now { get { return System.Diagnostics.Stopwatch.GetTimestamp(); } }
 
-        internal static void Add(long since)
+        internal static void Add(long since, int part)
         {
             if (!On) return;
             long d = System.Diagnostics.Stopwatch.GetTimestamp() - since;
-            if (Time.frameCount != _lastFrame) { if (_frameTicks > _worst) _worst = _frameTicks; _frameTicks = 0; _lastFrame = Time.frameCount; _frames++; }
+            if (Time.frameCount != _lastFrame) { EndFrame(); _lastFrame = Time.frameCount; _frames++; }
             _ticks += d; _frameTicks += d;
+            PartTicks[part] += d; PartFrame[part] += d;
+        }
+
+        // the frame before is over: its sums against the worst (and whether the game's garbage collector ran in it:
+        // its pause lands in whatever code was running, ours too)
+        private static void EndFrame()
+        {
+            int gc = GC.CollectionCount(0);
+            if (_frameTicks > _worst) { _worst = _frameTicks; _worstGc = gc != _gcSeen; }
+            _gcSeen = gc;
+            _frameTicks = 0;
+            for (int i = 0; i < PartFrame.Length; i++) { if (PartFrame[i] > PartWorst[i]) PartWorst[i] = PartFrame[i]; PartFrame[i] = 0; }
+        }
+
+        // one step of the main loop (Shoulder.Tick, Perks.Sync...): its slowest run is kept, by name (the totals are Add's)
+        internal static void Step(string name, long since)
+        {
+            long d = System.Diagnostics.Stopwatch.GetTimestamp() - since;
+            long w;
+            if (!StepWorst.TryGetValue(name, out w) || d > w) StepWorst[name] = d;
         }
 
         // from the plugin's Update: the time is up
@@ -287,8 +316,18 @@ namespace HuginWhispers
         {
             if (!On || Time.realtimeSinceStartup < _until) return;
             On = false;
+            EndFrame();
             double ms = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
-            string text = Lang.F("RavenWatch: у середньому {0} мс на кадр, найгірший кадр {1} мс ({2} кадрів)", (_ticks * ms / Mathf.Max(1, _frames)).ToString("0.000"), (_worst * ms).ToString("0.00"), _frames);
+            int frames = Mathf.Max(1, _frames);
+            string text = Lang.F("RavenWatch: у середньому {0} мс на кадр, найгірший кадр {1} мс ({2} кадрів)", (_ticks * ms / frames).ToString("0.000"), (_worst * ms).ToString("0.00"), _frames);
+            if (_worstGc) text += " — " + Lang.T("у ньому гра збирала сміття (GC)");
+            for (int i = 0; i < PartTicks.Length; i++)
+                if (PartTicks[i] > 0) text += "\n  " + Lang.T(PartNames[i]) + ": " + (PartTicks[i] * ms / frames).ToString("0.000") + " " + Lang.T("мс") + " (" + Lang.T("найгірший") + " " + (PartWorst[i] * ms).ToString("0.00") + ")";
+            List<KeyValuePair<string, long>> steps = new List<KeyValuePair<string, long>>(StepWorst);
+            steps.Sort((a, b) => b.Value.CompareTo(a.Value));
+            if (steps.Count > 0) text += "\n  " + Lang.T("найповільніші кроки:");
+            for (int i = 0; i < steps.Count && i < 8; i++) text += "\n    " + steps[i].Key + " " + (steps[i].Value * ms).ToString("0.00") + " " + Lang.T("мс");
+            text += "\n  " + Lang.F("гравців поруч: {0}, воронів на жердинах: {1}", Player.GetAllPlayers().Count, PerchLife.Count);
             if (Plugin.Instance != null) Plugin.Instance.Log(text);
             if (Player.m_localPlayer != null) Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, text);
             if (global::Console.instance != null) global::Console.instance.Print(text);
@@ -365,6 +404,28 @@ namespace HuginWhispers
         {
             ZDO zdo = Zdo(c, false);
             return zdo != null && zdo.GetBool(key, false);
+        }
+
+        // An order or an outing (0 none, up to 255) with its flight's seed in the next byte, written as one value:
+        // every game reads both at once and flies the same figure (Ring: the flight's random phase, 0..10).
+        internal static int Mode(Character c, string key)
+        {
+            ZDO zdo = Zdo(c, false);
+            return zdo != null ? zdo.GetInt(key, 0) & 0xFF : 0;
+        }
+
+        internal static void SetMode(Character c, string key, int mode)
+        {
+            ZDO zdo = Zdo(c, true);
+            if (zdo == null || (zdo.GetInt(key, 0) & 0xFF) == mode) return; // (the same one goes on: its seed kept)
+            zdo.Set(key, mode == 0 ? 0 : mode | (UnityEngine.Random.Range(1, 256) << 8));
+        }
+
+        internal static float Ring(Character c, string key)
+        {
+            ZDO zdo = Zdo(c, false);
+            int seed = zdo != null ? (zdo.GetInt(key, 0) >> 8) & 0xFF : 0;
+            return seed > 0 ? seed / 25.6f : UnityEngine.Random.Range(0f, 10f);
         }
     }
 

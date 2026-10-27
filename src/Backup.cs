@@ -32,18 +32,20 @@ namespace HuginWhispers
         }
 
         internal static string Id(ItemDrop.ItemData item) { return Get(item, IdKey); }
-        private static int Gen(ItemDrop.ItemData item) { int g; return int.TryParse(Get(item, GenKey), out g) ? g : 1; }
+        internal static int Gen(ItemDrop.ItemData item) { int g; return int.TryParse(Get(item, GenKey), out g) ? g : 1; }
 
         // the copy's text: every key and value of the raven, base64, "key:value,key:value"
-        private static string Pack(ItemDrop.ItemData item)
+        internal static string Pack(ItemDrop.ItemData item) { return Pack(item.m_customData); }
+
+        internal static string Pack(Dictionary<string, string> data)
         {
             List<string> parts = new List<string>();
-            foreach (KeyValuePair<string, string> kv in item.m_customData)
+            foreach (KeyValuePair<string, string> kv in data)
                 parts.Add(B64(kv.Key) + ":" + B64(kv.Value ?? ""));
             return string.Join(",", parts.ToArray());
         }
 
-        private static Dictionary<string, string> Unpack(string text)
+        internal static Dictionary<string, string> Unpack(string text)
         {
             Dictionary<string, string> d = new Dictionary<string, string>();
             if (string.IsNullOrEmpty(text)) return d;
@@ -69,7 +71,7 @@ namespace HuginWhispers
 
         private static string WorldKey(string id, int gen) { return ("rw_" + id + "_g" + gen).ToLowerInvariant(); }
 
-        private static int WorldGen(string id)
+        internal static int WorldGen(string id)
         {
             if (ZoneSystem.instance == null) return 0;
             string head = ("rw_" + id + "_g").ToLowerInvariant();
@@ -149,7 +151,7 @@ namespace HuginWhispers
                 ItemDrop f = feathers != null ? feathers.GetComponent<ItemDrop>() : null;
                 if (f != null) { ItemDrop.ItemData pile = f.m_itemData.Clone(); pile.m_dropPrefab = feathers; pile.m_stack = 3; inv.AddItem(pile); }
             }
-            RavenMsg.Center(p, Lang.T("Цей ворон був лише відлунням:\nсправжнього повернули біля каменів. Лишилось пір'я."));
+            RavenMsg.Center(p, Lang.T("Цей ворон був лише відлунням:\nсправжній уже повернувся. Лишилось пір'я."));
         }
 
         // the copy of this raven in your character
@@ -173,6 +175,54 @@ namespace HuginWhispers
             return false;
         }
 
+        // the copy kept from a raven's own data (a raven at home: its perch keeps it, the character keeps the copy)
+        internal static void SaveData(Player p, string id, bool munin, Dictionary<string, string> data)
+        {
+            if (p == null || string.IsNullOrEmpty(id) || data == null) return;
+            p.m_customData[CopyPrefix + id] = (munin ? "m" : "h") + ";" + Pack(data);
+            int g; string gs;
+            if (data.TryGetValue(GenKey, out gs) && int.TryParse(gs, out g) && ProfileGen(p, id) < g) p.m_customData[GenPrefix + id] = g.ToString();
+        }
+
+        // this raven (by its id) in your bag or on a shoulder cell, or null
+        internal static ItemDrop.ItemData With(Player p, string id)
+        {
+            if (p == null || string.IsNullOrEmpty(id)) return null;
+            foreach (ItemDrop.ItemData item in p.GetInventory().GetAllItems()) if (Id(item) == id) return item;
+            foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) if (Id(item) == id) return item;
+            return null;
+        }
+
+        // older than its return (a raven at home brought back from its copy meanwhile): an echo
+        internal static bool Stale(Dictionary<string, string> data)
+        {
+            string id, gs; int g;
+            if (data == null || !data.TryGetValue(IdKey, out id) || string.IsNullOrEmpty(id)) return false;
+            if (!data.TryGetValue(GenKey, out gs) || !int.TryParse(gs, out g)) g = 1;
+            return g < WorldGen(id);
+        }
+
+        // A raven at home called back from afar, its perch not here: it comes from the copy in your character, a new
+        // generation (the one on the perch turns into an echo when that perch is loaded). No price, no wait: it is yours.
+        internal static ItemDrop.ItemData FromCopy(Player p, string id)
+        {
+            string copy;
+            if (p == null || string.IsNullOrEmpty(id) || !p.m_customData.TryGetValue(CopyPrefix + id, out copy)) return null;
+            bool munin = copy.StartsWith("m");
+            GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(munin ? RavenItem.MuninPrefab : RavenItem.HuginPrefab) : null;
+            ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            if (drop == null) return null;
+            ItemDrop.ItemData item = drop.m_itemData.Clone();
+            item.m_dropPrefab = prefab; item.m_stack = 1; item.m_equipped = false;
+            item.m_customData = Unpack(copy.Substring(Math.Min(2, copy.Length)));
+            int gen = Mathf.Max(Mathf.Max(Gen(item), ProfileGen(p, id)), WorldGen(id)) + 1;
+            item.m_customData[IdKey] = id;
+            item.m_customData[GenKey] = gen.ToString();
+            p.m_customData[GenPrefix + id] = gen.ToString();
+            if (ZoneSystem.instance != null) ZoneSystem.instance.SetGlobalKey(WorldKey(id, gen));
+            return item;
+        }
+
         // ---------------------------------------------------------------- the book's view
 
         internal sealed class Lost
@@ -193,6 +243,7 @@ namespace HuginWhispers
             HashSet<string> here = new HashSet<string>();
             foreach (ItemDrop.ItemData item in p.GetInventory().GetAllItems()) { string id = Id(item); if (id != null) here.Add(id); }
             foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) { string id = Id(item); if (id != null) here.Add(id); }
+            Home.Ids(p, here); // left at home on a perch: with you too, just not here
             int today = Memory.Day();
             foreach (KeyValuePair<string, string> kv in p.m_customData)
             {
@@ -244,6 +295,7 @@ namespace HuginWhispers
             item.m_customData[GenKey] = gen.ToString();
             item.m_customData.Remove("RavenWatch_worn"); // the second belt's mark: it is in the bag, not worn
             Outfits.StripCrafted(item); // the things from the bag and the pouch's food: not twice
+            Home.Strip(item.m_customData); // (its copy from a perch: a raven in the bag, not at home)
             Trust.Returned(item);  // the level stays, the bar is empty, it is home and not on its way anywhere
             Memory.Forget(item);   // some of what it remembered is lost on the way
             if (!p.GetInventory().AddItem(item)) return Lang.T("У сумці нема місця для ворона.");
@@ -253,6 +305,8 @@ namespace HuginWhispers
             p.m_customData[BackPrefix + id] = Memory.Day().ToString();
             if (ZoneSystem.instance != null) ZoneSystem.instance.SetGlobalKey(WorldKey(id, gen)); // every other copy is now an echo
             Save(p, item);
+            RuneBook.Lost(p, id); // it was lost: it comes back without its runes
+            Home.Forget(p, id); // (it flew to Odin from a broken perch: back now)
             RitualFx.Play(p, l.Munin, l.Price.Prefab);
             Vector3 chest = p.transform.position + Vector3.up * 1.2f;
             LastChance.Ring(chest, new Color(1f, 0.9f, 0.6f, 1f), l.Munin ? new Color(0.7f, 0.1f, 0.1f, 1f) : new Color(0.3f, 0.5f, 0.9f, 1f));

@@ -28,7 +28,7 @@ namespace HuginWhispers
             RuneBook.Seen(p);
 
             // ---- right: the runes
-            RectTransform col = Column("Right", 644f, 40f, 500f, 8f);
+            RectTransform col = Column("Right", 644f, 40f, 500f, 4f); // (tight: three kinds, up to ten golden runes and the в'язь fit with no scroll)
             RectTransform head = Rect("Head", col);
             HBox(head, 8f, TextAnchor.LowerLeft);
             T(head, Lang.T("Руни"), 26f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
@@ -40,14 +40,14 @@ namespace HuginWhispers
             for (int k = 0; k < WearCatalog.Kinds; k++)
             {
                 RectTransform row = Rect("Kind", col);
-                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, 6, 0);
-                T(row, Lang.T(RuneBook.KindTitles[k]), 20f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
+                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+                T(row, Lang.T(RuneBook.KindTitles[k]), 18f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(row);
-                TMP_Text what = T(row, Lang.T(RuneBook.KindWhat[k]), 14f, Brown, F.Italic, TextAlignmentOptions.BottomRight);
+                TMP_Text what = T(row, Lang.T(RuneBook.KindWhat[k]), 13f, Brown, F.Italic, TextAlignmentOptions.BottomRight);
                 what.textWrappingMode = TextWrappingModes.NoWrap;
                 RectTransform grid = Rect("Grid", col);
                 GridLayoutGroup g = grid.gameObject.AddComponent<GridLayoutGroup>();
-                g.cellSize = new Vector2(56f, 62f); g.spacing = new Vector2(6f, 6f);
+                g.cellSize = new Vector2(56f, 58f); g.spacing = new Vector2(6f, 4f);
                 g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 8;
                 foreach (RuneDef r in RuneBook.All) if ((int)r.Kind == k) RuneCell(grid, p, d, r);
             }
@@ -57,15 +57,16 @@ namespace HuginWhispers
             else
             {
                 RectTransform row = Rect("Gold", col);
-                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, 6, 0);
-                T(row, Lang.T("Золоті руни"), 20f, GoldInk, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
+                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+                T(row, Lang.T("Золоті руни"), 18f, GoldInk, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(row);
                 TMP_Text n = T(row, Lang.F("у тебе {0} · усього {1}", d.Gold, d.GoldEver), 14f, Brown, F.Body, TextAlignmentOptions.BottomRight);
                 n.textWrappingMode = TextWrappingModes.NoWrap;
                 RectTransform grid = Rect("GoldGrid", col);
                 GridLayoutGroup g = grid.gameObject.AddComponent<GridLayoutGroup>();
-                g.cellSize = new Vector2(56f, 62f); g.spacing = new Vector2(6f, 6f);
-                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 8;
+                // five a row (free ones first, then the ones in gifts; more than ten: the column scrolls), each with its words under it: «вільна», or the gift and the raven
+                g.cellSize = new Vector2(94f, 80f); g.spacing = new Vector2(5f, 4f);
+                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 5;
                 for (int i = 0; i < d.Gold; i++) GoldCell(grid);
                 // the ones put into gifts stay in sight: in their raven's colour, the gift on hover
                 int spent = 0;
@@ -84,14 +85,17 @@ namespace HuginWhispers
             if (d.Bind.Length > 0)
             {
                 RectTransform brow = Rect("Binds", col);
-                HBox(brow, 6f, TextAnchor.LowerLeft, 0, 0, 6, 0);
-                T(brow, Lang.T("В'язь"), 20f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
+                HBox(brow, 6f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+                T(brow, Lang.T("В'язь"), 18f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(brow);
-                RectTransform bgrid = Rect("BindGrid", col);
-                GridLayoutGroup bg = bgrid.gameObject.AddComponent<GridLayoutGroup>();
-                bg.cellSize = new Vector2(250f, 40f); bg.spacing = new Vector2(6f, 6f);
-                bg.constraint = GridLayoutGroup.Constraint.FixedColumnCount; bg.constraintCount = 2;
-                BindCell(bgrid, p, d);
+                bool on = BindRun.On;
+                TMP_Text state = T(brow, on ? Lang.T("діє") : Lang.T("вимкнено"), 13f, Brown, F.Italic, TextAlignmentOptions.BottomRight);
+                state.textWrappingMode = TextWrappingModes.NoWrap;
+                TMP_Text sw = T(brow, on ? Lang.T("Вимкнути") : Lang.T("Увімкнути"), 13f, GoldInk, F.Head, TextAlignmentOptions.BottomRight);
+                sw.textWrappingMode = TextWrappingModes.NoWrap;
+                Tip(sw.gameObject, () => Lang.T("Вимкнена в'язь не спрацьовує й не відновлює заряди. Те саме — перемикач у колі дарів (Q)."));
+                Clickable(sw.gameObject, () => { BindRun.SetOn(p, !BindRun.On); Show(_tab, true); });
+                BindCell(col, p, d);
             }
             else if (d.Opened >= 2) T(col, Lang.T("Десь у світі ростуть Воронячі дерева. Біля їхнього коріння руни сплітаються у в'язі."), 14f, InkSoft, F.Italic);
         }
@@ -116,11 +120,20 @@ namespace HuginWhispers
 
         private static void RuneCell(Transform grid, Player p, RuneBook.Data d, RuneDef r)
         {
-            bool open = d.Has(r.Id);
+            bool open = d.Has(r.Id), taken = open && d.InBind(r.Id);
             WearDef eff = open ? RuneBook.EffectOf(d, r.Id) : null;
-            int by = open ? RuneBook.WornBy(p, r.Id) : 0;
+            int by = open && !taken ? RuneBook.WornBy(p, r.Id) : 0;
+            int stars = open ? d.StarsOf(r.Id) : 0;
             RectTransform cell = Rect("Rune_" + r.Id, grid);
-            if (!RuneStone(cell, (int)r.Kind, r.Glyph, !open ? 0 : by != 0 ? 2 : 1, 13f, 22f))
+            if (stars > 0 && !taken) // the sparks of Odin: a gold halo well past the stone, slowly breathing (the user: seen at once)
+            {
+                Image glow = Img(cell, "SparkGlow", BookArt.Glow, A(Gold, 0.6f));
+                Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-24f, -12f), new Vector2(24f, 24f));
+                glow.raycastTarget = false;
+                SparkBreath b = glow.gameObject.AddComponent<SparkBreath>();
+                b.Low = 0.45f + 0.1f * stars; b.High = Mathf.Min(1f, 0.75f + 0.1f * stars);
+            }
+            if (!RuneStone(cell, (int)r.Kind, r.Glyph, !open ? 0 : by != 0 || (stars > 0 && !taken) ? 2 : 1, 13f, 22f))
             {
                 Torn(cell, open ? (by != 0 ? new Color(0.66f, 0.52f, 0.23f, 0.25f) : BookArt.Card) : A(Ink, 0.05f),
                     open ? C("#a8843a") : A(Ink, 0.22f), 1.5f);
@@ -136,13 +149,16 @@ namespace HuginWhispers
                 dot.rectTransform.anchorMin = dot.rectTransform.anchorMax = dot.rectTransform.pivot = new Vector2(0f, 1f);
                 dot.rectTransform.sizeDelta = new Vector2(10f, 10f); dot.rectTransform.anchoredPosition = new Vector2(5f, -5f);
             }
-            int stars = open ? d.StarsOf(r.Id) : 0;
-            if (stars > 0) // the sparks of Odin on it
+            if (taken) // woven into the в'язь: dimmed and clamped like a golden rune given away; no click
             {
-                TMP_Text st = T(cell, RuneStars.StarText(stars), 12f, Gold, F.Head, TextAlignmentOptions.Top);
-                Stretch(st.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 0f), new Vector2(0f, -1f));
-                st.textWrappingMode = TextWrappingModes.NoWrap; st.raycastTarget = false;
+                Image dull = Img(cell, "Dull", BookArt.SoftDisc, new Color(0.22f, 0.16f, 0.08f, 0.6f));
+                Stretch(dull.rectTransform, Vector2.zero, Vector2.one, new Vector2(2f, 15f), new Vector2(-2f, -2f));
+                dull.raycastTarget = false;
+                Image clamp = Img(cell, "Clamp", BookArt.Picture("tree_clamp"), Color.white);
+                Stretch(clamp.rectTransform, Vector2.zero, Vector2.one, new Vector2(-6f, 6f), new Vector2(6f, 6f));
+                clamp.preserveAspect = true; clamp.raycastTarget = false;
             }
+            if (stars > 0) SparkRow(cell, stars, true);
             if (_freshRunes.Contains(r.Id))
             {
                 Image nd = Img(cell, "New", BookArt.Circle, Gold);
@@ -155,30 +171,32 @@ namespace HuginWhispers
                 string t = "<b>" + Glyph(r) + Lang.T(r.Name) + "</b> · " + kind;
                 if (!open) return t + "\n\n" + Lang.F("Ще не відкрита. Руни загоряються за доручення Одіна: {0} зарубок на різі — одна руна, навмання.", RuneBook.NotchesPerRune);
                 if (eff == null) return t + "\n\n" + Lang.T("Руна горить, але її сила ще не проявилась.");
-                string on = by == 1 ? Lang.T("Зараз на Хугіні.") : by == 2 ? Lang.T("Зараз на Муніні.") : Lang.T("Зараз ні на кому.");
+                if (taken) return t + "\n\n<color=" + GoldHex + ">" + eff.Name + "</color>\n\n" + Lang.T("Ця руна зараз у в'язі. Розплети в'язь, щоб вдягти її окремо.");
+                string away = by == 0 ? RuneBook.Elsewhere(p, r.Id) : null;
+                string on = by == 1 ? Lang.T("Зараз на Хугіні.") : by == 2 ? Lang.T("Зараз на Муніні.") : away != null ? Lang.F("Зараз {0}.", away) : Lang.T("Зараз ні на кому.");
                 return t + "\n\n<color=" + GoldHex + ">" + eff.Name + "</color>" + (eff.Desc.Length > 0 ? "\n" + eff.Desc : "") + "\n\n" + RuneStars.Describe(d, r.Id) + "\n\n" + on + "\n" + Lang.T("Клік — на якого ворона повісити.");
             });
-            if (open && eff != null) Clickable(cell.gameObject, () => RuneAsk(cell, r, eff));
+            if (!LightCell(cell, p, r.Id) && open && eff != null && !taken) Clickable(cell.gameObject, () => RuneAsk(cell, r, eff)); // (lighting a rune with a raven's sparklets: RavenBookRequest)
         }
 
-        // your в'язь: its runes; hover — its sentence; a click — on which raven, or unweave
-        private static void BindCell(Transform grid, Player p, RuneBook.Data d)
+        // your в'язь: its emblem (the stones tied by its tree's knot) and its sentence, short; hover — the whole sentence.
+        // It is yours, not a raven's: nothing to hang anywhere, no click (on/off over it, unweaving only at a tree)
+        private static void BindCell(Transform col, Player p, RuneBook.Data d)
         {
-            int on = RuneBook.BindOn(p);
-            RectTransform cell = Rect("Bind", grid);
-            Torn(cell, on != 0 ? new Color(0.66f, 0.52f, 0.23f, 0.25f) : BookArt.Card, C("#7a5ab0"), 1.5f);
-            TMP_Text n = T(cell, BindRunes(d), 15f, Ink, F.Head, TextAlignmentOptions.Center);
-            Stretch(n.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, 2f), new Vector2(-4f, -2f));
-            n.enableAutoSizing = true; n.fontSizeMin = 9f; n.fontSizeMax = 15f;
-            if (on != 0)
-            {
-                Image dot = Img(cell, "On", BookArt.Circle, on == 2 ? BookArt.Munin : BookArt.Hugin);
-                dot.rectTransform.anchorMin = dot.rectTransform.anchorMax = dot.rectTransform.pivot = new Vector2(0f, 1f);
-                dot.rectTransform.sizeDelta = new Vector2(9f, 9f); dot.rectTransform.anchoredPosition = new Vector2(4f, -4f);
-            }
+            bool on = BindRun.On;
+            Bind b = Bind.Parse(d.Bind);
+            RectTransform cell = Rect("Bind", col);
+            Fixed(cell.gameObject, -1f, 100f);
+            Torn(cell, on ? new Color(0.66f, 0.52f, 0.23f, 0.25f) : BookArt.Card, C("#7a5ab0"), 1.5f);
+            RectTransform holder = Rect("Holder", cell);
+            At(holder, 4f, 2f, 96f, 96f);
+            BindEmblem(holder, b, d.BindRunes, 96f);
             BindPower w = BindRun.PowerOf(d.Bind);
-            Tip(cell.gameObject, () => "<b>" + Lang.T("В'язь") + "</b>\n\n" + (w != null ? w.Sentence() : "") + "\n\n" + (on == 1 ? Lang.T("Зараз на Хугіні.") : on == 2 ? Lang.T("Зараз на Муніні.") : Lang.T("Зараз ні на кому — не діє.")) + "\n" + Lang.T("Клік — на якого ворона, або розплести."));
-            Clickable(cell.gameObject, () => BindAsk(cell));
+            TMP_Text n = T(cell, w != null ? Short(d, d.BindRunes, w) : BindRunes(d), 14f, on ? Ink : InkSoft, F.Body, TextAlignmentOptions.Left);
+            Stretch(n.rectTransform, Vector2.zero, Vector2.one, new Vector2(108f, 6f), new Vector2(-10f, -6f));
+            n.richText = true; n.raycastTarget = false;
+            n.enableAutoSizing = true; n.fontSizeMin = 10f; n.fontSizeMax = 14f;
+            Tip(cell.gameObject, () => "<b>" + Lang.T("В'язь") + "</b>\n\n" + (w != null ? w.Sentence() : "") + "\n\n" + (BindRun.On ? Lang.T("Діє на тобі.") : Lang.T("Вимкнена: не спрацьовує й не відновлює заряди.")) + "\n" + Lang.T("Розплести її можна лише біля Воронячого дерева."));
         }
 
         private static string BindRunes(RuneBook.Data d)
@@ -188,43 +206,18 @@ namespace HuginWhispers
             return string.Join(" + ", l.ToArray());
         }
 
-        private static void BindAsk(RectTransform cell)
-        {
-            ClosePopup();
-            HideTip();
-            Player p = Player.m_localPlayer;
-            if (_root == null || p == null) return;
-            RuneBook.Data d = RuneBook.Of(p);
-            int by = RuneBook.BindOn(p);
-            Card card = OpenCard("BindAsk", Lang.T("В'язь"), 520f, true);
-            RectTransform panel = card.Paper;
-            T(panel, BindRunes(d), 19f, PInk, F.Head);
-            BindPower w = BindRun.PowerOf(d.Bind);
-            if (w != null) T(panel, w.Sentence(), 15f, PInk, F.Body);
-            T(panel, Lang.T("В'язь носить один ворон; вона діє, поки він на плечі. Руни в ній окремо не вдягаються."), 14f, PSoft, F.Italic);
-            RectTransform row = card.Foot;
-            if (by != 0) AskButton(row, Lang.T("Зняти"), false, () => { ClosePopup(); string why = RuneBook.TakeOffBind(p); if (why != null) Tell(why); Show(_tab, true); });
-            foreach (bool m in new bool[] { true, false })
-            {
-                bool wm = m;
-                if (Trust.Worn(wm) == null) continue;
-                bool on = by == (wm ? 2 : 1);
-                AskButton(row, (on ? "✓ " : "") + Plugin.RavenName(wm), !on, () => { ClosePopup(); if (!on) { string why = RuneBook.PutBind(p, wm); if (why != null) Tell(why); else _dressMunin = wm; } Show(_tab, true); });
-            }
-            AskButton(row, Lang.T("Розплести"), false, () => { ClosePopup(); RuneBook.Unweave(p); Tell(Lang.T("В'язь розплетено. Руни вільні.")); Show(_tab, true); });
-            PlaceCard(card, cell);
-        }
-
         // a golden rune in hand (what it goes into comes with the gifts' levels)
         private static void GoldCell(Transform grid)
         {
             RectTransform cell = Rect("Gold", grid);
-            if (!RuneStone(cell, GoldKind, "ᚨ", 2, 4f, 26f))
+            RectTransform stone = GoldStone(cell);
+            if (!RuneStone(stone, GoldKind, "ᚨ", 2, 0f, 24f))
             {
-                Box(cell, 6f, new Color(0.9f, 0.75f, 0.35f, 0.3f), C("#a8843a"), 2f);
-                TMP_Text g = T(cell, "ᚨ", 30f, GoldInk, F.Rune, TextAlignmentOptions.Center);
-                Stretch(g.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 4f), Vector2.zero);
+                Box(stone, 6f, new Color(0.9f, 0.75f, 0.35f, 0.3f), C("#a8843a"), 2f);
+                TMP_Text g = T(stone, "ᚨ", 28f, GoldInk, F.Rune, TextAlignmentOptions.Center);
+                Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             }
+            GoldWords(cell, Lang.T("вільна"), null, Brown);
             Tip(cell.gameObject, () => Lang.F("<b>Золота руна</b>\n\nВкладається в один дар одного ворона — назавжди: дар стає сильнішим. У ворона до {0} золотих рун, у дару до {1} рівнів.\nКлік — у який дар вкласти.", GiftUp.MaxPerRaven, GiftUp.MaxLevel));
             Clickable(cell.gameObject, () => GoldAsk(cell, null, null));
         }
@@ -234,17 +227,59 @@ namespace HuginWhispers
         {
             RectTransform cell = Rect("GoldIn", grid);
             Color ink = BookArt.RavenInk(munin);
-            if (!RuneStone(cell, GoldKind, "ᚨ", 1, 13f, 22f))
+            RectTransform stone = GoldStone(cell);
+            if (!RuneStone(stone, GoldKind, "ᚨ", 1, 0f, 22f))
             {
-                Box(cell, 6f, new Color(ink.r, ink.g, ink.b, 0.12f), new Color(ink.r, ink.g, ink.b, 0.6f), 2f);
-                TMP_Text g = T(cell, "ᚨ", 30f, ink, F.Rune, TextAlignmentOptions.Center);
-                Stretch(g.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 4f), Vector2.zero);
+                Box(stone, 6f, new Color(ink.r, ink.g, ink.b, 0.12f), new Color(ink.r, ink.g, ink.b, 0.6f), 2f);
+                TMP_Text g = T(stone, "ᚨ", 28f, ink, F.Rune, TextAlignmentOptions.Center);
+                Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             }
-            TMP_Text lv = T(cell, GiftUp.Roman(level), 11f, ink, F.Body, TextAlignmentOptions.Bottom);
-            Stretch(lv.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 2f), Vector2.zero);
+            Image dull = Img(stone, "Dull", BookArt.SoftDisc, new Color(0.22f, 0.16f, 0.08f, 0.55f)); // (its glow given to the gift)
+            Stretch(dull.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, 4f), new Vector2(-4f, -4f));
+            Image clamp = Img(stone, "Clamp", BookArt.Picture("tree_clamp"), Color.white);
+            Stretch(clamp.rectTransform, Vector2.zero, Vector2.one, new Vector2(-8f, -8f), new Vector2(8f, 8f));
+            clamp.preserveAspect = true;
             RavenAbility a = RavenAbilities.Find(gift);
             string name = a != null ? a.Plain : gift;
+            GoldWords(cell, "<b>" + name + " " + GiftUp.Roman(level) + "</b>", Plugin.RavenName(munin), Ink);
             Tip(cell.gameObject, () => Lang.F("<b>Золота руна · вкладена</b>\n\n{0}, дар «{1}» — рівень {2}.", Plugin.RavenName(munin), name, GiftUp.Roman(level)));
+        }
+
+        // a rune's sparks of Odin as little carved sparks (assets/book/tree_spark.png) in a row across its cell, at its
+        // top or bottom edge
+        private static void SparkRow(RectTransform cell, int n, bool top)
+        {
+            if (n <= 0) return;
+            const float s = 15f, gap = 1f;
+            RectTransform row = Rect("Sparks", cell);
+            row.anchorMin = row.anchorMax = row.pivot = new Vector2(0.5f, top ? 1f : 0f);
+            row.sizeDelta = new Vector2(n * s + (n - 1) * gap, s);
+            row.anchoredPosition = new Vector2(0f, top ? 1f : -4f);
+            for (int i = 0; i < n; i++)
+            {
+                Image im = Img(row, "Spark", BookArt.Picture("tree_spark"), Color.white);
+                im.rectTransform.anchorMin = im.rectTransform.anchorMax = im.rectTransform.pivot = new Vector2(0f, 0.5f);
+                im.rectTransform.sizeDelta = new Vector2(s, s);
+                im.rectTransform.anchoredPosition = new Vector2(i * (s + gap), 0f);
+            }
+        }
+
+        // a golden cell's stone: the upper part of the cell (the words go under it)
+        private static RectTransform GoldStone(RectTransform cell)
+        {
+            RectTransform s = Rect("Stone", cell);
+            s.anchorMin = s.anchorMax = s.pivot = new Vector2(0.5f, 1f);
+            s.sizeDelta = new Vector2(48f, 48f); s.anchoredPosition = new Vector2(0f, -2f);
+            return s;
+        }
+
+        // the words under a golden cell: one or two lines
+        private static void GoldWords(RectTransform cell, string first, string second, Color ink)
+        {
+            TMP_Text t = T(cell, first + (second != null ? "\n<size=90%><color=#" + ColorUtility.ToHtmlStringRGB(Brown) + ">" + second + "</color></size>" : ""), 11f, ink, F.Body, TextAlignmentOptions.Bottom);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 0f), new Vector2(0f, -50f));
+            t.richText = true; t.raycastTarget = false; t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.enableAutoSizing = true; t.fontSizeMin = 8f; t.fontSizeMax = 11f;
         }
 
         // ---- a golden rune into a gift: which raven → which gift → «так, назавжди» (one card, step by step)
@@ -279,7 +314,7 @@ namespace HuginWhispers
                 T(panel, Lang.F("Золотих рун у ньому: {0} з {1}.", GiftUp.Used(item), GiftUp.MaxPerRaven), 15f, PSoft, F.Body);
                 foreach (RavenAbility a in RavenAbilities.All)
                 {
-                    if (a.Munin != m || !GiftUp.Upgradable.Contains(a.Id)) continue;
+                    if ((a.Pair ? !BothWorn : a.Munin != m) || !GiftUp.Upgradable.Contains(a.Id)) continue; // (a paired gift takes a rune from either raven, both on you)
                     RavenAbility ab = a;
                     int lv = GiftUp.LevelIn(item, a.Id);
                     string why = GiftUp.CanInvest(p, m, a.Id);
@@ -324,9 +359,11 @@ namespace HuginWhispers
             TMP_FontAsset rf = FontOf(F.Rune);
             T(panel, (rf != null ? "<font=\"" + rf.name + "\">" + r.Glyph + "</font> " : "") + Lang.T(r.Name) + " — <color=" + GoldInkHex + ">" + eff.Name + "</color>", 21f, PInk, F.Head);
             T(panel, Lang.F("Одна руна — на одному вороні. Якщо на ньому вже висить інша {0}, ця стане замість неї.", Lang.T(RuneBook.KindOne[(int)r.Kind])), 15f, PInk, F.Body);
+            string away = by == 0 ? RuneBook.Elsewhere(p, r.Id) : null;
+            if (away != null) T(panel, Lang.F("Зараз вона {0}. Повісиш тут — з нього вона зійде.", away), 15f, PSoft, F.Italic);
 
             RectTransform row = card.Foot;
-            if (by != 0) AskButton(row, Lang.T("Зняти"), false, () => { ClosePopup(); string why = RuneBook.TakeOff(p, r.Id); if (why != null) Tell(why); Show(_tab, true); });
+            if (by != 0 || away != null) AskButton(row, Lang.T("Зняти"), false, () => { ClosePopup(); string why = RuneBook.TakeOff(p, r.Id); if (why != null) Tell(why); Show(_tab, true); });
             foreach (bool m in new bool[] { true, false })
             {
                 bool w = m;
@@ -422,7 +459,7 @@ namespace HuginWhispers
             return null;
         }
 
-        // how many runes and в'язі of this kind could hang there
+        // how many runes of this kind could hang there
         private static int RunesOfKind(RuneBook.Data d, WearKind k)
         {
             int n = 0;
@@ -436,9 +473,7 @@ namespace HuginWhispers
             string id = RavenWear.Of(item)[k];
             string rune = RuneOn(d, k, id);
             WearDef eff = id.Length > 0 ? WearCatalog.Find(k, id) : null;
-            BindLook.Visual bv = BindLook.Of(RavenWear.Of(item).Bind);
-            bool bind = bv != null && bv.Has(k);
-            bool on = bind || (eff != null && rune != null);
+            bool on = eff != null && rune != null;
             int have = RunesOfKind(d, k);
 
             RectTransform box = Rect("Rune" + (int)k, left);
@@ -449,7 +484,7 @@ namespace HuginWhispers
             shade.rectTransform.anchorMin = shade.rectTransform.anchorMax = anchor;
             shade.rectTransform.sizeDelta = new Vector2(78f, 78f); shade.rectTransform.anchoredPosition = mid + new Vector2(0f, -4f);
             shade.raycastTarget = false;
-            string sign = rune != null ? RuneBook.Def(rune).Glyph : bind ? "ᛝ" : have > 0 ? "+" : "";
+            string sign = rune != null ? RuneBook.Def(rune).Glyph : have > 0 ? "+" : "";
             RectTransform dia = Rect("Diamond", box);
             dia.anchorMin = dia.anchorMax = anchor;
             dia.anchoredPosition = mid;
@@ -472,15 +507,14 @@ namespace HuginWhispers
             Tip(dia.gameObject, () =>
             {
                 string t = "<b>" + kind + "</b> · " + Lang.T(RuneBook.KindWhat[(int)k]);
-                if (bind) t += "\n\n" + Lang.T("Цей шар зараз малює твоя в'язь.");
-                else if (on) t += "\n\n" + (rune != null ? Glyph(RuneBook.Def(rune)) + Lang.T(RuneBook.Def(rune).Name) : Lang.T("В'язь")) + " — <color=" + GoldHex + ">" + eff.Name + "</color>" + (eff.Desc.Length > 0 ? "\n" + eff.Desc : "") + (rune != null ? "\n\n" + RuneStars.Describe(d, rune) : "");
+                if (on) t += "\n\n" + Glyph(RuneBook.Def(rune)) + Lang.T(RuneBook.Def(rune).Name) + " — <color=" + GoldHex + ">" + eff.Name + "</color>" + (eff.Desc.Length > 0 ? "\n" + eff.Desc : "") + "\n\n" + RuneStars.Describe(d, rune);
                 else if (have == 0) return t + "\n\n" + Lang.T("Жодна така руна ще не горить. Руни дає Одін за доручення — «Шлях Одіна».");
                 return t + "\n\n" + Lang.T("Клік — яку руну повісити.");
             });
             if (have > 0 || on) Clickable(dia.gameObject, () => RuneSlotAsk(dia, m, k));
         }
 
-        // a click on a rune place: the open runes (and в'язі) of its kind; «Зняти» when one hangs there
+        // a click on a rune place: the open runes of its kind; «Зняти» when one hangs there
         private static void RuneSlotAsk(RectTransform at, bool m, WearKind k)
         {
             ClosePopup();
@@ -502,7 +536,8 @@ namespace HuginWhispers
                 WearDef w = rd != null && rd.Kind == k ? RuneBook.EffectOf(d, r) : null;
                 if (w == null || d.InBind(r)) continue;
                 string rid = r;
-                SlotChoice(panel, Glyph(rd) + Lang.T(rd.Name), w, w.Id == id, RuneBook.WornBy(p, r), () => RuneBook.PutOn(p, rid, m));
+                int by = RuneBook.WornBy(p, r);
+                SlotChoice(panel, Glyph(rd) + Lang.T(rd.Name), w, w.Id == id, by, by == 0 ? RuneBook.Elsewhere(p, r) : null, () => RuneBook.PutOn(p, rid, m));
             }
             RectTransform row = card.Foot;
             string on = RuneOn(d, k, id);
@@ -513,14 +548,14 @@ namespace HuginWhispers
         }
 
         // one choice in that list: the rune, what it gives, who wears it now (the one there now: dark, the gold line)
-        private static void SlotChoice(RectTransform panel, string rune, WearDef w, bool here, int by, Func<string> put)
+        private static void SlotChoice(RectTransform panel, string rune, WearDef w, bool here, int by, string away, Func<string> put)
         {
             RectTransform r = PaperChoice(panel, here, true);
             HBox(r, 8f, TextAnchor.MiddleLeft, 10, 10, 5, 5);
             TMP_Text n = T(r, rune + " — <color=" + (here ? GoldHex : GoldInkHex) + ">" + w.Name + "</color>", 17f, here ? PCream : PInk, F.Head);
             n.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             n.raycastTarget = false;
-            string who = here ? "✓" : by == 1 ? Lang.T("на Хугіні") : by == 2 ? Lang.T("на Муніні") : "";
+            string who = here ? "✓" : by == 1 ? Lang.T("на Хугіні") : by == 2 ? Lang.T("на Муніні") : away ?? "";
             if (who.Length > 0) { TMP_Text t = T(r, who, 14f, here ? Gold : PSoft, F.Italic); t.textWrappingMode = TextWrappingModes.NoWrap; t.raycastTarget = false; }
             if (here) return;
             Clickable(r.gameObject, () => { ClosePopup(); string why = put(); if (why != null) Tell(why); Show(_tab, true); });
@@ -569,6 +604,30 @@ namespace HuginWhispers
         private static string RunesHelp(string h)
         {
             return Lang.F("{0}Руни дає Одін за свої доручення. За кожне виконане доручення на різі з'являються зарубки, а коли їх {1}, загоряється одна руна — навмання з тих, що ще не відкриті. Що саме вона дасть, вирішується тієї миті й лишається за нею назавжди: у різних гравців та сама руна дає різне.\n\n<b>Руни Фреї</b> фарбують пір'я, очі й полиск. <b>Руни Бальдра</b> дають ефект, що завжди з вороном. <b>Руни Геймдаля</b> лишають слід, коли ворон летить.\n\nНа вороні висить по одній руні кожного роду, а кожна руна — лише на одному вороні. Перевісити можна будь-коли: клік по руні. Руни — твої, а не ворона: віддаси ворона, і він їх не понесе.", h, RuneBook.NotchesPerRune);
+        }
+    }
+
+    // a rune's halo of Odin's sparks breathing slowly between two brightnesses (the book may stand over a paused game)
+    internal sealed class SparkBreath : MonoBehaviour
+    {
+        internal float Low = 0.5f, High = 0.9f;
+        private Image _im;
+        private float _phase;
+        // its own small canvas: its colour changing every frame redraws only itself, not the whole book (as SealPulse);
+        // it takes no clicks (a glow is never a raycast target), so nothing is lost under it
+        private void Awake()
+        {
+            _im = GetComponent<Image>();
+            _phase = UnityEngine.Random.value * 6.28f;
+            if (_im != null) _im.raycastTarget = false;
+            if (GetComponent<Canvas>() == null) gameObject.AddComponent<Canvas>();
+        }
+        private void Update()
+        {
+            if (_im == null) return;
+            Color c = _im.color;
+            c.a = Mathf.Lerp(Low, High, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2.2f + _phase));
+            _im.color = c;
         }
     }
 }

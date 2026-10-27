@@ -20,10 +20,17 @@ namespace HuginWhispers
             public string Text;      // {0} is the rolled number
             public float Min, Max;
             public bool Percent;
-            public Action<SE_Stats, float> Apply;
+            public bool Gold;        // a rare golden blessing (GoldChance), its numbers fixed
+            public Action<SE_Stats, float> Apply; // null: its own mechanics (PerkFx), nothing on the effect
             public Perk(string id, string stat, string text, float min, float max, bool percent, Action<SE_Stats, float> apply)
             { Id = id; Stat = stat; Text = text; Min = min; Max = max; Percent = percent; Apply = apply; }
         }
+
+        // a blessing or burden with its own mechanics (PerkFx reads its number through Of)
+        private static Perk Own(string id, string stat, string text, float min, float max, bool percent) { return new Perk(id, stat, text, min, max, percent, null); }
+        private static Perk Gold(string id, string text, Action<SE_Stats, float> apply) { Perk p = new Perk(id, id, text, 1f, 1f, false, apply); p.Gold = true; return p; }
+
+        internal static float GoldChance = 0.1f; // a bought raven's blessing is a golden one this often
 
         private static readonly Perk[] HuginBonus =
         {
@@ -36,6 +43,15 @@ namespace HuginWhispers
             new Perk("jumpstam", "jumpstam", Lang.K("−{0}% витривалості на стрибки"), 0.10f, 0.20f, true, (s, v) => s.m_jumpStaminaUseModifier -= v),
             new Perk("dodgestam", "dodgestam", Lang.K("−{0}% витривалості на перекат"), 0.10f, 0.20f, true, (s, v) => s.m_dodgeStaminaUseModifier -= v),
             new Perk("eitr", "eitr", Lang.K("+{0}% до відновлення ейтру"), 0.05f, 0.15f, true, (s, v) => s.m_eitrRegenMultiplier *= 1f + v),
+            // with their own mechanics (PerkFx)
+            Own("farsight", "explore", Lang.K("Зіркий: карта відкривається на {0}% ширше"), 0.30f, 0.60f, true),
+            Own("wander", "rested", Lang.K("Мандрівник: «Відпочинок» триває на {0}% довше"), 0.10f, 0.20f, true),
+            Own("picker", "pickup", Lang.K("Підбирач: автопідбір на {0}% ширший"), 0.50f, 1.00f, true),
+            Own("sweet", "food", Lang.K("Ласун: їжа діє на {0}% довше"), 0.05f, 0.10f, true),
+            Own("sniff", "sniff", Lang.K("Нюх на скарби: чує нерозкриті скрині до {0} м"), 15f, 25f, false),
+            Own("whisper", "raid", Lang.K("Шепіт вітру: під час набігу показує на мапі нападників до {0} м"), 50f, 70f, false),
+            Own("tongue", "trade", Lang.K("Язикатий: у торговців на {0}% дешевше"), 0.05f, 0.10f, true),
+            Own("sailor", "sail", Lang.K("Мореплавець: під вітрилом корабель на {0}% швидший"), 0.05f, 0.10f, true),
         };
 
         private static readonly Perk[] HuginMinus =
@@ -44,6 +60,16 @@ namespace HuginWhispers
             new Perk("stamregen", "stamregen", Lang.K("−{0}% відновлення витривалості"), 0.05f, 0.10f, true, (s, v) => s.m_staminaRegenMultiplier *= 1f - v),
             new Perk("weak", "damage", Lang.K("−{0}% шкоди"), 0.03f, 0.08f, true, (s, v) => { s.m_modifyAttackSkill = Skills.SkillType.All; s.m_damageModifier *= 1f - v; }),
             new Perk("slow", "speed", Lang.K("−{0}% швидкості"), 0.02f, 0.05f, true, (s, v) => s.m_speedModifier -= v),
+            Own("chatter", "noise", Lang.K("Балакун: раз на 20–30 хв бовкне вголос, і вороги до {0} м тебе помітять"), 15f, 25f, false),
+            Own("sleepy", "rested", Lang.K("Сонливий: «Відпочинок» на {0}% коротший"), 0.10f, 0.15f, true),
+            Own("seasick", "seasick", Lang.K("Морська хвороба: на кораблі витривалість відновлюється на {0}% повільніше"), 0.20f, 0.30f, true),
+        };
+
+        private static readonly Perk[] HuginGold =
+        {
+            Gold("g_eye", Lang.K("Око Одіна: +30% до скритності, а карта відкривається вдвічі ширше"), (s, v) => s.m_stealthModifier += 0.30f),
+            Gold("g_trail", Lang.K("Слід Хугіна: «Відпочинок» триває на 30% довше, автопідбір удвічі ширший"), null),
+            Gold("g_whisper", Lang.K("Шепіт Одіна: під час набігу всі нападники до 150 м — на мапі, а Хугін каже, звідки вони йдуть"), null),
         };
 
         private static readonly Perk[] MuninBonus =
@@ -53,6 +79,15 @@ namespace HuginWhispers
             new Perk("blockstam", "blockstam", Lang.K("−{0}% витривалості на блок"), 0.05f, 0.15f, true, (s, v) => s.m_blockStaminaUseModifier -= v),
             new Perk("dodgestam", "dodgestam", Lang.K("−{0}% витривалості на ривок"), 0.10f, 0.20f, true, (s, v) => s.m_dodgeStaminaUseModifier -= v),
             new Perk("hpregen", "hpregen", Lang.K("+{0}% до відновлення здоров'я"), 0.05f, 0.15f, true, (s, v) => s.m_healthRegenMultiplier *= 1f + v),
+            // with their own mechanics (PerkFx)
+            Own("grudge", "grudge", Lang.K("Злопам'ятний: +{0}% шкоди тим, хто вбив тебе останнім"), 0.10f, 0.15f, true),
+            Own("hunter", "trophy", Lang.K("Мисливець: трофеї з твоїх убитих падають на {0}% частіше"), 0.10f, 0.20f, true),
+            Own("bloodthirst", "killheal", Lang.K("Кровожер: кожне вбивство лікує на {0} здоров'я (бос — на 25)"), 2f, 4f, false),
+            Own("scav", "loot", Lang.K("Стерв'ятник: {0}% шанс на зайву здобич з твого вбитого"), 0.08f, 0.12f, true),
+            Own("revenge", "deathdmg", Lang.K("Месник: 10 хв після смерті +{0}% шкоди"), 0.10f, 0.15f, true),
+            Own("finisher", "finisher", Lang.K("Добивайло: +{0}% шкоди по ворогах, у яких лишилось ≤30% здоров'я"), 0.08f, 0.12f, true),
+            Own("bodymem", "skillloss", Lang.K("Пам'ять тіла: після смерті навички падають на {0}% менше"), 0.25f, 0.50f, true),
+            Own("grave", "corpserun", Lang.K("До могили: після смерті бігаєш на {0}% швидше, поки не забереш речі"), 0.08f, 0.12f, true),
         };
 
         private static readonly Perk[] MuninMinus =
@@ -60,7 +95,34 @@ namespace HuginWhispers
             new Perk("hpregen-", "hpregen", Lang.K("−{0}% відновлення здоров'я: Мунін виїдає нерви"), 0.05f, 0.15f, true, (s, v) => s.m_healthRegenMultiplier *= 1f - v),
             new Perk("noise", "noise", Lang.K("+{0}% шуму: Мунін лається на весь ліс"), 0.10f, 0.25f, true, (s, v) => s.m_noiseModifier += v),
             new Perk("carry-", "carry", Lang.K("−{0} вантажопідйомності"), 25f, 50f, false, (s, v) => s.m_addMaxCarryWeight -= v),
+            Own("gloat", "deathdmg", Lang.K("Зловтішний: 5 хв після смерті −{0}% шкоди"), 0.05f, 0.08f, true),
+            Own("bored", "bored", Lang.K("Занудьгував: пів години без убивств — −{0}% шкоди, поки когось не вб'єш"), 0.05f, 0.05f, true),
+            Own("glutton", "food", Lang.K("Ненажера: їжа діє на {0}% коротше"), 0.05f, 0.10f, true),
+            Own("boor", "trade", Lang.K("Хамло: у торговців на {0}% дорожче"), 0.05f, 0.10f, true),
         };
+
+        private static readonly Perk[] MuninGold =
+        {
+            Gold("g_memory", Lang.K("Пам'ять Одіна: +25% шкоди трьом останнім видам, що тебе вбили"), null),
+            Gold("g_feast", Lang.K("Кривава учта: кожне вбивство — +10 здоров'я і +10 витривалості"), null),
+            Gold("g_deathless", Lang.K("Безсмертна пам'ять: після смерті навички падають на 75% менше"), null),
+        };
+
+        private static Perk[] Bonuses(bool munin) { return munin ? MuninBonus : HuginBonus; }
+        private static Perk[] Minuses(bool munin) { return munin ? MuninMinus : HuginMinus; }
+        private static Perk[] Golds(bool munin) { return munin ? MuninGold : HuginGold; }
+
+        // a blessing as it is read back: the plain ones and the golden ones (made once: Sync reads it twice a second)
+        private static readonly Perk[][] AllB = new Perk[2][];
+        private static Perk[] AllBonuses(bool munin)
+        {
+            int i = munin ? 1 : 0;
+            if (AllB[i] != null) return AllB[i];
+            Perk[] a = Bonuses(munin), g = Golds(munin);
+            Perk[] all = new Perk[a.Length + g.Length];
+            a.CopyTo(all, 0); g.CopyTo(all, a.Length);
+            return AllB[i] = all;
+        }
 
         private static readonly System.Random Rng = new System.Random();
 
@@ -74,18 +136,62 @@ namespace HuginWhispers
         internal static void Roll(ItemDrop.ItemData item, bool munin)
         {
             if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
-            Perk bonus = Pick(munin ? MuninBonus : HuginBonus, null, null);
-            Perk minus = Pick(munin ? MuninMinus : HuginMinus, bonus.Stat, NoMinusStat(item));
+            Norov.Character c = Norov.EnsureChar(item, munin); // its character first: the blessings and burdens that suit it come twice as often
+            Perk bonus = Pick(Rng.NextDouble() < GoldChance ? Golds(munin) : Bonuses(munin), null, null, c);
+            Perk minus = Pick(Minuses(munin), bonus.Stat, NoMinusStat(item), c);
             item.m_customData[BonusKey] = bonus.Id + "=" + RollValue(bonus).ToString("R", CultureInfo.InvariantCulture);
             item.m_customData[MinusKey] = minus.Id + "=" + RollValue(minus).ToString("R", CultureInfo.InvariantCulture);
         }
 
-        private static Perk Pick(Perk[] pool, string notStat, string notStat2)
+        // a golden blessing (the book writes it in gold)
+        internal static bool Golden(ItemDrop.ItemData item)
+        {
+            string id = Id(item, BonusKey);
+            return id.StartsWith("g_");
+        }
+
+        // how lucky a roll came out: the blessing's number high in its range, the burden's low (−1 bad … 1 good); 2 golden
+        internal static float Luck(ItemDrop.ItemData item)
+        {
+            if (Golden(item)) return 2f;
+            bool munin;
+            RavenItem.IsRaven(item, out munin);
+            Perk b, m; float bv, mv;
+            if (!Read(item, BonusKey, AllBonuses(munin), out b, out bv) || !Read(item, MinusKey, Minuses(munin), out m, out mv)) return 0f;
+            return Share(b, bv) - Share(m, mv);
+        }
+        private static float Share(Perk p, float v) { return p.Max - p.Min > 1e-5f ? UnityEngine.Mathf.Clamp01((v - p.Min) / (p.Max - p.Min)) : 0.5f; }
+
+        // the Fate stone: a new fate, never the same blessing and burden it had (a stone spent on the same roll looks broken)
+        internal static void Reroll(ItemDrop.ItemData item, bool munin)
+        {
+            string b0 = Id(item, BonusKey), m0 = Id(item, MinusKey);
+            for (int i = 0; i < 12; i++)
+            {
+                Roll(item, munin);
+                if (Id(item, BonusKey) != b0 && Id(item, MinusKey) != m0) return;
+            }
+        }
+
+        private static string Id(ItemDrop.ItemData item, string key)
+        {
+            string raw;
+            if (item == null || item.m_customData == null || !item.m_customData.TryGetValue(key, out raw)) return "";
+            int eq = raw.IndexOf('=');
+            return eq >= 0 ? raw.Substring(0, eq) : raw;
+        }
+
+        private static Perk Pick(Perk[] pool, string notStat, string notStat2, Norov.Character c)
         {
             List<Perk> ok = new List<Perk>();
-            foreach (Perk p in pool) if (p.Stat != notStat && p.Stat != notStat2) ok.Add(p);
-            return ok[Rng.Next(ok.Count)];
+            float sum = 0f;
+            foreach (Perk p in pool) if (p.Stat != notStat && p.Stat != notStat2) { ok.Add(p); sum += Weight(p, c); }
+            float r = (float)Rng.NextDouble() * sum;
+            foreach (Perk p in ok) { r -= Weight(p, c); if (r <= 0f) return p; }
+            return ok[ok.Count - 1];
         }
+
+        private static float Weight(Perk p, Norov.Character c) { return c != null && Array.IndexOf(c.Perks, p.Id) >= 0 ? 2f : 1f; }
 
         // a loud raven (its quirk «Галасливий») never also gets the noise burden: one is enough
         private static string NoMinusStat(ItemDrop.ItemData item) { return Norov.HasQuirk(item, "loud") ? "noise" : null; }
@@ -94,18 +200,19 @@ namespace HuginWhispers
         internal static bool NoiseBurden(ItemDrop.ItemData item)
         {
             string raw;
-            return item != null && item.m_customData != null && item.m_customData.TryGetValue(MinusKey, out raw) && raw.StartsWith("noise=");
+            return item != null && item.m_customData != null && item.m_customData.TryGetValue(MinusKey, out raw) && (raw.StartsWith("noise=") || raw.StartsWith("chatter="));
         }
 
         // a raven rolled with a blessing or burden that is gone now (the armour ones, 1.7.0): only that one is rolled again
         private static bool Mend(ItemDrop.ItemData item, bool munin)
         {
             Perk b, m; float bv, mv;
-            bool hasB = Read(item, BonusKey, munin ? MuninBonus : HuginBonus, out b, out bv);
-            bool hasM = Read(item, MinusKey, munin ? MuninMinus : HuginMinus, out m, out mv);
+            bool hasB = Read(item, BonusKey, AllBonuses(munin), out b, out bv);
+            bool hasM = Read(item, MinusKey, Minuses(munin), out m, out mv);
             if (hasB && hasM) return false;
-            if (!hasB) { b = Pick(munin ? MuninBonus : HuginBonus, hasM ? m.Stat : null, null); item.m_customData[BonusKey] = b.Id + "=" + RollValue(b).ToString("R", CultureInfo.InvariantCulture); }
-            if (!hasM) { m = Pick(munin ? MuninMinus : HuginMinus, b.Stat, NoMinusStat(item)); item.m_customData[MinusKey] = m.Id + "=" + RollValue(m).ToString("R", CultureInfo.InvariantCulture); }
+            Norov.Character c = Norov.CharOf(item);
+            if (!hasB) { b = Pick(Bonuses(munin), hasM ? m.Stat : null, null, c); item.m_customData[BonusKey] = b.Id + "=" + RollValue(b).ToString("R", CultureInfo.InvariantCulture); }
+            if (!hasM) { m = Pick(Minuses(munin), b.Stat, NoMinusStat(item), c); item.m_customData[MinusKey] = m.Id + "=" + RollValue(m).ToString("R", CultureInfo.InvariantCulture); }
             return true;
         }
 
@@ -136,7 +243,8 @@ namespace HuginWhispers
         // the Book of ravens: every bonus and drawback with its range
         internal static string Catalog()
         {
-            return Lang.F("<b>Хугін</b>\n<color=#7CFC7C>{0}</color>\n<color=#FF6B6B>{1}</color>\n\n<b>Мунін</b>\n<color=#7CFC7C>{2}</color>\n<color=#FF6B6B>{3}</color>", Ranges(HuginBonus), Ranges(HuginMinus), Ranges(MuninBonus), Ranges(MuninMinus));
+            return Lang.F("<b>Хугін</b>\n<color=#7CFC7C>{0}</color>\n<color=#E6C77C>{1}</color>\n<color=#FF6B6B>{2}</color>\n\n<b>Мунін</b>\n<color=#7CFC7C>{3}</color>\n<color=#E6C77C>{4}</color>\n<color=#FF6B6B>{5}</color>",
+                Ranges(HuginBonus), Ranges(HuginGold), Ranges(HuginMinus), Ranges(MuninBonus), Ranges(MuninGold), Ranges(MuninMinus));
         }
 
         private static string Ranges(Perk[] pool)
@@ -144,16 +252,17 @@ namespace HuginWhispers
             List<string> lines = new List<string>();
             foreach (Perk p in pool)
             {
+                if (p.Gold) { lines.Add("★ " + Lang.T(p.Text)); continue; }
                 string lo = p.Percent ? Mathf.RoundToInt(p.Min * 100f).ToString() : Mathf.RoundToInt(p.Min).ToString();
                 string hi = p.Percent ? Mathf.RoundToInt(p.Max * 100f).ToString() : Mathf.RoundToInt(p.Max).ToString();
-                lines.Add("• " + string.Format(Lang.T(p.Text), lo + "–" + hi));
+                lines.Add("• " + string.Format(Lang.T(p.Text), lo == hi ? lo : lo + "–" + hi));
             }
             return string.Join("\n", lines.ToArray());
         }
 
         internal static string ListIds()
         {
-            return Lang.F("Хугін, блага: {0}\nХугін, тягарі: {1}\nМунін, блага: {2}\nМунін, тягарі: {3}", Ids(HuginBonus), Ids(HuginMinus), Ids(MuninBonus), Ids(MuninMinus));
+            return Lang.F("Хугін, блага: {0}\nХугін, золоті: {1}\nХугін, тягарі: {2}\nМунін, блага: {3}\nМунін, золоті: {4}\nМунін, тягарі: {5}", Ids(HuginBonus), Ids(HuginGold), Ids(HuginMinus), Ids(MuninBonus), Ids(MuninGold), Ids(MuninMinus));
         }
 
         private static string Ids(Perk[] pool)
@@ -166,8 +275,8 @@ namespace HuginWhispers
         // the console's exact choice, with a random value in the perk's range
         internal static string SetExact(ItemDrop.ItemData item, bool munin, string bonusId, string minusId)
         {
-            Perk b = Array.Find(munin ? MuninBonus : HuginBonus, x => x.Id == bonusId);
-            Perk m = Array.Find(munin ? MuninMinus : HuginMinus, x => x.Id == minusId);
+            Perk b = Array.Find(AllBonuses(munin), x => x.Id == bonusId);
+            Perk m = Array.Find(Minuses(munin), x => x.Id == minusId);
             if (b == null || m == null) return Lang.T("Немає такого блага чи тягаря. Список: raven perks");
             if (b.Stat == m.Stat) return Lang.T("Благо й тягар на одну характеристику — так не можна.");
             if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
@@ -181,8 +290,8 @@ namespace HuginWhispers
             bool munin;
             RavenItem.IsRaven(item, out munin);
             Perk b, m; float bv, mv;
-            bool hasB = Read(item, BonusKey, munin ? MuninBonus : HuginBonus, out b, out bv);
-            bool hasM = Read(item, MinusKey, munin ? MuninMinus : HuginMinus, out m, out mv);
+            bool hasB = Read(item, BonusKey, AllBonuses(munin), out b, out bv);
+            bool hasM = Read(item, MinusKey, Minuses(munin), out m, out mv);
             if (!hasB || !hasM) return Lang.F("<color=#9a9a9a>Благо й тягар цього ворона відкриються після покупки.</color>\n\n{0}", Power.Describe(item, munin, false));
             return Lang.F("<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>\n\n{2}", Line(b, bv), Line(m, mv), Power.Describe(item, munin, true));
         }
@@ -194,7 +303,7 @@ namespace HuginWhispers
             bool munin;
             if (item == null || !RavenItem.IsRaven(item, out munin)) return false;
             Perk b, m; float bv, mv;
-            if (!Read(item, BonusKey, munin ? MuninBonus : HuginBonus, out b, out bv) || !Read(item, MinusKey, munin ? MuninMinus : HuginMinus, out m, out mv)) return false;
+            if (!Read(item, BonusKey, AllBonuses(munin), out b, out bv) || !Read(item, MinusKey, Minuses(munin), out m, out mv)) return false;
             bonus = Line(b, bv); minus = Line(m, mv);
             return true;
         }
@@ -204,7 +313,7 @@ namespace HuginWhispers
             bool munin;
             RavenItem.IsRaven(item, out munin);
             Perk b, m; float bv, mv;
-            if (!Read(item, BonusKey, munin ? MuninBonus : HuginBonus, out b, out bv) || !Read(item, MinusKey, munin ? MuninMinus : HuginMinus, out m, out mv)) return "";
+            if (!Read(item, BonusKey, AllBonuses(munin), out b, out bv) || !Read(item, MinusKey, Minuses(munin), out m, out mv)) return "";
             return Lang.F("благо {0}, тягар {1}", Line(b, bv), Line(m, mv));
         }
 
@@ -289,12 +398,16 @@ namespace HuginWhispers
                     string kind = munin ? Trial.HadMuninKey : Trial.HadHuginKey;
                     if (!p.m_customData.ContainsKey(kind)) p.m_customData[kind] = "1"; // (a raven of this kind is yours: no big one of it flies to you any more)
                 }
-                if (!Rolled(item))
+                bool fresh = !Rolled(item);
+                if (Wing.Ensure(item, fresh) && !fresh && !Trust.Stranger(item, p)) Backup.Save(p, item); // its pace in the air (an old raven's from its id)
+                if (fresh)
                 {
                     Roll(item, munin);
+                    if (Golden(item)) PerkFx.GoldRolled(p, munin, item); // a golden blessing: said aloud
                     Trust.InitNew(item);
                     if (!Trust.Active(item)) Guide.Queue(p, Guide.Bought, 15f); // a new, sleeping raven: Hugin comes to explain
                 }
+                if (Checked.Count > 32) Checked.Clear(); // (every copy of a raven — back from a grave, a chest — is a new item: never a growing pile)
                 if (Checked.Add(item) && !Trust.Stranger(item, p) && Mend(item, munin)) Backup.Save(p, item); // a blessing or burden no longer there: rolled again (once a session)
                 if (!Norov.Rolled(item)) Norov.Ensure(p, item, munin); // its norov (old ravens too, once)
             }
@@ -302,6 +415,8 @@ namespace HuginWhispers
             RavenItem.Worn(p, out hugin, out munin2);
             Apply(p, false, hugin);
             Apply(p, true, munin2);
+            Refresh(hugin, munin2); // (PerkFx reads it: RavenSkills ticks it right after)
+            Wing.Publish(p, hugin, munin2); // their pace now, for every game that flies them
             OnTop(p);
             Label(p, false, hugin);
             Label(p, true, munin2);
@@ -347,17 +462,53 @@ namespace HuginWhispers
             if (item == null || !Trust.Active(item)) return; // asleep: no bonus, no drawback yet
 
             Perk b, m; float bv, mv;
-            if (!Read(item, BonusKey, munin ? MuninBonus : HuginBonus, out b, out bv) || !Read(item, MinusKey, munin ? MuninMinus : HuginMinus, out m, out mv)) return;
+            if (!Read(item, BonusKey, AllBonuses(munin), out b, out bv) || !Read(item, MinusKey, Minuses(munin), out m, out mv)) return;
             RavenPassive se = ScriptableObject.CreateInstance<RavenPassive>();
             se.name = EffectName(munin);
             se.m_name = ShoulderLine(munin);
             se.m_icon = RavenItem.Icon(munin);
             se.m_ttl = 0f;
-            b.Apply(se, bv);
-            m.Apply(se, mv);
+            if (b.Apply != null) b.Apply(se, bv);
+            if (m.Apply != null) m.Apply(se, mv);
             se.Munin = munin;
-            se.Text = Lang.F("<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>", Line(b, bv), Line(m, mv));
+            se.Text = Lang.F("<color={0}>Благо: {1}</color>\n<color=#FF6B6B>Тягар: {2}</color>", (b.Gold ? "#E6C77C" : "#7CFC7C"), Line(b, bv), Line(m, mv));
             seman.AddStatusEffect(se, true, 0, 0f, 0);
+        }
+
+        // ---------------------------------------------------------------- the ones with their own mechanics
+
+        // what the worn, awake ravens give now: id → its number (golden ones: 1); PerkFx reads it, made again on every Sync
+        private static readonly Dictionary<string, float> Live = new Dictionary<string, float>();
+
+        internal static float Of(string id) { float v; return Live.TryGetValue(id, out v) ? v : 0f; }
+        internal static bool Has(string id) { return Live.ContainsKey(id); }
+
+        private static string _live0 = "?", _live1 = "?";
+
+        private static void Refresh(ItemDrop.ItemData hugin, ItemDrop.ItemData munin)
+        {
+            if (Applied[0] == _live0 && Applied[1] == _live1) return; // (Apply's own signature of each: the same, nothing to read again)
+            _live0 = Applied[0]; _live1 = Applied[1];
+            Live.Clear();
+            Take(hugin, false);
+            Take(munin, true);
+        }
+
+        private static void Take(ItemDrop.ItemData item, bool munin)
+        {
+            if (item == null || !Trust.Active(item)) return; // asleep: nothing yet (as the effect)
+            Perk b, m; float bv, mv;
+            if (Read(item, BonusKey, AllBonuses(munin), out b, out bv)) Live[b.Id] = bv;
+            if (Read(item, MinusKey, Minuses(munin), out m, out mv)) Live[m.Id] = mv;
+        }
+
+        // the blessing's own name as the raven announces it (a golden one when it is bought)
+        internal static string BonusLine(ItemDrop.ItemData item)
+        {
+            bool munin;
+            Perk b; float bv;
+            if (item == null || !RavenItem.IsRaven(item, out munin) || !Read(item, BonusKey, AllBonuses(munin), out b, out bv)) return "";
+            return Line(b, bv);
         }
 
         // the raven's passives with when they work again: in the effect's tooltip and in the item's
@@ -367,10 +518,10 @@ namespace HuginWhispers
             foreach (RavenAbility a in RavenAbilities.All)
             {
                 if (!a.Passive || a.Munin != munin) continue;
-                if ((a.Id == "lastchance" && !LastChance.Enabled) || (a.Id == "bloodfury" && !BloodFury.Enabled) || ((a.Id == "anger" || a.Id == "lightstep") && !WeakPassive.Enabled) || (Loyal.Is(a) && !Loyal.Enabled)) continue;
+                if ((a.Id == "lastchance" && !LastChance.Enabled) || (a.Id == "bloodfury" && !BloodFury.Enabled) || ((a.Id == "anger" || a.Id == "lightstep") && !WeakPassive.Enabled) || (Loyal.Is(a) && !Loyal.Enabled) || (BloodRevenge.Is(a) && !BloodRevenge.Enabled) || (Omen.Is(a) && !Omen.Enabled)) continue;
                 // one paragraph, no "name: value" lines: tooltip mods (SeneaL UI) split those into separate blocks
                 text += Lang.F("\n\n<color=orange><b>{0}</b></color> (пасивний ефект) — {1} <color=#9a9a9a>{2}{3},</color> {4}.", a.Plain, a.Short,
-                    (Loyal.Is(a) ? Lang.T("без сили й перезарядки") : Lang.F("{0} сили{1}, раз на {2}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(munin), RavenAbilities.Span(a.Cooldown()))),
+                    (RavenAbilities.Free(a) ? Lang.T("без сили й перезарядки") : Lang.F("{0} сили{1}, раз на {2}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(munin), RavenAbilities.Span(a.Cooldown()))),
                     (onShoulder ? "" : Lang.T(", лише поки ворон на плечі")), RavenAbilities.PassiveReady(a));
             }
             return text;
@@ -444,8 +595,8 @@ namespace HuginWhispers
 #if RAVEN_ITEM
 namespace HuginWhispers
 {
-    // The game's own effect list writes the effect's name with colour tags off: "(голодний)" showed its tags as text.
-    // They are turned on for the names (SeneaL UI has its own list, where they already work).
+    // The game's own effect list writes the effect's name and the number under its icon with tags off: "(голодний)" and
+    // the strength showed their tags as text. They are turned on for both (SeneaL UI has its own list, where they work).
     [HarmonyLib.HarmonyPatch(typeof(Hud), "UpdateStatusEffects")]
     internal static class RavenEffectNameColourPatch
     {
@@ -462,6 +613,11 @@ namespace HuginWhispers
                 if (row == null || Done.Contains(row)) continue;
                 TMPro.TMP_Text name = row.GetComponentInChildren<TMPro.TMP_Text>();
                 if (name != null && !name.richText) name.richText = true;
+                // the number under the icon too: our ravens' strength comes in size/colour tags (RavenPassive.GetIconText),
+                // printed as text they made one long, tiny line
+                UnityEngine.Transform time = row.Find("TimeText");
+                TMPro.TMP_Text tt = time != null ? time.GetComponent<TMPro.TMP_Text>() : null;
+                if (tt != null && !tt.richText) tt.richText = true;
                 Done.Add(row);
             }
             if (Done.Count > 64) Done.RemoveWhere(r => r == null); // rows the game has destroyed

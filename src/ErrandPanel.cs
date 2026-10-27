@@ -118,7 +118,9 @@ namespace HuginWhispers
         {
             Times();
             GUILayout.BeginHorizontal();
-            Errands.ForceNoDeath = GUILayout.Toggle(Errands.ForceNoDeath, " видавати з модифікатором «Без смерті» (тест)");
+            GUILayout.Label("Модифікатор (тест):", GUILayout.Width(130));
+            foreach (string id in new[] { "", "nodeath", "noscratch", "hurry", "noportal", "noflee", "quiet", "vow", "sparktest", "offering" })
+                if (GUILayout.Toggle((Errands.ForceMod ?? "") == id, id.Length == 0 ? "сам" : id, "Button", GUILayout.ExpandWidth(false))) Errands.ForceMod = id.Length == 0 ? null : id;
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("<b>Видати доручення</b> (поточне відкладеться)");
@@ -129,11 +131,12 @@ namespace HuginWhispers
             List<string> recent = Errands.History(p);
             foreach (ErrandDef d in Errands.All())
             {
-                bool stage = Stage.HasAll(p, d.Needs);
-                if (!stage && !_showAll) continue;
+                bool stage = Stage.HasAll(p, d.Needs), ahead = !stage && Errands.Ahead(p, d);
+                if (!stage && !ahead && !_showAll) continue;
                 GUILayout.BeginHorizontal();
                 string tags = (d.Golden ? " <color=#FFC94A>золоте</color>" : "") + (Errands.NeedsServer(d) ? " <color=#8EC9FF>місце світу</color>" : "")
-                    + (!stage ? " <color=#FF7A7A>не на етапі (" + string.Join(" ", d.Needs.ToArray()) + ")</color>" : "") + (recent.Contains(d.Id) ? " <color=#9A9A9A>недавнє</color>" : "");
+                    + (ahead ? " <color=#C9A2FF>далеке (" + Mathf.RoundToInt(Errands.AheadChance * 100f) + "%)</color>"
+                        : !stage ? " <color=#FF7A7A>не на етапі (" + string.Join(" ", d.Needs.ToArray()) + ")</color>" : "") + (recent.Contains(d.Id) ? " <color=#9A9A9A>недавнє</color>" : "");
                 if (Stage.Of(p) > d.Upto) tags += " <color=#9A9A9A>уже не на етапі (до " + d.Upto + " босів)</color>";
                 if (d.Mods.Count > 0) tags += " <color=#FF8A7A>" + string.Join("+", d.Mods.ToArray()) + "</color>";
                 foreach (KeyValuePair<string, float> mm in d.MayMods) tags += " <color=#FF8A7A>" + mm.Key + " " + Mathf.RoundToInt(mm.Value) + "%</color>";
@@ -208,6 +211,19 @@ namespace HuginWhispers
             if (GUILayout.Button("+1 золота")) { _note = RuneBook.Cmd(p, new[] { "runes", "gold", "1" }); }
             if (GUILayout.Button("Скинути руни")) { _note = RuneBook.Cmd(p, new[] { "runes", "reset" }); }
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("+1 Іскра Одіна")) { string r = RuneStars.Spark(p); _note = r != null ? "Іскра: " + r + " " + RuneStars.SparkWord(RuneBook.Of(p).StarsOf(r)) + "." : "Нема руни для іскри (жодна не горить або всі ★★★)."; }
+            if (GUILayout.Button("Скинути всі іскри")) { RuneBook.Data d = RuneBook.Of(p); int n = 0; foreach (int v in d.Stars.Values) n += v; d.Stars.Clear(); RuneBook.Save(p, d); _note = "Іскри скинуто (зірок було " + n + ")."; }
+            GUILayout.Label(StarsLine(RuneBook.Of(p)));
+            GUILayout.EndHorizontal();
+        }
+
+        // the runes with stars, for the line by the buttons
+        private static string StarsLine(RuneBook.Data d)
+        {
+            List<string> l = new List<string>();
+            foreach (string r in d.Order) if (d.StarsOf(r) > 0) l.Add(r + " " + RuneStars.SparkWord(d.StarsOf(r)));
+            return l.Count > 0 ? string.Join(", ", l.ToArray()) : "зірок нема";
         }
 
         // ---------------------------------------------------------------- champions near

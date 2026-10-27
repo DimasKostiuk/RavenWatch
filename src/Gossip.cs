@@ -18,7 +18,6 @@ namespace HuginWhispers
     // something to tell; and only in some talks (CrossTalk rolls Chance once a talk).
     internal static class Gossip
     {
-        internal const string NetKey = "RavenWatch_Gossip";
         internal static float Chance = 0.35f; // of the pals' talks, those where the facts may be spoken of
         internal static bool ForceNext;       // the console: the next talk speaks of them for sure
 
@@ -40,15 +39,15 @@ namespace HuginWhispers
         }
         private static float _next;
 
-        // the wearer's game, in the twice-a-second sync: the facts gathered every 30 s, written only when they change
+        // the wearer's game, in the twice-a-second sync: the facts gathered every 30 s and told to the players near
+        // (NearCast: not on the player's ZDO)
+        private static string _mine = "";
         internal static void Publish(Player p, ItemDrop.ItemData hugin, ItemDrop.ItemData munin)
         {
             if (Time.time < _next) return;
             _next = Time.time + 30f;
-            ZDO z = NetFlag.Zdo(p, true);
-            if (z == null) return;
-            string s = Build(hugin, munin);
-            if (z.GetString(NetKey, "") != s) z.Set(NetKey, s);
+            _mine = Build(hugin, munin);
+            NearCast.Tell(p, NearCast.Gossip, _mine);
         }
 
         private static string Build(ItemDrop.ItemData hugin, ItemDrop.ItemData munin)
@@ -88,8 +87,7 @@ namespace HuginWhispers
         internal static void Fill(Dictionary<string, string> v, Player pl, bool munin, string pre, string dir) { using (Lang.Phrase()) FillIn(v, pl, munin, pre, dir); } // (the line's values in its own language)
         private static void FillIn(Dictionary<string, string> v, Player pl, bool munin, string pre, string dir)
         {
-            ZDO z = pl != null ? NetFlag.Zdo(pl, false) : null;
-            string raw = z != null ? z.GetString(NetKey, "") : "";
+            string raw = pl == null ? "" : ReferenceEquals(pl, Player.m_localPlayer) ? _mine : NearCast.Of(pl, NearCast.Gossip);
             if (raw.Length == 0) return;
             int today = Memory.Day(), n, day;
             foreach (string part in raw.Split(';'))

@@ -59,7 +59,7 @@ namespace HuginWhispers
             z.Set("RavenWatch_NickM", m ? NicksM[n % NicksM.Length] : "");
             z.Set(Voice.NetKey, Voice.Pack(h ? Voice.RandomCode() : -1, m ? Voice.RandomCode() : -1));
             int today = Memory.Day();
-            z.Set(Gossip.NetKey, "d," + today + ",c,$enemy_draugr,2;b," + Mathf.Max(0, today - 1) + ",Bonemass;h,42;m,17;k,1530");
+            NearCast.Put(id, NearCast.Gossip, "d," + today + ",c,$enemy_draugr,2;b," + Mathf.Max(0, today - 1) + ",Bonemass;h,42;m,17;k,1530");
             Made.Add(go);
             if (Plugin.Instance != null) Plugin.Instance.Log("Test dummy " + name + " (id " + id + ") at " + at + ", player component " + (body != null ? "off" : "missing"));
             if (pals) CrossTalk.Befriend(p, id, CrossTalk.PalsAt);

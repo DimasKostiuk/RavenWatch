@@ -10,11 +10,13 @@ using UnityEngine.UI;
 
 namespace HuginWhispers
 {
-    // SeneaL UI draws worn gear on a doll of its own, made of the game's inventory cells. The ravens get two small round
+    // SeneaL UI draws worn gear on a doll of its own, made of the game's inventory cells (or of Path of Valheiman's
+    // equipment rows, when that mod keeps its own). The ravens get two small round
     // cells there, on the lower corners of the head cell (Munin on the left, Hugin on the right), out of the helmet's way.
     // While they are there a raven on the shoulder is not in the bag at all (RavenSeat keeps it).
     // Nothing of SeneaL UI is changed: the cells lie beside its head cell and follow it (its cells hide the pictures other
-    // mods put inside them), and only what it keeps public is read: Plugin.Active, Slots.Bypass and Slots.SlotCell.
+    // mods put inside them), and only what it keeps public is read: Plugin.Active, Slots.Bypass, Slots.SlotCell, and
+    // (for Path of Valheiman's panel) Slots.Azu and Foreign.Inventory.
     // If any of it is missing, or its inventory is switched off, no cells are drawn and the ravens go back into the bag,
     // still on the shoulders, as in the plain game. Should SeneaL UI one day draw the ravens itself, this steps aside.
     internal static class SeneaLShoulders
@@ -32,6 +34,9 @@ namespace HuginWhispers
         private static MethodInfo _slotCell;    // SeneaLUI.Inv.Slots.SlotCell(Inventory, slot): where a doll slot lies
         // the same, made into plain calls once: they are asked every frame while the inventory is open
         private static Func<bool> _activeGet, _bypassGet;
+        // SeneaLUI.Inv.Slots.Azu: another mod's equipment rows (Path of Valheiman's) drawn by SeneaL UI on its doll, which
+        // Bypass counts as not its own; SeneaLUI.Mods.Foreign.Inventory: a mod of its own draws the whole inventory
+        private static Func<bool> _azuGet, _foreignGet;
         private static Func<Inventory, int, Vector2i> _cellOf;
         private static readonly FieldInfo DragItemField = AccessTools.Field(typeof(InventoryGui), "m_dragItem");
         private static readonly FieldInfo DragInvField = AccessTools.Field(typeof(InventoryGui), "m_dragInventory");
@@ -135,12 +140,38 @@ namespace HuginWhispers
                     _activeGet = Expression.Lambda<Func<bool>>(Expression.Field(null, _active)).Compile();
                     _bypassGet = (Func<bool>)Delegate.CreateDelegate(typeof(Func<bool>), _bypass.GetGetMethod(true));
                     _cellOf = (Func<Inventory, int, Vector2i>)Delegate.CreateDelegate(typeof(Func<Inventory, int, Vector2i>), _slotCell);
+                    _azuGet = BoolGetter(slots, "Azu");
+                    _foreignGet = BoolGetter(AccessTools.TypeByName("SeneaLUI.Mods.Foreign"), "Inventory");
                 }
                 Log(_found ? "SeneaL UI: the ravens sit in their own shoulder cells on its doll." : "SeneaL UI is not as RavenWatch knows it: the ravens on the shoulders stay in the bag.");
             }
             catch (Exception e) { _found = false; Log("SeneaL UI shoulder cells off: " + e.Message); }
             return _found;
         }
+
+        // a static bool property of SeneaL UI as a plain call, or null when it has none
+        private static Func<bool> BoolGetter(Type t, string name)
+        {
+            PropertyInfo pi = t != null ? AccessTools.Property(t, name) : null;
+            MethodInfo get = pi != null && pi.PropertyType == typeof(bool) ? pi.GetGetMethod(true) : null;
+            return get != null && get.IsStatic ? (Func<bool>)Delegate.CreateDelegate(typeof(Func<bool>), get) : null;
+        }
+
+        // Path of Valheiman's equipment rows drawn by SeneaL UI (its [Mods] PovEquipment = false): the doll is the
+        // «Equipment» panel, and the cells sit on the shoulders of its chest cell once that is laid out
+        private static bool OthersRows()
+        {
+            if (_azuGet == null || !_azuGet() || (_foreignGet != null && _foreignGet())) return false;
+            Player p = Player.m_localPlayer;
+            if (p == null) return false;
+            Vector2i chest = _cellOf(p.GetInventory(), ChestSlot);
+            return chest.x >= 0 && chest.y >= 0;
+        }
+
+        private const int HeadSlot = 0, ChestSlot = 2; // SeneaL UI's own numbering of the doll's slots
+        internal static bool OnChest { get { return _onChest; } }
+        private static bool _onChest; // Path of Valheiman's panel: by the chest cell's upper corners, not the head's lower ones
+        private static int AnchorSlot { get { return _onChest ? ChestSlot : HeadSlot; } }
 
         // SeneaL UI draws the inventory now: the ravens on the shoulders are kept off the bag
         internal static bool Holds
@@ -152,7 +183,12 @@ namespace HuginWhispers
                 _holds = false;
                 if (Wanted && Find())
                 {
-                    try { _holds = _activeGet() && !_bypassGet(); }
+                    try
+                    {
+                        bool own = _activeGet() && !_bypassGet();
+                        _holds = own || (_activeGet() && OthersRows());
+                        if (_holds) _onChest = !own;
+                    }
                     catch { _holds = false; }
                 }
                 if (_holds) _offSince = -1f;
@@ -185,8 +221,8 @@ namespace HuginWhispers
             Show(true);
             if (!_headFadeLooked) { _headFadeLooked = true; _headFade = head.GetComponent<CanvasGroup>(); }
             float alpha = _headFade != null ? _headFade.alpha : 1f; // SeneaL UI fades its doll in and out
-            _munin.Follow(head, false, alpha);
-            _hugin.Follow(head, true, alpha);
+            _munin.Follow(head, false, _onChest, alpha);
+            _hugin.Follow(head, true, _onChest, alpha);
             _munin.Refresh(p);
             _hugin.Refresh(p);
         }
@@ -197,12 +233,12 @@ namespace HuginWhispers
             if (_munin != null && _munin.gameObject.activeSelf != on) _munin.gameObject.SetActive(on);
         }
 
-        // SeneaL UI's head slot is slot 0; the game's cell that stands there
+        // the game's cell that stands in the doll's head slot (or chest slot on Path of Valheiman's panel)
         private static RectTransform HeadCell(InventoryGrid grid, Inventory inv)
         {
             if (grid == null || inv == null) return null;
             Vector2i pos;
-            try { pos = _cellOf(inv, 0); }
+            try { pos = _cellOf(inv, AnchorSlot); }
             catch { return null; }
             if (_head != null && _head.Position.x == pos.x && _head.Position.y == pos.y) return _head.transform as RectTransform;
             _head = null;
@@ -310,17 +346,18 @@ namespace HuginWhispers
             if (!right) RavenSeat.ToggleFromBag(p, munin);
         }
 
-        // a raven dropped on the head cell of the doll
-        internal static void SelectedOn(InventoryGui gui, InventoryGrid grid, Vector2i pos)
+        // a raven dropped on the head cell of the doll (the chest cell on Path of Valheiman's panel)
+        // true: it was a raven on that cell, and it is seen to
+        internal static bool SelectedOn(InventoryGui gui, InventoryGrid grid, Vector2i pos)
         {
-            if (gui == null || grid != gui.m_playerGrid || !Holds) return;
+            if (gui == null || grid != gui.m_playerGrid || !Holds) return false;
             ItemDrop.ItemData item = Dragged(gui);
             bool munin;
-            if (!RavenItem.IsRaven(item, out munin)) return;
+            if (!RavenItem.IsRaven(item, out munin)) return false;
             Vector2i head;
-            try { head = _cellOf(grid.GetInventory(), 0); }
-            catch { return; }
-            if (head.x == pos.x && head.y == pos.y) DropRaven(gui);
+            try { head = _cellOf(grid.GetInventory(), AnchorSlot); }
+            catch { return false; }
+            return head.x == pos.x && head.y == pos.y && DropRaven(gui);
         }
     }
 
@@ -368,7 +405,7 @@ namespace HuginWhispers
             icon.transform.SetParent(back.transform, false);
             RectTransform ir = (RectTransform)icon.transform;
             ir.anchorMin = Vector2.zero; ir.anchorMax = Vector2.one; ir.offsetMin = ir.offsetMax = Vector2.zero;
-            ir.localScale = new Vector3(munin ? -1f : 1f, 1f, 1f); // both look away from the head, out over the shoulder
+            // (no mirror: the pictures already look different ways, Munin left and Hugin right, out over the shoulders)
             c._icon = icon.AddComponent<Image>();
             c._icon.sprite = AbilityIcons.For(munin ? "munin" : "hugin", munin);
             c._icon.preserveAspect = true;
@@ -383,13 +420,15 @@ namespace HuginWhispers
             return c;
         }
 
-        // on the head cell's lower corner, as big as it is now (it swells a little under the pointer)
-        internal void Follow(RectTransform head, bool right, float alpha)
+        // on the head cell's lower corner (or the chest cell's upper one: its shoulder), as big as it is now (it swells a
+        // little under the pointer)
+        internal void Follow(RectTransform head, bool right, bool top, float alpha)
         {
             if (Rt.parent != head.parent) Rt.SetParent(head.parent, false);
             if (Rt.GetSiblingIndex() < head.GetSiblingIndex()) Rt.SetAsLastSibling();
             Rect r = head.rect;
-            Vector3 local = new Vector3(right ? r.xMax + SeneaLShoulders.OutX : r.xMin - SeneaLShoulders.OutX, r.yMin - SeneaLShoulders.DownY, 0f);
+            float y = top ? r.yMax + SeneaLShoulders.DownY : r.yMin - SeneaLShoulders.DownY;
+            Vector3 local = new Vector3(right ? r.xMax + SeneaLShoulders.OutX : r.xMin - SeneaLShoulders.OutX, y, 0f);
             Rt.position = head.TransformPoint(local);
             Rt.sizeDelta = new Vector2(SeneaLShoulders.Size, SeneaLShoulders.Size);
             float want = _over ? SeneaLShoulders.HoverScale : 1f;
@@ -415,7 +454,7 @@ namespace HuginWhispers
             if (_tip == null) return;
             string side = Munin ? Lang.T("Ліве плече") : Lang.T("Праве плече");
             if (on == null)
-                _tip.Set(side, Lang.F("{0}\nПеретягни ворона сюди або на шолом,\nабо клікни — сяде ворон із сумки.", (Munin ? Lang.T("Тут сидить Мунін.") : Lang.T("Тут сидить Хугін."))));
+                _tip.Set(side, Lang.F(SeneaLShoulders.OnChest ? "{0}\nПеретягни ворона сюди або на нагрудник,\nабо клікни — сяде ворон із сумки." : "{0}\nПеретягни ворона сюди або на шолом,\nабо клікни — сяде ворон із сумки.", (Munin ? Lang.T("Тут сидить Мунін.") : Lang.T("Тут сидить Хугін."))));
             else
                 _tip.Set(on.m_shared.m_name, Lang.F("{0}. Клік — зняти в сумку.\n\n{1}", (side + (state == 2 ? " (" + Trust.AwayWord(Munin, on) + ")" : "")), ItemDrop.ItemData.GetTooltip(on, on.m_quality, false, on.m_worldLevel, -1, false)));
         }
@@ -442,7 +481,7 @@ namespace HuginWhispers
                 }
                 return _tipObj;
             }
-            return SeneaLShoulders.EmptyTip(ref _emptyTip, side, Lang.F("{0}\nПеретягни ворона сюди або на шолом,\nабо клікни — сяде ворон із сумки.", (Munin ? Lang.T("Тут сидить Мунін.") : Lang.T("Тут сидить Хугін."))), Munin ? 2 : 1);
+            return SeneaLShoulders.EmptyTip(ref _emptyTip, side, Lang.F(SeneaLShoulders.OnChest ? "{0}\nПеретягни ворона сюди або на нагрудник,\nабо клікни — сяде ворон із сумки." : "{0}\nПеретягни ворона сюди або на шолом,\nабо клікни — сяде ворон із сумки.", (Munin ? Lang.T("Тут сидить Мунін.") : Lang.T("Тут сидить Хугін."))), Munin ? 2 : 1);
         }
 
         public void OnPointerEnter(PointerEventData e) { _over = true; _state = -1; SeneaLShoulders.TipShow(Rt, this); }
@@ -467,12 +506,22 @@ namespace HuginWhispers
         }
     }
 
-    // a raven dropped on the head cell: SeneaL UI refuses it there (not a helmet) and leaves it in the hand
+    // a raven dropped on the head cell: SeneaL UI refuses it there (not a helmet) and leaves it in the hand. On Path of
+    // Valheiman's panel (the chest cell) it is taken first: SeneaL UI would ask that mod and show its «invalid» line
     [HarmonyPatch(typeof(InventoryGui), "OnSelectedItem")]
     internal static class SeneaLShouldersDropPatch
     {
+        [HarmonyPriority(Priority.First)]
+        private static bool Prefix(InventoryGui __instance, InventoryGrid grid, Vector2i pos)
+        {
+            if (!SeneaLShoulders.OnChest) return true;
+            try { return !SeneaLShoulders.SelectedOn(__instance, grid, pos); }
+            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Shoulder drop: " + e.Message); return true; }
+        }
+
         private static void Postfix(InventoryGui __instance, InventoryGrid grid, Vector2i pos)
         {
+            if (SeneaLShoulders.OnChest) return;
             try { SeneaLShoulders.SelectedOn(__instance, grid, pos); }
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Shoulder drop: " + e.Message); }
         }

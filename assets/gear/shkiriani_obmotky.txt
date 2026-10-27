@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Шкіряні обмотки
+note: Смужки оленячої шкури, змотані на лапах, і пір'їна за шнурком. Так ходили мисливці по сухому листю. Ворон у них не шкрябає кігтями по наплічнику, і ти теж ступаєш тихше.
+use: gear
+id: shkiriani_obmotky
+cost: LeatherScraps:6 DeerHide:3 Feathers:2 TrophyNeck:1 RavenWatch_item_pryazhka_haldora:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: legs
+part asset/Спорядження/GearLeatherWraps pos 0 -0.05 0 rot 0 0 0 scale 0.08 0.08 0.08  # Шкіряні обмотки (Meshy)

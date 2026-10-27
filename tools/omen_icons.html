@@ -1,0 +1,189 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>omen + revenge icons</title></head>
+<body style="background:#444">
+<!-- The medallions of Hugin's «Віщування» (assets/icons/homen.png), Munin's «Кровна помста» (mrevenge.png) and «Приборкання» (mtame.png) in the
+     gifts' own style: dark edge, gold rim, a ring of runes, the raven's own middle (Hugin's night blue, Munin's blood
+     red) and its gem on the rim. Made by tools/omen_icons.js (headless Chrome); open in a browser to look at them. -->
+<canvas id="homen" width="256" height="256"></canvas>
+<canvas id="mrevenge" width="256" height="256"></canvas>
+<canvas id="mtame" width="256" height="256"></canvas>
+<pre id="out"></pre>
+<script>
+const C = 128, TAU = Math.PI * 2;
+const RUNES = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ'];
+
+function ring(g, r0, r1, fill) { g.beginPath(); g.arc(C, C, r1, 0, TAU); g.arc(C, C, r0, 0, TAU, true); g.fillStyle = fill; g.fill(); }
+function circle(g, r, fill) { g.beginPath(); g.arc(C, C, r, 0, TAU); g.fillStyle = fill; g.fill(); }
+
+// the frame every gift has: the rim, the rune band, the raven's own middle
+function frame(g, mid0, mid1, edge) {
+  g.clearRect(0, 0, 256, 256);
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.55)'; g.shadowBlur = 8; g.shadowOffsetY = 3; circle(g, 120, '#0b0806'); g.restore();
+  const gold = g.createLinearGradient(0, 8, 0, 248);
+  gold.addColorStop(0, '#f7dc8a'); gold.addColorStop(0.35, '#d9a640'); gold.addColorStop(0.7, '#a8741f'); gold.addColorStop(1, '#e2b552');
+  ring(g, 108, 117, gold);
+  ring(g, 116.5, 118, 'rgba(60,35,8,0.9)');
+  const band = g.createRadialGradient(C, C, 86, C, C, 108);
+  band.addColorStop(0, edge); band.addColorStop(1, '#0c0a0c');
+  ring(g, 88, 108, band);
+  g.save();
+  g.font = 'bold 15px "Segoe UI Historic", "Segoe UI Symbol", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * TAU - Math.PI / 2 + 0.1;
+    g.save(); g.translate(C + Math.cos(a) * 98, C + Math.sin(a) * 98); g.rotate(a + Math.PI / 2);
+    g.fillStyle = 'rgba(212,166,72,0.85)'; g.fillText(RUNES[i], 0, 0); g.restore();
+  }
+  g.restore();
+  const mid = g.createRadialGradient(118, 106, 8, C, C + 6, 88);
+  mid.addColorStop(0, mid0); mid.addColorStop(0.65, mid1); mid.addColorStop(1, edge);
+  circle(g, 88, mid);
+  g.lineWidth = 2.2; g.strokeStyle = '#c99a3e'; g.beginPath(); g.arc(C, C, 87.5, 0, TAU); g.stroke();
+  g.lineWidth = 2; g.strokeStyle = '#0a0705'; g.beginPath(); g.arc(C, C, 119, 0, TAU); g.stroke();
+}
+
+// the raven's gem on the rim: Hugin's blue at the top left, Munin's red at the top right
+function gem(g, munin) {
+  const [x, y, c0, c1] = munin ? [204, 46, '#ffd9c8', '#e0402e'] : [52, 46, '#d9f2ff', '#3d8fe0'];
+  const s = g.createRadialGradient(x - 3, y - 3, 1, x, y, 13);
+  s.addColorStop(0, c0); s.addColorStop(0.5, c1); s.addColorStop(1, 'rgba(0,0,0,0)');
+  g.beginPath(); g.arc(x, y, 13, 0, TAU); g.fillStyle = s; g.fill();
+  g.beginPath(); g.arc(x, y, 7.5, 0, TAU); g.fillStyle = c1; g.fill();
+  g.beginPath(); g.arc(x - 2.2, y - 2.4, 2.6, 0, TAU); g.fillStyle = c0; g.fill();
+}
+
+// a raven seen from below, wings spread (as on the paired gifts)
+function raven(g, x, y, s, rot, col, rim, lift) {
+  g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
+  const L = lift || 0;
+  g.beginPath();
+  for (const side of [1, -1]) {
+    const W = (px, py) => [px * side, py - L * Math.abs(px) * 0.35];
+    const p = [[4, -5], [18, -13], [34, -16], [50, -12], [56, -7], [49, -5], [54, 0], [46, 0], [50, 5], [42, 4], [44, 9], [35, 6], [26, 8], [15, 7], [5, 8]].map(q => W(q[0], q[1]));
+    g.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]);
+    g.closePath();
+  }
+  g.ellipse(0, 3, 7.5, 15, 0, 0, Math.PI * 2);
+  g.moveTo(6, -12); g.arc(0, -12, 6.5, 0, Math.PI * 2);
+  g.moveTo(-6, 15); g.lineTo(-10, 30); g.lineTo(-4, 28); g.lineTo(0, 32); g.lineTo(4, 28); g.lineTo(10, 30); g.lineTo(6, 15); g.closePath();
+  g.save(); g.shadowColor = rim; g.shadowBlur = 7 / s; g.fillStyle = col; g.fill(); g.restore();
+  g.fillStyle = col; g.fill();
+  g.beginPath(); g.moveTo(-2.6, -9); g.lineTo(2.6, -9); g.lineTo(0, -1.5); g.closePath(); g.fillStyle = '#3a3a40'; g.fill();
+  g.fillStyle = rim; g.beginPath(); g.arc(-2.6, -13, 1.3, 0, Math.PI * 2); g.arc(2.6, -13, 1.3, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+function out(id) { return id + ' ' + document.getElementById(id).toDataURL('image/png'); }
+
+// «Віщування»: an all-seeing eye in a night sky — the moon on one side, a storm cloud with lightning on the other,
+// Hugin flying over it
+function omen() {
+  const g = document.getElementById('homen').getContext('2d');
+  frame(g, '#3d6a9c', '#16294a', '#0b1424');
+  g.save(); g.beginPath(); g.arc(C, C, 86, 0, TAU); g.clip();
+  // stars
+  g.fillStyle = 'rgba(230,240,255,0.85)';
+  for (const [x, y, r] of [[70, 90, 1.4], [86, 70, 1], [170, 76, 1.2], [188, 96, 1], [62, 130, 1], [150, 60, 0.9], [104, 62, 1.1]]) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
+  // the moon, a crescent at the left
+  g.save(); g.beginPath(); g.arc(78, 118, 22, 0, TAU); g.clip();
+  g.beginPath(); g.arc(78, 118, 22, 0, TAU); g.arc(90, 111, 20, 0, TAU); g.fillStyle = '#f3e7b8'; g.fill('evenodd'); g.restore();
+  // the storm cloud at the right, a bolt from it
+  const cg = g.createLinearGradient(0, 100, 0, 150); cg.addColorStop(0, '#9aa6bb'); cg.addColorStop(1, '#4d566a');
+  g.beginPath(); g.arc(166, 128, 16, Math.PI * 0.9, Math.PI * 1.9); g.arc(186, 122, 13, Math.PI * 1.1, Math.PI * 2.1); g.arc(198, 134, 10, Math.PI * 1.4, Math.PI * 0.5); g.lineTo(150, 142); g.closePath(); g.fillStyle = cg; g.fill();
+  g.beginPath(); g.moveTo(178, 142); g.lineTo(170, 160); g.lineTo(178, 160); g.lineTo(168, 182); g.lineTo(188, 154); g.lineTo(180, 154); g.lineTo(186, 142); g.closePath(); g.fillStyle = '#ffe27a'; g.fill();
+  // the eye in the middle: gold lids, a blue iris, a glint
+  g.save(); g.translate(C, 150);
+  g.beginPath(); g.moveTo(-40, 0); g.quadraticCurveTo(0, -30, 40, 0); g.quadraticCurveTo(0, 30, -40, 0); g.closePath();
+  const white = g.createRadialGradient(0, 0, 4, 0, 0, 40); white.addColorStop(0, '#f6f2e6'); white.addColorStop(1, '#b9b2a0');
+  g.fillStyle = white; g.fill(); g.lineWidth = 4; g.strokeStyle = '#e1b25a'; g.stroke();
+  const iris = g.createRadialGradient(-3, -3, 2, 0, 0, 15); iris.addColorStop(0, '#9fd6ff'); iris.addColorStop(0.6, '#2f76c8'); iris.addColorStop(1, '#123a6e');
+  g.beginPath(); g.arc(0, 0, 15, 0, TAU); g.fillStyle = iris; g.fill();
+  g.beginPath(); g.arc(0, 0, 6.5, 0, TAU); g.fillStyle = '#05070c'; g.fill();
+  g.beginPath(); g.arc(-5, -5, 3, 0, TAU); g.fillStyle = '#ffffff'; g.fill();
+  // rays of sight
+  g.strokeStyle = 'rgba(255,226,140,0.7)'; g.lineWidth = 2; g.lineCap = 'round';
+  for (const a of [-2.3, -1.9, -1.57, -1.24, -0.84]) { g.beginPath(); g.moveTo(Math.cos(a) * 30, Math.sin(a) * 22); g.lineTo(Math.cos(a) * 42, Math.sin(a) * 33); g.stroke(); }
+  g.restore();
+  g.restore();
+  raven(g, C, 80, 0.62, 0, '#0e1424', '#7fb6ff', 0.4);
+  gem(g, false);
+  return out('homen');
+}
+
+// «Кровна помста»: Munin diving on a horned skull marked with a blood rune, red runes circling it
+function revenge() {
+  const g = document.getElementById('mrevenge').getContext('2d');
+  frame(g, '#a8382c', '#4a0f0e', '#1c0606');
+  g.save(); g.beginPath(); g.arc(C, C, 86, 0, TAU); g.clip();
+  // the circle of red runes round the marked one
+  g.save(); g.font = 'bold 15px "Segoe UI Historic", "Segoe UI Symbol", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * TAU + 0.3;
+    g.save(); g.translate(C + Math.cos(a) * 52, 150 + Math.sin(a) * 22); g.rotate(a * 0.2);
+    g.fillStyle = 'rgba(255,90,70,' + (0.55 + 0.4 * Math.sin(a)) + ')'; g.fillText(RUNES[(i * 5) % 16], 0, 0); g.restore();
+  }
+  g.restore();
+  // the horned skull
+  g.save(); g.translate(C, 156);
+  const bone = g.createLinearGradient(0, -32, 0, 30); bone.addColorStop(0, '#efe3c6'); bone.addColorStop(1, '#a8977a');
+  g.fillStyle = bone; g.strokeStyle = '#2a1a10'; g.lineWidth = 2;
+  // horns
+  for (const s of [1, -1]) { g.beginPath(); g.moveTo(16 * s, -18); g.quadraticCurveTo(44 * s, -26, 40 * s, -52); g.quadraticCurveTo(34 * s, -30, 10 * s, -10); g.closePath(); g.fill(); g.stroke(); }
+  g.beginPath(); g.moveTo(-24, -6); g.quadraticCurveTo(-26, -34, 0, -36); g.quadraticCurveTo(26, -34, 24, -6); g.quadraticCurveTo(22, 10, 14, 14); g.lineTo(14, 26); g.lineTo(-14, 26); g.lineTo(-14, 14); g.quadraticCurveTo(-22, 10, -24, -6); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#1a0a08';
+  g.beginPath(); g.ellipse(-10, -8, 7, 8, 0.2, 0, TAU); g.fill(); g.beginPath(); g.ellipse(10, -8, 7, 8, -0.2, 0, TAU); g.fill();
+  g.beginPath(); g.moveTo(0, 2); g.lineTo(-4, 10); g.lineTo(4, 10); g.closePath(); g.fill();
+  for (let i = -2; i <= 2; i++) { g.fillRect(i * 5 - 1, 18, 2, 8); }
+  // the blood rune on the brow, and a drop running down
+  g.font = 'bold 18px "Segoe UI Historic", "Segoe UI Symbol", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#d4231c'; g.fillText('ᛉ', 0, -23);
+  g.beginPath(); g.moveTo(0, -14); g.quadraticCurveTo(3.5, -7, 0, -4); g.quadraticCurveTo(-3.5, -7, 0, -14); g.fill();
+  g.restore();
+  g.restore();
+  // Munin diving on it, claws first
+  raven(g, C, 82, 0.66, Math.PI, '#220c0e', '#ff8a70', -0.6);
+  gem(g, true);
+  return out('mrevenge');
+}
+
+// «Приборкання»: a boar's head from the front, tusks and bristle, Munin standing on it with his wings up, a little
+// heart of soothing over it
+function tame() {
+  const g = document.getElementById('mtame').getContext('2d');
+  frame(g, '#b0503a', '#4a1410', '#1c0606');
+  g.save(); g.beginPath(); g.arc(C, C, 86, 0, TAU); g.clip();
+  g.save(); g.translate(C, 160);
+  // ears
+  g.fillStyle = '#5a3a24'; g.strokeStyle = '#1e120a'; g.lineWidth = 2;
+  for (const s of [1, -1]) { g.beginPath(); g.moveTo(26 * s, -26); g.lineTo(48 * s, -46); g.lineTo(40 * s, -14); g.closePath(); g.fill(); g.stroke(); }
+  // the head
+  const fur = g.createLinearGradient(0, -40, 0, 46); fur.addColorStop(0, '#8a5a36'); fur.addColorStop(1, '#4a2c18');
+  g.beginPath(); g.moveTo(-34, -24); g.quadraticCurveTo(0, -44, 34, -24); g.quadraticCurveTo(44, 10, 24, 34); g.quadraticCurveTo(0, 48, -24, 34); g.quadraticCurveTo(-44, 10, -34, -24); g.closePath();
+  g.fillStyle = fur; g.fill(); g.stroke();
+  // the bristle on top
+  g.strokeStyle = '#2a1a0e'; g.lineWidth = 2.2; g.lineCap = 'round';
+  for (let i = -3; i <= 3; i++) { g.beginPath(); g.moveTo(i * 6, -36); g.lineTo(i * 7, -46); g.stroke(); }
+  // eyes
+  g.fillStyle = '#ffd36a'; g.beginPath(); g.ellipse(-14, -6, 4, 3, 0.3, 0, TAU); g.fill(); g.beginPath(); g.ellipse(14, -6, 4, 3, -0.3, 0, TAU); g.fill();
+  g.fillStyle = '#1a0a04'; g.beginPath(); g.arc(-14, -6, 1.6, 0, TAU); g.fill(); g.beginPath(); g.arc(14, -6, 1.6, 0, TAU); g.fill();
+  // the snout
+  g.beginPath(); g.ellipse(0, 22, 18, 13, 0, 0, TAU); g.fillStyle = '#c98a6a'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#1e120a'; g.stroke();
+  g.fillStyle = '#3a1a10'; g.beginPath(); g.ellipse(-6, 22, 3.5, 5, 0, 0, TAU); g.fill(); g.beginPath(); g.ellipse(6, 22, 3.5, 5, 0, 0, TAU); g.fill();
+  // tusks
+  g.fillStyle = '#f2ead6';
+  for (const s of [1, -1]) { g.beginPath(); g.moveTo(14 * s, 30); g.quadraticCurveTo(26 * s, 28, 28 * s, 14); g.quadraticCurveTo(22 * s, 26, 12 * s, 26); g.closePath(); g.fill(); g.stroke(); }
+  g.restore();
+  // soothing: a small gold heart over the head
+  g.save(); g.translate(176, 96); g.scale(0.9, 0.9);
+  g.beginPath(); g.moveTo(0, 6); g.bezierCurveTo(-14, -4, -8, -16, 0, -8); g.bezierCurveTo(8, -16, 14, -4, 0, 6); g.closePath();
+  g.fillStyle = '#ffd36a'; g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#7a4a10'; g.stroke(); g.restore();
+  g.restore();
+  // Munin on top of the head, wings raised
+  raven(g, C, 98, 0.66, 0, '#220c0e', '#ff8a70', 0.9);
+  gem(g, true);
+  return out('mtame');
+}
+
+document.fonts.ready.then(() => { document.getElementById('out').textContent = [omen(), revenge(), tame()].join('\n'); });
+</script>
+</body></html>

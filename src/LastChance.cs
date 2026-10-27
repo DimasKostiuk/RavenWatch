@@ -16,7 +16,7 @@ namespace HuginWhispers
         internal static bool Enabled = true;
         internal static float Cost = 50f;
         internal static float CooldownMinutes = 10f;
-        internal static float SafeSeconds = 2f;
+        internal static float SafeSeconds = 4f;
 
         private static float _safeUntil;
         // when Hugin can save you again: kept in the character, in world time, so leaving the game does not reset it
@@ -51,7 +51,7 @@ namespace HuginWhispers
             Player p = (Player)c;
             ItemDrop.ItemData hugin, munin;
             RavenItem.Worn(p, out hugin, out munin);
-            if (hugin == null || Trust.Away(hugin) || Trust.SettledLevel(hugin) < RavenAbilities.StrongUnlock || Left(p) > 0f || !Shoulder.Arrived(p, false)) return health;
+            if (hugin == null || Trust.Away(hugin) || Trust.Hostile(hugin) || Trust.SettledLevel(hugin) < RavenAbilities.StrongUnlock || Left(p) > 0f || !Shoulder.Arrived(p, false)) return health;
             _busy = true;
             try
             {

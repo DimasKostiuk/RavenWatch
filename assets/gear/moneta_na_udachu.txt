@@ -3,7 +3,7 @@ name: Монета на удачу
 note: Знайдена в найглибшому місці троля — краще не питати, якому. Відмили. Майже. Відтоді щастить усім, крім того троля.
 use: gear
 id: moneta_na_udachu
-cost: Coins:50 AmberPearl:1 LeatherScraps:1 TrophyFrostTroll:1
+cost: Coins:50 AmberPearl:1 LeatherScraps:1 TrophyFrostTroll:1 RavenWatch_item_zamorske_piria:1
 station: RavenWatch_table_prostyi_voroniachyi_stil
 slot: neck
 follow: body

@@ -14,6 +14,7 @@ namespace HuginWhispers
     //             the grave, the worst day (a new record takes the old one's place)
     //   grudges - who killed you most (the 8 worst)
     //   deaths  - each with its place (12); a death on an old spot adds to that one; the weakest is forgotten first
+    //   fight   - the best fight judged (FightJudge, ★★★★ and up): its score, its stars, its place
     //   recent  - small lively moments (10): a scrape, a hard fight won, prey that got away, a run, a starred kill,
     //             a first kill of a kind; they fade within days, so fresh ones keep coming
     // Only an awake raven on its owner's shoulder remembers, and only its owner hears it remember.
@@ -348,6 +349,23 @@ namespace HuginWhispers
             }
         }
 
+#if RAVEN_ITEM
+        // a fight judged ★★★★ or better (FightJudge): the best one is kept, where it was
+        internal static void OnFight(Player p, int score, int stars)
+        {
+            if (p == null) return;
+            foreach (ItemDrop.ItemData item in Witnesses(p))
+            {
+                List<Mem> list = Load(item);
+                Mem r = Find(list, "fight");
+                if (r != null && score <= r.N) continue;
+                if (r == null) r = Add(list, "fight", "", p, score, 3);
+                r.N = score; r.Extra = stars.ToString(System.Globalization.CultureInfo.InvariantCulture); r.Day = Day(); Place(r, p); r.Told = 0;
+                Save(item, list);
+            }
+        }
+#endif
+
         internal static void OnFall(float height)
         {
             if (height < 8f) return;
@@ -529,7 +547,8 @@ namespace HuginWhispers
                     case "voyage": if (ctx == "sail" || ctx == "swim") score += 5f; break;
                     case "tame": if (ctx == "pet") score += 5f; break;
                     case "fall": if (ctx == "fall") score += 4f; break;
-                    case "friend": if (friendNear == m.Who) score += 5f; break;
+                    case "fight": if (sameLand) score += 2f; break;
+                    case "friend": if (friendNear == m.Who) score += 2f; break; // (+5 made the friend beside you win nearly every time)
                     case "recent":
                         int age = today - m.Day;
                         score += age <= 1 ? 4f : age <= 3 ? 2f : 0f; // yesterday's boar beats an old tale now and then
@@ -569,6 +588,7 @@ namespace HuginWhispers
                 case "slaughter": return "mem_slaughter";
                 case "voyage": return "mem_voyage";
                 case "fall": return "mem_fall";
+                case "fight": return Distance(m, p) < 60f ? "mem_fight_here" : "mem_fight";
                 case "tame": return "mem_tame";
                 case "home": return "mem_home";
                 case "friend": return "mem_friend";

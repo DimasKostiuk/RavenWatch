@@ -26,6 +26,11 @@ namespace HuginWhispers
         // the Guide (a raven of the game that teaches): amber, so it is never taken for Hugin or Munin
         internal static readonly Color GuideFrame = new Color(0.95f, 0.66f, 0.18f, 1f);
         internal const string GuideName = "#FFB84D", GuideTitle = "Провідник";
+        // «Жертва» (Victim): a line of mockery carries this invisible mark (three zero-width spaces, harmless in the chat
+        // and on an older game); its card is drawn apart: a venom-green rim that throbs, «глузує» after the name, a shake
+        internal const string Mock = "​​​";
+        internal static readonly Color MockFrame = new Color(0.74f, 0.90f, 0.22f, 1f);
+        internal const string MockName = "#C4E83A";
         internal const float MaxWidth = 470f;       // the words, px at 1080p
         internal const float FadeFrom = 25f;        // a card over a raven is clear up to here...
         internal const float DockAlpha = 0.82f;     // ...your own raven's fades only to this, and goes under the hotbar just as bright
@@ -371,8 +376,9 @@ namespace HuginWhispers
         {
             if (!dockable) seconds *= RavenSpeech.WorldMul;
             // the same words again (the game repeats them while the raven sits): only the time is kept going
+            string plain = text != null ? text.Replace(RavenSpeech.Mock, "") : text; // (a card keeps its words without the mockery mark)
             foreach (SpeechCard c in _cards)
-                if (c.Talker == talker && c.IsMunin == munin && c.Text == text && !c.Ending) { c.Extend(seconds); return c; }
+                if (c.Talker == talker && c.IsMunin == munin && c.Text == plain && !c.Ending) { c.Extend(seconds); return c; }
             foreach (SpeechCard c in _cards) if (c.Talker == talker && c.IsMunin == munin) c.End(); // a new line from the same raven replaces the old one
             SpeechCard card = SpeechCard.Make(transform, munin, name, text);
             card.Talker = talker; card.Offset = offset; card.Range = range; card.Dockable = dockable;
@@ -476,7 +482,8 @@ namespace HuginWhispers
         internal float Height;
         private float _width;
         private bool _munin;
-        private Color _own; // its colour: Hugin blue, Munin red, the Guide amber
+        private Color _own; // its colour: Hugin blue, Munin red, the Guide amber (a mockery: venom green)
+        private bool _mock; private float _born; // a line of mockery (Victim) and when it came
         private float _until, _flashAt = -1f, _held;
         private RectTransform _rt, _arrowRt;
         private CanvasGroup _cg;
@@ -492,6 +499,8 @@ namespace HuginWhispers
             go.transform.SetParent(parent, false);
             SpeechCard c = go.AddComponent<SpeechCard>();
             c._munin = munin;
+            c._mock = text != null && text.IndexOf(RavenSpeech.Mock, StringComparison.Ordinal) >= 0;
+            if (c._mock) { text = text.Replace(RavenSpeech.Mock, ""); c._born = Time.unscaledTime; }
             c.Text = text;
             c._rt = (RectTransform)go.transform;
             c._rt.anchorMin = c._rt.anchorMax = Vector2.zero;
@@ -501,7 +510,7 @@ namespace HuginWhispers
             c._cg.alpha = 0f;
             bool guide = StripTags(name) == Lang.T(RavenSpeech.GuideTitle);
             Color frameColor = guide ? RavenSpeech.GuideFrame : munin ? RavenSpeech.MuninFrame : RavenSpeech.HuginFrame;
-            c._own = frameColor;
+            c._own = c._mock ? RavenSpeech.MockFrame : frameColor;
 
             // a soft shadow under the capsule
             RectTransform shadow = Child(go.transform, "shadow");
@@ -517,7 +526,7 @@ namespace HuginWhispers
             RectTransform side = Child(bg, "side"); // the colour: the capsule's own shape, faded out from the left (BandFill)
             side.anchorMin = Vector2.zero; side.anchorMax = Vector2.one; side.offsetMin = side.offsetMax = Vector2.zero;
             c._side = side.gameObject.AddComponent<Image>();
-            c._side.sprite = RavenSpeech.Fill(); c._side.type = Image.Type.Sliced; c._side.color = new Color(frameColor.r, frameColor.g, frameColor.b, SideGlow); c._side.raycastTarget = false;
+            c._side.sprite = RavenSpeech.Fill(); c._side.type = Image.Type.Sliced; c._side.color = new Color(c._own.r, c._own.g, c._own.b, SideGlow); c._side.raycastTarget = false;
             BandFill sideFill = side.gameObject.AddComponent<BandFill>();
 
             RectTransform frame = Child(go.transform, "frame"); // the thin outline
@@ -544,12 +553,13 @@ namespace HuginWhispers
             // "Хугін: words" in one run of text, the name bold in the raven's colour
             string shownName = StripTags(name);
             if (shownName.Length == 0) shownName = Plugin.RavenName(munin); // the game gives its own ravens no title
-            string full = "<b><color=" + (guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + shownName + ":</color></b> " + RavenSpeech.MarkNames(text);
+            string mockHead = c._mock ? " <i><color=" + RavenSpeech.MockName + ">" + Lang.T("глузує") + "</color></i>" : ""; // mockery: said so after the name
+            string full = "<b><color=" + (guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + shownName + "</color></b>" + mockHead + "<b><color=" + (guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">:</color></b> " + RavenSpeech.MarkNames(text);
             TextMeshProUGUI body = Label(go.transform, "text", RavenSpeech.Font(false), 15.5f, FontStyles.Normal);
             body.text = full;
             body.color = new Color(0.90f, 0.91f, 0.93f, 1f);
             c._body = body; c._full = full; c._tone = guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName;
-            c._head = "<b><color=" + c._tone + ">" + shownName + ":</color></b> ";
+            c._head = "<b><color=" + c._tone + ">" + shownName + "</color></b>" + mockHead + "<b><color=" + c._tone + ">:</color></b> ";
             body.lineSpacing = 2f;
             Vector2 pref = body.GetPreferredValues(full, RavenSpeech.MaxWidth, 0f);
             float tw = Mathf.Clamp(pref.x + 2f, 120f, RavenSpeech.MaxWidth);
@@ -748,9 +758,18 @@ namespace HuginWhispers
                     scale = 1f + pulse * 0.03f;
                 }
             }
+            float tilt = 0f;
+            if (_mock) // mockery: the rim throbs in venom green all along, and the card shakes as it comes, like a jeer
+            {
+                float t = Time.unscaledTime - _born, beat = 0.5f + 0.5f * Mathf.Sin(t * 5f);
+                if (_flashAt < 0f || Time.unscaledTime - _flashAt >= 1.2f) fc = new Color(own.r, own.g, own.b, 0.45f + 0.4f * beat); // (the docking flash keeps its own pulse)
+                glow = Mathf.Max(glow, 0.26f + 0.12f * beat);
+                if (t < 0.9f) { float k = 1f - t / 0.9f; tilt = Mathf.Sin(t * 38f) * 3.2f * k; scale *= 1f + 0.05f * k; }
+            }
             _frame.color = fc;
             _side.color = new Color(own.r, own.g, own.b, glow);
             _rt.localScale = new Vector3(scale * size, scale * size, 1f);
+            _rt.localRotation = Quaternion.Euler(0f, 0f, tilt);
 
             // the arrow towards the raven
             bool arrow = Docked && Talker != null && _sp != Vector3.zero && Talker != (Player.m_localPlayer != null ? Player.m_localPlayer.gameObject : null);

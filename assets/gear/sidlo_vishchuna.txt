@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Сідло віщуна
+note: Різьблена голова ворона на спині ворона. Віщуни носили таке, щоб птах швидше їм довіряв. Ворон каже, що це не працює. Довіряє швидше.
+use: gear
+id: sidlo_vishchuna
+cost: Eitr:4 LinenThread:6 Carapace:2 TrophySeekerBrute:1 RavenWatch_item_chornylo_vishchuna:1
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: back
+part asset/Спорядження/GearTotem pos 0 0 0 rot 0 0 0 scale 0.07 0.07 0.07  # Сідло віщуна (Meshy), ~13 см

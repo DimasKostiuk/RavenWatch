@@ -9,7 +9,7 @@ namespace HuginWhispers
     //   - a night's sleep in a bed: a share of his strength in the morning, once a night, and a little trust
     //     (a night spent together);
     //   - craft and cooking: a point for each thing made (not building), at most CraftPerDay a game day;
-    //   - the farm: a point for each harvest (berries, crops, mushrooms, honey, sap) or planting, at most FarmPerDay;
+    //   - the farm: harvests (berries, crops, mushrooms, honey, sap) and planting, a point for several picks (Farm), at most FarmPerDay;
     //   - sailing: a point for every SailMeters on a ship (steering or riding along), no daily limit;
     //   - walking: a point for every WalkMeters on foot (walked or run), at most WalkPerDay;
     //   - work: a point for each tree felled, log split or rock broken, two for a fish, at most WorkPerDay.
@@ -21,7 +21,7 @@ namespace HuginWhispers
     {
         internal static float SleepShare = 0.15f;              // of Hugin's most strength
         internal static float SleepTrust = 10f;                // a deed of this size: Hugin about 5 trust, Munin 3.5
-        internal static float CraftPerDay = 50f, FarmPerDay = 50f, WorkPerDay = 40f, FightPerDay = 50f;
+        internal static float CraftPerDay = 50f, FarmPerDay = 25f, WorkPerDay = 40f, FightPerDay = 50f;
         internal static int HitsPerPoint = 6;      // Munin: blows landed on creatures for a point
         internal static float HurtPerPoint = 30f;  // Munin: damage taken from creatures for a point
         internal static float SailMeters = 200f; // about 3 a minute at full sail (by night ×1.5)
@@ -46,11 +46,15 @@ namespace HuginWhispers
             PlayerStatType.Logs, // a log split
             PlayerStatType.Mines, // a rock or a deposit broken
         };
-        private static readonly HashSet<PlayerStatType> Farm = new HashSet<PlayerStatType>
+        // a point is several picks (one a pick would pay far too much): a bush picked in passing
+        // weighs little, a grown crop more, a hive or a sap tap a whole point
+        private static readonly Dictionary<PlayerStatType, float> Farm = new Dictionary<PlayerStatType, float>
         {
-            PlayerStatType.HarvestCrop, PlayerStatType.HarvestBerry, PlayerStatType.HarvestMushroom, PlayerStatType.HarvestVine,
-            PlayerStatType.BeesHarvested, PlayerStatType.SapHarvested,
+            { PlayerStatType.HarvestBerry, 0.2f }, { PlayerStatType.HarvestMushroom, 0.2f }, { PlayerStatType.HarvestVine, 0.2f },
+            { PlayerStatType.HarvestCrop, 0.5f }, { PlayerStatType.BeesHarvested, 1f }, { PlayerStatType.SapHarvested, 1f },
         };
+        internal static float PlantWeight = 0.25f; // a seed in the ground
+        private static float _farmBits; // picks not yet a whole point
 
         private static bool _wasSleeping;
         private static int _sleptFrom = -1;
@@ -75,7 +79,7 @@ namespace HuginWhispers
                 return;
             }
             if (Craft.Contains(stat)) Chore(CraftKey, CraftPerDay);
-            else if (Farm.Contains(stat)) Chore(FarmKey, FarmPerDay);
+            else if (Farm.ContainsKey(stat)) FarmBit(Farm[stat]);
             else if (Work.Contains(stat)) Chore(WorkKey, WorkPerDay);
             else if (stat == PlayerStatType.FishCaught) { Chore(WorkKey, WorkPerDay); Chore(WorkKey, WorkPerDay); }
             else if (stat == PlayerStatType.EnemyHits && HitsPerPoint > 0 && ++_hits >= HitsPerPoint) { _hits = 0; Chore(FightKey, FightPerDay, true); }
@@ -101,7 +105,13 @@ namespace HuginWhispers
             while (_hurt >= HurtPerPoint) { _hurt -= HurtPerPoint; Chore(FightKey, FightPerDay, true); }
         }
 
-        internal static void OnPlanted() { Chore(FarmKey, FarmPerDay); }
+        internal static void OnPlanted() { FarmBit(PlantWeight); }
+
+        private static void FarmBit(float weight)
+        {
+            _farmBits += weight;
+            while (_farmBits >= 0.999f) { _farmBits -= 1f; Chore(FarmKey, FarmPerDay); }
+        }
 
         // the short reason shown in the corner
         private static string Why(string key)
@@ -163,7 +173,7 @@ namespace HuginWhispers
             return baseSeconds / (1f + Mathf.Max(0, comfort) / 15f);
         }
 
-        internal static void Reset() { _wasSleeping = false; _sleptFrom = -1; _sailed = 0f; _walked = 0f; _hits = 0; _hurt = 0f; }
+        internal static void Reset() { _wasSleeping = false; _sleptFrom = -1; _sailed = 0f; _walked = 0f; _hits = 0; _hurt = 0f; _farmBits = 0f; }
     }
 
     // every stat of the local player passes here (the game counts the sailed distance straight into the profile)

@@ -244,7 +244,7 @@ namespace HuginWhispers
             if (look != t.Look) { t.Look = look; _dirty = true; }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Flag(" Струшується", ref t.Shake); Flag(" Крок убік", ref t.Step); Flag(" Нахил у будь-який бік", ref t.Mirror);
+            Flag(" Струшується", ref t.Shake); Flag(" Струшує головою", ref t.Flick); Flag(" Чухається лапою", ref t.Scratch); Flag(" Крок убік", ref t.Step); Flag(" Нахил у будь-який бік", ref t.Mirror);
             GUILayout.EndHorizontal();
             t.Tremble = Slide("Тремтіння крил, °", t.Tremble, 0f, 10f, 0.1f, true);
             t.TrembleHz = Slide("Тремтіння, Гц", t.TrembleHz, 1f, 15f, 0.5f, true);

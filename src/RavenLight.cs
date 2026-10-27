@@ -520,7 +520,7 @@ namespace HuginWhispers
         internal const string EffectName = "RavenWatch_Wings";
         internal static readonly int Hash = EffectName.GetStableHashCode();
         internal static float Seconds = 20f, SecondsTop = 40f; // at trust level 1 and at the top level
-        internal static float Duration() { return Mathf.Floor(Trust.Lerp(true, Seconds, SecondsTop) * GiftUp.Power("wings") + 0.5f); }
+        internal static float Duration() { return Mathf.Floor(Trust.LerpGift("wings", Seconds, SecondsTop) * GiftUp.Power("wings") + 0.5f); }
         internal static float SpeedPercent = 50f;
         internal static float SpeedNow() { return Mathf.Max(0f, SpeedPercent) * Trust.Mul(true, 0.05f); } // as fast as it carries you now (trust)
         internal static float RunStaminaPercent = 30f; // the wings carry you: running costs less

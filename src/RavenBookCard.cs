@@ -147,7 +147,30 @@ namespace HuginWhispers
             b.interactable = enabled;
             if (!enabled) r.gameObject.AddComponent<CanvasGroup>().alpha = 0.45f;
             b.onClick.AddListener(() => click());
+            if (enabled) CardHover(r, main);
             return r;
+        }
+
+        // under the pointer: the gold pill brightens and grows a little; the outlined one gets gold words, line and a faint fill
+        private static void CardHover(RectTransform r, bool main)
+        {
+            Image fill = r.GetComponent<Image>();
+            InkHover h = r.gameObject.AddComponent<InkHover>();
+            h.Fill = fill;
+            h.FillNormal = fill.color;
+            h.Grow = main ? 0.03f : 0.02f;
+            if (main)
+            {
+                h.FillHover = Color.Lerp(fill.color, Color.white, 0.3f);
+                return;
+            }
+            h.FillHover = A(PlaqueInk, 0.1f);
+            h.Targets = new Graphic[] { r.GetComponentInChildren<TMP_Text>() };
+            h.Normal = FootInk; h.HoverColor = PlaqueInk;
+            Transform line = r.Find("Line");
+            if (line == null) return;
+            Hover(line.gameObject, new Graphic[] { line.GetComponent<Image>() }, C("#6e5a38"), null, r.gameObject);
+            line.GetComponent<InkHover>().HoverColor = PlaqueInk;
         }
 
         // a small outlined button on the parchment itself (in ink)
@@ -232,6 +255,7 @@ namespace HuginWhispers
         internal Graphic[] Targets;
         internal Color Normal, HoverColor, FillNormal, FillHover;
         internal Image Fill;
+        internal float Grow; // how much bigger under the pointer (0: stays)
         internal InkHover Source;
         internal bool Over;
         private float _k = -1f;
@@ -252,6 +276,7 @@ namespace HuginWhispers
         private void Apply()
         {
             Color c = Color.Lerp(Normal, HoverColor, _k);
+            if (Grow > 0f) transform.localScale = Vector3.one * (1f + Grow * _k);
             if (Targets != null) foreach (Graphic g in Targets) if (g != null) g.color = c;
             if (Fill != null) Fill.color = Color.Lerp(FillNormal, FillHover, _k);
         }

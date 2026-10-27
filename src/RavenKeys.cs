@@ -23,6 +23,7 @@ namespace HuginWhispers
         internal static readonly int[] KeyedOrders = { Orders.Follow, Orders.Circle, Orders.Scout };
         internal static string OrderId(bool munin, int order) { return (munin ? "orderM" : "orderH") + order; }
         private static readonly string[] OrderEnglish = { "", "beside", "circle", "fly around" };
+        internal const string HomeId = "home"; // looking at a perch: the raven stays there, at home or on guard (Home)
         internal const string PerchHId = "perchH", PerchMId = "perchM", PerchBothId = "perchBoth"; // to the nearest perch and back (Perches.Order)
         internal const string HereHId = "hereH", HereMId = "hereM"; // «Туди»: what fits where you look (Perches.OrderHere, SitHere)
         // a trick on its own key (set in the orders menu: right click the trick); "trickH4" = Hugin's barrel roll
@@ -36,7 +37,7 @@ namespace HuginWhispers
             const string sec = "6. Keys";
             const string note = " Easiest to set in game: right click the piece in the gifts circle (Q) or the orders circle (J). Never takes a key away from the game or other mods: a key used elsewhere too does both.";
             foreach (RavenAbility a in RavenAbilities.All)
-                if (!a.Passive && !RavenAbilities.Stub(a)) Entries[a.Id] = Plugin.Instance.Hide(sec, (a.Munin ? "Munin " : "Hugin ") + (a.Id == "mthought" ? "thought" : a.Id), KeyboardShortcut.Empty, "Key for " + a.Name + "." + note);
+                if (!a.Passive && !RavenAbilities.Stub(a)) Entries[a.Id] = Plugin.Instance.Hide(sec, (a.Pair ? "Both " : a.Munin ? "Munin " : "Hugin ") + (a.Id == "mthought" ? "thought" : a.Id), KeyboardShortcut.Empty, "Key for " + a.Name + "." + note);
             Entries[BookId] = cfg.Bind(sec, "Book of ravens", new KeyboardShortcut(KeyCode.B), "Key that opens the Book of ravens directly (B unless changed)." + note);
             // configs from before B was the book's key keep their empty value: given B once, a later choice is kept
             ConfigEntry<int> rev = Plugin.Instance.Hide(sec, "Keys revision", 0, "Internal: which default keys this file already got. Do not change.");
@@ -50,6 +51,7 @@ namespace HuginWhispers
             foreach (bool munin in new bool[] { false, true })
                 foreach (int o in KeyedOrders)
                     Entries[OrderId(munin, o)] = Plugin.Instance.Hide(sec, (munin ? "Munin" : "Hugin") + " order " + OrderEnglish[o], KeyboardShortcut.Empty, "Key for the order «" + Lang.En(Orders.NamesSrc[o]) + "». Easiest to set in game: J, right click the order." + note);
+            Entries[HomeId] = cfg.Bind(sec, "Leave at home", new KeyboardShortcut(KeyCode.R), "Looking at a perch: Hugin stays there at home (with Shift: Munin), off your shoulder without taking offence; on a guard perch he stays on guard. Taken back with E at the perch.");
             Entries[PerchHId] = Plugin.Instance.Hide(sec, "Hugin perch", KeyboardShortcut.Empty, "Key that sends Hugin to the nearest perch (20 m, seen) or calls him back from it." + note);
             Entries[PerchMId] = Plugin.Instance.Hide(sec, "Munin perch", KeyboardShortcut.Empty, "Key that sends Munin to the nearest perch (20 m, seen) or calls him back from it." + note);
             Entries[HereHId] = Plugin.Instance.Hide(sec, "Hugin there", KeyboardShortcut.Empty, "Key for the context order (There): what fits where you look - Hugin sits on the player or tamed animal you look at, fetches the small thing, sits on that perch or on top of that building; or comes back from where he sits." + note);
@@ -88,8 +90,9 @@ namespace HuginWhispers
             if (id == OrdersId) return Lang.T("Накази воронам");
             if (id == GiftsId) return Lang.T("Дари воронів");
             foreach (bool munin in new bool[] { false, true }) foreach (int o in KeyedOrders) if (id == OrderId(munin, o)) return (munin ? Lang.T("Мунін: ") : Lang.T("Хугін: ")) + Orders.Names[o];
-            if (id == PerchHId) return Lang.T("Хугін: жердина");
-            if (id == PerchMId) return Lang.T("Мунін: жердина");
+            if (id == HomeId) return Lang.T("Лишити вдома");
+            if (id == PerchHId) return Lang.T("Хугін: жердина / гратися");
+            if (id == PerchMId) return Lang.T("Мунін: жердина / гратися");
             if (id == PerchBothId) return Lang.T("Обидва: жердина");
             if (id == HereHId) return Lang.T("Хугін: туди");
             if (id == HereMId) return Lang.T("Мунін: туди");
@@ -149,9 +152,10 @@ namespace HuginWhispers
             Player me = Player.m_localPlayer;
             if (me != null && Free())
             {
+                if (Pressed(Get(HomeId)) && Home.Key(me, Held(KeyCode.LeftShift) || Held(KeyCode.RightShift))) return; // (only when looking at a perch)
                 if (Pressed(Get(PerchBothId))) { Perches.OrderBoth(me); return; }
-                if (Pressed(Get(PerchHId))) { Perches.Order(me, false); return; }
-                if (Pressed(Get(PerchMId))) { Perches.Order(me, true); return; }
+                if (Pressed(Get(PerchHId))) { BeastPlay.PerchOrPlay(me, false); return; } // (your tamed beast in sight: a game instead)
+                if (Pressed(Get(PerchMId))) { BeastPlay.PerchOrPlay(me, true); return; }
                 if (Pressed(Get(HereHId))) { Perches.OrderHere(me, false); return; }
                 if (Pressed(Get(HereMId))) { Perches.OrderHere(me, true); return; }
             }

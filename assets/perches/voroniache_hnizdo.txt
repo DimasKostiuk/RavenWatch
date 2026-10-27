@@ -3,7 +3,7 @@ name: Вороняче гніздо
 note: Гніздо на високій жердині, де ворони чекають слова від Одіна
 use: nest
 id: voroniache_hnizdo
-cost: Wood:10 Resin:4 Feathers:20 HardAntler:2
+cost: Wood:10 Resin:4 Feathers:10 HardAntler:2
 perday: 30
 pose: -50 90 -45 0 -50 90 -45 -1 0 -34 -33
 stand: 0 0 0 0 0 0 0 0 0 -34 -33

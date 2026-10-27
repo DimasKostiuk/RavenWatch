@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Казанок
+note: Казанок з ополоником, що застряг навіки. Пахне вчорашньою юшкою, і ворон від цього тільки щасливіший.
+use: gear
+id: kazanok
+slot: head
+part asset/Шапки/HatCauldron pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatCauldron (Шапки)

@@ -1,3 +1,5 @@
+<p align="center"><img src="media/logo.png" alt="RavenWatch" width="360"></p>
+
 # RavenWatch
 
 A Valheim mod (BepInEx): Odin's ravens Hugin and Munin live on your shoulders — they fly, fight, fetch, carry mail and roast you for every death. Trust rituals, gifts, orders, Odin's errands and runes. English & Ukrainian. Works on vanilla.

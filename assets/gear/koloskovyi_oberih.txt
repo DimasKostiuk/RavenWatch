@@ -1,0 +1,11 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Колосковий оберіг
+note: Бурштин і перший колосок із чужого поля. Ворон певен, що колосок — то запас на зиму. Поки він висить на шиї, про їжу ворон думає менше. Трохи менше.
+use: gear
+id: koloskovyi_oberih
+cost: Amber:1 Barley:4 LeatherScraps:2 TrophyLox:1 RavenWatch_item_zamorske_piria:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: neck
+follow: body
+ready: Valentina 2026-10-23
+part asset/Спорядження/GearAmulet pos 0 -0.05 0.1 rot 0 -180 0 scale 0.05 0.05 0.05  # GearAmulet (Спорядження)

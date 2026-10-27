@@ -59,8 +59,11 @@ namespace HuginWhispers
         private static readonly string[] CatNames = { "Речі", "Будівлі", "Світ", "Істоти", "Ассети", "Моделі" }; // (effects: the «Ефекти» mode, our library)
         private static readonly int[] CatIds = { WsCatalog.CatItem, WsCatalog.CatBuild, WsCatalog.CatWorld, WsCatalog.CatCreature, WsCatalog.CatAsset, -1 };
 
-        private static readonly string[] ForIds = { "guide", "hugin", "munin", "any", "rune" };
-        private static readonly string[] ForNames = { "Провідник", "Хугін", "Мунін", "будь-який", "Руна Фреї" };
+        private static readonly string[] ForIds = { "guide", "hugin", "munin", "any", "rune", "breed" };
+        private static readonly string[] ForNames = { "Провідник", "Хугін", "Мунін", "будь-який", "Руна Фреї", "Порода" };
+        // a breed seen under a rune of Freya (its marks over the rune's colours): that rune's id, "" none
+        private string _underRune = "";
+        private bool _oddShown; // an odd eye hangs on the stage's raven
         // feathers: black, soot, ash, silver, snow, bone, sand, gold, copper, rust, crimson, blood, wine, violet, night blue, sky, teal, moss
         private static readonly Color[] Swatches =
         {
@@ -112,7 +115,7 @@ namespace HuginWhispers
             {
                 _dirty = false;
                 _paintAt = Time.unscaledTime;
-                _paintedOk = RavenLooks.Paint(_live, _cur, LookStage.Munin);
+                _paintedOk = RavenLooks.Paint(_live, Shown(), LookStage.Munin);
                 if (!_paintedOk) _note = "Не вдалося пофарбувати: " + RavenLooks.Problem;
                 _paints++;
             }
@@ -128,9 +131,25 @@ namespace HuginWhispers
                 if (_world != null && _worldSkin != null) _worldSkin.sharedMaterials = _paintedOk && _live.Munin == WorldMunin ? RavenLooks.Dress(_live, _worldOrig) : _worldOrig;
             }
             SyncThings(LookStage.Model, LookStage.Munin, LookStage.Layer, ref _stageKind);
+            Look shown = Shown();
+            bool odd = shown.OddEyeOn && _show == 0;
+            if (odd || _oddShown) // (looked for only while one is wanted or still hangs there)
+            {
+                OddEye.Set(LookStage.Model, LookStage.Munin, odd, shown.OddEye, shown.OddEyeSize);
+                if (_world != null) OddEye.Set(_world, WorldMunin, odd && WorldMunin == _live.Munin, shown.OddEye, shown.OddEyeSize);
+                _oddShown = odd;
+            }
             if (_world != null) SyncThings(_world, WorldMunin, _world.layer, ref _worldKind);
             SyncFx(LookStage.Model, LookStage.Munin, LookStage.Layer);
             LookStage.Render();
+        }
+
+        // what the stage paints: the look, or a breed as it is under the chosen rune of Freya
+        private Look Shown()
+        {
+            if (_cur.For != "breed" || _underRune.Length == 0) return _cur;
+            WearDef r = WearCatalog.Find(WearKind.Freya, _underRune);
+            return r != null && r.Look != null ? Breeds.ComposeNew(r.Look, _cur) : _cur;
         }
 
         // On the stage: in «Ефекти» only the effect being made (a trail on a raven going round); else what the look wears
@@ -227,7 +246,7 @@ namespace HuginWhispers
             Shared.RemoveExclamation(src, _world);
             _world.SetActive(true);
             foreach (Collider c in _world.GetComponentsInChildren<Collider>(true)) Destroy(c);
-            foreach (Transform t in _world.GetComponentsInChildren<Transform>(true)) if (t != _world.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
+            foreach (Transform t in RavenBones.Of(_world.transform, false)) if (t != _world.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
             LookStage.Settle(_world);
             Vector3 fwd = p.transform.forward; fwd.y = 0f; fwd.Normalize();
             _world.transform.position = p.transform.position + fwd * 1.8f + Vector3.up * 0.9f;
@@ -309,8 +328,8 @@ namespace HuginWhispers
             GUILayout.BeginHorizontal();
             for (int i = 0; i < ForIds.Length; i++)
             {
-                if (i == 2) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
-                if (GUILayout.Button(ForNames[i], _cur.For == ForIds[i] ? _on : _btn)) _cur.For = ForIds[i];
+                if (i > 0 && i % 3 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
+                if (GUILayout.Button(ForNames[i], _cur.For == ForIds[i] ? _on : _btn)) { if (_cur.For != ForIds[i]) _dirty = true; _cur.For = ForIds[i]; }
             }
             GUILayout.EndHorizontal();
             if (_cur.For == "rune")
@@ -320,6 +339,7 @@ namespace HuginWhispers
                 if (d2 != _cur.Desc) _cur.Desc = d2;
                 GUILayout.Label("<color=#9A9A9A>Колір, очі й полиск — це руна Фреї. Річ і ефекти з бібліотеки руна не дає. Одягнути: raven wear f " + (string.IsNullOrEmpty(_cur.Id) ? "<id після збереження>" : _cur.Id) + "</color>", _small);
             }
+            else if (_cur.For == "breed") BreedLeft();
             else if (_cur.For != "guide") GUILayout.Label("<color=#9A9A9A>Ворони гравців вдягають вигляди лише через руни («Руна Фреї»).</color>", _small);
 
             GUILayout.Space(8);
@@ -352,6 +372,31 @@ namespace HuginWhispers
             }
             if (_note.Length > 0) GUILayout.Label(_note, _small);
             GUILayout.EndVertical();
+        }
+
+        // a breed: its rarity, its words for the book, and how it looks under each rune of Freya
+        private void BreedLeft()
+        {
+            GUILayout.Label("Рідкість", _small);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Рідкісна", _cur.Tier != "legend" ? _on : _btn)) { _cur.Tier = "rare"; }
+            if (GUILayout.Button("Легендарна", _cur.Tier == "legend" ? _on : _btn)) { _cur.Tier = "legend"; }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Опис для книги", _small);
+            string d2 = GUILayout.TextField(_cur.Desc);
+            if (d2 != _cur.Desc) _cur.Desc = d2;
+            GUILayout.Label("Під руною Фреї (як її видно з руною):", _small);
+            if (GUILayout.Button("без руни", _underRune.Length == 0 ? _on : _btn)) { _underRune = ""; _dirty = true; }
+            int col = 0;
+            GUILayout.BeginHorizontal();
+            foreach (WearDef r in WearCatalog.Of(WearKind.Freya))
+            {
+                if (col == 2) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); col = 0; }
+                if (GUILayout.Button(Lang.T(r.Name), _underRune == r.Id ? _on : _btn)) { _underRune = r.Id; _dirty = true; }
+                col++;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("<color=#9A9A9A>Прикмети (★ у зон праворуч і внизу) лишаються поверх будь-якої руни; ефекти й речі породи — завжди. Перевір: з кожною руною ворона мусить бути видно. Свому: raven breed " + (string.IsNullOrEmpty(_cur.Id) ? "<id після збереження>" : _cur.Id) + "</color>", _small);
         }
 
         private bool _confirmDelete;
@@ -439,6 +484,7 @@ namespace HuginWhispers
                     p.On = !p.On; _dirty = true;
                     if (p.On && p.Dark == Color.black && p.Light == Color.white) { p.Dark = new Color(0.05f, 0.05f, 0.06f); p.Light = new Color(0.5f, 0.5f, 0.55f); }
                 }
+                if (_cur.For == "breed" && GUILayout.Button(_cur.Keep[z] ? "★" : "☆", _cur.Keep[z] ? _on : _btn, GUILayout.Width(26f))) { _cur.Keep[z] = !_cur.Keep[z]; _dirty = true; }
                 if (GUILayout.Button(LookDiag.ZoneNames[z], _zone == z ? _on : _btn, GUILayout.Width(120f))) _zone = z;
                 if (p.On)
                 {
@@ -451,10 +497,25 @@ namespace HuginWhispers
             GUILayout.Space(6);
             ZoneEditor();
 
+            if (_cur.For == "breed")
+            {
+                GUILayout.Space(6);
+                GUILayout.Label("Прикмети поверх руни", _head);
+                GUILayout.BeginHorizontal();
+                KeepBtn(ref _cur.KeepLight, "очі"); KeepBtn(ref _cur.KeepGlow, "світіння"); KeepBtn(ref _cur.KeepSheen, "блиск"); KeepBtn(ref _cur.KeepSparks, "іскри");
+                GUILayout.EndHorizontal();
+            }
             GUILayout.Space(10);
             GUILayout.Label("Очі (світіння)", _head);
             Toggle(ref _cur.EyesOn, "Свої очі", "Очі як у грі");
             if (_cur.EyesOn) { ColorEdit("eyes", ref _cur.Eyes); _cur.EyePower = Slider("Сила", _cur.EyePower, 0f, 12f); }
+            Toggle(ref _cur.OddEyeOn, "Одне око іншого кольору", "Обидва ока однакові");
+            if (_cur.OddEyeOn)
+            {
+                ColorEdit("oddeye", ref _cur.OddEye);
+                _cur.OddEyeSize = Slider("Розмір (× око)", _cur.OddEyeSize, 0.5f, 2f);
+                if (LookDiag.Eyes(LookStage.Munin) == null) GUILayout.Label("<color=#FF9A7A>Очі ще не виміряно (карта зон не готова).</color>", _small);
+            }
 
             GUILayout.Space(8);
             GUILayout.Label("Світіння тіла", _head);
@@ -1004,6 +1065,8 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- little controls
+        private void KeepBtn(ref bool v, string what) { if (GUILayout.Button((v ? "★ " : "☆ ") + what, v ? _on : _btn)) { v = !v; _dirty = true; } }
+
         private void Toggle(ref bool v, string yes, string no)
         {
             if (GUILayout.Button(v ? yes : no, v ? _on : _btn, GUILayout.Width(160f))) { v = !v; _dirty = true; }
@@ -1185,7 +1248,7 @@ namespace HuginWhispers
             Settle(_model);
             foreach (Transform t in _model.GetComponentsInChildren<Transform>(true))
             {
-                if (t != _model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
+                if (t != _model.transform && t.localScale.sqrMagnitude < 1e-6f && RavenBones.Is(t, _model.transform, false)) t.localScale = Vector3.one;
                 t.gameObject.layer = layer;
             }
             _skin = null;
@@ -1202,7 +1265,7 @@ namespace HuginWhispers
             _anim = _model.GetComponentInChildren<Animator>(true);
             _fly = _anim != null ? ShoulderLife.FlyClipOf(_anim) : null;
             List<Transform> bones = new List<Transform>();
-            foreach (Transform t in _model.GetComponentsInChildren<Transform>(true)) if (t != _model.transform) bones.Add(t);
+            foreach (Transform t in RavenBones.Of(_model.transform, false)) if (t != _model.transform) bones.Add(t);
             _bones = bones.ToArray();
             _bp = new Vector3[_bones.Length]; _bs = new Vector3[_bones.Length]; _br = new Quaternion[_bones.Length];
             for (int i = 0; i < _bones.Length; i++) { _bp[i] = _bones[i].localPosition; _br[i] = _bones[i].localRotation; _bs[i] = _bones[i].localScale; }

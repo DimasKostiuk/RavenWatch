@@ -45,23 +45,9 @@ namespace HuginWhispers
         {
             if (Letters.Count == 0) { if (_lwRoot != null) _lwRoot.SetActive(false); return; }
             Got g = Letters.Dequeue();
-            if (_gameFont == null && InventoryGui.instance != null)
-            {
-                TMP_Text sample = InventoryGui.instance.m_recipeName != null ? InventoryGui.instance.m_recipeName : InventoryGui.instance.m_playerName;
-                _gameFont = sample != null ? sample.font : null;
-                BookArt.Fonts(_gameFont);
-            }
+            EnsureGameFont();
             if (_lwRoot != null) Object.Destroy(_lwRoot);
-            _lwRoot = new GameObject("RavenWatch_Letter", typeof(RectTransform));
-            Canvas c = _lwRoot.AddComponent<Canvas>();
-            c.renderMode = RenderMode.ScreenSpaceOverlay;
-            c.sortingOrder = 30003;
-            CanvasScaler sc = _lwRoot.AddComponent<CanvasScaler>();
-            sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            sc.referenceResolution = new Vector2(1920f, 1080f);
-            sc.matchWidthOrHeight = 1f;
-            _lwRoot.AddComponent<GraphicRaycaster>();
-            Object.DontDestroyOnLoad(_lwRoot);
+            _lwRoot = OverlayCanvas("RavenWatch_Letter", 30003, true);
             Transform root = _lwRoot.transform;
 
             _lDim = Rect("Dim", root).gameObject.AddComponent<Image>();

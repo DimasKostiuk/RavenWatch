@@ -162,6 +162,9 @@ namespace HuginWhispers
 
             GameObject go = UnityEngine.Object.Instantiate(source.m_visual, pos, rot);
             go.name = "RavenWatch_SharedRaven";
+#if RAVEN_ITEM
+            GuideLook.Undress(source, go); // our own raven may wear the Guide's crimson right now: the copy is another player's plain raven
+#endif
             go.SetActive(true);
             AppearMute.Quiet(go);
             foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) UnityEngine.Object.Destroy(c);

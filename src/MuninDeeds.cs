@@ -116,15 +116,71 @@ namespace HuginWhispers
             return null;
         }
         private static bool Prepare() { return TargetMethod() != null; }
+        private static string _prefab;
+        private static double _fresh; // (the world time it fell off a kill; 0: not from a kill)
         private static void Prefix(GameObject go, out bool __state)
         {
             ItemDrop drop = go != null ? go.GetComponent<ItemDrop>() : null;
             __state = drop != null && drop.m_itemData != null && drop.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophy;
+            _prefab = null; _fresh = 0;
+            if (!__state) return;
+            _prefab = Utils.GetPrefabName(go);
+#if RAVEN_ITEM
+            _fresh = FreshTrophy.Of(go);
+#endif
         }
         private static void Postfix(Humanoid __instance, bool __result, bool __state)
         {
-            if (__state && __result && __instance == Player.m_localPlayer) { HuginChores.OnTrophy(); Diary.Add(Ev.Trophy, "", 0); }
+            if (!__state || !__result || __instance != Player.m_localPlayer) return;
+            HuginChores.OnTrophy();
+            Diary.Add(Ev.Trophy, "", 0);
+#if RAVEN_ITEM
+            if (_fresh > 0) try { Errands.OnFreshTrophy(_prefab, _fresh); } catch (System.Exception e) { PatchGuard.Fail("TrophyPickupPatch fresh", e); }
+#endif
         }
     }
+
+#if RAVEN_ITEM
+    // A trophy that fell off a kill (the game's own loot drop, on the game that owns the dead): marked with the world
+    // time on its ground item, so the one who picks it up knows it is fresh — not one taken off a stand or dropped
+    // from a bag (Odin's errand «Трофеї на стіну» wants heads won, not the old wall hung again).
+    [HarmonyPatch(typeof(CharacterDrop), "DropItems")]
+    internal static class FreshTrophy
+    {
+        private const string Key = "RavenWatch_freshAt";
+        private static readonly FieldInfo All = AccessTools.Field(typeof(ItemDrop), "s_instances");
+
+        internal static double Of(GameObject go)
+        {
+            ZNetView nv = go != null ? go.GetComponent<ZNetView>() : null;
+            if (nv == null || !nv.IsValid()) return 0;
+            float at = nv.GetZDO().GetFloat(Key, 0f);
+            return at > 0f ? at : 0;
+        }
+
+        private static void Prefix(out int __state)
+        {
+            System.Collections.IList l = All != null ? All.GetValue(null) as System.Collections.IList : null;
+            __state = l != null ? l.Count : -1;
+        }
+
+        private static void Postfix(int __state)
+        {
+            if (__state < 0) return;
+            try
+            {
+                System.Collections.IList l = All.GetValue(null) as System.Collections.IList;
+                for (int i = __state; l != null && i < l.Count; i++)
+                {
+                    ItemDrop d = l[i] as ItemDrop;
+                    if (d == null || d.m_itemData == null || d.m_itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Trophy) continue;
+                    ZNetView nv = d.GetComponent<ZNetView>();
+                    if (nv != null && nv.IsValid()) nv.GetZDO().Set(Key, Mathf.Max(1f, (float)WorldTime.Now));
+                }
+            }
+            catch (System.Exception e) { PatchGuard.Fail("FreshTrophy", e); }
+        }
+    }
+#endif
 }
 #endif

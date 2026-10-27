@@ -166,12 +166,51 @@ namespace HuginWhispers
             float dmg = p.GetMaxHealth() * PeckShare;
             p.SetHealth(p.GetHealth() - dmg); // to death, if it comes to that (the game ends a life at 0 by itself)
             if (DamageText.instance != null) DamageText.instance.ShowText(HitData.DamageModifier.Normal, p.GetTopPoint(), dmg, true);
+            PeckSeen(t, p, munin);
+            string[] lines = munin ? MuninPeck : HuginPeck;
+            RavenMsg.Center(p, Plugin.RavenName(munin) + ": «" + lines[Random.Range(0, lines.Length)] + "»");
+            // the others near see the swoop and hear the caw too (each game flies its own picture of the grave's bird)
+            ZNetView nv = t.GetComponent<ZNetView>();
+            if (ZRoutedRpc.instance == null || nv == null || !nv.IsValid()) return;
+            ZPackage pkg = new ZPackage();
+            pkg.Write(nv.GetZDO().m_uid);
+            pkg.Write(p.GetZDOID());
+            pkg.Write(munin);
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, PeckRpc, pkg);
+        }
+
+        // the caw and the swoop at the thief
+        private static void PeckSeen(TombStone t, Player p, bool munin)
+        {
             GraveBird b = BirdAt(t, munin);
             Transform from = b != null ? b.transform : t.transform;
             ScreamFx.CawAt(from, from.position + Vector3.up * 0.2f, munin ? 0.85f : 1.3f, 0.6f, false);
             if (b != null) b.Swoop(p);
-            string[] lines = munin ? MuninPeck : HuginPeck;
-            RavenMsg.Center(p, Plugin.RavenName(munin) + ": «" + lines[Random.Range(0, lines.Length)] + "»");
+        }
+
+        private const string PeckRpc = "RavenWatch_GravePeck";
+        internal static void Register()
+        {
+            ZRoutedRpc.instance.Register<ZPackage>(PeckRpc, new System.Action<long, ZPackage>(OnPeck));
+        }
+
+        private static void OnPeck(long sender, ZPackage pkg)
+        {
+            if (sender == ZDOMan.GetSessionID()) return; // shown here already
+            ZDOID grave = pkg.ReadZDOID();
+            ZDOID thief = pkg.ReadZDOID();
+            bool munin = pkg.ReadBool();
+            TombStone t = null;
+            foreach (TombStone g in Graves)
+            {
+                ZNetView nv = g != null ? g.GetComponent<ZNetView>() : null;
+                if (nv != null && nv.IsValid() && nv.GetZDO().m_uid == grave) { t = g; break; }
+            }
+            if (t == null) return; // not loaded here: too far to see anyway
+            Player p = null;
+            foreach (Player o in Player.GetAllPlayers()) if (o != null && o.GetZDOID() == thief) { p = o; break; }
+            if (p != null) PeckSeen(t, p, munin);
+            if (p != null && Player.m_localPlayer != null && OwnerOf(t) == Player.m_localPlayer.GetPlayerID()) People.OnGrave(p); // your own grave: your ravens remember who rummaged in it
         }
 
         // the grave whose things these are, when it is someone else's (with a raven in it) and opened here
@@ -244,6 +283,20 @@ namespace HuginWhispers
             return false;
         }
 
+        // the owner's grave nearest that spot («Кровна помста»: the grave of that very death)
+        internal static TombStone OwnGraveNear(long owner, Vector3 at, float range)
+        {
+            TombStone best = null;
+            float bestD = range * range;
+            foreach (TombStone t in Graves)
+            {
+                if (t == null || OwnerOf(t) != owner) continue;
+                float d = (t.transform.position - at).sqrMagnitude;
+                if (d <= bestD) { bestD = d; best = t; }
+            }
+            return best;
+        }
+
         // a raven of this grave seen on it (the loyal one with you does not sit down on the same stone)
         internal static bool HasBird(TombStone t)
         {
@@ -274,6 +327,8 @@ namespace HuginWhispers
         private float _diagAt;
         private Quaternion _landFromRot;
         private Player _swoop;
+        private Character _hunt;    // «Кровна помста»: Munin up from the stone, circling over the one that killed his owner
+        private float _huntCaw;
         private const string Name = "над могилою";
         internal static float GiveUp = 25f;
 
@@ -289,7 +344,7 @@ namespace HuginWhispers
             GameObject r = Perches.Sitter(seat, munin, Shoulder.Scale * Shoulder.SizeFor(Mathf.Max(1, level)), -1, null, null);
             if (r == null) return null;
             Outfits.Dress(r, Outfits.Code(item));
-            RavenWear.Dress(r, munin, RavenWear.Code(item));
+            RavenWear.Dress(r, munin, RuneBook.ShownCode(item, owner)); // (a rune hung on another raven since: not on this one)
             GraveBird b = r.AddComponent<GraveBird>();
             b.Grave = t; b.Item = item; b.RavenId = id; b.Owner = owner; b.Munin = munin; b._index = index; b._level = level; b._seat = seat;
             b._ring = Mathf.Abs(id.GetStableHashCode() % 1000) / 100f;
@@ -310,7 +365,38 @@ namespace HuginWhispers
             Vector3 at;
             if (best == null) at = t.transform.position + Vector3.up * 0.8f;
             else if (!SitHere.TopOf(best, out at)) at = new Vector3(best.bounds.center.x, best.bounds.max.y, best.bounds.center.z);
+            // the game's stone is taller than its collider (its hooked top): the bird sat inside it. The model's own top wins
+            Vector3 look;
+            if (ModelTop(t, out look) && look.y > at.y + 0.05f && look.y < at.y + 1.5f) at = look; // (not a tall effect another mod hung on it)
             return at + t.transform.right * (index == 0 ? -0.12f : 0.12f);
+        }
+
+        // the highest point of the stone's model: the middle of its topmost vertices (a mesh the game lets us read), else
+        // the top of its drawn bounds
+        private static bool ModelTop(TombStone t, out Vector3 at)
+        {
+            at = Vector3.zero;
+            MeshFilter big = null; float size = 0f;
+            foreach (MeshFilter f in t.GetComponentsInChildren<MeshFilter>())
+            {
+                Renderer r = f.GetComponent<Renderer>();
+                if (f.sharedMesh == null || r == null || !r.enabled || f.GetComponent<TextMesh>() != null || f.GetComponent<TMPro.TMP_Text>() != null) continue; // (not the name over it)
+                float s = r.bounds.size.sqrMagnitude;
+                if (s > size) { size = s; big = f; }
+            }
+            if (big == null) return false;
+            Bounds rb = big.GetComponent<Renderer>().bounds;
+            at = new Vector3(rb.center.x, rb.max.y, rb.center.z);
+            Mesh m = big.sharedMesh;
+            if (!m.isReadable) return true;
+            Vector3[] v = m.vertices;
+            Transform tr = big.transform;
+            float top = float.MinValue;
+            for (int i = 0; i < v.Length; i++) { float y = tr.TransformPoint(v[i]).y; if (y > top) top = y; }
+            Vector3 sum = Vector3.zero; int n = 0;
+            for (int i = 0; i < v.Length; i++) { Vector3 w = tr.TransformPoint(v[i]); if (w.y > top - 0.04f) { sum += w; n++; } }
+            if (n > 0) at = sum / n;
+            return true;
         }
 
         // the game throws a new grave up and lets it fall (and water lifts it): the seat goes with it, measured anew
@@ -340,10 +426,11 @@ namespace HuginWhispers
         private bool WantSit()
         {
             ItemDrop.ItemData it = Item;
+            if (_hunt != null) return false; // over the killer, whatever the weather
             if (it == null || _roofed) return true;
             if (Trust.Level(it) <= 0 || Satiety.Zone(it) == Satiety.Starving) return true; // not woken / too weak to fly
             Norov.Quirk q = Norov.QuirkOf(it);
-            if (q != null && q.Id == "chilly" && (Quirks.Raining() || Quirks.Snowing()) && !GearFx.ColdProof(it)) return true; // «Мерзляк»: rain, a storm, snow
+            if (q != null && q.Id == "chilly" && (Quirks.Raining() || Quirks.Snowing()) && !GearFx.ColdProof(it) && !BreedTraits.ColdProof(it)) return true; // «Мерзляк»: rain, a storm, snow
             if (q != null && q.Id == "sleepy" && EnvMan.IsNight()) return true; // «Сонько»: asleep at night
             // the world's clock (the same in every game): one roll for each StateSeconds
             double now = ZNet.instance != null ? ZNet.instance.GetTimeSeconds() : Time.time;
@@ -361,6 +448,7 @@ namespace HuginWhispers
             FollowGrave();
             if (Time.time < _decideAt) return;
             _decideAt = Time.time + 1f;
+            if (Munin) Hunt();
             bool sit = WantSit();
             if (_state == 0 && !sit) TakeOff();
             else if (_state == 1 && sit && _swoopUntil < Time.time) { _state = 2; _since = Time.time; }
@@ -389,10 +477,26 @@ namespace HuginWhispers
             _state = 1; _since = Time.time;
         }
 
+        // the grave says whom its Munin hunts (BloodRevenge): found near — off the stone and round over it, a caw now and then
+        private void Hunt()
+        {
+            Character was = _hunt;
+            _hunt = _roofed ? null : BloodRevenge.HuntOf(Grave); // (no sky over the stone: it stays put)
+            if (_hunt == null) return;
+            if (was == null && _state != 0 && _state != 1 && _state != 4 && _motor != null && _motor.Body != null) { _motor.Body.NewLeg(); _state = 1; } // (coming in to the stone: off again)
+            if (_state == 1 && Time.time >= _huntCaw)
+            {
+                _huntCaw = Time.time + Random.Range(8f, 14f);
+                ScreamFx.CawAt(transform, transform.position, 0.8f, 0.85f, false);
+            }
+        }
+
         // the ring over the stone: Hugin wide and high, Munin lower and tighter; two of them opposite ways
         private Vector3 RingAim()
         {
             float t = Time.time + _ring;
+            if (_hunt != null) // over the killer's head, lower and tighter: it is meant to be seen
+                return CirclePlan.Ring(transform.position, _hunt.transform.position + Vector3.up * (Body.Radius(_hunt) * 2f + 2.6f), Mathf.Lerp(2.4f, 3.2f, Mathf.PerlinNoise(t * 0.2f, _ring)), 40f, 1f);
             Vector3 mid = _seat.position + Vector3.up * (Munin ? 3.2f : 3.8f);
             float r = Munin ? Mathf.Lerp(2.8f, 3.6f, Mathf.PerlinNoise(t * 0.15f, _ring)) : Mathf.Lerp(3.6f, 4.6f, Mathf.PerlinNoise(t * 0.08f, _ring));
             float h = Mathf.Sin(t * (Munin ? 0.6f : 0.4f)) * (Munin ? 0.4f : 0.6f);

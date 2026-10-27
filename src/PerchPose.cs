@@ -61,7 +61,7 @@ namespace HuginWhispers
                     }
                 if (_idle != null) Sample(0f);
             }
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, false)) // (its own legs, not a thing on them of that name)
             {
                 string n = t.name.ToLowerInvariant();
                 if (!n.EndsWith(".l") && !n.EndsWith(".r")) continue;
@@ -106,6 +106,13 @@ namespace HuginWhispers
         private bool _posed;
 
         private void LateUpdate()
+        {
+            long t0 = Perf.On ? Perf.Now : 0;
+            Place();
+            if (Perf.On) Perf.Add(t0, Perf.Perch);
+        }
+
+        private void Place()
         {
             if (_body == null) _body = GetComponentInChildren<SkinnedMeshRenderer>();
             if (_posed && _body != null && !_body.isVisible && Life != null && !Life.Stage) return; // off screen: it stays as it was posed (the test pictures always pose)

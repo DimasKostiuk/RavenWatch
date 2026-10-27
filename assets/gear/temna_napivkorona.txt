@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Темна напівкорона
+note: Половина корони з кістки й чорного дерева, у ній тліють зелені руни. Друга половина, кажуть, досі на чиїйсь голові в Хельгеймі.
+use: gear
+id: temna_napivkorona
+slot: head
+part asset/Шапки/HatDarkCrown pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatDarkCrown (Шапки)

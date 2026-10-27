@@ -1,20 +1,29 @@
-﻿param([string]$Version, [switch]$RavenItem, [switch]$DevKit, [switch]$NoVoice, [switch]$WithVoice, [switch]$NoTalkCheck)
+﻿param([string]$Version, [switch]$RavenItem, [switch]$DevKit, [switch]$NoVoice, [switch]$WithVoice, [switch]$NoTalkCheck, [switch]$NoStory)
 $tag = if ($DevKit) { "-devkit" } else { "" }; if ($DevKit) { $RavenItem = [switch]$true }
 $ErrorActionPreference = 'Stop'
 $M='E:\Steam\steamapps\common\Valheim\valheim_Data\Managed'; $C='D:\Thunderstore\Valheim\profiles\Valya\BepInEx\core'; $root='C:\Users\kosti\Desktop\RavensWatch'
-$list=@("$C\BepInEx.dll","$C\0Harmony.dll","$M\assembly_valheim.dll","$M\assembly_utils.dll","$M\assembly_guiutils.dll","$M\Splatform.dll","$M\UnityEngine.dll","$M\UnityEngine.CoreModule.dll","$M\UnityEngine.IMGUIModule.dll","$M\UnityEngine.InputLegacyModule.dll","$M\UnityEngine.AnimationModule.dll","$M\UnityEngine.PhysicsModule.dll","$M\UnityEngine.ParticleSystemModule.dll","$M\UnityEngine.AudioModule.dll","$M\UnityEngine.UI.dll","$M\UnityEngine.UIModule.dll","$M\UnityEngine.TextRenderingModule.dll","$M\UnityEngine.ImageConversionModule.dll","$M\Unity.TextMeshPro.dll","$M\UnityEngine.TextCoreFontEngineModule.dll","$M\SoftReferenceableAssets.dll","$M\netstandard.dll")
+$list=@("$C\BepInEx.dll","$C\0Harmony.dll","$M\assembly_valheim.dll","$M\assembly_utils.dll","$M\assembly_guiutils.dll","$M\Splatform.dll","$M\UnityEngine.dll","$M\UnityEngine.CoreModule.dll","$M\UnityEngine.IMGUIModule.dll","$M\UnityEngine.InputLegacyModule.dll","$M\UnityEngine.AnimationModule.dll","$M\UnityEngine.PhysicsModule.dll","$M\UnityEngine.ParticleSystemModule.dll","$M\UnityEngine.AudioModule.dll","$M\UnityEngine.UI.dll","$M\UnityEngine.UIModule.dll","$M\UnityEngine.TextRenderingModule.dll","$M\UnityEngine.ImageConversionModule.dll","$M\UnityEngine.ScreenCaptureModule.dll","$M\Unity.TextMeshPro.dll","$M\UnityEngine.TextCoreFontEngineModule.dll","$M\SoftReferenceableAssets.dll","$M\netstandard.dll")
 $out="$root\build\RavenWatch-$Version$tag.dll"
-$a=@('/nologo','/target:library','/optimize+','/warn:4','/utf8output','/codepage:65001',"/out:$out") + ($list | % { '/r:' + $_ })
+# the dll's own (assembly) name is FROZEN as «RavenWatch-2.5.1» in every version: RavenWatch_Voice is built against that
+# name, so the voice package keeps working across main updates without a re-upload. Never change it (that breaks
+# every voice package out there: «Could not load file or assembly RavenWatch-2.5.1» — 2.6.0 had «RavenWatch-2.6.0»).
+$asm="$root\build\name\RavenWatch-2.5.1.dll"; [void][IO.Directory]::CreateDirectory("$root\build\name")
+$a=@('/nologo','/target:library','/optimize+','/warn:4','/utf8output','/codepage:65001',"/out:$asm") + ($list | % { '/r:' + $_ })
 if ($DevKit) { $a += '/define:RAVEN_DEVKIT' }
-if ($RavenItem -and [version]$Version -ge [version]"2.4.0") { $a += '/define:RAVEN_STORY' } # the story (story-plan.md): from 2.4 only
+if ($RavenItem -and -not $NoStory -and [version]$Version -ge [version]"2.9.0") { $a += '/define:RAVEN_STORY' } # the story (story-plan.md): from 2.9 (the user 2026-10-27: moved again, 2.8.0 goes out without it); -NoStory: a store build while the story is unfinished (2.6.0 went out without it)
 if ($RavenItem) { $a += '/define:RAVEN_ITEM'; $a += "/resource:$root\assets\raven-fallback.png,RavenWatch.icon.png"; $a += "/resource:$root\assets\runes.png,RavenWatch.runes.png"; $a += "/resource:$root\assets\feathers.png,RavenWatch.feathers.png"; $a += "/resource:$root\assets\smoke.png,RavenWatch.smoke.png"; Get-ChildItem "$root\assets\icons\*.png" | % { $a += "/resource:$($_.FullName),RavenWatch.icons.$($_.Name)" }; if (Test-Path "$root\assets\perches") { Get-ChildItem "$root\assets\perches\*.txt" | % { $a += "/resource:$($_.FullName),RavenWatch.perches.$($_.Name)" } }; if (Test-Path "$root\assets\gear") { Get-ChildItem "$root\assets\gear\*.txt" | % { $a += "/resource:$($_.FullName),RavenWatch.gear.$($_.Name)" } }; if (Test-Path "$root\assets\items") { Get-ChildItem "$root\assets\items\*.txt" | % { $a += "/resource:$($_.FullName),RavenWatch.items.$($_.Name)" } }; if (Test-Path "$root\assets\fbx") { Get-ChildItem "$root\assets\fbx\*.fbx" | % { $a += "/resource:$($_.FullName),RavenWatch.fbx.$($_.Name)" }; Get-ChildItem "$root\assets\fbx\*_glow.png" | % { $a += "/resource:$($_.FullName),RavenWatch.fbx.$($_.Name)" } }; if (Test-Path "$root\assets\menu") { Get-ChildItem "$root\assets\menu\*.png" | % { $a += "/resource:$($_.FullName),RavenWatch.menu.$($_.Name)" } }; if (Test-Path "$root\assets\photos") { Get-ChildItem "$root\assets\photos\*.png" | % { $a += "/resource:$($_.FullName),RavenWatch.photos.$($_.Name)" } }; if (Test-Path "$root\assets\book") { Get-ChildItem "$root\assets\book\*.png" | % { $a += "/resource:$($_.FullName),RavenWatch.book.$($_.Name)" } }; if (Test-Path "$root\assets\fonts") { Get-ChildItem "$root\assets\fonts\*.ttf" | % { $a += "/resource:$($_.FullName),RavenWatch.fonts.$($_.Name)" } } }
 # the languages: assets/lang/<Language>/*.txt as RavenWatch.lang.<Language>.<file>
 if (Test-Path "$root\assets\lang") { Get-ChildItem "$root\assets\lang" -Directory | % { $ln = $_.Name; Get-ChildItem "$($_.FullName)\*.txt" | % { $a += "/resource:$($_.FullName),RavenWatch.lang.$ln.$($_.Name)" } } }
 # the ravens' talks must hold together (every answer on the thread of what was said): tools/talkcheck.js
 if ($RavenItem -and -not $NoTalkCheck) { & node "$root\tools\talkcheck.js" | Select-Object -Last 15; if ($LASTEXITCODE -ne 0) { throw "TALK CHECK FAILED (node tools/talkcheck.js; -NoTalkCheck to skip)" } }
 $a += "$root\src\*.cs"
-& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe @a 2>&1 | Select-Object -First 30
-if ($LASTEXITCODE -ne 0) { throw "BUILD FAILED" }
+# the arguments go in a response file: with every model, photo and text built in, the command line outgrew Windows' limit
+$rsp = "$root\build\csc.rsp"
+$a | % { '"' + $_ + '"' } | Set-Content -Path $rsp -Encoding UTF8
+& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe "@$rsp" 2>&1 | Select-Object -First 30
+$built = $LASTEXITCODE; Remove-Item $rsp -ErrorAction SilentlyContinue
+if ($built -ne 0) { throw "BUILD FAILED" }
+Copy-Item $asm $out -Force; Remove-Item "$root\build\name" -Recurse
 
 # staging copy of the package with this version's texts
 $stage="$env:TEMP\rw_stage_$Version$tag"; if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
@@ -50,21 +59,24 @@ if ($RavenItem) {
     $own = [regex]::Match($changelog, '(?m)^## ' + [regex]::Escape($Version) + '\s*$')
     $first = [regex]::Match($changelog, '(?m)^## ')
     if ($own.Success -and $first.Success -and $own.Index -gt $first.Index) { $changelog = $changelog.Substring(0, $first.Index) + $changelog.Substring($own.Index) }
-    # Thunderstore takes a changelog of at most 100000 characters: the store gets 2.x only, the full one stays in package/
-    $cut = [regex]::Match($changelog, '(?m)^## 1\.')
-    if ($cut.Success) { $changelog = $changelog.Substring(0, $cut.Index) + "## 1.x`r`n`r`nEarlier versions (1.0–1.6) are left out here: the store limits the changelog's length.`r`n`r`nРанні версії (1.0–1.6) тут не наведено: магазин обмежує довжину списку змін.`r`n" }
+    # Thunderstore takes a changelog of at most 100000 characters: the store gets 2.1 and later only, the full one stays in package/
+    $cut = [regex]::Match($changelog, '(?m)^## (1\.|2\.0\.)')
+    if ($cut.Success) { $changelog = $changelog.Substring(0, $cut.Index) + "## 1.x – 2.0`r`n`r`nEarlier versions (1.0–2.0) are left out here: the store limits the changelog's length.`r`n`r`nРанні версії (1.0–2.0) тут не наведено: магазин обмежує довжину списку змін.`r`n" }
 }
 if ($changelog.Length -gt 100000) { throw "CHANGELOG too long for Thunderstore: $($changelog.Length) characters (max 100000)" }
 [IO.File]::WriteAllText("$stage\CHANGELOG.md", $changelog, $utf8)
 [IO.File]::WriteAllText("$stage\README.md", $readme, $utf8)
 
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
-$zip="$root\RavenWatch-$Version$tag.zip"; if (Test-Path $zip) { [IO.File]::Delete($zip) }
+[void][IO.Directory]::CreateDirectory("$root\releases"); $zip="$root\releases\RavenWatch-$Version$tag.zip"; if (Test-Path $zip) { [IO.File]::Delete($zip) }
 $z=[IO.Compression.ZipFile]::Open($zip,'Create'); foreach($f in 'manifest.json','README.md','CHANGELOG.md','icon.png','plugins/RavenWatch.dll'){ [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z,(Join-Path $stage $f),$f,'Optimal') }
 # the Book of ravens' fonts are built into the dll: their licences go with it
 if ($RavenItem -and (Test-Path "$root\assets\fonts")) { Get-ChildItem "$root\assets\fonts\OFL-*.txt" | % { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z,$_.FullName,"plugins/fonts/$($_.Name)",'Optimal') } }
 # the ravens' voice (voicehost: RavenVoice.exe + ONNX Runtime, data: HolosTTS model with our knobs, vocab, stress dictionary, voices)
 if ($WithVoice -and -not $NoVoice -and (Test-Path "$root\voicehost\out\RavenVoice.exe")) {
+    # (test only: the voice's own plugin, built against this dll, starts the program — RavenWatch never does)
+    & "$root\tools\voice_plugin_build.ps1" -Main $out -Out "$root\build\RavenWatch_Voice.dll"
+    [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z,"$root\build\RavenWatch_Voice.dll","plugins/RavenWatch_Voice.dll",'Optimal')
     foreach ($f in 'RavenVoice.exe','RavenVoice.exe.config','Microsoft.ML.OnnxRuntime.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','onnxruntime.dll','onnxruntime_providers_shared.dll') { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z,"$root\voicehost\out\$f","plugins/voice/$f",'Optimal') }
     foreach ($f in 'model.onnx','vocab.txt','stress_dict.tsv','voices.bin','NOTICE.txt','language.txt') { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z,"$root\voicehost\data\$f","plugins/voice/$f",'Optimal') }
 }

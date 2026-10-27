@@ -1,0 +1,205 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>pair icons</title></head>
+<body style="background:#444">
+<!-- The paired gifts' medallions (assets/icons/pload.png, pclear.png, pwhirl.png) in the gifts' own style: dark edge,
+     gold rim, a ring of runes; inside a nobler inner border (a fine double gold line with small beads between) and a
+     twilight middle — Hugin's blue into Munin's red, as the gift is both of theirs — with both ravens' sparks on top.
+     Made by tools/pair_icons.js (headless Chrome); open in a browser to look at them. -->
+<canvas id="pload" width="256" height="256"></canvas>
+<canvas id="pclear" width="256" height="256"></canvas>
+<canvas id="pwhirl" width="256" height="256"></canvas>
+<pre id="out"></pre>
+<script>
+const C = 128, TAU = Math.PI * 2;
+const RUNES = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ'];
+
+function ring(g, r0, r1, fill) { g.beginPath(); g.arc(C, C, r1, 0, TAU); g.arc(C, C, r0, 0, TAU, true); g.fillStyle = fill; g.fill(); }
+function circle(g, r, fill) { g.beginPath(); g.arc(C, C, r, 0, TAU); g.fillStyle = fill; g.fill(); }
+
+// the frame every gift has, and the paired gifts' own inner border
+function frame(g, mid0, mid1) {
+  g.clearRect(0, 0, 256, 256);
+  // a soft shadow under the medallion
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.55)'; g.shadowBlur = 8; g.shadowOffsetY = 3; circle(g, 120, '#0b0806'); g.restore();
+  // the gold rim: warm metal, lit from the top
+  const gold = g.createLinearGradient(0, 8, 0, 248);
+  gold.addColorStop(0, '#f7dc8a'); gold.addColorStop(0.35, '#d9a640'); gold.addColorStop(0.7, '#a8741f'); gold.addColorStop(1, '#e2b552');
+  ring(g, 108, 117, gold);
+  ring(g, 116.5, 118, 'rgba(60,35,8,0.9)');
+  // the rune band
+  const band = g.createRadialGradient(C, C, 86, C, C, 108);
+  band.addColorStop(0, '#1d1420'); band.addColorStop(1, '#120c14');
+  ring(g, 88, 108, band);
+  g.save();
+  g.font = 'bold 15px "Segoe UI Historic", "Segoe UI Symbol", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * TAU - Math.PI / 2 + 0.1;
+    g.save(); g.translate(C + Math.cos(a) * 98, C + Math.sin(a) * 98); g.rotate(a + Math.PI / 2);
+    g.fillStyle = 'rgba(212,166,72,0.85)'; g.fillText(RUNES[i], 0, 0); g.restore();
+  }
+  g.restore();
+  // the middle: twilight, Hugin's blue into Munin's red
+  const mid = g.createRadialGradient(C, C - 18, 8, C, C + 6, 88);
+  mid.addColorStop(0, mid0); mid.addColorStop(0.6, mid1); mid.addColorStop(1, '#100a16');
+  circle(g, 88, mid);
+  const tw = g.createLinearGradient(40, 0, 216, 0);
+  tw.addColorStop(0, 'rgba(70,130,220,0.22)'); tw.addColorStop(0.5, 'rgba(0,0,0,0)'); tw.addColorStop(1, 'rgba(210,60,50,0.22)');
+  circle(g, 88, tw);
+  // the inner border: a fine double gold line, small beads between — noble, not loud
+  const fine = g.createLinearGradient(0, 40, 0, 216);
+  fine.addColorStop(0, '#f3d27c'); fine.addColorStop(0.5, '#c08a2e'); fine.addColorStop(1, '#e8bd5c');
+  g.lineWidth = 2.2; g.strokeStyle = fine; g.beginPath(); g.arc(C, C, 87, 0, TAU); g.stroke();
+  g.lineWidth = 1.1; g.strokeStyle = 'rgba(232,190,100,0.8)'; g.beginPath(); g.arc(C, C, 80.5, 0, TAU); g.stroke();
+  for (let i = 0; i < 36; i++) {
+    const a = i / 36 * TAU, big = i % 9 === 0;
+    g.beginPath(); g.arc(C + Math.cos(a) * 83.7, C + Math.sin(a) * 83.7, big ? 2.1 : 1.05, 0, TAU);
+    g.fillStyle = big ? '#f6dc90' : 'rgba(214,168,80,0.9)'; g.fill();
+  }
+  // the dark edge round it all
+  g.lineWidth = 2; g.strokeStyle = '#0a0705'; g.beginPath(); g.arc(C, C, 119, 0, TAU); g.stroke();
+}
+
+// both ravens' sparks on the rim: Hugin's blue at the top left, Munin's red at the top right
+function sparks(g) {
+  for (const [x, y, c0, c1] of [[52, 46, '#d9f2ff', '#3d8fe0'], [204, 46, '#ffd9c8', '#e0402e']]) {
+    const s = g.createRadialGradient(x - 3, y - 3, 1, x, y, 13);
+    s.addColorStop(0, c0); s.addColorStop(0.5, c1); s.addColorStop(1, 'rgba(0,0,0,0)');
+    g.beginPath(); g.arc(x, y, 13, 0, TAU); g.fillStyle = s; g.fill();
+    g.beginPath(); g.arc(x, y, 7.5, 0, TAU); g.fillStyle = c1; g.fill();
+    g.beginPath(); g.arc(x - 2.2, y - 2.4, 2.6, 0, TAU); g.fillStyle = c0; g.fill();
+  }
+}
+
+// a raven seen from below, wings spread (the dome's raven): a solid silhouette, fingered wing tips, a fanned tail;
+// lift: how far the wings are raised (−1 down … 1 up); rim: the raven's own light round its edge
+function raven(g, x, y, s, rot, col, rim, lift) {
+  g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
+  const L = lift || 0;
+  g.beginPath();
+  for (const side of [1, -1]) {
+    const W = (px, py) => [px * side, py - L * Math.abs(px) * 0.35];
+    const p = [[4, -5], [18, -13], [34, -16], [50, -12], [56, -7], [49, -5], [54, 0], [46, 0], [50, 5], [42, 4], [44, 9], [35, 6], [26, 8], [15, 7], [5, 8]].map(q => W(q[0], q[1]));
+    g.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]);
+    g.closePath();
+  }
+  g.ellipse(0, 3, 7.5, 15, 0, 0, Math.PI * 2);
+  g.moveTo(6, -12); g.arc(0, -12, 6.5, 0, Math.PI * 2);
+  g.moveTo(-6, 15); g.lineTo(-10, 30); g.lineTo(-4, 28); g.lineTo(0, 32); g.lineTo(4, 28); g.lineTo(10, 30); g.lineTo(6, 15); g.closePath();
+  g.save(); g.shadowColor = rim; g.shadowBlur = 7 / s; g.fillStyle = col; g.fill(); g.restore();
+  g.fillStyle = col; g.fill();
+  // the beak, the eyes
+  g.beginPath(); g.moveTo(-2.6, -9); g.lineTo(2.6, -9); g.lineTo(0, -1.5); g.closePath(); g.fillStyle = '#3a3a40'; g.fill();
+  g.fillStyle = rim; g.beginPath(); g.arc(-2.6, -13, 1.3, 0, Math.PI * 2); g.arc(2.6, -13, 1.3, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+function out(id) { return id + ' ' + document.getElementById(id).toDataURL('image/png'); }
+
+// «Подвійна ноша»: the two carry a heavy bundle between them on a rope
+function load() {
+  const g = document.getElementById('pload').getContext('2d');
+  frame(g, '#3a3050', '#22182e');
+  // the ropes
+  g.lineWidth = 2.4; g.strokeStyle = '#c9a463';
+  g.beginPath(); g.moveTo(90, 108); g.quadraticCurveTo(104, 132, 116, 142); g.stroke();
+  g.beginPath(); g.moveTo(166, 108); g.quadraticCurveTo(152, 132, 140, 142); g.stroke();
+  // the bundle: a heavy sack, tied at the top
+  const sack = g.createRadialGradient(122, 150, 6, 128, 166, 40);
+  sack.addColorStop(0, '#c99a5a'); sack.addColorStop(0.6, '#8a5f2c'); sack.addColorStop(1, '#4a2f12');
+  g.beginPath(); g.moveTo(116, 142); g.quadraticCurveTo(92, 160, 98, 186); g.quadraticCurveTo(128, 200, 158, 186);
+  g.quadraticCurveTo(164, 160, 140, 142); g.quadraticCurveTo(128, 136, 116, 142); g.closePath();
+  g.fillStyle = sack; g.fill(); g.lineWidth = 2; g.strokeStyle = '#2b1806'; g.stroke();
+  g.beginPath(); g.moveTo(114, 144); g.quadraticCurveTo(128, 150, 142, 144); g.lineWidth = 3; g.strokeStyle = '#e2c27c'; g.stroke();
+  // a patch and a seam: it is old and heavy
+  g.lineWidth = 1.4; g.strokeStyle = 'rgba(40,22,6,0.8)';
+  g.beginPath(); g.moveTo(112, 168); g.lineTo(122, 178); g.moveTo(144, 164); g.lineTo(140, 182); g.stroke();
+  // the two, straining upward, wings down in a hard beat
+  raven(g, 92, 92, 0.52, -0.18, '#0e1424', '#7fb6ff', 0.8);
+  raven(g, 164, 92, 0.52, 0.18, '#220c0e', '#ff8a70', 0.8);
+  // sweat drops of effort
+  g.fillStyle = 'rgba(160,210,255,0.85)';
+  for (const [x, y] of [[62, 72], [194, 72]]) { g.beginPath(); g.moveTo(x, y - 5); g.quadraticCurveTo(x + 4, y + 2, x, y + 4); g.quadraticCurveTo(x - 4, y + 2, x, y - 5); g.fill(); }
+  sparks(g);
+  return out('pload');
+}
+
+// «Розігнати хмари»: a sun breaking through, the clouds pushed apart by the two circling high
+function clear() {
+  const g = document.getElementById('pclear').getContext('2d');
+  frame(g, '#6f8fbf', '#2c3d66');
+  g.save(); g.beginPath(); g.arc(C, C, 79, 0, TAU); g.clip();
+  // the sun and its rays
+  const sun = g.createRadialGradient(C, 140, 4, C, 140, 60);
+  sun.addColorStop(0, '#fff6d6'); sun.addColorStop(0.3, '#ffd66a'); sun.addColorStop(1, 'rgba(255,190,80,0)');
+  g.beginPath(); g.arc(C, 140, 60, 0, TAU); g.fillStyle = sun; g.fill();
+  g.strokeStyle = 'rgba(255,224,140,0.75)'; g.lineWidth = 3; g.lineCap = 'round';
+  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; g.beginPath(); g.moveTo(C + Math.cos(a) * 30, 140 + Math.sin(a) * 30); g.lineTo(C + Math.cos(a) * 44, 140 + Math.sin(a) * 44); g.stroke(); }
+  g.beginPath(); g.arc(C, 140, 22, 0, TAU); g.fillStyle = '#ffe596'; g.fill();
+  // the clouds, pushed off to the sides
+  const cloud = (x, y, s, dir) => {
+    g.save(); g.translate(x, y); g.scale(s * dir, s);
+    g.beginPath(); g.arc(0, 0, 20, Math.PI * 0.9, Math.PI * 1.9); g.arc(22, -6, 16, Math.PI * 1.1, Math.PI * 2.05); g.arc(40, 4, 12, Math.PI * 1.4, Math.PI * 0.5);
+    g.lineTo(-18, 14); g.closePath();
+    const cg = g.createLinearGradient(0, -24, 0, 16); cg.addColorStop(0, '#d8dde8'); cg.addColorStop(1, '#7c8698');
+    g.fillStyle = cg; g.fill(); g.restore();
+  };
+  cloud(72, 176, 1.15, 1); cloud(184, 176, 1.15, -1); cloud(60, 118, 0.8, 1); cloud(196, 118, 0.8, -1);
+  // the wind of their wings: two swept arcs
+  g.strokeStyle = 'rgba(255,255,255,0.55)'; g.lineWidth = 2.2;
+  g.beginPath(); g.arc(C, 140, 52, Math.PI * 1.08, Math.PI * 1.36); g.stroke();
+  g.beginPath(); g.arc(C, 140, 52, Math.PI * 1.64, Math.PI * 1.92); g.stroke();
+  g.restore();
+  // the two high up, circling each other
+  raven(g, 100, 82, 0.42, -0.2, '#0e1424', '#7fb6ff', 0.3);
+  raven(g, 156, 78, 0.42, 0.2, '#220c0e', '#ff8a70', -0.3);
+  sparks(g);
+  return out('pclear');
+}
+
+// «Вихор»: a whirl of feathers and blows, the two at its edge chasing each other round
+function whirl() {
+  const g = document.getElementById('pwhirl').getContext('2d');
+  frame(g, '#4a2440', '#1e1028');
+  g.save(); g.beginPath(); g.arc(C, C, 79, 0, TAU); g.clip();
+  // the whirl: spiral arms, blue on one side, red on the other
+  g.lineCap = 'round';
+  for (let arm = 0; arm < 2; arm++) {
+    const col = arm === 0 ? [120, 180, 255] : [255, 110, 90];
+    for (let k = 0; k < 3; k++) {
+      g.beginPath();
+      for (let t = 0; t <= 1.0001; t += 0.02) {
+        const a = arm * Math.PI + k * 0.5 + t * 4.2, r = 8 + t * 62 - k * 6;
+        const x = C + Math.cos(a) * r, y = C + 4 + Math.sin(a) * r * 0.92;
+        if (t === 0) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.lineWidth = 5 - k * 1.4; g.strokeStyle = 'rgba(' + col.join(',') + ',' + (0.75 - k * 0.2) + ')'; g.stroke();
+    }
+  }
+  // the eye of it
+  const eye = g.createRadialGradient(C, C + 4, 1, C, C + 4, 18);
+  eye.addColorStop(0, '#fff2d0'); eye.addColorStop(0.5, 'rgba(240,190,110,0.6)'); eye.addColorStop(1, 'rgba(0,0,0,0)');
+  g.beginPath(); g.arc(C, C + 4, 18, 0, TAU); g.fillStyle = eye; g.fill();
+  // feathers torn loose, flying round
+  const feather = (x, y, a, c) => {
+    g.save(); g.translate(x, y); g.rotate(a);
+    g.beginPath(); g.moveTo(-9, 0); g.quadraticCurveTo(0, -4.5, 9, 0); g.quadraticCurveTo(0, 4.5, -9, 0); g.fillStyle = c; g.fill();
+    g.beginPath(); g.moveTo(-10, 0); g.lineTo(9, 0); g.lineWidth = 0.8; g.strokeStyle = 'rgba(255,255,255,0.5)'; g.stroke(); g.restore();
+  };
+  for (const [x, y, a, c] of [[82, 148, 0.6, '#1a2238'], [176, 110, 2.3, '#3a1418'], [100, 92, -0.8, '#3a1418'], [160, 168, 1.9, '#1a2238'], [140, 80, 0.2, '#1a2238'], [96, 176, -1.2, '#3a1418']]) feather(x, y, a, c);
+  // little strike sparks where the blows land
+  g.fillStyle = '#ffe08a';
+  for (const [x, y, r] of [[70, 120, 2.4], [186, 140, 2.4], [128, 196, 2], [120, 66, 1.8]]) {
+    g.beginPath(); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, rr = i % 2 ? r : r * 2.6; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.fill();
+  }
+  g.restore();
+  // the two chasing each other round the whirl
+  raven(g, 90, 104, 0.46, -0.9, '#0e1424', '#7fb6ff', 0.5);
+  raven(g, 166, 156, 0.46, 2.24, '#220c0e', '#ff8a70', 0.5);
+  sparks(g);
+  return out('pwhirl');
+}
+
+document.fonts.ready.then(() => { document.getElementById('out').textContent = [load(), clear(), whirl()].join('\n'); });
+</script>
+</body></html>

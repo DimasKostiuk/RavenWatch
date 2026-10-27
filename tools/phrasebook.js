@@ -4,7 +4,7 @@
 // gives them in the phrase files' format to bring back into the code)
 const fs = require('fs'), path = require('path');
 const src = path.join(__dirname, '..', 'src');
-const files = ['Patterns.cs', 'TalkPatterns.cs', 'PerchPatterns.cs', 'CrossPatterns.cs', 'AboutPatterns.cs', 'StrikePatterns.cs', 'DeathPatterns.cs', 'EmotePatterns.cs', 'PassPatterns.cs', 'LifePatterns.cs', 'VarietyPatterns.cs', 'QuipPatterns.cs', 'PlacePatterns.cs', 'LifeTalkPatterns.cs', 'AgainPatterns.cs', 'WorldPatterns.cs', 'WardPatterns.cs', 'ErrandPatterns.cs', 'MorePatterns.cs', 'MomentPatterns.cs'];
+const files = ['Patterns.cs', 'TalkPatterns.cs', 'PerchPatterns.cs', 'CrossPatterns.cs', 'AboutPatterns.cs', 'StrikePatterns.cs', 'DeathPatterns.cs', 'EmotePatterns.cs', 'PassPatterns.cs', 'LifePatterns.cs', 'VarietyPatterns.cs', 'QuipPatterns.cs', 'PlacePatterns.cs', 'LifeTalkPatterns.cs', 'AgainPatterns.cs', 'WorldPatterns.cs', 'WardPatterns.cs', 'ErrandPatterns.cs', 'MorePatterns.cs', 'MomentPatterns.cs', 'PerkPatterns.cs', 'VictimPatterns.cs', 'BondPatterns.cs', 'JointPatterns.cs', 'RequestPatterns.cs', 'PeoplePatterns.cs', 'HomePatterns.cs', 'BondMomentPatterns.cs', 'PetPatterns.cs', 'PairPatterns.cs', 'MeadPatterns.cs', 'OmenPatterns.cs', 'TamePatterns.cs'];
 
 function arrays(file, name) {
   const s = fs.readFileSync(path.join(src, file), 'utf8');

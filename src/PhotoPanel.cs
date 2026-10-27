@@ -89,9 +89,9 @@ namespace HuginWhispers
             switch (tab)
             {
                 case 1: return use == RavenGear.Use;
-                case 2: return use == Perches.Use || use == Perches.TableUse;
+                case 2: return Perches.IsPerchUse(use) || use == Perches.TableUse || use == Perches.FeederUse;
                 case 3: return use == WsItems.Use;
-                case 4: return use != RavenGear.Use && use != Perches.Use && use != Perches.TableUse && use != WsItems.Use;
+                case 4: return use != RavenGear.Use && !Perches.IsPerchUse(use) && use != Perches.TableUse && use != Perches.FeederUse && use != WsItems.Use;
                 default: return true;
             }
         }

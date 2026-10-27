@@ -37,6 +37,7 @@ namespace HuginWhispers
         // a blow between you and another player (Diary's hit patches)
         internal static void HitYou(Player by) { if (by != null && by != Player.m_localPlayer) HitYouAt[by.GetPlayerID()] = Time.time; }
         internal static void YouHit(Player whom) { if (whom != null && whom != Player.m_localPlayer) YouHitAt[whom.GetPlayerID()] = Time.time; }
+        internal static bool StruckLately(Player by) { return by != null && Fresh(HitYouAt, by.GetPlayerID()); } // (Victim: a reason to pick them)
         private static bool Fresh(Dictionary<long, float> d, long id) { float at; return d.TryGetValue(id, out at) && Time.time - at < HitMemory; }
         private static int _blockMask = -1;
 
@@ -130,6 +131,21 @@ namespace HuginWhispers
                     themes.Add(new Theme("about_envy", 70f + jitter())); // a legend on their shoulder, none on yours
             }
             else themes.Add(new Theme("about_noraven", 55f + jitter()));
+            string att = People.AboutTheme(p, munin, t); // how this raven takes to that person (People): it says so
+            if (att != null) themes.Add(new Theme(att, (att == "about_hate" ? 88f : att == "about_adore" ? 80f : 72f) + jitter()));
+            bool bondM; // one of theirs is a friend of this raven (Bonds): heard in the thought
+            if (Bonds.FriendOf(p, munin, t, out bondM))
+            {
+                v["bond_raven"] = Nicks.Name(t, bondM);
+                themes.Add(new Theme("about_bond_friend", 74f + jitter()));
+            }
+            bool chM; int chW, chL; // played the chase with one of theirs (JointPlay): the score of it
+            if (JointPlay.RecordWith(p, munin, t, out chM, out chW, out chL))
+            {
+                v["chase_raven"] = Nicks.Name(t, chM);
+                v["wins"] = chW.ToString(); v["losses"] = chL.ToString();
+                themes.Add(new Theme(chW > chL ? "about_chase_lead" : chW < chL ? "about_chase_behind" : "about_chase_even", 62f + jitter()));
+            }
 
             // how your ravens know each other
             int talks = CrossTalk.TalksWith(p, t);
@@ -179,6 +195,7 @@ namespace HuginWhispers
                 if (!string.IsNullOrEmpty(line))
                 {
                     LastTheme[tid] = themes[i].Tag;
+                    People.OnThought(t, munin, themes[i].Tag); // thinking of them sets the raven's mind a little
                     return new Shot { Target = t, Theme = themes[i].Tag, Line = line, Raven = themes[i].Tag.StartsWith("about_raven") || themes[i].Tag == "about_envy" ? raven : -1 };
                 }
                 themes.RemoveAt(i);
@@ -275,10 +292,10 @@ namespace HuginWhispers
                 case "about_hurt": fam = "hurt"; break;
                 case "about_sleep": fam = "sleep"; break;
                 case "about_boss": fam = "boss"; break;
-                case "about_raven": case "about_raven_gold": case "about_raven_legend": fam = "raven"; break;
+                case "about_raven": case "about_raven_gold": case "about_raven_legend": case "about_chase_lead": case "about_chase_behind": case "about_chase_even": fam = "raven"; break;
                 case "about_new": fam = "new"; break;
                 case "about_helmet": case "about_nohelmet": fam = "helmet"; break;
-                case "about_pals": fam = "friend"; break;                       // warm: "my own people"
+                case "about_pals": case "about_bond_friend": case "about_respect": case "about_adore": fam = "friend"; break; // warm: "my own people"
                 case "about_known": case "about_since": fam = "known"; break;   // plain: "I know you"
                 case "about_axe": case "about_pick": fam = "work"; break;
                 case "about_weapon": fam = "weapon"; break;

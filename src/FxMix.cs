@@ -129,8 +129,9 @@ namespace HuginWhispers
         // built in, the saved files (while files are read), the draft
         internal static List<MixDef> All()
         {
-            if (_all != null && _allAt == Version) return _all;
-            _allAt = Version;
+            int at = Version * 2 + (RavenLooks.FromFiles ? 1 : 0); // (the files come and go with admin tuning)
+            if (_all != null && _allAt == at) return _all;
+            _allAt = at;
             Dictionary<string, MixDef> by = new Dictionary<string, MixDef>();
             foreach (string s in Builtin)
             {
@@ -344,7 +345,6 @@ namespace HuginWhispers
 
         // the raven tree's way of weaving one layer of a в'язь (Bind.cs): green together, icy core and shell, charred over
         // the body (looks: half and half / body and wings / head to tail)
-        internal static int ModeForTree(int treeKind) { return treeKind == 1 ? 0 : treeKind == 0 ? 1 : 2; } // (0 icy, 1 green, 2 charred)
 
         // ---------------------------------------------------------------- for the window: what a mix is made of, in words
         internal static string ModeName(MixDef m) { string[] n = m.Kind == WearKind.Freya ? LookModes : FxModes; return n[Mathf.Clamp(m.Mode, 0, n.Length - 1)]; }

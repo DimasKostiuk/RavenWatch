@@ -6,7 +6,7 @@ using HarmonyLib;
 namespace HuginWhispers
 {
     // The hammer's own tab «RavenWatch» (the build menu sorted by use): every piece of ours (perches, the nest, the
-    // tables) goes there and nowhere else. The game's tabs are the flags of Piece.UsageTagFlags, copied once into each
+    // tables) goes there; the tables also stay in the game's «Crafting» (Perches.Build). The game's tabs are the flags of Piece.UsageTagFlags, copied once into each
     // by-use list with their names; one more flag, past the game's own, is added to that copy. A game without such
     // lists (older) simply has no tab. UI mods that redraw the game's tag buttons (SeneaL UI) show it as well.
     internal static class BuildTab

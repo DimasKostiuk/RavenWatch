@@ -12,7 +12,7 @@ namespace HuginWhispers
         Chop, Mine, Build, Craft, Cook, Eat, Hungry, Night, Level, Afk,
         Escaped, Flee, Friendly, Portal, Sail, Sleep, Pick, Loot, Encumbered, Pet, Fish,
         Raid, Plant, Trade, Ride, Parry, Dodge, Bow, Magic, Smelt, Ferment, Repair, Potion, Sit, Cozy, Trophy, TrophyHang, Cart, Fuel,
-        PortalBlocked, Broke, Tame, Freezing, Poison, Burning // 2.4.0: ore at a portal, a broken thing, a tamed beast, the body in trouble
+        PortalBlocked, Broke, Tame, Freezing, Poison, Burning // ore at a portal, a broken thing, a tamed beast, the body in trouble
     }
 
     internal struct Entry
@@ -100,6 +100,10 @@ namespace HuginWhispers
 
         internal static void Add(Ev type, string arg, int value)
         {
+#if RAVEN_ITEM
+            FightJudge.On(type); // (the fight being judged: parries, dodges, potions, running, a close call)
+            Habits.Happened(type); // («Звички»: deaths, a night's sleep)
+#endif
             Entry e;
             e.Time = Time.time;
             e.Type = type;
@@ -112,6 +116,8 @@ namespace HuginWhispers
             Nicks.OnEvent(type, value);            // and a deed for their nicknames
             SitEvents.FromDiary(type);             // and how they react on the shoulder (the sitting system)
             Errands.OnEvent(type, e.Arg, value);   // and Odin's errand, if it waits for this
+            Requests.OnEvent(type, e.Arg, value);  // and who hurt you (Munin's wish of revenge)
+            Words.OnEvent(type);                   // and a taught word for the moment (you ate, sat by a fire)
 #if RAVEN_STORY
             StoryBus.FromDiary(type, e.Arg, value); // and the story
 #endif
@@ -333,6 +339,14 @@ namespace HuginWhispers
         private static string _raid;
         private static readonly FieldInfo VagonsField = AccessTools.Field(typeof(Vagon), "m_instances");
 
+        // a cart is hitched to you
+        internal static bool Carting(Player p)
+        {
+            List<Vagon> carts = VagonsField != null ? VagonsField.GetValue(null) as List<Vagon> : null;
+            if (carts != null) foreach (Vagon c in carts) if (c != null && c.IsAttached(p)) return true;
+            return false;
+        }
+
         private static void SampleLife(Player p)
         {
             RandomEvent raid = RandEventSystem.instance != null ? RandEventSystem.instance.GetActiveEvent() : null;
@@ -347,10 +361,7 @@ namespace HuginWhispers
                 if (mount != null) Add(Ev.Ride, HitInfo.Token(mount), 0);
             }
 
-            List<Vagon> carts = VagonsField != null ? VagonsField.GetValue(null) as List<Vagon> : null;
-            if (carts != null)
-                foreach (Vagon cart in carts)
-                    if (cart != null && cart.IsAttached(p)) { Add(Ev.Cart, "", 0); break; }
+            if (Carting(p)) Add(Ev.Cart, "", 0);
 
             // at home: under a roof with some comfort around, and no raid at the door
             if (raidName == null && !p.InInterior() && p.InShelter() && RawComfort.Of(p) >= 5) Add(Ev.Cozy, "", 0);
@@ -496,6 +507,9 @@ namespace HuginWhispers
     {
         private static void Prefix(Player __instance)
         {
+#if RAVEN_ITEM
+            BloodRevenge.Died(__instance); // (a player under someone's vendetta: the avenger's game judges)
+#endif
             if (__instance != Player.m_localPlayer) return;
             Diary.OnOwnDeath();
 #if RAVEN_ITEM
@@ -507,11 +521,145 @@ namespace HuginWhispers
             string who = creature ? HitInfo.Token(attacker) : (hit != null ? hit.m_hitType.ToString() : "Undefined");
             Diary.Add(Ev.Death, who, creature ? 1 : 0);
 #if RAVEN_ITEM
-            Memory.OnDeath(__instance, who, creature, creature && attacker.IsBoss() && Champions.Fast(attacker) == null); // still worn: the tombstone has not taken the ravens yet (an errand's lord is no boss)
-            Nicks.OnDeath(__instance); // the ravens saw it (a deed for their nicknames)
+            Memory.OnDeath(__instance, who, creature, creature && Champions.TrueBoss(attacker)); // still worn: the tombstone has not taken the ravens yet
+            PerkFx.OnDeath(__instance, creature ? who : null); // what the blessings and burdens latch at a death
+            Nicks.OnDeath(__instance, hit, attacker); // the ravens saw it (a deed for their nicknames)
+            BloodRevenge.OnDeath(__instance, attacker); // Munin marks the one that killed you (the skills still whole)
             Guide.Died(__instance);    // the Guide tells what a death costs (once)
 #endif
         }
+    }
+
+    // whose kill it is when the killing blow names nobody: a modded weapon's bleed, poison or blast often hits with no
+    // attacker in it (and a summon or a pet finishing it off names itself) — the last player who hit it within the
+    // window gets it. Kept where the creature is simulated (RPC_Damage runs there, as OnDeath does)
+    internal static class KillCredit
+    {
+        private const float Window = 20f;
+        private static readonly Dictionary<ZDOID, KeyValuePair<Player, float>> Last = new Dictionary<ZDOID, KeyValuePair<Player, float>>();
+
+        internal static void Hit(Character c, Player p)
+        {
+            if (Last.Count > 400)
+            {
+                List<ZDOID> old = new List<ZDOID>();
+                foreach (KeyValuePair<ZDOID, KeyValuePair<Player, float>> e in Last) if (Time.time - e.Value.Value > Window) old.Add(e.Key);
+                foreach (ZDOID id in old) Last.Remove(id);
+            }
+            Last[c.GetZDOID()] = new KeyValuePair<Player, float>(p, Time.time);
+        }
+
+        // the killer of the creature that just died here (CreatureDeathPatch): its loot is made right after (PerkDropPatch)
+        private static Character _lastDead;
+        private static Player _lastKiller;
+        internal static void Died(Character c, Player killer) { _lastDead = c; _lastKiller = killer; }
+        internal static Player KillerOf(Character c) { return c != null && ReferenceEquals(c, _lastDead) ? _lastKiller : null; }
+
+        internal static Player Take(Character c)
+        {
+            ZDOID id = c.GetZDOID();
+            KeyValuePair<Player, float> e;
+            if (!Last.TryGetValue(id, out e)) return null;
+            Last.Remove(id);
+            return e.Key != null && Time.time - e.Value <= Window ? e.Key : null;
+        }
+
+        // ---- a kill shared with a helper (the user, 2026-10-27): Odin's kill errands count it for whoever has one and
+        // took at least AssistShare of the creature's health with their own blows (their ravens' too), not only for the
+        // one who finished it. Only the errands: strength, blessings, wishes and the rest stay the finisher's.
+        internal static float AssistShare = 0.3f;
+        private const float ShareKeep = 60f; // s after the last blow that its record is still kept
+        private sealed class Share { public float At; public readonly Dictionary<Player, float> By = new Dictionary<Player, float>(2); }
+        private static readonly Dictionary<ZDOID, Share> Shares = new Dictionary<ZDOID, Share>();
+        private static readonly List<ZDOID> OldShares = new List<ZDOID>();
+        private static readonly List<Player> HelperList = new List<Player>(2);
+
+        // the health this player's blow took (RPC_Damage, where the creature is simulated)
+        internal static void Dealt(Character c, Player p, float lost)
+        {
+            if (Shares.Count > 200)
+            {
+                OldShares.Clear();
+                foreach (KeyValuePair<ZDOID, Share> e in Shares) if (Time.time - e.Value.At > ShareKeep) OldShares.Add(e.Key);
+                foreach (ZDOID id in OldShares) Shares.Remove(id);
+            }
+            ZDOID key = c.GetZDOID();
+            Share s;
+            if (!Shares.TryGetValue(key, out s)) Shares[key] = s = new Share();
+            float had;
+            s.By.TryGetValue(p, out had);
+            s.By[p] = had + lost;
+            s.At = Time.time;
+        }
+
+        // at its death: the players (not the finisher) who took enough of it; the record goes
+        internal static List<Player> Helpers(Character c, Player killer)
+        {
+            HelperList.Clear();
+            ZDOID key = c.GetZDOID();
+            Share s;
+            if (!Shares.TryGetValue(key, out s)) return HelperList;
+            Shares.Remove(key);
+            if (Time.time - s.At > ShareKeep) return HelperList;
+            float need = c.GetMaxHealth() * AssistShare;
+            foreach (KeyValuePair<Player, float> e in s.By) if (e.Key != null && e.Key != killer && e.Value >= need) HelperList.Add(e.Key);
+            return HelperList;
+        }
+
+#if RAVEN_ITEM
+        private const string RpcAssist = "RavenWatch_KillAssist";
+        internal static void Register() { ZRoutedRpc.instance.Register<ZPackage>(RpcAssist, new Action<long, ZPackage>(OnAssist)); }
+
+        // tell a helper: its errands may count this kill
+        internal static void SendAssist(Player helper, Character c, string prefab, string token, int stars, bool boss)
+        {
+            ZPackage pkg = new ZPackage();
+            pkg.Write(c.GetZDOID());
+            pkg.Write(prefab ?? "");
+            pkg.Write(token ?? "");
+            pkg.Write(stars);
+            pkg.Write(boss);
+            if (helper == Player.m_localPlayer) { pkg.SetPos(0); Assisted(pkg); return; }
+            if (ZRoutedRpc.instance != null) ZRoutedRpc.instance.InvokeRoutedRPC(helper.GetZDOID().UserID, RpcAssist, pkg);
+        }
+
+        private static void OnAssist(long sender, ZPackage pkg) { try { Assisted(pkg); } catch (Exception e) { Debug.LogWarning("[RavenWatch] kill assist unreadable: " + e.Message); } }
+
+        // only the errands count it, as a kill of your own (the way of killing: by your own blows on that very one)
+        private static void Assisted(ZPackage pkg)
+        {
+            if (Player.m_localPlayer == null) return;
+            ZDOID id = pkg.ReadZDOID();
+            string prefab = pkg.ReadString(), token = pkg.ReadString();
+            int stars = pkg.ReadInt();
+            bool boss = pkg.ReadBool();
+            ErrandHow.Dying = id;
+            try { Errands.OnKill(prefab, token, stars, boss, false); }
+            finally { ErrandHow.Dying = ZDOID.None; }
+        }
+#endif
+    }
+
+    [HarmonyPatch(typeof(Character), "RPC_Damage")]
+    internal static class KillCreditPatch
+    {
+        // __state: its health before a player's blow (-1: not a player's), the share taken counted after it
+        private static void Prefix(Character __instance, HitData hit, out float __state)
+        { __state = -1f; try {
+            if (hit == null || __instance is Player) return;
+            Player p = hit.GetAttacker() as Player;
+            if (p == null) return;
+            KillCredit.Hit(__instance, p);
+            if (!__instance.IsTamed()) __state = __instance.GetHealth();
+        } catch (System.Exception e) { PatchGuard.Fail("KillCreditPatch", e); } }
+
+        private static void Postfix(Character __instance, HitData hit, float __state)
+        { try {
+            if (__state < 0f || hit == null || __instance.IsDead()) return; // (the killing blow: its finisher has the kill anyway)
+            float lost = __state - __instance.GetHealth();
+            Player p = hit.GetAttacker() as Player;
+            if (p != null && lost > 0f) KillCredit.Dealt(__instance, p, lost);
+        } catch (System.Exception e) { PatchGuard.Fail("KillCreditPatch", e); } }
     }
 
     // runs where the creature is simulated; tells the killer (possibly another PC) about the kill
@@ -522,22 +670,33 @@ namespace HuginWhispers
         { try {
             if (__instance is Player) return;
 #if RAVEN_ITEM
+            BloodRevenge.Died(__instance); // someone's vendetta on it: where it died, to everybody
             Champions.Died(__instance); // an errand's champion: its owner is told, whoever killed it
+            if (BindArena.Of(__instance)) return; // an arena's creature: no strength, errands, nicknames (weaving again and again would farm them)
 #endif
             HitData hit = HitInfo.LastHit(__instance);
-            if (hit == null) return;
-            Player killer = hit.GetAttacker() as Player;
+            Character by = hit != null ? hit.GetAttacker() : null;
+            Player killer = by as Player;
+            Player credited = KillCredit.Take(__instance);
+            if (killer == null && (by == null || by.IsTamed())) killer = credited; // a blow that names nobody: the last player who hit it
+            KillCredit.Died(__instance, killer); // (for its loot, made right after: the killer's blessings)
+#if RAVEN_ITEM
+            if (!__instance.IsTamed()) // a helper's share: its errands count it too (whoever finished it, even a beast)
+                foreach (Player h in KillCredit.Helpers(__instance, killer))
+                    KillCredit.SendAssist(h, __instance, Utils.GetPrefabName(__instance.gameObject), HitInfo.Token(__instance), Mathf.Max(0, __instance.GetLevel() - 1), Champions.TrueBoss(__instance));
+#endif
             if (killer == null) return;
             string token = HitInfo.Token(__instance);
-            int boss = __instance.IsBoss() ? 1 : 0;
 #if RAVEN_ITEM
-            if (boss == 1 && Champions.Fast(__instance) != null) boss = 0; // (an errand's lord wears a boss's bar, it is no boss)
+            int boss = Champions.TrueBoss(__instance) ? 1 : 0;
+#else
+            int boss = __instance.IsBoss() ? 1 : 0;
 #endif
             int stars = Mathf.Max(0, __instance.GetLevel() - 1);
             string prefab = Utils.GetPrefabName(__instance.gameObject); // what Munin's strength goes by
             bool tamed = __instance.IsTamed();
 #if RAVEN_ITEM
-            bool raven = hit.m_skillRaiseAmount <= Strike.Marker; // the last blow a raven's (its mark: Strike)
+            bool raven = hit != null && hit.m_skillRaiseAmount <= Strike.Marker; // the last blow a raven's (its mark: Strike)
 #else
             bool raven = false;
 #endif
@@ -546,18 +705,26 @@ namespace HuginWhispers
                 Diary.Killed(__instance, token);
                 Diary.Add(Ev.Kill, token, boss);
 #if RAVEN_ITEM
+                if (raven && Whirl.Quiet()) return; // («Вихор» past its first blows: the kill gives nothing)
                 Memory.OnKill(token, stars);
+                if (!tamed && __instance.m_faction != Character.Faction.AnimalsVeg) FightJudge.Kill(stars, boss == 1);
+                if (!tamed) Habits.Killed(__instance.m_faction == Character.Faction.AnimalsVeg); // («Вояка», «Ловчий»)
+                Bath.Killed(); // (Munin: the blood on him)
                 Power.OnKill(boss, stars, prefab, tamed, token);
+                PerkFx.OnKill(Player.m_localPlayer, boss == 1, tamed); // «Кровожер», «Кривава учта», «Занудьгував»
+                ErrandHow.Dying = __instance.GetZDOID(); // (the way it was killed: by this one's own blows)
                 if (!tamed) Errands.OnKill(prefab, token, stars, boss == 1, raven);
+                ErrandHow.Dying = ZDOID.None;
+                if (!tamed) Requests.OnKill(prefab, token, stars, boss == 1, raven, by == killer && !raven); // a raven's own wish
 #if RAVEN_STORY
                 if (!tamed) StoryBus.Kill(prefab, stars, boss == 1);
 #endif
-                if (!tamed) Nicks.OnKill(Player.m_localPlayer, stars); // a deed for Munin's nickname
+                if (!tamed) Nicks.OnKill(Player.m_localPlayer, stars, raven); // a deed for Munin's nickname
                 if (!tamed) BindRun.OnKill(Player.m_localPlayer); // a в'язь that fires on a kill
 #endif
                 return;
             }
-            Plugin.SendKill(killer.GetZDOID().UserID, token, boss, stars, prefab, tamed, raven);
+            Plugin.SendKill(killer.GetZDOID().UserID, token, boss, stars, prefab, tamed, raven, by == killer);
         } catch (System.Exception e) { PatchGuard.Fail("CreatureDeathPatch", e); } }
     }
 
@@ -579,6 +746,8 @@ namespace HuginWhispers
             }
 #if RAVEN_ITEM
             Senses.HitFoeAt = Time.time;
+            if (__instance.m_faction != Character.Faction.AnimalsVeg && !__instance.IsTamed()) Senses.HitMonsterAt = Time.time;
+            if (!__instance.IsTamed()) ErrandHow.OnHit(__instance, hit); // (an errand's way of killing: a bow, a sneak attack…)
 #endif
             switch (hit.m_skill) // what the blow came from: arrows and bolts, or the staffs
             {
@@ -597,16 +766,18 @@ namespace HuginWhispers
             if (__instance != Player.m_localPlayer || hit == null || __instance.IsDead()) return;
             if (hit.m_hitType == HitData.HitType.Fall) Diary.Add(Ev.Fall, "", 0);
 #if RAVEN_ITEM
+            if (hit.m_hitType == HitData.HitType.Tree) Nicks.OnTreeHit(Player.m_localPlayer); // a log on the head
             Memory.Hurt(hit.GetTotalDamage());
 #endif
             Character attacker = hit.GetAttacker();
             bool creature = attacker != null && !(attacker is Player);
 #if RAVEN_ITEM
-            if (attacker is Player && attacker != __instance) AboutTalk.HitYou((Player)attacker); // and who hit you
+            if (attacker is Player && attacker != __instance) { AboutTalk.HitYou((Player)attacker); People.OnHit((Player)attacker); } // and who hit you (your ravens remember it)
 #endif
             if (creature && attacker.m_faction != Character.Faction.AnimalsVeg) Diary.HurtBy(attacker);
 #if RAVEN_ITEM
             if (creature) Senses.HurtByFoeAt = Time.time;
+            if (creature && attacker.m_faction != Character.Faction.AnimalsVeg) FightJudge.Hurt(Player.m_localPlayer, attacker, hit.GetTotalDamage());
 #endif
 #if RAVEN_ITEM
             if (creature) HuginChores.OnHurt(hit.GetTotalDamage());
@@ -706,13 +877,28 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Player), "EatFood")]
     internal static class EatPatch
     {
-        private static void Postfix(Player __instance, bool __result) { if (__result && __instance == Player.m_localPlayer) Diary.Add(Ev.Eat, "", 0); }
+        private static void Postfix(Player __instance, bool __result)
+        {
+            if (!__result || __instance != Player.m_localPlayer) return;
+            Diary.Add(Ev.Eat, "", 0);
+#if RAVEN_ITEM
+            PerkFx.OnEat(); // «Ласун», «Ненажера»
+#endif
+        }
     }
 
     [HarmonyPatch(typeof(TeleportWorld), "Teleport")]
     internal static class PortalPatch
     {
-        private static void Postfix(Player player) { if (player == Player.m_localPlayer) Diary.Add(Ev.Portal, "", 0); }
+        // only a real crossing: the game calls this on every step into the portal, also when it refuses (ore in the bag, no
+        // other end) — then nothing is teleporting; and once for one crossing
+        private static float _at = -100f;
+        private static void Postfix(Player player)
+        {
+            if (player != Player.m_localPlayer || !player.IsTeleporting() || Time.time - _at < 5f) return;
+            _at = Time.time;
+            Diary.Add(Ev.Portal, "", 0);
+        }
     }
 
     [HarmonyPatch(typeof(Player), "SetSleeping")]
@@ -806,6 +992,11 @@ namespace HuginWhispers
         {
             if (!__result || __instance != Player.m_localPlayer || item == null) return;
             if (item.m_shared.m_food <= 0f && item.m_shared.m_consumeStatusEffect != null) Diary.Add(Ev.Potion, item.m_dropPrefab != null ? item.m_dropPrefab.name : "", 0);
+            string n = item.m_dropPrefab != null ? item.m_dropPrefab.name : "";
+            if (n.IndexOf("Mead", System.StringComparison.OrdinalIgnoreCase) >= 0) Combat.Drank(); // (the ravens on you: a twist of the head)
+#if RAVEN_ITEM
+            if (n.StartsWith("Mead")) Mead.Drank(__instance); // a raven sips it now and then: tipsy for a minute
+#endif
         }
     }
 
@@ -821,6 +1012,9 @@ namespace HuginWhispers
             {
                 if (string.IsNullOrEmpty(text) || Player.m_localPlayer == null) return;
                 if (text == "$msg_noteleport") Diary.Add(Ev.PortalBlocked, "", 0);
+#if RAVEN_ITEM
+                else if (text == "$msg_noroom" || text == "$inventory_full") Nicks.OnNoRoom(Player.m_localPlayer);
+#endif
                 else if (text.EndsWith(Tamed, StringComparison.Ordinal))
                 {
                     string name = text.Substring(0, text.Length - Tamed.Length).Trim();
@@ -841,12 +1035,27 @@ namespace HuginWhispers
             __state = false;
             if (!Mine.Me(user) || item == null || item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Trophy || __instance.HaveAttachment()) return;
             try { __state = CanAttach == null || (bool)CanAttach.Invoke(__instance, new object[] { item }); } catch { __state = false; }
+            _hung = item.m_dropPrefab != null ? item.m_dropPrefab.name : "";
         }
+        private static string _hung = ""; // (the kind of trophy going up now)
         private static void Postfix(ItemStand __instance, Humanoid user, bool __state, bool __result)
         {
             if (!__state || !__result) return;
+#if RAVEN_ITEM
+            // Odin's errand counts each stand once while it lasts, also one that held a trophy before (your old trophy
+            // wall); the ravens' word below only for a stand never hung on before
+            try { Errands.OnEvent(Ev.TrophyHang, StandId(__instance) + "|" + _hung, 0); } catch (System.Exception e) { PatchGuard.Fail("TrophyHangPatch errand", e); }
+#endif
             try { if (!FirstOnStand(user as Player, __instance)) return; } catch (System.Exception e) { PatchGuard.Fail("TrophyHangPatch", e); }
-            Diary.Add(Ev.TrophyHang, "", 0);
+            Diary.Add(Ev.TrophyHang, "", 0); // (no stand: the errand above has counted it already)
+        }
+
+        private static string StandId(ItemStand stand)
+        {
+            ZNetView nv = stand != null ? stand.GetComponent<ZNetView>() : null;
+            if (nv == null || !nv.IsValid()) return "";
+            ZDOID id = nv.GetZDO().m_uid;
+            return id.UserID + ":" + id.ID;
         }
 
         // the stands this character has hung a trophy on (kept in the character: the last StandsKept of them)

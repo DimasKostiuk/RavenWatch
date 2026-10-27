@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: В'язана шапка
+note: Тепла, з помпоном і сніжинками. Чиясь бабуся в'язала онукові, а дісталася ворону. Онук досі шукає.
+use: gear
+id: viazana_shapka
+slot: head
+part asset/Шапки/HatKnitted pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatKnitted (Шапки)

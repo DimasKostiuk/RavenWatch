@@ -13,7 +13,11 @@ namespace HuginWhispers
     // bubble growing much. Others' bubbles: only within 30 m, a little smaller, melting away towards the edge.
     internal sealed class TalkBubble : MonoBehaviour
     {
-        internal struct Line { public bool Munin; public string Text; }
+        internal struct Line
+        {
+            public bool Munin; public string Text; public string Name, To; // Name/To: who speaks to whom, when the kinds alone do not tell (a guest on a perch)
+            public GameObject Bird, ToBird; public Player Owner;          // ravens on several perches (PerchCrowd): the speaker, whom it speaks to, its owner when here (not sent)
+        }
 
         private const float Width = 450f;           // px at 1080p
         private const float Pic = 34f, PicSmall = 22f, PadL = 11f, Gap = 11f, PadR = 18f, PadV = 9f;
@@ -22,6 +26,9 @@ namespace HuginWhispers
         private static readonly Dictionary<Player, TalkBubble> Shown = new Dictionary<Player, TalkBubble>();
 
         // how long a line is the newest before the next one starts "thinking"
+        // where a line is cut: a share of it from its own words (the same in every game)
+        private static float CutShare(string text) { int h = 0; foreach (char c in text ?? "") h = h * 31 + c; return Mathf.Lerp(CutFrom, CutTo, (h & 0xFFFF) / 65535f); }
+
         internal static float Pace(string text) { return Mathf.Clamp(RavenSpeech.ReadSeconds(text) * 0.65f, 3f, 10f); }
         // after the last line the talk closes: that one is kept long enough to be read through, not just a pace
         internal static float After(string text, bool last, float mul) { float pace = Pace(text) * mul; return last ? Mathf.Max(pace + 2f, RavenSpeech.ReadSeconds(text) * mul) : pace; }
@@ -48,8 +55,52 @@ namespace HuginWhispers
             ShownPerch[v] = b;
         }
 
-        private Vector3 Anchor { get { return _perch != null ? _perch.TalkPoint() : _owner.transform.position + Vector3.up * 2.55f; } }
-        private Vector3 Where { get { return _perch != null ? _perch.transform.position : _owner.transform.position; } }
+        // ---- a talk of ravens on up to three perches near each other (PerchCrowd): over the middle of them all, every
+        // perch in it counts as talking; each line's bird opens its beak, the others look at it
+        private List<GameObject> _crowd;
+        private List<PerchView> _crowdPerches;
+
+        internal static void PlayCrowd(List<PerchView> perches, List<Line> lines, bool mine)
+        {
+            if (perches == null || perches.Count == 0 || lines == null || lines.Count == 0) return;
+            foreach (PerchView v in perches) { TalkBubble old; if (v != null && ShownPerch.TryGetValue(v, out old) && old != null) Destroy(old.gameObject); }
+            GameObject go = new GameObject("RavenWatch_PerchTalk", typeof(RectTransform));
+            go.transform.SetParent(RavenSpeech.Host.transform, false);
+            TalkBubble b = go.AddComponent<TalkBubble>();
+            b._perch = perches[0];
+            b._crowd = new List<GameObject>();
+            b._crowdPerches = new List<PerchView>(perches);
+            foreach (Line l in lines) { if (l.Bird != null && !b._crowd.Contains(l.Bird)) b._crowd.Add(l.Bird); if (l.ToBird != null && !b._crowd.Contains(l.ToBird)) b._crowd.Add(l.ToBird); }
+            b.Build(null, lines, mine);
+            foreach (PerchView v in perches) if (v != null) ShownPerch[v] = b;
+        }
+
+        private Vector3 CrowdPoint()
+        {
+            Vector3 sum = Vector3.zero; float top = float.MinValue; int n = 0;
+            foreach (GameObject g in _crowd) if (g != null) { Vector3 p = g.transform.position; sum += p; top = Mathf.Max(top, p.y); n++; }
+            if (n == 0) return _perch.TalkPoint();
+            Vector3 c = sum / n; c.y = top + 0.6f;
+            return c;
+        }
+
+        private Vector3 Anchor { get { return _crowd != null ? CrowdPoint() : _perch != null ? _perch.TalkPoint() : _owner.transform.position + Vector3.up * 2.55f; } }
+        private Vector3 Where { get { return _crowd != null ? CrowdPoint() : _perch != null ? _perch.transform.position : _owner.transform.position; } }
+
+        // the bird of a crowd line, else the perch's bird of that kind, else the shoulder's
+        private GameObject BirdOf(Line l) { return l.Bird != null ? l.Bird : _perch != null ? _perch.Bird(l.Munin) : Shoulder.ModelOf(_owner, l.Munin); }
+
+        private void CrowdSpeaking(Line l, float seconds)
+        {
+            PerchLife a = l.Bird != null ? l.Bird.GetComponent<PerchLife>() : null;
+            if (a != null) { a.Speak(seconds); if (l.ToBird != null) a.Listen(l.ToBird.transform, seconds); }
+            foreach (GameObject g in _crowd)
+            {
+                if (g == null || g == l.Bird) continue;
+                PerchLife o = g.GetComponent<PerchLife>();
+                if (o != null && l.Bird != null) o.Listen(l.Bird.transform, seconds);
+            }
+        }
 
         internal static void Play(Player owner, List<Line> lines, bool local)
         {
@@ -85,6 +136,15 @@ namespace HuginWhispers
         private bool _thinking;
         private float _height = 40f;
         private float _lookAt;        // when to look again whether both are still on the shoulder
+        // A line that breaks in (its text starts with CutMark, an invisible mark that travels with the talk to the other
+        // games): the line before it stops mid-word — its voice dies, its words end on a dash — and this one comes at
+        // once, no thinking dots. Where it cuts: the same share of the line in every game (from its words).
+        internal const char CutMark = '\u200B';
+        internal static bool Cuts(Line l) { return l.Text != null && l.Text.Length > 0 && l.Text[0] == CutMark; }
+        internal static float CutFrom = 0.5f, CutTo = 0.72f;
+        private float _cutAt = -1f;
+        private GameObject _cutVoice;
+        private Row _cutRow;
         private int[] _voice;         // each line's sound, asked all at once when the talk starts (RavenVoice: the next is made while one plays)
         private AudioClip _clip;      // the sound of the line about to be said
 
@@ -92,7 +152,7 @@ namespace HuginWhispers
         {
             _owner = owner; _local = local; _lines = lines;
             _voice = new int[lines.Count];
-            for (int i = 0; i < lines.Count; i++) _voice[i] = RavenVoice.Ahead(lines[i].Munin, RavenVoice.VoiceOf(owner, lines[i].Munin, null), lines[i].Text);
+            for (int i = 0; i < lines.Count; i++) _voice[i] = RavenVoice.Ahead(lines[i].Munin, RavenVoice.VoiceOf(lines[i].Bird != null ? lines[i].Owner : owner, lines[i].Munin, lines[i].Bird), lines[i].Text.TrimStart(CutMark));
 
             _rt = (RectTransform)transform;
             _rt.anchorMin = _rt.anchorMax = Vector2.zero;
@@ -178,7 +238,7 @@ namespace HuginWhispers
             return r;
         }
 
-        private Row AddRow(bool munin, string text)
+        private Row AddRow(bool munin, string text, string name = null)
         {
             Row r = Band(munin, "row", 0.34f);
             float tw = Width - PadL - Pic - Gap - PadR;
@@ -187,7 +247,7 @@ namespace HuginWhispers
             body.fontSize = 18f; body.richText = true; body.textWrappingMode = TextWrappingModes.Normal; body.raycastTarget = false;
             body.alignment = TextAlignmentOptions.MidlineLeft;
             body.color = new Color(0.90f, 0.91f, 0.93f, 1f);
-            string full = "<b><color=" + (munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + (_local || _owner == null ? Plugin.RavenName(munin) : Nicks.Name(_owner, munin)) + ":</color></b> " + RavenSpeech.MarkNames(text); // another player's two: by their nicknames
+            string full = "<b><color=" + (munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + (name ?? (_local || _owner == null ? Plugin.RavenName(munin) : Nicks.Name(_owner, munin))) + ":</color></b> " + RavenSpeech.MarkNames(text); // another player's two: by their nicknames
             body.text = full; r.Body = body;
             float th = body.GetPreferredValues(full, tw, 0f).y;
             r.H = Mathf.Max(Pic + 2f * PadV, th + 2f * PadV);
@@ -237,19 +297,24 @@ namespace HuginWhispers
         {
             Line l = _lines[_next];
             Drop(_typing); _typing = null;
-            Row row = AddRow(l.Munin, l.Text);
+            Row row = AddRow(l.Munin, l.Text, l.Name);
             ToChat(l);
             _thinking = false;
             _next++;
             _at = Time.time + After(l.Text, _next >= _lines.Count, 1f);
             if (_clip != null) // its voice, from the raven saying it; the next line only after it is over
             {
-                GameObject who = _perch != null ? _perch.Bird(l.Munin) : Shoulder.ModelOf(_owner, l.Munin);
+                GameObject who = BirdOf(l);
                 if (who == null && _owner != null) who = _owner.gameObject;
-                if (who != null) { WordReveal.Begin(row.Body, _clip.length); RavenVoice.Play(who, _clip, l.Munin); _at = Mathf.Max(_at, Time.time + _clip.length + 0.4f); }
+                float len = _clip.length;
+                GameObject voice = null;
+                if (who != null) { WordReveal.Begin(row.Body, len); voice = RavenVoice.Play(who, _clip, l.Munin); _at = Mathf.Max(_at, Time.time + len + 0.4f); }
                 else Destroy(_clip);
                 _clip = null;
+                if (voice != null && _next < _lines.Count && Cuts(_lines[_next])) { _cutAt = Time.time + len * CutShare(l.Text); _cutVoice = voice; _cutRow = row; }
             }
+            else if (_next < _lines.Count && Cuts(_lines[_next])) { _cutAt = Time.time + Pace(l.Text) * CutShare(l.Text); _cutVoice = null; _cutRow = null; } // (no voice: the next breaks in early)
+            if (_crowd != null) { CrowdSpeaking(l, Pace(l.Text)); return; } // on several perches: the speaker's beak, everyone's look at it
             if (_perch != null) { _perch.Speaking(l.Munin, Pace(l.Text)); return; } // on a perch: the beak and the other one's look
             // the raven itself opens its beak (on whoever's shoulder it sits)
             GameObject model = Shoulder.ModelOf(_owner, l.Munin);
@@ -267,8 +332,8 @@ namespace HuginWhispers
             if (chat == null || me == null || (_owner == null && _perch == null)) return;
             if ((!_local || _perch != null) && Vector3.Distance(me.transform.position, Where) > RavenTalk.HearRange) return;
             bool named = !_local && _perch == null && _owner != null; // another player's two: by their nicknames
-            string who = "<color=" + (l.Munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + (named ? Nicks.Name(_owner, l.Munin) : Plugin.RavenName(l.Munin)) + "</color>"
-                + "<color=#8A93A0> → " + (named ? Nicks.Name(_owner, !l.Munin) : Plugin.RavenName(!l.Munin)) + (_perch != null ? (_perch.GetComponent<NestView>() != null ? Lang.T(" · у гнізді") : Lang.T(" · на жердині")) : _local ? "" : " · " + _owner.GetPlayerName()) + "</color>";
+            string who = "<color=" + (l.Munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + (l.Name ?? (named ? Nicks.Name(_owner, l.Munin) : Plugin.RavenName(l.Munin))) + "</color>"
+                + "<color=#8A93A0> → " + (l.To ?? (named ? Nicks.Name(_owner, !l.Munin) : Plugin.RavenName(!l.Munin))) + (_perch != null ? (_perch.GetComponent<NestView>() != null ? Lang.T(" · у гнізді") : Lang.T(" · на жердині")) : _local ? "" : " · " + _owner.GetPlayerName()) + "</color>";
             try
             {
                 chat.AddString(who, l.Text, Talker.Type.Normal, false);
@@ -285,8 +350,16 @@ namespace HuginWhispers
             if (!_ending && Time.time >= _lookAt && (_local || _perch != null))
             {
                 _lookAt = Time.time + 0.25f;
-                bool gone = _perch != null ? (_perch.Bird(false) == null || _perch.Bird(true) == null) : (!Shoulder.Present(_owner, false) || !Shoulder.Present(_owner, true));
+                bool gone = _crowd != null ? CrowdGone() : _perch != null ? (_perch.Bird(false) == null || _perch.Bird(true) == null) : (!Shoulder.Present(_owner, false) || !Shoulder.Present(_owner, true));
                 if (gone) { _ending = true; _next = _lines.Count; }
+            }
+            if (!_ending && _cutAt > 0f && Time.time >= _cutAt) // broken into: this one stops, the next comes at once
+            {
+                _cutAt = -1f;
+                RavenVoice.Cut(_cutVoice); _cutVoice = null;
+                if (_cutRow != null) WordReveal.Stop(_cutRow.Body);
+                _cutRow = null;
+                _thinking = true; _at = Time.time;
             }
             if (!_ending && Time.time >= _at)
             {
@@ -391,7 +464,7 @@ namespace HuginWhispers
                 else { RavenVoice.Drop(_voice[_next]); _voice[_next] = -1; }
             }
             // another raven is speaking (a card, another talk): this line waits its turn a while, then goes without its voice
-            if (_clip != null && RavenVoice.BusyNear(SpeakerAt(_lines[_next].Munin)))
+            if (_clip != null && RavenVoice.BusyNear(SpeakerAt(_lines[_next])))
             {
                 if (Time.time < _at + RavenVoice.MaxWait + RavenVoice.TurnWait) return true;
                 Destroy(_clip); _clip = null;
@@ -399,9 +472,27 @@ namespace HuginWhispers
             return false;
         }
 
-        private Vector3 SpeakerAt(bool munin)
+        // one of the crowd flew off (its bird is gone from its perch): the talk ends
+        private bool CrowdGone()
         {
-            GameObject who = _perch != null ? _perch.Bird(munin) : Shoulder.ModelOf(_owner, munin);
+            foreach (GameObject g in _crowd)
+            {
+                if (g == null) return true;
+                bool sits = false; // still on a seat of one of the perches (a bird flying off is handed to its flight, not destroyed)
+                foreach (PerchView v in _crowdPerches)
+                {
+                    if (v == null) continue;
+                    for (int i = 0; i < v.Count && !sits; i++) if (v.BirdAt(i) == g) sits = true;
+                    if (sits) break;
+                }
+                if (!sits) return true;
+            }
+            return false;
+        }
+
+        private Vector3 SpeakerAt(Line l)
+        {
+            GameObject who = BirdOf(l);
             return who != null ? who.transform.position : Where;
         }
 

@@ -104,7 +104,7 @@ namespace HuginWhispers
             ItemDrop.ItemData.SharedData sh = drop.m_itemData.m_shared = Copy(drop.m_itemData.m_shared);
             WsModel m = d.Model;
             sh.m_name = Lang.W(m.Name);
-            sh.m_description = Lang.WordF("rw_ws_" + d.Prefab + "_desc", () => d.Gear ? RavenGear.Description(m) : Lang.T(m.Note ?? ""));
+            sh.m_description = Lang.WordF("rw_ws_" + d.Prefab + "_desc", () => d.Gear ? RavenGear.Description(m) : Lang.T(m.Note ?? "") + SoldLine(m));
             sh.m_itemType = d.Gear ? ItemDrop.ItemData.ItemType.Misc : ItemDrop.ItemData.ItemType.Material;
             sh.m_maxStackSize = d.Gear ? 1 : m.Stack > 0 ? m.Stack : 20;
             sh.m_weight = m.Weight > 0f ? m.Weight : 0.5f;
@@ -117,6 +117,22 @@ namespace HuginWhispers
             foreach (Light l in go.GetComponentsInChildren<Light>(true)) UnityEngine.Object.DestroyImmediate(l.gameObject == go ? (UnityEngine.Object)l : l.gameObject);
             d.Built = go;
             return go;
+        }
+
+        // the names of the goods Haldor sells (the game's item names)
+        internal static void SoldNames(List<string> into)
+        {
+            foreach (Def d in Defs)
+                if (!d.Replace && d.Model.Sell > 0 && d.Built != null) into.Add(d.Built.GetComponent<ItemDrop>().m_itemData.m_shared.m_name);
+        }
+
+        // under a sold item's words: who sells it and from which boss on (the boss by the game's own name)
+        private static readonly string[] BossNames = { "$enemy_eikthyr", "$enemy_gdking", "$enemy_bonemass", "$enemy_dragon", "$enemy_goblinking", "$enemy_seekerqueen", "$enemy_fader" }; // (as Stage.BossKeys)
+        private static string SoldLine(WsModel m)
+        {
+            if (m.Sell <= 0) return "";
+            int i = Array.IndexOf(Stage.BossKeys, m.SellAfter);
+            return i >= 0 && i < BossNames.Length ? Lang.F("\n\nПродає Хальдор, щойно переможено: {0}.", Lang.Game(BossNames[i])) : Lang.T("\n\nПродає Хальдор.");
         }
 
         // its own copy of the shared data (the source item's stays as it was)
@@ -177,7 +193,22 @@ namespace HuginWhispers
                 if (g == null || g == d.Dressed) continue;
                 try { Dress(g, d.Model); d.Dressed = g; d.IconDone = false; }
                 catch (Exception e) { Log(d.Model.Name + ": " + e.Message); }
+                // the photo at once, not on the player's spawn: an item made in the world before that (lying near
+                // the spawn, loaded with its zone) copies the prefab's look and kept the thunderstone's icon
+                try { Sprite s = d.Dressed == g ? IconPhotos.Get(IconPhotos.KeyOf(d.Model)) : null; if (s != null && g.GetComponent<ItemDrop>() != null) RavenItem.UseIcon(g, s); }
+                catch (Exception e) { Log("icon " + d.Model.Name + ": " + e.Message); }
             }
+        }
+
+        // an item holding its own copy of the look (made in the world, or copied by another mod) shows the prefab's icon
+        internal static void FixIcon(ItemDrop.ItemData item)
+        {
+            GameObject pf = item.m_dropPrefab;
+            if (pf == null || !pf.name.StartsWith(RavenGear.PrefabStart, StringComparison.Ordinal)) return;
+            ItemDrop drop = pf.GetComponent<ItemDrop>();
+            if (drop == null || drop.m_itemData.m_shared == item.m_shared) return;
+            Sprite[] icons = drop.m_itemData.m_shared.m_icons;
+            if (icons != null && icons.Length > 0 && item.m_shared.m_icons != icons) item.m_shared.m_icons = icons;
         }
 
         // the item's own shape hidden, the model in its place: centred where the item lies, a box round it to roll on
@@ -189,6 +220,7 @@ namespace HuginWhispers
             foreach (LODGroup lg in g.GetComponentsInChildren<LODGroup>(true)) lg.enabled = false;
             GameObject look = new GameObject(LookName);
             look.transform.SetParent(g.transform, false);
+            Glint(g);
             foreach (WsPart p in m.Parts) if (!WsFiles.Special(p.Src)) Perches.Part(look.transform, p, false);
             foreach (Transform t in look.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = g.layer;
             // where the model is, in the item's own frame (from the meshes: the prefab is not in the world, its bounds are empty)
@@ -215,7 +247,68 @@ namespace HuginWhispers
             box.size = new Vector3(Mathf.Max(0.05f, b.size.x), Mathf.Max(0.05f, b.size.y), Mathf.Max(0.05f, b.size.z));
         }
 
+        // Lying on the ground, ours sparkle a little — gold specks rising, a faint warm light close by — or a thing in
+        // the grass is hard to find (the thunderstone's own sparks are taken off them in Make). Only an item in the
+        // world shows it: the bag and the icons never build the item's object.
+        private const string GlintName = "RavenWatch_Glint";
+        private static void Glint(GameObject g)
+        {
+            if (g.transform.Find(GlintName) != null) return;
+            foreach (ParticleSystem own in g.GetComponentsInChildren<ParticleSystem>(true)) return; // (one of its own already: the item kept its look)
+            GameObject o = new GameObject(GlintName);
+            o.layer = g.layer;
+            o.transform.SetParent(g.transform, false);
+            ParticleSystem ps = o.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true;
+            main.playOnAwake = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.8f, 1.6f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.03f, 0.12f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.07f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.82f, 0.4f, 1f), new Color(1f, 0.97f, 0.75f, 1f));
+            main.gravityModifier = -0.04f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 16;
+            ParticleSystem.EmissionModule em = ps.emission;
+            em.rateOverTime = 5f;
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Sphere;
+            sh.radius = 0.12f;
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient fade = new Gradient();
+            fade.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(0f, 1f) });
+            col.color = new ParticleSystem.MinMaxGradient(fade);
+            ParticleSystemRenderer pr = o.GetComponent<ParticleSystemRenderer>();
+            pr.material = FxLib.Glow(true);
+            pr.renderMode = ParticleSystemRenderMode.Billboard;
+            pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            pr.receiveShadows = false;
+            ps.Play();
+            Light l = o.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = new Color(1f, 0.8f, 0.45f);
+            l.range = 1.3f;
+            l.intensity = 0.6f;
+            l.shadows = LightShadows.None;
+            LightLod lod = o.AddComponent<LightLod>();
+            lod.m_lightDistance = 20f; lod.m_shadowLod = false;
+        }
+
         // ---------------------------------------------------------------- icons and recipes (once the world is up)
+
+        // what Haldor sells of them now: (the item, its price) for those whose key this player has (Stage.Has: the world's or his own)
+        internal static List<KeyValuePair<GameObject, int>> ForSale(Player p)
+        {
+            List<KeyValuePair<GameObject, int>> l = new List<KeyValuePair<GameObject, int>>();
+            Load();
+            foreach (Def d in Defs)
+                if (!d.Replace && d.Built != null && d.Model.Sell > 0 && (d.Model.SellAfter.Length == 0 || Stage.Has(p, d.Model.SellAfter)))
+                    l.Add(new KeyValuePair<GameObject, int>(d.Built, d.Model.Sell));
+            return l;
+        }
 
         internal static void Spawned()
         {
@@ -258,7 +351,7 @@ namespace HuginWhispers
             if (db == null || db.m_recipes == null || ZNetScene.instance == null) return;
             foreach (Def d in Defs)
             {
-                if (d.Replace || d.Built == null) continue;
+                if (d.Replace || d.Built == null || d.Model.Sell > 0) continue; // (Haldor sells it: made nowhere)
                 string name = "Recipe_" + d.Prefab;
                 if (db.m_recipes.Exists(x => x != null && x.name == name)) continue;
                 string st = d.Gear ? RavenGear.TableOf(d.Model) : string.IsNullOrEmpty(d.Model.Station) ? "piece_workbench" : d.Model.Station;
@@ -300,6 +393,12 @@ namespace HuginWhispers
         private static void Postfix() { try { WsItems.DressAll(); } catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Workshop items: " + e); } }
     }
 
+    [HarmonyPatch(typeof(ItemDrop.ItemData), "GetIcon")]
+    internal static class WsItemsIconPatch
+    {
+        private static void Prefix(ItemDrop.ItemData __instance) { try { WsItems.FixIcon(__instance); } catch { } }
+    }
+
     [HarmonyPatch(typeof(Player), "OnSpawned")]
     internal static class WsItemsSpawnPatch
     {
@@ -307,6 +406,33 @@ namespace HuginWhispers
         {
             if (__instance != Player.m_localPlayer) return;
             try { WsItems.Spawned(); } catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Workshop items: " + e); }
+        }
+    }
+
+    // Haldor's goods do not hide what needs them: while the game looks which recipes and pieces you know, they count as
+    // known — so a perch or a raven's thing shows up (grey, the good's icon in its cost) as soon as you have held the
+    // rest of its materials and know its station, before you ever bought the good. Only for that look: the good itself
+    // stays unknown until you hold it (its «нова знахідка» still comes).
+    [HarmonyPatch(typeof(Player), "UpdateKnownRecipesList")]
+    internal static class WsSoldKnownPatch
+    {
+        private static readonly FieldInfo Known = AccessTools.Field(typeof(Player), "m_knownMaterial");
+        private static readonly List<string> Sold = new List<string>();
+        private static void Prefix(Player __instance, out List<string> __state)
+        {
+            __state = null;
+            HashSet<string> known = Known != null ? Known.GetValue(__instance) as HashSet<string> : null;
+            if (known == null) return;
+            Sold.Clear();
+            WsItems.SoldNames(Sold);
+            foreach (string n in Sold)
+                if (known.Add(n)) { if (__state == null) __state = new List<string>(); __state.Add(n); }
+        }
+        private static void Finalizer(Player __instance, List<string> __state) // (a finalizer: taken back even if the look threw)
+        {
+            if (__state == null) return;
+            HashSet<string> known = Known.GetValue(__instance) as HashSet<string>;
+            if (known != null) foreach (string n in __state) known.Remove(n);
         }
     }
 }

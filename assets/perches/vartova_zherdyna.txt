@@ -1,0 +1,15 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Вартова жердина
+note: Кований стовп із ліхтарем-кліткою на ланцюгу: поки в клітці горить вогонь, ворон на руці стереже все довкола
+use: guard
+id: vartova_zherdyna
+cost: Wood:10 Iron:6 Bronze:4 RavenWatch_item_dvergrski_skoby:2
+perday: 60
+station: forge
+pose: -50 90 -45 16 -50 90 -45 16 0 -27 -27
+stand: 0 0 0 0 0 0 0 0 0 -27 -27
+part asset/Жердини/PerchGallows pos 0 1.4247 0 rot 0 0 0 scale 2.35 2.9918 2.35  # Вартова жердина (Meshy, колишній «Вартовий ліхтар»), витягнута до 2,85 м
+part @seat pos -0.19 2.665 0 rot 0 0 0 scale 1 1 1  # місце ворона: на руці (верх руки 2,65 м)
+part @seat pos 0.28 2.655 0 rot 0 0 0 scale 1 1 1  # місце ворона: на руці
+part fx/piece_walltorch pos 0.635 1.5 0 rot 0 0 0 scale 0.45 0.45 0.45  # полум'я в клітці ліхтаря (вогонь настінного смолоскипа)
+part @light pos 0.635 1.6 0 rot 0 0 0 scale 8 1.6 0.2 tint FFB050  # тепле світло ліхтаря (дальність 8 м, мерехтить)

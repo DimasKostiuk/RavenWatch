@@ -677,6 +677,22 @@ namespace HuginWhispers
         }
     }
 
+    // The small "more below" arrow of a scrolling view (RavenBook.ScrollArrow): shown only while there is more under
+    // the view's bottom edge, gone once the view is scrolled to its end.
+    internal sealed class BookScrollArrow : MonoBehaviour
+    {
+        internal UnityEngine.UI.ScrollRect Scroll;
+        internal GameObject Arrow;
+
+        private void LateUpdate()
+        {
+            if (Scroll == null || Arrow == null || Scroll.content == null || Scroll.viewport == null) return;
+            float below = Scroll.content.rect.height - Scroll.viewport.rect.height - Scroll.content.anchoredPosition.y;
+            bool more = below > 2f;
+            if (Arrow.activeSelf != more) Arrow.SetActive(more);
+        }
+    }
+
     // A brush-stroke bar: a faint line along the bottom and over it the stroke, as long as the value. It paints itself
     // in when the page opens (from nothing to the value) and follows the value as it changes, smoothly.
     internal sealed class BookBar : MonoBehaviour

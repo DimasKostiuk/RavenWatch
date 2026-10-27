@@ -3,7 +3,7 @@ name: Холодний медальйон
 note: У сріблі горить крижаний вогонь із серця гори. Ворону не холодно й не мокро, а тому, кого він дзьобне, — дуже. Не лизати.
 use: gear
 id: kholodnyi_medalion
-cost: Silver:4 FreezeGland:3 Crystal:2 DragonTear:1
+cost: Silver:4 FreezeGland:3 Crystal:2 DragonTear:1 RavenWatch_item_chornylo_vishchuna:1
 station: RavenWatch_table_prosunytyi_stil_vorona
 slot: neck
 follow: body

@@ -102,6 +102,10 @@ namespace HuginWhispers
         // the rune effects (Бальдр: auras, Геймдаль: trails): the first draft, to be tuned in «Фарби» → «Ефекти»
         private static readonly string[] Builtin =
         {
+            // a breed's own (Breeds): never a rune's
+            "id: br_zori\nname: Зорі породи\nbase: game:FireFlies\nkind: aura\nbone: back\nrune: no\ndesc: довкола ворона мерехтять дрібні зорі\nat 0 0 0\ntint DDEBFF\nsize 0.25\namount 0.35\nspeed 0.25\nlife 0.6\n",
+            "id: br_imla\nname: Імла породи\nbase: ours:smoke\nkind: aura\nbone: back\nrune: no\ndesc: від ворона тягнеться бліда імла\nat 0 0 0\ntint C8E4EC\nsize 0.8\namount 0.7\nspeed 0.35\nlife 1.2\n",
+            "id: br_zhar\nname: Жар породи\nbase: game:bow_projectile_fire\nkind: aura\nbone: back\nrune: no\ndesc: з пір'я сиплються іскри\nat 0 0 0\ntint FF6A20\nsize 0.35\namount 0.45\nspeed 0.8\nlife 0.8\n",
             "id: b_zharyny\nname: Жарини\nbase: game:bow_projectile_fire\nkind: aura\nbone: back\nrune: yes\ndesc: довкола ворона кружляють жарини\nat 0 0 0\ntint FF7A20\nsize 0.6\namount 0.8\nspeed 1\nlife 1\n",
             "id: b_iskry\nname: Іскри Тора\nbase: game:staff_lightning_projectile\nkind: aura\nbone: back\nrune: yes\ndesc: по пір'ю бігають криваво-червоні іскри\nat 0 0 0\ntint 720007\nsize 1.281\namount 0.564\nspeed 0.37\nlife 1.762\n",
             "id: b_inii\nname: Подих інею\nbase: game:dragon_ice_projectile\nkind: aura\nbone: back\nrune: yes\ndesc: від ворона тягне морозом\nat 0 0 0\ntint C8E8FF\nsize 0.5\namount 0.7\nspeed 1\nlife 1\n",
@@ -126,8 +130,9 @@ namespace HuginWhispers
         // ours: built in, and (while files are read) the saved ones over them
         internal static List<RavenFxDef> All()
         {
-            if (_all != null && _allAt == Version) return _all;
-            _allAt = Version;
+            int at = Version * 2 + (RavenLooks.FromFiles ? 1 : 0); // (the files come and go with admin tuning)
+            if (_all != null && _allAt == at) return _all;
+            _allAt = at;
             Dictionary<string, RavenFxDef> by = new Dictionary<string, RavenFxDef>();
             foreach (string s in Builtin)
             {
@@ -391,6 +396,9 @@ namespace HuginWhispers
         }
 
         private static Material _dotMat, _ribbonMat;
+
+        // the same glow for other effects of ours (the в'язь's, BindFx): a round spark, or a band for a line
+        internal static Material Glow(bool dot) { return dot ? GlowMat(ref _dotMat, true) : GlowMat(ref _ribbonMat, false); }
 
         // a soft glow picture on the sprite shader: a round spark, or a band soft on both edges (across the ribbon)
         private static Material GlowMat(ref Material m, bool dot)

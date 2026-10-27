@@ -3,7 +3,7 @@ name: Окута жердина
 note: Дві тесані колоди, окуті залізом, і перекладина між ними: міцніша за просту жердину
 use: perch
 id: zalizna_zherdyna
-cost: Wood:10 Iron:4 Bronze:2
+cost: Wood:10 Iron:4 Bronze:2 RavenWatch_item_dvergrski_skoby:2
 perday: 60
 station: forge
 pose: -50 90 -45 16 -50 90 -45 16 0 -15 -10

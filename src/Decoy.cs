@@ -85,6 +85,7 @@ namespace HuginWhispers
             Character main = found.Count > 0 ? found[0] : null;
             if (main == null) { why = note ?? Lang.T("Нема кого обманювати — жодного ворога поблизу"); return null; }
             if (main.IsBoss()) { why = Lang.T("Цей на таке не купиться — боса не обдуриш"); return null; }
+            if (IsLured(main.GetZDOID())) { why = Lang.T("Його вже дражнить чужий Хугін"); return null; } // (another player's: ours is never out twice)
             if (main.GetComponent<MonsterAI>() == null) { why = Lang.T("Цей і так не б'ється — нема кого відволікати"); return null; }
             List<Character> list = new List<Character> { main };
             int more = level >= GangTwoAt ? 2 : level >= GangOneAt ? 1 : 0;
@@ -92,7 +93,7 @@ namespace HuginWhispers
             {
                 List<Character> near = new List<Character>();
                 foreach (Character c in Character.GetAllCharacters())
-                    if (c != main && Strike.Prey(p, c) && !c.IsBoss() && c.GetComponent<MonsterAI>() != null && Vector3.Distance(c.transform.position, main.transform.position) < GangReach) near.Add(c);
+                    if (c != main && Strike.Prey(p, c) && !c.IsBoss() && c.GetComponent<MonsterAI>() != null && !IsLured(c.GetZDOID()) && Vector3.Distance(c.transform.position, main.transform.position) < GangReach) near.Add(c);
                 near.Sort((a, b) => Vector3.Distance(a.transform.position, main.transform.position).CompareTo(Vector3.Distance(b.transform.position, main.transform.position)));
                 for (int i = 0; i < near.Count && i < more; i++) list.Add(near[i]);
             }
@@ -230,8 +231,6 @@ namespace HuginWhispers
         private static readonly MethodInfo StopM = AccessTools.Method(typeof(BaseAI), "StopMoving");
         private static readonly MethodInfo BestAttackM = AccessTools.Method(typeof(MonsterAI), "SelectBestAttack");
         private static readonly MethodInfo SetTargetM = AccessTools.Method(typeof(MonsterAI), "SetTarget", new[] { typeof(Character) });
-        private static readonly MethodInfo AlertM = AccessTools.Method(typeof(BaseAI), "SetAlerted", new[] { typeof(bool) });
-        private static readonly FieldInfo TargetF = AccessTools.Field(typeof(MonsterAI), "m_targetCreature");
 
         // instead of its own thinking while lured: after Hugin, swinging at the air where he flies
         internal static bool Drives(MonsterAI ai, float dt)
@@ -248,8 +247,8 @@ namespace HuginWhispers
             Vector3 at = Orbit(main, l.Seed, l.Start);
             try
             {
-                if (TargetF != null) TargetF.SetValue(ai, null); // nobody but him
-                if (AlertM != null) AlertM.Invoke(ai, new object[] { true });
+                AiTarget.Set(ai, null); // nobody but him
+                AiTarget.Alert(ai);
                 Humanoid h = c as Humanoid;
                 ItemDrop.ItemData weapon = h != null && BestAttackM != null ? BestAttackM.Invoke(ai, new object[] { h, dt }) as ItemDrop.ItemData : null;
                 float reach = weapon != null ? Mathf.Max(1.5f, weapon.m_shared.m_aiAttackRange) : 2f;
@@ -574,8 +573,9 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(MonsterAI), "UpdateAI")]
     internal static class DecoyPatch
     {
-        private static bool Prefix(MonsterAI __instance, float dt, ref bool __result)
+        private static bool Prefix(MonsterAI __instance, float dt, ref bool __result, bool __runOriginal)
         { try {
+            if (!__runOriginal) return false; // (scared this frame: FearPatch drives it; the lure goes on after)
             if (!Decoy.Any || !Decoy.Drives(__instance, dt)) return true;
             __result = true;
             return false;

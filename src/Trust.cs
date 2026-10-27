@@ -32,7 +32,7 @@ namespace HuginWhispers
         internal static float RitualRange = 25f;
         // after a ritual the raven finishes its words, flies off, and comes back a little later, grown
         internal static float WakeAwaySeconds = 60f;    // after the waking ritual: a short trip
-        internal static float RitualAwaySeconds = 1800f; // after every later one: half an hour at Odin's
+        internal static float RitualAwaySeconds = 300f;  // after every later one: five minutes at Odin's (was half an hour)
         private const float RitualLeaveDelay = 7f; // the ritual's message has faded and the raven has had its say before it takes off
         private const string LeaveKey = "RavenWatch_leaveAt"; // world time it takes off after a ritual
         private const string AwayWhyKey = "RavenWatch_awayWhy"; // "ritual" or "shy": what it says while away and when back
@@ -165,8 +165,16 @@ namespace HuginWhispers
         internal static float Lerp(bool munin, float atFirst, float atTop) { return LerpFrom(munin, 1, atFirst, atTop); }
 
         // the same for a gift that opens at a later level: atFirst at that level, atTop at the top one
+        // a gift's number: atFirst at the level the gift opens on, atTop at the top one
+        internal static float LerpGift(string id, float atFirst, float atTop)
+        {
+            RavenAbility a = RavenAbilities.Find(id);
+            return a == null ? atFirst : LerpFrom(a.Munin, RavenAbilities.UnlockLevel(a), atFirst, atTop);
+        }
+
         internal static float LerpFrom(bool munin, int from, float atFirst, float atTop)
         {
+            if (from >= MaxLevel) return atTop; // (a gift set to open only at the top: its top numbers)
             int steps = Mathf.Max(1, MaxLevel - from);
             return Mathf.Lerp(atFirst, atTop, Mathf.Clamp01((LevelWorn(munin) - (float)from) / steps));
         }
@@ -187,14 +195,11 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- gaining
 
-        private static void Add(ItemDrop.ItemData item, bool munin, float amount, bool tell) { Add(item, munin, amount, tell, null); }
-
         // note: the reason for the line in the corner (null: no line, the caller tells it itself)
         // returns the points really added (the bar stops at full)
         private static float Add(ItemDrop.ItemData item, bool munin, float amount, bool tell, string note)
         {
             if (item == null || amount <= 0f || Need(item) <= 0f) return 0f;
-            amount *= RuneStars.TrustMul(item); // («Мох»: faster)
             bool wasFull = Full(item);
             float before = Points(item);
             SetPoints(item, before + amount);
@@ -204,6 +209,11 @@ namespace HuginWhispers
                 RavenMsg.Center(Player.m_localPlayer, munin ? Lang.T("Мунін готовий, як ніколи.\nТягни трофеї до каменів, не барись.") : Lang.T("Хугін довіряє тобі повністю.\nЧас для ритуалу біля каменів."));
             return added;
         }
+
+        // trust given for something done for the raven (its own wish: Requests); the points really added
+        internal static float Gift(ItemDrop.ItemData item, bool munin, float amount, string note) { return Add(item, munin, amount * GainMul(item), true, note); }
+        // how much faster trust grows: a starred rune of «Мох», the saddle «Сідло віщуна»
+        internal static float GainMul(ItemDrop.ItemData item) { return RuneStars.TrustMul(item) * GearFx.TrustMul(item) * BreedTraits.TrustMul(item) * Habits.TrustMul(item); } // (the breed «Сивий»: faster)
 
         // ---------------------------------------------------------------- whose raven it is
         // A raven belongs to whoever woke it (a sleeping one can be bought for a friend and given away). In anyone
@@ -322,7 +332,7 @@ namespace HuginWhispers
             if (p.IsDead() || p.GetHealth() <= StarvePeckDamage) return; // you are too weak: it holds back this time
             p.SetHealth(p.GetHealth() - StarvePeckDamage);
             if (DamageText.instance != null) DamageText.instance.ShowText(HitData.DamageModifier.Normal, p.GetTopPoint(), StarvePeckDamage, true);
-            ScreamFx.Caw(p, munin, munin ? 0.85f : 1.3f, 0.5f);
+            ScreamFx.CawAll(p, munin, munin ? 0.85f : 1.3f, 0.5f);
             string made = Satiety.Say(p, munin, "starve_peck"); // phrase file, by trust tone
             if (!string.IsNullOrEmpty(made)) { RavenSkills.SayFromShoulder(p, munin, made); return; }
             string[] lines = munin ? MuninStarveLines : HuginStarveLines;
@@ -345,7 +355,7 @@ namespace HuginWhispers
             if (p.GetHealth() <= StarvePeckDamage) return false;
             p.SetHealth(p.GetHealth() - StarvePeckDamage);
             if (DamageText.instance != null) DamageText.instance.ShowText(HitData.DamageModifier.Normal, p.GetTopPoint(), StarvePeckDamage, true);
-            ScreamFx.Caw(p, munin, munin ? 0.85f : 1.3f, 0.5f);
+            ScreamFx.CawAll(p, munin, munin ? 0.85f : 1.3f, 0.5f);
             string made = Satiety.Say(p, munin, "starve_peck");
             if (string.IsNullOrEmpty(made))
             {
@@ -370,7 +380,7 @@ namespace HuginWhispers
             if (p.IsDead() || p.GetHealth() <= PeckDamage) return; // too weak: it holds back this time
             p.SetHealth(p.GetHealth() - PeckDamage);
             if (DamageText.instance != null) DamageText.instance.ShowText(HitData.DamageModifier.Normal, p.GetTopPoint(), PeckDamage, true);
-            ScreamFx.Caw(p, munin, munin ? 0.85f : 1.3f, 0.5f);
+            ScreamFx.CawAll(p, munin, munin ? 0.85f : 1.3f, 0.5f);
             string line = Plugin.Instance != null ? Plugin.Instance.ComposeTagged(p, munin, "stranger_peck") : null;
             RavenSkills.SayFromShoulder(p, munin, string.IsNullOrEmpty(line) ? (munin ? Lang.T("Ти не мій. На!") : Lang.T("Ти не мій господар.")) : line);
         }
@@ -426,6 +436,10 @@ namespace HuginWhispers
         internal static void Talked(bool munin) { Together(munin, TalkTrust, TalkDailyCap, TalkDayKey, TalkKey, Lang.T("розмова")); }
         // an order flown (Orders): play together, as a talk is; its own little limit a game day
         internal static void Ordered(bool munin) { Together(munin, OrderTrust, OrderDailyCap, OrderDayKey, OrderKey, Lang.T("наказ")); }
+        // its own little joys with you (a bath, a game with your tamed beast): their own limit a game day
+        internal static float PlayTrust = 1.5f, PlayDailyCap = 6f;
+        private const string PlayDayKey = "RavenWatch_playDay", PlayKey = "RavenWatch_playToday";
+        internal static void Played(bool munin, string why) { Together(munin, PlayTrust, PlayDailyCap, PlayDayKey, PlayKey, why); }
 
         private static void Together(bool munin, float amount, float cap, string dayKey, string key, string why)
         {
@@ -452,7 +466,8 @@ namespace HuginWhispers
             if (int.TryParse(Read(item, DeedDayKey), out d) && d >= day) float.TryParse(Read(item, DeedKey), NumberStyles.Float, CultureInfo.InvariantCulture, out today);
             float give = Mathf.Min(amount, DeedDailyCap - today);
             if (give <= 0f) return 0f;
-            give = Add(item, munin, give, true, why);
+            float mul = GainMul(item);
+            give = Add(item, munin, give * mul, true, why) / mul; // («Мох»: faster; the day's cap counts the plain amount)
             if (give <= 0f) return 0f;
             Write(item, DeedDayKey, day.ToString());
             Write(item, DeedKey, (today + give).ToString("0.##", CultureInfo.InvariantCulture));
@@ -567,6 +582,8 @@ namespace HuginWhispers
             }
             string picky = Quirks.PickyRefuses(p, munin, item, food); // «Перебірливий»: this one it will not eat
             if (picky != null) { Quirks.Act(p, munin, Lang.T("Воротить дзьоб")); return picky; }
+            string sweet = pouch ? null : Habits.Refuses(p, munin, item, food); // «Ласун»: plain food now and then turned down
+            if (sweet != null) { Quirks.Act(p, munin, Lang.T("Воротить дзьоб")); return sweet; }
             float before = Satiety.Value(item);
             if (before >= 99.5f) return Lang.F("{0} більше не влізе: ситий по самий дзьоб.", Plugin.RavenName(munin));
             if (!pouch)
@@ -576,13 +593,17 @@ namespace HuginWhispers
             }
             ate = true;
             Nicks.OnFed(item); // a deed for its nickname
+            Requests.OnFed(p, munin, item, food.Prefab); // its own wish, if it was this
+            Words.OnFed(p, munin); // a word for the food, if it has one
             bool fav = Satiety.IsFav(item, food.Prefab);
+            Habits.Fed(item, fav); // («Ласун»)
             bool first = fav && !Satiety.FavKnown(item);
             float trust = Satiety.TrustOf(item, food, fav); // counted before it fills
             Satiety.Change(item, Satiety.FillOf(food, fav));
             float after = Satiety.Value(item);
             Strike.Fed(item, fav ? Satiety.FavFedMul : 1f); // a fed raven strikes harder for a while; after its favourite longer
-            float added = trust > 0f ? Add(item, munin, trust, true, null) : 0f;
+            float tmul = GainMul(item);
+            float added = trust > 0f ? Add(item, munin, trust * tmul, true, null) / tmul : 0f; // («Мох»: faster; the food's day counts the plain amount)
             if (added > 0f) FoodTaken(item, added);
             bool capped = trust <= 0f && FoodLeftToday(item) <= 0f && Need(item) > 0f && !Full(item) && before <= Satiety.AskAt;
             if (first) Satiety.Reveal(item);
@@ -599,6 +620,7 @@ namespace HuginWhispers
                 }
                 return Lang.F("{0} сам поїв із торби: {1}{2}. Ситість {3} → {4}{5}.{6}", Plugin.RavenName(munin), food.Name, (fav && !first ? " ★" : ""), Mathf.RoundToInt(before), Mathf.RoundToInt(after), trustText, (first ? Lang.T("\nЦе його улюблена їжа!") : ""));
             }
+            if (!nest) PlayerAnims.Gesture(p, munin, "feed_"); // from your hand: you hold it up to the bird
             string line = fav ? Satiety.FavLineSaid(p, munin, first, food.Name)
                 : before <= Satiety.StuffedAt && after > Satiety.StuffedAt ? Satiety.StuffedSaid(p, munin)
                 : before > Satiety.AskAt ? Satiety.Say(p, munin, "fed_full") // not hungry: eats for the company
@@ -652,21 +674,35 @@ namespace HuginWhispers
             return i >= 0 && i < steps.Count ? steps[i] : null;
         }
 
-        // the stone of the boss whose trophy is offered, or else the nearest one in reach
-        private static BossStone[] _stones;
-        private static float _stonesAt = -1f;
+        private static readonly List<BossStone> KnownStones = new List<BossStone>();
+        private static BossStone[] _stones = new BossStone[0];
+        private static bool _stonesNew;
 
-        // every Sacrificial stone the game has loaded, found at most twice a second (the book and the ritual ask often)
+        // a Sacrificial stone the game starts (StoneStartPatch): noted, so nobody searches the whole scene for them
+        // (a search took ~20 ms in a world with many mods)
+        internal static void NoteStone(BossStone s) { if (s != null && !KnownStones.Contains(s)) { KnownStones.Add(s); _stonesNew = true; } }
+
+        // every Sacrificial stone the game has loaded (one gone with its zone: dropped when next asked)
         internal static BossStone[] Stones()
         {
-            if (_stones == null || Time.unscaledTime - _stonesAt > 0.5f || Time.unscaledTime < _stonesAt)
+            bool gone = false;
+            for (int i = 0; i < _stones.Length; i++) if (_stones[i] == null) { gone = true; break; }
+            if (gone || _stonesNew)
             {
-                _stones = UnityEngine.Object.FindObjectsByType<BossStone>(FindObjectsSortMode.None);
-                _stonesAt = Time.unscaledTime;
+                KnownStones.RemoveAll(s => s == null);
+                _stones = KnownStones.ToArray();
+                _stonesNew = false;
             }
             return _stones;
         }
 
+        [HarmonyLib.HarmonyPatch(typeof(BossStone), "Start")]
+        private static class StoneStartPatch
+        {
+            private static void Postfix(BossStone __instance) { NoteStone(__instance); }
+        }
+
+        // the stone of the boss whose trophy is offered, or else the nearest one in reach
         internal static BossStone StoneFor(Player p, string trophy)
         {
             BossStone best = null, any = null;
@@ -819,7 +855,7 @@ namespace HuginWhispers
             {
                 ItemDrop.ItemData item = Worn(munin);
                 if (item == null) continue;
-                float loss = (Level(item) <= DeathEarlyLevels ? DeathLossEarly : DeathLoss) * GearFx.DeathMul(item); // (Захисний ошейник: half)
+                float loss = (Level(item) <= DeathEarlyLevels ? DeathLossEarly : DeathLoss) * GearFx.DeathMul(item) * Omen.DeathMul() * BreedTraits.DeathMulOf(item); // (Захисний ошейник: half; Hugin's «Недобрий знак»: less; the breed «Примарний»: half)
                 float lost = Lose(item, loss);
                 if (lost > 0f) Write(item, GraveBackKey, WorldNow.ToString("R", CultureInfo.InvariantCulture) + "|" + lost.ToString("0.##", CultureInfo.InvariantCulture));
                 else if (item.m_customData != null) item.m_customData.Remove(GraveBackKey);
@@ -840,6 +876,30 @@ namespace HuginWhispers
             double since = WorldNow - at;
             if (since < 0.0 || since > GraveBackMinutes * 60.0) return; // too late (or a clock from another world)
             Add(item, munin, lost * GraveBackShare, false, Lang.T("вчасно забрали з могили"));
+        }
+
+        // «Кровна помста»: what the last death took from this raven (0: nothing, or already taken back from the grave),
+        // and what the grave would give back for it now (its share, while still in time)
+        internal static float DeathLost(ItemDrop.ItemData item, out float graveDue)
+        {
+            graveDue = 0f;
+            string v = Read(item, GraveBackKey);
+            if (v == null) return 0f;
+            string[] parts = v.Split('|');
+            double at; float lost;
+            if (parts.Length != 2 || !double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out at)
+                || !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out lost)) return 0f;
+            double since = WorldNow - at;
+            if (since >= 0.0 && since <= GraveBackMinutes * 60.0) graveDue = lost * GraveBackShare;
+            return lost;
+        }
+
+        // the revenge gives the death's loss back itself: the grave has nothing more to give for it
+        internal static void GiveBackDeath(ItemDrop.ItemData item, bool munin, float points)
+        {
+            if (item == null) return;
+            if (item.m_customData != null) item.m_customData.Remove(GraveBackKey);
+            if (points > 0f) Add(item, munin, points, false, Lang.T("кровна помста"));
         }
 
         internal static void OnTakenOff(ItemDrop.ItemData item) { if (item != null) Lose(item, Need(item) * TakeOffLoss); }
@@ -879,13 +939,16 @@ namespace HuginWhispers
 
         internal static string AwayWhy(ItemDrop.ItemData item) { return item != null ? Read(item, AwayWhyKey) : ""; }
 
+        // after a ritual, before it takes off to Odin
+        internal static bool Leaving(ItemDrop.ItemData item) { return !string.IsNullOrEmpty(Read(item, LeaveKey)); }
+
         // where it is while away, in a word or two: "у Одіна", "несе лист", "на жердині", "відлетів" — for every status line
         internal static string AwayWord(bool munin, ItemDrop.ItemData item)
         {
             if (item == null) return Lang.T("відлетів");
             if (Perches.On(item) && AwayLeft(item) <= 0f) return Perches.OnSpot(item) ? (WorldVisit.Active(munin) ? Lang.T("роздивляється") : Lang.T("сидить окремо")) : Perches.OnWord(item);
             string why = Read(item, AwayWhyKey);
-            if (why == "ritual" || why == Nest.Why) return Lang.T("у Одіна");
+            if (why == "ritual" || why == Nest.Why || why == OdinCall.Why) return Lang.T("у Одіна");
             if (why == Post.Why) return Post.AwayWord(Player.m_localPlayer, munin);
             return Lang.T("відлетів");
         }
@@ -932,8 +995,8 @@ namespace HuginWhispers
         internal static string AwayText(bool munin, ItemDrop.ItemData item)
         {
             if (Perches.On(item) && AwayLeft(item) <= 0f) return Perches.Text(munin, item) + ".\n" + Perches.CallHint(item);
-            if (Read(item, AwayWhyKey) == "ritual")
-                return Lang.F("{0} у Одіна, ще {1}.", Plugin.RavenName(munin), RavenAbilities.Span(AwayLeft(item)));
+            if (Read(item, AwayWhyKey) == "ritual" || Read(item, AwayWhyKey) == OdinCall.Why)
+                return Lang.F("{0} в Одіна, ще {1}.", Plugin.RavenName(munin), RavenAbilities.Span(AwayLeft(item)));
             if (Read(item, AwayWhyKey) == Nest.Why)
                 return Lang.F("{0} полетів до Одіна по доручення. Повернеться за {1}.", Plugin.RavenName(munin), RavenAbilities.Span(AwayLeft(item)));
             if (Read(item, AwayWhyKey) == Post.Why) return Post.AwayText(Player.m_localPlayer, munin, item); // (how long: as the post goes)
@@ -949,7 +1012,7 @@ namespace HuginWhispers
         // a raven on the shoulder takes off only under the sky and in peace: not in a dungeon, a cave or a house,
         // not in a fight, not mid-portal. One on a perch is not with you: it may go whatever you are doing.
         internal static float FreeRetrySeconds = 60f;
-        private static bool FreeToLeave(Player p, bool perched)
+        internal static bool FreeToLeave(Player p, bool perched)
         {
             if (perched) return true;
             if (p == null || !Senses.Ready || p.IsDead() || p.IsTeleporting()) return false; // (right after login nothing is known yet)
@@ -980,8 +1043,8 @@ namespace HuginWhispers
             {
                 // back (seen as soon as it is on the shoulder again, if it came back while in the bag)
                 item.m_customData.Remove(AwayWhyKey);
-                string gift = why == "ritual" ? Outfits.TakeNewGift(item) : null;
-                if (why == "ritual") RavenAura.BackFromOdin(p, munin); // a ringing caw, heard by everyone nearby
+                string gift = why == "ritual" || why == OdinCall.Why ? Outfits.TakeNewGift(item) : null;
+                if (why == "ritual" || why == OdinCall.Why) RavenAura.BackFromOdin(p, munin); // a ringing caw, heard by everyone nearby
                 if (p != null && why == "ritual")
                 {
                     int lv = Level(item);
@@ -989,6 +1052,7 @@ namespace HuginWhispers
                 }
                 if (why == Nest.Why) Nest.Back(p, munin, item); // with Odin's errand
                 else if (why == Post.Why) Post.Back(p, munin, item); // from the post: handed over or not
+                else if (why == OdinCall.Why) OdinCall.Back(p, munin, gift); // called by the stone: with Odin's hat
                 else if (p != null) RavenMsg.Center(p, why == "ritual"
                     ? Plugin.RavenName(munin) + (Level(item) > 1 ? Lang.T(" повернувся і підріс.") : Lang.T(" повернувся.")) + (gift != null ? Lang.F("\nОдін передав йому: {0}.", gift) : "")
                     : Lang.F("{0} повернувся на плече.", Plugin.RavenName(munin)));
@@ -1030,6 +1094,7 @@ namespace HuginWhispers
                 ItemDrop.ItemData item = Worn(munin);
                 if (item == null) { NetFlag.Set(p, munin ? StarveKeyM : StarveKeyH, false); StarveItem[munin ? 1 : 0] = null; continue; }
                 if (Active(item) && string.IsNullOrEmpty(Read(item, OwnerKey))) Bind(item, p); // awake from before owners: it takes its wearer
+                OdinCall.Tick(p, munin, item); // the stone's rite over: off to Odin
                 Wander(p, munin, item);
                 Peck(p, munin, item);
                 RavenAura.Hungry(p, munin, item);

@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Кістяні браслети
+note: Кісточки й черепки на шкіряному шнурку — болотяні шамани вірили, що в кістках лишається сила звіра. Ворон брязкає ними на кожному кроці, і дзьобає трохи важче, ніж раніше.
+use: gear
+id: kistiani_braslety
+cost: BoneFragments:10 Guck:2 LeatherScraps:2 TrophySkeleton:1 RavenWatch_item_pryazhka_haldora:1
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: legs
+part asset/Спорядження/GearBoneBracelet pos 0 -0.03 0 rot 0 0 0 scale 0.05 0.05 0.05  # Кістяні браслети (Meshy)

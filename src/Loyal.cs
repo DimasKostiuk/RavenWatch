@@ -52,7 +52,7 @@ namespace HuginWhispers
             bool munin;
             if (!Enabled || p == null || p != Player.m_localPlayer || !RavenItem.IsRaven(item, out munin)) return false;
             if (Trust.Away(item) || Trust.Stranger(item, p) || Trust.SettledLevel(item) < UnlockLevel) return false; // a stranger's raven owes you nothing
-            if (UnityEngine.Random.value >= GearFx.LoyalChance(item, Chance)) return false; // (Захисний ошейник: likelier)
+            if (UnityEngine.Random.value >= Mathf.Min(1f, GearFx.LoyalChance(item, Chance) * BreedTraits.LoyalMulOf(item))) return false; // (Захисний ошейник, the breed «Примарний»: likelier)
             Mark(item);
             if (_stayedFor != p.GetPlayerID()) Stayed.Clear();
             _stayedFor = p.GetPlayerID();
@@ -155,7 +155,7 @@ namespace HuginWhispers
         {
             if (!Enabled) return Lang.T("<color=#9a9a9a>вимкнено в налаштуваннях</color>");
             if (WorldKeeps()) return Lang.T("<color=#9a9a9a>у цьому світі спорядження й так лишається після смерті</color>");
-            return Lang.F("<color=#FFD54F><b>шанс {0}%</b></color>", RavenAbilities.R(GearFx.LoyalChance(Trust.Worn(munin), Chance) * 100f)); // (with «Захисний ошейник»: more)
+            return Lang.F("<color=#FFD54F><b>шанс {0}%</b></color>", RavenAbilities.R(Mathf.Min(1f, GearFx.LoyalChance(Trust.Worn(munin), Chance) * BreedTraits.LoyalMulOf(Trust.Worn(munin))) * 100f)); // (with «Захисний ошейник», «Примарний»: more)
         }
     }
 }

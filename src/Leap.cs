@@ -12,7 +12,7 @@ namespace HuginWhispers
         internal const string EffectName = "RavenWatch_Leap";
         internal static readonly int Hash = EffectName.GetStableHashCode();
         internal static float Seconds = 7.5f, SecondsTop = 30f; // how long the spell holds: at trust level 1 and at the top level
-        internal static float Duration() { return Mathf.Floor(Trust.Lerp(false, Seconds, SecondsTop) * GiftUp.Power("leap") + 0.5f); }
+        internal static float Duration() { return Mathf.Floor(Trust.LerpGift("leap", Seconds, SecondsTop) * GiftUp.Power("leap") + 0.5f); }
         internal static float Height = 12.5f;
         internal static float HeightNow() { return Height * Trust.Mul(false, 0.05f); } // as high and as far as it throws you now (trust)
         internal static float ForwardNow() { return Forward * Trust.Mul(false, 0.05f); }
@@ -46,7 +46,20 @@ namespace HuginWhispers
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
         }
 
-        internal static void Reset() { _flying = false; _measuring = false; FromGround = false; }
+        internal static void Reset() { _flying = false; _measuring = false; FromGround = false; _stopping = false; }
+
+        // the gift pressed again: the spell ends — on the ground at once; up in a jump only once you are down (the
+        // fall never hurts under it, so it is not taken away mid-air)
+        private static bool _stopping;
+        internal static bool Stopping(Player p) { return _stopping && On(p); }
+        internal static bool StopPending { get { return _stopping; } } // (no new high jump on the landing frame)
+        internal static void Stop(Player p)
+        {
+            if (p == null || !On(p)) return;
+            if (p.IsOnGround() || p.IsSwimming()) { End(p); return; }
+            _stopping = true;
+        }
+        private static void End(Player p) { _stopping = false; _flying = false; p.GetSEMan().RemoveStatusEffect(Hash, true); }
 
         // the local player is up in a high jump: the shoulder ravens spread their wings
         private static float _jumpedAt = -100f;
@@ -122,6 +135,8 @@ namespace HuginWhispers
 
         internal static void Tick(Player p)
         {
+            if (_stopping && (p == null || !On(p))) _stopping = false;
+            else if (_stopping && Time.time - _jumpedAt > 0.3f && (p.IsOnGround() || p.IsSwimming())) End(p); // (down: now it ends)
             Feathers(p);
             Landing(p);
             if (!_measuring || p == null) return;
@@ -217,7 +232,7 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Character), "Jump")]
     internal static class LeapJumpPatch
     {
-        private static void Prefix(Character __instance) { try { Leap.FromGround = Leap.On(__instance) && __instance.IsOnGround(); } catch (System.Exception e) { PatchGuard.Fail("LeapJumpPatch", e); } }
+        private static void Prefix(Character __instance) { try { Leap.FromGround = Leap.On(__instance) && !Leap.StopPending && __instance.IsOnGround(); } catch (System.Exception e) { PatchGuard.Fail("LeapJumpPatch", e); } }
         private static void Postfix() { try { Leap.FromGround = false; } catch (System.Exception e) { PatchGuard.Fail("LeapJumpPatch", e); } }
     }
 

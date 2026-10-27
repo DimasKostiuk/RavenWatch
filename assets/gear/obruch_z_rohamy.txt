@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Обруч з рогами
+note: Шкіряний обруч і два оленячі роги з інеєм на кінцях. Відтоді ворон заходить у двері боком.
+use: gear
+id: obruch_z_rohamy
+slot: head
+part asset/Шапки/HatAntlers pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatAntlers (Шапки)

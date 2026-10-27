@@ -24,10 +24,11 @@ namespace HuginWhispers
         internal static float SinkEase = 3f;                                     // m/s²: how gently the floating down sets in
         internal static float SinkSeconds = 10f, SinkLast = 1.5f, SinkFast = 8f; // the floating down: about this long from any height; the last moments' pace; at most m/s
         internal static float Accel = 9f, Decel = 6f, ClimbAccel = 12f;          // m/s²: the pull on starting and the drift on stopping
-        internal static float LiftHeight = 4f, LiftSeconds = 1.1f, LiftAccel = 40f; // the leap up at the start: like a jump, smoother
+        internal static float LiftHeight = 5.5f, LiftSeconds = 1.25f, LiftAccel = 60f; // the leap up at the start: like a jump, smoother
         internal static float MaxHeight = 40f;                                   // over the ground (or the sea)
         internal static float TurnRate = 140f, TurnEase = 0.35f;                 // the body turns after the way it flies: at most °/s, and how long it eases
-        internal static float MuninAfter = 0.4f, LiftAfter = 0.3f;               // Hugin first, then you (after the crouch of the take-off clip), then Munin
+        internal static float MuninAfter = 0.4f, LiftAfter = 0.32f;               // Hugin first, then you (after the crouch of the take-off clip), then Munin
+        internal static float TakeoffFade = 0.3f;                                // s: the take-off grows out of the pose you stand in (legs as they are), no snap
         internal static float FlourishMin = 7f, FlourishMax = 14f;              // a gentle stir this often (seconds)
         internal static float SafeAfter = 3f;                                    // no fall hurts this long after landing
 
@@ -117,7 +118,7 @@ namespace HuginWhispers
             HoldCrouch(p);
             RavenFx.Broadcast(RpcUp, p, Burst);
             Orders.FlyWith(p, false, Duration() + 20f); // Hugin first
-            PlayerAnims.Play(p, 2, "wings_takeoff", 0.08f, 1f);
+            PlayerAnims.Play(p, 2, Takeoffs[UnityEngine.Random.Range(0, Takeoffs.Length)], TakeoffFade, UnityEngine.Random.Range(0.92f, 1.08f));
         }
 
         // pressed again, or the time is up: down gently
@@ -147,7 +148,7 @@ namespace HuginWhispers
             Safe(p, SafeAfter);
             if (!p.IsDead() && air)
             {
-                PlayerAnims.Play(p, 2, "wings_land", 0.05f, 1f);
+                PlayerAnims.Play(p, 2, Landings[UnityEngine.Random.Range(0, Landings.Length)], 0.05f, UnityEngine.Random.Range(0.92f, 1.08f));
                 RavenFx.Broadcast(RpcDown, p, Landing);
             }
             Orders.FlyWithEnd(p, false);
@@ -168,7 +169,7 @@ namespace HuginWhispers
             HoldCrouch(p);
             PlayerAnims.Tag(p, Tag, false);
             PlayerAnims.Tag(p, SinkTag, false);
-            PlayerAnims.Play(p, 2, "wings_land", 0.05f, 1f);
+            PlayerAnims.Play(p, 2, Landings[UnityEngine.Random.Range(0, Landings.Length)], 0.05f, UnityEngine.Random.Range(0.92f, 1.08f));
             RavenFx.Broadcast(RpcDown, p, Landing);
         }
 
@@ -187,7 +188,7 @@ namespace HuginWhispers
             HoldCrouch(p);
             PlayerAnims.Tag(p, Tag, true);
             p.HideHandItems();
-            PlayerAnims.Play(p, 2, "wings_takeoff", 0.08f, 1f);
+            PlayerAnims.Play(p, 2, Takeoffs[UnityEngine.Random.Range(0, Takeoffs.Length)], TakeoffFade, UnityEngine.Random.Range(0.92f, 1.08f));
             RavenFx.Broadcast(RpcHop, p, Hop);
             return true;
         }
@@ -229,6 +230,9 @@ namespace HuginWhispers
             }
         }
 
+        // each take-off and landing its own manner of the arms (and pace): never the same twice in a row to the eye
+        private static readonly string[] Takeoffs = { "wings_takeoff", "wings_takeoff_b", "wings_takeoff_c", "wings_takeoff_d" };
+        private static readonly string[] Landings = { "wings_land", "wings_land_b" };
         private static readonly string[] Flourishes = { "wings_beat", "wings_dip", "wings_stretch" };
 
         internal static void Reset()

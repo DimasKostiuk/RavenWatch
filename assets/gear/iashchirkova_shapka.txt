@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Ящіркова шапка
+note: Голова болотної ящірки з жовтими очима. Ворон носить її, щоб жаби боялися. Жаби не бояться.
+use: gear
+id: iashchirkova_shapka
+slot: head
+part asset/Шапки/HatLizard pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatLizard (Шапки)

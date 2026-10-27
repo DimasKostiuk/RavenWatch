@@ -244,8 +244,10 @@ namespace HuginWhispers
 
         // a spot put there (follow: whom it rides on, SitOn), paid for (an order; a visit of its own is free: WorldVisit),
         // the raven sent onto it; the spot made, or null
-        internal static string Place(Player p, bool munin, Vector3 at, Quaternion rot, string follow, bool paid) { PerchView v; return Place(p, munin, at, rot, follow, paid, out v); }
-        internal static string Place(Player p, bool munin, Vector3 at, Quaternion rot, string follow, bool paid, out PerchView v)
+        internal static string Place(Player p, bool munin, Vector3 at, Quaternion rot, string follow, bool paid) { PerchView v; return Place(p, munin, at, rot, follow, paid, out v, ""); }
+        internal static string Place(Player p, bool munin, Vector3 at, Quaternion rot, string follow, bool paid, string mode) { PerchView v; return Place(p, munin, at, rot, follow, paid, out v, mode); } // mode: Perches.Sit's (an errand's guide: Perches.LeadMode)
+        internal static string Place(Player p, bool munin, Vector3 at, Quaternion rot, string follow, bool paid, out PerchView v) { return Place(p, munin, at, rot, follow, paid, out v, ""); }
+        internal static string Place(Player p, bool munin, Vector3 at, Quaternion rot, string follow, bool paid, out PerchView v, string mode)
         {
             v = null;
             GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(Prefab) : null;
@@ -262,7 +264,7 @@ namespace HuginWhispers
                 Trust.Ordered(munin);        // and it is something done together
             }
             _last[0] = _last[1] = null;  // (the other raven sees this one's spot at once)
-            Perches.Sit(p, v, munin, 0);
+            Perches.Sit(p, v, munin, 0, mode);
             return null;
         }
 

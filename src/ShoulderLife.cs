@@ -46,6 +46,22 @@ namespace HuginWhispers
         internal static bool TestWings;
         internal static float TestOut, TestUp, TestElbow;
         internal static float FlapOut = 55f, FlapUp = 35f, FlapBeat = 40f, FlapHz = 3f;
+        internal float HoverGlide, HoverPace = 1f, Dangle;
+        internal static float HoverLazyHz = 0.6f, HoverLazyAmp = 0.45f; // the lazier spell: share of the beat's pace and size
+        private float _sneak; // how low it crouches with you sneaking (eased)
+        internal bool Crouched { get { return _sneak > 0.3f; } } // (its owner sneaks: it speaks quietly too, RavenVoice)
+        private Animator _ownerAnim;
+        private static readonly int CrouchHash = Animator.StringToHash("crouching");
+        private bool Sneaking()
+        {
+            if (Player == null) return false;
+            if (ReferenceEquals(Player, Player.m_localPlayer)) return Player.IsCrouching();
+            if (_ownerAnim == null) _ownerAnim = Player.GetComponentInChildren<Animator>();
+            return _ownerAnim != null && _ownerAnim.GetBool(CrouchHash); // (another player's: synced in its animator)
+        }
+        internal static float SneakH = 0.8f, SneakM = 1f, SneakHunch = 10f, SneakCrouch = 0.45f, SneakNeck = 8f; // Hugin a little less than Munin
+        internal bool OnFloor;                              // down on the ground (HoverPlan): no shoulder slope under it
+        internal float GroundLiftL, GroundLiftR, GroundCrouch; // its steps, hops and turns there (HoverPlan): a foot up, both bent // the hover's (HoverPlan): gliding share, its beats' pace, legs let down
         internal static float HoverHz = 2.1f; // hanging in the air during an emote: calmer beats than a startled flap (30% slower)
         internal static float GlideOut = 70f, GlideUp = 10f, GlideElbow = 45f;
         // Munin's Wings while running: spread, but swept back and down (the "ninja run"), beating lightly
@@ -82,6 +98,13 @@ namespace HuginWhispers
         internal static void Register() { RavenFx.Register(RpcHeal, p => Moment(p, true, "heal", HealSeconds)); }
 
         // Munin puts a wing round you: here and on every game nearby
+        // a gift used with this raven (the owner's game): it wakes from a doze
+        internal static void WakeUp(Player p, bool munin)
+        {
+            ShoulderLife life = Shoulder.LifeOf(p, munin);
+            if (life != null) life._sitDir.Wake();
+        }
+
         internal static void Hug(Player p) { RavenFx.Broadcast(RpcHeal, p, x => Moment(x, true, "heal", HealSeconds)); }
 
         // a gift's pose for a moment on that player's raven (any player's)
@@ -89,6 +112,7 @@ namespace HuginWhispers
         {
             ShoulderLife life = Shoulder.LifeOf(p, munin);
             if (life == null || life.Asleep || !Poses.ContainsKey(pose)) return;
+            life._sitDir.Wake(); // (on every game: the pose is sent to all)
             life._moment = pose;
             life._momentUntil = Time.time + seconds;
         }
@@ -278,7 +302,7 @@ namespace HuginWhispers
         private void FindLanding(AnimationClip clip)
         {
             Transform hip = null;
-            foreach (Transform t in _anim.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(_anim.transform, Munin))
             {
                 string n = t.name.ToLowerInvariant();
                 if (n == "hip" || n == "hips") { hip = t; break; }
@@ -306,6 +330,7 @@ namespace HuginWhispers
             string rootLog = "";
             foreach (Transform t in all)
             {
+                if (!RavenBones.Is(t, _anim.transform, Munin)) continue; // (not a worn thing's part of that name)
                 string n = t.name.ToLowerInvariant();
                 if ((n == "armature" || n == "hip" || n == "hips" || n == "root" || n == "body") && !_landRoot.ContainsKey(n)) { _landRoot[n] = t.localPosition; rootLog += " " + t.name + " " + t.localPosition.ToString("F3"); }
             }
@@ -392,12 +417,25 @@ namespace HuginWhispers
         // The landing template's pose (situation «Посадка», the «Шаблони» tab) over the clip, and this landing's tilt:
         // in at once, held until the touch, then let go as the clip folds the wings (its end, the sitting pose, is the
         // clip's own). The template's keys are a beat of their own here (Landings.LandBeatHz).
+        // the wing by your head beats too as it lands, only smaller (LandBase) and held back along its body: behind
+        // your head, not over it (2026-10-22, the user: «щоб махав обома, просто тим, що над головою, менше чи трохи
+        // ззаду; якщо в модельку трохи зайде — нічого»)
+        internal static float LandInnerBack = 26f, LandInnerBackElbow = 12f, LandInnerDown = 6f;
         private void LandWings(float u, float len)
         {
             if (_land == null) return;
             FlightTemplate t = _land.Pose;
             bool pose = t != null && t.UsePose;
-            if (!pose && Mathf.Abs(_land.Tilt) < 0.5f) return;
+            float back = Mathf.Clamp01(u / 0.1f) * (1f - Mathf.Clamp01((u - 0.8f) / 0.2f)); // (in from the start, out into the sitting)
+            if (!pose && Mathf.Abs(_land.Tilt) < 0.5f)
+            {
+                if (back <= 0.001f) return;
+                if (_kl == null) WingKeys.Find(transform, out _kl, out _kr);
+                for (int i = 0; i < WingKeys.Bones; i++) { _addL[i] = Vector3.zero; _addR[i] = Vector3.zero; }
+                InnerBack(back);
+                WingKeys.ApplyAdds(_kl, _kr, transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation)), _addL, _addR);
+                return;
+            }
             float uTouch = _landTouch > _landA ? Mathf.Clamp01((_landTouch - _landA) / len) : 0.3f;
             float fadeIn = Mathf.Clamp01(u / 0.12f), fadeOut = u <= uTouch ? 1f : 1f - Mathf.Clamp01((u - uTouch) / 0.35f);
             float env = fadeIn * fadeIn * (3f - 2f * fadeIn) * fadeOut * fadeOut * (3f - 2f * fadeOut);
@@ -407,6 +445,7 @@ namespace HuginWhispers
             float x = Mathf.Repeat((Time.time * hz + _land.Phase / (Mathf.PI * 2f)) * WingKeys.Keys, WingKeys.Keys);
             for (int i = 0; i < WingKeys.Bones; i++) { Vector3 p = pose ? t.At(x, i) * env : Vector3.zero; _addL[i] = p; _addR[i] = p; }
             _addL[0].y += _land.Tilt * env; _addR[0].y -= _land.Tilt * env; // one wing up, the other down
+            InnerBack(back);
             Quaternion facing = transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation));
             WingKeys.ApplyAdds(_kl, _kr, facing, _addL, _addR);
             if (pose)
@@ -415,6 +454,15 @@ namespace HuginWhispers
                 for (int i = 0; i < WingKeys.BodyBones; i++) _bodyAdd[i] = t.At(x, 3 + i) * env;
                 WingKeys.ApplyBody(_bodyBones, facing, _bodyAdd);
             }
+        }
+
+        private void InnerBack(float k)
+        {
+            if (k <= 0.001f) return;
+            bool innerLeft = !Munin ^ PerchSwap;
+            Vector3[] a = innerLeft ? _addL : _addR;
+            a[0] += new Vector3(0f, LandInnerBack, LandInnerDown) * k; // back along the body, a little down (y back, z down: the safe ways)
+            if (a.Length > 1) a[1] += new Vector3(0f, LandInnerBackElbow, 0f) * k;
         }
 
         // just down: its little settle comes a moment later, when the director lets it (nothing else going on)
@@ -436,7 +484,7 @@ namespace HuginWhispers
             {
                 case 1: _hopAt = Time.time; break;
                 case 2: Flap(Munin ? Random.Range(0.3f, 0.5f) : Random.Range(0.25f, 0.4f)); break;
-                case 3: _stepFrom = _stepNow; _stepTo = Random.Range(-StepSize, StepSize); _stepAt = Time.time; break;
+                case 3: _stepFrom = _stepNow; _stepTo = Random.Range(-StepSize, StepSize); _stepAt = Time.time; _stepLen = StepSeconds * (Munin ? 0.9f : 1.05f); _stepLift = 1f; break;
                 case 4: _hopAt = Time.time; Flap(Random.Range(0.3f, 0.45f)); break;
             }
             AnimDirector.DidIdle(this, AnimDirector.Idle.Settle, 0.5f);
@@ -477,7 +525,7 @@ namespace HuginWhispers
             if (_perchRoots == null)
             {
                 List<Transform> found = new List<Transform>();
-                foreach (Transform t in _anim.GetComponentsInChildren<Transform>(true)) if (_landRoot.ContainsKey(t.name.ToLowerInvariant())) found.Add(t);
+                foreach (Transform t in RavenBones.Of(_anim.transform, Munin)) if (_landRoot.ContainsKey(t.name.ToLowerInvariant())) found.Add(t); // (not a hat's part of that name)
                 _perchRoots = found.ToArray();
             }
             foreach (Transform t in _perchRoots) if (t != null) t.localPosition = _landRoot[t.name.ToLowerInvariant()];
@@ -488,8 +536,31 @@ namespace HuginWhispers
         private void LandBase()
         {
             if (_landClip == null) return;
+            // the wing by your head: the clip's settling beats swept it over your head (the studio, 2026-10-22) — it keeps
+            // a share of the clip's move, the rest held as the clip leaves it at its end (folded)
+            if (_landInner == null) FindLandInner();
+            if (_landInner.Length > 0 && _landFoldFor != _landB) { _landFoldFor = _landB; _landClip.SampleAnimation(_anim.gameObject, _landB); for (int i = 0; i < _landInner.Length; i++) _landFold[i] = _landInner[i].localRotation; }
             _landClip.SampleAnimation(_anim.gameObject, _landU);
+            if (_landInner.Length > 0)
+            {
+                float share = _landU < _landTouch ? LandInnerBefore : LandInnerAfter;
+                for (int i = 0; i < _landInner.Length; i++) if (_landInner[i] != null) _landInner[i].localRotation = Quaternion.Slerp(_landFold[i], _landInner[i].localRotation, share);
+            }
             if (_rootBones != null) for (int i = 0; i < _rootBones.Length; i++) if (_rootBones[i] != null) _rootBones[i].localPosition = _rootPos[i];
+        }
+        internal static float LandInnerBefore = 0.75f, LandInnerAfter = 0.6f; // the inner wing's share of the landing clip: braking, then settling
+        private Transform[] _landInner;
+        private Quaternion[] _landFold;
+        private float _landFoldFor = -1f; // the clip's end its fold pose was taken at
+        private void FindLandInner()
+        {
+            List<Transform> l = new List<Transform>();
+            string top = (!Munin ^ PerchSwap) ? "wing1.l" : "wing1.r"; // (the wing by your head: Hugin's left, Munin's right)
+            Transform w = null;
+            w = RavenBones.Find(_anim.transform, top, true);
+            if (w != null) foreach (Transform t in RavenBones.Of(w, Munin)) l.Add(t);
+            _landInner = l.ToArray();
+            _landFold = new Quaternion[_landInner.Length];
         }
 
         // one frame of the landing: the clip's pose, and how far along the way it is (0..1); false once done
@@ -533,7 +604,7 @@ namespace HuginWhispers
         internal static bool LogLandings = false; // what each landing does (log); the landing panel's recorder does it better
 
         // the raven's skeleton (RavenSkeleton): sitting, flying, landing; made once its clips are known
-        private RavenSkeleton Skel { get { if (_skel == null && _anim != null && SitClips.Ready(_anim)) _skel = new RavenSkeleton(_anim, Munin); return _skel; } }
+        private RavenSkeleton Skel { get { if (_skel == null && _anim != null && SitClips.Ready(_anim)) { _skel = new RavenSkeleton(_anim, Munin); _skel.FoldInner(!Munin ^ PerchSwap); } return _skel; } }
         private System.Action _flyD, _landD; // the flight's and the landing's bases (kept: the skeleton tells them apart)
         private System.Action FlyD { get { if (_flyD == null) _flyD = FlyBase; return _flyD; } }
         private System.Action LandD { get { if (_landD == null) _landD = LandBase; return _landD; } }
@@ -605,7 +676,7 @@ namespace HuginWhispers
             _loopLooked = true;
             // every wing bone, both sides: the whole wing's pose is compared, not one bone's swing
             List<Transform> wings = new List<Transform>();
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
                 if (t.name.ToLowerInvariant().StartsWith("wing")) wings.Add(t);
             if (wings.Count == 0 || clip.length <= 0.1f) { Log("Flight loop: no wing bones found, the set slice is played"); return; }
             const int N = 400;
@@ -667,7 +738,7 @@ namespace HuginWhispers
         {
             StrokeTops = null; StrokeBottoms = null; Strokes = -1;
             Transform tip = null, hip = null, neck = null, wl = null, wr = null;
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 string n = t.name.ToLowerInvariant();
                 if (n == "wing3feathers3.l_end" || (tip == null && n == "wing3.l")) tip = t;
@@ -726,7 +797,7 @@ namespace HuginWhispers
         private void MeasureBody(AnimationClip clip, float a, float b)
         {
             Transform hip = null, neck = null;
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 string n = t.name.ToLowerInvariant();
                 if (hip == null && (n == "hip" || n == "hips" || n == "spine1")) hip = t;
@@ -804,7 +875,7 @@ namespace HuginWhispers
             {
                 _glanceNext = Time.time + Random.Range(1.5f, 3.5f) * (Munin ? 0.65f : 1f);
                 float r = Random.value;
-                _glanceAt = r < 0.4f ? 1 : (r < 0.65f && _foe != null && !_foe.IsDead()) ? 2 : 0;
+                _glanceAt = r < 0.4f ? 1 : (r < 0.65f && _foe != null && !_foe.IsDead()) ? 2 : r < 0.8f ? 3 : 0; // (3: the other raven)
                 _gYaw = Random.Range(-70f, 70f); _gPitch = Random.Range(-10f, 30f);
             }
             float yaw = _gYaw, pitch = _gPitch;
@@ -812,6 +883,7 @@ namespace HuginWhispers
             bool has = false;
             if (_glanceAt == 1 && Player != null) { at = Player.GetHeadPoint(); has = true; }
             else if (_glanceAt == 2 && _foe != null && !_foe.IsDead()) { at = Body.Eye(_foe); has = true; }
+            else if (_glanceAt == 3 && Player != null && ReferenceEquals(Player, Player.m_localPlayer)) { ShoulderLife o = Shoulder.LocalLife(!Munin); if (o != null) { at = o.HeadPoint; has = true; } }
             if (has)
             {
                 Vector3 dir = at - _head.position;
@@ -841,7 +913,7 @@ namespace HuginWhispers
         private void HoldRoots()
         {
             List<Transform> bones = new List<Transform>();
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin)) // (not a hat's part of that name)
             {
                 string n = t.name.ToLowerInvariant();
                 if (n == "armature" || n == "hip" || n == "hips" || n == "root" || n == "body") bones.Add(t);
@@ -893,7 +965,7 @@ namespace HuginWhispers
             float x = _flyX, span = _flySpan, a0 = _flyA0, fade = Mathf.Min(0.18f, span * 0.25f);
             if (x > a0 + span - fade && a0 - fade >= 0f)
             {
-                if (_bones == null) { _bones = _anim.GetComponentsInChildren<Transform>(true); _held = new Quaternion[_bones.Length]; }
+                if (_bones == null) { _bones = RavenBones.Of(_anim.transform, Munin).ToArray(); _held = new Quaternion[_bones.Length]; }
                 clip.SampleAnimation(_anim.gameObject, x - span);
                 for (int i = 0; i < _bones.Length; i++) if (_bones[i] != null) _held[i] = _bones[i].localRotation; // a transform gone since (not a bone) is skipped
                 clip.SampleAnimation(_anim.gameObject, x);
@@ -914,6 +986,16 @@ namespace HuginWhispers
         private readonly Vector3[] _addL = new Vector3[WingKeys.Bones], _addR = new Vector3[WingKeys.Bones];
 
         // on top of the clip's wings, at the same point in the continuously advancing beat
+        internal static float FlySweepBack = 15f, FlyUpBack = 15f; // ° the flight's whole beat held back (towards the tail); more, raised (studio 2026-10-22: the beat sat 13° forward on average, never back)
+        private Transform _wSh, _wHand; private bool _wLooked;
+        // how high the left wing is raised now (the clip's pose, before the adds): ° above straight out, in the body's frame
+        private float WingRaise(Quaternion facing)
+        {
+            if (!_wLooked) { _wLooked = true; foreach (Transform t in RavenBones.Of(transform, Munin)) { string n = t.name.ToLowerInvariant(); if (n == "wing1.l") _wSh = t; else if (n == "wing3.l") _wHand = t; } }
+            if (_wSh == null || _wHand == null) return 0f;
+            Vector3 d = Quaternion.Inverse(facing) * (_wHand.position - _wSh.position);
+            return Mathf.Atan2(d.y, Mathf.Max(0.0001f, Mathf.Abs(d.x))) * Mathf.Rad2Deg;
+        }
         private void KeyWings()
         {
             if (_kl == null) WingKeys.Find(transform, out _kl, out _kr);
@@ -935,6 +1017,10 @@ namespace HuginWhispers
             Mix.Tick(Dt);
             bool tpl = Mix.From != null || Mix.To != null;
             if (tpl) for (int i = 0; i < WingKeys.Bones; i++) { Vector3 p = Mix.PoseAt(x, i); _addL[i] += p; _addR[i] += p; }
+            // the whole beat held a little back along the body (tuned in the studio; - x: towards the tail), the elbow half
+            // and more the higher it is raised (a raven's upstroke: the wing drawn up and back, not up over its head)
+            float back = FlySweepBack + FlyUpBack * Mathf.Clamp01(WingRaise(facing) / 55f);
+            if (back != 0f) { _addL[0].x -= back; _addR[0].x -= back; _addL[1].x -= back * 0.5f; _addR[1].x -= back * 0.5f; }
             WingKeys.Apply(_kl, _kr, facing, x, _addL, _addR, poseOnlyDive ? 0f : Flight.Dive);
             // the body, head and tail: the base beat's turns (the wing panel) and the template's on top
             if (WingKeys.Active || tpl)
@@ -1011,8 +1097,13 @@ namespace HuginWhispers
         {
             SitTemplate t = r.T;
             if (_skel != null && r.Clip >= 0) _skel.Play((SitClip)r.Clip, SitSystem.FadeIn, age);
-            if (t.Shake) _shakeAt = Time.time - age;
-            if (t.Step) { _stepFrom = _stepNow; _stepTo = (new System.Random(r.Seed).NextDouble() < 0.5 ? -1f : 1f) * StepSize * (0.5f + 0.5f * r.Amp); _stepAt = Time.time - age; }
+            System.Random own = new System.Random(r.Seed * 31 + 7);
+            float size, pace, len;
+            Manner(own, r.Amp, out size, out pace, out len);
+            if (t.Flick) { _shakeAt = Time.time - age; _shakeLen = FlickSeconds * len; _shakeHz = FlickHz * pace; _shakeAmp = FlickAmp * size; _shakeBody = 0f; }
+            else if (t.Shake) { _shakeAt = Time.time - age; _shakeAmp = t.ShakeAmp * size; _shakeLen = ShakeSeconds * (0.5f + 0.5f * t.ShakeAmp) * len; _shakeHz = ShakeHz * pace; _shakeBody = 1f; }
+            if (t.Scratch) { _scratchAt = Time.time - age; _scratchLen = Mathf.Max(0.5f, r.Seconds); }
+            if (t.Step) { _stepFrom = _stepNow; _stepTo = (new System.Random(r.Seed).NextDouble() < 0.5 ? -1f : 1f) * StepSize * (0.5f + 0.5f * r.Amp); _stepAt = Time.time - age; _stepLen = StepSeconds * len; _stepLift = size; }
             if (age > 0.25f) return; // the moment's own things (a knock, beats, a caw) only when it is now
             if (t.Flap > 0f) Flap(t.Flap * r.Amp);
             if (t.KickPitch != 0f || t.KickRoll != 0f || t.KickDip != 0f) _sitBody.Kick(t.KickPitch * r.Amp, t.KickRoll * r.Sign * r.Amp, t.KickDip);
@@ -1080,7 +1171,7 @@ namespace HuginWhispers
             _anim = GetComponentInChildren<Animator>();
             if (_skel != null && !_skel.For(_anim)) _skel = null; // another model: its own clips
             // the game's raven has no head bone: the neck carries the head and the beak (Jaw)
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 if (_head == null && (t.name == "Neck" || t.name.ToLowerInvariant() == "head")) _head = t;
                 if (_spine == null && t.name == "Spine1") _spine = t;
@@ -1177,6 +1268,10 @@ namespace HuginWhispers
                     float extra = Munin ? (_furyOn ? FuryHunch : 0f) : (Ducked ? DuckHunch + HuginUpright : 0f);
                     _hunchExtra = Mathf.MoveTowards(_hunchExtra, extra, Time.deltaTime * HunchEase);
                     float sitHunch = SitNew ? _sitDir.MoodHunch : 0f; // (the sitting system: its mood; an act's own body turn is its template's, SitPose)
+                    // you sneak: it crouches with you, low and quiet (2026-10-22), each its own share, eased in and out
+                    bool sneak = Sneaking() && !Asleep;
+                    _sneak = Mathf.MoveTowards(_sneak, sneak ? (Munin ? SneakM : SneakH) : 0f, Time.deltaTime * (sneak ? 1.6f : 2.2f));
+                    sitHunch += _sneak * SneakHunch;
                     _spine.rotation = Quaternion.AngleAxis((Munin ? MuninHunch : -HuginUpright) + _hunchExtra + sitHunch, right) * _spine.rotation;
                 }
                 _spineWritten = _spine.localRotation;
@@ -1195,7 +1290,7 @@ namespace HuginWhispers
         private Wing FindWing(string side)
         {
             Wing w = new Wing();
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 string n = t.name.ToLowerInvariant();
                 if (!n.EndsWith(side)) continue;
@@ -1213,6 +1308,9 @@ namespace HuginWhispers
             Vector3 pos = Player.transform.position;
             if (Time.deltaTime > 0f && _lastPos != Vector3.zero)
             {
+                _vy = Mathf.Lerp(_vy, (pos.y - _lastPos.y) / Time.deltaTime, Mathf.Clamp01(Time.deltaTime * 10f));
+                bool dropping = _vy < -FallSpeed && !Player.IsOnGround() && !Player.IsSwimming() && !Leap.Gliding(Player) && !OdinWings.AirShown(Player);
+                _fallFor = dropping ? _fallFor + Time.deltaTime : 0f;
                 Vector3 step = Vector3.ProjectOnPlane(pos - _lastPos, Vector3.up);
                 _speed = Mathf.Lerp(_speed, Mathf.Min(step.magnitude / Time.deltaTime, 30f), Mathf.Clamp01(Time.deltaTime * 6f));
             }
@@ -1232,6 +1330,12 @@ namespace HuginWhispers
                 // leaving: wide, deep beats (the stroke folds the wing on the way up by itself)
                 o = FlapOut + 10f; u = TakeOffUp; e = FlapOut * 0.7f; hz = TakeOffHz; amp = TakeOffBeat; mode = 2;
             }
+            else if (!Asleep && _fallFor > FallAfter && !Ducked)
+            {
+                // you drop (a fall, off a cliff): it opens its wings against the air, holding them with a quick flutter
+                float f = Mathf.Clamp01((_fallFor - FallAfter) / 0.3f);
+                o = FallOut * f; u = FallUp * f; e = FallElbow * f; hz = FallHz; amp = FallBeat * f; mode = 7;
+            }
             else if (!Asleep && Time.time < _jumpUntil)
             {
                 float t = Mathf.Clamp01((Time.time - _jumpStarted) / Mathf.Max(0.05f, _jumpUntil - _jumpStarted));
@@ -1240,7 +1344,9 @@ namespace HuginWhispers
                 hz = _jumpCycles / Mathf.Max(0.05f, _jumpUntil - _jumpStarted); amp = envelope * FlapBeat * _jumpStrength; mode = 3;
             }
             else if (Soaring && Time.time >= _flapUntil) { o = GlideOut; u = GlideUp + Mathf.Sin(Time.time * 1.7f) * 5f; e = GlideElbow; }
-            else if (Hovering) { o = FlapOut; u = FlapUp; e = FlapOut * 0.6f; hz = HoverHz; amp = FlapBeat; mode = 4; }
+            // the hover: beats, and a lazier spell between (slower, shallower, the wings never stopped: a held wing over
+            // the shoulder snapped from the beat — the studio, 2026-10-22); eased by HoverGlide, never switched at once
+            else if (Hovering) { o = FlapOut; u = FlapUp; e = FlapOut * 0.6f; hz = HoverHz * HoverPace * Mathf.Lerp(1f, HoverLazyHz, HoverGlide); amp = FlapBeat * Mathf.Lerp(1f, HoverLazyAmp, HoverGlide); mode = 4; }
             else if (gift != null && !Asleep) Gift(gift, out o, out u, out e, out io, out iu, out ie);
             else if (Ducked) { } // Hugin under Munin's wings: folded, still (every wing value stays 0)
             else if (SitNew && !Asleep && _sitDir.Run != null && _sitDir.Run.Wings && _sitDir.ActW > 0.01f) { } // a sitting template's wings (SitPose): nothing else poses them meanwhile
@@ -1263,6 +1369,8 @@ namespace HuginWhispers
                 if (Munin) { o = FlapOut * 0.4f; u = FlapUp * 0.6f; e = FlapOut * 0.2f; amp = FlapBeat * 0.8f; }
                 else { o = FlapOut; u = FlapUp; e = FlapOut * 0.6f; amp = FlapBeat; }
             }
+            _foldInner = mode == 3 || mode == 6 || mode == 7 || (mode == 0 && o > 0.01f && _sitBody.Balance > 0.02f && !_furyOn && gift == null && !(TestWings && local)); // a jump, a flap, keeping its seat
+            if (_foldInner) { io -= o * InnerFold; ie -= e * InnerFold; } // the wing by your head: a third of the spread (not over your head)
             bool engine = (EngineBeats(mode) || (_engineOn && mode == 0 && _amp > 0.3f)) && EngineUsable(); // (else the hand-made stroke, with its own spread)
             if (engine && mode != 0) { o = 0f; u = 0f; e = 0f; } // the clip's own wings are the spread
             // each new opening its own: now and then held a little back (only the opening shrinks: towards the tail, never forward)
@@ -1284,6 +1392,8 @@ namespace HuginWhispers
             float kb = Mathf.Clamp01(k * ElbowFollow), kc = Mathf.Clamp01(k * HandFollow); // the elbow after the shoulder, the hand after the elbow
             _elbowB = Mathf.Lerp(_elbowB, _elbow, kb); _elbowC = Mathf.Lerp(_elbowC, _elbowB, kc); _outC = Mathf.Lerp(_outC, _out, kc);
             _inElbowB = Mathf.Lerp(_inElbowB, _inElbow, kb); _inElbowC = Mathf.Lerp(_inElbowC, _inElbowB, kc); _inOutC = Mathf.Lerp(_inOutC, _inOut, kc);
+            WingWhy = mode == 1 ? "leap" : mode == 2 ? "take-off" : mode == 3 ? "jump beats" : mode == 4 ? "hover" : mode == 5 ? "run cover" : mode == 6 ? "flap" : mode == 7 ? "fall"
+                    : _furyOn ? "fury" : gift != null ? "gift pose" : o > 1f ? "balance" : ""; // (the studio's report: what moved its wings)
             Stroke(hz, amp, mode, k);
             // the inner wing: the one closer to the wearer's head
             bool leftInner = true;
@@ -1307,8 +1417,14 @@ namespace HuginWhispers
         private bool _engineOn;
         private float _shT;                              // where in the clip's loop the beat is (its strokes, 0..1)
         private Transform[] _shBones; private string[] _shNames; private Quaternion[] _shRot; private Vector3[] _shPos, _shScl;
-        private int[] _shWing, _shTier; private Quaternion[] _shWingRot;
+        private int[] _shWing, _shTier; private Quaternion[] _shWingRot; private bool[] _shEndL, _shEndR; // (its side, from the name, once)
         internal static float EngineLag = 0.05f, EngineOpen = 0.7f; // s the elbow follows the shoulder (the hand twice that); share of the flight's spread
+        private bool _foldInner;
+        internal string WingWhy = "";
+        internal static float SwingNoBeat = 0.8f; // s after your swing a shove is not beaten against (it ducks: Combat)
+        private float _vy, _fallFor; // your fall: its speed down (m/s, eased), for how long
+        internal static float FallSpeed = 6f, FallAfter = 0.2f, FallOut = 45f, FallUp = 22f, FallElbow = 28f, FallHz = 6f, FallBeat = 6f; // wings open as you drop // this frame's beat or spread keeps the wing by your head small (Wings)
+        internal static float EngineInner = 0.35f, InnerFold = 0.65f; // the wing by your head: its share of the engine's beat; how much of a hand-made spread it leaves out
         private readonly Vector3[] _shAddL = new Vector3[WingKeys.Bones], _shAddR = new Vector3[WingKeys.Bones];
         internal static Vector3 MuninSwept = new Vector3(-10f, 0f, 0f), MuninSweptElbow = new Vector3(-8f, 0f, 0f), MuninSweptHand = new Vector3(-5f, 0f, 0f);
 
@@ -1378,7 +1494,13 @@ namespace HuginWhispers
                     if (_shBones[i] != null) { _shBones[i].localRotation = _shRot[i]; _shBones[i].localPosition = _shPos[i]; _shBones[i].localScale = _shScl[i]; }
                 if (root != null) { root.localPosition = lp; root.localRotation = lr; root.localScale = ls; }
             }
-            for (int j = 0; j < _shWing.Length; j++) { int i = _shWing[j]; _shBones[i].localRotation = Quaternion.Slerp(_shRot[i], _shWingRot[j], w); }
+            bool innerLeft = !Munin ^ PerchSwap; // (the wing by your head beats small: a full beat swept over your head)
+            for (int j = 0; j < _shWing.Length; j++)
+            {
+                int i = _shWing[j];
+                bool inner = innerLeft ? _shEndL[j] : _shEndR[j];
+                _shBones[i].localRotation = Quaternion.Slerp(_shRot[i], _shWingRot[j], inner && _foldInner ? w * EngineInner : w);
+            }
             // the user's keys and Munin's swept wings, as much as it beats
             if (_kl == null) WingKeys.Find(transform, out _kl, out _kr);
             float kx = WingKeys.KeyX(_shT);
@@ -1388,6 +1510,7 @@ namespace HuginWhispers
                 if (Munin) p += b == 0 ? MuninSwept : b == 1 ? MuninSweptElbow : MuninSweptHand;
                 if (b < 2) p.x -= _strokeBack * (b == 0 ? 1f : 0.5f); // (back: towards the tail)
                 _shAddL[b] = _shAddR[b] = p * w;
+                if (_foldInner) { if (innerLeft) _shAddL[b] *= EngineInner; else _shAddR[b] *= EngineInner; }
             }
             Quaternion facing = transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation));
             WingKeys.ApplyAdds(_kl, _kr, facing, _shAddL, _shAddR);
@@ -1406,7 +1529,7 @@ namespace HuginWhispers
             _shBones = _anim.GetComponentsInChildren<Transform>(true);
             List<Transform> keep = new List<Transform>();
             // only its own bones: not what it wears or holds (taken off later, those would leave holes in the list)
-            foreach (Transform t in _shBones) if (t != _anim.transform && t.GetComponentInParent<Outfits.Piece>() == null && t.GetComponentInParent<RavenFetch.Carried>() == null) keep.Add(t);
+            foreach (Transform t in _shBones) if (t != _anim.transform && RavenBones.Is(t, _anim.transform, Munin) && t.GetComponentInParent<Outfits.Piece>() == null && t.GetComponentInParent<RavenFetch.Carried>() == null) keep.Add(t);
             _shBones = keep.ToArray();
             _shNames = new string[_shBones.Length];
             for (int i = 0; i < _shBones.Length; i++) _shNames[i] = _shBones[i].name + (_shBones[i].parent != null ? "<" + _shBones[i].parent.name : "");
@@ -1417,6 +1540,8 @@ namespace HuginWhispers
                     if (t.name.ToLowerInvariant().StartsWith("wing1.")) { wing.Add(i); break; }
             _shWing = wing.ToArray();
             _shWingRot = new Quaternion[_shWing.Length];
+            _shEndL = new bool[_shWing.Length]; _shEndR = new bool[_shWing.Length];
+            for (int j = 0; j < _shWing.Length; j++) { string wn = _shBones[_shWing[j]].name.ToLowerInvariant(); _shEndL[j] = wn.EndsWith(".l"); _shEndR[j] = wn.EndsWith(".r"); }
             // which part of the wing each is: 0 the shoulder's, 1 from the elbow (Wing2) out, 2 from the hand (Wing3) out
             _shTier = new int[_shWing.Length];
             for (int j = 0; j < _shWing.Length; j++)
@@ -1444,6 +1569,8 @@ namespace HuginWhispers
         // landing (the new flight's flare): legs forward to take the shoulder, toes spread
         internal static float ReachHip = -35f, ReachKnee = 25f, ReachAnkle = -15f, ReachToes = -25f;
         private float _reach;
+        internal static float ReachFlare = 0.25f, ReachSpeed = 3f;
+        internal string LegWhy { get { return "tuck " + _tuck.ToString("0.0") + " reach " + _reach.ToString("0.0") + " flare " + Flare.ToString("0.0") + (_landing ? " landing " + LandU.ToString("0.00") : ""); } }
         internal static bool LegsOff;
         private sealed class LegBone { public BoneTurn B; public int Kind; public bool Left; } // 0 hip, 1 knee, 2 ankle, 3 front toe, 4 back talon
         private List<LegBone> _legs;
@@ -1455,15 +1582,18 @@ namespace HuginWhispers
             _legs = new List<LegBone>();
             _legPhase = Random.value * Mathf.PI * 2f;
             _legHz = Random.Range(0.45f, 0.7f);
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 string n = t.name.ToLowerInvariant();
                 if (!n.EndsWith(".l") && !n.EndsWith(".r")) continue;
                 string b = n.Substring(0, n.Length - 2);
                 int kind = b == "leg1" ? 0 : b == "leg2" ? 1 : b == "leg3" ? 2 : (b == "index1" || b == "mid1" || b == "ring1" || b == "index2" || b == "mid2" || b == "ring2") ? 3 : (b == "backtalon1" || b == "backtalon2") ? 4 : -1;
                 if (kind >= 0) _legs.Add(new LegBone { B = new BoneTurn(t), Kind = kind, Left = n.EndsWith(".l") });
+                if (b == "leg1") { if (n.EndsWith(".l")) _hipL = t; else _hipR = t; }
+                if (b == "mid1") { if (n.EndsWith(".l")) _toeL = t; else _toeR = t; }
             }
         }
+        private Transform _hipL, _hipR, _toeL, _toeR;
 
         // after each sampled flight frame: up in a moment, as a bird pulls its feet in after the take-off
         private void Tuck()
@@ -1475,7 +1605,7 @@ namespace HuginWhispers
             crouchW = crouchW * crouchW * (3f - 2f * crouchW);
             float since = Time.time - _flyHoldUntil, push = !held && _flyHoldUntil > 0f && since < 0.15f ? 1f - since / 0.15f : 0f;
             _tuck = Mathf.MoveTowards(_tuck, held || push > 0f || LegsOff ? 0f : 1f, Dt * 2.5f);
-            _reach = Mathf.MoveTowards(_reach, Flare > 0.25f ? 1f : 0f, Dt * 3f);
+            _reach = Mathf.MoveTowards(_reach, Flare > ReachFlare || Dangle > 0.5f ? (Flare > ReachFlare ? 1f : 0.7f) : 0f, Dt * ReachSpeed); // (legs out only near the seat: a real raven lowers them in the last moments)
             if (_legs.Count == 0) return;
             Quaternion facing = transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation));
             Vector3 side = facing * Vector3.right;
@@ -1514,22 +1644,77 @@ namespace HuginWhispers
         {
             if (_legs == null) FindLegs();
             if (_legs.Count == 0) return;
-            if (Mathf.Abs(PerchHip) + Mathf.Abs(PerchKnee) + Mathf.Abs(PerchAnkle) < 0.1f) return;
             Quaternion facing = transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation));
-            Vector3 side = facing * Vector3.right;
+            Vector3 side = facing * Vector3.right, ahead = facing * Vector3.forward;
             bool innerLeft = !Munin ^ PerchSwap; // Hugin sits on the right shoulder: his left leg is by the head
             _perchW = Mathf.MoveTowards(_perchW, 1f, Time.deltaTime * 2.5f);
             float w = _perchW * _perchW * (3f - 2f * _perchW);
             float crouch = SitNew ? Mathf.Clamp(SitRow(11), -0.5f, 1f) : 0f; // a sitting template's crouch: both legs
-            foreach (LegBone l in _legs) if (l.Kind <= 2) l.B.Begin();
+
+            // a step aside (2026-10-22): a little crouch, the leading foot comes up and goes over, the body follows it,
+            // then the other foot is drawn after; a foot standing keeps its place on the shoulder while the body moves
+            float su = (Time.time - _stepAt) / _stepLen;
+            bool stepping = su > 0f && su < 1f && Mathf.Abs(_stepTo - _stepFrom) > 0.001f;
+            float dir = _stepTo >= _stepFrom ? 1f : -1f, body = 0f, legLen = 0.05f;
+            bool leftLeads = false;
+            if (stepping)
+            {
+                body = Mathf.Lerp(_stepFrom, _stepTo, Ease(Mathf.InverseLerp(0.12f, 0.85f, su)));
+                crouch += Bump(su, 0f, 0.16f) * 0.5f;
+                if (_hipL != null && _hipR != null) leftLeads = Vector3.Dot(_hipL.position - _hipR.position, side) * dir > 0f;
+                if (_hipL != null && _toeL != null) legLen = Mathf.Max(0.01f, (_hipL.position - _toeL.position).magnitude);
+            }
+            // a feather shake: the body rolls on the hip (SmallMotion), the legs are turned back so the feet hold on
+            Vector3 fwd = Player != null ? Vector3.ProjectOnPlane(Player.transform.forward, Vector3.up).normalized : ahead;
+            float hold = -ShakeDeg * _shakeBody * ShakeWave(ShakeLag);
+            if (OnFloor) w = 0f; // (the ground is level: no leg bent down a slope)
+            crouch += GroundCrouch + _sneak * SneakCrouch;
+            float tk = SitNew && _sitDir.Run != null && _sitDir.Run.T.Tuck ? _sitDir.ActW : 0f; // (the cold: one foot drawn up)
+            float sc = ScratchEnv(), rub = sc > 0f ? Mathf.Sin((Time.time - _scratchAt) * ScratchHz * Mathf.PI * 2f) * ScratchRub * Mathf.Clamp01((sc - 0.6f) / 0.4f) : 0f;
+            bool busy = stepping || hold != 0f || sc > 0f || tk > 0f || GroundLiftL > 0f || GroundLiftR > 0f || GroundCrouch > 0f || _sneak > 0.01f;
+            if (!busy && Mathf.Abs(PerchHip) + Mathf.Abs(PerchKnee) + Mathf.Abs(PerchAnkle) < 0.1f) return;
+
+            foreach (LegBone l in _legs) if (busy || l.Kind <= 2) l.B.Begin();
             foreach (LegBone l in _legs)
             {
-                if (l.Kind > 2) continue;
-                float a = (l.Kind == 0 ? PerchHip : l.Kind == 1 ? PerchKnee : PerchAnkle) * ((l.Left == innerLeft ? w : 0f) + crouch * 0.8f);
+                if (!busy && l.Kind > 2) continue;
+                float lift = 0f, splay = 0f;
+                if (stepping)
+                {
+                    bool lead = l.Left == leftLeads;
+                    float sw = Mathf.InverseLerp(lead ? 0.1f : 0.45f, lead ? 0.45f : 0.82f, su);
+                    lift = Mathf.Sin(sw * Mathf.PI) * _stepLift;
+                    float foot = Mathf.Lerp(_stepFrom, _stepTo, Ease(sw)) - body; // where the foot is, from under the body
+                    splay = Mathf.Clamp(Mathf.Asin(Mathf.Clamp(foot / legLen, -0.9f, 0.9f)) * Mathf.Rad2Deg, -StepSplayMax, StepSplayMax);
+                }
+                if (l.Kind == 0)
+                {
+                    if (hold != 0f) l.B.Turn(Quaternion.AngleAxis(hold, fwd));
+                    if (Mathf.Abs(splay) > 0.01f) l.B.Turn(Quaternion.AngleAxis(splay, ahead));
+                }
+                float a = l.Kind > 2 ? (l.Kind == 3 ? StepToes : -StepToes) * lift
+                    : (l.Kind == 0 ? PerchHip : l.Kind == 1 ? PerchKnee : PerchAnkle) * ((l.Left == innerLeft ? w : 0f) + crouch * 0.8f)
+                      + (l.Kind == 0 ? StepHip : l.Kind == 1 ? StepKnee : StepAnkle) * lift;
+                float gl = l.Left ? GroundLiftL : GroundLiftR;
+                if (gl > 0f) a += (l.Kind == 0 ? StepHip : l.Kind == 1 ? StepKnee : l.Kind == 2 ? StepAnkle : (l.Kind == 3 ? StepToes : -StepToes)) * gl * 1.3f;
+                if (tk > 0f && l.Left != innerLeft) a += (l.Kind == 0 ? TuckHip : l.Kind == 1 ? TuckKnee : l.Kind == 2 ? TuckAnkle : (l.Kind == 3 ? TuckToes : -TuckToes)) * tk;
+                if (sc > 0f && l.Left != innerLeft) // (the outer foot: the one by your head has no room)
+                    a += l.Kind == 0 ? ScratchHip * sc : l.Kind == 1 ? ScratchKnee * sc + rub : l.Kind == 2 ? ScratchAnkle * sc + rub * 0.6f : (l.Kind == 3 ? ScratchToes : -ScratchToes) * sc;
                 if (Mathf.Abs(a) > 0.01f) l.B.Turn(Quaternion.AngleAxis(a, side));
                 l.B.End();
             }
         }
+        private static float Ease(float x) { return x * x * (3f - 2f * x); }
+        // a scratch (a template's): the outer foot comes up to the head and rubs, the head bowed and tipped to it
+        internal static float ScratchHip = -65f, ScratchKnee = -25f, ScratchAnkle = -20f, ScratchToes = 30f, ScratchHz = 7f, ScratchRub = 12f, ScratchTilt = 24f, ScratchBow = 22f;
+        private float _scratchAt = -10f, _scratchLen = 1f;
+        private float ScratchEnv()
+        {
+            float u = (Time.time - _scratchAt) / _scratchLen;
+            if (u <= 0f || u >= 1f) return 0f;
+            return Ease(Mathf.Clamp01(Mathf.Min(u, 1f - u) / 0.2f));
+        }
+        private static float Bump(float x, float from, float to) { return x <= from || x >= to ? 0f : Mathf.Sin((x - from) / (to - from) * Mathf.PI); }
 
         // ---------------------------------------------------------------- layer 2: small motion over any animation
         // A bird's head keeps still when its body turns and catches up after (Hugin holds longer and calmer, Munin
@@ -1539,7 +1724,32 @@ namespace HuginWhispers
         internal static float HeadLevel = 0.7f;               // in flight: how much of the bank the head takes out
         internal static float BreathDeg = 1.2f, BreathHz = 0.32f;
         internal static float TailTurn = 0.08f, TailMax = 22f;
-        internal static float ShakeSeconds = 0.45f, ShakeHz = 5f, ShakeDeg = 7f;
+        // the tail in flight: rudder (share of the bank), twist, brake (° down), dive (° up), flick (° a beat), its limit,
+        // its ease; spread (a scale of the tail bone across: no feathers of its own to fan) on these axes
+        internal static float TailRudder = 0.4f, TailTwist = 0.5f, TailBrake = 18f, TailDive = 10f, TailFlick = 3f, TailFlyMax = 32f, TailEase = 6f, TailFanEase = 4f;
+        internal static float TailFanX = 0.8f, TailFanY = -0.08f, TailFanZ = 0f; // (x is across the tail: found in the studio)
+        private float _tYaw, _tTwist, _tPitch, _tFan, _tFanShown = -1f;
+        private Vector3 _tailScale0 = Vector3.zero;
+        private void TailFan(float f)
+        {
+            if (_tailB == null || _tailB.T == null) return;
+            if (_tailScale0 == Vector3.zero) _tailScale0 = _tailB.T.localScale;
+            if (Mathf.Abs(f - _tFanShown) < 0.002f && _tailB.T.localScale == Vector3.Scale(_tailScale0, FanVec(f))) return;
+            _tFanShown = f;
+            _tailB.T.localScale = Vector3.Scale(_tailScale0, FanVec(f));
+        }
+        private static Vector3 FanVec(float f) { return new Vector3(1f + f * TailFanX, 1f + f * TailFanY, 1f + f * TailFanZ); }
+        internal static float ShakeSeconds = 0.6f, ShakeHz = 8f, ShakeDeg = 8f, ShakeNeckDeg = 14f, ShakeTailDeg = 12f, ShakeLag = 0.035f;
+        // the shake's swing at a place along the body (lag: s behind the neck): swells and dies away, no jolt at either end
+        private float ShakeWave(float lag)
+        {
+            float st = Time.time - _shakeAt - lag;
+            if (st <= 0f || st >= _shakeLen) return 0f;
+            return Mathf.Sin(st * _shakeHz * Mathf.PI * 2f) * Mathf.Sin(st / _shakeLen * Mathf.PI) * _shakeAmp;
+        }
+        // this shake's own: its length, pace, size, and the body's share (0: a flick, the head alone)
+        private float _shakeLen = 0.6f, _shakeHz = 8f, _shakeAmp = 1f, _shakeBody = 1f;
+        internal static float FlickSeconds = 0.4f, FlickHz = 11f, FlickAmp = 1.6f; // the water flicked off the head
         private Quaternion _stab = Quaternion.identity, _lastBody;
         private int _stabFrame = -10;
         private BoneTurn _tailB, _breathB, _neckRootB, _hipB;
@@ -1575,7 +1785,7 @@ namespace HuginWhispers
         private void FindSmall()
         {
             _smallFound = true;
-            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(transform, Munin))
             {
                 if (_tailB == null && t.name == "Tail") _tailB = new BoneTurn(t);
                 else if (_breathB == null && t.name == "Spine") _breathB = new BoneTurn(t);
@@ -1603,20 +1813,29 @@ namespace HuginWhispers
             if (_tailB != null)
             {
                 _tailB.Begin();
-                _tailB.Turn(Quaternion.AngleAxis(_tailYaw, Vector3.up) * Quaternion.AngleAxis(_tailPitch, right));
+                _tailB.Turn(Quaternion.AngleAxis(_tailYaw + ShakeTailDeg * _shakeBody * ShakeWave(ShakeLag * 2f), Vector3.up) * Quaternion.AngleAxis(_tailPitch, right));
                 _tailB.End();
+                // sitting: the spread from the flight closes over a moment; a little spread to keep its balance (SitBody)
+                _tFan = Mathf.Lerp(_tFan, Mathf.Clamp01(_sitBody.Balance * 0.8f), 1f - Mathf.Exp(-dt * 3f));
+                TailFan(_tFan);
             }
 
-            // a feather shake (a sitting template's), a quick shiver of the body dying away
-            float st = Time.time - _shakeAt;
+            // a feather shake (a sitting template's): a wave from the neck through the body to the tail, the feet hold on
+            // (PerchLegs turns them back against the body's roll)
+            float scr = ScratchEnv();
+            if (_neckRootB != null && (Time.time - _shakeAt < _shakeLen + 0.2f || Time.time - _scratchAt < _scratchLen + 0.2f || _sneak > 0.01f))
+            {
+                _neckRootB.Begin();
+                if (_sneak > 0.01f) _neckRootB.Turn(Quaternion.AngleAxis(_sneak * SneakNeck, right)); // (sneaking: the head down and in)
+                _neckRootB.Turn(Quaternion.AngleAxis(ShakeNeckDeg * ShakeWave(0f), fwd));
+                if (scr > 0f) _neckRootB.Turn(Quaternion.AngleAxis(-ScratchTilt * scr * (Munin ? -1f : 1f), fwd) * Quaternion.AngleAxis(ScratchBow * scr, right)); // (to its outer side: Hugin's right, Munin's left)
+                _neckRootB.End();
+            }
             if (_hipB != null)
             {
                 _hipB.Begin();
-                if (st < ShakeSeconds)
-                {
-                    float k = Mathf.Sin(st / ShakeSeconds * Mathf.PI); // swells and dies away, no jolt at either end
-                    _hipB.Turn(Quaternion.AngleAxis(Mathf.Sin(st * ShakeHz * Mathf.PI * 2f) * ShakeDeg * k, fwd));
-                }
+                float roll = ShakeDeg * _shakeBody * ShakeWave(ShakeLag);
+                if (roll != 0f) _hipB.Turn(Quaternion.AngleAxis(roll, fwd));
                 // Munin: small nervous twitches of the body now and then
                 if (Munin && !Droopy && !AnimDirector.Busy(this))
                 {
@@ -1629,7 +1848,8 @@ namespace HuginWhispers
 
             SettleStep(); // just landed: its little settle, when the director lets it
             float jolt = _sitBody.TakeJolt();
-            if (jolt > 0f) JoltWings(jolt); // a knock its feet cannot hold: a few beats (the dip is the body's)
+            if (jolt > 0f && !(Time.time - Combat.SwingAt < SwingNoBeat && jolt < 0.8f)) JoltWings(jolt); // a knock its feet cannot hold: a few beats (the dip is the body's); your own swing: it ducks instead
+
             if (_jumpFlapAt > 0f && Time.time >= _jumpFlapAt)
             {
                 _jumpStarted = Time.time;
@@ -1641,10 +1861,10 @@ namespace HuginWhispers
             else if (ht < 0.08f) hop = -HopDip * (ht / 0.08f);
             else if (ht < 0.4f) hop = HopUp * Mathf.Sin((ht - 0.08f) / 0.32f * Mathf.PI);
 
-            // a step aside on the shoulder (a sitting template's), with a little hop
-            float sp = Mathf.Clamp01((Time.time - _stepAt) / 0.3f);
-            _stepNow = Mathf.Lerp(_stepFrom, _stepTo, sp * sp * (3f - 2f * sp));
-            float stepHop = sp < 1f ? Mathf.Sin(sp * Mathf.PI) * 0.015f : 0f;
+            // a step aside on the shoulder: the body goes over with the feet (PerchLegs), a dip as each foot comes down
+            float su = (Time.time - _stepAt) / _stepLen;
+            _stepNow = Mathf.Lerp(_stepFrom, _stepTo, Ease(Mathf.InverseLerp(0.12f, 0.85f, su)));
+            float stepHop = su > 0f && su < 1f ? -StepDip * (Bump(su, 0.0f, 0.14f) * 0.6f + Bump(su, 0.4f, 0.55f) + Bump(su, 0.78f, 0.95f) * 0.7f) : 0f;
             PinNudge = Vector3.up * (hop + stepHop + _sitBody.Dip) + right * _stepNow;
             Clack(right);
         }
@@ -1804,12 +2024,31 @@ namespace HuginWhispers
         }
         private float _norovNerves = 1f, _norovNext;
 
+        // its beak with its voice (RavenVoice.Play): open on each syllable as loud as it is, shut in the pauses — the line's
+        // loudness a few dozen times a second, read once when the line starts
+        internal static float SayOpen = 16f; // ° on the loudest syllable
+        private float[] _say;
+        private float _sayAt, _sayRate;
+        private bool _sayShut; // (stopped mid-line: one more frame, so the beak shuts)
+        internal void SayBeak(float[] loud, float perSecond) { _say = loud; _sayAt = Time.time; _sayRate = perSecond; if (loud == null) _sayShut = true; } // (null: it stops, the beak shuts)
+
+        private float Said()
+        {
+            if (_say == null) return 0f;
+            float i = (Time.time - _sayAt) * _sayRate;
+            if (i >= _say.Length - 1) { _say = null; return 0f; }
+            int k = (int)i;
+            return Mathf.Lerp(_say[k], _say[k + 1], i - k) * SayOpen;
+        }
+
         private void Clack(Vector3 right)
         {
             float beak = SitNew ? Mathf.Max(0f, SitRow(10)) : 0f; // a sitting template's beak (begging chatters, cheering wide)
             float beakHz = SitNew && _sitDir.Run != null ? _sitDir.Run.T.BeakHz : 0f;
-            if (!Munin && beak <= 0.01f) return;
-            if (!_jawLooked) { _jawLooked = true; foreach (Transform t in GetComponentsInChildren<Transform>(true)) if (t.name == "Jaw") { _jawB = new BoneTurn(t); break; } }
+            bool speaking = _say != null || _sayShut; _sayShut = false; // (all through a line, its last frame too: the beak shuts between syllables and after)
+            float said = Said();
+            if (!Munin && beak <= 0.01f && !speaking) return;
+            if (!_jawLooked) { _jawLooked = true; foreach (Transform t in RavenBones.Of(transform, Munin)) if (t.name == "Jaw") { _jawB = new BoneTurn(t); break; } }
             if (_jawB == null) return;
             bool foe = Munin && _foe != null && !_foe.IsDead() && !_foe.IsPlayer() && !Droopy && !AnimDirector.Busy(this);
             if (foe && Time.time >= _clackNext)
@@ -1824,6 +2063,7 @@ namespace HuginWhispers
                 float ph = (t0 % one) / one;                      // open and shut, quick
                 _jawB.Turn(Quaternion.AngleAxis(Mathf.Sin(ph * Mathf.PI) * ClackOpen, right));
             }
+            else if (said > 0.01f) _jawB.Turn(Quaternion.AngleAxis(said, right)); // (its voice first: the template's beak waits)
             else if (beak > 0.01f) _jawB.Turn(Quaternion.AngleAxis(beak * (beakHz > 0f ? 0.55f + 0.45f * Mathf.Sin(Time.time * beakHz * Mathf.PI * 2f) : 1f), right));
             _jawB.End();
         }
@@ -1832,6 +2072,20 @@ namespace HuginWhispers
         internal static float BalanceOut = 30f, BalanceUp = 8f, BalanceElbow = 18f; // wings a little open, at full run
         internal static float HopDip = 0.025f, HopUp = 0.04f;                      // m: landing after a jump
         internal static float StepSize = 0.025f;                                   // a step aside, m
+        // the step itself (PerchLegs): how long, how high a foot comes up (a share of the leg's bend), the dips
+        private float _stepLen = 0.9f, _stepLift = 1f; // this step's own length and how high the foot comes up
+        // this time's manner of a quick move (a shake, a flick, a step): its size, pace and length — ±15% / ±10% each time,
+        // Munin quicker and sharper, Hugin slower and steadier, the act's size (touch, trust, nature) on top
+        internal static float MannerSize = 0.15f, MannerPace = 0.1f, MuninPace = 1.12f, HuginPace = 0.92f;
+        private void Manner(System.Random own, float amp, out float size, out float pace, out float len)
+        {
+            float kind = Munin ? MuninPace : HuginPace;
+            size = amp * (1f + MannerSize * (float)(own.NextDouble() * 2.0 - 1.0)) * (Munin ? 1.08f : 0.95f);
+            pace = kind * (1f + MannerPace * (float)(own.NextDouble() * 2.0 - 1.0));
+            len = (1f + MannerPace * (float)(own.NextDouble() * 2.0 - 1.0)) / kind;
+        }
+        internal static float TuckHip = -80f, TuckKnee = 126f, TuckAnkle = -72f, TuckToes = 52f; // the cold: the outer foot drawn up into the feathers (studio 2026-10-22)
+        internal static float StepSeconds = 0.9f, StepHip = -24f, StepKnee = 50f, StepAnkle = -32f, StepToes = 35f, StepDip = 0.004f, StepSplayMax = 35f;
         internal Vector3 PinNudge;                                                 // the pin adds this to the seat
         private float _hopAt = -10f, _stepAt = -10f, _stepFrom, _stepTo, _stepNow;
         private float _twitchNext, _twitchAt = -10f, _twitchDeg;
@@ -1941,10 +2195,19 @@ namespace HuginWhispers
             }
             if (_tailB != null && _tailB.T != null)
             {
+                // the tail as a bird's: a rudder in turns (swung and twisted with the bank), down and spread to brake
+                // (landing, slowing, hanging over you), up and folded in a dive, a small flick with each beat
+                float brake = Mathf.Clamp01(Mathf.Max(Flare, -thrust * 0.8f, Hovering ? 0.6f : 0f, Landing ? 1f : 0f));
+                float yawW = Mathf.Clamp(-roll * TailRudder, -TailFlyMax, TailFlyMax);
+                float twistW = Mathf.Clamp(-roll * TailTwist, -TailFlyMax, TailFlyMax) * upright;
+                float pitchW = Mathf.Clamp(-torsoPitch * 0.65f - thrust * 2f + brake * TailBrake - dive * TailDive + stroke * TailFlick * (1f - dive), -TailFlyMax, TailFlyMax);
+                float k = 1f - Mathf.Exp(-dt * TailEase);
+                _tYaw = Mathf.Lerp(_tYaw, yawW, k); _tTwist = Mathf.Lerp(_tTwist, twistW, k); _tPitch = Mathf.Lerp(_tPitch, pitchW, k);
+                _tFan = Mathf.Lerp(_tFan, Mathf.Clamp01(brake * 1.1f + Mathf.Abs(roll) / 60f * 0.4f - dive), 1f - Mathf.Exp(-dt * TailFanEase));
                 _tailB.Begin();
-                _tailB.Turn(Quaternion.AngleAxis(Mathf.Clamp(-roll * 0.35f, -TailMax, TailMax), up)
-                    * Quaternion.AngleAxis(Mathf.Clamp(-torsoPitch * 0.65f - thrust * 2f, -TailMax, TailMax), facing * Vector3.right));
+                _tailB.Turn(Quaternion.AngleAxis(_tYaw, up) * Quaternion.AngleAxis(_tTwist, fwd) * Quaternion.AngleAxis(_tPitch, facing * Vector3.right));
                 _tailB.End();
+                TailFan(_tFan);
             }
         }
 
@@ -2141,10 +2404,14 @@ namespace HuginWhispers
             }
             if (boss != null) { _foe = boss; SawBoss(boss); return; }
             if (enemy != null) { _foe = enemy; return; }
+            Character mocked = Victim.LookFor(Player, Munin); // mocking someone («Жертва»): eyes on them
+            if (mocked != null) { _foe = mocked; return; }
             Transform talk = CrossBubble.LookFor(Player, Munin); // in a talk with another player's raven: at the one speaking (or spoken to)
             if (talk != null) { _thing = talk; return; }
             if (ReferenceEquals(Player, Player.m_localPlayer))
             {
+                Transform shown = PerkFx.LookFor(Munin); // what its blessing points at (a chest it smelled, the one that killed you)
+                if (shown != null) { _thing = shown; return; }
                 GameObject hover = Player.GetHoverObject();
                 if (hover != null && Vector3.Distance(hover.transform.position, me) < 8f) { _thing = hover.transform; return; }
             }
@@ -2165,7 +2432,7 @@ namespace HuginWhispers
             if (!ReferenceEquals(Player, Player.m_localPlayer) || boss.GetZDOID() == _bossSeen) return;
             _bossSeen = boss.GetZDOID();
             SitEvents.Raise(SitEv.Boss); // it bristles (the sitting director)
-            Caw(Munin ? 0.8f : 1.15f, 0.9f);
+            CawAll(Munin ? 0.8f : 1.15f, 0.9f);
         }
 
         // You got hurt: Hugin cries out, Munin snarls. A real blow startles it; health trickling away (cold in a storm,
@@ -2185,13 +2452,20 @@ namespace HuginWhispers
             }
             if (!blow || Time.time < _nextCaw) return;
             _nextCaw = Time.time + BlowCawEvery;
-            Caw(Munin ? 0.85f : 1.35f, Munin ? 0.55f : 0.4f);
+            CawAll(Munin ? 0.85f : 1.35f, Munin ? 0.55f : 0.4f);
         }
 
         private void Caw(float pitch, float volume)
         {
             Talk();
             if (Player != null) ScreamFx.Caw(Player, Munin, pitch, volume);
+        }
+
+        // what only your game sees (a boss, your blow): the others near hear it too
+        private void CawAll(float pitch, float volume)
+        {
+            if (Player != null) ScreamFx.CawAll(Player, Munin, pitch, volume); // (the beak: CawAll opens it)
+            else Talk();
         }
 
         // once: the raven's bones in the log (for the wing flaps that come next)

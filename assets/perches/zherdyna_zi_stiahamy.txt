@@ -3,10 +3,11 @@ name: Жердина зі стягами
 note: Хрестовина зі стягами на кам’яному колі — більше для краси, але й ворону місце знайдеться. Яйце вгорі гаряче, не чіпати
 use: perch
 id: zherdyna_zi_stiahamy
-cost: Wood:10 Stone:8 LeatherScraps:4
-perday: 30
+cost: Wood:10 Stone:8 Iron:4 LeatherScraps:4 RavenWatch_item_dvergrski_skoby:2
+perday: 60
+station: forge
 ready: Ігор 2026-10-15
-pose: 0 0 0 -6 0 0 0 -6 0 -27 -27
+pose: -50 90 -45 16 -50 90 -45 16 0 -27 -27
 stand: 0 0 0 0 0 0 0 0 0 -27 -27
 part ashwood_beam_2m pos -0.28 0.93 -0.17 rot 0 0 90 scale 0.9 0.28 0.3 mat Iron  # Балка з попелистої деревини 2 м
 part ashwood_beam_2m pos -0.28 1.5 -0.17 rot 0 0 90 scale 0.9 0.28 0.3 mat Iron  # Балка з попелистої деревини 2 м

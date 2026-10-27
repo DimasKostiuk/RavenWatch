@@ -149,7 +149,7 @@ namespace HuginWhispers
             float dir = Flt(w[3]);
             Vector3 me = owner.transform.position;
             Vector3 at = me + Way(dir) * (Far * 0.8f) + Vector3.up * ComeHeight;
-            PostBird b = Make(at, (me - at).normalized, munin, Shoulder.LevelOn(owner, munin), z.GetString(munin ? Outfits.KeyM : Outfits.KeyH, ""),
+            PostBird b = Make(at, (me - at).normalized, munin, Shoulder.LevelOn(owner, munin), Outfits.CodeOn(z, munin),
                 z.GetString(munin ? RavenWear.KeyM : RavenWear.KeyH, ""), owner, false);
             if (b == null) return;
             b.Id = w[1]; b.OwnerPid = owner.GetPlayerID(); b._dir = dir;

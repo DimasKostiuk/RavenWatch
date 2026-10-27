@@ -14,7 +14,7 @@ namespace HuginWhispers
         internal static readonly int Hash = EffectName.GetStableHashCode();
         internal static float Multiplier = 1.35f;
         internal static float Seconds = 10f, SecondsTop = 20f; // at trust level 1 and at the top level
-        internal static float Duration() { return Mathf.Floor(Trust.Lerp(true, Seconds, SecondsTop) * GearFx.FuryMul() * GiftUp.Power("fury") + 0.5f); } // (Кігтясте намисто: longer)
+        internal static float Duration() { return Mathf.Floor(Trust.LerpGift("fury", Seconds, SecondsTop) * GearFx.FuryMul() * GiftUp.Power("fury") + 0.5f); } // (Кігтясте намисто: longer)
         private static SE_Stats _template;
         private static float _set = -1f;   // the speed we wrote last
         private static float _before = 1f; // what it was before we sped it up

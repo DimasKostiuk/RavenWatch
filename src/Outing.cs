@@ -26,26 +26,27 @@ namespace HuginWhispers
 
         private static readonly float[] Until = { 0f, 0f };
         private static readonly int[] Mode = { None, None };
+        // a find is picked up this long before the outing ends: it flies about with it in its beak, to be seen, then home
+        internal static float LootLead = 6f;
+        private static readonly bool[] Looted = { false, false };
         internal static float LastAt = -1000f; // when the last outing began (the director counts from it)
 
         internal static bool IsWide(int m) { return m == WideRight || m == WideLeft; }
         internal static bool Clockwise(int m) { return m == CircleRight || m == WideRight; }
 
-        internal static int Of(Player p, bool munin)
-        {
-            ZDO z = NetFlag.Zdo(p, false);
-            return z != null ? z.GetInt(munin ? KeyM : KeyH, None) : None;
-        }
+        internal static int Of(Player p, bool munin) { return NetFlag.Mode(p, munin ? KeyM : KeyH); }
+        internal static float RingOf(Player p, bool munin) { return NetFlag.Ring(p, munin ? KeyM : KeyH); } // (its figure, the same in every game)
 
         private static void Set(Player p, bool munin, int mode)
         {
-            ZDO z = NetFlag.Zdo(p, true);
-            string key = munin ? KeyM : KeyH;
-            if (z != null && z.GetInt(key, None) != mode) z.Set(key, mode);
+            NetFlag.SetMode(p, munin ? KeyM : KeyH, mode);
             Mode[munin ? 1 : 0] = mode;
         }
 
         internal static float RestStrength = 5f; // strength for an outing that ran its time (none when called back early)
+
+        // «Сорока»: something brought back; else now and then a find of the land (RavenLoot)
+        private static void Finds(Player p, bool munin) { if (!Quirks.OutingDone(p, munin)) RavenLoot.After(p, munin); }
 
         internal static bool Indoors() { return Senses.Underground || Senses.Indoors; }
 
@@ -67,14 +68,18 @@ namespace HuginWhispers
             {
                 bool munin = i == 1;
                 if (Of(p, munin) == None) continue;
-                if (why == null && Time.time < Until[i]) continue;
+                if (why == null && Time.time < Until[i])
+                {
+                    if (!Looted[i] && Mode[i] != Scout && Until[i] - Time.time <= LootLead) { Looted[i] = true; Finds(p, munin); }
+                    continue;
+                }
                 int was = Mode[i];
                 Set(p, munin, None);
                 if (why != null) { if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Raven anim: " + (munin ? "Munin" : "Hugin") + " called back early: " + why); }
                 else
                 {
                     if (was == Scout) Report(p, munin); // back from scouting: what it saw ahead
-                    else Quirks.OutingDone(p, munin);  // «Сорока»: something brought back
+                    else if (!Looted[i]) Finds(p, munin); // (an outing shorter than the lead)
                     Power.Rested(munin, RestStrength * Norov.RestMul(RavenSeat.On(p, munin))); // an outing that ran its time rests the wings (knack «Легке крило»: more)
                 }
             }
@@ -117,6 +122,7 @@ namespace HuginWhispers
             LastAt = Time.time;
             Set(p, munin, mode);
             Until[munin ? 1 : 0] = Time.time + Length(mode, RavenSeat.On(p, munin));
+            Looted[munin ? 1 : 0] = false;
             Nicks.OnOuting(p, munin);
             if (mode == Hunt) Say(munin, "out_hunt");
             else if (mode != Scout) Say(munin, mode == Follow ? "out_follow" : IsWide(mode) ? "out_sail" : "out_circle");
@@ -129,7 +135,9 @@ namespace HuginWhispers
             ZDO z = NetFlag.Zdo(p, true);
             if (z == null) return false;
             z.Set(munin ? HuntM : HuntH, bird.UserID + ":" + bird.ID);
-            return Start(p, munin, Hunt);
+            bool went = Start(p, munin, Hunt);
+            if (went && Plugin.Instance != null) { GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(bird) : null; Plugin.Instance.Log("Outing: " + Plugin.RavenName(munin) + " hunts " + (g != null ? Utils.GetPrefabName(g) + " " + Mathf.RoundToInt(Vector3.Distance(g.transform.position, p.transform.position)) + " m off" : "a bird")); }
+            return went;
         }
 
         // the bird it hunts (every game: from the player's ZDO), or null (gone, out of sight)

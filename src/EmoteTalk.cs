@@ -49,9 +49,40 @@ namespace HuginWhispers
             {
                 _id = id;
                 string e = zdo.GetString(ZDOVars.s_emote, "");
-                if (e.Length > 0 && Time.time >= OursUntil) Started(e);
+                if (e.Length > 0 && Time.time >= OursUntil) { Move(e); Started(e); Nicks.OnEmote(p, e); }
             }
             if (_sayAt > 0f && Time.time >= _sayAt) { _sayAt = -1f; Say(p, _kind); }
+        }
+
+        // what the ravens on your shoulder do at an emote: template, chance Hugin, chance Munin
+        private static readonly Dictionary<string, object[]> Moves = new Dictionary<string, object[]>(System.StringComparer.OrdinalIgnoreCase)
+        {
+            { "wave", new object[] { "Махає крилом", 0.7f, 0.4f } }, { "comehere", new object[] { "Махає крилом", 0.4f, 0.25f } },
+            { "bow", new object[] { "Кланяється", 0.8f, 0.5f } }, { "kneel", new object[] { "Кланяється", 0.8f, 0.5f } },
+            { "cry", new object[] { "Пригортається", 0.8f, 0.6f } }, { "despair", new object[] { "Пригортається", 0.8f, 0.6f } },
+            { "headbang", new object[] { "Киває в такт", 0.6f, 0.9f } },
+            { "cheer", new object[] { Combat.TriumphName, 0.6f, 0.7f } }, { "thumbsup", new object[] { Combat.TriumphName, 0.5f, 0.6f } },
+            { "flex", new object[] { "Хизується", 0.3f, 0.6f } }, { "toast", new object[] { Combat.TriumphName, 0.5f, 0.5f } },
+            { "challenge", new object[] { "Наїжачився", 0.6f, 0.9f } }, { "roar", new object[] { "Наїжачився", 0.6f, 0.9f } },
+            { "laugh", new object[] { "Каркає", 0.4f, 0.7f } }, { "nonono", new object[] { "Воротить дзьоб", 0.5f, 0.5f } },
+            { "cower", new object[] { "Ховається", 0.8f, 0.6f } }, { "shrug", new object[] { "Розпушився", 0.5f, 0.5f } },
+            { "point", new object[] { "Зазирає в торбу", 0f, 0f } }, // (no look at a point yet)
+            { "blowkiss", new object[] { "Відвертається", 0.3f, 0.6f } }, { "loveyou", new object[] { "Підставляє шию", 0.6f, 0.2f } },
+            { "sit", new object[] { "Вмощується", 0.7f, 0.7f } }, { "relax", new object[] { "Вмощується", 0.7f, 0.7f } }, { "rest", new object[] { "Вмощується", 0.7f, 0.7f } },
+        };
+        private static void Move(string emote)
+        {
+            object[] m;
+            if (!Moves.TryGetValue(emote, out m)) return;
+            for (int i = 0; i < 2; i++)
+            {
+                bool munin = i == 1;
+                float chance = (float)m[munin ? 2 : 1];
+                if (chance <= 0f || UnityEngine.Random.value > chance) continue;
+                ShoulderLife life = Shoulder.LocalLife(munin);
+                if (life == null || !life.SitNew || life.Hovering) continue;
+                life.SitDirectorNow.React(life, (string)m[0], UnityEngine.Random.Range(0.25f, 0.6f) + (munin ? 0f : 0.2f));
+            }
         }
 
         private static void Started(string emote)

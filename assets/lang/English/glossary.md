@@ -28,6 +28,9 @@ Status: DRAFT, to be approved by the author.
 | Довіра | Trust |
 | Сила (ворона) | Strength |
 | Ситість | Satiety |
+| Ватажок (доручення) / охоронець | Champion / warden |
+| В'язь | Bindrune |
+| Іскра Одіна (на руні) | Spark of Odin — never "star" |
 | Вишкіл | Training |
 | Ритуал / обряд | ritual / rite |
 | Розбудити / пробудження | wake / waking |
@@ -148,6 +151,12 @@ Status: DRAFT, to be approved by the author.
 | Захисний ошейник | Guard Collar |
 | Холодний медальйон | Frost Medallion |
 | Кігтясте намисто | Claw Necklace |
+| Срібні кільця | Silver Rings |
+| Кістяні браслети | Bone Bracelets |
+| Шкіряні обмотки | Leather Wraps |
+| Панцирний щиток | Carapace Shield |
+| Торба збирача | Forager's Bag |
+| Ейтрова підвіска | Eitr Pendant |
 | Монета на удачу | Lucky Coin |
 | Спіраль захисту | Warding Spiral |
 | Кігті комара | Mosquito Claws |
@@ -161,7 +170,7 @@ Status: DRAFT, to be approved by the author.
 | Проста жердина · Проста настінна жердина | Simple Perch · Simple Wall Perch |
 | Окута жердина · Магічна жердина | Iron-Bound Perch · Magic Perch |
 | Жердина двергрів · Жердина зі стягами | Dvergr Perch · Banner Perch |
-| Вартовий ліхтар · Воронячий піддашок | Watch Lantern · Raven Awning |
+| Вартова жердина · Кована шибениця · Воронячий піддашок | Guard Perch · Forged Gallows · Raven Awning |
 | Простий воронячий стіл · Просунутий стіл ворона | Simple Raven Table · Advanced Raven Table |
 
 ## Bosses (the game's English names)

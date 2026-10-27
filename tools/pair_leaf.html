@@ -1,0 +1,94 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>pair leaf</title></head>
+<body style="background:#3a2a1a">
+<!-- The paired gifts' leaf in the book (assets/book/pair_leaf.png, 2× of 480×160): a loose sheet of the cards' own
+     parchment lying across the spread between the two ravens' pages, its sides gnawed (a raven's beak), the top and
+     bottom only a little ragged, a burnt-brown edge, and a few of Odin's runes in gold. The title is the game's text.
+     Made by tools/pair_leaf.js (headless Chrome); open in a browser to look at it. -->
+<canvas id="c" width="960" height="320"></canvas>
+<pre id="out"></pre>
+<script>
+const W = 960, H = 320, TAU = Math.PI * 2;
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+// the outline: ragged top and bottom, gnawed sides (bites of a beak: round notches, a few deep)
+function outline() {
+  const pts = [], m = 26; // margin left for the bites and the shadow
+  const edge = (x0, y0, x1, y1, n, jitter, bites) => {
+    for (let i = 0; i < n; i++) {
+      const t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+      const nx = -(y1 - y0), ny = x1 - x0, l = Math.hypot(nx, ny);
+      let d = (rnd() - 0.5) * jitter;
+      if (bites && rnd() < 0.16) { // a bite: a few points sunk in along a curve
+        const depth = 8 + rnd() * 18, len = 3 + Math.floor(rnd() * 4);
+        for (let k = 0; k < len && i < n; k++, i++) {
+          const tt = i / n, s = Math.sin((k + 0.5) / len * Math.PI) * depth;
+          pts.push([x0 + (x1 - x0) * tt + nx / l * s, y0 + (y1 - y0) * tt + ny / l * s]);
+        }
+        continue;
+      }
+      pts.push([x + nx / l * d, y + ny / l * d]);
+    }
+  };
+  edge(m + 8, m, W - m - 8, m, 90, 3.5, false);          // top, left to right
+  edge(W - m, m + 6, W - m, H - m - 6, 60, 6, true);      // right side, down
+  edge(W - m - 8, H - m, m + 8, H - m, 90, 3.5, false);   // bottom, right to left
+  edge(m, H - m - 6, m, m + 6, 60, 6, true);              // left side, up
+  return pts;
+}
+
+function path(g, pts) { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (const p of pts) g.lineTo(p[0], p[1]); g.closePath(); }
+
+function rune(g, ch, x, y, size, rot) {
+  g.save(); g.translate(x, y); g.rotate(rot);
+  g.font = 'bold ' + size + 'px "Segoe UI Historic", "Segoe UI Symbol", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.shadowColor = 'rgba(255,200,90,0.55)'; g.shadowBlur = size * 0.35;
+  const gold = g.createLinearGradient(0, -size / 2, 0, size / 2);
+  gold.addColorStop(0, '#f8dc86'); gold.addColorStop(0.5, '#d4a23c'); gold.addColorStop(1, '#a8741f');
+  g.fillStyle = gold; g.fillText(ch, 0, 0);
+  g.shadowBlur = 0; g.lineWidth = 1.2; g.strokeStyle = 'rgba(90,55,12,0.55)'; g.strokeText(ch, 0, 0);
+  g.restore();
+}
+
+function draw() {
+  const c = document.getElementById('c'), g = c.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  const pts = outline();
+  // its shadow on the book
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 14; g.shadowOffsetY = 5; path(g, pts); g.fillStyle = '#d9c597'; g.fill(); g.restore();
+  // the parchment
+  g.save(); path(g, pts); g.clip();
+  const p = g.createRadialGradient(W / 2, H * 0.42, 20, W / 2, H / 2, W * 0.6);
+  p.addColorStop(0, '#f6e9c8'); p.addColorStop(0.5, '#ecdcb6'); p.addColorStop(0.85, '#dcc699'); p.addColorStop(1, '#c6ad7c');
+  g.fillStyle = p; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 2600; i++) { // grain
+    g.fillStyle = 'rgba(110,80,40,' + (rnd() * 0.07) + ')';
+    g.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2, 1 + rnd() * 2);
+  }
+  for (let i = 0; i < 5; i++) { // old stains
+    const x = rnd() * W, y = rnd() * H, r = 20 + rnd() * 50, s = g.createRadialGradient(x, y, 1, x, y, r);
+    s.addColorStop(0, 'rgba(140,100,50,0.08)'); s.addColorStop(1, 'rgba(140,100,50,0)');
+    g.fillStyle = s; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+  }
+  g.restore();
+  // the edge, browned where it was torn and bitten
+  g.save(); path(g, pts); g.clip();
+  g.lineJoin = 'round';
+  g.lineWidth = 16; g.strokeStyle = 'rgba(150,105,50,0.22)'; path(g, pts); g.stroke();
+  g.lineWidth = 6; g.strokeStyle = 'rgba(120,80,35,0.35)'; path(g, pts); g.stroke();
+  g.restore();
+  g.lineWidth = 1.6; g.strokeStyle = 'rgba(100,66,28,0.75)'; path(g, pts); g.stroke();
+  // a fine gold line under the title, broken in the middle for it
+  g.lineWidth = 1.6; g.strokeStyle = 'rgba(200,150,60,0.7)';
+  g.beginPath(); g.moveTo(170, 60); g.lineTo(360, 60); g.moveTo(600, 60); g.lineTo(790, 60); g.stroke();
+  // Odin's runes in gold: ᚨ (Ansuz, Odin's own) by the title, two more at the lower corners (the middle is the cards')
+  rune(g, 'ᚨ', 140, 58, 40, -0.08);
+  rune(g, 'ᚨ', 820, 58, 40, 0.08);
+  rune(g, 'ᛟ', 80, 262, 30, -0.15);
+  rune(g, 'ᚱ', 880, 262, 30, 0.12);
+  document.getElementById('out').textContent = 'leaf ' + c.toDataURL('image/png');
+}
+document.fonts.ready.then(draw);
+</script>
+</body></html>

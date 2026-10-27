@@ -671,6 +671,27 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- a scene
 
+        // Now and then one breaks into the other's longer line (Munin into Hugin's more often): a short word of its own,
+        // put in here so every game shows the same talk (TalkBubble.CutMark); only into talks short enough that the
+        // whole of it still reaches the others (MaxLines)
+        internal static float BreakInM = 0.15f, BreakInH = 0.05f;
+        internal const int BreakInLength = 40; // characters: a line shorter than this is let finish
+        private static void BreakIn(Player p, List<TalkBubble.Line> lines)
+        {
+            if (lines.Count < 2 || lines.Count >= MaxLines) return;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                TalkBubble.Line l = lines[i];
+                if (l.Text == null || l.Text.Length < BreakInLength || TalkBubble.Cuts(l)) continue;
+                bool cutter = !l.Munin;
+                if (UnityEngine.Random.value >= (cutter ? BreakInM : BreakInH)) continue;
+                string word = Satiety.Say(p, cutter, "cut_in");
+                if (string.IsNullOrEmpty(word)) return;
+                lines.Insert(i + 1, new TalkBubble.Line { Munin = cutter, Text = TalkBubble.CutMark + word });
+                return; // (one a talk)
+            }
+        }
+
         private static bool Play(Player p, string reason, float chatty)
         {
             if (Plugin.Instance == null) return false;
@@ -688,6 +709,7 @@ namespace HuginWhispers
                 for (int tries = 0; tries < 3 && lines == null; tries++) lines = Make(p, s, reason, chatty); // an answer that does not fit what was said is never taken: put together again
                 if (lines == null) continue;
                 Remember(p, s.Id);
+                BreakIn(p, lines);
                 TalkBubble.Play(p, lines, true);
                 Send(p, lines);
                 float total = 0f;
@@ -860,7 +882,7 @@ namespace HuginWhispers
             ZRoutedRpc.instance.Register<ZPackage>(RpcTalk, new Action<long, ZPackage>(OnTalk));
         }
 
-        private static void Send(Player p, List<TalkBubble.Line> lines)
+        internal static void Send(Player p, List<TalkBubble.Line> lines)
         {
             if (ZRoutedRpc.instance == null || ZNet.instance == null) return;
             ZPackage pkg = new ZPackage();

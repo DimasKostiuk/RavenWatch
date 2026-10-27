@@ -104,16 +104,18 @@ namespace HuginWhispers
         internal static FlightStyle For(bool munin) { return munin ? Munin : Hugin; }
 
         // One raven's own way of flying (RavenMotor): its kind's style with a small stable personal touch (seed: its
-        // owner) and its trust (nerves above 1: quicker turns and beats, fewer glides; below 1: calmer)
+        // owner) and its trust (nerves above 1: quicker turns and beats, fewer glides; below 1: calmer). Its speed is
+        // its own pace (Wing, FlightBody.Pace), not this touch.
         internal static FlightStyle Personal(bool munin, int seed, float nerves)
         {
             FlightStyle b = For(munin);
             System.Random r = new System.Random(seed);
             float sp = RavenMotor.Spread, n = (nerves - 1f) * RavenMotor.NervesWeight;
             System.Func<float> k = () => 1f + sp * ((float)r.NextDouble() * 2f - 1f);
+            k(); k(); // (the speeds' draws: the rest of the touch stays what it was)
             return new FlightStyle
             {
-                Cruise = b.Cruise * k(), Top = b.Top * k(), Accel = b.Accel * k() * (1f + n * 0.5f), Turn = b.Turn * k() * (1f + n),
+                Cruise = b.Cruise, Top = b.Top, Accel = b.Accel * k() * (1f + n * 0.5f), Turn = b.Turn * k() * (1f + n),
                 Bank = b.Bank * k(), Glide = Mathf.Clamp01(b.Glide * k() * (1f - n)), Beat = b.Beat * k() * (1f + n * 0.5f)
             };
         }
@@ -180,6 +182,7 @@ namespace HuginWhispers
         private float _launchBeat;
         internal static float TurnBelow = 0.8f; // m/s: slower than this it turns to face your way for landing
         internal float Gust;           // 0..1 how hard the wind throws it about now (the motor sets it)
+        internal float Drunk;          // 0..1 tipsy on its owner's mead (Mead; the motor sets it)
         internal static float GustRoll = 6f; // ° it rolls in a full gale
         internal LandStyle Land;       // this landing's own way (Landings.Pick, set by the motor on the way home)
         internal FlightCharacter Char; // its character (RavenFlight.CharFor, set by the motor): how it turns, banks, swings round
@@ -197,6 +200,7 @@ namespace HuginWhispers
         internal float Speed { get { return Vel.magnitude; } }
         internal float Age { get { return _age; } } // seconds in the air (a takeover in the air keeps counting)
         internal float AccelMul = 1f; // below 1: more inertia (a strike's flight swings wider)
+        internal float Pace = 1f;     // this raven's own pace (Wing, set by the motor): × every speed it is asked for, and its pull
         // it met something (Motor.ClearMove): the part of its speed into the surface is gone, along it goes on
         internal void Slide(Vector3 normal)
         {
@@ -260,7 +264,7 @@ namespace HuginWhispers
             }
             float launch = Mathf.Clamp01(_age / Mathf.Max(0.1f, LaunchDuration));
             launch = launch * launch * (3f - 2f * launch);
-            speed *= Mathf.Lerp(0.45f, 1f, launch);
+            speed *= Mathf.Lerp(0.45f, 1f, launch) * Pace;
             Vector3 to = target - _t.position;
             float dist = to.magnitude;
             float want = speed;
@@ -268,7 +272,7 @@ namespace HuginWhispers
             if (arrive && dist < 3f) want = Mathf.Min(want, dist * BrakeGain + 0.05f); // and softly into the very spot, no overshoot
             want = Mathf.Min(want, BendSpeed(to, dist, carry, sharp, arrive));
             Vector3 desired = (dist > 0.001f ? to / dist * want : Vector3.zero) + carry;
-            float maxA = _s.Accel * (arrive && dist < 3f ? 1.8f : 1f) * (1f + sharp * 0.5f) * Mathf.Lerp(0.5f, 1f, launch) * AccelMul;
+            float maxA = _s.Accel * (arrive && dist < 3f ? 1.8f : 1f) * (1f + sharp * 0.5f) * Mathf.Lerp(0.5f, 1f, launch) * AccelMul * Pace;
             Vector3 currentFlat = Vector3.ProjectOnPlane(Vel, Vector3.up);
             Vector3 desiredFlat = Vector3.ProjectOnPlane(desired - carry, Vector3.up);
             bool broadTurn = sharp < 1f && currentFlat.sqrMagnitude > 0.25f && desiredFlat.sqrMagnitude > 0.25f;
@@ -358,6 +362,10 @@ namespace HuginWhispers
             Vector3 fwd = Vector3.ProjectOnPlane(owner.transform.forward, Vector3.up).normalized;
             Vector3 side = Vector3.Cross(Vector3.up, fwd) * (_munin ? -1f : 1f);
             float back = Land != null ? Land.Back : ApproachBack, up = Land != null ? Land.Up : ApproachUp, out_ = Land != null ? Land.Side : ApproachSide;
+            // from near you (a perch by you, a hop): a short way in, not up and round behind you as from afar (2026-10-22:
+            // «злітає надто високо, хоча я близько»); measured once, where this way home began
+            if (_approachK < 0f) _approachK = Mathf.Lerp(NearApproach, 1f, Mathf.Clamp01((Vector3.Distance(_t.position, shoulder) - NearFrom) / Mathf.Max(0.1f, FarFrom - NearFrom)));
+            back *= _approachK; up *= _approachK; out_ *= _approachK;
             Vector3 approach = shoulder - fwd * back + Vector3.up * up + side * out_; // (this landing's own way in: Landings)
             Vector3 rel = _t.position - shoulder;
             // already behind you: it comes straight in from there, facing your way (no round to the side point,
@@ -369,6 +377,8 @@ namespace HuginWhispers
             if (!_final && near && RavenMotor.Walled(shoulder, approach)) _final = true; // you stand by a wall: that side is no way in
             return _final ? OverSeat(shoulder, owner) : approach;
         }
+        private float _approachK = -1f;
+        internal static float NearApproach = 0.3f, NearFrom = 2f, FarFrom = 10f; // the way in's size from this near (share) to this far (whole)
         internal static float FinalReach = 6f; // m: the straight last way in only from this near (and in sight)
         // you went round a corner while it came in straight: it flies by its eyes again (walls, the way round)
         internal void Unfinal() { _final = false; _nearSince = -1f; ResetLandWait(); }
@@ -476,6 +486,26 @@ namespace HuginWhispers
         }
 
         // facing the way it flies, banked into the turn, nose with the climb (and up when braking)
+        // ---- play in the air (2026-10-22): now and then a barrel roll or a flip onto its back and over, for nothing but
+        // the joy of it (ravens do). Started by a plan (an outing far from you); its moment and kind come from the network
+        // clock and who it is, so every game shows the same.
+        internal static float PlayRollSeconds = 0.7f, PlayFlipSeconds = 1.1f;
+        private float _playAt = -10f, _playLen = 1f;
+        private int _playKind; // 1 roll, 2 flip
+        internal bool Playing { get { return _clock - _playAt < _playLen; } }
+        internal void Play(int kind) { if (Playing) return; _playKind = kind; _playAt = _clock; _playLen = kind == 1 ? PlayRollSeconds : PlayFlipSeconds; }
+        private float PlayRoll()
+        {
+            float u = (_clock - _playAt) / _playLen;
+            if (u <= 0f || u >= 1f) return 0f;
+            float s = u * u * (3f - 2f * u);
+            if (_playKind == 1) return s * 360f * (_munin ? -1f : 1f);
+            // a flip: over onto its back, a moment there, and back the way it came
+            float k = u < 0.35f ? Mathf.SmoothStep(0f, 1f, u / 0.35f) : u < 0.6f ? 1f : Mathf.SmoothStep(1f, 0f, (u - 0.6f) / 0.4f);
+            return k * 170f * (_munin ? 1f : -1f);
+        }
+
+        internal static float NoBackAngle = 95f, NoBackFrom = 0.6f; // flying more than this far off its facing, faster than this: it turns to its way
         internal void Face(float dt, float flare)
         {
             Vector3 flat = new Vector3(Vel.x, 0f, Vel.z);
@@ -488,6 +518,10 @@ namespace HuginWhispers
             // only once it has slowed to the hover does it turn round to face your way
             float slowed = 1f - Mathf.Clamp01((hs - TurnBelow) / 2.2f);
             if (!float.IsNaN(_hintYaw)) { hw = Mathf.Max(_hintWeight * slowed, 1f - moving); want = Mathf.LerpAngle(want, _hintYaw, hw); }
+            // never tail first (2026-10-22: called back from a perch while it sat facing away, it flew to you backwards):
+            // while it still drifts on, the way it goes wins over the hint; only nearly stopped does it turn round
+            float back = Mathf.Abs(Mathf.DeltaAngle(want, velYaw));
+            if (back > NoBackAngle && hs > NoBackFrom) { float k = Mathf.Clamp01((hs - NoBackFrom) / 0.8f) * Mathf.Clamp01((back - NoBackAngle) / 40f); want = Mathf.LerpAngle(want, velYaw, k); hw *= 1f - k; }
             float launchEase = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_age / 0.85f));
             float calm = Char.TurnCap / 175f; // its own pace of turning (Hugin slower, Munin quicker)
             float yawRate = Mathf.Lerp(90f, 240f, launchEase) * calm;
@@ -512,7 +546,7 @@ namespace HuginWhispers
             _pitch = Mathf.Lerp(_pitch, pitchWant, Mathf.Clamp01(dt * (Char.PitchEase + settle * 5f)));
             // Euler: yaw, then pitch (minus = nose up), then roll (minus = right wing down, into a right turn)
             // a young raven twitches in the air (fading with trust; never on the way onto the seat)
-            float tw = (Char.Twitch + Gust * GustRoll) * (1f - settle); // a young raven's twitch, the wind's buffeting
+            float tw = (Char.Twitch + Gust * GustRoll + Drunk * Mead.RollDegrees) * (1f - settle); // a young raven's twitch, the wind's buffeting, the mead
             float twRoll = 0f, twYaw = 0f;
             if (tw > 0.05f)
             {
@@ -520,7 +554,7 @@ namespace HuginWhispers
                 twRoll = (Mathf.PerlinNoise(_clock * 1.6f, s0) - 0.5f) * 2f * tw;
                 twYaw = (Mathf.PerlinNoise(s0, _clock * 1.3f) - 0.5f) * tw;
             }
-            Quaternion rot = Quaternion.Euler(-_pitch, _yaw + twYaw, -_bank - twRoll);
+            Quaternion rot = Quaternion.Euler(-_pitch, _yaw + twYaw, -_bank - twRoll - PlayRoll() * (1f - settle));
             if (_recover > 0f)
             {
                 _recover = Mathf.Max(0f, _recover - dt / Mathf.Max(0.05f, RecoverSeconds));

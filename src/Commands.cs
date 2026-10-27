@@ -19,7 +19,7 @@ namespace HuginWhispers
         {
             "help", "quick", "visit", "diary",
 #if RAVEN_ITEM
-            "book", "give", "power", "reroll", "perk", "perks", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "eyes", "gift", "perf", "cells", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour",
+            "book", "train", "mastery", "give", "power", "reroll", "perk", "perks", "wing", "studio", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "eyes", "gift", "perf", "netsize", "cells", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour", "victim", "breed", "bond", "joint", "loot", "play", "share", "gather", "people", "request",
 #endif
         };
 
@@ -139,8 +139,12 @@ namespace HuginWhispers
                     case "norov": return NorovCmd(p, a);
                     case "perk": return Perk(p, a);
                     case "perks": return Perks.ListIds();
+                    case "wing": return WingCmd(p, a);
+                    case "studio": return Studio.Describe();
                     case "ready": RavenSkills.ResetCooldowns(); return "Перезарядки дарів і образи воронів (очікування, щоб знову посадити на плече) скинуто.";
                     case "trust": return TrustCmd(a);
+                    case "train": return TrainCmd(a);
+                    case "mastery": return MasteryCmd(a);
                     case "icons": AbilityIcons.Reload(); return "Іконки воронів з моделей: " + RavenItem.RetryIcons();
                     case "info": return Info(p);
                     case "shoulder": return ShoulderCmd(a);
@@ -156,6 +160,15 @@ namespace HuginWhispers
                     case "voices": return Voice.Samples(p, a);
                     case "pass": return PassTalk.Force(p, a.Length > 1 ? a[1].ToLowerInvariant() : null);
                     case "emote": return EmoteTalk.Force(p, a.Length > 1 ? a[1].ToLowerInvariant() : null);
+                    case "victim": return Victim.Cmd(p, a);
+                    case "breed": return Breeds.Cmd(p, a);
+                    case "bond": return Bonds.Cmd(p, a);
+                    case "joint": return JointPlay.Cmd(p, a);
+                    case "play": return Orders.Play(p) ? "Play: started." : "Play: not now (an order going, or a raven hungry or not yours).";
+                    case "share": return Share.Cmd(p);
+                    case "gather": return Gathering.Cmd(p);
+                    case "people": return People.Cmd(p, a);
+                    case "loot": return RavenLoot.Force(p, a.Length > 1 && a[1].ToLowerInvariant().StartsWith("m"));
                     case "world": return WorldVisit.Force(p, a.Length > 1 && a[1].ToLowerInvariant().StartsWith("m"));
                     case "cross": return CrossTalk.Force(p, a.Length > 1 ? a[1].ToLowerInvariant() : "greet");
                     case "nick": return Nicks.Cmd(p, a.Length > 1 && a[1].ToLowerInvariant().StartsWith("m"), a.Length > 2 ? a[2] : null);
@@ -166,6 +179,12 @@ namespace HuginWhispers
                     case "runes": return RuneBook.Cmd(p, a);
                     case "bind": return BindRun.Cmd(p, a);
                     case "errand": return Errands.Cmd(p, a);
+                    case "request": return Requests.Cmd(p, a);
+                    case "words": return global::HuginWhispers.Words.Cmd(p, a);
+                    case "mead": return Mead.Cmd(p, a);
+                    case "habits": return Habits.Cmd(p, a);
+                    case "bath": return Bath.Cmd(p, a);
+                    case "beastplay": return BeastPlay.Cmd(p, a);
 #if RAVEN_STORY
                     case "story": return Story.Cmd(p, a);
                     case "npc": return Npcs.Cmd(p, a);
@@ -198,6 +217,7 @@ namespace HuginWhispers
                     case "starve": return StarveCmd(a);
                     case "sat": return SatCmd(a);
                     case "perf": return Perf.Start(10f);
+                    case "netsize": return NetSize.Cmd(p);
 #endif
                     default: return Help();
                 }
@@ -253,8 +273,11 @@ namespace HuginWhispers
                 + "  raven give hugin|munin|stone [кількість] — видати предмет\n"
                 + "  raven power hugin|munin|all <число>       — встановити силу ворона (до межі його рівня довіри)\n"
                 + "  raven trust hugin|munin <рівень> [очки]  — встановити рівень довіри й очки\n"
+                + "  raven train hugin|munin <рівень>  — встановити рівень вишколу удару (1-" + Strike.MaxLevel + ")\n"
+                + "  raven mastery hugin|munin reset  — забути обрані прийоми майстерності\n"
                 + "  raven reroll [hugin|munin]              — перекинути благо й тягар\n"
                 + "  raven perk hugin|munin <благо> <тягар>  — задати точні благо й тягар (список: raven perks)\n"
+                + "  raven wing hugin|munin [0.9..1.1]       — темп ворона в повітрі (без числа: показати)\n"
                 + "  raven ready                             — скинути перезарядки, Останній шанс, образи воронів і денне годування\n"
                 + "  raven info                              — ворони на тобі: благо й тягар, сила, перезарядки\n"
                 + "  raven forget <біом> [біом…]             — ворони й гра забувають землю (напр. AshLands): знову «вперше тут»\n"
@@ -385,6 +408,21 @@ namespace HuginWhispers
                 + " (характер розкрито на " + Mathf.RoundToInt(Norov.Shows(item) * 100f) + "%)";
         }
 
+        private static string WingCmd(Player p, string[] a)
+        {
+            if (a.Length < 2) return "raven wing hugin|munin [0.9..1.1]";
+            bool munin = Raven(a, 1);
+            ItemDrop.ItemData item = Find(p, munin);
+            if (item == null) return "Такого ворона немає ні на тобі, ні в сумці.";
+            float v;
+            if (a.Length > 2 && float.TryParse(a[2].Replace(",", "."), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out v))
+            {
+                Wing.Set(item, v);
+                Backup.Save(p, item);
+            }
+            return Plugin.RavenName(munin) + ": темп " + Wing.Base(item).ToString("0.00") + " (" + Wing.Word(item) + "), зараз " + Wing.Now(item).ToString("0.00");
+        }
+
         private static string Perk(Player p, string[] a)
         {
             if (a.Length < 4) return "raven perk hugin|munin <благо> <тягар> — список назв: raven perks";
@@ -404,6 +442,27 @@ namespace HuginWhispers
             if (h != null) s += "Хугін: " + Perks.Short(h) + "; сила " + Mathf.FloorToInt(Power.Get(h)) + "/" + Mathf.RoundToInt(Trust.Strength(h)) + "\n";
             if (m != null) s += "Мунін: " + Perks.Short(m) + "; сила " + Mathf.FloorToInt(Power.Get(m)) + "/" + Mathf.RoundToInt(Trust.Strength(m)) + "\n";
             return s + RavenSkills.CooldownReport();
+        }
+
+        private static string TrainCmd(string[] a)
+        {
+            int level;
+            if (a.Length < 3 || !int.TryParse(a[2], out level)) return "raven train hugin|munin <рівень 1-" + Strike.MaxLevel + ">";
+            bool munin = Raven(a, 1);
+            ItemDrop.ItemData item = Trust.Worn(munin);
+            if (item == null) return Plugin.RavenName(munin) + " зараз не на тобі.";
+            Strike.SetLevel(item, level);
+            return Plugin.RavenName(munin) + ": вишкіл " + Strike.Level(item) + "/" + Strike.MaxLevel + ", удар " + Mathf.RoundToInt(Strike.Blow(munin, item)) + ".";
+        }
+
+        private static string MasteryCmd(string[] a)
+        {
+            if (a.Length < 3 || a[2].ToLowerInvariant() != "reset") return "raven mastery hugin|munin reset";
+            bool munin = Raven(a, 1);
+            ItemDrop.ItemData item = Trust.Worn(munin);
+            if (item == null) return Plugin.RavenName(munin) + " зараз не на тобі.";
+            Mastery.Forget(item);
+            return Plugin.RavenName(munin) + ": прийоми майстерності забуто.";
         }
 
         private static string TrustCmd(string[] a)

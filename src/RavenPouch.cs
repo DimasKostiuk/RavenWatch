@@ -18,10 +18,14 @@ namespace HuginWhispers
     // only whether you own it (you do). Nothing of it is sent anywhere or saved by the game: the food is kept in the
     // raven item, as "Prefab:count", while the pouch is worn; taken off in any way, the food goes to your bag (Spill).
     //
-    // Only food this raven eats now goes in, and never more than Max: a stack of 20 dragged in leaves 15 where it was.
+    // Only food this raven eats now goes in, and never more than its pouch holds (Max; the big «Похідна торба» BigMax):
+    // a stack of 20 dragged in leaves 15 where it was.
     internal static class RavenPouch
     {
-        internal const int Max = 5;
+        internal const int Max = 5, BigMax = 10;
+        internal const string BigId = "pokhidna_torba";
+        internal static int CapOf(string key) { return key == RavenGear.KeyPrefix + BigId ? BigMax : Max; }
+        internal static int Cap(ItemDrop.ItemData raven) { return CapOf(raven != null ? Outfits.Worn(raven, Outfits.Back) : null); }
         internal static float SayChance = 0.5f;       // it says something about it, now and then (always told in the corner)
         internal static float CheckSeconds = 3f;      // how often a hungry raven looks into its pouch
         internal static float AfterMealSeconds = 20f; // and after a piece, before the next
@@ -75,7 +79,7 @@ namespace HuginWhispers
             int c = v.LastIndexOf(':');
             if (c <= 0 || !int.TryParse(v.Substring(c + 1), NumberStyles.Integer, CultureInfo.InvariantCulture, out n) || n <= 0) return false;
             prefab = v.Substring(0, c);
-            n = Mathf.Min(n, Max);
+            n = Mathf.Min(n, BigMax);
             return true;
         }
 
@@ -118,6 +122,8 @@ namespace HuginWhispers
             if (raven == null) return Lang.F("{0} зараз не на тобі.", Plugin.RavenName(munin));
             if (!Worn(raven)) return Lang.F("На {0} нема торби.", (munin ? Lang.T("Муніні") : Lang.T("Хугіні")));
             if (Trust.Stranger(raven, p)) return Lang.F("{0} не твій: у його торбу не лізь.", Plugin.RavenName(munin));
+            string gone = Gone(p, munin, raven);
+            if (gone != null) return gone;
             ZNetView view = p.GetComponent<ZNetView>();
             if (view == null || InvF == null || ViewF == null) return Lang.T("Торбу зараз не відкрити.");
             if (_box == null || _box.transform.parent != p.transform)
@@ -148,6 +154,15 @@ namespace HuginWhispers
             return null;
         }
 
+        // the pouch is on its back: flown off (Odin, an outing, a perch, the post; an order, a strike, scouting), out of reach
+        private static string Gone(Player p, bool munin, ItemDrop.ItemData raven)
+        {
+            string off;
+            if (Trust.Away(raven)) return Trust.AwayAction(munin, raven, Lang.T("торба полетіла разом із ним"));
+            if (RavenSkills.OffShoulder(p, munin, out off)) return Lang.F("{0} зараз {1}.\nТорба в нього на спині: відкриєш, коли повернеться на плече.", Plugin.RavenName(munin), off);
+            return null;
+        }
+
         internal static bool IsOpen
         {
             get
@@ -173,12 +188,12 @@ namespace HuginWhispers
 
         internal static void CloseFor(bool munin) { if (_inv != null && _munin == munin) { Save(); Shut(); _inv = null; _raven = null; } }
 
-        // twice a second: the window shuts when its raven is off you or the pouch off the raven
+        // twice a second: the window shuts when its raven is off you, the pouch off the raven, or the raven flown off
         internal static void Guard()
         {
             if (_inv == null) return;
             if (!IsOpen) { _inv = null; _raven = null; return; } // closed by the player: all was saved on every change
-            if (Trust.Worn(_munin) != _raven || !Worn(_raven)) { Save(); Shut(); _inv = null; _raven = null; }
+            if (Trust.Worn(_munin) != _raven || !Worn(_raven) || Gone(Player.m_localPlayer, _munin, _raven) != null) { Save(); Shut(); _inv = null; _raven = null; }
         }
 
         // A pouch tried on without being given (admins fitting) comes off: its food goes back into your bag (or at your feet).
@@ -233,9 +248,10 @@ namespace HuginWhispers
         {
             if (_inv == null || !Accepts(item)) return 0;
             ItemDrop.ItemData at = _inv.GetItemAt(0, 0);
-            if (at == null) return Max;
+            int cap = Cap(_raven);
+            if (at == null) return cap;
             if (at.m_shared.m_name != item.m_shared.m_name) return 0;
-            return Mathf.Max(0, Max - at.m_stack);
+            return Mathf.Max(0, cap - at.m_stack);
         }
 
         internal static void Redraw(Inventory inv) { InvRedraw.Changed(inv); }

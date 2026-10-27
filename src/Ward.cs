@@ -390,6 +390,7 @@ namespace HuginWhispers
                 GameObject root = new GameObject("RavenWatch_Ward");
                 l = root.AddComponent<WardLook>();
                 l._p = p;
+                Shadow.Outside(root, p); // (hidden with you in Hugin's shadow)
                 l._born = Time.time;
                 l.Build();
                 Looks[p] = l;

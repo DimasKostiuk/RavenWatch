@@ -5,14 +5,15 @@ use: tree
 id: voroniache_derevo_horile
 cost: Wood:1
 perday: 30
-part asset/Дерева/TreeAsh pos 0 3.7 0 rot 0 0 0 scale 4.2 4.2 4.2  # горіле дерево (Meshy), 8 м
-part @box:bowl pos 0 0.35 0 rot 0 0 0 scale 3.6 1 3.2  # зона «коріння» (E — змішати руни)
-part @box:top pos 0 3.4 0 rot 0 0 0 scale 1.7 4.8 1.7  # зона «верх»: стовбур (E — посадити / забрати воронів)
-part @seat pos -1.05 7.26 -0.2 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
-part @seat pos -0.6 7.24 -0.19 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
-part @seat pos 0.45 7.25 -0.16 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
-part fx/bow_projectile_fire pos 0.1 2.4 0.95 rot 0 0 0 scale 0.8 0.8 0.8  # вогник у тріщині стовбура
-part fx/bow_projectile_fire pos 0 4.12 0.46 rot 0 0 0 scale 0.6 0.6 0.6  # вогник вище
-part fx/bow_projectile_fire pos 1.6 1.18 0 rot 0 0 0 scale 0.7 0.7 0.7  # жар біля коріння
-part @light pos 0 2.7 1.2 rot 0 0 0 scale 10 1.6 0.2 tint FF6A20  # тепле світло жару
-part fx/MushroomSmokePuff pos 0 6.7 0 rot 0 0 0 scale 1 1 1 tint 4A4038  # легкий дим над кроною
+part asset/Дерева/TreeAsh pos 0 3.885 0 rot 0 0 0 scale 4.41 4.41 4.41  # горіле дерево (Meshy), 8,4 м
+part @box:bowl pos 0 0.368 0 rot 0 0 0 scale 3.78 1.05 3.36  # зона «коріння» (E — сплести руни)
+part @box:bowl pos 0 1.12 0 rot 0 0 0 scale 1.785 2.24 1.785  # і стовбур до 2,2 м — що перед очима (E — сплести руни)
+part @box:top pos 0 4.165 0 rot 0 0 0 scale 1.785 3.85 1.785  # зона «верх»: стовбур вище 2,2 м (E — посадити / забрати воронів)
+part @seat pos -1.102 7.517 -0.21 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
+part @seat pos -0.63 7.543 -0.199 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
+part @seat pos 0.473 7.524 -0.198 rot 0 0 0 scale 1 1 1  # місце ворона: на жердині на верхівці
+part fx/bow_projectile_fire pos 0.105 2.52 0.997 rot 0 0 0 scale 0.84 0.84 0.84  # вогник у тріщині стовбура
+part fx/bow_projectile_fire pos 0 4.326 0.483 rot 0 0 0 scale 0.63 0.63 0.63  # вогник вище
+part fx/bow_projectile_fire pos 1.68 1.239 0 rot 0 0 0 scale 0.735 0.735 0.735  # жар біля коріння
+part @light pos 0 2.835 1.26 rot 0 0 0 scale 10.5 1.6 0.2 tint FF6A20  # тепле світло жару
+part fx/MushroomSmokePuff pos 0 7.035 0 rot 0 0 0 scale 1.05 1.05 1.05 tint 4A4038  # легкий дим над кроною

@@ -225,12 +225,14 @@ namespace HuginWhispers
             Row(p, "lightstep", hugin != null, () => WeakPassive.TestStep(p));
             Row(p, "lastchance", hugin != null, () => LastChance.Test(p));
             Row(p, "hloyal", hugin != null, () => _note = Loyal.Test(p, true, false));
+            Row(p, "homen", hugin != null, () => _note = Omen.Test(p));
 
             GUILayout.Space(8);
             GUILayout.Label("<b><color=#FF8A7A>Мунін</color></b>" + (munin == null ? "  <color=#FF7A7A>не на плечі</color>" : ""));
             Row(p, "anger", munin != null, () => WeakPassive.TestAnger(p));
             Row(p, "bloodfury", munin != null, () => BloodFury.Test(p));
             Row(p, "mloyal", munin != null, () => _note = Loyal.Test(p, false, true));
+            Row(p, "mrevenge", munin != null, () => _note = BloodRevenge.Test(p));
 
             GUILayout.Space(8);
             GUI.enabled = hugin != null && munin != null;

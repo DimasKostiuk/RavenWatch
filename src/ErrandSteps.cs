@@ -24,6 +24,14 @@ namespace HuginWhispers
         internal virtual bool Tick(ErrandRun r, int i, Player p) { return false; }
         internal virtual string HandIn(ErrandRun r, int i, Player p) { return Lang.T("Зараз нема чого віддавати."); }
         internal virtual bool Where(ErrandRun r, int i, out Vector3 at, out float radius) { at = Vector3.zero; radius = 0f; return false; }
+        internal virtual bool TakesHandIn { get { return false; } } // the nest's «Віддати» is for it
+        internal virtual float Wait { get { return 0f; } }          // s the deed itself takes, whatever you do (ErrandMods: a timer leaves room)
+        internal virtual string How { get { return ""; } }          // the way of killing it asks for (ErrandHow)
+
+        // An active step's own deed (take the feather, lay it down…): the same from E at its place, the J circle and the
+        // book's button (Errands.Act). Its name now ("" none) and why not here and now (null: it can be done).
+        internal virtual string ActLabel(ErrandRun r, int i, Player p, out string why) { why = null; return ""; }
+        internal virtual string Act(ErrandRun r, int i, Player p) { return null; } // null done, else why not
 
         // The step's zone (Where): the core watches you come in and go out, and calls these. Here a step does its work in
         // the world (a champion appears; later: a cache, a defence…). Inside: every couple of seconds while you are in.
@@ -60,6 +68,14 @@ namespace HuginWhispers
             { "destroy", () => new DestroyStep() },
             { "rest", () => new RestStep() },
             { "riddle", () => new RiddleStep() },
+            { "any", () => new AnyStep() },
+            { "spare", () => new SpareStep() },
+            { "carry", () => new CarryStep() },
+            { "hold", () => new HoldStep() },
+            { "follow", () => new FollowStep() },
+            { "clue", () => new ClueStep() },
+            { "cache", () => new CacheStep() },
+            { "siege", () => new SiegeStep() },
         };
 
         // a count as a range ("20-40"): rolled once when the errand is given (ErrandRun.Need), in steps of 10 or 5 when
@@ -107,11 +123,24 @@ namespace HuginWhispers
             string kind = slot.Length > 1 ? slot[1] : "";
             switch (kind)
             {
-                case "around": return Around(p, slot.Length > 2 ? Errands.F(slot[2], 200f) : 200f, slot.Length > 3 ? Errands.F(slot[3], 600f) : 600f, within, out why);
+                case "around": return Around(p, slot.Length > 2 ? Errands.F(slot[2], 200f) : 200f, slot.Length > 3 ? Errands.F(slot[3], 600f) : 600f, within, InOf(slot), out why);
                 case "riddle":
                     Riddles.Riddle rd = Riddles.Pick(p);
                     if (rd == null) { why = "no riddle for this stage"; return null; }
                     return rd.Id;
+                case "route": return FollowStep.Route(p, slot, filled, within, out why);
+                case "nest":
+                    // the nest the ravens last flew to Odin from (Nest.Accept)
+                    string nest;
+                    if (p.m_customData.TryGetValue(Nest.FromKey, out nest) && nest.Length > 0) return nest;
+                    why = "no nest the ravens flew to Odin from";
+                    return null;
+                case "manner":
+                    // manner <chance %> [bow,sneak,…]: a way of killing for a kill step (its word @<slot>), or none ("-");
+                    // only the ways open at your stage (ErrandHow.Open)
+                    List<string> ways = new List<string>();
+                    foreach (string w in slot.Length > 3 ? slot[3].Split(',') : ErrandHow.All) if (ErrandHow.Open(p, w)) ways.Add(w);
+                    return ways.Count > 0 && UnityEngine.Random.value * 100f < (slot.Length > 2 ? Errands.F(slot[2], 50f) : 50f) ? ways[UnityEngine.Random.Range(0, ways.Count)] : "-";
                 case "champion":
                     // champion around <min> <max>: a place, and a champion of that land at your stage;
                     // champion near <slot> <min> <max>: beside another slot's place (two of them in one ring)
@@ -121,10 +150,11 @@ namespace HuginWhispers
                         if (filled == null || !filled.TryGetValue(slot[3], out other)) { why = "slot " + slot[0] + ": no slot «" + slot[3] + "» before it"; return null; }
                         pt = Near(other, slot.Length > 4 ? Errands.F(slot[4], 20f) : 20f, slot.Length > 5 ? Errands.F(slot[5], 40f) : 40f);
                     }
-                    else pt = Around(p, slot.Length > 3 ? Errands.F(slot[3], 300f) : 300f, slot.Length > 4 ? Errands.F(slot[4], 900f) : 900f, within, out why);
+                    else pt = Around(p, slot.Length > 3 ? Errands.F(slot[3], 300f) : 300f, slot.Length > 4 ? Errands.F(slot[4], 900f) : 900f, within, InOf(slot), out why);
                     Vector3 at;
                     if (pt == null || !Point(pt, out at)) return null;
-                    // options after the numbers: lord (a guardian: a boss's bar, size, music), who:<Prefab>, title:<Its_name>
+                    // options after the numbers: lord (a guardian: a boss's bar, size, music), who:<Prefab>, title:<Its_name>,
+                    // in:<Biome> (only in that land: Errands.InLand)
                     string force = "", title = "";
                     bool lord = false;
                     for (int k = 3; k < slot.Length; k++)
@@ -133,6 +163,7 @@ namespace HuginWhispers
                         else if (slot[k].StartsWith("who:")) force = slot[k].Substring(4);
                         else if (slot[k].StartsWith("title:")) title = slot[k].Substring(6).Replace('_', ' ');
                     }
+                    if (force.Length > 0 && (ZNetScene.instance == null || ZNetScene.instance.GetPrefab(force) == null)) { why = "slot " + slot[0] + ": no creature «" + force + "» in this game"; return null; } // (not someone else in its place)
                     Champions.Mods m = Champions.Roll(p, at, force, lord);
                     if (m == null) { why = Lang.T("Одін не знайшов там гідного ворога."); return null; }
                     return pt + "|" + m.Who + "|" + m.Level + "|" + m.Hp.ToString("0.##", CultureInfo.InvariantCulture) + "|" + m.Dmg.ToString("0.##", CultureInfo.InvariantCulture) + "|" + string.Join("+", m.Aff.ToArray()) + "|" + title;
@@ -161,7 +192,20 @@ namespace HuginWhispers
 
         // a place on land this far from you, in a land you have already walked (the Meadows always); within: this near
         // the world's middle at most (0: anywhere)
-        private static string Around(Player p, float min, float max, float within, out string why)
+        // a slot's in:<Biome> option (None without one)
+        internal static Heightmap.Biome InOf(string[] slot)
+        {
+            foreach (string w in slot)
+                if (w.StartsWith("in:"))
+                    try { return (Heightmap.Biome)Enum.Parse(typeof(Heightmap.Biome), w.Substring(3), true); }
+                    catch { Errands.Log("slot " + slot[0] + ": unknown land «" + w.Substring(3) + "»"); }
+            return Heightmap.Biome.None;
+        }
+
+        internal static string Around(Player p, float min, float max, float within, out string why) { return Around(p, min, max, within, Heightmap.Biome.None, out why); }
+
+        // only: in this land alone (None: any you have been to)
+        internal static string Around(Player p, float min, float max, float within, Heightmap.Biome only, out string why)
         {
             why = null;
             if (p == null || WorldGenerator.instance == null) { why = Lang.T("Світ ще не готовий."); return null; }
@@ -177,6 +221,7 @@ namespace HuginWhispers
                 if (within > 0f && x * x + z * z > within * within) continue;
                 Heightmap.Biome b = WorldGenerator.instance.GetBiome(x, z);
                 if (b == Heightmap.Biome.Ocean || b == Heightmap.Biome.None) continue;
+                if (only != Heightmap.Biome.None && b != only) continue;
                 if (b != Heightmap.Biome.Meadows && !lands.Contains("|" + b + "|")) continue; // not sent where you have never been
                 if (WorldGenerator.instance.GetHeight(x, z) < sea + 1f) continue; // under water
                 return Pt(x) + "/" + Pt(z);
@@ -204,7 +249,7 @@ namespace HuginWhispers
             return true;
         }
 
-        private static bool ParsePoint(string v, out Vector3 at)
+        internal static bool ParsePoint(string v, out Vector3 at)
         {
             at = Vector3.zero;
             int bar = v.IndexOf('|');
@@ -265,9 +310,9 @@ namespace HuginWhispers
         private static string Loc(string s) { return Localization.instance != null ? Localization.instance.Localize(s) : s; }
     }
 
-    // kill <Prefab,Prefab…|*> <count> [near <slot> <radius>] [raven]: any of them (by prefab or the game's name token;
-    // * anyone but a boss); near: only while you are that close to the slot's place; raven: only when the last blow was
-    // a raven's (Strike's mark)
+    // kill <Prefab,Prefab…|*> <count> [near <slot> <radius>] [raven] [night] [<how>]: any of them (by prefab or the game's
+    // name token; * anyone but a boss); near: only while you are that close to the slot's place; raven: only when the
+    // last blow was a raven's (Strike's mark); how: bow, magic, sneak, stagger, fire, frost (ErrandHow) — fewer of them then
     internal sealed class KillStep : ErrandStep
     {
         private string[] _who = new string[0];
@@ -275,6 +320,8 @@ namespace HuginWhispers
         private string _near = "";
         private float _radius = 150f;
         private bool _any, _raven, _night;
+        private string _how = ""; // the way of killing asked for (ErrandHow): "" any way
+        internal override string How { get { return _how; } }
         protected override void Read()
         {
             _who = Arg(1, "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -285,7 +332,9 @@ namespace HuginWhispers
                 if (A[k] == "near" && k + 1 < A.Length) { _near = A[k + 1]; _radius = Mathf.Max(10f, Errands.F(Arg(k + 2, "150"), 150f)); k += 2; }
                 else if (A[k] == "raven") _raven = true;
                 else if (A[k] == "night") _night = true;
+                else if (ErrandHow.Is(A[k])) _how = A[k];
             }
+            if (_how.Length > 0) _n = Mathf.Max(1, Mathf.RoundToInt(_n * ErrandHow.Factor(_how)));
         }
         internal override int Need { get { return _n; } }
 
@@ -309,6 +358,7 @@ namespace HuginWhispers
         internal override bool OnKill(ErrandRun r, int i, string prefab, string token, int stars, bool boss, bool raven)
         {
             if (_raven && !raven || _night && !EnvMan.IsNight() || !Close(r, Player.m_localPlayer)) return false;
+            if (_how.Length > 0 && (raven || !ErrandHow.Fits(_how, prefab))) return false; // (a raven's blow is not yours)
             if (_any) { if (boss) return false; r.Count[i] = Mathf.Min(_n, r.Count[i] + 1); return true; }
             foreach (string w in _who)
                 if (string.Equals(w, prefab, StringComparison.OrdinalIgnoreCase) || string.Equals("enemy_" + w, token, StringComparison.OrdinalIgnoreCase) || string.Equals(w, token, StringComparison.OrdinalIgnoreCase))
@@ -328,6 +378,7 @@ namespace HuginWhispers
             }
             if (_raven) line += Lang.T(" (останній удар — воронячий)");
             if (_night) line += Lang.T(" (лише вночі)");
+            line += ErrandHow.Note(_how);
             return _near.Length > 0 ? line + Lang.T(" (біля позначеного місця)") : line;
         }
     }
@@ -339,6 +390,7 @@ namespace HuginWhispers
         private int _n = 1;
         protected override void Read() { _what = Arg(1, ""); _n = ArgI(2, 1); }
         internal override int Need { get { return _n; } }
+        internal override bool TakesHandIn { get { return true; } }
 
         internal override string HandIn(ErrandRun r, int i, Player p)
         {
@@ -388,7 +440,7 @@ namespace HuginWhispers
         internal override string Describe(ErrandRun r, int i, Player p)
         {
             Vector3 at;
-            if (r.Count[i] >= 1) return Lang.T("Дійшов до позначеного місця");
+            if (r.Count[i] >= 1) return Lang.T("Дійш{ов|ла} до позначеного місця");
             if (p == null || !ErrandSteps.Point(Slot(r), out at)) return Lang.T("Дійди до позначеного на мапі місця");
             Vector3 d = at - p.transform.position; d.y = 0f;
             return Lang.F("Дійди до позначеного на мапі місця — ще {0} м", Mathf.RoundToInt(d.magnitude));
@@ -411,15 +463,99 @@ namespace HuginWhispers
             _arg = Arg(3, "");
         }
         internal override int Need { get { return _n; } }
+        private const int HelmSeconds = 5; // do Sail <n>: counted once a Diary sample (every 5 s) while at the helm of a ship under way
+        private const float TameSeconds = 2400f; // a beast fed till it is tame: about this long (wolf, boar, lox, asksvin)
         private const string ForageArg = "forage"; // do Pick <n> forage: only what the woods give — berries, mushrooms, flowers
+
+        internal override float Wait { get { return !_ok ? 0f : _ev == Ev.Tame ? TameSeconds * _n : _ev == Ev.Sail ? HelmSeconds * _n : 0f; } }
 
         internal override bool OnEvent(ErrandRun r, int i, Ev type, string arg, int value)
         {
             if (!_ok || type != _ev) return false;
-            if (_arg == ForageArg) { if (!ErrandSteps.Forage(arg)) return false; }
-            else if (_arg.Length > 0 && !string.Equals(_arg, arg, StringComparison.OrdinalIgnoreCase)) return false;
+            if (_ev == Ev.Sail && !UnderWay()) return false; // (at the helm of a ship lying at anchor: no voyage)
+            if (_ev == Ev.TrophyHang) { if (!Hung(r, arg)) return false; }
+            else if (_arg == ForageArg) { if (!ErrandSteps.Forage(arg)) return false; }
+            else if (_arg.Length > 0 && !Any(arg)) return false;
             r.Count[i] = Mathf.Min(_n, r.Count[i] + 1);
             return true;
+        }
+
+        // do TrophyHang <n> [fresh]: the deed comes as "stand|prefab" (none: the diary's own word, not for the errand).
+        // Each stand once in this errand — any stand, old ones too. With "fresh" only a head won since the errand was
+        // given counts: a trophy of that kind picked up off a kill (Errands.OnFreshTrophy), one per hanging — so the
+        // old trophy wall taken down and hung again counts nothing.
+        internal const string FreshArg = "fresh", FreshMark = "fresh";
+        private const string StandsMark = "stands";
+        private bool Hung(ErrandRun r, string arg)
+        {
+            int bar = arg != null ? arg.IndexOf('|') : -1;
+            string stand = bar > 0 ? arg.Substring(0, bar) : "", prefab = bar > 0 ? arg.Substring(bar + 1) : "";
+            if (stand.Length == 0) return false;
+            string had = r.Mark(StandsMark);
+            if (("/" + had + "/").Contains("/" + stand + "/")) return false;
+            if (_arg == FreshArg)
+            {
+                string fresh = r.Mark(FreshMark);
+                if (FreshOf(fresh, prefab) <= 0) { Errands.Log("trophy hung but not won in this errand: " + prefab); return false; }
+                r.SetMark(FreshMark, AddFresh(fresh, prefab, -1));
+            }
+            r.SetMark(StandsMark, had.Length > 0 ? had + "/" + stand : stand);
+            return true;
+        }
+
+        // the fresh heads kept with the errand: "TrophyDeer:2/TrophyBoar:1"
+        internal static int FreshOf(string mark, string prefab)
+        {
+            foreach (string w in (mark ?? "").Split('/'))
+            {
+                int c = w.LastIndexOf(':'), n;
+                if (c > 0 && w.Substring(0, c) == prefab && int.TryParse(w.Substring(c + 1), out n)) return n;
+            }
+            return 0;
+        }
+
+        private static int FreshLeft(ErrandRun r)
+        {
+            int n = 0, k;
+            foreach (string w in r.Mark(FreshMark).Split('/')) { int c = w.LastIndexOf(':'); if (c > 0 && int.TryParse(w.Substring(c + 1), out k)) n += k; }
+            return n;
+        }
+
+        internal static string AddFresh(string mark, string prefab, int by)
+        {
+            List<string> l = new List<string>();
+            int n = FreshOf(mark, prefab) + by;
+            foreach (string w in (mark ?? "").Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)) if (!w.StartsWith(prefab + ":", StringComparison.Ordinal)) l.Add(w);
+            if (n > 0) l.Add(prefab + ":" + n);
+            return string.Join("/", l.ToArray());
+        }
+
+        private static bool UnderWay()
+        {
+            Player p = Player.m_localPlayer;
+            Ship s = p != null ? p.GetControlledShip() : null;
+            return s != null && Mathf.Abs(s.GetSpeed()) > 1.5f;
+        }
+
+        // the deed's word is one of the step's (Prefab,Prefab…)
+        private bool Any(string arg)
+        {
+            foreach (string w in _arg.Split(',')) if (string.Equals(w, arg, StringComparison.OrdinalIgnoreCase) || string.Equals("enemy_" + w, arg, StringComparison.OrdinalIgnoreCase)) return true; // (a tamed beast: its name token)
+            return false;
+        }
+
+        private string Beasts()
+        {
+            List<string> names = new List<string>();
+            foreach (string w in _arg.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)) names.Add(ErrandSteps.Creature(w));
+            return string.Join(Lang.T(" чи "), names.ToArray());
+        }
+
+        private string Items()
+        {
+            List<string> names = new List<string>();
+            foreach (string w in _arg.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)) names.Add(ErrandSteps.Item(w));
+            return string.Join(Lang.T(" чи "), names.ToArray());
         }
 
         internal override string Describe(ErrandRun r, int i, Player p)
@@ -427,6 +563,8 @@ namespace HuginWhispers
             string what;
             switch (_ev)
             {
+                case Ev.Sail: return Lang.F("Веди корабель — {0}/{1} хв", r.Count[i] * HelmSeconds / 60, _n * HelmSeconds / 60);
+                case Ev.Tame: what = _arg.Length > 0 ? Lang.F("Приручи: {0}", Beasts()) : Lang.T("Приручи звіра"); break;
                 case Ev.Fish: what = Lang.T("Злови рибу"); break;
                 case Ev.Chop: what = Lang.T("Зрубай дерево"); break;
                 case Ev.Mine: what = Lang.T("Видобудь руду чи камінь"); break;
@@ -438,9 +576,9 @@ namespace HuginWhispers
                 case Ev.Parry: what = Lang.T("Відбий удар вчасно"); break;
                 case Ev.Build: what = Lang.T("Збудуй щось"); break;
                 case Ev.Potion: what = Lang.T("Випий зілля"); break;
-                case Ev.Pick: what = _arg == ForageArg ? Lang.T("Збери ягоди, гриби чи квіти") : Lang.T("Збери щось"); break;
+                case Ev.Pick: what = _arg == ForageArg ? Lang.T("Збери ягоди, гриби чи квіти") : _arg.Length > 0 ? Lang.F("Збери: {0}", Items()) : Lang.T("Збери щось"); break;
                 case Ev.Ferment: what = Lang.T("Постав основу меду бродити"); break;
-                case Ev.TrophyHang: what = Lang.T("Повісь трофей на підставку"); break;
+                case Ev.TrophyHang: what = _arg == FreshArg ? Lang.F("Вполюй звіра, забери його трофей і повісь на підставку (здобуто й не повішено: {0})", FreshLeft(r)) : Lang.T("Повісь трофей на підставку"); break;
                 case Ev.Fuel: what = _arg.Length > 0 ? Lang.F("Підкинь у вогонь: {0}", ErrandSteps.Item(_arg)) : Lang.T("Підкинь паливо у вогонь"); break;
                 default: what = _ok ? _ev.ToString() : "?"; break;
             }
@@ -600,12 +738,12 @@ namespace HuginWhispers
                 List<string> left = new List<string>();
                 int got = 0;
                 for (int k = 0; k < _slots.Length; k++) { if (Got(r, i, k)) { got++; continue; } Champions.Mods mk = Mods(r, k); if (mk != null) left.Add(Champions.Name(mk)); }
-                if (left.Count == 0) return Lang.F("Переміг ватажків: {0}", _slots.Length);
+                if (left.Count == 0) return Lang.F("Перемі{{г|гла}} ватажків: {0}", _slots.Length);
                 return Lang.F("Знайди й убий ватажків у колі на мапі — {0}/{1}: {2}", got, _slots.Length, string.Join(", ", left.ToArray()));
             }
             Champions.Mods m = Mods(r, 0);
             if (m == null) return Lang.T("Убий ватажка");
-            if (r.Count[i] >= 1) return Lang.F("Переміг: {0}", Champions.Name(m));
+            if (r.Count[i] >= 1) return Lang.F("Перемі{{г|гла}}: {0}", Champions.Name(m));
             if (_guard.Length > 0) return r.Mark("risen" + i).Length > 0 ? Lang.F("Здолай: {0} — він біля входу в курган", Champions.Name(m))
                 : Lang.F("Вийди з кургану: біля входу на тебе чекає {0}", Champions.Name(m));
             string w = Champions.Words(m);
@@ -685,7 +823,7 @@ namespace HuginWhispers
 
         internal override string Describe(ErrandRun r, int i, Player p)
         {
-            if (r.Count[i] >= 1) return Lang.T("Прочитав рунний камінь");
+            if (r.Count[i] >= 1) return Lang.T("Прочита{в|ла} рунний камінь");
             Vector3 at;
             if (p == null || !ErrandSteps.Point(Slot(r), out at)) return Lang.T("Дійди до позначеного на мапі каменя й прочитай його");
             Vector3 d = at - p.transform.position; d.y = 0f;
@@ -713,7 +851,7 @@ namespace HuginWhispers
 
         internal override string Describe(ErrandRun r, int i, Player p)
         {
-            return Lang.F("Добудь сам: {0} — {1}/{2}", ErrandSteps.Item(_what), r.Count[i], _n);
+            return Lang.F("Добудь сам{{|а}}: {0} — {1}/{2}", ErrandSteps.Item(_what), r.Count[i], _n);
         }
     }
 
@@ -814,7 +952,7 @@ namespace HuginWhispers
             string line;
             if (_dawn)
             {
-                if (r.Count[i] >= 1) return Lang.T("Досидів біля вогню до світанку");
+                if (r.Count[i] >= 1) return Lang.T("Досиді{в|ла} біля вогню до світанку");
                 float f = EnvMan.instance != null ? EnvMan.instance.GetDayFraction() : 0f;
                 int min = Mathf.FloorToInt(f * 24f * 60f);
                 line = Lang.F("Досиди біля вогню до світанку з воронами на плечах — зараз {0:00}:{1:00}", min / 60, min % 60);
@@ -854,6 +992,289 @@ namespace HuginWhispers
             if (rd == null) return Lang.T("Загадка Одіна");
             if (r.Count[i] >= 1) return Lang.F("Відгадано: {0}", ErrandSteps.Item(rd.Prefab));
             return Lang.F("Загадка: «{0}» Поклади відгадку в чашу гнізда ({1} шт.) і віддай Одіну.", Lang.T(rd.Text), rd.Count);
+        }
+    }
+
+    // any <step> | <step> …: one of the ways is enough (kill, bring, do — the others have their own work in the core).
+    // Each way keeps its own count (the run's mark any<i>); the first one done counts for the step.
+    internal sealed class AnyStep : ErrandStep
+    {
+        private static readonly string[] Ways = { "kill", "bring", "do" };
+        private readonly List<ErrandStep> _alt = new List<ErrandStep>();
+        private ErrandRun _shadow, _for; // (the ways' counts, read again only when the mark changed)
+        private string _raw;
+
+        protected override void Read()
+        {
+            List<string> cur = new List<string>();
+            for (int k = 1; k <= A.Length; k++)
+            {
+                if (k < A.Length && A[k] != "|") { cur.Add(A[k]); continue; }
+                if (cur.Count > 0 && Array.IndexOf(Ways, cur[0]) >= 0) _alt.Add(ErrandSteps.Make(cur.ToArray()));
+                else if (cur.Count > 0) Errands.Log("step any: «" + cur[0] + "» can't be one of its ways");
+                cur.Clear();
+            }
+        }
+        internal override int Need { get { return 1; } }
+        internal override bool TakesHandIn { get { foreach (ErrandStep s in _alt) if (s.TakesHandIn) return true; return false; } }
+        internal override float Wait { get { float w = 0f; for (int j = 0; j < _alt.Count; j++) w = j == 0 ? _alt[j].Wait : Mathf.Min(w, _alt[j].Wait); return w; } }
+        internal override string How { get { foreach (ErrandStep s in _alt) if (s.How.Length > 0) return s.How; return ""; } }
+
+        private static string Key(int i) { return "any" + i; }
+
+        // a run of its own for the ways: the errand's slots, their counts
+        private ErrandRun Shadow(ErrandRun r, int i)
+        {
+            string raw = r.Mark(Key(i));
+            if (_shadow != null && _for == r && _raw == raw) return _shadow;
+            ErrandRun s = new ErrandRun { Def = r.Def, Id = r.Id, Munin = r.Munin, Given = r.Given };
+            foreach (KeyValuePair<string, string> kv in r.Slot) s.Slot[kv.Key] = kv.Value;
+            s.Count = new int[_alt.Count];
+            string[] c = raw.Split(',');
+            for (int j = 0; j < s.Count.Length && j < c.Length; j++) s.Count[j] = Mathf.Max(0, Errands.I(c[j], 0));
+            _shadow = s; _for = r; _raw = raw;
+            return s;
+        }
+
+        // a way moved: its count kept in the run; one done is the step done
+        private bool Back(ErrandRun r, int i, ErrandRun s, bool moved)
+        {
+            if (!moved) return false;
+            string[] c = new string[s.Count.Length];
+            for (int j = 0; j < c.Length; j++) { c[j] = s.Count[j].ToString(CultureInfo.InvariantCulture); if (_alt[j].Done(s, j)) r.Count[i] = 1; }
+            r.SetMark(Key(i), string.Join(",", c));
+            _raw = r.Mark(Key(i));
+            return true;
+        }
+
+        internal override void Start(ErrandRun r, int i, Player p) { ErrandRun s = Shadow(r, i); for (int j = 0; j < _alt.Count; j++) _alt[j].Start(s, j, p); }
+
+        internal override bool OnEvent(ErrandRun r, int i, Ev type, string arg, int value)
+        {
+            ErrandRun s = Shadow(r, i);
+            bool m = false;
+            for (int j = 0; j < _alt.Count; j++) if (_alt[j].OnEvent(s, j, type, arg, value)) m = true;
+            return Back(r, i, s, m);
+        }
+
+        internal override bool OnKill(ErrandRun r, int i, string prefab, string token, int stars, bool boss, bool raven)
+        {
+            ErrandRun s = Shadow(r, i);
+            bool m = false;
+            for (int j = 0; j < _alt.Count; j++) if (_alt[j].OnKill(s, j, prefab, token, stars, boss, raven)) m = true;
+            return Back(r, i, s, m);
+        }
+
+        internal override bool Tick(ErrandRun r, int i, Player p)
+        {
+            ErrandRun s = Shadow(r, i);
+            bool m = false;
+            for (int j = 0; j < _alt.Count; j++) if (_alt[j].Tick(s, j, p)) m = true;
+            return Back(r, i, s, m);
+        }
+
+        // the first way that takes it (a thing to bring); else why the first of them can't
+        internal override string HandIn(ErrandRun r, int i, Player p)
+        {
+            ErrandRun s = Shadow(r, i);
+            string first = null;
+            for (int j = 0; j < _alt.Count; j++)
+            {
+                if (!_alt[j].TakesHandIn || _alt[j].Done(s, j)) continue;
+                string why = _alt[j].HandIn(s, j, p);
+                if (why == null) { Back(r, i, s, true); return null; }
+                if (first == null) first = why;
+            }
+            return first ?? Lang.T("Зараз нема чого віддавати.");
+        }
+
+        internal override bool Where(ErrandRun r, int i, out Vector3 at, out float radius)
+        {
+            ErrandRun s = Shadow(r, i);
+            for (int j = 0; j < _alt.Count; j++) if (_alt[j].Where(s, j, out at, out radius)) return true;
+            at = Vector3.zero; radius = 0f;
+            return false;
+        }
+
+        internal override string Describe(ErrandRun r, int i, Player p)
+        {
+            ErrandRun s = Shadow(r, i);
+            List<string> ways = new List<string>();
+            for (int j = 0; j < _alt.Count; j++) ways.Add(_alt[j].Describe(s, j, p));
+            return string.Join("\n" + Lang.T("   або: "), ways.ToArray());
+        }
+    }
+
+    // spare <Prefab,…> [days]: none of them killed by you for that many game days, counted from the next dawn; one
+    // killed in that time — the count begins again with the dawn after (the run's mark spare<i>: when it began)
+    internal sealed class SpareStep : ErrandStep
+    {
+        private const float DawnAt = 0.15f; // the morning, in the raw day (EnvMan.GetMorningStartSec; its shown fraction is rescaled to 0.25)
+        private string[] _who = new string[0];
+        private int _days = 1;
+        protected override void Read()
+        {
+            _who = Arg(1, "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            _days = ArgI(2, 1);
+        }
+        internal override int Need { get { return 1; } }
+        internal override float Wait { get { return (_days + 0.5f) * Power.GameDaySeconds(); } }
+
+        private static string Key(int i) { return "spare" + i; }
+
+        private static double NextDawn()
+        {
+            double len = Power.GameDaySeconds(), now = WorldTime.Now;
+            double dawn = Math.Floor(now / len) * len + len * DawnAt;
+            return dawn > now ? dawn : dawn + len;
+        }
+
+        private static double From(ErrandRun r, int i)
+        {
+            double at;
+            return double.TryParse(r.Mark(Key(i)), NumberStyles.Float, CultureInfo.InvariantCulture, out at) ? at : -1;
+        }
+
+        private static void Begin(ErrandRun r, int i, Player p)
+        {
+            r.SetMark(Key(i), NextDawn().ToString("0", CultureInfo.InvariantCulture));
+            Errands.Keep(p, r);
+        }
+
+        internal override void Start(ErrandRun r, int i, Player p) { if (From(r, i) < 0) Begin(r, i, p); }
+
+        internal override bool Tick(ErrandRun r, int i, Player p)
+        {
+            if (r.Count[i] >= 1) return false;
+            double from = From(r, i);
+            if (from < 0) { Begin(r, i, p); return false; }
+            if (WorldTime.Now < from + _days * Power.GameDaySeconds()) return false;
+            r.Count[i] = 1;
+            return true;
+        }
+
+        // (a raven's blow is not yours: it may strike unbidden)
+        internal override bool OnKill(ErrandRun r, int i, string prefab, string token, int stars, bool boss, bool raven)
+        {
+            if (raven || r.Count[i] >= 1 || !Is(prefab, token)) return false;
+            double from = From(r, i);
+            if (from < 0 || WorldTime.Now < from) return false; // (before the dawn: not yet counted)
+            Player p = Player.m_localPlayer;
+            Begin(r, i, p);
+            if (p != null) RavenMsg.Center(p, Lang.F("{0} це бачив. Відлік — знову з наступного світанку.", Plugin.RavenName(r.Munin)));
+            return false;
+        }
+
+        private bool Is(string prefab, string token)
+        {
+            foreach (string w in _who)
+                if (string.Equals(w, prefab, StringComparison.OrdinalIgnoreCase) || string.Equals("enemy_" + w, token, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        internal override string Describe(ErrandRun r, int i, Player p)
+        {
+            List<string> names = new List<string>();
+            foreach (string w in _who) names.Add(ErrandSteps.Creature(w));
+            string who = string.Join(Lang.T(" чи "), names.ToArray());
+            if (r.Count[i] >= 1) return Lang.F("Не чіпа{{в|ла}}: {0}", who);
+            double from = From(r, i);
+            string span = _days == 1 ? Lang.T("добу") : Lang.N(_days, "добу|доби|діб");
+            if (from < 0 || WorldTime.Now < from) return Lang.F("Не вбивай: {0} — {1}, від найближчого світанку", who, span);
+            int left = Mathf.Max(1, Mathf.CeilToInt((float)(from + _days * Power.GameDaySeconds() - WorldTime.Now) / 60f));
+            return Lang.F("Не вбивай: {0} — лишилось {1} хв", who, left);
+        }
+    }
+
+    // carry <slot> [radius]: Odin's feather, taken at a raven's nest (the step's start), carried to that place and laid
+    // down there; it goes through no portal and by no post. Taking and laying are the step's deed (ActLabel): E at the
+    // nest's bowl or the feather used from the bag, the J circle, the book. Died: the feather waits in the grave; lost:
+    // another one at a nest. Each feather taken bears the errand's stamp and its number (mark carry<i>: how many taken):
+    // only the last one counts, so none can be stocked up in a chest; and it is taken only well away from the place (no
+    // nest built beside it). (Its tool tier keeps it from every portal, even in a world that lets all things through.)
+    internal sealed class CarryStep : ErrandStep
+    {
+        private const float NestNear = 8f, RingSeen = 80f; // (the ring: its ground read once, from a zone already loaded)
+        private string _slot = "";
+        private float _radius = 8f;
+        protected override void Read() { _slot = Arg(1, ""); _radius = Mathf.Max(4f, Errands.F(Arg(2, "8"), 8f)); }
+        internal override int Need { get { return 1; } }
+
+        private static string Key(int i) { return "carry" + i; }
+        private static int TakenN(ErrandRun r, int i) { return Errands.I(r.Mark(Key(i)), 0); }
+        private static bool Taken(ErrandRun r, int i) { return TakenN(r, i) > 0; }
+        private static bool Holds(ErrandRun r, int i, Player p) { return Taken(r, i) && RavenItem.Feathers(p, Stamp(r, i)) > 0; }
+
+        // the feather that counts now: this errand's, this step's, the last one taken
+        internal static string Stamp(ErrandRun r, int i) { return ErrandMark.Of(r) + "#" + i + "#" + TakenN(r, i); }
+
+        // how far from the place it is taken at least: half of how far the errand sent you, within these bounds
+        private static float MinTake(ErrandRun r) { return Mathf.Clamp(ErrandMods.FarOf(r) * 0.5f, 150f, 400f); }
+
+        internal override float Wait { get { return 300f; } } // (the way to a nest first: ErrandMods' timer)
+
+        internal override bool Where(ErrandRun r, int i, out Vector3 at, out float radius)
+        {
+            radius = _radius; at = Vector3.zero;
+            string v;
+            return r.Slot.TryGetValue(_slot, out v) && ErrandSteps.Point(v, out at);
+        }
+
+        private float Way(ErrandRun r, int i, Player p)
+        {
+            Vector3 at; float rad;
+            if (p == null || !Where(r, i, out at, out rad)) return float.MaxValue;
+            Vector3 d = p.transform.position - at; d.y = 0f;
+            return d.magnitude - rad;
+        }
+
+        internal override string ActLabel(ErrandRun r, int i, Player p, out string why)
+        {
+            why = null;
+            if (r.Count[i] >= 1 || p == null) return "";
+            if (!Holds(r, i, p))
+            {
+                float min = MinTake(r);
+                if (!Nest.Near(p, NestNear)) why = Lang.T("біля воронячого гнізда");
+                else if (Way(r, i, p) < min) why = Lang.F("біля гнізда, не ближче {0} м до позначки", Mathf.RoundToInt(min));
+                else if (!p.GetInventory().HaveEmptySlot()) why = Lang.T("з вільним місцем у сумці");
+                return Lang.T("Взяти перо Одіна");
+            }
+            if (Way(r, i, p) > 1f) why = Lang.T("на позначці доручення");
+            return Lang.T("Покласти перо Одіна");
+        }
+
+        internal override string Act(ErrandRun r, int i, Player p)
+        {
+            if (!Holds(r, i, p))
+            {
+                if (!p.GetInventory().HaveEmptySlot() || RavenItem.Feather == null) return Lang.T("У сумці нема місця для пера.");
+                if (!p.GetInventory().AddItem(RavenItem.Feather, 1)) return Lang.T("У сумці нема місця для пера.");
+                r.SetMark(Key(i), (TakenN(r, i) + 1).ToString(CultureInfo.InvariantCulture)); // (the ones taken before count no more)
+                RavenItem.StampNew(p, Stamp(r, i));
+                RavenMsg.Center(p, Lang.T("Ти взя{в|ла} перо Одіна. Донеси його до позначки на мапі — крізь портал воно не пройде."));
+                return null;
+            }
+            RavenItem.DropFeathers(p);
+            r.Count[i] = 1;
+            return null;
+        }
+
+        internal override bool Tick(ErrandRun r, int i, Player p)
+        {
+            Vector3 at; float rad;
+            if (r.Count[i] < 1 && Way(r, i, p) < RingSeen && Where(r, i, out at, out rad)) RuneRing.Want(at, rad); // (the place, seen when near)
+            return false;
+        }
+
+        internal override string Describe(ErrandRun r, int i, Player p)
+        {
+            if (r.Count[i] >= 1) return Lang.T("Перо Одіна покладено");
+            if (!Taken(r, i)) return Lang.T("Візьми перо Одіна в чаші воронячого гнізда й донеси до позначки");
+            if (!Holds(r, i, p)) return Lang.T("Перо Одіна не з тобою: забери його з могили або візьми нове в чаші гнізда");
+            float way = Way(r, i, p);
+            return way <= 1f ? Lang.T("Ти на позначці: поклади перо Одіна (правий клік у сумці)")
+                : Lang.F("Донеси перо Одіна до позначки — ще {0} м (крізь портал не пройде)", Mathf.RoundToInt(way));
         }
     }
 

@@ -103,6 +103,8 @@ const GROUPS = [
   ['Світ', t => t.startsWith('world_')],
   ['Дари: Крила, Обманка, Звір, Заслона', t => /^(hflight|hdecoy|beast|ward)/.test(t)],
   ['Доручення Одіна', t => t.startsWith('errand_')],
+  ['Віщування й кровна помста', t => t.startsWith('omen_') || t.startsWith('revenge_')],
+  ['Приборкання', t => t.startsWith('mtame')],
   ['Емоції гравця', t => t.startsWith('emote_')],
   ['Де ти зараз', t => t.startsWith('here_') || t === 'afk'],
   ['Знову те саме', t => /(^again_|_again$)/.test(t)],

@@ -20,7 +20,13 @@ namespace HuginWhispers
         // and a crow's chatter backwards, at 0.9 of its speed (a little longer and lower)
         internal const string CrowSound = "sfx_crow_idle";
         internal static float CrowSpeed = 0.9f;
-        internal static void Register() { RavenFx.Register(RpcFx, Spawn); }
+        private const string RpcCaw = "RavenWatch_Caw";
+        private const float CawHeard = 100f;
+        internal static void Register()
+        {
+            RavenFx.Register(RpcFx, Spawn);
+            ZRoutedRpc.instance.Register<ZPackage>(RpcCaw, new Action<long, ZPackage>(OnCaw));
+        }
         internal static void Play(Player p) { RavenFx.Broadcast(RpcFx, p, Spawn); }
 
         // A raven's voice from the game's sounds. Found once, and written to the log, so it is clear what plays.
@@ -64,6 +70,40 @@ namespace HuginWhispers
         internal static void Caw(Player p, bool munin, float pitch, float volume)
         {
             CawAt(p.transform, p.transform.position + Vector3.up * 1.4f, pitch, volume, false, Voice.CodeOn(p, munin));
+        }
+
+        // your raven's caw that the others near hear too (something only your game knows of: a peck, a perk, hunger);
+        // their game plays it in the same voice and opens the beak of the raven they see on you
+        internal static void CawAll(Player p, bool munin, float pitch, float volume)
+        {
+            if (p == null) return;
+            Caw(p, munin, pitch, volume);
+            ShoulderLife life = Shoulder.LifeOf(p, munin); // the beak with it, here as on the others' games
+            if (life != null) life.Talk();
+            if (ZRoutedRpc.instance == null || !ReferenceEquals(p, Player.m_localPlayer)) return;
+            ZPackage pkg = new ZPackage();
+            pkg.Write(p.GetZDOID());
+            pkg.Write(p.transform.position);
+            pkg.Write(munin);
+            pkg.Write(pitch);
+            pkg.Write(volume);
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcCaw, pkg);
+        }
+
+        private static void OnCaw(long sender, ZPackage pkg)
+        {
+            ZDOID id = pkg.ReadZDOID();
+            Vector3 pos = pkg.ReadVector3();
+            bool munin = pkg.ReadBool();
+            float pitch = pkg.ReadSingle(), volume = pkg.ReadSingle();
+            Player me = Player.m_localPlayer;
+            if (me == null || sender == ZDOMan.GetSessionID() || Vector3.Distance(me.transform.position, pos) > CawHeard) return;
+            GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(id) : null;
+            Player who = g != null ? g.GetComponent<Player>() : null;
+            if (who == null || who == me || Shadow.Flagged(who)) return; // (in Hugin's shadow: unheard as unseen)
+            Caw(who, munin, pitch, volume);
+            ShoulderLife life = Shoulder.LifeOf(who, munin);
+            if (life != null) life.Talk();
         }
 
         // the same voice from anywhere (a raven on a perch), carried along by 'on'; voice: the raven's number, -1 plain

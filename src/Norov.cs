@@ -32,6 +32,7 @@ namespace HuginWhispers
             public float SitPace = 1f, SitReact = 1f, SitAmp = 1f;  // sitting: × how often it does things of its own, × how readily it reacts to you, × how big its poses are
             public string[] Knacks = new string[0];           // the knacks that suit it (rolled twice as often with it)
             public string[] Quirks = new string[0];           // the quirks that suit it (likewise)
+            public string[] Perks = new string[0];            // the blessings and burdens that suit it (likewise: Perks.Roll)
             public string Tag { get { return "char_" + Id; } } // its phrases (later)
         }
 
@@ -52,36 +53,36 @@ namespace HuginWhispers
             new Character { Id = "homebody", Name = Lang.K("Домосід"), WeightH = 1.3f, WeightM = 0.7f,
                 Text = Lang.K("Тримається плеча: сам відлітає рідше і ненадовго, здебільшого летить слідом за тобою. На плечі спокійний, у повітрі плавний."),
                 OutChance = 0.6f, OutLength = 0.8f, Follow = 2f, Circle = 0.6f, Scout = 0.5f, Nerves = 0.85f, SitPace = 0.9f, SitReact = 0.9f, SitAmp = 0.95f,
-                Turn = 0.95f, Curve = 1.05f, Switch = 1.08f, Ease = 0.95f, Knacks = new[] { "frugal", "thrifty" }, Quirks = new[] { "sleepy", "chilly" } },
+                Turn = 0.95f, Curve = 1.05f, Switch = 1.08f, Ease = 0.95f, Knacks = new[] { "frugal", "thrifty" }, Quirks = new[] { "sleepy", "chilly" }, Perks = new[] { "wander", "sweet", "sleepy" } },
             new Character { Id = "wanderer", Name = Lang.K("Мандрівник"), WeightH = 1.3f, WeightM = 0.8f,
                 Text = Lang.K("Любить небо: сам відлітає частіше й літає довше, охочіше кружляє й розвідує. Широкі дуги, довгі ковзання."),
                 OutChance = 1.5f, OutLength = 1.3f, Follow = 0.6f, Circle = 1.3f, Scout = 1.6f, SitAmp = 1.05f,
-                Curve = 1.08f, Switch = 1.05f, Knacks = new[] { "far", "eye" }, Quirks = new[] { "magpie", "wet" } },
+                Curve = 1.08f, Switch = 1.05f, Knacks = new[] { "far", "eye" }, Quirks = new[] { "magpie", "wet" }, Perks = new[] { "farsight", "sailor", "whisper" } },
             new Character { Id = "fidget", Name = Lang.K("Непосида"), WeightH = 0.7f, WeightM = 1.3f,
                 Text = Lang.K("Не всидить: сам зривається частіше, але ненадовго. На плечі весь час вовтузиться, у повітрі смикається й міняє манеру."),
                 OutChance = 1.3f, OutLength = 0.7f, Nerves = 1.3f, SitPace = 1.4f, SitReact = 1.2f, SitAmp = 1.1f,
-                Turn = 1.08f, Curve = 0.94f, Switch = 0.92f, Ease = 1.08f, Knacks = new[] { "quick", "light" }, Quirks = new[] { "loud", "willful" } },
+                Turn = 1.08f, Curve = 0.94f, Switch = 0.92f, Ease = 1.08f, Knacks = new[] { "quick", "light" }, Quirks = new[] { "loud", "willful" }, Perks = new[] { "picker", "sniff", "chatter" } },
             new Character { Id = "calm", Name = Lang.K("Спокійний"), WeightH = 1.3f, WeightM = 0.6f,
                 Text = Lang.K("Нічим не збентежиш: сам відлітає трохи рідше, на плечі сидить тихо, у повітрі найрівніший."),
                 OutChance = 0.8f, Nerves = 0.75f, SitPace = 0.7f, SitReact = 0.7f, SitAmp = 0.85f,
-                Turn = 0.94f, Curve = 1.04f, Switch = 1.08f, Ease = 0.92f, Wobble = 0.5f, Knacks = new[] { "keen", "thrifty" }, Quirks = new[] { "picky", "grumbler" } },
+                Turn = 0.94f, Curve = 1.04f, Switch = 1.08f, Ease = 0.92f, Wobble = 0.5f, Knacks = new[] { "keen", "thrifty" }, Quirks = new[] { "picky", "grumbler" }, Perks = new[] { "bodymem", "wander" } },
             new Character { Id = "watchful", Name = Lang.K("Сторожкий"), WeightH = 1f, WeightM = 1f,
                 Text = Lang.K("Усе мусить бачити: у дорозі сам частіше летить розвідати шлях, на плечі пильно озирається."),
-                Follow = 0.8f, Scout = 2f, Nerves = 1.1f, Ease = 1.04f, SitPace = 1.1f, SitReact = 1.15f, Knacks = new[] { "eye", "keen" }, Quirks = new[] { "timid", "chilly" } },
+                Follow = 0.8f, Scout = 2f, Nerves = 1.1f, Ease = 1.04f, SitPace = 1.1f, SitReact = 1.15f, Knacks = new[] { "eye", "keen" }, Quirks = new[] { "timid", "chilly" }, Perks = new[] { "whisper", "grudge" } },
             new Character { Id = "bold", Name = Lang.K("Зухвалий"), WeightH = 0.6f, WeightM = 1.4f,
                 Text = Lang.K("Задирака: сам відлітає трохи частіше й любить кружляти. У повітрі різкий, з крутими поворотами."),
                 OutChance = 1.1f, Circle = 1.3f, Nerves = 1.15f, SitPace = 1.1f, SitReact = 1.2f, SitAmp = 1.2f,
-                Turn = 1.08f, Curve = 0.92f, Switch = 0.95f, Ease = 1.06f, Knacks = new[] { "heavy", "quick" }, Quirks = new[] { "showoff", "grumbler" } },
+                Turn = 1.08f, Curve = 0.92f, Switch = 0.95f, Ease = 1.06f, Knacks = new[] { "heavy", "quick" }, Quirks = new[] { "showoff", "grumbler" }, Perks = new[] { "revenge", "finisher", "boor" } },
             new Character { Id = "devoted", Name = Lang.K("Відданий"), WeightH = 1f, WeightM = 1f,
                 Text = Lang.K("Твоя тінь: сам відлітає трохи рідше і майже завжди летить слідом за тобою, а не кудись."),
-                OutChance = 0.9f, Follow = 2.5f, Circle = 0.7f, Scout = 0.5f, Nerves = 0.9f, Knacks = new[] { "light", "frugal" }, Quirks = new[] { "jealous", "thief" } },
+                OutChance = 0.9f, Follow = 2.5f, Circle = 0.7f, Scout = 0.5f, Nerves = 0.9f, Knacks = new[] { "light", "frugal" }, Quirks = new[] { "jealous", "thief" }, Perks = new[] { "grave", "bloodthirst" } },
         };
 
         internal static readonly Knack[] Knacks =
         {
             new Knack { Id = "heavy", NameH = Lang.K("Важкий дзьоб"), NameM = Lang.K("Важкі кігті"), Damage = 10f, Text = Lang.K("Шкода удару +10%.") },
             new Knack { Id = "far", NameH = Lang.K("Далекий виліт"), Range = 10f, Text = Lang.K("Дальність удару +10%.") },
-            new Knack { Id = "quick", NameH = Lang.K("Швидке крило"), Cooldown = 15f, Text = Lang.K("Пауза між ударами −15%.") },
+            new Knack { Id = "quick", NameH = Lang.K("Швидке крило"), Cooldown = 15f, Text = Lang.K("Пауза між ударами −15%, і в повітрі на 6% швидший.") },
             new Knack { Id = "thrifty", NameH = Lang.K("Ощадний"), Cost = 10f, Text = Lang.K("Удар коштує на 10% менше сили.") },
             new Knack { Id = "keen", NameH = Lang.K("Влучний"), Crit = 5f, Text = Lang.K("Шанс криту +5%, і межа криту 95% замість 90%.") },
             new Knack { Id = "eye", NameH = Lang.K("Пильне око"), Scout = 15f, Text = Lang.K("Розвідка бачить на 15% далі: ворогів і руду в розвідці Хугіна, ворогів у наказі «Облетіти» і з прогулянки.") },
@@ -151,17 +152,7 @@ namespace HuginWhispers
         internal static void Ensure(Player p, ItemDrop.ItemData item, bool munin)
         {
             if (item == null || Rolled(item) || Trust.Stranger(item, p)) return;
-            if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
-            Character c = CharOf(item);
-            if (c == null)
-            {
-                float sum = 0f;
-                foreach (Character x in Characters) sum += munin ? x.WeightM : x.WeightH;
-                float r = Random.value * sum;
-                c = Characters[Characters.Length - 1];
-                foreach (Character x in Characters) { r -= munin ? x.WeightM : x.WeightH; if (r <= 0f) { c = x; break; } }
-                item.m_customData[CharKey] = c.Id;
-            }
+            Character c = EnsureChar(item, munin);
             if (KnackOf(item) == null)
             {
                 float sum = 0f;
@@ -183,6 +174,22 @@ namespace HuginWhispers
                 Quirks.Rolled(item, munin);
             }
             Backup.Save(p, item); // the copy keeps its norov too
+        }
+
+        // its character alone (Perks.Roll asks first: the blessing and burden that suit it come twice as often)
+        internal static Character EnsureChar(ItemDrop.ItemData item, bool munin)
+        {
+            if (item == null) return null;
+            if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
+            Character c = CharOf(item);
+            if (c != null) return c;
+            float sum = 0f;
+            foreach (Character x in Characters) sum += munin ? x.WeightM : x.WeightH;
+            float r = Random.value * sum;
+            c = Characters[Characters.Length - 1];
+            foreach (Character x in Characters) { r -= munin ? x.WeightM : x.WeightH; if (r <= 0f) { c = x; break; } }
+            item.m_customData[CharKey] = c.Id;
+            return c;
         }
 
         private static float KnackWeight(Character c, Knack k) { return System.Array.IndexOf(c.Knacks, k.Id) >= 0 ? 2f : 1f; }
@@ -239,7 +246,7 @@ namespace HuginWhispers
         }
 
         // your raven's own outings: × the director's chance, × the length, × each kind's weight
-        internal static float OutChance(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.OutChance, Shows(item)) : 1f; }
+        internal static float OutChance(ItemDrop.ItemData item) { Character c = CharOf(item); return (c != null ? Mul(c.OutChance, Shows(item)) : 1f) * Habits.OutMul(item); } // («Бродяга» at home: more often)
         internal static float OutLength(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.OutLength, Shows(item)) : 1f; }
         internal static float FollowW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Follow, Shows(item)) : 1f; }
         internal static float CircleW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Circle, Shows(item)) : 1f; }

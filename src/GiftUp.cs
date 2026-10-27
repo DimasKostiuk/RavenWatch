@@ -24,7 +24,8 @@ namespace HuginWhispers
         internal static readonly HashSet<string> Upgradable = new HashSet<string>
         {
             "scout", "light", "leap", "shadow", "dome", "hstrike", "hdecoy", "hflight", "lightstep", "lastchance",
-            "mstrike", "anger", "bloodfury", "scream", "fury", "wings", "heal", "ward", "mberserk",
+            "mstrike", "anger", "bloodfury", "scream", "fury", "wings", "heal", "ward", "mberserk", "mtame",
+            "pwhirl", "pclear", "pload", // (the paired ones: a rune in either raven, their levels add up)
         };
 
         // what level III will add (its own behaviour; shown in the book as what is coming)
@@ -39,7 +40,9 @@ namespace HuginWhispers
             { "bloodfury", Lang.K("кожен твій удар у люті лікує на 2% здоров'я") }, { "scream", Lang.K("ще й відкидає ворогів") },
             { "fury", Lang.K("ще й біжиш на 15% швидше") }, { "wings", Lang.K("ще й пливеш на 30% швидше") },
             { "heal", Lang.K("лікує й гравців поруч (до 10 м)") }, { "ward", Lang.K("стріли й закляття, що влучили в заслону, б'ють у стрільця") },
-            { "mberserk", Lang.K("без втоми після звіра") },
+            { "mberserk", Lang.K("без втоми після звіра") }, { "mtame", Lang.K("поки Мунін сидить, звір ситий — годувати не треба") },
+            { "pwhirl", Lang.K("удари холодять — вороги довкола сповільнені") }, { "pclear", Lang.K("ясно ще й у радіусі вдвічі ширшому") },
+            { "pload", Lang.K("ще й без перевантаження, а падіння м'якше: −75% шкоди") },
         };
 
         // ---------------------------------------------------------------- the raven's record
@@ -82,6 +85,7 @@ namespace HuginWhispers
         internal static int Level(string id)
         {
             RavenAbility a = RavenAbilities.Find(id);
+            if (a != null && a.Pair) return Mathf.Min(MaxLevel, LevelIn(Trust.Worn(false), id) + LevelIn(Trust.Worn(true), id)); // (both ravens' runes)
             return a != null ? LevelIn(Trust.Worn(a.Munin), id) : 0;
         }
 
@@ -102,9 +106,9 @@ namespace HuginWhispers
             string off = Shoulder.NotOnShoulder(p, munin); // (things change only while it sits on your shoulder)
             if (off != null) return off;
             RavenAbility a = RavenAbilities.Find(id);
-            if (a == null || a.Munin != munin || !Upgradable.Contains(id)) return Lang.T("Цей дар не покращується рунами.");
+            if (a == null || (a.Munin != munin && !a.Pair) || !Upgradable.Contains(id)) return Lang.T("Цей дар не покращується рунами.");
             if (!RavenAbilities.Unlocked(a)) return Lang.T("Цей дар ще не відкритий.");
-            if (LevelIn(item, id) >= MaxLevel) return Lang.T("Дар уже на найвищому рівні.");
+            if (LevelIn(item, id) >= MaxLevel || (a.Pair && Level(id) >= MaxLevel)) return Lang.T("Дар уже на найвищому рівні.");
             if (Used(item) >= MaxPerRaven) return Lang.F("У {0} уже {1} золотих рун — більше не вміщає.", munin ? Lang.T("Муніна") : Lang.T("Хугіна"), MaxPerRaven);
             return null;
         }
@@ -129,7 +133,36 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- words
         internal static string Roman(int lv) { return lv <= 0 ? "" : lv == 1 ? "I" : lv == 2 ? "II" : "III"; }
 
-        // what each level gives this gift (the book)
+        // what each level gives this gift (the book): the levels it has in gold, the one it is at in bold with a mark,
+        // the ones still to come greyed
+        internal static string LevelsText(string id, int lv)
+        {
+            string[] rows = LevelsText(id).Split('\n');
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < rows.Length; i++)
+            {
+                if (i > 0) b.Append('\n');
+                int at = i + 1;
+                if (at == lv) b.Append("<color=#F2CF6E><b>▸ ").Append(rows[i]).Append("</b></color>");
+                else if (at < lv) b.Append("<color=#D8B45A>").Append(rows[i]).Append("</color>");
+                else b.Append("<color=#8C8270>").Append(rows[i]).Append("</color>");
+            }
+            return b.ToString();
+        }
+
+        // what its golden runes give now, in one short line for the circles' info bar («радіус крику +25%, −20% сили й
+        // перезарядки»); null: none
+        internal static string ShortText(string id, int lv)
+        {
+            if (lv <= 0) return null;
+            List<string> parts = new List<string>();
+            parts.Add(Lang.F("{0} +{1}%", Lang.T(MainThing(id)), Mathf.RoundToInt((PowerByLevel[1] - 1f) * 100f)));
+            if (lv >= 2) parts.Add(Lang.F("−{0}% сили й перезарядки", Mathf.RoundToInt((1f - CostByLevel[2]) * 100f)));
+            string facet;
+            if (lv >= 3 && Facets.TryGetValue(id, out facet)) parts.Add(Lang.T(facet));
+            return string.Join(", ", parts.ToArray());
+        }
+
         internal static string LevelsText(string id)
         {
             string facet;
@@ -145,9 +178,11 @@ namespace HuginWhispers
             switch (id)
             {
                 case "scout": return Lang.K("радіус розвідки");
-                case "hstrike": case "mstrike": return Lang.K("шкода удару");
+                case "hstrike": case "mstrike": case "pwhirl": return Lang.K("шкода удару");
+                case "pload": return Lang.K("вага, яку беруть ворони");
                 case "scream": return Lang.K("радіус крику");
                 case "heal": return Lang.K("швидкість лікування");
+                case "mtame": return Lang.K("швидкість приручення");
                 case "lastchance": return Lang.K("час без шкоди");
                 case "anger": case "lightstep": return Lang.K("сила ефекту");
                 default: return Lang.K("тривалість");

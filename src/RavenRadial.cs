@@ -51,7 +51,7 @@ namespace HuginWhispers
                 list.Add(Circle(false, Lang.T("Накази"), Lang.T("поруч · кружляй · облетіти · жердина · трюки"), Lang.F("Коло наказів воронам. Своя клавіша — {0}.", RavenKeys.Label(RavenKeys.Get(RavenKeys.OrdersId))), AbilityIcons.For("orders", false)));
             }
             foreach (RavenAbility a in RavenAbilities.All) // the gifts here too, one by one (not yet open: only in the book)
-                if (!a.Passive && (a.Munin ? munin : hugin) != null && RavenAbilities.Shown(a)) list.Add(Ability(a));
+                if (!a.Passive && (a.Munin ? munin : hugin) != null && (!a.Pair || munin != null) && RavenAbilities.Shown(a)) list.Add(Ability(a)); // (a paired one: both on)
             radial.ConstructRadial(list);
         }
 

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // «Річ для ворона»: a Workshop model marked "use: gear" — something a raven wears (a saddle on its back, a charm on
-    // its neck, rings on its legs, a hat of our own: only for looks, in the pool of the game's hats), made at the raven table (Perches.TableStation). How it is given to a raven and what
+    // its neck, rings on its legs, a hat of our own: only for looks, in the pool of the game's hats), made at the raven table. How it is given to a raven and what
     // it gives come later; here is how such a model sits on a raven, the same in the Workshop's picture, in the book's
     // and in the game.
     //
@@ -43,6 +43,9 @@ namespace HuginWhispers
         internal static readonly string[] SlotIds = { Back, Neck, Legs, Head };
         internal static string[] SlotNames { get { return Lang.Arr(SlotNamesSrc); } } // (translated on every read)
         private static readonly string[] SlotNamesSrc = Lang.Keys("Спина", "Шия", "Лапи", "Шапка");
+        // where it goes, the first line of its description (the crafting window's own word above is only the item's kind)
+        private static readonly string[] SlotOnSrc = Lang.Keys("На спину ворона", "На шию ворона", "На лапи ворона", "На голову ворона");
+        private static string SlotOn(WsModel m) { return "<color=#D9B26A><b>" + Lang.Arr(SlotOnSrc)[System.Array.IndexOf(SlotIds, SlotOf(m))] + "</b></color>\n\n"; }
         internal const string HolderName = "RavenWatch_Gear";
         internal const string KeyPrefix = "gear_"; // what a raven wears is kept as this + the model's id (Outfits)
 
@@ -52,16 +55,17 @@ namespace HuginWhispers
         internal static string KeyOfPrefab(string prefab) { return prefab != null && prefab.StartsWith(PrefabStart + KeyPrefix, System.StringComparison.Ordinal) ? prefab.Substring(PrefabStart.Length) : null; }
 
         // The feeding pouch (торба): a thing on the back with room for a little food the raven eats by itself (RavenPouch).
-        internal static readonly string[] PouchIds = { "sumka_dlia_hoduvannia" };
+        internal static readonly string[] PouchIds = { "sumka_dlia_hoduvannia", "pokhidna_torba" };
         internal static bool IsPouch(string key) { return key != null && key.StartsWith(KeyPrefix, System.StringComparison.Ordinal) && System.Array.IndexOf(PouchIds, key.Substring(KeyPrefix.Length)) >= 0; }
 
         // the words on the item: the model's note, and how it is worn
         internal static string Description(WsModel m)
         {
             string note = m != null && !string.IsNullOrEmpty(m.Note) && m.Note.Trim().ToLowerInvariant() != (m.Name ?? "").Trim().ToLowerInvariant() ? m.Note.Trim() + "\n\n" : "";
+            note = SlotOn(m) + note;
             string id = m != null ? (string.IsNullOrEmpty(m.Id) || m.Id == Perches.IdFor("") ? Perches.IdFor(m.Name) : m.Id) : "";
             if (IsPouch(KeyPrefix + id))
-                return Lang.F("{0}Торба на спину ворона. ПКМ — надіти Хугіну, Shift+ПКМ — Мунінові (або в Книзі воронів, вкладка «Образ»). Поклади туди їжу — до {1} шматків. Коли ворон зголодніє, поїсть із неї сам.", note, RavenPouch.Max);
+                return Lang.F("{0}Торба на спину ворона. ПКМ — надіти Хугіну, Shift+ПКМ — Мунінові (або в Книзі воронів, вкладка «Образ»). Поклади туди їжу — до {1} шматків. Коли ворон зголодніє, поїсть із неї сам.", note, RavenPouch.CapOf(KeyPrefix + id));
             string fx = GearFx.Text(id);
             int lv = GearFx.WearLevel(KeyPrefix + id);
             return Lang.F("{0}Річ для ворона ({1}). Надівається з {2}-го рівня довіри: ПКМ — Хугіну, Shift+ПКМ — Мунінові (або в Книзі воронів, вкладка «Образ»).", (note + (fx != null ? fx + "\n\n" : "")), Lang.Lower(SlotNames[System.Array.IndexOf(SlotIds, SlotOf(m))]), lv);
@@ -87,9 +91,7 @@ namespace HuginWhispers
         internal static Transform Bone(GameObject raven, string name)
         {
             if (raven == null) return null;
-            foreach (Transform t in raven.GetComponentsInChildren<Transform>(true))
-                if (string.Equals(t.name, name, System.StringComparison.OrdinalIgnoreCase)) return t;
-            return null;
+            return RavenBones.Find(raven.transform, name, true); // (its own bone, not a worn thing's part of that name)
         }
 
         // ---------------------------------------------------------------- the things there are

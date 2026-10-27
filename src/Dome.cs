@@ -15,7 +15,7 @@ namespace HuginWhispers
         internal static float Radius = 6f;
         internal static float Seconds = 60f, SecondsTop = 90f;
         internal static int UnlockLevel = 3;
-        internal static float Duration() { return Trust.RoundTime(Trust.Lerp(false, Seconds, SecondsTop) * GearFx.GuardMul(false) * GiftUp.Power("dome")); } // (Спіраль захисту: longer)
+        internal static float Duration() { return Trust.RoundTime(Trust.LerpGift("dome", Seconds, SecondsTop) * GearFx.GuardMul(false) * GiftUp.Power("dome")); } // (Спіраль захисту: longer)
 
         // Against a boss the dome is brittle: it takes this many of a boss's blows, whatever their size (a boss's
         // damage differs tenfold between the first and the last one, and with stars, world settings and mods), and
@@ -118,7 +118,8 @@ namespace HuginWhispers
             {
                 State s = new State { Owner = pkg.ReadLong(), Pos = pkg.ReadVector3(), Radius = pkg.ReadSingle(), Until = pkg.ReadDouble(), Level = pkg.ReadInt() };
                 s.Hp = pkg.ReadSingle(); s.MaxHp = pkg.ReadSingle();
-                if (sender == Me && s.Owner == Me) return; // our own, already here
+                if (s.Owner != sender) return; // (only its owner speaks for a dome)
+                if (sender == Me) return; // our own, already here
                 State known;
                 if (s.Until <= Now)
                 {
@@ -238,6 +239,10 @@ namespace HuginWhispers
                 if (f == Character.Faction.Players || f == Character.Faction.PlayerSpawned) continue;
                 ZNetView nv = c.GetComponent<ZNetView>();
                 if (nv == null || !nv.IsValid() || !nv.IsOwner()) continue; // only the game that moves it may move it
+                // two players' domes may overlap: pushed out of all of them at once, from the middle of the overlap the
+                // pushes cancel and it stands inside both; out of the one nearest its edge instead (then the next one)
+                Vector3 dir = Vector3.zero;
+                float step = 0f, least = float.MaxValue;
                 foreach (State s in Active.Values)
                 {
                     if (s.Until <= now) continue;
@@ -246,19 +251,21 @@ namespace HuginWhispers
                     d.y = 0f;
                     float edge = s.Radius + Body.Radius(c) * 0.5f;
                     float dist = d.magnitude;
-                    if (dist >= edge) continue;
-                    Vector3 dir = dist > 0.01f ? d / dist : c.transform.forward;
-                    float step = Mathf.Min(edge - dist, PushSpeed * dt);
-                    Rigidbody rb = c.GetComponent<Rigidbody>();
-                    if (rb != null)
-                    {
-                        rb.position += dir * step;
-                        Vector3 v = rb.linearVelocity;
-                        float inward = Vector3.Dot(v, -dir);
-                        if (inward > 0f) rb.linearVelocity = v + dir * inward; // no more walking in
-                    }
-                    else c.transform.position += dir * step;
+                    if (dist >= edge || edge - dist >= least) continue;
+                    least = edge - dist;
+                    dir = dist > 0.01f ? d / dist : c.transform.forward;
+                    step = Mathf.Min(edge - dist, PushSpeed * dt);
                 }
+                if (step <= 0f) continue;
+                Rigidbody rb = c.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.position += dir * step;
+                    Vector3 v = rb.linearVelocity;
+                    float inward = Vector3.Dot(v, -dir);
+                    if (inward > 0f) rb.linearVelocity = v + dir * inward; // no more walking in
+                }
+                else c.transform.position += dir * step;
             }
         }
 
@@ -335,7 +342,7 @@ namespace HuginWhispers
             }
             // now pacing along the edge, now standing and staring in: each monster in its own rhythm and direction
             float phase = Time.time * 0.11f + (id & 1023) * 0.0137f;
-            Character target = TargetOf(ai);
+            Character target = AiTarget.Of(ai);
             if (Mathf.Sin(phase * Mathf.PI * 2f) > 0.45f)
             {
                 ai.StopMoving();
@@ -347,8 +354,6 @@ namespace HuginWhispers
             MoveTo(ai, dt, s.Pos + next * ring, 0.5f, false);
         }
 
-        private static readonly System.Reflection.FieldInfo TargetField = AccessTools.Field(typeof(MonsterAI), "m_targetCreature");
-        private static Character TargetOf(MonsterAI ai) { try { return TargetField != null ? TargetField.GetValue(ai) as Character : null; } catch { return null; } }
 
         // ---------------------------------------------------------------- no blows
 
@@ -404,12 +409,12 @@ namespace HuginWhispers
         // struck it, as it would anywhere else.
         private static void TurnOn(Character victim, Character attacker)
         {
-            if (!(attacker is Player) || TargetField == null) return;
+            if (!(attacker is Player) || !AiTarget.Known) return;
             MonsterAI ai = victim.GetComponent<MonsterAI>();
             if (ai == null) return;
-            Character target = TargetOf(ai);
+            Character target = AiTarget.Of(ai);
             if (target == null || target == attacker || At(target.transform.position) == null) return;
-            TargetField.SetValue(ai, attacker);
+            AiTarget.Set(ai, attacker);
         }
 
         // ---------------------------------------------------------------- a roof

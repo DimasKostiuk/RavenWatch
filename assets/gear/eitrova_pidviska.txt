@@ -1,0 +1,10 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Ейтрова підвіска
+note: Кристал ейтру в срібному пазурі. Він тихо світиться й підживлює ворона, тож дари даються йому легше, ніж зазвичай.
+use: gear
+id: eitrova_pidviska
+cost: Eitr:10 Silver:4 Softtissue:4 TrophyHare:2 RavenWatch_item_chornylo_vishchuna:2
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: neck
+follow: body
+part asset/Спорядження/GearEitrPendant pos 0 -0.05 0.1 rot 0 -180 0 scale 0.1 0.1 0.1  # Ейтрова підвіска (Meshy), ~9 см

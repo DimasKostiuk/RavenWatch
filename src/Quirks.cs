@@ -35,6 +35,7 @@ namespace HuginWhispers
             ItemDrop.ItemData item = Item(p, munin);
             if (item == null || !Norov.HasQuirk(item, id) || !Trust.Active(item) || Trust.Stranger(item, p) || Trust.Away(item)) return null;
             if ((id == "chilly" || id == "wet") && GearFx.ColdProof(item)) return null; // «Холодний медальйон»: no cold, no rain
+            if (id == "chilly" && BreedTraits.ColdProof(item)) return null; // the breed «Жаровий»: no cold
             return item;
         }
 
@@ -279,27 +280,38 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- «Сорока»: back from an outing with junk
 
-        internal static void OutingDone(Player p, bool munin)
+        // true when it brought something (then no find of the land's on top: RavenLoot)
+        internal static bool OutingDone(Player p, bool munin)
         {
-            if (With(p, munin, "magpie") == null || Random.value >= MagpieChance || ObjectDB.instance == null) return;
+            if (With(p, munin, "magpie") == null || Random.value >= MagpieChance || ObjectDB.instance == null) return false;
             GameObject prefab = ObjectDB.instance.GetItemPrefab(Junk[Random.Range(0, Junk.Length)]);
             ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
-            if (drop == null || !p.GetInventory().AddItem(prefab, 1)) return; // no room: it drops it on the way
+            if (drop == null || !p.GetInventory().AddItem(prefab, 1)) return false; // no room: it drops it on the way
             string name = Localization.instance != null ? Lang.Game(drop.m_itemData.m_shared.m_name) : prefab.name;
             Corner(p, munin, Lang.F("{0} приніс тобі: {1}", Name(munin), name));
             Say(p, munin, "quirk_magpie", "item", name);
+            return true;
         }
 
         // ---------------------------------------------------------------- the weather («Мерзляк», «Мокрий»)
 
-        private static string Env()
+        // the weather's name, its rain and snow: looked at once a half second (asked by every raven every frame)
+        private static string _env = "";
+        private static bool _rain, _snow;
+        private static float _envAt = -1f;
+        private static void EnvLook()
         {
+            if (Time.time < _envAt) return;
+            _envAt = Time.time + 0.5f;
             EnvSetup e = EnvMan.instance != null ? EnvMan.instance.GetCurrentEnvironment() : null;
-            return e != null && e.m_name != null ? e.m_name.ToLowerInvariant() : "";
+            _env = e != null && e.m_name != null ? e.m_name.ToLowerInvariant() : "";
+            _rain = _env.Contains("rain") || _env.Contains("thunder") || _env.Contains("storm");
+            _snow = _env.Contains("snow") || _env.Contains("blizzard");
         }
-        internal static bool Raining() { string n = Env(); return n.Contains("rain") || n.Contains("thunder") || n.Contains("storm"); }
-        internal static bool Snowing() { string n = Env(); return n.Contains("snow") || n.Contains("blizzard"); }
-        private static bool Outside() { return !Senses.Indoors && !Senses.Underground; }
+        internal static string Env() { EnvLook(); return _env; }
+        internal static bool Raining() { EnvLook(); return _rain; }
+        internal static bool Snowing() { EnvLook(); return _snow; }
+        internal static bool Outside() { return !Senses.Indoors && !Senses.Underground; }
 
         // cold for a chilly raven: rain or snow outside, or out in the Mountains or the Deep North
         internal static bool Cold(Player p)
@@ -358,13 +370,13 @@ namespace HuginWhispers
                     else if (now >= _loudAt[i])
                     {
                         _loudAt[i] = now + Random.Range(LoudMin, LoudMax);
-                        ScreamFx.Caw(p, munin, munin ? 0.85f : 1.3f, 1f);
+                        ScreamFx.CawAll(p, munin, munin ? 0.85f : 1.3f, 1f);
                         p.AddNoise(LoudNoise);
                         if (!RavenSkills.Hushed(p)) Say(p, munin, "quirk_loud"); // its own noise: not over a talk
                     }
                     break;
                 case "chilly":
-                    bool cold = Cold(p) && !GearFx.ColdProof(item); // (Холодний медальйон: never cold)
+                    bool cold = Cold(p) && !GearFx.ColdProof(item) && !BreedTraits.ColdProof(item); // (Холодний медальйон, «Жаровий»: never cold)
                     if (cold && onShoulder) gloom = true;
                     if (cold && !_cold[i] && onShoulder && now - _chillySaid[i] > ChillyRest && SayOwn(p, munin, "quirk_chilly", Director.Voice.Event)) _chillySaid[i] = now;
                     _cold[i] = cold;

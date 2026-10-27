@@ -27,7 +27,7 @@ namespace HuginWhispers
             "Enabled", "Ability gestures", "Munin ward shows damage", "Radial menu group", "Show gains in corner", "Thought assembled percent",
             "Munin fury effect color", "Quiet seconds between own lines", "Moment word chance", "Emote words chance",
             "Emote words pause minutes", "Moment talk chance", "Talks with other players ravens", "Ravens touch the world",
-            "Other players ravens may sit on me", "Words in passing chance", "Words in passing pause minutes",
+            "Other players ravens may sit on me", "Other players ravens may mock me", "Words in passing chance", "Words in passing pause minutes",
             "Talks with other players ravens pause minutes", "Own lines per 10 minutes",
             "SeneaL UI shoulder cells", "SeneaL UI shoulder cell size", "SeneaL UI shoulder cell out", "SeneaL UI shoulder cell down",
             "Hugin light talk chance", "Hugin light game sounds", "Hugin light sound volume", "Hugin light follow lag seconds",

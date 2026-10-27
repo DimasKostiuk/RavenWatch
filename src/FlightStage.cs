@@ -64,7 +64,7 @@ namespace HuginWhispers
                 // its bones by name on this model (the recorded one had its own: made at another time, other pieces on)
                 _repFor = Replay; _repModel = _model;
                 Dictionary<string, Transform> byName = new Dictionary<string, Transform>();
-                foreach (Transform b in _model.GetComponentsInChildren<Transform>(true)) if (!byName.ContainsKey(b.name)) byName[b.name] = b;
+                foreach (Transform b in RavenBones.Of(_model.transform, false)) if (!byName.ContainsKey(b.name)) byName[b.name] = b;
                 _repBones = new Transform[Replay.Bones.Length];
                 for (int i = 0; i < _repBones.Length; i++) { Transform b; if (byName.TryGetValue(Replay.Bones[i], out b)) _repBones[i] = b; }
             }

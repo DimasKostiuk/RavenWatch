@@ -68,7 +68,7 @@ namespace HuginWhispers
             foreach (string n in BoneNames)
             {
                 Transform found = null;
-                foreach (Transform t in model.GetComponentsInChildren<Transform>(true)) if (t.name == n) { found = t; break; }
+                found = RavenBones.Find(model.transform, n);
                 list.Add(found);
             }
             _bones = list.ToArray();

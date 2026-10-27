@@ -19,7 +19,7 @@ namespace HuginWhispers
         internal const string Who = "guide", Name = "Провідник";
 
         internal const int Bought = 1, Woke = 2, Gear = 3, NestTrial = 4, TrialLost = 5, Gifts = 6, Food = 7, Orders = 8, Perches = 9,
-            Strong = 10, Rune = 11, Gold = 13, Death = 14, Lost = 15, Mail = 16, NestErrands = 17, Binds = 18; // (12: the old tree topic, gone)
+            Strong = 10, Rune = 11, Gold = 13, Death = 14, Lost = 15, Mail = 16, NestErrands = 17, Binds = 18, Habit = 19; // (12: the old tree topic, gone)
 
         private sealed class Topic
         {
@@ -47,7 +47,7 @@ namespace HuginWhispers
                 When = p => Hungry(p),
                 Text = Lang.K("Ворон голодний. Хугін їсть ягоди, мед, гриби й рибу, Мунін — сире м'ясо. Підходить лише їжа його рівня — яка, видно в книзі.\n\nГодуй з кола J («Погодувати»). Їжа — головний шлях до довіри. Улюблену він має свою й сам натякне на неї.\n\nГолодний ворон краде їжу із сумки, а на нулі слабне й клює тебе.") },
             new Topic { Id = Death, Known = true, Title = Lang.K("Смерть"),
-                Text = Lang.K("Смерть забирає в ворона довіру (на 1–2 рівнях — менше).\n\nВорони лягають у могилу з речами й стережуть її. Ворон із плеча, щойно забереш його, сяде назад на плече. Прийдеш по нього за 10 хвилин — він поверне половину втраченої довіри.\n\nЗагубив ворона зовсім — поверни його обрядом: B → «Ворони», сторінка ворона. Раз на 5 днів.") },
+                Text = Lang.K("Смерть забирає в ворона довіру (на 1–2 рівнях — менше).\n\nВорони лягають у могилу з речами й стережуть її. Ворон із плеча, щойно забереш його, сяде назад на плече. Прийдеш по нього за 10 хвилин — він поверне половину втраченої довіри.\n\nЗагуби{в|ла} ворона зовсім — поверни його обрядом: B → «Ворони», сторінка ворона. Раз на 5 днів.") },
             new Topic { Id = Lost, Title = Lang.K("Чужий ворон"),
                 When = p => HoldsStranger(p),
                 Text = Lang.K("Цей ворон не твій. Дари він дає, але не росте, нічого не пам'ятає й клює тебе.\n\nСвого загубленого ворона поверни обрядом: B → «Ворони», сторінка ворона. Старий тоді розсиплеться пір'ям.") },
@@ -60,21 +60,24 @@ namespace HuginWhispers
             new Topic { Id = Perches, Title = Lang.K("Жердини"),
                 When = p => Done(p, Gear),
                 Text = Lang.K("Молоток → RavenWatch: жердини для воронів.\n\nE біля жердини садить Хугіна, Shift+E — Муніна. Там ворон відпочиває й набирається сили. Під дахом і в затишку — швидше.\n\nПокликати його назад можна звідусіль.") },
+            new Topic { Id = Habit, Title = Lang.K("Звички ворона"),
+                When = p => HasHabit(),
+                Text = Lang.K("Твій ворон набув звички. Звички беруться з того, як ти граєш останні дні: п'єш медовуху, сидиш удома чи мандруєш, б'єшся, годуєш, гладиш…\n\nКожна дає і плюс, і мінус. Тримається щонайменше п'ять днів, а тоді минає, якщо ти граєш інакше. Не більше двох разом.\n\nУ книзі (B) під норовом — рядок «Звички». Наведи на звичку: там написано, як її позбутися або як зберегти.") },
             new Topic { Id = NestErrands, Title = Lang.K("Доручення Одіна"),
                 When = p => TopLevel(p) >= 1 && Stage.Has(p, Trial.BossKey),
-                Text = Lang.K("Посади воронів у Вороняче гніздо (E угорі), поклади дари в чашу й поклич Одіна. Він дає доручення — раз на день.\n\nГнізда нема — молоток → RavenWatch, треба ще 2 роги Ейктюра.\n\nВиконані доручення запалюють руни. Усе — у книзі (B), «Шлях Одіна».") },
+                Text = Lang.K("Посади воронів у Вороняче гніздо (E угорі), поклади дари в чашу й поклич Одіна. Він дає доручення — раз на день, а з довірою частіше.\n\nГнізда нема — молоток → RavenWatch, треба ще 2 роги Ейктюра.\n\nВиконані доручення запалюють руни. Усе — у книзі (B), «Шлях Одіна».") },
             new Topic { Id = Strong, Title = Lang.K("Ворон береже тебе"),
                 When = p => TopLevel(p) >= 4,
-                Text = Lang.K("Тепер ворон береже тебе в скруті: Хугін рятує від смертельного удару, Мунін люто б'ється, коли тобі погано.\n\nДалі — більші дари, а з 6-го рівня Крила Одіна і Звір Муніна.\n\nДорогу ти вже знаєш. Прилітатиму рідше.") },
+                Text = Lang.K("Тепер ворон береже тебе в скруті: Хугін рятує від смертельного удару, Мунін люто б'ється, коли тобі погано.\n\nДалі — більші дари: з 5-го рівня Хугін віщує ранками, а Мунін мститься твоєму вбивці; з 6-го — Крила Одіна і Звір Муніна.\n\nДорогу ти вже знаєш. Прилітатиму рідше.") },
             new Topic { Id = Rune, Title = Lang.K("Перша руна"),
                 When = p => RuneBook.Of(p).Opened >= 1,
                 Text = Lang.K("Загорілася руна. Руни Фреї фарбують ворона, руни Бальдра дають ефект, руни Геймдаля — слід у польоті.\n\nПовісити руну: B → «Образ», ромби довкола ворона. Усі руни — у «Шляху Одіна».\n\nРуна твоя, не ворона: віддаси ворона — він її не понесе.") },
             new Topic { Id = Binds, Title = Lang.K("Воронячі в'язі"),
                 When = p => FoundTree(p) && RuneBook.Of(p).Opened >= 2,
-                Text = Lang.K("Ти знайшов Вороняче дерево. Біля його коріння руни сплітаються у в'язь — силу ворона.\n\nРуни Бальдра кажуть, що станеться, руни Геймдаля — коли, руни Фреї — як сильно. Зелене дерево бере 2 руни, крижане — 3, горіле — 4. Слухає воно лише ворона з довірою 2, 4 чи 6.\n\nЩоб сплести — встій на арені довкола дерева. В'язь у тебе одна; вмикає й вимикає її коло Q.") },
+                Text = Lang.K("Ти знайш{ов|ла} Вороняче дерево. Біля його коріння руни сплітаються у в'язь — силу, що діє на тобі.\n\nРуни Бальдра кажуть, що станеться, руни Геймдаля — коли, руни Фреї — як. Зелене дерево бере 2 руни, крижане — 3, горіле — 4. Слухає воно лише ворона з довірою 2, 4 чи 6.\n\nЩоб сплести — посади своїх воронів на жердину на верхівці дерева, стань біля нього й встій на арені. В'язь у тебе одна; вмикає й вимикає її коло Q або книга, а розплести її можна лише біля дерева.") },
             new Topic { Id = Gold, Title = Lang.K("Золото Одіна"),
                 When = p => Golden(p),
-                Text = Lang.K("Одін кличе на золоті доручення. За кожне — золота руна.\n\nЇї вкладають у дар ворона назавжди: дар сильнішає, дешевшає, а на третьому рівні отримує свою грань.\n\nДо трьох рівнів на дар, до п'яти золотих рун на ворона.") },
+                Text = Lang.K("Одін кличе на золоті доручення. За кожне — золота руна.\n\nЇї вкладають у дар ворона назавжди: дар сильнішає, дешевшає, а на третьому рівні отримує свою грань.\n\nДо трьох рівнів на дар, до п'яти золотих рун на ворона — усього десять. Коли отримаєш десяту, золоті доручення скінчаться.") },
             new Topic { Id = Mail, Title = Lang.K("Пошта воронів"),
                 When = p => OtherRavenNear(p) && Post.LockedWhy(p) == null && (Trust.Worn(false) != null || Trust.Worn(true) != null), // (a raven of yours old enough to carry a letter)
                 Text = Lang.K("Поруч гравець із воронами. Йому можна слати листи й посилки.\n\nКонверт у кутку книги (B). Лист — 20 сили й пергамент (у Хальдора), посилка — 30 сили й одна річ до 2 кг, з 3-го рівня довіри ворона.") },
@@ -110,6 +113,12 @@ namespace HuginWhispers
                 ItemDrop.ItemData item = Trust.Worn(m);
                 if (item != null && Trust.Active(item) && !Trust.Stranger(item, p) && Satiety.Zone(item) <= Satiety.Hungry) return true;
             }
+            return false;
+        }
+
+        private static bool HasHabit()
+        {
+            foreach (bool m in new bool[] { false, true }) { ItemDrop.ItemData item = Trust.Worn(m); if (item != null && Trust.Active(item) && Habits.Now(item).Count > 0) return true; }
             return false;
         }
 
@@ -345,6 +354,24 @@ namespace HuginWhispers
             RavenLooks.Drop(s.Paint);
             r.m_name = s.Name;
             Worn.Remove(r);
+        }
+
+        // a copy cloned from a raven that wears the look right now (another player's visiting raven is cloned from ours):
+        // its own materials back, the things and smoke the look hung on it off
+        internal static void Undress(Raven r, GameObject copy)
+        {
+            Saved s;
+            if (r == null || copy == null || r.m_visual == null || !Worn.TryGetValue(r, out s)) return;
+            Dictionary<Renderer, Material[]> own = new Dictionary<Renderer, Material[]>();
+            for (int i = 0; i < s.Renderers.Length; i++) if (s.Renderers[i] != null) own[s.Renderers[i]] = s.Mats[i];
+            Renderer[] from = r.m_visual.GetComponentsInChildren<Renderer>(true), to = copy.GetComponentsInChildren<Renderer>(true);
+            if (from.Length != to.Length) return;
+            for (int i = 0; i < from.Length; i++)
+            {
+                Material[] m;
+                if (own.TryGetValue(from[i], out m)) to[i].sharedMaterials = m;
+                else UnityEngine.Object.Destroy(to[i].gameObject); // (not there when the look was put on: hung by it)
+            }
         }
 
         internal static void Forget(Raven r) { Saved s; if (Worn.TryGetValue(r, out s)) RavenLooks.Drop(s.Paint); Worn.Remove(r); }

@@ -51,8 +51,9 @@ namespace HuginWhispers
             return Localization.instance != null ? Lang.Game(n) : n;
         }
 
-        // why not onto this one (null: there is room)
-        internal static string WhyNot(Character c)
+        // why not onto this one (null: there is room); wild: a wild beast too (Munin's «Приборкання»)
+        internal static string WhyNot(Character c) { return WhyNot(c, false); }
+        internal static string WhyNot(Character c, bool wild)
         {
             if (c == null) return Lang.T("Нема кого.");
             string name = NameOf(c);
@@ -63,7 +64,7 @@ namespace HuginWhispers
                 ZDO z = NetFlag.Zdo(pl, false);
                 if (z != null && z.GetBool(NoSitKey, false)) return Lang.F("{0} не пускає на себе чужих воронів.", name);
             }
-            else if (!c.IsTamed()) return Lang.F("{0} — не ручна тварина. Ворон на диких не сідає.", name);
+            else if (!c.IsTamed() && !wild) return Lang.F("{0} — не ручна тварина. Ворон на диких не сідає.", name);
             if (Free(c).Count == 0) return Lang.F("{0}: уже нема вільного місця.", name);
             return null;
         }
@@ -98,29 +99,49 @@ namespace HuginWhispers
         }
 
         // the order (Perches.GoHere for a player or an animal under the crosshair)
-        internal static string Go(Player p, bool munin, Character c)
+        internal static string Go(Player p, bool munin, Character c) { PerchView v; return Go(p, munin, c, true, -1, out v); }
+
+        // paid: an order (strength); unpaid: the raven's own doing (Victim: onto the one it mocks), on the slot it
+        // wants when that one is free (-1: any)
+        internal static string Go(Player p, bool munin, Character c, bool paid, int want, out PerchView v) { return Go(p, munin, c, paid, want, false, out v); }
+        internal static string Go(Player p, bool munin, Character c, bool paid, int want, bool wild, out PerchView v)
         {
-            string why = WhyNot(c) ?? SitHere.WhyNotNow(p, munin); // (WhyNot counted the free places: Free's list is that)
+            v = null;
+            string why = WhyNot(c, wild) ?? (paid ? SitHere.WhyNotNow(p, munin) : null); // (WhyNot counted the free places: Free's list is that)
             if (why != null) return why;
             List<int> free = _free;
-            int slot = free[Random.Range(0, free.Count)];
+            int slot = want >= 0 && free.Contains(want) ? want : free[Random.Range(0, free.Count)];
             ZDOID id = c.GetZDOID();
             string follow = id.UserID + ":" + id.ID + "|" + slot;
             Vector3 local = Vector3.zero;
             if (slot == Back || slot == BeastHead)
             {
                 Vector3 top;
-                if (!OnBody(c, slot == Back ? Body.Center(c) : Body.Head(c), out top)) return Lang.T("Не видно, куди сісти.");
+                if (slot == Back ? !OnBody(c, Body.Center(c), out top) : !OnHead(c, out top)) return Lang.T("Не видно, куди сісти.");
                 local = c.transform.InverseTransformPoint(top);
                 follow += "|" + F(local.x) + "|" + F(local.y) + "|" + F(local.z);
             }
             Transform bone = null;
             Vector3 at; Quaternion rot;
             if (!Place(c, slot, local, ref bone, out at, out rot)) return Lang.T("Не видно, куди сісти.");
-            return SitHere.Place(p, munin, at, rot, follow, true);
+            return SitHere.Place(p, munin, at, rot, follow, paid, out v);
         }
 
         private static string F(float v) { return v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture); }
+
+        // the top of the head: the body's colliders often stand far over a head held low in front (a lox, a boar), so a
+        // collider top counts only a little over the head point; else the head's own size by the beast's girth
+        private static bool OnHead(Character c, out Vector3 at)
+        {
+            Vector3 head = Body.Head(c);
+            float reach = Mathf.Clamp(Body.Radius(c) * 0.35f, 0.12f, 0.6f);
+            Vector3 hit;
+            OnBody(c, head, out hit);
+            float up = hit.y - head.y;
+            at = up > 0.03f && up < reach * 1.6f ? hit : head + Vector3.up * reach;
+            if (Plugin.Instance != null) Plugin.Instance.Log("Seat on " + Utils.GetPrefabName(c.gameObject) + "'s head: " + (up > 0.03f && up < reach * 1.6f ? "its collider top " : "its girth ") + (at.y - head.y).ToString("0.00") + " m over the head point (girth " + Body.Radius(c).ToString("0.00") + ")");
+            return true;
+        }
 
         // the top of the animal's body right over a point of it (its back over the middle, its head over the head point)
         private static bool OnBody(Character c, Vector3 near, out Vector3 at)
@@ -291,6 +312,7 @@ namespace HuginWhispers
                 Perches.Occupant o = v.At(i);
                 if (o == null || !_shaken.Add(o.Token)) continue;
                 ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, Perches.RpcGone, v.Id, i, o.Token);
+                if (say) People.SendShook(o); // shaken off by a roll: its owner's ravens take it ill
                 if (say) me.Message(MessageHud.MessageType.TopLeft, Grammar.Fix(Lang.F("Ти струси{{в|ла}} з себе {0} гравця {1}.", (o.Munin ? Lang.T("Муніна") : Lang.T("Хугіна")), o.Name), me));
             }
             if (_shaken.Count > 64) _shaken.Clear();
@@ -312,10 +334,18 @@ namespace HuginWhispers
         private PerchView _view;
         internal Character Who { get { return _who; } }
         private Transform _bone;
+        private Transform _head; private bool _headLooked; private Vector3 _onHead; private Quaternion _headRest; // a trader's head (WorldVisit)
         private float _readAt, _posAt, _seenAt;
         private int _peck = -1;
-        private string _told; // the raven on you that you were told about (its seat's token)
+        private string _told;
+        // on an animal: the bird's inertia (the seat's last place and speed, the lean on its spring, the turn lagging)
+        internal static float LeanPerSpeed = 5f, LeanMax = 24f, LeanSpring = 70f, LeanDamp = 7f, TurnLag = 7f, FastFollow = 12f, SlowFollow = 2.5f;
+        private Vector3 _lastAt, _velFast, _velSlow, _lean, _leanVel;
+        private Quaternion _yaw = Quaternion.identity;
+        private bool _haveLast; // the raven on you that you were told about (its seat's token)
         internal const string PeckKey = "RavenWatch_peck"; // a count: one more, one more pecking (WorldVisit)
+        internal const string BatheKey = "RavenWatch_bathe"; // a bath (WorldVisit): its count << 8 | its seconds
+        private int _bathe = -1;
 
         private void Awake() { _nv = GetComponent<ZNetView>(); _view = GetComponent<PerchView>(); _seenAt = Time.time; }
 
@@ -328,6 +358,9 @@ namespace HuginWhispers
             int peck = _nv.GetZDO().GetInt(PeckKey, 0);
             if (_peck >= 0 && peck != _peck && _view != null) { PerchLife life = _view.LifeAt(0); if (life != null) life.Peck(WorldVisit.PeckSeconds); }
             _peck = peck;
+            int bathe = _nv.GetZDO().GetInt(BatheKey, 0);
+            if (_bathe >= 0 && bathe != _bathe && bathe != 0 && _view != null) { PerchLife life = _view.LifeAt(0); if (life != null) life.Bathe(bathe & 0xFF); }
+            _bathe = bathe;
             string raw = _nv.GetZDO().GetString(SitOn.FollowKey, "");
             if (raw != _raw)
             {
@@ -351,15 +384,46 @@ namespace HuginWhispers
             }
             // it landed on you: you are told whose it is and how to shake it off (once a raven; four times a second is enough)
             if (Slot <= SitOn.Left && _who != null && ReferenceEquals(_who, Player.m_localPlayer) && _view != null && _view.Settled(0)) Tell((Player)_who);
+            // your own raven of that side is back (from a perch, the post, put on again): the stranger makes room for it.
+            // Your game alone decides it — its own shoulders are what it knows for sure, the others' only see them late
+            if ((Slot == SitOn.Right || Slot == SitOn.Left) && _who != null && ReferenceEquals(_who, Player.m_localPlayer)
+                && Shoulder.ModelOf((Player)_who, Slot == SitOn.Left) != null) SitOn.Shake(_view, (Player)_who, false);
             if (Target != ZDOID.None && _who == null && ZNetScene.instance != null)
             {
                 GameObject g = ZNetScene.instance.FindInstance(Target);
                 _who = g != null ? g.GetComponent<Character>() : null;
                 _anchor = g != null ? g.transform : null;
-                _bone = null;
+                _bone = null; _head = null; _headLooked = false;
                 if (_who != null) LastName = SitOn.NameOf(_who);
                 else if (g != null) { Piece pc = g.GetComponent<Piece>(); LastName = pc != null && Localization.instance != null ? Lang.Game(pc.m_name) : ""; }
             }
+        }
+
+        // the seat stays on the beast's point (the feet must not leave it); the bird turns about its feet: its heading
+        // follows the beast's a moment late, and it leans against the beast's pull — back when it starts, forward when it
+        // stops, outward in a turn — swinging a little before it settles
+        private Quaternion Inertia(Vector3 at, Quaternion rot)
+        {
+            float dt = Time.deltaTime;
+            if (!_haveLast || dt <= 0f || (at - _lastAt).sqrMagnitude > 4f) // first, or a jump (loaded again, teleported): no swing
+            {
+                _haveLast = true; _lastAt = at; _velFast = _velSlow = _lean = _leanVel = Vector3.zero; _yaw = rot;
+                return rot;
+            }
+            // the pull, without the frame-to-frame jitter: the speed followed quickly against the speed followed slowly
+            // (their gap grows while the beast speeds up, slows down or swerves, and is nothing while it goes evenly)
+            Vector3 vel = (at - _lastAt) / dt;
+            _lastAt = at;
+            vel.y = 0f;
+            _velFast = Vector3.Lerp(_velFast, vel, 1f - Mathf.Exp(-FastFollow * dt));
+            _velSlow = Vector3.Lerp(_velSlow, vel, 1f - Mathf.Exp(-SlowFollow * dt));
+            Vector3 want = Vector3.ClampMagnitude(-(_velFast - _velSlow) * LeanPerSpeed, LeanMax); // degrees, toward where it is thrown
+            _leanVel += ((want - _lean) * LeanSpring - _leanVel * LeanDamp) * dt;
+            _lean = Vector3.ClampMagnitude(_lean + _leanVel * dt, LeanMax);
+            _yaw = Quaternion.Slerp(_yaw, rot, 1f - Mathf.Exp(-TurnLag * dt));
+            float deg = _lean.magnitude;
+            if (deg < 0.05f) return _yaw;
+            return Quaternion.AngleAxis(deg, Vector3.Cross(Vector3.up, _lean / deg)) * _yaw;
         }
 
         private void Tell(Player me)
@@ -377,11 +441,21 @@ namespace HuginWhispers
             if (Target == ZDOID.None) return;
             if (Slot == SitOn.Thing)
             {
-                // on a ship or a cart: its point, turned with it
+                // on a ship or a cart: its point, turned with it. On a trader's head: on the head bone, so it nods and
+                // turns with the head (the point in the bone's space from the first moment's pose, as on an animal's head)
                 if (_anchor == null) return;
                 _seenAt = Time.time;
-                Vector3 fw = Vector3.ProjectOnPlane(_anchor.forward, Vector3.up);
-                transform.SetPositionAndRotation(_anchor.TransformPoint(_local), Quaternion.LookRotation(fw.sqrMagnitude > 0.0001f ? fw.normalized : Vector3.forward, Vector3.up));
+                if (!_headLooked)
+                {
+                    _headLooked = true;
+                    _head = _anchor.GetComponent<Trader>() != null ? WorldVisit.HeadBone(_anchor) : null;
+                    if (_head != null) { _onHead = _head.InverseTransformPoint(_anchor.TransformPoint(_local)); _headRest = Quaternion.Inverse(_anchor.rotation) * _head.rotation; }
+                }
+                Vector3 fw = _anchor.forward, spot;
+                if (_head != null) { spot = _head.TransformPoint(_onHead); fw = _head.rotation * Quaternion.Inverse(_anchor.rotation * _headRest) * fw; } // (the head's own turn past its rest)
+                else spot = _anchor.TransformPoint(_local);
+                fw = Vector3.ProjectOnPlane(fw, Vector3.up);
+                transform.SetPositionAndRotation(spot, Quaternion.LookRotation(fw.sqrMagnitude > 0.0001f ? fw.normalized : Vector3.forward, Vector3.up));
                 if (_nv != null && _nv.IsValid() && _nv.IsOwner() && Time.time >= _posAt) { _posAt = Time.time + 1f; _nv.GetZDO().SetPosition(transform.position); }
                 return;
             }
@@ -391,6 +465,7 @@ namespace HuginWhispers
             if (Slot <= SitOn.Left && ReferenceEquals(_who, Player.m_localPlayer) && ((Player)_who).InDodge()) SitOn.Shake(_view, (Player)_who, true);
             Vector3 at; Quaternion rot;
             if (!SitOn.Place(_who, Slot, _local, ref _bone, out at, out rot)) return;
+            if (Slot == SitOn.Back || Slot == SitOn.BeastHead) rot = Inertia(at, rot);
             transform.SetPositionAndRotation(at, rot);
             if (_nv != null && _nv.IsValid() && _nv.IsOwner() && Time.time >= _posAt) { _posAt = Time.time + 1f; _nv.GetZDO().SetPosition(at); }
         }

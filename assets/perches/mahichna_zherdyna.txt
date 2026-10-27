@@ -3,7 +3,7 @@ name: Магічна жердина
 note: Жердина з гілок Іґґдрасіля з самоцвітом, у якій дрімає давня сила
 use: perch
 id: mahichna_zherdyna
-cost: YggdrasilWood:10 Eitr:5
+cost: YggdrasilWood:10 Eitr:5 RavenWatch_item_chornylo_vishchuna:2
 perday: 100
 station: piece_magetable
 pose: -50 90 -45 16 -50 90 -45 16 0 -15 -10

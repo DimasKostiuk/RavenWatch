@@ -27,6 +27,11 @@ namespace HuginWhispers
     //                                    other side too), then what it is: a game piece, fx/<piece>, asset/<set>/<file>
     //                                    or model:<Workshop file name>
     //   fx zhar_pirya                    an effect of our library it wears (FxLib, config/RavenWatch/fx/<id>.txt)
+    //   oddeye FFB020 1.1                one eye of another colour (both share a picture, so it is a thing on that eye:
+    //                                    OddEye): colour, size × the eye; always kept over a rune
+    //   tier: rare                       a breed («for: breed», Breeds): rare | legend
+    //   keep: tips eyes light sparks     a breed's marks: what stays on it over a rune of Freya (zone ids; light = the
+    //                                    eyes' glow, glow = the body's, sheen, sparks); its things and effects always stay
     // A line left out = the game's own. Files are read only with "Outfits all for tuning" (as the gear); the release
     // uses Builtin.
     internal class Look
@@ -34,7 +39,11 @@ namespace HuginWhispers
         internal class Part { public bool On; public Color Dark = Color.black, Light = Color.white; public float Mix = 1f, Relief = 0.8f; }
 
         public string Element = ""; // «element: fire» (Elements): its own, else the catalog's table
-        public string Id = "", Name = "", For = "guide", Desc = ""; // for: rune = a rune may give it (WearCatalog: Фрея)
+        public string Id = "", Name = "", For = "guide", Desc = ""; // for: rune = a rune may give it (WearCatalog: Фрея); breed = a breed (Breeds)
+        public string Tier = "";  // a breed's rarity: rare | legend
+        public bool[] Keep = new bool[ZoneIds.Length]; // a breed's zones kept over a rune of Freya
+        public bool KeepLight, KeepGlow, KeepSheen, KeepSparks; // and these of it
+        public bool OddEyeOn; public Color OddEye = new Color(1f, 0.7f, 0.15f); public float OddEyeSize = 1.1f; // one eye of another colour
         public System.DateTime SavedAt; // a file's last write (the newest guide file wins)
         public Part[] Zones = new Part[LookDiag.ZoneNames.Length];
         public bool EyesOn; public Color Eyes = new Color(1f, 0.7f, 0.25f); public float EyePower = 4f;
@@ -95,6 +104,9 @@ namespace HuginWhispers
             sb.Append("name: ").Append(Name).Append('\n').Append("for: ").Append(For).Append('\n');
             if (Desc.Length > 0) sb.Append("desc: ").Append(Desc).Append('\n');
             if (Element.Length > 0) sb.Append("element: ").Append(Element).Append('\n');
+            if (Tier.Length > 0) sb.Append("tier: ").Append(Tier).Append('\n');
+            string keep = KeepCode();
+            if (keep.Length > 0) sb.Append("keep: ").Append(keep).Append('\n');
             for (int i = 1; i < Zones.Length; i++)
             {
                 Part p = Zones[i];
@@ -105,6 +117,7 @@ namespace HuginWhispers
             if (EyesOn) sb.Append("eyes ").Append(Hex(Eyes)).Append(' ').Append(F(EyePower)).Append('\n');
             if (GlowOn) sb.Append("glow ").Append(Hex(Glow)).Append(' ').Append(F(GlowPower)).Append('\n');
             if (SheenOn) sb.Append("sheen ").Append(Hex(Sheen)).Append(' ').Append(F(Metal)).Append(' ').Append(F(MetalGloss)).Append(' ').Append(F(Gloss)).Append('\n');
+            if (OddEyeOn) sb.Append("oddeye ").Append(Hex(OddEye)).Append(' ').Append(F(OddEyeSize)).Append('\n');
             if (SparksOn) sb.Append("sparks ").Append(Hex(Sparks)).Append(' ').Append(F(SparkPower)).Append(' ').Append(F(SparkSize)).Append(' ').Append(F(SparkEdge)).Append('\n');
             if (things) foreach (Thing t in Things) sb.Append(t.Line()).Append('\n');
             if (things) foreach (string id in Fx) sb.Append("fx ").Append(id).Append('\n');
@@ -125,6 +138,8 @@ namespace HuginWhispers
                 if (line.StartsWith("for:")) { l.For = line.Substring(4).Trim().ToLowerInvariant(); continue; }
                 if (line.StartsWith("desc:")) { l.Desc = line.Substring(5).Trim(); continue; }
                 if (line.StartsWith("element:")) { l.Element = line.Substring(8).Trim().ToLowerInvariant(); continue; }
+                if (line.StartsWith("tier:")) { l.Tier = line.Substring(5).Trim().ToLowerInvariant(); continue; }
+                if (line.StartsWith("keep:")) { l.ReadKeep(line.Substring(5)); continue; }
                 string[] a = line.Split(new[] { ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
                 switch (a[0].ToLowerInvariant())
                 {
@@ -147,6 +162,7 @@ namespace HuginWhispers
                         if (a.Length > 2) l.SparkPower = N(a[2], 2f); if (a.Length > 3) l.SparkSize = N(a[3], 3f); if (a.Length > 4) l.SparkEdge = N(a[4], 0.2f);
                         break;
                     case "fx": if (a.Length > 1 && !l.Fx.Contains(a[1])) l.Fx.Add(a[1]); break;
+                    case "oddeye": l.OddEyeOn = true; if (a.Length > 1) l.OddEye = C(a[1]); if (a.Length > 2) l.OddEyeSize = N(a[2], 1.1f); break;
                     case "thing":
                         Thing th = Thing.Parse(a, line);
                         if (th != null && System.Array.IndexOf(LookThings.BoneIds, th.Bone) >= 0) l.Things.Add(th);
@@ -157,6 +173,27 @@ namespace HuginWhispers
         }
 
         internal Look Copy() { Look c = Parse(Code(), Id); return c; }
+
+        // a breed's marks, as a line: "tips eyes light sparks"
+        internal string KeepCode()
+        {
+            List<string> l = new List<string>();
+            for (int i = 1; i < Keep.Length; i++) if (Keep[i]) l.Add(ZoneIds[i]);
+            if (KeepLight) l.Add("light"); if (KeepGlow) l.Add("glow"); if (KeepSheen) l.Add("sheen"); if (KeepSparks) l.Add("sparks");
+            return string.Join(" ", l.ToArray());
+        }
+
+        private void ReadKeep(string s)
+        {
+            foreach (string w in s.Split(new[] { ' ', '\t', ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                string k = w.ToLowerInvariant();
+                int z = System.Array.IndexOf(ZoneIds, k);
+                if (z > 0) Keep[z] = true;
+                else if (k == "light") KeepLight = true; else if (k == "glow") KeepGlow = true;
+                else if (k == "sheen") KeepSheen = true; else if (k == "sparks") KeepSparks = true;
+            }
+        }
 
         internal static string Hex(Color c) { return ColorUtility.ToHtmlStringRGB(c); }
         private static string F(float v) { return v.ToString("0.###", CultureInfo.InvariantCulture); }
@@ -175,6 +212,15 @@ namespace HuginWhispers
             "zone tail 0A0102 6A0C16 100 80\nzone legs 141010 4A3A34 100 70\n" +
             "eyes FFB040 4\nsheen FF6A50 0.55 0.7 0.25\n" +
             "thing head 0 -0.068 0.012 125 5 5 0.348 0.327 0.362 - - - GemstoneRed\n",
+            // the breeds («for: breed», Breeds): a look of their own, and the marks that stay over any rune of Freya
+            "id: br_albinos\nname: Альбінос\nfor: breed\ntier: rare\ndesc: біле пір'я, рожевий дзьоб і лапи, червоні очі\nkeep: beak eyes legs light\nzone body A8A39A FFFFFF 100 80\nzone head B0ABA2 FFFFFF 100 80\nzone beak B07A78 F4CCC8 100 70\nzone eyes 300000 FF4040 100 60\nzone wings 9C978E FBFAF6 100 85\nzone tips 8A857C F0EDE6 100 85\nzone tail 948F86 F6F4EE 100 85\nzone legs A07070 E8B8B0 100 70\neyes FF2A2A 5\n",
+            "id: br_irzhavyi\nname: Іржавий\nfor: breed\ntier: rare\ndesc: крила кольору старої іржі, бурштинові очі\nkeep: tips tail light\nzone body 140A06 4A2A18 100 80\nzone head 160C08 5A3420 100 80\nzone wings 2A1206 B4521E 100 85\nzone tips 3A1606 E8742A 100 85\nzone tail 2A1006 A84A1C 100 85\nzone eyes 2A1000 FFB040 100 60\neyes FF9A30 3\n",
+            "id: br_syvyi\nname: Сивий\nfor: breed\ntier: rare\ndesc: срібна голова й кінчики крил, як у старого мудреця\nkeep: head tips sheen light\nzone head 3A3C42 D8DCE4 100 80\nzone tips 40434A F0F4FA 100 85\nzone tail 202226 8A8E96 70 80\nzone eyes 0A1420 C8E8FF 100 60\neyes B8DCFF 3\nsheen D8E0F0 0.6 0.75 0.35\n",
+            "id: br_strokatyi\nname: Строкатий\nfor: breed\ntier: rare\ndesc: біле черево й білі кінчики крил на чорному\nkeep: body tips\nzone body 6E6C66 FAFAF6 100 80\nzone tips 7A7872 FFFFFF 100 85\nzone head 060606 2A2A2C 100 80\nzone wings 050506 262628 100 85\n",
+            "id: br_riznookyi\nname: Золотоокий\nfor: breed\ntier: rare\ndesc: обидва ока горять золотом, як у Одінового ворона\nkeep: eyes light\nzone eyes 2A1600 FFC040 100 50\nzone beak 2A2014 8A7040 100 70\neyes FFB020 6\n",
+            "id: br_zorianyi\nname: Зоряний\nfor: breed\ntier: legend\ndesc: пір'я нічного неба, по якому мерехтять зорі\nkeep: sparks light\nzone body 04050C 1A2244 100 80\nzone head 05060E 222A50 100 80\nzone wings 03040A 18204A 100 85\nzone tips 0A0E22 3A4A8E 100 85\nzone tail 04050E 1C2650 100 85\nzone eyes 000820 B8D8FF 100 60\neyes A8CCFF 5\nsparks D8E8FF 3.2 2 0.3\nfx br_zori\n",
+            "id: br_pryzrachnyi\nname: Примарний\nfor: breed\ntier: legend\ndesc: блідий, як туман над болотом, ледь світиться й тягне за собою імлу\nkeep: glow light\nzone body 4A5658 C8D8DC 100 70\nzone head 505C5E D0E0E4 100 70\nzone wings 445052 BCD0D4 100 75\nzone tips 5A686A E4F4F8 100 75\nzone tail 445052 B8CCD0 100 75\nzone eyes 002024 C8FFFF 100 60\neyes C0FFFF 6\nglow 9FDCE6 0.55\nfx br_imla\n",
+            "id: br_zharovyi\nname: Жаровий\nfor: breed\ntier: legend\ndesc: пір'я, що тліє, як вугілля, і сиплє іскрами\nkeep: tips glow sparks light\nzone body 080302 3A1206 100 80\nzone head 0A0402 4A1608 100 80\nzone wings 120502 8A2A08 100 85\nzone tips 3A0A00 FF6A10 100 85\nzone tail 1A0602 A03010 100 85\nzone eyes 301000 FFC040 100 60\neyes FFA020 6\nglow FF5A10 0.45\nsparks FF7A20 3 3 0.2\nfx br_zhar\n",
             // the rune looks (Фрея, «for: rune»): the first draft, to be tuned in «Фарби»
             "id: f_inii\nname: Іній\nfor: rune\ndesc: пір'я вкрите інеєм, очі крижано-сині\nzone body 455780 8DAFD0 83 80\nzone head 415578 B8CCE0 100 80\nzone beak 2A2A30 8A8A96 100 70\nzone eyes 0A1830 80C8FF 100 60\nzone wings 141C28 A8C4DC 100 80\nzone tips 0A0E18 E8F2FF 100 80\nzone tail 0A0E18 7A90A8 100 80\nzone legs 202428 6A7078 100 70\neyes 60B8FF 4\nsheen C0E0FF 0.5 0.7 0.3\n",
             "id: f_popil\nname: Попіл\nfor: rune\ndesc: сіре, як згасле вогнище, з жаринами в очах\nzone body 2D2D2D 9A9A96 100 80\nzone head 333333 B0B0AC 100 80\nzone beak 1A1A1A 5A5A5A 100 70\nzone eyes 131A00 F5F5F0 100 60\nzone wings 202020 8A8A86 100 80\nzone tips 919191 505050 100 80\nzone tail AAAAC6 6A6A66 100 80\nzone legs 70706D 4A4A4A 100 70\neyes FF7A20 3\n",
@@ -187,7 +233,7 @@ namespace HuginWhispers
         };
 
         internal static string Dir { get { return Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "looks"); } }
-        internal static bool FromFiles { get { return Outfits.TuningWanted; } }
+        internal static bool FromFiles { get { return Outfits.TuningAllowed; } } // (admins only: files could make any errand, effect or look)
         internal static int Version; // goes up when a file is saved: the guide re-dresses
 
         private static List<Look> _builtin;

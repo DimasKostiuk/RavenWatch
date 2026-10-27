@@ -14,15 +14,18 @@ namespace HuginWhispers
     // game shows it alike (name with stars, size) and whoever simulates it applies it (health, damage, traits):
     //   RavenWatch_champ = owner=<player id>;id=<errand stamp>;who=<prefab>;lvl=;hp=;dmg=;aff=fire+fast
     // It is spawned by the errand's owner when near the place (the zone is loaded there), found again on coming back,
-    // and goes when its errand is done or given up. Its drop is cut to about twice a plain one (stars would multiply it).
+    // and goes when its errand is done or given up. It is ours alone (ChampionOwn: no other mod's stars, health, blows
+    // or traits), has its own name (Nick), its own bar (RavenBook.ChampionBar), its traits seen on it (ChampionLife.Auras),
+    // and its own drop with its trophy and gold when its owner takes it down (ChampionDropPatch).
     internal static class Champions
     {
-        internal const string Key = "RavenWatch_champ", PackKey = "RavenWatch_champPack";
+        internal const string Key = "RavenWatch_champ", PackKey = "RavenWatch_champPack", BornKey = "RavenWatch_champBorn";
+        internal static float OrphanDays = 5f; // game days: one whose owner stays away this long goes (its errand brings it again on return)
         internal const string RpcDead = "RavenWatch_ChampDead";
         internal static float SpawnNear = 70f;    // m: the zone's ring round its place (the step's map ring; in it, it appears)
         internal static float CreditRange = 100f; // m: its death counts for the errand only with its owner this near, alive
 
-        // the creatures of each land (by the land's tier: Meadows 0 … Ashlands 6); only those that walk on land
+        // the creatures of each land (by the land's tier: Meadows 0 … Ashlands 6, the Deep North 7); only those that walk on land
         private static readonly string[][] ByTier =
         {
             new[] { "Greydwarf", "Boar", "Neck", "Greyling" },
@@ -32,9 +35,10 @@ namespace HuginWhispers
             new[] { "Goblin", "GoblinBrute", "GoblinShaman", "Lox" },
             new[] { "Seeker", "SeekerBrute" },
             new[] { "Charred_Melee", "Charred_Archer", "Morgen", "Asksvin" },
+            new[] { "JotunWarrior", "JotunWitch", "TrollFrost", "Skeleton_DeepNorth", "GoblinDeepNorth" },
         };
         // how strong a plain creature of each tier is, roughly (its health and blows together)
-        private static readonly float[] TierPower = { 1f, 2.2f, 4f, 7f, 11f, 17f, 26f };
+        private static readonly float[] TierPower = { 1f, 2.2f, 4f, 7f, 11f, 17f, 26f, 38f };
         internal static float Toughness = 4f;    // a champion is this many plain creatures of YOUR stage's land
 
         // the ordinary creatures of a tier this game has (the raven tree's arena)
@@ -56,7 +60,8 @@ namespace HuginWhispers
                 case Heightmap.Biome.Mountain: return 3;
                 case Heightmap.Biome.Plains: return 4;
                 case Heightmap.Biome.Mistlands: return 5;
-                case Heightmap.Biome.AshLands: case Heightmap.Biome.DeepNorth: return 6;
+                case Heightmap.Biome.AshLands: return 6;
+                case Heightmap.Biome.DeepNorth: return 7;
                 default: return 0;
             }
         }
@@ -66,6 +71,7 @@ namespace HuginWhispers
         {
             public long Owner; public string Id = "", Who = "", Title = ""; // Title: its own name (a lord's), a translation key
             public int Level = 2; public float Hp = 1f, Dmg = 1f;
+            public bool Spent; // one risen again after a kill not counted: no gold, no sure trophy (no farming it)
             public readonly List<string> Aff = new List<string>();
 
             internal bool Has(string a) { return Aff.Contains(a); }
@@ -73,7 +79,7 @@ namespace HuginWhispers
             internal string Code()
             {
                 return "owner=" + Owner + ";id=" + Id + ";who=" + Who + ";lvl=" + Level + ";hp=" + Hp.ToString("0.##", CultureInfo.InvariantCulture)
-                    + ";dmg=" + Dmg.ToString("0.##", CultureInfo.InvariantCulture) + ";aff=" + string.Join("+", Aff.ToArray()) + (Title.Length > 0 ? ";t=" + Title : "");
+                    + ";dmg=" + Dmg.ToString("0.##", CultureInfo.InvariantCulture) + ";aff=" + string.Join("+", Aff.ToArray()) + (Title.Length > 0 ? ";t=" + Title : "") + (Spent ? ";sp=1" : "");
             }
 
             internal static Mods Parse(string s)
@@ -95,6 +101,7 @@ namespace HuginWhispers
                         case "dmg": m.Dmg = Mathf.Max(0.1f, Errands.F(v, 1f)); break;
                         case "aff": foreach (string a in v.Split('+')) if (a.Length > 0) m.Aff.Add(a); break;
                         case "t": m.Title = v; break;
+                        case "sp": m.Spent = v == "1"; break;
                     }
                 }
                 return m;
@@ -139,7 +146,32 @@ namespace HuginWhispers
         internal static void Forget(Character c) { if (c != null) Known.Remove(c); }
         internal static ChampionLife Life(Character c) { ChampionLife l; return c != null && Known.TryGetValue(c, out l) && l != null ? l : null; }
         internal static Mods Fast(Character c) { ChampionLife l = Life(c); return l != null ? l.M : null; }
+        // a boss of the game, not an errand's lord (a lord carries the boss flag: the ravens' gifts treat it as one; the diary does not)
+        internal static bool TrueBoss(Character c) { return c != null && c.IsBoss() && Fast(c) == null; }
         internal static bool Any { get { return Known.Count > 0; } } // (the hot patches: nothing to do while no champion is loaded)
+
+        // the nearest champion alive within this reach of a place (its bar), or null
+        internal static Character Nearest(Vector3 at, float reach)
+        {
+            Character best = null;
+            float bestD = reach * reach;
+            foreach (KeyValuePair<Character, ChampionLife> kv in Known)
+            {
+                Character c = kv.Key;
+                if (c == null || c.IsDead()) continue;
+                float d = (c.transform.position - at).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = c; }
+            }
+            return best;
+        }
+
+        // its errand's owner alive and within CreditRange of this place (in any game: the owner's ZDO says who it is)
+        internal static bool OwnerNear(Mods m, Vector3 at, bool alive = true)
+        {
+            foreach (Player o in Player.GetAllPlayers())
+                if (o != null && (!alive || !o.IsDead()) && o.GetPlayerID() == m.Owner && (o.transform.position - at).sqrMagnitude <= CreditRange * CreditRange) return true;
+            return false;
+        }
 
         // from its ZDO (when it wakes; its health): the ZDO read and parsed
         internal static Mods Of(Character c)
@@ -154,7 +186,7 @@ namespace HuginWhispers
         internal static readonly Dictionary<string, string> Affixes = new Dictionary<string, string>
         {
             { "fire", Lang.K("вогняний") }, { "frost", Lang.K("крижаний") }, { "fast", Lang.K("швидкий") },
-            { "tough", Lang.K("броньований") }, { "regen", Lang.K("живучий") }, { "pack", Lang.K("ватажок зграї") },
+            { "tough", Lang.K("броньований") }, { "regen", Lang.K("живучий") }, { "pack", Lang.K("очільник зграї") },
         };
 
         internal static string Words(Mods m)
@@ -164,11 +196,25 @@ namespace HuginWhispers
             return string.Join(", ", l.ToArray());
         }
 
+        // its own name (the user, 2026-10-21: «Гнилозуб», «Сивогрив»): two halves by what it is — its creature, stars and
+        // traits (never by chance: the book before it rises, every game and its bar say the same), each half its own
+        // translation (Rot + fang); a lord's title from its template wins
+        internal static readonly string[] NickHead = Lang.Keys("Крово", "Кісто", "Гнило", "Чорно", "Сиво", "Криво", "Залізно", "Мерзло", "Попело", "Гостро", "Рвано", "Сліпо");
+        internal static readonly string[] NickTail = Lang.Keys("зуб", "грив", "шкур", "гриз", "рик", "пазур", "хвіст", "лом", "пив", "вий", "лап", "різ");
+
+        internal static string Nick(Mods m)
+        {
+            if (m.Title.Length > 0) return Lang.T(m.Title);
+            int h = (m.Who + "|" + m.Level + "|" + m.Hp.ToString("0.##", CultureInfo.InvariantCulture) + "|" + string.Join("+", m.Aff.ToArray())).GetStableHashCode() & 0x7fffffff;
+            return Lang.T(NickHead[h % NickHead.Length]) + Lang.T(NickTail[(h / NickHead.Length) % NickTail.Length]);
+        }
+
+        internal static string Stars(Mods m) { return new string('★', Mathf.Max(0, m.Level - 1)); }
+
+        // «Гнилозуб, ватажок ★★★» (a lord: «охоронець»)
         internal static string Name(Mods m)
         {
-            string stars = " " + new string('★', Mathf.Max(0, m.Level - 1));
-            if (m.Title.Length > 0) return Lang.T(m.Title) + stars;
-            return Lang.F("Ватажок {0}", ErrandSteps.Creature(m.Who)) + stars;
+            return Nick(m) + ", " + (m.Has("lord") ? Lang.T("охоронець") : Lang.T("ватажок")) + " " + Stars(m);
         }
 
         // ---------------------------------------------------------------- in the world
@@ -182,13 +228,15 @@ namespace HuginWhispers
             if (prefab == null) { Errands.Log("champion: no creature " + m.Who); return null; }
             Vector3 pos = at;
             if (ZoneSystem.instance != null) pos.y = ZoneSystem.instance.GetGroundHeight(at) + 0.5f;
-            m.Owner = p.GetPlayerID(); m.Id = stamp;
+            m.Owner = p.GetPlayerID(); m.Id = stamp; m.Spent = WasSpent(p, stamp);
             GameObject go = UnityEngine.Object.Instantiate(prefab, pos, Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f));
             Character c = go.GetComponent<Character>();
             ZNetView nv = go.GetComponent<ZNetView>();
             if (c == null || nv == null || !nv.IsValid()) { UnityEngine.Object.Destroy(go); return null; }
             nv.GetZDO().Set(Key, m.Code());
-            c.SetLevel(m.Level);                    // (its health: SetupMaxHealth, with our factor)
+            if (ZNet.instance != null) nv.GetZDO().Set(BornKey, (long)ZNet.instance.GetTimeSeconds());
+            ChampionOwn.Claim(nv.GetZDO());         // (other creature mods: hands off, before its stars are set)
+            c.SetLevel(m.Level);                    // (its health: ChampionMaxHealthPatch, with our factor)
             c.SetHealth(c.GetMaxHealth());
             ChampionLife.Put(c);
             Errands.Log("champion " + m.Code() + " at " + Mathf.RoundToInt(pos.x) + " " + Mathf.RoundToInt(pos.z) + ", health " + Mathf.RoundToInt(c.GetMaxHealth()));
@@ -213,7 +261,6 @@ namespace HuginWhispers
         {
             Mods m = Of(c);
             if (m == null || ZRoutedRpc.instance == null) return;
-            if (m.Has("lord")) DropTrophy(c);
             ZPackage pkg = new ZPackage();
             pkg.Write(m.Owner);
             pkg.Write(m.Id);
@@ -221,20 +268,6 @@ namespace HuginWhispers
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcDead, pkg);
         }
 
-        // a lord's head always falls (its errand may ask for it): its creature's trophy, by its drop list
-        private static void DropTrophy(Character c)
-        {
-            CharacterDrop cd = c.GetComponent<CharacterDrop>();
-            if (cd == null) return;
-            foreach (CharacterDrop.Drop d in cd.m_drops)
-            {
-                ItemDrop it = d.m_prefab != null ? d.m_prefab.GetComponent<ItemDrop>() : null;
-                if (it == null || it.m_itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Trophy) continue;
-                UnityEngine.Object.Instantiate(d.m_prefab, c.transform.position + Vector3.up * 1.5f, Quaternion.identity);
-                Errands.Log("lord " + Name(Of(c)) + " left its trophy " + d.m_prefab.name);
-                return;
-            }
-        }
 
         // a lord counted as a boss in the world (the game's «active bosses»: no portals while one fights, in some worlds)
         // taken away without dying: counted off as the game does on a boss's death
@@ -262,14 +295,8 @@ namespace HuginWhispers
             {
                 // not counted: on the way back into its ring the errand brings another one
                 Errands.Log("champion " + id + " killed " + Mathf.RoundToInt(dist) + " m from you" + (p.IsDead() ? " (you were dead)" : "") + ": not counted");
-                if (Errands.Wants(p, id)) RavenMsg.Center(p, Lang.T("Ватажка вбили без тебе — Одін цього не зарахував. Повернись у позначене коло: там з'явиться інший."));
-                return;
-            }
-            if (!HasStruck(p, id))
-            {
-                // near, but not a single blow of yours (nor of your ravens): the others did it for you
-                Errands.Log("champion " + id + " killed near you, but you never hit it: not counted");
-                if (Errands.Wants(p, id)) RavenMsg.Center(p, Lang.T("Ватажка вбили інші, а ти його й не зачепи{в|ла} — Одін цього не зарахував. У позначеному колі з'явиться інший."));
+                if (Errands.Wants(p, id)) RavenMsg.Center(p, Lang.T("Ватажок упав без тебе — Одін зараховує, лише коли ти жив{ий|а} поруч. Повернись у позначене коло: там з'явиться інший, але вже без золота."));
+                Spend(p, id);
                 return;
             }
             Errands.OnChampion(id);
@@ -278,26 +305,26 @@ namespace HuginWhispers
 #endif
         }
 
-        // the champions of your errands you hit (player customData, the last few: it lives through leaving the game)
-        internal const string StruckKey = "RavenWatch_champHit";
+        // the errands whose champion fell once without counting (player customData, the last few): the next is Spent
+        internal const string SpentKey = "RavenWatch_champSpent";
 
-        internal static void Struck(Player p, string id)
+        private static void Spend(Player p, string id)
         {
             string raw;
-            if (!p.m_customData.TryGetValue(StruckKey, out raw)) raw = "";
+            if (!p.m_customData.TryGetValue(SpentKey, out raw)) raw = "";
             if (("|" + raw + "|").Contains("|" + id + "|")) return;
             List<string> l = new List<string>(raw.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries));
             l.Add(id);
             while (l.Count > 6) l.RemoveAt(0);
-            p.m_customData[StruckKey] = string.Join("|", l.ToArray());
-            Errands.Log("you hit the champion " + id);
+            p.m_customData[SpentKey] = string.Join("|", l.ToArray());
         }
 
-        internal static bool HasStruck(Player p, string id)
+        internal static bool WasSpent(Player p, string id)
         {
             string raw;
-            return p != null && p.m_customData.TryGetValue(StruckKey, out raw) && ("|" + raw + "|").Contains("|" + id + "|");
+            return p != null && p.m_customData.TryGetValue(SpentKey, out raw) && ("|" + raw + "|").Contains("|" + id + "|");
         }
+
     }
 
     // on a champion, in every game: its size; where it is simulated: its traits that act by themselves, and it goes
@@ -325,6 +352,39 @@ namespace HuginWhispers
 
         private void OnDestroy() { Champions.Forget(_c); }
 
+        // its traits seen on it, in every game: each its own effect at its middle (the game's burning and frost, our runes,
+        // smoke and streak tinted), gone with it
+        private static readonly Dictionary<string, KeyValuePair<string, string>> AuraOf = new Dictionary<string, KeyValuePair<string, string>>
+        {
+            { "fire", new KeyValuePair<string, string>("game:vfx_Burning", "") }, { "frost", new KeyValuePair<string, string>("game:vfx_Frost", "") },
+            { "regen", new KeyValuePair<string, string>("ours:runes", "7CFF7A") }, { "tough", new KeyValuePair<string, string>("ours:runes", "B8C2CC") },
+            { "fast", new KeyValuePair<string, string>("ours:streak", "CFE8FF") }, { "pack", new KeyValuePair<string, string>("ours:smoke", "7A1E1E") },
+            { "lord", new KeyValuePair<string, string>("ours:runes", "FFC860") },
+        };
+
+        private void Auras()
+        {
+            try
+            {
+                Vector3 middle = transform.InverseTransformPoint(_c.GetCenterPoint());
+                foreach (string a in _m.Aff)
+                {
+                    KeyValuePair<string, string> fx;
+                    if (!AuraOf.TryGetValue(a, out fx)) continue;
+                    GameObject tpl = FxLib.Template(fx.Key);
+                    if (tpl == null) continue;
+                    GameObject g = UnityEngine.Object.Instantiate(tpl, transform, false);
+                    g.name = "RavenWatch_ChampionAura_" + a; g.hideFlags = HideFlags.None;
+                    g.transform.localPosition = middle;
+                    foreach (ParticleSystem ps in g.GetComponentsInChildren<ParticleSystem>(true)) { ParticleSystem.MainModule mm = ps.main; mm.loop = true; } // (a one-shot of the game's goes on)
+                    g.SetActive(true);
+                    Color tint;
+                    if (fx.Value.Length > 0 && ColorUtility.TryParseHtmlString("#" + fx.Value, out tint)) g.AddComponent<WsFx>().Recolor(true, tint);
+                }
+            }
+            catch (Exception e) { Errands.Log("champion aura: " + e.Message); }
+        }
+
         internal static void Put(Character c)
         {
             if (c == null || c.GetComponent<ChampionLife>() != null) return;
@@ -334,14 +394,18 @@ namespace HuginWhispers
             l._c = c; l._nv = c.GetComponent<ZNetView>(); l._m = m;
             Champions.Know(c, l);
             c.transform.localScale *= m.Has("lord") ? 1.6f : 1.2f;
-            if (m.Has("lord")) c.m_boss = true; // a boss's bar over the screen for everyone (each game sets it on its own copy)
+            if (m.Has("lord")) c.m_boss = true; // (each game on its own copy) the ravens' gifts treat it as a boss: no fear, no decoy, boss marks; the game counts it among active bosses (Uncount) — the diary does not (TrueBoss)
             if (m.Has("fast")) { c.m_speed *= 1.35f; c.m_runSpeed *= 1.35f; c.m_walkSpeed *= 1.2f; }
             l._lastHealth = c.GetHealth();
+            l.Auras();
         }
+
+        private float _nextOwn, _nextOrphan;
 
         private void Update()
         {
             if (_c == null || _nv == null || !_nv.IsValid() || _c.IsDead()) return;
+            if (Time.time >= _nextOwn) { _nextOwn = Time.time + 1f; ChampionOwn.Keep(_c, _m); } // (ours alone: stars, health, no other mods' traits)
             if (Time.time >= _next)
             {
                 _next = Time.time + 5f;
@@ -356,6 +420,18 @@ namespace HuginWhispers
                 }
             }
             if (!_nv.IsOwner()) return; // its traits act where it is simulated
+            if (Time.time >= _nextOrphan) // an errand dropped far away, a character gone: whoever holds it lets it go
+            {
+                _nextOrphan = Time.time + 30f;
+                long born = _nv.GetZDO().GetLong(Champions.BornKey, 0L);
+                if (born > 0L && ZNet.instance != null && ZNet.instance.GetTimeSeconds() - born > Champions.OrphanDays * (double)Power.GameDaySeconds() && !Champions.OwnerNear(_m, transform.position, false)) // (an owner it just killed is still there)
+                {
+                    Errands.Log("champion left without its owner gone: " + _m.Who);
+                    Champions.Uncount(_c, _nv);
+                    ZNetScene.instance.Destroy(gameObject);
+                    return;
+                }
+            }
             float hp = _c.GetHealth(), max = _c.GetMaxHealth();
             if (hp < _lastHealth - 0.01f) _lastHurt = Time.time;
             _lastHealth = hp;
@@ -381,53 +457,190 @@ namespace HuginWhispers
         private static void Postfix(Character __instance) { try { ChampionLife.Put(__instance); } catch { } }
     }
 
-    // its health: the game's (base × level) and our factor on top (the game sets it again when it is at full health)
-    [HarmonyPatch(typeof(Character), "SetupMaxHealth")]
-    internal static class ChampionHealthPatch
+    // its health: the game's base × its stars × our factor — whoever sets its maximum (the game on its stars, another
+    // mod scaling every creature), it ends as ours, and as wounded as it was (a share of the old maximum)
+    [HarmonyPatch(typeof(Character), "SetMaxHealth")]
+    internal static class ChampionMaxHealthPatch
     {
-        private static void Postfix(Character __instance)
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(Character __instance, out float __state)
         {
+            __state = -1f;
             try
             {
-                Champions.Mods m = Champions.Of(__instance);
-                if (m == null) return;
-                __instance.SetMaxHealth(__instance.GetMaxHealthBase() * __instance.GetLevel() * m.Hp);
+                if (__instance is Player || Champions.Of(__instance) == null) return;
+                float max = __instance.GetMaxHealth();
+                __state = max > 0f ? Mathf.Clamp01(__instance.GetHealth() / max) : 1f;
             }
             catch { }
         }
+
+        [HarmonyPriority(Priority.Last)]
+        private static void Postfix(Character __instance, float __state)
+        {
+            if (__state < 0f) return;
+            try { Champions.Mods m = Champions.Of(__instance); if (m != null) ChampionOwn.Health(__instance, m, __state); } catch { }
+        }
     }
 
-    // its blows: the stars' factor and ours
+    // its blows: the game's own per star (+50% a star) and our factor — not another mod's stars
     [HarmonyPatch(typeof(Attack), "GetLevelDamageFactor")]
     internal static class ChampionDamagePatch
     {
+        [HarmonyPriority(Priority.Last)]
         private static void Postfix(Humanoid ___m_character, ref float __result)
         {
             if (!Champions.Any) return;
             try
             {
                 Champions.Mods m = Champions.Fast(___m_character);
-                if (m != null) __result *= m.Dmg;
+                if (m != null) __result = (1f + 0.5f * Mathf.Max(0, m.Level - 1)) * m.Dmg;
             }
             catch { }
         }
     }
 
-    // your blow (or your ravens') on the champion of your own errand: you took part, its death may count for you
-    [HarmonyPatch(typeof(Character), "Damage")]
-    internal static class ChampionStruckPatch
+    // its stars set (by the game, or by another mod giving stars of its own): back to ours, others' traits off
+    [HarmonyPatch(typeof(Character), "SetLevel")]
+    internal static class ChampionLevelPatch
     {
-        private static void Prefix(Character __instance, HitData hit)
+        [HarmonyPriority(Priority.Last)]
+        private static void Postfix(Character __instance)
+        {
+            if (__instance is Player) return;
+            try { Champions.Mods m = Champions.Of(__instance); if (m != null) ChampionOwn.Keep(__instance, m); } catch { }
+        }
+    }
+
+    // its armour: the game's own (a creature has none) — not a mod's armour for every creature
+    [HarmonyPatch(typeof(Character), "GetBodyArmor")]
+    internal static class ChampionArmorPatch
+    {
+        [HarmonyPriority(Priority.Last)]
+        private static void Postfix(Character __instance, ref float __result)
         {
             if (!Champions.Any) return;
+            try { if (Champions.Fast(__instance) != null) __result = 0f; } catch { }
+        }
+    }
+
+    // its blows where they land: a mod that makes every creature hit harder (Path of Valheiman's biome ladder) has
+    // already scaled the hit — taken back off, so only ours stays
+    [HarmonyPatch(typeof(Character), "RPC_Damage")]
+    internal static class ChampionHitPatch
+    {
+        [HarmonyPriority(Priority.Last)]
+        private static void Prefix(ref HitData hit)
+        {
+            if (!Champions.Any || hit == null) return;
             try
             {
-                Player me = Player.m_localPlayer;
-                if (me == null || hit == null || hit.m_attacker != me.GetZDOID()) return;
-                Champions.Mods m = Champions.Fast(__instance);
-                if (m != null && m.Owner == me.GetPlayerID()) Champions.Struck(me, m.Id);
+                Champions.Mods m = Champions.Fast(hit.GetAttacker());
+                if (m == null) return;
+                float f = ChampionOwn.ForeignDamage(hit.GetAttacker());
+                if (f > 0.0001f && Mathf.Abs(f - 1f) > 0.001f) hit.m_damage.Modify(1f / f);
             }
             catch { }
+        }
+    }
+
+    // ---------------------------------------------------------------- ours alone (the user, 2026-10-21)
+    // A champion is ours: other mods that scale or dress every creature keep off it. On the plain game nothing here
+    // does anything (the game's numbers are ours already); with Path of Valheiman: no extra stars of its own (its
+    // "manual" mark), its rarity and modifiers taken off (through its own methods), its biome ladder off the health
+    // (ChampionMaxHealthPatch) and off the blows (ChampionHitPatch); with Elite Creatures: its controller taken off.
+    // Others are looked for by name, never needed: absent, nothing happens.
+    internal static class ChampionOwn
+    {
+        private static bool _looked, _busy;
+        private static System.Reflection.MethodInfo _povMods, _povRarity, _povDamage;
+        private static System.Reflection.PropertyInfo _povCurrent;
+
+        private static void Look()
+        {
+            if (_looked) return;
+            _looked = true;
+            try
+            {
+                System.Reflection.Assembly pov = null; // (on the plain game it is not there, and nothing is asked)
+                foreach (System.Reflection.Assembly a in AppDomain.CurrentDomain.GetAssemblies()) { try { if (a.GetType("PassiveTree.EnemyDifficulty") != null) { pov = a; break; } } catch { } } // (by a class of its own)
+                if (pov == null) return;
+                Type mods = pov.GetType("PassiveTree.RarityMods"), rarity = pov.GetType("PassiveTree.CreatureRarity");
+                Type api = pov.GetType("Valheiman.Api.Creatures"), diff = pov.GetType("PassiveTree.EnemyDifficulty");
+                _povMods = Setter(mods);
+                _povRarity = Setter(rarity);
+                if (api != null) _povDamage = AccessTools.Method(api, "DamageFactor", new[] { typeof(Character) });
+                if (diff != null) _povCurrent = AccessTools.Property(diff, "Current");
+                if (_povMods != null || _povDamage != null) Errands.Log("champions: Path of Valheiman found — its creature scaling kept off champions");
+            }
+            catch (Exception e) { Errands.Log("champions: looking for creature mods: " + e.Message); }
+        }
+
+        // a static Set(Character, <an enum>) of that type (its first value: none, common)
+        private static System.Reflection.MethodInfo Setter(Type t)
+        {
+            if (t == null) return null;
+            foreach (System.Reflection.MethodInfo mi in AccessTools.GetDeclaredMethods(t))
+            {
+                if (mi.Name != "Set" || !mi.IsStatic) continue;
+                System.Reflection.ParameterInfo[] ps = mi.GetParameters();
+                if (ps.Length == 2 && ps[0].ParameterType == typeof(Character) && ps[1].ParameterType.IsEnum) return mi;
+            }
+            return null;
+        }
+
+        // before its stars are first set: Path of Valheiman gives no extra stars to a creature marked so
+        internal static void Claim(ZDO z) { if (z != null && !z.GetBool("pt.crar.manual", false)) z.Set("pt.crar.manual", true); } // (once: every second it is only looked at)
+
+        internal static float Health(Character c, Champions.Mods m) { return c.GetMaxHealthBase() * Mathf.Max(1, m.Level) * m.Hp; }
+
+        // its maximum as ours, written straight (never through SetMaxHealth: other mods scale that); health: the same share
+        internal static void Health(Character c, Champions.Mods m, float share)
+        {
+            ZNetView nv = c.GetComponent<ZNetView>();
+            if (nv == null || !nv.IsValid() || c.IsDead()) return;
+            ZDO z = nv.GetZDO();
+            float want = Health(c, m);
+            if (Mathf.Abs(z.GetFloat(ZDOVars.s_maxHealth, c.m_health) - want) > 0.5f) z.Set(ZDOVars.s_maxHealth, want);
+            if (nv.IsOwner())
+            {
+                float hp = Mathf.Clamp(want * Mathf.Clamp01(share), 1f, want);
+                if (Mathf.Abs(z.GetFloat(ZDOVars.s_health, want) - hp) > 0.5f) z.Set(ZDOVars.s_health, hp);
+            }
+        }
+
+        // once a second where it lives, and whenever its stars are set: its stars, health and traits ours
+        internal static void Keep(Character c, Champions.Mods m)
+        {
+            if (_busy || c == null || m == null) return;
+            _busy = true;
+            try
+            {
+                Component elite = c.GetComponent("EliteController"); // (Elite Creatures: its traits live on this)
+                if (elite != null) UnityEngine.Object.Destroy(elite);
+                ZNetView nv = c.GetComponent<ZNetView>();
+                if (nv == null || !nv.IsValid() || !nv.IsOwner() || c.IsDead()) return;
+                ZDO z = nv.GetZDO();
+                Look();
+                if (_povMods != null || _povRarity != null) Claim(z);
+                if (c.GetLevel() != m.Level) c.SetLevel(m.Level);
+                float max = c.GetMaxHealth();
+                if (Mathf.Abs(max - Health(c, m)) > 0.5f) Health(c, m, max > 0f ? c.GetHealth() / max : 1f);
+                if (_povMods != null && z.GetInt("pt.crmod", 0) != 0) _povMods.Invoke(null, new object[] { c, Enum.ToObject(_povMods.GetParameters()[1].ParameterType, 0) });
+                if (_povRarity != null && z.GetInt("pt.crar", 0) != 0) _povRarity.Invoke(null, new object[] { c, Enum.ToObject(_povRarity.GetParameters()[1].ParameterType, 0) });
+            }
+            catch (Exception e) { Errands.Log("champion: keeping it ours: " + e.Message); }
+            finally { _busy = false; }
+        }
+
+        // how much another mod scaled this creature's blows (1: none)
+        internal static float ForeignDamage(Character c)
+        {
+            Look();
+            if (_povDamage == null || c == null) return 1f;
+            if (_povCurrent != null && _povCurrent.GetValue(null, null) == null) return 1f; // (its creature scaling off: it did not scale)
+            object v = _povDamage.Invoke(null, new object[] { c });
+            return v is float ? (float)v : 1f;
         }
     }
 
@@ -466,7 +679,7 @@ namespace HuginWhispers
         }
     }
 
-    // its name over the bar: «Ватажок Грейдворф ★★★★ · вогняний, швидкий» (in each game's own words)
+    // its name when aimed at: «Гнилозуб, ватажок ★★★ · вогняний, швидкий» (in each game's own words)
     [HarmonyPatch(typeof(Character), "GetHoverName")]
     internal static class ChampionNamePatch
     {
@@ -482,29 +695,64 @@ namespace HuginWhispers
         }
     }
 
-    // its drop: about twice a plain one (stars would double it for each)
+    // its drop, its own (whatever stars or another mod would multiply — never the game's ×2 per star): what it drops,
+    // twice a plain one's roll (not counted: one roll); its trophy always (an errand may ask for it) and its gold, by the land it fell in
+    // (a lord: twice) — only when its owner is there to have it counted: one killed without them comes back in its
+    // ring, and no one farms its gold. An arena's creature drops nothing at all — here, since both ways the game drops
+    // (straight, or later from the body) take this list.
     [HarmonyPatch(typeof(CharacterDrop), "GenerateDropList")]
     internal static class ChampionDropPatch
     {
+        internal static readonly int[] GoldByTier = { 40, 80, 120, 180, 260, 360, 480, 620 };
+
+        [HarmonyPriority(Priority.Last)]
         private static void Postfix(CharacterDrop __instance, List<KeyValuePair<GameObject, int>> __result)
         {
             try
             {
-                if (__result == null || !Champions.Any) return;
-                Champions.Mods m = Champions.Fast(__instance.GetComponent<Character>());
+                if (__result == null) return;
+                Character c = __instance.GetComponent<Character>();
+                if (BindArena.Of(c)) { __result.Clear(); return; }
+                if (!Champions.Any) return;
+                Champions.Mods m = Champions.Fast(c);
                 if (m == null) return;
-                int pow = Mathf.Max(1, (int)Mathf.Pow(2f, m.Level - 1));
-                HashSet<GameObject> starred = new HashSet<GameObject>(); // (only these amounts were multiplied by the stars)
-                foreach (CharacterDrop.Drop d in __instance.m_drops) if (d.m_prefab != null && d.m_levelMultiplier && !d.m_levelMultiplierNotAmount) starred.Add(d.m_prefab);
-                for (int i = 0; i < __result.Count; i++)
+                bool near = Champions.OwnerNear(m, c.transform.position);
+                bool counted = near && !m.Spent; // (not its owner's kill: plain; one risen again: its trophy still — an errand may ask for it — but no gold, no double)
+                GameObject trophy = null;
+                foreach (CharacterDrop.Drop d in __instance.m_drops)
                 {
-                    if (!starred.Contains(__result[i].Key)) continue;
-                    int n = __result[i].Value;
-                    int cut = Mathf.Max(1, Mathf.CeilToInt(n * 2f / pow));
-                    if (cut < n) __result[i] = new KeyValuePair<GameObject, int>(__result[i].Key, cut);
+                    if (d.m_prefab == null) continue;
+                    ItemDrop it = d.m_prefab.GetComponent<ItemDrop>();
+                    if (it != null && it.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophy) trophy = d.m_prefab;
+                    if (!d.m_levelMultiplier || d.m_levelMultiplierNotAmount) continue;
+                    for (int i = 0; i < __result.Count; i++)
+                        if (__result[i].Key == d.m_prefab)
+                            __result[i] = new KeyValuePair<GameObject, int>(d.m_prefab, Mathf.Max(1, UnityEngine.Random.Range(d.m_amountMin, d.m_amountMax + 1) * (counted ? 2 : 1)));
+                }
+                if (!near) return;
+                bool hasTrophy = false;
+                foreach (KeyValuePair<GameObject, int> kv in __result) if (kv.Key == trophy) hasTrophy = true;
+                if (trophy != null && !hasTrophy) __result.Add(new KeyValuePair<GameObject, int>(trophy, 1));
+                if (!counted) return;
+                GameObject coins = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab("Coins") : null;
+                if (coins != null)
+                {
+                    int tier = WorldGenerator.instance != null ? Champions.TierOf(WorldGenerator.instance.GetBiome(c.transform.position.x, c.transform.position.z)) : 0;
+                    int gold = GoldByTier[Mathf.Clamp(tier, 0, GoldByTier.Length - 1)] * (m.Has("lord") ? 2 : 1);
+                    __result.Add(new KeyValuePair<GameObject, int>(coins, gold));
                 }
             }
-            catch { }
+            catch (Exception e) { Errands.Log("champion drop: " + e.Message); }
+        }
+    }
+
+    // the game's own bar over a champion: none (its own bar shows it, RavenBook.ChampionBar)
+    [HarmonyPatch(typeof(EnemyHud), "ShowHud")]
+    internal static class ChampionHudPatch
+    {
+        private static bool Prefix(Character c)
+        {
+            try { return !Champions.Any || Champions.Fast(c) == null; } catch { return true; }
         }
     }
 }

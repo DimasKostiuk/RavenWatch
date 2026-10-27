@@ -79,7 +79,7 @@ namespace HuginWhispers
                 model.SetActive(true);
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = Quaternion.identity;
-                foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+                foreach (Transform t in RavenBones.Of(model.transform, false))
                     if (t != model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
                 foreach (Animator a in model.GetComponentsInChildren<Animator>(true)) a.enabled = false;
                 SkinnedMeshRenderer skin = null;
@@ -126,6 +126,8 @@ namespace HuginWhispers
                 }
                 zm = new ZoneMap { Z = zone, W = W, H = H };
                 Maps[munin] = zm;
+                try { MeasureEyes(munin, skin, bones, bonePos, vPos, uv, zone, W, H); }
+                catch (System.Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Raven looks: eyes not measured: " + e.Message); }
                 if (Plugin.Instance != null) Plugin.Instance.Log("Raven looks: zone map of " + (munin ? "Munin" : "Hugin") + " " + W + "x" + H + " (" + how + ")");
                 return zone;
             }
@@ -134,6 +136,100 @@ namespace HuginWhispers
                 Object.Destroy(stage);
                 if (emi != null) Object.Destroy(emi);
             }
+        }
+
+        // ---------------------------------------------------------------- the two eyes, one by one
+        // Both eyes share one picture (left and right are mirrored onto it), so a look paints them alike. Where each eye
+        // is in the head's own space (its middle and its size) is measured once per raven, from the vertices in the
+        // eye zone: a thing on one eye only («oddeye» of a look: OddEye) sits there.
+        internal struct EyeSpot { public Vector3 At; public float Size; }
+        private static readonly Dictionary<bool, EyeSpot[]> EyeSpots = new Dictionary<bool, EyeSpot[]>();
+        internal const string HeadBone = "Neck";
+
+        // [0] one eye, [1] the other (always the same one of a raven); null: not measured (no zone map yet, no eye)
+        internal static EyeSpot[] Eyes(bool munin)
+        {
+            EyeSpot[] e;
+            if (EyeSpots.TryGetValue(munin, out e)) return e;
+            int w, h; string why;
+            Zones(munin, out w, out h, out why); // (measured with the map)
+            return EyeSpots.TryGetValue(munin, out e) ? e : null;
+        }
+
+        private static void MeasureEyes(bool munin, SkinnedMeshRenderer skin, Transform[] bones, Vector3[] bonePos, Vector3[] vPos, Vector2[] uv, byte[] zone, int W, int H)
+        {
+            int hb = -1;
+            for (int i = 0; i < bones.Length; i++) if (bones[i] != null && bones[i].name == HeadBone) { hb = i; break; }
+            if (hb < 0 || vPos == null || uv == null) return;
+            // the baked space → the world: of the two readings, the one that puts the head bone where it is
+            Matrix4x4[] tries = { Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one), skin.transform.localToWorldMatrix };
+            Matrix4x4 m = tries[0];
+            float best = float.MaxValue;
+            foreach (Matrix4x4 t in tries) { float d = (t.MultiplyPoint3x4(bonePos[hb]) - bones[hb].position).sqrMagnitude; if (d < best) { best = d; m = t; } }
+            Transform head = bones[hb];
+            List<Vector3> pts = new List<Vector3>();
+            for (int i = 0; i < vPos.Length && i < uv.Length; i++)
+            {
+                int x = Mathf.Clamp((int)(uv[i].x * W), 0, W - 1), y = Mathf.Clamp((int)(uv[i].y * H), 0, H - 1);
+                if (zone[y * W + x] == (byte)Zone.Eyes) pts.Add(head.InverseTransformPoint(m.MultiplyPoint3x4(vPos[i])));
+            }
+            if (pts.Count < 4) return;
+            // the head's left and right: its middle plane (Across). The eye points are split by their side of it; when the
+            // zone holds one eye only, the other eye is that one mirrored
+            Vector3 o, across;
+            if (!Across(bones, head, pts, out o, out across)) return;
+            EyeSpot[] res = new EyeSpot[2];
+            int[] count = new int[2];
+            for (int side = 0; side < 2; side++)
+            {
+                List<Vector3> mine = new List<Vector3>();
+                foreach (Vector3 p in pts) if ((Vector3.Dot(p - o, across) >= 0f) == (side == 0)) mine.Add(p);
+                count[side] = mine.Count;
+                if (mine.Count < Mathf.Max(3, pts.Count / 5)) continue; // (a few stray points are no eye)
+                // the eye's outer face: the points farthest out from the middle plane (the zone also runs round the socket,
+                // whose middle lies inside the head)
+                mine.Sort((p1, p2) => Mathf.Abs(Vector3.Dot(p2 - o, across)).CompareTo(Mathf.Abs(Vector3.Dot(p1 - o, across))));
+                int take = Mathf.Max(3, Mathf.CeilToInt(mine.Count * 0.5f));
+                Vector3 c = Vector3.zero;
+                for (int i = 0; i < take; i++) c += mine[i];
+                c /= take;
+                List<float> r = new List<float>();
+                foreach (Vector3 p in mine) r.Add((p - c).magnitude);
+                r.Sort();
+                res[side] = new EyeSpot { At = c, Size = Mathf.Max(1e-4f, r[Mathf.Min(r.Count - 1, (int)(r.Count * 0.75f))] * 2f) };
+            }
+            bool has0 = res[0].Size > 0f, has1 = res[1].Size > 0f;
+            if (!has0 && !has1) return;
+            if (!has0) res[0] = Mirror(res[1], o, across);
+            if (!has1) res[1] = Mirror(res[0], o, across);
+            EyeSpots[munin] = res;
+            if (Plugin.Instance != null) Plugin.Instance.Log("Raven looks: eyes of " + (munin ? "Munin" : "Hugin") + " at " + res[0].At.ToString("F4") + " / " + res[1].At.ToString("F4") + ", size " + res[0].Size.ToString("F4") + " (head space, " + pts.Count + " points: " + count[0] + " / " + count[1] + (has0 && has1 ? "" : ", one eye mirrored") + ")");
+        }
+
+        // the head's middle plane in its own space: its normal (left-right) from the wings' roots, its point the beak's
+        // root, which lies on the middle (not halfway between the wings: they sit askew in the measured pose); no beak
+        // bone: the eye points' own middle
+        private static bool Across(Transform[] bones, Transform head, List<Vector3> pts, out Vector3 o, out Vector3 across)
+        {
+            o = Vector3.zero; across = Vector3.right;
+            Transform l = null, rt = null, jaw = null;
+            foreach (Transform b in bones)
+            {
+                if (b == null) continue;
+                if (b.name == "Wing1.l") l = b; else if (b.name == "Wing1.r") rt = b; else if (b.name == "Jaw") jaw = b;
+            }
+            if (l == null || rt == null) return false;
+            Vector3 a = head.InverseTransformPoint(l.position), c = head.InverseTransformPoint(rt.position);
+            if ((a - c).sqrMagnitude < 1e-10f) return false;
+            across = (a - c).normalized;
+            if (jaw != null) o = head.InverseTransformPoint(jaw.position);
+            else { foreach (Vector3 p in pts) o += p; o /= Mathf.Max(1, pts.Count); }
+            return true;
+        }
+
+        private static EyeSpot Mirror(EyeSpot e, Vector3 o, Vector3 across)
+        {
+            return new EyeSpot { At = e.At - 2f * Vector3.Dot(e.At - o, across) * across, Size = e.Size };
         }
 
         internal static Color32 ZoneColor(int z) { return z >= 0 && z < ZoneColors.Length ? ZoneColors[z] : new Color32(20, 20, 20, 255); }
@@ -180,7 +276,7 @@ namespace HuginWhispers
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = Quaternion.identity;
                 foreach (Collider c in model.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
-                foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+                foreach (Transform t in RavenBones.Of(model.transform, false))
                     if (t != model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
                 Animator anim = model.GetComponentInChildren<Animator>(true);
                 if (anim != null) anim.enabled = false;

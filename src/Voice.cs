@@ -85,6 +85,7 @@ namespace HuginWhispers
             if (z == null) return;
             int v = (_hCode < 0 ? None : _hCode) | ((_mCode < 0 ? None : _mCode) << 15) | Set;
             if (z.GetInt(NetKey, 0) != v) z.Set(NetKey, v);
+            RavenVoice.PublishTimbres(p, hugin, munin); // its speaking timbre, kept on it (RavenVoice.TimbreKey)
         }
 
         // the int a player carries for these two numbers (the console's test dummy writes it itself)
@@ -105,6 +106,15 @@ namespace HuginWhispers
 
         // pitch and loudness the game's way (its ZSFX sets them every frame from its own: a plain set would be undone),
         // the timbre by an audio filter, the manner by an echo or a quick fade
+        // an audio filter on the sound: its own if it has one already (Unity allows one of a kind: a second AddComponent is null)
+        private static T Filter<T>(GameObject g) where T : Behaviour
+        {
+            T f = g.GetComponent<T>();
+            if (f == null) f = g.AddComponent<T>();
+            f.enabled = true;
+            return f;
+        }
+
         internal static void Shape(AudioSource a, float pitch, float volume, Sound s, bool voiced)
         {
             ZSFX z = a.GetComponent<ZSFX>();
@@ -116,11 +126,11 @@ namespace HuginWhispers
             GameObject g = a.gameObject;
             switch (s.Timbre)
             {
-                case 1: g.AddComponent<AudioDistortionFilter>().distortionLevel = 0.45f; g.AddComponent<AudioLowPassFilter>().cutoffFrequency = 4200f; break; // hoarse
-                case 2: { AudioLowPassFilter f = g.AddComponent<AudioLowPassFilter>(); f.cutoffFrequency = 1300f; f.lowpassResonanceQ = 1.2f; break; } // muffled
-                case 3: g.AddComponent<AudioHighPassFilter>().cutoffFrequency = 1200f; break; // thin
+                case 1: Filter<AudioDistortionFilter>(g).distortionLevel = 0.45f; Filter<AudioLowPassFilter>(g).cutoffFrequency = 4200f; break; // hoarse
+                case 2: { AudioLowPassFilter f = Filter<AudioLowPassFilter>(g); f.cutoffFrequency = 1300f; f.lowpassResonanceQ = 1.2f; break; } // muffled
+                case 3: Filter<AudioHighPassFilter>(g).cutoffFrequency = 1200f; break; // thin
             }
-            if (s.Manner == 2) { AudioEchoFilter e = g.AddComponent<AudioEchoFilter>(); e.delay = 110f; e.decayRatio = 0.5f; e.wetMix = 0.55f; e.dryMix = 1f; } // drawn out
+            if (s.Manner == 2) { AudioEchoFilter e = Filter<AudioEchoFilter>(g); e.delay = 110f; e.decayRatio = 0.5f; e.wetMix = 0.55f; e.dryMix = 1f; } // drawn out
             else if (s.Manner == 0 && a.clip != null) g.AddComponent<Clip>().Begin(z, a, volume, a.clip.length * 0.45f); // clipped short
         }
 

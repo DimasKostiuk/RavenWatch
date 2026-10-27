@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Чорнило віщуна
+note: Густе фіолетове чорнило віщунів: руни, написані ним, світяться в темряві. Хальдор продає його не кожному.
+use: item
+id: chornylo_vishchuna
+stack: 50
+weight: 0.1
+sell: 150 defeated_goblinking
+part asset/Товари/GoodsInk pos 0 0 0 rot 0 0 0 scale 0.063 0.063 0.063  # Чорнило віщуна (Meshy), ~12 см, крапля й руна світяться

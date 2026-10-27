@@ -1,0 +1,202 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>tree window art</title></head>
+<body>
+<!-- The raven tree window's pictures (assets/book/tree_*.png), after the user's mockups 3a/3b/3c: the chests' empty
+     sockets (Фрея round, Бальдр a rounded square, Геймдаль a tall oval), an empty root place (a dashed ring, white:
+     tinted by the tree), the branch (a glowing line, white), the chests' dark wood, and the three «Сплести» stones:
+     green — a river pebble with moss, icy — a chipped block with frost on its top edge, charred — a coal shard
+     smouldering from below. Made by tools/tree_art.js (headless Chrome). -->
+<pre id="out"></pre>
+<script>
+const out = [];
+function make(name, w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); draw(g, w, h);
+  out.push(name + ' ' + c.toDataURL('image/png'));
+}
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function inset(g, path, w, h) {
+  // a dark hollow: deep in the middle, a little lighter at the lip, a faint light edge below
+  const rg = g.createRadialGradient(w / 2, h * 0.42, 4, w / 2, h / 2, Math.max(w, h) * 0.55);
+  rg.addColorStop(0, '#0b0705'); rg.addColorStop(0.8, '#160e09'); rg.addColorStop(1, '#22170f');
+  path(); g.fillStyle = rg; g.fill();
+  g.save(); path(); g.clip();
+  g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 14; g.shadowOffsetY = 5;
+  g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.85)'; path(); g.stroke();
+  g.restore();
+  g.lineWidth = 2; g.strokeStyle = 'rgba(120,90,60,0.35)'; path(); g.stroke();
+}
+// sockets
+make('tree_socket_f', 128, 128, (g, w, h) => inset(g, () => { g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); }, w, h));
+make('tree_socket_b', 128, 128, (g, w, h) => inset(g, () => rr(g, 14, 14, 100, 100, 24), w, h));
+make('tree_socket_h', 128, 128, (g, w, h) => inset(g, () => { g.beginPath(); g.ellipse(64, 64, 40, 56, 0, 0, Math.PI * 2); }, w, h));
+// an empty root place: a dashed ring
+make('tree_place', 128, 128, (g) => {
+  g.setLineDash([9, 7]); g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,0.85)';
+  g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); g.stroke();
+  g.setLineDash([]);
+  const rg = g.createRadialGradient(64, 64, 10, 64, 64, 52); rg.addColorStop(0, 'rgba(0,0,0,0.35)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = rg; g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.fill();
+});
+// the branch: a glowing line, fading at both ends
+make('tree_branch', 1024, 48, (g, w, h) => {
+  for (let x = 0; x < w; x++) {
+    const e = Math.min(1, Math.min(x, w - x) / (w * 0.12));
+    for (let y = 0; y < h; y++) {
+      const d = Math.abs(y - h / 2);
+      const a = (d < 3 ? 1 : Math.exp(-(d - 3) * (d - 3) / 60) * 0.55) * e;
+      g.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')'; g.fillRect(x, y, 1, 1);
+    }
+  }
+});
+// the chests' dark wood (tiles upward)
+make('tree_wood', 256, 256, (g, w, h) => {
+  g.fillStyle = '#2a1a10'; g.fillRect(0, 0, w, h);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let x = 0; x < w; x += 2) {
+    const v = 0.5 + 0.5 * Math.sin(x * 0.11 + Math.sin(x * 0.03) * 3) * 0.6 + (rnd() - 0.5) * 0.25;
+    g.fillStyle = 'rgba(' + (v > 0.5 ? '70,45,26' : '15,9,5') + ',' + (Math.abs(v - 0.5) * 0.5).toFixed(3) + ')';
+    g.fillRect(x, 0, 2, h);
+  }
+  for (let i = 0; i < 9; i++) { const x = Math.floor(rnd() * w); g.fillStyle = 'rgba(10,6,3,0.35)'; g.fillRect(x, 0, 1, h); }
+});
+// the «Сплести» stones
+const BW = 600, BH = 150;
+make('tree_btn_green', BW, BH, (g) => {
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 22; g.shadowOffsetY = 10;
+  g.beginPath(); g.ellipse(300, 72, 280, 58, 0, 0, Math.PI * 2);
+  const lg = g.createLinearGradient(0, 14, 0, 130); lg.addColorStop(0, '#7d8a72'); lg.addColorStop(0.45, '#56624f'); lg.addColorStop(1, '#2f372b');
+  g.fillStyle = lg; g.fill(); g.restore();
+  g.save(); g.beginPath(); g.ellipse(300, 72, 280, 58, 0, 0, Math.PI * 2); g.clip();
+  const hl = g.createRadialGradient(260, 30, 10, 260, 30, 260); hl.addColorStop(0, 'rgba(255,255,240,0.28)'); hl.addColorStop(1, 'rgba(255,255,240,0)');
+  g.fillStyle = hl; g.fillRect(0, 0, BW, BH);
+  const moss = g.createRadialGradient(170, 128, 6, 170, 128, 120); moss.addColorStop(0, 'rgba(80,120,40,0.75)'); moss.addColorStop(1, 'rgba(80,120,40,0)');
+  g.fillStyle = moss; g.fillRect(0, 0, BW, BH);
+  g.restore();
+  g.lineWidth = 2; g.strokeStyle = 'rgba(20,26,16,0.8)'; g.beginPath(); g.ellipse(300, 72, 280, 58, 0, 0, Math.PI * 2); g.stroke();
+});
+make('tree_btn_icy', BW, BH, (g) => {
+  const pts = [[40, 78], [96, 18], [470, 10], [568, 38], [586, 84], [512, 136], [118, 140], [30, 104]];
+  const path = () => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (const p of pts.slice(1)) g.lineTo(p[0], p[1]); g.closePath(); };
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 22; g.shadowOffsetY = 10; path();
+  const lg = g.createLinearGradient(0, 10, 0, 140); lg.addColorStop(0, '#8b9aa8'); lg.addColorStop(0.5, '#5a6876'); lg.addColorStop(1, '#2e3843');
+  g.fillStyle = lg; g.fill(); g.restore();
+  g.save(); path(); g.clip();
+  g.fillStyle = 'rgba(255,255,255,0.10)'; g.beginPath(); g.moveTo(300, 0); g.lineTo(380, 0); g.lineTo(250, BH); g.lineTo(170, BH); g.closePath(); g.fill(); // a facet
+  g.strokeStyle = 'rgba(220,235,250,0.35)'; g.lineWidth = 2; g.beginPath(); g.moveTo(330, 10); g.lineTo(230, 140); g.stroke();
+  const fr = g.createLinearGradient(0, 8, 0, 34); fr.addColorStop(0, 'rgba(240,250,255,0.85)'); fr.addColorStop(1, 'rgba(240,250,255,0)');
+  g.fillStyle = fr; g.fillRect(0, 0, BW, 40); // frost on the top edge
+  g.restore();
+  g.lineWidth = 2; g.strokeStyle = 'rgba(15,22,30,0.85)'; path(); g.stroke();
+});
+make('tree_btn_charred', BW, BH, (g) => {
+  const pts = [[44, 70], [70, 30], [150, 22], [210, 34], [300, 14], [420, 26], [520, 18], [566, 50], [554, 92], [584, 112], [500, 138], [360, 128], [240, 140], [110, 134], [56, 112]];
+  const path = () => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (const p of pts.slice(1)) g.lineTo(p[0], p[1]); g.closePath(); };
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.75)'; g.shadowBlur = 22; g.shadowOffsetY = 10; path();
+  const lg = g.createLinearGradient(0, 14, 0, 140); lg.addColorStop(0, '#3e3430'); lg.addColorStop(0.55, '#231c19'); lg.addColorStop(1, '#140f0d');
+  g.fillStyle = lg; g.fill(); g.restore();
+  g.save(); path(); g.clip();
+  g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1.5;
+  for (let x = 30; x < BW; x += 14) { g.beginPath(); g.moveTo(x, 0); g.bezierCurveTo(x + 6, 50, x - 6, 100, x + 4, BH); g.stroke(); } // grain
+  const em = g.createLinearGradient(0, 96, 0, 142); em.addColorStop(0, 'rgba(255,110,30,0)'); em.addColorStop(1, 'rgba(255,110,30,0.55)');
+  g.fillStyle = em; g.fillRect(0, 90, BW, 60); // it smoulders from below
+  g.restore();
+  g.lineWidth = 2; g.strokeStyle = 'rgba(255,120,40,0.35)'; path(); g.stroke();
+});
+// the в'язь's knot over its stones (a woven в'язь: the book, the tree, the result), by the tree that tied it:
+// green — a living vine in three turns, buds for the knot, little leaves; icy — a frosted thread, a crystal for the
+// knot, icicles at its ends; charred — a burnt cord smouldering inside, its knot glowing
+const S = 512, C = 256;
+const strands = [ // each: start, two controls, end (crossing at the middle)
+  [[60, 300], [170, 210], [340, 330], [452, 222]],
+  [[236, 52], [300, 190], [210, 330], [272, 462]],
+  [[96, 140], [210, 230], [300, 280], [420, 390]],
+];
+function strand(g, s) { g.beginPath(); g.moveTo(s[0][0], s[0][1]); g.bezierCurveTo(s[1][0], s[1][1], s[2][0], s[2][1], s[3][0], s[3][1]); }
+function at(s, t) { const u = 1 - t, p = (i) => u * u * u * s[0][i] + 3 * u * u * t * s[1][i] + 3 * u * t * t * s[2][i] + t * t * t * s[3][i]; return [p(0), p(1)]; }
+make('tree_knot_green', S, S, (g) => {
+  for (const s of strands) {
+    g.lineCap = 'round';
+    strand(g, s); g.lineWidth = 15; g.strokeStyle = '#1e3010'; g.stroke();
+    strand(g, s); g.lineWidth = 10; g.strokeStyle = '#6fa035'; g.stroke();
+    g.setLineDash([12, 10]); strand(g, s); g.lineWidth = 3; g.strokeStyle = '#2e4a16'; g.stroke(); g.setLineDash([]);
+    for (let t = 0.12; t < 0.95; t += 0.2) { // little leaves along the vine
+      const [x, y] = at(s, t), [x2, y2] = at(s, t + 0.02), a = Math.atan2(y2 - y, x2 - x) + (t * 10 % 2 > 1 ? 1 : -1) * 1.1;
+      g.save(); g.translate(x, y); g.rotate(a);
+      g.beginPath(); g.ellipse(18, 0, 18, 7, 0, 0, Math.PI * 2); g.fillStyle = '#7fbf3a'; g.fill();
+      g.lineWidth = 2; g.strokeStyle = '#2a4a12'; g.stroke(); g.restore();
+    }
+  }
+  for (const [x, y, r] of [[C, C, 20], [C - 22, C + 14, 11], [C + 20, C - 16, 10]]) { // the buds: the knot
+    const rg = g.createRadialGradient(x - r * 0.3, y - r * 0.3, 2, x, y, r); rg.addColorStop(0, '#d8f08a'); rg.addColorStop(1, '#4a7a1e');
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = rg; g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#1e3010'; g.stroke();
+  }
+});
+make('tree_knot_icy', S, S, (g) => {
+  for (const s of strands.slice(0, 2)) {
+    g.lineCap = 'round';
+    g.save(); g.shadowColor = 'rgba(160,220,255,0.9)'; g.shadowBlur = 18;
+    strand(g, s); g.lineWidth = 9; g.strokeStyle = '#dff4ff'; g.stroke(); g.restore();
+    strand(g, s); g.lineWidth = 3; g.strokeStyle = '#ffffff'; g.stroke();
+    for (const t of [0, 1]) { // icicles at its ends
+      const [x, y] = at(s, t), [x2, y2] = at(s, t === 0 ? 0.04 : 0.96), a = Math.atan2(y - y2, x - x2);
+      g.save(); g.translate(x, y); g.rotate(a);
+      g.beginPath(); g.moveTo(-4, -6); g.lineTo(26, 0); g.lineTo(-4, 6); g.closePath(); g.fillStyle = 'rgba(230,248,255,0.95)'; g.fill(); g.restore();
+    }
+  }
+  g.save(); g.translate(C, C); g.shadowColor = 'rgba(170,230,255,1)'; g.shadowBlur = 24; // the crystal: the knot
+  g.beginPath(); g.moveTo(0, -30); g.lineTo(20, 0); g.lineTo(0, 30); g.lineTo(-20, 0); g.closePath();
+  const lg = g.createLinearGradient(-20, -30, 20, 30); lg.addColorStop(0, '#ffffff'); lg.addColorStop(1, '#8fd0f0');
+  g.fillStyle = lg; g.fill(); g.lineWidth = 2; g.strokeStyle = '#e8f8ff'; g.stroke(); g.restore();
+});
+make('tree_knot_charred', S, S, (g) => {
+  for (const s of strands.slice(0, 2)) {
+    g.lineCap = 'round';
+    strand(g, s); g.lineWidth = 13; g.strokeStyle = '#1a0c06'; g.stroke();
+    g.save(); g.shadowColor = 'rgba(255,110,30,0.9)'; g.shadowBlur = 14;
+    g.setLineDash([16, 10]); strand(g, s); g.lineWidth = 6; g.strokeStyle = '#ff7a2a'; g.stroke(); g.setLineDash([]); g.restore();
+  }
+  g.save(); g.shadowColor = 'rgba(255,120,30,1)'; g.shadowBlur = 30; // the knot glows
+  const rg = g.createRadialGradient(C - 6, C - 6, 3, C, C, 22); rg.addColorStop(0, '#ffd08a'); rg.addColorStop(0.5, '#e8641e'); rg.addColorStop(1, '#5a1e08');
+  g.beginPath(); g.arc(C, C, 22, 0, Math.PI * 2); g.fillStyle = rg; g.fill(); g.restore();
+});
+// a golden rune put into a gift: a bronze clamp across its stone, two rivets and a small lock in the middle
+make('tree_clamp', 256, 256, (g) => {
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 8; g.shadowOffsetY = 3;
+  rr(g, 8, 104, 240, 48, 8);
+  const lg = g.createLinearGradient(0, 104, 0, 152); lg.addColorStop(0, '#c89a52'); lg.addColorStop(0.5, '#8a6230'); lg.addColorStop(1, '#5a3c18');
+  g.fillStyle = lg; g.fill(); g.restore();
+  g.lineWidth = 2; g.strokeStyle = '#3a2610'; rr(g, 8, 104, 240, 48, 8); g.stroke();
+  g.strokeStyle = 'rgba(255,230,170,0.45)'; g.beginPath(); g.moveTo(16, 110); g.lineTo(240, 110); g.stroke();
+  for (const x of [28, 228]) { // rivets
+    const rg = g.createRadialGradient(x - 2, 126, 1, x, 128, 8); rg.addColorStop(0, '#f0d090'); rg.addColorStop(1, '#5a3c18');
+    g.beginPath(); g.arc(x, 128, 8, 0, Math.PI * 2); g.fillStyle = rg; g.fill();
+  }
+  // the lock: a shackle over a small body with a keyhole
+  g.lineWidth = 7; g.strokeStyle = '#6a4a22'; g.beginPath(); g.arc(128, 104, 16, Math.PI, 0); g.stroke();
+  rr(g, 106, 100, 44, 40, 6);
+  const lk = g.createLinearGradient(0, 100, 0, 140); lk.addColorStop(0, '#d8aa5a'); lk.addColorStop(1, '#7a5426');
+  g.fillStyle = lk; g.fill(); g.lineWidth = 2; g.strokeStyle = '#3a2610'; rr(g, 106, 100, 44, 40, 6); g.stroke();
+  g.fillStyle = '#2a1a08'; g.beginPath(); g.arc(128, 116, 5, 0, Math.PI * 2); g.fill(); g.fillRect(126, 118, 4, 12);
+});
+// a spark of Odin on a rune (its "stars"): three cut strokes crossing like a carved sign, sharp at the ends, gold with
+// an ember at the middle
+make('tree_spark', 64, 64, (g) => {
+  const blade = (a, len, w) => { // one stroke, pointed at both ends
+    g.save(); g.translate(32, 32); g.rotate(a);
+    g.beginPath(); g.moveTo(0, -len); g.lineTo(w, 0); g.lineTo(0, len); g.lineTo(-w, 0); g.closePath(); g.restore();
+  };
+  g.save(); g.shadowColor = 'rgba(255,150,40,0.95)'; g.shadowBlur = 10;
+  for (const [a, len, w] of [[0, 27, 5], [Math.PI / 3, 20, 4], [-Math.PI / 3, 20, 4]]) {
+    blade(a, len, w);
+    const lg = g.createLinearGradient(0, 4, 0, 60); lg.addColorStop(0, '#fff2c0'); lg.addColorStop(0.5, '#f0b848'); lg.addColorStop(1, '#c87418');
+    g.fillStyle = lg; g.fill();
+  }
+  g.restore();
+  for (const [a, len, w] of [[0, 27, 5], [Math.PI / 3, 20, 4], [-Math.PI / 3, 20, 4]]) { blade(a, len, w); g.lineWidth = 1.2; g.strokeStyle = 'rgba(90,40,6,0.9)'; g.stroke(); }
+  const rg = g.createRadialGradient(32, 32, 0, 32, 32, 7); rg.addColorStop(0, '#fffbe8'); rg.addColorStop(1, 'rgba(255,170,60,0)');
+  g.fillStyle = rg; g.beginPath(); g.arc(32, 32, 7, 0, Math.PI * 2); g.fill();
+});
+document.getElementById('out').textContent = out.join('\n');
+</script>
+</body></html>

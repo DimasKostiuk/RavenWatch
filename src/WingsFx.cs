@@ -96,6 +96,7 @@ namespace HuginWhispers
             {
                 GameObject g = new GameObject("RavenWatch_WingsTrail");
                 g.AddComponent<WingsStreams>().Init(pl);
+                Shadow.Outside(g, pl); // (hidden with you in Hugin's shadow)
                 return g;
             }
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Wings trail failed: " + e.Message); return null; }

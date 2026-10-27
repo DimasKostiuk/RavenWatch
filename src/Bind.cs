@@ -6,11 +6,12 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // «В'язь» (binds-plan.md): two to four burning runes woven at a raven tree into one thing — a look on the raven and
-    // a power. The power is a sentence: runes of Бальдр say WHAT happens, runes of Геймдаль WHEN, runes of Фрея HOW.
-    // A player has one в'язь at most; the runes in it are taken (none of them is worn alone while it lasts).
+    // «В'язь» (binds-plan.md): two to four burning runes woven at a raven tree into one power — the player's own, no
+    // raven wears it. The power is a sentence: runes of Бальдр say WHAT happens, runes of Геймдаль WHEN, runes of Фрея HOW.
+    // A player has one в'язь at most; the runes in it are taken (none of them is worn alone while it lasts); it is
+    // switched off in the book or the gifts circle (Q), unwoven only at a tree.
     // Its id is its recipe — x~<tree>~<f|b|h>.<effect id>~… (the roots' places in order) — so every game rebuilds the
-    // same look and power from the id alone; the player's record keeps which runes went into it.
+    // same power from the id alone; the player's record keeps which runes went into it.
     internal sealed class BindPart
     {
         public WearKind Kind;
@@ -29,12 +30,12 @@ namespace HuginWhispers
         internal static int TrustNeed(int tree) { return tree == 1 ? 2 : tree == 0 ? 4 : 6; }
         internal static int ChargesOf(int tree) { return Slots(tree); }
 
-        // the names of the roots' places: where each rune lies on the raven (the tree's way of weaving)
+        // the names of the roots' places, from the heart of the tree out (the user's mockups): icy 3, green 2, charred 4
         internal static readonly string[][] PlaceNames =
         {
             Lang.Keys("Серце", "Середина", "Оболонка"),
-            Lang.Keys("Перша", "Друга"),
-            Lang.Keys("Хвіст", "Ліве крило", "Праве крило", "Спина"),
+            Lang.Keys("Серце", "Оболонка"),
+            Lang.Keys("Серце", "Середина", "Оболонка", "Кора"),
         };
 
         internal string Id()
@@ -51,6 +52,7 @@ namespace HuginWhispers
             int tree;
             if (a.Length < 3 || !int.TryParse(a[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out tree) || tree < 0 || tree > 2) return null;
             Bind b = new Bind { Tree = tree };
+            if (a.Length - 2 > Slots(tree)) return null; // (more runes than the tree holds: not a в'язь — another's ZDO may say anything)
             for (int i = 2; i < a.Length; i++)
             {
                 int dot = a[i].IndexOf('.');
@@ -80,7 +82,7 @@ namespace HuginWhispers
         internal string Problem()
         {
             if (Parts.Count < 2) return Lang.T("Поклади на коріння щонайменше дві руни.");
-            if (Parts.Count > Slots(Tree)) return Lang.F("На цьому дереві вміщається {0} рун(и).", Slots(Tree));
+            if (Parts.Count > Slots(Tree)) return Lang.F("На цьому дереві вміщається {0}.", Lang.N(Slots(Tree), "руна|руни|рун"));
             foreach (BindPart p in Parts) if (p.Wear.Length == 0 || WearCatalog.Find(p.Kind, p.Wear) == null) return Lang.T("Одна з рун ще не знайшла свого ефекту.");
             for (int i = 0; i < Parts.Count; i++) for (int j = i + 1; j < Parts.Count; j++) if (Parts[i].Kind == Parts[j].Kind && Parts[i].Wear == Parts[j].Wear) return Lang.T("Одна руна — лише на одне місце.");
             if (Count(WearKind.Baldr) + Count(WearKind.Heimdall) == 0) return Lang.T("Фрея лише підсилює. Додай руну Бальдра (що станеться) або Геймдаля (коли).");
@@ -138,8 +140,6 @@ namespace HuginWhispers
             return (p.Kind == WearKind.Baldr ? WhatByEl : p.Kind == WearKind.Heimdall ? WhenByEl : HowByEl)[(int)e];
         }
 
-        internal static bool Offensive(string what) { return what == "flash" || what == "frost" || what == "chain" || what == "poison" || what == "gust"; }
-
         internal static BindPower Of(Bind b)
         {
             BindPower w = new BindPower();
@@ -185,9 +185,9 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- in words (the tree, the book)
         internal static readonly Dictionary<string, string> WhenWords = new Dictionary<string, string>
         {
-            { "sprint", Lang.K("біжиш 3 с без зупинки") }, { "dodge", Lang.K("ухиляєшся перекатом") }, { "heavy", Lang.K("влучаєш сильною атакою або стрілою") },
+            { "sprint", Lang.K("біжиш 3 с без зупинки") }, { "dodge", Lang.K("ухиляєшся перекатом") }, { "heavy", Lang.K("влучаєш сильною атакою, стрілою чи чарами") },
             { "lowhp", Lang.K("здоров'я падає нижче 30%") }, { "sneak", Lang.K("б'єш зі скритності") }, { "kill", Lang.K("вбиваєш ворога") },
-            { "parry", Lang.K("відбиваєш удар щитом") }, { "land", Lang.K("приземляєшся з висоти") },
+            { "parry", Lang.K("блокуєш удар щитом") }, { "land", Lang.K("приземляєшся з висоти") },
         };
 
         internal string WhatWords(string a, float night)
@@ -196,11 +196,11 @@ namespace HuginWhispers
             switch (a)
             {
                 case "flash": return Lang.F("спалах вогню довкола ({0} м): {1}% шкоди зброї + підпал", N(4f * Radius), Pct(40f * p * Instant));
-                case "frost": return Lang.F("морозна хвиля ({0} м): {1}% шкоди зброї морозом, вороги повільніші {2} с", N(5f * Radius), Pct(15f * p), N(4f * Dur));
+                case "frost": return Lang.F("морозна хвиля ({0} м): {1}% шкоди зброї морозом, мороз сповільнює ворогів", N(5f * Radius), Pct(15f * p)); // (the game's own frost: its own time)
                 case "chain": return Lang.F("розряд у {0} найближчих ворогів: кожному {1}% шкоди зброї", Targets, Pct(50f * p * Instant));
                 case "heal": return Lang.F("лікує {0}% здоров'я одразу й ще {1}% за {2} с", Pct(15f * p * Personal), Pct(10f * p * Personal), N(5f * Dur));
                 case "poison": return Lang.F("хмара отрути ({0} м): {1}% шкоди зброї отрутою", N(4f * Radius), Pct(60f * p));
-                case "vanish": return Lang.F("вороги довкола губляють тебе на {0} с", N(3f * Dur));
+                case "vanish": return Lang.F("вороги (крім босів) гублять тебе на {0} с", N(3f * Dur));
                 case "leech": return Lang.F("{0} наступні удари (за {1} с) лікують на {2}% шкоди", 3, N(8f * Dur), Pct(15f * p * Personal));
                 case "shield": return Lang.F("щит на {0}% твого здоров'я, {1} с", Pct(20f * p * Personal), N(6f * Dur));
                 case "gust": return Lang.F("вихор відкидає ворогів ({0} м), {1}% шкоди зброї", N(4f * Radius), Pct(10f * p * Instant));
@@ -225,7 +225,7 @@ namespace HuginWhispers
                 case "hammer": return Lang.F("блискавка в ціль під прицілом і ще в {0} ворогів поруч, кожному {1}% шкоди зброї", Targets, Pct(100f * p * Instant));
                 case "light": return Lang.F("сяйво на {0} с ({1} м): ти й союзники відновлюєте {2}% здоров'я щосекунди, вороги б'ють тебе на 20% слабше", N(8f * Dur), N(8f * Radius), Pct(3f * p * Personal));
                 case "hel": return Lang.F("поле отрути на {0} с ({1} м): разом {2}% шкоди зброї кожному ворогу в ньому", N(6f * Dur), N(6f * Radius), Pct(120f * p));
-                case "shadow": return Lang.F("{0} с вороги тебе не бачать, перший удар з тіні — удвічі сильніший", N(5f * Dur));
+                case "shadow": return Lang.F("{0} с вороги (крім босів) тебе не бачать, перший удар з тіні — удвічі сильніший", N(5f * Dur));
                 case "sacrifice": return Lang.F("віддаєш 20% здоров'я; {0} с усі удари лікують на {1}% шкоди", N(10f * Dur), Pct(25f * p * Personal));
                 case "runeshield": return Lang.F("щит на {0}% здоров'я тобі й союзникам поруч, {1} с", Pct(30f * p * Personal), N(8f * Dur));
             }
@@ -256,62 +256,16 @@ namespace HuginWhispers
                 sb.Append(Lang.F("<b>Кнопка в колі дарів (Q) — {0}:</b> {1}.", ActiveTitle(), ActiveWords(Active, 1f)));
                 if (what.Count > 0) sb.Append('\n').Append(Lang.F("Разом із нею: {0}.", string.Join("; ", what.ToArray())));
             }
-            else sb.Append(Lang.F("<b>Коли</b> {0} — {1}.", string.Join(Lang.T(" або "), when.ToArray()), Lang.T("+25% до швидкості й удвічі менше витривалості на біг 4 с")));
+            else sb.Append(Lang.F("<b>Коли</b> {0} — {1}.", string.Join(Lang.T(" або "), when.ToArray()), Lang.F("+{0}% до швидкості й удвічі менше витривалості на біг {1} с", Pct(25f * Pow), N(4f * Dur))));
             foreach (string h in How) { string s; sb.Append('\n').Append(Lang.T("Фрея:")).Append(' ').Append(HowWordsMap.TryGetValue(h, out s) ? Lang.T(s) : h).Append('.'); }
             if (BonusSteps > 0) sb.Append('\n').Append(Lang.F("Бонус стихії: {0} ×{1} — сила +{2}%, заряди на {3}% швидше.", Elements.Colored(BonusEl), BonusSteps + 1, BonusSteps * 30, BonusSteps * 20));
-            if (Stars > 0) sb.Append('\n').Append(Lang.F("Зірки рун: {0} — сила +{1}%.", Stars, Mathf.RoundToInt(Stars * RuneStars.BindPerStar * 100f)));
+            if (Stars > 0) sb.Append('\n').Append(Lang.F("Іскри рун: {0} — сила +{1}%.", Stars, Mathf.RoundToInt(Stars * RuneStars.BindPerStar * 100f)));
             sb.Append('\n').Append(Lang.F("Зарядів: {0}, кожен відновлюється за {1} с.", Charges, Mathf.RoundToInt(Recharge)));
             return sb.ToString();
         }
 
         private static string N(float v) { return v.ToString(Mathf.Abs(v - Mathf.Round(v)) < 0.05f ? "0" : "0.#", CultureInfo.InvariantCulture); }
         private static string Pct(float v) { return Mathf.RoundToInt(v).ToString(CultureInfo.InvariantCulture); }
-    }
-
-    // ---------------------------------------------------------------- the look: what a в'язь puts on a raven, by layer
-    internal static class BindLook
-    {
-        internal sealed class Visual
-        {
-            public Look Look;                                         // Фрея (null: the layer is not the в'язь's)
-            public readonly List<RavenFxDef>[] Fx = new List<RavenFxDef>[WearCatalog.Kinds];
-            internal bool Has(WearKind k) { return k == WearKind.Freya ? Look != null : Fx[(int)k] != null && Fx[(int)k].Count > 0; }
-        }
-
-        private static readonly Dictionary<string, Visual> Cache = new Dictionary<string, Visual>();
-        private static int _stamp = -1;
-
-        internal static Visual Of(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return null;
-            int stamp = WearCatalog.Stamp;
-            if (stamp != _stamp) { Cache.Clear(); _stamp = stamp; }
-            Visual v;
-            if (Cache.TryGetValue(id, out v)) return v;
-            v = null;
-            try { v = Make(Bind.Parse(id), id); }
-            catch (System.Exception e) { if (Plugin.Instance != null) Plugin.Instance.LogError("Raven bind look " + id + ": " + e.Message); }
-            Cache[id] = v;
-            return v;
-        }
-
-        // the runes of one layer woven the tree's way (FxMix: green together, icy core and shell, charred over the body)
-        private static Visual Make(Bind b, string id)
-        {
-            if (b == null) return null;
-            Visual v = new Visual();
-            for (int k = 0; k < WearCatalog.Kinds; k++)
-            {
-                List<string> ids = new List<string>();
-                foreach (BindPart p in b.Parts) if ((int)p.Kind == k && p.Wear.Length > 0) ids.Add(p.Wear);
-                if (ids.Count == 0) continue;
-                MixDef m = new MixDef { Id = id + "_" + WearCatalog.KindIds[k], Name = "", Kind = (WearKind)k, Mode = FxMix.ModeForTree(b.Tree), Harmony = k != (int)WearKind.Freya };
-                foreach (string s in ids) { m.Of.Add(s); m.Weight.Add(1f); }
-                if (k == (int)WearKind.Freya) v.Look = FxMix.LookOf(m);
-                else v.Fx[k] = FxMix.Parts(m);
-            }
-            return v;
-        }
     }
 }
 #endif

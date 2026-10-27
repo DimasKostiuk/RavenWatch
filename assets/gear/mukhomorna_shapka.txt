@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Мухоморна шапка
+note: Червона в білу цятку. Їсти не можна, носити — запросто. Ворон клянеться, що в ній чує, як ростуть гриби.
+use: gear
+id: mukhomorna_shapka
+slot: head
+part asset/Шапки/HatMushroom pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatMushroom (Шапки)

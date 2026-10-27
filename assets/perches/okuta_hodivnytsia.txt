@@ -1,0 +1,11 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Окута годівниця
+note: Міцне корито, окуте залізом і бронзою, з дашком від дощу: корм із неї ворону поживніший
+use: feeder
+id: okuta_hodivnytsia
+cost: Wood:10 Iron:4 Bronze:2
+station: forge
+feed: 1.25
+part asset/Годівниці/FeederIron pos 0 0.313 0 rot 0 0 0 scale 0.47 0.47 0.47  # Окута годівниця (Meshy, 8k), ~0,9 м
+part @seat pos -0.15 0.36 0.09 rot 0 180 0 scale 1 1 1  # де ворон їсть (з відкритого боку, під дашком корм)
+part @seat pos 0.15 0.36 0.09 rot 0 180 0 scale 1 1 1  # де ворон їсть (з відкритого боку)

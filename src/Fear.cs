@@ -12,7 +12,7 @@ namespace HuginWhispers
     // screamer tells every game which creatures are scared; each one then runs on whichever game drives it.
     internal static class Fear
     {
-        internal static float Seconds = 3f;
+        internal static float Seconds = 4f;
         private const string Rpc = "RavenWatch_Fear";
         private sealed class Scare { public float Until; public Vector3 From; }
         private static readonly Dictionary<ZDOID, Scare> Scared = new Dictionary<ZDOID, Scare>();
@@ -88,11 +88,15 @@ namespace HuginWhispers
         internal static void Reset() { Scared.Clear(); }
     }
 
+    // first of our creature minds (before the decoy): a scare is short, the lure goes on after it — one mind a frame,
+    // whoever's gift it is (another player's Hugin may lure the very monster your Munin scared)
     [HarmonyPatch(typeof(MonsterAI), "UpdateAI")]
+    [HarmonyPriority(Priority.High)]
     internal static class FearPatch
     {
-        private static bool Prefix(MonsterAI __instance, float dt, ref bool __result)
+        private static bool Prefix(MonsterAI __instance, float dt, ref bool __result, bool __runOriginal)
         { try {
+            if (!__runOriginal) return false; // (driven already this frame)
             if (!Fear.Any || !Fear.Runs(__instance, dt)) return true; // nobody scared: nothing to do, the cheapest way out
             __result = true;
             return false;

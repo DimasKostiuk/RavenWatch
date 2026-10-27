@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Торба збирача
+note: Дві плетені кишеньки, з яких завжди визирає ягода чи гриб. Поки ти зриваєш одне, ворон устигає зірвати друге — і майже завжди віддає тобі.
+use: gear
+id: torba_zbyracha
+cost: LinenThread:10 LeatherScraps:6 YggdrasilWood:4 TrophyGjall:2 RavenWatch_item_chornylo_vishchuna:2
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: back
+part asset/Спорядження/GearForager pos 0 0 0 rot 0 0 0 scale 0.13 0.13 0.13  # Торба збирача (Meshy), ~12 см

@@ -25,26 +25,36 @@ namespace HuginWhispers
 
         private static readonly Dictionary<Transform, float> Blinded = new Dictionary<Transform, float>();
         internal static bool AnyBlind { get { return Blinded.Count > 0; } }
+        private static readonly Dictionary<Transform, float> Weak = new Dictionary<Transform, float>(); // «Рвана броня»: wounded ones strike weaker (every game knows)
+        private const byte FlagDeep = 1, FlagWeak = 2; // sent after the seconds: «Рвані крила», «Рвана броня»
 
         internal static void Register()
         {
             ZRoutedRpc.instance.Register<ZPackage>(Rpc, new Action<long, ZPackage>(OnMark));
         }
 
-        internal static void Reset() { Blinded.Clear(); Bleeds.Clear(); Firm.Clear(); }
+        internal static void Reset() { Blinded.Clear(); Bleeds.Clear(); Firm.Clear(); Weak.Clear(); }
 
-        // from the striker's game, at the first blow on a target
-        internal static void Put(Character c, bool munin)
+        // from the striker's game, at the first blow on a target (mods: the raven's techniques; first: the flight's first target)
+        internal static void Put(Character c, bool munin, Strike.Mods mods, bool first)
         {
             if (c == null || c.IsDead() || ZRoutedRpc.instance == null) return;
             float secs = munin ? (c.IsBoss() ? WoundBossSeconds : WoundSeconds) : (c.IsBoss() ? BlindBossSeconds : BlindSeconds);
             if (secs <= 0f) return;
             bool firm = !munin && Facets.On("hstrike");
             if (firm) secs *= 2f;
+            if (!munin && mods != null)
+            {
+                secs *= mods.BlindMul; // «Глибока сліпота»
+                if (first && c.IsBoss() && mods.BlindBoss > secs) secs = mods.BlindBoss; // «Око Одіна»: even a boss
+            }
+            byte flags = 0;
+            if (munin && mods != null) { if (mods.Slow > 0f) flags |= FlagDeep; if (mods.Weak) flags |= FlagWeak; }
             ZPackage pkg = new ZPackage();
             pkg.Write(c.GetZDOID());
             pkg.Write(munin ? Wound : firm ? BlindFirm : Blind);
             pkg.Write(secs);
+            pkg.Write(flags); // (an older game reads up to the seconds and leaves this)
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, Rpc, pkg); // every game, this one too
         }
 
@@ -55,6 +65,7 @@ namespace HuginWhispers
                 ZDOID id = pkg.ReadZDOID();
                 byte kind = pkg.ReadByte();
                 float secs = pkg.ReadSingle();
+                byte flags = pkg.GetPos() < pkg.Size() ? pkg.ReadByte() : (byte)0; // (an older striker sends none)
                 GameObject go = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(id) : null;
                 Character c = go != null ? go.GetComponent<Character>() : null;
                 if (c == null || c.IsDead()) return;
@@ -70,7 +81,8 @@ namespace HuginWhispers
                 }
                 else if (kind == Wound)
                 {
-                    if (mine) Limp(c, secs);
+                    if (mine) Limp(c, secs, (flags & FlagDeep) != 0 ? Mastery.CrippleSlow : Slow);
+                    if ((flags & FlagWeak) != 0) Weak[c.transform] = Time.time + secs;
                     MarkLook.Show(c, true, secs);
                 }
             }
@@ -109,6 +121,29 @@ namespace HuginWhispers
             return false;
         }
 
+        // «Рвана броня»: this one strikes weaker while the mark lasts
+        internal static bool Weakened(Transform t)
+        {
+            float until;
+            if (t == null || Weak.Count == 0 || !Weak.TryGetValue(t, out until)) return false;
+            if (Time.time < until) return true;
+            Weak.Remove(t);
+            return false;
+        }
+
+        // Munin's wound from this player still bleeding on it / on anyone
+        internal static bool BleedingFrom(Player p, Character c)
+        {
+            foreach (Bleed b in Bleeds) if (b.From == p && b.Target == c && b.Left > 0) return true;
+            return false;
+        }
+
+        internal static bool AnyBleedFrom(Player p)
+        {
+            foreach (Bleed b in Bleeds) if (b.From == p && b.Left > 0 && b.Target != null && !b.Target.IsDead()) return true;
+            return false;
+        }
+
         internal static bool IsBlind(Transform t)
         {
             float until;
@@ -118,16 +153,12 @@ namespace HuginWhispers
             return false;
         }
 
-        private static readonly FieldInfo TargetField = AccessTools.Field(typeof(MonsterAI), "m_targetCreature");
-        private static readonly FieldInfo StaticField = AccessTools.Field(typeof(MonsterAI), "m_targetStatic");
-        private static readonly MethodInfo SetAlerted = AccessTools.Method(typeof(BaseAI), "SetAlerted");
 
         internal static void LoseTarget(Character c)
         {
             MonsterAI ai = c != null ? c.GetComponent<MonsterAI>() : null;
             if (ai == null) return;
-            if (TargetField != null) TargetField.SetValue(ai, null);
-            if (StaticField != null) StaticField.SetValue(ai, null);
+            AiTarget.Drop(ai);
             // its alert is left alone: dropped every frame, the game raised it again at once, and every raise
             // plays the creature's alert sound (a Greyling kept crying for the whole blindness)
         }
@@ -137,12 +168,12 @@ namespace HuginWhispers
         private static SE_Stats _limp;
         private const string LimpName = "RavenWatch_Wound";
 
-        private static void Limp(Character c, float secs)
+        private static void Limp(Character c, float secs, float slow)
         {
             SE_Stats se = RavenFx.Template(ref _limp, LimpName);
             se.m_name = Lang.W("Рвана рана");
             se.m_ttl = secs;
-            se.m_speedModifier = -Mathf.Clamp01(Slow);
+            se.m_speedModifier = -Mathf.Clamp01(slow);
             se.m_icon = AbilityIcons.ForEffect("mstrike", true);
             c.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
         }
@@ -158,22 +189,25 @@ namespace HuginWhispers
             public float Next;
             public Dictionary<Character, float> CapLeft;
             public Action<Character, float> Count;
+            public Strike.Mods Mods;   // the raven's techniques that ride on the wound
+            public float Blow;         // the blow that tore it (the bursts are shares of it)
+            public Vector3 Last;       // where it was last bled (it may be gone when it dies)
         }
 
         private static readonly List<Bleed> Bleeds = new List<Bleed>();
 
-        internal static void StartBleed(Player p, Character c, float blow, Dictionary<Character, float> capLeft, Action<Character, float> count)
+        internal static void StartBleed(Player p, Character c, float blow, Dictionary<Character, float> capLeft, Action<Character, float> count, Strike.Mods mods)
         {
             float secs = c.IsBoss() ? WoundBossSeconds : WoundSeconds;
             int ticks = Mathf.Max(1, Mathf.RoundToInt(secs));
             float total = blow * Mathf.Max(0f, BleedShare) * (secs / Mathf.Max(0.1f, WoundSeconds)) * (Facets.On("mstrike") ? 2f : 1f); // («Кігті» III: twice the bleeding)
             if (total <= 0.5f) return;
-            foreach (Bleed b in Bleeds) if (b.Target == c && b.From == p) { b.Left = ticks; b.Per = total / ticks; b.CapLeft = capLeft; b.Count = count; return; } // a fresh wound on an old one: this flight's now
-            Bleeds.Add(new Bleed { From = p, Target = c, Per = total / ticks, Left = ticks, Next = Time.time + 1f, CapLeft = capLeft, Count = count });
+            foreach (Bleed b in Bleeds) if (b.Target == c && b.From == p) { b.Left = ticks; b.Per = total / ticks; b.CapLeft = capLeft; b.Count = count; b.Mods = mods; b.Blow = blow; return; } // a fresh wound on an old one: this flight's now
+            Bleeds.Add(new Bleed { From = p, Target = c, Per = total / ticks, Left = ticks, Next = Time.time + 1f, CapLeft = capLeft, Count = count, Mods = mods, Blow = blow, Last = Body.Center(c) });
         }
 
         // every frame from the skills' Update
-        private static float _nextSweep;
+        private static float _nextSweep, _nextWeakSweep;
 
         internal static void Tick()
         {
@@ -185,10 +219,22 @@ namespace HuginWhispers
                     if (kv.Key == null || Time.time >= kv.Value) { if (over == null) over = new List<Transform>(); over.Add(kv.Key); }
                 if (over != null) foreach (Transform t in over) { Blinded.Remove(t); Firm.Remove(t); }
             }
+            if (Weak.Count > 0 && Time.time >= _nextWeakSweep) // «Рвана броня» on ones nobody struck you with since: not kept
+            {
+                _nextWeakSweep = Time.time + 5f;
+                List<Transform> gone = null;
+                foreach (KeyValuePair<Transform, float> kv in Weak) if (kv.Key == null || Time.time >= kv.Value) { if (gone == null) gone = new List<Transform>(); gone.Add(kv.Key); }
+                if (gone != null) foreach (Transform t in gone) Weak.Remove(t);
+            }
             for (int i = Bleeds.Count - 1; i >= 0; i--)
             {
                 Bleed b = Bleeds[i];
-                if (b.Target == null || b.Target.IsDead() || b.From == null || b.Left <= 0) { Bleeds.RemoveAt(i); continue; }
+                if (b.From == null) { Bleeds.RemoveAt(i); continue; }
+                // died with the wound open: the techniques that follow a death (the last drop's kill comes a moment
+                // later from the creature's own game: the wound waits for it a little after its last drop)
+                if (b.Target == null || b.Target.IsDead()) { Bleeds.RemoveAt(i); if (b.Left > 0 || Time.time < b.Next + 0.5f) Died(b); continue; }
+                if (b.Left <= 0) { if (Time.time >= b.Next + 0.5f) Bleeds.RemoveAt(i); continue; }
+                b.Last = Body.Center(b.Target);
                 if (Time.time < b.Next) continue;
                 b.Next = Time.time + 1f;
                 b.Left--;
@@ -201,8 +247,9 @@ namespace HuginWhispers
                     b.CapLeft[b.Target] = left - v;
                 }
                 if (v <= 0.5f) continue;
+                Strike.Mods mods = b.Mods;
                 HitData hit = new HitData();
-                hit.m_damage.m_slash = v;
+                if (mods != null && mods.Hot) hit.m_damage.m_fire = v; else hit.m_damage.m_slash = v; // «Гаряча кров»: it burns
                 hit.m_point = Body.Center(b.Target);
                 hit.m_dir = Vector3.down;
                 hit.m_pushForce = 0f;
@@ -214,8 +261,41 @@ namespace HuginWhispers
                 hit.m_skill = Skills.SkillType.None;
                 hit.m_skillRaiseAmount = Strike.Marker - v;
                 hit.SetAttacker(b.From);
+                bool lastDrop = v >= b.Target.GetHealth() - 0.5f;
                 b.Target.Damage(hit);
                 if (b.Count != null) b.Count(b.Target, v);
+                if (mods == null) continue;
+                if (mods.Thirst && !b.From.IsDead()) b.From.Heal(v * Mastery.ThirstShare, true);   // «Спрага»
+                if (mods.BloodEitr && !b.From.IsDead()) b.From.AddEitr(v * Mastery.BloodEitr);     // «Кров в ейтир»
+                if (mods.Whirl) Mastery.Splash(b.From, b.Last, Mastery.WhirlRadius, v * Mastery.WhirlShare, true, b.Target, b.CapLeft, true); // «Кривавий вир»
+                if (mods.Carrion && !mods.CarrionDone && lastDrop && mods.Item != null) // «Падальник»: the drop that finishes it
+                {
+                    mods.CarrionDone = true;
+                    float back = Power.Refund(mods.Item, Strike.CostOf(true, mods.Item) * Mastery.CarrionBack);
+                    if (back >= 0.5f) b.From.Message(MessageHud.MessageType.TopLeft, Lang.F("Падальник: повернулось {0} сили", Mathf.RoundToInt(back)));
+                }
+            }
+        }
+
+        // a wounded one died with its wound still open: «Кривава руна» bursts, «Кривавий слід» goes on to the next
+        private static void Died(Bleed b)
+        {
+            Strike.Mods mods = b.Mods;
+            if (mods == null || b.From == null || b.From.IsDead()) return;
+            if (mods.Rune)
+            {
+                Mastery.Splash(b.From, b.Last, Mastery.RuneRadius, b.Blow * Mastery.RuneShare, true, b.Target, b.CapLeft, true);
+                BindFx.Nova(b.From, "sun", b.Last, Mastery.RuneRadius, 0.6f);
+            }
+            if (mods.Trail)
+            {
+                List<Character> bleeding = new List<Character>();
+                foreach (Bleed o in Bleeds) if (o.From == b.From && o.Target != null) bleeding.Add(o.Target);
+                if (b.Target != null) bleeding.Add(b.Target);
+                Character next = Mastery.Nearest(b.From, b.Last, Mastery.TrailRadius, bleeding);
+                if (next == null) return;
+                Bleeds.Add(new Bleed { From = b.From, Target = next, Per = b.Per, Left = Mathf.Max(2, b.Left), Next = Time.time + 1f, CapLeft = b.CapLeft, Count = b.Count, Mods = mods, Blow = b.Blow, Last = Body.Center(next) });
+                Put(next, true, mods, false); // its own limp and drops
             }
         }
     }

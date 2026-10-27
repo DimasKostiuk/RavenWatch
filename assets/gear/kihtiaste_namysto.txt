@@ -3,7 +3,7 @@ name: Кігтясте намисто
 note: Кігті вовків, рисі й одного необачного ведмедя на жилі. Зі знаком берсерків ворон б’є, ніби наївся мухоморів.
 use: gear
 id: kihtiaste_namysto
-cost: WolfClaw:3 WolfFang:2 LeatherScraps:2 TrophyWolf:1
+cost: WolfClaw:3 WolfFang:2 LeatherScraps:2 TrophyWolf:1 RavenWatch_item_pryazhka_haldora:1
 station: RavenWatch_table_prostyi_voroniachyi_stil
 slot: neck
 follow: body

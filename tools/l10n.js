@@ -11,7 +11,7 @@ const skip = new Set(["Grammar.cs", "Lang.cs",
   // the phrase data (its own files per language, not this table)
   "Patterns.cs", "VarietyPatterns.cs", "CrossPatterns.cs", "TalkPatterns.cs", "AboutPatterns.cs", "Quips.cs", "QuipPatterns.cs", "LifePatterns.cs",
   "LifeTalkPatterns.cs", "DefaultsEvents.cs", "PerchPatterns.cs", "PlacePatterns.cs", "AgainPatterns.cs", "EmotePatterns.cs", "PassPatterns.cs",
-  "WorldPatterns.cs", "Defaults.cs", "StrikePatterns.cs", "DeathPatterns.cs", "WardPatterns.cs", "ErrandPatterns.cs", "MorePatterns.cs", "MomentPatterns.cs",
+  "WorldPatterns.cs", "Defaults.cs", "StrikePatterns.cs", "DeathPatterns.cs", "WardPatterns.cs", "ErrandPatterns.cs", "MorePatterns.cs", "MomentPatterns.cs", "HomePatterns.cs",
   // the author's own tools (test windows, console, workshop, flight internals): stay Ukrainian
   "Workshop.cs", "Commands.cs", "FlightPanel.cs", "PlayerAnimPanel.cs", "SitPanel.cs", "TemplatePanel.cs", "LooksPanel.cs", "LandPanel.cs",
   "WingPanel.cs", "PhotoPanel.cs", "TakeoffPanel.cs", "DevPanel.cs", "SoundPanel.cs", "LookDiag.cs", "Dummy.cs", "EyeGlow.cs", "PerchTurn.cs",

@@ -248,17 +248,27 @@ namespace HuginWhispers
             if (hitTop > float.MinValue)
             {
                 how = Lang.F("поверхня під вороном: {0} {1} см (промінь)", hitOn, Mathf.RoundToInt((hitTop - seat.y) * 100f));
-                return Mathf.Clamp(hitTop + Margin - seat.y, MinLift, MaxLift);
+                return Mathf.Clamp(hitTop + Margin - seat.y - Sink(p, hitOn), MinLift, MaxLift);
             }
             for (int c = 0; c < Columns.Length; c++)
             {
                 if (colN[c] < 3) continue;
                 top = colTop[c];
                 how = Lang.F("поверхня під вороном: {0} {1} см, стовпчик {2} см, {3} точок", colOn[c], Mathf.RoundToInt((top - seat.y) * 100f), Mathf.RoundToInt(Columns[c] * 200f), colN[c]);
-                return Mathf.Clamp(top + Margin - seat.y, MinLift, MaxLift);
+                return Mathf.Clamp(top + Margin - seat.y - Sink(p, colOn[c]), MinLift, MaxLift);
             }
             how = Lang.F("за типом одягу{0}", (unread > 0 ? Lang.F(", моделі закриті: {0}", unread) : ""));
             return ByGear(p);
+        }
+
+        // on armour the feet sink in a little: a bare shoulder is one known surface, armour is any of hundreds (other
+        // mods' too) with collars and plates the reading may land on — a bird a touch into the leather looks right, one
+        // hanging over it does not (the user, 2026-10-24)
+        internal static float ArmourSink = 0.03f;
+        private static float Sink(Player p, string on)
+        {
+            VisEquipment vis = p != null ? p.GetComponent<VisEquipment>() : null;
+            return vis != null && vis.m_bodyModel != null && on == vis.m_bodyModel.name ? 0f : ArmourSink;
         }
 
         // no surface could be read: by what is worn
@@ -270,6 +280,7 @@ namespace HuginWhispers
             try { if (ChestField != null) chest = ChestField.GetValue(p) as ItemDrop.ItemData; if (CapeField != null) cape = CapeField.GetValue(p) as ItemDrop.ItemData; } catch { }
             float lift = chest == null ? NakedLift : chest.m_shared.m_armor < 8f ? TunicLift : chest.m_shared.m_armor < HeavyArmor ? LightLift : HeavyLift;
             if (cape != null) lift += CapeLift;
+            if (chest != null || cape != null) lift -= ArmourSink;
             return Mathf.Clamp(lift, MinLift, MaxLift);
         }
     }

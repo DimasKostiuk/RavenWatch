@@ -20,7 +20,7 @@ namespace HuginWhispers
         private const float Start = 50f;
 
         internal static float MuninThoughtCost = 1f;
-        internal static float ThoughtCost = 1f, ScoutCost = 40f, ScreamCost = 60f, FuryCost = 60f, LightCost = 20f, WingsCost = 30f, LeapCost = 50f, HealCost = 40f, ShadowCost = 60f, DomeCost = 60f, WardCost = 40f, FlightCost = 80f, BeastCost = 100f, DecoyCost = 35f;
+        internal static float ThoughtCost = 1f, ScoutCost = 40f, ScreamCost = 30f, FuryCost = 60f, LightCost = 20f, WingsCost = 30f, LeapCost = 50f, HealCost = 40f, ShadowCost = 60f, DomeCost = 60f, WardCost = 40f, FlightCost = 100f, BeastCost = 100f, DecoyCost = 35f;
 
         private static readonly string HowHuginSrc = Lang.K("щодня +10, нові предмети й рецепти, нові руни, моноліти Path of Valheiman і Вегвізири (+20, повторне читання +5, до 5 каменів на день), рівні навичок, сон у ліжку, відпочинок біля вогню (у затишку швидше), ремесло й готування, врожай, ягоди й мед, робота (рубка дерев, видобуток, риболовля; уночі в 1,5 раза більше), плавання на кораблі, піші подорожі (до 30 на день), нові біоми й підземелля, розмови з торговцями");
         internal static string HowHugin { get { string s = Lang.T(HowHuginSrc); return _pov ? Lang.F("новий рівень персонажа (+{0}), {1}", Mathf.RoundToInt(PovLevelGain), s) : s; } }
@@ -56,6 +56,13 @@ namespace HuginWhispers
 
         internal static void SetValue(ItemDrop.ItemData item, float v) { Set(item, v); }
 
+        // enough for this price, reckoned exactly as Spend does
+        internal static bool Afford(bool munin, float cost)
+        {
+            ItemDrop.ItemData item = WornItem(munin);
+            return item != null && Get(item) >= Price(munin, cost);
+        }
+
         internal static int Current(bool munin)
         {
             ItemDrop.ItemData item = WornItem(munin);
@@ -89,7 +96,7 @@ namespace HuginWhispers
             if (deed) Trust.Deed(munin, amount, why); // what you do together builds trust too (a raven away gets none: Trust.DeedFor)
             if (item != null && Trust.Away(item)) return; // flown off: it did not see it, no strength
             if (item == null || amount <= 0f || !Trust.Active(item)) return; // an asleep raven does not charge
-            amount *= Satiety.GainMul(munin); // hungry: none comes; fed: faster
+            amount *= Satiety.GainMul(munin) * GearFx.StrengthMul(item) * Habits.RegenMul(item); // hungry: none comes; fed: faster (Збруя гінця: faster; «Звички»)
             if (amount <= 0f) return;
             float max = Trust.Strength(item);
             float before = Get(item);
@@ -98,8 +105,8 @@ namespace HuginWhispers
             GainNote.Strength(munin, Mathf.Min(amount, max - before), why); // a short line in the corner
         }
 
-        // what a gift really costs now: a hungry raven's gifts cost more (rounded as shown)
-        internal static float Price(bool munin, float cost) { float mul = Satiety.CostMul(munin); return mul > 1f ? Mathf.Round(cost * mul) : cost; }
+        // what a gift really costs now: a hungry raven's gifts cost more, with the eitr pendant less (rounded as shown)
+        internal static float Price(bool munin, float cost) { float mul = Satiety.CostMul(munin) * GearFx.CostMul(munin) * Habits.CostMul(munin); return mul != 1f ? Mathf.Round(cost * mul) : cost; }
 
         // part of a gift's price given back (a strike that found nobody): strength only, no trust, no note; returns how much came back
         internal static float Refund(ItemDrop.ItemData item, float amount)
@@ -124,6 +131,7 @@ namespace HuginWhispers
             }
             Set(item, have - real);
             Satiety.UsedGift(munin, cost); // every gift makes it hungrier
+            Habits.Spent(munin); // («Трудяга»/«Ледащо»)
             return true;
         }
 
@@ -451,7 +459,7 @@ namespace HuginWhispers
             HashSet<string> known = Known != null ? Known.GetValue(__instance) as HashSet<string> : null;
             bool raven;
             __state = __instance == Player.m_localPlayer && known != null && item != null && !known.Contains(item.m_shared.m_name)
-                && !RavenItem.IsRaven(item, out raven) && !RavenItem.IsReroll(item);
+                && !RavenItem.IsRaven(item, out raven) && !RavenItem.IsReroll(item) && !RavenItem.IsFeather(item);
         }
         private static void Postfix(bool __state) { if (__state) Power.OnLearned(Lang.T("нова знахідка")); }
     }

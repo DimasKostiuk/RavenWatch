@@ -30,9 +30,23 @@ namespace HuginWhispers
         private static bool _wasOn, _revealed;
         private static float _strikeUntil, _firstHit = -1f;
 
-        internal static float Duration() { return Mathf.Floor(Trust.Lerp(false, Seconds, SecondsTop) * GiftUp.Power("shadow") + 0.5f); }
+        internal static float Duration() { return Mathf.Floor(Trust.LerpGift("shadow", Seconds, SecondsTop) * GiftUp.Power("shadow") + 0.5f); }
 
-        internal static bool Anyone { get { return InShadow.Count > 0; } }
+        internal static bool Anyone { get { return InShadow.Count > 0 || InMurk.Count > 0; } }
+
+        // the в'язь's murk (BindRun): monsters lose that player as in the shadow — only that, no look, no strike
+        private const string MurkKey = "RavenWatch_Murk";
+        private static readonly HashSet<Character> InMurk = new HashSet<Character>();
+        private static bool _murk;
+
+        internal static void Murk(Player p, bool on)
+        {
+            if (p == null || _murk == on) return;
+            _murk = on;
+            if (on) InMurk.Add(p); else InMurk.Remove(p);
+            NetFlag.Set(p, MurkKey, on);
+            if (on) Calm(p); // (the ones this game drives at once; the others on their owners' games, ShadowSensePatch)
+        }
 
         internal static bool On(Player p) { return p != null && p.GetSEMan().HaveStatusEffect(Hash); }
 
@@ -68,7 +82,7 @@ namespace HuginWhispers
             RavenFx.Broadcast(RpcFx, p, Spawn);
         }
 
-        internal static void Reset() { InShadow.Clear(); _wasOn = false; _revealed = false; _strikeUntil = 0f; _firstHit = -1f; if (_orbit != null) UnityEngine.Object.Destroy(_orbit.transform.parent != null ? _orbit.transform.parent.gameObject : _orbit.gameObject); _orbit = null; }
+        internal static void Reset() { InShadow.Clear(); InMurk.Clear(); _murk = false; _wasOn = false; _revealed = false; _strikeUntil = 0f; _firstHit = -1f; if (_orbit != null) UnityEngine.Object.Destroy(_orbit.transform.parent != null ? _orbit.transform.parent.gameObject : _orbit.gameObject); _orbit = null; }
 
         private static ParticleSystem _orbit; // your circling feathers while it lasts
 
@@ -108,7 +122,7 @@ namespace HuginWhispers
         // a monster at "me" should not notice the target
         internal static bool HiddenFrom(Character target, Transform me)
         {
-            if (InShadow.Count == 0 || !InShadow.Contains(target)) return false;
+            if (!Anyone || !(InShadow.Contains(target) || InMurk.Contains(target))) return false;
             if (FoolsBosses || me == null) return true;
             Character m = me.GetComponent<Character>();
             return m == null || !m.IsBoss();
@@ -159,11 +173,17 @@ namespace HuginWhispers
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Shadow effect failed: " + e.Message); }
         }
 
-        // the other players: one in the shadow is not drawn (the model, the gear, the ravens, the lights); Hugin's wisp
-        // is its own and stays in sight, light and runes and all
-        private static readonly Dictionary<Player, List<Behaviour>> HiddenLights = new Dictionary<Player, List<Behaviour>>();
-        private static readonly Dictionary<Player, List<Renderer>> Hidden = new Dictionary<Player, List<Renderer>>();
+        // The other players: one in the shadow is neither seen nor heard — the model, the gear, the ravens (on the
+        // shoulder or flying), Hugin's wisp, the lights, every sound on them, and our looks that follow them but hang
+        // outside their body (a ward, smoke, ropes, rings, trails: registered with Outside); their steps raise no dust
+        // (ShadowStepPatch).
+        private sealed class Veil { internal readonly List<Renderer> R = new List<Renderer>(); internal readonly List<Behaviour> L = new List<Behaviour>(); internal readonly List<AudioSource> A = new List<AudioSource>(); }
+        private static readonly Dictionary<Player, Veil> Hidden = new Dictionary<Player, Veil>();
         private static float _nextLook;
+
+        // a look of ours following this player outside their body: hidden with them while they are in the shadow
+        private static readonly List<KeyValuePair<GameObject, Player>> Outsiders = new List<KeyValuePair<GameObject, Player>>();
+        internal static void Outside(GameObject go, Player owner) { if (go != null && owner != null) Outsiders.Add(new KeyValuePair<GameObject, Player>(go, owner)); }
 
         internal static void TickOthers()
         {
@@ -171,41 +191,56 @@ namespace HuginWhispers
             _nextLook = Time.time + (Hidden.Count > 0 ? 0.1f : 0.25f);
             Player me = Player.m_localPlayer;
             InShadow.RemoveWhere(c => c == null);
+            InMurk.RemoveWhere(c => c == null);
             foreach (Player o in Player.GetAllPlayers())
             {
                 if (o == null || o == me) continue;
                 bool on = NetFlag.Get(o, Key);
                 Mark(o, on);
+                if (NetFlag.Get(o, MurkKey)) InMurk.Add(o); else InMurk.Remove(o);
                 if (on) Hide(o);
                 else if (Hidden.ContainsKey(o)) Show(o);
             }
             List<Player> gone = null;
             foreach (Player o in Hidden.Keys) if (o == null) { if (gone == null) gone = new List<Player>(); gone.Add(o); }
-            if (gone != null) foreach (Player o in gone) { Hidden.Remove(o); HiddenLights.Remove(o); }
+            if (gone != null) foreach (Player o in gone) Hidden.Remove(o);
+            Outsiders.RemoveAll(kv => kv.Key == null || kv.Value == null);
         }
 
         private static readonly List<Renderer> ScanR = new List<Renderer>();
         private static readonly List<Light> ScanL = new List<Light>();
+        private static readonly List<AudioSource> ScanA = new List<AudioSource>();
 
         private static void Hide(Player o)
         {
-            List<Renderer> rs;
-            if (!Hidden.TryGetValue(o, out rs)) { rs = new List<Renderer>(); Hidden[o] = rs; HiddenLights[o] = new List<Behaviour>(); }
-            o.GetComponentsInChildren<Renderer>(true, ScanR);
-            foreach (Renderer r in ScanR)
-                if (r != null && r.enabled && r.GetComponentInParent<WispLife>() == null) { r.enabled = false; rs.Add(r); } // gear put on meanwhile is caught next time
-            List<Behaviour> ls = HiddenLights[o];
-            o.GetComponentsInChildren<Light>(true, ScanL);
-            foreach (Light l in ScanL)
-                if (l != null && l.enabled && l.GetComponentInParent<WispLife>() == null) { l.enabled = false; ls.Add(l); }
+            Veil v;
+            if (!Hidden.TryGetValue(o, out v)) { v = new Veil(); Hidden[o] = v; }
+            HideUnder(o.gameObject, v); // (gear put on meanwhile is caught next time)
+            for (int i = 0; i < 2; i++)
+            {
+                GameObject raven = Shoulder.ModelOf(o, i == 1); // flying off your shoulder: no longer under you
+                if (raven != null && !raven.transform.IsChildOf(o.transform)) HideUnder(raven, v);
+            }
+            foreach (KeyValuePair<GameObject, Player> kv in Outsiders) if (kv.Value == o && kv.Key != null) HideUnder(kv.Key, v);
+        }
+
+        private static void HideUnder(GameObject root, Veil v)
+        {
+            root.GetComponentsInChildren<Renderer>(true, ScanR);
+            foreach (Renderer r in ScanR) if (r != null && r.enabled) { r.enabled = false; v.R.Add(r); }
+            root.GetComponentsInChildren<Light>(true, ScanL);
+            foreach (Light l in ScanL) if (l != null && l.enabled) { l.enabled = false; v.L.Add(l); }
+            root.GetComponentsInChildren<AudioSource>(true, ScanA);
+            foreach (AudioSource a in ScanA) if (a != null && !a.mute) { a.mute = true; v.A.Add(a); }
         }
 
         private static void Show(Player o)
         {
-            foreach (Renderer r in Hidden[o]) if (r != null) r.enabled = true;
-            foreach (Behaviour l in HiddenLights[o]) if (l != null) l.enabled = true;
+            Veil v = Hidden[o];
+            foreach (Renderer r in v.R) if (r != null) r.enabled = true;
+            foreach (Behaviour l in v.L) if (l != null) l.enabled = true;
+            foreach (AudioSource a in v.A) if (a != null) a.mute = false;
             Hidden.Remove(o);
-            HiddenLights.Remove(o);
         }
 
         // ---------------------------------------------------------------- you, as you see yourself
@@ -302,9 +337,8 @@ namespace HuginWhispers
                 foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true)) Fade(r);
                 return;
             }
-            List<Renderer> rs;
-            if (!Hidden.TryGetValue(pl, out rs)) return;
-            foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true)) if (r != null && r.enabled) { r.enabled = false; rs.Add(r); }
+            Veil v;
+            if (Hidden.TryGetValue(pl, out v)) HideUnder(go, v);
         }
 
         private static void Unfade()
@@ -368,7 +402,7 @@ namespace HuginWhispers
             Ghosts.Clear();
             foreach (Player o in new List<Player>(Hidden.Keys)) if (o != null) Show(o);
             Hidden.Clear();
-            HiddenLights.Clear();
+            Outsiders.Clear();
         }
     }
 
@@ -381,7 +415,7 @@ namespace HuginWhispers
         { try {
             long t0 = Perf.On ? Perf.Now : 0;
             bool hidden = Shadow.HiddenFrom(target, me);
-            if (Perf.On) Perf.Add(t0);
+            if (Perf.On) Perf.Add(t0, Perf.Shadow);
             if (!hidden) return true;
             __result = false;
             return false;
@@ -403,14 +437,11 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(MonsterAI), "UpdateTarget")]
     internal static class ShadowSensePatch
     {
-        private static readonly FieldInfo Target = AccessTools.Field(typeof(MonsterAI), "m_targetCreature");
-        private static readonly MethodInfo SetAlerted = AccessTools.Method(typeof(BaseAI), "SetAlerted");
-        private static readonly System.Collections.Generic.Dictionary<int, float> Calmed = new System.Collections.Generic.Dictionary<int, float>();
 
         private static void Postfix(MonsterAI __instance, ref bool canHearTarget, ref bool canSeeTarget)
         { try {
-            if (Target == null || !Shadow.Anyone) return; // nobody in the shadow: nothing to do for this monster
-            Character t = Target.GetValue(__instance) as Character;
+            if (!AiTarget.Known || !Shadow.Anyone) return; // nobody in the shadow: nothing to do for this monster
+            Character t = AiTarget.Of(__instance);
             if (t == null || !Shadow.HiddenFrom(t, __instance.transform)) return;
             canHearTarget = false;
             canSeeTarget = false;
@@ -419,19 +450,12 @@ namespace HuginWhispers
 
         internal static void Forget(MonsterAI ai, Character who)
         {
-            if (Target == null || ai == null || Target.GetValue(ai) as Character != who) return;
+            if (ai == null || AiTarget.Of(ai) != who) return;
             if (!Shadow.HiddenFrom(who, ai.transform)) return;
             ZNetView nv = ai.GetComponent<ZNetView>();
             if (nv == null || !nv.IsValid() || !nv.IsOwner()) return;
-            Target.SetValue(ai, null);
-            // calmed at most once in a while: dropped again and again, the game raises the alert again and every
-            // raise plays the creature's alert sound
-            int key = ai.GetInstanceID();
-            float last;
-            if (Calmed.TryGetValue(key, out last) && Time.time - last < 5f) return;
-            if (Calmed.Count > 200) Calmed.Clear();
-            Calmed[key] = Time.time;
-            if (SetAlerted != null) SetAlerted.Invoke(ai, new object[] { false });
+            AiTarget.Set(ai, null);
+            AiTarget.Calm(ai); // (at most once in a while: see AiTarget)
         }
     }
 
@@ -486,6 +510,19 @@ namespace HuginWhispers
         private static void Postfix(Character c, ref bool __result)
         {
             if (__result && c != null && c != Player.m_localPlayer && c.IsPlayer() && Shadow.Flagged(c)) __result = false;
+        }
+    }
+
+    // A step of someone in the shadow raises no dust, splash or sound on the other games (each game makes every
+    // player's steps itself, sent to it by the walker's game); your own steps you still see and hear.
+    [HarmonyPatch(typeof(FootStep), "RPC_Step")]
+    internal static class ShadowStepPatch
+    {
+        private static bool Prefix(FootStep __instance)
+        {
+            if (!Shadow.Anyone || __instance == null) return true;
+            Player p = __instance.GetComponent<Player>();
+            return p == null || p == Player.m_localPlayer || !Shadow.Flagged(p);
         }
     }
 

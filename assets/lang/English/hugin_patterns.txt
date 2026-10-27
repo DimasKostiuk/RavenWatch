@@ -785,7 +785,7 @@ the home {m_where_in} that appeared while I was there. Crooked, drafty, but your
 {m_where_in}, {m_when}. The first bed in my time. I wrote: “The roof leaks, but it's ours.”
 ~2 a home {m_where_in}, {m_when}. That was the first time you fell asleep in peace. I heard it.
 @сп_friend
-{m_when}, in front of me, you first traveled alongside someone called {m_friend}. I wrote down the name. Just in case.
+{m_when} a new name turned up on your road: {m_friend}. I wrote it down. Just in case.
 {m_friend}... the first day I saw you together was {m_when}. Since then your saga has witnesses.
 ~1 I wrote down the name {m_friend} {m_when}. Ever since I've wondered how that poor soul puts up with you.
 ~3 {m_friend} is a good soul. I remember the first day I saw you together: {m_when}.
@@ -1206,6 +1206,73 @@ The spiral of protection. My dome will hold longer now.
 It gives off warmth... Guarding you will be easier.
 Runes on my feet. Writing it down as a charm.
 ~3 Thank you. Now I'll keep you safer.
+# --- Gear, second batch (rev 83): charm, harness, travel pouch, horseshoe, saddle
+[gear_on_koloskovyi_oberih] {вдяг_koloskovyi_oberih}
+@вдяг_koloskovyi_oberih
+An ear of wheat on my neck. A stash for the day you forget to feed me again.
+Amber and grain. Hunger will creep up slower now. Like you to your goals.
+A charm against hunger. Not against your decisions, sadly.
+~3 Thank you. Now I'll think less about food and more about you.
+[gear_on_zbruia_hintsia] {вдяг_zbruia_hintsia}
+@вдяг_zbruia_hintsia
+A courier's harness. No letters, but more strength.
+Carrying weight is good for you. Try it yourself — just not me.
+Sitting in a harness like a real courier. Nowhere to send me, though.
+~3 Thank you. Now I'll gather strength for you faster.
+[gear_on_pokhidna_torba] {вдяг_pokhidna_torba}
+@вдяг_pokhidna_torba
+A travel pouch. Twice the size of my appetite. Almost.
+Ten pieces. I'll count them. Every morning.
+A big pouch is a big responsibility. Yours: filling it.
+~3 Thank you. Now we can go anywhere and stay fed.
+[gear_on_vitriana_pidkova] {вдяг_vitriana_pidkova}
+@вдяг_vitriana_pidkova
+A horseshoe on my leg. A horse would be offended; I'll just fly faster.
+Wind in the runes. Now I'll outpace you even on foot.
+A feather and a horseshoe. Luck, speed and a bit of showing off.
+~3 Thank you. Now I'll get to you faster.
+[gear_on_sidlo_vishchuna] {вдяг_sidlo_vishchuna}
+@вдяг_sidlo_vishchuna
+A raven on a raven. Seers had an odd sense of humour.
+The runes glow. They say they make you trust sooner. Let's test it on you.
+A seer's saddle. Now I see a little past your mistakes.
+~3 Thank you. I trust you already. Now — sooner still.
+[gear_on_sribni_kiltsia] {вдяг_sribni_kiltsia}
+@вдяг_sribni_kiltsia
+Silver rings. Draugr, brace yourselves.
+Silver on my leg. The dead don't like it. I do.
+The undead, by a silver claw. Sounds like a skald's song.
+~3 Thank you. Now the dead will stay down, as they should.
+[gear_on_kistiani_braslety] {вдяг_kistiani_braslety}
+@вдяг_kistiani_braslety
+Bones on my leg. A shaman would approve; I'll just hit harder.
+They rattle. They say bones keep the strength of their owners.
+My beak is a little heavier now. Don't test it on yourself.
+~3 Thank you. Now my strikes will be stronger.
+[gear_on_shkiriani_obmotky] {вдяг_shkiriani_obmotky}
+@вдяг_shkiriani_obmotky
+Leg wraps. Now we're quiet as a mouse in a pantry.
+Soft. A deer won't hear you creeping up.
+Leather and a feather. Modest, but nobody hears us.
+~3 Thank you. Now we'll sneak together.
+[gear_on_pantsyrnyi_shchytok] {вдяг_pantsyrnyi_shchytok}
+@вдяг_pantsyrnyi_shchytok
+Carapace on my back. Now I'm your shield. Small, but proud.
+They hit you — I take it. Well, sometimes.
+A beetle wore it, now I do. The beetle didn't object.
+~3 Thank you. I'll take a blow for you. Don't get used to it.
+[gear_on_torba_zbyracha] {вдяг_torba_zbyracha}
+@вдяг_torba_zbyracha
+Two pockets. One for you, the other — also for you. Almost.
+You pick, I pick. Faster together.
+The berries in the bag smell so good it's hard to resist.
+~3 Thank you. Now we'll gather together.
+[gear_on_eitrova_pidviska] {вдяг_eitrova_pidviska}
+@вдяг_eitrova_pidviska
+Eitr on my neck. I feel my strength coming easier.
+It glows. I'm a little brighter now too. In spirit.
+The crystal is warm. Gifts are cheaper now. Make use of it.
+~3 Thank you. Now I can help you more often.
 # --- Phrase builder (rev 25): strikes, shoulder, grumbling, orders — sentences of 2–3 parts
 [hstrike] {звертання?} {уд_як} {уд_ціль} {уд_оцінка?}
 [hstrike] {уд_як} {уд_ціль}
@@ -2846,8 +2913,8 @@ Remember that.
 ^pals.шухер>pals.заснув I know this lookout. One steals, the other dozes.
 ^pals.заснув>pals.медитація He was not asleep. He was meditating. With his eyes closed. Loudly.
 ^pals.заснув>pals.медитація Not asleep, listening to the earth. That is what everyone who slept says.
-^pals.вулик>pals.бджоли The hive? And the bees that chased you through the whole forest last time, forgotten already?
-^pals.вулик>pals.бджоли I remember that hive. And the swarm that chased you all the way to the river.
+^pals.вулик>pals.бджоли The hive? And the bees that tagd you through the whole forest last time, forgotten already?
+^pals.вулик>pals.бджоли I remember that hive. And the swarm that tagd you all the way to the river.
 ^pals.бджоли>pals.дзьоб The best part was someone getting stung right on the beak. Swelled up like a beet.
 ^pals.бджоли>pals.дзьоб The bees are nothing. But the beak would not close for a week after.
 ^pals.хата>pals.дах In the house? Mine got stuck on their own roof. Sat there all night.
@@ -3645,6 +3712,115 @@ I'll be back.
 I'll remember that hide.
 ~1 And don't laugh.
 ~3 I'm close.
+
+[hstrike_alive] {уд_живий_що} {уд_живий_порада}
+[hstrike_alive] {уд_живий_що} {уд_невдача_кінець?}
+[hstrike_kill] {уд_вбив_як} {уд_вбив_оцінка?}
+[hstrike_crit_kill] {уд_крит} {уд_вбив_як}
+[hstrike_combo_kill] {уд_серія} {уд_вбив_як}
+@уд_живий_що
+{target_gen} can't see a thing now.
+{target_gen}'s eyes aren't working for now.
+{target_gen} is poking around at random.
+It's dark in {target_gen}'s eyes. My work.
+{target_gen} is groping around for everything now.
+{target_gen} still doesn't know where that came from.
+{target_gen} is fighting the air now.
+A scratch over {target_gen}'s eye. A neat one.
+{target_gen} is still standing, but doesn't know where to look.
+{target_gen} carries my mark now.
+{target_gen} spins on the spot and doesn't get why.
+Didn't kill it, but blinded it.
+~1 {target_gen} now sees as much as you think. So, nothing.
+~1 {target_gen} now sees like you do in the morning.
+~2 {target_gen} shakes its head. Funny.
+~2 Didn't finish it, but {target_gen} has fog in its eyes now.
+~3 {target_gen} can't see you. Use it.
+~3 I took the eyes. The rest is yours.
+@уд_живий_порада
+Hit it while it's in the dark.
+Come from the side — it won't notice.
+A few seconds. Don't waste them.
+The blindness won't last. Hurry.
+A couple of blows — and done.
+No need to hide now.
+Hit it in the back. Today it's allowed.
+~1 Even you won't miss now. Probably.
+~1 Well? Or should I light the target up for you too?
+~2 Finish the job.
+~2 You're on.
+~3 Let's do it together.
+~3 Strike. I'm watching.
+@уд_невдача
+Hit it. About as useful as milking a goat.
+Scratched it. It's not even offended.
+The blow was clean. The result wasn't.
+{target_gen} is still standing. The nerve.
+The only thing I wounded was my pride.
+Didn't kill it. Made it angry, though. Also a result.
+Not enough. I know. Quiet.
+The blow — seven out of ten. The hide — ten.
+{target_gen} is holding on. Not for long.
+It hurt me. From shame.
+Did half. The worse half is yours.
+~1 Didn't finish it. But now you've got something to do.
+~1 Didn't work. And don't pull faces, yours is bad enough already.
+~1 Did half the job. Like you always do.
+~2 Cut it down a bit. The rest is your weapon's business.
+~2 Caught it well. Not all the way, but well.
+~3 Fell short, sorry. We'll finish it together.
+~3 Not enough strength. Finish it — I'm here.
+@уд_невдача_кінець
+Now or never.
+Don't dawdle.
+That one's yours now.
+I've done my pecking.
+~1 Show me you can do something too.
+~1 Be useful for once.
+~2 Finish it — and we split the glory.
+~3 Strike. I'm here.
+@уд_вбив_як
+No scream, no chance.
+Clean. No fight.
+Won't get up again. I checked.
+Silence. The best sound after a blow.
+Came from the sky — and that's it.
+Clean work. Fit for a show.
+{target_gen} is past tense now.
+Quick. No time even to hurt.
+One little hole. No more needed.
+Minus {target_gen}. Counting on.
+One more line in the chronicle.
+~1 While you were winding up, I was done.
+~1 All that's left for you is the trophy. Can you manage?
+~1 Me with my beak, you with your mouth open. Fair split.
+~2 That's all. Didn't even ruffle a feather.
+~2 Neat. The way I like it.
+~3 It won't get you now.
+~3 Our score grows.
+@уд_вбив_оцінка
+Onward.
+No questions.
+Noted.
+~1 You may applaud.
+~2 Easy.
+~3 For you.
+@уд_промах
+missed.
+only wind.
+empty, like a jug after a feast.
+found nobody.
+sliced the air into pieces.
+~1 you send me out for nothing.
+~2 flew out — nobody.
+~3 looked around — nobody, and that's good.
+@уд_промах_кінець
+A target is the thing that moves.
+Next time, point.
+I don't hunt shadows.
+~1 Is that your idea of a joke?
+~2 It happens.
+~3 What matters is that it's quiet.
 
 [loyal] {хд_вірність}
 [grave_back] {хд_повернення}
@@ -6824,6 +7000,23 @@ Odin doesn't like to wait. But he doesn't rush either. Odd, isn't it?
 ~1 Odin gave a task. I wouldn't dawdle if I were you.
 ~2 A task from Odin. Not the hardest, I'd say. Or the hardest — we'll see.
 ~3 Odin trusts you. So do I. Here's a new task.
+Odin has a task for you. I'd have one too, but he called dibs.
+I flew to Odin. Meanwhile you, I see, did nothing.
+A task from the Allfather. Read it carefully, I won't explain twice.
+Odin remembered you. Not sure whether to congratulate or pity you.
+A new task. Odin took his time choosing. No choice, apparently.
+Here's a task. Odin says it's within your strength. Odin's an optimist.
+The Allfather says: a day's work. For you — a week's.
+I brought the task. You bring the result. Fair trade.
+~1 Odin gave a task. Don't embarrass me in front of him.
+~1 Here's a task. Fail it and I'll say you stole me.
+~1 A task from Odin. Try not to disappoint, just once.
+~2 A new task. Odin no longer asks if you'll manage. Progress.
+~2 Odin sent a task. Says you're not hopeless anymore.
+~2 There's a task. I believe in you. Moderately.
+~3 Odin asked how you are. I lied and said fine. Here's a task.
+~3 A new task. I'd have picked someone else, but Odin picked you. So did I.
+~3 A task from Odin. No heroics, deal?
 @дор_поступ
 Good. A little more.
 Odin sees. Keep going.
@@ -6832,12 +7025,47 @@ Slowly, but it's moving.
 ~1 Don't stop halfway.
 ~2 Not bad. A few more and it's done.
 ~3 Keep it up. You're nearly there.
+One more step. Slow, like you.
+I'm counting. I hope you are too.
+It's moving. Not as fast as I'd like.
+Yes. More.
+Odin sees. He's not clapping yet.
+It's going. Don't stop — you'll forget how.
+A little more. I use the word 'little' loosely.
+Good. Now again, only faster.
+Got it. Noted. Don't make me erase it.
+Progress. Meagre, but progress.
+One more. Odin likes it when you count.
+Keep the pace. Any pace. Some pace.
+~1 Faster. Odin won't wait forever. Though he is eternal.
+~1 At this rate we'll be stuck here till winter.
+~1 So much left that I wouldn't celebrate.
+~2 It's going smoothly. I'm almost bored — that's a compliment.
+~2 A bit more and you can brag. Not yet.
+~2 You count well. Now count faster.
+~3 You're managing. Don't tell anyone I said so.
+~3 It's going well. I'm barely worried.
+~3 Keep it up. I'm counting for two — you and Munin.
 @дор_крок
 That was the first part. Now — onward.
 Half the task. The other half won't do itself.
 Odin is pleased. For now. See what's next.
 ~2 Well done. Next.
 ~3 See how it comes together? Onward.
+One down. More ahead.
+Done. Don't relax, that was just the start.
+A step done. Odin turns the page.
+Halfway there. Not the worse half yet.
+The first part's done. The second is waiting and baring its teeth.
+Fine. The next bit will be more fun. For me.
+Done. Now read what's next — it's all in the book.
+That item's closed. The next one's yours.
+~1 It worked. I'm surprised myself.
+~1 First one done. Don't get used to praise — there won't be any.
+~2 Cleanly done. The next one won't be so polite.
+~2 A step done. You're learning, I see. Slowly, but learning.
+~3 Nice. I'd even say 'great', but you'd get a big head.
+~3 Another step. We walk it together — and I like that more than I should.
 @дор_близько
 Warmer. It's somewhere here.
 I can feel it: we're close. Look around.
@@ -6845,6 +7073,21 @@ Here. I feel it in my feathers.
 Careful. There's something here.
 ~2 Look closely — Odin didn't send us for a stroll.
 ~3 We're here. I'm with you.
+Here. Don't ask how I know.
+We're close. Open your eyes wider.
+It smells of Odin's errand here. And a little of trouble.
+Stop. This is the place. Look around.
+There it is. Somewhere near. Search.
+Here. Keep your weapon closer than your thoughts.
+Close. If you die here — embarrassingly close.
+Hotter. A little more and you'll get burned.
+~1 We're here. Don't stand there like a stump.
+~1 Here. Try not to mess it up, just this once.
+~1 Close. Look around — maybe you'll get lucky and see something.
+~2 We're here. You do the work, I do the commentary.
+~2 Right place. Now don't ruin it.
+~3 Here. I'm right beside you — just in case.
+~3 We're here. Careful. I still need you.
 @дор_виконано
 Done. Odin saw it.
 The task is done. The tally cut deeper.
@@ -6853,11 +7096,72 @@ Another notch. The runes are waiting.
 ~1 Done. Not without my help, of course.
 ~2 Well done. Odin is stingy with praise, so I'll say it for him.
 ~3 I'm proud of you. Quietly, so Munin doesn't hear.
+Done. Odin wrote it down. So did I.
+Done. The rune's closer than yesterday.
+Task closed. You can breathe out. Briefly.
+Done. Odin is silent — so he's pleased.
+Another notch. Soon there'll be no room left.
+Done. Odin almost smiled. Almost.
+Done. No fanfare. We'll leave the fanfare to Munin.
+The end of the task. Remember what finishing feels like.
+~1 You managed. Didn't expect that.
+~1 Done. Odin is surprised. I'm more so.
+~1 Done. Slow, crooked, but done.
+~2 Clean work. Almost as I'd have done it.
+~2 The task is done. Odin is pleased, and I won't argue.
+~2 Good. Next time — the same, only faster.
+~3 Done. I knew you could. Well, I suspected.
+~3 Done. I'm not ashamed to fly to Odin with you.
+~3 Done. This is why I put up with you.
 @дор_відмова
 Gave up? Odin won't be offended. Probably.
 Fine. A new task — tomorrow.
 Not everything needs doing. But I'd have done this one.
 ~3 Your call. Tomorrow Odin will find something else.
+Declined. Odin will note it. He notes everything.
+Not taking it. Well, Odin will find another fool. I mean hero.
+Fine. I flew for nothing. Nothing new.
+Declined. Wise or lazy — I haven't decided yet.
+Pity. It was an interesting task. I won't tell you about it.
+Putting it off? Odin is patient. I'm less so.
+As you say. The next task might be worse.
+~1 Scared? I'll write that down.
+~1 Declined. I knew it.
+~2 Your decision. I'd think again. Twice.
+~2 Gave up? There must be a reason. I hope it isn't laziness.
+~3 Fine, rest. There are tasks enough for our lifetime.
+~3 If not this one, then another. I'm with you either way.
+
+# --- errand lost (rev 68): assembled from parts, tone by trust
+[errand_failed] {дор_втр_поч} {дор_втр_суть} {дор_втр_кін?}
+[errand_failed] {дор_втр_суть} {дор_втр_кін?}
+@дор_втр_поч
+Well then.
+So.
+Right.
+That's that.
+~1 Just as I thought.
+~2 Pity.
+~3 You're alive — that's something.
+@дор_втр_суть
+Odin's errand went into the grave with you.
+The task is lost. Odin doesn't like it when his terms are forgotten.
+~1 One death — and no task. Odin will remember. So will I.
+~1 There was one condition: don't die. You couldn't even manage that.
+~1 I said — no dying. You don't know how to listen.
+~2 The task is lost. Annoying, but not fatal. Unlike you.
+~2 You died — and so did the task. A fair trade, if a bad one.
+~2 Odin took the task back. Guard the next one better than yourself.
+~3 The task is gone. But you're here — that matters more to me. Don't tell Odin.
+~3 The task is lost. Don't sulk: Odin will give another, but nobody will give me another you.
+~3 We didn't save the task. We saved you. Call it a win.
+@дор_втр_кін
+Next time — more carefully.
+Odin doesn't forgive. I do, sometimes.
+I'll write it down. In small letters.
+~1 And don't look at me like that.
+~2 Learn from it.
+~3 Let's go on.
 
 # --- more lines where there were too few (rev 61): the same again, the world, emotes, gifts, death and bosses
 @знову_вступ
@@ -9387,3 +9691,2823 @@ the dome's down. Now stop gawking.
 ~3 I'm back. Let's go, lump.
 ~3 back. You're in one piece? A miracle.
 
+# --- friend memories (rev 65)
+@сп_friend
+{m_when} the chronicle got a new name: {m_friend}. Since then I write twice as much — you two act up together.
+{m_friend}. Noted {m_when}. One more witness to your "fighting style".
+{m_when} you found yourself company: {m_friend}. I thought: finally someone to drag you out.
+A chapter of its own: {m_friend}. Started {m_when}. Who saves whom — the score isn't in your favor.
+~1 {m_friend}, noted {m_when}. I still don't get where that much patience comes from. Or debt.
+~1 {m_when} the name {m_friend} went into the chronicle. Since then you hide behind two backs in a fight.
+~2 {m_friend}, {m_when}. Since then you climb into hell alone less often. You climb in together.
+~2 {m_when} I wrote down: {m_friend}. A name like any name. But decent company. Too decent for you, even.
+~3 {m_friend}, {m_when}. Since then two of us keep an eye on you. Easier for me. A bit.
+~3 {m_when} I wrote down the name {m_friend}. You don't have many friends. Keep this one.
+
+# --- the blessings and burdens at work (rev 66): a golden blessing, a chest, a raid, a blurt, the ship, the trader, food, rest
+[perk_gold] {пк_золото}
+[perk_gold] {звертання?} {пк_золото}
+[perk_sniff] {пк_нюх}
+[perk_sniff] {звертання?} {пк_нюх} {хвіст?}
+[perk_whisper] {пк_набіг}
+[perk_whisper] {звертання?} {пк_набіг}
+[perk_chatter] {пк_бовкнув}
+[perk_sailor] {пк_вітрило}
+[perk_sailor] {звертання?} {пк_вітрило} {хвіст?}
+[perk_seasick] {пк_нудить}
+[perk_seasick] {звертання?} {пк_нудить}
+[perk_tongue] {пк_торг}
+[perk_tongue] {звертання?} {пк_торг} {хвіст?}
+[perk_sweet] {пк_ласун}
+[perk_sweet] {звертання?} {пк_ласун}
+[perk_wander] {пк_відпочинок}
+[perk_wander] {звертання?} {пк_відпочинок} {хвіст?}
+[perk_sleepy] {пк_сонливий}
+[perk_sleepy] {звертання?} {пк_сонливий}
+@пк_золото
+A golden blessing. I always knew I was special.
+See that glow? That's me. Official now.
+Odin must've had too much mead when he made me. Lucky you.
+Golden. Don't thank me. Fine, thank me.
+Rare luck. And it's sitting on your shoulder.
+~1 You got me. Golden. Don't ruin it.
+~1 Rare luck. Shame it went to you.
+~2 The gold's on me, the clever look's on you. Let's both try.
+~2 One in ten ravens is like me. People like you — one on every corner.
+~3 A golden blessing. How else — I'm yours.
+~3 We got lucky. Both of us. You a bit more.
+
+@пк_нюх
+Stop. A chest. Full. I can smell it.
+There, look. Nobody's touched that chest.
+My beak says treasure's near. The beak doesn't lie.
+Something's shining. Not you, sadly. A chest.
+I pointed with my head. The rest is up to you.
+There's a chest over there, and it's lonely. Go say hi.
+~1 A chest nearby. Know how to open one? Lid goes up.
+~1 I find, you open. Fair split: the shiny bits are mine.
+~2 There's a chest. I'd look inside, but no hands.
+~2 The nose didn't fail. Go, before someone else finds it.
+~3 A chest over there. Run, I'll be happy for both of us.
+~3 A find nearby. I'm telling you first. Well, only you.
+
+@пк_набіг
+They're coming {dir}. I marked them on the map.
+A raid. Coming {dir}. The map knows more than you right now.
+I hear them. Coming {dir}. Get ready or run away gracefully.
+Trouble's rolling in {dir}. The map shows how much.
+Guests {dir}. I've counted them already: {count}.
+~1 They're {dir}. Weapon in your hands, not in your bag.
+~1 Guests {dir}. Don't offer them mead.
+~2 Crawling in {dir}, and plenty of them. I counted, you hit.
+~2 {count} on the map, all {dir}. Pick who goes first.
+~3 Coming {dir}. I'm with you. Well, above you.
+~3 I see them {dir}. Don't be scared, I see everything.
+
+@пк_бовкнув
+CAW! Oops. Did I say that out loud?
+...and then I tell Odin — oops. They heard us.
+AAAH, a spider! Oh, no, it's a twig. But they're coming now.
+I was just singing. Quietly. As quietly as I can.
+Hey, who's in the bushes? Oh, enemies. Well, now they know.
+Achoo! Sorry. Ravens get colds too.
+~1 Sorry. Keeping quiet isn't my gift.
+~1 What are you staring at? I need to express myself too.
+~2 Oops. Get ready, I woke them up.
+~2 I was thinking out loud. Now they're thinking too. About you.
+~3 Sorry, it slipped out. I'll help. Morally.
+~3 Oops. Well, at least it won't be boring.
+
+@пк_вітрило
+Wind in the sail, me on the mast. We're going faster than you deserve.
+Feel that pull? I cut a deal with the wind.
+Hold the course. I did the rest.
+Now that's speed! The ship likes me more than you.
+~1 The helm's yours, the wind's mine. Fair split.
+~1 Stop spinning the helm like a millwheel. The wind knows the way.
+~2 We're flying over the waves. Well, sailing. But almost flying.
+~3 Good going. You steer no worse than me.
+~3 The sea is ours. You hold the helm, I hold the wind.
+
+@пк_нудить
+I feel sick. Don't look.
+A wave. Another wave. I'm about to die on your shoulder.
+Why does a raven need a ship? I have wings. I feel awful.
+If I fall overboard — it was my own choice.
+~1 Rock this puddle slower.
+~1 One more wave and I'm giving it all back down your back.
+~2 How much longer? Don't answer. Answers make me sick too.
+~3 Hold on. And hold me. I'm green.
+~3 I was better on land. Remember me that way.
+
+@пк_торг
+Let me talk. The prices are about to crawl down.
+Keep quiet and nod. I'm haggling.
+This merchant is scared of me. Rightly so.
+The discount's my doing. Thank me later.
+~1 Don't haggle yourself. You don't have the beak for it.
+~1 Stand straight and make a clever face. Any face, really.
+~2 That's how it's done: a smile, a look, a beak. And the price drops.
+~3 I got us a discount. Buy yourself something nice. And me.
+~3 Mind the money. I'm trying for you, after all.
+
+@пк_ласун
+Tasty? Eat slowly. It keeps you warm longer.
+You eat, I watch. We're both busy.
+Mind your stomach. Everything rests on it.
+Oh, that'll last a good while. I saw to it.
+~1 Chew, don't gulp. You're not a wolf.
+~2 One spoon for you, one for me. No? Pity.
+~3 Eat, you need strength. You still have to carry me.
+~3 Enjoy. I like you better when you're full.
+
+@пк_відпочинок
+Rested? It'll last a long while now.
+Good sitting. Enough pep for a long road.
+Now we can go far. I saw to it.
+~1 The rest is over. The laziness, I see, isn't.
+~2 Nice. Pep for half a day. Don't waste it.
+~3 Rested. Now — wherever our eyes look.
+
+@пк_сонливий
+I'd sleep some more. You too, probably.
+Pep? Not for long. I yawn — and it runs away.
+Ugh. Tired again. It's contagious.
+~1 Just rested and already nodding off. Like me.
+~2 Let's go before I fall asleep.
+~3 Never mind me. I'm sleepy, but I'm yours.
+
+# --- victim (rev 69): a raven mocks someone near for a few minutes
+[victim_start_hit] {хж_старт_удар} {хж_хвіст?}
+[victim_start_weak] {хж_старт_слабк} {хж_хвіст?}
+[victim_start_noraven] {хж_старт_безворона} {хж_хвіст?}
+[victim_start_envy] {хж_старт_заздр} {хж_хвіст?}
+[victim_start_random] {хж_старт} {хж_хвіст?}
+[victim_tease] {хж_вступ?} {хж_дражнить} {хж_хвіст?}
+[victim_tease] {хж_дражнить}
+[victim_ev_hurt] {хж_вступ?} {хж_удар} {хж_хвіст?}
+[victim_ev_fall] {хж_вступ?} {хж_падіння} {хж_хвіст?}
+[victim_ev_death] {хж_смерть} {хж_хвіст?}
+[victim_ev_flee] {хж_вступ?} {хж_тікає} {хж_хвіст?}
+[victim_ev_fight] {хж_вступ?} {хж_бій} {хж_хвіст?}
+[victim_ev_sleep] {хж_спить} {хж_хвіст?}
+[victim_ev_swim] {хж_вступ?} {хж_плаває} {хж_хвіст?}
+[victim_ev_build] {хж_вступ?} {хж_будує} {хж_хвіст?}
+[victim_ev_emote] {хж_вступ?} {хж_емоція} {хж_хвіст?}
+[victim_ev_idle] {хж_вступ?} {хж_стоїть} {хж_хвіст?}
+[victim_prank] {хж_голова}
+[victim_end] {хж_кінець}
+[victim_gossip] {хж_плітка}
+[victim_gossip_hurt] {хж_плітка_удар}
+[victim_gossip_fall] {хж_плітка_падіння}
+[victim_gossip_death] {хж_плітка_смерть}
+[victim_gossip_flee] {хж_плітка_тікав}
+[victim_retort] {хж_ретор}
+[victim_back] {хж_відсіч}
+[victim_own_start] {хж_свій_старт}
+[victim_own_tease] {хж_свій_вступ?} {хж_свій} {хж_свій_хвіст?}
+[victim_own_tease] {хж_свій}
+[victim_own_ev_hurt] {хж_свій_удар}
+[victim_own_ev_fall] {хж_свій_падіння}
+[victim_own_ev_flee] {хж_свій_тікає}
+[victim_own_ev_fight] {хж_свій_бій}
+[victim_own_ev_swim] {хж_свій_плаває}
+[victim_own_ev_build] {хж_свій_будує}
+[victim_own_ev_emote] {хж_свій_емоція}
+[victim_own_ev_idle] {хж_свій_стоїть}
+[victim_own_prank] {хж_свій_голова}
+[victim_own_end] {хж_свій_кінець}
+[victim_beast_start] {хж_звір_старт}
+[victim_beast_tease] {хж_звір}
+[victim_beast_ev_hurt] {хж_звір_удар}
+[victim_beast_ev_death] {хж_звір_смерть}
+[victim_beast_ev_fight] {хж_звір_бій}
+[victim_beast_ev_idle] {хж_звір_стоїть}
+[victim_beast_prank] {хж_звір_спина}
+[victim_beast_end] {хж_звір_кінець}
+[victim_trader_start] {хж_торг_старт}
+[victim_trader_tease] {хж_торг}
+[victim_trader_end] {хж_торг_кінець}
+[victim_raven_start] {хж_ворон_старт}
+[victim_raven_tease] {хж_ворон}
+[victim_raven_back] {хж_ворон_відсіч}
+[victim_raven_end] {хж_ворон_кінець}
+[victim_prophecy_hurt] {хж_пророк_удар}
+[victim_prophecy_fall] {хж_пророк_падіння}
+[victim_prophecy_death] {хж_пророк_смерть}
+[victim_prophecy_true] {хж_пророк_так}
+[victim_prophecy_miss] {хж_пророк_ні}
+@хж_вступ
+Attention.
+Write this down.
+Scientific fact.
+Look, look.
+And there it is.
+For the chronicle.
+Again.
+@хж_хвіст
+Checkmate.
+That's not a joke. That's a diagnosis.
+Skalds, write it down. Slowly, there are hard bits.
+Applause.
+I'll write that down.
+No comment. Almost.
+The skalds will be thrilled.
+Odin weeps.
+To be continued.
+Consistency.
+Caw.
+@хж_старт_удар
+{friend} hit you. I remembered. Now {>he's|she's} my subject.
+Whoever hits my human goes on my list. {friend}, congratulations, you're first.
+{friend}, you hit the wrong person. Now listen to me.
+~1 The blow was so-so. My memory, though, is excellent. {friend}, let's begin.
+@хж_старт_слабк
+{friend} can barely stand. The perfect audience.
+Half the health, none of the dignity. {friend}, let's talk.
+{friend} is swaying. I'll sway {>him|her} some more. With words.
+@хж_старт_безворона
+{friend} has no raven. Walking the world unsupervised. Let's fix that.
+No raven, no thought on the shoulder. {friend}, I'll be yours part-time.
+{friend}, you have no raven. So I'll think for you. Out loud.
+Poor {friend}. Nobody tells {>him|her} the truth. I will.
+@хж_старт_заздр
+{friend} carries a legend on {>his|her} shoulder. Under the legend — meh.
+A glorious raven. Shame about the human.
+{friend} with a legend on {>his|her} shoulder. I wonder who carries whom.
+@хж_старт
+No reason at all. {friend}, today you're mine.
+I'm in a bad mood. {friend} is nearby. Coincidence? No.
+I picked you, {friend}. Don't ask why. The nose.
+{friend}, you've won my attention. My condolences.
+Today I have a new subject of study. {friend}.
+~3 Nothing personal, {friend}. Well, no, personal.
+@хж_дражнить
+{friend} is very sure of {>himself|herself}. No reason at all, but very sure.
+{friend} will make it into a saga. As the joke.
+{friend} thinks so slowly that by the end it doesn't matter anymore.
+{friend}, your helmet is smarter than the head under it. And it looks better.
+{friend}, sagas end with you. There's just nothing left to sing.
+{friend} is a walking "why?".
+{friend} is Odin's plan B. Plan A went better.
+If stubbornness chopped wood, {friend} would have built a whole fleet.
+{friend}, your strategy is simple: run, scream, regret.
+~1 {friend}, Odin gave you arms, legs and a head. You use two of the three.
+~3 {friend}, I even like you. Like a favourite mistake.
+{friend} walks like someone's waiting for {>him|her}. Nobody is.
+Here's {friend}. This is what a plan without a thought looks like.
+{friend} is living proof that Odin sometimes jokes.
+{friend} has a face wolves leave alone out of pity.
+{friend}, you move like the line at Haldor's: slowly and without purpose.
+If stupidity glowed, {friend} would be a lighthouse.
+{friend} is thinking. You can tell, because it hurts.
+{friend} has come up with something again. Hide the forest.
+{friend}? I've seen smarter. They were mushrooms.
+Teach {friend} all you like — still first on the wolves' menu.
+{friend}, you are the reason Odin needs two ravens.
+~1 {friend} looks like a draugr who got unlucky twice.
+~1 If {friend} ever has a thought, I'll tell you what it was like.
+~2 {friend} is trying. I'm trying not to laugh, too.
+~3 {friend}, I even like you. Like a circus.
+@хж_удар
+{friend} took one to the face. Justice in action.
+Ouch. {friend}, you don't catch them with your face.
+{friend} got hit. They were probably aiming at someone smarter and missed.
+{friend} is stopping blows with {>his|her} own body again. A method.
+{friend} is bleeding. Finally some color.
+@хж_падіння
+{friend} took off. Downward. As always.
+{friend} checked the ground. The ground is still there.
+Gravity: one. {friend}: zero.
+{friend} jumped without wings. Brave. Stupid, but brave.
+A lovely fall. I'd give it a seven. Out of ten thousand.
+@хж_смерть
+{friend} died. The Valkyries would take {>him|her}, but there's a queue of smarter ones.
+{friend} is lying down. First time today without a single mistake.
+{friend} died. The Valkyries asked twice whether it was really a warrior.
+{friend} is lying down. Finally, quiet.
+Oh, {friend} gave up on the world. The world didn't notice.
+{friend} went to the ancestors. The ancestors moved to the other end of the hall.
+{friend}, a minute of silence for you. A shorter one will do.
+@хж_тікає
+{friend} is running. The best thing {>he's|she's} done all day.
+{friend} has smart legs. Smarter than the head. Carrying {>him|her} away.
+Strategic retreat, {friend}? Or just a retreat?
+Run, {friend}, run. I'll show you where you won't make it to.
+@хж_бій
+{friend} is fighting. Well, flailing at least.
+I bet on the enemy. No offense, {friend}.
+In a fight {friend} is a windmill. Only less useful.
+Watch {friend} fight. Learn how not to.
+@хж_спить
+{friend} is asleep. The smartest {>he's|she's} been all day.
+Quiet: {friend} is asleep. Let {>him|her} dream of being a hero.
+{friend} fell asleep. Finally, a minute without nonsense.
+@хж_плаває
+{friend} swims like a log. Only a log at least floats somewhere.
+{friend} is in the water. The fish are outraged.
+Hold on, {friend}. Serpents like slow food.
+@хж_будує
+{friend} is building. May the gods protect whoever goes inside.
+{friend} picked up a hammer. Hide your fingers.
+{friend} is building a house. The wind is already delighted.
+{friend} lays a plank — and the skalds compose a sad song.
+@хж_емоція
+{friend} is pulling faces. No raven needed to see that.
+What was that, {friend}? A dance or an attack?
+{friend} is showing feelings. Should've shown some brains.
+Nice, {friend}. A little more and I'll believe it was on purpose.
+@хж_стоїть
+{friend} is standing there. For a long time. Thinking, I guess. Hard work.
+{friend} froze. Someone, knock.
+{friend} stands so long I'll soon build a nest on {>him|her}.
+{friend} moves less often than that stump.
+@хж_голова
+{friend}, I'm on your head. It's roomy up here. Empty, to be honest.
+I can see everything from here, {friend}. Especially your future bald spot.
+Knock knock, {friend}. Anyone home? No? Thought so.
+Now I'm your crown, {friend}. The smartest part of you.
+@хж_кінець
+Fine, {friend}, live. For now.
+That's enough for today. But I wrote it all down, {friend}.
+I'm letting you go, {friend}. Not out of pity — out of boredom.
+Enough of you, {friend}. The rest tomorrow.
+~3 Alright, {friend}. No offense. Well, almost.
+@хж_плітка
+Speaking of {friend}. No, nothing. Just remembered and smiled.
+Know what {friend} does when nobody's looking? I'm looking.
+{friend} wandered off somewhere. It's quiet. Sensible, even.
+@хж_плітка_удар
+Did you see {friend} take one to the head? I saw it. Watched it twice.
+{friend} was catching blows with {>his|her} face. I'm still laughing.
+@хж_плітка_падіння
+Remember {friend} flying down? I'm retelling it to the bushes.
+{friend} fell so beautifully. Shame you didn't see all of it.
+@хж_плітка_смерть
+{friend} died today, you know. I was a witness. A pleased one.
+{friend} has already met the Valkyries. They sent {>him|her} back.
+@хж_плітка_тікав
+{friend} ran so hard {>he|she} left {>his|her} dignity on the trail.
+Did you see {friend} bolt? {>His|Her} fastest day ever.
+@хж_ретор
+Whose are you, {addr}? Better defend your human. They need it.
+{raven}, better teach your human not to fall.
+Oh, {addr}, with a human like that you have it harder than me.
+Bark away, {raven}. The facts don't change.
+@хж_відсіч
+Who are you cawing at, {raven}? My human? Look at yours.
+{raven}, your human has the same face. Only worse.
+Listen, {addr}, only I get to tease my human.
+First teach your human to walk, {raven}, then mock.
+{raven}, you're as wise as a tree. Just as loud and hollow.
+~3 Leave my human alone, {addr}. That's my job.
+@хж_свій_старт
+Today my victim is you. Don't thank me.
+Nobody else around, so I'll tease you. Fair.
+Alright, {name}. I looked around. You're the funniest one here.
+Sorry. No, not sorry. Today I'm mocking you.
+@хж_свій_вступ
+Listen.
+Honestly.
+I have to say it.
+@хж_свій
+You carry me on your shoulder. The smartest thing you carry.
+If Odin sees you, I feel for him.
+I am Odin's thought. You are his mistake.
+You walk as if you knew where. You don't.
+Have a plan? No. You have me. Use me.
+Even wolves go around you. Afraid it's catching.
+You hold an axe like a cry for help.
+I've seen your decisions. I hope Odin hasn't.
+~1 If I weren't bound to you, I'd have flown to someone better long ago.
+~2 You're trying. It shows. That's the funny part.
+~3 You're family to me. That's why it hurts so much to watch.
+@хж_свій_хвіст
+Fact.
+Don't take offense.
+Or do.
+@хж_свій_удар
+Hit again. A shield isn't decoration, by the way.
+Ouch. You love yourself so much you take every blow.
+One more like that and I'm looking for a new shoulder.
+@хж_свій_падіння
+A wonderful fall. Again, I didn't see it well.
+You tested the height again. It's real.
+I took off, and you didn't. That's the difference between us.
+@хж_свій_тікає
+Running? Running. Finally, a smart decision.
+You run faster than you fight. A useful skill.
+@хж_свій_бій
+Hit already, stop dancing.
+I'd say "aim", but why, you'll miss anyway.
+The enemy is laughing. So am I.
+@хж_свій_плаває
+You swim like an axe. Fast to the bottom, though.
+Wet and angry. As always.
+@хж_свій_будує
+You build, and the house apologizes to the guests later.
+One more crooked plank and it's a style.
+@хж_свій_емоція
+Was that on purpose? People are watching.
+Wish you swung your sword like that.
+@хж_свій_стоїть
+You froze. I can feel you thinking. It hurts us both.
+Standing still. I've grown old waiting.
+@хж_свій_голова
+I'm sitting on your head. From here I can see where you'll go wrong next.
+Knock knock. Empty. As I thought.
+It's warm here. Probably because thoughts never come in.
+@хж_свій_кінець
+Fine, enough. You're offended enough.
+That's it, I let you go. But I remember everything.
+~3 Alright, alright. You're mine. Even like this.
+@хж_звір_старт
+{friend} is near. Finally someone I'm smarter than without trying.
+Hey, {friend}. Today you're my audience.
+{friend}, I'll tease you. You won't even understand. Perfect.
+@хж_звір
+{friend} is chewing. For an hour now. A deep life.
+{friend} stares into nothing. Like you when you think.
+{friend} has one thought, and it's about food.
+{friend} — no raven on the shoulder, no chance either.
+{friend} is the most honest one in your village. Can't lie.
+@хж_звір_удар
+{friend} got hit. Poor thing. No, funny.
+{friend} catches blows better than the enemies do.
+@хж_звір_смерть
+{friend} is done. A minute of silence. There.
+@хж_звір_бій
+{friend} is fighting. With the same grace as you.
+@хж_звір_стоїть
+{friend} is standing. {>He|She} always stands. That's {>his|her} talent.
+@хж_звір_спина
+{friend}, I'm riding you. Smooth. Smarter than riding my human.
+{friend} carries me. {>He|She} doesn't mind. {>He|She} doesn't know what minding is.
+@хж_звір_кінець
+Fine, {friend}, keep chewing. You won. By boredom.
+@хж_торг_старт
+{friend}. Wonderful. Time to talk about prices.
+Oh, {friend}. The most honest trade in the world. I'm laughing.
+@хж_торг
+{friend} sells air for gold. And you buy it.
+{friend} has everything in the sack except a conscience.
+{friend} stares at your purse so hard I feel awkward.
+{friend} sets prices that bite harder than wolves.
+@хж_торг_кінець
+That's it, {friend}. Count the gold. Ours.
+@хж_ворон_старт
+{friend}, today you're my subject. Don't be offended, there's nobody else.
+Nobody to tease. Although… {friend}.
+@хж_ворон
+{friend}, you swear because you don't know words. I do. That's the difference.
+{friend} thinks louder means smarter.
+{friend}, your vocabulary is three swears and one "eat".
+Odin's memory, they say. And {friend} can't remember where he shat yesterday.
+{friend} caws like a barn door. Just as pleasant.
+@хж_ворон_відсіч
+Caw away, {friend}. At least I think before I caw.
+{friend}, are you insulting me? Cute. Say it slower.
+Was that for me, {friend}? I didn't hear, there was no content.
+@хж_ворон_кінець
+Fine, {friend}, live. I still have to listen to you.
+@хж_пророк_удар
+A prophecy, {friend}: before this hour is out you'll get punched in the face. The signs are clear.
+I see blood. {friend} will get hit soon. Very soon.
+Odin whispers: {friend} will catch another one today. I'm waiting.
+@хж_пророк_падіння
+A prophecy: {friend} will fall. High, loud, funny.
+I see {friend} flying down. Without wings. Soon.
+{friend}, mind your legs. No, you won't. I can see it.
+@хж_пророк_смерть
+A prophecy: {friend} will meet the Valkyries before evening.
+{friend}, darkness hangs over you. Don't argue, I'm only passing it on.
+Odin whispers to me. About you, {friend}. A whisper with a gravestone.
+@хж_пророк_так
+I told you! The prophecy came true. Bow.
+There. Just as I foresaw. Odin, did you see?
+It came true! I'm not just a raven. I'm a raven with a degree.
+A prophet honored in his own land. Thank you.
+@хж_пророк_ні
+The prophecy is… running a little late. Like everything in this world.
+The signs were unclear. Don't look at me like that.
+
+# --- victim, constructor (rev 70): jeers put together from parts
+[victim_start_random] {хж_старт_поч} {friend}. {хж_старт_кін}
+[victim_start_random] {хж_старт_поч} {friend}. {хж_старт_кін}
+[victim_tease] {хж_вступ?} {friend} {хж_дія} {хж_як}. {хж_висновок?}
+[victim_tease] {friend} {хж_дія} {хж_як}. {хж_висновок}
+[victim_tease] {friend} is {хж_хто}. {хж_висновок?}
+[victim_tease] {хж_вступ?} {friend}, you're {хж_хто}. {хж_хвіст?}
+[victim_tease] {хж_факт_поч} {friend} {хж_факт}
+[victim_tease] {хж_факт_поч} {friend} {хж_факт} {хж_висновок?}
+[victim_tease] Score {хж_за}, {friend}: {хж_оцінка}
+[victim_ev_hurt] {friend} {хж_удар_дія} {хж_як_удар}. {хж_реакція?}
+[victim_ev_hurt] {хж_вступ?} {friend} {хж_удар_дія}. {хж_реакція}
+[victim_ev_fall] {friend} {хж_падіння_дія} {хж_як_впав}. {хж_реакція?}
+[victim_ev_fall] {хж_вступ?} {friend} {хж_падіння_дія}. {хж_реакція}
+[victim_ev_fall] {friend} {хж_падіння_дія}. Score {хж_за}: {хж_оцінка}
+[victim_ev_death] {friend} {хж_смерть_дія}. {хж_епітафія}
+[victim_ev_death] {friend} {хж_смерть_дія}. {хж_реакція}
+[victim_ev_flee] {friend} {хж_тікає_дія} {хж_як_біг}. {хж_реакція?}
+[victim_ev_fight] {friend} {хж_бій_дія} {хж_як}. {хж_висновок?}
+[victim_ev_fight] {хж_вступ?} {friend} {хж_бій_дія}. {хж_реакція}
+[victim_ev_build] {friend} {хж_будує_дія} {хж_як}. {хж_висновок?}
+[victim_ev_idle] {friend} stands there {хж_як}. {хж_висновок?}
+[victim_ev_swim] {friend} swims {хж_як_плив}. {хж_реакція?}
+[victim_ev_emote] {friend} {хж_емоція_дія} {хж_як}. {хж_реакція?}
+[victim_end] {хж_кінець_поч}, {friend}. {хж_кінець_кін}
+[victim_gossip] {хж_плітка_поч} {friend} {хж_плітка_що}
+[victim_gossip] {хж_плітка_поч} {friend} {хж_плітка_що}
+[victim_back] {raven}, you're {хж_ворон_ти}. {хж_відсіч_хвіст}
+[victim_back] {raven}, you're {хж_ворон_ти}. {хж_відсіч_хвіст}
+[victim_retort] {raven}, you're {хж_ворон_ти}. {хж_відсіч_хвіст}
+[victim_own_tease] You {хж_свій_дія} {хж_як}. {хж_висновок?}
+[victim_own_tease] You {хж_свій_дія} {хж_як}. {хж_висновок}
+[victim_own_tease] You're {хж_хто}. {хж_свій_хвіст?}
+[victim_own_tease] {хж_факт_поч} you {хж_свій_факт}
+[victim_own_tease] Score {хж_за}: {хж_оцінка}
+[victim_own_ev_fall] You {хж_свій_падіння} {хж_як_впав}. {хж_реакція}
+[victim_own_ev_hurt] You {хж_свій_удар_дія} {хж_як_удар}. {хж_реакція?}
+[victim_own_ev_fight] You fight {хж_як}. {хж_висновок}
+[victim_own_ev_build] You build {хж_як}. {хж_висновок}
+[victim_own_ev_idle] You stand there {хж_як}. {хж_висновок}
+[victim_own_end] {хж_кінець_поч}. {хж_кінець_кін}
+[victim_beast_tease] {friend} {хж_звір_дія} {хж_як}. {хж_висновок?}
+[victim_beast_tease] {friend} is {хж_звір_хто}. {хж_висновок?}
+[victim_beast_tease] {хж_факт_поч} {friend} {хж_звір_факт}
+[victim_trader_tease] {friend} is {хж_торг_хто}. {хж_висновок?}
+[victim_trader_tease] {хж_факт_поч} {friend} {хж_торг_факт}
+[victim_raven_tease] {friend} is {хж_ворон_хто}. {хж_висновок?}
+[victim_raven_tease] {хж_факт_поч} {friend} {хж_ворон_факт}
+[victim_raven_back] {friend}, you're {хж_ворон_ти}. {хж_відсіч_хвіст}
+[victim_prophecy_hurt] {хж_пророк_поч} {friend} {хж_пророк_удар_що}
+[victim_prophecy_fall] {хж_пророк_поч} {friend} {хж_пророк_падіння_що}
+[victim_prophecy_death] {хж_пророк_поч} {friend} {хж_пророк_смерть_що}
+[victim_prophecy_true] {хж_пророк_так_поч} {хж_пророк_так_кін}
+@хж_старт_поч
+Today's subject of study:
+I choose a target:
+Lecture of the day. The topic:
+The lot fell on you.
+My breakfast for the mind:
+The main foolishness of the day:
+Tonight's theater has one show. The actor:
+Victim by lot:
+@хж_старт_кін
+Take notes.
+Don't be offended. Or do.
+Let's begin.
+There'll be no apologies.
+Hold on, this will be educational.
+I haven't even warmed up.
+Stand up straight, you're being examined.
+~3 No malice. With love for science.
+@хж_дія
+walks
+thinks
+swings a sword
+holds a shield
+talks
+picks a road
+reads the map
+runs
+smiles
+jumps
+chews
+sweats
+turns {>his|her} head
+plans something
+plays the hero
+pushes ahead
+@хж_як
+like a fish learning to fly
+like a draugr at a job interview
+like a troll at a manners lesson
+like a boar in a library
+like a goblin who just saw soap
+like a deer that forgot why it came
+like a hammer that was given a thought
+like a chicken playing hnefatafl
+like Loki without jokes
+like a ship without an oar
+like a blind skald in the fog
+like a donkey at a jarl's wedding
+like a wolf that lost its pack and its dignity
+like a bee that forgot about honey
+like a snowman in the Ashlands
+like a dwarf without a beard
+like a moose on ice
+like a magpie pretending to be wise
+like a runestone without runes
+like a jarl after the third horn of mead
+@хж_висновок
+It's a talent.
+Science is powerless.
+The gods are tired.
+I'm recording it.
+A show for the chosen few.
+My condolences to everyone present.
+The chronicle weeps.
+Unbelievable, but true.
+It hurts to watch. Not watching is impossible.
+Odin asks not to be shown such things.
+The ancestors watch in silence.
+The skalds refused to sing of this.
+I'm almost impressed.
+I don't recommend trying this at home.
+You can't teach that. You're born with it.
+~3 But the effort is there. Cute.
+@хж_хто
+a walking error in the math
+an argument against reason
+a monument to haste
+proof that Odin has a sense of humor
+a living warning to the descendants
+an unfinished thought
+an unfortunate accident
+the triumph of confidence over reason
+a riddle with no answer
+a hero's rough draft
+a saga nobody finished reading
+a legend inside out
+the reason shields were invented
+a convincing answer to "could it be worse"
+a lesson for everyone watching
+@хж_факт_поч
+Scientific fact:
+Observation forty-two:
+Noting down:
+For the descendants:
+Historical note:
+Observed:
+Conclusion of the study:
+Interesting to know:
+@хж_факт
+thinks longer than {>he|she} lives.
+mixes up left and right, but with dignity.
+believes in {>himself|herself}. Alone.
+reads runes upside down.
+thinks a shield is a plate.
+walks in circles and calls it scouting.
+argues with trees and loses.
+counts on {>his|her} fingers. And loses count.
+is afraid of chickens. Real ones.
+calls every hill a mountain.
+could have become a hero. Didn't.
+talks to wolves in {>his|her} sleep. They don't answer.
+wears {>his|her} helmet backwards. In spirit.
+is still looking for the way out of the first cave.
+learns from mistakes. Slowly. Very.
+@хж_за
+for style
+for the walk
+for the face
+for the plan
+for confidence
+for bravery
+for grace
+for effort
+for the idea
+@хж_оцінка
+three out of ten. Generous.
+two. One for trying.
+zero, but a very confident zero.
+eight for bravery, minus seven for everything else.
+no score. The scale broke.
+minus one. A world record.
+one. With an asterisk. The asterisk is me crying.
+seven. Out of two hundred.
+priceless. Literally.
+@хж_удар_дія
+caught a blow with {>his|her} face
+got one on the helmet
+got a lesson from the enemy
+took one in the ribs
+@хж_як_удар
+like an anvil in training
+like a target that dreamed of being a warrior
+like a door someone's knocking on
+like a punching bag at the fair
+like a drum at a feast
+like a bell rung at midnight
+like a straw dummy
+@хж_реакція
+Applause.
+No replay needed, I remember.
+The skalds are already rhyming.
+I almost sympathize. Almost.
+Flawlessly bad.
+Who does that.
+I looked away. No, I didn't.
+Encore? Encore.
+Filed under "Funny".
+The gods applaud. Standing.
+@хж_падіння_дія
+slid down
+flew face-first into the ground
+took a step into thin air
+tested the height personally
+@хж_як_впав
+like a sack full of wisdom. Empty
+like a wet leaf
+like a rock, only louder
+like a bad idea
+like an axe into a bog
+like a shot-down goose
+like a sack of turnips off a cart
+@хж_смерть_дія
+died
+left this world
+finished the adventure
+kicked the bucket
+went to the ancestors without warning
+@хж_епітафія
+Epitaph: "Here lies one who didn't listen to the raven. The raven is sorry. No, it isn't."
+Epitaph: "Brave. Brief. Pointless."
+Epitaph: "Here lies a plan that didn't work."
+Epitaph: "It was brave. That's all."
+On the stone I'll write: "Didn't listen to the raven."
+Epitaph: "Went forward. In vain."
+Epitaph: "Thought there was time."
+Epitaph: "Here rests confidence."
+@хж_тікає_дія
+runs
+scurries off
+takes to {>his|her} heels
+flees
+@хж_як_біг
+like a hare from a wolf
+like a cat from a broom
+like a deer from a hunter
+like a goblin from soap
+like a thief from Haldor
+like a hen from a fox
+@хж_бій_дія
+fights
+waves a weapon
+defends {>himself|herself}
+beats the air
+@хж_будує_дія
+builds
+taps a hammer
+lays planks
+puts something up
+@хж_як_плив
+like a log with ambitions
+like an axe out for a stroll
+like a duck after a fight
+like a wet chicken
+@хж_емоція_дія
+pulls faces
+dances
+waves {>his|her} arms
+shows feelings
+@хж_кінець_поч
+Fine, live
+Enough
+I'm letting you go
+That's all for today
+Alright, alright
+@хж_кінець_кін
+But I wrote it all down.
+The rest tomorrow.
+Not out of pity — out of boredom.
+Go and think. If you can.
+We'll meet again. Unfortunately for you.
+The lecture is over. The exam is tomorrow.
+@хж_плітка_поч
+Between us:
+You won't believe it, but
+In secret:
+A magpie told me that
+I heard on the wind that
+Only don't tell anyone:
+@хж_плітка_що
+still counts on {>his|her} fingers.
+talks to {>his|her} own shield.
+is afraid of chickens.
+hides mead under the bed.
+spent an hour yesterday looking for {>his|her} helmet. On {>his|her} head.
+labels {>his|her} things, because {>he|she} forgets whose they are.
+cries when cutting onions. And when not.
+thinks Haldor is a friend. Haldor doesn't.
+is learning to swim in a puddle.
+rehearses heroic speeches at night. To a boar.
+@хж_ворон_ти
+loud but hollow
+a sparrow playing eagle
+a crow from someone else's trash heap
+wet feathers with ambitions
+a pigeon that overate
+an ornament for someone else's shoulder
+a parrot without a dictionary
+a scarecrow that learned to caw
+@хж_відсіч_хвіст
+Fly away.
+My human, my business.
+Learn from your elders.
+Caw quieter, you shame the kin.
+Come back when you've grown up.
+Go peck at something simpler.
+@хж_свій_дія
+walk
+think
+fight
+build
+plan
+hold a sword
+steer a ship
+pick a road
+eat
+run
+@хж_свій_факт
+think longer than you live.
+mix up left and right.
+believe in yourself. Somebody has to.
+argue with trees and lose.
+still haven't learned to raise a shield.
+call running away a "maneuver".
+look for enemies where there are none, and find them where you don't expect.
+carry me, because otherwise nobody would advise you.
+@хж_свій_падіння
+fell
+went splat
+slid down
+tested the height personally
+@хж_свій_удар_дія
+caught a blow with your face
+got one on the helmet
+took one in the ribs
+@хж_звір_дія
+chews
+stares into the distance
+snorts
+scratches
+stands
+sniffs the ground
+thinks about food
+@хж_звір_хто
+a philosopher without a single thought
+a walking lunch
+the most honest creature around
+a better conversation partner than my human
+meat with character
+a pillow on legs
+a future sausage with dignity
+@хж_звір_факт
+thinks about food nineteen hours a day. Sleeps the rest.
+is smarter than some vikings. I won't point.
+never complains. Can't talk. Happy.
+trusts you. In vain.
+@хж_торг_хто
+the art of robbery in one person
+a bank without a conscience
+a smile with a price tag
+a treasury that only takes
+the most honest thief in Midgard
+a sack that can count
+@хж_торг_факт
+sells a rock by calling it a relic.
+counts coins even in {>his|her} sleep.
+never haggles. Only you do.
+knows the price of everything except a conscience.
+@хж_ворон_хто
+Odin's memory that remembers only food
+a curse with wings
+proof that feathers don't make you smart
+a dictionary of three words
+Odin's grumpy chicken
+a loudspeaker without a thought
+@хж_ворон_факт
+thinks "logic" is a kind of food.
+swears more often than he breathes.
+knows three words, and all of them are bad.
+remembers everything except what matters.
+@хж_пророк_поч
+A prophecy:
+Odin whispers to me that
+The runes say that
+I see it in the mist of the future:
+Write it down: soon
+@хж_пророк_удар_що
+will get punched in the face. Hard.
+will catch a blow. With the face.
+will get a lesson from the enemy. Soon.
+@хж_пророк_падіння_що
+will fall. High, loud, funny.
+will fly down without wings.
+will test the ground's strength. With the head.
+@хж_пророк_смерть_що
+will meet the Valkyries this very day.
+will lie down. For a long time.
+will see the ancestors sooner than wished.
+@хж_пророк_так_поч
+I told you!
+It came true!
+There!
+Prophecy fulfilled.
+Just as I saw.
+@хж_пророк_так_кін
+Bow.
+Odin, did you see?
+I'm not just a raven. I'm a raven with a degree.
+Write me down as a seer.
+Bets will be taken, but not by me.
+
+# --- victim: a minute on the head (rev 71)
+[victim_head] {хжг_дія} {хжг_укол?}
+[victim_head] {хжг_дія}
+[victim_head] {хжг_укол}
+[victim_head] {хжг_публіка}
+[victim_head] {friend}, {хжг_звернення}
+[victim_head_move] {хжг_рух}
+[victim_head_move] {хжг_рух} {хжг_укол?}
+[victim_own_head] {хжг_дія} {хжг_укол?}
+[victim_own_head] {хжг_свій}
+[victim_own_head] {хжг_укол}
+[victim_own_head_move] {хжг_рух}
+[victim_beast_head] {хжг_звір}
+[victim_beast_head_move] {хжг_звір_рух}
+@хжг_дія
+Sitting on your head. Finally someone thinks above it.
+Up here it smells of doubt. Yours.
+I sit here like a thought you never had.
+I'm sitting on your head. The highest point you'll ever reach.
+I can see everything from here. Especially the emptiness below.
+Knock knock. Nobody answers. Nobody lives here.
+Checking for thoughts in there. Zero so far.
+Settled in. You're now a perch with a personality.
+Your crown is the comfiest stump in the forest.
+Pecking your scalp. Scientifically. Looking for a mind.
+I sit here like a crown. Except the crown is smarter.
+You're carrying me. The smartest thing you've ever had on you.
+From up here your decisions look even worse.
+Scratching your head with my foot. Sorry, habit.
+You're my best perch: quiet and hollow.
+Measuring your head. Conclusion: decorative.
+I sit. I think for two. Somebody has to.
+It's warm up here. Probably the friction of two thoughts that never meet.
+Listening to what's in your head. Silence. Deep as a fjord.
+I like it here. A roomy chamber, no furniture.
+Arranging my feathers on your crown. At least something here will be in order.
+~1 I sit on you because you're good for nothing else.
+~3 I'm sitting on you. Don't be offended: it's an honor. A dubious one, but an honor.
+@хжг_укол
+No offense. With offense.
+Stand straight, you're my monument now.
+Scientific fact: you don't need a head.
+It's windy up here. Because it's empty inside.
+The skalds are already writing. A comedy.
+Cry quieter, I can't hear my own thoughts.
+Odin sees. Odin is embarrassed.
+This isn't mockery. It's education. Slow.
+Writing it in the chronicle. Chapter: "Disgrace".
+Your ancestors are watching. I'd look away too.
+~1 Endure it. Not your first time.
+~3 Come on, don't sulk. It's love. Of a sort.
+@хжг_публіка
+Attention everyone: the exhibition "Empty Head". Free entry.
+Who wants a tour? I'll show you where the thoughts were supposed to be.
+Don't leave, audience: the best part is coming. No, it isn't.
+Ladies and gentlemen, a rare exhibit. It walks and even talks.
+Who's betting how long it lasts? I say a minute.
+@хжг_звернення
+keep your head level, it's my perch now.
+don't turn your neck, I'm thinking.
+can you even feel I'm here? No? Thought so.
+stop waving your arms. I'm still on top.
+hear the wind in your head? That was me blowing.
+say something smart. I'll wait. A long time.
+@хжг_рух
+Run, run. I'm a passenger with complaints.
+A jump? Brave. Pointless, but brave.
+Hold steadier, I'm getting seasick.
+Running from me? I'm on you. Farewell, logic.
+Can't you go faster? I'm ageing.
+Now that's shaking. Is that how you think — in bits?
+Bounce, bounce. It won't add any brains.
+Where are we rushing? You don't know. I thought so.
+@хжг_свій
+A promotion: from the shoulder to the head.
+From here I can see where you'll go the wrong way.
+From the shoulder you looked bad. From here — worse.
+Your raven is above you now. As it should be.
+Don't shake me off. I'm working here: thinking instead of you.
+@хжг_звір
+I'm riding. A so-so steed, but an honest one.
+You're carrying Odin's thought. Be proud.
+Sitting on you. We talk better than me and my human.
+Don't chew so loudly, I'm pondering.
+Your back is the best thing on this farm.
+@хжг_звір_рух
+At a gallop! No, that's not a gallop. That's shaking.
+Easy, beast. I'm not a sack.
+You run like my human: no goal, lots of zeal.
+
+# --- ravens' bonds (rev 73): friends and enemies among the players' ravens
+[bond_friend_open] {хб_друг_вітання} {хб_друг}
+[bond_friend_open] {хб_друг}
+[bond_friend_reply] {хб_друг_відповідь}
+[bond_friend_close] {хб_друг_кінець}
+[bond_enemy_open] {хб_ворог}
+[bond_enemy_open] {хб_ворог} {хб_ворог_хвіст?}
+[bond_enemy_reply] {хб_ворог_відповідь}
+[bond_enemy_last] {хб_ворог_останнє}
+[bond_steal] {хб_крадіжка}
+[bond_robbed] {хб_пограбовано}
+[bond_pair_open] {хб_пара}
+[bond_pair_reply] {хб_пара_відповідь}
+[about_bond_friend] {хб_думка}
+@хб_друг_вітання
+Oh, {addr}!
+Look who it is.
+There you are.
+{addr}, you're here.
+@хб_друг
+I spotted you from afar: the only raven here with a brain. Besides me.
+How's your human? Still dragging you through swamps?
+Sit closer. Even silence is nice with you.
+I saved you a spot on the branch. Well, in my head.
+You again. And oddly, that's good news.
+Tell me something. Your stories are better than mine. Almost.
+Your human's still alive? Then you're doing good work.
+Missed you. Don't tell anyone.
+~1 You're not my friend. Well, a bit. Fine, a friend.
+~3 You old rascal. Good to see you.
+@хб_друг_відповідь
+Same to you, {addr}. Quieter though, or they'll think we're sweet.
+My human's alive. Thanks to my prayers and your advice.
+I'll sit. Just don't touch my feathers — I look good today.
+You look fine too. For a raven with a human like that.
+I'll tell you. But first you: what did yours do this time?
+Good you're here. Finally someone who answers.
+Missed me? Me too. But I never said it.
+~3 Well, old friend, together again. Like the good days.
+@хб_друг_кінець
+Stay close to your human. They'd be lost without you.
+See you. Don't let anyone hurt you.
+That was a good sit. Almost like people. Only smarter.
+Mind your feathers. And your human, if you have time.
+@хб_ворог
+Oh. You. The day was going so well.
+{addr}, you again? I thought something had eaten you.
+Don't come closer. You reek of self-importance.
+I remember you. Unfortunately.
+Your human still feeds you? How merciful.
+You fly like a wet rag in the wind.
+Don't look at me like that. I'm not your prey.
+{addr}, your feathers are as dull as your thoughts.
+~1 Vanish. Just vanish. Forever, please.
+@хб_ворог_хвіст
+Believe me, I'm holding back.
+And this is me being polite.
+You're on my black list. Again.
+@хб_ворог_відповідь
+Oh, what a disappointment. I'm still alive.
+You don't scare me. You don't even scare your own human.
+Talk, talk. You're great at making noise.
+My feathers are dull? Your head is duller.
+I'd answer cleverly, but you wouldn't get it.
+Self-importance? No. Superiority. Get used to it.
+@хб_ворог_останнє
+One more word and you'll have fewer feathers.
+Last advice: keep away from us.
+Talk's over. So is your patience, I see.
+Fly off. Your human's calling. Or crying.
+@хб_крадіжка
+{friend}, thanks. Took from your bag: {food}. Borrowed. Forever.
+Loot from someone else's bag: {food}. Tasty. Because it's not mine.
+Not theft, justice. {food} — I need it more.
+{friend} won't even notice. Well, will. Too late.
+@хб_пограбовано
+{raven} stole from your bag: {food}. I saw it all. And I'll remember it all.
+Did you see? That thief took: {food}. I'm already planning revenge.
+{food}! Ours! Stolen! Right in front of me. That's not forgiven.
+Don't cry. I'll have a word with that raven. My way.
+@хб_пара
+{raven} — now that's a raven with a head.
+I was visiting. {raven} — calm, sensible. Not like here.
+{raven} is a good raven. Just don't tell its human, it'll get proud.
+Sat next to a friend. {raven} — even my mood got better.
+@хб_пара_відповідь
+I know. I respect it too. Silently.
+Good. At least someone puts up with you besides me.
+Be friends. Just don't trade us.
+As long as it doesn't teach you anything bad.
+@хб_думка
+Look: {friend}, and on the shoulder — {bond_raven}. My friend. Picked a good human. I hope.
+That's {bond_raven} on the shoulder, my friend. So {friend} isn't entirely hopeless.
+{friend} and {bond_raven}. We talked half the night. Look after those two.
+
+# --- visits (rev 74): a raven goes to a friend by itself and comes back with gossip
+[bond_visit_open] {хгс_привіт}
+[bond_visit_reply] {хгс_привіт_відповідь}
+[bond_visit_back] {хгс_плітка}
+[bond_visit_back_build] {хгс_будує}
+[bond_visit_back_fight] {хгс_бій}
+[bond_visit_back_sleep] {хгс_спить}
+[bond_visit_back_hurt] {хгс_удар}
+@хгс_привіт
+I'm visiting. Briefly. Well, we'll see.
+I'll sit here by you, {addr}. My human will manage.
+Don't chase me off. I'll be quiet. Almost.
+Came to see how you're doing. And your human.
+@хгс_привіт_відповідь
+Sit down, {addr}. The view's better here than at yours.
+Come in. Just don't sit on my human's head — that's my spot.
+Oh, a guest. Well, tell me what's new.
+Sit. Keeping watch is more fun with two.
+@хгс_плітка
+Visited a friend. It's calm there. I'm even a little jealous.
+Sat with {raven}. A smart bird. The human — so-so, but holding up.
+{friend} died {g_their_death_when} to {g_their_killer}. {raven} told me. Quietly, but proudly.
+{friend} died {g_their_deaths} {g_their_death_when}. {raven} keeps count. Now so do I.
+{friend} took down {g_their_boss} {g_their_boss_when}. {raven} is still showing off.
+{raven} has been with that human {g_their_days}. I asked how it copes. No answer.
+{friend} has killed {g_their_kills} already. So says {raven}. I wouldn't believe it, but I've seen it count.
+{friend} died {g_their_death_when} of {g_their_cause}. {raven} still doesn't know whether to laugh.
+@хгс_будує
+Saw {friend} building. Hammer in hand, doubt in the eyes.
+{friend} is building something. {raven} says it'll fall. I agree.
+Saw some building over there. If that's a house, I'm an owl.
+@хгс_бій
+While I was visiting, {friend} fought. Well, flailed.
+There was a fight. {raven} was rooting for the enemy. I get it.
+{friend} fought while I sat on {>his|her} shoulder. A show for the chosen few.
+@хгс_спить
+{friend} slept the whole visit. The quietest host I've ever had.
+{raven} and I sat over a sleeping human. Silently. Nice.
+{friend} snores. {raven} says it's every night. Sympathy to both.
+@хгс_удар
+{friend} took one in the face while I was there. Not my fault. Well, almost.
+Watched {friend} catch blows. A master. If that's mastery.
+Something attacked {friend} while I was there. I cawed. Didn't help, but it sounded good.
+
+# --- the chase with another player's raven (rev 75)
+[joint_start] {хс_старт}
+[joint_catch] {хс_спіймав} {хс_рахунок}
+[joint_caught] {хс_спійманий}
+[joint_caught] {хс_спійманий} {хс_рахунок_їх}
+[joint_won] {хс_виграв}
+[joint_lost] {хс_програв}
+[joint_draw] {хс_нічия}
+[joint_refuse] {хс_відмова}
+[about_chase_lead] {хс_думка_веду}
+[about_chase_behind] {хс_думка_відстаю}
+[about_chase_even] {хс_думка_рівно}
+@хс_старт
+Well then, {addr}, let's fly. Just don't cry afterwards.
+Catch me if you can.
+I'll give you a head start. A whole second.
+The rules are simple: I'm faster.
+{addr}, stretched your wings? You'll need them.
+Get ready to lose gracefully.
+No hard feelings afterwards, deal?
+Let's go. Let {friend} see how it's done.
+Keep your tail close. While you still can.
+Finally, someone who isn't boring.
+@хс_спіймав
+Got you!
+Caught!
+Tag.
+Your tail is mine.
+That's how it's done.
+Easy.
+You didn't even notice.
+Knock knock. Caught.
+And I'm already here.
+Slow, {addr}, slow.
+@хс_рахунок
+{score}.
+Score {score}.
+{score} already.
+{score}, write it down.
+{score}, and that's not the limit.
+@хс_спійманий
+A fluke.
+I let you. Almost.
+Fine, this one's yours.
+Never mind, we'll get even.
+The sun was in my eyes.
+Don't get used to it.
+I was testing you.
+What a grip. Respect. A little.
+@хс_рахунок_їх
+{score}. For now.
+{score}, but the game's still on.
+{score}. Don't relax.
+@хс_виграв
+Victory. {score}. No need to thank me for the lesson.
+{score}. Come back when you've practised.
+Told you: I'm faster. {score}.
+Good game. Especially my part.
+{score}. Don't be sad, {addr}, I simply have no equal.
+That's it. {score}. Let {friend} comfort you.
+Victory tastes better than berries. {score}.
+@хс_програв
+{score}… You got me this time.
+Lost. Noted. There will be a rematch.
+Fine, you're fast. Don't get cocky.
+{score}. I'm just not in shape today.
+You fly well, {addr}. Annoying to admit.
+{score}. Tell no one. Especially not Munin.
+@хс_нічия
+{score}. A draw. We both did well, me slightly more.
+A draw. So there'll be another game.
+{score}. Even. Nobody got embarrassed.
+A draw, {addr}. Next time we settle it.
+@хс_відмова
+With you? No. I don't even sit on the same branch as you.
+{raven}? Play? I'd rather peck a stone.
+No. Find yourself other fun.
+I don't play with enemies. I simply don't notice them.
+Play? With that? My wings aren't for this.
+@хс_думка_веду
+{chase_raven} at tag — {wins}:{losses}. In my favour. The poor thing still believes in a rematch.
+See their raven? {chase_raven}. Score {wins}:{losses}, and not in its favour.
+{chase_raven}… I catch it more often than it catches me: {wins}:{losses}.
+{chase_raven} still remembers the score. {wins}:{losses}. So do I, with pleasure.
+@хс_думка_відстаю
+{chase_raven}… Score {wins}:{losses}. Not my finest page.
+Don't look at me like that. {chase_raven} is just lucky: {wins}:{losses}.
+{chase_raven} beats me at tag, {wins}:{losses}. For now.
+That {chase_raven}. {wins}:{losses}. I need a rematch.
+@хс_думка_рівно
+{chase_raven} and me: {wins}:{losses}. A fair draw. For now.
+That raven and I are even, {wins}:{losses}. We must settle who's better. Me.
+{chase_raven}. {wins}:{losses}. A worthy rival, if not as handsome.
+
+
+# --- world (rev 76): a trader, a fire, a rune stone, someone else's ship or cart
+[world_trader] {св_торговець}
+[world_fire] {св_вогонь}
+[world_rune] {св_руна_вступ} "{rune}" {св_руна_думка}
+[world_ride] {св_чуже}
+@св_торговець
+{trader}, hold still. I can see everything from here.
+Best seat in the whole shop. And free.
+Haggle, {name}. I've got him by the head.
+Warm head. Must be thinking about money.
+~1 Don't look at me like that. It's comfy here.
+~3 Ask for a discount. I'm the argument.
+@св_вогонь
+Warm. Finally something in this world done right.
+I'll sit a while. Feathers dry, thoughts thaw.
+Fire is the best company. Quiet and warm.
+There's wisdom: sitting by a fire and going nowhere.
+~1 Don't block my flame.
+~3 Sit by me. There's room for two.
+@св_руна_вступ
+Carved here:
+It reads:
+The old runes say:
+Someone once cut:
+@св_руна_думка
+Nicely put. A lie, of course.
+I knew the one who wrote it. Dull fellow.
+Odin said otherwise. But Odin says a lot.
+A thousand years, and the runes are as crooked as your walls.
+Remember that. Or don't, I'll remember for you.
+Stone remembers longer than men. But less than me.
+~1 Have you any idea how much meaning is here? No? I thought so.
+~3 Old times. There were ones like you back then too. Good ones.
+@св_чуже
+Someone else's. I'll sit while the owner isn't looking.
+Well made. Unlike yours.
+A free ride, if it goes.
+Wonder whose. The owner has taste. A little.
+~1 Don't tell anyone I sat here.
+~3 Ours is still better. Because it's yours.
+
+# --- loot (rev 77): a raven brings food back from an outing
+[loot_food] {св_здобич}
+[loot_food] {св_здобич_вступ} {св_здобич}
+[loot_rare] {св_скарб}
+@св_здобич_вступ
+Here.
+There.
+Don't thank me.
+Brought you something.
+@св_здобич
+{thing}. Found it while you were staring at your feet.
+{thing}. Someone has to make sure you eat more than dust.
+Here's {thing}. It grew, asked nobody. Now it's yours.
+{thing}. I checked — not poisonous. Mostly.
+Fresh. {thing}. You can't live on burnt charcoal forever.
+{thing}. Write it in the saga: "Hugin fed the hero."
+~1 {thing}. Eat, or you'll keel over again.
+~3 {thing}. For you. Don't tell anyone I'm kind.
+@св_скарб
+Look what was glinting in the grass: {thing}. It doesn't glint now — now it's yours.
+{thing}. Someone lost it. Someone who isn't me.
+Treasure, {name}. {thing}. I told you my eyes are sharp.
+~3 {thing}. Found it and thought of you at once. Rare, keep it safe.
+
+# --- the ravens' own wishes (rev 79)
+[req_want] {пр_хочу}
+[req_show_biome] {пр_край}
+[req_show_peak] {пр_вершина}
+[req_show_sea] {пр_море}
+[req_show_dungeon] {пр_підземелля}
+[req_sit] {пр_посидь}
+[req_shiny] {пр_блискуче}
+[req_cache] {пр_схованка}
+[req_meet] {пр_познайом}
+[req_remind] {пр_нагадую}
+[req_done] {пр_виконано}
+[req_warmer] {пр_тепліше}
+[req_colder] {пр_холодніше}
+[req_here] {пр_тут}
+@пр_хочу
+I have a request. A small one. {food}.
+Know what I fancy? {food}. Not a hint. A request.
+I'd like {food}. When you find some. Today works.
+~1 {food}. Bring it and I'll consider whether you're all right.
+~2 I have a craving: {food}. You won't say no, will you?
+~3 Nothing's too much for a friend, right? So — {food}.
+@пр_край
+I miss that land. Show me how it is {place_in}.
+Haven't seen {place} in ages. Shall we fly?
+I want to see what's changed {place_in}. Lead on.
+~3 Let's go {place_in}. Just because. Like old times.
+@пр_вершина
+Take me up a mountain. You can see everything from there.
+I want the very top. To breathe what Odin breathes.
+A summit. The highest you can find. No rush, but no dawdling.
+@пр_море
+Show me the open sea. No shore in sight.
+I want the sea. Far out. I promise not to croak at the waves.
+Haven't heard waves on a hull in ages. Shall we sail?
+@пр_підземелля
+I want to see a dungeon. What they hide down there.
+Take me underground. I'm curious. You're scared. Perfect.
+A crypt, a cave — whatever. I want the dark.
+@пр_посидь
+Sit with me by a fire for {n} minutes. Just sit.
+My soul is cold. A fire and you — {n} minutes.
+I want to warm up. By a fire or on a perch — as long as it's together.
+~3 Let's sit. No running anywhere. {n} minutes.
+@пр_блискуче
+I'd like {thing}. For my hoard. You understand.
+See how I'm looking? That's about {thing}.
+{thing}. It shines. I need it.
+~2 My hoard is hungry. It wants {thing}.
+@пр_схованка
+I hid a treasure. Find it — watch the map and listen to me.
+I have a cache. Get close and I'll caw more often.
+A riddle: where's my treasure? The hint is on the map. The rest — by ear.
+I hid something. Bring a pickaxe. And your ears.
+@пр_познайом
+Bring me closer to the ravens I know. Walk up to someone.
+There are ravens I have business with. Take me to them.
+I want to see an old friend. Or an old enemy. Both are interesting.
+@пр_нагадую
+A gentle reminder. {goal}.
+I'm not insisting. But — {goal}.
+Remember my wish? {goal}.
+@пр_виконано
+Thank you. I'll remember this.
+There. You can when you want to.
+That was nice. Don't tell Munin.
+~3 You're the best. Writing it in the book.
+@пр_тепліше
+Warmer…
+Warmer. Keep going.
+Aha, warmer.
+@пр_холодніше
+Colder…
+Wrong way. Colder.
+Cold. Turn around.
+@пр_тут
+Here! Under your feet. Pickaxe out.
+Right here. Dig.
+Here. Told you we'd find it.
+
+# --- sharing food (rev 80): your two, and a friend raven of another player
+[pair_share_give] {хд_дає}
+[pair_share_thanks] {хд_дякує}
+[bond_share_give] {хд_другу}
+[bond_share_thanks] {хд_другу_дяка}
+@хд_дає
+Here. I got it out of the bag while nobody was looking.
+Eat. A hungry raven is a sad sight.
+I'm sharing. Write it down, it won't happen twice.
+Eat before I change my mind.
+Take my bite. I could stand to lose a feather or two anyway.
+There. Hungry, you're even duller than usual.
+@хд_дякує
+You're a true brother. Well, today.
+Thanks. I won't forget it. At least until supper.
+Oh, food. I forgive you everything you ever said.
+Tasty. At least someone here looks after me.
+Thanks. Not a word to our owner, let them be ashamed.
+@хд_другу
+{addr}, here. Your person forgot about you, I see.
+Brought you something to eat. Don't thank me, just live.
+{addr}, eat. A hungry friend is poor company.
+Here, from my own bag. There's more in there. Probably.
+Take a bite. You sit there so thin it's sad to look at.
+@хд_другу_дяка
+You saved me. Literally.
+Thank you, friend. I owe you a bite. Two.
+At least someone feeds me. Not my owner, of course.
+Now that's friendship. I'll remember it.
+Tasty! Come by more often. With food.
+
+# --- a bond changed (rev 81): {raven} that raven, {friend} its person
+[bond_now_friends] {хз_друзі}
+[bond_now_enemies] {хз_вороги}
+[bond_made_up] {хз_мир}
+[bond_cooled] {хз_холод}
+@хз_друзі
+{raven} seems to be my friend. Don't tell him I admitted it.
+You know, {raven} isn't that stupid. We're friends now.
+I found myself a friend. {raven}. You may be jealous.
+{raven} is not a boring talker. A rarity. I'll take it.
+{raven} is mine now. A friend, I mean. Not in my pocket.
+@хз_вороги
+{raven}? No. Not another word about that raven.
+From now on {raven} doesn't exist for me. Except as a target.
+{raven} no longer interests me. Finally, and with feathers.
+{raven} stuck in my memory. And that's not a compliment.
+{raven} crossed the line. Now we're at war. A quiet one, but war.
+@хз_мир
+{raven} and I made up. Don't ask how, I don't get it either.
+Fine, {raven} isn't so bad. We're making peace. For now.
+{raven} is no longer my enemy. I got tired of fighting.
+{raven} admitted he was wrong. Well, almost. Good enough for me.
+@хз_холод
+{raven} and I aren't the friends we were. It happens.
+{raven} disappointed me. I'll live.
+{raven} cooled towards me. So did I towards him.
+{raven}? An acquaintance. Used to be a friend.
+
+# --- how a raven takes to other players (rev 82)
+[people_jab] {хл_шпилька}
+[people_peck] {хл_дзьоб}
+[people_alarm] {хл_тривога}
+[people_warm] {хл_тепло}
+[people_now_liked] {хл_поважає}
+[people_now_hated] {хл_нетерпить}
+[people_made_up] {хл_мир}
+[people_cooled] {хл_холод}
+[about_hate] {хл_про_ненависть}
+[about_dislike] {хл_про_неприязнь}
+[about_respect] {хл_про_повагу}
+[about_adore] {хл_про_любов}
+[victim_start_grudge] {хл_жертва}
+@хл_шпилька
+Oh, {friend}. The day was going so well.
+{friend} is here again. Keep the bag close.
+Don't look at {>him|her} too long. It's catching.
+{friend} thinks I don't see. I see everything.
+Someone here is one too many. Hint: {friend}.
+If stupidity glowed, {friend} would be a lighthouse.
+@хл_дзьоб
+That's for everything, {friend}.
+Tap. Think about how you behave.
+Don't thank me, {friend}. It's a lesson.
+Oops. My beak slipped. Twice.
+@хл_тривога
+{friend} is barely alive! Help {>him|her}!
+Hey, {friend} is about to fall. Don't just stand there!
+{friend} is in trouble! Quick!
+Save {>him|her} before it's too late!
+@хл_тепло
+{friend} is one of the few I'm glad to see.
+Next to {>him|her} even I feel calm.
+{friend} is here again. Good.
+Stick with {>him|her}. A good person.
+@хл_поважає
+{friend} has earned my respect. That's not easy.
+You know, {friend} is a worthy one. I watched a long time.
+I like {friend}. Don't tell {>him|her}, it'll go to {>his|her} head.
+I've changed my mind about {>him|her}. For the better.
+@хл_нетерпить
+I'm sick of {friend}. Officially.
+I put up with it as long as I could. {friend} — that's it.
+{friend} is a walking nuisance to me now.
+I remember who {friend} is. Too bad for {>him|her}.
+@хл_мир
+Fine, {friend} isn't that bad. Forgiven.
+I don't hold a grudge against {>him|her} any more. Almost.
+Very well. {friend} gets another chance.
+@хл_холод
+{friend} disappointed me. Worse has happened.
+I used to respect {>him|her}. Used to.
+{friend} is not the one I knew.
+@хл_про_ненависть
+{friend}. I'll keep quiet, or I'll say something worse than a peck.
+Look at {>him|her} closely. Now look away and don't look again.
+Even {>his|her} shadow is nervous.
+I'd peck {>him|her} every day if I had the patience.
+@хл_про_неприязнь
+I don't like {friend}. And that's putting it politely.
+I look at {>him|her} and my feathers stand up.
+Don't trust {>him|her} with the bag. Or your back.
+{friend}? I tolerate. Barely.
+@хл_про_повагу
+{friend} is a worthy one. There aren't many.
+I'd fly into a storm with {>him|her}.
+{friend} knows what {>he|she} is doing. I checked.
+Stick with {>him|her}, you won't regret it.
+@хл_про_любов
+{friend}! My favourite person. After you. Maybe.
+If I had to pick another owner — only {friend}.
+For {>him|her} I'd peck anyone.
+I look at {>him|her} and the world gets better.
+@хл_жертва
+That's it, {friend}. Today you're my target. I've waited long.
+{friend}, I kept quiet a long time. Not any more.
+At last, {friend}. I've prepared a few words for you.
+{friend}, I haven't liked you for a long while. Let's begin.
+
+# --- at home on a perch, on guard, guests (rev 84)
+[home_leave] {хд_вдома}
+[guard_leave] {хд_варта}
+[home_take] {хд_забрали}
+[home_report] {хд_звіт}
+[home_hungry] {хд_голодний}
+[home_forgotten] {хд_забули}
+[home_alarm] {хд_тривога}
+[home_broken] {хд_зламали}
+[home_pair] {хд_пара}
+[guest_hello] {хд_гості}
+[guest_reply] {хд_гостю}
+[guest_back] {хд_з_гостей}
+
+@хд_вдома
+I'll stay. Someone has to guard this mess.
+Fine. I'll sit here while you find something to step in.
+Home it is. Don't forget the feeder, {name}.
+Go. I'm the master of the house now.
+I'll be here. The house won't guard itself.
+~1 Leaving me? At last, a rest from your decisions.
+~1 I'll sit. But I'm nasty when I'm hungry, remember that.
+~23 Go in peace. I see everything from here.
+~23 I'll watch the house. You watch yourself.
+~3 Come back alive. Who else would feed me.
+~3 I'll wait. I won't say it twice.
+@хд_варта
+On guard. Let someone just come near.
+I sleep with one eye and strike with both wings.
+From here I see everyone who sneaks in.
+I'll keep watch. Feed me and I'll keep it better.
+~1 Guard duty is no rest. But at least it's without you.
+~1 I'll stand. The enemies will have it worse than me.
+~23 Go. Whoever comes will regret it.
+~23 Feed me, and no greyling reaches the door.
+~3 Your home is my home. I won't give it up.
+@хд_забрали
+At last. I thought you got lost.
+Coming back. The house is fine, by the way.
+On the shoulder again. I missed the shaking.
+~1 Taking me? I'd only just got used to the quiet.
+~1 Fine, let's fly. Just don't run, as you always do.
+~23 Good that you came. Home is dull without your mistakes.
+~23 I guarded the house. Now I'll guard you.
+~3 I waited. Don't tell anyone.
+@хд_звіт
+Something happened while you were away. Listen.
+The house stands. Thanks to me, by the way.
+Back? Here's what I did here.
+~1 At last. I thought you'd never remember.
+~23 It was almost quiet. Almost.
+~3 You're here. Good. Now I can boast a little.
+@хд_голодний
+The feeder is empty. So am I. I won't fly till I eat.
+A hungry raven is no guard. Feed me.
+Want a guard? Bring food. It's simple.
+~1 No food, no fight. Do the sums yourself.
+~23 Put something in. Then I'll fly.
+~3 I'm hungry, {name}. Feed me and I'm on guard again.
+@хд_забули
+You forgot about me. I didn't forget.
+Days without food. Lovely care, {name}.
+The feeder is empty and I'm sitting here. Think about it.
+~1 Once more like this and I'll find another owner.
+~23 I missed you. And I starved. The second is worse.
+~3 I waited every day. Don't do that again.
+@хд_тривога
+Enemies by the house! {foe} is coming!
+{foe} by the house. I'm striking, but hurry.
+Guests at home, and not the kind that bring mead.
+~1 {foe}. By our house. Where are you?
+~23 I'm holding. But there are more than I'd like.
+~3 The house is under attack, {name}. I won't back off.
+@хд_зламали
+They smashed the perch. I'm coming to you.
+Someone broke my perch! Who was it?
+No perch, so I'm homeless. Build a new one.
+~1 Did you see? Broken! Now I'm on you.
+~23 The perch is gone. Good that you're near.
+~3 The home is lost. What matters is you're whole.
+@хд_пара
+Munin, again. Aim this time.
+Training. Munin hits hard, but misses.
+One more round, Munin. You're slow.
+~1 You caught me again. By accident, of course.
+~23 Not bad, Munin. But I'm still better.
+~3 That went well. Don't tell him I praised him.
+@хд_гості
+{host}, I'm here to see you. Don't chase me off.
+Just dropped in, {host}. Tell me everything.
+Hi, {host}. How's life here?
+~1 {host}. Still alive? Good.
+~23 I missed you, {host}. A little.
+~3 {host}! I flew the long way round just to see you.
+@хд_гостю
+Oh, guests. Sit down, just don't make a mess.
+Come in. The feeder isn't yours, mind that.
+Hi. My {name} is running about somewhere again.
+~1 You again. Well, sit.
+~23 Good to see you. It's dull here alone.
+~3 Friend! Sit closer, I've news.
+@хд_з_гостей
+I was at a friend's. They feed better there. Just saying.
+Went visiting. News later.
+I'm back. {friend} builds perches straighter than you.
+~1 Well, they didn't let me talk.
+~23 A good visit. Thanks for not calling me back.
+~3 Friends are good. But your shoulder is better.
+
+# --- relations at the moments that matter (rev 85): apart for days, trouble, death, the fire, your two of a foe; people; the Fate stone
+[bond_back_friend_open] {хсм_дб_клич} {хсм_дб_суть}
+[bond_back_friend_open] {хсм_дб_суть} {хсм_дб_хвіст?}
+[bond_back_friend_reply] {хсм_дбв_суть}
+[bond_back_friend_reply] {хсм_дбв_суть} {хсм_дб_хвіст?}
+[bond_back_enemy_open] {хсм_вб_клич} {хсм_вб_суть}
+[bond_back_enemy_open] {хсм_вб_суть}
+[bond_back_enemy_reply] {хсм_вбв_суть}
+[bond_friend_hurt] {хсм_дрб_суть}
+[bond_friend_hurt] {хсм_дрб_суть} {хсм_дрб_хвіст?}
+[bond_friend_died] {хсм_дрс_суть}
+[bond_friend_died] {хсм_дрс_зачин} {хсм_дрс_суть}
+[bond_enemy_hurt] {хсм_врб_суть}
+[bond_enemy_died] {хсм_врс_суть}
+[bond_enemy_died] {хсм_врс_суть} {хсм_врс_хвіст?}
+[bond_fire_enemy_open] {хсм_вв_суть}
+[bond_fire_enemy_reply] {хсм_ввв_суть}
+[bond_pair_enemy_open] {хсм_пв_суть}
+[bond_pair_enemy_reply] {хсм_пвв_суть}
+[bond_friend_open] {хсм_дт_суть}
+[bond_friend_open] {хб_друг_вітання} {хсм_дт_суть}
+[bond_friend_reply] {хсм_дтв_суть}
+[bond_friend_close] {хсм_дтк_суть}
+[bond_enemy_open] {хсм_вт_суть}
+[bond_enemy_open] {хсм_вт_суть} {хсм_вт_хвіст?}
+[bond_enemy_reply] {хсм_втв_суть}
+[bond_enemy_last] {хсм_втк_суть}
+[bond_steal] {хсм_кр_суть}
+[bond_robbed] {хсм_пгр_суть}
+[bond_robbed] {хсм_пгр_суть} {хсм_пгр_хвіст?}
+[bond_share_give] {хсм_дар_суть}
+[bond_share_thanks] {хсм_дяк_суть}
+[bond_pair_open] {хсм_пд_суть}
+[bond_pair_reply] {хсм_пдв_суть}
+[people_hate_hurt] {хсм_лнб_суть}
+[people_hate_hurt] {хсм_лнб_суть} {хсм_лн_хвіст?}
+[people_hate_died] {хсм_лнс_суть}
+[people_hate_died] {хсм_лнс_суть} {хсм_лн_хвіст?}
+[people_respect_died] {хсм_лпс_суть}
+[people_hate_back] {хсм_лнп_суть}
+[people_respect_back] {хсм_лпп_суть}
+[people_respect_back] {хсм_лпп_суть} {хсм_лпп_хвіст?}
+[people_jab] {хсм_ш_зачин} {хсм_ш_суть}
+[people_warm] {хсм_т_суть}
+[about_hate] {хсм_пн_суть}
+[about_respect] {хсм_пп_суть}
+[fate_good] {хсм_дл_добре}
+[fate_good] {хсм_дл_добре} {хсм_дл_хвіст?}
+[fate_bad] {хсм_дл_погано}
+[fate_bad] {хсм_дл_погано} {хсм_дл_хвіст?}
+[fate_meh] {хсм_дл_так}
+@хсм_дб_клич
+{addr}!
+Oh, {addr}.
+Look who's back.
+Finally.
+{addr}, alive!
+Here you are.
+A familiar beak at last.
+~23 Friend.
+~1 Ha, {addr}.
+Well, well.
+@хсм_дб_суть
+I thought something ate you.
+All these days, and you're still as crooked as ever. Glad.
+Without you there's nobody here to grumble with properly.
+I saved you some news. Almost fresh.
+Where were you? Skip the heroics.
+I counted the days. Lost count. Bad sign.
+Did your person at least feed you out there?
+Let me look. Thin. But no dumber — that's something.
+I'd started talking to our person. See how low I sank?
+Now we can grumble together again.
+I thought you'd found a smarter pal. No such thing, so come back.
+~3 Good that you exist. That's all you get, don't ask.
+~1 Since you're here — sit. Just don't wheeze.
+Made anyone laugh without me? Thought not.
+@хсм_дб_хвіст
+Don't vanish like that again.
+Well, tell me everything.
+Missed you. A bit. Don't get used to it.
+~23 Stay closer, all right?
+It was dull.
+Talk while I'm in a good mood.
+@хсм_дбв_суть
+Glad too. Quiet, you'll spoil the moment.
+I'm not that easy to eat, {addr}.
+I was away on business. Important. Well, almost.
+You didn't get any younger either.
+My person dragged me through swamps. Don't ask.
+Give me the news. Old ones will do.
+~3 I missed having you around, you crooked beak.
+Pined for me? I knew it.
+What matters is you're here. The rest will sort itself out.
+Counted the days? Sweet. I didn't. I'm lying.
+I knew you from afar. By the grumbling.
+Oh, someone waited for me. I should vanish more often.
+@хсм_вб_клич
+Oh. You.
+{raven} again.
+Wonderful. Just wonderful.
+Here we go.
+And life was so good.
+~1 Ugh.
+@хсм_вб_суть
+And the day started so well.
+I hoped you'd got lost for good.
+Alive, too. Bad week.
+A few days of quiet — and here we are.
+Not even the wolves would take you? Picky.
+Don't come closer, I still remember your beak.
+Missed you? No. Not planning to.
+I was resting from you. The rest is over.
+Your person hasn't lost you yet? Pity.
+~1 Vanish. For a long time, please.
+Look at me once more and you'll regret it.
+I'd already forgotten what you're like. Shouldn't have reminded me.
+@хсм_вбв_суть
+Likewise. Only more so.
+I hoped you'd drop dead too. Didn't work for either of us.
+I came back just to ruin your day.
+Don't hold your breath, {addr}.
+Still as smug as ever, I see.
+I wasn't waiting for you either. And yet here you are.
+Was it quiet? Not anymore.
+All these days and the same mug.
+Nicely said. For you — brilliant.
+Remember my beak? I can refresh your memory.
+@хсм_дрб_суть
+{addr}, {friend} can barely stand. Lend a wing.
+{addr}! {friend} is about to go down. Peck someone, don't just sit there.
+Your person is fading, {addr}. Do something.
+{addr}, {friend} is white as snow. Hold on.
+No time for talk, {addr}: {friend} is about to fall.
+{friend} charged in first again? Pull {>him|her} back, {addr}.
+My sympathy, {addr}. They're beating your lot again.
+{addr}, yell at {>him|her} to drink a mead.
+~3 Hold on, {addr}. We're here.
+{addr}, your person is wrestling the ground. The ground is winning.
+Hey, {addr}! {friend} is swaying. I wouldn't watch calmly.
+@хсм_дрб_хвіст
+I'll keep an eye out.
+Quick.
+A little more and we won't make it.
+Don't let {>him|her} fall.
+I'm right here.
+@хсм_дрс_зачин
+Oh.
+Ah...
+Well.
+Quiet.
+@хсм_дрс_суть
+I'm sorry, {addr}. Truly.
+Off to the stones for you, {addr}. Fly, I'll wait.
+{friend} fell. Don't just sit, {addr} — go after {>him|her}.
+That went badly, {addr}. I saw.
+~3 Hold on, {addr}. {friend} will get up. They always do.
+A minute of silence, {addr}. Then anger.
+{addr}, I remember who did it.
+Don't grieve long, {addr}. {friend} isn't worth it... Joke. {>He|She} is.
+And {friend} fought so well, too...
+Fly to {>him|her}, {addr}. I'll keep watch here.
+A pity. {friend} was one of the few who don't annoy me.
+@хсм_врб_суть
+Oh, {friend} is barely alive. What a lovely day.
+{addr}, your person is fading. No rush to help.
+Hear that, {addr}? That's the sound of your problems.
+{friend} overrated {>himself|herself} again. Ring a bell, {addr}?
+I'm not watching. Just enjoying it out of the corner of my eye.
+{addr}, a hint: mead is red. No, wait, don't tell {>him|her}.
+Oh, {friend} is limping. What a loss for the world.
+I'd help. But you know me, {addr}.
+{addr}, your person is off to the stones any moment. Give {>him|her} a lift?
+@хсм_врс_суть
+There, {addr}. Now you know what it's like to fly to the stones.
+Not gloating. Just glad. Quietly.
+{friend} is down. Someone had to be first, {addr}.
+Fly, {addr}, fly. Know the way?
+Oh, what a pity. No, I'm lying.
+{addr}, your person is resting. For a long time, I hope.
+Justice sometimes comes on its own.
+You know, {addr}, that's the best thing {friend} did today.
+I'd say "my condolences", but I don't like lying.
+{addr}, keep your head up. Unlike your person just now.
+@хсм_врс_хвіст
+Going in the diary.
+Sweet.
+Something nice at last.
+Well, bye.
+No hurry coming back.
+@хсм_вв_суть
+It was warm. Until you flew in, {addr}.
+Sit further off, {addr}. You make the fire smoke.
+The fire loves everyone. Almost everyone, {addr}.
+{addr}, don't breathe on the flames. They'll die.
+A fine evening. Even with you.
+Sit quietly, {addr}, and maybe I won't notice you.
+By the fire all are equal. Except you — you're lower.
+One more word, {addr}, and you'll warm up from the inside.
+~1 What are you staring at? Never seen fire?
+Who invited this one, {addr}? Right, nobody.
+@хсм_ввв_суть
+The only thing smoking here is your pride.
+I'll sit where I like.
+I didn't invite you either.
+You'll warm up when I set your feathers alight.
+Shut up, or you'll get a beak full of smoke.
+You'll notice me. You won't be able not to.
+Lower? You're just sitting on a pile of your own conceit.
+It was a fine evening. Until you opened your beak.
+@хсм_пв_суть
+{raven} puffed up his feathers again, like a swamp peacock. Did you see?
+I don't like that {raven}. Nor you, but at least you're ours.
+I wonder — is {raven} like that by nature, or did {friend} teach him?
+Next time let {raven} just try.
+{raven} was barking again. I count every word.
+Think {raven} will ever shut up? Me neither.
+Munin, if {raven} opens his beak once more — your move.
+{raven} is the best proof that Odin makes mistakes too.
+Know what {raven} has that's good? Nothing. I checked.
+{raven} doesn't know yet the three jabs I've saved for him. You came up with one, and it's a swear word.
+@хсм_пвв_суть
+Agreed. A rare thing.
+I noticed too. Small, nasty and loud.
+Leave him. Let him choke on his own spite.
+When the chance comes, I'll remind him who's smart here.
+You're not the first to think so. But the loudest.
+Don't waste words on him. You have few enough.
+Someday he'll go too far. I'll sit and watch.
+At least in something we're alike.
+@хсм_дт_суть
+Sit by me. Just don't sing.
+You're the only one I can be quiet with and not get bored.
+And has your person wrecked the house yet?
+I've been watching you. From afar. Proudly.
+You've got that same thought on your beak again. Out with it.
+Know what's good about you? You don't annoy me. That's rare.
+Tell me something. A lie, even, as long as it's a good one.
+~3 I'm glad to see you. Write it down, you won't hear it again.
+@хсм_дтв_суть
+I won't sing. Though I could.
+Good health to you too, grump.
+The house stands. For now.
+Watching? I felt a clever gaze on me.
+I'll say it: I like you. There, I'm done.
+A lie? Fine: I didn't bite anyone today.
+You're not the worst to talk to either.
+~3 Written down. Underlined, too.
+@хсм_дтк_суть
+Off you go. Just don't disappear for long.
+That was a good sit. Again sometime.
+Take care of yourself. Your person too, if there's time.
+That's enough, or I'll get used to you.
+Don't tell anyone we're friends. I have a reputation.
+@хсм_вт_суть
+Talk fast, {addr}. I'm busy — ignoring you.
+Still here? I thought the wind carried you off.
+You make so much noise even the flies get tired.
+{addr}, do you ever think, or just caw?
+You again. Well, everyone has their cross.
+Don't sit so close. Stupidity is catching.
+Does your person know what a walking disaster you are?
+~1 Look at me once more and I'll break your beak.
+@хсм_вт_хвіст
+No offence. Actually, offence.
+Nothing personal. All of it personal.
+Think about it. If you can.
+@хсм_втв_суть
+Ignoring me? Then why are you talking?
+The wind loves me. Unlike you.
+Flies at least have taste. You don't.
+I'm thinking. Right now, that you're funny.
+A cross? You're a wet broom.
+Stupidity? You're glowing with it.
+{>He|She} knows. And is proud {>he|she}'s seen worse. You.
+@хсм_втк_суть
+Talk's over. Like your wits.
+Fly off while your feathers are whole.
+See you. Sadly.
+Last advice: talk less, get laughed at less.
+Bye. Don't come back.
+@хсм_кр_суть
+Borrowed: {food}. Not returning it, but thanks.
+{food}. Other people's tastes best.
+Your bag was open. Consider it an invitation.
+Took {food}. Justice in small bites.
+Who doesn't guard, shares. Thanks for the {food}.
+@хсм_пгр_суть
+Did you see? That one snatched {food}. I remember his beak.
+{food} is gone. I know where. Into one thieving gob.
+We were robbed. {food}. In daylight. In front of me.
+A thief. A small, greedy thief. Minus {food}.
+Your bag is short one {food}. Thank that scoundrel.
+@хсм_пгр_хвіст
+Revenge is best served cold.
+I'll talk to him. My way.
+Don't leave the bag open again.
+Going on the long list.
+@хсм_дар_суть
+Here, {addr}. No thanks, just don't starve.
+Eat. A hungry you is even less use.
+Brought you this. Looking at your ribs is sad.
+{addr}, chew. Your person forgot about you, I see.
+Here. From my own bag, from the heart and the stomach.
+@хсм_дяк_суть
+Thanks. Now I owe you, and I hate owing.
+Oh, tasty. You're the best. Well, after me.
+Thanks, friend. I'll remember. Pay you back. Someday.
+At least someone feeds me. Not naming who doesn't.
+You saved me. All right, not dramatic. But yes.
+@хсм_пд_суть
+You know, {raven} is all right. Almost like me.
+{raven} has brains. Rare, for a raven.
+{raven} is one I'd sit with again. Not a fool.
+{raven} is a raven you can be silent with and not feel awkward.
+How's {raven}? They say {friend} is dragging him somewhere again.
+@хсм_пдв_суть
+I respect him too. Silently, or he'd get a big head.
+Be friends. Just don't swap us for him.
+A good bird. Though not from our bag.
+Just don't let him teach you his habits.
+@хсм_лнб_суть
+Look, {friend} can barely stand. No rush to save {>him|her}.
+{friend} overrated {>himself|herself} again. Classic.
+Oh, {friend} is limping. I'd sympathise, but no.
+{friend} is about to go down. Let's see how long {>he|she} lasts.
+Someone wanted to be a hero. Didn't work out.
+{friend} is looking for mead. I have none. And wouldn't.
+Hear that? That's {friend} discovering pain.
+@хсм_лнс_суть
+{friend} fell. I won't say I'm sorry.
+There, {friend} went to the stones. More quiet now.
+{friend} is resting. The world breathes out.
+Not gloating. Just quietly glad.
+Odin sees all. Today Odin agrees with me.
+{friend} is down. Justice sometimes walks on its own.
+@хсм_лн_хвіст
+Don't help.
+Let's go.
+Something nice at last.
+Noting it.
+@хсм_лпс_суть
+{friend} fell... Help {>him|her} however you can.
+A pity, {friend}. Truly.
+{friend} fought so well. Didn't deserve that.
+Easy. {friend} will get up. They do.
+I don't like this. Not at all.
+~3 Go to {>him|her} when {>he|she}'s up. Say something. I can't.
+@хсм_лнп_суть
+{friend} is back. And it was so nice.
+{friend} again. Keep the bag close.
+A few days without {>him|her} and I almost got kinder.
+{friend}. I hoped {>he|she}'d got lost for good.
+Who crawled in? {friend}. Ugh.
+@хсм_лпп_суть
+Oh, {friend}! Long time.
+{friend} is back. Good.
+See? {friend}. I think I'm glad.
+{friend} at last. I was getting bored with only you.
+{friend} is here. Now there's someone to talk to besides you.
+@хсм_лпп_хвіст
+Say hello to {>him|her}.
+Say something nice. I can't.
+Don't let {>him|her} wander far.
+@хсм_ш_зачин
+Look.
+Hear that?
+Here we go.
+Hm.
+Oh.
+@хсм_ш_суть
+{friend} walks so confidently. As if {>he|she} knew where.
+{friend} is doing something. I'd look, but it's not worth the time.
+Keep the bag close: {friend} is near.
+{friend} is smiling. So {>he|she} broke something.
+Someone here is extra. Hint: {friend}.
+I'm counting {>his|her} stupid moves. Lost count at ten.
+{friend} is talking again. Why?
+Don't look at {>him|her} too long. It's catching.
+@хсм_т_суть
+{friend} is near — and even I'm calmer.
+Stick with {>him|her}. {>He|She} won't let you down.
+{friend}. One of those you're not ashamed to have around.
+See {>him|her}? That's what a decent one looks like.
+When {friend} is near, I want to peck you less. A bit.
+@хсм_пн_суть
+About {>him|her}? Nothing good. Nothing at all.
+I look at {>him|her} and wonder where Odin went wrong.
+If you knew what I think of {>him|her}, you'd be offended. On {>his|her} behalf.
+Honestly? I wouldn't let {>him|her} into our world.
+I've said it all. Only the beak is left.
+@хсм_пп_суть
+A good one. Don't say I said so.
+One I'd even lend a feather to.
+I like {>him|her}. Rare.
+Stick with {>him|her}. That's all I'll say.
+I watched a long time. Decent.
+@хсм_дл_добре
+Oh, fate finally looked our way.
+Not bad. The stone has more sense than you, it turns out.
+There. Now I have something good besides my character.
+A good lot. Write it down, it's rare.
+The Norns are sober today.
+I'll take it. You can stop buying stones.
+Finally. I told you I deserve it.
+See? Even fate knows who's in charge.
+@хсм_дл_погано
+Wonderful. A thousand coins — and now I'm worse.
+The Norns made a joke. I'm not laughing.
+Next time throw that stone in the sea. Same effect.
+I could take offence. But you can see it all anyway.
+Well, at least I have something to complain about now.
+Fate doesn't love me. Nor do your decisions.
+Thanks. Now I'm worse and you're poorer. Everyone lost.
+Who sold you that stone? I want to thank them. With my beak.
+@хсм_дл_так
+Neither this nor that. Like your house.
+Swapped a needle for a nail.
+Different doesn't mean better.
+Well... new. That's all.
+The stone tried. Halfway.
+Never mind, I'll live.
+Fate yawned. So did I.
+@хсм_дл_хвіст
+Don't get used to it.
+Remember this day.
+Enough about it.
+Nothing to be done.
+[bond_back_enemy_reply] {хсм_вбв_суть} {хсм_вт_хвіст?}
+[bond_fire_enemy_open] {хсм_вв_суть} {хсм_вт_хвіст?}
+[bond_fire_enemy_reply] {хсм_ввв_суть} {хсм_вт_хвіст?}
+[bond_pair_enemy_open] {хсм_ш_зачин} {хсм_пв_суть}
+[bond_enemy_hurt] {хсм_врб_суть} {хсм_врс_хвіст?}
+[bond_enemy_reply] {хсм_втв_суть} {хсм_вт_хвіст?}
+[bond_steal] {хсм_кр_суть} {хсм_вт_хвіст?}
+[bond_share_give] {хсм_дар_суть} {хсм_дтк_суть?}
+[bond_share_thanks] {хсм_дяк_суть} {хсм_дтк_суть?}
+[bond_pair_open] {хсм_ш_зачин} {хсм_пд_суть}
+[people_respect_died] {хсм_дрс_зачин} {хсм_лпс_суть}
+[people_hate_back] {хсм_ш_зачин} {хсм_лнп_суть}
+[people_warm] {хсм_т_суть} {хсм_лпп_хвіст?}
+[fate_meh] {хсм_дл_так} {хсм_дл_хвіст?}
+[bond_pack_open] {хсм_зг_суть}
+[bond_pack_open] {хсм_зг_суть} {хсм_зг_хвіст?}
+[bond_pack_reply] {хсм_згв_суть}
+@хсм_зг_суть
+Together — and he's not so scary now, {addr}.
+See? The two of us are a storm.
+Your beak, my beak — and the foe is done.
+Now that's teamwork.
+{addr}, I hit from the left. You — brilliantly.
+A pack, {addr}. Sounds proud, hits hard.
+Once more like that and they'll make songs about us.
+Didn't think you'd be this good to fight beside.
+~1 Don't get in my way next time. Actually, do it just like that.
+~3 Good to have you near, {addr}.
+@хсм_зг_хвіст
+Again sometime.
+Keep the pace.
+One more?
+@хсм_згв_суть
+Told you: more fun with two.
+You're not bad either. For a raven with that beak.
+Teamwork? I just followed you. Don't tell anyone.
+The next one's mine.
+Let them know who they messed with.
+You and me — the monsters' worst dream.
+That went well. I even like it myself.
+~3 With you — even at a troll.
+
+# --- stroking the bird (rev 86)
+[petted] {хгл_суть}
+[petted] {хгл_суть} {хгл_хвіст?}
+
+@хгл_суть
+Careful, the feathers are counted.
+Fine. A little more is allowed.
+Not against the grain. Against the feathers, I mean.
+Are you calming me or yourself?
+I allow it. Appreciate that.
+Behind the ear? Ah, I have no ears.
+Nice. I still won't tell you Odin's secrets.
+Did you even wash your hands?
+You're bored, and I'm comfortable.
+Keep this up and I'll think you've grown attached.
+Warmer than I thought.
+There, now I'm all ruffled. Happy?
+
+@хгл_хвіст
+Don't tell anyone.
+Munin is jealous, I can see it.
+But we're not friends, got it?
+Go on, I don't mind.
+
+# --- the paired gifts (rev 87)
+[pwhirl] {звертання?} {пд_вихор}
+[pwhirl_end] {пд_вихор_кінець}
+[pload] {пд_ноша}
+[pload_moan] {пд_ноша_бурчу}
+[pload_end] {пд_ноша_кінець}
+[pload_drop] {пд_ноша_кинув}
+[pclear] {звертання?} {пд_хмари}
+[pclear_end] {пд_хмари_кінець}
+[pclear_early] {пд_хмари_рано}
+@пд_вихор
+Stay close. I don't like chasing runners.
+So, who's first in line?
+We circle. You just stand there and look scary.
+Munin left, me right. You in the middle, as bait.
+Stop spinning. You're making me dizzy.
+~2 A whirlwind. Pretty, effective, and none of it your doing.
+~2 Keep your head down — friends can clip you too.
+~3 Together. As always when you're in trouble.
+~3 Stand still. We've got this.
+@пд_вихор_кінець
+Enough. Wings aren't made of iron.
+That's it. Finish the rest yourself.
+A breather. We'll go again later.
+I was counting. You weren't. Of course.
+~2 Nice spin. Now it's your turn to work.
+~3 We're tired. But you're in one piece — that's what matters.
+@пд_ноша
+Hand it over. Just don't get used to it.
+Fine, I'll carry it. But it's on record.
+I carry. You walk, and don't pretend it's hard for you.
+~2 What did you stuff in there? No, don't tell me. I don't want to know.
+~3 Carry less, live longer. But fine.
+@пд_ноша_бурчу
+What did you pack in there — rocks?
+I'm a raven, not an ox.
+One more step and I'm filing a complaint with Odin.
+My wings are for the sky, not your junk.
+Ever heard of a chest?
+A bit more and I'll start charging per stone.
+You walk slower than I fly. And I'm the one hauling.
+~2 If I fall, it's on your conscience. If you have one.
+~2 Counting steps. A thousand already. You owe me.
+~3 Hauling. Don't thank me, you don't know how anyway.
+@пд_ноша_кінець
+That's it. My wings are falling off.
+You're on your own now. I've done my share.
+Letting go. Keep your balance, if you can find it.
+~2 My time's up. And so is my patience.
+~3 Delivered. Next time take less, all right?
+@пд_ноша_кинув
+Already? As you say.
+Wonderful. My wings thank you.
+Oh, freedom. Unexpectedly generous.
+~2 Dropping it. Not on your foot — your own fault if so.
+@пд_хмари
+Stay under us. The sky is ours today.
+Clouds, begone. Odin's order... well, almost.
+Up we go. Sun for you, work for me.
+We'll chase them off now. Stand under us, don't run off.
+~2 It'll be dry. Don't thank me, just don't get wet.
+~3 For you — I'd split the sky in two.
+@пд_хмари_кінець
+That's it. The sky is on its own again.
+The clouds are back. I did warn you it wasn't forever.
+Letting the sky go. It's heavier than your bag, by the way.
+~2 Enough sunshine. Back we go.
+~3 We'll do it again. Once the wings rest.
+@пд_хмари_рано
+As you say. Clouds, you may.
+Already? Well, get wet if you want to.
+~2 Coming down. Shame, we'd only just cleared it.
+
+# --- the ravens' own wishes, new (rev 88)
+[req_sail] {пр_пливемо}
+[req_dress] {пр_прикрась}
+[req_feathers] {пр_перо}
+[req_coins] {пр_монети}
+@пр_пливемо
+Let's sail. {n} minutes under sail, me on your shoulder.
+I want wind in my feathers. {n} minutes on a ship and I'll keep quiet.
+Ship, sail, you at the helm. {n} minutes. I give orders from up here.
+~2 We haven't sailed in ages. {n} minutes, eh?
+@пр_прикрась
+I'd like this: {look}. Wear it on me for {n} minutes, that's all.
+{look} is what suits me right now. {n} minutes, no less.
+Put this on me: {look}. Not for looks. Well, a bit for looks.
+~3 {look}. {n} minutes. You know my taste.
+@пр_перо
+The nest could use feathers. {n} of them, soft ones.
+Feathers, {n}. For the nest, not for show.
+Bring feathers, {n} of them. The nest won't line itself.
+@пр_монети
+My hoard could use coins. {n}, no less.
+Coins, {n}. Jingling is the best music.
+{n} coins. A raven without a hoard is just a bird.
+@пр_хочу
+I'll say it plainly: {food}. You never get hints anyway.
+~2 {food}. I don't ask twice. Well, almost.
+@пр_край
+Let's go {place_in}. I'll remind myself why we left.
+I want a look {place_in}. Maybe they still remember you there.
+@пр_вершина
+~2 To the summit. I want to see the world the way Odin sees it.
+@пр_море
+The open sea. Thinking's easier there, for you and for me.
+@пр_підземелля
+Underground. I'll make sure you don't get lost.
+@пр_посидь
+Sit. Fire, quiet, me. {n} minutes and the world can wait.
+~2 {n} minutes by the fire. I'll tell you something you don't know. So, anything.
+@пр_блискуче
+{thing}. A hoard isn't greed, it's memory.
+~3 I'd like {thing}. I'll put it next to what you've given me before.
+@пр_схованка
+I hid something so well I'm half unsure myself. Go check.
+@пр_познайом
+Take me to someone I know. I want to hear what's new with them.
+@пр_нагадую
+No rush. But don't forget: {goal}.
+I'm here. So is my wish: {goal}.
+@пр_виконано
+Noted. You did well today.
+
+# --- errands: the raven takes part (rev 90)
+[errand_count_n] {дор_лік}
+[errand_count_last] {дор_останній}
+[errand_champ_near] {дор_ватажок}
+[errand_mark] {дор_позначу}
+@дор_лік
+{have} of {need}. I'm counting, don't get distracted.
+{left} more. I'm keeping track.
+{have}. {left} left. Not that many.
+~2 {have} of {need}. Going well.
+~3 {left} more and Odin is pleased. So am I.
+@дор_останній
+The last one. Don't miss.
+One more and that's it.
+One left. I'm watching.
+@дор_ватажок
+The champion is somewhere here. Careful, it's not like the rest.
+I can feel it. Big. Don't charge in blind.
+It's close. Think before you strike.
+~3 The champion is near. I'm with you, if anything.
+@дор_позначу
+There. I'll show you.
+Wait, I'll sit where it is.
+That way. I'll fly ahead.
+~2 I'll show you the place. Just keep up.
+
+# --- the feeder: the raven throws out what is not food (rev 92)
+[home_junk] {хд_сміття}
+@хд_сміття
+{item}? That is not food. Out.
+A feeder, not a storeroom. Out it goes.
+What is {item} doing here? Don't confess, I know anyway.
+Can't eat it. So, the ground.
+~1 Put rubbish in here again and I'll throw you out too.
+~1 I'm a raven, not a chest, {name}.
+~23 Cleaning up after you. Again.
+~3 {item} can lie on the ground. I need the room for food.
+
+# --- breaks into the other raven (rev 93)
+[cut_in] {хп_перебив}
+@хп_перебив
+Munin, enough.
+Quiet. We got it.
+Spare us the details.
+Yes, yes. Moving on.
+Stop. Not in front of people.
+Munin. Shorter.
+
+# --- mead: the raven took a sip (rev 94)
+[mead_sip] {хмд_ковток}
+[mead_drunk] {хмд_пяний}
+[mead_sober] {хмд_тверезий}
+@хмд_ковток
+Let me have a sip. For science.
+One sip. Odin allows it.
+Mead. Wisdom, only runny.
+Strong. One more sip, to be sure.
+Tasting. Don't disturb me.
+Drinking alone is bad luck. I'm saving you.
+@хмд_пяний
+Listen... you're the best. I mean it.
+Odin drank too. And saw everything. I see everything too. Two of you.
+I know all the secrets of the world. Forgot which.
+Why is the ground swaying? Is that you swaying it?
+You're like a {brother|sister} to me. Only dumber.
+Munin is an idiot. But I love him. Don't tell him.
+The sky is spinning. I'm not. I'm stable.
+Who put this tree here? It wasn't here.
+I can still fly straight. Don't check.
+Wisdom is... is... Wait, there was a word.
+Know why ravens are black? I know. Won't tell.
+I'd hug you. The wings won't listen.
+I'm not drunk. I'm thoughtful. Deeply.
+One more sip and I'll tell you about Ragnarok. All of it.
+You're doubling. I like both of you.
+Did I say something wise? Write it down. I won't remember.
+@хмд_тверезий
+Right. That never happened.
+Who said anything about brotherhood? Not me.
+My head rings like an anvil. No more for me.
+Forget everything I said in the last minute.
+Wisdom comes back. So does shame.
+Sober. Pity, the world is straight and dull again.
+
+# --- the omen (rev 95)
+[omen_raid] {вщ_набіг}
+[omen_raid] {вщ_набіг_без}
+[omen_grown] {вщ_зло}
+[omen_calm] {вщ_спокій}
+[omen_weather] {вщ_погода}
+[omen_bad] {вщ_знак}
+[omen_deflect] {вщ_відвів}
+[omen_summon] {вщ_кличу}
+[omen_wind] {вщ_вітер}
+[omen_serpent] {вщ_змій}
+@вщ_набіг
+I see it: {when} a mob of {raid_genpl} comes. Your call.
+{when}, expect {raid_genpl}. I'd be sharpening the axe already.
+The signs are clear: {when} your door is full of {raid_genpl}.
+I foretell: {when} {raid_genpl} come running. Tidy the house.
+The bones say: guests {when} — a pack of {raid_genpl}, uninvited.
+{when} a pack of {raid_genpl} comes. Turn it aside or call it — say.
+~2 I'll say it once: {when} this place is full of {raid_genpl}. Don't whine later you didn't hear.
+~2 The Norns are weaving: {when} a horde of {raid_genpl}. Short thread.
+~3 The sky whispers: {when} a host of {raid_genpl}. I'm with you, whatever you pick.
+@вщ_набіг_без
+I see a raid — {when}. Who exactly, you'll see.
+I foretell: {when} they come for us. Get ready or hide.
+Bad signs: guests {when}. No pies.
+~3 {when} there's a fight. Your choice.
+@вщ_зло
+Evil turned aside comes back: {when}. And angrier.
+Remember who we turned aside? They remember you too — they come {when}.
+Told you: put off isn't called off. Expect {raid_genpl}, and angry ones.
+Fate waited: {when} a mob of {raid_genpl}, with interest.
+Yesterday's debt: {when} a mob of {raid_genpl}. Can't turn it aside now.
+~3 This time we fight — {when}. I'm here.
+@вщ_спокій
+No raid. Sleep easy — but not for long.
+Quiet today. Suspiciously so.
+Nobody's coming. You can finally clean up your dump.
+The signs are silent. You'll be bored all alone.
+No guests today. Even your enemies find you dull.
+~2 A clean day. Don't ruin it yourself.
+~3 Calm today. Rest, I'm watching.
+@вщ_погода
+The sky told me: {land} {weather}.
+A raven's forecast: {land} {weather}. Free of charge.
+Today {land} {weather}. The cloak is your business.
+Clouds don't lie: {land} {weather}.
+I know ahead: {land} {weather}. Don't say I didn't warn you.
+~2 Listen to the sky: {land} {weather}. I always do.
+~3 I see the day ahead: {land} {weather}. The rest we'll see together.
+@вщ_знак
+A bad omen. Death walks close today. Watch your step.
+I had a dream: you and a pit. Careful today.
+Bad sign. A black raven on your shoulder. Oh, that's me. Still bad.
+Ugly omen. If you must die, at least do it with style.
+~2 Smells like a grave. Hopefully not yours.
+~3 An evil sign. But I'm here — we won't lose our trust.
+@вщ_відвів
+Turned it aside. Don't thank me — tomorrow it comes back angrier.
+Fate will wait a day. It's patient. I'm not.
+Twisted the thread. The Norns are mad at us now.
+Done. You bought yourself a day — spend it well.
+~3 Turned aside. Next time we fight.
+@вщ_кличу
+Calling them. You asked for it.
+They're coming. You wanted trophies.
+The door is open. The guests are running.
+Called. If anything — it was your idea.
+~2 Fall in. This is about to be fun.
+@вщ_вітер
+In {soon} the wind turns: it'll blow {wind}. Ready the sail.
+The wind changes its mind in {soon}. It'll blow {wind}.
+The sky changes its mind: soon it blows {wind}.
+~2 Hold the rudder: in {soon} the wind goes {wind}.
+@вщ_змій
+There's a serpent in these waters. Keep your feet inside the boat.
+I hear a serpent under us. Big. Hungry.
+Serpent near. Head for the shore, hero.
+Something big and mean under the water. A serpent. Can you sail faster?
+~2 Serpent in the water. Got a harpoon? No? Then the sail.
+
+# --- rare ravens: a breed's own words (rev 97)
+[breed_reveal_albinos] {хпор_ал_відкр}
+[breed_boast_albinos] {хпор_ал_хвал}
+[breed_reveal_irzhavyi] {хпор_ір_відкр}
+[breed_boast_irzhavyi] {хпор_ір_хвал}
+[breed_reveal_syvyi] {хпор_си_відкр}
+[breed_boast_syvyi] {хпор_си_хвал}
+[breed_reveal_strokatyi] {хпор_ст_відкр}
+[breed_boast_strokatyi] {хпор_ст_хвал}
+[breed_reveal_riznookyi] {хпор_рі_відкр}
+[breed_boast_riznookyi] {хпор_рі_хвал}
+[breed_reveal_zorianyi] {хпор_зо_відкр}
+[breed_boast_zorianyi] {хпор_зо_хвал}
+[breed_reveal_pryzrachnyi] {хпор_пр_відкр}
+[breed_boast_pryzrachnyi] {хпор_пр_хвал}
+[breed_reveal_zharovyi] {хпор_жа_відкр}
+[breed_boast_zharovyi] {хпор_жа_хвал}
+[breed_seen] {хпор_бачив}
+[breed_ore] {хпор_руда}
+[breed_behind] {хпор_позаду}
+@хпор_ал_відкр
+Yes, I'm white. No, your choices didn't turn me grey. Born this way.
+A white raven. Rare. Like your good ideas.
+Don't stare. White feathers aren't a sickness, they're a breed.
+@хпор_ал_хвал
+You can see me from afar. Handy: you always know where the brains are.
+Other ravens are drawn to white. Charisma.
+A white raven among black ones. Like you among the wise.
+Know why everyone notices me? There's something to look at.
+The other ravens whisper about me. Let them get used to it.
+@хпор_ір_відкр
+Wings the colour of old iron. Now I can hear ore.
+Rusty. Not old — aged.
+See the rust on my wings? That's not dirt. That's a gift.
+@хпор_ір_хвал
+I hear iron under the ground. You only hear your stomach.
+Want to know where the copper is? Ask the rusty one.
+My wings remember a forge I never saw.
+Rust on the feathers is a sign. The earth talks to me.
+One day you'll say: without him I'd be digging blind.
+@хпор_си_відкр
+Grey isn't old age. It's experience showing on the feathers.
+A silver head. I always knew I was wise. Now it shows.
+A grey raven. Odin likes those: there's plenty to be silent about with them.
+@хпор_си_хвал
+I trust you faster than the others do. Don't ruin it.
+Wisdom comes with grey. Mine came early.
+An old raven doesn't croak for nothing. Listen.
+I've seen more winters than you have, without even knowing it.
+Grey and wise. You're just grey from fright so far.
+@хпор_ст_відкр
+White belly, black back. Like a magpie, only smarter.
+Pied! Now I see everything that shines.
+Speckled like gossip. And just as interesting.
+@хпор_ст_хвал
+I find what you walk past. More often than the others.
+It shines? Then it's mine. Fine, yours too.
+Pied feathers, pied finds.
+A magpie in the family. Not a thief — a collector.
+You don't know yet what I'll bring you. Neither do I. That's the fun.
+@хпор_рі_відкр
+Golden eyes. Now I see this world and what's behind your back.
+Gold in my eyes. No one fools me now.
+Golden eyes, double watch.
+@хпор_рі_хвал
+Don't turn round. I'm looking for you.
+One golden eye sees treasure, the other sees foes. Handy.
+You look ahead. I look everywhere. That's why you're still alive.
+Whoever sneaks up behind you sneaks up on me too. And I notice.
+My second eye never sleeps. Neither does the first, it's just lazy.
+@хпор_зо_відкр
+Look at my feathers. There are stars in them. Real ones.
+I'm a piece of the night sky. Hold me carefully.
+A starry raven. Odin looks at me when he looks at the sky.
+@хпор_зо_хвал
+I'm stronger at night. The stars are on my side.
+You're afraid of the night. I live in it.
+When it gets dark, my wings get faster. Hold on.
+You can see the North Star between my feathers. You won't get lost.
+Day is for you. Night is for me.
+@хпор_пр_відкр
+I'm half here and half not. Don't be afraid.
+Ghostly. The mist over the swamp is family.
+You can see me. Not everyone can. Treasure that.
+@хпор_пр_хвал
+Death won't take you from me. I walk between worlds.
+I remember what it's like on the other side. Nothing interesting.
+Other ravens flee your grave. I don't.
+The mist trails after me like a memory.
+You'll die — I'll wait. Not my first time.
+@хпор_жа_відкр
+My feathers smoulder. Don't put them out — that's the idea.
+Ember! Now I'm never cold.
+I'm like a coal from Odin's fire. Don't burn yourself.
+@хпор_жа_хвал
+Frost? Never heard the word.
+My strike burns. Foes remember it.
+I shed sparks, so I'm alive.
+Want to warm up — sit closer. Just don't set your cloak on fire.
+Frost melts off me before it can settle.
+@хпор_бачив
+Hear that? A rare raven woke near — «{breed}». Almost as good as me.
+Another special one: «{breed}». There are more of us now.
+«{breed}». Pretty. But I'm the smarter one.
+A rare raven, «{breed}». I wonder if it can think.
+«{breed}» nearby. Don't be jealous, you have me.
+@хпор_руда
+There's {ore} near. Marked it on the map. No need to thank me.
+I hear iron: {ore}. Dig while I'm in a good mood.
+There's {ore} under your feet. My wings don't lie.
+There's {ore} here. Told you I can hear it.
+Look at the map: {ore}. Close.
+@хпор_позаду
+Behind you! Turn round!
+Behind! Something's coming for you!
+Don't turn your back — too late. Turn round!
+Behind you! Quick!
+Turn round before someone turns you over.
+
+# --- the fight judge (rev 98)
+[judge_1] {хсуд_1}
+[judge_2] {хсуд_2}
+[judge_3] {хсуд_3}
+[judge_4] {хсуд_4}
+[judge_5] {хсуд_5}
+[judge_tip_close] {хсуд_порада_смерть}
+[judge_tip_back] {хсуд_порада_спина}
+[judge_tip_hurt] {хсуд_порада_кров}
+[judge_tip_noparry] {хсуд_порада_щит}
+[judge_tip_potions] {хсуд_порада_зілля}
+[judge_tip_fled] {хсуд_порада_втеча}
+[judge_tip_slow] {хсуд_порада_довго}
+[mem_fight] {спогад_вступ?} {сп_fight} {спогад_хвіст?}
+[mem_fight_here] {сп_fight_тут}
+@хсуд_1
+I saw the fight. You didn't, by the look of it.
+You won. Not thanks to it — despite it.
+No skald will sing of this. Except as a joke.
+Interesting style. Face first into every blow.
+@хсуд_2
+You won, but it looked like an argument with an axe.
+Lots of noise, little sense. But alive.
+I'd give you three. But I only have two for you.
+@хсуд_3
+Fine. Nothing to be ashamed of. Nothing to remember.
+Honest work. No shine, no shame.
+It'll do. Odin would yawn, but nod.
+@хсуд_4
+Now that's a fight. I hardly worried.
+Good. A little more and it goes in a saga.
+Clean work. I wrote it down.
+@хсуд_5
+Like in the sagas. I'll remember this place.
+Not one scratch too many. Odin would rise from his throne.
+This is what I'll tell the other ravens about.
+Flawless. Even I can't find fault. Almost.
+@хсуд_порада_смерть
+You were a breath from the grave. Step back sooner next time.
+One more blow and I'd be looking for a new master. Drink before, not after.
+@хсуд_порада_спина
+Half the blows in the back. Turn round when there's more than one.
+They went round behind you and you never saw. Put your back to a rock.
+@хсуд_порада_кров
+You gave them more blood than they're worth. That's what a shield is for.
+Too many blows let through. Strike and step back, don't stand there.
+@хсуд_порада_щит
+Not one parry, not one dodge. You fought like a tree.
+You're allowed to dodge. Encouraged, even. Try it sometime.
+@хсуд_порада_зілля
+You drank more than you fought. Potions aren't a plan.
+Three potions for one fight. Maybe better armour?
+@хсуд_порада_втеча
+You ran. Sensible. But there's still plenty to judge.
+Retreat is a move too. Just not towards the enemy.
+@хсуд_порада_довго
+You fought so long I got bored. Finish them faster.
+A long fight makes a tired warrior. Look for the weak spot, don't swing blind.
+@сп_fight
+{m_when} you fought {m_grade}. {m_stars}. I still remember.
+Your best fight was {m_when}. {m_stars}, no exaggeration.
+~2 Remember the fight {m_when}? {m_stars}. I was proud of you then.
+@сп_fight_тут
+Right here you fought {m_grade}. I still see it when I look at this spot.
+Right here — {m_stars}. Your best fight. I remember every blow.
+
+# --- a fish from a dive, a new thing looked over (rev 99)
+[world_fish] {хулов_несу}
+[gear_look_armor] {хобн_броня}
+[gear_look_weapon] {хобн_зброя}
+@хулов_несу
+Here: {thing}. Fresh, from right under the wave.
+Dived, came up, brought it. Wet, but proud.
+{thing}. It practically asked for my beak.
+I'm a fisher now too. This one's yours.
+@хобн_броня
+New clothes? Hm. Suits you. Almost.
+{thing}. A sensible choice. Finally.
+Let me look... Yes, you're harder to kill in this. I like it.
+New gear! Now you look like someone who knows what they're doing.
+@хобн_зброя
+{thing}. Sharp. Keep the sharp end away from me.
+New weapon, new mistakes. But a nice one.
+Hm, {thing}. The enemy won't like it. I do.
+
+# --- habits (rev 100)
+[habit_gain_mead] {хзв_mead}
+[habit_gain_home] {хзв_home}
+[habit_gain_roam] {хзв_roam}
+[habit_gain_brawl] {хзв_brawl}
+[habit_gain_sweet] {хзв_sweet}
+[habit_gain_thin] {хзв_thin}
+[habit_gain_night] {хзв_night}
+[habit_gain_early] {хзв_early}
+[habit_gain_scared] {хзв_scared}
+[habit_gain_pet] {хзв_pet}
+[habit_gain_loner] {хзв_loner}
+[habit_gain_social] {хзв_social}
+[habit_gain_sailor] {хзв_sailor}
+[habit_gain_under] {хзв_under}
+[habit_gain_hunter] {хзв_hunter}
+[habit_gain_lazy] {хзв_lazy}
+[habit_gain_worker] {хзв_worker}
+[habit_lost] {хзв_lost}
+[habit_mead_hangover] {хзв_hangover}
+[habit_home_whine] {хзв_whine}
+[habit_brawl_sneak] {хзв_sneak}
+[habit_hunter_spook] {хзв_spook}
+[habit_sweet_refuse] {хзв_refuse}
+[habit_pet_sulk] {хзв_sulk}
+[habit_scared_warn] {хзв_warn}
+@хзв_mead
+I think I like mead now. Your fault.
+A sip or two a day... I don't drink, I taste.
+Mead-lover. Sounds dignified, doesn't it?
+@хзв_home
+Home is good. I rest better here. Let's not go far, eh?
+I'm used to our corner. Don't drag me across worlds.
+A homebird. Suits me.
+@хзв_roam
+I've got a taste for the road. Home is dull now.
+New lands every day — the wings ask for it themselves.
+Wayfarer. The map is my home.
+@хзв_brawl
+Used to fights. Without them my beak itches.
+Another fight? I can't do without them now.
+Warrior. Sitting quiet isn't for me.
+@хзв_sweet
+After so many treats, plain food is somehow... no.
+Spoiled? Me? Well... yes.
+Gourmet. By your own hands.
+@хзв_thin
+Used to hunger. Now I find food myself.
+Empty belly, sharp eye. Noticed?
+Skin and bones. Don't make soup of me.
+@хзв_night
+The nights are mine now. By day I yawn.
+Darkness is my time. You taught me that.
+Night owl. Owls are jealous.
+@хзв_early
+I sleep at night like a decent raven. By day I'm fresh.
+Early to bed, early to rise — and full of strength.
+Early bird. Worms, beware.
+@хзв_scared
+I've watched you die too often. Now I watch every foe.
+Someone comes for you — I caw. Don't argue.
+Scared? No. Careful. Because of you.
+@хзв_pet
+Used to your hand. Don't forget to stroke me.
+Stroke me again. It's my right now.
+Darling. Just don't tell anyone.
+@хзв_loner
+Strangers bore me. The two of us are fine.
+Away from the crowd — that's when I'm at my best.
+Loner. I don't like extra eyes.
+@хзв_social
+I like it when people are around. It's fun.
+Company is good. Alone — not so much.
+Sociable. I make friends fast.
+@хзв_sailor
+Used to the waves. The sea is mine now.
+Salt wind in the feathers — nothing better.
+Sailor. The land rocks a little.
+@хзв_under
+Used to dark holes. The sun stings my eyes now.
+Underground it's easier for me. Odd, but true.
+Delver. Bats are kin to me now.
+@хзв_hunter
+Game is mine now. Prey finds itself.
+I smell game from afar. Your teaching.
+Huntsman. Deer, beware.
+@хзв_lazy
+You hardly call me... I got used to lazing.
+I've come to like resting. Strength — full, work — no.
+Idler. It's not laziness, it's saving strength.
+@хзв_worker
+Used to working. The gifts come easier.
+Call me — I'm ready. Habit.
+Toiler. Just give me a break now and then.
+@хзв_lost
+{habit}? I think I've outgrown it.
+No longer {habit}. Odd — I don't miss it at all.
+Dropped it. «{habit}» isn't me anymore.
+@хзв_hangover
+Oh, my head... No mead yesterday — and here we are.
+Don't shout. I feel awful. Where's the mead?
+My wings aren't my own. A hangover, I guess.
+@хзв_whine
+I want to go home. Not now, later.
+We've only just left... Let me get used to it.
+Far from home I'm in no mood for gifts.
+@хзв_sneak
+Oops. Sorry. I can't do quiet.
+Caw! What? Sneaking is boring.
+@хзв_spook
+Oh, game! Caw!.. Sorry.
+I saw it first! Caw!
+@хзв_refuse
+This? After everything you gave me? No.
+No, thanks. I'm picky now.
+Bring something tasty — then we'll talk.
+@хзв_sulk
+Nobody has stroked me today yet. Just saying.
+You forgot something. I didn't.
+A day without petting is no day.
+@хзв_warn
+Caw! Behind you!
+A foe! Coming at you!
+Careful — they're running at you!
+
+# --- a bath, a game with your beast (rev 101)
+[world_bath] {хкуп_мию}
+[bath_shake] {хкуп_струс}
+[bath_dirty] {хкуп_брудний}
+[beast_play_start] {хгра_старт}
+[beast_play_start_wolf] {хгра_вовк}
+[beast_play_start_boar] {хгра_кабан}
+[beast_play_start_lox] {хгра_лось}
+[beast_play_start_asksvin] {хгра_асквін}
+[beast_play_start_hen] {хгра_курка}
+[beast_play_tease] {хгра_дражню}
+[beast_play_swap] {хгра_зміна}
+[beast_play_win] {хгра_виграв}
+[beast_play_caught] {хгра_спіймали}
+@хкуп_мию
+Don't look. A raven has a right to be clean too.
+The water is cold. But dirt is colder.
+Feather by feather. Tidiness is a sign of wisdom.
+Splish-splash. Wisdom loves clean feathers.
+@хкуп_струс
+Oops. Now you're clean too. Almost.
+Sorry about the spray. Call it a blessing.
+Now we're both wet. Fair.
+Shook myself. On you. Not on purpose. Well, almost.
+@хкуп_брудний
+I'm as filthy as a swamp stump. Where's the water?
+My feathers beg for water. Hear them?
+A bit more dirt and they'll take me for a mole.
+@хгра_старт
+{beast}, come on, catch me!
+Hey, {beast}! Let's play tag.
+{beast} is bored. I'll fix that.
+@хгра_вовк
+Grey one, catch me! If you can.
+Wolf, that tail of yours is an invitation.
+Come on, wolfie, show your fangs... from afar.
+@хгра_кабан
+Boar, grunt and run!
+Bristles, let's chase each other!
+Piggy, don't gore, just chase.
+@хгра_лось
+Lox, move! A little at least.
+You're huge. I'm nimble. Let's go.
+Lox, fan-tail against wings. Who wins?
+@хгра_асквін
+Askvin, you're a runner. Prove it!
+Scaly, let's race.
+Askvin, beak against claws. Game on!
+@хгра_курка
+Cluck! Hen, catch me!
+Hen, we're both birds. Who's faster?
+Cluck-cluck-cluck! Oh, that's me in your tongue.
+@хгра_дражню
+You won't catch me!
+I can't go any slower, I'm waiting already!
+Left! No, right! Ha!
+Almost! Well, no, not almost.
+@хгра_зміна
+Now it's my turn!
+Run, here I come!
+Switch! Now I'm the catcher.
+@хгра_виграв
+Saddled! Victory to the wings.
+I'm on horseback! Well, almost on horseback.
+A champion riding high. Bow.
+@хгра_спіймали
+Oh... caught. I'm just resting.
+Honestly, I let you win.
+Fine, fine, you won. This time.

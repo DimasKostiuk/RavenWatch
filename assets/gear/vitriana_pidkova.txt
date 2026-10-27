@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Вітряна підкова
+note: Підкова з копита Слейпніра — принаймні так клявся торговець. Пір'їна валькірії, вітер у рунах. Ворон із нею літає так, ніби за ним женуться.
+use: gear
+id: vitriana_pidkova
+cost: Silver:2 Iron:2 Feathers:6 TrophyHatchling:1 RavenWatch_item_zamorske_piria:1
+station: RavenWatch_table_prosunytyi_stil_vorona
+slot: legs
+part asset/Спорядження/GearAnklet pos 0 -0.0688 0 rot 0 0 0 scale 0.02 0.02 0.02  # Вітряна підкова (Meshy), кільце ~3 см

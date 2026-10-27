@@ -23,7 +23,9 @@ namespace HuginWhispers
     internal static class Outfits
     {
         internal const int Head = 0, Neck = 1, Back = 2, Legs = 3, Slots = 4;
-        internal const string KeyH = "RavenWatch_OutfitH", KeyM = "RavenWatch_OutfitM"; // on the player's ZDO: "head|neck|back|legs"
+        // on the player's ZDO: each slot's piece as a 4-byte code (its prefab name's hash, 0 none), 16 bytes a raven, not
+        // the names (that ZDO goes out whole with every move); CodeOn reads it back as "head|neck|back|legs"
+        private const string NetH = "RavenWatch_OutfitCodeH", NetM = "RavenWatch_OutfitCodeM";
         private static readonly string[] DataKey = { "RavenWatch_OutfitHead", "RavenWatch_OutfitNeck", "RavenWatch_OutfitBack", "RavenWatch_OutfitLegs" }; // in the raven item
         internal static string[] SlotTitles { get { return Lang.Arr(SlotTitlesSrc); } } // (translated on every read)
         private static readonly string[] SlotTitlesSrc = Lang.Keys("На голову", "На шию", "На спину", "На лапи");
@@ -104,36 +106,75 @@ namespace HuginWhispers
             { "gear_kihtiaste_namysto", new Fit(0.388f, 0f, -0.005f, 0.045f, -30f, 0f, 0f) { SX = 1f, SY = 1.194f, SZ = 1f } },
             { "gear_kholodnyi_medalion", new Fit(0.751f, 0f, -0.39f, 0.1f, -8f, 0f, 0f) { SX = 1.513f, SY = 1.093f, SZ = 1.126f } },
             { "gear_korona_vidom", new Fit(0.407f, 0.003f, 0.007f, 0f, -2f, -1f, -6f) { SX = 0.78f, SY = 1.161f, SZ = 0.836f } },
+            // the second batch (Meshy models), tuned in game 2026-10-23/24
+            { "gear_koloskovyi_oberih", new Fit(1f, 0f, -0.04f, -0.07f, 0f, 0f, 0f) { SX = 1.03f, SY = 1.344f, SZ = 1.384f } },
+            { "gear_zbruia_hintsia", new Fit(1.653f, 0.495f, -0.29f, 0.045f, -60f, 90f, -10f) { SX = 0.943f, SY = 1.344f, SZ = 0.744f } },
+            { "gear_pokhidna_torba", new Fit(1.342f, 0f, 0.02f, -0.07f, 0f, 90f, -10f) },
+            { "gear_sidlo_vishchuna", new Fit(2f, 0f, 0.05f, -0.07f, 0f, 90f, -15f) { SX = 1.061f, SY = 0.766f, SZ = 1.093f } },
+            { "gear_vitriana_pidkova", new Fit(1.384f, 0f, 0.075f, 0.025f, 10f, 0f, 0f) },
+            // the simple table's legs and the third batch of the advanced one (Meshy), tuned in game 2026-10-25
+            { "gear_sribni_kiltsia", new Fit(1.051f, 0f, 0.02f, 0.003f, -20f, 0f, 0f) },
+            { "gear_kistiani_braslety", new Fit(1f, 0f, 0.015f, 0.015f, 0f, 0f, 0f) { SX = 1f, SY = 1.172f, SZ = 0.813f } },
+            { "gear_shkiriani_obmotky", new Fit(1.03f, 0f, 0.027f, -0.009f, -18f, 0f, 0f) },
+            { "gear_pantsyrnyi_shchytok", new Fit(1.426f, 0f, 0.02f, -0.035f, -10f, 0f, 0f) { SX = 0.863f, SY = 0.701f, SZ = 1.23f } },
+            { "gear_torba_zbyracha", new Fit(1.806f, 0f, 0.035f, 0f, -48f, 0f, 0f) { SX = 1.061f, SY = 0.888f, SZ = 0.971f } },
+            { "gear_eitrova_pidviska", new Fit(1f, 0f, -0.005f, -0.035f, 0f, 0f, 0f) { SX = 1.653f, SY = 1.384f, SZ = 1f } },
+            // Odin's call hats (Meshy), tuned in game 2026-10-24
+            { "gear_soniachna_korona", new Fit(1.257f, 0f, 0.004f, 0f, -17f, 5f, -1f) { SX = 0.879f, SY = 1f, SZ = 0.905f } },
+            { "gear_hnizdo_kapeliukh", new Fit(1.403f, 0f, 0f, 0f, 5f, 0f, -5f) },
+            { "gear_kazanok", new Fit(1.245f, -0.005f, 0.012f, 0f, -10f, 0f, -9f) },
+            { "gear_sholom_voronoi_valkirii", new Fit(1.687f, 0.002f, -0.005f, 0.005f, 2f, 4f, -4f) { SX = 1.105f, SY = 0.789f, SZ = 1f } },
+            { "gear_temna_napivkorona", new Fit(1.072f, 0f, 0.01f, 0.011f, 16f, 7f, 0f) { SX = 0.887f, SY = 1f, SZ = 0.749f } },
+            { "gear_lodiana_korona", new Fit(1.051f, 0f, 0.016f, 0.004f, -9f, 0f, -1f) { SX = 0.803f, SY = 1f, SZ = 1f } },
+            { "gear_mukhomorna_shapka", new Fit(1.161f, 0f, -0.002f, 0f, -20f, 0f, -5f) { SX = 0.961f, SY = 1f, SZ = 0.99f } },
+            { "gear_kistiana_korona", new Fit(1.245f, 0f, 0.003f, -0.005f, -4f, 0f, 1f) { SX = 0.844f, SY = 1f, SZ = 1f } },
+            { "gear_viazana_shapka", new Fit(1.267f, 0f, 0.018f, 0f, -9f, 0f, 6f) { SX = 1f, SY = 0.789f, SZ = 1f } },
+            { "gear_kapeliukh_vsebatka", new Fit(1.531f, 0f, -0.009f, 0f, -3f, 0f, 0f) },
+            { "gear_lavovyi_sholom", new Fit(1.722f, 0f, -0.022f, -0.006f, -4f, 0f, 0f) { SX = 1.127f, SY = 0.708f, SZ = 0.951f } },
+            { "gear_kovpak_vishchuna", new Fit(1.53f, 0f, 0.005f, -0.001f, -13f, 0f, -8f) },
+            { "gear_zmiieva_korona", new Fit(1f, 0f, -0.002f, 0f, -5f, 0f, 2f) },
+            { "gear_iashchirkova_shapka", new Fit(1.403f, 0f, -0.019f, 0f, 15f, 0f, -2f) { SX = 0.905f, SY = 1f, SZ = 0.942f } },
+            { "gear_obruch_z_rohamy", new Fit(1.245f, 0.002f, 0.006f, 0.008f, 4f, 0f, 2f) { SX = 0.78f, SY = 1.072f, SZ = 0.99f } },
+            { "gear_rohatyi_sholom", new Fit(1.431f, 0f, -0.007f, 0.007f, 8f, 9f, -1f) { SX = 1f, SY = 0.887f, SZ = 1f } },
         };
 
         // The wardrobe grows with trust: the raven lets itself be dressed from level 3, first in plain caps, then in
-        // helmets, the crown of Valheim when it trusts you almost fully. Every other piece is Odin's gift: coming back
-        // from him after a ritual (to levels 3-6) the raven wears one, picked at random from that level's pool
-        // (GiftPool), and keeps it. Nothing opens all at once at the top: each raven ends with its own few gifts, and
-        // the book never shows what it could have had. All of it is kept in the raven item.
+        // helmets, the crown of Valheim when it trusts you almost fully, the raven valkyrie's helm at full trust. Every
+        // other piece is Odin's gift: coming back from him after a ritual (to levels 3-7) the raven wears one, picked at
+        // random from that level's pool
+        // (GiftPool), and keeps it; Odin's call (the stone) brings one more it missed (CallPool). Nothing opens all at
+        // once at the top: each raven ends with its own few gifts, and the book never shows what it could have had.
+        // All of it is kept in the raven item.
         internal const int WardrobeLevel = 3;
         internal const int TopLevel = 7;
         private static readonly Dictionary<string, int> UnlockAt = new Dictionary<string, int>
         {
             { "HelmetHat4", 3 }, { "HelmetHat9", 3 }, { "HelmetHat10", 3 }, { "HelmetHat7", 3 }, { "HelmetSweatBand", 3 }, // everyday caps
-            { "HelmetBronze", 4 }, { "HelmetIron", 4 },                                                                    // battle helmets
-            { "HelmetDrake", 5 }, { "HelmetCarapace", 5 },
-            { "HelmetCrownofValheim", 6 },                                                                                  // it trusts you almost fully
+            { RavenGear.KeyPrefix + "viazana_shapka", 3 },
+            { "HelmetBronze", 4 }, { "HelmetIron", 4 }, { RavenGear.KeyPrefix + "rohatyi_sholom", 4 },                     // battle helmets
+            { "HelmetDrake", 5 }, { "HelmetCarapace", 5 }, { RavenGear.KeyPrefix + "obruch_z_rohamy", 5 },
+            { "HelmetCrownofValheim", 6 }, { RavenGear.KeyPrefix + "kistiana_korona", 6 },                                 // it trusts you almost fully
+            { RavenGear.KeyPrefix + "sholom_voronoi_valkirii", 7 },                                                        // full trust: the raven's own valkyrie helm
         };
 
         // What Odin may give on reaching each level (one piece a ritual, one it has not got). A level whose pool this
-        // raven has had all of takes from the levels below. The top level has none for now (more later).
+        // raven has had all of takes from the levels below.
         private static readonly Dictionary<string, int> GiftPool = new Dictionary<string, int>
         {
             // plain and festive
             { "HelmetStrawHat", 3 }, { "HelmetFishingHat", 3 }, { "HelmetHat3", 3 }, { "HelmetHat8", 3 },
             { "HelmetCelebration", 3 }, { "HelmetMidsummerCrown", 3 }, { "HelmetPointyHat", 3 }, { "HelmetYule", 3 },
+            { RavenGear.KeyPrefix + "mukhomorna_shapka", 3 }, { RavenGear.KeyPrefix + "hnizdo_kapeliukh", 3 },
             // battle
-            { "HelmetDverger", 4 }, { "HelmetBerserkerUndead", 4 }, { "HelmetRootCrown", 4 },
-            // trophies: the heads (no matter whom you have killed)
-            { RavenGear.KeyPrefix + "holova_iahluta", 5 }, { RavenGear.KeyPrefix + "holova_valkirii", 5 },
+            { "HelmetDverger", 4 }, { "HelmetBerserkerUndead", 4 }, { "HelmetRootCrown", 4 }, { RavenGear.KeyPrefix + "kazanok", 4 },
+            // trophies and the lands' elements: the heads (no matter whom you have killed), ice, fire, the serpent
+            { RavenGear.KeyPrefix + "holova_iahluta", 5 }, { RavenGear.KeyPrefix + "holova_valkirii", 5 }, { RavenGear.KeyPrefix + "iashchirkova_shapka", 5 },
+            { RavenGear.KeyPrefix + "lodiana_korona", 5 }, { RavenGear.KeyPrefix + "lavovyi_sholom", 5 }, { RavenGear.KeyPrefix + "zmiieva_korona", 5 },
             // magic
             { "HelmetDNMage", 6 }, { RavenGear.KeyPrefix + "korona_vidom", 6 }, { RavenGear.KeyPrefix + "kaptur_odina", 6 },
+            { RavenGear.KeyPrefix + "kovpak_vishchuna", 6 }, { RavenGear.KeyPrefix + "temna_napivkorona", 6 },
+            // Odin's own, for full trust
+            { RavenGear.KeyPrefix + "kapeliukh_vsebatka", 7 }, { RavenGear.KeyPrefix + "soniachna_korona", 7 },
         };
         private const string GiftsKey = "RavenWatch_OutfitGifts"; // Odin's gifts this raven got, comma-separated
         private const string NewGiftKey = "RavenWatch_OutfitNew";  // the gift it brings on this trip, told when it is back
@@ -170,38 +211,66 @@ namespace HuginWhispers
             return Gifts(item).Contains(e.Prefab);
         }
 
+        // Odin's gifts this raven got. Read only — the list is shared: the book asks for every piece once a second, so
+        // the last text read is kept parsed (a raven's gifts change only on a return from Odin)
+        private static string _giftsRaw = "";
+        private static readonly List<string> _gifts = new List<string>();
         private static List<string> Gifts(ItemDrop.ItemData item)
         {
             string v;
-            List<string> l = new List<string>();
-            if (item != null && item.m_customData != null && item.m_customData.TryGetValue(GiftsKey, out v))
-                foreach (string s in v.Split(',')) if (s.Trim().Length > 0) l.Add(s.Trim());
-            return l;
+            if (item == null || item.m_customData == null || !item.m_customData.TryGetValue(GiftsKey, out v) || v == null) v = "";
+            if (v == _giftsRaw) return _gifts;
+            _giftsRaw = v;
+            _gifts.Clear();
+            foreach (string s in v.Split(',')) if (s.Trim().Length > 0) _gifts.Add(s.Trim());
+            return _gifts;
         }
 
-        // The raven flies off to Odin after a ritual (Trust): at levels 3-6 Odin picks a piece it does not have yet,
+        // The raven flies off to Odin after a ritual (Trust): at levels 3-7 Odin picks a piece it does not have yet,
         // from the new level's pool (GiftPool; that pool all had: the nearest level below with something left).
         // Only picked here: it is given and put on when the raven is back (TakeNewGift), so the book shows nothing early.
         internal static void OdinGift(bool munin, ItemDrop.ItemData item)
         {
             if (item == null) return;
             int level = Trust.Level(item); // the new level: the gift is for reaching it
-            if (level < WardrobeLevel || level >= TopLevel) return;
-            List<string> have = Gifts(item);
-            List<string> pool = new List<string>();
-            for (int lv = level; lv >= WardrobeLevel && pool.Count == 0; lv--)
-                foreach (KeyValuePair<string, int> kv in GiftPool)
-                {
-                    if (kv.Value != lv || have.Contains(kv.Key)) continue;
-                    Entry e = Find(kv.Key);
-                    if (e == null || !(Builtin.ContainsKey(kv.Key) || (OwnHat(e) && e.Gear.BuiltIn))) continue; // (released pieces only)
-                    pool.Add(kv.Key);
-                }
+            if (level < WardrobeLevel || level > TopLevel) return;
+            List<string> pool = GiftChoices(item, level);
             if (pool.Count == 0) return;
             string gift = pool[UnityEngine.Random.Range(0, pool.Count)];
             if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
             item.m_customData[NewGiftKey] = gift;
             if (Plugin.Instance != null) Plugin.Instance.Log(Plugin.RavenName(munin) + " will get " + gift + " from Odin (level " + level + ")");
+        }
+
+        // what Odin may give at this level: its pool's pieces this raven has not got, else the nearest level below with
+        // something left (released pieces only)
+        private static List<string> GiftChoices(ItemDrop.ItemData item, int level)
+        {
+            List<string> have = Gifts(item), pool = new List<string>();
+            for (int lv = Mathf.Min(level, TopLevel); lv >= WardrobeLevel && pool.Count == 0; lv--)
+                foreach (KeyValuePair<string, int> kv in GiftPool)
+                {
+                    if (kv.Value != lv || have.Contains(kv.Key)) continue;
+                    Entry e = Find(kv.Key);
+                    if (e != null && (Builtin.ContainsKey(kv.Key) || (OwnHat(e) && e.Gear.BuiltIn))) pool.Add(kv.Key);
+                }
+            return pool;
+        }
+
+        // Odin's call (OdinCall: the stone from Haldor) has no hats of its own: once a trust level it brings a gift this
+        // raven missed, from that level's ritual pool (or below), picked as it flies off and given on its return
+        // (TakeNewGift), as the ritual's.
+        internal static List<string> CallPool(ItemDrop.ItemData item) { return GiftChoices(item, Trust.SettledLevel(item)); }
+
+        internal static string CallGift(bool munin, ItemDrop.ItemData item)
+        {
+            List<string> pool = CallPool(item);
+            if (item == null || pool.Count == 0) return null;
+            string gift = pool[UnityEngine.Random.Range(0, pool.Count)];
+            if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
+            item.m_customData[NewGiftKey] = gift;
+            if (Plugin.Instance != null) Plugin.Instance.Log(Plugin.RavenName(munin) + " will get " + gift + " from Odin (called by the stone)");
+            return gift;
         }
 
         // the trust level a piece opens on; 0: it comes only as Odin's gift (or with the top level)
@@ -279,7 +348,7 @@ namespace HuginWhispers
             item.m_customData.Remove(NewGiftKey);
             Entry e = Find(v);
             if (e == null) return null;
-            List<string> have = Gifts(item);
+            List<string> have = new List<string>(Gifts(item)); // (its own copy: Gifts' list is shared)
             if (!have.Contains(v)) have.Add(v);
             item.m_customData[GiftsKey] = string.Join(",", have.ToArray());
             item.m_customData[DataKey[e.Slot]] = v; // worn from now on
@@ -403,6 +472,27 @@ namespace HuginWhispers
             if (string.IsNullOrEmpty(prefab)) item.m_customData.Remove(DataKey[slot]);
             else item.m_customData[DataKey[slot]] = prefab;
             Refresh(munin, item);
+        }
+
+        // the studio (test only): a piece shown on the worn raven without the bag (never over a thing given from the bag),
+        // and outfits.txt read again with both ravens dressed anew
+        internal static string StudioWear(bool munin, string slotName, string key)
+        {
+            int slot = System.Array.IndexOf(new[] { "head", "neck", "back", "legs" }, slotName);
+            ItemDrop.ItemData item = Trust.Worn(munin);
+            if (slot < 0 || item == null) return "no such slot or raven";
+            if (Paid(item, slot)) return "that slot holds a thing from the bag: take it off first";
+            if (item.m_customData == null) item.m_customData = new Dictionary<string, string>();
+            if (Worn(item, slot) != (key == "-" ? "" : key)) RavenPouch.Spill(Player.m_localPlayer, item, slot); // a pouch's food back to the bag
+            if (key == "-") item.m_customData.Remove(DataKey[slot]); else item.m_customData[DataKey[slot]] = key;
+            Refresh(munin, item);
+            return "worn: " + key;
+        }
+        internal static string StudioFits()
+        {
+            _fits = null;
+            foreach (bool munin in new[] { false, true }) { ItemDrop.ItemData item = Trust.Worn(munin); if (item != null) Refresh(munin, item); }
+            return "fits read again: " + Fits().Count;
         }
 
         private static void Refresh(bool munin, ItemDrop.ItemData item)
@@ -553,9 +643,63 @@ namespace HuginWhispers
         {
             ZDO zdo = NetFlag.Zdo(p, true);
             if (zdo == null) return;
-            string h = Code(hugin), m = Code(munin);
-            if (zdo.GetString(KeyH, "") != h) zdo.Set(KeyH, h);
-            if (zdo.GetString(KeyM, "") != m) zdo.Set(KeyM, m);
+            PublishOne(zdo, false, hugin);
+            PublishOne(zdo, true, munin);
+        }
+
+        // (twice a second: the codes compared with what was last sent, so nothing is made unless it changed)
+        private static readonly int[][] Sent = { new int[Slots], new int[Slots] };
+        private static readonly ZDO[] SentOn = new ZDO[2];
+        private static void PublishOne(ZDO zdo, bool munin, ItemDrop.ItemData item)
+        {
+            int i = munin ? 1 : 0;
+            bool same = ReferenceEquals(SentOn[i], zdo);
+            for (int s = Head; s < Slots; s++)
+            {
+                string piece = item != null ? WornOpen(item, s) : "";
+                int h = piece.Length > 0 ? piece.GetStableHashCode() : 0;
+                if (Sent[i][s] != h) { Sent[i][s] = h; same = false; }
+            }
+            if (same) return;
+            SentOn[i] = zdo;
+            byte[] b = new byte[Slots * 4];
+            for (int s = Head; s < Slots; s++) { int h = Sent[i][s]; b[s * 4] = (byte)h; b[s * 4 + 1] = (byte)(h >> 8); b[s * 4 + 2] = (byte)(h >> 16); b[s * 4 + 3] = (byte)(h >> 24); }
+            zdo.Set(munin ? NetM : NetH, b);
+        }
+
+        // what this player's raven wears, as the dressing reads it ("head|neck|back|legs"); decoded only when it changed
+        private sealed class Heard { internal readonly byte[] Raw = new byte[Slots * 4]; internal bool Set; internal string Code = ""; internal List<Entry> From; }
+        private static readonly Dictionary<ZDOID, Heard>[] HeardOn = { new Dictionary<ZDOID, Heard>(), new Dictionary<ZDOID, Heard>() };
+        private static readonly Dictionary<int, string> ByHash = new Dictionary<int, string>();
+        private static List<Entry> _byHashFrom;
+        internal static string CodeOn(ZDO zdo, bool munin)
+        {
+            if (zdo == null) return "";
+            byte[] raw = zdo.GetByteArray(munin ? NetM : NetH, null);
+            if (raw == null || raw.Length < Slots * 4) return "";
+            List<Entry> cat = Catalog();
+            Dictionary<ZDOID, Heard> seen = HeardOn[munin ? 1 : 0];
+            Heard h;
+            if (!seen.TryGetValue(zdo.m_uid, out h)) { h = new Heard(); seen[zdo.m_uid] = h; }
+            bool same = h.Set && ReferenceEquals(h.From, cat);
+            for (int k = 0; k < Slots * 4; k++) if (h.Raw[k] != raw[k]) { h.Raw[k] = raw[k]; same = false; }
+            if (same) return h.Code;
+            if (!ReferenceEquals(_byHashFrom, cat)) // (a new catalog: the names by their codes again)
+            {
+                ByHash.Clear();
+                foreach (string prefab in ByPrefab.Keys) ByHash[prefab.GetStableHashCode()] = prefab;
+                _byHashFrom = cat;
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int s = Head; s < Slots; s++)
+            {
+                if (s > Head) sb.Append('|');
+                int code = raw[s * 4] | (raw[s * 4 + 1] << 8) | (raw[s * 4 + 2] << 16) | (raw[s * 4 + 3] << 24);
+                string prefab;
+                if (code != 0 && ByHash.TryGetValue(code, out prefab)) sb.Append(prefab); // (a piece this game does not have: not drawn)
+            }
+            h.Code = sb.ToString(); h.Set = true; h.From = cat;
+            return h.Code;
         }
 
         // ---------------------------------------------------------------- dressing a raven model
@@ -580,6 +724,16 @@ namespace HuginWhispers
                 Entry e = parts.Length > slot ? Find(parts[slot]) : null;
                 if (e != null) PutOn(raven, e);
             }
+        }
+
+        // what it wears, taken off and put on again (only if it wears anything)
+        internal static void Redress(GameObject raven)
+        {
+            State st = raven != null ? raven.GetComponent<State>() : null;
+            if (st == null || string.IsNullOrEmpty(st.Code) || st.Code.Replace("|", "").Length == 0) return;
+            string code = st.Code;
+            st.Code = null;
+            Dress(raven, code);
         }
 
         internal static void Undress(GameObject raven)
@@ -669,8 +823,7 @@ namespace HuginWhispers
 
         private static Transform FindBone(GameObject raven, string name)
         {
-            foreach (Transform t in raven.GetComponentsInChildren<Transform>(true)) if (t.name == name) return t;
-            return null;
+            return RavenBones.Find(raven.transform, name);
         }
 
         // Size and place are counted in the raven's own measure (its head with the beak), so a fit holds at any size.
@@ -1057,7 +1210,7 @@ namespace HuginWhispers
                 a.enabled = false;
             }
             // a pose still squashed (the game keeps a raven that is away squashed to nothing): opened up
-            foreach (Transform t in _model.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(_model.transform, false))
                 if (t != _model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
             EyeGlow.Apply(_model, level); // its eyes as on your shoulder
             foreach (Renderer r in _model.GetComponentsInChildren<Renderer>(true))
@@ -1070,7 +1223,7 @@ namespace HuginWhispers
             // the sitting pose as it is now, and what the flight needs
             List<Transform> bones = new List<Transform>(), roots = new List<Transform>();
             _hip = null;
-            foreach (Transform t in _model.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(_model.transform, false)) // (its bones, not what it wears)
             {
                 if (t == _model.transform) continue;
                 bones.Add(t);

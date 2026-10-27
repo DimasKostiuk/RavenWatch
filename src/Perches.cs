@@ -25,8 +25,22 @@ namespace HuginWhispers
     internal static class Perches
     {
         internal const string Use = "perch";
+        // «Вдома»: a guard perch (one mode only: the raven stays on guard) and the feeder by the perches (Home.cs)
+        internal const string GuardUse = "guard", FeederUse = "feeder";
+        internal static bool IsPerchUse(string use) { return use == Use || use == GuardUse; }
+        internal static float PerchHealth = 2000f, GuardHealth = 4000f; // a raven may live on it: hard to break
         internal const string DefaultCost = "Wood:10";
-        internal static bool FromFiles;                 // the Workshop's marked files too (testing; not shared)
+        // the Workshop's marked files too (testing; not shared) — only in a world of this game's own (alone, the host): on
+        // someone's server a file of a built-in id would stand in for that perch (its day norm, its cost), and the server's
+        // value of the setting comes only after the pieces are made
+        internal static bool FilesWanted;
+        internal static bool FromFiles { get { return FilesWanted && OwnWorld(); } }
+        private static readonly System.Reflection.FieldInfo IsServerField = AccessTools.Field(typeof(ZNet), "m_isServer");
+        private static bool OwnWorld()
+        {
+            if (ZNet.instance != null) return ZNet.instance.IsServer();
+            try { return IsServerField != null && (bool)IsServerField.GetValue(null); } catch (Exception) { return false; } // (the scene loads before ZNet wakes: its static says)
+        }
         internal static float DailyCap = 30f;           // a perch's day norm when its model names none ("perday:")
         // The norm comes in over a whole game day under a bare roof; comfort speeds it up (+10% a level above 1, at
         // most x3); out in the open and not cosy (comfort under 3) only a fifth of the pace.
@@ -37,7 +51,9 @@ namespace HuginWhispers
 
         internal const string PerchKey = "RavenWatch_perch", AtKey = "RavenWatch_perchAt", DayKey = "RavenWatch_perchDay", GotKey = "RavenWatch_perchGot";
         internal const string RpcSeat = "RavenWatch_PerchSeat", RpcGone = "RavenWatch_PerchGone", RpcSay = "RavenWatch_PerchSay", RpcTalkHere = "RavenWatch_PerchTalk";
-        internal static string SeatKey(int i) { return "RavenWatch_seat" + i; }
+        // made once per seat number: every look at a seat asks for it (many times a second per perch)
+        private static readonly string[] SeatKeys = { "RavenWatch_seat0", "RavenWatch_seat1", "RavenWatch_seat2", "RavenWatch_seat3" };
+        internal static string SeatKey(int i) { return i >= 0 && i < SeatKeys.Length ? SeatKeys[i] : "RavenWatch_seat" + i; }
 
         internal sealed class Def
         {
@@ -52,6 +68,9 @@ namespace HuginWhispers
             internal bool Table;          // «Стіл ворона» (use: station): a crafting station, no seats
             internal bool Nest;           // «Вороняче гніздо» (use: nest): the raven flies to Odin from it (Nest.cs)
             internal bool Tree;           // «Вороняче дерево» (use: tree): put in the world by the server, not built, never broken (RavenTree)
+            internal bool Guard;          // «Вартова жердина» (use: guard): the raven left on it is on guard (Home)
+            internal bool Feeder;         // «Годівниця» (use: feeder): a box the ravens at home eat from (Home), no seats
+            internal float Feed = 1f;     // a feeder's thrift: the same food fills this much more from it ("feed:")
         }
 
         // «Стіл ворона»: a Workshop model marked "use: station" becomes a crafting station of its own (E opens the
@@ -63,6 +82,7 @@ namespace HuginWhispers
         internal static readonly List<Def> Tables = new List<Def>();  // the raven tables
         internal static readonly List<Def> Nests = new List<Def>();   // the ravens' nests (Odin's errands)
         internal static readonly List<Def> Trees = new List<Def>();   // the raven trees in the world (mixing runes)
+        internal static readonly List<Def> Feeders = new List<Def>(); // the feeders (Home)
         private static readonly List<Def> All = new List<Def>();      // both: built, put in the hammer, photographed alike
         private static readonly Dictionary<string, Def> ByPrefab = new Dictionary<string, Def>();
         private static GameObject _holder;
@@ -96,7 +116,7 @@ namespace HuginWhispers
         {
             if (_loaded) return;
             _loaded = true;
-            Defs.Clear(); Tables.Clear(); Nests.Clear(); Trees.Clear(); All.Clear(); ByPrefab.Clear();
+            Defs.Clear(); Tables.Clear(); Nests.Clear(); Trees.Clear(); Feeders.Clear(); All.Clear(); ByPrefab.Clear();
             List<WsModel> models = new List<WsModel>();
             try
             {
@@ -113,22 +133,22 @@ namespace HuginWhispers
                 foreach (string f in WsFiles.List()) { WsModel m = WsFiles.Load(f); if (m != null) models.Add(m); }
             foreach (WsModel m in models)
             {
-                bool table = m.Use == TableUse, nest = m.Use == NestUse, tree = m.Use == TreeUse;
-                if (m.Use != Use && !table && !nest && !tree) continue;
-                if (!table && m.Seats == 0) { Log(m.Name + ": no raven seat, left out"); continue; }
+                bool table = m.Use == TableUse, nest = m.Use == NestUse, tree = m.Use == TreeUse, guard = m.Use == GuardUse, feeder = m.Use == FeederUse;
+                if (!IsPerchUse(m.Use) && !table && !nest && !tree && !feeder) continue;
+                if (!table && !feeder && m.Seats == 0) { Log(m.Name + ": no raven seat, left out"); continue; }
                 Def d = new Def();
-                d.Table = table; d.Nest = nest; d.Tree = tree;
+                d.Table = table; d.Nest = nest; d.Tree = tree; d.Guard = guard; d.Feeder = feeder; d.Feed = m.Feed > 0f ? m.Feed : 1f;
                 d.Id = string.IsNullOrEmpty(m.Id) ? IdFor(m.Name) : m.Id;
-                d.Prefab = (table ? "RavenWatch_table_" : nest ? "RavenWatch_nest_" : tree ? "RavenWatch_tree_" : "RavenWatch_perch_") + d.Id;
+                d.Prefab = (table ? "RavenWatch_table_" : nest ? "RavenWatch_nest_" : tree ? "RavenWatch_tree_" : feeder ? "RavenWatch_feeder_" : "RavenWatch_perch_") + d.Id;
                 d.Name = m.Name; d.Note = m.Note; d.Cost = string.IsNullOrEmpty(m.Cost) ? DefaultCost : m.Cost;
                 d.Model = m; d.Pose = m.Pose; d.Stand = m.Stand; d.PerDay = m.PerDay > 0f ? m.PerDay : DailyCap; d.Wall = m.Wall; d.Station = string.IsNullOrEmpty(m.Station) ? "piece_workbench" : m.Station;
                 Def old;
-                if (ByPrefab.TryGetValue(d.Prefab, out old)) { Defs.Remove(old); Tables.Remove(old); Nests.Remove(old); Trees.Remove(old); All.Remove(old); } // a file of the same id wins over the built-in one
+                if (ByPrefab.TryGetValue(d.Prefab, out old)) { Defs.Remove(old); Tables.Remove(old); Nests.Remove(old); Trees.Remove(old); Feeders.Remove(old); All.Remove(old); } // a file of the same id wins over the built-in one
                 ByPrefab[d.Prefab] = d;
-                (table ? Tables : nest ? Nests : tree ? Trees : Defs).Add(d);
+                (table ? Tables : nest ? Nests : tree ? Trees : feeder ? Feeders : Defs).Add(d);
                 All.Add(d);
             }
-            Log(Defs.Count + " perch model(s), " + Tables.Count + " raven table(s), " + Nests.Count + " nest(s)" + (FromFiles ? " (with the Workshop's files)" : ""));
+            Log(Defs.Count + " perch model(s), " + Tables.Count + " raven table(s), " + Nests.Count + " nest(s), " + Feeders.Count + " feeder(s)" + (FromFiles ? " (with the Workshop's files)" : ""));
         }
 
         // ---------------------------------------------------------------- the pieces
@@ -205,15 +225,17 @@ namespace HuginWhispers
             GameObject hammer = db.GetItemPrefab("Hammer");
             ItemDrop drop = hammer != null ? hammer.GetComponent<ItemDrop>() : null;
             PieceTable table = drop != null ? drop.m_itemData.m_shared.m_buildPieces : null;
-            if (table != null) table.m_pieces.RemoveAll(g => g == null || ((g.name.StartsWith("RavenWatch_perch_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_table_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_nest_", StringComparison.Ordinal)) && DefOf(g.name) == null) || (DefOf(g.name) != null && DefOf(g.name).Built != g));
+            if (table != null) table.m_pieces.RemoveAll(g => g == null || ((g.name.StartsWith("RavenWatch_perch_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_table_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_nest_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_feeder_", StringComparison.Ordinal)) && DefOf(g.name) == null) || (DefOf(g.name) != null && DefOf(g.name).Built != g));
             foreach (Def d in All)
             {
                 if (d.Built == null || d.Tree) continue; // (the trees are no pieces you build)
                 Piece piece = d.Built.GetComponent<Piece>();
-                if (piece.m_resources == null || piece.m_resources.Length == 0) piece.m_resources = Costs(db, d.Cost);
+                if (piece.m_resources == null || piece.m_resources.Length < CostCount(d.Cost)) piece.m_resources = Costs(db, d.Cost); // (again while a part is missing: our goods, WsItems, may come later)
                 if (table != null && !table.m_pieces.Contains(d.Built)) table.m_pieces.Add(d.Built);
             }
         }
+
+        private static int CostCount(string cost) { return (cost ?? "").Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Length; }
 
         internal static Piece.Requirement[] Costs(ObjectDB db, string cost)
         {
@@ -251,14 +273,20 @@ namespace HuginWhispers
             // the model's own words, then what it gives (from its norm, so the numbers never go stale), then the keys
             if (d.Nest)
                 piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nПосади в гніздо воронів і чекай: коли над ним засяє золото, Одін змилувався — зазирни в чашу внизу. Раз на день він дає доручення, а за виконані — руни.{1}", (string.IsNullOrEmpty(d.Note) ? Lang.T("Гніздо для воронів.") : Lang.T(d.Note).TrimEnd('.') + "."), Lang.T("\nСтавиться лише просто неба, не під дахом.")));
+            else if (d.Feeder)
+                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nСюди кладуть їжу для воронів, що лишились удома на жердинах поруч (до {1} м): Муніну — будь-яке м'ясо, Хугіну — рибу, ягоди, гриби, овочі й страви з них. Що поживніша їжа, то довше ворон ситий. Лише ситий ворон вилітає на ворогів, швидше набирається сили й приносить сюди знахідки; без їжі він полює сам, але лишається голодним, а за кілька днів без годівниці сумує й тратить довіру.{2}", (string.IsNullOrEmpty(d.Note) ? Lang.T("Годівниця для воронів.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(Home.FeederReach), (d.Feed > 1.001f ? Lang.F("\nЦя годівниця ощадливіша: та сама їжа з неї насичує в {0} раза більше.", Lang.Num(d.Feed, "0.##")) : "")));
+            else if (d.Guard)
+                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nВорон лишається на ній на варті. Обживається {1} хв, а тоді б'є розлючених ворогів, яких бачить, до {2} м. Б'є із запасу варти, що набирається тут першим (до половини його сили): удар — {3}. Ставлять її надворі: відкрите небо заряду не шкодить. Покликати ворона звідси не можна — лише прийти й забрати.{4}\nВзаємодія — лишити на варті Хугіна, із Shift — Муніна.", (string.IsNullOrEmpty(d.Note) ? Lang.T("Вартова жердина.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(Home.SettleSeconds / 60f), Mathf.RoundToInt(Home.GuardRadius), Mathf.RoundToInt(Home.GuardCost), (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : "")));
             else if (d.Table)
                 piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nБіля нього майструють, як за верстаком.", ((string.IsNullOrEmpty(d.Note) ? Lang.T("Стіл, за яким роблять речі для воронів.") : Lang.T(d.Note).TrimEnd('.') + ".")
                     + (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : ""))));
             else
-                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nНа ній ворон відпочиває й набирається сили: до {1} на день, під дахом і в затишку швидше.{2}\nВзаємодія — посадити Хугіна, із Shift — Муніна.", (string.IsNullOrEmpty(d.Note) ? Lang.T("Жердина для ворона.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(d.PerDay), (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : "")));
+                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nНа ній ворон відпочиває й набирається сили: до {1} на день, під дахом і в затишку швидше.{2}\nВзаємодія — посадити Хугіна, із Shift — Муніна. {3} — лишити його вдома: там він і стереже, що бачить (до {4} м), але удар коштує дорожче, ніж на вартовій жердині ({5} запасу варти).", (string.IsNullOrEmpty(d.Note) ? Lang.T("Жердина для ворона.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(d.PerDay), (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : ""), RavenKeys.LabelOf(RavenKeys.HomeId), Mathf.RoundToInt(Home.HomeRadius), Mathf.RoundToInt(Home.HomeCost)));
             piece.m_icon = IconPhotos.Get(d.Id) ?? AbilityIcons.For("hugin", false); // its own photo when there is one (no camera needed); else photographed later (Icons)
             piece.m_category = d.Table ? Piece.PieceCategory.Crafting : Piece.PieceCategory.Furniture;
+            if (d.Feeder) piece.m_category = Piece.PieceCategory.Furniture;
             piece.m_usage = BuildTab.Flag; // the hammer's own tab «RavenWatch» (BuildTab)
+            if (d.Table && !d.Feeder) piece.m_usage |= Piece.UsageTagFlags.Crafting; // the tables also in «Crafting», by the game's benches
             piece.m_notOnFloor = d.Wall;
             GameObject bench = scene.GetPrefab(d.Station) ?? scene.GetPrefab("piece_workbench");
             if (bench != null && bench.GetComponent<CraftingStation>() == null) { Log(d.Name + ": " + d.Station + " is no crafting station, the workbench instead"); bench = scene.GetPrefab("piece_workbench"); }
@@ -267,7 +295,7 @@ namespace HuginWhispers
             GameObject look = new GameObject("new");
             look.transform.SetParent(root.transform, false);
             look.layer = PieceLayer;
-            int parts = 0, seats = 0;
+            int parts = 0, seats = 0, eats = 0;
             bool ownBoxes = d.Model.Parts.Exists(x => WsFiles.IsBox(x.Src)); // (its own colliders: its parts get none)
             foreach (WsPart p in d.Model.Parts)
             {
@@ -284,7 +312,7 @@ namespace HuginWhispers
                 if (p.Src == WsFiles.Seat)
                 {
                     if (d.Table) continue; // a table seats no raven
-                    GameObject s = new GameObject("seat_" + seats++);
+                    GameObject s = new GameObject(d.Feeder ? "eat_" + eats++ : "seat_" + seats++); // (a feeder's: where a raven at home eats: HomeMeal)
                     s.transform.SetParent(root.transform, false);
                     s.transform.localPosition = p.Pos; s.transform.localRotation = Quaternion.Euler(p.Rot);
                     continue;
@@ -304,7 +332,7 @@ namespace HuginWhispers
             }
             WearNTear wnt = root.AddComponent<WearNTear>();
             wnt.m_new = look; wnt.m_worn = look; wnt.m_broken = look;
-            wnt.m_health = 400f;
+            wnt.m_health = d.Guard ? GuardHealth : d.Table || d.Feeder ? 400f : PerchHealth;
             wnt.m_materialType = WearNTear.MaterialType.Wood;
             GameObject like = scene.GetPrefab("piece_chair") ?? scene.GetPrefab("woodiron_pole");
             if (like != null)
@@ -315,6 +343,7 @@ namespace HuginWhispers
                 if (lw != null) { wnt.m_destroyedEffect = lw.m_destroyedEffect; wnt.m_hitEffect = lw.m_hitEffect; wnt.m_switchEffect = lw.m_switchEffect; }
             }
             if (d.Table) Station(d, root);
+            else if (d.Feeder) Feeder.Make(d, root, scene);
             else if (d.Nest) { root.AddComponent<PerchView>(); root.AddComponent<NestView>(); } // a perch of two seats, and Odin's (Nest)
             else root.AddComponent<PerchView>();
             Log(d.Name + " built as " + d.Prefab + ": " + parts + " parts, " + seats + " seat(s), cost " + d.Cost);
@@ -346,9 +375,6 @@ namespace HuginWhispers
                 cs.m_useAnimation = like.m_useAnimation;
             }
         }
-
-        // the raven table's station (for the recipes of things for the ravens): the first table there is
-        internal static CraftingStation TableStation { get { foreach (Def d in Tables) if (d.Built != null) return d.Built.GetComponent<CraftingStation>(); return null; } }
 
         private static readonly Dictionary<string, Material> Baked = new Dictionary<string, Material>();
 
@@ -536,7 +562,7 @@ namespace HuginWhispers
         // (its smoke) left off.
         internal static void Reveal(GameObject r, bool offscreen)
         {
-            foreach (Transform t in r.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(r.transform, false)) // (its own parts the game shrank, not what it wears)
                 if (t != r.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
             foreach (Renderer x in r.GetComponentsInChildren<Renderer>(true))
             {
@@ -560,6 +586,14 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- the raven's side: where it sits
+
+        // where it sits, in this world (the orders circle points there); false: no seat, or a seat in another world
+        internal static bool SpotPos(ItemDrop.ItemData item, out Vector3 pos)
+        {
+            Spot s = Where(item);
+            pos = s != null ? s.Pos : Vector3.zero;
+            return s != null && (s.World.Length == 0 || s.World == World);
+        }
 
         internal static bool On(ItemDrop.ItemData item)
         {
@@ -661,7 +695,7 @@ namespace HuginWhispers
         private static int Today { get { return EnvMan.instance != null ? EnvMan.instance.GetDay() : 0; } }
 
         // the time since the last look turned into strength (at most a game day's share); asleep: none
-        private static void Charge(ItemDrop.ItemData item)
+        internal static void Charge(ItemDrop.ItemData item)
         {
             double now = WorldTime.Now, at;
             string raw;
@@ -678,7 +712,7 @@ namespace HuginWhispers
             float mul = item.m_customData.ContainsKey(MulKey) ? ReadF(item, MulKey) : 1f;
             int zone = Satiety.Zone(item);
             float fed = zone <= Satiety.Hungry ? 0f : zone == Satiety.Fed ? Satiety.FedGainMul : 1f; // as Satiety.GainMul
-            float perMinute = norm / Mathf.Max(1f, Power.GameDaySeconds() / 60f) * mul * fed;
+            float perMinute = norm / Mathf.Max(1f, Power.GameDaySeconds() / 60f) * mul * fed * GearFx.StrengthMul(item); // (Збруя гінця: faster, the day's norm the same)
             float add = Mathf.Min(minutes * perMinute, norm - gained);
             float before = Power.Get(item), max = Trust.Strength(item);
             add = Mathf.Min(add, max - before);
@@ -744,6 +778,7 @@ namespace HuginWhispers
             RavenSkills.SyncSoon(); // its model on the shoulder takes over from the perch's bird at once
             if (p == null) return;
             if (_together) { _togetherMunin.Add(munin); _togetherGot.Add(got); _togetherFrom.Add(from); return; } // both called at once: one message after
+            if (why != null && why.Length == 0) return; // (quiet: an errand's guide hopping on, FollowStep)
             RavenMsg.Center(p, why + GotText(got, from));
         }
 
@@ -800,7 +835,8 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- sitting down and calling back
 
-        private sealed class Pending { internal PerchView View; internal ZDOID Zdo; internal int Seat; internal string Token; internal ItemDrop.ItemData Item; internal bool Munin; internal float Until; }
+        internal const string LeadMode = "lead"; // a sit of an errand's guide (Lead): landing quietly
+        private sealed class Pending { internal PerchView View; internal ZDOID Zdo; internal int Seat; internal string Token; internal ItemDrop.ItemData Item; internal bool Munin; internal float Until; internal string Mode = ""; }
 
         // sit-downs dropped before they were confirmed (death, a new life): their seats let go, wherever the perch is
         private static void DropPending()
@@ -832,7 +868,11 @@ namespace HuginWhispers
 
         internal static void Sit(Player p, PerchView v, bool munin) { Sit(p, v, munin, -1); }
 
-        internal static void Sit(Player p, PerchView v, bool munin, int seat)
+        internal static void Sit(Player p, PerchView v, bool munin, int seat) { Sit(p, v, munin, seat, ""); }
+
+        // mode: "" a rest on the perch; Home.AtHome / Home.OnGuard — it flies there first, the same way, and once it
+        // sits there it stays (Home.Commit takes it off you)
+        internal static void Sit(Player p, PerchView v, bool munin, int seat, string mode)
         {
             ItemDrop.ItemData item;
             string why = WhyNot(p, munin, out item);
@@ -847,12 +887,11 @@ namespace HuginWhispers
             bool flip = Vector3.Dot(way, front) < 0f;
             if (v.IsSpot && SitOn.Follows(v)) flip = false; // on a player: facing their way, as on a shoulder
             else if (WallAhead(v, seat, flip) && !WallAhead(v, seat, !flip)) flip = !flip; // its beak would be in the wall: the other way
-            ZDO pz = NetFlag.Zdo(p, false);
-            string outfit = pz != null ? pz.GetString(munin ? Outfits.KeyM : Outfits.KeyH, "") : "";
+            string outfit = Outfits.Code(item); // (what it shows: as on the shoulder)
             string wear = RavenWear.Code(item); // what its runes give it (line 3)
-            string data = p.GetPlayerID() + "|" + (munin ? 1 : 0) + "|" + Trust.ShownLevel(munin, item) + "|" + token + "|" + p.GetPlayerName().Replace("|", "/") + "|" + p.GetZDOID().UserID + "|" + (flip ? "1" : "0") + "|" + (Grammar.Female(p) ? "1" : "0") + "|" + Voice.Code(item) + "\n" + outfit + "\n" + wear; // field 8: its own voice, for when you are not around
+            string data = p.GetPlayerID() + "|" + (munin ? 1 : 0) + "|" + Trust.ShownLevel(munin, item) + "|" + token + "|" + p.GetPlayerName().Replace("|", "/") + "|" + p.GetZDOID().UserID + "|" + (flip ? "1" : "0") + "|" + (Grammar.Female(p) ? "1" : "0") + "|" + Voice.Code(item) + "||" + (Backup.Id(item) ?? "") + "|" + RavenVoice.KeptTimbre(item) + "\n" + outfit + "\n" + wear; // fields 9–10: no mode (a rest), its id (who it is: Guests) // field 8: its own voice, for when you are not around; 11: its speaking timbre
             v.Send(seat, data);
-            _pending.Add(new Pending { View = v, Zdo = v.Id, Seat = seat, Token = token, Item = item, Munin = munin, Until = Time.time + 4f });
+            _pending.Add(new Pending { View = v, Zdo = v.Id, Seat = seat, Token = token, Item = item, Munin = munin, Until = Time.time + 4f, Mode = mode ?? "" });
         }
 
         // the perch's owner took it: the raven is told where it sits now (and flies off the shoulder at the next look)
@@ -896,7 +935,10 @@ namespace HuginWhispers
             RavenItem.ForgetWorn();
             RavenSkills.SyncSoon(); // the shoulder and the book see it at once
             string onWhom = pd.View.IsSpot ? SitOn.Text(pd.View) : null, visit = pd.View.IsSpot ? WorldVisit.Note(pd.Munin) : null;
-            if (visit != null) p.Message(MessageHud.MessageType.TopLeft, visit, 0, RavenItem.Icon(pd.Munin));
+            if (pd.Mode == LeadMode) { } // an errand's guide: quietly (FollowStep says what it does)
+            else if (pd.Mode == Guests.VisitMode) Guests.Landed(pd.Munin, pd.View, pd.Seat, pd.Token); // a visit to a friend raven: quietly (Guests says it)
+            else if (pd.Mode.Length > 0) Home.Flying(p, pd.Item, pd.Munin, pd.View, pd.Seat, pd.Token, pd.Mode); // to stay there: said once it sits
+            else if (visit != null) p.Message(MessageHud.MessageType.TopLeft, visit, 0, RavenItem.Icon(pd.Munin));
             else if (onWhom != null) p.Message(MessageHud.MessageType.TopLeft, Lang.F("{0} «Повернути» — і він прилетить назад.", (Plugin.RavenName(pd.Munin) + onWhom)));
             else if (pd.View.IsSpot) p.Message(MessageHud.MessageType.TopLeft, Plugin.RavenName(pd.Munin) + Grammar.Fix(Lang.T(" полетів сісти туди, куди ти показа{в|ла}. «Повернути» — і він прилетить назад."), p));
             else if (pd.View.GetComponent<NestView>() != null) p.Message(MessageHud.MessageType.TopLeft, Lang.F("{0} полетів у гніздо. Там він відпочине й набереться сили (до {1} на день; {2}).", Plugin.RavenName(pd.Munin), Mathf.RoundToInt(pd.View.PerDay), pd.View.EnvText()));
@@ -1028,7 +1070,7 @@ namespace HuginWhispers
         // It is called off its seat as when called back, and the moment its bird is in the air (its shoulder model
         // made from it) it is sent on to the new place: the flight there turns it in the air (Perches.FlyTo), it does
         // not land on you between. Moving: the checks "on the shoulder, landed, not busy" let it go from the air.
-        private sealed class Move { internal SitHere.Target T; internal float Until; }
+        private sealed class Move { internal SitHere.Target T; internal float Until; internal bool Free; internal Vector3 At; internal Quaternion Rot; } // Free: an errand's guide, onto an unseen spot there (Lead)
         private static readonly Move[] Moves = new Move[2];
         private const float MoveWait = 6f; // its bird not in the air by then (a far perch, a lag): the move is dropped, it comes to you
         private static bool Moving;
@@ -1088,7 +1130,7 @@ namespace HuginWhispers
                 Moves[k] = null;
                 Moving = true;
                 string why;
-                try { why = ToTarget(p, munin, m.T); }
+                try { why = m.Free ? SitHere.Place(p, munin, m.At, m.Rot, null, false, LeadMode) : ToTarget(p, munin, m.T); }
                 finally { Moving = false; }
                 if (why != null) RavenMsg.Center(p, Lang.F("{0}\n{1} летить до тебе.", why, Plugin.RavenName(munin))); // (the place went meanwhile: it just comes back)
             }
@@ -1113,6 +1155,43 @@ namespace HuginWhispers
         }
 
         // back to you from where it sits, saying nothing (the end of its own visit: WorldVisit)
+        // an errand's guide (FollowStep): onto an unseen spot there, free and quiet (as a visit of its own: no order paid, no
+        // food); sitting somewhere already, it goes there straight through the air (the move). null when on its way, else why not
+        internal static string Lead(Player p, bool munin, Vector3 at, Quaternion rot)
+        {
+            ItemDrop.ItemData item = RavenSeat.On(p, munin);
+            if (p == null || item == null) return Lang.F("{0} нема на плечі.", Plugin.RavenNameGen(munin));
+            int k = munin ? 1 : 0;
+            if (Waiting(munin) || Moves[k] != null) return null; // (already on its way somewhere: the guide asks again when it sits)
+            if (!On(item))
+            {
+                ItemDrop.ItemData it;
+                string why = WhyNot(p, munin, out it); // (asleep, away, sulking, busy in the air: said here, not after it was sent)
+                return why ?? SitHere.Place(p, munin, at, rot, null, false, LeadMode);
+            }
+            if (Trust.Stranger(item, p)) return Lang.F("{0} не твій — він не сяде, куди ти скажеш.", Plugin.RavenName(munin));
+            if (Trust.AwayLeft(item) > 0f) return Lang.F("{0} {1}.", Plugin.RavenName(munin), Trust.AwayWord(munin, item));
+            string sulk = Quirks.Sulk(p, munin);
+            if (sulk != null) return sulk + ".";
+            CallFar(p, item, munin, "");
+            Moves[k] = new Move { Free = true, At = at, Rot = rot, Until = Time.time + MoveWait };
+            return null;
+        }
+
+        // on its way to a seat or a move (not yet sitting)
+        internal static bool Busy(bool munin) { return Waiting(munin) || Moves[munin ? 1 : 0] != null; }
+
+        // the seat it sits on now, as loaded here (its voice comes from there); null when not loaded
+        internal static Transform SpotOf(ItemDrop.ItemData item)
+        {
+            Spot s = Where(item);
+            GameObject g = s != null && ZNetScene.instance != null ? ZNetScene.instance.FindInstance(s.Zdo) : null;
+            return g != null ? g.transform : null;
+        }
+
+        // called back from where it sits without a word (an errand's guide at its end)
+        internal static void CallSilent(Player p, ItemDrop.ItemData item, bool munin) { if (p != null && item != null && On(item)) CallFar(p, item, munin, ""); }
+
         internal static void CallQuiet(Player p, ItemDrop.ItemData item, bool munin)
         {
             if (p == null || item == null || !On(item)) return;
@@ -1175,9 +1254,9 @@ namespace HuginWhispers
         }
 
         // the bird on a perch (or on its way there) flies off and away: the shoulder's fly-off on the same bird
-        internal static void FlyAway(GameObject b, bool munin, int level, Player owner, Transform face)
+        internal static ShoulderFlyOff FlyAway(GameObject b, bool munin, int level, Player owner, Transform face)
         {
-            if (b == null) return;
+            if (b == null) return null;
             foreach (PerchFlight f in b.GetComponents<PerchFlight>()) UnityEngine.Object.DestroyImmediate(f);
             foreach (PerchLife l in b.GetComponents<PerchLife>()) UnityEngine.Object.DestroyImmediate(l);
             foreach (PerchPose pp in b.GetComponents<PerchPose>()) UnityEngine.Object.DestroyImmediate(pp);
@@ -1201,6 +1280,7 @@ namespace HuginWhispers
             fly.Motor = RavenMotor.Of(b, munin, owner);
             fly.Wait = fly.Motor != null && fly.Motor.Airborne ? 0f : 0.25f; // the wings open first, unless already flying
             AnimDirector.Take(b, RavenAct.FlyOff, fly, "flies off a perch to Odin");
+            return fly;
         }
 
         // called back from wherever it sits: the perch here → its own bird flies to you, however far; not loaded → it
@@ -1329,7 +1409,7 @@ namespace HuginWhispers
             string[] w = o.Raw.Split('|');
             if (w.Length < 8) { string[] x = new string[8]; for (int i = 0; i < 8; i++) x[i] = i < w.Length ? w[i] : "0"; w = x; }
             w[6] = o.Flip ? "0" : "1";
-            v.Send(seat, string.Join("|", w) + "\n" + v.Outfit(seat));
+            v.Send(seat, string.Join("|", w) + "\n" + v.Outfit(seat) + "\n" + v.Zdo.GetString(SeatKey(seat) + "w", "")); // (its runes' look kept)
         }
 
         // console "raven roost": every raven of yours called back from wherever it sits (a perch out of reach, lost)
@@ -1366,6 +1446,7 @@ namespace HuginWhispers
             ZRoutedRpc.instance.Register<ZDOID, int, string>(RpcGone, OnGone);
             ZRoutedRpc.instance.Register<ZPackage>(RpcSay, OnSay);
             ZRoutedRpc.instance.Register<ZPackage>(RpcTalkHere, OnTalkHere);
+            PerchCrowd.Register(); // (ravens on perches near each other talking together)
         }
 
         // "free this seat if that raven still sits there": seat -1 = the perch itself is gone (every raven on it leaves)
@@ -1401,7 +1482,8 @@ namespace HuginWhispers
         internal static bool MayChange(long sender, Occupant cur)
         {
             if (cur == null || cur.Uid == 0) return true;
-            return sender == cur.Uid || sender == ZDOMan.GetSessionID();
+            if (sender == cur.Uid || sender == ZDOMan.GetSessionID()) return true;
+            return cur.Mode.Length > 0 && Home.PidOf(sender) == cur.Pid; // a raven left at home: its owner, in whatever later session
         }
 
         // ---- what a perch's raven says, sent once by the perch's holder to everyone (shown by those near)
@@ -1417,6 +1499,7 @@ namespace HuginWhispers
             if (ZRoutedRpc.instance == null) return;
             ZPackage pkg = new ZPackage(); pkg.Write(perch); pkg.Write(lines.Count);
             foreach (TalkBubble.Line l in lines) { pkg.Write(l.Munin); pkg.Write(l.Text); }
+            foreach (TalkBubble.Line l in lines) { pkg.Write(l.Name ?? ""); pkg.Write(l.To ?? ""); } // (who to whom, when named)
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcTalkHere, pkg);
         }
 
@@ -1445,6 +1528,7 @@ namespace HuginWhispers
             int n = Mathf.Min(pkg.ReadInt(), RavenTalk.MaxLines);
             List<TalkBubble.Line> lines = new List<TalkBubble.Line>();
             for (int i = 0; i < n; i++) lines.Add(new TalkBubble.Line { Munin = pkg.ReadBool(), Text = pkg.ReadString() });
+            for (int i = 0; i < lines.Count && pkg.GetPos() < pkg.Size(); i++) { TalkBubble.Line l = lines[i]; string nm = pkg.ReadString(), to = pkg.ReadString(); l.Name = nm.Length > 0 ? nm : null; l.To = to.Length > 0 ? to : null; lines[i] = l; }
             PerchView v = Near(id);
             if (v == null || !v.HeldBy(sender) || lines.Count == 0) return;
             Player me = Player.m_localPlayer;
@@ -1470,6 +1554,7 @@ namespace HuginWhispers
             if (Moves[0] != null || Moves[1] != null) MoveOn(p);
             SitHere.Tick(); // the «sit here» spots nobody uses any more: taken away
             WorldVisit.Tick(p); // the ravens' own visits: what they do there, and back in time
+            Home.Tick(p); // the ravens left at home: settled there, taken back, their news
             if (Time.time < _nextCharge) return;
             _nextCharge = Time.time + 5f;
             foreach (ItemDrop.ItemData item in new List<ItemDrop.ItemData>(Mine(p)))
@@ -1539,6 +1624,7 @@ namespace HuginWhispers
         internal static void Spawned()
         {
             _spawnedAt = Time.time; DropPending();
+            Guests.Reset();
             foreach (Left l in LeftFrom.Values) if (l.Bird != null) UnityEngine.Object.Destroy(l.Bird);
             LeftFrom.Clear();
             Misses.Clear();
@@ -1600,7 +1686,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- the flights there and back
 
-        internal sealed class Occupant { internal long Pid; internal bool Munin; internal int Level; internal string Token = "", Name = "", Raw = ""; internal long Uid; internal bool Flip, Female; internal int Voice = -1; }
+        internal sealed class Occupant { internal long Pid; internal bool Munin; internal int Level; internal string Token = "", Name = "", Raw = ""; internal long Uid; internal bool Flip, Female; internal int Voice = -1, Timbre = -1; internal string Mode = "", Rid = ""; internal bool Home { get { return Mode.Length > 0; } } }
 
         internal static Occupant Parse(string raw)
         {
@@ -1617,6 +1703,9 @@ namespace HuginWhispers
             o.Flip = w.Length > 6 && w[6] == "1"; // it sits facing the other way along the bar
             o.Female = w.Length > 7 && w[7] == "1"; // its owner's forms in its words
             if (w.Length > 8 && !int.TryParse(w[8], out o.Voice)) o.Voice = -1; // its own voice (Voice), for when its owner is not around
+            if (w.Length > 9) o.Mode = w[9];  // "" resting, "h" left at home, "g" on guard (Home)
+            if (w.Length > 10) o.Rid = w[10]; // the raven's own id (Backup.Id)
+            if (w.Length > 11 && !int.TryParse(w[11], out o.Timbre)) o.Timbre = -1; // its kept speaking timbre (RavenVoice.TimbreKey)
             o.Raw = raw;
             return o;
         }
@@ -1844,6 +1933,7 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(ObjectDB), "Awake")]
     internal static class PerchDbPatch
     {
+        [HarmonyPriority(Priority.VeryLow)] // after WsItems: the costs may name our goods
         private static void Postfix()
         {
             try { Perches.Hammer(); }

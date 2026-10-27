@@ -117,6 +117,103 @@ namespace HuginWhispers
         private float _pendingAt;
         internal bool ShakeWanted;             // a quirk asked for a shake now (ShoulderLife.ShakeNow)
         internal string Wanted; internal float WantedAt, WantedUntil; // a quirk's moment asks this act by name (ShoulderLife.Act): from WantedAt, as soon as it may, else forgotten
+        // the rain (2026-10-22): out in it, it sits hunched («Мокне»), now and then flicks the water off its head or shakes
+        // itself; in from a soaking (the rain over, or under a roof) a big shake, often a preen after it
+        internal static float RainSoak = 20f, RainFlickMin = 15f, RainFlickMax = 35f, RainShakeMin = 45f, RainShakeMax = 100f, RainPreen = 0.5f;
+        private float _rainFor, _rainFlickAt, _rainShakeAt, _rainSoakAt, _rainPreenAt = -1f;
+        private void Rain(ISitBird b)
+        {
+            if (b.BirdAsleep) return;
+            bool swim = b.BirdHears && Senses.Swimming; // (your raven on your shoulder, you in the water)
+            if ((Quirks.Raining() && !Quirks.Snowing() && (b.BirdOnPerch ? OpenSky(b) : Quirks.Outside())) || swim) // (a snowstorm is a storm too: not a soaking)
+            {
+                if (_rainFor <= 0f) { _rainFlickAt = Time.time + Random.Range(3f, 8f); _rainShakeAt = Time.time + Random.Range(RainShakeMin, RainShakeMax) * 0.5f; _rainSoakAt = Time.time + Random.Range(1f, 3f); }
+                _rainFor += Time.deltaTime * (swim ? 6f : 1f);
+                if (Wanted != null || Playing) return;
+                if (Time.time >= _rainFlickAt) { _rainFlickAt = Time.time + Random.Range(RainFlickMin, RainFlickMax); Want(SitTemplates.FlickName, 0f, 3f); }
+                else if (Time.time >= _rainShakeAt) { _rainShakeAt = Time.time + Random.Range(RainShakeMin, RainShakeMax); ShakeWanted = true; }
+                else if (Time.time >= _rainSoakAt && Doze <= 0.01f) { _rainSoakAt = Time.time + Random.Range(1.5f, 5f); Want(swim ? SitTemplates.SwimName : SitTemplates.SoakName, 0f, 2f); }
+                return;
+            }
+            if (_rainFor >= RainSoak) { Want(SitTemplates.ShakeOffName, Random.Range(1.5f, 4f), 6f); _rainPreenAt = Random.value < RainPreen ? Time.time + 7f : -1f; }
+            _rainFor = 0f;
+            if (_rainPreenAt > 0f && Time.time >= _rainPreenAt && !Playing && Wanted == null) { _rainPreenAt = -1f; Want("Чистить пір'я", 0f, 5f); }
+        }
+
+        // a perch under the open sky (not your being outside: the perch may stand in a house), looked at now and then
+        private float _skyAt = -1f; private bool _sky;
+        private static int _skyMask;
+        private bool OpenSky(ISitBird b)
+        {
+            if (Time.time < _skyAt) return _sky;
+            _skyAt = Time.time + 3f;
+            Component me = b as Component;
+            if (me == null) return _sky = false;
+            if (_skyMask == 0) _skyMask = LayerMask.GetMask("Default", "static_solid", "piece", "terrain");
+            return _sky = !Physics.Raycast(me.transform.position + Vector3.up * 0.4f, Vector3.up, 30f, _skyMask, QueryTriggerInteraction.Ignore);
+        }
+
+        // a lean over to the other raven (a nudge, a preen) only when it sits beside it, not on the bar's other arm
+        internal static float BesideMetres = 0.45f;
+        private static bool Beside(ISitBird b)
+        {
+            Component me = b as Component, other = b.BirdPartner as Component;
+            return me != null && other != null && (me.transform.position - other.transform.position).sqrMagnitude < BesideMetres * BesideMetres;
+        }
+        internal void React(ISitBird b, string template, float after)
+        {
+            if (!b.BirdDecides || b.BirdAsleep) return;
+            SitTemplate t = SitTemplates.Find(template);
+            if (t == null || !t.For(b.BirdMunin) || !Rested(t, b)) return;
+            if (_pendingT != null && _pendingT.Prio >= t.Prio) return;
+            _pendingT = t; _pendingSit = SitTemplates.Doing; _pendingAt = Time.time + after;
+        }
+
+        // the world's moments a drooping raven (starving, sulking, cold) still has: its body's own, not a doing
+        private static bool DroopOk(string t) { return WakesWet(t) || t == "Підібрав лапу" || t == "Спекотно" || t == "Тримається" || t == "Тривожиться" || t == SitTemplates.SoakName || t == SitTemplates.SwimName; }
+        private static bool WakesWet(string t) { return t == SitTemplates.ShakeOffName || t == SitTemplates.FlickName || t == TuckHead; } // (and the sleep's own: tucked in)
+
+        // the world and your days (2026-10-22): each its own pause, its own chance, only for your ravens on you
+        internal const string TuckHead = "Ховає голову";
+        internal string Why = ""; // what the world is to it now (the studio's report)
+        private float _mLook, _mCold, _mHeat, _mThunder, _mShip, _mSleep, _mAfk, _mHurt, _dozeFor;
+        private int _mDawnDay = -1;
+        private bool _mMap, _mStore;
+        private void Moments(ISitBird b)
+        {
+            if (!b.BirdHears || b.BirdAsleep) return;
+            Player p = b.BirdOwner;
+            if (p == null || EnvMan.instance == null) return;
+            bool munin = b.BirdMunin;
+            float now = Time.time;
+            _dozeFor = Doze >= 0.99f ? (_dozeFor <= 0f ? now : _dozeFor) : 0f; // (since when it dozes)
+            // the moment you open the map, the trade: a look (an act of its own now, not waiting)
+            bool map = Minimap.IsOpen(), store = StoreGui.IsVisible();
+            if (map && !_mMap && Random.value < (munin ? 0.5f : 0.8f)) React(b, "Дивиться в мапу", Random.Range(0.2f, 0.7f));
+            if (store && !_mStore && Random.value < 0.7f) React(b, munin ? "Косить оком" : "Розглядає знахідку", Random.Range(0.3f, 0.9f));
+            _mMap = map; _mStore = store;
+            bool outside = Quirks.Outside();
+            if (outside && Quirks.Env().Contains("thunder") && now >= _mThunder) { _mThunder = now + Random.Range(15f, 45f); React(b, "Грім", Random.Range(0f, munin ? 0.1f : 0.25f)); }
+            if (Wanted != null || Playing || now < _mLook) return;
+            _mLook = now + 0.5f; // (the rest of the world: twice a second is enough)
+            // asleep on you: now and then the head tucked into its back
+            if (_dozeFor > 0f && now - _dozeFor > 15f && now >= _mSleep) { _mSleep = now + Random.Range(30f, 70f); Want(TuckHead, 0f, 3f); return; }
+            if (Studio.On) Why = Doze > 0.01f ? "dozing" : "";
+            if (Doze > 0.01f) return;
+            // the dawn: once a morning, a stretch and a caw
+            int day = EnvMan.instance.GetDay();
+            float frac = EnvMan.instance.GetDayFraction();
+            if (day != _mDawnDay && frac > 0.24f && frac < 0.32f) { _mDawnDay = day; if (outside) { Want("Потягується", Random.Range(0f, 15f), 20f); return; } }
+            bool heat = EffectArea.IsPointInsideArea(p.transform.position, EffectArea.Type.Heat, 1f) != null || Senses.Biome == Heightmap.Biome.AshLands;
+            bool cold = !heat && (EnvMan.IsCold() || EnvMan.IsFreezing()) && !p.InShelter() && !BreedTraits.ColdProof(RavenSeat.On(p, munin)); // (the breed «Жаровий»: never cold)
+            if (Studio.On) Why = (cold ? "cold " : "") + (heat ? "heat " : "") + (Senses.Afk ? "idle " : "") + (Senses.OnShip ? "ship " : "") + (Senses.Health01 < 0.3f ? "hurt " : "") + "env=" + Quirks.Env(); // (the studio's report)
+            if (cold && now >= _mCold) { _mCold = now + Random.Range(40f, 90f); Want("Підібрав лапу", 0f, 4f); return; }
+            if (heat && now >= _mHeat) { _mHeat = now + Random.Range(30f, 60f); Want("Спекотно", 0f, 4f); return; }
+            if (Senses.OnShip && (Quirks.Raining() || EnvMan.instance.GetWindIntensity() > 0.6f) && now >= _mShip) { _mShip = now + Random.Range(20f, 40f); Want("Тримається", 0f, 4f); return; }
+            if (Senses.Health01 < 0.3f && !p.IsDead() && now >= _mHurt) { _mHurt = now + Random.Range(12f, 25f); Want("Тривожиться", 0f, 3f); return; }
+            if (Senses.Afk && now >= _mAfk) { _mAfk = now + Random.Range(25f, 60f) * (munin ? 0.8f : 1.2f); Want("Досліджує тебе", 0f, 5f); return; }
+        }
+
         internal void Want(string template, float after, float wait) { Wanted = template; WantedAt = Time.time + after; WantedUntil = WantedAt + wait; }
         private int _pubTpl, _pubSeed, _pubSit;
         private long _pubStart;
@@ -144,6 +241,10 @@ namespace HuginWhispers
         internal static float DozeAfter = 12f, DozeIn = 5f, DozeOut = 0.6f, DozeHead = 22f, DozeHunch = 5f;
         internal const int WakePrio = 4;
         private float _drowsySince = -1f;
+
+        // a gift used with it: awake at once, and it nods off again only after DozeAfter of quiet (a gift done asleep:
+        // Munin screamed with his head tucked in his back)
+        internal void Wake() { _drowsySince = Time.time; } // (the doze itself eases out by DozeOut: no snap of the head)
         internal float GlanceMul { get { return Mathf.Max(0.3f, 1f - 0.5f * MoodW[1] - 0.4f * MoodW[2] + 1.5f * MoodW[3]); } }
 
         internal string Describe() { return "настрій " + SitTemplates.MoodNames[Mathf.Clamp(Mood, 0, 3)].ToLowerInvariant() + (Doze > 0.01f ? ", спить " + Mathf.RoundToInt(Doze * 100f) + "%" : "") + (Playing ? ", «" + Run.T.Name + "»" : ""); }
@@ -168,6 +269,8 @@ namespace HuginWhispers
         {
             bool munin = b.BirdMunin;
             Who(b);
+            Rain(b);
+            Moments(b);
             if (Time.time >= _moodAt)
             {
                 _moodAt = Time.time + 0.5f;
@@ -218,8 +321,8 @@ namespace HuginWhispers
             }
             if (Playing) return;
             // a quirk's moment (the grumbler grumbles, the show-off shows off, the picky one turns its beak away): its own act
-            if (Wanted != null && (Time.time >= WantedUntil || Doze > 0.01f)) Wanted = null;
-            if (Wanted != null && Time.time >= WantedAt && !b.BirdDroopy && b.BirdMayDo())
+            if (Wanted != null && (Time.time >= WantedUntil || (Doze > 0.01f && !WakesWet(Wanted)))) Wanted = null; // (the water shaken off wakes it, as a wet shake does)
+            if (Wanted != null && Time.time >= WantedAt && (!b.BirdDroopy || DroopOk(Wanted)) && b.BirdMayDo())
             {
                 SitTemplate wt = SitTemplates.Find(Wanted); Wanted = null;
                 if (wt != null && wt.For(munin) && ClipOk(wt, b)) { Start(b, wt, SitTemplates.Doing, Random.Range(0, 256), false); b.BirdDid(Run.Seconds, true); return; }
@@ -230,7 +333,7 @@ namespace HuginWhispers
             if (b.BirdDroopy || (Doze > 0.01f && !ShakeWanted) || (!ShakeWanted && Time.time < _doingNext)) return; // (asleep on its seat: no doings; wet, it shakes awake)
             if (!b.BirdMayDo()) { _doingNext = Time.time + Random.Range(2f, 5f); return; }
             bool shake = ShakeWanted;
-            System.Func<SitTemplate, bool> ok = x => Mine(x) && Rested(x, b) && (!shake || x.Shake) && ClipOk(x, b) && (!x.Step || b.BirdSpeed < 1f) && (x.Reach <= 0f || b.BirdOnPerch);
+            System.Func<SitTemplate, bool> ok = x => Mine(x) && Rested(x, b) && (!shake || x.Shake) && ClipOk(x, b) && (!x.Step || b.BirdSpeed < 1f) && (x.Reach <= 0f || (b.BirdOnPerch && (Beside(b) || PerchLife.CanMeet(b)))) && (!x.Scratch || !b.BirdOnPerch);
             int dsit = SitTemplates.Doing;
             SitTemplate d = null;
             if (!shake && Random.value < PairShare && PartnerFree(b)) { d = SitTemplates.Pick(SitTemplates.Pair, Mood, munin, ok, Random.value, Weight); if (d != null) dsit = SitTemplates.Pair; }
@@ -301,6 +404,17 @@ namespace HuginWhispers
             int sit = 0;
             for (int i = 0; i < SitTemplates.SitCount; i++) if (t.Sits[i]) { sit = i; break; }
             Start(b, t, sit, Random.Range(0, 256));
+        }
+
+        // what every game sees for itself at once (a blow mark on the perch): played here from the same seed, not sent
+        internal bool PlayHere(ISitBird b, string template, int seed)
+        {
+            SitTemplate t = SitTemplates.Find(template);
+            if (t == null || !t.For(b.BirdMunin) || HoldU >= 0f) return false;
+            Begin(b, t, SitTemplates.Doing, seed & 255, 0f);
+            _played[t] = Time.time;
+            _pubTpl = 0; // (not sent: the last act sent is not sent again under it)
+            return true;
         }
 
         // an act begins here now (the deciding game); it goes out with the next publish. 'ask': the other raven may answer it

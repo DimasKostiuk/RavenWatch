@@ -3,7 +3,7 @@ name: Сумка для годування
 note: Шкіряна торба з великим секретом: у ній їжа. Ворон знає про секрет. Ворон завжди знає про секрет.
 use: gear
 id: sumka_dlia_hoduvannia
-cost: LeatherScraps:6 DeerHide:2 Resin:2
+cost: LeatherScraps:6 DeerHide:2 Resin:2 RavenWatch_item_pryazhka_haldora:1
 station: RavenWatch_table_prostyi_voroniachyi_stil
 slot: back
 part asset/RPG_предмети/Bag pos 0 0.2535 0 rot -70 -177 0 scale 0.1269 0.1269 0.1269 tint 131614  # Bag (RPG_предмети)

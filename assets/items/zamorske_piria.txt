@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Заморське пір'я
+note: Пір'я птахів, яких тут ніхто не бачив. Хальдор везе його з-за моря й не каже звідки. Ворони заздрять мовчки.
+use: item
+id: zamorske_piria
+stack: 50
+weight: 0.1
+sell: 80 defeated_dragon
+part asset/Товари/GoodsFeathers pos 0 0 0 rot 0 0 0 scale 0.16 0.16 0.16  # Заморське пір'я (Meshy), ~30 см

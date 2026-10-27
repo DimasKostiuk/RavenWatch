@@ -487,6 +487,7 @@ namespace HuginWhispers
             if (mat == null) return;
             GameObject holder = new GameObject("RavenWatch_BeastSmoke");
             holder.AddComponent<Feathers.Follow>().Target = pl.transform;
+            Shadow.Outside(holder, pl); // (hidden with you in Hugin's shadow)
             GameObject go = new GameObject("smoke");
             go.transform.SetParent(holder.transform, false);
             go.transform.localPosition = Vector3.up * 2.9f;
@@ -576,7 +577,7 @@ namespace HuginWhispers
         {
             if (p == null || Mat() == null || EyeMesh() == null) return null;
             Animator an = p.GetComponentInChildren<Animator>();
-            Transform head = an != null ? Utils.FindChild(an.transform, "Head", Utils.IterativeSearchType.DepthFirst) : null;
+            Transform head = an != null ? PlayerAnims.SkeletonBone(p, an.transform, "Head") : null; // (not a raven's head on your shoulder)
             if (head == null) return null;
             Transform b = p.transform;
             float s = b.localScale.x;

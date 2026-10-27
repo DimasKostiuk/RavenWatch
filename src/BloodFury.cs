@@ -50,7 +50,7 @@ namespace HuginWhispers
             Player p = (Player)c;
             ItemDrop.ItemData hugin, munin;
             RavenItem.Worn(p, out hugin, out munin);
-            if (munin == null || Trust.Away(munin) || Trust.SettledLevel(munin) < RavenAbilities.StrongUnlock || Left(p) > 0f || !Shoulder.Arrived(p, true)) return;
+            if (munin == null || Trust.Away(munin) || Trust.Hostile(munin) || Trust.SettledLevel(munin) < RavenAbilities.StrongUnlock || Left(p) > 0f || !Shoulder.Arrived(p, true)) return;
             _busy = true;
             try
             {

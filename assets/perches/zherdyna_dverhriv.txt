@@ -3,10 +3,10 @@ name: Жердина двергрів
 note: Темне дерево з різьбленим круком, двергрські ліхтарі й крижані серця: від неї віє морозом
 use: perch
 id: zherdyna_dverhriv
-cost: YggdrasilWood:8 Eitr:4 FreezeGland:4
+cost: YggdrasilWood:8 Eitr:4 FreezeGland:4 RavenWatch_item_chornylo_vishchuna:2
 station: piece_magetable
 perday: 100
-pose: 0 0 0 -6 0 0 0 -6 0 -27 -27
+pose: -50 90 -45 16 -50 90 -45 16 0 -27 -27
 stand: 0 0 0 0 0 0 0 0 0 -27 -27
 part asset/Жердини/PerchDvergr pos 0 1.0 0 rot 0 0 0 scale 2.1 2.1 2.1  # Жердина двергрів (Meshy), 2 м
 part @seat pos 0.42 1.53 -0.21 rot 0 0 0 scale 1 1 1  # місце ворона

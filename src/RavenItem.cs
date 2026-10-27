@@ -17,6 +17,8 @@ namespace HuginWhispers
         internal const string MuninPrefab = "RavenWatch_Munin";
         internal const string RerollPrefab = "RavenWatch_FateStone";
         internal const string LetterPrefab = "RavenWatch_Letter"; // the post's blank sheet (Post)
+        internal const string FeatherPrefab = "RavenWatch_OdinFeather"; // carried for an errand (CarryStep)
+        internal const string FeatherStampKey = "RavenWatch_feather";     // on each one: which errand, step and taking (CarryStep.Stamp)
 
         internal static bool Enabled = true;
         internal static int HuginPrice = 1500;
@@ -31,6 +33,7 @@ namespace HuginWhispers
         internal static GameObject Munin;
         internal static GameObject Reroll;
         internal static GameObject Letter;
+        internal static GameObject Feather;
         private static GameObject _holder;
         private static Sprite _huginIcon;
         private static Sprite _muninIcon;
@@ -126,6 +129,65 @@ namespace HuginWhispers
             return go;
         }
 
+        // Odin's feather: an errand's (CarryStep) — used from the bag, it is laid down; no portal, no post, no price
+        private static GameObject BuildFeather(GameObject feathers)
+        {
+            GameObject go = Clone(feathers, FeatherPrefab);
+            if (go == null) return null;
+            ItemDrop.ItemData.SharedData sh = go.GetComponent<ItemDrop>().m_itemData.m_shared;
+            sh.m_name = Lang.Word("rw_item_feather", "Перо Одіна");
+            sh.m_description = Lang.Word("rw_item_feather_desc", "Перо з крила Одінового ворона. Донеси його туди, куди кличе доручення, і там використай (правий клік). Крізь портал не пройде.");
+            sh.m_itemType = ItemDrop.ItemData.ItemType.Consumable;
+            sh.m_maxStackSize = 1;
+            sh.m_weight = 0.1f;
+            sh.m_value = 0;
+            sh.m_teleportable = false;
+            sh.m_toolTier = 1000; // (the game's portal check: such a thing never goes through, even where all things may)
+            sh.m_questItem = false;
+            sh.m_food = 0f; sh.m_foodStamina = 0f; sh.m_foodEitr = 0f;
+            sh.m_consumeStatusEffect = null;
+            FateStoneLook.Dress(go, FateStoneLook.Odin); // black, a faint gold glow, a gold light and sparks
+            Sprite icon = AbilityIcons.Get("feather"); // assets/icons/feather.png (tools/FeatherIcon.cs), or config/RavenWatch/icons/feather.png
+            if (icon != null) sh.m_icons = new Sprite[] { icon };
+            return go;
+        }
+
+        internal static bool IsFeather(ItemDrop.ItemData item)
+        {
+            return item != null && item.m_dropPrefab != null && item.m_dropPrefab.name == FeatherPrefab;
+        }
+
+        private static bool Stamped(ItemDrop.ItemData it, string stamp)
+        {
+            string s;
+            return it.m_customData != null && it.m_customData.TryGetValue(FeatherStampKey, out s) && s == stamp;
+        }
+
+        // the feather just put in the bag (the one without a stamp yet) gets this one
+        internal static void StampNew(Player p, string stamp)
+        {
+            foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems())
+                if (IsFeather(it) && (it.m_customData == null || !it.m_customData.ContainsKey(FeatherStampKey))) { it.m_customData[FeatherStampKey] = stamp; return; }
+        }
+
+        // how many of Odin's feathers with this stamp the bag holds
+        internal static int Feathers(Player p, string stamp)
+        {
+            int n = 0;
+            if (p != null) foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems()) if (IsFeather(it) && Stamped(it, stamp)) n += it.m_stack;
+            return n;
+        }
+
+        // out of the bag: all of them, or (keep) all but the one that counts now; true when there were any
+        internal static bool DropFeathers(Player p) { return DropFeathers(p, null); }
+        internal static bool DropFeathers(Player p, string keep)
+        {
+            if (p == null) return false;
+            List<ItemDrop.ItemData> all = p.GetInventory().GetAllItems().FindAll(it => IsFeather(it) && (keep == null || !Stamped(it, keep)));
+            foreach (ItemDrop.ItemData it in all) p.GetInventory().RemoveItem(it);
+            return all.Count > 0;
+        }
+
         private static void BuildAll(Func<string, GameObject> find)
         {
             GameObject feathers = find("Feathers");
@@ -133,6 +195,7 @@ namespace HuginWhispers
             if (Munin == null) Munin = BuildRaven(feathers, true);
             if (Reroll == null) Reroll = BuildReroll(find("Thunderstone") ?? feathers);
             if (Letter == null) Letter = BuildLetter(find("LeatherScraps") ?? feathers);
+            if (Feather == null) Feather = BuildFeather(feathers);
         }
 
         // the game's network prefab list: dropped ravens must exist for everyone
@@ -140,7 +203,7 @@ namespace HuginWhispers
         {
             if (!Enabled || scene == null || scene.m_prefabs == null) return;
             BuildAll(n => scene.m_prefabs.Find(g => g != null && g.name == n));
-            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter })
+            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter, Feather })
                 if (g != null && !scene.m_prefabs.Contains(g)) scene.m_prefabs.Add(g);
         }
 
@@ -151,7 +214,7 @@ namespace HuginWhispers
             Power.NoticePov();
             BuildAll(n => db.GetItemPrefab(n));
             bool added = false;
-            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter })
+            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter, Feather })
                 if (g != null && !db.m_items.Contains(g)) { db.m_items.Add(g); added = true; }
             if (added && UpdateRegisters != null) UpdateRegisters.Invoke(db, null);
         }
@@ -300,12 +363,14 @@ namespace HuginWhispers
             try
             {
                 string dir = IconDir;
-                if (!Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                    File.WriteAllText(Path.Combine(dir, "ПРОЧИТАЙ.txt"),
-                        Lang.T("Свої іконки воронів: поклади сюди hugin.png і/або munin.png.\nКвадратна PNG із прозорим фоном, найкраще 128x128 (можна 256x256).\nПідхоплюється при вході у світ або одразу командою в консолі: raven icons\nНема файлу — мод бере свої вбудовані іконки.\n"), new System.Text.UTF8Encoding(false));
-                }
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                // what the folder is for: README.txt (an English name, as every file of the mod; the words in your
+                // language), written while missing; the old Ukrainian-named one (before 2.4.0) goes
+                string old = Path.Combine(dir, "ПРОЧИТАЙ.txt"), readme = Path.Combine(dir, "README.txt");
+                if (File.Exists(old)) File.Delete(old);
+                if (!File.Exists(readme))
+                    File.WriteAllText(readme,
+                        Lang.T("Свої іконки воронів: поклади сюди hugin.png і/або munin.png.\nКвадратна PNG із прозорим фоном, найкраще 128x128 (можна 256x256).\nПідхоплюється при вході у світ.\nНема файлу — мод бере свої вбудовані іконки.\n"), new System.Text.UTF8Encoding(false));
                 // your file in the folder, else the mod's own picture (assets/icons/hugin.png, munin.png)
                 bool ownHugin = File.Exists(Path.Combine(dir, "hugin.png")), ownMunin = File.Exists(Path.Combine(dir, "munin.png"));
                 _huginFile = AbilityIcons.Get("hugin");
@@ -378,7 +443,7 @@ namespace HuginWhispers
         private static void Postfix(ObjectDB __instance) { RavenItem.RegisterItems(__instance); }
     }
 
-    // Haldor sells both ravens and the Fate stone
+    // Haldor sells both ravens, the Fate stone, the parchment and our goods for the raven things (WsItems.ForSale)
     [HarmonyPatch(typeof(Trader), "GetAvailableItems")]
     internal static class RavenTraderPatch
     {
@@ -392,6 +457,7 @@ namespace HuginWhispers
             Offer(__result, RavenItem.Munin, RavenItem.MuninPrice);
             Offer(__result, RavenItem.Reroll, RavenItem.RerollPrice);
             Offer(__result, RavenItem.Letter, RavenItem.LetterPrice); // (one at a time)
+            foreach (KeyValuePair<GameObject, int> g in WsItems.ForSale(Player.m_localPlayer)) Offer(__result, g.Key, g.Value); // our goods, each after its boss
         }
 
         // StoreGui finds the selected entry by reference (GetSelectedItemIndex), so each offer must be the same
@@ -452,37 +518,105 @@ namespace HuginWhispers
         }
     }
 
-    // using the Fate stone: roll the worn raven again
+    // using the Fate stone: roll a worn raven again. Taken at the right click itself (UseItem, before every other
+    // mod: some stop a consumable there, and then the game's ConsumeItem never comes); ConsumeItem stays as a fallback.
+    // The click asks which raven (RavenBook.ShowRavenPick, as Odin's call): both may sit on you; the stone goes only
+    // when one is picked.
+    internal static class FateStone
+    {
+        internal static bool Use(Player p, Inventory inventory, ItemDrop.ItemData item)
+        {
+            if (p == null || p != Player.m_localPlayer || FateRite.Busy) return false; // (the last stone still at work: this one stays in the bag)
+            if (Trust.Worn(false) == null && Trust.Worn(true) == null)
+            {
+                RavenMsg.Center(p, Lang.T("Посади на плече ворона,\nякому хочеш змінити долю."));
+                return false;
+            }
+            if (InventoryGui.instance != null && InventoryGui.IsVisible()) InventoryGui.instance.Hide();
+            RavenBook.ShowRavenPick(new RavenPick
+            {
+                Title = Lang.T("Камінь долі"),
+                Say = Lang.T("Підніми камінь до ворона — і доля його перекинеться: нове благо й новий тягар."),
+                Sub = Lang.T("Старої долі вже не повернути. Обери, кому змінити:"),
+                WhyNot = munin => WhyNot(p, munin),
+                Note = munin => Perks.Rolled(Trust.Worn(munin)) ? Perks.Short(Trust.Worn(munin)) : Lang.T("доля ще прихована"),
+                Act = munin => Reroll(p, munin),
+            });
+            return false; // (spent only when a raven is picked)
+        }
+
+        // why this raven's fate cannot be changed now; null: it can
+        private static string WhyNot(Player p, bool munin)
+        {
+            ItemDrop.ItemData raven = Trust.Worn(munin);
+            if (raven == null) return Lang.T("не на плечі");
+            if (Trust.Stranger(raven, p)) return Lang.F("не твій: долю йому міняє лише {0}", Trust.OwnerName(raven));
+            return null;
+        }
+
+        // the raven picked: its fate rolled again, the stone spent, the rite shown; null, or why not
+        private static string Reroll(Player p, bool m)
+        {
+            if (FateRite.Busy) return null;
+            string why = WhyNot(p, m);
+            if (why != null) return RavenItem.Name(m) + ": " + why + ".";
+            ItemDrop.ItemData stone = null;
+            foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems()) if (RavenItem.IsReroll(it)) { stone = it; break; }
+            if (stone == null) return Lang.T("Каменя долі в сумці нема.");
+            ItemDrop.ItemData raven = Trust.Worn(m);
+            string was = Perks.Short(raven);
+            Perks.Reroll(raven, m);
+            Backup.Save(p, raven); // the copy follows the new fate at once: no going back to the old one
+            p.GetInventory().RemoveOneItem(stone);
+            if (Plugin.Instance != null) Plugin.Instance.Log("Fate stone: " + RavenItem.Name(m) + " " + was + " -> " + Perks.Short(raven));
+            FateRite.Play(p, m, raven, RavenItem.Name(m) + ": " + Perks.Short(raven)); // shown: the stone raised, the raven turned (the new fate told at its end; a golden blessing its own way)
+            return null;
+        }
+    }
+
+    [HarmonyPatch(typeof(Humanoid), "UseItem")]
+    internal static class FateStoneUsePatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static bool Prefix(Humanoid __instance, Inventory __0, ItemDrop.ItemData __1)
+        { try {
+            if (!RavenItem.IsReroll(__1)) return true;
+            FateStone.Use(__instance as Player, __0, __1);
+            return false;
+        } catch (Exception e) { PatchGuard.Fail("FateStoneUsePatch", e); return true; } }
+    }
+
     [HarmonyPatch(typeof(Player), "ConsumeItem")]
     internal static class RavenRerollPatch
     {
+        [HarmonyPriority(Priority.First)]
         private static bool Prefix(Player __instance, Inventory inventory, ItemDrop.ItemData item, ref bool __result)
         {
+            if (RavenItem.IsFeather(item)) { __result = FeatherUsePatch.Use(__instance as Player); return false; }
             if (!RavenItem.IsReroll(item)) return true;
-            __result = false;
-            ItemDrop.ItemData hugin, munin;
-            RavenItem.Worn(__instance, out hugin, out munin);
-            if (hugin == null && munin == null)
-            {
-                RavenMsg.Center(__instance, Lang.T("Посади на плече ворона,\nякому хочеш змінити долю."));
-                return false;
-            }
-            if (hugin != null && munin != null)
-            {
-                RavenMsg.Center(__instance, Lang.T("На тобі обидва ворони.\nЗніми одного — кому міняти долю?"));
-                return false;
-            }
-            ItemDrop.ItemData raven = hugin ?? munin;
-            if (Trust.Stranger(raven, __instance as Player))
-            {
-                RavenMsg.Center(__instance, Lang.F("{0} не твій: долю йому міняє лише {1}.", RavenItem.Name(munin != null), Trust.OwnerName(raven)));
-                return false;
-            }
-            Perks.Roll(raven, munin != null);
-            Backup.Save(__instance as Player, raven); // the copy follows the new fate at once: no going back to the old one
-            inventory.RemoveOneItem(item);
-            RavenMsg.Center(__instance, RavenItem.Name(munin != null) + ": " + Perks.Short(raven));
-            __result = true;
+            __result = FateStone.Use(__instance, inventory, item);
+            return false;
+        }
+    }
+
+    // Odin's feather used from the bag: laid down at its errand's place (Errands.Act, as the J circle and the book)
+    [HarmonyPatch(typeof(Humanoid), "UseItem")]
+    internal static class FeatherUsePatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static bool Prefix(Humanoid __instance, ItemDrop.ItemData __1)
+        { try {
+            if (!RavenItem.IsFeather(__1)) return true;
+            Use(__instance as Player);
+            return false;
+        } catch (Exception e) { PatchGuard.Fail("FeatherUsePatch", e); return true; } }
+
+        internal static bool Use(Player p)
+        {
+            if (p == null || p != Player.m_localPlayer) return false;
+            ErrandRun r = Errands.Of(p);
+            if (r != null && r.Def != null && r.Current is CarryStep) return Errands.Act(p); // (not another step's deed: a watch, a guide)
+            RavenMsg.Center(p, Lang.T("Зараз перо Одіна ні до чого."));
             return false;
         }
     }

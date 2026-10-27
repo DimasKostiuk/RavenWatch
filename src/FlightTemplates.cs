@@ -854,7 +854,7 @@ k10=0,2,0;0,1,0;0,0,0;-0.5,0,-0.5;0,0.25,0;0,0.5,0;0,0,0",
                 case "удар": return (int)FlightSit.Attack;
                 case "додому": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : (int)FlightSit.Home;
                 case "слідом": case "за тобою": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : (int)FlightSit.Follow;
-                case "догонялки": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : (int)FlightSit.Circle; // (flown as a ring: the circle's ways of flying)
+                case "догонялки": case "за кормою": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : (int)FlightSit.Circle; // (flown as a ring: the circle's ways of flying)
                 case "коло": case "розвідка": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : m.Plan == "коло" ? (int)FlightSit.Circle : (int)FlightSit.Scout;
                 case "купол": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : (int)FlightSit.Dome;
                 case "танець": return m.Body.Age < m.Body.LaunchDuration ? (int)FlightSit.TakeOff : (int)FlightSit.Hover;

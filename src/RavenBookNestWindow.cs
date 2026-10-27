@@ -43,24 +43,10 @@ namespace HuginWhispers
             if (IsOpen) Close();
             CloseTreeWindow();
             OrdersMenu.CloseNow();
-            if (_gameFont == null && InventoryGui.instance != null)
-            {
-                TMP_Text sample = InventoryGui.instance.m_recipeName != null ? InventoryGui.instance.m_recipeName : InventoryGui.instance.m_playerName;
-                _gameFont = sample != null ? sample.font : null;
-                BookArt.Fonts(_gameFont);
-            }
+            EnsureGameFont();
             if (_nwRoot == null)
             {
-                _nwRoot = new GameObject("RavenWatch_NestWindow", typeof(RectTransform));
-                Canvas c = _nwRoot.AddComponent<Canvas>();
-                c.renderMode = RenderMode.ScreenSpaceOverlay;
-                c.sortingOrder = 30002;
-                CanvasScaler sc = _nwRoot.AddComponent<CanvasScaler>();
-                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                sc.referenceResolution = new Vector2(1920f, 1080f);
-                sc.matchWidthOrHeight = 1f;
-                _nwRoot.AddComponent<GraphicRaycaster>();
-                UnityEngine.Object.DontDestroyOnLoad(_nwRoot);
+                _nwRoot = OverlayCanvas("RavenWatch_NestWindow", 30002, true);
                 Image dim = Rect("Dim", _nwRoot.transform).gameObject.AddComponent<Image>();
                 Stretch(dim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 dim.color = new Color(0f, 0f, 0f, 0.55f);
@@ -77,7 +63,8 @@ namespace HuginWhispers
             _nwAt = null;
             ClearOffer();
             if (_nwGhost != null) UnityEngine.Object.Destroy(_nwGhost.gameObject);
-            _nwGhost = null; _nwDragging = null; _nwWait = null; _nwTipFn = null;
+            _nwGhost = null; _nwDragging = null; _nwWait = null; NestTip.Hide();
+            NwLive.Clear();
         }
 
         // from the plugin's Update (RavenBook.Update)
@@ -88,13 +75,20 @@ namespace HuginWhispers
             if (p == null || p.IsDead() || InventoryGui.IsVisible() || Menu.IsVisible() || RavenKeys.Down(KeyCode.Escape)
                 || _nwAt == null || !_nwAt.Near(p) || (Nest.MineIn(p, _nwAt).Count == 0 && !Nest.Flying(out _nwB, out _nwF)))
             { CloseNestWindow(); return; }
-            NwTipTick();
+            NestTip.Tick(_nwRoot.transform, _nwDragging != null);
             if (Time.time < _nwNext) return;
             _nwNext = Time.time + 0.3f;
             if (_nwWait != null) _nwWait.text = WaitDots();
+            foreach (Action a in NwLive.ToArray()) { try { a(); } catch { } }
             if (_nwDragging == null && NestStamp(p) != _nwStamp) NestWindowDraw(); // (not under a drag: it would lose what is dragged)
         }
         private static TMP_Text _nwWait;
+        private static readonly List<Action> NwLive = new List<Action>();
+        private static TMP_Text NwTicking(TMP_Text t, Func<string> text)
+        {
+            NwLive.Add(() => { if (t == null) return; string s = text(); if (s != null && t.text != s) t.text = s; });
+            return t;
+        }
         private static string WaitDots() { return Lang.T("Ворони кличуть Одіна") + new string('.', 1 + Mathf.FloorToInt(Nest.Waited) % 3); }
         private static bool _nwB; private static float _nwF;
 
@@ -104,9 +98,9 @@ namespace HuginWhispers
             bool m; float left;
             List<bool> mine = Nest.MineIn(p, _nwAt);
             string s = Errands.Version + ":" + Favour.Version + ":" + RuneBook.Version + ":" + mine.Count + ":" + (Nest.OdinOver(_nwAt) ? 1 : 0)
-                + ":" + Mathf.CeilToInt(Nest.CooldownLeft(p) / 10f) + ":" + (Nest.Flying(out m, out left) ? Mathf.CeilToInt(left / 5f) : -1)
+                + ":" + (Nest.CooldownLeft(p) > 0f ? 1 : 0) + ":" + (Nest.Flying(out m, out left) ? (m ? 2 : 1) : 0) // (the time left ticks in its own line: NwTicking)
                 + ":" + _nwFeed + ":" + _nwRefuseAsk + ":" + (Nest.Waited > 0f ? 1 : 0) + ":" + OfferCode(); // (the waiting dots change on their own: WaitDots)
-            foreach (bool r in mine) { ItemDrop.ItemData it = Perches.MineOn(p, _nwAt.Perch, r); s += ":" + (it != null ? Mathf.RoundToInt(Satiety.Value(it)) : -1); }
+            foreach (bool r in mine) { ItemDrop.ItemData it = Perches.MineOn(p, _nwAt.Perch, r); s += ":" + (it != null ? Satiety.Zone(it) : -1); } // (its number and bar: live, RavenCard)
             foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems()) s += it.m_stack; // (the bag: gifts and food counts)
             return s;
         }
@@ -116,7 +110,8 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             if (_nwRoot == null || p == null || _nwAt == null) return;
             _nwStamp = NestStamp(p);
-            _nwTipFn = null;
+            NwLive.Clear();
+            NestTip.Hide();
             if (_nwPanel != null) { _nwPanel.gameObject.SetActive(false); UnityEngine.Object.Destroy(_nwPanel.gameObject); } // (hidden now: the new one is not drawn over it for a frame)
 
             bool riddle = Errands.RiddleOpen(p); // (Odin's riddle waits: anything may be laid, the answer among it)
@@ -284,19 +279,18 @@ namespace HuginWhispers
             HBox(lab, 4f, TextAnchor.MiddleLeft);
             T(lab, "<b>" + Lang.T("Ситість") + "</b>", 14f, C("#d9c49a"), F.Body).textWrappingMode = TextWrappingModes.NoWrap;
             Spring(lab);
-            T(lab, Mathf.RoundToInt(v) + " / 100", 14f, NwSoft, F.Body).textWrappingMode = TextWrappingModes.NoWrap;
+            NwTicking(T(lab, Mathf.RoundToInt(v) + " / 100", 14f, NwSoft, F.Body), () => Mathf.RoundToInt(Satiety.Value(item)) + " / 100").textWrappingMode = TextWrappingModes.NoWrap;
             RectTransform bar = Rect("Bar", card);
             Fixed(bar.gameObject, -1f, 12f);
             Image track = Img(bar, "Track", null, A(NwSoft, 0.3f));
             track.rectTransform.anchorMin = new Vector2(0f, 0.5f); track.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             track.rectTransform.sizeDelta = new Vector2(0f, 1f);
-            if (v > 0.5f)
-            {
-                Image fill = Img(bar, "Fill", BookArt.Brush(m ? "brush-munin" : "brush-huginn"), Color.white);
-                fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = 28f / 12f;
-                fill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(v / 100f), 1f);
-                if (fill.sprite == null) fill.color = NwRavenLine(m);
-            }
+            Image fill = Img(bar, "Fill", BookArt.Brush(m ? "brush-munin" : "brush-huginn"), Color.white);
+            fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = 28f / 12f;
+            if (fill.sprite == null) fill.color = NwRavenLine(m);
+            Action paint = () => { if (fill == null) return; float now = Satiety.Value(item); fill.enabled = now > 0.5f; Vector2 want = new Vector2(Mathf.Clamp01(now / 100f), 1f); if (fill.rectTransform.anchorMax != want) fill.rectTransform.anchorMax = want; };
+            paint();
+            NwLive.Add(paint); // (it drains as you look: the bar moves, the window is not drawn again)
 
             bool open = _nwFeed == (m ? 1 : 0);
             RectTransform row = Rect("Buttons", card);
@@ -319,8 +313,9 @@ namespace HuginWhispers
             VBox(names, 0f, TextAnchor.MiddleLeft);
             names.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             T(names, Plugin.RavenName(m), 26f, A(NwInk, 0.55f), F.Head).textWrappingMode = TextWrappingModes.NoWrap;
-            T(names, Lang.F("у хмарах, в Одіна · ще {0}", RavenAbilities.Span(left)), 14f, NwSoft, F.Italic);
-            NwTip(card.gameObject, () => Lang.F("{0} полетів до Одіна й повернеться на плече вже з дорученням.", Plugin.RavenName(m)));
+            NwTicking(T(names, Lang.F("у хмарах, в Одіна · ще {0}", RavenAbilities.Span(left)), 14f, NwSoft, F.Italic),
+                () => { bool fm; float fl; return Nest.Flying(out fm, out fl) ? Lang.F("у хмарах, в Одіна · ще {0}", RavenAbilities.Span(fl)) : null; });
+            NestTip.Attach(card.gameObject, () => Lang.F("{0} полетів до Одіна й повернеться на плече вже з дорученням.", Plugin.RavenName(m)));
         }
 
         // a dark button with a gold line (and a small picture before its words)
@@ -372,7 +367,7 @@ namespace HuginWhispers
                 Clickable(c.gameObject, () => { Tell(Trust.FeedInNest(p, m, food)); NestWindowDraw(); });
                 bool fav = Satiety.KnownFav(raven, f.Prefab);
                 string name = f.Name;
-                NwTip(c.gameObject, () => "<b>" + name + "</b>" + (fav ? "\n" + Lang.T("улюблена страва") : "") + "\n" + Lang.T("Клік — згодувати один шматок."));
+                NestTip.Attach(c.gameObject, () => "<b>" + name + "</b>" + (fav ? "\n" + Lang.T("улюблена страва") : "") + "\n" + Lang.T("Клік — згодувати один шматок."));
             }
         }
 
@@ -416,7 +411,7 @@ namespace HuginWhispers
             At(row, 0f, 506f, NwMidW, 52f);
             HBox(row, 0f, TextAnchor.MiddleCenter);
             RectTransform give = CardButton(row, Lang.T("Віддати Одіну"), true, () => { GiveOffer(p); NestWindowDraw(); }, "ᚠ", gainText.Length > 0 || riddle && laid);
-            NwTip(give.gameObject, () => Lang.T("Що лежить у чаші, піде Одіну й наповнить його милість. Віддане назад не забрати."));
+            NestTip.Attach(give.gameObject, () => Lang.T("Що лежить у чаші, піде Одіну й наповнить його милість. Віддане назад не забрати."));
 
             int lean = Favour.Leaning(p);
             string line = gainText.Length > 0 ? Lang.F("Дасть милості: {0}", gainText)
@@ -469,7 +464,7 @@ namespace HuginWhispers
             if (gain > 0.05f) n += " <color=#e3c27c>+" + Mathf.RoundToInt(gain) + "</color>";
             T(r, n, 14f, NwSoft, F.Body, TextAlignmentOptions.Top).textWrappingMode = TextWrappingModes.NoWrap;
             int k = i;
-            NwTip(r.gameObject, () => Lang.F("<b>{0}</b> — {1}.\n{2}", Lang.T(Favour.Names[k]), Lang.T(Favour.Leads[k]), Lang.T("Чим повніша милість, тим частіше Одін дає такі доручення.")));
+            NestTip.Attach(r.gameObject, () => Lang.F("<b>{0}</b> — {1}.\n{2}", Lang.T(Favour.Names[k]), Lang.T(Favour.Leads[k]), Lang.T("Чим повніша милість, тим частіше Одін дає такі доручення.")));
         }
 
         // ---- right: Odin
@@ -487,6 +482,26 @@ namespace HuginWhispers
             RectTransform gap = Rect("Gap", col); Fixed(gap.gameObject, -1f, 4f);
             TMP_Text t = T(col, text.ToUpperInvariant(), 13f, PLabel, F.Head);
             t.characterSpacing = 6f; t.textWrappingMode = TextWrappingModes.NoWrap;
+        }
+
+        // the quiet «no» under Odin's gold button, centred: a thin red-ink outline with the rune of need (ᚾ); asked once
+        // (sure): the ink fills faintly, the second press does it
+        private static RectTransform DeclineButton(Transform row, string caption, bool sure, Action click)
+        {
+            RectTransform r = Rect("Button", row);
+            HBox(r, 8f, TextAnchor.MiddleCenter, 18, 20, 0, 0);
+            Fixed(r.gameObject, -1f, 34f);
+            Box(r, 17f, sure ? A(Bad, 0.10f) : new Color(0f, 0f, 0f, 0f), A(Bad, sure ? 0.85f : 0.5f), 1.3f);
+            TMP_Text g = T(r, "ᚾ", 14f, A(Bad, 0.8f), F.Rune, TextAlignmentOptions.Center);
+            g.textWrappingMode = TextWrappingModes.NoWrap;
+            TMP_Text t = T(r, caption, 16f, Bad, F.Body, TextAlignmentOptions.Center);
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            Button b = r.gameObject.AddComponent<Button>();
+            b.targetGraphic = r.GetComponent<Image>();
+            Tint(b);
+            b.onClick.AddListener(() => click());
+            Hover(r.gameObject, new Graphic[] { t, g }, Bad, r.GetComponent<Image>());
+            return r;
         }
 
         // a link on the parchment: underlined, its ink turns gold under the pointer
@@ -507,23 +522,21 @@ namespace HuginWhispers
             if (r != null) { NestErrand(col, p, r); Spring(col); return; }
             PaperLabel(col, Lang.T("Воля Одіна"));
             string blocked = Nest.Blocked(p);
-            if (blocked != null) { T(col, blocked, 16f, PSoft, F.Italic); Spring(col); return; }
+            if (blocked != null) { NwTicking(T(col, blocked, 16f, PSoft, F.Italic), () => Nest.Blocked(Player.m_localPlayer)); Spring(col); return; } // (its time left ticks)
             if (Nest.OdinOver(_nwAt))
             {
                 T(col, Lang.T("Над гніздом золоте сяйво: Одін змилувався."), 19f, GoldInk, F.Head);
                 RectTransform row = Rect("Accept", col);
-                HBox(row, 0f, TextAnchor.MiddleLeft, 0, 0, 6, 2);
+                HBox(row, 0f, TextAnchor.MiddleCenter, 0, 0, 6, 2);
                 RectTransform yes = CardButton(row, Lang.T("Прийняти волю Одіна"), true, () => { _nwRefuseAsk = false; string why = Nest.Accept(p, _nwAt); if (why != null) Tell(why); NestWindowDraw(); });
-                NwTip(yes.gameObject, () => Lang.T("Чого він хоче, Одін не скаже. Один із воронів злетить до нього в хмари й повернеться на плече вже з дорученням."));
-                Spring(row);
+                NestTip.Attach(yes.gameObject, () => Lang.T("Чого він хоче, Одін не скаже. Один із воронів злетить до нього в хмари й повернеться на плече вже з дорученням."));
                 RectTransform no = Rect("Decline", col);
-                HBox(no, 0f, TextAnchor.MiddleLeft);
-                PaperLink(no, _nwRefuseAsk ? Lang.T("так, відхилити") : Lang.T("відхилити"), Bad, () =>
+                HBox(no, 0f, TextAnchor.MiddleCenter, 0, 0, 4, 0);
+                DeclineButton(no, _nwRefuseAsk ? Lang.T("Так, відхилити") : Lang.T("Відхилити"), _nwRefuseAsk, () =>
                 {
                     if (!_nwRefuseAsk) { _nwRefuseAsk = true; NestWindowDraw(); return; }
                     _nwRefuseAsk = false; string why = Nest.Decline(p); if (why != null) Tell(why); NestWindowDraw();
                 });
-                Spring(no);
                 if (_nwRefuseAsk) T(col, Lang.T("Одін піде без кари, дари не пропадуть, але покликати його знову можна лише наступного дня. Натисни ще раз, щоб відхилити."), 14f, Bad, F.Italic);
                 Spring(col);
                 return;
@@ -532,7 +545,7 @@ namespace HuginWhispers
             {
                 _nwWait = T(col, WaitDots(), 19f, PInk, F.Head);
                 TMP_Text when = T(col, Lang.T("Коли над гніздом засяє золото — він тут."), 15f, PSoft, F.Italic);
-                NwTip(when.gameObject, () => Lang.T("Він приходить, коли захоче: інколи за кілька секунд, інколи за хвилину. А буває, що й зовсім не озветься."));
+                NestTip.Attach(when.gameObject, () => Lang.T("Він приходить, коли захоче: інколи за кілька секунд, інколи за хвилину. А буває, що й зовсім не озветься."));
                 OmenBlock(col, p);
                 Spring(col);
                 return;
@@ -542,7 +555,7 @@ namespace HuginWhispers
             RectTransform call = Rect("Call", col);
             HBox(call, 0f, TextAnchor.MiddleLeft, 0, 0, 8, 2);
             RectTransform go = CardButton(call, Lang.T("Призвати милість Одіна"), true, () => { string why = Nest.Summon(p, _nwAt); if (why != null) Tell(why); NestWindowDraw(); });
-            NwTip(go.gameObject, () => Lang.T("Ворони закаркають із гнізда й покличуть Одіна. Він не завжди відгукується, а щедрі дари роблять його прихильнішим. Кликати можна раз на день — тож спершу дари."));
+            NestTip.Attach(go.gameObject, () => Lang.T("Ворони закаркають із гнізда й покличуть Одіна. Він не завжди відгукується, а щедрі дари роблять його прихильнішим. Кликати можна раз на день — тож спершу дари."));
             Spring(call);
             T(col, Lang.T("Спершу дари в чашу — кликати можна раз на день."), 14f, PSoft, F.Italic);
             Spring(col);
@@ -554,7 +567,7 @@ namespace HuginWhispers
             int lvl = Nest.OmenLevel(p);
             TMP_Text marks = T(col, "<color=#a8843a>" + new string('◆', lvl) + "</color><color=#c9b48a>" + new string('◇', 5 - lvl) + "</color>", 22f, PInk, F.Body);
             marks.characterSpacing = 8f;
-            NwTip(marks.gameObject, () => Lang.T("Прикмета: наскільки Одін зараз прихильний до твого гнізда. Свіжі дари роблять її кращою."));
+            NestTip.Attach(marks.gameObject, () => Lang.T("Прикмета: наскільки Одін зараз прихильний до твого гнізда. Свіжі дари роблять її кращою."));
             T(col, Nest.Omen(p), 15f, lvl >= 3 ? GoldInk : PSoft, F.Italic);
         }
 
@@ -568,7 +581,7 @@ namespace HuginWhispers
             Box(card, 6f, golden ? new Color(0.95f, 0.8f, 0.4f, 0.35f) : new Color(1f, 0.99f, 0.95f, 0.55f), golden ? PGoldLine : PEdge, golden ? 2f : 1.2f);
             if (r.Def == null)
             {
-                T(card, Lang.F("Доручення «{0}» з іншої версії мода: його можна лише відкласти.", r.Id), 15f, PSoft, F.Italic);
+                T(card, r.Elsewhere ? Lang.T("Це доручення Одін дав в іншому світі: воно чекає, доки ти туди повернешся.") : Lang.F("Доручення «{0}» з іншої версії мода: його можна лише відкласти.", r.Id), 15f, PSoft, F.Italic);
             }
             else
             {
@@ -592,26 +605,54 @@ namespace HuginWhispers
                     }
                 }
             }
+            // its modifiers (a broken one struck out, «Поспіх» its time, «Пожертва» its stake and the coins to lay)
+            if (r.Def != null)
+            {
+                List<string> mods = ErrandMods.Lines(r);
+                for (int i = 0; i < mods.Count; i++)
+                {
+                    int at = i; // («Поспіх» counts down)
+                    NwTicking(T(card, mods[i], 14f, new Color(0.62f, 0.16f, 0.12f), F.Head), () => { List<string> now = ErrandMods.Lines(r); return at < now.Count ? now[at] : null; });
+                }
+            }
+            if (r.Mods.Contains("offering") && ErrandMods.Stake(r) == 0 && ErrandMods.OfferOpen(r))
+            {
+                RectTransform give = Rect("Offer", card);
+                HBox(give, 10f, TextAnchor.MiddleLeft);
+                T(give, Lang.T("Пожертвувати:"), 14f, PSoft, F.Body);
+                foreach (int c in new[] { 100, 200, 300 })
+                {
+                    int n = c;
+                    PaperLink(give, Lang.F("{0} монет", n), GoldInk, () => { string why = Errands.Offer(Player.m_localPlayer, n); if (why != null) Tell(why); NestWindowDraw(); });
+                }
+            }
             RectTransform rule = Rect("Rule", card); Fixed(rule.gameObject, -1f, 1f);
             rule.gameObject.AddComponent<Image>().color = A(PRule, 0.8f);
             RectTransform foot = Rect("Foot", card);
             HBox(foot, 6f, TextAnchor.MiddleLeft);
+            int bonus = r.Def != null && !r.Def.Trial ? ErrandMods.Bonus(r) * (golden ? 2 : 1) : 0;
             if (r.Def != null && !r.Def.Trial)
             {
-                int bonus = ErrandMods.Bonus(r) * (golden ? 2 : 1);
-                string reward = golden ? Lang.T("золота руна") + (bonus > 0 ? " + " + Lang.N(bonus, "зарубка|зарубки|зарубок") : "")
-                    : Lang.N(r.Price + bonus, "зарубка|зарубки|зарубок");
-                if (bonus > 0) reward += " " + Lang.F("(або Іскра Одіна, {0}%)", Mathf.RoundToInt(golden ? RuneStars.SparkGolden : RuneStars.SparkChance));
+                // (what the modifiers give is a secret until it is done: notches, or a spark of Odin)
+                string reward = (golden ? Lang.T("золота руна") : Lang.N(r.Price, "зарубка|зарубки|зарубок")) + (ErrandMods.SureSpark(r) ? " + " + Lang.T("іскра Одіна") : "") + (bonus > 0 ? " + " + Lang.T("таємна нагорода") : "");
                 TMP_Text rt = T(foot, Lang.T("Нагорода:") + " <b><color=" + (golden ? "#7a5514" : "#8E1E1E") + ">" + reward + "</color></b>", 14f, PSoft, F.Body);
                 rt.textWrappingMode = TextWrappingModes.NoWrap;
-                NwTip(rt.gameObject, () => Lang.F("За кожне виконане доручення на різі з'являються зарубки. Коли їх {0}, загоряється одна руна.", RuneBook.NotchesPerRune));
+                NestTip.Attach(rt.gameObject, () => golden ? Lang.T("За золоте доручення — золота руна: її вкладають у дар ворона (книга, вкладка «Образ»).") : Lang.F("За кожне виконане доручення на різі з'являються зарубки. Коли їх {0}, загоряється одна руна.", RuneBook.NotchesPerRune));
             }
-            Spring(foot);
-            PaperLink(foot, _nwRefuseAsk ? Lang.T("так, відмовитись") : Lang.T("відмовитись"), Bad, () =>
+            // the refusal on a row of its own, on the right: the reward's line keeps to one line and may be long
+            RectTransform refuse = Rect("Refuse", card);
+            HBox(refuse, 6f, TextAnchor.MiddleLeft);
+            Spring(refuse);
+            PaperLink(refuse, _nwRefuseAsk ? Lang.T("так, відмовитись") : Lang.T("відмовитись"), Bad, () =>
             {
                 if (!_nwRefuseAsk) { _nwRefuseAsk = true; NestWindowDraw(); return; }
                 _nwRefuseAsk = false; Nest.Refuse(p); NestWindowDraw();
             });
+            if (bonus > 0) // its own line (the reward's one keeps to one line)
+            {
+                TMP_Text sp = T(card, Lang.T("За кожен модифікатор — таємна нагорода: що саме, Одін скаже, коли виконаєш."), 13f, PSoft, F.Italic);
+                NestTip.Attach(sp.gameObject, () => Lang.T("Зарубка на різі — або Іскра Одіна: вона падає на випадкову руну, що горить, і лишається на ній, тоді руна на вороні дає силу, а не лише вигляд. Зламаний модифікатор нагороди не дає."));
+            }
             if (_nwRefuseAsk) T(col, Lang.T("Доручення пропаде без кари, але нове Одін дасть лише наступного дня. Натисни ще раз, щоб відмовитись."), 14f, Bad, F.Italic);
 
             if (Nest.AsksToHandIn(p))
@@ -619,6 +660,14 @@ namespace HuginWhispers
                 RectTransform row = Rect("HandIn", col);
                 HBox(row, 0f, TextAnchor.MiddleLeft, 0, 0, 4, 0);
                 InkButton(row, Lang.T("Віддати в чашу"), () => { Tell(Nest.HandIn(p) ?? Lang.T("Віддано.")); NestWindowDraw(); });
+                Spring(row);
+            }
+            if (Errands.CanAct(p)) // (the step's deed at a nest: Odin's feather)
+            {
+                string why;
+                RectTransform row = Rect("Act", col);
+                HBox(row, 0f, TextAnchor.MiddleLeft, 0, 0, 4, 0);
+                InkButton(row, Errands.ActLabel(p, out why), () => { Errands.Act(p); NestWindowDraw(); });
                 Spring(row);
             }
 
@@ -708,7 +757,7 @@ namespace HuginWhispers
             });
             string name = Lang.Game(it.m_shared.m_name);
             FavourGroup gg = grp; float ww = worth; bool kk = known;
-            NwTip(c.gameObject, () => "<b>" + name + "</b> ×" + free + (kk ? "\n" + Lang.F("{0}: +{1} милості за штуку", Lang.T(Favour.Names[(int)gg]), Lang.Num(ww, "0.#")) : "\n" + Lang.T("Не дар, але може бути відгадкою.")));
+            NestTip.Attach(c.gameObject, () => "<b>" + name + "</b> ×" + free + (kk ? "\n" + Lang.F("{0}: +{1} милості за штуку", Lang.T(Favour.Names[(int)gg]), Lang.Num(ww, "0.#")) : "\n" + Lang.T("Не дар, але може бути відгадкою.")));
             NwDrag drag = c.gameObject.AddComponent<NwDrag>();
             drag.Prefab = prefab; drag.Icon = icon;
         }
@@ -823,79 +872,25 @@ namespace HuginWhispers
             if (it != null)
             {
                 Sprite icon = it.GetIcon();
-                if (icon != null) { Image im = Img(c, "Icon", icon, Color.white); im.preserveAspect = true; Stretch(im.rectTransform, Vector2.zero, Vector2.one, new Vector2(12f, 12f), new Vector2(-12f, -12f)); }
+                if (icon != null) { Image im = Img(c, "Icon", icon, Color.white); im.preserveAspect = true; Stretch(im.rectTransform, Vector2.zero, Vector2.one, new Vector2(14f, 18f), new Vector2(-14f, -10f)); } // (lifted a bit: the count sits under it, inside the hollow)
                 TMP_Text cnt = T(c, "<b>×" + o.Count + "</b>", 14f, NwInk, F.Body, TextAlignmentOptions.Bottom);
-                Stretch(cnt.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, -4f), new Vector2(0f, 0f));
+                Stretch(cnt.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 6f), new Vector2(0f, 0f)); // inside the ring: at -4 it ran over the rim
                 cnt.outlineWidth = 0.2f; cnt.outlineColor = new Color32(0, 0, 0, 200);
                 Clickable(c.gameObject, () => { _nwOffer[i] = null; NestWindowDraw(); });
                 string name = Lang.Game(it.m_shared.m_name);
-                NwTip(c.gameObject, () => "<b>" + name + "</b> ×" + o.Count + "\n" + Lang.T("Клік — забрати з чаші."));
+                NestTip.Attach(c.gameObject, () => "<b>" + name + "</b> ×" + o.Count + "\n" + Lang.T("Клік — забрати з чаші."));
             }
             else
             {
                 TMP_Text plus = T(c, "+", 28f, new Color(0.17f, 0.11f, 0.05f, 0.6f), F.Head, TextAlignmentOptions.Center);
                 Stretch(plus.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                NwTip(c.gameObject, () => Lang.T("Поклади дари в чашу: клік по речі внизу або перетягни її сюди."));
+                NestTip.Attach(c.gameObject, () => Lang.T("Поклади дари в чашу: клік по речі внизу або перетягни її сюди."));
             }
             c.gameObject.AddComponent<NwDrop>().Index = i;
         }
 
         // ---- the window's own tooltip (the book's lives on the book's canvas, closed while this is up)
-        private static Func<string> _nwTipFn;
-        private static RectTransform _nwTip;
-        private static TMP_Text _nwTipText;
-
-        private static void NwTip(GameObject g, Func<string> text)
-        {
-            Graphic gr = g.GetComponent<Graphic>();
-            if (gr != null) gr.raycastTarget = true;
-            else g.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
-            NwHover h = g.GetComponent<NwHover>();
-            if (h == null) h = g.AddComponent<NwHover>();
-            h.Text = text;
-        }
-
-        private static void NwTipTick()
-        {
-            if (_nwTip == null)
-            {
-                _nwTip = Rect("Tip", _nwRoot.transform);
-                _nwTip.anchorMin = _nwTip.anchorMax = new Vector2(0.5f, 0.5f);
-                _nwTip.pivot = new Vector2(0f, 1f);
-                Box(_nwTip, 6f, BookArt.TipBg, Gold, 1f);
-                foreach (Image i in _nwTip.GetComponentsInChildren<Image>(true)) i.raycastTarget = false;
-                _nwTipText = T(_nwTip, "", 15f, BookArt.TipInk, F.Body);
-                Stretch(_nwTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14f, 12f), new Vector2(-14f, -12f));
-            }
-            string text = null;
-            if (_nwTipFn != null && _nwDragging == null) { try { text = _nwTipFn(); } catch { text = null; } }
-            if (string.IsNullOrEmpty(text)) { if (_nwTip.gameObject.activeSelf) _nwTip.gameObject.SetActive(false); return; }
-            if (_nwTipText.text != text)
-            {
-                _nwTipText.text = text;
-                Vector2 size = _nwTipText.GetPreferredValues(text, 380f, 0f);
-                float w = Mathf.Min(380f, size.x) + 28f;
-                _nwTip.sizeDelta = new Vector2(w, _nwTipText.GetPreferredValues(text, w - 28f, 0f).y + 24f);
-            }
-            _nwTip.gameObject.SetActive(true);
-            _nwTip.SetAsLastSibling();
-            RectTransform root = (RectTransform)_nwRoot.transform;
-            Vector2 local;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(root, Input.mousePosition, null, out local);
-            Vector2 half = root.rect.size / 2f, sz = _nwTip.sizeDelta;
-            float x = local.x + 18f, y = local.y - 18f;
-            if (x + sz.x > half.x - 8f) x = local.x - 12f - sz.x;
-            if (y - sz.y < -half.y + 8f) y = local.y + 12f + sz.y;
-            _nwTip.anchoredPosition = new Vector2(x, y);
-        }
-
-        internal sealed class NwHover : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler
-        {
-            internal Func<string> Text;
-            public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e) { _nwTipFn = Text; }
-            public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) { if (_nwTipFn == Text) _nwTipFn = null; }
-            private void OnDisable() { if (_nwTipFn == Text) _nwTipFn = null; }
-        }
+        private static readonly WinTip NestTip = new WinTip(380f);
 
         // ---- dragging a thing from the bag's list onto a place in the bowl
         private static string _nwDragging;

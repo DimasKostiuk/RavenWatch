@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Рогатий шолом
+note: Справжні вікінги таких не носили. Ворону байдуже: роги — це красиво.
+use: gear
+id: rohatyi_sholom
+slot: head
+part asset/Шапки/HatViking pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatViking (Шапки)

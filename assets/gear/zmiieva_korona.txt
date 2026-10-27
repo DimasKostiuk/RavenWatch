@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Змієва корона
+note: Змій, що вхопив себе за хвіст, — Йормунганд у малому. Ворон обіцяє, що змій не живий. Майже певен.
+use: gear
+id: zmiieva_korona
+slot: head
+part asset/Шапки/HatSerpent pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatSerpent (Шапки)

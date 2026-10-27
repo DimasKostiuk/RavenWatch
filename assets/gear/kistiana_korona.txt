@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Кістяна корона
+note: Кістки, руни й одне чорне перо — зі свого ж крила, тож ворон вважає її родинною реліквією.
+use: gear
+id: kistiana_korona
+slot: head
+part asset/Шапки/HatBoneCrown pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatBoneCrown (Шапки)

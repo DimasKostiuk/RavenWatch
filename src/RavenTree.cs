@@ -15,8 +15,8 @@ namespace HuginWhispers
     internal static class RavenTree
     {
         internal const string KnownKey = "RavenWatch_trees";     // player customData: the trees you found ("v2|x/z|…")
-        internal static float FindRange = 400f, UseRange = 8f;
-        internal static float Footprint = 3f, FlatMax = 0.7f, AwayFromPlaces = 60f; // m: the roots' reach, how uneven under them, how far from the world's own buildings
+        internal static float FindRange = 400f, UseRange = 12f; // (the trees about 8.4 m tall, the icy one 11.8 m: their model files)
+        internal static float Footprint = 4.5f, FlatMax = 0.7f, AwayFromPlaces = 60f; // m: the roots' reach, how uneven under them, how far from the world's own buildings
 
         // ---------------------------------------------------------------- which tree, where
         // Kind: 0 icy, 1 green, 2 charred (the mixing counts by it: KindNames)
@@ -221,7 +221,7 @@ namespace HuginWhispers
             if (!p.m_customData.TryGetValue(KnownKey, out raw)) raw = "v2|";
             if (raw.Contains("|" + id + "|")) return;
             p.m_customData[KnownKey] = raw + id + "|";
-            RavenMsg.Center(p, Lang.T("Ти знайш{ов|ла} Вороняче дерево. Біля нього руни можна змішувати."));
+            RavenMsg.Center(p, Lang.T("Ти знайш{ов|ла} Вороняче дерево. Біля нього руни сплітаються у в'язь."));
             Log("found the raven tree at " + id);
         }
 
@@ -317,9 +317,6 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- weaving (Bind.cs, the arena: BindArena)
-        // how a tree of this kind weaves (the tree window says it)
-        internal static readonly string[] HowWeaves = Lang.Keys("кладе руни серцем, серединою й оболонкою (кольори: голова й тіло, крила, хвіст)", "зливає руни в одне (кольори — навпіл)", "розносить руни по тілу ворона (кольори — від голови до хвоста)");
-
         internal static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Raven tree: " + s); }
 
         // ---------------------------------------------------------------- console (for testing, not in the docs)
@@ -396,9 +393,9 @@ namespace HuginWhispers
     internal sealed class TreeView : MonoBehaviour
     {
         internal static readonly List<TreeView> All = new List<TreeView>();
-        internal const string ClearedKey = "RavenWatch_cleared2"; // (2: the first one was often set before the woods grew)
-        internal const string GroundKey = "RavenWatch_grounded";
-        internal static float ClearRadius = 6f, ClearHeight = 9f;
+        internal const string ClearedKey = "RavenWatch_cleared3"; // (2: the first one was often set before the woods grew; 3: the trees grew 1.5 times)
+        internal const string GroundKey = "RavenWatch_grounded2"; // (2: set on the ground again for the wider roots)
+        internal static float ClearRadius = 9f, ClearHeight = 13.5f;
         private ZNetView _nv;
         private PerchView _perch;
         private float _next, _readySince = -1f;
@@ -598,7 +595,7 @@ namespace HuginWhispers
             if (Nest != null && mine.Count == 0 && !Trial.HasRaven(p)) { Trial.NoRavenUse(p, Nest); return true; }
             if (mine.Count > 0)
             {
-                foreach (bool m in mine) { ItemDrop.ItemData item = Perches.MineOn(p, Perch, m); if (item != null) Perches.CallBack(p, Perch, m, item); }
+                foreach (bool m in mine) { ItemDrop.ItemData item = Perches.MineOn(p, Perch, m); if (item != null) { PlayerAnims.Gesture(p, m, "call_"); Perches.CallBack(p, Perch, m, item); } }
                 return true;
             }
             string other = Other(p);

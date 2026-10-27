@@ -34,7 +34,7 @@ namespace HuginWhispers
         private static int _stamp = -1;
 
         // changes when a look or an effect is saved: what is worn is looked up again
-        internal static int Stamp { get { return (RavenLooks.Version * 7919 + FxLib.Version) * 31 + FxMix.Version; } }
+        internal static int Stamp { get { return ((RavenLooks.Version * 7919 + FxLib.Version) * 31 + FxMix.Version) * 2 + (RavenLooks.FromFiles ? 1 : 0); } }
 
         // an id goes into the wear code and the rune record: none of their separators in it
         private static bool GoodId(string id)
@@ -109,11 +109,14 @@ namespace HuginWhispers
 
         internal string this[WearKind k] { get { return Ids[(int)k]; } set { Ids[(int)k] = Clean(value); } }
 
-        // the в'язь this raven wears (Bind.cs; its id is its recipe): drawn over the runes of the layers it covers
-        private string _bind = "";
-        internal string Bind { get { return _bind; } set { _bind = Clean(value); } }
+        internal bool Empty { get { foreach (string s in Ids) if (s.Length > 0) return false; return true; } }
 
-        internal bool Empty { get { if (_bind.Length > 0) return false; foreach (string s in Ids) if (s.Length > 0) return false; return true; } }
+        // the raven's breed, once revealed (Breeds): carried with what it wears, so every game dresses it so
+        internal string Breed
+        {
+            get { foreach (KeyValuePair<string, string> kv in _other) if (kv.Key == Breeds.WearKey) return kv.Value; return ""; }
+            set { _other.RemoveAll(kv => kv.Key == Breeds.WearKey); string v = Clean(value); if (v.Length > 0) _other.Add(new KeyValuePair<string, string>(Breeds.WearKey, v)); }
+        }
 
         internal static Wear Parse(string code)
         {
@@ -125,7 +128,7 @@ namespace HuginWhispers
                 if (eq <= 0) continue;
                 string k = part.Substring(0, eq), v = part.Substring(eq + 1);
                 if (k == "v") continue;
-                if (k == "x") { w._bind = v; continue; }
+                if (k == "x") continue; // (a в'язь: the player's own, never on a raven — an old one is dropped)
                 int i = System.Array.IndexOf(WearCatalog.KindIds, k);
                 if (i >= 0) w.Ids[i] = v; else w._other.Add(new KeyValuePair<string, string>(k, v));
             }
@@ -138,7 +141,6 @@ namespace HuginWhispers
             if (Empty && _other.Count == 0) return "";
             StringBuilder sb = new StringBuilder("v=").Append(Format);
             for (int i = 0; i < Ids.Length; i++) if (Ids[i].Length > 0) sb.Append(';').Append(WearCatalog.KindIds[i]).Append('=').Append(Ids[i]);
-            if (_bind.Length > 0) sb.Append(";x=").Append(_bind);
             foreach (KeyValuePair<string, string> kv in _other) sb.Append(';').Append(kv.Key).Append('=').Append(kv.Value);
             return sb.ToString();
         }
@@ -169,11 +171,9 @@ namespace HuginWhispers
             if (c.Length == 0) item.m_customData.Remove(ItemKey); else item.m_customData[ItemKey] = c;
         }
 
-        internal static void SetBind(ItemDrop.ItemData item, string id)
+        internal static void Rewrite(ItemDrop.ItemData item, Wear w)
         {
-            if (item == null) return;
-            Wear w = Of(item);
-            w.Bind = id;
+            if (item == null || w == null) return;
             string c = w.Code();
             if (c.Length == 0) item.m_customData.Remove(ItemKey); else item.m_customData[ItemKey] = c;
         }
@@ -183,12 +183,12 @@ namespace HuginWhispers
         {
             ZDO zdo = NetFlag.Zdo(p, true);
             if (zdo == null) return;
+            RuneBook.Track(p, hugin, munin); // another raven put on that shoulder: the old one's runes come off it
             RuneBook.KeepOwn(p, hugin); RuneBook.KeepOwn(p, munin); // only what your runes give
             if (hugin != null && munin != null) // each rune on one raven only (put on one while the other was off the shoulder): Munin gives it up
             {
                 Wear wh = Of(hugin), wm = Of(munin);
                 for (int k = 0; k < WearCatalog.Kinds; k++) if (wh.Ids[k].Length > 0 && wh.Ids[k] == wm.Ids[k]) Set(munin, (WearKind)k, "");
-                if (wh.Bind.Length > 0 && wh.Bind == wm.Bind) SetBind(munin, "");
             }
             string h = Code(hugin), m = Code(munin);
             if (zdo.GetString(KeyH, "") != h) zdo.Set(KeyH, h);
@@ -219,20 +219,26 @@ namespace HuginWhispers
                 TakeOff(body, st);
                 st.Code = code; st.Stamp = stamp; st.Munin = munin;
                 Wear w = Wear.Parse(code);
-                BindLook.Visual bv = w.Bind.Length > 0 ? BindLook.Of(w.Bind) : null;
                 WearDef f = WearCatalog.Find(WearKind.Freya, w[WearKind.Freya]);
-                Look look = bv != null && bv.Has(WearKind.Freya) ? bv.Look : f != null ? f.Look : null;
+                Look breed = Breeds.Find(w.Breed);
+                Look look = Breeds.Compose(f != null ? f.Look : null, breed); // (a breed keeps its marks over the rune)
                 if (look != null) Paint(body, st, look, munin);
+                if (breed != null) // its own effects and things, whatever rune it wears
+                {
+                    foreach (string id in breed.Fx)
+                    {
+                        RavenFxDef d = FxLib.Find(id);
+                        FxOn on = d != null ? FxLib.Put(body, d, munin, body.layer) : null;
+                        if (on != null) { on.Worn = true; st.Fx.Add(on); }
+                    }
+                    if (breed.Things.Count > 0) { LookThings.Hang(body, breed, munin, body.layer); st.Things = true; }
+                    if (breed.OddEyeOn) { OddEye.Set(body, munin, true, breed.OddEye, breed.OddEyeSize); st.OddEye = true; }
+                }
                 for (int k = (int)WearKind.Baldr; k <= (int)WearKind.Heimdall; k++)
                 {
-                    List<RavenFxDef> parts = null;
-                    if (bv != null && bv.Has((WearKind)k)) parts = bv.Fx[k];
-                    else
-                    {
-                        WearDef d = WearCatalog.Find((WearKind)k, w.Ids[k]);
-                        if (d == null) continue;
-                        parts = d.Mix != null ? FxMix.Parts(d.Mix) : d.Fx != null ? new List<RavenFxDef> { d.Fx } : null;
-                    }
+                    WearDef d = WearCatalog.Find((WearKind)k, w.Ids[k]);
+                    if (d == null) continue;
+                    List<RavenFxDef> parts = d.Mix != null ? FxMix.Parts(d.Mix) : d.Fx != null ? new List<RavenFxDef> { d.Fx } : null;
                     if (parts == null) continue;
                     foreach (RavenFxDef part in parts)
                     {
@@ -284,6 +290,8 @@ namespace HuginWhispers
             st.Paint = null;
             foreach (FxOn f in st.Fx) if (f != null) f.Off();
             st.Fx.Clear();
+            if (st.Things) { LookThings.Unhang(body); st.Things = false; }
+            if (st.OddEye) { OddEye.Set(body, st.Munin, false, Color.clear, 0f); st.OddEye = false; }
         }
 
         // ---------------------------------------------------------------- console (for testing, not in the docs)
@@ -343,6 +351,8 @@ namespace HuginWhispers
     // on a raven body: what it wears now, and the game's own materials to put back
     internal sealed class WearState : MonoBehaviour
     {
+        internal bool Things; // a breed's things hung on it (LookThings)
+        internal bool OddEye; // and its odd eye (OddEye)
         internal string Code = "";
         internal int Stamp = -1;
         internal bool Munin;

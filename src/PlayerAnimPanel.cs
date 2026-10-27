@@ -620,7 +620,7 @@ namespace HuginWhispers
                 if (ReferenceEquals(t, null)) return null; // (known to be missing: not looked for every frame)
                 if (t != null) return t;
             }
-            t = Utils.FindChild(an.transform, name, Utils.IterativeSearchType.DepthFirst);
+            t = PlayerAnims.SkeletonBone(an.GetComponentInParent<Player>(), an.transform, name);
             _markerBones[name] = t;
             return t;
         }

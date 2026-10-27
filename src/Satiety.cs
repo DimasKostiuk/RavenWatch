@@ -52,14 +52,18 @@ namespace HuginWhispers
         private static float Rate(ItemDrop.ItemData item) { return PerDay * HungerMul(item) / Power.GameDaySeconds(); } // per second
 
         // how fast it gets hungry: knack «Невибагливий» slower, a starred rune of Фрея slower («Іній») or faster («Кров»)
-        internal static float HungerMul(ItemDrop.ItemData item) { return Norov.SatietyMul(item) * RuneStars.HungerMul(item); }
+        internal static float HungerMul(ItemDrop.ItemData item) { return Norov.SatietyMul(item) * RuneStars.HungerMul(item) * GearFx.HungerMul(item) * Habits.HungerMul(item); } // (Колосковий оберіг: slower)
 
         // only an awake raven on its owner melts: a sleeping one, one on a stranger, or one flown off (to Odin after a
         // ritual, or a shy one) keeps what it has; one resting on a perch gets hungry as usual (it is not a way to stop it)
         private static bool Draining(ItemDrop.ItemData item)
         {
+            if (item != null && Home.Is(item)) return Trust.Active(item); // left at home: hungry as ever, in whichever game holds its perch
             return item != null && Trust.Active(item) && !Trust.Stranger(item, Player.m_localPlayer) && (!Trust.Away(item) || Perches.On(item));
         }
+
+        // counted and written down now; the seconds it spent starving since the last count (a raven at home: Home)
+        internal static float SyncNow(ItemDrop.ItemData item) { return item != null ? Sync(item) : 0f; }
 
         private static bool Stored(ItemDrop.ItemData item, out float v, out double at)
         {
@@ -217,6 +221,31 @@ namespace HuginWhispers
             { "LoxMeat", 4 }, { "HareMeat", 4 }, { "ChickenMeat", 4 }, { "BugMeat", 4 },
             { "AsksvinMeat", 5 }, { "VoltureMeat", 5 }, { "BoneMawSerpentMeat", 5 },
         };
+
+        // the land a thing comes from, in the order you get there (1 Meadows, 2 Black Forest, 3 Swamp, 4 Mountain, 5 Plains,
+        // 6 Mistlands, 7 Ashlands, 8 the Deep North): a raven's wish asks for what the world has reached, now and then one
+        // land beyond (Requests)
+        private static readonly Dictionary<string, int> Lands = new Dictionary<string, int>
+        {
+            { "Lingonberry", 8 }, { "MooseMeat", 8 }, { "SealBlubber", 8 },
+            { "AncientCoin", 8 }, { "AncientGemstoneBlack", 8 }, { "AncientGemstoneGreen", 8 }, { "AncientGemstoneOrange", 8 }, { "AncientGemstonePurple", 8 },
+            { "Raspberry", 1 }, { "Honey", 1 }, { "Mushroom", 1 }, { "Fish1", 1 }, { "RawMeat", 1 }, { "DeerMeat", 1 }, { "NeckTail", 1 },
+            { "Blueberries", 2 }, { "MushroomYellow", 2 }, { "Fish2", 2 }, { "Amber", 2 }, { "AmberPearl", 2 }, { "Ruby", 2 },
+            { "Fish5", 3 }, { "Fish6", 3 }, { "SilverNecklace", 3 },
+            { "MushroomBlue", 4 }, { "Fish4_cave", 4 }, { "WolfMeat", 4 }, { "SerpentMeat", 4 },
+            { "Cloudberry", 5 }, { "Fish7", 5 }, { "Fish8", 5 }, { "LoxMeat", 5 }, { "ChickenMeat", 5 },
+            { "MushroomJotunPuffs", 6 }, { "MushroomMagecap", 6 }, { "Fish9", 6 }, { "HareMeat", 6 }, { "BugMeat", 6 },
+            { "Fish10", 8 }, { "Fish11", 7 }, { "Fish12", 7 }, { "AsksvinMeat", 7 }, { "VoltureMeat", 7 }, { "BoneMawSerpentMeat", 7 },
+        };
+
+        // its land: from the table, else from its class (a food added in the config)
+        internal static int LandOf(string prefab, int cls)
+        {
+            int l;
+            if (prefab != null && Lands.TryGetValue(prefab, out l)) return l;
+            switch (Mathf.Clamp(cls, 1, 5)) { case 1: return 1; case 2: return 2; case 3: return 4; case 4: return 6; default: return 7; }
+        }
+
 
         // a food's class: from the config list (Item:points:class), else the table, else from its points
         internal static int ClassOf(string prefab, int points, int given)
@@ -415,7 +444,7 @@ namespace HuginWhispers
         {
             int i = munin ? 1 : 0;
             if (Zone(item) > Hungry || !Trust.Active(item) || Trust.Stranger(item, p) || Trust.Away(item)) { NextSteal[i] = -1f; Warned[i] = false; return; }
-            if (NextSteal[i] < 0f) { NextSteal[i] = Time.time + StealMinutes * 30f * GearFx.StealWaitMul(item); return; } // the first a little sooner
+            if (NextSteal[i] < 0f) { NextSteal[i] = Time.time + StealMinutes * 30f * GearFx.StealWaitMul(item) * Habits.StealWaitMul(item); return; } // the first a little sooner
             if (Time.time < NextSteal[i]) return;
             string off;
             if (RavenSkills.OffShoulder(p, munin, out off)) return;
@@ -429,7 +458,7 @@ namespace HuginWhispers
                 RavenSkills.SayFromShoulder(p, munin, !string.IsNullOrEmpty(warn) ? warn : munin ? Lang.T("Даю тобі хвилину. Потім сам полізу в сумку.") : Lang.T("Я дуже голодний. Ще хвилина — і я візьму сам, вибач наперед."));
                 return;
             }
-            NextSteal[i] = Time.time + Mathf.Max(1f, StealMinutes) * 60f * GearFx.StealWaitMul(item); // (Монета на удачу: less often)
+            NextSteal[i] = Time.time + Mathf.Max(1f, StealMinutes) * 60f * GearFx.StealWaitMul(item) * Habits.StealWaitMul(item); // (Монета на удачу: less often)
             Warned[i] = false;
             string name = Plugin.RavenName(munin);
             Trust.Food f = StealPick(p, munin, tier);
@@ -474,7 +503,7 @@ namespace HuginWhispers
                              : Lang.F("Забрав собі {0}. Куплю на них їжі в торговця. Ну, колись.", Coins(coins)));
             }
             if (said == null) return; // nothing to take: it just goes on being hungry
-            ScreamFx.Caw(p, munin, munin ? 0.85f : 1.3f, 0.5f);
+            ScreamFx.CawAll(p, munin, munin ? 0.85f : 1.3f, 0.5f);
             RavenSkills.SayFromShoulder(p, munin, said);
         }
 

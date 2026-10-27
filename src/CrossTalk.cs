@@ -29,7 +29,17 @@ namespace HuginWhispers
         internal const float FireRange = 8f, BossRange = 30f, HearRange = 30f;
         internal const int MaxLines = 6, MaxRavens = 4, PalsAt = 5;
 
-        internal sealed class Who { public Player P; public bool Munin; public int Level; }
+        internal sealed class Who
+        {
+            public Player P; public bool Munin; public int Level;
+            // a raven on a perch whose owner may be away (P null): who it is, from the perch
+            public string Owner = "", Nick, Call; public bool Female; public int Voice = -1;
+            internal string OwnerName { get { return P != null ? P.GetPlayerName() : Owner ?? ""; } }
+            internal string NickName { get { return P != null ? Nicks.Name(P, Munin) : Nick ?? Plugin.RavenName(Munin); } }
+            internal string CallName { get { return P != null ? Nicks.Call(P, Munin) : Call ?? Nick ?? Plugin.RavenName(Munin); } }
+            internal bool IsFemale { get { return P != null ? Grammar.Female(P) : Female; } }
+            internal int VoiceCode { get { return P != null ? HuginWhispers.Voice.CodeOn(P, Munin) : Voice; } }
+        }
         internal struct Line { public int Who, To; public string Text; } // To: whom it speaks to
 
         private static readonly Dictionary<long, float> SeenAt = new Dictionary<long, float>();  // a player within ApartRange, last
@@ -142,6 +152,7 @@ namespace HuginWhispers
         {
             if (!Enabled) return;
             _boss = string.IsNullOrEmpty(token) ? "" : token;
+            People.OnBoss(); // (who was there with you: your ravens remember it)
             _bossUntil = Time.time + 120f;
             Player p = Player.m_localPlayer;
             if (p != null && AnyRavensNear(p, BossRange)) RavenTalk.Forget("boss"); // someone's ravens near (even out on a strike now): they talk of it together, not yours alone too
@@ -300,6 +311,8 @@ namespace HuginWhispers
 
         // the kinds of talk (their steps: Plan)
         private static readonly HashSet<string> Scenes = new HashSet<string> { "intro", "greet", "pals", "boss", "fire", "rename", "about" }; // about: a thought about someone and their raven's answer (AboutTalk)
+        // talks put together elsewhere and sent as they are (Script): the mockery's quarrel (Victim), friends and enemies (Bonds)
+        private static readonly HashSet<string> Scripted = new HashSet<string> { "victim", "bfriend", "benemy" };
 
         private static float Chatty(string kind) { return kind == "fire" ? 0.75f : kind == "intro" || kind == "pals" ? 0.65f : 0.55f; }
 
@@ -381,14 +394,14 @@ namespace HuginWhispers
         private static string Compose(string dir, Who s, Who to, string tag, Dictionary<string, string> boss)
         {
             Dictionary<string, string> v = new Dictionary<string, string>(boss);
-            v["name"] = s.P.GetPlayerName();
-            v["friend"] = to.P.GetPlayerName();
-            v["raven"] = Nicks.Name(to.P, to.Munin);
-            v["addr"] = Nicks.Call(to.P, to.Munin);
-            v["me"] = Nicks.Name(s.P, s.Munin);
+            if (s.OwnerName.Length > 0) v["name"] = s.OwnerName;   // (an old perch seat without its owner's name: the lines naming them are left out)
+            if (to.OwnerName.Length > 0) v["friend"] = to.OwnerName;
+            v["raven"] = to.NickName;
+            v["addr"] = to.CallName;
+            v["me"] = s.NickName;
             v["kin"] = Plugin.RavenName(to.Munin);
-            if (_gossip) { Gossip.Fill(v, s.P, s.Munin, "g_my_", dir); Gossip.Fill(v, to.P, to.Munin, "g_their_", dir); } // what really happened to them, now and then
-            return Composer.ComposeCross(dir, s.Munin, tag, s.Level, Grammar.Female(s.P), Grammar.Female(to.P), v, Voice.CodeOn(s.P, s.Munin));
+            if (_gossip && s.P != null && to.P != null) { Gossip.Fill(v, s.P, s.Munin, "g_my_", dir); Gossip.Fill(v, to.P, to.Munin, "g_their_", dir); } // what really happened to them, now and then
+            return Composer.ComposeCross(dir, s.Munin, tag, s.Level, s.IsFemale, to.IsFemale, v, s.VoiceCode);
         }
 
         // three words in a row that an earlier line of the talk already said
@@ -434,6 +447,29 @@ namespace HuginWhispers
         }
         internal static int TalksWith(Player p, Player o) { return Talks(p, o); }
 
+        // the ravens' evening gathering (Gathering): a fireside talk of these ravens (they sit by the fire, not on the
+        // shoulders, so they are named here, not looked for); false when it could not be put together
+        internal static bool Gather(List<Who> whos)
+        {
+            if (Plugin.Instance == null || whos == null || whos.Count < 2) return false;
+            List<Line> lines = null;
+            for (int tries = 0; tries < 3 && lines == null; tries++) lines = Make("fire", whos, null);
+            if (lines == null) return false;
+            _lastCross = Time.time; _fireNext = Time.time + FireMinutes * 60f; // (no second fireside talk right on top of it)
+            Send("fire", whos, lines);
+            Play("fire", whos, lines);
+            return true;
+        }
+
+        // ravens sitting on perches near each other (PerchCrowd): their talk put together, not sent nor shown here
+        internal static List<Line> PerchMake(string kind, List<Who> whos)
+        {
+            if (Plugin.Instance == null || whos == null || whos.Count < 2) return null;
+            List<Line> lines = null;
+            for (int tries = 0; tries < 3 && lines == null; tries++) lines = Make(kind, whos, null);
+            return lines;
+        }
+
         // a talk put together elsewhere: sent to everybody and shown here
         internal static void Script(string kind, List<Who> whos, List<Line> lines)
         {
@@ -469,7 +505,7 @@ namespace HuginWhispers
             {
                 string kind = pkg.ReadString();
                 long by = pkg.ReadLong();
-                if (!Scenes.Contains(kind)) return;
+                if (!Scenes.Contains(kind) && !Scripted.Contains(kind)) return;
                 int n = Mathf.Min(pkg.ReadInt(), MaxRavens);
                 List<Who> whos = new List<Who>();
                 for (int i = 0; i < n; i++)
@@ -539,6 +575,7 @@ namespace HuginWhispers
             }
             else if (dist < HearRange) Cozy.Quiet(total);
             if (dist < ApartRange) _busyUntil = Time.time + total;
+            try { Bonds.OnTalk(kind, whos); } catch (Exception e) { Log("Bonds: " + e.Message); } // (my ravens in it: how they get along)
             CrossBubble.Play(whos, lines, mine);
         }
 

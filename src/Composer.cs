@@ -180,7 +180,7 @@ namespace HuginWhispers
             if (s.N(Ev.Repair) > 0) Add(list, "repair", 37, s.Age(Ev.Repair));
             if (s.N(Ev.Ferment) > 0) Add(list, "ferment", 36, s.Age(Ev.Ferment));
             if (s.N(Ev.Sit) > 0) Add(list, "sit", 28, s.Age(Ev.Sit));
-            // 2.4.0: ore at a portal, a broken thing, a tamed beast, the body freezing, poisoned or on fire
+            // ore at a portal, a broken thing, a tamed beast, the body freezing, poisoned or on fire
             if (s.N(Ev.Tame) > 0 && !string.IsNullOrEmpty(s.Tamed)) Add(list, "tame", 58, s.Age(Ev.Tame));
             if (s.N(Ev.Broke) > 0) Add(list, "broke", 52, s.Age(Ev.Broke));
             if (s.N(Ev.Burning) > 0) Add(list, "burning", 50, s.Age(Ev.Burning));
@@ -437,6 +437,9 @@ namespace HuginWhispers
                 case "slaughter": v["m_count"] = Lang.N(m.N, "ворога|ворогів|ворогів"); break;
                 case "voyage": v["m_km"] = Lang.F("{0} км", Lang.Num(m.N / 1000f, "0.0")); break;
                 case "fall": v["m_m"] = Lang.F("{0} м", m.N); break;
+#if RAVEN_ITEM
+                case "fight": int st; if (!int.TryParse(m.Extra, out st)) st = 4; v["m_grade"] = Lang.LowerFirst(FightJudge.Grade(st)); v["m_stars"] = FightJudge.Stars(st); break;
+#endif
                 case "tomb": v["m_min"] = Lang.N(m.N, "хвилину|хвилини|хвилин"); break;
                 case "grudge": case "badday": case "death": v["m_times"] = Times(m.N); break;
             }
@@ -897,6 +900,16 @@ namespace HuginWhispers
         internal static void CreatureForms(string dir, Dictionary<string, string> v, string key, string token)
         {
             AddCreature(v, ReadNames(Path.Combine(dir, NamesFile)), key, token != null && token.StartsWith("$") ? token.Substring(1) : token);
+        }
+
+        // a creature's name in its cases for the next tagged line ({key} {key_gen} {key_ins} {key_genpl}: Extra)
+        internal static void ExtraCreature(string key, string token)
+        {
+            string dir = Plugin.Instance != null ? Plugin.Instance.PhraseDir : null;
+            if (dir == null || string.IsNullOrEmpty(token)) return;
+            Dictionary<string, string> v = new Dictionary<string, string>();
+            using (Lang.Phrase()) AddCreature(v, ReadNames(Path.Combine(dir, NamesFile)), key, token);
+            foreach (KeyValuePair<string, string> kv in v) Extra[kv.Key] = kv.Value;
         }
 
         // only placeholders we really know get a value; phrases needing missing ones are skipped

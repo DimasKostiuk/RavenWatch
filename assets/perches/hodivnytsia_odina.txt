@@ -1,0 +1,11 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Годівниця Одіна
+note: Вівтар із чорного дерева на воронячих лапах, з кам'яною чашею й рунами: Одін сам наче доглядає його воронів
+use: feeder
+id: hodivnytsia_odina
+cost: YggdrasilWood:10 BlackMetal:4 Eitr:3
+station: piece_magetable
+feed: 1.5
+part asset/Годівниці/FeederOdin pos 0 0.48 0 rot 0 0 0 scale 0.53 0.53 0.53  # Годівниця Одіна (Meshy), ~1 м
+part @seat pos -0.12 0.65 0 rot 0 90 0 scale 1 1 1  # де ворон їсть (у чаші)
+part @seat pos 0.15 0.69 0 rot 0 -90 0 scale 1 1 1  # де ворон їсть (у чаші)

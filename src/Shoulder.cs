@@ -28,11 +28,12 @@ namespace HuginWhispers
         }
         internal static Vector3 Offset = new Vector3(0.14f, 0.05f, 0f);
         internal static Vector3 Rotation = new Vector3(0f, 180f, 0f); // the raven model faces the other way
+        internal static float RideTilt = 0.3f, RideLift = 1.2f, RideMax = 12f, RideSettle = 6f, RideFollow = 14f; // riding the shoulder: share of its tip the bird takes, times the seat rides it, most degrees, seconds its usual pose takes to follow, ease 1/s
         internal static float HuginTilt = 0f, MuninTilt = 0f; // degrees sideways, away from the head
 
         // Some emotes throw the shoulders about (a dance, lying down): then the ravens hover above instead (the ones
         // listed; asleep in a bed always).
-        private static readonly HashSet<string> HoverEmotes = new HashSet<string>();
+        private static readonly HashSet<string> HoverEmotes = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase); // (the emote compared as the game names it)
         internal static void SetHoverEmotes(string list)
         {
             HoverEmotes.Clear();
@@ -49,7 +50,7 @@ namespace HuginWhispers
             ZDO zdo = NetFlag.Zdo(pl, false);
             if (zdo == null) return false;
             string e = zdo.GetString(ZDOVars.s_emote, "");
-            return e.Length > 0 && HoverEmotes.Contains(e.ToLowerInvariant());
+            return e.Length > 0 && HoverEmotes.Contains(e);
         }
 
         private sealed class Pair { public GameObject Hugin, Munin; public int HuginLv = -1, MuninLv = -1; }
@@ -126,21 +127,21 @@ namespace HuginWhispers
         {
             if (Time.time < _next) return;
             _next = Time.time + 0.5f;
-            Senses.Tick();          // what is going on around you, once for everyone
-            Perches.Sweep();        // birds left by a perch and taken by nobody: off in a puff (also with no perch loaded)
-            GraveRavens.Tick();     // ravens lying in a grave near: seen over it
-            BlackBox.Ensure();      // the flight's black box (the last seconds, saved on a key)
-            RavenJournal.Watch();   // a raven of yours gone from both shoulder and bag: noted
-            Outing.Tick();
-            Orders.Tick();          // the orders run their time (and the short scouting's marks)
-            Errands.Tick();         // Odin's errand: places reached, its map marks
-            RavenFetch.Visuals();   // what a raven brings, seen in its beak
-            Post.Tick();            // the post: trips, letters coming, their birds
-            Quirks.Tick();          // the ravens' quirks (Norov)
-            GearFx.Tick();          // the things they wear (the bell's warning)
-            Trust.WatchStones(Player.m_localPlayer); // what hangs on the boss stones, remembered for the book
-            AnimDirector.Schedule();
-            if (Time.time >= _nextMatCheck) { _nextMatCheck = Time.time + 5f; foreach (Player pl in Player.GetAllPlayers()) if (pl != null) { FixPink(ModelOf(pl, false), false); FixPink(ModelOf(pl, true), true); } }
+            { long ts = Perf.On ? Perf.Now : 0; Senses.Tick(); if (Perf.On) Perf.Step("Senses.Tick", ts); }          // what is going on around you, once for everyone
+            { long ts = Perf.On ? Perf.Now : 0; Perches.Sweep(); if (Perf.On) Perf.Step("Perches.Sweep", ts); }        // birds left by a perch and taken by nobody: off in a puff (also with no perch loaded)
+            { long ts = Perf.On ? Perf.Now : 0; GraveRavens.Tick(); if (Perf.On) Perf.Step("GraveRavens.Tick", ts); }     // ravens lying in a grave near: seen over it
+            { long ts = Perf.On ? Perf.Now : 0; BlackBox.Ensure(); if (Perf.On) Perf.Step("BlackBox.Ensure", ts); }      // the flight's black box (the last seconds, saved on a key)
+            { long ts = Perf.On ? Perf.Now : 0; RavenJournal.Watch(); if (Perf.On) Perf.Step("RavenJournal.Watch", ts); }   // a raven of yours gone from both shoulder and bag: noted
+            { long ts = Perf.On ? Perf.Now : 0; Outing.Tick(); if (Perf.On) Perf.Step("Outing.Tick", ts); }
+            { long ts = Perf.On ? Perf.Now : 0; Orders.Tick(); if (Perf.On) Perf.Step("Orders.Tick", ts); }          // the orders run their time (and the short scouting's marks)
+            { long ts = Perf.On ? Perf.Now : 0; Errands.Tick(); if (Perf.On) Perf.Step("Errands.Tick", ts); }         // Odin's errand: places reached, its map marks
+            { long ts = Perf.On ? Perf.Now : 0; RavenFetch.Visuals(); if (Perf.On) Perf.Step("RavenFetch.Visuals", ts); }   // what a raven brings, seen in its beak
+            { long ts = Perf.On ? Perf.Now : 0; Post.Tick(); if (Perf.On) Perf.Step("Post.Tick", ts); }            // the post: trips, letters coming, their birds
+            { long ts = Perf.On ? Perf.Now : 0; Quirks.Tick(); if (Perf.On) Perf.Step("Quirks.Tick", ts); }          // the ravens' quirks (Norov)
+            { long ts = Perf.On ? Perf.Now : 0; GearFx.Tick(); if (Perf.On) Perf.Step("GearFx.Tick", ts); }          // the things they wear (the bell's warning)
+            { long ts = Perf.On ? Perf.Now : 0; Trust.WatchStones(Player.m_localPlayer); if (Perf.On) Perf.Step("Trust.WatchStones", ts); } // what hangs on the boss stones, remembered for the book
+            { long ts = Perf.On ? Perf.Now : 0; AnimDirector.Schedule(); if (Perf.On) Perf.Step("AnimDirector.Schedule", ts); }
+            if (Time.time >= _nextMatCheck) { long ts = Perf.On ? Perf.Now : 0; _nextMatCheck = Time.time + 5f; foreach (Player pl in Player.GetAllPlayers()) if (pl != null) { FixPink(ModelOf(pl, false), false); FixPink(ModelOf(pl, true), true); } if (Perf.On) Perf.Step("Shoulder.FixPink", ts); }
             Player me = Player.m_localPlayer;
             if (me != _me) { _me = me; _meSince = Time.time; _ready = false; }
             if (me != null && !_ready)
@@ -173,8 +174,8 @@ namespace HuginWhispers
                 if (zdo != null) // what each raven wears (Outfits)
                 {
                     long t0 = Slow.Start();
-                    Outfits.Dress(pr.Hugin, zdo.GetString(Outfits.KeyH, ""));
-                    Outfits.Dress(pr.Munin, zdo.GetString(Outfits.KeyM, ""));
+                    Outfits.Dress(pr.Hugin, Outfits.CodeOn(zdo, false));
+                    Outfits.Dress(pr.Munin, Outfits.CodeOn(zdo, true));
                     Slow.End(t0, "raven outfits");
                     RavenWear.Dress(pr.Hugin, false, zdo.GetString(RavenWear.KeyH, "")); // and what its runes give it
                     RavenWear.Dress(pr.Munin, true, zdo.GetString(RavenWear.KeyM, ""));
@@ -456,11 +457,13 @@ namespace HuginWhispers
         // who made it: "_RavenEyes" the eye glow, "(shadow)", "(guide)", "(fate)", "(perch)"), once each.
         private static float _nextMatCheck;
         private static readonly HashSet<string> PinkTold = new HashSet<string>();
+        private static readonly List<Renderer> PinkScan = new List<Renderer>();
         private static void FixPink(GameObject go, bool munin)
         {
             if (go == null) return;
             Raven src = Template(munin);
-            foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
+            go.GetComponentsInChildren<Renderer>(true, PinkScan); // (one list for all: this runs for every raven around)
+            foreach (Renderer r in PinkScan)
             {
                 if (r is ParticleSystemRenderer) continue;
                 Material[] mats = r.sharedMaterials;
@@ -538,7 +541,7 @@ namespace HuginWhispers
             return sb.ToString();
         }
 
-        private static Transform Bone(Player pl, bool munin)
+        internal static Transform Bone(Player pl, bool munin) // (the load's ropes tie to it too: PairFx)
         {
             foreach (string name in new string[] { munin ? MuninBone : HuginBone, munin ? "LeftShoulder" : "RightShoulder", "Spine2", "Spine1" })
             {
@@ -572,7 +575,7 @@ namespace HuginWhispers
         private float _perchLook;
         private Vector3 _dir = Vector3.up;
         private bool _off;
-        private const float Flight = 1.5f;
+        internal float Flight = 1.5f; // seconds in the air before the puff (the game's big raven flies off longer: BigRavenLeave)
         private float _t;
         private Vector3 _goal;
         internal RavenMotor Motor;   // the raven's motor: a jump, hard beats, speeding up and climbing away (or on, if already flying)
@@ -652,6 +655,8 @@ namespace HuginWhispers
     {
         // flying in after you appeared, until it sits (the fly-in, then its landing)
         private bool _arrival;
+        // a hat put on during the game's fly-in could hang off its head (seen after Odin's gift): dressed again once it sits
+        private bool _redress;
         internal bool Arriving
         {
             get
@@ -719,7 +724,7 @@ namespace HuginWhispers
             if (Life != null) Motor.Grounded(); // it sits down: the next flight starts afresh
             ShoulderFit.Again(Player); // the armour under it, measured now: the landing aims at it
             if (Life == null || !Life.BeginLand(clipAt)) { SettleFrom(from, rot, 0.3f); if (Life != null) Life.SettleLater(); return; }
-            _landFrom = from; _landRot = rot; _landFresh = true; _landOn = true;
+            _landFrom = from; _landRot = rot; _landFresh = true; _landOn = true; _met = false;
             _settleStart = -1f; _arriveStart = -1f;
         }
         private bool _landOn, _landFresh;
@@ -759,6 +764,7 @@ namespace HuginWhispers
         {
             if (Player == null || FlyInSeconds <= 0f) return;
             _arrival = true;
+            _redress = true;
             Vector3 fwd = Vector3.ProjectOnPlane(Player.transform.forward, Vector3.up).normalized;
             Vector3 side = Vector3.Cross(Vector3.up, fwd) * (Munin ? -1f : 1f);
             // each its own way in: not two robots side by side (a delay, where it shows up, how high and how long)
@@ -805,7 +811,10 @@ namespace HuginWhispers
                 sa.fireEvents = ev;
                 Perches.Reveal(gameObject, false); // its parts as they were on the perch, whatever the animator's first state
                 Vector3 sf = Vector3.ProjectOnPlane((rot * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation))) * Vector3.forward, Vector3.up).normalized;
-                ArriveFlight(perch, rot, sf * 1.2f + Vector3.up * 2.2f, true);
+                float far = Mathf.Clamp01((Vector3.Distance(perch, Player.transform.position) - 2f) / 8f); // (near you: a low hop over, not up into the trees)
+                Vector3 toYou = Vector3.ProjectOnPlane(Player.transform.position - perch, Vector3.up).normalized;
+                if (toYou.sqrMagnitude > 0.01f) sf = Vector3.Slerp(sf, toYou, 1f - far * 0.6f).normalized; // (near: off your way at once; far: more its own way first)
+                ArriveFlight(perch, rot, sf * 1.2f + Vector3.up * Mathf.Lerp(0.9f, 2.2f, far), true);
                 return;
             }
             // a new model (the perch's bird is not in this game), or the perch's before any raven idled: out of its
@@ -893,7 +902,8 @@ namespace HuginWhispers
             if (Player == null || Bone == null) return;
             long t0 = Perf.On ? Perf.Now : 0;
             Place();
-            if (Perf.On) Perf.Add(t0);
+            if (_redress && !Arriving) { _redress = false; Outfits.Redress(gameObject); } // once, as it sits down
+            if (Perf.On) Perf.Add(t0, Perf.Shoulder);
         }
 
         private void Place()
@@ -910,21 +920,32 @@ namespace HuginWhispers
             if (Life != null && Life.SitNew) _bodyYaw = Life.SitYaw(yawNow); // the sitting system: its body turns after you on its own spring
             else _bodyYaw = _bodyYawSet && Time.frameCount - _bodyYawFrame < 3 ? Mathf.LerpAngle(_bodyYaw, yawNow, Mathf.Clamp01(Time.deltaTime * (Munin ? Shoulder.TurnFollowMunin : Shoulder.TurnFollowHugin))) : yawNow;
             _bodyYawSet = true; _bodyYawFrame = Time.frameCount;
-            transform.rotation = Quaternion.Euler(0f, _bodyYaw, 0f) * Quaternion.AngleAxis(tilt, Vector3.forward) * Quaternion.Euler(Shoulder.Rotation);
+            // riding the shoulder: the collarbone's own move (a breath, a shrug, a swing) carries the seat and tips the bird
+            Quaternion ride = Ride();
+            transform.rotation = Quaternion.Slerp(Quaternion.identity, ride, Shoulder.RideTilt) * Quaternion.Euler(0f, _bodyYaw, 0f) * Quaternion.AngleAxis(tilt, Vector3.forward) * Quaternion.Euler(Shoulder.Rotation);
             // Munin sits on the left: the sideways offset is mirrored for him
             Vector3 off = Munin ? new Vector3(-Shoulder.Offset.x, Shoulder.Offset.y, Shoulder.Offset.z) : Shoulder.Offset;
             float big = Player != null ? Player.transform.localScale.x : 1f; // (a grown body: «Звір Муніна»)
-            transform.position = Bone.position + facing * (off * big);
+            Quaternion rideLift = RideGain(ride, Shoulder.RideLift);
+            transform.position = Bone.position + rideLift * (facing * (off * big));
             // on what is worn: in the air no lift; the landing aims straight at the armour (measured as it begins,
             // in your pose then), so it sits down right onto it, nothing to settle afterwards
             bool busy = _airMode != 0 || _arriveStart >= 0f;
+            long tf = Perf.On ? Perf.Now : 0;
             float lift = busy ? 0f : ShoulderFit.Lift(Player, Munin, transform.position);
+            if (Perf.On) Perf.Step("pin: ShoulderFit.Lift", tf);
             _lift = _liftSet ? Mathf.MoveTowards(_lift, lift, Time.deltaTime * (busy || _landOn ? 1f : 0.6f)) : lift;
             _liftSet = true;
             transform.position += Vector3.up * (_lift - Shoulder.PerchDrop);
             SeatNow = transform.position; // where it sits (the landing record measures from here)
             if (!busy && !_landOn && Life != null) transform.position += Life.PinNudge; // its own little hops and steps on the shoulder
-            if (Life != null && AirStep(facing)) { Life.Apply(); return; }
+            if (Life != null)
+            {
+                long ta = Perf.On ? Perf.Now : 0;
+                bool air = AirStep(facing);
+                if (Perf.On) Perf.Step("pin: AirStep", ta);
+                if (air) { long tl = Perf.On ? Perf.Now : 0; Life.Apply(); if (Perf.On) Perf.Step("pin: Life.Apply (air)", tl); return; }
+            }
             if (_landOn && Life != null)
             {
                 Quaternion seatRot = transform.rotation;
@@ -936,6 +957,7 @@ namespace HuginWhispers
                 }
                 float way;
                 bool still = Life.StepLand(out way);
+                if (!_met && way >= MeetAt) { _met = true; Meet(); }
                 transform.position += seatRot * (_landOff * (1f - way)) + facing * LandFix(Life.LandU);
                 transform.rotation = Quaternion.Slerp(seatRot * _landTurn, seatRot, Mathf.Clamp01(way * LandTurnRate));
                 if (!still) { _landOn = false; AnimDirector.Release(gameObject, this); } // sitting again
@@ -1004,7 +1026,7 @@ namespace HuginWhispers
                     return; // the head and wings are left to the game's flying animation meanwhile
                 }
             }
-            if (Life != null) Life.Apply();
+            if (Life != null) { long tl = Perf.On ? Perf.Now : 0; Life.Apply(); if (Perf.On) Perf.Step("pin: Life.Apply", tl); }
         }
 
         // During a dance or lying down the raven lifts off and hangs in the air above where the shoulder stands,
@@ -1023,6 +1045,51 @@ namespace HuginWhispers
         private float _lift;
         private bool _liftSet;
         private float _bodyYaw;
+        private bool _met;
+        internal static float MeetAt = 0.8f; // of the landing's way: the feet about to touch
+
+        // your shoulder rises to meet the bird and the head turns to it (your own game; the others see it by your data)
+        private void Meet() { if (Player != null) PlayerAnims.Gesture(Player, Munin, "shoulder_meet_"); }
+
+        private Transform _chest;
+        private float _chestCheck;
+        private Quaternion _rideRest, _rideNow = Quaternion.identity;
+        private bool _rideSet;
+        internal float RideAngle; // (the studio's report: how far the collarbone tips the seat now, degrees)
+
+        // the same turn, so many times over (the seat may ride more than the bone itself turns: the shoulder's top is
+        // further out than the bird's offset from the joint)
+        private static Quaternion RideGain(Quaternion q, float k)
+        {
+            float ang; Vector3 axis;
+            q.ToAngleAxis(out ang, out axis);
+            if (ang > 180f) ang -= 360f;
+            return Mathf.Abs(ang) < 0.001f ? Quaternion.identity : Quaternion.AngleAxis(ang * k, axis);
+        }
+
+        // the collarbone turned from its usual pose (in the chest's frame, as a turn in the world): its usual pose follows
+        // slowly (a long hold — a raised shield — sinks in), so what shows is the move itself; eased a little (the bird
+        // rides it with its weight) and softly kept within RideMax
+        private Quaternion Ride()
+        {
+            if (Bone == null || Player == null) return Quaternion.identity;
+            if (_chest != null && Time.time >= _chestCheck) { _chestCheck = Time.time + 1f; if (!_chest.IsChildOf(Player.transform)) _chest = null; } // (a body made anew: looked up again)
+            if (_chest == null) { Animator an = Player.GetComponentInChildren<Animator>(); _chest = PlayerAnims.SkeletonBone(Player, an != null ? an.transform : Player.transform, "Spine2"); }
+            if (_chest == null) return Quaternion.identity;
+            Quaternion rel = Quaternion.Inverse(_chest.rotation) * Bone.rotation;
+            float dt = Time.deltaTime;
+            if (!_rideSet || dt <= 0f) { _rideRest = rel; _rideSet = true; _rideNow = Quaternion.identity; return _rideNow; }
+            _rideRest = Quaternion.Slerp(_rideRest, rel, 1f - Mathf.Exp(-dt / Shoulder.RideSettle));
+            Quaternion move = _chest.rotation * (rel * Quaternion.Inverse(_rideRest)) * Quaternion.Inverse(_chest.rotation);
+            float ang; Vector3 axis;
+            move.ToAngleAxis(out ang, out axis);
+            if (ang > 180f) ang -= 360f;
+            float soft = Shoulder.RideMax * (float)System.Math.Tanh(ang / Shoulder.RideMax); // (no hard stop: it eases towards the limit)
+            Quaternion want = Mathf.Abs(ang) < 0.01f ? Quaternion.identity : Quaternion.AngleAxis(soft, axis);
+            _rideNow = Quaternion.Slerp(_rideNow, want, 1f - Mathf.Exp(-dt * Shoulder.RideFollow));
+            RideAngle = soft;
+            return _rideNow;
+        }
         private bool _bodyYawSet;
         private int _bodyYawFrame;
         private RavenMotor _motor;
@@ -1042,6 +1109,8 @@ namespace HuginWhispers
             if (o == Orders.Scout) return _orderScout;
             if (o == Orders.Chase) return _chase;
             if (o == Orders.Fetch) return _fetch;
+            if (o == Orders.Ship) return _ship;
+            if (o == Orders.Beast) return _beast;
             return _tricks[o];
         }
         // an order begins (from the shoulder or taking over the dance / an outing in the air)
@@ -1049,7 +1118,7 @@ namespace HuginWhispers
         {
             _ordMode = _ordNow; _outEnd = -1f; _homeSince = -1f; _airSince = Time.time;
             _outMode = Outing.CircleRight; // the circle plan's way round
-            _ring = Random.Range(0f, 10f);
+            _ring = Orders.RingOf(Player, Munin); _clock0 = -1.0; // (the order's own seed and clock: every game flies the same figure)
             FlightPlan plan = OrderPlan(_ordMode);
             plan.Begin();
             Motor.Launch(Motor.TakeoffVelocity(plan.TakeoffAim(this, facing), carry, plan.Name), plan.Name, 1f);
@@ -1060,6 +1129,17 @@ namespace HuginWhispers
         private int _outNow, _outMode; // «адаптивні ворони»: the outing asked for now / the one it is on
         private float _outCheck, _outEnd = -1f, _ring;
         internal float Ring { get { return _ring; } }      // this flight's own random phase (the plans' drift and rings)
+        // the plans' clock, the same in every game: the network's, counted from the hour (a float stays exact)
+        private double _clock0 = -1.0;
+        internal float Clock
+        {
+            get
+            {
+                double n = SitNet.Seconds;
+                if (_clock0 < 0.0 || n < _clock0) _clock0 = System.Math.Floor(n / 3600.0) * 3600.0;
+                return (float)(n - _clock0);
+            }
+        }
         internal int OutMode { get { return _outMode; } }
         private readonly HoverPlan _hover = new HoverPlan();
         private readonly FollowPlan _follow = new FollowPlan();
@@ -1068,11 +1148,14 @@ namespace HuginWhispers
         private readonly TrailPlan _trail = new TrailPlan();
         private readonly ChasePlan _chase = new ChasePlan();
         private readonly FetchPlan _fetch = new FetchPlan();
+        private readonly ShipPlan _ship = new ShipPlan();
+        private readonly BeastPlan _beast = new BeastPlan();
         internal RavenMotor Motor { get { if (_motor == null) _motor = RavenMotor.Of(gameObject, Munin, Player); return _motor; } }
         private readonly HuntPlan _hunt = new HuntPlan();
         private FlightPlan OutPlan(int mode) { return mode == Outing.Follow ? (FlightPlan)_follow : mode == Outing.Scout ? (FlightPlan)_scout : mode == Outing.Hunt ? (FlightPlan)_hunt : _circle; }
 
-        internal static float FarAway = 150f; // m: farther than this from you it is brought close at once (a portal; a scouting goes up to 100 m)
+        internal static float TiredAfter = 25f, TiredChance = 0.7f; // s out: then it pants on the shoulder (this often)
+        internal static float FarAway = 150f; // m: farther than this from you it is brought close at once (a portal; a scouting goes up to 120 m)
         internal static float OutUp = 1f, OutBack = 2f; // flying along: how far above and behind
         internal static float ScoutAhead = 24f, ScoutUp = 5f; // scouting: how far ahead and how high it darts
         private float _followUntil = -1f; // after the dance, flying along a while if you are off at once (-1: not decided)
@@ -1086,7 +1169,7 @@ namespace HuginWhispers
         }
         private float _hoverEnd = -1f, _homeSince = -1f, _lingerUntil = -1f;
 
-        private void OnDisable() { if (_quietAnim != null) { _quietAnim.fireEvents = true; _quietAnim = null; } if (_airMode != 0 && Life != null) Life.Hovering = false; _airMode = 0; _landOn = false; } // a strike or the dome takes the bird: they bring it back (the motor keeps it flying)
+        private void OnDisable() { if (_quietAnim != null) { _quietAnim.fireEvents = true; _quietAnim = null; } if (Life != null) { Life.OnFloor = false; Life.GroundCrouch = 0f; Life.GroundLiftL = Life.GroundLiftR = 0f; } _hover.Begin(); if (_airMode != 0 && Life != null) Life.Hovering = false; _airMode = 0; _landOn = false; } // a strike or the dome takes the bird: they bring it back (the motor keeps it flying)
 
         // true while it is in the air here (then this frame's place and turn are the flight's)
         private bool AirStep(Quaternion facing)
@@ -1102,7 +1185,8 @@ namespace HuginWhispers
             // an order while it hangs over the shoulder or is out on its own: it takes over in the air
             if ((_airMode == 2 || _airMode == 3) && _ordNow != Orders.None && AnimDirector.Take(gameObject, RavenAct.Command, this, "order: " + Orders.Names[_ordNow]))
             {
-                _airMode = 4; BeginOrder(carry, facing); // (the hover flag: the director's, as it took the bird)
+                if (_airMode == 2) _hover.TakeOff(m, this, carry); // (down by you: up first, the order flies from the air)
+                _airMode = 4; { long tb = Perf.On ? Perf.Now : 0; BeginOrder(carry, facing); if (Perf.On) Perf.Step("air: BeginOrder", tb); } // (the hover flag: the director's, as it took the bird)
             }
             if (_airMode == 0)
             {
@@ -1110,20 +1194,21 @@ namespace HuginWhispers
                 if (_ordNow != Orders.None && !_landOn && !arriving && AnimDirector.Take(gameObject, RavenAct.Command, this, "order: " + Orders.Names[_ordNow]))
                 {
                     _airMode = 4; _airPos = seat; _airTurn = seatRot;
-                    BeginOrder(carry, facing);
+                    { long tb = Perf.On ? Perf.Now : 0; BeginOrder(carry, facing); if (Perf.On) Perf.Step("air: BeginOrder", tb); }
                 }
                 else if (_hoverWant && !arriving)
                 {
                     // an emote: up off the shoulder
                     if (!AnimDirector.Take(gameObject, RavenAct.Hover, this, "dance")) return false;
                     _airMode = 2; _airSince = Time.time; _airPos = seat; _airTurn = seatRot;
+                    _hover.Begin();
                     m.Launch(m.TakeoffVelocity(_hover.TakeoffAim(this, facing), carry, _hover.Name), _hover.Name, 1f);
                 }
                 else if (_outNow != Outing.None && !_landOn && !arriving && AnimDirector.Take(gameObject, RavenAct.Outing, this, _outNow == Outing.Follow ? "outing: along" : _outNow == Outing.Scout ? "outing: scouting" : "outing: circling"))
                 {
                     // «адаптивні ворони»: off the shoulder to stretch its wings (up and a little out, then its way)
                     _airMode = 3; _airSince = Time.time; _airPos = seat; _airTurn = seatRot; _outMode = _outNow; _outEnd = -1f;
-                    _ring = Random.Range(0f, 10f);
+                    _ring = Outing.RingOf(Player, Munin); _clock0 = -1.0;
                     FlightPlan plan = OutPlan(_outMode);
                     plan.Begin();
                     m.Launch(m.TakeoffVelocity(plan.TakeoffAim(this, facing), carry, plan.Name), plan.Name, 1f);
@@ -1132,7 +1217,7 @@ namespace HuginWhispers
             }
             transform.position = _airPos;
             transform.rotation = _airTurn;
-            if (m.Body == null) m.Launch(carry, "", 1f); // (never left without a body in the air)
+            if (m.Body == null && !_hover.OnGround) m.Launch(carry, "", 1f); // (never left without a body in the air; down by you it has none)
             // left far behind (a portal, a teleport): it does not cross half the world, it shows up close behind you
             float farAway = _airMode == 1 ? Mathf.Max(FarAway, _arriveFar + 30f) : FarAway;
             if ((_airPos - Player.transform.position).sqrMagnitude > farAway * farAway)
@@ -1140,7 +1225,7 @@ namespace HuginWhispers
                 Vector3 f = Vector3.ProjectOnPlane(Player.transform.forward, Vector3.up).normalized;
                 _airPos = Player.transform.position + Vector3.up * 5f - f * 6f;
                 transform.position = _airPos;
-                m.Body.Vel = carry;
+                if (m.Body != null) m.Body.Vel = carry;
             }
 
             // an order or an outing over while you still dance, or flying in to you (back from a perch, out of the bag)
@@ -1148,6 +1233,7 @@ namespace HuginWhispers
             if (_hoverWant && (_airMode == 1 || (_airMode == 4 && _ordNow == Orders.None && !Finishing) || (_airMode == 3 && _outNow == Outing.None)) && AnimDirector.Take(gameObject, RavenAct.Hover, this, "dance"))
             {
                 _airMode = 2; _lingerUntil = -1f; _homeSince = -1f; _hoverEnd = -1f; _followUntil = -1f;
+                _hover.Begin(); // (its own way about you chosen afresh)
                 if (m.Body != null) m.Body.NewLeg(); // it was coming home (final): now it hangs about, its templates and the way down "up and back first" again
             }
 
@@ -1157,11 +1243,13 @@ namespace HuginWhispers
             bool hanging = _airMode == 2 && (_hoverWant || Time.time < _lingerUntil);
             // still flying on (hanging, an outing, an order, trailing you): the way home has not begun
             if (hanging || (_airMode == 3 && _outNow != Outing.None) || (_airMode == 4 && (_ordNow != Orders.None || Finishing)) || (_airMode == 2 && _followUntil > Time.time)) _homeSince = -1f;
+            if (!hanging && _hover.OnGround) _hover.TakeOff(m, this, carry); // (down by you: up again first)
+            else if (!hanging && _airMode == 2) _hover.TakeOff(m, this, carry); // (on its way down: no more)
             if (hanging)
             {
                 _hoverEnd = -1f; _followUntil = -1f;
                 m.SetPlan(_hover.Name);
-                _hover.Step(m, this, facing, carry, dt);
+                { long tp = Perf.On ? Perf.Now : 0; _hover.Step(m, this, facing, carry, dt); if (Perf.On) Perf.Step("air: _hover.Step", tp); }
             }
             else if (_airMode == 4 && (_ordNow != Orders.None || Finishing))
             {
@@ -1171,18 +1259,18 @@ namespace HuginWhispers
                 if (_ordNow != Orders.None && _ordNow != _ordMode && !inFigure) { _ordMode = _ordNow; _outEnd = -1f; OrderPlan(_ordMode).Begin(); }
                 FlightPlan plan = OrderPlan(_ordMode);
                 m.SetPlan(plan.Name);
-                plan.Step(m, this, facing, carry, dt);
+                { long tp = Perf.On ? Perf.Now : 0; plan.Step(m, this, facing, carry, dt); if (Perf.On) Perf.Step("air: plan.Step", tp); }
             }
             else if (_airMode == 3 && _outNow != Outing.None)
             {
                 FlightPlan plan = OutPlan(_outMode);
                 m.SetPlan(plan.Name);
-                plan.Step(m, this, facing, carry, dt);
+                { long tp = Perf.On ? Perf.Now : 0; plan.Step(m, this, facing, carry, dt); if (Perf.On) Perf.Step("air: plan.Step", tp); }
             }
             else if (_airMode == 2 && Following(carry))
             {
                 m.SetPlan(_trail.Name);
-                _trail.Step(m, this, facing, carry, dt);
+                { long tp = Perf.On ? Perf.Now : 0; _trail.Step(m, this, facing, carry, dt); if (Perf.On) Perf.Step("air: _trail.Step", tp); }
             }
             else
             {
@@ -1205,6 +1293,9 @@ namespace HuginWhispers
                     if (ShoulderLife.LogLandings && ReferenceEquals(Player, Player.m_localPlayer) && Plugin.Instance != null) Plugin.Instance.Log("Landing (pin " + _airMode + "): facing " + Mathf.RoundToInt(m.Body.YawOff(Player.transform.forward)) + "° off the owner's way, " + Mathf.RoundToInt(Vector3.Distance(transform.position, seat) * 100f) + " cm from the seat, speed " + m.Body.Speed.ToString("0.0"));
                     Vector3 from = transform.position;
                     Quaternion turn = transform.rotation;
+                    // a long way out (an outing, an order): it pants a while once down (the owner's game asks; the act is sent)
+                    if ((_airMode == 3 || _airMode == 4) && Time.time - _airSince > TiredAfter && Life != null && Life.SitNew && ReferenceEquals(Player, Player.m_localPlayer) && Random.value < TiredChance)
+                        Life.SitDirectorNow.Want("Захекався", Random.Range(0.6f, 1.4f), 6f);
                     _airMode = 0; _homeSince = -1f;
                     transform.position = seat; transform.rotation = seatRot;
                     ComeBack(from, turn); // near: the landing; stuck far off (the safety ran out): gone in a puff and flown in again, not dragged across by the landing clip

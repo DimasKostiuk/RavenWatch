@@ -29,6 +29,27 @@ namespace HuginWhispers
         internal float PerDay { get { return _def != null ? _def.PerDay : Perches.DailyCap; } }
         // a «sit here» spot (SitHere), not a perch someone built
         internal bool IsSpot { get { return _def != null && _def.Id == SitHere.DefId; } }
+        internal bool IsGuard { get { return _def != null && _def.Guard; } }
+        internal float[] SitPose { get { return _def != null ? _def.Pose : null; } }   // (its raven sitting on a feeder: HomeMeal)
+        internal float[] StandPose { get { return _def != null ? _def.Stand : null; } } // «Вартова жердина»: one mode only, on guard (Home)
+        internal bool IsNest { get { return _def != null && _def.Nest; } }
+        internal bool IsTree { get { return _def != null && _def.Tree; } }
+        internal string Name { get { return GetHoverName(); } }
+        internal float Born { get; private set; } // when this game loaded it (old news on it is not acted on)
+        // its bird is off the seat for a moment (a blow from the perch: HomeStrike), not drawn anew meanwhile
+        private float[] _outUntil;
+        internal bool Busy(int seat) { return seat >= 0 && seat < Count && ((_outUntil != null && Time.time < _outUntil[seat]) || _incoming[seat] != null); }
+        // the bird sitting here taken off the seat for a flight from it (it comes back by PerchFlight → Landed)
+        internal GameObject TakeBird(int seat, float seconds)
+        {
+            if (seat < 0 || seat >= Count || _birds[seat] == null || _incoming[seat] != null) return null;
+            GameObject b = _birds[seat];
+            _birds[seat] = null;
+            if (_outUntil == null) _outUntil = new float[Count];
+            _outUntil[seat] = Time.time + seconds;
+            b.transform.SetParent(null, true);
+            return b;
+        }
         // nobody sits on it, nobody flies to it, no bird of it about
         internal bool Idle
         {
@@ -86,6 +107,7 @@ namespace HuginWhispers
             _waitUntil = new float[_seats.Length]; _staleAt = new float[_seats.Length]; _incoming = new PerchFlight[_seats.Length];
             for (int i = 0; i < _seats.Length; i++) { _shown[i] = ""; _hidden[i] = null; }
             if (!Valid) return; // the hammer's ghost
+            Born = Time.time;
             _nv.Register<int, string>(Perches.RpcSeat, OnSeat);
             WearNTear w = GetComponent<WearNTear>();
             if (w != null) w.m_onDestroyed = (Action)Delegate.Combine(w.m_onDestroyed, new Action(Broken));
@@ -95,10 +117,17 @@ namespace HuginWhispers
         private void OnDestroy()
         {
             All.Remove(this);
-            if (_birds != null) foreach (GameObject b in _birds) if (b != null) Destroy(b);
+            if (_birds == null) return;
+            for (int i = 0; i < _birds.Length; i++)
+            {
+                if (_birds[i] == null) continue;
+                Perches.Occupant o = _occAt != null && i < _occAt.Length ? _occAt[i] : null; // (the last read: the ZDO may be gone already)
+                if (o != null && o.Home) Home.PerchLost(_birds[i], o.Pid, o.Munin, false); // yours, you near: it flies to you from here
+                Destroy(_birds[i]);
+            }
         }
 
-        private void Broken() { if (Owner) Perches.Broke(_nv.GetZDO().m_uid); }
+        private void Broken() { if (Owner) { Home.Broken(this); Perches.Broke(_nv.GetZDO().m_uid); } } // (the ravens at home on it: to their owner or to Odin)
 
         // who sits on seat i: the ZDO's string read and parsed once, again only when it changes (asked very often)
         private string[] _rawAt;
@@ -195,60 +224,85 @@ namespace HuginWhispers
             if (b != null && sp != null) b.Listen(sp.transform, seconds);
         }
 
-        // now and then, with someone near: a talk of the two (one owner's Hugin and Munin here), else a thought aloud
+        // now and then, with someone near: a talk of the ravens here and on the perches beside (PerchCrowd: one owner's
+        // Hugin and Munin, or the ravens of different players, up to four on up to three perches), else a thought aloud
         private void Chatter()
         {
             if (_talkAt < 0f) { _talkAt = Time.time + UnityEngine.Random.Range(TalkMin * 0.4f, TalkMax * 0.6f); return; }
             if (Time.time < _talkAt) return;
             _talkAt = Time.time + UnityEngine.Random.Range(TalkMin, TalkMax);
             if (Time.time < _speakFree || TalkBubble.PlayingAt(this) || Plugin.Instance == null) return;
-            Player near = null, owner = null; float nd = HearNear;
-            Perches.Occupant h = null, m = null; int hs = -1, ms = -1;
-            for (int i = 0; i < Count; i++)
-            {
-                Perches.Occupant o = At(i);
-                if (o == null || _birds[i] == null) continue;
-                PerchLife l = _birds[i].GetComponent<PerchLife>();
-                if (l == null || !l.Calm) continue;
-                if (o.Munin) { m = o; ms = i; } else { h = o; hs = i; }
-            }
-            if (h == null && m == null) return;
+            if (PerchCrowd.Try(this)) return;
+            List<int> calm = new List<int>();
+            for (int i = 0; i < Count; i++) if (CalmAt(i)) calm.Add(i);
+            if (calm.Count == 0 || !SomeoneNear()) return; // nobody to hear
+            Say(calm[UnityEngine.Random.Range(0, calm.Count)], "perch_idle", null, IdleChance);
+        }
+
+        // someone sits on it (the perch's data: the same in every game, unlike the birds' calm)
+        internal bool Taken()
+        {
+            for (int i = 0; i < Count; i++) if (At(i) != null) return true;
+            return false;
+        }
+
+        // a raven sits on seat i, landed and calm (not asleep, not at a foe, not turning)
+        internal bool CalmAt(int i)
+        {
+            if (At(i) == null || !Settled(i)) return false;
+            PerchLife l = _birds[i].GetComponent<PerchLife>();
+            return l != null && l.Calm;
+        }
+
+        internal bool SomeoneNear()
+        {
             foreach (Player p in Player.GetAllPlayers())
+                if (p != null && !p.IsDead() && Vector3.Distance(p.transform.position, transform.position) < HearNear) return true;
+            return false;
+        }
+
+        // another player near (not the ravens' owner); one hidden in the shadow is not named
+        internal string Friend(long ownerPid)
+        {
+            foreach (Player p in Player.GetAllPlayers())
+                if (p != null && p.GetPlayerID() != ownerPid && !Shadow.Flagged(p) && Vector3.Distance(p.transform.position, transform.position) < HearNear) return p.GetPlayerName();
+            return null;
+        }
+
+        // the talk of one owner's Hugin and Munin (anywhere among the perches near): its lines, or null
+        internal List<TalkBubble.Line> PairLines(Perches.Occupant h, Perches.Occupant m)
+        {
+            string friend = Friend(h.Pid);
+            foreach (string reason in TalkReasons(h, m, friend))
             {
-                if (p == null || p.IsDead()) continue;
-                float d = Vector3.Distance(p.transform.position, transform.position);
-                if (d < nd) { nd = d; near = p; }
+                List<TalkBubble.Line> lines = RavenTalk.PerchTalk(reason, h.Level, m.Level, h.Name, h.Female, friend, _recentTalks, h.Voice, m.Voice);
+                if (lines != null) return lines;
             }
-            if (near == null) return; // nobody to hear
-            Perches.Occupant any = h ?? m;
-            foreach (Player p in Player.GetAllPlayers()) if (p != null && p.GetPlayerID() == any.Pid) owner = p;
-            if (h != null && m != null && h.Pid == m.Pid)
-            {
-                string friend = null;
-                foreach (Player p in Player.GetAllPlayers())
-                    if (p != null && p.GetPlayerID() != h.Pid && !Shadow.Flagged(p) && Vector3.Distance(p.transform.position, transform.position) < HearNear) { friend = p.GetPlayerName(); break; } // one hidden in the shadow is not named
-                List<TalkBubble.Line> lines = null;
-                foreach (string reason in TalkReasons(h, m, friend))
-                {
-                    lines = RavenTalk.PerchTalk(reason, h.Level, m.Level, h.Name, h.Female, friend, _recentTalks, h.Voice, m.Voice);
-                    if (lines != null) break;
-                }
-                if (lines != null)
-                {
-                    float total = 0f;
-                    foreach (TalkBubble.Line l in lines) total += TalkBubble.Pace(l.Text);
-                    _speakFree = Time.time + total + GapSeconds;
-                    TalkBubble.PlayAt(this, lines, owner == Player.m_localPlayer);
-                    Perches.SendTalk(Id, lines);
-                    return;
-                }
-            }
-            int seat = h != null && (m == null || UnityEngine.Random.value < 0.5f) ? hs : ms;
-            Say(seat, "perch_idle", null, IdleChance);
+            return null;
+        }
+
+        // both of them on this perch: the talk over it, as ever
+        internal bool PairTalk(Perches.Occupant h, Perches.Occupant m)
+        {
+            List<TalkBubble.Line> lines = PairLines(h, m);
+            if (lines == null) return false;
+            Talked(lines);
+            Player owner = PlayerOf(h.Pid);
+            TalkBubble.PlayAt(this, lines, owner != null && owner == Player.m_localPlayer);
+            Perches.SendTalk(Id, lines);
+            return true;
+        }
+
+        // a talk here or in a crowd: this perch keeps quiet until it is over
+        internal void Talked(List<TalkBubble.Line> lines)
+        {
+            float total = 0f;
+            foreach (TalkBubble.Line l in lines) total += TalkBubble.Pace(l.Text);
+            _speakFree = Time.time + total + GapSeconds;
         }
 
         // which talks fit now: the weather and the hour first (not always), the place, a friend, the trust gap; then the perch or just talk
-        private List<string> TalkReasons(Perches.Occupant h, Perches.Occupant m, string friend)
+        internal List<string> TalkReasons(Perches.Occupant h, Perches.Occupant m, string friend)
         {
             List<string> r = new List<string>();
             float f = EnvMan.instance != null ? EnvMan.instance.GetDayFraction() : 0.5f;
@@ -317,12 +371,14 @@ namespace HuginWhispers
             if (!Owner || seat < 0 || seat >= Count || data == null) return;
             ZDO z = _nv.GetZDO();
             Perches.Occupant cur = At(seat);
+            if (data.StartsWith("#")) { Home.Ack(this, seat, data.Substring(1), sender); return; } // its owner came by: a new tally
             if (data.StartsWith("-") || data.StartsWith("!"))
             {
                 string token = data.Substring(1);
                 if (!Perches.MayChange(sender, cur) || cur == null || cur.Token != token) return;
                 if (data[0] == '!') z.Set(Perches.SeatKey(seat) + "g", token); // off to Odin, not to the shoulder
                 ClearIf(seat, token);
+                if (cur.Home) Home.Log(Plugin.RavenName(cur.Munin) + " taken home from a perch by its owner");
                 return;
             }
             string[] two = data.Split('\n');
@@ -336,10 +392,13 @@ namespace HuginWhispers
             {
                 if (cur.Token != want.Token) return; // taken (also by another raven of yours)
                 if (!Perches.MayChange(sender, cur) || want.Pid != cur.Pid || want.Uid != cur.Uid || want.Munin != cur.Munin) return; // the same raven, changed only by its owner or the holder (a turn)
+                if (cur.Home && !want.Home) return; // left at home: it stays so (only taken off the seat)
             }
+            if (want.Home && (cur == null || two.Length < 4 || two[3].Length == 0) && !(cur != null && cur.Home)) return; // a raven stays here with all of it, never as a bare word
             z.Set(Perches.SeatKey(seat), two[0]);
             z.Set(Perches.SeatKey(seat) + "o", two.Length > 1 ? two[1] : "");
             z.Set(Perches.SeatKey(seat) + "w", two.Length > 2 ? two[2] : "");
+            if (two.Length > 3 && two[3].Length > 0 && want.Home) z.Set(Perches.SeatKey(seat) + "b", two[3]); // its data: it lives here now
         }
 
         internal void ClearIf(int seat, string token)
@@ -350,6 +409,10 @@ namespace HuginWhispers
             z.Set(Perches.SeatKey(seat), "");
             z.Set(Perches.SeatKey(seat) + "o", "");
             z.Set(Perches.SeatKey(seat) + "w", "");
+            z.Set(Perches.SeatKey(seat) + "b", "");
+            z.Set(Perches.SeatKey(seat) + "x", "");
+            z.Set(Perches.SeatKey(seat) + "a", "");
+            z.Set(Perches.SeatKey(seat) + "f", "");
         }
 
         private Vector3 Pos(int seat) { return _birds[seat] != null ? _birds[seat].transform.position : SeatT(seat).position; }
@@ -446,18 +509,32 @@ namespace HuginWhispers
         {
             _incoming[seat] = null;
             _waitUntil[seat] = 0f;
+            if (_outUntil != null) _outUntil[seat] = 0f;
             _next = 0f;
             Draw(seat, bird);
             PerchLife life = _birds[seat] != null ? _birds[seat].GetComponent<PerchLife>() : null;
             if (life != null) life.JustLanded(); // it stands on the bar first, then sits down
+            if (life != null && _blowAt != null && Time.time - _blowAt[seat] < 30f) { _blowAt[seat] = -100f; life.AfterFight(); } // back from a blow: a shake, a triumph
         }
 
+        // a blow from here flies back (HomeStrike); its own hunt over (the bird drawn again): what it does once it sits
+        private float[] _blowAt;
+        private string[] _hunted; // (the token of the raven off hunting: another raven on that seat later is not back from it)
+        internal void BackFromBlow(int seat) { if (_blowAt == null) { _blowAt = new float[Count]; for (int i = 0; i < Count; i++) _blowAt[i] = -100f; } if (seat >= 0 && seat < Count) _blowAt[seat] = Time.time; }
+
         private void Update()
+        {
+            long t0 = Perf.On ? Perf.Now : 0;
+            Tend();
+            if (Perf.On) Perf.Add(t0, Perf.Perch);
+        }
+
+        private void Tend()
         {
             Perches.Sweep();
             if (!Valid || Time.time < _next) return;
             _next = Time.time + 0.25f;
-            if (Owner && !IsSpot) { FaceNearest(); Chatter(); } // (a «sit here» spot: no perch talk, no turning on a head)
+            if (Owner && !IsSpot) { FaceNearest(); Chatter(); Home.HolderTick(this); } // (and the ravens left at home here: their life) // (a «sit here» spot: no perch talk, no turning on a head)
             if (Owner && !IsSpot && Time.time >= _envAt) // the place measured now and then by whoever holds the perch (a spot gives nothing: not measured)
             {
                 _envAt = Time.time + 30f;
@@ -480,11 +557,15 @@ namespace HuginWhispers
                     else Destroy(_incoming[i].gameObject);
                     _incoming[i] = null;
                 }
-                if (prev != null && o != null && prev.Token == o.Token && prev.Flip != o.Flip && _birds[i] != null)
+                if (prev != null && o != null && prev.Token == o.Token) // the same raven, its word changed (turned round, left here at home): it stays where it sits
                 {
-                    PerchLife turning = _birds[i].GetComponent<PerchLife>();
-                    if (turning != null) turning.TurnTo(Facing(i, o.Flip));
-                    else { _birds[i].transform.SetParent(Facing(i, o.Flip), false); }
+                    if (prev.Flip != o.Flip && _birds[i] != null)
+                    {
+                        PerchLife turning = _birds[i].GetComponent<PerchLife>();
+                        if (turning != null) turning.TurnTo(Facing(i, o.Flip));
+                        else { _birds[i].transform.SetParent(Facing(i, o.Flip), false); }
+                    }
+                    if (_hidden[i] == _shown[i]) _hidden[i] = raw;
                     _shown[i] = raw;
                 }
                 if (raw != _shown[i])
@@ -508,21 +589,27 @@ namespace HuginWhispers
                     }
                 }
                 if (_incoming[i] == null || !_incoming[i]) _incoming[i] = null;
+                if (o != null && o.Home)
+                {
+                    Home.WatchBlow(this, i); // a blow from here: its bird flies at the enemy and back
+                    Home.WatchMeal(this, i); // a meal: its bird flies to the feeder, eats and back
+                    if (Home.Hunting(this, i)) { if (_birds[i] != null) FlyAway(i, o); if (_hunted == null) _hunted = new string[Count]; _hunted[i] = o.Token; continue; } // off hunting by itself: not here till it is back
+                }
                 // its owner has left the game: the raven leaves too (a puff here; the seat freed by whoever holds the perch)
                 // (your own old seat from before is not this: your raven flies to you from it, then the seat goes)
-                if (o != null && (me == null || o.Pid != me.GetPlayerID()) && !Perches.Online(o.Uid) && PlayerOf(o.Pid) == null)
+                if (o != null && !o.Home && (me == null || o.Pid != me.GetPlayerID()) && !Perches.Online(o.Uid) && PlayerOf(o.Pid) == null)
                 {
                     if (_birds[i] != null) { Perches.Puff(_birds[i], o.Munin, "its owner left the game"); _birds[i] = null; }
                     _hidden[i] = raw;
                     if (Owner) ClearIf(i, o.Token);
                     continue;
                 }
-                if (o != null && _birds[i] == null && _incoming[i] == null && _hidden[i] != raw && Time.time >= _waitUntil[i]) Draw(i);
+                if (o != null && _birds[i] == null && _incoming[i] == null && _hidden[i] != raw && Time.time >= _waitUntil[i] && (_outUntil == null || Time.time >= _outUntil[i])) Draw(i);
                 // a seat of mine that no raven of mine holds (a lost game, an old copy): let it go
                 if (o != null && me != null && o.Pid == me.GetPlayerID() && (Perches.Ready || Perches.FreshDone) && Time.time >= _staleAt[i])
                 {
                     _staleAt[i] = Time.time + 5f; // looked at every 5 s (it reads your bag)
-                    if (!Perches.HasToken(me, o.Token))
+                    if (o.Home ? !Home.Noted(me, o.Token) : !Perches.HasToken(me, o.Token))
                     {
                         if (_birds[i] != null) { Kill(i); _hidden[i] = raw; } // your seat from before: empty, quietly
                         Send(i, "-" + o.Token);
@@ -555,9 +642,10 @@ namespace HuginWhispers
             if (r == null) return;
             _birds[seat] = r;
             PerchLife life = r.AddComponent<PerchLife>();
-            life.Munin = o.Munin; life.Level = o.Level; life.Owner = o.Pid; life.VoiceCode = o.Voice; life.View = this; life.Seat = seat;
+            life.Munin = o.Munin; life.Level = o.Level; life.Owner = o.Pid; life.VoiceCode = o.Voice; life.Timbre = o.Timbre; life.View = this; life.Seat = seat;
             PerchPose pose = r.GetComponent<PerchPose>();
             if (pose != null) { pose.Life = life; life.Pose = pose; }
+            if (_hunted != null && _hunted[seat] != null) { if (_hunted[seat] == o.Token) life.BackFromHunt(); _hunted[seat] = null; }
             Outfits.Dress(r, _nv.GetZDO().GetString(Perches.SeatKey(seat) + "o", ""));
             RavenWear.Dress(r, o.Munin, _nv.GetZDO().GetString(Perches.SeatKey(seat) + "w", ""));
         }
@@ -573,6 +661,7 @@ namespace HuginWhispers
         private float _hoverAt = -1f;
         public string GetHoverText()
         {
+            Home.Hovered(this);
             if (Time.time - _hoverAt < 0.25f) return _hover;
             _hoverAt = Time.time;
             _hover = MakeHover();
@@ -585,28 +674,47 @@ namespace HuginWhispers
             StringBuilder sb = new StringBuilder(GetHoverName());
             sb.Append("\n<color=#9A9A9A>").Append(EnvText()).Append(Lang.F(" · норма {0} на день", Mathf.RoundToInt(PerDay))).Append("</color>");
             Player p = Player.m_localPlayer;
+            if (IsGuard) sb.Append("\n<color=#9A9A9A>").Append(Lang.F("варта: б'є розлючених ворогів, яких бачить, до {0} м · удар — {1} запасу варти", Mathf.RoundToInt(Home.GuardRadius), Mathf.RoundToInt(Home.GuardCost))).Append("</color>");
             for (int i = 0; i < Count; i++)
             {
                 Perches.Occupant o = At(i);
                 if (o == null || (p != null && o.Pid == p.GetPlayerID())) continue;
-                sb.Append("\n<color=#9A9A9A>").Append(Lang.F("{0} гравця {1}", Plugin.RavenName(o.Munin), o.Name)).Append("</color>");
+                sb.Append("\n<color=#9A9A9A>").Append(Lang.F("{0} гравця {1}", Plugin.RavenName(o.Munin), o.Name)).Append(o.Home ? " · " + Home.Hover(this, i, o, false) : "").Append("</color>");
             }
+            string homeKey = RavenKeys.LabelOf(RavenKeys.HomeId);
             foreach (bool munin in new[] { false, true })
             {
                 string key = munin ? "[<color=yellow><b>$KEY_AltPlace + $KEY_Use</b></color>] " : "[<color=yellow><b>$KEY_Use</b></color>] ";
+                // left here at home (or on guard): only taken back here
+                int hs = p != null ? SeatOf(p.GetPlayerID(), munin) : -1;
+                Perches.Occupant ho = hs >= 0 ? At(hs) : null;
+                if (ho != null && ho.Home)
+                {
+                    sb.Append('\n').Append(key).Append(Lang.F("Забрати {0}", Plugin.RavenNameGen(munin))).Append(" <color=#9A9A9A>(").Append(Home.Hover(this, hs, ho, true)).Append(")</color>");
+                    continue;
+                }
+                string homeLine = homeKey.Length > 0 ? "\n[<color=yellow><b>" + (munin ? "Shift + " : "") + homeKey + "</b></color>] " + (IsGuard ? Lang.F("Лишити {0} на варті", Plugin.RavenNameGen(munin)) : Lang.F("Лишити {0} вдома", Plugin.RavenNameGen(munin))) : "";
                 ItemDrop.ItemData mine = Perches.MineOn(p, this, munin);
                 if (mine != null)
                 {
                     string state = StateOf(p.GetPlayerID(), munin);
                     sb.Append('\n').Append(key).Append(Lang.F("Забрати {0}", Plugin.RavenNameGen(munin))).Append(" <color=#9A9A9A>(").Append(state.Length > 0 ? state + ", " : "").Append(Perches.DayText(mine)).Append(")</color>");
+                    if (!IsSpot && !IsNest) sb.Append(homeLine);
                     continue;
                 }
                 ItemDrop.ItemData on;
                 string why = Perches.WhyNot(p, munin, out on);
                 if (on == null) continue;
                 if (why == null && FreeSeat() < 0) why = Lang.T("нема місця");
+                if (IsGuard) // one way only: on guard, by E or by its own key
+                {
+                    sb.Append('\n').Append(key).Append(Lang.F("Лишити {0} на варті", Plugin.RavenNameGen(munin)));
+                    if (why != null) sb.Append(" <color=#9A9A9A>— ").Append(why.TrimEnd('.')).Append("</color>");
+                    continue;
+                }
                 sb.Append('\n').Append(key).Append(Lang.F("Посадити {0}", Plugin.RavenNameGen(munin)));
                 if (why != null) sb.Append(" <color=#9A9A9A>— ").Append(why.TrimEnd('.')).Append("</color>");
+                else if (!IsSpot && !IsNest) sb.Append(homeLine);
             }
             return Localization.instance != null ? Lang.Game(sb.ToString()) : sb.ToString();
         }
@@ -623,8 +731,12 @@ namespace HuginWhispers
             Player p = user as Player;
             if (hold || p == null || p != Player.m_localPlayer || !Valid) return false;
             bool munin = alt;
+            int hs = SeatOf(p.GetPlayerID(), munin);
+            Perches.Occupant ho = hs >= 0 ? At(hs) : null;
+            if (ho != null && ho.Home) { Home.TakeBack(p, this, hs); return true; } // left here: back to you
             ItemDrop.ItemData mine = Perches.MineOn(p, this, munin);
-            if (mine != null) Perches.CallBack(p, this, munin, mine);
+            if (mine != null && !IsGuard) { PlayerAnims.Gesture(p, munin, "call_"); Perches.CallBack(p, this, munin, mine); } // (you call it: a beckon; its own returns come without one)
+            else if (IsGuard) Home.Leave(p, this, munin); // a guard perch: on guard, nothing else
             else Perches.Sit(p, this, munin);
             return true;
         }

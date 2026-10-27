@@ -158,7 +158,7 @@ namespace HuginWhispers
             internal Rig(Transform root)
             {
                 Dictionary<string, Transform> found = new Dictionary<string, Transform>(System.StringComparer.OrdinalIgnoreCase);
-                foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+                foreach (Transform t in RavenBones.Of(root, false))
                     if (!found.ContainsKey(t.name)) found.Add(t.name, t);
                 for (int i = 0; i < BoneNames.Length; i++) found.TryGetValue(BoneNames[i], out _bones[i]);
             }

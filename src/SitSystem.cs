@@ -143,6 +143,68 @@ namespace HuginWhispers
         internal static bool Ready(Animator a) { AnimationClip[] c = Of(a); return c != null && c[0] != null; }
     }
 
+    // The raven's own bones: what the game's raven has, never what we hang on it (a hat, a thing from the table, an aura,
+    // a thing in its beak) whatever its parts are called. A hat's mesh named "body" or "Root" was taken for a bone: given
+    // the raven's rest pose, held at the body's place in flight — and it hung in the air beside the raven.
+    internal static class RavenBones
+    {
+        private static readonly HashSet<string>[] Names = new HashSet<string>[2];
+
+        internal static List<Transform> Of(Transform root, bool munin)
+        {
+            List<Transform> l = new List<Transform>();
+            if (root == null) return l;
+            HashSet<string> names = NamesOf(munin);
+            Transform[] all = root.GetComponentsInChildren<Transform>(true);
+            foreach (Transform t in all) if (Is(t, root, names)) l.Add(t);
+            // a model not made like the game's raven (its parts named otherwise): only our own marked parts left out
+            if (names != null && l.Count < 8 && all.Length >= 8) { l.Clear(); foreach (Transform t in all) if (Is(t, root, null)) l.Add(t); }
+            return l;
+        }
+
+        internal static bool Is(Transform t, Transform root, bool munin) { return Is(t, root, NamesOf(munin)); }
+
+        // the raven's own bone of that name (the first, as the game's hierarchy has it), never a part of something it wears
+        internal static Transform Find(Transform root, string name, bool anyCase = false)
+        {
+            if (root == null || string.IsNullOrEmpty(name)) return null;
+            System.StringComparison how = anyCase ? System.StringComparison.OrdinalIgnoreCase : System.StringComparison.Ordinal;
+            HashSet<string> names = NamesOf(false);
+            Transform[] all = root.GetComponentsInChildren<Transform>(true);
+            foreach (Transform t in all) if (string.Equals(t.name, name, how) && Is(t, root, names)) return t;
+            // a model not made like the game's raven: only our own marked parts left out
+            if (names != null) foreach (Transform t in all) if (string.Equals(t.name, name, how) && Is(t, root, null)) return t;
+            return null;
+        }
+
+        // every step up to the root is a part the game's raven has (none of ours)
+        private static bool Is(Transform t, Transform root, HashSet<string> names)
+        {
+            for (Transform u = t; u != null && u != root; u = u.parent)
+            {
+                if (u.name.StartsWith("RavenWatch_", System.StringComparison.Ordinal)) return false;
+                if (names != null && !names.Contains(u.name)) return false;
+            }
+            return true;
+        }
+
+        // the names in the game's raven (null until it is found: then only our own marked parts are left out)
+        private static HashSet<string> NamesOf(bool munin)
+        {
+            int k = munin ? 1 : 0;
+            if (Names[k] != null) return Names[k];
+            HashSet<string> s = new HashSet<string>();
+            foreach (bool m in new[] { munin, !munin }) // (both ravens' parts: a bird may wear the other's model)
+            {
+                Raven src = Shoulder.Template(m);
+                if (src == null || src.m_visual == null) { if (m == munin) return null; continue; }
+                foreach (Transform t in src.m_visual.GetComponentsInChildren<Transform>(true)) s.Add(t.name);
+            }
+            Names[k] = s;
+            return s;
+        }
+    }
+
     // «Скелет ворона»: the one place that lays a raven's clips on its bones, sitting or flying. Each frame the skeleton
     // starts clean (every bone the clips leave alone back at the raven's own rest), then its base is laid down: the
     // sitting (the loop on its own clock, an action such as preening or talking over it, each with its fade), the flight
@@ -170,6 +232,20 @@ namespace HuginWhispers
         private readonly List<Renderer> _skins = new List<Renderer>();
         private Slot _cur, _prev;
         private float _clock, _idlePhase;
+        // On a shoulder the wing by your head stays folded in the game's big wing clips (the stretch, the spread: made for
+        // a raven on the ground, they swept it over your head): it takes only a share of their move (2026-10-22)
+        private bool[] _inner;
+        internal static float InnerWingShare = 0.2f;
+        internal void FoldInner(bool left)
+        {
+            _inner = new bool[_bones.Length];
+            string top = left ? "wing1.l" : "wing1.r";
+            Transform wing = null;
+            foreach (Transform t in _bones) if (t != null && t.name.ToLowerInvariant() == top) { wing = t; break; }
+            if (wing == null) { _inner = null; return; }
+            for (int i = 0; i < _bones.Length; i++) _inner[i] = _bones[i] != null && (_bones[i] == wing || _bones[i].IsChildOf(wing));
+        }
+        private bool Folds(Slot s) { return _inner != null && s != null && (s.Kind == SitClip.Idle3 || s.Kind == SitClip.Idle4); }
         internal bool Active;
 
         // the base now and the one it eases out of (null: the pose it had, held)
@@ -183,7 +259,7 @@ namespace HuginWhispers
             _anim = anim; _go = anim.gameObject; _root = anim.transform;
             _clips = SitClips.Of(anim);
             List<Transform> list = new List<Transform>();
-            foreach (Transform t in anim.GetComponentsInChildren<Transform>(true)) if (t != _root) list.Add(t);
+            foreach (Transform t in RavenBones.Of(_root, munin)) if (t != _root) list.Add(t); // (not what it wears)
             _bones = list.ToArray();
             int n = _bones.Length;
             _hasRest = new bool[n]; _restRot = new Quaternion[n]; _accRot = new Quaternion[n]; _snapRot = new Quaternion[n];
@@ -203,7 +279,7 @@ namespace HuginWhispers
             }
             foreach (Renderer r in anim.GetComponentsInChildren<SkinnedMeshRenderer>(true)) _skins.Add(r);
             AnimationClip idle = _clips[(int)SitClip.Idle];
-            _idlePhase = idle != null ? Random.value * idle.length : 0f;
+            _idlePhase = idle != null ? (float)(SitNet.Seconds % idle.length) : 0f; // (the idle in step with the world's clock: its look-arounds alike in every game)
             _sitD = SitBase;
             _base = _sitD;
         }
@@ -362,9 +438,24 @@ namespace HuginWhispers
         internal void Step(float dt, float rate, bool pose)
         {
             _clock += dt * rate;
+            KeepIdleInStep(dt, rate);
             if (_prev != null && Weight(_prev) <= 0f && _clock - _prev.Start > 0f) _prev = null;
             if (_cur != null && _clock - _cur.Start >= _cur.Clip.length) _cur = null;
             if (pose) Frame();
+        }
+
+        // The idle loop drifts off the world's clock while it is slowed (drowsy, asleep) or not stepped (unseen): at its
+        // full pace it is eased back, at most a tenth faster or slower, never a jump, so every game shows the same
+        // look-arounds again a little later.
+        internal static float IdleCatchUp = 0.1f;
+        private void KeepIdleInStep(float dt, float rate)
+        {
+            AnimationClip idle = _clips[(int)SitClip.Idle];
+            if (idle == null || Mathf.Abs(rate - 1f) > 0.03f) return; // (only at its plain pace: an alert or drowsy one keeps its own, alike everywhere)
+            float len = idle.length;
+            float off = Mathf.Repeat((float)(SitNet.Seconds % len) - (_clock + _idlePhase), len);
+            if (off > len * 0.5f) off -= len; // (the short way round)
+            _idlePhase += Mathf.Clamp(off, -dt * IdleCatchUp, dt * IdleCatchUp);
         }
 
         // the sitting laid down: the loop, its actions mixed over it
@@ -372,12 +463,12 @@ namespace HuginWhispers
         {
             float wp = _prev != null ? Weight(_prev) : 0f, wc = _cur != null ? Weight(_cur) : 0f;
             AnimationClip idle = _clips[(int)SitClip.Idle];
-            if (wc >= 0.999f && wp <= 0f) { Sample(_cur); return; }
+            if (wc >= 0.999f && wp <= 0f && !Folds(_cur)) { Sample(_cur); return; }
             idle.SampleAnimation(_go, Mathf.Repeat(_clock + _idlePhase, idle.length));
             if (wp <= 0f && wc <= 0f) return;
             Capture();
-            if (wp > 0f) { Sample(_prev); Mix(wp); }
-            if (wc > 0f) { Sample(_cur); Mix(wc); }
+            if (wp > 0f) { Sample(_prev); Mix(wp, Folds(_prev)); }
+            if (wc > 0f) { Sample(_cur); Mix(wc, Folds(_cur)); }
             Write();
         }
 
@@ -388,14 +479,15 @@ namespace HuginWhispers
             for (int i = 0; i < _bones.Length; i++) { Transform b = _bones[i]; if (b != null) { _accRot[i] = b.localRotation; _accPos[i] = b.localPosition; } }
         }
 
-        private void Mix(float w)
+        private void Mix(float w, bool fold = false)
         {
             for (int i = 0; i < _bones.Length; i++)
             {
                 Transform b = _bones[i];
                 if (b == null) continue;
-                _accRot[i] = Quaternion.Slerp(_accRot[i], b.localRotation, w);
-                _accPos[i] = Vector3.Lerp(_accPos[i], b.localPosition, w);
+                float k = fold && _inner[i] ? w * InnerWingShare : w;
+                _accRot[i] = Quaternion.Slerp(_accRot[i], b.localRotation, k);
+                _accPos[i] = Vector3.Lerp(_accPos[i], b.localPosition, k);
             }
         }
 

@@ -21,7 +21,7 @@ namespace HuginWhispers
         internal const string Why = "errand";                 // the reason a raven is away (Trust)
         internal const string NextKey = "RavenWatch_nestNext"; // player customData: world time of the next errand
         internal const string OdinKey = "RavenWatch_odin";    // player customData: call=1;need=<s>;sat=<s>;came=1
-        internal static float AwayMin = 300f, AwayMax = 480f; // s at Odin's
+        internal static float AwayMin = 180f, AwayMax = 300f; // s at Odin's (3–5 min; the user 2026-10-21: no more than 5)
         internal static float UseRange = 6f;                  // m: the window stays open this near
         internal static float MinWait = 10f, WaitMin = 10f, WaitMax = 60f; // s of sitting before Odin comes
         internal static float BaseChance = 0.6f, GiftChance = 0.35f; // he answers the call: 60%, gifts of FullGifts add up to +35%
@@ -29,6 +29,9 @@ namespace HuginWhispers
         internal const string GiftsKey = "RavenWatch_odinGifts"; // player customData: those points (kept when he did not come, gone once he comes)
 
         private static float DayLen { get { return EnvMan.instance != null ? Mathf.Max(60f, EnvMan.instance.m_dayLengthSec) : 1800f; } }
+
+        // the pause after an errand taken, by the trust of the raven that went: a game day at trust 1, ~0.6 of one at 7
+        internal static float PauseMul(int level) { return 1f - 0.07f * Mathf.Clamp(level - 1, 0, 6); }
 
         internal static float CooldownLeft(Player p) { return p != null ? WorldTime.LeftHere(p.m_customData, NextKey) : 0f; }
 
@@ -52,7 +55,7 @@ namespace HuginWhispers
             if (p == null) return Lang.T("Нема гравця.");
             if (Errands.Of(p) != null) return Lang.T("У тебе вже є доручення. Нове — коли виконаєш або відмовишся.");
             bool m; float left;
-            if (Flying(out m, out left)) return Lang.F("{0} у Одіна. Повернеться за {1} — з дорученням.", Plugin.RavenName(m), RavenAbilities.Span(left));
+            if (Flying(out m, out left)) return Lang.F("{0} в Одіна. Повернеться за {1} — з дорученням.", Plugin.RavenName(m), RavenAbilities.Span(left));
             float wait = CooldownLeft(p);
             if (wait > 0f) return Lang.F("Одін сьогодні вже дав доручення. Наступне — за {0}.", RavenAbilities.Span(wait));
             return null;
@@ -166,6 +169,16 @@ namespace HuginWhispers
         // your ravens sitting in this nest (Hugin false, Munin true)
         internal static List<bool> MineIn(Player p, NestView v) { return SeatZone.Mine(p, v != null && v.Valid ? v.Perch : null); }
 
+        // a raven's nest this near you, anyone's
+        internal const string FromKey = "RavenWatch_nestFrom"; // the nest the ravens last flew to Odin from ("x/z")
+
+        internal static bool Near(Player p, float within)
+        {
+            if (p == null) return false;
+            foreach (NestView v in NestView.All) if (v != null && v.Valid && Vector3.Distance(v.transform.position, p.transform.position) <= within) return true;
+            return false;
+        }
+
         // the nest your ravens sit in, when it is loaded here
         internal static NestView Where(Player p)
         {
@@ -254,8 +267,9 @@ namespace HuginWhispers
             if (item == null) return Lang.T("Твоїх воронів у гнізді нема.");
             float away = UnityEngine.Random.Range(AwayMin, Mathf.Max(AwayMin, AwayMax));
             Trust.SendAway(item, away, Why);
-            WorldTime.SetHere(p.m_customData, NextKey, DayLen);
+            WorldTime.SetHere(p.m_customData, NextKey, DayLen * PauseMul(Trust.Level(item)));
             p.m_customData.Remove(OdinKey); // the next wait is a new one
+            p.m_customData[FromKey] = ErrandSteps.Pt(v.transform.position.x) + "/" + ErrandSteps.Pt(v.transform.position.z); // (an errand at this nest: «Облога гнізда»)
             SetGlow(p, null);
             _session = 0f; _toldCame = false;
             v.Cloud();
@@ -272,10 +286,16 @@ namespace HuginWhispers
             if (p == null) return;
             Errands.Version++;
             if (Errands.Of(p) != null) { RavenMsg.Center(p, Lang.F("{0} повернувся від Одіна. Доручення в тебе вже є.", Plugin.RavenName(munin))); return; }
-            float chance = RuneBook.GoldChance(RuneBook.Of(p).Opened);
+            RuneBook.Data rb = RuneBook.Of(p);
+            float chance = RuneBook.GoldChance(rb.Opened);
+            // every golden rune ever got counts, wherever it is now (in the book, in a gift, on a raven in a chest): both
+            // ravens' worth got — no more golden errands (the user: a raven lost for good does not bring them back)
+            int gold = rb.Gold;
+            foreach (bool m in new[] { false, true }) { ItemDrop.ItemData it = Trust.Worn(m); if (it != null && !Trust.Stranger(it, p)) gold += GiftUp.Used(it); } // (a record from before the count: what is seen)
+            if (Mathf.Max(rb.GoldEver, gold) >= 2 * GiftUp.MaxPerRaven) chance = 0f;
             if (chance > 0f) chance = Mathf.Clamp01(chance + Favour.GoldBonus(p));
-            ErrandDef d = chance > 0f && UnityEngine.Random.value < chance ? Errands.Pick(p, munin, true) : null;
-            if (d == null) d = Errands.Pick(p, munin, false);
+            ErrandDef d = chance > 0f && UnityEngine.Random.value < chance ? Errands.Pick(p, munin, true, item) : null; // (by the raven that went, wherever it sits now)
+            if (d == null) d = Errands.Pick(p, munin, false, item);
             if (d == null)
             {
                 WorldTime.ClearHere(p.m_customData, NextKey); // nothing came of it: Odin may be asked again
@@ -284,7 +304,7 @@ namespace HuginWhispers
             }
             // (a place of the world in it: given once the server answers; nothing came of it — Odin may be asked again)
             System.Action<string> failed = w => { Player me = Player.m_localPlayer; if (me == null) return; WorldTime.ClearHere(me.m_customData, NextKey); Errands.Version++; RavenMsg.Center(me, w); };
-            string why = Errands.Give(p, d, munin, failed);
+            string why = Errands.Give(p, d, munin, failed, item);
             if (why != null) failed(why);
         }
 
@@ -304,7 +324,7 @@ namespace HuginWhispers
         internal static bool AsksToHandIn(Player p)
         {
             ErrandRun r = Errands.Of(p);
-            return r != null && r.Current is BringStep;
+            return r != null && r.Current != null && r.Current.TakesHandIn;
         }
 
         // ---------------------------------------------------------------- console (for testing, not in the docs)
@@ -331,7 +351,7 @@ namespace HuginWhispers
         internal static string Status(Player p)
         {
             bool m; float left;
-            if (Flying(out m, out left)) return Lang.F("{0} у Одіна, ще {1}", Plugin.RavenName(m), RavenAbilities.Span(left));
+            if (Flying(out m, out left)) return Lang.F("{0} в Одіна, ще {1}", Plugin.RavenName(m), RavenAbilities.Span(left));
             ErrandRun r = Errands.Of(p);
             if (r != null) return r.Def != null ? Lang.F("Доручення: «{0}»", Lang.T(r.Def.Name)) : Lang.T("Доручення з іншої версії мода");
             float wait = CooldownLeft(p);
@@ -563,6 +583,12 @@ namespace HuginWhispers
         {
             Player p = Player.m_localPlayer;
             if (View == null || p == null) return "";
+            string why, act = Errands.ActLabel(p, out why); // (an errand's deed at a nest: Odin's feather)
+            if (act.Length > 0 && why == null)
+            {
+                string a = GetHoverName() + "\n[<color=yellow><b>$KEY_Use</b></color>] " + act;
+                return Localization.instance != null ? Localization.instance.Localize(a) : a;
+            }
             bool mine = Nest.MineIn(p, View).Count > 0;
             string trial = mine || Trial.HasRaven(p) ? null : Trial.NoRavenHover(p, View);
             if (trial != null) { string t = GetHoverName() + "\n" + trial; return Localization.instance != null ? Localization.instance.Localize(t) : t; }
@@ -576,6 +602,7 @@ namespace HuginWhispers
         {
             Player p = user as Player;
             if (hold || p == null || p != Player.m_localPlayer || View == null || !View.Valid) return false;
+            if (Errands.CanAct(p)) { Errands.Act(p); return true; } // (Odin's feather taken here, ravens in the nest or not)
             if (Nest.MineIn(p, View).Count == 0 && !Trial.HasRaven(p)) { Trial.NoRavenUse(p, View); return true; }
             if (Nest.MineIn(p, View).Count == 0 && Trial.Use(p, View)) return true;
             if (Nest.MineIn(p, View).Count == 0) { RavenMsg.Center(p, Lang.T("Чаша порожня, поки в гнізді нема твоїх воронів. Посади їх (угорі).")); return true; }

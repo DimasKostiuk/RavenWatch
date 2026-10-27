@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Двергрські скоби
+note: Кований кріпіж двергрів із руною на найбільшій скобі. Тримає жердину так, що її не зрушить і троль. Перевірено на тролі.
+use: item
+id: dvergrski_skoby
+stack: 50
+weight: 0.1
+sell: 50 defeated_bonemass
+part asset/Товари/GoodsBrackets pos 0 0 0 rot 0 0 0 scale 0.08 0.08 0.08  # Двергрські скоби (Meshy), ~15 см

@@ -24,6 +24,7 @@ namespace HuginWhispers
         internal static bool FoeNear, Attacking, Jumped;
         internal static float HurtAt = -100f, Health01 = 1f, Walked;
         internal static float HitFoeAt = -100f, HurtByFoeAt = -100f; // set by the hit patches in Diary.cs
+        internal static float HitMonsterAt = -100f; // you hit a monster (not a wild animal, not a tamed one)
         internal static Character Foe, Boss;      // the nearest enemy within LookRange, a boss within BossRange
         internal static Heightmap.Biome Biome;
 
@@ -84,11 +85,15 @@ namespace HuginWhispers
                 float d = (c.transform.position - me).sqrMagnitude;
                 if (c.IsBoss()) { if (d <= BossRange * BossRange && boss == null) boss = c; }
                 if (d > FoeRange * FoeRange || !BaseAI.IsEnemy(p, c)) continue;
+                if (c.m_faction == Character.Faction.AnimalsVeg && !AfterYou(c, p)) continue; // (the game counts every deer a foe of yours: a grazing one is no fight)
                 near = true;
                 if (!c.IsBoss() && d < best) { best = d; foe = c; }
             }
             FoeNear = near; Foe = foe; Boss = boss;
         }
+
+        // a beast of the meadows is a foe only once it comes for you (a boar, a neck at you; a deer never)
+        private static bool AfterYou(Character c, Player p) { MonsterAI ai = c.GetBaseAI() as MonsterAI; return ai != null && ai.GetTargetCreature() == p; }
 
         // something ahead of you within this distance (for the raven's scouting): the nearest enemy in front
         internal static Character Ahead(Player p, float range)

@@ -15,6 +15,7 @@ namespace HuginWhispers
         internal static float MaxWeight = 2f;   // kg a piece
         internal static float Range = 40f;      // m from you
         internal static float Bring = 25f;      // s: home by then or not, what it took is given
+        internal static float Rising = 8f;      // s a raven sitting away (a visit's spot) may take to be up and flying with it
         internal const string AtH = "RavenWatch_FetchH", AtM = "RavenWatch_FetchM";       // where it flies to
         internal const string CarryH = "RavenWatch_CarryH", CarryM = "RavenWatch_CarryM"; // what is in its beak (a prefab)
 
@@ -108,6 +109,24 @@ namespace HuginWhispers
             return true;
         }
 
+        // something found on a visit (WorldVisit: Munin's bones): in its beak now, into your bag once it is home (as a
+        // thing fetched); false when the beak is full or the thing is unknown
+        internal static bool Hold(Player p, bool munin, string prefab, int count)
+        {
+            int k = munin ? 1 : 0;
+            if (p == null || Held[k] != null || ObjectDB.instance == null) return false;
+            GameObject go = ObjectDB.instance.GetItemPrefab(prefab);
+            ItemDrop d = go != null ? go.GetComponent<ItemDrop>() : null;
+            if (d == null) return false;
+            ItemDrop.ItemData one = d.m_itemData.Clone();
+            one.m_stack = Mathf.Clamp(count, 1, Mathf.Max(1, one.m_shared.m_maxStackSize));
+            one.m_dropPrefab = go;
+            Held[k] = one; HeldAt[k] = Time.time; _heldIn = ZNet.instance;
+            ZDO z = NetFlag.Zdo(p, true);
+            if (z != null) z.Set(munin ? CarryM : CarryH, prefab);
+            return true;
+        }
+
         // the order ran out before it got there (Orders.Tick)
         internal static void Missed(bool munin) { Want[munin ? 1 : 0] = ZDOID.None; }
 
@@ -123,7 +142,8 @@ namespace HuginWhispers
                 GameObject model = Shoulder.ModelOf(p, munin);
                 ShoulderPin pin = model != null ? model.GetComponent<ShoulderPin>() : null;
                 bool home = pin != null && pin.enabled && !pin.InAir && !pin.Landing;
-                if (!home && !p.IsDead() && model != null && Time.time - HeldAt[k] < Bring) continue;
+                bool coming = model != null ? !home : Time.time - HeldAt[k] < Rising; // (called off a spot or a perch: its bird is up in a moment)
+                if (coming && !p.IsDead() && Time.time - HeldAt[k] < Bring) continue;
                 Give(p, munin, Held[k]);
                 Held[k] = null;
                 ZDO z = NetFlag.Zdo(p, true);
@@ -148,10 +168,10 @@ namespace HuginWhispers
 
         private static void Give(Player p, bool munin, ItemDrop.ItemData one)
         {
-            string name = Localization.instance != null ? Lang.Game(one.m_shared.m_name) : one.m_shared.m_name;
+            string name = (Localization.instance != null ? Lang.Game(one.m_shared.m_name) : one.m_shared.m_name) + (one.m_stack > 1 ? " ×" + one.m_stack : "");
             if (!p.IsDead() && p.GetInventory().AddItem(one)) { Say(p, munin, Lang.F("{0} приніс: {1}.", Plugin.RavenName(munin), name)); return; }
             Vector3 at = p.transform.position + p.transform.forward * 0.7f + Vector3.up * 0.5f;
-            ItemDrop.DropItem(one, 1, at, Quaternion.identity);
+            ItemDrop.DropItem(one, one.m_stack, at, Quaternion.identity); // (all of it: a find may be a few)
             if (!p.IsDead()) Say(p, munin, Lang.F("{0} приніс: {1} — у сумці нема місця, кинув під ноги.", Plugin.RavenName(munin), name));
         }
 
@@ -195,8 +215,7 @@ namespace HuginWhispers
 
         private static Transform Bone(GameObject r, string name)
         {
-            foreach (Transform t in r.GetComponentsInChildren<Transform>(true)) if (t.name == name) return t;
-            return null;
+            return r != null ? RavenBones.Find(r.transform, name) : null;
         }
 
         // a copy of the item's look (its first level of detail, meshes only: nothing of the game's object), held at the
@@ -217,18 +236,20 @@ namespace HuginWhispers
             Transform sr = src.transform;
             foreach (Renderer r in parts)
             {
-                MeshRenderer mr = r as MeshRenderer;
-                MeshFilter mf = mr != null ? mr.GetComponent<MeshFilter>() : null;
-                if (mf == null || mf.sharedMesh == null) continue;
+                // a plain mesh, or a skinned one (a fish, some meat: its rest shape, not posed)
+                MeshFilter mf = r is MeshRenderer ? r.GetComponent<MeshFilter>() : null;
+                SkinnedMeshRenderer sk = r as SkinnedMeshRenderer;
+                Mesh mesh = mf != null ? mf.sharedMesh : sk != null ? sk.sharedMesh : null;
+                if (mesh == null) continue;
                 GameObject g = new GameObject("m");
                 g.layer = model.layer;
                 g.transform.SetParent(root.transform, false);
-                g.transform.localPosition = sr.InverseTransformPoint(mr.transform.position);
-                g.transform.localRotation = Quaternion.Inverse(sr.rotation) * mr.transform.rotation;
-                g.transform.localScale = Div(mr.transform.lossyScale, sr.lossyScale);
-                g.AddComponent<MeshFilter>().sharedMesh = mf.sharedMesh;
+                g.transform.localPosition = sr.InverseTransformPoint(r.transform.position);
+                g.transform.localRotation = Quaternion.Inverse(sr.rotation) * r.transform.rotation;
+                g.transform.localScale = Div(r.transform.lossyScale, sr.lossyScale);
+                g.AddComponent<MeshFilter>().sharedMesh = mesh;
                 MeshRenderer nr = g.AddComponent<MeshRenderer>();
-                nr.sharedMaterials = mr.sharedMaterials;
+                nr.sharedMaterials = r.sharedMaterials;
                 nr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
             Bounds b, body;
@@ -259,7 +280,7 @@ namespace HuginWhispers
             if (made == null) return null;
             made.localScale *= 1.3f;
             System.Collections.Generic.List<Transform> toes = new System.Collections.Generic.List<Transform>();
-            foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RavenBones.Of(model.transform, false))
             {
                 string n = t.name.ToLowerInvariant();
                 if (n == "index1.l" || n == "index1.r" || n == "mid1.l" || n == "mid1.r" || n == "backtalon1.l" || n == "backtalon1.r") toes.Add(t);

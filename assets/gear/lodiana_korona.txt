@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Льодяна корона
+note: Вирізана з гірського льоду і не тане. Ворон каже, що голова від неї ясніша. Мерзне, але каже.
+use: gear
+id: lodiana_korona
+slot: head
+part asset/Шапки/HatIceCrown pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatIceCrown (Шапки)

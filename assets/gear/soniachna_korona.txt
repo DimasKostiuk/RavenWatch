@@ -1,0 +1,7 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Сонячна корона Бальдра
+note: Золоті промені, що не тьмяніють навіть уночі. Ворон носить її з таким виглядом, наче це він переміг зиму.
+use: gear
+id: soniachna_korona
+slot: head
+part asset/Шапки/HatSunCrown pos 0 0.03 0 rot 0 0 0 scale 0.08 0.08 0.08  # HatSunCrown (Шапки)

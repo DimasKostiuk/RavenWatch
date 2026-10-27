@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // The в'язь at work (binds-plan.md §7): it lives only while the raven wearing it sits on your shoulder. It has
+    // The в'язь at work (binds-plan.md §7): it is the player's own — no raven wears it — and works while it is on. It has
     // charges (2/3/4 by its tree); each firing spends one, each spent one comes back on its own timer. A switch in the
     // gifts circle (Q) turns it off — then it neither fires nor recharges (no «off to save up»), the charges kept.
     //   Б + Г: fires by itself when a Геймдаль condition happens; only Б: a button (Q); only Г: «рух» (speed).
@@ -27,7 +27,6 @@ namespace HuginWhispers
         private static readonly List<float> _spent = new List<float>(); // seconds left for each spent charge
         private static float _lastFire = -100f, _saveAt;
         private static bool _dirty;
-        private static int _wearer = -1; // 0 Hugin, 1 Munin, -1 none on the shoulder
         private static float _lookAt;
 
         internal static int Version; // goes up when what the window / book shows changed
@@ -39,19 +38,20 @@ namespace HuginWhispers
         private static string _plain = "";
         private static Player _player; // whose state this is (another character: everything anew)
         internal static bool On { get { return _on; } }
-        internal static bool Active { get { return _pow != null && _wearer >= 0; } }
+        internal static bool Active { get { return _pow != null; } }
         internal static int Charges { get { return _pow == null ? 0 : Mathf.Max(0, _pow.Charges - _spent.Count); } }
         internal static float NextIn { get { float m = float.MaxValue; foreach (float t in _spent) m = Mathf.Min(m, t); return _spent.Count == 0 ? 0f : m; } }
 
         internal static BindPower PowerOf(string id) { Bind b = Bind.Parse(id); return b != null ? BindPower.Of(b) : null; }
 
         // ---------------------------------------------------------------- the record
-        private static void Load(Player p, string bind)
+        private static void Load(Player p, string bind, bool newPlayer)
         {
             _bind = bind; _b = Bind.Parse(bind); _pow = _b != null ? BindPower.Of(_b) : null;
             _plain = _pow != null ? StripTags(_pow.Sentence()) : "";
             _spent.Clear(); _on = true;
-            _shield = 0f; _leechHits = 0; _vanishUntil = _hotUntil = _lightUntil = _helUntil = _shadowStrikeUntil = 0f; _wearer = -1; _lookAt = 0f;
+            _leechHits = 0; _vanishUntil = _hotUntil = _lightUntil = _helUntil = _shadowStrikeUntil = 0f; _lookAt = 0f;
+            if (newPlayer) { _shield = 0f; _shieldUntil = 0f; } // (on a new в'язь a shield stays: it may be a friend's, and it runs out by itself)
             _badgeStale = true; _badgeKey = -1;
             string raw;
             if (p != null && p.m_customData.TryGetValue(StateKey, out raw))
@@ -92,7 +92,7 @@ namespace HuginWhispers
         internal static void SetOn(Player p, bool on)
         {
             if (_on == on) return;
-            _on = on; _dirty = true; Version++;
+            _on = on; Save(p); Version++;
             if (p != null) RavenMsg.Center(p, on ? Lang.T("В'язь увімкнено.") : Lang.T("В'язь вимкнено: не спрацьовує й не відновлює заряди."));
         }
 
@@ -104,22 +104,16 @@ namespace HuginWhispers
         internal static void Tick(Player p, float dt)
         {
             RuneBook.Data d = RuneBook.Of(p);
-            if (d.Bind != _bind || !ReferenceEquals(p, _player)) { _player = p; Load(p, d.Bind); }
+            bool newPlayer = !ReferenceEquals(p, _player);
+            if (d.Bind != _bind || newPlayer) { _player = p; Load(p, d.Bind, newPlayer); }
+            Shadow.Murk(p, _pow != null && Time.time < _vanishUntil); // (the murk: monsters lose you in every game, as in Hugin's Shadow)
             if (_pow == null) { Badge(p, false); if (_dirty) Save(p); return; } // (unwoven: its old state goes, a new one starts full)
             if (Time.time >= _lookAt)
             {
                 _lookAt = Time.time + 0.5f;
-                int w = -1;
-                for (int i = 0; i < 2 && w < 0; i++)
-                {
-                    bool m = i == 1;
-                    ItemDrop.ItemData it = Trust.Worn(m);
-                    if (it != null && RavenWear.Of(it).Bind == _bind && Shoulder.NotOnShoulder(p, m) == null) w = i;
-                }
-                if (w != _wearer) { _wearer = w; Version++; }
                 if (RuneStars.BindStars(_b) != _pow.Stars) { _pow = BindPower.Of(_b); _plain = StripTags(_pow.Sentence()); Version++; _badgeStale = true; } // (a spark of Odin on one of its runes)
             }
-            bool live = _wearer >= 0 && _on && !p.IsDead();
+            bool live = _on && !p.IsDead();
             if (live && _spent.Count > 0)
             {
                 for (int i = _spent.Count - 1; i >= 0; i--)
@@ -129,7 +123,7 @@ namespace HuginWhispers
                 }
                 _dirty = true;
             }
-            Badge(p, _wearer >= 0);
+            Badge(p, true);
             States(p, dt);
             if (live) Watch(p, dt);
             else { _hpWas = p.GetMaxHealth() > 0f ? p.GetHealth() / p.GetMaxHealth() : 1f; _air = false; _run = 0f; _ran = false; } // (a fall or a run while it was off counts for nothing)
@@ -172,7 +166,6 @@ namespace HuginWhispers
         internal static string Fire(Player p)
         {
             if (_pow == null || p == null || p.IsDead()) return Lang.T("У тебе нема в'язі.");
-            if (_wearer < 0) return Lang.T("Ворон із в'яззю не на плечі.");
             if (!_on) return Lang.T("В'язь вимкнено.");
             if (Charges <= 0) return Lang.F("Заряди ще не відновились ({0} с).", Mathf.CeilToInt(NextIn));
             if (Time.time - _lastFire < Gap) return Lang.T("Зарано.");
@@ -186,7 +179,7 @@ namespace HuginWhispers
             }
             _lastFire = Time.time;
             _spent.Add(_pow.Recharge);
-            _dirty = true; Version++;
+            Save(p); Version++; // (at once: a charge spent is never refunded by quitting before the 2-s save)
             bool twice = _pow.Double > 0f && UnityEngine.Random.value < _pow.Double;
             if (_pow.Mode == BindMode.Motion) Rush(p, twice);
             else
@@ -200,7 +193,7 @@ namespace HuginWhispers
                 float max = p.GetMaxHealth(), cost = max * 0.1f, hp = p.GetHealth();
                 if (hp - cost >= max * 0.3f) p.UseHealth(cost);
             }
-            RavenFx.Play("vfx_offering", p.transform.position + Vector3.up, Quaternion.identity);
+            BindFx.Cast(p, BindFx.MainAction(_pow));
             RavenFx.Play("sfx_raven_kaw", p.transform.position, Quaternion.identity);
             return null;
         }
@@ -223,7 +216,24 @@ namespace HuginWhispers
         internal static bool Ours { get { return _ours; } }
         private static float _vanishUntil, _leechUntil, _shieldUntil, _hotUntil, _hotPerSec;
         private static int _leechHits;
-        private static float _leechPct, _shield;
+        private static float _leechPct, _shield, _shieldMax = 1f, _rushUntil;
+
+        // what lasts now, in seconds left (0: nothing) — what BindFx shows: 0 shield, 1 healing, 2 smoke, 3 blood thirst, 4 rush
+        internal static float StateLeft(int i)
+        {
+            float now = Time.time, until = 0f;
+            switch (i)
+            {
+                case 0: if (_shield > 0f) until = _shieldUntil; break;
+                case 1: until = _hotUntil; break;
+                case 2: until = _vanishUntil; break;
+                case 3: if (_leechHits > 0) until = _leechUntil; break;
+                case 4: until = _rushUntil; break;
+            }
+            return Mathf.Max(0f, until - now);
+        }
+        internal static float ShieldLeft { get { return Time.time <= _shieldUntil ? _shield : 0f; } }
+        internal static float ShieldFrac { get { return Mathf.Clamp01(ShieldLeft / Mathf.Max(1f, _shieldMax)); } }
 
         private static void Do(Player p, string a, float night, bool twice)
         {
@@ -235,35 +245,43 @@ namespace HuginWhispers
                 case "flash":
                     foreach (Character c in Foes(p, 4f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_fire = dmg * 0.4f * pw * w.Instant; Blow(c, h); }
                     if (twice) foreach (Character c in Foes(p, 4f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_fire = dmg * 0.4f * pw * w.Instant; Blow(c, h); }
+                    BindFx.Nova(p, a, at, 4f * w.Radius, 0f);
                     break;
                 case "frost":
                     foreach (Character c in Foes(p, 5f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_frost = dmg * 0.15f * pw * (twice ? 2f : 1f); Blow(c, h); }
+                    BindFx.Nova(p, a, at, 5f * w.Radius, 0f);
                     break;
                 case "chain":
                     {
                         List<Character> l = Foes(p, 10f * w.Radius);
                         l.Sort((x, y) => Vector3.Distance(at, x.transform.position).CompareTo(Vector3.Distance(at, y.transform.position)));
-                        for (int i = 0; i < l.Count && i < w.Targets; i++) { HitData h = Hit(p, l[i]); h.m_damage.m_lightning = dmg * 0.5f * pw * w.Instant * (twice ? 2f : 1f); Blow(l[i], h); }
+                        List<Vector3> struck = new List<Vector3>();
+                        for (int i = 0; i < l.Count && i < w.Targets; i++) { struck.Add(l[i].GetCenterPoint()); HitData h = Hit(p, l[i]); h.m_damage.m_lightning = dmg * 0.5f * pw * w.Instant * (twice ? 2f : 1f); Blow(l[i], h); }
+                        BindFx.Bolt(p, struck);
                     }
                     break;
                 case "poison":
                     foreach (Character c in Foes(p, 4f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_poison = dmg * 0.6f * pw * (twice ? 2f : 1f); Blow(c, h); }
+                    BindFx.Nova(p, a, at, 4f * w.Radius, 0f);
                     break;
                 case "gust":
                     foreach (Character c in Foes(p, 4f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_blunt = dmg * 0.1f * pw * w.Instant; h.m_pushForce = 60f * (twice ? 1.6f : 1f); Blow(c, h); }
+                    BindFx.Nova(p, a, at, 4f * w.Radius, 0f);
                     break;
                 case "heal":
                     p.Heal(max * 0.15f * pw * w.Personal * (twice ? 2f : 1f), true);
                     _hotUntil = Time.time + 5f * w.Dur; _hotPerSec = max * 0.10f * pw * w.Personal / (5f * w.Dur);
+                    BindFx.Heal(p);
                     break;
                 case "vanish":
                     _vanishUntil = Time.time + 3f * w.Dur * (twice ? 2f : 1f);
+                    BindFx.Nova(p, a, at, 1.5f, 0f);
                     break;
                 case "leech":
                     _leechHits = 3; _leechPct = 0.15f * pw * w.Personal; _leechUntil = Time.time + 8f * w.Dur * (twice ? 2f : 1f);
                     break;
                 case "shield":
-                    _shield = max * 0.2f * pw * w.Personal; _shieldUntil = Time.time + 6f * w.Dur * (twice ? 2f : 1f);
+                    _shield = _shieldMax = max * 0.2f * pw * w.Personal; _shieldUntil = Time.time + 6f * w.Dur * (twice ? 2f : 1f);
                     break;
             }
         }
@@ -283,10 +301,12 @@ namespace HuginWhispers
             {
                 case "sun":
                     Burst(at, 3f, 1.5f, null);
+                    BindFx.Nova(p, a, at, 6f * w.Radius, 0f);
                     foreach (Character c in Foes(p, 6f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_fire = dmg * 1.2f * pw * w.Instant * more; h.m_staggerMultiplier = 100f; Blow(c, h); }
                     break;
                 case "crown":
                     Burst(at, 3.5f, 2f, null);
+                    BindFx.Nova(p, a, at, 8f * w.Radius, 0f);
                     foreach (Character c in Foes(p, 8f * w.Radius)) { HitData h = Hit(p, c); h.m_damage.m_frost = dmg * 0.3f * pw * more; h.m_staggerMultiplier = 100f; Blow(c, h); }
                     break;
                 case "hammer":
@@ -299,24 +319,30 @@ namespace HuginWhispers
                         l.RemoveAll(c => (c.transform.position - t0).sqrMagnitude > 64f);
                         l.Sort((x, y) => (x.transform.position - t0).sqrMagnitude.CompareTo((y.transform.position - t0).sqrMagnitude));
                         l.Insert(0, first);
+                        List<Vector3> struck = new List<Vector3>();
                         for (int i = 0; i < l.Count && i <= w.Targets; i++)
                         {
+                            struck.Add(l[i].transform.position);
                             HitData h = Hit(p, l[i]); h.m_damage.m_lightning = dmg * 1.0f * pw * w.Instant * more; Blow(l[i], h);
                             Burst(l[i].transform.position, 1.5f, 1f, null);
                         }
+                        BindFx.Strike(p, struck);
                     }
                     break;
                 case "light":
                     _lightUntil = Time.time + 8f * w.Dur * more; _lightTick = 0f;
                     Burst(Vector3.zero, 2f, 8f * w.Dur * more, p.transform);
+                    BindFx.Heal(p);
                     break;
                 case "hel":
                     _helUntil = Time.time + 6f * w.Dur * more; _helAt = at; _helTick = 0f;
                     Burst(at, 3f, 6f * w.Dur * more, null);
+                    BindFx.Nova(p, a, at, 6f * w.Radius, 6f * w.Dur * more);
                     break;
                 case "shadow":
                     _vanishUntil = Time.time + 5f * w.Dur * more; _shadowStrikeUntil = _vanishUntil + 0.5f;
                     Burst(Vector3.zero, 1.5f, 2f, p.transform);
+                    BindFx.Nova(p, a, at, 1.5f, 0f);
                     break;
                 case "sacrifice":
                     {
@@ -324,10 +350,11 @@ namespace HuginWhispers
                         if (cost > 0f) p.UseHealth(cost);
                         _leechHits = 999; _leechPct = 0.25f * pw * w.Personal; _leechUntil = Time.time + 10f * w.Dur * more;
                         Burst(Vector3.zero, 1.5f, 2f, p.transform);
+                        BindFx.Nova(p, a, at, 1.5f, 0f);
                     }
                     break;
                 case "runeshield":
-                    _shield = max * 0.3f * pw * w.Personal; _shieldUntil = Time.time + 8f * w.Dur * more;
+                    _shield = _shieldMax = max * 0.3f * pw * w.Personal; _shieldUntil = Time.time + 8f * w.Dur * more;
                     ShieldNear(p, 0.3f * pw * w.Personal, 8f * w.Dur * more, 8f * w.Radius);
                     Burst(Vector3.zero, 2f, 2f, p.transform);
                     break;
@@ -352,19 +379,10 @@ namespace HuginWhispers
         }
 
         // the great power shown with its rune's own effect: a burst at a place, or on you, for a while
+        // (every game near sees it: BindFx)
         private static void Burst(Vector3 at, float size, float seconds, Transform follow)
         {
-            RavenFxDef d = FxLib.Find(_pow.ActiveFx);
-            GameObject tpl = d != null ? FxLib.Template(d.Base) : null;
-            if (tpl == null) return;
-            GameObject g = follow != null ? UnityEngine.Object.Instantiate(tpl, follow, false) : UnityEngine.Object.Instantiate(tpl, at, Quaternion.identity);
-            if (follow != null) g.transform.localPosition = Vector3.up;
-            g.hideFlags = HideFlags.None;
-            g.transform.localScale = Vector3.one * size;
-            WsFx tint = g.AddComponent<WsFx>();
-            g.SetActive(true);
-            tint.Recolor(d.Tinted, d.Tint);
-            UnityEngine.Object.Destroy(g, seconds);
+            BindFx.Rune(Player.m_localPlayer, _pow.ActiveFx, at, size, seconds, follow != null);
         }
 
         // the states that last: healing over time, the foes losing you
@@ -388,23 +406,9 @@ namespace HuginWhispers
                 foreach (Character c in Foes(p, 60f))
                     if ((c.transform.position - _helAt).sqrMagnitude <= 36f * _pow.Radius * _pow.Radius) { HitData h = Hit(p, c); h.m_damage.m_poison = dmg; Blow(c, h); }
             }
-            if (Time.time < _vanishUntil && Time.time >= _vanishLook)
-            {
-                _vanishLook = Time.time + 0.25f;
-                foreach (Character c in Foes(p, 25f))
-                {
-                    MonsterAI ai = c.GetComponent<MonsterAI>();
-                    if (ai == null || !c.IsOwner()) continue;
-                    if ((Character)TargetOf.GetValue(ai) == p) { TargetOf.SetValue(ai, null); try { SetAlerted.Invoke(ai, NotAlerted); } catch { } }
-                }
-            }
         }
 
-        private static float _vanishLook;
-        private static readonly object[] NotAlerted = { false };
 
-        private static readonly System.Reflection.FieldInfo TargetOf = AccessTools.Field(typeof(MonsterAI), "m_targetCreature");
-        private static readonly System.Reflection.MethodInfo SetAlerted = AccessTools.Method(typeof(BaseAI), "SetAlerted");
 
         // «рух» (only Геймдаль): faster and lighter on the legs a few seconds
         private static SE_Stats _rushTemplate;
@@ -413,9 +417,10 @@ namespace HuginWhispers
         {
             SE_Stats se = RavenFx.Template(ref _rushTemplate, RushName);
             se.m_name = Lang.W("Рух в'язі");
-            se.m_tooltip = Lang.T("+25% до швидкості, удвічі менше витривалості на біг.");
-            se.m_icon = AbilityIcons.ForEffect("bind", _wearer == 1);
+            se.m_tooltip = Lang.F("+{0}% до швидкості, удвічі менше витривалості на біг.", Mathf.RoundToInt(25f * _pow.Pow));
+            se.m_icon = AbilityIcons.ForEffect("bind", false);
             se.m_ttl = 4f * _pow.Dur * (twice ? 2f : 1f);
+            _rushUntil = Time.time + se.m_ttl;
             se.m_speedModifier = 0.25f * _pow.Pow;
             se.m_runStaminaDrainModifier = -0.5f;
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
@@ -468,11 +473,25 @@ namespace HuginWhispers
             ZRoutedRpc.instance.Register<float, float>(RpcShield, OnShield);
         }
 
+        // a friend's в'язь reaches only the players near it: a call from anyone else is not believed
+        private static bool SenderNear(long sender, Player me)
+        {
+            foreach (Player o in Player.GetAllPlayers())
+                if (o != null && o.GetZDOID().UserID == sender) return (o.transform.position - me.transform.position).sqrMagnitude <= 40f * 40f;
+            return false;
+        }
+
+        private static readonly Dictionary<long, float> _healFrom = new Dictionary<long, float>(); // (when each friend healed last: a в'язь fires 2 s apart at best)
+
         private static void OnHeal(long sender, float pct)
         {
             Player me = Player.m_localPlayer;
-            if (me == null || me.IsDead()) return;
+            if (me == null || me.IsDead() || !SenderNear(sender, me)) return;
+            float last;
+            if (_healFrom.TryGetValue(sender, out last) && Time.time - last < 1f) return;
+            _healFrom[sender] = Time.time;
             me.Heal(me.GetMaxHealth() * Mathf.Clamp(pct, 0f, 0.5f), true);
+            BindFx.Heal(me);
         }
 
         private const string RpcShield = "RavenWatch_BindShield";
@@ -480,8 +499,10 @@ namespace HuginWhispers
         private static void OnShield(long sender, float pct, float seconds)
         {
             Player me = Player.m_localPlayer;
-            if (me == null || me.IsDead()) return;
-            _shield = Mathf.Max(_shield, me.GetMaxHealth() * Mathf.Clamp(pct, 0f, 0.6f));
+            if (me == null || me.IsDead() || !SenderNear(sender, me)) return;
+            bool had = ShieldLeft > 0f;
+            _shield = Mathf.Max(had ? _shield : 0f, me.GetMaxHealth() * Mathf.Clamp(pct, 0f, 0.6f));
+            _shieldMax = had ? Mathf.Max(_shieldMax, _shield) : _shield; // (a new shield: the shell's fullness counts from it)
             _shieldUntil = Mathf.Max(_shieldUntil, Time.time + Mathf.Clamp(seconds, 0f, 20f));
         }
 
@@ -506,12 +527,13 @@ namespace HuginWhispers
         {
             if (_ours || _pow == null || !Active || target == null || target.IsPlayer() || target.IsTamed() || !BaseAI.IsEnemy(me, target)) return;
             if (hit.m_skillRaiseAmount <= Strike.Marker) return; // (a raven's blow)
-            bool heavy = IsSecondary(me) || hit.m_skill == Skills.SkillType.Bows || hit.m_skill == Skills.SkillType.Crossbows;
+            bool heavy = IsSecondary(me) || hit.m_skill == Skills.SkillType.Bows || hit.m_skill == Skills.SkillType.Crossbows
+                || hit.m_skill == Skills.SkillType.ElementalMagic || hit.m_skill == Skills.SkillType.BloodMagic; // (a spell counts as a strong blow: the mage's way in)
             if (heavy && Time.time - _heavyAt > 0.6f) { _heavyAt = Time.time; Trigger(me, "heavy"); }
             if (_shadowStrikeUntil > 0f && Time.time < _shadowStrikeUntil && hit.GetTotalDamage() > 0f) { _shadowStrikeUntil = 0f; hit.m_damage.Modify(2f); } // Тінь Одіна: the first blow from the shadow
             BaseAI ai = target.GetBaseAI();
             if (ai != null && !ai.IsAlerted() && hit.m_backstabBonus > 1f) Trigger(me, "sneak");
-            if (_leechHits > 0 && Time.time < _leechUntil && hit.GetTotalDamage() > 0f) { _leechHits--; me.Heal(hit.GetTotalDamage() * _leechPct, true); }
+            if (_leechHits > 0 && Time.time < _leechUntil && hit.GetTotalDamage() > 0f) { _leechHits--; me.Heal(hit.GetTotalDamage() * _leechPct, true); BindFx.Drain(me, target.GetCenterPoint()); }
         }
 
         private static readonly System.Reflection.FieldInfo SecondaryOf = AccessTools.Field(typeof(Humanoid), "m_currentAttackIsSecondary");
@@ -531,6 +553,8 @@ namespace HuginWhispers
             float take = Mathf.Min(_shield, total);
             _shield -= take;
             hit.m_damage.Modify((total - take) / total);
+            BindFx.ShieldHit(Player.m_localPlayer, hit.m_point, _shield <= 0.01f);
+            if (_shield <= 0.01f) _shield = 0f;
         }
 
         // ---------------------------------------------------------------- the badge (the status bar)
@@ -555,7 +579,7 @@ namespace HuginWhispers
             if (_badge == null) { _badge = ScriptableObject.CreateInstance<SE_RavenBind>(); _badge.name = SE_RavenBind.Id; _badge.hideFlags = HideFlags.HideAndDontSave; }
             _badge.m_name = Lang.W("В'язь");
             _badge.m_tooltip = _plain;
-            _badge.m_icon = AbilityIcons.ForEffect("bind", _wearer == 1);
+            _badge.m_icon = AbilityIcons.ForEffect("bind", false);
             _badge.m_ttl = 0f;
             se.AddStatusEffect(_badge, true, 0, 0f, 0);
         }
@@ -591,9 +615,8 @@ namespace HuginWhispers
                 case "on": SetOn(p, true); return "В'язь увімкнено.";
                 case "off": SetOn(p, false); return "В'язь вимкнено.";
                 case "press": { string why = Press(p); return why ?? "Спрацювала."; }
-                case "fill": _spent.Clear(); _dirty = true; Version++; return "Заряди відновлено.";
+                case "fill": _spent.Clear(); Save(p); Version++; return "Заряди відновлено.";
                 case "clear": RuneBook.Unweave(p); return "В'язь розплетено.";
-                case "wear": { bool m = a.Length > 2 && a[2].ToLowerInvariant().StartsWith("m"); string why = RuneBook.PutBind(p, m); return why ?? "В'язь на " + Plugin.RavenName(m) + "."; }
                 case "make":
                     {
                         if (a.Length < 4) return "raven bind make green|icy|charred <rune> <rune> [...]";
@@ -606,17 +629,14 @@ namespace HuginWhispers
                         string no = b.Problem();
                         if (no != null) return no;
                         RuneBook.SetBind(p, b, runes);
-                        RuneBook.PutBind(p, Trust.Worn(false) == null);
                         return "Сплетено: " + b.Id() + "\n" + StripTags(BindPower.Of(b).Sentence());
                     }
             }
             if (d.Bind.Length == 0) return "В'язі нема. raven bind make green|icy|charred <rune> <rune> …";
             BindPower w = BindPower.Of(Bind.Parse(d.Bind));
-            int on = RuneBook.BindOn(p);
             return d.Bind + " (руни " + string.Join(", ", d.BindRunes.ToArray()) + ")\n" + StripTags(w.Sentence())
                 + "\nЗаряди " + Charges + "/" + w.Charges + (NextIn > 0f ? ", наступний за " + Mathf.CeilToInt(NextIn) + " с" : "") + (_on ? "" : ", ВИМКНЕНО")
-                + "\nНосить: " + (on == 1 ? "Хугін" : on == 2 ? "Мунін" : "ніхто") + (Active ? "" : " (не на плечі — не діє)")
-                + "\nraven bind on|off|press|fill|clear|wear [hugin|munin]|make";
+                + "\nraven bind on|off|press|fill|clear|make";
         }
     }
 
@@ -638,6 +658,7 @@ namespace HuginWhispers
             RuneStars.Tick(__instance);
             BindArena.Tick(__instance, Time.deltaTime);
             BindArena.RingsTick();
+            BindFx.Watch(__instance);
         } catch (Exception e) { PatchGuard.Fail("BindTickPatch", e); } }
     }
 
@@ -663,11 +684,10 @@ namespace HuginWhispers
         } catch (Exception e) { PatchGuard.Fail("BindShieldPatch", e); } }
     }
 
-    // a parry: the game's own test (a timed block within a quarter second)
+    // a block with a shield (a parry too): the bind of «блокуєш удар щитом»
     [HarmonyPatch(typeof(Humanoid), "BlockAttack")]
     internal static class BindParryPatch
     {
-        private static readonly System.Reflection.FieldInfo BlockTimer = AccessTools.Field(typeof(Humanoid), "m_blockTimer");
         private static readonly System.Reflection.MethodInfo Blocker = AccessTools.Method(typeof(Humanoid), "GetCurrentBlocker");
 
         private static void Prefix(Humanoid __instance, ref bool __state)
@@ -676,8 +696,7 @@ namespace HuginWhispers
             try {
                 if (BindRun.Power == null || !ReferenceEquals(__instance, Player.m_localPlayer)) return;
                 ItemDrop.ItemData b = (ItemDrop.ItemData)Blocker.Invoke(__instance, null);
-                float t = (float)BlockTimer.GetValue(__instance);
-                __state = b != null && b.m_shared.m_timedBlockBonus > 1f && t != -1f && t < 0.25f;
+                __state = b != null && b.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield; // any block with a shield (a parry too): the tank's way in
             } catch (Exception e) { PatchGuard.Fail("BindParryPatch", e); }
         }
 

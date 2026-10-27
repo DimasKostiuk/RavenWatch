@@ -49,7 +49,7 @@ namespace HuginWhispers
         {
             if (!Enabled || p == null || p != Player.m_localPlayer || p.IsDead()) return false;
             ItemDrop.ItemData raven = Trust.Worn(munin);
-            if (raven == null || Trust.SettledLevel(raven) < RavenAbilities.WeakUnlock || Trust.Away(raven) || Left(p, key) > 0f || !Shoulder.Arrived(p, munin)) return false;
+            if (raven == null || Trust.SettledLevel(raven) < RavenAbilities.WeakUnlock || Trust.Away(raven) || Trust.Hostile(raven) || Left(p, key) > 0f || !Shoulder.Arrived(p, munin)) return false;
             if (Power.Current(munin) < Mathf.Round(Cost * GiftUp.CostMul(munin ? "anger" : "lightstep") * Satiety.CostMul(munin))) return false; // hungry: dearer
             return true;
         }

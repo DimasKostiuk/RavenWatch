@@ -1,0 +1,9 @@
+# RavenWatch — модель з Майстерні (raven workshop). Рядок part: деталь гри, місце (м), поворот (°), розмір, колір.
+name: Похідна торба
+note: Велика торба для далекої дороги: влазить удвічі більше, ніж у звичайну. Ворон перелічує шматки щоранку. Ти — ні, і він це знає.
+use: gear
+id: pokhidna_torba
+cost: LeatherScraps:10 TrollHide:2 LinenThread:4 Resin:4 RavenWatch_item_zamorske_piria:2
+station: RavenWatch_table_prostyi_voroniachyi_stil
+slot: back
+part asset/Спорядження/GearSatchel pos 0 0 0 rot 0 0 0 scale 0.065 0.065 0.065  # Похідна торба (Meshy), ~12 см

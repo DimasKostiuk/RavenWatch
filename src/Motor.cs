@@ -16,7 +16,7 @@ namespace HuginWhispers
     {
         // ---------------------------------------------------------------- tuning (the «Політ» tab)
         internal static float BlendSeconds = 0.6f;   // a new aim eases in over this long
-        internal static float Spread = 0.08f;        // each raven's own touch: ± this share on its speeds, turns, beats
+        internal static float Spread = 0.08f;        // each raven's own touch: ± this share on its turns, bank, beats (its speed is its own pace: Wing)
         internal static float NervesWeight = 0.35f;  // how much trust shows in its flight (low: twitchy, high: calm)
         internal static bool AvoidOn = true;
         internal static float LookAhead = 0.6f;      // s of flight it looks ahead for something in the way
@@ -86,12 +86,21 @@ namespace HuginWhispers
         // shoulder: it pushes off with 'vel'. True when it really took off now (the take-off flap is the caller's).
         internal bool Launch(Vector3 vel, string plan, float accelMul)
         {
+            long t0 = Perf.On ? Perf.Now : 0;
+            bool r = LaunchNow(vel, plan, accelMul);
+            if (Perf.On) Perf.Step("motor: Launch", t0);
+            return r;
+        }
+        private bool LaunchNow(Vector3 vel, string plan, float accelMul)
+        {
             bool fresh = !Airborne;
             if (fresh) { Body = new FlightBody(_t, _life, _munin, vel, plan); _aimSet = false; _push = _pushWant = Vector3.zero; Flare = 0f; _sit = -2; _diving = false; _divingSince = _clock; if (_life != null && plan != "приліт") _life.PrepareTakeoff(); }
             else Body.NewLeg();
             LandNow = null; Body.Land = null; // a new way: its landing is picked afresh when it comes down
             Body.Style = Style();
             Body.Char = Char();
+            Body.Pace = Pace();
+            Body.Drunk = Drunk();
             Body.AccelMul = accelMul;
             if (fresh && plan != "приліт" && plan != "перегляд") BeginTakeoff(vel, plan); // (a fly-in is already in the air; the test picture flies at once)
             else if (fresh) _holdUntil = -1f;
@@ -141,7 +150,7 @@ namespace HuginWhispers
             int level = _life != null ? _life.Level : 1, norov = NorovIndex();
             float nerves = _life != null ? _life.Nerves : 1f; // (trust and its character's restlessness, each on its own clock)
             int nervesKey = Mathf.RoundToInt(nerves * 100f);
-            float fly = RuneStars.FlyMul(_owner, _munin, false);
+            float fly = Storm(false);
             if (_style != null && _styleVer == Version && _styleLevel == level && _styleNorov == norov && _styleNerves == nervesKey && _styleFly == fly) return _style;
             int seed = _munin ? 7 : 3;
             try { if (_owner != null) { long id = _owner.GetPlayerID(); seed = (int)(id ^ (id >> 32)) * 31 + seed; } } catch { }
@@ -161,6 +170,30 @@ namespace HuginWhispers
         {
             if (Time.time >= _norovAt) { _norovAt = Time.time + 1f; _norov = Norov.IndexOnPlayer(_owner, _munin); }
             return _norov;
+        }
+
+        // its own pace now (Wing: the owner's ZDO, the same in every game), looked up once a second
+        private float _pace = 1f, _paceAt = -1f;
+        private float Pace()
+        {
+            if (Time.time >= _paceAt) { _paceAt = Time.time + 1f; _pace = Wing.Of(_owner, _munin); }
+            return _pace;
+        }
+
+        // tipsy on its owner's mead (Mead: the owner's ZDO, the same in every game), looked up once a second
+        private float _drunk, _drunkAt = -1f;
+        private float Drunk()
+        {
+            if (Time.time >= _drunkAt) { _drunkAt = Time.time + 1f; _drunk = Mead.Of(_owner, _munin); }
+            return _drunk;
+        }
+
+        // «Буря» on it (RuneStars.FlyMul: another player's from their ZDO), looked up once a second as well
+        private float _storm = 1f, _stormHome = 1f, _stormAt = -1f;
+        private float Storm(bool home)
+        {
+            if (Time.time >= _stormAt) { _stormAt = Time.time + 1f; _storm = RuneStars.FlyMul(_owner, _munin, false); _stormHome = RuneStars.FlyMul(_owner, _munin, true); }
+            return home ? _stormHome : _storm;
         }
 
         // its character at its trust (RavenFlight.CharFor) with its own norov, made again when the trust, the norov
@@ -188,6 +221,8 @@ namespace HuginWhispers
             if (_holdUntil >= 0f) { if (_clock < _holdUntil) { HoldStep(); return Vector3.Distance(_t.position, aim); } Push(); } // the take-off's crouch, then the spring
             if (_styleVer != Version) Style(); // tuned in the panel: at once, in the air
             Body.Char = Char();
+            Body.Pace = Pace();
+            Body.Drunk = Drunk();
             Direct();
             Body.Style = Effective();
             Vector3 use = aim;
@@ -218,6 +253,14 @@ namespace HuginWhispers
                     wob *= Mathf.Clamp01(((_t.position - _owner.transform.position).magnitude - 1.5f) / 3f);
                     float s0 = _munin ? 11.3f : 4.1f;
                     use += new Vector3(Mathf.PerlinNoise(_clock * 0.9f, s0) - 0.5f, (Mathf.PerlinNoise(s0, _clock * 0.7f) - 0.5f) * 0.6f, Mathf.PerlinNoise(_clock * 0.8f + 3f, s0 + 2f) - 0.5f) * (2f * wob);
+                }
+                // tipsy on your mead: wide slow lurches off its line, a dip now and then (not by your shoulder either)
+                float drunk = Body.Drunk * Mead.SwayMetres;
+                if (drunk > 0.01f && _owner != null)
+                {
+                    drunk *= Mathf.Clamp01(((_t.position - _owner.transform.position).magnitude - 1.5f) / 3f);
+                    float s1 = _munin ? 7.9f : 2.6f;
+                    use += new Vector3(Mathf.PerlinNoise(_clock * 0.45f, s1) - 0.5f, (Mathf.PerlinNoise(s1, _clock * 0.6f) - 0.5f) * 0.8f, Mathf.PerlinNoise(_clock * 0.4f + 5f, s1 + 3f) - 0.5f) * (4f * drunk);
                 }
             }
             if (!Body.Final)
@@ -327,6 +370,7 @@ namespace HuginWhispers
             Flare = Mathf.MoveTowards(Flare, flareWant, dt * 3f);
             Body.Face(dt, Flare);
             Body.Wings(dt, Flare);
+            Body.WingMode = 0; // (a plan's say on the wings is for this frame only)
             HoldDivePose();
         }
 
@@ -341,8 +385,15 @@ namespace HuginWhispers
         // pre: a first point to pass (down from the dance: a little up and back first), until it is final.
         internal bool Home(Vector3 seat, Player owner, float speed, float dt, bool wave, float seed, bool hasPre, Vector3 pre)
         {
+            long t0 = Perf.On ? Perf.Now : 0;
+            bool r = HomeNow(seat, owner, speed, dt, wave, seed, hasPre, pre);
+            if (Perf.On) Perf.Step("motor: Home", t0);
+            return r;
+        }
+        private bool HomeNow(Vector3 seat, Player owner, float speed, float dt, bool wave, float seed, bool hasPre, Vector3 pre)
+        {
             SetPlan(Plan == "приліт" ? "приліт" : "додому"); // the fly-in stays the fly-in all the way down
-            speed *= RuneStars.FlyMul(owner, _munin, true); // («Буря»)
+            speed *= Storm(true); // («Буря»)
             if (Body == null) return true;
             LandStyle land = Landing();
             float seatD = Vector3.Distance(_t.position, seat);
