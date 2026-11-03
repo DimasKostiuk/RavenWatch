@@ -273,12 +273,7 @@ namespace HuginWhispers
         {
             GameObject go = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab("Coins") : null;
             if (p == null || go == null || n <= 0) return;
-            if (!p.GetInventory().AddItem(go, n))
-            {
-                GameObject drop = UnityEngine.Object.Instantiate(go, p.transform.position + p.transform.forward + Vector3.up, Quaternion.identity);
-                ItemDrop it = drop.GetComponent<ItemDrop>();
-                if (it != null) it.SetStack(n);
-            }
+            Errands.Give(p, go, n);
             RavenMsg.Center(p, said);
             p.Message(MessageHud.MessageType.TopLeft, said);
         }

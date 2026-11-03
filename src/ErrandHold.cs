@@ -58,7 +58,7 @@ namespace HuginWhispers
         {
             r.SetMark(Key(i), "1");
             _sat = 0f; _outTold = false;
-            RavenMsg.Center(p, Lang.T("Варта почалася. Тримай коло до кінця — і не помри."));
+            RavenMsg.Center(p, Lang.T("Варта почалася. Звірі йдуть хвилями — тримай коло до кінця і не помри."));
             return null;
         }
 
@@ -103,7 +103,7 @@ namespace HuginWhispers
         {
             if (r.Count[i] >= _n) return Lang.T("Варту відстояно");
             int min = Mathf.Max(1, Mathf.RoundToInt(_n / 60f));
-            if (!Begun(r, i)) return Lang.F("Вартуй уночі в рунному колі — {0} хв; почни біля кілка посередині", min);
+            if (!Begun(r, i)) return Lang.F("Вартуй уночі в рунному колі — {0} хв; почни біля кілка посередині. Звірі цього краю нападатимуть хвилями, щораз більше", min);
             string line = Lang.F("Варта: {0} / {1} хв", r.Count[i] / 60, min);
             return Off(r, i, p) > 0f ? line + Lang.T(" (на паузі — повернись у коло)") : line;
         }

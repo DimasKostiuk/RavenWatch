@@ -30,6 +30,7 @@ namespace HuginWhispers
             public float Nerves = 1f;                         // × restlessness on the shoulder (preening, shakes, steps, clacks, head turns)
             public float Turn = 1f, Curve = 1f, Switch = 1f, Ease = 1f, Wobble = 1f; // flight: turn rate/accel, curve radius, template patience, bank/nose ease, aim wobble
             public float SitPace = 1f, SitReact = 1f, SitAmp = 1f;  // sitting: × how often it does things of its own, × how readily it reacts to you, × how big its poses are
+            public float Visit = 1f, Fish = 1f, Steal = 1f, Share = 1f, Pet = 1f; // × its own visits to things in the world, × its fish dives, × the wait before it steals food, × sharing food, × being the one you stroke
             public string[] Knacks = new string[0];           // the knacks that suit it (rolled twice as often with it)
             public string[] Quirks = new string[0];           // the quirks that suit it (likewise)
             public string[] Perks = new string[0];            // the blessings and burdens that suit it (likewise: Perks.Roll)
@@ -76,6 +77,31 @@ namespace HuginWhispers
             new Character { Id = "devoted", Name = Lang.K("Відданий"), WeightH = 1f, WeightM = 1f,
                 Text = Lang.K("Твоя тінь: сам відлітає трохи рідше і майже завжди летить слідом за тобою, а не кудись."),
                 OutChance = 0.9f, Follow = 2.5f, Circle = 0.7f, Scout = 0.5f, Nerves = 0.9f, Knacks = new[] { "light", "frugal" }, Quirks = new[] { "jealous", "thief" }, Perks = new[] { "grave", "bloodthirst" } },
+            // 2.8.1: six more (the user, 2026-10-29). The network keeps a character in 4 bits: 15 at most (NetKey).
+            new Character { Id = "curious", Name = Lang.K("Цікавий"), WeightH = 1.2f, WeightM = 0.8f,
+                Text = Lang.K("Усе мусить роздивитись: частіше сам летить до табличок, рун, кущів і блискучого й приносить більше знахідок."),
+                OutChance = 1.2f, Follow = 0.8f, Scout = 1.4f, Nerves = 1.1f, SitPace = 1.15f, SitReact = 1.2f, SitAmp = 1.05f,
+                Turn = 1.03f, Switch = 0.97f, Ease = 1.02f, Visit = 1.6f, Knacks = new[] { "eye", "far" }, Quirks = new[] { "magpie", "wet" }, Perks = new[] { "sniff", "picker", "scav" } },
+            new Character { Id = "proud", Name = Lang.K("Гордій"), WeightH = 1.2f, WeightM = 0.7f,
+                Text = Lang.K("Красень і знає це: найохайніший, часто миється й чепуриться, любить обнови й убори, у повітрі красується."),
+                OutChance = 0.9f, Circle = 1.2f, Scout = 0.8f, Nerves = 1.15f, SitReact = 0.9f, SitAmp = 1.15f,
+                Curve = 1.05f, Ease = 0.95f, Wobble = 0.7f, Knacks = new[] { "keen", "light" }, Quirks = new[] { "showoff", "picky" }, Perks = new[] { "tongue", "chatter", "gloat" } },
+            new Character { Id = "tender", Name = Lang.K("Лагідний"), WeightH = 1.2f, WeightM = 0.7f,
+                Text = Lang.K("Тягнеться до тебе: найчастіше підставляє шию, тримається поруч і легко дружить з іншими воронами."),
+                OutChance = 0.8f, Follow = 1.8f, Circle = 0.8f, Scout = 0.7f, Nerves = 0.9f, SitPace = 0.9f, SitReact = 1.25f,
+                Turn = 0.96f, Curve = 1.04f, Switch = 1.05f, Ease = 0.95f, Pet = 2f, Knacks = new[] { "frugal", "light" }, Quirks = new[] { "jealous", "chilly" }, Perks = new[] { "whisper", "sweet", "grave" } },
+            new Character { Id = "grumpy", Name = Lang.K("Буркотун"), WeightH = 0.7f, WeightM = 1.3f,
+                Text = Lang.K("Усім незадоволений: бурчить, до людей холодніший, з чужими воронами частіше свариться. Медовуха його розм'якшує."),
+                OutChance = 0.9f, OutLength = 1.1f, Follow = 0.9f, Circle = 0.8f, Nerves = 1.05f, SitPace = 0.85f, SitReact = 0.8f, SitAmp = 0.95f,
+                Turn = 0.97f, Switch = 1.05f, Ease = 0.97f, Knacks = new[] { "heavy", "thrifty" }, Quirks = new[] { "grumbler", "willful" }, Perks = new[] { "grudge", "boor", "bored" } },
+            new Character { Id = "huntsman", Name = Lang.K("Ловчий"), WeightH = 0.8f, WeightM = 1.3f,
+                Text = Lang.K("Живе полюванням: частіше просить полювати й битися, частіше пірнає по рибу й приносить здобич. Кров на пір'ї йому байдуже."),
+                OutChance = 1.1f, OutLength = 1.1f, Follow = 0.9f, Circle = 1.1f, Scout = 1.5f, SitReact = 1.1f,
+                Turn = 1.05f, Curve = 0.96f, Switch = 0.97f, Ease = 1.04f, Wobble = 0.7f, Fish = 1.8f, Knacks = new[] { "keen", "heavy" }, Quirks = new[] { "willful", "wet" }, Perks = new[] { "hunter", "bloodthirst", "finisher" } },
+            new Character { Id = "sweettooth", Name = Lang.K("Ласогуб"), WeightH = 1f, WeightM = 1f,
+                Text = Lang.K("Думає шлунком: голодний, частіше сам лізе в сумку по їжу, охочіше ділиться нею з другом і дуже любить медовуху."),
+                Follow = 1.1f, Nerves = 1.05f, SitPace = 1.05f, SitReact = 1.1f, Turn = 0.97f, Curve = 1.03f, Ease = 0.97f, Steal = 0.6f, Share = 1.6f,
+                Knacks = new[] { "quick", "eye" }, Quirks = new[] { "thief", "picky" }, Perks = new[] { "sweet", "glutton", "scav" } },
         };
 
         internal static readonly Knack[] Knacks =
@@ -135,6 +161,7 @@ namespace HuginWhispers
         internal static bool HasQuirk(ItemDrop.ItemData item, string id) { return item != null && Read(item, QuirksKey) == id; }
 
         internal static Character CharOf(ItemDrop.ItemData item) { return CharById(Read(item, CharKey)); }
+        internal static string CharIdOf(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? c.Id : ""; }
         internal static Knack KnackOf(ItemDrop.ItemData item) { return KnackById(Read(item, KnackKey)); }
         internal static bool Rolled(ItemDrop.ItemData item) { return CharOf(item) != null && KnackOf(item) != null && QuirkOf(item) != null; }
         internal static string Code(ItemDrop.ItemData item) { return (Read(item, CharKey) ?? "-") + "/" + (Read(item, KnackKey) ?? "-") + "/" + (Read(item, QuirksKey) ?? "-") + "/" + Quirks.Code(item); }
@@ -251,6 +278,11 @@ namespace HuginWhispers
         internal static float FollowW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Follow, Shows(item)) : 1f; }
         internal static float CircleW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Circle, Shows(item)) : 1f; }
         internal static float ScoutW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Scout, Shows(item)) : 1f; }
+        internal static float VisitW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Visit, Shows(item)) : 1f; }
+        internal static float FishW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Fish, Shows(item)) : 1f; }
+        internal static float StealW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Steal, Shows(item)) : 1f; }
+        internal static float ShareW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Share, Shows(item)) : 1f; }
+        internal static float PetW(ItemDrop.ItemData item) { Character c = CharOf(item); return c != null ? Mul(c.Pet, Shows(item)) : 1f; }
 
         // ---------------------------------------------------------------- the knack's effects (fixed: trust does not change them)
 

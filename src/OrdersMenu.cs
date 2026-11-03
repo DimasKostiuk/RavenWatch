@@ -47,7 +47,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- the pieces
 
-        private enum Kind { Order, Pouch, Trick, Chase, Recall, Feed, Gift, Power, ToOrders, Here, Toggle, Bind, BindFire }
+        private enum Kind { Order, Pouch, Trick, Chase, Recall, Feed, Gift, Power, ToOrders, Here, Toggle, Bind, BindFire, Arm }
 
         private sealed class Piece
         {
@@ -59,9 +59,12 @@ namespace HuginWhispers
             internal float ShapeS = -1f;
             internal string Title = "", Sub = "", Desc = "";
             internal bool Usable = true, Now, Glow, Stays;
+            internal bool Hidden;             // not there now (the arm's row below its trust): not drawn, not hit
             internal bool Sits;               // the raven sits where this button sent it (a perch, a spot): filled with his colour
             internal bool Moves;              // ...and a click moves him to where you look (not back to you)
             internal bool Play;               // the perch's button turned «Гратися» (your tamed beast in sight)
+            internal bool Wash;               // ...or «Помити» (you stand in the water)
+            internal string Icon;             // its picture when it depends on the place (null: by its kind)
             internal int Seq;                 // a trick: its turn flying out of «Трюки»
             internal float CoolLeft, CoolAll;
             internal string KeyId, KeyLabel; // a trick's own key and its label ("—" none), read four times a second, not every frame
@@ -312,7 +315,7 @@ namespace HuginWhispers
             { "pload", new Vector3(1, -18f, 76f) }, { "pclear", new Vector3(1, 0f, 76f) }, { "pwhirl", new Vector3(1, 18f, 76f) },
         };
         private static bool _g; // the face drawn now is the gifts' one
-        private float RimNow { get { return !_g && _tricksOpen ? 450f * GS : GRim1; } } // (the tricks dropped: their band is ours too)
+        private float RimNow { get { return !_g && _tricksOpen ? 450f * GS : !_g && (_armShown[0] || _armShown[1]) ? (_armMore ? ArmQ1 : ArmR1) + 4f : GRim1; } } // (the tricks dropped: their band is ours too; so are the arm's rows)
 
         // the orders on a wing: Облетіти, Поруч, Кружляй, Жердина, Туди, Торба — each its angle (Hugin's side; Munin's the
         // mirror) and row (0 by the middle, 1 out), the rows staggered so the wing is filled evenly
@@ -323,6 +326,15 @@ namespace HuginWhispers
         private const float ToggleTwo = 232f * GS, ToggleOne = 150f * GS, ToggleD = 44f, ChaseTwo = 378f * GS, ChaseOne = 375f * GS, ChaseD = 50f;
         private bool _tricksOpen;
         private float _tricksAt;
+        // «На руку» (ArmPerch): each raven's row of small buttons on a thin band just outside his wing (one raven: on his
+        // side, under the fan), shown from trust 5: onto the arm or back, a stroke, food, eye to eye, a toss
+        private const float ArmR0 = 321f * GS, ArmR1 = 363f * GS, ArmR = 342f * GS, ArmD = 32f, ArmStep = 9f, ArmTwoA0 = 68f, ArmOneA0 = 100f, ArmPad = 6f;
+        private const float ArmQ0 = 367f * GS, ArmQ1 = 409f * GS, ArmQ = 388f * GS, ArmQStep = 8f; // its own tricks' row, out beyond the arm's (ArmTricks)
+        private readonly bool[] _armShown = new bool[2];
+        private static bool _armMore;                         // its own tricks' row dropped («Звички»)
+        private static readonly int[] _armOpen = new int[2];  // how many tricks each raven has open (its row's length)
+        private static readonly int[] _armRowN = { 1, 1 };    // the arm row's buttons shown (1: «На руку» alone, it is not on the arm)
+        private static readonly int[] ArmRowOrders = { ArmPerch.ActToggle, ArmPerch.ActFeed, ArmPerch.ActToss, ArmPerch.ActMore };
 
         private void Layout(Player p)
         {
@@ -434,11 +446,18 @@ namespace HuginWhispers
             into.Clear();
             if (mode == -2) return;
             bool one = mode != 0;
-            if (!one) { Half(into, false, 1f); Half(into, true, -1f); }
-            else Half(into, mode == 2, 0f);
+            if (!one) { Half(into, false, 1f); Half(into, true, -1f); ArmRow(into, false, false); ArmRow(into, true, false); }
+            else { Half(into, mode == 2, 0f); ArmRow(into, mode == 2, true); }
             Round(into, Kind.Chase, false, Orders.Chase, 180f, one ? ChaseOne : ChaseTwo, ChaseD); // two ravens: in the gap between their bands; one: just under its band (with another player's raven)
             Round(into, Kind.Toggle, false, 0, 180f, one ? ToggleOne : ToggleTwo, ToggleD);
             Round(into, Kind.Recall, false, 0, 0f, 0f, OrdersBtn * 2f / GS);
+        }
+
+        // the arm's five small buttons (Munin's on the left, as his arm)
+        private static void ArmRow(List<Piece> into, bool munin, bool one)
+        {
+            for (int i = 0; i < ArmRowOrders.Length; i++) Round(into, Kind.Arm, munin, ArmRowOrders[i], (one ? ArmOneA0 : ArmTwoA0) + ArmStep * i, ArmR, ArmD, munin ? -1f : 1f);
+            for (int i = 0; i < ArmTricks.Slots; i++) Round(into, Kind.Arm, munin, ArmPerch.ActTrick + i, (one ? ArmOneA0 : ArmTwoA0) + 0.5f + ArmQStep * i, ArmQ, ArmD, munin ? -1f : 1f); // (its own tricks, out beyond)
         }
 
         // a round button: its centre at an angle (Hugin's side) and a radius, its size before GS
@@ -489,9 +508,10 @@ namespace HuginWhispers
         {
             if (Time.unscaledTime - _built < 0.25f) return;
             _built = Time.unscaledTime;
+            _armShown[0] = _armShown[1] = false;
             foreach (Piece pc in _pieces)
             {
-                pc.Usable = true; pc.Now = pc.Glow = pc.Stays = pc.Sits = pc.Moves = false; pc.CoolLeft = 0f; pc.Info = pc.MidName = null; // (the action stays: made once)
+                pc.Usable = true; pc.Now = pc.Glow = pc.Stays = pc.Sits = pc.Moves = pc.Hidden = false; pc.CoolLeft = 0f; pc.Info = pc.MidName = null; // (the action stays: made once)
                 bool mm = pc.Munin;
                 ItemDrop.ItemData item = RavenSeat.On(p, mm);
                 string name = Plugin.RavenName(mm);
@@ -511,6 +531,10 @@ namespace HuginWhispers
                         break;
                     case Kind.Chase:
                         ChasePiece(p, pc);
+                        break;
+                    case Kind.Arm:
+                        ArmPiece(p, pc, item);
+                        if (!pc.Hidden) _armShown[mm ? 1 : 0] = true;
                         break;
                     case Kind.Gift:
                     {
@@ -654,15 +678,90 @@ namespace HuginWhispers
         // a gift's name on its piece: without the raven's own name ("Світло Хугіна" → "Світло")
         private static string GiftTitle(RavenAbility a) { return a.Bare; }
 
-        private static readonly string TwoInOneSrc = Lang.K("Кнопка подвійна: зазвичай — «Жердина», а коли дивишся на свого прирученого звіра — «Гратися».");
+        // «На руку» (ArmPerch): a button of the arm's row; from trust 5, your own raven only
+        private static void ArmPiece(Player p, Piece pc, ItemDrop.ItemData item)
+        {
+            bool mm = pc.Munin;
+            pc.Hidden = !RavenSkills.Animations || item == null || !Trust.Active(item) || Trust.Stranger(item, p) || Trust.Level(item) < ArmPerch.MinTrust;
+            if (pc.Hidden) return;
+            // only «На руку» until it sits on your arm; then the rest of the row (the user, 2026-10-29: the arm first)
+            bool on = ArmPerch.Holding(p, mm), flying = ArmPerch.Away(p, mm), seated = on && !flying;
+            if (pc.Order == ArmPerch.ActToggle) _armRowN[mm ? 1 : 0] = seated ? ArmRowOrders.Length : 1;
+            else if (!seated) { pc.Hidden = true; if (pc.Order == ArmPerch.ActMore) _armOpen[mm ? 1 : 0] = 0; return; }
+            if (pc.Order == ArmPerch.ActMore) { MorePiece(p, pc, item); return; }
+            if (pc.Order >= ArmPerch.ActTrick) { TrickPiece(p, pc, item); return; }
+            if (pc.Act == null) { int what = pc.Order; pc.Act = () => { Player me = Player.m_localPlayer; if (me != null) ArmPerch.Act(me, mm, what); }; }
+            if (pc.Order == ArmPerch.ActToggle)
+            {
+                // onto the arm (or called back onto it from the air), or back to the shoulder
+                string why = on ? null : ArmPerch.WhyNot(p, mm, true);
+                pc.Icon = seated ? "o-armback" : "o-arm"; pc.Now = on; pc.Stays = true; pc.Usable = why == null;
+                pc.Title = seated ? Lang.T("На плече") : Lang.T("На руку");
+                pc.Desc = on && flying ? Lang.T("Ворон летить до тебе на руку. Ще клік — сяде на плече.")
+                    : on ? Lang.T("Ворон перестрибує з руки назад на плече, рука опускається.")
+                    : flying ? Lang.T("Кличе ворона з польоту: він повертається й сідає тобі на руку.")
+                    : Lang.T("Виставляєш руку, і ворон перестрибує на неї з плеча. Зброю чи знаряддя в руках ховаєш (R — дістати). Візьмеш щось у руки, вдариш, побіжиш чи стрибнеш — він сам повернеться на плече.");
+                pc.Sub = why != null ? why.TrimEnd('.').Replace("\n", " ") : on && flying ? Lang.T("● летить на руку") : on ? Lang.T("● на руці")
+                    : flying ? Lang.T("у польоті · покликати на руку") : Lang.T("з плеча на руку");
+                return;
+            }
+            if (pc.Order == ArmPerch.ActFeed)
+            {
+                pc.Icon = "o-armfeed"; pc.Title = Lang.T("Нагодувати з руки");
+                pc.Desc = Lang.T("Даєш з долоні його їжу з сумки: улюблену, якщо знаєш її, інакше ту, якої найбільше.");
+                pc.Sub = Lang.T("● на руці");
+                return;
+            }
+            // the toss: hungry, too weak, or an outing would be called off at once — grey with why; else its price, as «Кружляй»
+            string no = ArmPerch.TossWhy(p, mm);
+            pc.Icon = "o-toss"; pc.Stays = true; pc.Usable = no == null; // (the circle stays: «На руку» calls it back)
+            pc.Title = Lang.T("Підкинути");
+            pc.Desc = Lang.T("Змах рукою, і ворон злітає. Дивишся вдалину — облетить місцину попереду, інакше покружляє над тобою й повернеться.");
+            pc.Sub = no != null ? no : Orders.PriceText(mm, Orders.Circle);
+        }
+
+        // «Звички»: drops (or folds) the row of its own tricks, so the circle is not cluttered with them
+        private static readonly string TrickOwnSrc = Lang.K("У кожного ворона свої звички на руці: на довірі 3 він знає одну, з кожною новою довірою — ще одну. А часом на руці сам робить будь-яку.");
+        private static void MorePiece(Player p, Piece pc, ItemDrop.ItemData item)
+        {
+            int open = ArmTricks.Open(item);
+            _armOpen[pc.Munin ? 1 : 0] = open;
+            pc.Icon = "o-more"; pc.Stays = true; pc.Now = _armMore;
+            pc.Usable = open > 0;
+            pc.Title = Lang.T("Звички");
+            pc.Sub = open > 0 ? Lang.F("{0} з {1} · {2}", open, ArmTricks.Slots, _armMore ? Lang.T("сховати") : Lang.T("показати")) : Lang.F("довіра {0}+", ArmTricks.FirstTrust);
+            pc.Desc = Lang.T(TrickOwnSrc);
+            if (pc.Act == null) pc.Act = () => { _armMore = !_armMore; if (_inst != null) _inst._built = -1f; }; // (shown or hidden at once)
+        }
+
+        // a slot of its own tricks' row: only an open one, only while the row is dropped
+        private static void TrickPiece(Player p, Piece pc, ItemDrop.ItemData item)
+        {
+            bool mm = pc.Munin; // (shown only while it sits on your arm: ArmPiece)
+            int slot = pc.Order - ArmPerch.ActTrick, trick = ArmTricks.At(item, mm, slot);
+            pc.Hidden = !_armMore || trick < 0;
+            if (!pc.Hidden)
+            {
+                pc.Icon = ArmTricks.Icons[trick];
+                pc.Now = trick == ArmTricks.Other && ArmPerch.OnOther; // (on the other arm now: lit)
+                pc.Title = ArmTricks.Names[trick];
+                pc.Sub = Lang.T("● на руці");
+                pc.Desc = ArmTricks.Desc[trick] + "\n" + Lang.T(TrickOwnSrc);
+            }
+            if (pc.Act == null) { int what = pc.Order; pc.Act = () => { Player me = Player.m_localPlayer; if (me != null) ArmPerch.Act(me, mm, what); }; }
+        }
+
+        private static readonly string TwoInOneSrc = Lang.K("Кнопка потрійна: зазвичай — «Жердина»; коли дивишся на свого прирученого звіра — «Гратися»; коли стоїш у воді — «Помити».");
         private static void PerchPiece(Player p, Piece pc, ItemDrop.ItemData item)
         {
             bool mm = pc.Munin, on = item != null && Perches.On(item), spot = on && Perches.OnSpot(item);
+            pc.Icon = null;
             pc.KeyId = mm ? RavenKeys.PerchMId : RavenKeys.PerchHId;
             pc.KeyLabel = RavenKeys.LabelOf(pc.KeyId);
             if (pc.Act == null) pc.Act = () => { Player me = Player.m_localPlayer; if (me != null) BeastPlay.PerchOrPlay(me, mm); }; // (looked at again on the click)
             Character beast = !on && p != null ? BeastPlay.Aimed(p, mm) : null;
             pc.Play = beast != null;
+            pc.Wash = false;
             if (beast != null)
             {
                 string why = BeastPlay.WhyNot(p, beast) ?? Orders.Why(p, mm, Orders.Beast);
@@ -674,7 +773,21 @@ namespace HuginWhispers
                 pc.CoolLeft = Orders.LeftOf(mm, Orders.Beast); pc.CoolAll = Orders.WaitOf(Orders.Beast);
                 return;
             }
-            pc.Title = Lang.T("Жердина");
+            if (!on && Bath.Wading(p))
+            {
+                string why = Bath.HandWhyNot(p, mm);
+                pc.Wash = true;
+                pc.Title = Lang.T("Помити");
+                pc.Sub = why != null ? why.TrimEnd('.').Replace("\n", " ") : Lang.T("ти у воді · помити ворона");
+                pc.Desc = Lang.T("Ворон сідає у воду біля тебе, а ти його миєш: бризки, тремтіння, і він знову чистий. Довіри за це більше, ніж коли купається сам.") + "\n" + Lang.T(TwoInOneSrc);
+                pc.Now = pc.Sits = false;
+                pc.Usable = why == null;
+                pc.CoolLeft = 0f;
+                return;
+            }
+            string seat = on && !spot ? Perches.SeatKind(item) : "perch";
+            pc.Icon = seat == "nest" ? "o-nest" : seat == "tree" ? "o-tree" : null;
+            pc.Title = seat == "nest" ? Lang.T("Гніздо") : seat == "tree" ? Lang.T("Дерево") : Lang.T("Жердина");
             pc.Sub = spot ? (Grammar.Female(p) ? Lang.T("сидить, де ти показала · покликати") : Lang.T("сидить, де ти показав · покликати")) : on ? Lang.F("● зараз · {0}", PerchDay(item)) : Perches.OrderSub(p, mm);
             pc.Desc = spot ? Lang.T("Кличе його звідти, де він сидить: злетить і прилетить до тебе.")
                     : on ? Lang.T("Кличе його з жердини: він злетить і прилетить до тебе, хоч би й здалека.")
@@ -808,6 +921,7 @@ namespace HuginWhispers
         private static void HerePiece(Player p, Piece pc, ItemDrop.ItemData item)
         {
             bool mm = pc.Munin, on = item != null && Perches.On(item), spot = on && Perches.OnSpot(item);
+            pc.Icon = null;
             pc.KeyId = mm ? RavenKeys.HereMId : RavenKeys.HereHId;
             pc.KeyLabel = RavenKeys.LabelOf(pc.KeyId);
             if (pc.Act == null) pc.Act = () => { Player me = Player.m_localPlayer; if (me == null) return; if (ErrandHere(me, mm)) Errands.Act(me); else Perches.OrderHere(me, mm); };
@@ -816,6 +930,7 @@ namespace HuginWhispers
                 string why;
                 pc.Title = Errands.ActLabel(p, out why);
                 pc.Sub = Lang.T("доручення Одіна");
+                pc.Icon = "o-odin";
                 pc.Desc = Lang.T("Дія доручення Одіна — те саме, що E на місці чи кнопка в книзі.");
                 return;
             }
@@ -824,14 +939,15 @@ namespace HuginWhispers
             if (on && !move)
             {
                 pc.Title = spot ? Lang.T("Назад") : Lang.T("Туди"); // (a click calls him back)
-                pc.Sub = spot ? Lang.T("● сидить · покликати") : Perches.InNest(item) ? Lang.T("сидить у гнізді · покликати") : Lang.T("сидить на жердині · покликати");
+                pc.Icon = "o-recall";
+                pc.Sub = spot ? Lang.T("● сидить · покликати") : Lang.F("сидить {0} · покликати", Perches.OnWord(item));
                 pc.Desc = Lang.T("Кличе його звідти, де він сидить: злетить і прилетить до тебе.");
                 pc.Now = pc.Sits = spot;
                 return;
             }
             if (p != null && Orders.Of(p, mm) == Orders.Fetch)
             {
-                pc.Title = Lang.T("Принести"); pc.Sub = Lang.T("● летить по здобич"); pc.Desc = Orders.Desc[Orders.Fetch]; pc.Now = true; pc.Usable = false;
+                pc.Title = Lang.T("Принести"); pc.Sub = Lang.T("● летить по здобич"); pc.Icon = "o-fetch"; pc.Desc = Orders.Desc[Orders.Fetch]; pc.Now = true; pc.Usable = false;
                 return;
             }
             SitHere.Target t = p != null ? SitHere.Look(p, mm) : null;
@@ -841,7 +957,7 @@ namespace HuginWhispers
             if (t != null && t.Player != null)
             {
                 string why = busy ?? t.Why ?? SitHere.WhyNotNow(p, mm);
-                pc.Title = Lang.T("На гравця");
+                pc.Title = Lang.T("На гравця"); pc.Icon = "o-player";
                 pc.Sub = why != null ? why.TrimEnd('.').Replace("\n", " ") : Lang.F("{0} · {1} м · {2}", t.Name, Mathf.RoundToInt(t.Dist), SitHere.PriceText(mm));
                 pc.Desc = Lang.T("Сідає на голову або на вільне плече гравця, на якого ти дивишся (куди саме — навмання з вільних місць), і сидить там, доки не повернеш. Гравець може струсити його перекатом.");
                 pc.Usable = why == null;
@@ -849,7 +965,7 @@ namespace HuginWhispers
             else if (t != null && t.Animal != null)
             {
                 string why = busy ?? t.Why ?? SitHere.WhyNotNow(p, mm);
-                pc.Title = Lang.T("На тварину");
+                pc.Title = Lang.T("На тварину"); pc.Icon = "o-animal";
                 pc.Sub = why != null ? why.TrimEnd('.').Replace("\n", " ") : Lang.F("{0} · {1} м · {2}", t.Name, Mathf.RoundToInt(t.Dist), SitHere.PriceText(mm));
                 pc.Desc = Lang.T("Сідає на ручну тварину, на яку ти дивишся: на спину (якщо ніхто не їде верхи) або на голову — навмання з вільних місць, і їде на ній, доки не повернеш. На диких не сідає.");
                 pc.Usable = why == null;
@@ -857,7 +973,7 @@ namespace HuginWhispers
             else if (t != null && t.Item != null)
             {
                 string why = t.Why ?? (RavenFetch.Carrying(mm) ? Lang.T("ще несе попереднє") : null) ?? Orders.Why(p, mm, Orders.Fetch);
-                pc.Title = Lang.T("Принести");
+                pc.Title = Lang.T("Принести"); pc.Icon = "o-fetch";
                 pc.Sub = why != null ? why.TrimEnd('.').Replace("\n", " ") : Lang.F("{0} · {1} м · {2}", t.Name, Mathf.RoundToInt(t.Dist), Orders.PriceText(mm, Orders.Fetch));
                 pc.Desc = Lang.F("Летить до дрібниці, на яку ти дивишся, хапає одну штуку й приносить тобі в сумку. Лише легке — до {0} кг за штуку.", Satiety.Num(RavenFetch.MaxWeight));
                 pc.Usable = why == null;
@@ -865,7 +981,7 @@ namespace HuginWhispers
             }
             else if (t != null && t.Perch != null)
             {
-                pc.Title = Lang.T("На цю жердину");
+                pc.Title = t.Perch.IsNest ? Lang.T("У це гніздо") : Lang.T("На цю жердину"); pc.Icon = t.Perch.IsNest ? "o-nest" : "o-perch";
                 bool room = t.Perch.FreeSeat() >= 0;
                 freePerch = busy == null && room;
                 pc.Sub = busy != null ? busy.TrimEnd('.').Replace("\n", " ") : !room ? Lang.T("на ній нема місця") : Lang.T("сісти на неї · безкоштовно");
@@ -875,7 +991,7 @@ namespace HuginWhispers
             else if (t != null && t.Building)
             {
                 string why = busy ?? t.Why ?? SitHere.WhyNotNow(p, mm);
-                pc.Title = Lang.T("Сісти тут");
+                pc.Title = Lang.T("Сісти тут"); pc.Icon = t.Follow != null ? "o-ship" : "o-roof";
                 pc.Sub = why != null ? why.TrimEnd('.').Replace("\n", " ") : Lang.F("{0} · {1} м · {2}", t.Name, Mathf.RoundToInt(t.Dist), SitHere.PriceText(mm));
                 pc.Desc = Lang.F("Сідає зверху на будову, на яку ти дивишся (табличка, паркан, дах, портал...), і сидить там, доки не повернеш. Сили там не набирається. Відійдеш далі {0} м — полетить за тобою.", Mathf.RoundToInt(SitHere.Far));
                 pc.Usable = why == null;
@@ -904,8 +1020,8 @@ namespace HuginWhispers
             if (item == null) return Lang.T("нема на плечі");
             if (!Trust.Active(item)) return Lang.T("спить · довіра 0");
             if (Trust.Stranger(item, p)) return Lang.T("чужий");
-            if (Perches.OnSpot(item)) return (Grammar.Female(p) ? Lang.T("сидить, де ти показала") : Lang.T("сидить, де ти показав"));
-            if (Perches.On(item)) return Perches.InNest(item) ? Lang.F("у гнізді · {0}", PerchDay(item)) : Lang.F("на жердині · {0}", PerchDay(item));
+            if (Perches.OnSpot(item)) return Perches.SpotWord(p, munin);
+            if (Perches.On(item)) return Lang.F("{0} · {1}", Perches.OnWord(item), PerchDay(item));
             int o = Orders.Of(p, munin);
             if (o == Orders.Follow) return Lang.T("в польоті · поруч");
             if (o == Orders.Circle) return Lang.T("в польоті · кружляє");
@@ -942,7 +1058,7 @@ namespace HuginWhispers
         {
             if (item == null) return 0;
             if (Perches.On(item)) return 1;
-            if (Orders.Of(p, munin) != Orders.None || Trust.Away(item) || (!munin && Shoulder.HuginAway)) return 2;
+            if (Orders.Of(p, munin) != Orders.None || Trust.Away(item) || (!munin && Shoulder.HuginAway) || Perks.OffWord(p, munin) != null) return 2;
             return 0;
         }
 
@@ -953,7 +1069,7 @@ namespace HuginWhispers
             if (pc.Act == null) return;
             // not now: the menu stays; a gift still says why in the middle of the screen (RavenSkills.Use names every
             // refusal): a click that did nothing at all looked broken
-            if (!pc.Usable) { if (pc.Kind == Kind.Gift && pc.Gift != null) RavenSkills.Use(pc.Gift); else if (pc.Kind == Kind.BindFire || (pc.Kind == Kind.Here && pc.Moves)) pc.Act(); return; } // (the в'язь's press and a blocked move say why not too)
+            if (!pc.Usable) { if (pc.Kind == Kind.Gift && pc.Gift != null) RavenSkills.Use(pc.Gift); else if (pc.Kind == Kind.BindFire || pc.Kind == Kind.Arm || (pc.Kind == Kind.Here && pc.Moves)) pc.Act(); return; } // (the в'язь's press and a blocked move say why not too)
             Action act = pc.Act;
             if (!pc.Stays) Close();
             try { act(); } // an order that cannot go now says why itself
@@ -1009,6 +1125,7 @@ namespace HuginWhispers
             // the plates: each raven's wing, the tricks' band (dropped), the middle disc and the small ones under «Трюки»
             // and «Догонялки»
             Wings(c, s);
+            if (!_g) ArmBands(c, s);
             if (!_g && _tricksOpen) Band(c, s);
             Plate(c, DiscR, s, 1f);
             if (!_g)
@@ -1032,7 +1149,7 @@ namespace HuginWhispers
                 Piece pc = _pieces[_hover];
                 if (pc.Info == null) // made once per change of the piece (Build clears it)
                 {
-                    bool own = pc.Kind == Kind.Trick || pc.Kind == Kind.Order || pc.Kind == Kind.Here || pc.Kind == Kind.Pouch || pc.Kind == Kind.Gift;
+                    bool own = pc.Kind == Kind.Trick || pc.Kind == Kind.Order || pc.Kind == Kind.Here || pc.Kind == Kind.Pouch || pc.Kind == Kind.Gift || pc.Kind == Kind.Arm;
                     bool bound = pc.KeyLabel != null && pc.KeyLabel != "—";
                     int gold = pc.Kind == Kind.Gift && pc.Gift != null && GiftUp.Upgradable.Contains(pc.Gift.Id) ? GiftUp.Level(pc.Gift.Id) : 0; // golden runes in it
                     pc.Info = "<b>" + (own ? Plugin.RavenName(pc.Munin) + ": " : "") + pc.Title + "</b>  <color=#BFB59A>" + pc.Sub + "</color>"
@@ -1081,6 +1198,7 @@ namespace HuginWhispers
         private void DrawPiece(Piece pc, int index, Vector2 c, float s)
         {
             bool hot = index == _hover;
+            if (pc.Hidden) return;
             if (pc.Kind == Kind.ToOrders) { OrdersButton(c, s, hot); return; }
             if (pc.Kind == Kind.Gift) { RoundGift(pc, c, s, hot); return; }
             if (pc.Kind == Kind.Power) { PowerRing(pc, c, s); return; }
@@ -1141,7 +1259,7 @@ namespace HuginWhispers
             else
             {
                 bool words = pc.Kind == Kind.Recall;
-                float isz = d * (words ? 0.26f : 0.42f);
+                float isz = d * (words ? 0.26f : pc.Kind == Kind.Arm ? 0.8f : 0.42f); // (the arm's buttons are small: their pictures twice as big in them)
                 Vector2 ic = words ? at - new Vector2(0f, d * 0.12f) : at;
                 GUI.DrawTexture(new Rect(ic.x - isz * 0.5f, ic.y - isz * 0.5f, isz, isz), Asset(IconOf(pc)));
                 if (words) Text(at + new Vector2(0f, d * 0.18f), 0f, "<b>" + pc.Title.ToUpperInvariant() + "</b>", _small, A(new Color(0.85f, 0.78f, 0.64f), a), Mathf.Max(9f * s, d * 0.1f), d * 1.1f);
@@ -1208,6 +1326,7 @@ namespace HuginWhispers
         // which picture a button of the orders' face shows
         private static string IconOf(Piece pc)
         {
+            if (pc.Icon != null) return pc.Icon;
             switch (pc.Kind)
             {
                 case Kind.Here: return "o-here";
@@ -1216,7 +1335,7 @@ namespace HuginWhispers
                 case Kind.Recall: return "o-recall";
                 case Kind.Toggle: return _inst != null && _inst._tricksOpen ? "o-up" : "o-down";
                 case Kind.Chase: return "o-chase";
-                default: return pc.Order < 0 ? (pc.Play ? "o-chase" : "o-perch") : pc.Order == Orders.Scout ? "o-scout" : pc.Order == Orders.Follow ? "o-near" : "o-circle";
+                default: return pc.Order < 0 ? (pc.Play ? "o-chase" : pc.Wash ? "o-wash" : "o-perch") : pc.Order == Orders.Scout ? "o-scout" : pc.Order == Orders.Follow ? "o-near" : "o-circle";
             }
         }
 
@@ -1286,6 +1405,30 @@ namespace HuginWhispers
                 GUI.DrawTexture(r, sh.Fill);
                 GUI.color = A(munin ? MLine : HLine, 0.6f * a);
                 GUI.DrawTexture(r, sh.Line);
+            }
+            GUI.color = Color.white;
+        }
+
+        // the arm's thin band outside each wing, in the raven's colour (only while its row is shown)
+        private void ArmBands(Vector2 c, float s)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                if (!_armShown[k]) continue;
+                bool munin = k == 1;
+                float start = _mode != 0 ? ArmOneA0 : ArmTwoA0;
+                for (int row = 0; row < 2; row++)
+                {
+                    if (row == 1 && (!_armMore || _armOpen[k] <= 0)) break; // (its tricks: only dropped, as long as it has)
+                    float a0 = start - ArmPad, a1 = row == 0 ? start + ArmStep * (_armRowN[k] - 1) + ArmPad : start + 0.5f + ArmQStep * (_armOpen[k] - 1) + ArmPad;
+                    float r0 = row == 0 ? ArmR0 : ArmQ0, r1 = row == 0 ? ArmR1 : ArmQ1;
+                    Shape sh = munin ? ShapeFor(-a1, -a0, r0, r1, 14f * GS, true, s) : ShapeFor(a0, a1, r0, r1, 14f * GS, true, s);
+                    Rect r = Place(sh, c, s);
+                    GUI.color = munin ? new Color(0.16f, 0.07f, 0.05f, row == 0 ? 0.88f : 0.8f) : new Color(0.05f, 0.08f, 0.13f, row == 0 ? 0.88f : 0.8f);
+                    GUI.DrawTexture(r, sh.Fill);
+                    GUI.color = A(munin ? MLine : HLine, row == 0 ? 0.55f : 0.4f);
+                    GUI.DrawTexture(r, sh.Line);
+                }
             }
             GUI.color = Color.white;
         }
@@ -1490,23 +1633,23 @@ namespace HuginWhispers
             return list;
         }
 
-        // a gift: a round button with its rune medallion. Hover: a light ring; a golden rune: a golden ring and a glow
-        // round it, a little stronger with each (the third breathes); its wait drains over it from the top
+        // a gift: a round button with its rune medallion. Hover: a light ring; golden runes: a small medallion with the level
+        // (I–III) on the outer side (Hugin's right, Munin's left, the paired ones below), the third also breathes a glow;
+        // its wait drains over it from the top
         private static void RoundGift(Piece pc, Vector2 c, float s, bool hot)
         {
             Vector2 at = c + Dir(pc.A0) * pc.R0 * s;
             float d = pc.CR * 2f * s;
-            if (pc.Gold > 0)
+            if (pc.Gold >= GiftUp.MaxLevel) // all three: it breathes a gold glow
             {
-                float glow = pc.Gold == 1 ? 0.3f : pc.Gold == 2 ? 0.5f : 0.6f + 0.2f * Mathf.Sin(Time.unscaledTime * 2.4f);
-                float g = d * (1.3f + 0.12f * pc.Gold);
-                GUI.color = A(GoldGlow, glow);
+                float g = d * 1.95f; // (the soft disc fades fast: this wide, it still shows a rim of light round the icon)
+                GUI.color = A(GoldGlow, 0.8f + 0.2f * Mathf.Sin(Time.unscaledTime * 2.4f));
                 GUI.DrawTexture(new Rect(at.x - g * 0.5f, at.y - g * 0.5f, g, g), _soft);
             }
-            if (hot || pc.Gold > 0 || pc.Now)
+            if (hot || pc.Now)
             {
-                float rw = (hot || pc.Now ? 3f : 1.5f + pc.Gold * 0.75f) * GS * s, rd = d + rw * 2f;
-                GUI.color = hot ? HoverLine : pc.Gold > 0 ? GoldGlow : Bright;
+                float rw = 3f * GS * s, rd = d + rw * 2f;
+                GUI.color = hot ? HoverLine : Bright;
                 GUI.DrawTexture(new Rect(at.x - rd * 0.5f, at.y - rd * 0.5f, rd, rd), _disc);
             }
             Rect r = new Rect(at.x - d * 0.5f, at.y - d * 0.5f, d, d);
@@ -1514,7 +1657,28 @@ namespace HuginWhispers
             DrawSprite(r, AbilityIcons.For(pc.Gift.Id, pc.Munin));
             if (!pc.Now && pc.CoolLeft > 0.5f && pc.CoolAll > 0f) Overlay(r, _disc, new Color(0f, 0f, 0f, 0.6f), Mathf.Clamp01(pc.CoolLeft / pc.CoolAll));
             if (!pc.Usable && !pc.Now) { GUI.color = new Color(0f, 0f, 0f, 0.3f); GUI.DrawTexture(r, _disc); }
+            if (pc.Gold > 0) GoldBadge(at, d, pc.Gift != null && pc.Gift.Pair ? 0 : pc.Munin ? -1 : 1, pc.Gold, s);
             GUI.color = Color.white;
+        }
+
+        // the golden runes' level: a dark medallion with a gold rim and the numeral, on the gift's outer side
+        // (side 1 right, -1 left, 0 below). Drawn from a texture made at its own pixel size, on whole pixels: the big
+        // shared disc squeezed this small showed stairs on its edge.
+        private static void GoldBadge(Vector2 at, float d, int side, int level, float s)
+        {
+            int bd = Mathf.RoundToInt(Mathf.Max(15f * GS * s, d * 0.4f));
+            Vector2 dir = side == 0 ? new Vector2(0f, 1f) : new Vector2(side * 0.7071f, 0.7071f); // (screen y grows down)
+            Vector2 bc = at + dir * (d * 0.5f * 0.86f);
+            Rect r = new Rect(Mathf.Round(bc.x - bd * 0.5f), Mathf.Round(bc.y - bd * 0.5f), bd, bd);
+            if (level >= GiftUp.MaxLevel) // the third: a small glow breathing behind the medallion too
+            {
+                float g = bd * 2.4f;
+                GUI.color = A(GoldGlow, 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 2.4f + 1.2f));
+                GUI.DrawTexture(new Rect(r.center.x - g * 0.5f, r.center.y - g * 0.5f, g, g), _soft);
+            }
+            GUI.color = Color.white;
+            GUI.DrawTexture(r, BadgeTex(bd, Mathf.Max(1.5f, 1.6f * GS * s)));
+            Text(r.center, 0f, "<b>" + GiftUp.Roman(level) + "</b>", _title, Bright, bd * 0.52f, bd * 1.6f); // (GUI.color white: it tints the label too)
         }
 
         // marks on the strength half-rings at a quarter, half and three quarters (the fill rises straight up)
@@ -1563,7 +1727,7 @@ namespace HuginWhispers
             }
             if (pc.MidName == null) // made once per change of the piece (Build clears it), not every frame
             {
-                pc.MidName = pc.Title + (pc.Gold > 0 ? " <color=#FFC23A>" + new string('•', pc.Gold) + "</color>" : "");
+                pc.MidName = pc.Title + (pc.Gold > 0 ? " <color=#FFC23A>" + GiftUp.Roman(pc.Gold) + "</color>" : "");
                 string extra = pc.CoolText ?? (pc.Now ? Lang.T("● зараз") : pc.KeyLabel != null && pc.KeyLabel != "—" ? "[" + pc.KeyLabel + "]" : null);
                 pc.MidSub = "<color=#" + ColorUtility.ToHtmlStringRGB(pc.Munin ? MLine : HLine) + ">" + Plugin.RavenName(pc.Munin) + "</color>" + (extra != null ? "  " + extra : "");
             }
@@ -1633,7 +1797,7 @@ namespace HuginWhispers
         private static Rect PopupRect(Vector2 c, float s)
         {
             // under the feed button (the centre disc's lower edge), never off the screen's bottom
-            float w = 4f * 56f * s + 28f * s, h = 30f * s + 2f * 58f * s + 34f * s;
+            float w = 4f * 56f * s + 28f * s, h = 30f * s + 2f * 58f * s + 50f * s; // (the bottom: two lines, the food and what it gives)
             float y = Mathf.Min(c.y + Centre * s + 8f * s, Screen.height - h - 4f);
             return new Rect(c.x - w * 0.5f, y, w, h);
         }
@@ -1662,7 +1826,7 @@ namespace HuginWhispers
                     if ((n > 0) != (pass == 0)) continue;
                     bool fav = Satiety.IsFav(item, fd.Prefab), known = Satiety.KnownFav(item, fd.Prefab);
                     _foods.Add(fd); _have.Add(n); _favKnown.Add(known); _haveText.Add("×" + n);
-                    _foodLine.Add(Lang.F("<b>{0}{1}</b>  <color=#BFB59A>+{2} ситості · +{3} довіри{4}</color>", fd.Name, (known ? " ★" : ""), Mathf.RoundToInt(Satiety.FillOf(fd, fav)), Satiety.Num(Mathf.Round(Satiety.TrustOf(item, fd, fav) * 10f) / 10f), (n <= 0 ? Lang.T(" · нема в сумці") : "")));
+                    _foodLine.Add(Lang.F("<b>{0}{1}</b>\n<color=#BFB59A>+{2} ситості · +{3} довіри{4}</color>", fd.Name, (known ? " ★" : ""), Mathf.RoundToInt(Satiety.FillOf(fd, fav, item)), Satiety.Num(Mathf.Round(Satiety.TrustOf(item, fd, fav) * 10f) / 10f), (n <= 0 ? Lang.T(" · нема в сумці") : "")));
                 }
         }
 
@@ -1724,7 +1888,7 @@ namespace HuginWhispers
             if (_feedHover >= 0) line = _foodLine[_feedHover];
             else line = _foods.Count == 0 ? Lang.T("Зараз він нічого не їсть.") : Lang.T("<color=#BFB59A>Наведи на їжу.</color>");
             _info.alignment = TextAnchor.MiddleLeft;
-            Label(new Rect(r.x + pad, r.yMax - 30f * s, r.width - pad * 2f, 26f * s), line, _info, Ink, 12f * s);
+            Label(new Rect(r.x + pad, r.yMax - 46f * s, r.width - pad * 2f, 42f * s), line, _info, Ink, 12f * s);
             // the pointer: a little notch under the popup, at the centre
             GUI.color = RavenBook.TipFill;
             GUI.DrawTexture(new Rect(r.center.x - 7f * s, r.yMax - 1f, 14f * s, 7f * s), _notch);
@@ -1801,6 +1965,7 @@ namespace HuginWhispers
             {
                 Piece pc = _pieces[i];
                 if ((pc.Kind == Kind.Trick || pc.Kind == Kind.Chase) && !_tricksOpen) continue; // (not dropped: not there)
+                if (pc.Hidden) continue;
                 if (pc.CR > 0f) { if ((d / s - Dir(pc.A0) * pc.R0).magnitude <= pc.CR + 3f) return i; continue; } // a round button
                 if (pc.Kind == Kind.Power) continue;
                 if (r < pc.R0 || r > pc.R1) continue;
@@ -1824,6 +1989,9 @@ namespace HuginWhispers
             if (!d.TryGetValue(colour, out n)) d[colour] = n = (runes ? "f-ring-" : "f-plain-") + colour;
             return n;
         }
+
+        // the circles' pictures (frames f-*, icons o-*) for other round menus of ours (the NPC menu): one look
+        internal static Texture2D Pic(string name) { return Asset(name); }
 
         private static Texture2D Asset(string name)
         {
@@ -1908,8 +2076,36 @@ namespace HuginWhispers
             Cache.Clear();
             foreach (Texture2D t in new[] { _disc, _notch, _soft, _pointer }) if (t != null) Destroy(t);
             _disc = _notch = _soft = _pointer = null;
+            foreach (Texture2D t in Badges.Values) if (t != null) Destroy(t);
+            Badges.Clear();
             FreeLit(0); FreeLit(1);
             _wingsS = _ticksS = _satS = -1f;
+        }
+
+        // the golden runes' medallion at one pixel size: a gold rim round a dark middle, both edges smoothed over a pixel
+        private static readonly Dictionary<int, Texture2D> Badges = new Dictionary<int, Texture2D>();
+        private static Texture2D BadgeTex(int size, float rim)
+        {
+            Texture2D t;
+            if (Badges.TryGetValue(size, out t) && t != null) return t;
+            t = NewTex(size, size);
+            t.filterMode = FilterMode.Bilinear;
+            Color32[] px = new Color32[size * size];
+            float half = size * 0.5f;
+            Color dark = new Color(0.13f, 0.09f, 0.05f, 0.97f);
+            for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x + 0.5f - half, dy = y + 0.5f - half, r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float outer = Mathf.Clamp01(half - r);         // 1 inside, 0 outside, a pixel of blend
+                    float inner = Mathf.Clamp01(half - rim - r);   // the dark middle
+                    Color c = Color.Lerp(Gold, dark, inner);
+                    c.a = outer * Mathf.Lerp(1f, dark.a, inner);
+                    px[y * size + x] = c;
+                }
+            t.SetPixels32(px); t.Apply(false, true);
+            Badges[size] = t;
+            return t;
         }
 
         internal static float ScaleNow { get { return Mathf.Round(Mathf.Clamp(Screen.height / 1080f, 0.6f, 2f) * 20f) / 20f; } } // in 5% steps: a window being resized does not rebuild the pictures every frame
@@ -2163,7 +2359,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(StoreGui), "IsVisible")]
     internal static class OrdersMenuAsWindowPatch
     {
-        private static void Postfix(ref bool __result) { if (OrdersMenu.Shields) __result = true; }
+        private static void Postfix(ref bool __result)
+        {
+            if (OrdersMenu.Shields) __result = true;
+#if RAVEN_NPC
+            if (NpcMenu.Shields) __result = true; // (the NPC's round menu: the same shield)
+#endif
+        }
     }
 
     // The trader's-window trick does not stop a mouse swing: the game hands the hero its attack, second attack and block
@@ -2173,7 +2375,11 @@ namespace HuginWhispers
     {
         private static void Prefix(Player __instance, ref bool attack, ref bool attackHold, ref bool secondaryAttack, ref bool secondaryAttackHold, ref bool block, ref bool blockHold)
         {
-            if (!OrdersMenu.Shields || __instance != Player.m_localPlayer) return;
+            bool shield = OrdersMenu.Shields;
+#if RAVEN_NPC
+            shield |= NpcMenu.Shields;
+#endif
+            if (!shield || __instance != Player.m_localPlayer) return;
             attack = attackHold = secondaryAttack = secondaryAttackHold = block = blockHold = false;
         }
     }

@@ -8,14 +8,17 @@ namespace HuginWhispers
 {
     // «Заслона Муніна»: a wall of runes in front of you that takes a monster's blow from the front, whatever its size
     // (a two-star wolf that would kill you does not), with all of it: no damage, no push, no poison, no stagger. A blow
-    // that would have staggered you staggers the one who struck instead. One blow, two from trust level 6, three at 7;
-    // two minutes. A perfect parry of your own keeps the charge: the game parries it, unless that parry would stagger you.
+    // that would have staggered you staggers the one who struck instead. Two blows, three from trust level 6, four at 7;
+    // two minutes. A light blow (under FreeShare of your health, no stagger in it) it takes without spending a charge,
+    // so the small fry don't wear it out before the blow it was raised for. A perfect parry of your own keeps the charge
+    // too: the game parries it, unless that parry would stagger you.
     // The blow lands in the game of the one struck (Character.RPC_Damage runs on the owner), so all of it is decided
     // here; the others only draw it: the charges in the player's ZDO, a message for each blow taken.
     internal static class Ward
     {
         internal static float Seconds = 120f;
-        internal static int UnlockLevel = 4, TwoBlowsAt = 6, ThreeBlowsAt = 7;
+        internal static int UnlockLevel = 4, Blows = 2, ThreeBlowsAt = 6, FourBlowsAt = 7;
+        internal static float FreeShare = 0.1f; // a blow under this share of your health takes no charge
         internal static float FrontDegrees = 180f;           // the whole front half
         internal static float PushForce = 40f, PushReach = 5f; // the one who struck is pushed back (not a boss, not from afar)
         internal static bool ShowNumber = true;              // the blow's damage over you in red, as the game shows a hit taken
@@ -27,7 +30,7 @@ namespace HuginWhispers
         private const string HitRpc = "RavenWatch_WardHit";
 
         internal static float Duration() { return Trust.RoundTime(Seconds * GearFx.GuardMul(true) * GiftUp.Power("ward")); } // (Спіраль захисту: longer)
-        internal static int BlowsAt(int level) { return level >= ThreeBlowsAt ? 3 : level >= TwoBlowsAt ? 2 : 1; }
+        internal static int BlowsAt(int level) { return level >= FourBlowsAt ? Blows + 2 : level >= ThreeBlowsAt ? Blows + 1 : Blows; }
 
         private static int _charges, _max;
         private static double _until;
@@ -106,6 +109,7 @@ namespace HuginWhispers
             if (_charges > 0 && (p == null || p.IsDead() || _until <= Now))
             {
                 bool timeUp = p != null && !p.IsDead();
+                if (timeUp) Twists.Shards(p, 0.5f); // (III: faded with charges left, its runes fly too, at half)
                 _charges = 0;
                 if (p != null) Publish(p);
                 if (timeUp) RavenSkills.GiftSay(true, "ward_end", Lang.T("Все, заслона здулася. Далі {сам|сама}."));
@@ -154,9 +158,21 @@ namespace HuginWhispers
             if (parry) stagger = true;
             if (damage <= 0.1f && !stagger && hit.m_statusEffectHash == 0) return false; // nothing in it to stop
 
+            if (!stagger && damage < p.GetMaxHealth() * FreeShare) // a light blow: stopped, the charge kept
+            {
+                if (hit.m_ranged && !attacker.IsPlayer() && Facets.On("ward")) Reflect(p, hit, attacker);
+                Twists.Thorn(p, hit, attacker);
+                if (ShowNumber) Number(hit.m_point != Vector3.zero ? hit.m_point : p.GetCenterPoint() + from * 0.6f, damage);
+                WardLook light = WardLook.For(p, false);
+                if (light != null) light.Glint();
+                return true;
+            }
+
             _charges--;
             Publish(p);
             if (hit.m_ranged && !attacker.IsPlayer() && Facets.On("ward")) Reflect(p, hit, attacker); // («Заслона Муніна» III)
+            Twists.Thorn(p, hit, attacker); // (II: a close blow half back)
+            if (_charges <= 0) Twists.Shards(p); // (III: broken, its runes fly ahead)
             Vector3 away = Flat(attacker.transform.position - p.transform.position, from);
             if (stagger) attacker.Stagger(away);
             if (!attacker.IsBoss() && !attacker.IsPlayer() && PushForce > 0f && Vector3.Distance(attacker.transform.position, p.transform.position) <= PushReach) Push(attacker, away);
@@ -582,7 +598,7 @@ namespace HuginWhispers
         {
             int max;
             Ward.Shown(_p, out max);
-            max = Mathf.Clamp(max, 1, 3);
+            max = Mathf.Clamp(max, 1, 4);
             for (int i = 0; i < max; i++)
             {
                 GameObject go = new GameObject("charge");

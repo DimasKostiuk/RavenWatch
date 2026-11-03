@@ -1,8 +1,9 @@
-#if RAVEN_ITEM && RAVEN_STORY
+#if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using UnityEngine;
 
 namespace HuginWhispers
 {
@@ -16,6 +17,7 @@ namespace HuginWhispers
         public readonly List<string> Flags = new List<string>();
         public readonly Dictionary<string, int> Vars = new Dictionary<string, int>();
         public readonly Dictionary<string, string> Quests = new Dictionary<string, string>(); // id → active | done | failed
+        public readonly Dictionary<string, string> Stages = new Dictionary<string, string>(); // id → the stage it stands at (StoryQuests)
         private readonly List<KeyValuePair<string, string>> _other = new List<KeyValuePair<string, string>>();
 
         internal string Code()
@@ -24,6 +26,7 @@ namespace HuginWhispers
             if (Flags.Count > 0) sb.Append(";f=").Append(string.Join("+", Flags.ToArray()));
             foreach (KeyValuePair<string, int> kv in Vars) sb.Append(";n.").Append(kv.Key).Append('=').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
             foreach (KeyValuePair<string, string> kv in Quests) sb.Append(";q.").Append(kv.Key).Append('=').Append(kv.Value);
+            foreach (KeyValuePair<string, string> kv in Stages) sb.Append(";s.").Append(kv.Key).Append('=').Append(kv.Value);
             foreach (KeyValuePair<string, string> kv in _other) sb.Append(';').Append(kv.Key).Append('=').Append(kv.Value);
             return sb.ToString();
         }
@@ -41,6 +44,7 @@ namespace HuginWhispers
                 if (k == "f") { foreach (string f in v.Split('+')) if (f.Length > 0 && !s.Flags.Contains(f)) s.Flags.Add(f); }
                 else if (k.StartsWith("n.") && k.Length > 2) s.Vars[k.Substring(2)] = Errands.I(v, 0);
                 else if (k.StartsWith("q.") && k.Length > 2) s.Quests[k.Substring(2)] = v;
+                else if (k.StartsWith("s.") && k.Length > 2) s.Stages[k.Substring(2)] = v;
                 else s._other.Add(new KeyValuePair<string, string>(k, v));
             }
             return s;
@@ -94,7 +98,7 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- numbers
         internal static int Var(Player p, string n) { int v; return p != null && Of(p).Vars.TryGetValue(n, out v) ? v : 0; }
 
-        internal static void SetVar(Player p, string n, int v)
+        internal static void SetVar(Player p, string n, int v, bool quiet = false)
         {
             if (p == null || !GoodName(n)) return;
             StoryState s = Of(p);
@@ -102,7 +106,7 @@ namespace HuginWhispers
             if (s.Vars.TryGetValue(n, out old) && old == v) return;
             if (v == 0) s.Vars.Remove(n); else s.Vars[n] = v; // (0 is the same as never set)
             Save(p, s);
-            Log("var " + n + " = " + v);
+            if (!quiet) Log("var " + n + " = " + v);
         }
 
         internal static void AddVar(Player p, string n, int d) { SetVar(p, n, Var(p, n) + d); }
@@ -123,7 +127,28 @@ namespace HuginWhispers
             Log("quest " + id + " → " + (string.IsNullOrEmpty(state) ? "(forgotten)" : state));
         }
 
+        // the stage a quest stands at ("" none)
+        internal static string StageOf(Player p, string id) { string v; return p != null && Of(p).Stages.TryGetValue(id, out v) ? v : ""; }
+
+        internal static void SetStage(Player p, string id, string stage)
+        {
+            if (p == null || !GoodName(id)) return;
+            StoryState s = Of(p);
+            if (string.IsNullOrEmpty(stage)) { if (!s.Stages.Remove(id)) return; }
+            else { string old; if (s.Stages.TryGetValue(id, out old) && old == stage) return; s.Stages[id] = stage; }
+            Save(p, s);
+            Log("stage " + id + " → " + (string.IsNullOrEmpty(stage) ? "(none)" : stage));
+        }
+
         // ---------------------------------------------------------------- small things
+        // a file name the author's tools may write (letters, digits, _ - . and .txt at the end; no folders)
+        internal static bool GoodFile(string f)
+        {
+            if (string.IsNullOrEmpty(f) || !f.EndsWith(".txt") || f.Length > 60) return false;
+            foreach (char c in f) if (!(char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == '.')) return false;
+            return f.IndexOf("..") < 0;
+        }
+
         internal static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Story: " + s); }
 
         internal static string Describe(Player p)
@@ -146,6 +171,14 @@ namespace HuginWhispers
         {
             if (p == null) return "Нема гравця.";
             string what = a.Length > 1 ? a[1].ToLowerInvariant() : "";
+#if RAVEN_STORY
+            if (what.Length == 0 || what == "ui") { if (!Blueprint.On) return "Вікно сюжету спить: немає теки " + Blueprint.Root; StoryPanel.Toggle(); return StoryPanel.Said(); }
+#else
+            if (what.Length == 0 || what == "ui") return Describe(p); // (the story's window: from 3.0)
+#endif
+#if RAVEN_STORY
+            if (what == "people" || what == "heid") return StoryPeople.Describe(p, what == "heid" ? "heid" : (a.Length > 2 ? a[2] : "")); // (where the story's people are, and why)
+#endif
             string name = a.Length > 2 ? a[2] : "";
             switch (what)
             {
@@ -176,13 +209,74 @@ namespace HuginWhispers
                     if (a.Length < 3) return "raven story raise <подія> [arg] [число]";
                     StoryBus.Raise(a[2], a.Length > 3 ? a[3] : "", a.Length > 4 ? Errands.I(a[4], 0) : 0);
                     return StoryBus.Describe();
+#if RAVEN_STORY
+                case "quests": StoryQuests.Reload(); return StoryPanel.TrackText(p);
+                case "start":
+                case "jump":
+                case "forget":
+                    {
+                        StoryQuests.QuestDef q = StoryQuests.Find(name);
+                        if (q == null) return "raven story " + what + " <квест>" + (what == "jump" ? " <етап>" : "") + " — нема квесту «" + name + "»";
+                        if (what == "start") StoryQuests.Start(p, q);
+                        else if (what == "forget") StoryQuests.Forget(p, q);
+                        else { if (a.Length < 4) return "raven story jump <квест> <етап>"; StoryQuests.Jump(p, q, a[3]); }
+                        return StoryPanel.TrackText(p);
+                    }
+                case "bird":
+                    {
+                        if (StoryBird.Live.Count == 0) return "Сюжетних воронів нема.";
+                        StringBuilder sb = new StringBuilder("Сюжетні ворони (" + StoryBird.Live.Count + "):");
+                        foreach (StoryBird b in StoryBird.Live) if (b != null) sb.Append("\n  ").Append(b.Describe());
+                        return sb.ToString();
+                    }
+                case "scene":
+                    {
+                        if (name == "stop") { StoryScenes.Stop("автор"); return "Сцену зупинено."; }
+                        if (name == "reload") { StoryFiles.Again(); StoryScenes.Reload(); StoryQuests.Reload(); return "Перечитано: сцен " + StoryScenes.Scenes.Count + ", проблем " + StoryScenes.Errors.Count + "; квестів " + StoryQuests.Quests.Count + ", проблем " + StoryQuests.Errors.Count + "."; } // (the author: files changed outside the game)
+                        StoryScenes.SceneDef sc = StoryScenes.Find(name);
+                        if (sc == null) return "raven story scene <id>|stop|reload — нема сцени «" + name + "»";
+                        StoryScenes.Play(sc);
+                        return "Сцена «" + name + "» пішла.";
+                    }
+                case "world":
+                    if (name == "clear") return "Світових ключів сюжету стерто: " + StoryWorld.Clear();
+                    if (name.Length > 0) StoryWorld.SetFlag(name.TrimStart('!'), !name.StartsWith("!"));
+                    return "Світ: " + string.Join(", ", StoryWorld.All().ToArray());
+                case "played":
+                    StoryTrackConds.AddMinutes(p, Errands.I(name, 10));
+                    return "Зіграно хвилин: " + StoryTrackConds.Played(p) / 60;
+                case "where":
+                case "tp":
+                    {
+                        Vector3 at;
+                        if (!StoryWhere.Find(name, out at)) return "raven story " + what + " <місце> — нема місця «" + name + "» (hall, hall.<назва>, torvald, prologue_house, prologue_munin, мітка автора…)";
+                        string xyz = Mathf.RoundToInt(at.x) + " " + Mathf.RoundToInt(at.y) + " " + Mathf.RoundToInt(at.z);
+                        if (what == "where") return name + ": " + xyz + ", " + Mathf.RoundToInt(Utils.DistanceXZ(at, p.transform.position)) + " м від тебе";
+                        float y = ZoneSystem.instance != null ? Mathf.Max(at.y, ZoneSystem.instance.GetGroundHeight(at)) : at.y;
+                        p.TeleportTo(new Vector3(at.x, y + 1f, at.z), p.transform.rotation, true); // (the author's test: there at once)
+                        return "До «" + name + "»: " + xyz;
+                    }
+                case "mark":
+                    if (!GoodName(name)) return "raven story mark <назва>   (мітка автора тут, де стоїш: як F9 → «Поставити мітку тут»)";
+                    return StoryPlaces.Set(name, p.transform.position, p.transform.eulerAngles.y);
+                case "npcravens": return NpcRaven.Describe();
+                case "raventrace": NpcRaven.Trace = !NpcRaven.Trace; return "Польоти воронів людей у лог: " + (NpcRaven.Trace ? "так" : "ні");
+                case "own":
+                case "unown":
+                    {
+                        if (name != "hugin" && name != "munin" && !(what == "unown" && name == "both")) return "raven story own hugin|munin · unown hugin|munin|both";
+                        if (what == "own") { StoryOwn.Return(p, name == "munin"); return "Свій " + (name == "munin" ? "Мунін" : "Хугін") + " летить (є вже такий — зіллється з ним)."; }
+                        if (name == "both") return StoryOwn.Unown(p, false) + "\n" + StoryOwn.Unown(p, true);
+                        return StoryOwn.Unown(p, name == "munin");
+                    }
+#endif
                 case "reset":
                     p.m_customData.Remove(Key);
                     Reset(); Version++;
                     Log("reset for " + p.GetPlayerName());
                     return "Сюжет персонажа стерто.";
             }
-            return Describe(p) + "\nraven story flag|unflag x · var x N|+N|-N · quest x active|done|failed|- · check <умови> · conds · events · trace · raise <подія> [arg] [N] · reset";
+            return Describe(p) + "\nraven story flag|unflag x · var x N|+N|-N · quest x active|done|failed|- · check <умови> · conds · events · trace · raise <подія> [arg] [N] · reset · quests · start|forget <квест> · jump <квест> <етап> · scene <id>|stop|reload · world [x|!x|clear] · played [+хв] · own hugin|munin · unown hugin|munin|both · npcravens · raventrace · where|tp <місце> · mark <назва>";
         }
     }
 }

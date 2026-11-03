@@ -57,9 +57,11 @@ namespace HuginWhispers
         internal static void Show(GameObject talker, Vector3 offset, float range, float seconds, bool munin, string name, string text, bool dockable)
         {
             if (talker == null || string.IsNullOrEmpty(text)) return;
-            int voice = RavenVoice.VoiceOf(dockable ? Player.m_localPlayer : null, munin, talker);
+            bool copy;
+            int voice = Shared.IsCopy(talker, out copy) ? RavenVoice.BigVoice(munin) : RavenVoice.VoiceOf(dockable ? Player.m_localPlayer : null, munin, talker); // (another player's big raven: the big raven's voice)
             SpeechCard card = null;
-            bool voiced = RavenVoice.Say(talker, munin, voice, text, s => Voiced(card, seconds, s));
+            // (a big raven of the game is voiced by RavenVoice.SayBig in its own voice: the card only shows the words)
+            bool voiced = voice >= 0 && talker.GetComponent<Raven>() == null && RavenVoice.Say(talker, munin, voice, text, s => Voiced(card, seconds, s));
             card = ShowNow(talker, offset, range, seconds, munin, name, text, dockable);
             if (voiced && card != null) card.Typing();
         }

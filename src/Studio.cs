@@ -141,13 +141,22 @@ namespace HuginWhispers
                     case "ytakeoff": job = HeroTakeoff(Arg(a, 1, "ytakeoff"), Num(a, 2, 2.6f), Num(a, 3, 10f), Arg(a, 4, "side,front,three")); break;
                     case "armor": Log(line, Armour(Arg(a, 1, "none"))); break;
                     case "armors": Log(line, Armours()); break;
-                    case "yreload": PlayerAnims.Load(); Log(line, "player clips read again: " + PlayerAnims.Clips.Count); break;
+                    case "react": Log(line, PlayerReact.Studio(Arg(a, 1, "ear"), Arg(a, 2, "h").StartsWith("m"))); break;
+                    case "arm": Log(line, ArmPerch.Studio(Arg(a, 1, "up"), Arg(a, 2, "h").StartsWith("m"))); break;
+                    case "yreload": BodyClips.Load(); Log(line, "player clips read again: " + BodyClips.Clips.Count); break;
                     case "set": Log(line, Field(Arg(a, 1, ""), Arg(a, 2, null))); break;
                     case "get": Log(line, Field(Arg(a, 1, ""), null)); break;
                     case "wear": Log(line, Outfits.StudioWear(Arg(a, 1, "h").StartsWith("m"), Arg(a, 2, "back"), Arg(a, 3, "-"))); break;
                     case "fits": Log(line, Outfits.StudioFits()); break;
                     case "photo": job = Photo(Arg(a, 1, ""), Num(a, 2, float.NaN), Num(a, 3, float.NaN), Num(a, 4, float.NaN)); break;
                     case "reload": SitTemplates.Load(); Log(line, "templates read again: " + SitTemplates.All.Count); break;
+#if RAVEN_NPC
+                    case "nlook": job = NpcLook(Arg(a, 1, "nlook"), Arg(a, 2, "near"), Arg(a, 3, "front,side,back")); break;
+                    case "nprobe": job = NpcProbe(Arg(a, 1, "nprobe"), Arg(a, 2, "near"), Num(a, 3, 2f)); break;
+                    case "nattach": Log(line, NpcAttach(Arg(a, 1, ""))); break;
+                    case "hover": Log(line, Hover()); break;
+                    case "nfilm": job = NpcFilm(Arg(a, 1, "nfilm"), Arg(a, 2, "near"), Num(a, 3, 4f), Num(a, 4, 2f), Arg(a, 5, "front,side")); break;
+#endif
                     default: Log(line, "unknown command"); break;
                 }
             }

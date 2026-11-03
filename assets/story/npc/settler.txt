@@ -1,0 +1,7 @@
+# Поселенець (NpcSettlers): ім'я, вигляд і вік кожному свої — мод робить їх сам; тут лише спільне.
+[npc settler]
+name: Поселенець
+body: human
+generated: yes
+fight: wary
+greet: {@see_player}

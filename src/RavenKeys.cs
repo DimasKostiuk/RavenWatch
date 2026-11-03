@@ -133,6 +133,11 @@ namespace HuginWhispers
         internal static void Update()
         {
             if (Entries.Count == 0 || RavenBook.Capturing || RavenBook.JustBound || OrdersMenu.Capturing || OrdersMenu.JustBound || Typing()) return;
+#if RAVEN_NPC
+            // a person under the pointer (or a place picked for it): its menu, not the gifts — with a raven of your own or not
+            Player me0 = Player.m_localPlayer;
+            if (Pressed(Get(GiftsId)) && !OrdersMenu.IsOpen && (NpcMenu.IsOpen || Free()) && !(me0 != null && me0.InPlaceMode()) && NpcMenu.Key(Get(GiftsId).MainKey)) return;
+#endif
             // no raven of its own yet: nobody to send, the keys stay quiet (G → Ворони still opens everything); what is open closes on its key
             Player own = Player.m_localPlayer;
             if (!Trust.Bonded(own))

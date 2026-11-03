@@ -16,7 +16,7 @@ namespace HuginWhispers
         internal static bool Enabled = true;
         internal static float Cost = 50f;
         internal static float CooldownMinutes = 10f;
-        internal static float SafeSeconds = 4f;
+        internal static float SafeSeconds = 4f, SafeSecondsTop = 8f; // at the level it opens on and at the top one
 
         private static float _safeUntil;
         // when Hugin can save you again: kept in the character, in world time, so leaving the game does not reset it
@@ -39,7 +39,7 @@ namespace HuginWhispers
 
         // its wait as it is now: trust shortens it (and «Спіраль захисту»); the golden runes on top (RavenAbilities, Guard)
         internal static float Cooldown() { return Trust.Sooner(false, CooldownMinutes * 60f * GearFx.GuardCooldownMul(false)); }
-        internal static float Safe() { return SafeSeconds * GearFx.GuardMul(false) * GiftUp.Power("lastchance"); } // (Спіраль захисту: longer)
+        internal static float Safe() { return Trust.LerpFrom(false, RavenAbilities.StrongUnlock, SafeSeconds, SafeSecondsTop) * GearFx.GuardMul(false) * GiftUp.Power("lastchance"); } // (Спіраль захисту: longer)
 
         // the game is about to set this health; returns the health it should set instead
         internal static float Guard(Character c, float health)
@@ -60,6 +60,7 @@ namespace HuginWhispers
                 WorldTime.Set(p.m_customData, Key, wait);
                 Fire(p, false);
                 Nicks.OnSaved(p); // a deed for Hugin's nickname
+                Twists.Lesson(p, WeakPassive.LastFoe != null && Time.time - WeakPassive.LastHit < 1f ? WeakPassive.LastFoe : null); // («Останній шанс» II)
                 p.Message(MessageHud.MessageType.TopLeft, Lang.F("Останній шанс: Хугін відпочиватиме {0}", RavenAbilities.Span(wait)));
                 return Facets.On("lastchance") ? Mathf.Max(1f, p.GetMaxHealth() * 0.25f) : 1f; // («Останній шанс» III: a quarter of health)
             }

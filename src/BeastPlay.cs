@@ -102,12 +102,14 @@ namespace HuginWhispers
             return t != null && t.Animal != null && t.Animal.IsTamed() ? t.Animal : null;
         }
 
-        // the perch key (RavenKeys): your beast in sight → a game; else the perch as ever
+        // the perch key (RavenKeys): your beast in sight → a game; you in the water → a wash; else the perch as ever
         internal static void PerchOrPlay(Player p, bool munin)
         {
             ItemDrop.ItemData item = RavenSeat.On(p, munin);
             Character beast = item != null && !Perches.On(item) ? Aimed(p, munin) : null;
-            if (beast != null) Order(p, munin, beast); else Perches.Order(p, munin);
+            if (beast != null) Order(p, munin, beast);
+            else if (item != null && !Perches.On(item) && Bath.Wading(p)) { string why = WorldVisit.HandWash(p, munin); if (why != null) RavenMsg.Center(p, why); } // (standing in the water: you wash it)
+            else Perches.Order(p, munin);
         }
 
         private static Game Begin(Player p, bool munin, Character beast, bool ordered)
@@ -153,7 +155,7 @@ namespace HuginWhispers
         {
             Norov.Character c = Norov.CharOf(raven);
             string id = c != null ? c.Id : "";
-            float w = id == "bold" ? 0.7f : id == "fidget" ? 0.6f : id == "calm" ? 0.4f : 0.5f;
+            float w = id == "bold" || id == "huntsman" ? 0.7f : id == "fidget" ? 0.6f : id == "curious" ? 0.55f : id == "calm" || id == "tender" ? 0.4f : 0.5f;
             if (kind == "lox" || kind == "hen") w += 0.25f;
             else if (kind == "wolf") w -= 0.15f;
             return Mathf.Clamp01(w);
@@ -191,7 +193,7 @@ namespace HuginWhispers
         {
             Norov.Character c = Norov.CharOf(item);
             string id = c != null ? c.Id : "";
-            return id == "fidget" || id == "bold" ? 1.5f : id == "calm" ? 0.6f : 1f;
+            return id == "fidget" || id == "bold" ? 1.5f : id == "curious" || id == "huntsman" ? 1.3f : id == "tender" ? 1.2f : id == "calm" || id == "grumpy" ? 0.6f : id == "proud" ? 0.4f : 1f; // («Гордій»: no muddy games)
         }
 
         private static Character NearBeast(Player p)
@@ -276,6 +278,7 @@ namespace HuginWhispers
             Clear(p, g.Munin);
             if (!through || g.Beast == null) return;
             Trust.Played(g.Munin, Lang.T("гра зі звіром"));
+            Nicks.OnBeastPlay(p, g.Munin); // a deed for its nickname
             Tameable tm = g.Beast.GetComponent<Tameable>();
             ZNetView nv = g.Beast.GetComponent<ZNetView>();
             if (tm == null || nv == null || !nv.IsValid() || !nv.IsOwner() || ZNet.instance == null) return;

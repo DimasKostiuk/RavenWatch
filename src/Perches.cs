@@ -70,19 +70,23 @@ namespace HuginWhispers
             internal bool Tree;           // «Вороняче дерево» (use: tree): put in the world by the server, not built, never broken (RavenTree)
             internal bool Guard;          // «Вартова жердина» (use: guard): the raven left on it is on guard (Home)
             internal bool Feeder;         // «Годівниця» (use: feeder): a box the ravens at home eat from (Home), no seats
+            internal bool Heart;          // «Серце оселі» (use: heart): a settlement's centre for the NPCs (NpcHeart), no seats
+            internal bool Story;          // a building of the story (use: story — the Hall of the Watch): no seats, no cost, unbreakable; in the hammer only for the author
             internal float Feed = 1f;     // a feeder's thrift: the same food fills this much more from it ("feed:")
         }
 
         // «Стіл ворона»: a Workshop model marked "use: station" becomes a crafting station of its own (E opens the
         // crafting window, as at the workbench). Things for the ravens are made at it (RavenGear, later).
         internal const string TableUse = "station";
-        internal const string NestUse = "nest", TreeUse = "tree";
+        internal const string NestUse = "nest", TreeUse = "tree", HeartUse = "heart", StoryUse = "story";
 
         internal static readonly List<Def> Defs = new List<Def>();    // the perches
         internal static readonly List<Def> Tables = new List<Def>();  // the raven tables
         internal static readonly List<Def> Nests = new List<Def>();   // the ravens' nests (Odin's errands)
         internal static readonly List<Def> Trees = new List<Def>();   // the raven trees in the world (mixing runes)
         internal static readonly List<Def> Feeders = new List<Def>(); // the feeders (Home)
+        internal static readonly List<Def> Hearts = new List<Def>();  // «Серце оселі» (NpcHeart; story builds only)
+        internal static readonly List<Def> Stories = new List<Def>(); // the story's buildings (assets/story: the Hall of the Watch; 2.9+ builds)
         private static readonly List<Def> All = new List<Def>();      // both: built, put in the hammer, photographed alike
         private static readonly Dictionary<string, Def> ByPrefab = new Dictionary<string, Def>();
         private static GameObject _holder;
@@ -116,7 +120,7 @@ namespace HuginWhispers
         {
             if (_loaded) return;
             _loaded = true;
-            Defs.Clear(); Tables.Clear(); Nests.Clear(); Trees.Clear(); Feeders.Clear(); All.Clear(); ByPrefab.Clear();
+            Defs.Clear(); Tables.Clear(); Nests.Clear(); Trees.Clear(); Feeders.Clear(); Hearts.Clear(); Stories.Clear(); All.Clear(); ByPrefab.Clear();
             List<WsModel> models = new List<WsModel>();
             try
             {
@@ -133,19 +137,25 @@ namespace HuginWhispers
                 foreach (string f in WsFiles.List()) { WsModel m = WsFiles.Load(f); if (m != null) models.Add(m); }
             foreach (WsModel m in models)
             {
-                bool table = m.Use == TableUse, nest = m.Use == NestUse, tree = m.Use == TreeUse, guard = m.Use == GuardUse, feeder = m.Use == FeederUse;
-                if (!IsPerchUse(m.Use) && !table && !nest && !tree && !feeder) continue;
-                if (!table && !feeder && m.Seats == 0) { Log(m.Name + ": no raven seat, left out"); continue; }
+                bool table = m.Use == TableUse, nest = m.Use == NestUse, tree = m.Use == TreeUse, guard = m.Use == GuardUse, feeder = m.Use == FeederUse, heart = m.Use == HeartUse, story = m.Use == StoryUse;
+#if !(RAVEN_ITEM && RAVEN_NPC)
+                if (heart) continue; // (the people: only in their builds, 2.9+)
+#endif
+#if !(RAVEN_ITEM && RAVEN_NPC)
+                if (story) continue; // (the Hall of the Watch: from 2.9, with the people)
+#endif
+                if (!IsPerchUse(m.Use) && !table && !nest && !tree && !feeder && !heart && !story) continue;
+                if (!table && !feeder && !heart && !story && m.Seats == 0) { Log(m.Name + ": no raven seat, left out"); continue; }
                 Def d = new Def();
-                d.Table = table; d.Nest = nest; d.Tree = tree; d.Guard = guard; d.Feeder = feeder; d.Feed = m.Feed > 0f ? m.Feed : 1f;
+                d.Table = table; d.Nest = nest; d.Tree = tree; d.Guard = guard; d.Feeder = feeder; d.Heart = heart; d.Story = story; d.Feed = m.Feed > 0f ? m.Feed : 1f;
                 d.Id = string.IsNullOrEmpty(m.Id) ? IdFor(m.Name) : m.Id;
-                d.Prefab = (table ? "RavenWatch_table_" : nest ? "RavenWatch_nest_" : tree ? "RavenWatch_tree_" : feeder ? "RavenWatch_feeder_" : "RavenWatch_perch_") + d.Id;
+                d.Prefab = (table ? "RavenWatch_table_" : nest ? "RavenWatch_nest_" : tree ? "RavenWatch_tree_" : feeder ? "RavenWatch_feeder_" : heart ? "RavenWatch_heart_" : story ? "RavenWatch_story_" : "RavenWatch_perch_") + d.Id;
                 d.Name = m.Name; d.Note = m.Note; d.Cost = string.IsNullOrEmpty(m.Cost) ? DefaultCost : m.Cost;
                 d.Model = m; d.Pose = m.Pose; d.Stand = m.Stand; d.PerDay = m.PerDay > 0f ? m.PerDay : DailyCap; d.Wall = m.Wall; d.Station = string.IsNullOrEmpty(m.Station) ? "piece_workbench" : m.Station;
                 Def old;
-                if (ByPrefab.TryGetValue(d.Prefab, out old)) { Defs.Remove(old); Tables.Remove(old); Nests.Remove(old); Trees.Remove(old); Feeders.Remove(old); All.Remove(old); } // a file of the same id wins over the built-in one
+                if (ByPrefab.TryGetValue(d.Prefab, out old)) { Defs.Remove(old); Tables.Remove(old); Nests.Remove(old); Trees.Remove(old); Feeders.Remove(old); Hearts.Remove(old); Stories.Remove(old); All.Remove(old); } // a file of the same id wins over the built-in one
                 ByPrefab[d.Prefab] = d;
-                (table ? Tables : nest ? Nests : tree ? Trees : feeder ? Feeders : Defs).Add(d);
+                (table ? Tables : nest ? Nests : tree ? Trees : feeder ? Feeders : heart ? Hearts : story ? Stories : Defs).Add(d);
                 All.Add(d);
             }
             Log(Defs.Count + " perch model(s), " + Tables.Count + " raven table(s), " + Nests.Count + " nest(s), " + Feeders.Count + " feeder(s)" + (FromFiles ? " (with the Workshop's files)" : ""));
@@ -225,15 +235,30 @@ namespace HuginWhispers
             GameObject hammer = db.GetItemPrefab("Hammer");
             ItemDrop drop = hammer != null ? hammer.GetComponent<ItemDrop>() : null;
             PieceTable table = drop != null ? drop.m_itemData.m_shared.m_buildPieces : null;
-            if (table != null) table.m_pieces.RemoveAll(g => g == null || ((g.name.StartsWith("RavenWatch_perch_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_table_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_nest_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_feeder_", StringComparison.Ordinal)) && DefOf(g.name) == null) || (DefOf(g.name) != null && DefOf(g.name).Built != g));
+            if (table != null) table.m_pieces.RemoveAll(g => g == null || ((g.name.StartsWith("RavenWatch_perch_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_table_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_nest_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_feeder_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_heart_", StringComparison.Ordinal) || g.name.StartsWith("RavenWatch_story_", StringComparison.Ordinal)) && DefOf(g.name) == null) || (DefOf(g.name) != null && DefOf(g.name).Built != g));
             foreach (Def d in All)
             {
                 if (d.Built == null || d.Tree) continue; // (the trees are no pieces you build)
                 Piece piece = d.Built.GetComponent<Piece>();
+                if (d.Story) // (the story's: free, and in the hammer only for the author — config/RavenWatch/blueprints, as Blueprint)
+                {
+                    piece.m_resources = new Piece.Requirement[0];
+                    bool author = StoryAuthor;
+                    if (table != null && author && !table.m_pieces.Contains(d.Built)) table.m_pieces.Add(d.Built);
+                    if (table != null && !author) table.m_pieces.Remove(d.Built);
+                    continue;
+                }
                 if (piece.m_resources == null || piece.m_resources.Length < CostCount(d.Cost)) piece.m_resources = Costs(db, d.Cost); // (again while a part is missing: our goods, WsItems, may come later)
                 if (table != null && !table.m_pieces.Contains(d.Built)) table.m_pieces.Add(d.Built);
             }
         }
+
+        // the author of the story (its tools awake): the folder config/RavenWatch/blueprints exists — players never have it
+#if RAVEN_ITEM && RAVEN_NPC
+        internal static bool StoryAuthor { get { return System.IO.Directory.Exists(Blueprint.Root); } }
+#else
+        internal static bool StoryAuthor { get { return false; } }
+#endif
 
         private static int CostCount(string cost) { return (cost ?? "").Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Length; }
 
@@ -271,17 +296,21 @@ namespace HuginWhispers
             Piece piece = root.AddComponent<Piece>();
             piece.m_name = Lang.W(d.Name);
             // the model's own words, then what it gives (from its norm, so the numbers never go stale), then the keys
-            if (d.Nest)
+            if (d.Story)
+                piece.m_description = Lang.T(string.IsNullOrEmpty(d.Note) ? "Сюжетна будівля." : d.Note.TrimEnd('.') + ".") + "\n<color=#e0b860>" + Lang.T("Сюжетна будівля Зали Варти: лише для автора, гравці її не будують.") + "</color>";
+            else if (d.Heart)
+                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nСерце поселення: дай йому назву (Shift+E) — і найманих людей можна буде послати сюди, вони прийдуть самі й оселяться тут (до {1} людей). На дошці (E) — хто тут живе і чого бракує. Ударом не зламати, лише молотом розібрати.", (string.IsNullOrEmpty(d.Note) ? Lang.T("Серце оселі.") : Lang.T(d.Note).TrimEnd('.') + "."), 10));
+            else if (d.Nest)
                 piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nПосади в гніздо воронів і чекай: коли над ним засяє золото, Одін змилувався — зазирни в чашу внизу. Раз на день він дає доручення, а за виконані — руни.{1}", (string.IsNullOrEmpty(d.Note) ? Lang.T("Гніздо для воронів.") : Lang.T(d.Note).TrimEnd('.') + "."), Lang.T("\nСтавиться лише просто неба, не під дахом.")));
             else if (d.Feeder)
                 piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nСюди кладуть їжу для воронів, що лишились удома на жердинах поруч (до {1} м): Муніну — будь-яке м'ясо, Хугіну — рибу, ягоди, гриби, овочі й страви з них. Що поживніша їжа, то довше ворон ситий. Лише ситий ворон вилітає на ворогів, швидше набирається сили й приносить сюди знахідки; без їжі він полює сам, але лишається голодним, а за кілька днів без годівниці сумує й тратить довіру.{2}", (string.IsNullOrEmpty(d.Note) ? Lang.T("Годівниця для воронів.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(Home.FeederReach), (d.Feed > 1.001f ? Lang.F("\nЦя годівниця ощадливіша: та сама їжа з неї насичує в {0} раза більше.", Lang.Num(d.Feed, "0.##")) : "")));
             else if (d.Guard)
-                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nВорон лишається на ній на варті. Обживається {1} хв, а тоді б'є розлючених ворогів, яких бачить, до {2} м. Б'є із запасу варти, що набирається тут першим (до половини його сили): удар — {3}. Ставлять її надворі: відкрите небо заряду не шкодить. Покликати ворона звідси не можна — лише прийти й забрати.{4}\nВзаємодія — лишити на варті Хугіна, із Shift — Муніна.", (string.IsNullOrEmpty(d.Note) ? Lang.T("Вартова жердина.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(Home.SettleSeconds / 60f), Mathf.RoundToInt(Home.GuardRadius), Mathf.RoundToInt(Home.GuardCost), (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : "")));
+                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nВорон лишається на ній на варті. Обживається {1} хв, а тоді б'є розлючених ворогів, яких бачить, до {2} м. Б'є із запасу варти, що набирається тут першим (до половини його сили): удар — {3}. Ставлять її надворі: відкрите небо заряду не шкодить. Покликати ворона звідси не можна — лише прийти й забрати.{4}\nВзаємодія — лишити на варті Хугіна, із Shift — Муніна.", (string.IsNullOrEmpty(d.Note) ? Lang.T("Вартова жердина.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(Home.SettleSeconds / 60f), Mathf.RoundToInt(Home.GuardRadius), Mathf.RoundToInt(Home.GuardCost), (d.Wall ? Lang.T("\nСтавиться на стіну чи стовп.") : "")));
             else if (d.Table)
                 piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nБіля нього майструють, як за верстаком.", ((string.IsNullOrEmpty(d.Note) ? Lang.T("Стіл, за яким роблять речі для воронів.") : Lang.T(d.Note).TrimEnd('.') + ".")
-                    + (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : ""))));
+                    + (d.Wall ? Lang.T("\nСтавиться на стіну чи стовп.") : ""))));
             else
-                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nНа ній ворон відпочиває й набирається сили: до {1} на день, під дахом і в затишку швидше.{2}\nВзаємодія — посадити Хугіна, із Shift — Муніна. {3} — лишити його вдома: там він і стереже, що бачить (до {4} м), але удар коштує дорожче, ніж на вартовій жердині ({5} запасу варти).", (string.IsNullOrEmpty(d.Note) ? Lang.T("Жердина для ворона.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(d.PerDay), (d.Wall ? Lang.T("\nСтавиться лише на стіну.") : ""), RavenKeys.LabelOf(RavenKeys.HomeId), Mathf.RoundToInt(Home.HomeRadius), Mathf.RoundToInt(Home.HomeCost)));
+                piece.m_description = Lang.WordF("rw_piece_" + d.Id + "_desc", () => Lang.F("{0}\nНа ній ворон відпочиває й набирається сили: до {1} на день, під дахом і в затишку швидше.{2}\nВзаємодія — посадити Хугіна, із Shift — Муніна. {3} — лишити його вдома: там він і стереже, що бачить (до {4} м), але удар коштує дорожче, ніж на вартовій жердині ({5} запасу варти).", (string.IsNullOrEmpty(d.Note) ? Lang.T("Жердина для ворона.") : Lang.T(d.Note).TrimEnd('.') + "."), Mathf.RoundToInt(d.PerDay), (d.Wall ? Lang.T("\nСтавиться на стіну чи стовп.") : ""), RavenKeys.LabelOf(RavenKeys.HomeId), Mathf.RoundToInt(Home.HomeRadius), Mathf.RoundToInt(Home.HomeCost)));
             piece.m_icon = IconPhotos.Get(d.Id) ?? AbilityIcons.For("hugin", false); // its own photo when there is one (no camera needed); else photographed later (Icons)
             piece.m_category = d.Table ? Piece.PieceCategory.Crafting : Piece.PieceCategory.Furniture;
             if (d.Feeder) piece.m_category = Piece.PieceCategory.Furniture;
@@ -328,6 +357,37 @@ namespace HuginWhispers
                 root.AddComponent<PerchView>(); // its seats: the ravens sit on it first (SeatZone), then its roots open the mixing
                 root.AddComponent<TreeView>();
                 Log(d.Name + " built as " + d.Prefab + ": " + parts + " parts (a raven tree)");
+                return root;
+            }
+            if (d.Story)
+            {
+                // no WearNTear: no blow breaks it; no cost (the author places it, the story puts it in the world)
+                piece.m_category = Piece.PieceCategory.Misc;
+                GameObject likeS = scene.GetPrefab("piece_chair") ?? scene.GetPrefab("woodiron_pole");
+                Piece lpS = likeS != null ? likeS.GetComponent<Piece>() : null;
+                if (lpS != null) piece.m_placeEffect = lpS.m_placeEffect;
+                if (seats > 0) root.AddComponent<PerchView>(); // (the Hall's own perch: ravens sit on it like on any perch)
+#if RAVEN_ITEM && RAVEN_NPC
+                if (d.Id == "vohnyshche_varty") root.AddComponent<HallHearth>(); // (its fires: cold, Hel's, the Watch's)
+                if (d.Id == "rizba_eirika") root.AddComponent<EirikCarving>(); // (E: read when it can be; the story hears it)
+#if RAVEN_STORY
+                if (d.Id == "kreslennia_sertsia") root.AddComponent<HeartBoard>(); // (E: the heart's old drawing — the prologue)
+#endif
+#endif
+                Log(d.Name + " built as " + d.Prefab + ": " + parts + " parts" + (seats > 0 ? ", " + seats + " seat(s)" : "") + " (a building of the story)");
+                return root;
+            }
+            if (d.Heart)
+            {
+                // no WearNTear: no blow breaks it, only the hammer takes it down (the game's way for a piece without one)
+                GameObject like0 = scene.GetPrefab("piece_chair") ?? scene.GetPrefab("woodiron_pole");
+                Piece lp0 = like0 != null ? like0.GetComponent<Piece>() : null;
+                if (lp0 != null) piece.m_placeEffect = lp0.m_placeEffect;
+#if RAVEN_ITEM && RAVEN_NPC
+                root.AddComponent<NpcHeart>();
+                NpcHeart.Prepare(root, look.transform, scene); // (its coin box: the model's own chest part made a chest)
+#endif
+                Log(d.Name + " built as " + d.Prefab + ": " + parts + " parts, cost " + d.Cost + " (a settlement's heart)");
                 return root;
             }
             WearNTear wnt = root.AddComponent<WearNTear>();
@@ -638,8 +698,24 @@ namespace HuginWhispers
             if (w.Length > 8) return w[8] == "n";
             return FromKind(Where(item)) == FromNest;
         }
-        // "на жердині" or "у гнізді"
-        internal static string OnWord(ItemDrop.ItemData item) { return InNest(item) ? Lang.T("у гнізді") : Lang.T("на жердині"); }
+        // what it sits on, for its icon and word: "spot" (where you showed it), "nest", "tree" (the Raven Tree), else "perch"
+        internal static string SeatKind(ItemDrop.ItemData item)
+        {
+            Spot s = Where(item);
+            if (s == null) return "perch";
+            if (s.PerDay <= 0f) return "spot";
+            if (InNest(item)) return "nest";
+            ZDO z = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(s.Zdo) : null;
+            GameObject pf = z != null && ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(z.GetPrefab()) : null;
+            Def d = pf != null ? DefOf(pf.name) : null;
+            return d != null && d.Tree ? "tree" : "perch";
+        }
+
+        // a raven on a spot: where you showed it, or at the ravens' gathering by a fire (Gathering sends them as spots)
+        internal static string SpotWord(Player p, bool munin) { return Gathering.Sent(munin) ? Lang.T("на вічі воронів біля вогню") : Grammar.Female(p) ? Lang.T("сидить, де ти показала") : Lang.T("сидить, де ти показав"); }
+
+        // "на жердині", "у гнізді" or "на Воронячому дереві"
+        internal static string OnWord(ItemDrop.ItemData item) { string k = SeatKind(item); return k == "nest" ? Lang.T("у гнізді") : k == "tree" ? Lang.T("на Воронячому дереві") : Lang.T("на жердині"); }
 
         // this player's ravens: in the bag, or on the shoulder cells
         private static readonly List<ItemDrop.ItemData> _mine = new List<ItemDrop.ItemData>(4);
@@ -889,7 +965,7 @@ namespace HuginWhispers
             else if (WallAhead(v, seat, flip) && !WallAhead(v, seat, !flip)) flip = !flip; // its beak would be in the wall: the other way
             string outfit = Outfits.Code(item); // (what it shows: as on the shoulder)
             string wear = RavenWear.Code(item); // what its runes give it (line 3)
-            string data = p.GetPlayerID() + "|" + (munin ? 1 : 0) + "|" + Trust.ShownLevel(munin, item) + "|" + token + "|" + p.GetPlayerName().Replace("|", "/") + "|" + p.GetZDOID().UserID + "|" + (flip ? "1" : "0") + "|" + (Grammar.Female(p) ? "1" : "0") + "|" + Voice.Code(item) + "||" + (Backup.Id(item) ?? "") + "|" + RavenVoice.KeptTimbre(item) + "\n" + outfit + "\n" + wear; // fields 9–10: no mode (a rest), its id (who it is: Guests) // field 8: its own voice, for when you are not around; 11: its speaking timbre
+            string data = p.GetPlayerID() + "|" + (munin ? 1 : 0) + "|" + Trust.ShownLevel(munin, item) + "|" + token + "|" + p.GetPlayerName().Replace("|", "/") + "|" + p.GetZDOID().UserID + "|" + (flip ? "1" : "0") + "|" + (Grammar.Female(p) ? "1" : "0") + "|" + Voice.Code(item) + "||" + (Backup.Id(item) ?? "") + "|" + RavenVoice.KeptTimbre(item) + "|" + Norov.CharIdOf(item) + "\n" + outfit + "\n" + wear; // fields 9–10: no mode (a rest), its id (who it is: Guests) // field 8: its own voice, for when you are not around; 11: its speaking timbre; 12: its character (the manner of its voice)
             v.Send(seat, data);
             _pending.Add(new Pending { View = v, Zdo = v.Id, Seat = seat, Token = token, Item = item, Munin = munin, Until = Time.time + 4f, Mode = mode ?? "" });
         }
@@ -1686,7 +1762,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- the flights there and back
 
-        internal sealed class Occupant { internal long Pid; internal bool Munin; internal int Level; internal string Token = "", Name = "", Raw = ""; internal long Uid; internal bool Flip, Female; internal int Voice = -1, Timbre = -1; internal string Mode = "", Rid = ""; internal bool Home { get { return Mode.Length > 0; } } }
+        internal sealed class Occupant { internal long Pid; internal bool Munin; internal int Level; internal string Token = "", Name = "", Raw = ""; internal long Uid; internal bool Flip, Female; internal int Voice = -1, Timbre = -1; internal string Mode = "", Rid = "", Char = ""; internal bool Home { get { return Mode.Length > 0; } } }
 
         internal static Occupant Parse(string raw)
         {
@@ -1706,6 +1782,7 @@ namespace HuginWhispers
             if (w.Length > 9) o.Mode = w[9];  // "" resting, "h" left at home, "g" on guard (Home)
             if (w.Length > 10) o.Rid = w[10]; // the raven's own id (Backup.Id)
             if (w.Length > 11 && !int.TryParse(w[11], out o.Timbre)) o.Timbre = -1; // its kept speaking timbre (RavenVoice.TimbreKey)
+            if (w.Length > 12) o.Char = w[12]; // its character (Norov): the manner of its voice, as on the shoulder
             o.Raw = raw;
             return o;
         }

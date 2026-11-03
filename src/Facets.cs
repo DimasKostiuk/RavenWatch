@@ -75,6 +75,7 @@ namespace HuginWhispers
             Vector3 v = rb.linearVelocity;
             v.y = Mathf.Lerp(v.y, -GlideFall, Mathf.Clamp01(Time.deltaTime * 8f));
             rb.linearVelocity = v;
+            p.AddStamina(Twists.GlideBreath * Time.deltaTime); // (and catches your breath gliding)
         }
 
         // dome III: you heal under your own dome

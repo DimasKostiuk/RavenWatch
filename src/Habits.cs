@@ -38,7 +38,7 @@ namespace HuginWhispers
                 Lang.K("день без меду — і зранку похмілля: удар і політ на 10% слабші"), Lang.K("кілька днів не пити медовуху при ньому"), Lang.K("пити медовуху при ньому хоча б раз на день-два")),
             D("home", "roam", Lang.K("Хатній"), Lang.K("ви багато часу вдома: під дахом чи біля твого ліжка"), Lang.K("удома сила відновлюється на 15% швидше"),
                 Lang.K("перші 10 хвилин далеко від дому ниє: два випадкові дари недоступні"), Lang.K("частіше брати його в довгі мандри"), Lang.K("проводити більшу частину дня вдома")),
-            D("roam", "home", Lang.K("Мандрій"), Lang.K("ви багато ходите далеко від дому"), Lang.K("розвідка на 15% ширша, а в дорозі він на 10% швидший"),
+            D("roam", "home", Lang.K("Непосида"), Lang.K("ви багато ходите далеко від дому"), Lang.K("розвідка на 15% ширша, а в дорозі він на 10% швидший"),
                 Lang.K("удома нудьгує: удвічі частіше відлітає сам"), Lang.K("посидіти кілька днів удома"), Lang.K("щодня проходити чималу дорогу")),
             D("brawl", null, Lang.K("Вояка"), Lang.K("ви багато б'єтеся"), Lang.K("удар на 10% сильніший"),
                 Lang.K("не вміє сидіти тихо: каркає, коли ти скрадаєшся"), Lang.K("кілька мирних днів без бійок"), Lang.K("битися щодня")),
@@ -54,7 +54,7 @@ namespace HuginWhispers
                 Lang.K("у бою дари на 15% дорожчі"), Lang.K("кілька днів не гинути"), Lang.K("гинути частіше (навряд чи захочеш)")),
             D("pet", null, Lang.K("Мазунчик"), Lang.K("ви часто спокійно стоїте разом, і ти його гладиш"), Lang.K("довіра росте на 15% швидше"),
                 Lang.K("день без пестощів — дметься: довіра росте на 15% повільніше"), Lang.K("менше стояти без діла, поки він на плечі"), Lang.K("щодня трохи постояти спокійно — тоді ти його гладиш")),
-            D("loner", "social", Lang.K("Відлюдько"), Lang.K("коли в світі є інші гравці, ви тримаєтеся осторонь"), Lang.K("коли поруч нікого, удар на 10% сильніший"),
+            D("loner", "social", Lang.K("Відлюдник"), Lang.K("коли в світі є інші гравці, ви тримаєтеся осторонь"), Lang.K("коли поруч нікого, удар на 10% сильніший"),
                 Lang.K("з чужими воронами дружить удвічі повільніше"), Lang.K("частіше бути поруч з іншими гравцями"), Lang.K("триматися подалі від інших")),
             D("social", "loner", Lang.K("Компанійський"), Lang.K("ви часто поруч з іншими гравцями"), Lang.K("з чужими воронами дружить у півтора раза швидше"),
                 Lang.K("пів години без людей поруч — довіра росте на 10% повільніше"), Lang.K("довше бути самому"), Lang.K("проводити час з іншими")),
@@ -62,12 +62,28 @@ namespace HuginWhispers
                 Lang.K("перші три хвилини на суші летить на 10% повільніше"), Lang.K("кілька днів не виходити в море"), Lang.K("плавати щодня")),
             D("under", null, Lang.K("Підземник"), Lang.K("ви багато часу в підземеллях"), Lang.K("під землею дари на 15% дешевші"),
                 Lang.K("надворі вдень мружиться: політ на 5% повільніший"), Lang.K("кілька днів не лізти під землю"), Lang.K("ходити в підземелля щодня")),
-            D("hunter", null, Lang.K("Ловчий"), Lang.K("ти часто полюєш на звірину"), Lang.K("приносить здобич у півтора раза частіше"),
+            D("hunter", null, Lang.K("Звіролов"), Lang.K("ти часто полюєш на звірину"), Lang.K("приносить здобич у півтора раза частіше"),
                 Lang.K("коли ти скрадаєшся біля звірини, часом каркає"), Lang.K("кілька днів не полювати"), Lang.K("полювати щодня")),
             D("lazy", "worker", Lang.K("Ледащо"), Lang.K("ти майже не кличеш його дарів"), Lang.K("сила відновлюється на 15% швидше"),
                 Lang.K("перший дар у кожному бою на 20% дорожчий"), Lang.K("частіше кликати його дари"), Lang.K("рідко кликати дари")),
             D("worker", "lazy", Lang.K("Трудяга"), Lang.K("ти часто кличеш його дари"), Lang.K("дари перезаряджаються на 10% швидше"),
                 Lang.K("сила відновлюється на 10% повільніше"), Lang.K("дати йому перепочити"), Lang.K("кликати його дари щодня")),
+            D("fire", null, Lang.K("Вогнелюб"), Lang.K("ви подовгу грієтеся біля вогню"), Lang.K("біля вогню сила відновлюється на 15% швидше"),
+                Lang.K("уночі далеко від тепла мерзне: дари на 10% дорожчі"), Lang.K("кілька днів менше сидіти біля вогню"), Lang.K("щодня грітися біля вогню")),
+            D("storm", null, Lang.K("Буревісник"), Lang.K("ви часто надворі в дощ і бурю"), Lang.K("у негоду летить на 10% швидше"),
+                Lang.K("у ясну днину нудьгує: частіше відлітає сам"), Lang.K("кілька днів ховатися від негоди"), Lang.K("виходити в дощ і бурю")),
+            D("mine", null, Lang.K("Копач"), Lang.K("ти багато копаєш руду й камінь"), Lang.K("руду чує на 20% далі"),
+                Lang.K("хвилину після удару кайлом глухне: ворогів помічає на 30% ближче"), Lang.K("кілька днів не брати кайла"), Lang.K("копати щодня")),
+            D("fish", null, Lang.K("Ласун на рибу"), Lang.K("ти часто рибалиш"), Lang.K("риба насичує його на 20% більше, а по рибу пірнає частіше"),
+                Lang.K("інша їжа насичує на 15% менше"), Lang.K("кілька днів не рибалити"), Lang.K("рибалити щодня")),
+            D("portal", "foot", Lang.K("Кочівник"), Lang.K("ти часто ходиш порталами"), Lang.K("дві хвилини після порталу дари на 15% дешевші"),
+                Lang.K("довго в дорозі без порталу (понад 10 хвилин) — летить на 10% повільніше"), Lang.K("ходити пішки, без порталів"), Lang.K("ходити порталами щодня")),
+            D("foot", "portal", Lang.K("Пішохід"), Lang.K("ви багато ходите пішки й не беретеся за портали"), Lang.K("у дорозі далеко від дому дари на 10% дешевші"),
+                Lang.K("дві хвилини після порталу приходить до тями: дари на 15% дорожчі"), Lang.K("частіше ходити порталами"), Lang.K("щодня ходити пішки й без порталів")),
+            D("miser", null, Lang.K("Скупердяй"), Lang.K("ти носиш при собі купу монет"), Lang.K("його схованка щодня росте на десяту частину; коли відвикне — віддасть усе"),
+                Lang.K("раз на день тягне з твоєї сумки трохи монет у схованку"), Lang.K("тримати монети в скрині, а не при собі"), Lang.K("носити при собі багато монет")),
+            D("watch", null, Lang.K("Нічний сторож"), Lang.K("ти часто лишаєш його вартувати дім"), Lang.K("на жердині бачить ворогів на 30% далі"),
+                Lang.K("у мандрах розвідка на 15% вужча"), Lang.K("частіше брати його з собою"), Lang.K("лишати його на варті чи вдома на кілька днів")),
         };
 
         internal static Def Find(string id) { foreach (Def d in All) if (d.Id == id) return d; return null; }
@@ -75,6 +91,8 @@ namespace HuginWhispers
         // the pace (see above) and the lines
         internal static float Keep = 0.85f, Gain = 25f, Push = 20f, On = 60f, Off = 30f, Forming = 20f;
         internal static int LockDays = 5, MaxOn = 2, HistoryKept = 8;
+        internal static int StashMax = 999, StealMin = 5, StealMax = 40, StealFrom = 50; // «Скупердяй»: its stash at most; a day's pinch; only from a purse this full
+        internal static float StashGrow = 0.1f, StealShare = 0.05f;
         internal const string Key = "RavenWatch_habits";
 
         // ---------------------------------------------------------------- what a raven keeps
@@ -84,6 +102,7 @@ namespace HuginWhispers
             public readonly List<KeyValuePair<string, int>> OnSince = new List<KeyValuePair<string, int>>(); // the habits it has, since which day
             public readonly List<string> History = new List<string>(); // "id@from-to"
             public int PetDay = -999, MeadDay = -999, HangSaid = -999, SulkSaid = -999; // (the days its hangover, its sulk were said)
+            public int Stash, StealDay = -999, ColdSaid = -999; // «Скупердяй»: the coins in its stash, the day it last took some; «Вогнелюб»: the night it last froze aloud
             public bool Has(string id) { foreach (KeyValuePair<string, int> kv in OnSince) if (kv.Key == id) return true; return false; }
             public int Since(string id) { foreach (KeyValuePair<string, int> kv in OnSince) if (kv.Key == id) return kv.Value; return 0; }
             public float LeanOf(string id) { float v; return Lean.TryGetValue(id, out v) ? v : 0f; }
@@ -123,6 +142,9 @@ namespace HuginWhispers
                 else if (k == "mead" && int.TryParse(v, out n)) s.MeadDay = n;
                 else if (k == "sulk" && int.TryParse(v, out n)) s.SulkSaid = n;
                 else if (k == "hang" && int.TryParse(v, out n)) s.HangSaid = n;
+                else if (k == "stash" && int.TryParse(v, out n)) s.Stash = Mathf.Max(0, n);
+                else if (k == "steal" && int.TryParse(v, out n)) s.StealDay = n;
+                else if (k == "cold" && int.TryParse(v, out n)) s.ColdSaid = n;
             }
             return s;
         }
@@ -142,6 +164,7 @@ namespace HuginWhispers
             for (int i = 0; i < s.OnSince.Count; i++) b.Append(i > 0 ? "," : "").Append(s.OnSince[i].Key).Append('@').Append(s.OnSince[i].Value);
             b.Append("|hist:").Append(string.Join(",", s.History.ToArray()));
             b.Append("|pet:").Append(s.PetDay).Append("|mead:").Append(s.MeadDay).Append("|sulk:").Append(s.SulkSaid).Append("|hang:").Append(s.HangSaid);
+            b.Append("|stash:").Append(s.Stash).Append("|steal:").Append(s.StealDay).Append("|cold:").Append(s.ColdSaid);
             item.m_customData[Key] = b.ToString();
         }
 
@@ -158,8 +181,8 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the day's doings, per raven with you
         private sealed class Tally
         {
-            public float Worn, Home, Travel, Night, Sail, Under, Hungry, Solo, Company;
-            public int Sips, Kills, Animals, Deaths, Pets, Favs, Gifts;
+            public float Worn, Home, Travel, Night, Sail, Under, Hungry, Solo, Company, Fire, Wet, Rich;
+            public int Sips, Kills, Animals, Deaths, Pets, Favs, Gifts, Mines, Fish, Portals;
             public bool Slept;
         }
         private static readonly Dictionary<ItemDrop.ItemData, Tally> Day = new Dictionary<ItemDrop.ItemData, Tally>();
@@ -205,6 +228,9 @@ namespace HuginWhispers
             {
                 case Ev.Death: Each(it => T(it).Deaths++); break;
                 case Ev.Sleep: if (Night) Each(it => T(it).Slept = true); break;
+                case Ev.Mine: _mineAt = Time.time; Each(it => T(it).Mines++); break;
+                case Ev.Fish: Each(it => T(it).Fish++); break;
+                case Ev.Portal: _portalAt = Time.time; Each(it => T(it).Portals++); break;
             }
         }
 
@@ -213,7 +239,7 @@ namespace HuginWhispers
         private static int _day = -1;
         private static Vector3 _lastPos;
         private static bool _hadPos;
-        private static float _aloneSince = -1f, _landedAt = -999f, _tripFrom = -999f, _homeSince = -1f;
+        private static float _aloneSince = -1f, _landedAt = -999f, _tripFrom = -999f, _homeSince = -1f, _leftHomeAt = -999f, _mineAt = -999f, _portalAt = -999f;
         private static Vector3 _homePos;
         private static bool _wasOnShip, _fought;
         internal static float TripFar = 150f, HomeSettle = 120f; // m from home a trip begins; s at home before the next one counts (_tripFrom −1: ready)
@@ -223,7 +249,7 @@ namespace HuginWhispers
         {
             if (p == null || EnvMan.instance == null) return;
             int today = Today;
-            if (_day < 0 || today < _day) { _day = today; Day.Clear(); } // (first look, or another world: nothing to weigh)
+            if (_day < 0 || today < _day) { _day = today; Day.Clear(); _leftHomeAt = Time.time; } // (first look, or another world: nothing to weigh; the road counts from here)
             if (today != _day) { NewDay(p, _day, today); _day = today; }
             float now = Time.time;
             // the moments of these minutes: a trip from home begun, ashore again, alone among players
@@ -236,6 +262,7 @@ namespace HuginWhispers
             }
             else
             {
+                if (_homeSince >= 0f) _leftHomeAt = now;
                 _homeSince = -1f;
                 if (_tripFrom == -1f && Vector3.Distance(pos, _homePos) > TripFar) _tripFrom = now;
             }
@@ -256,6 +283,7 @@ namespace HuginWhispers
             float moved = _hadPos ? Vector3.Distance(pos, _lastPos) : 0f;
             _lastPos = pos; _hadPos = true;
             bool home = AtHome(p), crowd = ZNet.instance != null && ZNet.instance.GetNrOfPlayers() > 1, sleeping = p.IsSleeping() || p.InBed();
+            bool warm = InHeat(p), wet = Foul(), rich = p.GetInventory().CountItems(CoinName) >= RichCoins;
             foreach (bool m in Both)
             {
                 ItemDrop.ItemData it = With(p, m);
@@ -268,6 +296,9 @@ namespace HuginWhispers
                 if (Senses.Underground) t.Under += min;
                 if (Satiety.Zone(it) <= Satiety.Hungry) t.Hungry += min;
                 if (crowd) { if (others) t.Company += min; else t.Solo += min; }
+                if (warm) t.Fire += min;
+                if (wet) t.Wet += min;
+                if (rich) t.Rich += min;
             }
         }
 
@@ -280,6 +311,22 @@ namespace HuginWhispers
             PlayerProfile pr = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
             return pr != null && pr.HaveCustomSpawnPoint() && Vector3.Distance(pr.GetCustomSpawnPoint(), p.transform.position) < 60f;
         }
+
+        internal const string CoinName = "$item_coins";
+        internal static int RichCoins = 300; // «Скупердяй»: this many coins on you counts as a fat purse
+
+        // in a fire's warmth
+        private static bool _heat;
+        private static float _heatAt = -999f;
+        private static bool InHeat(Player p) // (once a second: the book asks the prices every frame)
+        {
+            if (p == null) return false;
+            if (Time.time - _heatAt >= 1f) { _heatAt = Time.time; _heat = EffectArea.IsPointInsideArea(p.transform.position, EffectArea.Type.Heat, 1f) != null; }
+            return _heat;
+        }
+
+        // out in the rain or a storm (under a roof or underground it is not weather)
+        private static bool Foul() { return EnvMan.instance != null && EnvMan.IsWet() && !Senses.Indoors && !Senses.Underground; }
 
         private static bool Others(Player p, float r)
         {
@@ -311,6 +358,14 @@ namespace HuginWhispers
                 case "hunter": return C(t.Animals / 6f);
                 case "lazy": return t.Worn >= 15f * day && t.Gifts == 0 ? 1f : 0f;
                 case "worker": return C(t.Gifts / 8f);
+                case "fire": return C(t.Fire / (6f * day));
+                case "storm": return C(t.Wet / (6f * day));
+                case "mine": return C(t.Mines / 120f);
+                case "fish": return C(t.Fish / 4f);
+                case "portal": return C(t.Portals / 4f);
+                case "foot": return t.Portals == 0 ? C(t.Travel / 3000f) : 0f;
+                case "miser": return C(t.Rich / (12f * day));
+                case "watch": return 0f; // (counted when it comes back from its perch: FromPerch)
             }
             return 0f;
         }
@@ -347,16 +402,42 @@ namespace HuginWhispers
                 float opp = d.Opp != null ? score[d.Opp] : 0f;
                 s.Lean[d.Id] = Mathf.Clamp(s.LeanOf(d.Id) * Keep + Gain * score[d.Id] - Push * opp, 0f, 100f);
             }
+            // «Скупердяй»: its stash grows a tenth a day (a day it was with you)
+            if (t != null && s.Has("miser") && s.Stash > 0) s.Stash = Mathf.Min(StashMax, s.Stash + Mathf.Max(1, Mathf.RoundToInt(s.Stash * StashGrow)));
             // going: under Off, past its lock
             for (int i = s.OnSince.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<string, int> h = s.OnSince[i];
                 if (s.LeanOf(h.Key) >= Off || today - h.Value < LockDays) continue;
                 s.OnSince.RemoveAt(i);
-                Remember(s, h.Key, h.Value, today);
-                Told(p, munin, item, h.Key, false);
+                Gone(p, munin, item, s, h, today);
             }
-            // coming: the strongest over On first; never beside its opposite; more than MaxOn: the weakest past its lock gives way
+            Arrive(p, item, munin, s, today);
+            Write(item, s);
+            Backup.Save(p, item); // (its copy in your character keeps up: «Скупердяй»'s stash grown or given back is never paid twice)
+            if (Plugin.Instance != null && t != null)
+                Plugin.Instance.Log("Habits: " + Plugin.RavenName(munin) + " day " + today + " — " + Leans(s) + "; has " + Names(s));
+        }
+
+        // a habit gone: remembered, told; «Скупердяй» gives its whole stash back
+        private static void Gone(Player p, bool munin, ItemDrop.ItemData item, State s, KeyValuePair<string, int> h, int today)
+        {
+            Remember(s, h.Key, h.Value, today);
+            Told(p, munin, item, h.Key, false);
+            if (h.Key != "miser" || s.Stash <= 0) return;
+            int n = s.Stash;
+            s.Stash = 0;
+            GameObject coins = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab("Coins") : null;
+            if (coins == null) { s.Stash = n; return; }
+            Errands.Give(p, coins, n);
+            p.Message(MessageHud.MessageType.Center, Lang.F("{0} віддає свою схованку: {1}.", Plugin.RavenName(munin), Lang.N(n, "монета|монети|монет")));
+            PerkFx.Say(munin, "habit_miser_back", 1f, 2f);
+            RavenJournal.Note(p, item, "gave its stash back: " + n + " coins");
+        }
+
+        // coming: the strongest over On first; never beside its opposite; more than MaxOn: the weakest past its lock gives way
+        private static void Arrive(Player p, ItemDrop.ItemData item, bool munin, State s, int today)
+        {
             List<Def> rising = new List<Def>();
             foreach (Def d in All) if (!s.Has(d.Id) && s.LeanOf(d.Id) >= On) rising.Add(d);
             rising.Sort((a, b) => s.LeanOf(b.Id).CompareTo(s.LeanOf(a.Id)));
@@ -371,15 +452,25 @@ namespace HuginWhispers
                     if (weakest < 0) continue;
                     KeyValuePair<string, int> gone = s.OnSince[weakest];
                     s.OnSince.RemoveAt(weakest);
-                    Remember(s, gone.Key, gone.Value, today);
-                    Told(p, munin, item, gone.Key, false);
+                    Gone(p, munin, item, s, gone, today);
                 }
                 s.OnSince.Add(new KeyValuePair<string, int>(d.Id, today));
                 Told(p, munin, item, d.Id, true);
             }
+        }
+
+        // «Нічний сторож»: back from a perch, the days it sat there on guard (or at home: half) lean it that way at once
+        internal static float WatchPerDay = 25f;
+        internal static void FromPerch(Player p, ItemDrop.ItemData item, bool munin, bool guard, double seconds)
+        {
+            if (p == null || item == null || seconds <= 0) return;
+            float days = (float)(seconds / Mathf.Max(60f, Power.GameDaySeconds()));
+            if (days < 0.5f) return; // (an hour on the perch is no habit)
+            State s = Of(item);
+            s.Lean["watch"] = Mathf.Clamp(s.LeanOf("watch") + WatchPerDay * Mathf.Min(days, 6f) * (guard ? 1f : 0.5f), 0f, 100f);
+            Arrive(p, item, munin, s, Today);
             Write(item, s);
-            if (Plugin.Instance != null && t != null)
-                Plugin.Instance.Log("Habits: " + Plugin.RavenName(munin) + " day " + today + " — " + Leans(s) + "; has " + Names(s));
+            if (Plugin.Instance != null) Plugin.Instance.Log("Habits: " + Plugin.RavenName(munin) + " back from its perch after " + days.ToString("0.0", CultureInfo.InvariantCulture) + " days — watch " + Mathf.RoundToInt(s.LeanOf("watch")));
         }
 
         private static void Remember(State s, string id, int from, int to)
@@ -423,7 +514,7 @@ namespace HuginWhispers
                 if (it == null) continue;
                 State s = Of(it);
                 int k = m ? 1 : 0;
-                // «Вояка»: you sneak, he will not keep quiet; «Ловчий»: you stalk the game, he caws at it
+                // «Вояка»: you sneak, he will not keep quiet; «Звіролов»: you stalk the game, he caws at it
                 if (p.IsCrouching() && now >= NextCaw[k])
                 {
                     if (s.Has("brawl") && UnityEngine.Random.value < 0.25f) { NextCaw[k] = now + UnityEngine.Random.Range(30f, 60f); ScreamFx.CawAll(p, m, m ? 0.9f : 1.25f, 0.8f); PerkFx.Say(m, "habit_brawl_sneak", 0.4f, 3f); }
@@ -445,7 +536,31 @@ namespace HuginWhispers
                 if (s.Has("mead") && Hangover(it) && s.HangSaid != Today) { s.HangSaid = Today; Write(it, s); PerkFx.Say(m, "habit_mead_hangover", 1f, 0f); }
                 // «Мазунчик»: not stroked today, by noon he sulks (said once a day)
                 if (s.Has("pet") && Unpetted(it) && s.SulkSaid != Today) { s.SulkSaid = Today; Write(it, s); PerkFx.Say(m, "habit_pet_sulk", 1f, 0f); }
+                // «Вогнелюб»: a night out in the cold, far from a fire — said once a night
+                if (s.Has("fire") && Cold(p) && s.ColdSaid != Today) { s.ColdSaid = Today; Write(it, s); PerkFx.Say(m, "habit_fire_cold", 1f, 0f); }
+                // «Скупердяй»: once a day, from the afternoon, a pinch of your coins into its stash
+                if (s.Has("miser") && s.StealDay != Today && EnvMan.instance.GetDayFraction() > 0.4f) Pinch(p, m, it, s);
             }
+        }
+
+        // night, away from home, no fire's warmth
+        private static bool Cold(Player p) { return p != null && Night && !AtHome(p) && !Senses.Underground && !InHeat(p); }
+
+        // «Скупердяй»: a twentieth of your coins (StealMin..StealMax) gone into its stash; a thin purse it leaves be
+        private static void Pinch(Player p, bool munin, ItemDrop.ItemData item, State s)
+        {
+            s.StealDay = Today;
+            Inventory inv = p.GetInventory();
+            int have = inv.CountItems(CoinName);
+            int n = Mathf.Min(Mathf.Clamp(Mathf.RoundToInt(have * StealShare), StealMin, StealMax), StashMax - s.Stash);
+            if (have < StealFrom || n <= 0) { Write(item, s); return; }
+            inv.RemoveItem(CoinName, n);
+            s.Stash += n;
+            Write(item, s);
+            Backup.Save(p, item); // (its copy in your character knows the stash at once: a raven brought back pays no stash twice)
+            p.Message(MessageHud.MessageType.TopLeft, Lang.F("{0} потягнув {1} у свою схованку (там уже {2}).", Plugin.RavenName(munin), Lang.N(n, "монету|монети|монет"), s.Stash));
+            PerkFx.Say(munin, "habit_miser_pinch", 1f, 1f);
+            RavenJournal.Note(p, item, "pinched " + n + " coins into its stash (" + s.Stash + ")");
         }
 
         private static bool GameNear(Player p)
@@ -514,6 +629,8 @@ namespace HuginWhispers
             if (s.Has("night") && Night) v *= 1.1f;
             if (s.Has("sailor") && Time.time - _landedAt < 180f) v *= 0.9f;
             if (s.Has("under") && !Night && !Senses.Underground && !Senses.Indoors) v *= 0.95f;
+            if (s.Has("storm") && Foul()) v *= 1.1f;
+            if (s.Has("portal") && p != null && !AtHome(p) && Time.time - Mathf.Max(_portalAt, _leftHomeAt) > 600f) v *= 0.9f;
             return v;
         }
 
@@ -530,6 +647,11 @@ namespace HuginWhispers
             if (s.Has("scared") && Senses.Fight) v *= 1.15f;
             if (s.Has("under") && Senses.Underground) v *= 0.85f;
             if (s.Has("lazy") && Senses.Fight && !FirstInFight[munin ? 1 : 0]) v *= 1.2f;
+            Player p = Player.m_localPlayer;
+            if (s.Has("fire") && Cold(p)) v *= 1.1f;
+            bool portalNow = Time.time - _portalAt < 120f;
+            if (s.Has("portal") && portalNow) v *= 0.85f;
+            if (s.Has("foot")) v *= portalNow ? 1.15f : p != null && !AtHome(p) && !Senses.OnShip ? 0.9f : 1f;
             return v;
         }
 
@@ -552,6 +674,7 @@ namespace HuginWhispers
             if (s.Has("early") && !Night) v *= 1.1f;
             if (s.Has("lazy")) v *= 1.15f;
             if (s.Has("worker")) v *= 0.9f;
+            if (s.Has("fire") && InHeat(p)) v *= 1.15f;
             return v;
         }
 
@@ -592,11 +715,32 @@ namespace HuginWhispers
 
         internal static float HungerMul(ItemDrop.ItemData item) { return Has(item, "sweet") ? 0.85f : 1f; }
         internal static float StealWaitMul(ItemDrop.ItemData item) { return Has(item, "thin") ? 0.5f : 1f; }
-        internal static float ScoutMul(ItemDrop.ItemData item) { return Has(item, "roam") ? 1.15f : 1f; }
+        internal static float ScoutMul(ItemDrop.ItemData item) { return (Has(item, "roam") ? 1.15f : 1f) * (Has(item, "watch") ? 0.85f : 1f); }
         internal static float SeaMul(ItemDrop.ItemData item) { return Has(item, "sailor") ? 0.6f : 1f; } // (the pause before the next dive or mast)
+        internal static float FishMul(ItemDrop.ItemData item) { return SeaMul(item) * (Has(item, "fish") ? 0.6f : 1f); } // (the pause before the next dive for a fish)
+
+        // «Копач»: the ore it hears; the foes it hears just after a pick's blow
+        internal static float OreMul(ItemDrop.ItemData item) { return Has(item, "mine") ? 1.2f : 1f; }
+        internal static float HearMul(ItemDrop.ItemData item) { return Has(item, "mine") && Time.time - _mineAt < 60f ? 0.7f : 1f; }
+
+        // «Ласун на рибу»: what a food fills, ×
+        internal static float FillMul(ItemDrop.ItemData item, string prefab)
+        {
+            if (!Has(item, "fish") || string.IsNullOrEmpty(prefab)) return 1f;
+            return prefab.IndexOf("Fish", StringComparison.OrdinalIgnoreCase) >= 0 ? 1.2f : 0.85f;
+        }
+
+        // «Нічний сторож»: how far it sees from its perch, × (the perch's own copy of the raven)
+        internal static float GuardMul(ItemDrop.ItemData item) { return Has(item, "watch") ? 1.3f : 1f; }
 
         // how often it flies off by itself, ×
-        internal static float OutMul(ItemDrop.ItemData item) { return Has(item, "roam") && AtHome(Player.m_localPlayer) ? 2f : 1f; }
+        internal static float OutMul(ItemDrop.ItemData item)
+        {
+            Player p = Player.m_localPlayer;
+            float v = Has(item, "roam") && AtHome(p) ? 2f : 1f;
+            if (Has(item, "storm") && !Night && EnvMan.instance != null && !EnvMan.IsWet() && !Senses.Indoors && !Senses.Underground) v *= 1.5f; // (a clear day bores it)
+            return v;
+        }
 
         // «Гурман»: plain food now and then turned down (a word, and why)
         internal static string Refuses(Player p, bool munin, ItemDrop.ItemData item, Trust.Food food)
@@ -655,14 +799,17 @@ namespace HuginWhispers
         }
 
         // ●●●: how strong it is (its lean over On), the rest faded (no other glyph has to be in the font)
-        internal static string Dots(ItemDrop.ItemData item, string id)
+        internal static string Dots(ItemDrop.ItemData item, string id) { return Pips(DotsOf(item, id), 3); }
+        internal static int DotsOf(ItemDrop.ItemData item, string id)
         {
             float v = Of(item).LeanOf(id);
-            return Pips(v >= 90f ? 3 : v >= 75f ? 2 : 1, 3);
+            return v >= 90f ? 3 : v >= 75f ? 2 : 1;
         }
 
         // ●●●●: how far a forming one is to On
-        internal static string Bar(ItemDrop.ItemData item, string id) { return Pips(Mathf.Clamp(Mathf.FloorToInt(Of(item).LeanOf(id) / On * 4f), 0, 4), 4); }
+        internal static string Bar(ItemDrop.ItemData item, string id) { return Pips(BarOf(item, id), 4); }
+        internal static int BarOf(ItemDrop.ItemData item, string id) { return Mathf.Clamp(Mathf.FloorToInt(Of(item).LeanOf(id) / On * 4f), 0, 4); }
+        internal static float LeanOf(ItemDrop.ItemData item, string id) { State s = Of(item); return s != null ? s.LeanOf(id) : 0f; }
 
         private static string Pips(int n, int of) { return new string('●', n) + (of > n ? "<alpha=#40>" + new string('●', of - n) + "<alpha=#FF>" : ""); }
 
@@ -690,6 +837,7 @@ namespace HuginWhispers
                 b.Append(Lang.F("Щоб з'явилась: {0}.", Lang.T(d.KeepSrc))).Append('\n');
                 b.Append(Lang.F("Щоб не з'явилась: {0}.", Lang.T(d.LoseSrc)));
             }
+            if (d.Id == "miser" && s.Stash > 0) b.Append('\n').Append(Lang.F("У схованці: {0}.", Lang.N(s.Stash, "монета|монети|монет")));
             string hist = History(s);
             if (hist.Length > 0) b.Append("\n\n").Append(hist);
             return b.ToString();
@@ -699,7 +847,7 @@ namespace HuginWhispers
         internal static string Explain(ItemDrop.ItemData item)
         {
             string hist = History(Of(item));
-            return Lang.T("Звички ворон набуває від того, як ви граєте останніми днями: медовуха, мандри чи дім, бої, годування, пестощі, ніч чи день, море, підземелля… Кожна дає і плюс, і мінус. Звичка з'являється за кілька днів такої поведінки, тримається щонайменше п'ять днів і минає, якщо поведінка зміниться. Не більше двох разом.")
+            return Lang.T("Звички ворон набуває від того, як ви граєте останніми днями: медовуха, мандри чи дім, бої, годування, пестощі, ніч чи день, море, підземелля, вогонь, негода, кайло, риба, портали, монети, варта… Кожна дає і плюс, і мінус. Звичка з'являється за кілька днів такої поведінки, тримається щонайменше п'ять днів і минає, якщо поведінка зміниться. Не більше двох разом.")
                 + (hist.Length > 0 ? "\n\n" + hist : "");
         }
 

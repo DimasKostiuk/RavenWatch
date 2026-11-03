@@ -6,54 +6,36 @@ using UnityEngine.UI;
 
 namespace HuginWhispers
 {
-    // «Знайомі» in the book (BondLog): a seal with the rune ᛗ (people, kin) and the number of ravens met, beside the
-    // raven's name on «Ворони» — only once it has met a raven of another player (alone, there is nothing to show). A
-    // click opens the post-style card: each raven it knows (its picture, name, whose it is), how they get along — in
+    // «Знайомі» in the book (BondLog): a medallion on the margin of «Ворони» (RavenBookRail), two birds, friends · foes
+    // under it (faded while it knows nobody). A click opens the post-style card: each raven it knows (its picture, name, whose it is), how they get along — in
     // words, once it has shown itself — and when they last met; on hover the story of the two and why it is so.
     internal static partial class RavenBook
     {
-        private static readonly Color KinWax = C("#6b4a22");
         internal static int KinShown = 40; // ravens (and people) listed in the card (the closest bonds and the latest met first)
         private const float KinViewMax = 480f; // the lists' height before they scroll: about seven rows with both headers
 
-        private static void KinSeal(RectTransform top, bool m, ItemDrop.ItemData item)
+        // the medallion on the page's margin (RavenBookRail): friends · foes; faded while it knows nobody; it breathes
+        // while a bond changed since you looked; a click opens the card
+        private static void KinMedal(RectTransform rail, bool m, ItemDrop.ItemData item)
         {
             List<BondLog.Rec> all = BondLog.Of(item);
             List<People.Rec> folk = People.Of(item);
-            if (all.Count == 0 && folk.Count == 0) return;
-            int friends, foes;
+            int friends, foes, liked, hated;
             Tally(item, all, out friends, out foes);
-            int liked, hated;
             TallyFolk(folk, out liked, out hated);
-            RectTransform box = Rect("Kin", top);
-            Fixed(box.gameObject, 54f, 66f);
-            RectTransform seal = Rect("Seal", box);
-            seal.anchorMin = seal.anchorMax = seal.pivot = new Vector2(0.5f, 1f);
-            seal.sizeDelta = new Vector2(46f, 46f);
-            seal.anchoredPosition = new Vector2(0f, -2f);
+            Medal md = Medallion(rail, "Kin", "rail_kin");
+            int c = all.Count + folk.Count;
+            md.Num.text = c == 0 ? "<b>0</b>" : "<b><color=#3F6B34>" + (friends + liked) + "</color><color=#A08868>·</color><color=#9A3A2A>" + (foes + hated) + "</color></b>";
+            if (c == 0) { md.Fade.alpha = 0.45f; Tip(md.Disc.gameObject, () => Lang.F("<b>Знайомі {0}</b>\nЩе нікого. Зустрінете інших гравців і їхніх воронів — тут буде, хто з ким дружить.", Plugin.RavenNameGen(m))); return; }
             bool fresh = BondLog.AnyFresh(item) || People.AnyFresh(item);
-            if (fresh) // a bond changed since you looked: it breathes, as a wish waiting
-            {
-                Image glow = Img(seal, "Glow", BookArt.Glow, A(Gold, 0.7f));
-                Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-10f, -10f), new Vector2(10f, 10f));
-                SparkBreath b = glow.gameObject.AddComponent<SparkBreath>();
-                b.Low = 0.15f; b.High = 0.8f;
-            }
-            Image ring = Img(seal, "Ring", BookArt.Circle, Color.Lerp(KinWax, Color.black, 0.35f));
-            Image face = Img(seal, "Face", BookArt.Circle, KinWax);
-            Stretch(face.rectTransform, Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
-            TMP_Text g = T(seal, "ᛗ", 22f, C("#f6e2c0"), F.Rune, TextAlignmentOptions.Center);
-            Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            TMP_Text n = T(box, (all.Count + folk.Count).ToString(), 13f, InkSoft, F.Body, TextAlignmentOptions.Bottom);
-            Stretch(n.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            foreach (Image i in seal.GetComponentsInChildren<Image>(true)) i.raycastTarget = i == ring;
-            ring.raycastTarget = true;
-            int f = friends, e = foes, c = all.Count + folk.Count, lk = liked, ht = hated, nf = folk.Count;
-            Tip(ring.gameObject, () => Lang.F("<b>Знайомі {0}: {1}</b>\n{2}\n\nКлік — хто з ким дружить і чому.", Plugin.RavenNameGen(m), c,
+            if (fresh) MedalBreath(md);
+            int f = friends, e = foes, lk = liked, ht = hated, nf = folk.Count;
+            Tip(md.Disc.gameObject, () => Lang.F("<b>Знайомі {0}: {1}</b>\n{2}\n\nКлік — хто з ким дружить і чому.", Plugin.RavenNameGen(m), c,
                 Lang.F("Друзів: {0} · ворогів: {1}", f, e) + (nf > 0 ? "\n" + Lang.F("Людей: {0} · поважає: {1} · не терпить: {2}", nf, lk, ht) : ""))
                 + (fresh ? "\n<color=#FFD54F>" + Lang.T("Є зміни у стосунках.") + "</color>" : ""));
             ItemDrop.ItemData mine = item;
-            Clickable(ring.gameObject, () => KinCard(seal, m, mine)); // (this raven: the one whose seal it is)
+            RectTransform disc = md.Disc;
+            MedalClick(md, () => KinCard(disc, m, mine)); // (this raven: the one whose medallion it is)
         }
 
         // friends and foes among the ones that have shown how they get along
@@ -125,10 +107,10 @@ namespace HuginWhispers
             BondLog.Seen(item); // (opened: the seal stops breathing with the next draw)
             People.Seen(item);
             // the card first takes its width, then the lists their height (the words wrap only once the width is known)
-            PlaceCard(c, by, true);
+            PlaceCard(c, by, !m); // (Munin's medallion on the left margin: the card over it, not off the book)
             LayoutRebuilder.ForceRebuildLayoutImmediate(list);
             Fixed(view.gameObject, -1f, Mathf.Min(KinViewMax, LayoutUtility.GetPreferredHeight(list)));
-            PlaceCard(c, by, true);
+            PlaceCard(c, by, !m); // (Munin's medallion on the left margin: the card over it, not off the book)
         }
 
         private static void TallyFolk(List<People.Rec> folk, out int liked, out int hated)

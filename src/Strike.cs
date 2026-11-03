@@ -18,6 +18,8 @@ namespace HuginWhispers
         internal static float HuginCost = 25f, MuninCost = 35f;
         internal static float HuginCooldown = 40f, MuninCooldown = 60f;
         internal static float BossCapHugin = 0.03f, BossCapMunin = 0.05f;
+        internal static float DebtBossCap = 0.1f; // «Злість» III: of a boss's health, the most a debt takes at once
+        private static bool _volley;
         internal static float MuninMul = 1.2f;
         internal static float TrainPct = 3f, TrustPct = 5f, FedPct = 20f, FedMinutes = 10f;
         internal static float CritBonus = 20f, CritPerTrust = 5f; // points of crit chance on top of the training's (at the top: Hugin 85, Munin 90)
@@ -122,7 +124,7 @@ namespace HuginWhispers
         // the blow as it would be with the next boss seen (the book's "what next")
         internal static float BlowWithTier(bool munin, ItemDrop.ItemData item, int tier)
         {
-            return Base[Mathf.Clamp(tier, 0, Base.Length - 1)] * (munin ? MuninMul : 1f) * (1f + (TrainBonus(item) + TrustBonus(item) + FedBonus(item) + KnackBonus(item) + GearFx.DamagePct(item) + RuneStars.StrikePct(item) + BreedTraits.StrikePct(item) + Habits.StrikePct(item)) / 100f) * StarveMul(item) * GiftUp.PowerOf(item, munin ? "mstrike" : "hstrike");
+            return Base[Mathf.Clamp(tier, 0, Base.Length - 1)] * (munin ? MuninMul : 1f) * (1f + (TrainBonus(item) + TrustBonus(item) + FedBonus(item) + KnackBonus(item) + GearFx.DamagePct(item) + RuneStars.StrikePct(item) + BreedTraits.StrikePct(item) + Habits.StrikePct(item) + Bath.StrikePct(item)) / 100f) * StarveMul(item) * GiftUp.PowerOf(item, munin ? "mstrike" : "hstrike");
         }
 
         // why the blow is what it is, line by line (the book's tooltip)
@@ -130,10 +132,10 @@ namespace HuginWhispers
         {
             int tier = Tier(item);
             float b = BaseOf(munin, item), tr = TrainBonus(item), tu = TrustBonus(item), fe = FedBonus(item), kn = KnackBonus(item);
-            float sum = tr + tu + fe + kn + GearFx.DamagePct(item) + RuneStars.StrikePct(item) + BreedTraits.StrikePct(item) + Habits.StrikePct(item), blow = Blow(munin, item), starve = StarveMul(item);
+            float sum = tr + tu + fe + kn + GearFx.DamagePct(item) + RuneStars.StrikePct(item) + BreedTraits.StrikePct(item) + Habits.StrikePct(item) + Bath.StrikePct(item), blow = Blow(munin, item), starve = StarveMul(item);
             List<string> seen = BossesSeen(item);
             string from = tier == 0 ? Lang.T("ще жодного боса з ним на плечі") : Lang.F("найдальший бос, переможений з ним: {0}", BossNames[tier - 1]);
-            string t = Lang.F("Основа: {0} ({1}{2})\n+ вишкіл {3}-го рівня: +{4}%\n+ довіра {5}-го рівня: +{6}%\n+ ситий: {7}\n{8}{9}{10}= {11} × {12}{13} = {14}\n\n{15}Удар не залежить від твоєї зброї. Боса один виліт ранить не більше ніж на {16}% здоров'я.", R(b), from, (munin ? Lang.F("; Мунін б'є на {0}% сильніше", R((MuninMul - 1f) * 100f)) : ""), Level(item), R(tr), Trust.Level(item), R(tu), (fe > 0f ? Lang.F("+{0}% (ще {1})", R(fe), RavenAbilities.Clock(FedLeft(item))) : Lang.F("0% (нагодуй — {0} хв по +{1}%)", R(FedMinutes), R(FedPct))), (kn > 0f ? Lang.F("+ хист «{0}»: +{1}%\n", Norov.KnackOf(item).Name(munin), R(kn)) : ""), GearFx.WhyLine(item) + RuneStars.WhyLine(item) + BreedTraits.WhyLine(item), (starve < 1f ? (Trust.Starving(item)
+            string t = Lang.F("Основа: {0} ({1}{2})\n+ вишкіл {3}-го рівня: +{4}%\n+ довіра {5}-го рівня: +{6}%\n+ ситий: {7}\n{8}{9}{10}= {11} × {12}{13} = {14}\n\n{15}Удар не залежить від твоєї зброї. Боса один виліт ранить не більше ніж на {16}% здоров'я.", R(b), from, (munin ? Lang.F("; Мунін б'є на {0}% сильніше", R((MuninMul - 1f) * 100f)) : ""), Level(item), R(tr), Trust.Level(item), R(tu), (fe > 0f ? Lang.F("+{0}% (ще {1})", R(fe), RavenAbilities.Clock(FedLeft(item))) : Lang.F("0% (нагодуй — {0} хв по +{1}%)", R(FedMinutes), R(FedPct))), (kn > 0f ? Lang.F("+ хист «{0}»: +{1}%\n", Norov.KnackOf(item).Name(munin), R(kn)) : ""), GearFx.WhyLine(item) + RuneStars.WhyLine(item) + BreedTraits.WhyLine(item) + FreshLine(item), (starve < 1f ? (Trust.Starving(item)
                     ? Lang.F("<color=#FF6B6B>× голод: −{0}% (ситість 0 — нагодуй)</color>\n", R(Trust.StarveStrikePct))
                     : Lang.F("<color=#B48CE6>× об'ївся: −{0}% (лінується, поки ситість понад {1})</color>\n", R(Satiety.StuffedStrikePct), R(Satiety.StuffedAt))) : ""), R(b), (1f + sum / 100f).ToString("0.00"), (starve < 1f ? " × " + starve.ToString("0.00") : ""), R(blow), (GearFx.FrostShareOf(item) > 0f ? Lang.F("«Холодний медальйон»: {0}% удару — мороз, він сповільнює ціль.\n", R(GearFx.FrostShareOf(item) * 100f)) : ""), R((munin ? BossCapMunin : BossCapHugin) * 100f));
             return t;
@@ -170,6 +172,8 @@ namespace HuginWhispers
         private static float Grown(ItemDrop.ItemData item) { return (Mathf.Min(Level(item), TrainCap) - 1) / (float)(TrainCap - 1); }
         internal static float TrustBonus(ItemDrop.ItemData item) { return Mathf.Max(0, Trust.Level(item) - 1) * TrustPct; }
         internal static float FedBonus(ItemDrop.ItemData item) { return FedLeft(item) > 0f ? FedPct : 0f; }
+        // «Свіже пір'я» a while after a bath (Bath): its own line in the tooltip
+        private static string FreshLine(ItemDrop.ItemData item) { float l = Bath.FreshLeft(item); return l > 0f && Bath.StrikePct(item) > 0f ? Lang.F("+ свіже пір'я: +{0}% (ще {1})\n", R(Bath.StrikePct(item)), RavenAbilities.Clock(l)) : ""; }
         internal static float KnackBonus(ItemDrop.ItemData item) { return Norov.DamagePct(item); } // knack «Важкий дзьоб / Важкі кігті»
 
         // a starving raven (satiety 0) strikes weaker, and a stuffed one is too lazy to strike hard
@@ -187,7 +191,7 @@ namespace HuginWhispers
         // one blow before any crit
         internal static float Blow(bool munin, ItemDrop.ItemData item)
         {
-            return BaseOf(munin, item) * (1f + (TrainBonus(item) + TrustBonus(item) + FedBonus(item) + KnackBonus(item) + GearFx.DamagePct(item) + RuneStars.StrikePct(item) + BreedTraits.StrikePct(item) + Habits.StrikePct(item)) / 100f) * StarveMul(item) * GiftUp.PowerOf(item, munin ? "mstrike" : "hstrike"); // (+ «Кігтясте намисто», golden runes)
+            return BaseOf(munin, item) * (1f + (TrainBonus(item) + TrustBonus(item) + FedBonus(item) + KnackBonus(item) + GearFx.DamagePct(item) + RuneStars.StrikePct(item) + BreedTraits.StrikePct(item) + Habits.StrikePct(item) + Bath.StrikePct(item)) / 100f) * StarveMul(item) * GiftUp.PowerOf(item, munin ? "mstrike" : "hstrike"); // (+ «Кігтясте намисто», golden runes)
         }
 
         private static float Lerp(float[] range, int level) { return Mathf.Lerp(range[0], range[1], (Mathf.Min(level, TrainCap) - 1) / (float)(TrainCap - 1)); }
@@ -208,6 +212,7 @@ namespace HuginWhispers
             public ZDOID Id;
             public bool Crit;
             public bool Sky; // «Каменем з неба»: the first blow at one that never saw it
+            public float Debt; // «Злість» III: the blood debt Munin pays back with this blow
         }
 
         // the techniques (Mastery) of the raven that flies, as they act on this one flight
@@ -260,7 +265,7 @@ namespace HuginWhispers
 
         // from the ability: pick the targets, roll the blows, fly. Training, the words and (on a miss) half the strength
         // back all come once it is back on the shoulder, by what its blows really did.
-        internal static void Launch(Player p, bool munin, ItemDrop.ItemData item, float paid, List<Character> targets)
+        internal static void Launch(Player p, bool munin, ItemDrop.ItemData item, float paid, List<Character> targets, float debt = 0f)
         {
             List<Peck> plan = new List<Peck>();
             Mods mods = Mods.For(munin, item, paid);
@@ -287,6 +292,7 @@ namespace HuginWhispers
                     plan.Add(new Peck { Target = t, Id = t.GetZDOID(), Crit = c, Sky = i == 0 && sneak && mods.Sky });
                 }
             }
+            if (debt > 0f && plan.Count > 0) plan[0].Debt = debt; // «Злість» III: the debt comes with the first blow
             // «Рикошет»: the blows on the first look like they finish it — the next one near it is taken too
             if (!munin && mods.Ricochet && targets.Count > 0)
             {
@@ -339,7 +345,9 @@ namespace HuginWhispers
             if (k == null || k.Target == null || k.Target.IsDead()) return;
             if (Time.time - v.CapAt >= CapSpan) { v.CapLeft.Clear(); v.CapAt = Time.time; }
             float blow = v.Blow * mul * (k.Target.IsBoss() ? bossMul : 1f);
-            Hit(p, munin, k, blow, v.Frost, v.Fire, v.Steal, v.CapLeft, from, v.Tally, v.Mods, !counts);
+            _volley = true; // (the whirl's blows: no spoils)
+            try { Hit(p, munin, k, blow, v.Frost, v.Fire, v.Steal, v.CapLeft, from, v.Tally, v.Mods, !counts); }
+            finally { _volley = false; }
             if (counts) v.Hits++;
         }
 
@@ -470,6 +478,7 @@ namespace HuginWhispers
 
         // seen: its middle, or its head over a bush or a rise (a grazing deer's middle is often behind a tussock)
         internal static bool Seen(Player p, Character c) { Vector3 eye = p.GetEyePoint(); return Clear(eye, c, p, Body.Center(c)) || Clear(eye, c, p, Body.Head(c)); }
+        internal static float ThreatNear = 10f; // m: a foe this close is the one to strike when none is in your sights
         internal static float AimBeyond = 60f; // m past the range a creature in your sights is still noticed (and said too far)
 
         // Nothing in the way but the creature itself (and the one looking): a modded creature's body is often on the
@@ -504,8 +513,9 @@ namespace HuginWhispers
             List<Character> found = new List<Character>();
             Transform aim = Aim();
             Vector3 from = aim.position, dir = aim.forward;
-            Character inSight = null, ahead = null, any = null, sightOut = null;
+            Character inSight = null, ahead = null, any = null, sightOut = null, threat = null, foeAhead = null, foe = null;
             float sightScore = float.MaxValue, aheadScore = float.MaxValue, anyDist = float.MaxValue, outScore = float.MaxValue, outDist = 0f;
+            float threatDist = float.MaxValue, foeAheadScore = float.MaxValue, foeDist = float.MaxValue;
             bool outFar = false;
             foreach (Character c in Character.GetAllCharacters())
             {
@@ -526,6 +536,11 @@ namespace HuginWhispers
                 if (angle <= allow && score < sightScore) { sightScore = score; inSight = c; }
                 if (angle <= 70f && score < aheadScore) { aheadScore = score; ahead = c; }
                 if (dist < anyDist) { anyDist = dist; any = c; }
+                if (!BaseAI.IsEnemy(p, c)) continue; // (a deer, a boar: only when no foe is about)
+                MonsterAI ai = c.GetBaseAI() as MonsterAI;
+                if ((dist <= ThreatNear || (ai != null && ai.GetTargetCreature() == p)) && dist < threatDist) { threatDist = dist; threat = c; }
+                if (angle <= 70f && score < foeAheadScore) { foeAheadScore = score; foeAhead = c; }
+                if (dist < foeDist) { foeDist = dist; foe = c; }
             }
             if (inSight == null && sightOut != null)
             {
@@ -533,9 +548,12 @@ namespace HuginWhispers
                 note = outFar ? Lang.F("{0} задалеко — {1} м, долітає на {2}", who, R(outDist), R(range)) : Lang.F("{0} за перешкодою — не бачить", who);
                 if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Strike aim: " + Utils.GetPrefabName(sightOut.gameObject) + " in the sights, " + R(outDist) + " m, " + (outFar ? "beyond the range " + R(range) : "hidden") + ": passed over");
             }
-            Character best = inSight != null ? inSight : ahead != null ? ahead : any;
+            // in your sights first; else a foe on you (close by or coming for you, wherever you look), then a foe ahead,
+            // any foe, and only then the other game, ahead or near. A harmless one in the sights gives way to a foe on you.
+            if (inSight != null && threat != null && !BaseAI.IsEnemy(p, inSight)) inSight = null;
+            Character best = inSight ?? threat ?? foeAhead ?? foe ?? ahead ?? any;
             if (best == null) { WhyNone(p, range); return found; }
-            if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Strike aim: " + Utils.GetPrefabName(best.gameObject) + " (" + (best == inSight ? "in the sights" : best == ahead ? "nearest ahead" : "nearest") + ")");
+            if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Strike aim: " + Utils.GetPrefabName(best.gameObject) + " (" + (best == inSight ? "in the sights" : best == threat ? "foe on you" : best == foeAhead ? "foe ahead" : best == foe ? "nearest foe" : best == ahead ? "nearest ahead" : "nearest") + ")");
             found.Add(best);
             if (!munin) return found;
             // how many and how far: three within MuninReach, more with «Ще одна жертва» / «Зграя»
@@ -696,8 +714,9 @@ namespace HuginWhispers
                 if (!capLeft.TryGetValue(t, out left)) left = t.GetMaxHealth() * (munin ? BossCapMunin : BossCapHugin);
                 v = Mathf.Min(v, left);
                 capLeft[t] = left - v;
-                if (v <= 0.5f) return;
+                if (v <= 0.5f && peck.Debt <= 0f) return;
             }
+            if (peck.Debt > 0f) v += t.IsBoss() ? Mathf.Min(peck.Debt, t.GetMaxHealth() * DebtBossCap) : peck.Debt; // «Злість» III: the debt (a boss: its own cap)
             HitData hit = new HitData();
             float shares = Mathf.Max(1f, frostShare + fireShare + mods.Light); // (never more than the whole blow)
             float frost = v * frostShare / shares, fire = v * fireShare / shares, light = v * mods.Light / shares; // «Холодний медальйон»: part of it frost (the game's frost slows the target); «Сонце» ★★★: fire (it burns); «Іскра в дзьобі»: lightning
@@ -718,6 +737,7 @@ namespace HuginWhispers
             hit.m_skillRaiseAmount = Marker - v; // carried to the target's game: there the blow is cut back to v
             hit.SetAttacker(p);
             t.Damage(hit);
+            if (!_volley && !quiet) { if (munin) Twists.TrophyWatch(p, t); else Twists.Snatch(p, t); } // (II: «Кігті» a trophy off the fallen, «Удар в очі» a thing off the living)
             if (!quiet) Pack.OwnHit(p, munin, t, v, from); // («Зграя»: a friend's raven struck it a moment ago — a blow more)
             if (peck.Sky) t.Stagger(hit.m_dir); // «Каменем з неба»: knocked off its stride
             if (steal > 0f && !p.IsDead()) p.Heal(v * steal, true); // «Кров» ★★★
@@ -926,6 +946,7 @@ namespace HuginWhispers
                 Fights.Remove(key);
                 if (Vector3.Distance(p.transform.position, at) > WatchRange * 1.5f) return; // you were not there at the end
                 Memory.OnBoss(p, prefab);
+                PlayerReact.BossDown(p); // a fist to the sky, the ravens up circling
                 ItemDrop.ItemData h, m;
                 RavenItem.Worn(p, out h, out m);
                 if (Same(fight.Hugin, h)) Nicks.OnBoss(p, h, prefab); // each fall counts for the nicknames

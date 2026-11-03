@@ -1,4 +1,4 @@
-#if RAVEN_ITEM && RAVEN_STORY
+#if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -22,7 +22,7 @@ namespace HuginWhispers
         internal static readonly int KBy = "RavenWatch_npcBy".GetStableHashCode();    // long: whose story it serves (0: the world's)
         internal static readonly int KTag = "RavenWatch_npcTag".GetStableHashCode();  // string: its name in a scene ("" none)
 
-        private static GameObject _holder, _human, _odin;
+        private static GameObject _holder, _human, _odin, _locker;
         internal static string NextId = "";  // the spawner's word for the NPC being made (its Awake reads it before the ZDO has one)
 
         private static readonly HashSet<string> PlayerOnly = new HashSet<string> { "PlayerController", "Talker", "Skills", "Player" };
@@ -31,6 +31,7 @@ namespace HuginWhispers
         internal static void Register(ZNetScene scene)
         {
             if (scene == null) return;
+            NpcModules.Wire(); // (the modules hung on the core, once: NpcModules)
             if (_holder == null)
             {
                 _holder = new GameObject("RavenWatch_Npcs");
@@ -39,6 +40,8 @@ namespace HuginWhispers
             }
             if (_human == null) { try { _human = BuildHuman(scene); } catch (Exception e) { Log("human body: " + e); } }
             if (_odin == null) { try { _odin = BuildOdin(scene); } catch (Exception e) { Log("odin body: " + e); } }
+            if (_locker == null) _locker = NpcLocker.Build(_holder.transform);
+            Add(scene, _locker, NpcLocker.Prefab);
             Add(scene, _human, HumanPrefab);
             Add(scene, _odin, OdinPrefab);
         }
@@ -85,17 +88,38 @@ namespace HuginWhispers
             h.m_randomSets = new Humanoid.ItemSet[0];
             h.m_randomItems = new Humanoid.RandomItem[0];
             NpcMind mind = go.AddComponent<NpcMind>();
-            mind.m_pathAgentType = Pathfinding.AgentType.Humanoid;
+            mind.m_pathAgentType = NpcKit.Walker;
             mind.m_viewRange = 30f;
             mind.m_viewAngle = 140f;
             mind.m_hearRange = 15f;
             mind.m_idleSoundChance = 0f;
             mind.m_randomMoveInterval = 9999f;
             mind.m_jumpInterval = 0f;
-            mind.m_avoidWater = false;
+            mind.m_avoidWater = true; // (round water, not through it: NpcKit.Walker)
             mind.m_avoidFire = true;
             mind.m_afraidOfFire = false;
-            go.AddComponent<NpcActor>();
+            go.AddComponent<NpcBody>();
+            go.AddComponent<NpcGait>(); // (its own way of carrying itself: after the game's animation)
+            go.AddComponent<NpcEat>(); // (its bite in its hand at the table, raised to its mouth: after the game's animation too)
+            go.AddComponent<NpcPose>(); // (the one pass that puts the layers of its pose in order: gait, fall, meal)
+            go.AddComponent<NpcFall>(); // (its own fall when it drops senseless, its lying, its getting up: after the game's animation too)
+            NpcActor actor = go.AddComponent<NpcActor>();
+            GameObject odin = scene.GetPrefab("odin"); Odin os = odin != null ? odin.GetComponent<Odin>() : null;
+            if (os != null) actor.m_vanish = os.m_despawn; // (Odin's puff of smoke: a person put somewhere as the last safety goes and comes in it)
+            go.AddComponent<NpcResident>();
+            go.AddComponent<NpcWorker>();
+            // its gear's cells: the game's chest on its body (its window, its keeping in the ZDO); after NpcActor, so E is still its talk
+            Container box = go.AddComponent<Container>();
+            box.m_name = "Спорядження"; box.m_width = NpcGear.Width; box.m_height = NpcGear.Height;
+            box.m_privacy = Container.PrivacySetting.Public; box.m_checkGuardStone = false;
+            GameObject chest = scene.GetPrefab("piece_chest_wood");
+            Container like = chest != null ? chest.GetComponent<Container>() : null;
+            if (like != null) { box.m_bkg = like.m_bkg; box.m_openEffects = like.m_openEffects; box.m_closeEffects = like.m_closeEffects; }
+            go.AddComponent<NpcGear>();
+            go.AddComponent<NpcVitals>();
+            go.AddComponent<NpcHunger>();
+            go.AddComponent<NpcToil>(); // (tiredness, mood, pay, its craft)
+            go.AddComponent<NpcRescueSite>(); // (a person in need: its scene where it is owned)
             ZNetView nv = go.GetComponent<ZNetView>();
             if (nv != null) nv.m_persistent = true; // (the world's people stay; a scene's own are taken away by their scene)
             int character = LayerMask.NameToLayer("character");
@@ -149,8 +173,8 @@ namespace HuginWhispers
             if (d == null) { Log("no npc «" + id + "»"); return null; }
             GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(d.Odin ? OdinPrefab : HumanPrefab) : null;
             if (prefab == null) { Log("no body for «" + id + "» (" + (d.Odin ? OdinPrefab : HumanPrefab) + " not made)"); return null; }
-            float h;
-            if (ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(at, out h)) at.y = Mathf.Max(at.y, h);
+            at = Free(at);
+            at = NpcKit.Floor(at); // (on the floor there, not on the roof over it)
             NextId = id;
             GameObject go;
             try { go = UnityEngine.Object.Instantiate(prefab, at, turn); }
@@ -162,6 +186,25 @@ namespace HuginWhispers
             a.Appear();
             Log("spawned " + id + (string.IsNullOrEmpty(tag) ? "" : " as «" + tag + "»") + " at " + Mathf.RoundToInt(at.x) + "," + Mathf.RoundToInt(at.z) + (by != 0 ? " for " + by : " (the world's)"));
             return a;
+        }
+
+        // a spot not inside another person: the asked one, else a step aside round it (1.2 m apart at least)
+        private static Vector3 Free(Vector3 at)
+        {
+            if (!Taken(at)) return at;
+            for (int ring = 1; ring <= 2; ring++)
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 p = at + Quaternion.Euler(0f, i * 45f, 0f) * Vector3.forward * (1.3f * ring);
+                    if (!Taken(p)) return p;
+                }
+            return at;
+        }
+
+        private static bool Taken(Vector3 p)
+        {
+            foreach (NpcActor n in NpcActor.Live) if (n != null && Utils.DistanceXZ(n.transform.position, p) < 1.2f) return true;
+            return false;
         }
 
         // the live ones (loaded near someone)
@@ -192,6 +235,9 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- console (for testing, not in the docs)
         // raven npc · list · spawn <id> [tag] · go <who> [run] · come <who> · follow <who> · stay <who> · look <who> · say <who> <text> · tp <who> · remove <who>|all · reload
         // <who>: an id or tag, or «near» (the nearest within 30 m)
+        // a module's console words for one person («raven npc <word> <who> …»: you, it, the words, where you look) — NpcModules
+        internal static readonly Dictionary<string, Func<Player, NpcActor, string[], Vector3, string>> Commands = new Dictionary<string, Func<Player, NpcActor, string[], Vector3, string>>();
+
         internal static string Cmd(Player p, string[] a)
         {
             if (p == null) return "Нема гравця.";
@@ -211,36 +257,60 @@ namespace HuginWhispers
                     Vector3 at = p.transform.position + p.transform.forward * 3f;
                     NpcActor s = Spawn(a[2], at, Quaternion.LookRotation(-p.transform.forward), p.GetPlayerID(), a.Length > 3 ? a[3] : "");
                     return s != null ? "З'явився: " + s.Describe(p) : "Не вийшло (див. лог «Npc:»).";
-                case "reload": NpcDefs.Reload(); return "Перечитано: " + NpcDefs.All().Count + ".";
+                case "rescue": return NpcRescue.Test(p.transform.position, a.Length > 2 ? a[2] : "");
+                case "net":
+                {
+                    System.Text.StringBuilder sb = new System.Text.StringBuilder("Вага NPC у мережі (одне надсилання; поки рухається — до 20 разів на секунду кожному гравцю поруч):\n");
+                    int sum = 0;
+                    foreach (NpcActor n in NpcActor.Live)
+                    {
+                        if (n == null || n.Zdo == null) continue;
+                        string big; int b = NetSize.Weigh(n.Zdo, out big);
+                        sum += b;
+                        sb.Append("  ").Append(n.Id).Append(": ").Append(b).Append(" Б (").Append(NetSize.PerSecond(b).ToString("0.0")).Append(" КБ/с у русі)").Append(big.Length > 0 ? "  — " + big : "").Append("\n");
+                    }
+                    sb.Append("Разом: ").Append(sum).Append(" Б, до ").Append(NetSize.PerSecond(sum).ToString("0.0")).Append(" КБ/с, якщо всі рухаються.");
+                    Log("[npc net]\n" + sb);
+                    return sb.ToString();
+                }
+                case "reload": NpcDefs.Reload(); NpcTalk.Reload(); NpcChatter.Reload(); NpcPhrases.Reload(); return "Перечитано: " + NpcDefs.All().Count + ".";
+                case "walk": return NpcWalk.Command(p, a); // (its feet, for everyone: NpcWalk)
+                case "perf": return NpcPerf.Command(a); // (what the people cost: NpcPerf)
                 case "removeall": int gone = 0; foreach (NpcActor x in NpcActor.Live.ToArray()) if (x != null) { x.Remove(); gone++; } return "Прибрано: " + gone + ".";
             }
             if (what.Length > 0 && who == null) return "Нема такого NPC поруч (raven npc list).";
+            Func<Player, NpcActor, string[], Vector3, string> own;
+            if (Commands.TryGetValue(what, out own)) return own(p, who, a, aim); // (a module's word: NpcModules)
             switch (what)
             {
                 case "go": who.Order("go " + V(aim) + (a.Length > 3 && a[3] == "run" ? " run" : "")); return "Іде туди, куди ти дивишся.";
                 case "come": who.Order("go " + V(p.transform.position) + " run"); return "Іде до тебе.";
                 case "follow": who.Order("follow " + p.GetZDOID().UserID + ":" + p.GetZDOID().ID + " 3"); return "Іде за тобою.";
                 case "stay": who.Order("stay"); return "Стоїть.";
+                case "free": who.Order("free"); return "Відпущено: повертається до своїх справ.";
                 case "look": who.Order("look " + p.GetZDOID().UserID + ":" + p.GetZDOID().ID); return "Дивиться на тебе.";
                 case "tp": who.Order("tp " + V(aim)); return "Переставлено.";
                 case "say": who.Say(a.Length > 3 ? string.Join(" ", a, 3, a.Length - 3) : "…"); return "Сказав.";
+                case "clip": if (a.Length < 4) return "raven npc clip <хто> <кліп>|none [секунд]"; who.Order("clip " + a[3] + (a.Length > 4 ? " " + a[4] : "")); return "Кліп: " + a[3];
                 case "remove": who.Remove(); return "Пішов.";
+                case "down": if (!who.Owned || who.Vitals == null) return "Його веде інша гра."; who.Vitals.KnockOut(); return "Упав без тями (тест падіння, NpcFall).";
+                case "up": who.Act("revive"); return "Приходить до тями.";
                 case "wander": who.Order("wander " + (a.Length > 3 ? a[3] : "8") + " " + V(aim)); return "Походжає там, куди ти дивишся.";
                 case "sit": who.Order("sit " + V(aim)); return "Сідає (на лаву чи стілець біля того місця, куди ти дивишся, або на землю).";
                 case "stand": who.Order("stand"); return "Встав.";
                 case "emote": if (a.Length < 4) return "raven npc emote <хто> <wave|point|bow|sit|relax|cheer|nonono|thumbsup|…> [loop]"; who.Order("emote " + a[3] + (a.Length > 4 && a[4] == "loop" ? " loop" : "")); return "Жест: " + a[3] + ".";
-                case "fight": who.Order("fight " + (a.Length > 3 ? a[3] : "defend")); return "Бій: " + (a.Length > 3 ? a[3] : "defend") + ".";
+                case "fight": who.Order("fight " + (a.Length > 3 ? a[3] : "flee")); return "Бій: " + (a.Length > 3 ? a[3] : "flee") + ".";
                 case "attack":
                     Character foe = null; float fd = 15f;
                     foreach (Character c in Character.GetAllCharacters()) { if (c == null || c.IsPlayer() || c.IsDead() || c.GetComponent<NpcActor>() != null) continue; float d = Vector3.Distance(c.transform.position, aim); if (d < fd) { fd = d; foe = c; } }
                     if (foe == null) return "Нема ворога біля того місця, куди ти дивишся.";
-                    who.Order("attack " + NpcMind.IdOf(foe.GetZDOID())); return "Атакує: " + foe.m_name + ".";
+                    who.Order("attack " + NpcKit.Ref(foe.GetZDOID())); return "Атакує: " + foe.m_name + ".";
             }
-            return "raven npc list | spawn <id> [тег] | go <хто> [run] | come | follow | stay | look | wander <хто> [r] | sit | stand | emote <хто> <жест> [loop] | fight <хто> off|defend|hunt | attack <хто> | say <хто> <текст> | tp | remove <хто> | removeall | reload  (хто: id, тег або near)";
+            return "raven npc list | spawn <id> [тег] | go <хто> [run] | come | follow | stay | free | settle <хто> [here] | unsettle | job <хто> stoker|smelter|gatherer|cleaner|none | chest <хто> (ящик, куди дивишся) | bed <хто> (ліжко, куди дивишся) | base | whim <хто> [id] (eat — поїсти) | hunger <хто> [0–100] | hall <хто> (до Дому воронів) | rescue [surrounded|captive|hungry|wounded|lost] (подія біля серця) | net (вага в мережі) | perf [reset] (вартість NPC, черга перевірок) | lever <хто> <важіль…> | vars <хто> | request <хто> (попросить зараз) | chat <хто> (заговорить із сусідом зараз) | toil <хто> (втома, настрій, ремесло, платня) | pay <хто> (іде по платню зараз) | gear <хто> | look | wander <хто> [r] | sit | stand | emote <хто> <жест> [loop] | fight <хто> flee|wary|off|defend|hunt | attack <хто> | say <хто> <текст> | tp | remove <хто> | removeall | reload  (хто: id, тег або near)";
         }
 
         // where you look, on the ground, up to 40 m
-        private static Vector3 Aim(Player p)
+        internal static Vector3 Aim(Player p)
         {
             Transform cam = GameCamera.instance != null ? GameCamera.instance.transform : p.transform;
             RaycastHit hit;
@@ -276,9 +346,34 @@ namespace HuginWhispers
             {
                 if (__instance.GetComponent<NpcActor>() == null) return true;
                 NpcActor.Hit(__instance, hit != null ? hit.GetAttacker() : null);
+                if (NpcRescueHits.Take(__instance, hit)) return false; // (one in need: blows counted, not damage)
                 return !NpcActor.Immortal(__instance);
             }
-            catch { return true; }
+            catch (Exception e) { PatchGuard.Fail("NpcDamagePatch", e); return true; }
+        }
+    }
+
+    // the words under the crosshair: a creature is pointed at as its body (the game's Character is itself «hoverable»,
+    // and says something only for a tamed animal) — for our people it says ours: its name, E, Q
+    [HarmonyPatch(typeof(Character), "GetHoverText")]
+    internal static class NpcHoverTextPatch
+    {
+        private static void Postfix(Character __instance, ref string __result)
+        {
+            if (NpcActor.Live.Count == 0) return;
+            try { NpcActor a = NpcActor.Of(__instance); if (a != null) __result = a.GetHoverText(); }
+            catch (Exception e) { PatchGuard.Fail("NpcHoverTextPatch", e); }
+        }
+    }
+
+    [HarmonyPatch(typeof(Character), "GetHoverName")]
+    internal static class NpcHoverNamePatch
+    {
+        private static void Postfix(Character __instance, ref string __result)
+        {
+            if (NpcActor.Live.Count == 0) return;
+            try { NpcActor a = NpcActor.Of(__instance); if (a != null) __result = a.GetHoverName(); }
+            catch (Exception e) { PatchGuard.Fail("NpcHoverNamePatch", e); }
         }
     }
 
@@ -288,7 +383,8 @@ namespace HuginWhispers
     {
         private static void Postfix(Character c, ref bool __result)
         {
-            if (__result && c != null && NpcActor.Live.Count > 0 && NpcActor.Immortal(c)) __result = false;
+            try { if (__result && c != null && NpcActor.Live.Count > 0 && NpcActor.Immortal(c) && !(NpcRescueHits.InNeed(NpcActor.Of(c)) && !NpcVitals.IsDown(c))) __result = false; }
+            catch (Exception e) { PatchGuard.Fail("NpcHudPatch", e); } // (one in need: its bar is its blows left)
         }
     }
 }

@@ -15,25 +15,32 @@ namespace HuginWhispers
     // float down like on a cloak of levitation (faster high up, slow near the ground), no fall hurts, and land in a
     // ring of feathers; on the ground it just ends.
     // The motion is the owner's (Character.UpdateMotion of the local player, like the game's debug fly but our own);
-    // the look is every game's: the player's ZDO flag and the "odinwings" tag drive the clips (PlayerAnims rules,
+    // the look is every game's: the player's ZDO flag and the "odinwings" tag drive the clips (BodyClips rules,
     // built in below) and the ravens' trail; the bursts go to everyone as an effect message.
     internal static class OdinWings
     {
-        internal static float Seconds = 60f, SecondsTop = 75f;
+        internal static float Seconds = 75f, SecondsTop = 120f;
         internal static float Speed = 13f, ClimbSpeed = 7f, SinkSlow = 1.1f; // m/s: ahead, up/down, floating down at the end at the slowest
         internal static float SinkEase = 3f;                                     // m/s²: how gently the floating down sets in
         internal static float SinkSeconds = 10f, SinkLast = 1.5f, SinkFast = 8f; // the floating down: about this long from any height; the last moments' pace; at most m/s
         internal static float Accel = 9f, Decel = 6f, ClimbAccel = 12f;          // m/s²: the pull on starting and the drift on stopping
+        // the run-up (the user, 2026-10-29: held long ahead, faster): past Speed the pace keeps growing while you press on
+        // ahead, up to SurgeTop more; a sharp turn bleeds it, going down feeds it, climbing spends it; let go, it melts
+        internal static float SurgeTop = 0.65f, SurgeBuild = 7f, SurgeFade = 2.5f;  // share over Speed at most; s from cruise to the top; s to melt away
+        internal static float SurgeTurn = 35f, SurgeTurnBleed = 1.2f;            // ° off your way before a turn costs; how hard (a share a second per 90° past it)
+        internal static float SurgeDive = 4f, SurgeClimb = 6f;                   // s of going down at ClimbSpeed to fill it; of climbing to spend it
+        internal static float BrakeFrom = 1.2f, BrakePause = 4f;                 // × Speed: let go this fast and you rear back (wings_brake); s between
         internal static float LiftHeight = 5.5f, LiftSeconds = 1.25f, LiftAccel = 60f; // the leap up at the start: like a jump, smoother
         internal static float MaxHeight = 40f;                                   // over the ground (or the sea)
         internal static float TurnRate = 140f, TurnEase = 0.35f;                 // the body turns after the way it flies: at most °/s, and how long it eases
+        internal static float AimTurnRate = 540f, AimTurnEase = 0.12f;           // aiming a shot (II): to where you look, quicker
         internal static float MuninAfter = 0.4f, LiftAfter = 0.32f;               // Hugin first, then you (after the crouch of the take-off clip), then Munin
         internal static float TakeoffFade = 0.3f;                                // s: the take-off grows out of the pose you stand in (legs as they are), no snap
         internal static float FlourishMin = 7f, FlourishMax = 14f;              // a gentle stir this often (seconds)
         internal static float SafeAfter = 3f;                                    // no fall hurts this long after landing
 
         internal const string NetKey = "RavenWatch_OdinWings", Tag = "odinwings", SinkTag = "odinwings_sink";
-        private const string RpcUp = "RavenWatch_WingsUp", RpcDown = "RavenWatch_WingsDown", RpcHop = "RavenWatch_WingsHop";
+        private const string RpcUp = "RavenWatch_WingsUp", RpcDown = "RavenWatch_WingsDown", RpcHop = "RavenWatch_WingsHop", RpcDive = "RavenWatch_WingsDive";
         internal static float Duration() { return Trust.RoundTime(Trust.LerpFrom(false, RavenAbilities.UnlockLevel(RavenAbilities.Find("hflight")), Seconds, SecondsTop) * GiftUp.Power("hflight")); } // (from the gift's own first level)
 
         private enum Phase { None, Lift, Fly, Sink, Ground } // (Ground: down on your feet, the gift still on)
@@ -43,9 +50,14 @@ namespace HuginWhispers
         private static bool _muninSent;
         private static Vector3 _vel;
         private static float _yawVel;
+        private static float _surge, _brakeNext; // the run-up 0..1 (Surge); the rear-back pose again not before
+        internal static float Rush { get { return _phase == Phase.Fly ? _surge : 0f; } } // (the wind and the trail grow with it)
 
         private static double Now { get { return WorldTime.Now; } }
 
+        // the take-off hides what is in hand (the hands are the wings); with the second rune a bow, a crossbow or a staff stays
+        private static void HideHands(Player p) { if (!(Twists.Two("hflight") && WingsAttackPatch.Shoots(p.GetCurrentWeapon()))) p.HideHandItems(); }
+        internal static bool Aiming(Player p) { return p != null && (p.InAttack() || p.IsDrawingBow() || p.InMinorAction()); } // (a bow drawn, a crossbow reloaded: not attacks to the game)
         internal static bool Flying() { return _phase != Phase.None; } // the gift is on (in the air or on the ground)
         internal static bool InAir() { return _phase == Phase.Lift || _phase == Phase.Fly || _phase == Phase.Sink; }
         internal static bool OnGround() { return _phase == Phase.Ground; }
@@ -60,7 +72,7 @@ namespace HuginWhispers
             if (p == null) return false;
             if (p == Player.m_localPlayer) return InAir();
             ZDO z = NetFlag.Zdo(p, false);
-            return z != null && NetFlag.Get(p, NetKey) && z.GetString(PlayerAnims.TagKey, "").Contains(Tag);
+            return z != null && NetFlag.Get(p, NetKey) && z.GetString(BodyClips.TagKey, "").Contains(Tag);
         }
 
         internal static void Register()
@@ -68,6 +80,7 @@ namespace HuginWhispers
             RavenFx.Register(RpcUp, Burst);
             RavenFx.Register(RpcDown, Landing);
             RavenFx.Register(RpcHop, Hop);
+            RavenFx.Register(RpcDive, DiveThud);
         }
 
         // A gift out of place with the wings on (null: it may be used). In the air: no scream, no fury, no tailwind.
@@ -112,13 +125,13 @@ namespace HuginWhispers
             if (_logUntil > 0f) { _logUntil = -1f; PAnimLog.End(Lang.T("новий політ")); } // the last landing still recording
             PAnimLog.Begin(Lang.T("Крила Одіна"));
             NetFlag.Set(p, NetKey, true);
-            PlayerAnims.Tag(p, Tag, true);
+            BodyClips.Tag(p, Tag, true);
             Safe(p, Duration() + 30f); // no fall hurts while you fly (ended at the landing, a few seconds after)
-            p.HideHandItems();
+            HideHands(p);
             HoldCrouch(p);
             RavenFx.Broadcast(RpcUp, p, Burst);
             Orders.FlyWith(p, false, Duration() + 20f); // Hugin first
-            PlayerAnims.Play(p, 2, Takeoffs[UnityEngine.Random.Range(0, Takeoffs.Length)], TakeoffFade, UnityEngine.Random.Range(0.92f, 1.08f));
+            BodyClips.Play(p, 2, Takeoffs[UnityEngine.Random.Range(0, Takeoffs.Length)], TakeoffFade, UnityEngine.Random.Range(0.92f, 1.08f));
         }
 
         // pressed again, or the time is up: down gently
@@ -129,7 +142,7 @@ namespace HuginWhispers
             _phase = Phase.Sink;
             _since = Time.time;
             PAnimLog.Event(Lang.T("фаза: спуск"));
-            if (p != null) PlayerAnims.Tag(p, SinkTag, true);
+            if (p != null) BodyClips.Tag(p, SinkTag, true);
             if (p != null) RavenSkills.GiftSay(false, "hflight_end", Lang.T("Крила втомились. Тримайся, опускаю."));
         }
 
@@ -142,13 +155,13 @@ namespace HuginWhispers
             Flaring(p, false);
             HoldCrouch(p); // (the key held for "down": no sneaking after the landing)
             NetFlag.Set(p, NetKey, false);
-            PlayerAnims.Tag(p, Tag, false);
-            PlayerAnims.Tag(p, SinkTag, false);
-            PlayerAnims.Stop(p, 2, 0.2f);
+            BodyClips.Tag(p, Tag, false);
+            BodyClips.Tag(p, SinkTag, false);
+            BodyClips.Stop(p, 2, 0.2f);
             Safe(p, SafeAfter);
             if (!p.IsDead() && air)
             {
-                PlayerAnims.Play(p, 2, Landings[UnityEngine.Random.Range(0, Landings.Length)], 0.05f, UnityEngine.Random.Range(0.92f, 1.08f));
+                BodyClips.Play(p, 2, Landings[UnityEngine.Random.Range(0, Landings.Length)], 0.05f, UnityEngine.Random.Range(0.92f, 1.08f));
                 RavenFx.Broadcast(RpcDown, p, Landing);
             }
             Orders.FlyWithEnd(p, false);
@@ -167,9 +180,9 @@ namespace HuginWhispers
             PAnimLog.Event(Lang.T("на землю (дар ще діє)"));
             Flaring(p, false);
             HoldCrouch(p);
-            PlayerAnims.Tag(p, Tag, false);
-            PlayerAnims.Tag(p, SinkTag, false);
-            PlayerAnims.Play(p, 2, Landings[UnityEngine.Random.Range(0, Landings.Length)], 0.05f, UnityEngine.Random.Range(0.92f, 1.08f));
+            BodyClips.Tag(p, Tag, false);
+            BodyClips.Tag(p, SinkTag, false);
+            BodyClips.Play(p, 2, Landings[UnityEngine.Random.Range(0, Landings.Length)], 0.05f, UnityEngine.Random.Range(0.92f, 1.08f));
             RavenFx.Broadcast(RpcDown, p, Landing);
         }
 
@@ -186,9 +199,9 @@ namespace HuginWhispers
             _vel = rb != null ? new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z) : Vector3.zero;
             PAnimLog.Event(Lang.T("знову злет із землі"));
             HoldCrouch(p);
-            PlayerAnims.Tag(p, Tag, true);
-            p.HideHandItems();
-            PlayerAnims.Play(p, 2, Takeoffs[UnityEngine.Random.Range(0, Takeoffs.Length)], TakeoffFade, UnityEngine.Random.Range(0.92f, 1.08f));
+            BodyClips.Tag(p, Tag, true);
+            HideHands(p);
+            BodyClips.Play(p, 2, Takeoffs[UnityEngine.Random.Range(0, Takeoffs.Length)], TakeoffFade, UnityEngine.Random.Range(0.92f, 1.08f));
             RavenFx.Broadcast(RpcHop, p, Hop);
             return true;
         }
@@ -198,6 +211,7 @@ namespace HuginWhispers
         {
             Player p = Player.m_localPlayer;
             WingsLook.Tick();
+            WingsWind.Step(p, Rush, Time.deltaTime);
             ReleaseCrouch();
             if (_logUntil > 0f && Time.time >= _logUntil) { _logUntil = -1f; PAnimLog.End(Lang.T("після посадки")); }
             if (_phase == Phase.None) return;
@@ -223,10 +237,10 @@ namespace HuginWhispers
             if (_phase == Phase.Fly && Time.time >= _nextFlourish)
             {
                 _nextFlourish = Time.time + UnityEngine.Random.Range(FlourishMin, FlourishMax);
-                PlayerAnimator a = PlayerAnimator.Of(p);
+                BodyAnimator a = BodyAnimator.Of(p);
                 // only on the way (their arms are the flight's, out at the shoulders): hanging in place the arms stay low
                 bool going = a != null && a.ValueOf("speed") > 3f;
-                if (going && !a.Playing(2)) PlayerAnims.Play(p, 2, Flourishes[UnityEngine.Random.Range(0, Flourishes.Length)], 0.12f, 1f);
+                if (going && !a.Playing(2) && !Aiming(p)) BodyClips.Play(p, 2, Flourishes[UnityEngine.Random.Range(0, Flourishes.Length)], 0.12f, 1f); // (not over a shot: the game's arms then)
             }
         }
 
@@ -239,9 +253,11 @@ namespace HuginWhispers
         {
             _phase = Phase.None;
             _vel = Vector3.zero;
+            _surge = 0f;
             _flaring = false;
             _noCrouch = false;
             WingsLook.CloseAll();
+            WingsWind.Stop();
         }
 
         // ---------------------------------------------------------------- the motion (FixedUpdate of the local player)
@@ -285,13 +301,29 @@ namespace HuginWhispers
                     break;
                 default:
                     vy = up ? ClimbSpeed : down ? -ClimbSpeed : 0f;
+                    vy = Dive(p, down && !up, height, pos, vy); // («Крила Одіна» III: the dive)
                     break;
             }
+            if (_phase != Phase.Fly) _diving = false;
+
+            // the dive hits the ground: the blast, and on your feet with the gift still on
+            if (_diving && (height < DiveTouch || p.IsOnGround()))
+            {
+                DiveBlast(p, pos);
+                body.linearVelocity = Vector3.down;
+                Touch(p);
+                return;
+            }
+
+            // the run-up over the cruise (Surge), eased: slow to come at first, slow to the top
+            float surge = Surge(flat, vy, dt);
+            target *= 1f + SurgeTop * surge * surge * (3f - 2f * surge);
+            Brake(p, flat);
 
             // the landing seen a few metres ahead: going down near the ground, or flying on into rising ground — the body
             // swings feet first, the pace drops, it settles and touches down with a small crouch (not at full speed into it)
             bool flare = false;
-            if (_phase == Phase.Fly || _phase == Phase.Sink)
+            if ((_phase == Phase.Fly || _phase == Phase.Sink) && !_diving)
             {
                 bool goingDown = _phase == Phase.Sink || down || _vel.y < -0.5f;
                 if (_phase == Phase.Fly && (up || _overWater)) { } // (Space: away from the ground; over the sea: no landing, it pushes you up)
@@ -319,7 +351,7 @@ namespace HuginWhispers
             Vector3 h = new Vector3(_vel.x, 0f, _vel.z);
             float rate = target.sqrMagnitude >= h.sqrMagnitude ? Accel * (Facets.On("hflight") ? 1.5f : 1f) : flare ? FlareDecel : Decel;
             h = Vector3.MoveTowards(h, target, rate * dt);
-            float yv = Mathf.MoveTowards(_vel.y, vy, (_phase == Phase.Lift ? LiftAccel : _phase == Phase.Sink ? SinkEase : ClimbAccel) * dt);
+            float yv = Mathf.MoveTowards(_vel.y, vy, (_phase == Phase.Lift ? LiftAccel : _phase == Phase.Sink ? SinkEase : _diving ? DiveAccel : ClimbAccel) * dt);
             _vel = new Vector3(h.x, yv, h.z);
 
             // touched down while sinking, or into the water: the flight is over
@@ -331,24 +363,139 @@ namespace HuginWhispers
             currentVel = _vel;
             maxAir = pos.y;
             lastGround = 1f; // not "just touched the ground": else the game jumps on Space up here (IsOnGround) and the landing checks lie
-            // the body turns after the way it flies (standing: where the camera looks)
-            Quaternion want = h.sqrMagnitude > 1f ? Quaternion.LookRotation(new Vector3(h.x, 0f, h.z)) : lookYaw;
+            // the body turns after the way it flies (standing, or aiming a shot: where the camera looks, as the game does)
+            bool aiming = Aiming(p);
+            Quaternion want = h.sqrMagnitude > 1f && !aiming ? Quaternion.LookRotation(new Vector3(h.x, 0f, h.z)) : lookYaw;
             // eased: it starts turning slowly, keeps a steady pace, and settles (no snap round to the camera)
             float yaw = p.transform.eulerAngles.y;
-            yaw = Mathf.SmoothDampAngle(yaw, want.eulerAngles.y, ref _yawVel, TurnEase, TurnRate, dt);
+            yaw = Mathf.SmoothDampAngle(yaw, want.eulerAngles.y, ref _yawVel, aiming ? AimTurnEase : TurnEase, aiming ? AimTurnRate : TurnRate, dt);
             body.rotation = Quaternion.Euler(0f, yaw, 0f);
             try { if (EyeTurn != null) EyeTurn.Invoke(p, null); } catch { }
             // the game's own "in the air" animation under our clips (standing while you gather for the leap: its falling
             // pose has the knees pulled up, and would show through before the take-off clip has taken the legs)
             if (zanim != null)
             {
-                zanim.SetBool(FallingHash, !crouching);
-                zanim.SetBool(GroundHash, crouching);
+                bool armed = crouching || WingsAttackPatch.Shoots(p.GetCurrentWeapon()); // (a bow, a crossbow, a staff in hand: the game's standing hold, our legs over it)
+                zanim.SetBool(FallingHash, !armed);
+                zanim.SetBool(GroundHash, armed);
                 zanim.SetBool(WaterHash, false);
                 zanim.SetBool(FlyingHash, false);
                 zanim.SetFloat(ForwardHash, 0f);
                 zanim.SetFloat(SideHash, 0f);
             }
+        }
+
+        // the run-up: grows while you keep on ahead at the cruise (III: quicker), a turn sharper than SurgeTurn bleeds it,
+        // going down feeds it and climbing spends it (height into pace, as a glider); let go, or off the flight, it melts
+        private static float Surge(Vector3 flat, float vy, float dt)
+        {
+            if (_phase != Phase.Fly || _diving || _flaring) { _surge = Mathf.MoveTowards(_surge, 0f, dt / 0.8f); return _surge; }
+            Vector3 h = new Vector3(_vel.x, 0f, _vel.z);
+            float cruise = Speed * (Facets.On("hflight") ? 1.15f : 1f) * 0.9f;
+            float d;
+            if (flat.sqrMagnitude > 0.5f && h.sqrMagnitude > cruise * cruise)
+            {
+                d = (Facets.On("hflight") ? 1.4f : 1f) / SurgeBuild;
+                float turn = Vector3.Angle(h, flat);
+                if (turn > SurgeTurn) d -= (turn - SurgeTurn) / 90f * SurgeTurnBleed;
+            }
+            else d = -1f / SurgeFade;
+            if (vy < -0.5f) d += -vy / ClimbSpeed / SurgeDive;
+            else if (vy > 0.5f) d -= vy / ClimbSpeed / SurgeClimb;
+            _surge = Mathf.Clamp01(_surge + d * dt);
+            return _surge;
+        }
+
+        // let go of the way at a run: the body rears back, the legs swing ahead, the wings held against the air (not over
+        // a shot, nor over another clip of the arms)
+        private static void Brake(Player p, Vector3 flat)
+        {
+            if (_phase != Phase.Fly || _diving || Time.time < _brakeNext) return;
+            Vector3 h = new Vector3(_vel.x, 0f, _vel.z);
+            if (h.sqrMagnitude < BrakeFrom * BrakeFrom * Speed * Speed) return;
+            if (flat.sqrMagnitude > 0.25f && Vector3.Dot(flat.normalized, h.normalized) > 0f) return; // (still on, or turning: no)
+            BodyAnimator a = BodyAnimator.Of(p);
+            if (a == null || a.Playing(2) || Aiming(p)) return;
+            _brakeNext = Time.time + BrakePause;
+            BodyClips.Play(p, 2, "wings_brake", 0.15f, 1f);
+        }
+
+        // ---------------------------------------------------------------- «Крила Одіна» III: the dive
+
+        // Crouch held a moment in flight, high enough over land: you drop like a stone (Hugin pulls you down), and the
+        // ground you hit shakes — a blast that grows with the height you fell from. No fall hurts; you stand, the gift
+        // still on, and Space takes you up for the next one (after DivePause).
+        internal static float DiveFrom = 8f, DiveHold = 0.35f;        // m over the ground at least; s of crouch held
+        internal static float DiveSpeed = 28f, DiveAccel = 40f;       // m/s down; m/s² to get there
+        internal static float DiveTouch = 1.2f, DivePause = 8f;
+        internal static float DivePerMetre = 0.08f;                   // the blast: Hugin's blow × (1 + this per metre fallen)
+        internal static float DiveRadius = 4f, DiveRadiusTop = 8f;    // from a low dive to one from MaxHeight
+        private static bool _diving;
+        private static float _diveTop, _downSince = -1f, _diveReadyAt;
+
+        private static float Dive(Player p, bool down, float height, Vector3 pos, float vy)
+        {
+            if (!down || _overWater || !Facets.On("hflight")) { _downSince = -1f; _diving = false; return vy; } // (let go: the dive eases out into the flight)
+            if (_downSince < 0f) _downSince = Time.time;
+            if (!_diving && Time.time - _downSince >= DiveHold && height >= DiveFrom && Time.time >= _diveReadyAt)
+            {
+                _diving = true;
+                _diveTop = pos.y;
+                RavenMsg.Center(p, Lang.T("Піке!"));
+                PAnimLog.Event(Lang.T("піке"));
+            }
+            return _diving ? -DiveSpeed : vy;
+        }
+
+        // the dive's landing heard: a sledge's blow, slowed (lower, duller); the plain landing if the game lacks it
+        internal static string DiveSound = "sfx_sledge_hit", DiveSoundFallback = "sfx_land";
+        internal static float DiveSoundStretch = 1.3f;
+        private static void DiveThud(Player p)
+        {
+            if (p == null) return;
+            string played = Thud(DiveSound, p.transform.position, DiveSoundStretch) ? DiveSound : Thud(DiveSoundFallback, p.transform.position, 1f) ? DiveSoundFallback : null;
+            if (Plugin.Instance != null) Plugin.Instance.Log("Odin wings dive thud: " + (played ?? "no sound found (" + DiveSound + ", " + DiveSoundFallback + ")"));
+        }
+
+        // a game sound played here only: one kept in the game's scene list carries a network view — made without it
+        // (each game plays its own copy, the message brings it to the others)
+        private static bool Thud(string name, Vector3 at, float stretch)
+        {
+            GameObject prefab = RavenFx.Prefab(name);
+            if (prefab == null) return false;
+            if (prefab.GetComponent<ZNetView>() == null) return RavenFx.PlayStretched(prefab, at, stretch) != null;
+            GameObject made;
+            ZNetView.m_forceDisableInit = true;
+            try { made = UnityEngine.Object.Instantiate(prefab, at, Quaternion.identity); }
+            finally { ZNetView.m_forceDisableInit = false; }
+            if (made == null) return false;
+            foreach (ZNetView nv in made.GetComponentsInChildren<ZNetView>(true)) UnityEngine.Object.Destroy(nv);
+            made.SetActive(true);
+            RavenFx.Stretch(made, stretch);
+            UnityEngine.Object.Destroy(made, 5f);
+            return true;
+        }
+
+        private static void DiveBlast(Player p, Vector3 at)
+        {
+            _diving = false;
+            _downSince = -1f;
+            _diveReadyAt = Time.time + DivePause;
+            float fallen = Mathf.Max(0f, _diveTop - at.y);
+            ItemDrop.ItemData hugin = Trust.Worn(false);
+            float v = (hugin != null ? Strike.Blow(false, hugin) : 10f) * (1f + fallen * DivePerMetre);
+            float r = Mathf.Lerp(DiveRadius, DiveRadiusTop, fallen / MaxHeight);
+            Mastery.Splash(p, at, r, v, false, null, new Dictionary<Character, float>(), false, true);
+            Mastery.StaggerAround(p, at, r);
+            List<Character> dazed = new List<Character>();
+            foreach (Character c in Character.GetAllCharacters())
+                if (Strike.Prey(p, c) && !c.IsBoss() && Vector3.Distance(c.transform.position, at) <= r + Body.Radius(c)) dazed.Add(c);
+            Daze.Put(dazed); // (and the ones it reached stand dazed a while)
+            BindFx.Nova(p, "gust", at, r, 0.6f);
+            RavenFx.Broadcast(RpcDive, p, DiveThud); // (a dull thud, for everyone near)
+            if (GameCamera.instance != null) GameCamera.instance.AddShake(at, 30f, 1.5f + fallen / 20f, false);
+            p.Message(MessageHud.MessageType.TopLeft, Lang.F("Піке з {0} м", Mathf.RoundToInt(fallen)));
+            if (Plugin.Instance != null) Plugin.Instance.Log("Odin wings dive: fell " + fallen.ToString("0.0") + " m, blast " + v.ToString("0") + " in " + r.ToString("0.0") + " m");
         }
 
         // ---------------------------------------------------------------- the landing ahead
@@ -365,7 +512,7 @@ namespace HuginWhispers
         {
             if (on == _flaring) return;
             _flaring = on;
-            PlayerAnims.Tag(p, LandTag, on);
+            BodyClips.Tag(p, LandTag, on);
             if (on) PAnimLog.Event(Lang.T("підліт до посадки"));
         }
 
@@ -377,7 +524,7 @@ namespace HuginWhispers
             if (Time.time - _aheadAt < 0.05f) return _ahead;
             _aheadAt = Time.time;
             Vector3 dir = vel.normalized;
-            float dist = Mathf.Clamp(vel.magnitude * 0.3f, 1.5f, 4f);
+            float dist = Mathf.Clamp(vel.magnitude * 0.3f, 1.5f, 7f); // (a run-up: looks further, in time to come down)
             RaycastHit hit;
             _ahead = Physics.SphereCast(pos + Vector3.up * 0.5f, 0.3f, dir, out hit, dist, RavenMotor.Mask) && hit.normal.y > 0.6f;
             return _ahead;
@@ -514,22 +661,75 @@ namespace HuginWhispers
         private static bool Prefix(Player __instance) { return !(OdinWings.InAir() && __instance == Player.m_localPlayer); }
     }
 
-    // nothing to strike with up there
+    // nothing to strike with up there (II: but a bow, a crossbow or a staff shoots)
     [HarmonyPatch(typeof(Humanoid), "StartAttack")]
     internal static class WingsAttackPatch
     {
         private static bool Prefix(Humanoid __instance, ref bool __result)
         {
             if (!OdinWings.InAir() || __instance != Player.m_localPlayer) return true;
+            if (Twists.Two("hflight") && Shoots(__instance.GetCurrentWeapon())) return true;
             __result = false;
             return false;
+        }
+
+        internal static bool Shoots(ItemDrop.ItemData w)
+        {
+            return w != null && BodyClips.Ranged(w.m_shared); // (a bow, a crossbow or a staff, as the gift says: not a fishing rod, a harpoon or a bomb)
+        }
+
+        // the hands are the wings up there: nothing goes into them (II: a bow, a crossbow or a staff may)
+        internal static bool HandsFree(Humanoid h, ItemDrop.ItemData item)
+        {
+            if (item == null || !OdinWings.InAir() || h != Player.m_localPlayer) return true;
+            ItemDrop.ItemData.ItemType t = item.m_shared.m_itemType;
+            bool hand = item.IsWeapon() || t == ItemDrop.ItemData.ItemType.Shield || t == ItemDrop.ItemData.ItemType.Torch || t == ItemDrop.ItemData.ItemType.Tool;
+            if (!hand || (Twists.Two("hflight") && Shoots(item))) return true;
+            if (Time.time - _saidAt > 2f)
+            {
+                _saidAt = Time.time;
+                RavenMsg.Center(Player.m_localPlayer, Twists.Two("hflight") ? Lang.T("У польоті — тільки лук, арбалет чи посох") : Lang.T("У польоті руки — це крила"));
+            }
+            return false;
+        }
+        private static float _saidAt = -10f;
+    }
+
+    // in flight nothing is taken in hand (EquipItem: the hotbar, the inventory)…
+    [HarmonyPatch(typeof(Humanoid), "EquipItem")]
+    internal static class WingsEquipPatch
+    {
+        private static bool Prefix(Humanoid __instance, ItemDrop.ItemData item, ref bool __result)
+        {
+            try { if (WingsAttackPatch.HandsFree(__instance, item)) return true; } catch (Exception e) { PatchGuard.Fail("WingsEquipPatch", e); return true; }
+            __result = false;
+            return false;
+        }
+    }
+
+    // …and the things hidden at the take-off do not come back (R)
+    [HarmonyPatch(typeof(Humanoid), "ShowHandItems")]
+    internal static class WingsShowPatch
+    {
+        private static readonly System.Reflection.FieldInfo HiddenRight = AccessTools.Field(typeof(Humanoid), "m_hiddenRightItem"), HiddenLeft = AccessTools.Field(typeof(Humanoid), "m_hiddenLeftItem");
+        private static bool Prefix(Humanoid __instance)
+        {
+            try
+            {
+                if (!OdinWings.InAir() || __instance != Player.m_localPlayer) return true;
+                ItemDrop.ItemData r = HiddenRight != null ? HiddenRight.GetValue(__instance) as ItemDrop.ItemData : null;
+                ItemDrop.ItemData l = HiddenLeft != null ? HiddenLeft.GetValue(__instance) as ItemDrop.ItemData : null;
+                return WingsAttackPatch.HandsFree(__instance, r) && WingsAttackPatch.HandsFree(__instance, l);
+            }
+            catch (Exception e) { PatchGuard.Fail("WingsShowPatch", e); return true; }
         }
     }
 
     // Every game: the feathers trailing after Hugin (and lighter after you) while a player flies on the wings.
     internal static class WingsLook
     {
-        private sealed class Look { public ParticleSystem Hugin, Self; public GameObject HuginModel; }
+        private sealed class Look { public ParticleSystem Hugin, Self; public GameObject HuginModel; public Vector3 At; public float AtTime = -1f; }
+        internal static float TrailRush = 2f; // the run-up: this many times more feathers at the top (anyone's: from how fast they go)
         private static readonly Dictionary<Player, Look> Looks = new Dictionary<Player, Look>();
         private static float _next;
 
@@ -552,6 +752,12 @@ namespace HuginWhispers
                     l.Hugin = model != null ? Feathers.Trail(model.transform, false) : null;
                     l.HuginModel = model;
                 }
+                // the run-up shows: past the cruise, thicker trails (the pace from where they were a moment ago)
+                Vector3 now = pl.transform.position;
+                float pace = l.AtTime > 0f && Time.time > l.AtTime ? Vector3.Distance(now, l.At) / (Time.time - l.AtTime) : 0f;
+                l.At = now; l.AtTime = Time.time;
+                float rush = Mathf.InverseLerp(OdinWings.Speed * 1.05f, OdinWings.Speed * (1f + OdinWings.SurgeTop), pace);
+                Thicken(l.Self, rush); Thicken(l.Hugin, rush);
             }
             List<Player> gone = null;
             foreach (Player k in Looks.Keys) if (k == null) { if (gone == null) gone = new List<Player>(); gone.Add(k); }
@@ -560,7 +766,68 @@ namespace HuginWhispers
 
         private static void End(Look l) { Feathers.EndTrail(l.Hugin); Feathers.EndTrail(l.Self); }
 
+        private static void Thicken(ParticleSystem ps, float rush)
+        {
+            if (ps == null) return;
+            ParticleSystem.EmissionModule em = ps.emission;
+            if (em.rateOverDistance.constant > 0f) em.rateOverDistance = Feathers.TrailPerMetre * (1f + TrailRush * rush); // (0: the trail is ending)
+        }
+
         internal static void CloseAll() { foreach (Look l in Looks.Values) End(l); Looks.Clear(); }
+    }
+
+    // The run-up's wind (yours: what you hear): a rush of air that grows with OdinWings.Rush, from the game's own wind
+    // sound (the longest clip of that name it has), louder and higher the faster you go; it fades out with the run-up.
+    internal static class WingsWind
+    {
+        internal static float Volume = 0.5f, PitchLow = 0.85f, PitchHigh = 1.25f, Fade = 0.8f; // at the top; pitch from/to; share a second
+        private static AudioSource _src;
+        private static AudioClip _clip;
+        private static AudioSource _like;
+        private static bool _looked;
+        private static float _now;
+
+        internal static void Step(Player p, float rush, float dt)
+        {
+            _now = Mathf.MoveTowards(_now, p != null && OdinWings.Flying() ? rush : 0f, dt * Fade);
+            if (_now <= 0.001f) { Stop(); return; }
+            if (_src == null && !Make(p)) return;
+            _src.volume = Volume * _now * _now;
+            _src.pitch = Mathf.Lerp(PitchLow, PitchHigh, _now);
+        }
+
+        internal static void Stop() { if (_src != null) UnityEngine.Object.Destroy(_src.gameObject); _src = null; }
+
+        private static bool Make(Player p)
+        {
+            if (p == null) return false;
+            if (!_looked)
+            {
+                _looked = true;
+                foreach (AudioClip c in Resources.FindObjectsOfTypeAll<AudioClip>())
+                {
+                    string n = c.name.ToLowerInvariant();
+                    if (!n.Contains("wind") || n.Contains("window") || n.Contains("mill")) continue;
+                    if (_clip == null || c.length > _clip.length) _clip = c;
+                }
+                GameObject like = RavenFx.Prefab("sfx_raven_flap");
+                _like = like != null ? like.GetComponentInChildren<AudioSource>(true) : null; // (its mixer: the game's sound volume counts)
+                if (Plugin.Instance != null) Plugin.Instance.Log("Odin wings run-up wind: " + (_clip != null ? _clip.name + " (" + _clip.length.ToString("0.0") + " s)" : "no wind clip found"));
+            }
+            if (_clip == null) return false;
+            if (_clip.loadState == AudioDataLoadState.Unloaded) _clip.LoadAudioData();
+            GameObject go = new GameObject("RavenWatch_WingsWind");
+            go.transform.SetParent(p.transform, false);
+            _src = go.AddComponent<AudioSource>();
+            if (_like != null) _src.outputAudioMixerGroup = _like.outputAudioMixerGroup;
+            _src.clip = _clip;
+            _src.loop = true;
+            _src.spatialBlend = 0f; // (round your ears, not a place)
+            _src.volume = 0f;
+            _src.time = UnityEngine.Random.Range(0f, _clip.length * 0.8f); // (not the same start each run)
+            _src.Play();
+            return true;
+        }
     }
 }
 #endif

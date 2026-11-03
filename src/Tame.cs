@@ -127,7 +127,7 @@ namespace HuginWhispers
                 Trust.Ordered(true);
             }
             if (c == null || c.IsDead()) { End(p, null, true); return; }
-            if (c.IsTamed()) { End(p, "mtame_done", true); return; }
+            if (c.IsTamed()) { Twists.MarkTamed(c); Nicks.OnTamed(p); End(p, "mtame_done", true); return; }
             if (Time.time >= _until) { End(p, "mtame_end", true); return; }
             if (Time.time >= _buckAt)
             {

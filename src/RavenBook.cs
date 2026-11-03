@@ -604,6 +604,7 @@ namespace HuginWhispers
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Book of ravens page failed: " + e); }
             try { Footer(tab); } catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Book of ravens footer failed: " + e); }
             Relayout(); // the columns laid out now, not at the frame's end: a grid of cards (the ritual's) stood empty until the next redraw
+            if (tab == RavensTab) TooTall();
             if (scroll != null) RestoreScroll(scroll);
             _shown = Snapshot();
             TabDots();
@@ -637,6 +638,19 @@ namespace HuginWhispers
             if (_pages == null) return;
             foreach (ScrollRect sr in _pages.GetComponentsInChildren<ScrollRect>())
                 if (sr.content != null) LayoutRebuilder.ForceRebuildLayoutImmediate(sr.content);
+        }
+
+        // the Ravens pages are laid out to fit without scrolling: one that does not is told in the log (once per height)
+        private static readonly HashSet<string> _tallTold = new HashSet<string>();
+        private static void TooTall()
+        {
+            foreach (ScrollRect sr in _pages.GetComponentsInChildren<ScrollRect>())
+            {
+                if (sr.content == null || sr.viewport == null) continue;
+                float over = sr.content.rect.height - sr.viewport.rect.height;
+                if (over > 1f && _tallTold.Add(sr.name + ":" + Mathf.RoundToInt(over)) && Plugin.Instance != null)
+                    Plugin.Instance.Log("Book of ravens: the Ravens page of " + sr.name + " runs " + Mathf.RoundToInt(over) + " px past the page");
+            }
         }
 
         // ... and back on the page drawn anew (its layout made now, so it is known how far it can go)
@@ -917,13 +931,22 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- «Ворони»
 
+        // the Ravens pages leave the outer margin to the medallions (RavenBookRail): narrower, set in from the outer edge
+        private static float RavensX(bool munin) { return munin ? 86f : 630f; }
+        private const float RavensW = 484f;
+
         private static void PageRavens(ItemDrop.ItemData hugin, ItemDrop.ItemData munin)
         {
             foreach (bool m in new bool[] { true, false })
             {
                 ItemDrop.ItemData item = m ? munin : hugin;
-                RectTransform col = Column(m ? "Munin" : "Hugin", ColumnX(m), ColumnTop, ColumnW, 11f);
-                if (item != null) { RavenPage(col, m, item); HomeRows(col, m); } // (another of that kind at home: under this one's page)
+                RectTransform col = Column(m ? "Munin" : "Hugin", RavensX(m), ColumnTop, RavensW, 8f);
+                if (item != null)
+                {
+                    RavenPage(col, m, item);
+                    if (!Trust.Stranger(item, Player.m_localPlayer)) Rail(m, item);
+                    FootZone(col, m, false); // (another of that kind at home: one line under this one's page)
+                }
                 else EmptyPage(col, m, true);
             }
         }
@@ -938,7 +961,8 @@ namespace HuginWhispers
             // the portrait, the name with its initial, the level and what it does now
             RectTransform top = Rect("Top", col);
             HBox(top, 16f, TextAnchor.MiddleLeft);
-            Image portrait = Portrait(top, m, 96f);
+            // (as tall as the portrait, 104, or the name and its lines if they come out taller in another font)
+            Image portrait = Portrait(top, m, 92f);
             if (level == 0) portrait.color = new Color(0.62f, 0.58f, 0.52f, 1f);  // asleep: grey, as a stranger to you
             else if (away) portrait.color = new Color(1f, 1f, 1f, 0.5f);           // flown off: half there
             RectTransform info = Rect("Info", top);
@@ -948,21 +972,21 @@ namespace HuginWhispers
             TMP_Text lv = T(info, Lang.F("Рівень {0}/{1} · <color={2}><b>{3}</b></color> · {4}", level, Trust.MaxLevel, GoldInkHex, Trust.Rank(m, level), (m ? Lang.T("ліве плече") : Lang.T("праве плече"))), 15f, Ink, F.Italic);
             lv.textWrappingMode = TextWrappingModes.NoWrap;
             bool badState;
-            string state = StateLine(p, m, item, out badState);
+            string state = StateText(p, m, item, out badState);
             TMP_Text st = T(info, state, 14f, badState ? Bad : BookArt.RavenInk(m), F.Body);
             ItemDrop.ItemData stItem = item;
-            Ticking(st, () => { bool b; return StateLine(p, m, stItem, out b); }); // («повернеться за ~…» counts down)
-            st.textWrappingMode = TextWrappingModes.NoWrap;
+            Ticking(st, () => { bool b; string s = StateText(p, m, stItem, out b); if (st != null) st.color = b ? Bad : BookArt.RavenInk(m); return s; }); // («повернеться за ~…» counts down; red once it goes bad)
+            Shrink(st, 11f);
+            Tip(st.gameObject, () => Filthy(p, stItem) ? Bath.BookTip(stItem, m) : null); // («· брудний»: what dirt does)
             if (!stranger && level > 0) RequestSeal(top, m, item); // its own wish, its sparklets (RavenBookRequest)
-            if (!stranger) KinSeal(top, m, item); // the ravens of other players it knows (RavenBookKin)
-            if (!stranger) WordsSeal(top, m, item); // the words you taught it (RavenBookWords)
+            // (the ravens it knows and the words it was taught: on the margin, RavenBookRail)
 
             if (stranger)
                 T(col, Lang.F("Чужий ворон: його власник — {0}. Довіри, годування й ритуалів з тобою не буде.", (Trust.OwnerName(item) ?? Lang.T("хтось інший"))), 15f, Bad, F.Italic);
 
-            // the bars: trust, strength, satiety
+            // the bars: trust, strength, satiety (the dirt: on the margin, the bath)
             RectTransform bars = Rect("Bars", col);
-            VBox(bars, 11f, TextAnchor.UpperLeft);
+            VBox(bars, 8f, TextAnchor.UpperLeft);
             ItemDrop.ItemData it = item;
             if (level == 0) Meter(bars, Lang.T("Довіра"), () => TrustTip(m, it), () => Lang.T("спить"), () => 0f, "brush-gold", BarKey(m, Lang.T("Довіра")));
             else Meter(bars, Lang.T("Довіра"), () => TrustTip(m, it), () => Trust.Need(it) > 0f ? Mathf.FloorToInt(Trust.Points(it)) + " / " + Mathf.RoundToInt(Trust.Need(it)) : Lang.T("найвища"), () => Trust.Need(it) > 0f ? Trust.Points(it) / Trust.Need(it) : 1f, "brush-gold", BarKey(m, Lang.T("Довіра")));
@@ -970,34 +994,40 @@ namespace HuginWhispers
                 () => Mathf.FloorToInt(Power.Get(it)) + " / " + Mathf.RoundToInt(Trust.Strength(it)), () => Power.Get(it) / Mathf.Max(1f, Trust.Strength(it)), m ? "brush-munin" : "brush-huginn", BarKey(m, Lang.T("Сила")));
             if (level > 0 && !stranger) SatietyGauge(bars, m, item);
 
-            // «Благо» and «Тягар»
+            // «Благо» and «Тягар»: one line, each cut with «…» (the whole of it on hover)
             string bonus, minus;
             RectTransform perks = Rect("Perks", col);
-            HorizontalLayoutGroup ph = HBox(perks, 16f, TextAnchor.MiddleLeft);
+            HorizontalLayoutGroup ph = HBox(perks, 20f, TextAnchor.MiddleLeft);
             ph.childForceExpandWidth = false;
             Fixed(perks.gameObject, -1f, RowPerks);
             if (Perks.Lines(item, out bonus, out minus))
             {
                 string bl = Lang.F("<color={0}><b>Благо</b></color> <color={1}>{2}</color>", GoldInkHex, Perks.Golden(item) ? GoldInkHex : GoodHex, Perks.Golden(item) ? "<b>" + bonus + "</b>" : bonus); // (a golden one: in gold)
                 string tl = Lang.F("<color={0}><b>Тягар</b></color> <color={1}>{2}</color>", GoldInkHex, BadHex, minus);
-                TMP_Text b = Shrink(T(perks, bl, 15f, Ink, F.Body), 11f);
-                b.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+                TMP_Text b = Shrink(T(perks, bl, 14f, Ink, F.Body), 14f);
                 Tip(b.gameObject, () => bl + "\n" + tl + "\n\n" + PerksTip());
-                TMP_Text t = Shrink(T(perks, tl, 15f, Ink, F.Body), 11f);
-                t.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+                TMP_Text t = Shrink(T(perks, tl, 14f, Ink, F.Body), 14f);
                 Tip(t.gameObject, () => bl + "\n" + tl + "\n\n" + PerksTip());
             }
-            else Shrink(T(perks, Lang.T("Благо й тягар відкриються після покупки."), 15f, InkSoft, F.Italic), 11f);
+            else Shrink(T(perks, Lang.T("Благо й тягар відкриються після покупки."), 14f, InkSoft, F.Italic), 11f);
 
-            NorovRow(col, m, item);
-            HabitsRow(col, item);
+            if (!stranger) NatureGrid(col, m, item);
             GiftsRow(col, m);
-            RuneDivider(col);
+            RuneDivider(col, true);
             NextCard(col, p, m, item);
         }
 
         // the raven page's rows: the same height on both pages, whatever they say (a long text shrinks, Shrink)
-        private const float RowPerks = 26f, RowHabits = 24f, RowNorov = 46f, RowGifts = 32f, RowFoot = 20f, RowNext = 96f;
+        private const float RowPerks = 20f, RowTrait = 40f, RowGifts = 36f, RowFoot = 20f, RowNext = 86f;
+
+        // too dirty: its gains fall (Bath.FilthyAt) — said after its state («· брудний») and in red on the bath
+        private static bool Filthy(Player p, ItemDrop.ItemData item) { return item != null && !Trust.Stranger(item, p) && Trust.Active(item) && Bath.DirtOf(item) >= Bath.FilthyAt; }
+
+        private static string StateText(Player p, bool m, ItemDrop.ItemData item, out bool bad)
+        {
+            string s = StateLine(p, m, item, out bad);
+            return Filthy(p, item) ? s + Lang.F(" · <b><color={0}>брудний</color></b>", GoldInkHex) : s;
+        }
 
         private static string PerksTip()
         {
@@ -1081,8 +1111,8 @@ namespace HuginWhispers
             bad = false;
             if (Trust.Stranger(item, p)) { bad = true; return Lang.F("● чужий — власник {0}", (Trust.OwnerName(item) ?? Lang.T("інший"))); }
             if (!Trust.Active(item)) { bad = true; return Lang.T("● спить · довіра 0"); }
-            if (Perches.OnSpot(item)) return "● " + (Grammar.Female(p) ? Lang.T("сидить, де ти показала") : Lang.T("сидить, де ти показав"));
-            if (Perches.On(item)) return Lang.F("● сидить на жердині · {0}", Perches.DayText(item));
+            if (Perches.OnSpot(item)) return "● " + Perches.SpotWord(p, m);
+            if (Perches.On(item)) return Lang.F("● сидить {0} · {1}", Perches.OnWord(item), Perches.DayText(item));
             if (Trust.Away(item)) { bad = true; return Trust.AwayWhy(item) == Post.Why ? "● " + Trust.AwayWord(m, item) : Lang.F("● {0} — повернеться за ~{1}", Trust.AwayWord(m, item), RavenAbilities.Span(Trust.AwayLeft(item))); } // (the post: no clock, it goes as the post goes)
             int zone = Satiety.Zone(item);
             if (zone <= Satiety.Hungry) { bad = true; return Lang.F("● {0} — накази не виконує", Satiety.ZoneWords[zone]); }
@@ -1091,6 +1121,8 @@ namespace HuginWhispers
             if (o != Orders.None && o > 0 && o < Orders.Names.Length) return Lang.F("● виконує «{0}»", Orders.Names[o]);
             string off;
             if (RavenSkills.OffShoulder(p, m, out off)) return "● " + off;
+            string doing = Perks.OffWord(p, m); // (a visit, an outing of its own: off the shoulder too)
+            if (doing != null) return "● " + doing;
             return Lang.T("● на плечі");
         }
 
@@ -1106,107 +1138,167 @@ namespace HuginWhispers
             Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, 4f), new Vector2(-4f, -4f));
             Image pic = Img(r, "Raven", BookArt.Portrait(m) ?? RavenItem.Icon(m), Color.white);
             Stretch(pic.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 6f), new Vector2(-6f, -6f));
+            if (m) pic.rectTransform.localScale = new Vector3(-1f, 1f, 1f); // Munin looks left, Hugin right: they face apart
             return pic;
         }
 
-        // «Норов»: the raven's traits — a framed letter (or the trait's picture) and its name, each told in full on hover
-        private static void NorovRow(Transform col, bool m, ItemDrop.ItemData item)
+        // «Норов» and «Звички» in one grid of four (the user's design 2026-10-28): character, knack, quirk, and the habit —
+        // each a card with its stripe, its mark, its caption and name, told in full on hover
+        private static void NatureGrid(Transform col, bool m, ItemDrop.ItemData item)
         {
-            if (item == null || Trust.Stranger(item, Player.m_localPlayer)) return;
-            RectTransform row = Rect("Norov", col);
-            HorizontalLayoutGroup h = HBox(row, 8f, TextAnchor.MiddleLeft);
-            h.childForceExpandHeight = true;
-            Fixed(row.gameObject, -1f, RowNorov);
-            TMP_Text l = T(row, Lang.T("Норов"), 14f, Brown, F.Body, TextAlignmentOptions.MidlineLeft);
-            Fixed(l.gameObject, 58f, -1f);
+            RectTransform grid = Rect("Nature", col);
+            GridLayoutGroup g = grid.gameObject.AddComponent<GridLayoutGroup>();
+            g.cellSize = new Vector2(Mathf.Floor((RavensW - 8f) / 2f), RowTrait); g.spacing = new Vector2(8f, 6f);
+            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 2;
+            Fixed(grid.gameObject, -1f, RowTrait * 2f + 6f);
             Norov.Character c = Norov.CharOf(item);
             Norov.Knack k = Norov.KnackOf(item);
             Norov.Quirk q = Norov.QuirkOf(item);
-            if (c == null || k == null || q == null) { T(row, Lang.T("відкриється після покупки"), 14f, InkSoft, F.Italic, TextAlignmentOptions.MidlineLeft); Spring(row); return; }
+            if (c == null || k == null || q == null)
+            {
+                for (int i = 0; i < 3; i++) Trait(grid, i, null, "<i>" + Lang.T("після покупки") + "</i>", null);
+                HabitCard(grid, item);
+                return;
+            }
             ItemDrop.ItemData it = item;
             // the voice comes with the character: a quiet «· голос» on it, only while the ravens really speak aloud
             bool voice = RavenVoice.Available;
-            Trait(row, 0, c.Id, c.Name + (voice ? " <size=78%><color=#8a6420>· " + Lang.T("голос") + "</color></size>" : ""),
-                () => Norov.CharTip(it) + (RavenVoice.Available ? "\n\n" + Lang.T("Говорить уголос — голосом свого характеру.") : ""));
+            Trait(grid, 0, c.Id, c.Name + (voice ? " <size=72%><color=#8A7A62>· " + Lang.T("голос") + "</color></size>" : ""),
+                () => Norov.CharTip(it) + (RavenVoice.Available ? "\n\n" + Lang.T("Говорить уголос — голосом свого характеру.") : "") + ArmTricksTip(it, m));
             Look breed = Breeds.Of(item);
-            LayoutElement knack = Trait(row, 1, k.Id, k.Name(m), () => { string bt = Breeds.Tip(it); return Norov.KnackTip(it, m) + (bt != null ? "\n\n" + bt : ""); }, breed != null);
-            if (breed != null) knack.flexibleWidth = 1.15f; // (a breed's card a little wider: it is the one to notice)
-            Trait(row, 2, q.Id, q.Name + (Quirks.SulkLeft(item) > 0f ? Lang.F(" <color={0}>(ображений)</color>", BadHex) : ""), () => Norov.QuirkTip(it, m));
+            Trait(grid, 1, k.Id, k.Name(m), () => { string bt = Breeds.Tip(it); return Norov.KnackTip(it, m) + (bt != null ? "\n\n" + bt : ""); }, breed != null);
+            Trait(grid, 2, q.Id, q.Name + (Quirks.SulkLeft(item) > 0f ? Lang.F(" <color={0}>(ображений)</color>", BadHex) : ""), () => Norov.QuirkTip(it, m));
+            HabitCard(grid, item);
         }
 
-        // «Звички»: what it picked up from how you play these days (Habits) — up to two with their strength, or the one
-        // forming; each told in full on hover (whence, what it gives, how to lose it, how to keep it)
-        private static readonly string HabitHex = "#2a4f6a";
-        private static void HabitsRow(Transform col, ItemDrop.ItemData item)
+        // its own ways on your arm (ArmTricks), under its character: what it has opened so far
+        private static string ArmTricksTip(ItemDrop.ItemData item, bool m)
         {
-            if (item == null || Trust.Stranger(item, Player.m_localPlayer)) return;
-            ItemDrop.ItemData it = item;
-            RectTransform row = Rect("Habits", col);
-            HorizontalLayoutGroup h = HBox(row, 14f, TextAnchor.MiddleLeft);
-            h.childForceExpandWidth = false;
-            Fixed(row.gameObject, -1f, RowHabits);
-            TMP_Text l = T(row, Lang.T("Звички"), 14f, Brown, F.Body, TextAlignmentOptions.MidlineLeft);
-            Fixed(l.gameObject, 58f, -1f);
-            Tip(l.gameObject, () => Habits.Explain(it));
-            List<Habits.Def> now = Trust.Active(item) ? Habits.Now(item) : new List<Habits.Def>();
-            foreach (Habits.Def d in now)
-            {
-                Habits.Def hd = d;
-                TMP_Text t = Shrink(T(row, Lang.F("<color={0}><b>{1}</b></color> <color={2}>{3}</color>", HabitHex, d.Name, GoldInkHex, Habits.Dots(item, d.Id)), 15f, Ink, F.Body), 11f);
-                t.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-                Tip(t.gameObject, () => Habits.Tip(it, hd, true, GoodHex, BadHex));
-            }
-            Habits.Def rising = now.Count < Habits.MaxOn && Trust.Active(item) ? Habits.Rising(item) : null;
-            if (rising != null)
-            {
-                TMP_Text t = Shrink(T(row, Lang.F("назріває: {0} <color={1}>{2}</color>", rising.Name, HabitHex, Habits.Bar(item, rising.Id)), 14f, InkSoft, F.Italic), 10f);
-                t.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-                Tip(t.gameObject, () => Habits.Tip(it, rising, false, GoodHex, BadHex));
-            }
-            if (now.Count == 0 && rising == null)
-            {
-                TMP_Text t = Shrink(T(row, Lang.T("ще не набув — наведи, щоб дізнатися, які бувають"), 14f, InkSoft, F.Italic), 10f);
-                t.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-                Tip(t.gameObject, () => Habits.Explain(it));
-            }
+            string known = ArmTricks.Known(item, m);
+            return known != null ? "\n\n" + Lang.F("<b>На руці:</b> {0}.", known) : "";
         }
 
         // the three kinds of trait: caption, colour, mark
         private static string[] TraitCaption { get { return Lang.Arr(TraitCaptionSrc); } } // (translated on every read)
         private static readonly string[] TraitCaptionSrc = Lang.Keys("Характер", "Хист", "Примха");
         private static readonly Color[] TraitInk = { C("#8a6420"), C("#2f5a2a"), C("#8E1E1E") };
+        private static readonly Color BreedGold = C("#b8862a"), TraitFill = C("#d6c29a"), TraitCap = C("#8A7A62");
+        private static readonly string HabitHex = "#2a4f6a", HabitRisingHex = "#2F5D9E";
 
-        // one trait's card: a stripe in its colour down the left, a pale tint of it, its caption, a round mark and the name
-        private static readonly Color BreedGold = C("#b8862a");
-
+        // one trait's card: a stripe in its colour down the left, a light fill, the round mark, its caption over its name
         // gold: a raven of a breed — its knack's card glows gold (the breed's trait comes on top of the knack)
-        private static LayoutElement Trait(RectTransform row, int kind, string id, string name, Func<string> tip, bool gold = false)
+        private static RectTransform Trait(RectTransform parent, int kind, string id, string name, Func<string> tip, bool gold = false)
         {
             Color ink = TraitInk[kind];
-            RectTransform card = Rect("Trait", row);
-            LayoutElement le = card.gameObject.AddComponent<LayoutElement>();
-            le.flexibleWidth = 1f;
-            if (gold) Box(card, 5f, A(BreedGold, 0.2f), A(BreedGold, 0.85f), 1.5f);
-            else Box(card, 5f, A(ink, 0.07f), A(ink, 0.35f), 1f);
+            RectTransform card = TraitCard(parent, ink, gold ? A(BreedGold, 0.2f) : A(TraitFill, 0.45f), gold ? A(BreedGold, 0.85f) : new Color(0f, 0f, 0f, 0f), false);
+            RectTransform mark = Rect("Mark", card);
+            Fixed(mark.gameObject, 24f, 24f);
+            Sprite sp = id != null ? Norov.Icon(id) : null;
+            if (sp != null) Img(mark, "Icon", sp, Color.white).preserveAspect = true; // its own picture when one is drawn
+            else TraitMark(mark, kind, ink);
+            TraitWords(card, TraitCaption[kind], "<b>" + name + "</b>", ink);
+            if (tip != null) Tip(card.gameObject, tip);
+            return card;
+        }
+
+        // the card itself: its fill (and frame), the stripe down the left; dashed: a habit only forming, or none yet
+        private static RectTransform TraitCard(RectTransform parent, Color ink, Color fill, Color frame, bool dashed)
+        {
+            RectTransform card = Rect("Trait", parent);
+            Box(card, 3f, fill, frame, 1.5f);
+            if (dashed)
+            {
+                Color d = A(ink, 0.5f);
+                DashEdge(card, true, new Vector2(0f, 1f), new Vector2(1f, 1f), d);
+                DashEdge(card, true, new Vector2(0f, 0f), new Vector2(1f, 0f), d);
+                DashEdge(card, false, new Vector2(1f, 0f), new Vector2(1f, 1f), d);
+            }
             Image stripe = Img(card, "Stripe", BookArt.Stripe, ink); // soft-edged (the tilt made a hard thin box ragged)
             stripe.type = Image.Type.Sliced;
             stripe.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             stripe.rectTransform.anchorMin = new Vector2(0f, 0f); stripe.rectTransform.anchorMax = new Vector2(0f, 1f);
             stripe.rectTransform.pivot = new Vector2(0f, 0.5f);
-            stripe.rectTransform.offsetMin = new Vector2(-1f, 1f); stripe.rectTransform.offsetMax = new Vector2(5f, -1f); // ~4 of ink, its clear sides outside
-            VBox(card, 1f, TextAnchor.MiddleLeft, 10, 6, 3, 4);
-            Shrink(T(card, TraitCaption[kind], 13f, ink, F.Body), 10f);
-            RectTransform line = Rect("Line", card);
-            HBox(line, 6f, TextAnchor.MiddleLeft);
-            RectTransform mark = Rect("Mark", line);
-            Fixed(mark.gameObject, 18f, 18f);
-            Sprite sp = Norov.Icon(id);
-            if (sp != null) Img(mark, "Icon", sp, Color.white).preserveAspect = true; // its own picture when one is drawn
-            else TraitMark(mark, kind, ink);
-            TMP_Text n = Shrink(T(line, "<b>" + name + "</b>", 14f, ink, F.Body), 10f);
-            n.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            Tip(card.gameObject, tip);
-            return le;
+            stripe.rectTransform.offsetMin = new Vector2(-1f, 0f); stripe.rectTransform.offsetMax = new Vector2(4f, 0f); // ~3 of ink, its clear sides outside
+            HBox(card, 8f, TextAnchor.MiddleLeft, 11, 8, 2, 2);
+            return card;
+        }
+
+        // a thin dashed edge of a card (across: top or bottom; else the right side)
+        private static void DashEdge(RectTransform card, bool across, Vector2 min, Vector2 max, Color c)
+        {
+            Image d = Img(card, "Dash", BookArt.Dash(across), c);
+            d.type = Image.Type.Tiled; d.pixelsPerUnitMultiplier = 2f;
+            d.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            d.rectTransform.anchorMin = min; d.rectTransform.anchorMax = max;
+            d.rectTransform.offsetMin = across ? new Vector2(3f, -1f) : new Vector2(-1f, 0f);
+            d.rectTransform.offsetMax = across ? new Vector2(0f, 1f) : new Vector2(1f, 0f);
+        }
+
+        // the caption (small, grey) over the name, both cut with «…» where too long
+        private static RectTransform TraitWords(RectTransform card, string caption, string name, Color ink)
+        {
+            RectTransform words = Rect("Words", card);
+            VBox(words, 0f, TextAnchor.MiddleLeft);
+            LayoutElement le = words.gameObject.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f; le.minWidth = 0f; le.preferredWidth = 0f;
+            Shrink(T(words, caption, 11f, TraitCap, F.Body), 10f);
+            Shrink(T(words, name, 14f, ink, F.Body), 11f);
+            return words;
+        }
+
+        // «Звичка»: the strongest habit with its notches (a second one: «+1», told on hover); else the one forming
+        // (dashed, its notches towards taking hold); else none yet (dashed, grey) — what it picked up from how you play
+        private static void HabitCard(RectTransform grid, ItemDrop.ItemData item)
+        {
+            ItemDrop.ItemData it = item;
+            bool live = item != null && Trust.Active(item) && Norov.CharOf(item) != null;
+            List<Habits.Def> now = live ? Habits.Now(item) : new List<Habits.Def>();
+            now.Sort((a, b) => Habits.LeanOf(it, b.Id).CompareTo(Habits.LeanOf(it, a.Id)));
+            Habits.Def rising = live && now.Count < Habits.MaxOn ? Habits.Rising(item) : null;
+            bool has = now.Count > 0, forming = !has && rising != null;
+            Color ink = has ? C(HabitHex) : forming ? C(HabitRisingHex) : TraitCap;
+            RectTransform card = TraitCard(grid, ink, has ? A(TraitFill, 0.45f) : forming ? A(TraitFill, 0.25f) : new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 0f, 0f), !has);
+            RectTransform mark = Rect("Mark", card);
+            Fixed(mark.gameObject, 24f, 24f);
+            Img(mark, "Ring", BookArt.Circle, ink);
+            Image paper = Img(mark, "Paper", BookArt.Circle, C("#efe2c2"));
+            Stretch(paper.rectTransform, Vector2.zero, Vector2.one, new Vector2(1.5f, 1.5f), new Vector2(-1.5f, -1.5f));
+            TMP_Text g = T(mark, has || forming ? "ᛃ" : "?", has || forming ? 15f : 16f, ink, has || forming ? F.Rune : F.Body, TextAlignmentOptions.Center); // ᛃ: the year's turn, a thing done again and again
+            Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            string caption = has ? Lang.T("Звичка") : forming ? Lang.T("Звичка · назріває") : Lang.T("Звичка");
+            string name = has ? "<b>" + now[0].Name + "</b>" : forming ? "<b><i>" + rising.Name + "</i></b>" : "<b><i>" + Lang.T("ще не набув") + "</i></b>";
+            TraitWords(card, caption, name, ink);
+            if (has || forming)
+            {
+                int filled = has ? Habits.DotsOf(item, now[0].Id) : Habits.BarOf(item, rising.Id), of = has ? 3 : 4;
+                RectTransform notches = Rect("Notches", card);
+                HBox(notches, 3f, TextAnchor.MiddleCenter);
+                for (int i = 0; i < of; i++)
+                {
+                    RectTransform n = Rect("Notch", notches);
+                    Fixed(n.gameObject, 3f, 14f);
+                    Image ni = n.gameObject.AddComponent<Image>();
+                    ni.sprite = BookArt.RoundFine(1f); ni.type = Image.Type.Sliced; ni.pixelsPerUnitMultiplier = BookArt.Fine;
+                    ni.color = i < filled ? ink : A(Brown, 0.2f); ni.raycastTarget = false;
+                    n.localRotation = Quaternion.Euler(0f, 0f, -12f); // a cut slanted like a tally mark
+                }
+            }
+            if (now.Count > 1)
+            {
+                RectTransform more = Rect("More", card);
+                Fixed(more.gameObject, 24f, 16f);
+                Box(more, 8f, C("#C9A24A"), new Color(0f, 0f, 0f, 0f), 0f);
+                TMP_Text mt = T(more, "<b>+" + (now.Count - 1) + "</b>", 11f, C("#2A1E14"), F.Body, TextAlignmentOptions.Center);
+                Stretch(mt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            }
+            Tip(card.gameObject, () =>
+            {
+                if (!has && !forming) return Habits.Explain(it);
+                List<string> l = new List<string>();
+                foreach (Habits.Def d in now) l.Add(Habits.Tip(it, d, true, GoodHex, BadHex));
+                if (rising != null) l.Add(Habits.Tip(it, rising, false, GoodHex, BadHex));
+                return string.Join("\n\n", l.ToArray());
+            });
         }
 
         // the round mark: a ring with ◆ (character), + (knack) or − (quirk) in it, drawn (no font has to have them)
@@ -1219,30 +1311,30 @@ namespace HuginWhispers
             {
                 Image d = Img(mark, "Diamond", null, ink);
                 d.rectTransform.anchorMin = d.rectTransform.anchorMax = d.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                d.rectTransform.sizeDelta = new Vector2(6.5f, 6.5f); d.rectTransform.anchoredPosition = Vector2.zero;
+                d.rectTransform.sizeDelta = new Vector2(8.5f, 8.5f); d.rectTransform.anchoredPosition = Vector2.zero;
                 d.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
                 return;
             }
             Image a = Img(mark, "Across", null, ink);
             a.rectTransform.anchorMin = a.rectTransform.anchorMax = a.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            a.rectTransform.sizeDelta = new Vector2(8f, 1.6f); a.rectTransform.anchoredPosition = Vector2.zero;
+            a.rectTransform.sizeDelta = new Vector2(10.5f, 2f); a.rectTransform.anchoredPosition = Vector2.zero;
             if (kind != 1) return;
             Image u = Img(mark, "Up", null, ink);
             u.rectTransform.anchorMin = u.rectTransform.anchorMax = u.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            u.rectTransform.sizeDelta = new Vector2(1.6f, 8f); u.rectTransform.anchoredPosition = Vector2.zero;
+            u.rectTransform.sizeDelta = new Vector2(2f, 10.5f); u.rectTransform.anchoredPosition = Vector2.zero;
         }
 
-        // the open gifts, small; a click goes to the Gifts tab
+        // the open gifts, small (one cooling down: dimmed, a dark clock sector over it); a click goes to the Gifts tab
         private static void GiftsRow(Transform col, bool m)
         {
             RectTransform row = Rect("Gifts", col);
             HBox(row, 6f, TextAnchor.MiddleLeft);
             Fixed(row.gameObject, -1f, RowGifts);
-            TMP_Text l = T(row, Lang.T("Дари"), 14f, Brown, F.Body);
-            Fixed(l.gameObject, 58f, -1f);
+            TMP_Text l = T(row, Lang.T("Дари"), 15f, Brown, F.Body, TextAlignmentOptions.MidlineLeft);
+            Fixed(l.gameObject, 52f, -1f);
             List<RavenAbility> open = new List<RavenAbility>();
             foreach (RavenAbility a in BookOrder()) if (a.Munin == m && !a.Pair && !RavenAbilities.Stub(a) && RavenAbilities.Unlocked(a) && !a.Passive) open.Add(a); // (the paired ones: on the leaf «Дари обох», not one raven's)
-            const float size = 30f;
+            float size = Mathf.Min(34f, Mathf.Floor((RavensW - 52f - 96f) / Mathf.Max(1, open.Count)) - 6f); // (many: smaller, still one row)
             foreach (RavenAbility a in open)
             {
                 RavenAbility ab = a;
@@ -1252,44 +1344,51 @@ namespace HuginWhispers
                 Image ic = Img(r, "Icon", AbilityIcons.For(a.Id, a.Munin), Color.white);
                 Stretch(ic.rectTransform, Vector2.zero, Vector2.one, new Vector2(1f, 1f), new Vector2(-1f, -1f));
                 ic.preserveAspect = true;
+                int gold = GiftUp.Level(a.Id);
+                Image cool = Img(r, "Cool", BookArt.Circle, new Color(0.08f, 0.055f, 0.04f, 0.6f));
+                Stretch(cool.rectTransform, Vector2.zero, Vector2.one, new Vector2(2f, 2f), new Vector2(-2f, -2f));
+                cool.type = Image.Type.Filled; cool.fillMethod = Image.FillMethod.Radial360; cool.fillOrigin = (int)Image.Origin360.Top; cool.fillClockwise = true;
+                if (gold > 0) GoldBadge(r, size, m ? -1 : 1, gold); // (over the cooling sector)
                 Tip(r.gameObject, () => GiftTip(ab));
                 Clickable(r.gameObject, () => Show(GiftsTab));
-                Action dim = () => { if (ic != null) ic.color = new Color(1f, 1f, 1f, ab.Passive || RavenSkills.Dot(ab) == RavenSkills.DotReady ? 1f : 0.45f); };
+                Action dim = () =>
+                {
+                    if (ic == null) return;
+                    bool now = RavenSkills.Dot(ab) == RavenSkills.DotReady;
+                    ic.color = now ? Color.white : new Color(0.7f, 0.67f, 0.62f, 0.55f);
+                    float left = RavenSkills.LeftOf(ab.Id);
+                    cool.fillAmount = left > 0f ? Mathf.Clamp01(left / Mathf.Max(1f, RavenSkills.CooldownSeconds(ab.Id))) : 0f;
+                };
                 dim(); // now, not on the next second's renew: a page drawn anew must not blink
                 Live.Add(dim);
             }
-            if (open.Count == 0) T(row, Lang.T("ще жодного"), 14f, InkSoft, F.Italic);
+            if (open.Count == 0) T(row, Lang.T("ще жодного"), 14f, InkSoft, F.Italic, TextAlignmentOptions.MidlineLeft);
             Spring(row);
-            TMP_Text ready = T(row, "", 14f, Good, F.Body, TextAlignmentOptions.MidlineRight);
+            TMP_Text ready = T(row, "", 14f, InkSoft, F.Body, TextAlignmentOptions.MidlineRight);
             ready.textWrappingMode = TextWrappingModes.NoWrap;
             Action count = () =>
             {
                 if (ready == null) return;
                 int n = 0; foreach (RavenAbility a in open) if (RavenSkills.Dot(a) == RavenSkills.DotReady) n++;
-                ready.text = open.Count == 0 ? "" : Lang.N(n, "готовий|готові|готові");
+                ready.text = open.Count == 0 ? "" : Lang.N(n, "готовий|готові|готові") + " ›";
             };
             count();
             Live.Add(count);
+            if (open.Count > 0) Clickable(ready.gameObject, () => Show(GiftsTab));
         }
 
-        // ── ᚱᚨᚢᛖᚾ ── between the raven and what comes next
-        private static void RuneDivider(Transform col)
+        // ── ᚱᚨᚢᛖᚾ ── between the raven and what comes next (small: the Ravens page's, set in from the sides)
+        private static void RuneDivider(Transform col, bool small = false)
         {
             RectTransform row = Rect("Runes", col);
-            HBox(row, 10f, TextAnchor.MiddleCenter, 0, 0, 4, 0);
+            HBox(row, small ? 12f : 10f, TextAnchor.MiddleCenter, small ? 70 : 0, small ? 70 : 0, small ? 0 : 4, 0);
+            if (small) Fixed(row.gameObject, -1f, 14f);
             Image a = Img(row, "Line", BookArt.Fade(true), new Color(0.227f, 0.141f, 0.078f, 0.5f));
             Fixed(a.gameObject, -1f, 1f); a.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
-            TMP_Text t = T(row, "ᚱᚨᚢᛖᚾ", 15f, new Color(0.478f, 0.353f, 0.196f, 0.7f), F.Rune, TextAlignmentOptions.Center);
-            t.characterSpacing = 40f; t.textWrappingMode = TextWrappingModes.NoWrap;
+            TMP_Text t = T(row, "ᚱᚨᚢᛖᚾ", small ? 13f : 15f, new Color(0.478f, 0.353f, 0.196f, 0.7f), F.Rune, TextAlignmentOptions.Center);
+            t.characterSpacing = small ? 30f : 40f; t.textWrappingMode = TextWrappingModes.NoWrap;
             Image b = Img(row, "Line", BookArt.Fade(false), new Color(0.227f, 0.141f, 0.078f, 0.5f));
             Fixed(b.gameObject, -1f, 1f); b.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
-        }
-
-        private static void DashedLine(Transform col)
-        {
-            Image d = Img(col, "Dashes", BookArt.Dash(true), new Color(0.227f, 0.141f, 0.078f, 0.45f));
-            d.type = Image.Type.Tiled;
-            Fixed(d.gameObject, -1f, 4f);
         }
 
         // what trust is, short (the full story is behind the window's "?" on the Growth tab)
@@ -1404,7 +1503,7 @@ namespace HuginWhispers
             RectTransform foot = Rect("Foot", box);
             HBox(foot, 10f, TextAnchor.MiddleLeft);
             Fixed(foot.gameObject, -1f, RowFoot);
-            TMP_Text fav = Shrink(T(foot, "", 14f, InkSoft, F.Italic), 11f);
+            TMP_Text fav = Shrink(T(foot, "", 14f, InkSoft, F.Italic), 10f);
             fav.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Tip(fav.gameObject, () => Satiety.FavLine(item, m));
             TMP_Text feed = T(foot, Lang.T("<b>Чим нагодувати</b>"), 14f, GoldInk, F.Body, TextAlignmentOptions.MidlineRight);
@@ -1421,8 +1520,7 @@ namespace HuginWhispers
                 int z = Satiety.Zone(v);
                 num.text = "<b><color=" + ZoneInk[z] + ">" + Lang.UpperFirst(Satiety.ZoneWords[z]) + " · " + Mathf.RoundToInt(v) + " / 100</color></b>";
                 float left = Strike.FedLeft(sat);
-                string favLine = System.Text.RegularExpressions.Regex.Replace(Satiety.FavLine(sat, m) ?? "", "<.*?>", "");
-                fav.text = left > 0f ? Lang.F("<color={0}>удар +{1}% · ще {2}</color>", GoodHex, RavenAbilities.R(Strike.FedPct), RavenAbilities.Clock(left)) : favLine;
+                fav.text = left > 0f ? Lang.F("<color={0}>удар +{1}% · ще {2}</color>", GoodHex, RavenAbilities.R(Strike.FedPct), RavenAbilities.Clock(left)) : Satiety.FavShort(sat, m); // (the whole line on hover)
             };
             live();
             Live.Add(live);
@@ -1435,7 +1533,7 @@ namespace HuginWhispers
             string s = Lang.F("<b><color={0}>Ситість</color></b>\n\n{1} має ситість від 0 до 100{2}. Вона тане сама (≈{3} за ігровий день{4}) і від кожного дару ({5}% його ціни в силі). Годувати можна скільки завгодно, аж до 100.\n", GoldHex, name, (item != null ? Lang.F(", зараз <color={0}>{1} — {2}</color>", Satiety.ZoneHexOf(item), Mathf.RoundToInt(Satiety.Value(item)), Satiety.ZoneWord(item)) : ""), RavenAbilities.R(Satiety.PerDay * Satiety.HungerMul(item)), (Norov.SatietyMul(item) < 1f ? Lang.T(", з хистом «Невибагливий»") : ""), RavenAbilities.R(Satiety.GiftShare * 100f));
             for (int z = Satiety.Starving; z <= Satiety.Stuffed; z++)
                 s += "\n• <color=" + Satiety.ZoneHex[z] + ">" + Satiety.ZoneText(z) + "</color>";
-            s += Lang.F("\n\n<b>Їжа.</b> Що далі від дому здобута, то ситніша: від +15 (Луки) до +35 (Попелясті землі). Раціон залежить від довіри: {0}. Клас — біом походження: від 1 (Луки) до 5 (Попелясті землі). Нижчий або вищий клас ворон відмовиться їсти; їжа не витратиться. Довіру дає лише та частина їжі, що вгамовує справжній голод (нижче {1}); ситому — нуль. За день з їжі — не більше {2} довіри{3}. Нагодований ворон ще й {4} хв б'є на {5}% сильніше.", (item != null ? Trust.FoodRuleText(Trust.Level(item)) : Lang.T("1–2-й рівні — класи 1–3, 3–5-й — 2–4, 6–7-й — 2–5")), RavenAbilities.R(Satiety.AskAt), RavenAbilities.R(Trust.FoodDailyCap), (item != null && Trust.Need(item) > 0f ? Lang.F(" (сьогодні лишилось {0})", RavenAbilities.R(Trust.FoodLeftToday(item))) : ""), RavenAbilities.R(Strike.FedMinutes), RavenAbilities.R(Strike.FedPct));
+            s += Lang.F("\n\n<b>Їжа.</b> Що далі від дому здобута, то ситніша: від +15 (Луки) до +35 (Попелясті землі). Раціон залежить від довіри: {0}. З кожним рівнем ворон їсть їжу з краю на один далі за останнього здоланого боса, а з 3-го рівня вже не їсть простої їжі з Лук. Іншої відмовиться; їжа не витратиться. Довіру дає лише та частина їжі, що вгамовує справжній голод (нижче {1}); ситому — нуль. За день з їжі — не більше {2} довіри{3}. Нагодований ворон ще й {4} хв б'є на {5}% сильніше.", (item != null ? Trust.FoodRuleText(Trust.Level(item)) : Lang.T("на кожному рівні — на край далі за останнього боса")), RavenAbilities.R(Satiety.AskAt), RavenAbilities.R(Trust.FoodDailyCap), (item != null && Trust.Need(item) > 0f ? Lang.F(" (сьогодні лишилось {0})", RavenAbilities.R(Trust.FoodLeftToday(item))) : ""), RavenAbilities.R(Strike.FedMinutes), RavenAbilities.R(Strike.FedPct));
             s += Lang.F("\n\n<b>Улюблена їжа</b> — своя в кожного ворона і спершу прихована. Він натякає на неї, коли просить їсти; а нагодуєш нею — і дізнаєшся напевно. Ситить у {0} раза більше, довіри вдвічі більше, бонус до удару вдвічі довший.", Satiety.Num(Satiety.FavFillMul));
             return s;
         }
@@ -1581,7 +1679,7 @@ namespace HuginWhispers
             }
 
             RectTransform card = Rect("Next", col);
-            HBox(card, 14f, TextAnchor.MiddleLeft, 0, 0, 4, 0);
+            HBox(card, 14f, TextAnchor.MiddleLeft); // (no room over it: the seal is as tall as the row)
             Fixed(card.gameObject, -1f, RowNext);
             RectTransform words = Rect("Words", card);
             VBox(words, 2f, TextAnchor.MiddleLeft);
@@ -1632,10 +1730,7 @@ namespace HuginWhispers
             T(col, Lang.F("{0} нема на плечі", (m ? Lang.T("Муніна") : Lang.T("Хугіна"))), 15f, Ink, F.Italic, TextAlignmentOptions.Center);
             TMP_Text how = T(col, Lang.T("<b>Як посадити</b>"), 15f, GoldInk, F.Body, TextAlignmentOptions.Center);
             Tip(how.gameObject, () => Lang.F("<b><color={0}>Як посадити ворона</color></b>\n\nХугіна й Муніна продає Хальдор. Правий клік на вороні в сумці садить його на плече: Хугіна — на праве, Муніна — на ліве. Ще раз — знімає (довіра від цього трохи тане).", GoldHex));
-            HomeRows(col, m); // left at home on a perch: where, how, «Покликати»
-            if (!returns) return;
-            Player p = Player.m_localPlayer;
-            foreach (Backup.Lost l in Backup.Ravens(p)) if (l.Munin == m && !l.WithYou) ReturnRow(col, p, l);
+            FootZone(col, m, returns); // left at home on a perch, or lost: one line, its card on a click (RavenBookHome)
         }
 
         // which raven it is (one not on you: lost, at home): its nickname, its norov, how far you went together
@@ -1653,24 +1748,6 @@ namespace HuginWhispers
             if (nature.Count > 0) T(box, string.Join(" · ", nature.ToArray()), 14f, InkSoft, F.Italic, TextAlignmentOptions.Center);
             int days = Nicks.Count(copy, "days");
             T(box, Lang.F("довіра {0} · вишкіл {1}{2}", level, Strike.Level(copy), (days > 0 ? Lang.F(" · {0} разом", Lang.N(days, "день|дні|днів")) : "")), 14f, InkSoft, F.Body, TextAlignmentOptions.Center);
-        }
-
-        // a lost raven comes back: only for one that is not with you
-        private static void ReturnRow(Transform parent, Player p, Backup.Lost l)
-        {
-            bool atStones = Trust.AtStones(p);
-            DashedLine(parent);
-            RectTransform box = Rect("Return", parent);
-            VBox(box, 6f, TextAnchor.UpperCenter, 0, 0, 6, 0).childForceExpandWidth = false;
-            string price = l.Price != null ? Lang.F("{0} ×{1} (є {2})", l.Price.Name, l.Price.Count, Trust.Have(p, l.Price.Prefab)) : Lang.T("трофеї боса");
-            string why = l.DaysLeft > 0 ? Lang.F("лишилось {0} дн. до наступного повернення", l.DaysLeft) : !atStones ? Lang.T("підійди до Жертовних каменів") : price;
-            TMP_Text t = T(box, Lang.F("Повернути {0}", (l.Munin ? Lang.T("Муніна") : Lang.T("Хугіна"))), 19f, Ink, F.Head, TextAlignmentOptions.Center);
-            Tip(t.gameObject, () => Lang.F("<b><color={0}>Повернення ворона</color></b>\n\nВорон загинув у морі, зник чи лишився деінде? Його можна повернути обрядом біля Жертовних каменів.\n\nЦіна: {1}.\n\nВорон повернеться з тим самим рівнем довіри, вишколом і переможеними босами. Лише шкала до наступного рівня почнеться з нуля, а частину спогадів він забуде. Старий ворон, якщо десь лишився, розсиплеться пір'ям. Не частіше ніж раз на {2} днів.", GoldHex, price, Backup.RestoreDays));
-            WhichRaven(box, l.Copy, l.Munin, l.Level);
-            string id = l.Id;
-            bool can = atStones && l.DaysLeft == 0 && l.Price != null && Trust.Have(p, l.Price.Prefab) >= l.Price.Count;
-            T(box, why, 14f, can ? Good : Bad, F.Body, TextAlignmentOptions.Center); // what it takes: green when all is there
-            OutlineButton(box, Lang.T("Повернути"), () => Act(() => Backup.Restore(p, id)), can);
         }
 
         // ---------------------------------------------------------------- the food list by the seal
@@ -1762,7 +1839,7 @@ namespace HuginWhispers
                 n.overflowMode = TextOverflowModes.Ellipsis;
                 RectTransform line = Rect("Line", words);
                 HBox(line, 6f, TextAnchor.MiddleLeft);
-                T(line, "+" + Mathf.RoundToInt(Satiety.FillOf(f, favReal)) + " · +" + Satiety.Num(Mathf.Round(Satiety.TrustOf(raven, f, favReal) * 10f) / 10f), 14f, BookArt.Good, F.Body).textWrappingMode = TextWrappingModes.NoWrap;
+                T(line, "+" + Mathf.RoundToInt(Satiety.FillOf(f, favReal, raven)) + " · +" + Satiety.Num(Mathf.Round(Satiety.TrustOf(raven, f, favReal) * 10f) / 10f), 14f, BookArt.Good, F.Body).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(line);
                 T(line, "×" + have, 14f, PSoft, F.Body, TextAlignmentOptions.MidlineRight).textWrappingMode = TextWrappingModes.NoWrap;
                 if (fav)
@@ -1872,10 +1949,10 @@ namespace HuginWhispers
                 ItemDrop.ItemData item = m ? munin : hugin;
                 if (item == null) continue;
                 List<RavenAbility> cards, passive, shut;
-                bool badges;
+                int rest;
                 SortGifts(m, item, out cards, out passive, out shut);
                 float w, h;
-                RingPlaces(cards.Count, ColumnW, RingHeight(passive.Count, shut.Count, out badges), 140f, out w, out h);
+                RingPlaces(cards.Count, ColumnW, RingHeight(passive.Count, shut.Count, out rest), 140f, out w, out h);
                 _cardCap = Mathf.Min(_cardCap, w);
             }
             foreach (bool m in new bool[] { true, false })
@@ -1920,7 +1997,8 @@ namespace HuginWhispers
         // under it the passive ones and the shut ones as small chips. A card: click — give it a key (the key then hangs
         // under the card as a dark tab). All of it fits the page with no scrolling, however many gifts there are: the ring
         // takes what the head and the chips leave (its cards get smaller), and when even that is too little the shut
-        // gifts fold into small lock badges.
+        // gifts fold into small lock badges; tighter still (the paired gifts' leaf takes the bottom) the groups lose their
+        // titles and the badges join the passives' line.
         private const float RingMax = 440f, RingMin = 320f, GiftHeadH = 44f, GiftGap = 12f, ChipH = 38f, ChipTitleH = 22f, BadgeH = 40f;
         private static void GiftsPage(RectTransform col, bool m, ItemDrop.ItemData item)
         {
@@ -1932,9 +2010,9 @@ namespace HuginWhispers
 
             int level = Trust.Level(item);
             List<RavenAbility> cards, passive, shut;
-            bool badges;
+            int rest;
             SortGifts(m, item, out cards, out passive, out shut);
-            float ringH = RingHeight(passive.Count, shut.Count, out badges);
+            float ringH = RingHeight(passive.Count, shut.Count, out rest);
 
             RectTransform ring = Rect("Ring", col);
             Fixed(ring.gameObject, -1f, ringH);
@@ -1945,6 +2023,16 @@ namespace HuginWhispers
             for (int i = 0; i < cards.Count; i++) GiftCard(ring, cards[i], level, at[i], w, h);
 
             if (passive.Count + shut.Count == 0) return;
+            if (rest == RestTight) // short of room: no group titles, the shut ones as lock badges, on the passives' line if they fit
+            {
+                bool line = OneLine(passive.Count, shut.Count);
+                RectTransform row = line ? Rect("Rest", col) : null;
+                if (row != null) HBox(row, 16f, TextAnchor.MiddleLeft);
+                if (passive.Count > 0) ChipGroup(row != null ? row : col, null, passive, false, line ? passive.Count : PassiveCols, false);
+                if (shut.Count > 0) ChipGroup(row != null ? row : col, null, shut, true, line ? shut.Count : BadgeCols, true, TightBadge);
+                return;
+            }
+            bool badges = rest == RestBadges;
             if (!badges && passive.Count + shut.Count <= 3) // a few: both groups on one line
             {
                 RectTransform row = Rect("Rest", col);
@@ -1975,21 +2063,47 @@ namespace HuginWhispers
         }
 
         // the page's height (the column's, less its bottom padding) shared out: the head, the chips, the ring the rest
-        private static float RingHeight(int passive, int shut, out bool badges)
+        // (the chips under it: as ever, the shut ones as badges, or tight: no titles and on one line where they fit;
+        // the first that leaves the ring RingMin, else the one that leaves it most)
+        private const int RestPlain = 0, RestBadges = 1, RestTight = 2;
+        private static float RingHeight(int passive, int shut, out int rest)
         {
             float page = PageBottom - ColumnTop - ColumnPadBottom - _leafCut;
-            badges = false;
-            float ringH = page - GiftHeadH - GiftGap - RestH(passive, shut, false);
-            if (ringH < RingMin && shut > 0) { badges = true; ringH = page - GiftHeadH - GiftGap - RestH(passive, shut, true); }
-            return Mathf.Floor(Mathf.Clamp(ringH, 240f, RingMax));
+            rest = RestPlain;
+            float best = -1f;
+            for (int k = RestPlain; k <= RestTight; k++)
+            {
+                if (k == RestBadges && shut == 0) continue;
+                float h = page - GiftHeadH - GiftGap - RestH(passive, shut, k);
+                if (h > best + 0.5f) { best = h; rest = k; }
+                if (h >= RingMin) break;
+            }
+            return Mathf.Floor(Mathf.Clamp(best, 240f, RingMax));
+        }
+
+        // tight: the passive chips (no narrower than ChipMinW) and the lock badges on one line
+        private const float ChipMinW = 100f, TightBadge = 36f;
+        private static bool OneLine(int passive, int shut)
+        {
+            if (passive == 0 || shut == 0) return false;
+            return passive * ChipMinW + (passive - 1) * 8f + 16f + shut * (TightBadge + 6f) - 6f <= ColumnW;
         }
 
         private const int PassiveCols = 4, ShutCols = 4, BadgeCols = 11; // (4: a raven's four passives on one line, the ring keeps its height)
 
         // how tall the passive and shut groups come out (each with the gap over it), as ChipGroup lays them
-        private static float RestH(int passive, int shut, bool badges)
+        private static float RestH(int passive, int shut, int rest)
         {
             if (passive + shut == 0) return 0f;
+            if (rest == RestTight)
+            {
+                if (OneLine(passive, shut)) return GiftGap + Mathf.Max(ChipH, TightBadge);
+                float t = 0f;
+                if (passive > 0) { int r = Mathf.CeilToInt(passive / (float)PassiveCols); t += GiftGap + r * ChipH + (r - 1) * 6f; }
+                if (shut > 0) { int r = Mathf.CeilToInt(shut / (float)BadgeCols); t += GiftGap + r * TightBadge + (r - 1) * 6f; }
+                return t;
+            }
+            bool badges = rest == RestBadges;
             if (!badges && passive + shut <= 3) return GiftGap + GroupH(1, ChipH);
             float h = 0f;
             if (passive > 0) h += GiftGap + GroupH(Mathf.CeilToInt(passive / (float)PassiveCols), ChipH);
@@ -2131,19 +2245,20 @@ namespace HuginWhispers
         }
 
         // the passive or the shut gifts: a small heading and their chips (shut ones grey, a lock and the level they open at)
-        // (badges: shut ones folded to a lock and the level, the name in the tooltip — when the page is short of room)
-        private static void ChipGroup(Transform parent, string title, List<RavenAbility> list, bool shut, int cols, bool badges)
+        // (badges: shut ones folded to a lock and the level, the name in the tooltip — when the page is short of room;
+        // title null: no heading, badge: their size — the tight page)
+        private static void ChipGroup(Transform parent, string title, List<RavenAbility> list, bool shut, int cols, bool badges, float badge = BadgeH)
         {
             RectTransform g = Rect(shut ? "Shut" : "Passive", parent);
             VBox(g, 4f, TextAnchor.UpperLeft);
-            if (parent.GetComponent<HorizontalLayoutGroup>() != null) g.gameObject.AddComponent<LayoutElement>().flexibleWidth = list.Count;
-            Fixed(T(g, title, 17f, Brown, F.Head).gameObject, -1f, ChipTitleH);
+            if (parent.GetComponent<HorizontalLayoutGroup>() != null) g.gameObject.AddComponent<LayoutElement>().flexibleWidth = badges ? 0f : list.Count;
+            if (title != null) Fixed(T(g, title, 17f, Brown, F.Head).gameObject, -1f, ChipTitleH);
             RectTransform grid = Rect("Chips", g);
             GridLayoutGroup gl = null;
             if (badges) // a row of small badges, wrapping
             {
                 gl = grid.gameObject.AddComponent<GridLayoutGroup>();
-                gl.cellSize = new Vector2(BadgeH, BadgeH); gl.spacing = new Vector2(6f, 6f);
+                gl.cellSize = new Vector2(badge, badge); gl.spacing = new Vector2(6f, 6f);
                 gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = cols;
             }
             else if (list.Count <= cols) HBox(grid, 8f, TextAnchor.MiddleLeft); // one line: the chips share it
@@ -2222,10 +2337,9 @@ namespace HuginWhispers
             RectTransform card = Rect("Gift_" + a.Id, ring);
             Centre(card, pos, new Vector2(w, h));
             bool waiting = _capturing == a.Id;
-            int gold = GiftUp.Level(a.Id); // golden runes in it: a gold edge that grows with each level, the level in the corner
-            Torn(card, BookArt.Card, waiting ? GoldInk : gold > 0 ? A(GoldInk, GoldEdge[gold]) : BookArt.CardLine, waiting || gold >= 2 ? 2f : 1f);
-            if (gold > 0 && level > 0) GoldHalo(ring, card, gold, w, h); // (after Torn: its torn shape goes by the card's place among the cards)
-            if (gold >= GiftUp.MaxLevel) GoldInner(card);
+            int gold = GiftUp.Level(a.Id); // golden runes in it: a medallion with the level by the icon (GoldBadge), all three a gold glow
+            Torn(card, BookArt.Card, waiting ? GoldInk : BookArt.CardLine, waiting ? 2f : 1f);
+            if (gold >= GiftUp.MaxLevel && level > 0) GoldHalo(ring, card, gold, w, h); // (after Torn: its torn shape goes by the card's place among the cards)
             if (level == 0) card.gameObject.AddComponent<CanvasGroup>().alpha = 0.55f;
             VBox(card, 2f * k, TextAnchor.UpperCenter, 6, 6, Mathf.RoundToInt(12f * k), 6).childForceExpandWidth = false;
             RectTransform ic = Rect("Icon", card);
@@ -2235,6 +2349,7 @@ namespace HuginWhispers
             Image icon = Img(ic, "Icon", AbilityIcons.For(a.Id, a.Munin), Color.white);
             Stretch(icon.rectTransform, Vector2.zero, Vector2.one, new Vector2(1f, 1f), new Vector2(-1f, -1f));
             icon.preserveAspect = true;
+            if (gold > 0) GoldBadge(ic, isz, a.Pair ? 0 : a.Munin ? -1 : 1, gold);
             TMP_Text name = T(card, a.Plain, Mathf.Max(13f, 17f * k), Ink, F.Head, TextAlignmentOptions.Center);
             name.enableAutoSizing = true; name.fontSizeMin = 11f; name.fontSizeMax = Mathf.Max(13f, 17f * k); name.textWrappingMode = TextWrappingModes.NoWrap;
             Fixed(name.gameObject, w - 14f, Mathf.Max(16f, 21f * k));
@@ -2284,38 +2399,46 @@ namespace HuginWhispers
             };
             paint();
             Live.Add(paint);
-            if (gold > 0)
-            {
-                TMP_Text g = T(card, GiftUp.Roman(gold), 15f, GoldInk, F.Head, TextAlignmentOptions.TopLeft);
-                g.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-                Stretch(g.rectTransform, Vector2.zero, Vector2.one, new Vector2(10f, 8f), new Vector2(-10f, -8f));
-            }
         }
 
-        // A golden gift's card, quiet but plain to see, in three steps: I a gold torn edge; II a firmer edge and a soft
-        // gold glow under the card; III a warmer glow and a thin second gold line just inside the edge.
-        private static readonly float[] GoldEdge = { 0f, 0.55f, 0.8f, 0.95f };
-        private static readonly float[] GoldGlow = { 0f, 0f, 0.16f, 0.26f };
+        // the golden runes' level by a gift's icon, as in the gifts circle: a dark medallion, a gold rim, the numeral;
+        // on the outer side (Hugin's right, Munin's left, a paired gift below). On the gift cards, the «Ворони» page's
+        // gifts row and the golden rune's choice of a gift.
+        private static void GoldBadge(RectTransform icon, float isz, int side, int level)
+        {
+            float bd = Mathf.Max(15f, isz * 0.42f);
+            RectTransform b = Rect("Gold", icon);
+            b.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            b.anchorMin = b.anchorMax = new Vector2(side == 0 ? 0.5f : side > 0 ? 0.5f + 0.5f * 0.6f : 0.5f - 0.5f * 0.6f, side == 0 ? 0.07f : 0.2f);
+            b.pivot = new Vector2(0.5f, 0.5f);
+            b.sizeDelta = new Vector2(bd, bd); b.anchoredPosition = Vector2.zero;
+            if (level >= GiftUp.MaxLevel) // the third: a small gold glow behind the medallion, as in the gifts circle
+            {
+                Image glow = Img(b, "Glow", BookArt.Glow, A(BookArt.Initial, 0.75f));
+                Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-bd * 0.7f, -bd * 0.7f), new Vector2(bd * 0.7f, bd * 0.7f));
+                glow.raycastTarget = false;
+            }
+            Image rim = Img(b, "Rim", BookArt.Circle, GoldInk);
+            Stretch(rim.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Image disc = Img(b, "Disc", BookArt.Circle, C("#2a1e12"));
+            Stretch(disc.rectTransform, Vector2.zero, Vector2.one, new Vector2(1.5f, 1.5f), new Vector2(-1.5f, -1.5f));
+            TMP_Text t = T(b, "<b>" + GiftUp.Roman(level) + "</b>", bd * 0.55f, Gold, F.Head, TextAlignmentOptions.Center); // (light gold: it stands on the dark disc, not on the paper)
+            t.textWrappingMode = TextWrappingModes.NoWrap; t.raycastTarget = false;
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            rim.raycastTarget = disc.raycastTarget = false;
+        }
 
+        // a gift with all three golden runes: a soft gold glow under its card (the level itself: GoldBadge)
         private static void GoldHalo(RectTransform ring, RectTransform card, int gold, float w, float h)
         {
-            if (GoldGlow[gold] <= 0f) return;
-            Image g = Img(ring, "GoldGlow_" + card.name, BookArt.Glow, A(GoldInk, GoldGlow[gold]));
+            if (gold < GiftUp.MaxLevel) return;
+            Image g = Img(ring, "GoldGlow_" + card.name, BookArt.Glow, A(GoldInk, 0.26f));
             g.raycastTarget = false;
             RectTransform r = g.rectTransform;
             r.anchorMin = card.anchorMin; r.anchorMax = card.anchorMax; r.pivot = card.pivot;
             r.anchoredPosition = card.anchoredPosition;
             r.sizeDelta = new Vector2(w * 1.45f, h * 1.6f);
             g.transform.SetSiblingIndex(card.GetSiblingIndex()); // (under the card)
-        }
-
-        private static void GoldInner(RectTransform card)
-        {
-            Image l = Rect("GoldLine", card).gameObject.AddComponent<Image>();
-            Stretch(l.rectTransform, Vector2.zero, Vector2.one, new Vector2(5f, 5f), new Vector2(-5f, -5f));
-            l.sprite = BookArt.FrameFine(4f, 1f); l.type = Image.Type.Sliced; l.pixelsPerUnitMultiplier = BookArt.Fine;
-            l.color = A(GoldInk, 0.45f); l.raycastTarget = false;
-            l.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         // a key field in the footer's keys strip, a raised keycap: the key, "—", or waiting for a key
@@ -2359,6 +2482,7 @@ namespace HuginWhispers
             s += "\n\n" + a.Long();
             if (!RavenAbilities.Unlocked(a)) s += "\n\n<color=" + GreyHex + ">" + (RavenAbilities.Stub(a) ? Lang.T("ще в роботі") : Lang.F("відкриється на {0}-му рівні довіри", RavenAbilities.UnlockLevel(a))) + "</color>";
             else if (Trust.Worn(a.Munin) != null) s += "\n\n" + RavenSkills.Status(a);
+            if (Omen.Is(a) && RavenAbilities.Unlocked(a) && Omen.Enabled) s += "\n\n" + Omen.TodayText(Player.m_localPlayer); // this morning's word stays readable here
             if (GiftUp.Upgradable.Contains(a.Id) && RuneBook.Of(Player.m_localPlayer).GoldEver > 0) // golden runes: once the first one is got
             {
                 int lv = GiftUp.Level(a.Id);
@@ -2501,7 +2625,7 @@ namespace HuginWhispers
                 edge.color = on ? A(deep, 0.85f) : A(raven, 0.55f); edge.raycastTarget = false;
                 RectTransform face = Rect("Face", b);
                 Fixed(face.gameObject, 24f, 24f);
-                Img(face, "Ring", BookArt.Circle, on ? A(deep, 0.9f) : A(raven, 0.6f));
+                Image ring = Img(face, "Ring", BookArt.Circle, on ? A(deep, 0.9f) : A(raven, 0.6f));
                 Image fill = Img(face, "Fill", BookArt.Circle, C("#efe3c4"));
                 Stretch(fill.rectTransform, Vector2.zero, Vector2.one, new Vector2(1.5f, 1.5f), new Vector2(-1.5f, -1.5f));
                 Image pic = Img(face, "Raven", BookArt.Portrait(w) ?? RavenItem.Icon(w), Color.white);
@@ -2515,8 +2639,9 @@ namespace HuginWhispers
                 {
                     Button bt = b.gameObject.AddComponent<Button>();
                     bt.targetGraphic = bg;
-                    Tint(bt);
+                    bt.transition = Selectable.Transition.None; // (its own hover: SwitchHover)
                     bt.onClick.AddListener(() => pick(w));
+                    SwitchHover.On(b, bg, edge, ring, t, raven, deep);
                 }
             }
         }
@@ -2668,8 +2793,8 @@ namespace HuginWhispers
             if (lv == Outfits.WardrobeLevel) more.Add(Lang.T("спорядження: шапки, намиста й інші речі для ворона"));
             if (lv >= Outfits.WardrobeLevel && lv < Outfits.TopLevel) more.Add(Lang.T("після ритуалу на цей рівень ворон може принести від Одіна річ"));
             if (lv == Trust.MaxLevel) more.Add(Lang.T("найвища довіра: усе спорядження відкрите"));
-            if (m && lv == Ward.TwoBlowsAt) more.Add(Lang.T("«Заслона» витримує два удари"));
             if (m && lv == Ward.ThreeBlowsAt) more.Add(Lang.T("«Заслона» витримує три удари"));
+            if (m && lv == Ward.FourBlowsAt) more.Add(Lang.T("«Заслона» витримує чотири удари"));
             if (opens.Count > 0 || more.Count > 0)
             {
                 s += Lang.F("\n\n<color={0}><b>Відкриває</b></color>", GoldHex);
@@ -3585,6 +3710,14 @@ namespace HuginWhispers
         private static string Num(float v) { return (Mathf.Abs(v) < 0.0005f ? 0f : v).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture); }
 
         // a box to type a number in (Enter or a click away takes it)
+        // a field made here was switched on (AddComponent) before it had its text to draw in, and TMP sets the caret up as
+        // it is switched on: off and on again, the caret shows. A click puts the caret where it is (the text not selected).
+        private static void CaretReady(TMP_InputField f)
+        {
+            f.onFocusSelectAll = false;
+            f.enabled = false; f.enabled = true;
+        }
+
         private static TMP_InputField NumberField(Transform parent, float width, string value, Action<float> set)
         {
             RectTransform box = Rect("Field", parent);
@@ -3605,6 +3738,7 @@ namespace HuginWhispers
             f.selectionColor = new Color(0.66f, 0.52f, 0.23f, 0.35f);
             Navigation nav = f.navigation; nav.mode = Navigation.Mode.None; f.navigation = nav;
             f.text = value;
+            CaretReady(f);
             f.onEndEdit.AddListener(s =>
             {
                 float v;
@@ -4123,6 +4257,48 @@ namespace HuginWhispers
     }
 
     // a seal that is only shown (the training level): it lights up under the cursor like a button, without being one
+    // the Munin/Hugin bookmark not chosen, under the pointer, as the book's other cells (nicknames, techniques): it grows
+    // a little, the raven's colour soaks into its paper like ink, its edge and the portrait's ring turn gold; pressed,
+    // the paper darkens for a moment (eased, unscaled time)
+    internal sealed class SwitchHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+    {
+        private static readonly Color Gold = new Color(0.659f, 0.518f, 0.227f, 1f); // the book's gold rim (NickRing)
+        private Image _bg, _edge, _ring;
+        private TMP_Text _text;
+        private Color _bg0, _edge0, _ring0, _text0, _bg1, _text1, _press1;
+        private float _w, _want, _press, _pressWant;
+        internal static void On(RectTransform r, Image bg, Image edge, Image ring, TMP_Text text, Color raven, Color deep)
+        {
+            SwitchHover h = r.gameObject.AddComponent<SwitchHover>();
+            h._bg = bg; h._edge = edge; h._ring = ring; h._text = text;
+            h._bg0 = bg.color; h._edge0 = edge.color; h._ring0 = ring != null ? ring.color : Color.clear; h._text0 = text.color;
+            h._bg1 = new Color(raven.r, raven.g, raven.b, 0.25f);
+            h._press1 = new Color(deep.r, deep.g, deep.b, 0.4f);
+            h._text1 = Color.Lerp(text.color, deep, 0.5f);
+        }
+        public void OnPointerEnter(PointerEventData e) { _want = 1f; }
+        public void OnPointerExit(PointerEventData e) { _want = 0f; _pressWant = 0f; }
+        public void OnPointerDown(PointerEventData e) { _pressWant = 1f; }
+        public void OnPointerUp(PointerEventData e) { _pressWant = 0f; }
+        private void OnDisable() { _want = _w = _press = _pressWant = 0f; Paint(); }
+        private void Update()
+        {
+            if (Mathf.Approximately(_w, _want) && Mathf.Approximately(_press, _pressWant)) return;
+            _w = Mathf.MoveTowards(_w, _want, Time.unscaledDeltaTime / 0.1f);
+            _press = Mathf.MoveTowards(_press, _pressWant, Time.unscaledDeltaTime / 0.06f);
+            Paint();
+        }
+        private void Paint()
+        {
+            float k = _w * _w * (3f - 2f * _w);
+            if (_bg != null) _bg.color = Color.Lerp(Color.Lerp(_bg0, _bg1, k), _press1, _press);
+            if (_edge != null) _edge.color = Color.Lerp(_edge0, Gold, k);
+            if (_ring != null) _ring.color = Color.Lerp(_ring0, Gold, k);
+            if (_text != null) _text.color = Color.Lerp(_text0, _text1, k);
+            transform.localScale = Vector3.one * (1f + 0.04f * k);
+        }
+    }
+
     internal sealed class BookGlow : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         private static readonly Color Rest = new Color(0.92f, 0.92f, 0.92f, 1f); // as the buttons rest (Tint)
@@ -4143,7 +4319,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(StoreGui), "IsVisible")]
     internal static class RavenBookAsWindowPatch
     {
-        private static void Postfix(ref bool __result) { if (RavenBook.IsOpen || RavenBook.NestWindowOpen || RavenBook.TreeWindowOpen || RavenBook.LetterOpen || RavenBook.BindResultOpen || RavenBook.InviteOpen || RavenBook.PickOpen || RavenBook.OmenOpen) __result = true; }
+        private static void Postfix(ref bool __result)
+        {
+            if (RavenBook.IsOpen || RavenBook.NestWindowOpen || RavenBook.TreeWindowOpen || RavenBook.LetterOpen || RavenBook.BindResultOpen || RavenBook.InviteOpen || RavenBook.PickOpen || RavenBook.OmenOpen) __result = true;
+#if RAVEN_NPC
+            if (RavenBook.TalkOpen || RavenBook.CardOpen) __result = true; // (a person's talk, its card)
+#endif
+        }
     }
 }
 #endif

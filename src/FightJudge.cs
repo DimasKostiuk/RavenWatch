@@ -114,9 +114,11 @@ namespace HuginWhispers
             int score = Score(lost, seconds), stars = score < 35 ? 1 : score < 50 ? 2 : score < 65 ? 3 : score < 80 ? 4 : 5;
             _nextJudge = Time.time + PauseMinutes * 60f;
             p.Message(MessageHud.MessageType.TopLeft, Lang.F("{0} оцінює бій: {1} — {2}", Plugin.RavenName(munin), Stars(stars), Grade(stars)));
+            Guide.Queue(p, Guide.Judge, 120f); // what the stars are, told once
             string tip = !munin && stars <= 3 ? Mistake(lost, seconds) : null; // (Hugin names the main mistake of a poor fight)
             _word = tip != null ? "judge_tip_" + tip : "judge_" + stars; _wordMunin = munin; _wordUntil = Time.time + WordWait; // (said when the director lets it: Tick)
-            if (stars == 5) Trust.Deed(munin, TopTrust, Lang.T("бій як у сагах"));
+            HuginChores.OnFightJudged(stars); // (Hugin: no blood, but a good fight thought over)
+            if (stars == 5) { Trust.Deed(munin, TopTrust, Lang.T("бій як у сагах")); Nicks.OnSaga(p, munin); Nest.Deed(p, Nest.SagaMinutes, Lang.T("бій як у сагах")); }
             if (stars >= 4) Memory.OnFight(p, score, stars);
             if (stars >= 4 && UnityEngine.Random.value < TreasureChance && Requests.Give(p, munin, "cache") == null) Log("a fight so good " + Plugin.RavenName(munin) + " shows you its cache");
             Log(Plugin.RavenName(munin) + " judged a fight of " + Mathf.RoundToInt(seconds) + " s: " + score + " (" + stars + "★; kills " + _kills + ", strong " + _strong + ", lost " + Mathf.RoundToInt(lost * 100f) + "%, parries " + _parries + ", dodges " + _dodges + ", behind " + _back + ", potions " + _potions + (_fled ? ", fled" : "") + (_near ? ", near death" : "") + (tip != null ? ", tip " + tip : "") + ")");
@@ -160,7 +162,7 @@ namespace HuginWhispers
                 else
                 {
                     Norov.Character c = Norov.CharOf(Trust.Worn(true));
-                    munin = UnityEngine.Random.value < (c != null && c.Id == "bold" ? 0.7f : 0.5f); // (a bold Munin judges more often)
+                    munin = UnityEngine.Random.value < (c != null && (c.Id == "bold" || c.Id == "grumpy" || c.Id == "huntsman") ? 0.7f : 0.5f); // (a bold, grumpy or hunting Munin judges more often)
                 }
             }
             return true;

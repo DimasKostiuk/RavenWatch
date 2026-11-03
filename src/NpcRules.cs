@@ -1,4 +1,4 @@
-#if RAVEN_ITEM && RAVEN_STORY
+#if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,7 +43,6 @@ namespace HuginWhispers
         internal static readonly int KHome = "RavenWatch_npcHome".GetStableHashCode(); // Vector3: where it first appeared
         internal static readonly int KBorn = "RavenWatch_npcBorn".GetStableHashCode(); // bool: «on spawn» done
 
-        internal static bool Has(NpcDef d, string when) { if (d == null) return false; foreach (NpcRule r in d.Rules) if (r.When == when) return true; return false; }
 
         // the rules of this kind, in order; true when there was one
         internal static bool Fire(NpcActor a, string when, Player subject)
@@ -72,10 +71,11 @@ namespace HuginWhispers
                     {
                         string text = s.Substring(4).Trim();
                         if (text == "@greet") text = a.Def.Greet.Count > 0 ? a.Def.Greet[UnityEngine.Random.Range(0, a.Def.Greet.Count)] : "";
-                        a.Say(text);
+                        if (text.Contains("{@")) text = a.Form(NpcPhrases.Inline(a, text, subject ?? Player.GetClosestPlayer(a.transform.position, 20f))); // («{@theme}»: a made line)
+                        a.Say(text, subject); // (to the one the rule is about: the player who came near, who spoke to it)
                     }
                     else if (s.StartsWith("raise ")) StoryBus.Raise(s.Substring(6).Trim(), a.Id, 0, a.transform.position);
-                    else a.OrderNow(Expand(a, s, subject));
+                    else a.Habit(Expand(a, s, subject));
                 }
                 catch (Exception e) { Npcs.Log(a.Id + " rule «" + s + "»: " + e.Message); }
             }
@@ -94,7 +94,7 @@ namespace HuginWhispers
                     case "fire": w[i] = Npcs.V(ByFire(a)); break;
                     case "player":
                         Player p = subject != null ? subject : Player.GetClosestPlayer(a.transform.position, 60f);
-                        w[i] = p != null ? NpcMind.IdOf(p.GetZDOID()) : "none";
+                        w[i] = p != null ? NpcKit.Ref(p.GetZDOID()) : "none";
                         break;
                 }
             }
@@ -107,23 +107,8 @@ namespace HuginWhispers
             return z != null ? z.GetVec3(KHome, a.transform.position) : a.transform.position;
         }
 
-        // a spot two steps from the nearest fire, on the NPC's side of it
-        private static Vector3 ByFire(NpcActor a)
-        {
-            Fireplace best = null;
-            float bd = 40f;
-            foreach (Collider c in Physics.OverlapSphere(a.transform.position, 40f, LayerMask.GetMask("piece", "piece_nonsolid", "Default", "Default_small")))
-            {
-                Fireplace f = c.GetComponentInParent<Fireplace>();
-                if (f == null || !f.IsBurning()) continue;
-                float d = Vector3.Distance(f.transform.position, a.transform.position);
-                if (d < bd) { bd = d; best = f; }
-            }
-            if (best == null) return Home(a);
-            Vector3 dir = a.transform.position - best.transform.position; dir.y = 0f;
-            if (dir.sqrMagnitude < 0.01f) dir = Vector3.forward;
-            return best.transform.position + dir.normalized * 2f;
-        }
+        // a spot two steps from the nearest burning fire (40 m), on the NPC's side of it; none: home
+        private static Vector3 ByFire(NpcActor a) { return NpcKit.ByFire(a.transform.position, 40f, a.transform.position, Home(a), null); }
     }
 }
 #endif

@@ -1,4 +1,4 @@
-#if RAVEN_ITEM && RAVEN_STORY
+#if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -38,9 +38,10 @@ namespace HuginWhispers
     internal static class StoryBus
     {
         private static readonly List<KeyValuePair<string, Action<StoryEvent>>> Listeners = new List<KeyValuePair<string, Action<StoryEvent>>>();
+        private static KeyValuePair<string, Action<StoryEvent>>[] _handTo = new KeyValuePair<string, Action<StoryEvent>>[0]; // (who hears, as an array made once a change of listeners: one may unsubscribe while hearing)
         private static readonly Queue<StoryEvent> Waiting = new Queue<StoryEvent>();
         private static bool _handing;
-        internal static readonly List<string> Recent = new List<string>(); // the last ones, for the panel and `raven story events`
+        private static readonly List<KeyValuePair<DateTime, StoryEvent>> Recent = new List<KeyValuePair<DateTime, StoryEvent>>(); // the last ones, for `raven story events` (put into words only when shown)
         internal static bool Trace;                                         // every event into the BepInEx log too
 
         // who: a name for the log («story», «errands»…); subscribing twice under one name replaces the first
@@ -48,6 +49,7 @@ namespace HuginWhispers
         {
             Listeners.RemoveAll(kv => kv.Key == who);
             if (f != null) Listeners.Add(new KeyValuePair<string, Action<StoryEvent>>(who, f));
+            _handTo = Listeners.ToArray();
         }
 
         internal static void Raise(string name, string arg, int value) { Raise(name, arg, value, Vector3.zero, false); }
@@ -76,15 +78,13 @@ namespace HuginWhispers
 
         private static void Hand(StoryEvent e)
         {
-            string line = e.ToString();
-            Recent.Add(DateTime.Now.ToString("HH:mm:ss") + "  " + line);
+            Recent.Add(new KeyValuePair<DateTime, StoryEvent>(DateTime.Now, e));
             if (Recent.Count > 60) Recent.RemoveAt(0);
-            if (Trace) Story.Log("event " + line);
-            KeyValuePair<string, Action<StoryEvent>>[] now = Listeners.ToArray(); // (one may unsubscribe while hearing)
-            foreach (KeyValuePair<string, Action<StoryEvent>> kv in now)
+            if (Trace) Story.Log("event " + e);
+            foreach (KeyValuePair<string, Action<StoryEvent>> kv in _handTo)
             {
                 try { kv.Value(e); }
-                catch (Exception ex) { Story.Log("bus: " + kv.Key + " on «" + line + "»: " + ex); }
+                catch (Exception ex) { Story.Log("bus: " + kv.Key + " on «" + e + "»: " + ex); }
             }
         }
 
@@ -113,7 +113,7 @@ namespace HuginWhispers
             for (int i = 0; i < Listeners.Count; i++) sb.Append(i > 0 ? ", " : "").Append(Listeners[i].Key);
             if (Listeners.Count == 0) sb.Append("—");
             int from = Mathf.Max(0, Recent.Count - 20);
-            for (int i = from; i < Recent.Count; i++) sb.Append('\n').Append(Recent[i]);
+            for (int i = from; i < Recent.Count; i++) sb.Append('\n').Append(Recent[i].Key.ToString("HH:mm:ss")).Append("  ").Append(Recent[i].Value);
             return sb.ToString();
         }
     }

@@ -1,0 +1,16 @@
+only1 bed -1.48 0.02 -1.031
+only1 wood_pole_log -3.094 1 0.34
+only1 wood_wall_log_4x0.5 -1.293 1.75 -0.529
+only1 wood_roof_45 -2.628 1 -0.995
+only1 wood_roof_45 -0.827 1 -1.865
+only1 wood_pole_log 0.508 1 -1.399
+only1 wood_roof -1.925 1.557 0.208
+only1 wood_roof -0.124 1.557 -0.662
+only1 piece_pot3 0.366 -0.059 -2.199
+only1 piece_chest_private 1.004 -0.029 -1.927
+only1 itemstandh 1.69 -0.051 1.415
+only1 fire_pit 1.14 0 2.37
+only1,-1.1 itemstandh 0.738 0 1.535
+only1,-1.1 itemstandh -1.303 0.758 5.968
+only1 wood_fine_stack -9.8 -0.79 1.105
+only1 wood_roof 0.848 -0.462 -2.569

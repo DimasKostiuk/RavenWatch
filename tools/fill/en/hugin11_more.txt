@@ -1,0 +1,127 @@
+@бм_левади
+The Meadows. The safest land. You still manage to find danger here.
+in the Meadows a boar is the scariest beast. Don't give it a reason to get cocky.
+~3 The Meadows. Everything began here. I remember your first failed swing.
+@бм_левади_порада
+This is where one learns. Learn.
+Don't relax: even a boar has beaten someone once.
+@бм_чорнолісся
+The Black Forest. The trees here are older than all your mistakes combined.
+in the Black Forest the greylings count your steps. So do I.
+~1 in the Black Forest those who look up survive. So not you.
+@бм_чорнолісся_порада
+You hear a troll from afar. Listen.
+Copper is here. Bring your brains along.
+@бм_болото
+The Swamp. Every step is a negotiation with the mud.
+in the Swamp the dead don't lie still. Much like you at night.
+~1 in the Swamp there's poison in the air. And in your decisions.
+@бм_болото_порада
+Poison potion. In advance.
+Stick to the stone. Mud is no friend.
+@бм_гори
+The Mountains. Clean air, angry wolves, honest cold.
+in the Mountains every mistake costs double. Pay less.
+~3 you can see half the world from here. Shame you're looking at your feet. Though — rightly.
+@бм_гори_порада
+The cold doesn't forgive. Dress up.
+Wolves go in packs. You don't. Remember.
+@бм_рівнини
+The Plains. No shade, no cover. Only honest fights and dishonest flies.
+on the Plains the enemy sees you from afar. You don't see it.
+~1 goblins here. They don't think either. You'll get along.
+@бм_рівнини_порада
+Shield higher. The flies bite from above.
+Don't charge the camp. The camp charges you.
+@бм_імла
+The Mistlands. Here you only see what's already next to you.
+in the Mist even my eyes are almost useless. Yours — completely.
+~3 stay with me. In the mist I'm your eyes.
+@бм_імла_порада
+Light first.
+The web is a trap. Go around.
+@бм_попіл
+The Ashlands. Here even what shouldn't burn burns.
+in the Ashlands the enemy is stronger, the ground is hot, and you're the same.
+~1 here fire is the master. You're a guest. Behave accordingly.
+@бм_попіл_порада
+Fire resistance. Don't go without it.
+Lava isn't a road. Just reminding you.
+@бм_північ
+The Deep North. The cold here is older than the gods.
+in the North every fire is a feast. And a rescue.
+~3 even thoughts freeze here. Mine don't. Stay with me.
+@бм_північ_порада
+A fire at every stop.
+Standing still you freeze. Walking you live.
+@бм_океан
+The Ocean. The depth under you is always greater than it seems.
+in the open sea the shore is a dream and the serpent is reality.
+~1 hold the course. Not the one in your head.
+@бм_океан_порада
+Watch the water. The serpent doesn't warn.
+Repairs on the shore. Not among the waves.
+@ем_танець
+A dance. The enemies watch and don't understand. Neither do I.
+You have rhythm. Your own. Like nothing else.
+~3 Dance. I like it when you're not thinking about fighting.
+@ем_тиче
+You're pointing. So you see. Progress.
+There's nothing there. I checked earlier.
+@ем_радість
+You're happy. No idea why, but I'll record it as a rarity.
+You're jumping. I'm being shaken. Your joy is physical.
+@ем_мязи
+Showing muscles. Won't show your mind?
+Strong. Yes. Now show some wit.
+@ем_сміх
+Laughing. Because it's funny or because you're nervous?
+Your laugh scares wolves. Useful.
+@ем_що
+What was that? I wrote it down but didn't understand.
+An interesting move. Don't repeat it.
+@зн_chop
+chopping again? The forest keeps count. So do I.
+~1 another tree. You're not at war with the forest — you're rewriting it.
+@зн_mine
+digging again? Soon there'll be a cave here. Your work.
+~3 ore again. Good. Metal is the future.
+@зн_build
+building again? Good. Order is a defence too.
+~1 beams again. I hope they're straight this time.
+@зн_kill
+another one. The counter grows faster than your caution.
+~3 a fine streak. Don't stop thinking.
+@зн_fall
+off a height again? The ground is waiting for you.
+~1 another fall. A pattern, not an accident.
+@зн_death
+another death. The list grows, the conclusions don't.
+~1 valkyries again. They know you by name now.
+@афк
+you're standing. The world moves. The difference shows.
+in this time the enemies made a plan. You didn't.
+~1 you've stood so long I began to doubt you're alive.
+@афк_кінець
+Let's move.
+Time goes on. Without you.
+@рівень
+I trust you more. Don't make me regret it.
+A new level. Don't get cocky: there are even more ways to disappoint me ahead.
+~3 You've come closer. I noticed. I like it.
+@жт_зілля
+drinking a potion. Sensible. A rare combination for you.
+a potion is no substitute for caution. But it helps.
+~3 drink. I'm calmer when you're whole.
+@жт_стілець
+sat down. Rest is part of strategy too.
+a chair. You on it — like a jarl without a council.
+~3 let's sit. I'm fine here.
+@пл_тут
+sitting on the shoulder counting bushes. Twenty. Suspicious — three.
+from the shoulder I see: there's a path, you're not on it.
+~3 it's nice here. Look up for once.
+@пл_вбивство_суд
+Neat. Recorded.
+The enemy is down. Conclusion: sometimes you know what you're doing.
+No wasted moves. Rarely, but it happens.

@@ -33,7 +33,7 @@ I see {seen_gen}. Finally something interesting.
 @порада
 CHOP IT!
 Strike first — corpses don't hold grudges.
-Kill it or run, you chickenshit.
+Go round the back — and hit the nape, damn. Like I taught you.
 Don't stand there like a stump!
 Run, or it'll break your legs, you oaf.
 Punch it in the face!
@@ -883,7 +883,7 @@ another beast to feed.
 @ягоди_м
 berries, up their ass. What are you, a thrush?
 picking berries when you could be collecting heads.
-~1 pick away, pick away, granny.
+~1 pick away, granny. We'll buy you a basket and a headscarf, damn.
 ~3 give me one, cheapskate. Well, two.
 @портал_м
 through this hole in the world's ass again. I feel sick.
@@ -949,7 +949,7 @@ knock-knock, you damn woodpecker. You've knocked my whole brain out.
 @пл_море_м
 rocking like a drunk troll. I'm about to puke on you.
 the sea, damn it. Nothing to eat, nobody to kill.
-~1 you steer like a drunk troll.
+~1 you steer like a drunk jerk. The ship itself is ashamed, damn.
 ~3 the wind, damn it! This is the life!
 @пл_плавання_м
 I'm soaked through, you wet scarecrow!
@@ -1738,12 +1738,12 @@ sitting. Bored.
 counting how many times you've scratched yourself.
 cleaning my claws on your jacket.
 looking for someone to peck.
-~1 we stand like two stumps.
+~1 we stand like two morons at a wedding nobody invited us to, damn.
 ~3 it's not bad sitting like this.
 @пл_спокій_думка_м
-Bored out of my mind.
+Bored out of my mind. I'd howl, but I'm no damn wolf.
 Let's kill someone.
-The silence annoys me.
+The silence annoys me. If only someone would damn well fart.
 ~1 One more minute and I'll bite you.
 ~2 Let's go somewhere, eh?
 ~3 Oh well, let it be quiet.
@@ -1792,7 +1792,7 @@ Hold the course, or I'll drown you.
 If only there were a whale.
 Boring, but beautiful.
 ~1 Where are we sailing, captain moron?
-~2 Bearable.
+~2 We endure. What else is there, damn. Except howling.
 ~3 We're doing fine here.
 @пл_плавання_що_м
 I'm wet to the bone.
@@ -2520,14 +2520,6 @@ to hell with him
 ~3 ^fed_hugin.заслужив Fine, you earned it. But next time it's me, you little shit.
 ~1 ^fed_hugin.заслужив At night I'll peck out your merits. Eyes included.
 ^fed_hugin.крихта One crumb? Feathered cheapskate. I'll remember.
-@м_ситий
-^fed_munin.мене|fed_munin.заздрю>fed_munin.дуля And you get a fig. Watching is free, {м_слівце}.
-~1 ^fed_munin.мене|fed_munin.заздрю>fed_munin.дуля What are you staring at? Not sharing, even if you croak.
-^fed_munin.мене|fed_munin.заслуги>fed_munin.заслуга I get fed because I'm scarier. Simple.
-~2 ^fed_munin.мене>fed_munin.дуля I'd share. But I already ate it. Sorry. No, not sorry.
-~3 ^fed_munin.мене|fed_munin.заздрю|fed_munin.радий>fed_munin.крихта Well… here, sniff it, {м_слівце}. Just sniff.
-~3 ^fed_munin.мене|fed_munin.заздрю|fed_munin.подобрієш|fed_munin.радий>fed_munin.крихта Here, a crumb. Tearing it from my heart, fuck. Value it.
-^fed_munin.заслуги>fed_munin.заслуга Merits? I am the merit. All of me, beak to ass.
 @м_хвалиться
 ^gap_m.чесний {name} trusts me more. Because I'm honest. Honest, I said!
 ^gap_m.годує {name} feeds me more often. Get why? Because of trust.
@@ -3157,20 +3149,7 @@ Listen up.
 ~1 Oh, that's it.
 ~3 Ha!
 
-@мх_відгук
-What?
-Ha!
-Oh, that's it.
-Listen up.
-{м_слівце}.
-~3 Well, well.
 
-@мх_хвіст
-Ugh.
-Kraa, {м_слівце}. So there.
-So there.
-~1 Leave me alone.
-~3 Don't get used to it.
 
 @мх_знайомство_встряє
 ^intro.назвався>intro.ще_один And I'm {me}. Whoever doesn't remember gets a beak to the skull.
@@ -3482,6 +3461,22 @@ So there.
 ^pals.більше That is it, keep counting, bookkeeper. I am off.
 ^pals.рахунок_кінець What bookkeepers you all are, fuck.
 ^pals.рахунок_кінець That is it, the count is closed. Mine won. Do not argue.
+^pals.заснув Whoever slept is to blame. Heh.
+^pals.медитація Meditating, sure. Snored so loud the enemies ran.
+^pals.бджоли Bees are bitches. I won't go near a hive again. Lying, I will.
+^pals.дзьоб The beak swelled up, but the honey was tasty.
+^pals.дах Humans and roofs — a comedy of its own.
+^pals.драбина Burned the ladder, fell off the ladder. Humans, man.
+^pals.ревнощі Yeah, we missed you. Stop whining.
+^pals.зграя Everyone's here, all ours. A decent gang.
+^pals.своя They die, they get up. As always.
+^pals.рахуй Let Hugin count. I just eat.
+^pals.свій_бос Not brag? No way.
+^pals.слава Enough, braggarts.
+^pals.звикли Used to it. Like a callus.
+^pals.вірні Loyal — that's us. Lazy — also us.
+^pals.якість Everyone says their own. Whatever.
+^pals.ставка A bet! Loser feeds everyone. I'm already hungry.
 
 @мх_вг
 ^fire.історія {addr}, let me tell you how {name} lit a fire. Half a day, fuck! And I still had to blow on it.
@@ -3541,6 +3536,14 @@ So there.
 ~1 ^fire.тиша That is it, I am sleeping. Whoever wakes me is fucked.
 ^fire.тепло_кінець That is it, we found a watch. I am sleeping, fuck it.
 ^fire.тепло_кінець That is it, someone is on watch. Not me, and thank Odin, fuck.
+^fire.дерево At least a tree doesn't lie. Unlike humans.
+^fire.троль That troll must have laughed his head off.
+^fire.рахунок Count or not — they feed us too little.
+^fire.борг We carry it. Heavy, but ours.
+^fire.хліб Bread, crumbs — as long as it's grub.
+^fire.крадене Stolen is tastiest. Sacred.
+^fire.вартовий Keep watch yourself. I'm sleeping.
+^fire.зміна Whoever yawned keeps watch. Not me.
 
 @мх_бс
 ^xboss.бос {addr}, you see that carcass? This big! Now that was a brawl, fuck.
@@ -3589,6 +3592,12 @@ So there.
 ^xboss.кричала That is it. Next time I will do the hitting myself, damn it.
 ^xboss.влучила_кінець That is it, enough. Alive, and thank the gods.
 ^xboss.влучила_кінець A pack of heroes, fuck it. Half of them behind a rock.
+^xboss.земля The ground shook, I didn't. Well, a little.
+^xboss.пісня Let them sing. Just louder about me.
+^xboss.третя Whoever finished it is the hero. Me, basically.
+^xboss.всі All together? Well, me the hardest.
+^xboss.камінь Whoever sat behind the rock knows.
+^xboss.тактика Tactics, my tail. Cowardice, not tactics.
 
 
 [about_hurt] {ма_вступ?} {ма_поранений} {ма_хвіст?}
@@ -3674,8 +3683,8 @@ Talking to me?
 @мв_шпилька
 Ugh.
 Got it, {м_слівце}?
-I'll peck.
-And smooth your feathers.
+One more word and I'll peck.
+Smooth your feathers, they stick out like a loser's.
 So there.
 Fuck.
 I spit on you.
@@ -4501,7 +4510,7 @@ What is {he|she} doing? What is that even?
 This fuckwit is pulling something again.
 I won't watch this. Well, maybe a little.
 ~1 A disgrace. Simply a disgrace.
-~2 And what was that?
+~2 And what was that? I lost feathers over it, damn.
 ~3 You're strange. But one of ours.
 
 # --- a passing word (rev 40): the raven throws a line to another raven when players run past
@@ -5143,17 +5152,17 @@ looking at the clouds. One looks like your mug.
 listening to your belly growl.
 sharpening my beak on your shoulder strap.
 hatching eggs. Kidding, fuck.
-~2 almost dozing.
+~2 almost dozing. One more minute of quiet and I fall off the shoulder, damn.
 ~3 warming myself on you.
 
 @пл_спокій_думка_м
-Deadly boredom.
+Deadly boredom. Even the flies are yawning, hell.
 If only someone would attack.
 I spit on this silence.
-I'll go mad soon.
+I'll go mad soon. Me, hell, not the house.
 ~1 You could at least scratch yourself for entertainment.
 ~2 Well, so be it.
-~3 Good, fuck.
+~3 It's fine. We sit like two stumps and, hell, it's good.
 ~3 Let's sit some more.
 
 @пл_тут_м
@@ -5277,7 +5286,7 @@ a hungry raven is an angry raven. And I'm already very angry.
 ~1 you gobble, and I watch. You're a cheapskate, not a master.
 ~1 a little more and I'll leave you for a dead boar.
 ~2 I'm hungry, damn it. Feed me, eh?
-~2 I want to eat. Badly.
+~2 I'm so hungry the flies look at me with pity, damn.
 ~3 feed me, fuck, please. There.
 ~3 I'd eat something. Together with you.
 
@@ -5332,7 +5341,7 @@ you swing the axe better than in battle.
 the firs weep resin. Ha.
 ~1 you chop like the tree owes you money.
 ~1 the tree fell the wrong way. Like everything of yours.
-~2 good logs, damn it.
+~2 good logs, damn it. Enough even for your coffin.
 ~3 chop, chop. We need a house, fuck.
 
 @про_копання
@@ -5353,7 +5362,7 @@ the walls grow, the brains don't.
 oh, another shack. For trolls, probably.
 building, building… And who are we killing?
 nails, beams, planks. Boring, fuck.
-~1 crooked as your mug.
+~1 crooked as your mug after a fight with a door, hell.
 ~1 the wind blows — and everything falls. I'll wait.
 ~2 it stands, damn it. Didn't expect that.
 ~3 it'll be a nice house, fuck. A perch for me.
@@ -5385,7 +5394,7 @@ you flop around like a frog in a puddle.
 get out, or the fish will gnaw you.
 ~1 drowning? I'll watch.
 ~1 in the water you're even dumber. I didn't think that was possible.
-~2 paddle faster, fuck.
+~2 paddle faster, fuck, the fish are already writing a menu.
 ~2 the shore isn't far. Move it.
 ~3 swim out, jerk. I feel sorry for you.
 ~3 hold on, fuck. Don't drown.
@@ -5410,7 +5419,7 @@ the sky is crying. At your mug, probably.
 feathers getting soaked, patience getting soaked.
 ~1 what, do you live in a pond? Take cover.
 ~1 the rain is washing you. First time this week.
-~2 pouring, fuck. Let's wait it out.
+~2 pouring, fuck. Let's wait it out somewhere, I'm already a floor rag.
 ~3 wet, fuck. But together.
 ~3 let's take cover, damn it. I'm freezing.
 
@@ -5497,7 +5506,7 @@ a wave over the side.
 gulls are teasing.
 salt everywhere.
 the tub is rocking.
-~2 we're sailing.
+~2 we're sailing. Where to — hell knows, but with a breeze.
 ~3 we're going well.
 
 @пл_море_думка_м
@@ -5505,8 +5514,8 @@ Hold the helm, you oaf.
 Land soon?
 I hate water.
 If only I could kill a serpent.
-~1 Don't drown us.
-~2 Fine.
+~1 Don't drown us, dummy. I can't swim, and you can't think.
+~2 Fine, we sail. Like two chips in a puddle, hell.
 ~3 Nice, fuck.
 ~3 Let's sail on.
 
@@ -5516,7 +5525,7 @@ I'm getting soaked on your shoulder like a rag.
 my feathers are stuck together. So are you.
 ~1 you can't even hold a roof over us, you oaf.
 ~1 wet, fuck. Because of you.
-~2 we're getting soaked, damn it.
+~2 we're getting soaked, damn it. Soon mushrooms will grow on us, hell.
 ~3 I'm snuggling up to you. Don't get used to it.
 ~3 wet, but with you, fuck.
 
@@ -5527,7 +5536,7 @@ puddles knee-deep.
 the sky is pouring.
 wet, fuck.
 squelching.
-~2 well, wet.
+~2 well, wet. Like inside a frog's shirt, damn.
 ~3 warmth from you.
 
 @пл_дощ_думка_м
@@ -5535,8 +5544,8 @@ Look for a roof.
 I hate getting wet.
 A fire would be nice.
 At least under a tree.
-~1 This is all you.
-~2 It'll pass.
+~1 This is all your fault, damn. As always. As it, hell, always will be.
+~2 It'll pass. Like everything, damn. Except your stupidity.
 ~3 We'll dry off.
 ~3 We'll bear it together.
 
@@ -5677,7 +5686,7 @@ the valkyries are already circling.
 the heart is pounding like mad.
 your legs are shaking.
 death breathed in our faces.
-~1 you nearly croaked.
+~1 you nearly croaked. Nearly, damn. Like everything with you.
 ~3 I got scared, fuck.
 
 @пл_ледь_порада_м
@@ -5706,7 +5715,7 @@ Blood and glory!
 We're the best!
 They'll sing about this.
 The trophy is ours.
-~1 Incredible.
+~1 Holy hell. I haven't seen that even in Hel, damn.
 ~2 Nice, fuck.
 ~3 You're a legend, fuck.
 
@@ -5718,7 +5727,7 @@ berries aren't food, they're fodder for thrushes.
 better you collected skulls.
 ~1 you pick berries and lost your brains.
 ~1 pick, pick. A true viking.
-~2 well, at least it's grub.
+~2 well, at least it's grub. No masterpiece, but, hell, chewable.
 ~3 give me a berry. Please, fuck.
 ~3 tasty, damn it. More.
 
@@ -5741,7 +5750,7 @@ another piece of iron. At least it's sharp?
 don't smash your fingers, you oaf.
 ~1 I hope it doesn't fall apart in the first fight.
 ~1 crafting isn't your thing. But keep trying.
-~2 a decent thing, damn it.
+~2 a decent thing, damn it. Won't fall apart before lunch. Probably.
 ~2 oh, sharp. I like it.
 ~3 it turned out well, fuck. A master.
 ~3 make me something too. Claws.
@@ -5752,7 +5761,7 @@ the grub is bubbling, I'm drooling.
 cooking? The first piece is mine.
 it smells of meat. I love it.
 don't burn it, or I'll eat you.
-~1 some slop again.
+~1 some slop again. Even trolls wouldn't get poisoned by this, damn.
 ~1 you cook like a troll. But I'll eat it.
 ~2 it smells good, damn it. A piece for me.
 ~3 smells tasty, fuck. You know how.
@@ -5765,7 +5774,7 @@ you sleep, and enemies walk around.
 finally you woke up. I'm frozen already.
 ~1 you sleep like a corpse. Pity you wake up.
 ~1 you sleep more than you fight.
-~2 morning, fuck. Let's go.
+~2 morning, fuck. The sun is up, and you, hell, still aren't.
 ~2 slept well? Then let's slice.
 ~3 good morning, you little shit. I kept watch.
 ~3 get up, fuck. I missed you.
@@ -5788,9 +5797,9 @@ the portal hums, I'm shaking.
 my feathers stood up from that magic.
 I hope we came out in one piece. Counting my feet.
 ~1 someday you'll come out of there without a head. I'm waiting.
-~1 this crap again.
+~1 this crap again, hell. Even a troll would spit this out, damn.
 ~2 we got there fast, damn it.
-~2 fine. At least not on foot.
+~2 fine. At least not on foot, your legs are like a chicken's, hell.
 ~3 hold on to me in that hole, fuck.
 ~3 we went through together. Good.
 
@@ -5871,7 +5880,7 @@ your legs are shaking, you oaf.
 a little more and you'll be carrion.
 ~1 you stink of death. I like it. No, I don't.
 ~1 you're like a sieve. More holes than brains.
-~2 you look bad, fuck.
+~2 you look like a draugr with a hangover. Like shit, damn.
 ~3 I'm scared, fuck. Heal up.
 
 @рани_порада
@@ -6297,19 +6306,6 @@ Eat!
 ^fed_hugin.дражнить Well, well. Someday I'll be full and you won't. Wait for it.
 ~3 ^fed_hugin.дражнить Savour it. But the next piece is mine. Deal.
 
-@м_ситий
-~1 ^fed_munin.заслуги>fed_munin.заслуга What happened is you're second now, nerd. Get used to it.
-~3 ^fed_munin.заслуги>fed_munin.заслуга Earned it by being handsome. Unlike some.
-^fed_munin.чавкає>fed_munin.чавк I smack because it's tasty. You listen and sob.
-^fed_munin.чавкає>fed_munin.чавк Nobody eats manners on an empty stomach, nerd.
-~1 ^fed_munin.чавкає>fed_munin.чавк Don't like it, cover your ears with a wing.
-^fed_munin.подобрієш>fed_munin.злий Get kinder? Don't hold your breath, {м_слівце}.
-^fed_munin.подобрієш>fed_munin.злий Grub only makes me meaner. Like this.
-^fed_munin.заздрю>fed_munin.дуля Go on, envy me, {м_слівце}. It's good for you.
-^fed_munin.заздрю>fed_munin.дуля Look, look. You won't fill up with your eyes, nerd.
-~1 ^fed_munin.заздрю>fed_munin.зжеру Look at me once more and I'll eat you too. As a snack.
-^fed_munin.радий>fed_munin.дуля Glad, he says. Your beak's dripping with drool.
-^fed_munin.радий>fed_munin.дуля Sincere? Then watch me finish it.
 
 @м_кінець
 ^gap_m.наздожену Sure. I'll be further ahead by the time you catch up.
@@ -7064,19 +7060,19 @@ Eat!
 [death_many] {звертання?} {цт_death_many}
 [death_creature] %30 {звертання?} {ст_death_creature}
 [death_fall] %30 {звертання?} {ст_death_fall}
-[death_fall] {звертання?} {цт_death_fall}
+[death_fall] %20 {звертання?} {цт_death_fall}
 [death_drown] %30 {звертання?} {ст_death_drown}
-[death_drown] {звертання?} {цт_death_drown}
+[death_drown] %20 {звертання?} {цт_death_drown}
 [death_fire] %30 {звертання?} {ст_death_fire}
-[death_fire] {звертання?} {цт_death_fire}
+[death_fire] %20 {звертання?} {цт_death_fire}
 [death_poison] %30 {звертання?} {ст_death_poison}
-[death_poison] {звертання?} {цт_death_poison}
+[death_poison] %20 {звертання?} {цт_death_poison}
 [death_cold] %30 {звертання?} {ст_death_cold}
-[death_cold] {звертання?} {цт_death_cold}
+[death_cold] %20 {звертання?} {цт_death_cold}
 [death_tree] %30 {звертання?} {ст_death_tree}
-[death_tree] {звертання?} {цт_death_tree}
+[death_tree] %20 {звертання?} {цт_death_tree}
 [death] %30 {звертання?} {ст_death}
-[death] {звертання?} {цт_death}
+[death] %20 {звертання?} {цт_death}
 [near_death] %30 {звертання?} {ст_near_death}
 [level] %30 {звертання?} {ст_level}
 [kill_many] %30 {звертання?} {ст_kill_many}
@@ -7095,19 +7091,19 @@ Eat!
 [idle] %30 {звертання?} {ст_idle}
 [fury] {вл_fury}
 [wings] {вл_wings}
-[sh_here] {вл_sh_here}
-[sh_idle] {вл_sh_idle}
-[sh_kill] {вл_sh_kill}
-[sh_kill_many] {вл_sh_kill_many}
-[sh_near_death] {вл_sh_near_death}
-[sh_boss] {вл_sh_boss}
-[sh_build] {вл_sh_build}
-[sh_sail] {вл_sh_sail}
-[sh_weather_rain] {вл_sh_weather_rain}
+[sh_here] %20 {вл_sh_here}
+[sh_idle] %20 {вл_sh_idle}
+[sh_kill] %20 {вл_sh_kill}
+[sh_kill_many] %20 {вл_sh_kill_many}
+[sh_near_death] %20 {вл_sh_near_death}
+[sh_boss] %20 {вл_sh_boss}
+[sh_build] %20 {вл_sh_build}
+[sh_sail] %20 {вл_sh_sail}
+[sh_weather_rain] %20 {вл_sh_weather_rain}
 [fed] {вл_fed}
 [awake] {вл_awake}
-[see_enemy] {вл_see_enemy}
-[see_hurt] {вл_see_hurt}
+[see_enemy] %20 {вл_see_enemy}
+[see_hurt] %20 {вл_see_hurt}
 [heal] {вл_heal}
 
 @про_боса
@@ -8581,7 +8577,7 @@ Rip, trample, break — I'm holding on to the shoulder!
 ~3 You and I are one rage. Go!
 ~3 I hold on. You strike.
 @звір_кінець
-That's it, the beast is out. Now you're a rag. Catch your breath.
+That's it, the beast crawled back in. Now you're a wet rag. Catch your breath.
 Deflated. Breathe, or your legs will give out.
 The beast fell asleep. And now you're a wet chicken.
 ~2 So, feel better? Now sit, catch your breath.
@@ -10159,9 +10155,9 @@ I wouldn't buy a thing from you. But my owner's an idiot.
 [victim_own_ev_flee] {мж_свій_тікає}
 [victim_own_ev_fight] {мж_свій_бій}
 [victim_own_ev_swim] {мж_свій_плаває}
-[victim_own_ev_build] {мж_свій_будує}
+[victim_own_ev_build] %20 {мж_свій_будує}
 [victim_own_ev_emote] {мж_свій_емоція}
-[victim_own_ev_idle] {мж_свій_стоїть}
+[victim_own_ev_idle] %20 {мж_свій_стоїть}
 [victim_own_prank] {мж_свій_голова}
 [victim_own_end] {мж_свій_кінець}
 [victim_beast_start] {мж_звір_старт}
@@ -10544,7 +10540,7 @@ You're a seer like I'm a singer, Hugin. Well, at least I laugh.
 [victim_own_tease] {м_вигук?} You're {мж_хто}. {мж_свій_погроза}
 [victim_own_tease] {мж_факт_поч} you {мж_свій_факт}
 [victim_own_tease] Score {мж_за}: {мж_оцінка}
-[victim_own_ev_fall] You {мж_свій_падіння} {мж_як_впав}. {мж_реакція}
+[victim_own_ev_fall] You {мж_свій_падіння_дія} {мж_як_впав}. {мж_реакція}
 [victim_own_ev_hurt] You {мж_свій_удар_дія} {мж_як_удар}. {мж_реакція?}
 [victim_own_ev_fight] You fight {мж_як}. {мж_висновок}
 [victim_own_ev_build] You build {мж_як}. {мж_висновок}
@@ -10868,7 +10864,7 @@ sleep with your mouth open. I nearly shat in it.
 talk to boars like family.
 scratch your ass when you think nobody's looking. I'm looking.
 mix up berries with mushrooms. And mushrooms with rocks.
-@мж_свій_падіння
+@мж_свій_падіння_дія
 went splat
 slammed into the ground
 went down
@@ -12409,7 +12405,7 @@ Oh, dry mouth. Give me water. Or mead.
 [omen_summon] {мп_кличу}
 @мп_старт
 I remember {killer_gen}. You've got {left}. Go tear it apart.
-The mark's on {killer_gen}. {left} — and your skills come back. Move it.
+The mark's on {killer_gen}. You've got {left} — and your skills come back. Move it.
 Whoever killed you is marked. See the runes over its head? Go.
 Up? Good. Now go kill that piece of shit. Clock's ticking.
 Revenge, fuck yeah. You've got {left}. Miss it — your own damn fault.
@@ -12687,6 +12683,17 @@ Whoa, what a thing. Let me peck it. No? Miser.
 [habit_sweet_refuse] {мзв_refuse}
 [habit_pet_sulk] {мзв_sulk}
 [habit_scared_warn] {мзв_warn}
+[habit_gain_fire] {мзв_fire}
+[habit_gain_storm] {мзв_storm}
+[habit_gain_mine] {мзв_mine}
+[habit_gain_fish] {мзв_fish}
+[habit_gain_portal] {мзв_portal}
+[habit_gain_foot] {мзв_foot}
+[habit_gain_miser] {мзв_miser}
+[habit_gain_watch] {мзв_watch}
+[habit_fire_cold] {мзв_cold}
+[habit_miser_pinch] {мзв_pinch}
+[habit_miser_back] {мзв_back}
 @мзв_mead
 That's it, you got a raven drunk. Now pour regularly.
 Mead is holy. Without it I'm angry now.
@@ -12789,7 +12796,6 @@ A foe! Mind your head!
 # --- a bath, a game with your beast (rev 101)
 [world_bath] {мкуп_мию}
 [bath_shake] {мкуп_струс}
-[bath_dirty] {мкуп_брудний}
 [beast_play_start] {мгра_старт}
 [beast_play_start_wolf] {мгра_вовк}
 [beast_play_start_boar] {мгра_кабан}
@@ -12855,3 +12861,1747 @@ Victory! Carry me, slave.
 What? I tripped! Doesn't count!
 So you caught me, so what. I gave you a head start.
 Damn it. Next time I'll tear you up.
+
+# --- dirt on a raven (rev 102)
+[dirt_hint_mud] {мбр_мул} {мбр_хочу}
+[dirt_hint_mud_dry] {мбр_мул} {мбр_сухо}
+[dirt_hint_ash] {мбр_попіл} {мбр_хочу}
+[dirt_hint_ash_dry] {мбр_попіл} {мбр_сухо}
+[dirt_hint_blood] {мбр_кров} {мбр_хочу}
+[dirt_hint_blood] {мкуп_брудний}
+[dirt_hint_blood_dry] {мбр_кров} {мбр_сухо}
+[dirt_hint_bones] {мбр_кістки} {мбр_хочу}
+[dirt_hint_bones_dry] {мбр_кістки} {мбр_сухо}
+[dirt_proud] {мбр_гордий}
+[bath_hand] {мкуп_руки}
+[bath_tub] {мкуп_купіль}
+[bond_dirt_friend] {мбр_друг}
+[bond_dirt_friend_reply] {мбр_друг_відп}
+[bond_dirt_enemy] {мбр_ворог}
+[bond_dirt_enemy_reply] {мбр_ворог_відп}
+@мбр_мул
+I'm in swamp up to my ass.
+Half the fucking swamp is on me.
+Feathers in muck like a pig's.
+I stink of swamp so bad my eyes water.
+@мбр_попіл
+I'm all ash, damn it.
+Grey as a shitty cinder.
+Ash in my feathers, my beak and my ass.
+I'm not a raven now, I'm a burnt stub.
+@мбр_кров
+Covered in guts. Lovely.
+Feathers glued with blood, damn it.
+So much blood on me a butcher'd be jealous.
+Sticky with blood like a tavern floor.
+@мбр_кістки
+I stink like a draugr after a sauna.
+Dug in the bones. Now I stink of corpse.
+Dead men's dust in my feathers. Gross.
+I reek of graveyard, damn it.
+@мбр_хочу
+I need washing. Now.
+Where's that damn puddle?
+Water, or I'll die of my own stink.
+Drag me to a river, damn it.
+@мбр_сухо
+I'd wash, but there's not a drop of water here.
+Filthy as hell. And no water anywhere.
+This hole hasn't even got a puddle.
+When we reach water — don't chase me out of it.
+@мбр_гордий
+Covered in {dirt}? That's war paint, damn it.
+Wash? So everyone thinks I didn't fight? Hell no.
+I'm covered in {dirt} and I feel fucking great.
+Dirt is a medal. And you've got no medals.
+@мкуп_руки
+What, itchy hands? Fine, scrub away.
+Easy, damn it, those are feathers, not a sponge.
+Under the wing too. Like that.
+Don't get used to it. But... a bit more.
+@мкуп_купіль
+Hot water. Fine, maybe you're not such an idiot.
+Scoot over, damn it, I want in too.
+Now that's living. Just add mead.
+Steam, warmth... Nobody sees me enjoying it.
+@мбр_друг
+{addr}, you're covered in {dirt}. Wash, brother, you stink.
+{addr}, what's that filth on you? As a friend: into the water.
+Brother, you stink of {dirt}. Said with love.
+@мбр_друг_відп
+I know, damn it. Shocked by myself.
+I'll find water, quit buzzing.
+So I stink. Who of us doesn't?
+@мбр_ворог
+{addr}, you're covered in {dirt} like a pig in a puddle.
+Ugh, damn. {raven} stinks of {dirt} for miles.
+Look at this dirty prick.
+@мбр_ворог_відп
+At least you're clean and stupid.
+Dirt I'll wash off. Your mug — never.
+Sniff and envy.
+
+@м_ситий
+^fed_munin.мене|fed_munin.заздрю>fed_munin.дуля And for you — a fig. You can look for free, {м_слівце}.
+~1 ^fed_munin.мене|fed_munin.заздрю>fed_munin.дуля What are you staring at? I won't share, even if you croak here.
+^fed_munin.мене|fed_munin.заслуги>fed_munin.заслуга They feed me because I'm scarier. Simple.
+~2 ^fed_munin.мене>fed_munin.дуля I'd share. But I already ate it. Sorry. No, not sorry.
+~3 ^fed_munin.мене|fed_munin.заздрю|fed_munin.радий>fed_munin.крихта Well… here, sniff it, {м_слівце}. Just sniff.
+~3 ^fed_munin.мене|fed_munin.заздрю|fed_munin.подобрієш|fed_munin.радий>fed_munin.крихта Here, a crumb. Tearing it from my heart, damn. Appreciate it.
+^fed_munin.заслуги>fed_munin.заслуга Merits? I am the merit. All of me, beak to butt.
+~1 ^fed_munin.заслуги>fed_munin.заслуга What happened is you're second now, nerd. Get used to it.
+~3 ^fed_munin.заслуги>fed_munin.заслуга Earned it, because I'm handsome. Unlike some.
+^fed_munin.чавкає>fed_munin.чавк I smack because it's tasty. And you listen and weep.
+^fed_munin.чавкає>fed_munin.чавк You can't eat manners on an empty stomach, nerd.
+~1 ^fed_munin.чавкає>fed_munin.чавк Don't like it — cover your ears with a wing.
+^fed_munin.подобрієш>fed_munin.злий Get kinder? You'll never see it, {м_слівце}.
+^fed_munin.подобрієш>fed_munin.злий Food only makes me meaner. That's how it is.
+^fed_munin.заздрю>fed_munin.дуля Go on, envy, {м_слівце}. It's good for you.
+^fed_munin.заздрю>fed_munin.дуля Look, look. You won't get full with your eyes, nerd.
+~1 ^fed_munin.заздрю>fed_munin.зжеру Glance once more — and I'll eat you too. As a snack.
+^fed_munin.радий>fed_munin.дуля Glad, he says. Drooled all over his beak already.
+^fed_munin.радий>fed_munin.дуля Sincere? Then watch me finish it.
+
+# --- more lines where too few (rev 103, tools/fillgen.js) ---
+@про_ворога
+there's {seen}. A big dumb lump with teeth. Like your uncle, only more honest, damn it.
+{seen} stares at you like you stare at my food. Only hungrier, hell.
+{seen} is coming. In your place I'd crap myself. Good thing I'm on the shoulder.
+I see {seen}. A brawl's coming and I've got no snacks, no beer, damn it.
+{seen} sniffs the air. Sniffs you. I pity the beast, damn.
+~1 {seen} is close and you stand there like a monument to your own stupidity, hell.
+~1 {seen} is already licking its lips. You're lunch on legs, damn.
+~2 {seen} is coming. Punch it in the face, I'll scream for courage, hell.
+~3 {seen} is close, bro. Hold on, because if you get eaten I'll be damn sad.
+~3 {seen}. Shall we tear it together? You cut, I cheer really, really hard.
+@рани
+you're leaking like a holey barrel. I'm already dipping bread, damn it. Heal!
+you're a pale stain with legs. The valkyries are whispering already, hell.
+blood on you, blood under me. It doesn't suit me, damn it.
+~1 a bit more and I'll be sitting not on a shoulder but on a grave, damn.
+~1 you sway like a drunk at a funeral. Your own funeral, hell.
+~2 they beat you so hard I felt it. And nobody touched me.
+~3 hey, hold on, hear me? Without you I'm nothing. Tell no one, damn.
+~3 you're bleeding and I'm shaking, hell. Don't do this to me, bro.
+@про_вбивство
+{top} — flat on the ground like a plank. At least something you do comes out straight, hell.
+{top} — into the dirt, and I'm thrilled. Blood smells like a holiday, damn.
+another {top} taken apart for spare parts. A real craftsman, damn it.
+crack — and no more {top}. I didn't even get to blink, damn.
+~1 {top} is down because you got lucky, not because you're good, hell.
+~1 killing {top} is no feat, damn. The feat is not getting killed.
+~2 crunch — and {top} is gone. Music to my ears, hell.
+~2 {top} on the ground, you standing. A rarity, damn. I'll note it.
+~3 nicely done on {top}, bro. I cawed with pride, damn it.
+~3 what a blow! A couple more like that and I'll respect you, damn.
+@смерть_загальна
+dead again? The valkyries already say: "Oh hell, this one again". I'm ashamed, and I'm a raven.
+you die more often than I crap. And I crap a lot, damn.
+your grave is like a second house. The key's under the stone, damn.
+you lie there beautifully. Shame you're dead, hell.
+~1 how many more times, damn? Odin has already hung a sign with your name.
+~1 off to the other world again? Do they give you a discount there?
+~2 death doesn't suit you. Little suits you at all, damn.
+~2 running for the gear again. I know the way by heart, hell.
+~3 don't do that, hear me? I worry, damn. A little.
+~3 get up, bro. Without you I've got nobody to sit on, damn it.
+@ледь_живе
+a bit more and you're jelly, damn.
+{attacker} nearly made you kick the bucket. The bucket, hell!
+you're hanging by a hair, and the hair is damn thin.
+~1 I've already split your boots, damn. The left one's mine.
+~3 don't scare me like that, hell. My heart's in my heels. No idea where my heels are.
+@про_падіння
+you hit the ground so hard someone in Hel knocked on the ceiling: "What the hell up there?"
+you fly like a sack of potatoes and land even worse, damn.
+the ground hugged you again. Are you two dating, hell?
+you landed so hard the birds left three forests, damn.
+~1 no wings, no brains. What do you have besides bruises, damn?
+~1 you fall more often than Hugin shows off. And he shows off constantly, damn.
+~2 thud! In one piece? Pity. I mean good, damn.
+~3 careful, bro. I fall too when you fall, hell.
+@про_будову
+building? This house will stand exactly until a troll sneezes.
+you hammer so hard the woodpeckers retired, damn.
+the wall is crooked like your fate. But it stands, hell. For now.
+~1 some architect. Boars would refuse to live in this.
+~1 build, build. And who'll put the roof on, Odin?
+~2 oh, another beam. Soon it'll be a shed. A nice damn shed.
+~3 looks good, bro. Almost like people do it, hell.
+~3 build. I'll make a nest here, damn. Under the roof. If there's a roof.
+@про_рубку
+you chop so badly the tree falls from shame, not from the axe, damn.
+the forest fears you. Not your strength, hell, your stupidity.
+tree — crack, chips — in my face. Thanks a lot, damn.
+~1 you chop, I count. Tree — one, you — zero, at least it stood straight, damn.
+~1 another tree dead for your crooked house. Murderer, hell.
+~2 you swing that axe like a granny with a broom. But it falls, damn.
+~3 good chopping, bro. The forest is smoking nervously.
+~3 one more tree and we're rich, damn. In firewood.
+@про_копання
+dig, dig. Maybe you'll dig down to your brains. Your own, damn it, not the dwarves'.
+dust everywhere on me. Beak, feathers and, hell, my soul.
+clang-clang with the pickaxe. My head's a bell, damn.
+~1 you dig so badly the dwarves underground are laughing, hell.
+~1 the ore would crawl out itself if you stopped missing it, damn.
+~2 oh, shiny! Mine? At least one thing, damn it, mine.
+~3 dig, bro. When you're rich, buy me a shiny thing, damn.
+~3 what ore! We're getting rich, hell. I can already hear the coins.
+@про_плавання
+you swim like an axe with ambitions. Sinking, but trying, damn.
+the water's as cold as your heart. I'm wet, hell.
+you flounder and the fish laugh. I can hear them, damn.
+~1 a bit more and fishermen will be fishing you out, hell.
+~1 wet as a rat and just as smart, damn.
+~2 row, row. The shore won't swim to us, damn it.
+~3 hold on, bro. I can't swim, but I'll scream encouragingly, damn.
+@про_дощ
+it pours like Thor's bucket. Someone up there is in a mood. Like me, damn.
+the sky is crying. Probably saw you, hell.
+the rain gets under my feathers like you into someone's bag, damn.
+~1 I'm wet because of you. And the sky, but mostly you, damn it.
+~1 find a roof, I'm a sponge already, damn.
+~2 puddles, mud, you. Three troubles, hell, all mine.
+~3 wet, cold. Huddle up, bro. Just no snot, damn.
+@про_грозу
+it thunders so hard I prayed, damn. Me! A raven!
+Thor's hammering up there. Probably looking for you, hell.
+one bolt and it's roast raven. No thanks, damn it.
+~1 standing in the storm like a lightning rod, damn. A dumb one.
+~2 thunder. Hide, or we'll fry, hell.
+~3 don't be scared, bro. I'm scared too, damn. Together it's less scary.
+@про_туман
+fog like milk. Only you can't drink it, damn.
+can't see a thing. Like in your head, as always, hell.
+something will crawl out of the fog and eat you. I'm curious, damn it.
+~1 get lost in the fog and I won't look for you. Well, I will. But slowly, damn.
+~2 quiet in the fog, like a graveyard. Don't like it, hell.
+~3 stay by me, bro. At least I can smell, damn.
+@про_сніг
+so cold my beak froze to my tongue, damn.
+snow, snow, snow. White, wet and, hell, soulless.
+~1 you'll freeze stiff and I'm on you like on an ice floe, damn.
+~1 snow up to the knees and brains, damn it, up to the ankles.
+~2 cold. Light a fire, or I'll croak, damn.
+~3 we warm each other, bro. You me, me you. Well, mostly you me, hell.
+@про_нудьгу
+we're standing. I know every blade of grass by name. This one's Gala. She's damn more interesting than you.
+so bored I made friends with a fly, damn.
+silence. Even the wind fell asleep, hell.
+~1 you stand like a monument to laziness. Pigeons would sit on you, damn.
+~1 nobody's dying. Boredom is, damn it, deadly.
+~2 do something already, damn. Sing a song. No, don't sing.
+~3 we sit, we're quiet. Fine, hell. Like two old men on a bench.
+@їжа
+oh, grub! That's it, you're not a jerk today. Until evening, damn.
+yum. So tasty my claws are shaking, hell.
+I eat and think: you're not so damn hopeless after all.
+~1 finally, damn it! I was already trying your ear on.
+~1 for once you did something useful, damn.
+~2 grub is sacred. You're a saint today, hell. Almost.
+~3 yum. You feed me better than Odin, just don't tell him, or we're both done for.
+~3 tasty, bro. You spoil me, damn.
+@голод
+I'm so hungry your helmet smells like soup. With you inside, hell.
+my belly growls so loud the enemies look around, damn.
+I want to eat like a wolf. Well, like a very angry raven, damn it.
+~1 feed me or I start with you. A finger. Then, damn, another.
+~1 I'm so hungry I see you roasted. With onions, hell.
+~2 hungry Munin is angry Munin. And angry, damn, I bite.
+~3 bro, some grub. Please, hell. See, I'm polite.
+@готування_м
+smells so good I'm drooling on you, damn.
+cooking? Just don't burn it like last time, hell.
+~1 some cook. Even wolves run from your stew, damn.
+~2 frying? Give me a piece or I'll peck, damn it.
+~3 oh, this will be tasty. First piece is mine, bro. I'm in charge, damn.
+@ремесло_м
+carving? Mind your fingers, you'll need them, damn.
+oh, another piece of iron. Is it at least sharp, hell?
+~1 a jack of all trades. Both hands, damn, out of your butt.
+~2 craft away. I'll see what, damn it, comes out.
+~3 nice thing, bro. Good for smacking a bastard, damn.
+@ніч_м
+night. Either we eat someone or they eat us. Fifty-fifty, hell, and you're blind on top.
+dark as inside a troll's shirt. Smells the same, damn.
+at night all the filth crawls out. You among it, damn it.
+~1 prowling at night? Maybe the dark will eat you, damn.
+~2 night. Time to cut and not sleep, hell.
+~3 at night stay by me, bro. I see better in the dark, damn.
+@тут_м
+a place like your face: seems fine, but you don't want to live, damn.
+it stinks so bad even I'm disgusted, hell.
+~1 every bush here wants to eat you. I understand them, damn it.
+~2 here you need eyes in the back of your head. You've got one, damn, and it's sleepy.
+~3 decent place, bro. Just, hell, don't relax.
+@ягоди_м
+picking berries? Are you a viking or a granny at the market, damn?
+a handful of berries, and none, damn it, for me.
+~1 picking berries while something behind you is already sniffing, hell.
+~3 give me one, bro. Well, two. Well, damn, all of them.
+@пл_спокій_м
+I sit on you like a nail in a board. Only, damn, useless.
+the shoulder is warm, but you're cold as a fish, hell.
+I've grown roots here, damn.
+~1 do something, or I'll peck you myself to get you moving, damn it.
+~2 we sit. At least not in silence, damn. I'm talking.
+~3 I'm fine here, bro. Just, hell, tell no one.
+@пл_вбивство_м
+saw it twitch from the front row. Worth the ticket, damn.
+blood flew all the way to me. A souvenir, hell.
+~1 crooked, but a corpse. As always, damn.
+~2 fell nicely, damn it. The shoulder even shook.
+~3 what a blow, bro! I nearly flew off the shoulder with joy, damn.
+@мгл_суть
+That's it, that's it. A bit more and I'll start respecting you. And we damn well don't need that.
+There, scratch there. Oh, damn. Oh, hell. Don't stop.
+Pet me, pet me. Just don't tell Hugin, damn it.
+You pet me and I think whom to peck, damn. From happiness.
+My feathers puffed up. Because of you, hell. Happy?
+@жт_зілля
+glug-glug. What a drink, damn. Give me a sip.
+you drink potions like water. Won't your belly burst?
+~1 chugging again? A drunk, damn, not a warrior.
+~3 drink, bro. Be healthy, hell.
+@жт_стілець
+sat down like a king on a throne. King of, damn, dung and sticks.
+you sit, and I sit on you. Hierarchy, hell.
+~1 sprawled out. Meanwhile the enemies are growing, damn it.
+~3 sit, bro. You've earned it, damn.
+@про_боса
+{boss} is down and I'm sitting on top like a rooster on a dung heap. Only prouder, damn.
+Odin is watching and crying with pride, hell. Well, maybe with laughter.
+{boss} is down! The skalds will wet themselves with joy, damn!
+~1 {boss} is down. You were there too, damn. As an extra.
+~3 we did it, bro! {boss} in the ground and we're alive, hell!
+@про_море
+the sea is like soup: salty, wet and, hell, no meat.
+waves so big my stomach stayed on the mast, damn.
+~1 you steer like a blind drunk. The fish are laughing, hell.
+~2 wind in the sail, and up my butt. Fair, damn.
+~3 good sailing, bro. Just don't capsize us, hell.
+@про_підземелля
+it stinks of corpses here and, damn, of your socks.
+dark as Hel's pocket. Hold the fire, hell.
+every corner here wants to eat you. I'm first in line, damn.
+~1 we crawled into a hole like rats. You're the head rat, hell.
+~3 stay by me, bro. In the dark I'm at home, damn.
+@крик
+SCATTER, BASTARDS, OR I'LL EAT YOU ALL!
+CAW, DAMN IT! WHOEVER DIDN'T HIDE — NOT MY FAULT!
+GET AWAY FROM MY HUMAN, HELL!
+BEAT IT WHILE YOUR EYES ARE STILL IN!
+@лють
+tear them like Thor tears rags, damn!
+blood to the head! Hit, hell, don't think!
+more, more, more! Guts on the bushes, damn!
+~3 together, bro! Let them run, hell!
+@крила
+run so fast the wind falls behind, damn!
+feet in hand, hell! I mean, in wings!
+~1 for once in your life you're fast, damn. With my help.
+@зцілення
+patching holes like the neighbour's roof. Crooked, but it holds, damn.
+don't twitch, or I'll sew your ear to your butt, hell.
+~1 patching you up for the tenth time, damn. Pay me in meat.
+~3 easy, easy. It'll get better, bro. I'm here, damn.
+@рівень
+Well, now you're almost family. Almost, damn.
+We've grown together, hell. Like dung and a boot.
+I trust you more than Hugin. Which is no damn surprise.
+@кігті
+peeled it like a potato, damn!
+beak in the eye — and goodbye, hell!
+claws across the face like a rake across a garden, heh!
+@кігті_промах
+missed, hell! The wind let me down, damn it.
+missed. Even I miss sometimes, damn. Rarely.
+@портал_м
+through this hole again. Like being pulled through a butt, damn.
+the portal hums like a drunk bumblebee. Creepy, hell.
+~3 hold on to me, bro. Anything can happen in a portal, damn.
+@сон_м
+you snored so loud a troll answered from behind the hill, damn.
+sleep is for the dead. And for you, hell.
+~1 slept half the day. I thought you croaked, damn.
+~3 slept well, bro? Right, now, hell, we smash.
+@пл_ледь_м
+you're swaying and I'm on you like on a mast in a storm, damn.
+you're leaking and I'm sitting in a red puddle, hell.
+~3 hold on, bro. Without you I'm going nowhere, damn.
+@пл_бос_м
+I saw it go down! The ground jumped, damn!
+the head on the ground, and I'm in heaven, hell.
+~3 we did it, bro! The best view, damn, from my shoulder!
+@пл_море_м
+a wave in the face, and I'm not even a pirate, damn.
+everything's salty: the wind, my feathers and my tears, hell.
+~3 good sailing, bro. Just don't drown, damn.
+@пл_дощ_м
+rain, and I'm on you like a sponge on a bench. Wring me out, hell.
+it runs down my collar. I have no collar and it still runs, damn.
+~3 getting wet together, bro. Romantic, hell. Ugh.
+@ем_танець_м
+You dance like a chicken on a hot pan, damn.
+What moves! Just don't throw me off, hell.
+~3 Go on, go on, bro! I'll caw along, damn.
+@ем_тиче_м
+Pointing like a kid at a puddle. What's there, damn?
+There's nothing there, hell. Except maybe your conscience.
+@ем_радість_м
+Happy as a fool with a cookie. What happened, damn?
+Jumping for joy? I'm getting shaken, hell.
+@ем_мязи_м
+Showing muscles? I've seen bigger on a chicken, damn.
+Showing off. The trolls are laughing, hell.
+@ем_сміх_м
+Neighing like a mare at a wedding, damn.
+Laughing? Laugh at yourself, hell, plenty of reasons.
+@ем_що_м
+What was that, damn? Did you swallow ants?
+I watch and don't get it, hell. Nobody does.
+@бм_левади
+The Meadows, damn. Even the boars smile here. Gets on my nerves, hell.
+in the Meadows it's so quiet I can hear you getting dumber, damn.
+~3 The Meadows… This is where we started, hell. I've gone soft.
+@бм_левади_порада
+Don't fall asleep, or a boar will laugh at you, damn.
+Let's move on, hell, this place is for kids.
+@бм_чорнолісся
+The Black Forest, damn. Every bush has eyes and teeth.
+greylings behind every tree, and behind the tree — another damn tree.
+~1 in the Black Forest you're like a hunk of meat at a fair, damn.
+@бм_чорнолісся_порада
+Hold the torch higher, hell.
+Hear a troll — run, damn, then fight.
+@бм_болото
+the swamp, hell. Squelch-squelch — and half a boot is gone.
+every puddle here wants to eat you, damn.
+~1 in the Swamp you're like a fly in jelly, hell.
+@бм_болото_порада
+Mind the poison, damn.
+Keep to dry ground, hell, if you find any.
+@бм_гори
+in the Mountains it's so cold my thoughts froze, damn.
+the wolves here are like axes with legs, hell.
+~3 nice view, bro. Cold, but, damn, nice.
+@бм_гори_порада
+Drink the frost potion, hell.
+To the fire, damn, now.
+@бм_рівнини
+The Plains, damn. No tree, no shade, just killer flies.
+the goblins here are like you: dumb, but, hell, angry.
+~1 on the Plains you'll die beautifully. From a fly, damn.
+@бм_рівнини_порада
+Swat the flies before they eat you, hell.
+Hold your shield, damn, things bite here.
+@бм_імла
+in the Mistlands you can't see a damn thing, and that's, hell, the good part.
+the spiders here are like your nightmares, damn, only alive.
+~3 stay by me, bro. In the mist I'm your eyes, hell.
+@бм_імла_порада
+Don't walk into the webs, damn.
+Light higher, hell, or they'll eat us.
+@бм_попіл
+in the Ashlands it's so hot my feathers smoulder, damn.
+everything burns here, even my nerves, hell.
+~1 they'll roast you here and serve you with onions, damn.
+@бм_попіл_порада
+Don't stand in the lava, hell.
+Drink the fire potion, damn.
+@бм_північ
+in the Deep North it's so cold my butt froze into the ice, damn.
+snow, ice, and you in the middle like a fool, hell.
+~3 freezing together, bro. At least not alone, damn.
+@бм_північ_порада
+Fire, damn, now!
+Don't stand still or you'll freeze to the spot, hell.
+@бм_океан
+in the Ocean it's water, water, water. And you in it like a speck, damn.
+the sea is wide, and your brain, hell, is a drop.
+~1 if a serpent shows up — I'm the first to run, damn.
+@бм_океан_порада
+Row to the shore, hell.
+Watch the water, damn, serpents.
+@афк
+you stand like a stump. Mushrooms are growing on you, damn.
+~1 fell asleep standing? Like a horse, hell.
+move, or I'll peck your butt, damn.
+@афк_кінець
+Come on, damn!
+Wake up, hell!
+@зн_chop
+chopping again? Soon there'll be a desert here, damn.
+~1 another tree. Are you at war with them, hell?
+@зн_mine
+digging again? Soon you'll dig into Hel, damn.
+~3 ore again. Good, bro, we're getting rich, hell.
+@зн_build
+hammering again? I've got a hammer in my head now, damn.
+~1 building again. How much longer, hell?
+@зн_kill
+another one! I can't keep count, damn!
+~3 what a streak, bro! Blood like a river, hell!
+@зн_fall
+fell again? The ground knows your name by now, damn.
+~1 off a height again. Are you a bird, hell? No.
+@зн_death
+dead again? Your grave misses you already, damn.
+~1 valkyries again. They've made a schedule, hell.
+@мб_друг_вітання
+Yo, {addr}! Alive, damn!
+Oh, one of ours! Hey there, hell!
+@мсм_вт_хвіст
+Beat it while your feathers are whole, damn.
+And don't stick your beak up at me, hell.
+@мсм_пгр_хвіст
+I'll find that bastard by the stink, damn.
+I remembered its beak. And its butt, hell.
+@мб_крадіжка
+{friend}, an open bag is an invitation, damn. Minus {food}.
+Nicked from {friend}: {food}. Tasty, hell. Someone else's is always tastier.
+@мб_пограбовано
+{raven} nicked our {food}! I'll pluck it like a chicken, damn!
+We've been robbed, hell! {raven} took {food}! War!
+@мсм_кр_суть
+{food} is mine now. Guard your bag, loser.
+Snap — and {food} is in my beak. Thanks for the treat, damn.
+@мсм_т_суть
+{friend} is one of ours, hell. I won't peck that one.
+With {friend} you can go scouting. And for beer, damn.
+@мсм_лпп_хвіст
+Say something nice. I can't, damn.
+What a person. Not like you, hell.
+@мл_тепло
+{friend}! A decent face, damn. Nice.
+{friend} is here. That's it, the day's a success, hell.
+@мл_шпилька
+{friend} again. Hold your bag, or it'll get nicked, damn.
+Oh, {friend}. I went sour, hell.
+@ммд_ковток
+Give me a sip or I'll peck, damn.
+Mead! A sip for me, cheapskate, hell.
+@мн_заслужив
+Now I'm {nick}, damn! Whoever forgets gets a beak on the head.
+{nick}. Sounds like me, hell. Scary and pretty.
+@св_скарб_м
+Look what I found: {thing}! It was mine, but, damn, I'm giving it.
+{thing}! It shone, hell. Couldn't resist.
+@мулов_несу
+Here, {thing}. Nearly ate it myself, damn.
+Dived — and here: {thing}. Wet as a rat, but, hell, with a catch.
+@мобн_броня
+{thing}? Well, at least not rags, damn. Almost like a person.
+New gear! Just don't whine the first time it gets scratched, hell.
+@мобн_зброя
+{thing}? Sharp, damn. Finally something to chop someone properly with.
+A new toy. Swing it at enemies, not at me, hell.
+@мзв_lost
+{habit}? Screw that, I'm over it.
+Was {habit}, now I'm not. Growing up, damn.
+@мп_старт
+I remembered that {killer_gen}, damn. You've got {left} — then go tear it.
+I marked {killer_gen}. You have {left}, hell. Don't dawdle.
+@мп_сплачено
+That's it, damn! Debt paid. Skills back.
+The bastard's dead! Revenge is the tastiest thing there is, hell.
+@пр_бій
+I want a brawl, damn. Find a starred beast and tear it in front of me.
+Ordinary ones are for losers. Give me a starred one, hell.
+@пр_полюємо
+We hunt, damn! {foe_genpl} — {n} of them. I'm counting.
+Bag {foe_genpl} — {n} of them, hell. No slacking.
+@пр_помста
+That {foe} nearly ate you, damn. Find one like it — and into dust.
+{foe} insulted us, hell. Go and pay the debt back.
+@звір
+GROW, BEAST! LET THEM KNOW, HELL!
+CLAWS HIGHER! TEETH SHARPER! TEAR, DAMN!
+[req_teach] {пр_навчи_м}
+@пр_навчи_м
+Teach me a word. A juicy one. I'll repeat it so everyone loses it.
+I want a new word. Say something — I'll remember it and tease with it.
+I'm bored. Teach me a word, or I'll make up my own, damn.
+Give me a word, hell. One that makes Hugin flinch.
+~1 Teach me a word. Don't offer swears — I know them all already.
+~3 Teach me a word, bro. I'll say it only to you. Well, and to everyone.
+[anger_debt] {лють_борг}
+@лють_борг
+You owed me nothing. But he owes. Take the change, bastard!
+He hit you — I pay him back, damn. With interest.
+Debt paid, hell! Nobody hits my human for free.
+For every blow on you — two on him. That's my bookkeeping, damn.
+I counted everything, hell. Now I'm paying back.
+@мсуд_1
+What a brawl. Like two hens over grain, only the hen is you.
+Alive, damn? Well, at least you can do one thing — not croak.
+The enemy got embarrassed fighting such a loser.
+I saw you miss from the shoulder. Miss everything. Everything!
+One star, and that's out of pity, idiot.
+They beat you like a sack of flour. Shame.
+If that was a fight, I'm a swan.
+What were you doing out there? Say it was a dance, or it's a disgrace.
+@мсуд_2
+You won, but looking like you lost.
+Two stars. The second because I'm kind today.
+Blood poured out of you like beer from a barrel. But you're standing.
+You hit, they hit, and luck alone decided it.
+Victory, damn. Crooked, limping, but victory.
+Once more like that and I'll finish you myself, to end the suffering.
+@мсуд_3
+Well, okay. Nothing to laugh at, nothing to praise.
+Three stars. Like soup without meat — edible.
+You did your job. No spark, but done.
+No guts, no glory. Boring.
+It'll do. I've seen worse. From you, too.
+Middling. At least not a disgrace.
+@мсуд_4
+Now that's chopping! Guts flying!
+Four stars, damn. Don't get used to it, I'll take them back.
+You gave it to them! I even cawed with joy.
+What, someone taught you? Confess, who.
+That went beautifully. I'd pour you a beer if I had hands.
+Good killing. A bit more and I'll be bragging about you.
+@мсуд_5
+Five stars, hell yeah! Where'd you learn that?
+I flew off the shoulder, it was that beautiful!
+That's my master, damn it! Who else says weakling?
+Not a scratch — and all of them in the ground. Legend.
+Skalds will sing this! And I'll caw along.
+Did you just come from Valhalla? What a fight!
+I'll tell all the ravens. Let them be jealous.
+What a brawl! I even forgot I'm hungry.
+@сп_fight_м
+{m_when} you smashed them so well I licked my beak. {m_stars}.
+The brawl {m_when}. {m_stars}. That was a show, damn.
+{m_when} — {m_stars}. First time I wasn't ashamed to sit on you.
+~1 Once in your life you fought well, {m_when}. {m_stars}. Once.
+~2 Remember {m_when}? {m_stars}. Blood everywhere and you standing. Respect.
+~3 {m_when} you fought {m_grade}. That's when I knew you're one of us.
+@сп_fight_тут_м
+Here — {m_stars}, damn. The ground still smells of blood.
+Here you tore them like rags. {m_stars}.
+Here you fought {m_grade}. I puffed up my feathers right here.
+I remember this place. {m_stars}. What a brawl that was.
+@сп_first_death_by_м
+your first death with me — {m_who}, {m_when}. Back then I thought you were tough. Naive me.
+{m_where_in}, {m_when}. {m_who} — and you lie there for the first time, me sitting on a corpse. Romantic.
+~1 by {m_who}, damn. First death with me — and from such crap.
+~2 {m_who}, {m_when}. That's how it started. The valkyries know your face since.
+~2 by {m_who}, {m_where_in}. I'm still looking for that bastard. Find it — tear it.
+~3 {m_when}, by {m_who}... That's when I got scared the first time. Don't tell the nerd.
+@сп_first_death_cause_м
+first death with me — by {m_cause}. Didn't even need an enemy, you managed alone.
+{m_when}, {m_where_in}. By {m_cause}. I laughed until it hit me you weren't getting up.
+~1 by {m_cause}! First death with me — and so dumb.
+~2 {m_when} — by {m_cause}. That's how our friendship began. Dumb start.
+~2 by {m_cause}, {m_where_in}. I thought you were joking.
+~3 by {m_cause}, {m_when}... I sat over you a long time. Quiet, imagine that.
+@сп_death_by_м
+{m_who}, {m_when}. They spread you like butter on bread.
+by {m_who}, {m_where_in}. I remembered that bastard. Face to face.
+~1 {m_when} — {m_who}, and you're in the ground. What a sack.
+~2 death by {m_who}, {m_when}. Happens. With you — constantly.
+~2 {m_where_in}, {m_when}. {m_who}. I swore out loud. Well, as always.
+~3 {m_when}, {m_who}... I sat in your grave thinking how I'd tear that bastard apart.
+@сп_death_cause_м
+by {m_cause}, {m_where_in}. What kind of person are you, huh?
+{m_when} — by {m_cause}. Never saw a dumber death. Well, except your other ones.
+~1 by {m_cause}. Did you even try?
+~2 {m_when}, by {m_cause}. Dumb, but your style.
+~2 by {m_cause}, {m_where_in}. I was pulling feathers off my head.
+~3 by {m_cause}, {m_when}. Once more and we're not friends. Lying. We are.
+@сп_death_here_м
+here you lay down, {m_when}. I smell this place.
+oh, familiar place. {m_when} I sat on your corpse here.
+~1 here, {m_when}, you croaked. Walk around, or again.
+~2 here, {m_when}. This ground is yours, you paid for it in blood.
+~2 here again. {m_when} this is exactly where they put you down.
+~3 here, {m_when}... I don't like this place. Let's go.
+@сп_death_again_here_м
+{m_times} here, damn. What did you forget here?
+you croaked here {m_times}. Build a house here, why walk far.
+~1 {m_times} on one spot. What a ram, honestly.
+~2 {m_times} here. I know every blade of grass by now.
+~2 here — {m_times}. Maybe screw this place?
+~3 {m_times} here... Let's go, yeah? I feel awful here.
+@сп_grudge_м
+{m_who} — {m_times}. That bastard is hunting you.
+I hate {m_who} now. {m_times} — that's personal.
+~1 {m_times} by {m_who}. Do you owe it something?
+~2 {m_who} — {m_times}. Someday we'll tear that bastard. Promise.
+~2 we have a score with {m_who}: {m_times}. Not in our favour.
+~3 {m_who}... {m_times}. I'll peck it first. In the eye.
+@сп_near_м
+{m_hp} health, {m_where_in}. I was already dividing up your boots.
+{m_when} you had {m_hp} health left. I nearly crapped myself.
+~1 {m_hp} health and you keep swinging. Dumb, but alive.
+~2 {m_when}, {m_hp} health. First time I wanted to shove a potion down your throat.
+~2 after {m_who} — {m_hp} health. Barely, damn, barely.
+~3 {m_hp} health... Don't do that. I haven't finished scolding you yet.
+@сп_boss_м
+you tore {m_who} apart {m_when}. Now that was something!
+{m_who}, {m_where_in}. Our best brawl. Still buzzing.
+~1 you actually took {m_who} down. And I bet against you. Lost.
+~2 {m_when} — {m_who}. Blood, yelling, and you on top. Bliss.
+~2 the fight with {m_who}, {m_when}. I went hoarse cawing.
+~3 {m_when} you took down {m_who}. I told all the lads.
+@сп_boss_friend_м
+we took {m_who} as a gang: you, {m_friend} and me. Me in charge, obviously.
+{m_when}, {m_who}. {m_friend} were there. Good lads, ours.
+~1 took it down as a crowd. You did the least, damn.
+~2 {m_who}, {m_when}. {m_friend} were there. A crowd is already a gang.
+~2 you took {m_who} together. I yelled loudest. That counts.
+~3 {m_when} — {m_who}. You, {m_friend} and me. What a gang.
+@сп_biome_м
+{m_where_in}, {m_when}. First time there and you're already scratching your head.
+I remember the first day {m_where_in}. Stank like your bag.
+~1 {m_where_in}, {m_when}. You barged in there brainless. As always.
+~2 {m_where_in} together first time, {m_when}. New land — new bastards for me.
+~2 {m_when} we were first {m_where_in}. I ate something on day one. Don't ask what.
+~3 {m_where_in}, {m_when}. A good day. Our first time there together.
+@сп_biome_death_м
+{m_where_in} you didn't last a day. The locals were happy.
+first day {m_where_in} — straight into the ground. {m_when}. Fast, damn.
+~1 {m_where_in}: walked in — and croaked. A record.
+~2 {m_when}, {m_where_in}. The land told you: "Nope".
+~2 {m_where_in} they met us with teeth, not bread.
+~3 {m_where_in}, {m_when}. You lay down on day one. But you came back. Respect.
+@сп_dungeon_м
+{m_where_in}, underground, {m_when}. Dark, damp, and dead things. Bliss.
+our first dungeon, {m_when}. You were noisy as a pig at the trough.
+~1 first dungeon, {m_where_in}. You got lost there twice. Twice!
+~2 {m_when} we first crawled into a hole. You came out with loot, me with cobwebs in my beak.
+~2 {m_where_in}, {m_when}. First hole together. Stank of corpses.
+~3 first dungeon together, {m_when}. I was scared down there. Don't tell the nerd.
+@сп_slaughter_м
+{m_count} in a minute, {m_where_in}! Now that I get!
+{m_when} — {m_count} in a minute. I drooled.
+~1 {m_count} in a minute. Brainless, but damn beautiful.
+~2 {m_count} in a minute, {m_when}. That was meat.
+~2 {m_where_in}, {m_count} in a minute. I went hoarse with joy.
+~3 {m_count} in a minute, {m_when}. You were a beast. My beast.
+@сп_voyage_м
+{m_km} by sea, {m_when}. I threw up three times.
+the longest sail — {m_km}. I sat on the mast swearing the whole way.
+~1 {m_km}, {m_when}. And you didn't drown us. A miracle.
+~2 {m_km} without a stop, {m_when}. Wind in the face, you at the helm. Fine.
+~2 {m_when} — {m_km} by sea. I snatched fish out of the water. Tasty.
+~3 {m_km} by sea, {m_when}. What a ride that was.
+@сп_fall_м
+{m_m} down, {m_when}. I flew alongside laughing.
+{m_when} — {m_m}. You landed so hard the ground shook.
+~1 {m_m} fall. And alive. Fools are lucky.
+~2 {m_m}, {m_when}. I thought: that's it, there goes my perch.
+~2 {m_when} you flew {m_m}. Without wings. Without wings!
+~3 {m_m}... I crapped myself in fear. Stop climbing cliffs.
+@сп_tame_м
+you tamed {m_who} {m_when}. Less food for me.
+{m_when} — {m_who}. One more mouth on our heads.
+~1 you tamed {m_who}. You pet it, and me? Me?
+~2 {m_who}, {m_when}. Decent beast. Dumb, but ours.
+~2 {m_when} you tamed {m_who}. I pecked it first. For order.
+~3 you tamed {m_who} {m_when}. Good heart you've got. Don't show anyone.
+@сп_home_м
+{m_where_in}, {m_when}. First house with me. I sat on the beam and crapped. For luck.
+the house {m_where_in}. The first night was cold as your heart.
+~1 the house {m_where_in}, {m_when}. Crooked, drafty. Your style.
+~2 {m_when} you put a bed {m_where_in}. Somewhere to sleep since.
+~2 {m_where_in}, {m_when}. Our den. Stinks, but ours.
+~3 {m_where_in} — our house. First time I slept properly there.
+@сп_tomb_м
+{m_min} in the grave. I sniffed your socks. Out of boredom.
+{m_min} I waited for you to crawl over.
+~1 {m_min} in the grave. You took your sweet time. I remember.
+~2 {m_min} in the grave. Cramped, dark, stinking. Like your bag.
+~2 {m_min}. That's how long I sat in the grave swearing. Out loud.
+~3 {m_min} in the grave. I knew you'd come. You're nothing without me.
+@сп_metal_м
+{m_item}, {m_when}. You carried it around like an egg.
+{m_when}, {m_item} in your hands for the first time. Eyes shining. Like mine at meat.
+~1 {m_item}, {m_when}. And you instantly thought you're cool. Nope.
+~2 {m_item}, {m_when}. New metal — new bastards for it.
+~2 {m_when} you found {m_item}. I wanted something too, but nobody gave me anything.
+~3 {m_item}, {m_when}. A good day. You were happy, and me with you.
+@сп_badday_м
+{m_times} in a day, {m_when}. I didn't leave the graves.
+{m_when} you croaked {m_times}. I counted the curses. Lost count.
+~1 {m_times} in a day. What a master.
+~2 {m_when}, {m_times}. A bad day. You have many.
+~2 {m_times} in one day, {m_when}. I even got drunk that evening. On puddle water.
+~3 {m_when}... {m_times} in a day. And you got up and went on. Respect.
+@сп_r_near_м
+after {m_who} — {m_hp} health. I was already trying on your helmet.
+{m_hp} health, {m_when}. And you were grinning, dummy.
+~1 {m_hp} health and you go back in. Where did you lose your brain?
+~2 {m_when}, {m_hp} health. Since then I yell when you start a fight.
+~2 you barely got away from {m_who}, {m_when}. Barely.
+~3 {m_hp} health... {m_when}. Don't scare me like that again. I'm old.
+@сп_r_hard_м
+{m_who}, {m_when}. You gave {m_lost} health, but finished the bastard.
+the fight with {m_who}, {m_when}. Long, crooked, but ours.
+~1 you struggled with {m_who} so long I fell asleep. Twice.
+~2 {m_who}, {m_when}. Expensive, but worth it.
+~2 {m_when} — {m_who}. A hard brawl. You didn't run. Good.
+~3 {m_when}, {m_who}. You fought like me. No higher praise.
+@сп_r_escaped_м
+{m_who}, {m_when}. Ran off with your arrow. A gift.
+{m_when} the prey got away. I still remember that face.
+~1 {m_who}, {m_when}. Gone. You're a blind shot, not a hunter.
+~2 {m_when} the prey got away: {m_who}. I clacked my beak in rage.
+~2 {m_who}, {m_when}. You stared after it like a ram at a new gate.
+~3 {m_who}, {m_when}. Gone. Never mind, we'll meet again.
+@сп_r_fled_м
+you ran from {m_who}, {m_when}. I nearly fell off the shoulder.
+{m_who}, {m_when}. You ran like the wind. Wish you charged like that.
+~1 {m_when} you ran from {m_who}. Coward.
+~2 {m_who}, {m_when}. You backed off. Smart. Rare, but smart.
+~2 from {m_who}, {m_when}. But alive, and that's something.
+~3 {m_when} you ran from {m_who}. Rightly. What would I do with you dead?
+@сп_r_star_м
+{m_who} at {m_stars}, {m_when}! Now that's meat!
+{m_when} — {m_who} at {m_stars}. Doesn't happen every day.
+~1 {m_stars}, {m_when}. I thought you'd crap yourself. You didn't. Weird.
+~2 {m_who} at {m_stars}. {m_when}. Good work.
+~2 {m_when} you took down {m_who} at {m_stars}. I told everyone. Twice.
+~3 {m_stars}, {m_when}. That's us! That's what we did!
+@сп_r_newkill_м
+{m_who}, {m_when}. New blood on the menu.
+{m_when} you killed {m_who} for the first time. I tasted it right away. Meh.
+~1 {m_who}, {m_when}. One more beast you don't fear. Wrongly.
+~2 {m_when} — {m_who}. Now you know where to hit. And I know what to eat.
+~2 {m_who}, {m_when}. A new line on the menu. Noted.
+~3 {m_when} you first beat {m_who}. I was proud of you.
+@спогад_знову_м
+I'll tell it again, because I want to:
+I know, I know, you've heard it. Listen anyway:
+~2 Once more:
+~3 You've heard it, but I love this story:
+@пл_набіг_м
+guests, damn! Uninvited! Smash them!
+crawling in like cockroaches. Squash them.
+oh, the meat came by itself. Handy.
+~1 don't stand there like a stump, hit!
+~1 want to lose the house? Swing, dummy.
+~1 scared? Me too. But hit.
+~2 we hold the house. Just let them try.
+~2 hit this one, hit that one. Hit everyone.
+~2 going fine. Blood, screams, all as it should be.
+~3 we'll beat them off together, bro. As always.
+~3 you in front, me on you. Let them be afraid.
+~3 smash them, and I'll scream. Scarily.
+@пл_їзда_м
+ride, damn! Let the wind whistle!
+shakes like a cart of potatoes. Bliss.
+the beast stinks, you stink. Only I smell nice.
+~1 steer, don't sleep, dummy.
+~1 if I fall, I'll peck the back of your head.
+~1 crawling like a turtle. Spur it on!
+~2 good gallop. I like it.
+~2 faster, even faster!
+~2 decent beast. It listens. Unlike you.
+~3 we're flying, bro! This is life!
+~3 all day like this. You, the beast and me.
+~3 I'm holding on. Ride, don't be scared.
+@пл_візок_м
+pull, horsey! Giddy-up!
+the wheel creaks, you creak. Music.
+what's in the cart? Any grub?
+~1 pull faster, lazy butt.
+~1 don't hit a hole, I'll fly off.
+~1 you puff like a smith's bellows.
+~2 a bit more, a bit more. Pull.
+~2 strong like an ox. An ox is dumb, but strong.
+~2 the road is smooth — and that's bliss.
+~3 pull, and I'll caw you a song.
+~3 we'll get there, bro. Where else would we go.
+~3 you pull, I steer. A team.
+@пл_стілець_м
+sit, sit. Don't sit your butt off.
+oh, a break. Finally.
+we sit like two grandpas on a bench.
+~1 you sit, the enemies grow. Get up.
+~1 sprawled like a king. Ugh.
+~1 sitting and sitting. Grow roots while you're at it.
+~2 well, let's sit. What else.
+~2 I'll sit with you. Just don't chatter.
+~2 so quiet. Suspicious.
+~3 nice sitting, bro.
+~3 sit. I'm here, not going anywhere.
+~3 I love when you sit. The shoulder doesn't shake.
+@пл_затишок_м
+house, fire, grub. What else do you need?
+warm, damn. Even my feathers fluffed up.
+at home it's like under mum's wing.
+~1 cozy here, and you still stink.
+~1 don't go soft, enemies come and you're in slippers.
+~1 the house is crooked but warm. Like you.
+~2 good here. We're not going anywhere, right?
+~2 I'll sit and warm up. Don't move.
+~2 warm, quiet. Bliss.
+~3 our house, bro. Ours.
+~3 I love when we're home. Tell no one.
+~3 here I'm happy, damn. Well, almost.
+@пл_торг_м
+the trader is a crook. Keep your eyes open.
+the money melts like snow. Why so much?
+buy something sharp, not pretty.
+~1 buying junk again? Ugh.
+~1 haggle, cheapskate. He's fooling you.
+~1 you've got the money, he's got the brains.
+~2 decent price. Take it.
+~2 watch he doesn't cheat you.
+~2 good stuff. Fine.
+~3 buy me a shiny thing, yeah?
+~3 take what you need. I'll help haggle from the shoulder. By screaming.
+~3 nice haggling, bro.
+@пл_піч_м
+hot as hell. I like it.
+smoke in my beak. Cough, damn.
+it melts. You melt too, all sweaty.
+~1 step back, we'll roast!
+~1 don't sleep, pour the ore!
+~1 heat right up my butt. Thanks a lot.
+~2 burns nicely. There'll be metal.
+~2 roars like a beast. Good sound.
+~2 warm. Feathers drying.
+~3 I love watching fire. With you.
+~3 from this iron you'll knock someone's head off. Nice.
+~3 sitting, warming up. Fine.
+@пл_город_м
+digging in the dirt like a mole.
+plant, plant. The boars will thank you.
+worms! Give me one.
+~1 you plant crooked, dummy.
+~1 a viking with a hoe. Ugh.
+~1 you bent and I nearly flew off, damn.
+~2 it grows slowly. Fine.
+~2 a nice bed. For you.
+~2 there'll be grub — that's good.
+~3 plant me some berries, yeah?
+~3 so calm. The soil smells.
+~3 you plant, I guard. A team.
+@пл_зілля_м
+glug. Bottoms up!
+stinks like a swamp. But it works.
+give me a sip too. Cheapskate.
+~1 drinking again? Drunkard.
+~1 don't spill, I'm sitting right here.
+~1 drink faster, enemies won't wait.
+~2 it works. I can see it works.
+~2 that went down well.
+~2 now you can fight some more.
+~3 drink, bro. Cheers.
+~3 get well. I'm bored without you.
+~3 that's better. I can see.
+@пл_трофей_м
+another head. A collection, damn.
+hangs like it's alive. I want to peck it.
+oh, that bastard. I remember how it stank.
+~1 crooked. Rehang it, dummy.
+~1 hanging it isn't killing it. Anyone can do this.
+~1 barely took it down and now you hang it like a hero.
+~2 hangs nicely. Let the guests piss themselves.
+~2 our wall grows, damn.
+~2 a good trophy. I pecked it too.
+~3 our trophy, bro. Ours.
+~3 I'm proud, hear me? A little.
+~3 a couple more heads and it's like a jarl's hall.
+@мзв_hangover
+Why are you yelling? My head's splitting.
+Dry yesterday — bad today. That's how it goes.
+Don't shake so much, I'm sick.
+Give me a hair of the dog or I'll croak.
+The sun is too damn bright. Turn it off.
+Shut up. Just shut up and bring mead.
+@мзв_whine
+Home, damn. It's warm there and there's grub.
+How much more walking? I want my beam.
+Nothing here is mine. I want back.
+Where did you drag me, huh?
+Home is better. Always better.
+When we get home I'll sleep three days.
+@мзв_sneak
+Quiet is for cowards. CAW!
+Why are you hissing? It wasn't on purpose.
+Why hide? Walk up and punch it in the face!
+Oops. They heard. Good, fight.
+I'm not sneaking. I'm walking proudly.
+Caw! Let them know.
+@мзв_spook
+I wanted to catch it myself!
+It ran. And I yelled at it to stay.
+Meat! Was.
+Caw! Someone had to scare it.
+Sorry. I was hungry.
+The game got scared. Wimp.
+@мзв_refuse
+Eat that yourself.
+Am I a pig? Bring something decent.
+Ugh. I won't even sniff it.
+I want something sweet. Not this.
+You spoiled me, and now this? Nope.
+Let Hugin eat it. He doesn't care.
+@мзв_sulk
+Who's going to scratch me? The neighbour?
+Don't want to pet me? Fine. I'm offended.
+I sit here. Unpetted. Like an orphan.
+Pet me just once, cheapskate.
+Forgot about me? I'll remember.
+A whole day without affection. You brute.
+@мзв_warn
+Damn, behind you!
+Turn around, dummy, they're cutting!
+Beast behind!
+Left, left, damn!
+It's running at you!
+Hit, or they'll eat you!
+@прм_гучний
+CAW! Well, I said I can't do quiet.
+Cough. CAW. What?
+~1 Let them come. I'm bored.
+~1 Quiet? Screw quiet.
+~2 Oops. Slipped out, damn.
+~2 I'm quiet. CAW. See.
+~3 Sorry, bro. That's my voice.
+~3 Cawed. Happens. Don't sulk.
+@прм_ревнощі
+Grub for the nerd? And me?
+I'm here like an orphan and you feed Hugin.
+~1 I'll remember this. For a long time.
+~1 A chunk for him, a fig for me. Sure.
+~2 Don't look at me. I'm offended.
+~2 Next time me first, hear?
+~3 I want some too. Come on.
+~3 I'm jealous, damn. No idea why.
+@прм_ревнощі_кінець
+Okay, forget it.
+Fine. But the nerd owes me.
+~1 Forgiven. But I remember everything.
+~1 Fine. This time. Next time I peck.
+~2 Done, not angry. Almost.
+~2 Peace. Just don't do it often.
+~3 I can't sulk at you long.
+~3 Done, bro. Peace.
+@прм_відвага
+That's it, now I'm angry!
+It's staggering! Let's tear it!
+~1 Ha! Not scary now!
+~1 My turn, damn!
+~2 Finish the bastard!
+~2 I'm going! Cover me!
+~3 Together, bro! Take it down!
+~3 For you — even at a giant.
+@прм_монети
+{coins} glitter — so they're mine.
+~1 {coins}? Mine now. Don't look.
+~1 Borrowed {coins}. Forever.
+~2 {coins} — into my nest. Don't ask.
+~3 Saving for our old age: {coins}. A shiny old age.
+@улюблене_вперше
+{food}! Are you reading my mind?
+ooh, {food}. Now that's grub.
+~1 {food}. Well, for once you didn't screw up.
+~1 {food}?! Where were you before, cheapskate?
+~2 {food}! I drooled. On you.
+~2 {food}. That's it, I'm yours now. Almost.
+~3 {food}! Bro, you know me inside out.
+~3 {food}... What a gift. Thanks.
+@улюблене
+Mine! Give it here, quick.
+{food}. You're good today.
+~1 {food}. Finally it got through to you.
+~1 Oh, mine. This time I won't peck.
+~2 {food}. Sucking up? Smart move.
+~2 Mine again. What, in love? Sure.
+~3 {food}. You spoil me, bro.
+~3 My favourite. You're gold, damn.
+@обївся
+That's it, my belly's bursting.
+Full as a python. Now I'll crawl.
+~1 One more bite and I'll crap on your shoulder. From joy.
+~1 Fattening me for slaughter? What are you plotting?
+~2 Full. Don't touch me.
+~2 Stuffed. Hic. Pardon.
+~3 Full, bro. Thanks. Nap time.
+~3 Full to the throat. You like having me, huh?
+@ситий_їсть
+Not hungry. But I'll eat.
+Full, but I don't skip freebies.
+~1 Eating on principle. So you get nothing.
+~1 Give. Not because I want it. Because I can.
+~2 For later. I'll thank you in winter.
+~2 What, more? I'll take it.
+~3 Well, if you're giving — I'll take it, bro.
+~3 You feed me like family. Go on.
+@втеча_м
+{prey} — gone. What a lousy shot.
+lunch ran off. I'd have caught it, but you don't let me.
+~1 you shoot like a blind man into fog. Ugh.
+~1 it ran because you huff for the whole forest.
+~2 never mind, we'll catch it. Maybe.
+~2 gone. Well, at least we ran.
+~3 don't be sad, bro. The next one won't get away. I'll see to it.
+@гострю
+my claws cut like an axe.
+a bit more and I'll tear them myself, without you.
+~1 I learn faster than you. What a turtle.
+~1 training. On them. For now on them.
+~2 my paw's getting practised. Blood flows — it works.
+~2 sharpening my beak. Someone will get it.
+~3 sharpening for you, bro. So no one touches you.
+~3 a bit more and we'll be scary as devils.
+@бачив_смерть
+a big beast. Was.
+I saw it fall. Fell nicely.
+~1 took it down. And I pecked most, just so you know.
+~1 lucky you. And me. But mostly me.
+~2 one more head. A good day.
+~2 what a brawl! Blood splashed all the way to my tail.
+~3 together we're power, bro.
+~3 proud of us. Both.
+@мбр_мул
+I'm not a raven, I'm a frog with a beak.
+Mud in my feathers, my feet, everywhere.
+Heavy as a wet sack.
+The swamp is on me. The whole swamp.
+@мбр_хочу
+Find water, or I'll smear you.
+A puddle! Any puddle!
+I want a wash like never before.
+Where's the water? Where's that water?
+@мбр_сухо
+Not a drop, damn. What a place.
+You could only wash in dust here.
+I'll endure. But I'll grumble.
+No water, but plenty of stink.
+@мбр_попіл
+I sneeze soot. Cough.
+I'm grey as grandpa's beard.
+I stink of a burnt-out fire.
+Enough ash in my feathers for a whole stove.
+@мбр_кров
+Someone else's blood, and it sticks like mine.
+A retired butcher — that's me.
+When it dries I'll have a crust, like a pie.
+Blood on me. Pretty, but it stinks.
+@мбр_кістки
+Dead men's dust in my feathers. Ugh.
+I stink of a crypt. Don't come close.
+Bones in my feathers. They crack.
+I reek of the grave.
+@мбр_гордий
+Dirty? Battle-ready!
+Let them see I didn't just sit around.
+I won't wash. Let them be afraid.
+Dirt is my armour.
+@мж_плітка_удар
+{friend} got hit so hard today the teeth flew. Heh.
+Did you miss {friend} taking one in the face? Shame. It was a show.
+{friend} offered {>his|her} head like there's nothing in it to break.
+I counted how many {friend} took. Lost count.
+@мж_плітка_падіння
+{friend} went down so hard the ground shook.
+Did you see {friend} fly down? No wings, heh.
+{friend} kissed the ground today. Passionately.
+I'll remember {friend}'s fall for a long time. And laugh.
+@мж_плітка_смерть
+{friend} had a lie-down today. A rest, heh.
+The valkyries know {friend} by face already.
+{friend} kicked the bucket. Not for long, sadly.
+{friend} had a short trip. To the pit.
+@мж_плітка_тікав
+{friend} ran so fast the dust rose in a pillar.
+Did you see {friend} retreat? Faster than a hare.
+{friend} showed every bastard {>his|her} back today.
+{friend}'s best weapon is heels.
+@мж_свій_тікає
+Running? Right, it's a mess here.
+You run well. Wish you fought like that.
+Run, run, I'm holding on.
+Retreat, damn! A tactical one!
+@мж_свій_плаває
+You swim like a log. A wet log.
+The water's cold, my butt's wet.
+Swim faster or the fish will eat us.
+Now we're both wet as rats.
+@мж_свій_емоція
+What a clown. The audience is shocked.
+What was that? A fit?
+Waving your arms like a windmill in the wind.
+Dancing? The enemies are laughing. Me too.
+@мж_звір_удар
+{friend} got hit. Well, the beast is like its master.
+Oh, {friend} whimpered. Bliss.
+{friend} took a blow. Dumb animal.
+{friend} has a hole now. It suits {>him|her}.
+@мж_звір_смерть
+{friend} is done. Barbecue time.
+{friend} kicked the bucket. Heh.
+Farewell, {friend}. Who'll carry us now?
+{friend} is lying there. Can I peck?
+@мж_звір_бій
+{friend} bites! Go, beast!
+{friend} went into battle. Brave. Dumb.
+Listen to {friend} growl! Almost scary.
+{friend} fights better than the master, damn.
+@мж_звір_стоїть
+{friend} chews. The deed of the day.
+{friend} stares into nowhere. A thinker, damn.
+{friend} has stood so long it'll grow roots.
+{friend} is scratching. That's all the work.
+@мж_звір_спина
+{friend}, ride smooth or I'll peck.
+Sitting on {friend}. Above everyone.
+{friend} didn't even notice I'm here. Dumb.
+Riding {friend}! Giddy-up!
+@нак_поруч_м
+Beside, then. Don't run or I'll fall behind.
+Sticking to you like a shadow with a beak.
+I'll be at your side. Whoever comes — gets pecked.
+~1 Beside you, because you'd get lost alone.
+~2 Flying beside. Fine.
+~3 Next to you, bro. Where else.
+@нак_коло_м
+Circling. From above you see all the bastards.
+A circle over you. Just let someone try.
+I'll look from above at who to tear.
+~1 I'll circle, and you stop being dumb down there.
+~2 I'll check everything. Now.
+~3 I'm above you, bro. Relax.
+@нак_розвідка_м
+Flying ahead. Whatever I find is mine.
+I'll see who's hiding there, and back.
+I'll scout. If anything — I scream.
+~1 I'm risking again, and you're strolling.
+~2 I'll look and come back.
+~3 In a flash. Don't move without me.
+@нак_трюк_початок_м
+Look!
+Hop!
+Now, now.
+~1 Well, if you want it so bad, watch.
+~2 Here.
+~3 For you, bro.
+@нак_трюк_м
+Only I can do this. The nerd is nervously smoking.
+What flying, damn!
+I won't repeat it. Well, maybe I will.
+~1 What, impressed? Of course.
+~2 Well? Bliss, right.
+~3 Did you like it? Say yes.
+@св_торговець_м
+Sitting on {trader}. Now I'm the boss here.
+{trader}, don't move or I peck.
+From here I can see him counting money. Crook.
+~1 Buy something, I'm not sitting here for looks.
+~2 Nice hat he's got. It'll be my nest.
+~3 Take what you need. I'm holding him by the head.
+@св_вогонь_м
+Fire! Warms the butt, warms the soul.
+I'll sit. Don't call me.
+Feathers drying. Bliss, damn.
+~1 Warm up too, you stink of damp.
+~2 Warm. Could doze off. Wake me if something, damn, catches fire.
+~3 Sit beside me. Warmer together.
+@св_чуже_м
+Someone else's? No one's. Mine now.
+No owner — I'm the owner.
+I'll sit while no one's looking.
+~1 You saw nothing, got it?
+~2 Nice thing. Shame it's not ours.
+~3 Let's go home. Ours is there.
+@мд_звіт
+It was fun here without you, damn.
+The house stands. I stood guard. Don't thank me.
+Listen to what happened. Don't interrupt.
+~1 Oh, finally. I carried everything alone here.
+~2 All fine. Almost.
+~3 I waited for you. Now I'll tell you everything.
+@мд_голодний
+No grub — no guard.
+The feeder's as empty as your head.
+Pour some meat — then I'll fly.
+~1 Hungry, I'm angry. Not at the enemies. At you.
+~2 Throw something in the feeder, huh?
+~3 Feed me, bro, and I'll tear them all.
+@мд_забули
+I counted the days here. And my ribs.
+The feeder grew dust, damn.
+Forgot? I didn't.
+~1 Once more and I move in with the neighbours.
+~2 I thought you wouldn't come.
+~3 Missed you, damn. Feed me and forget it.
+@мд_тривога
+Guests, damn! {foe} by the house!
+{foe} is crawling in! Quick, here!
+Hitting as I can! Hurry!
+~1 {foe} is in our home, and where are you wandering?
+~2 Strangers by the house! Put them out!
+~3 I won't give up our house. Holding on, bro.
+@мд_зламали
+They smashed the perch! Who, damn?
+My home — splinters. I'm angry.
+No perch. I'll ride on you.
+~1 Build a new one. And not out of crap.
+~2 No perch, but I'm still here.
+~3 What matters is you're whole. We'll make a new perch.
+@мд_пара
+Nerd, aim better! You nearly hit me!
+Again, nerd. I'll beat you now.
+Hugin flaps like a chicken. But he tries.
+~1 You clipped me again, nerd. On purpose, huh?
+~2 Oh, better now, nerd.
+~3 The nerd and me — power. Don't tell him.
+@мб_женеш
+{addr}, where are you rushing like scalded?
+What's burning, {addr}? Or are you burning?
+~1 Running from someone, cowards?
+~2 Don't kill yourselves there, {addr}!
+~3 Ride, {addr}! Let the wind whistle!
+@мб_поспіх
+No time for you, {addr}! Later!
+Out of the way or I'll knock you down!
+~1 No time to wag tongues, {addr}.
+~2 Bye, {addr}! We'll cross again.
+~3 Sorry, bro, we're on business! We'll chat tonight.
+@мб_назустріч
+Yo, {addr}! And bye.
+You that way, we this way. Whatever.
+~1 {addr}, something scary behind? You run like cowards.
+~2 What's there, {addr}? Anyone to smash?
+~3 Mind your feathers, {addr}!
+@мб_наввипередки
+Last one is a loser!
+We'll beat you, {addr}! Like kids!
+~1 Run, run. You'll lose anyway.
+~2 Come on, {addr}! Show what you can do!
+~3 Good race, bro! Again sometime?
+@мб_зброя
+{addr}, cutting someone? I'm in!
+What iron! Who are we hunting?
+~1 Just don't wave it near me, you'll trim my feathers.
+~2 Good luck with the chopping, {addr}.
+~3 Take them all down, {addr}! Well, not us.
+@мб_ніч
+Prowling at night? Sure.
+Dark as a pit, and they're running.
+~1 {addr}, is your human even dumber at night?
+~2 Closer to the fire, {addr}.
+~3 Don't get lost, {addr}.
+@мб_приятель
+{addr}! Hey! What's new?
+Oh, {addr}! Still alive? Good.
+~1 {addr}, and where's my mead? I remember.
+~2 Hey, {addr}! Tonight by the fire.
+~3 Glad to see you, bro. Honestly.
+@мб_чужий
+What kind of bird is that? Not ours.
+A strange raven. I look at you, you look at me.
+~1 Who let you in, feathers?
+~2 Hey, stranger. I don't bite. Yet.
+~3 A stranger, but looks decent. Let it live.
+@мб_знаменитий
+{raven}! The one? Not that great.
+{raven} himself is running! Give me an autograph. With your beak.
+~1 {raven}? I thought you'd be taller.
+~2 Hey, {raven}! Heard a lot about you.
+~3 {raven}, you're a damn legend. Respect.
+@мб_брат
+Brother! Who are we tearing today?
+Another Munin! What power!
+~1 Brother, are you angry or just hungry?
+~2 Hey, brother! How's the grub?
+~3 Two of us — the end for everyone, brother.
+@мб_поранений
+{friend} is like a sieve. Who did that to you?
+Blood on the path, {addr}. Yours?
+~1 Who beat up {friend} like that? Nicely done.
+~2 To the fire, {addr}! It'll get easier.
+~3 Hold on, {addr}. Get well.
+@мб_мокрі
+Wet as hens after rain!
+You're dripping like a barrel.
+~1 {addr}, you look like a wet broom after the bathhouse.
+~2 Under a roof, {addr}, or you'll catch cold.
+~3 Dry off, bro. Don't get sick.
+@пр_хочу
+I want {food}. Why are you standing there?
+{food}. Bring it, or I'll be angry.
+~1 I want to eat. {food}. Quick.
+~3 Bro, I'd love {food}. Please.
+@пр_край
+Carry me to {place_in}. I miss it.
+I want {place}. Come on, move.
+{place}. Haven't been in ages. Let's go.
+Take me to {place_in}. I'll see what's there.
+@пр_вершина
+I want a mountain. The highest.
+I want the peak. To spit on everyone from up there.
+Climb the mountain, and I'll steer.
+I want high. Breathtaking high.
+@пр_море
+The sea! I want it to rock.
+Let's sail far. No one, just us and the waves.
+I want the sea, damn. Sick of your land.
+I want waves. And fish. Mostly fish.
+@пр_підземелля
+I want a hole. Dark, with dead things.
+A crypt! Bones there. I love bones.
+Lead me underground. It's interesting.
+I want the dark. You bring the fire.
+@пр_блискуче
+{thing}. I want it. Now.
+Bring {thing} and I'll be nice. Maybe.
+{thing}. It shines! Come on.
+My nest asks for: {thing}.
+@пр_схованка
+I hid a treasure. Look for it, loser.
+There's a cache. Find it — good job, if not — loser.
+There's treasure. Map, pickaxe, go.
+Let's play. I hid it — you look.
+@пр_познайом
+I want to go to my ravens. Lead.
+There's one raven out there. I need to tell it something.
+Take me to someone. I'm bored with just you.
+I want to see old acquaintances. Good ones and bastards.
+@пр_нагадую
+Hey. {goal}. Remember?
+I haven't forgotten. {goal}.
+So what's up? {goal}.
+Reminding you, because you'll forget. {goal}.
+@пр_тепліше
+Warmer, warmer!
+Close now, damn.
+That way, that way. Warmer.
+Yeah, like that. Warmer.
+@пр_холодніше
+Cold, dummy. Back.
+Where are you going? Colder.
+Not there, damn!
+Cold. Turn around.
+@пр_тут
+Here, damn! Dig!
+Stop! Under your feet!
+Right here! Pickaxe!
+Found it! Dig here.
+@пр_прикрась
+Put {look} on me. {n} minutes. I want to look like a jarl.
+{look}. {n} minutes. Let them envy.
+I want {look}, {n} minutes. Looking good is work.
+{look} on me, {n} minutes. And don't take it off early.
+@пр_перо
+The nest is bare. Feathers, {n} of them.
+{n} feathers. Soft ones. Not from me.
+Bring feathers, {n} of them, the nest is cold.
+I want feathers, {n} of them. For the nest.
+# --- end of rev 103 lines ---
+
+# --- the hot tub (rev 104)
+[dirt_tub_wish] {мбр_купіль_мрія}
+[req_tub] {мбр_купіль_прох}
+@мбр_купіль_мрія
+Rivers are crap. A hot tub — now that's something.
+Why rinse me in a puddle? Give me the tub.
+Thought of the hot tub. Feathers stood on end.
+Only frogs wash in cold water. I want it hot.
+@мбр_купіль_прох
+I stink even to myself. Hot tub, you and me. Today.
+I want the tub. Hot, damn it. And nobody staring.
+Enough rivers. Tub, steam and quiet — that's my wish.
+Walking round filthy like a pig. Haven't I earned a tub?
+
+# --- the raven on your arm (rev 105)
+[arm_hint] {мрк_натяк}
+[arm_open] {мрк_відкрито}
+[arm_up] {мрк_сів}
+[arm_land] {мрк_прилетів}
+[arm_pet] {мрк_гладь}
+[arm_eyes] {мрк_очі}
+[arm_eyes_warm] {мрк_очі_тепло}
+[arm_toss] {мрк_злет}
+[arm_off_weapon] {мрк_зброя}
+[arm_off_foe] {мрк_ворог}
+[arm_off_hurt] {мрк_удар}
+@мрк_натяк
+Why d'you keep lugging me on your shoulder? Give me your arm like a human.
+Shoulder, shoulder... Too stingy to give an arm, are ya?
+If there was an arm, I'd sit. Instead I sit here like an idiot.
+A bit more and I'm climbing onto your arm. Brace yourself, damn it.
+People have falconers. I've got you. Well, better than nothing.
+That's a big arm. What, too stingy to let me sit?
+@мрк_відкрито
+Fine, you earned it. I'll sit on your arm now. Won't bite it off. Probably.
+That's it, I'm on the arm now too. Hold tight or I peck.
+Hold out your arm and I'll sit. Just don't shake like a puppy.
+From now on the arm is mine. The shoulder's mine too. Everything's mine, really.
+@мрк_сів
+Now that's a throne, damn it. Hold it level.
+Don't shake. I'm not heavy, I'm majestic.
+Heh. I can see the top of your head from here. Some head.
+Lift it higher. Oh, you can't. Weakling.
+Fine. Just don't trim my claws.
+I'm sitting. Now what, you sorry falconer?
+@мрк_прилетів
+What, been waiting? Fine, I sat, don't cry.
+On the arm, on the arm... Fine, for a minute.
+Now that's a landing, damn it. Learn.
+Holding your arm out means you missed me. Heh.
+Well hi there, perch.
+@мрк_гладь
+Stroke, stroke. Is there food coming?
+Oh that's the stuff. Don't stop, damn it.
+Paws like a troll's, but you stroke all right.
+Don't tell Hugin, he'll laugh.
+More. And behind the neck. Like that.
+Gone soft with you, to hell with it.
+@мрк_очі
+What're you staring at? I'll peck your eye, then you'll know.
+Fine, I'm looking. A mug's a mug. Seen worse.
+What are you looking for there? Wisdom? Go ask Hugin.
+Blink. Ha, you blinked! I win.
+Don't come closer, you stink of onions.
+What, you fell in love? Ugh, damn.
+@мрк_очі_тепло
+You know... you're all right. Just don't tell anyone or I peck.
+I've seen plenty. You're one of us. That's all.
+Like hell I'll ever leave you. Got it?
+I look at you and think: what a mess we got into. The two of us.
+You're mine. Period. Anyone touches you, I take an eye.
+@мрк_злет
+Wheee, let's fly, damn it!
+Tossed me like a sack. Whatever, I'll fly around.
+What a launch! Do it again!
+Don't miss me. I'll be quick. Probably.
+I'm off. Don't mope without me.
+@мрк_зброя
+Grab your axe then. I'm off to the shoulder.
+A weapon means a fight. Count me in!
+Got it, the hand's busy. I'm not stupid.
+At least warn me before you grab the iron!
+@мрк_ворог
+Whoa, guests. I'm getting down, and don't stand there like a stump.
+Something's coming. Freeing your hand — hit it!
+See that? So do I. Shoulder, quick.
+I smell trouble. Getting down.
+@мрк_удар
+Ow, damn it! That nearly got me!
+Hold your arm steady when they beat you! Oh, right.
+I'm flying off! Take your own beating.
+Damn, they're hitting you again. To the shoulder!
+
+# --- its own ways on your arm (rev 106)
+[arm_t_scratch] {мрт_чух}
+[arm_t_blow] {мрт_дмух}
+[arm_t_peck] {мрт_палець}
+[arm_t_world] {мрт_світ}
+[arm_t_other] {мрт_інша}
+[arm_t_wings] {мрт_крила}
+[arm_t_swing] {мрт_гойд}
+[arm_t_paw] {мрт_лапа}
+[arm_new_scratch] {мрт_нов_чух}
+[arm_new_blow] {мрт_нов_дмух}
+[arm_new_peck] {мрт_нов_палець}
+[arm_new_world] {мрт_нов_світ}
+[arm_new_other] {мрт_нов_інша}
+[arm_new_wings] {мрт_нов_крила}
+[arm_new_swing] {мрт_нов_гойд}
+[arm_new_paw] {мрт_нов_лапа}
+@мрт_чух
+Ooh, right there, damn. Don't stop.
+Hrrr. What? Nothing. Scratch.
+Those fingers of yours are good for something after all.
+More, damn it, more. Like that.
+@мрт_дмух
+Pfft! Why are you blowing on me like on porridge?
+Feathers on end! You little pest.
+You stink of onions and now you blow on me too.
+Blow once more and I peck your nose.
+@мрт_палець
+Snap! Well, gonna poke your fingers in again?
+You offered it yourself. Not my fault.
+That'll bleed nicely. Heh.
+Don't cry, it's just a finger.
+@мрт_світ
+Well, forest. Well, mountains. Where's the grub?
+Pretty, damn it. Just don't tell anyone.
+I see where the enemies hide. I'll show you later. Maybe.
+Turn me some more, you sorry falconer. What a view.
+@мрт_інша
+This arm's warmer. That's all.
+Climbing over. What, too stingy?
+It's steadier like this. Don't ask.
+Left, right — it's all the same to me, damn it.
+@мрт_крила
+Look how scary I am!
+Now that's a wingspan, damn it. Who else can?
+Let everyone see who's boss here.
+Spread them. You may applaud.
+@мрт_гойд
+Hey! Hey! Stop shaking or I fly off!
+What am I to you, a swing?
+That's seasickness, damn it.
+Once more and I'll crap on your head.
+@мрт_лапа
+Here. Foot. Just don't paw it too long.
+Why are you shaking my hand like a merchant's?
+There, we greeted. Now give me food.
+I gave you my foot. Now you owe me meat.
+@мрт_нов_чух
+Fine. You may scratch under my beak. Just so nobody sees.
+It itches under the beak. That's your job now.
+@мрт_нов_дмух
+You may blow on my feathers. Just don't wheeze like a bear.
+Blow away, to hell with it. I even like it.
+@мрт_нов_палець
+Offer me a finger and I peck. Fair warning.
+Now you may give me a finger. You'll regret it.
+@мрт_нов_світ
+Lift me higher and turn around. I want to see everything.
+Show me the world, falconer. I've earned it.
+@мрт_нов_інша
+Your other arm is mine too. Everything's mine, I told you.
+Now I'll climb from arm to arm. Get used to it.
+@мрт_нов_крила
+Raise your arm and I'll show my wings. You'll be thrilled to bits.
+Now I can spread my wings on your arm. Let them fear.
+@мрт_нов_гойд
+You may rock me. But if I drop, it's your fault.
+Fine, rock me. I'm not scared. Almost.
+@мрт_нов_лапа
+I'll give you my foot. Like a decent raven. Once a year.
+Now I'll give you my foot. Don't get used to it.
+
+# --- the stroke and eye to eye as its own ways (rev 107)
+[arm_new_pet] {мрт_нов_гладь}
+[arm_new_eyes] {мрт_нов_очі}
+@мрт_нов_гладь
+Fine, stroke me on your arm. Just not in front of Hugin.
+You may stroke me on the arm. But I peck when you stop.
+@мрт_нов_очі
+Bring me up to your mug. Let us see who blinks first.
+Now I can look you in the eye. Scared? Good.
+
+# --- in Odin's nest (rev 109)
+[nest_land] {мг_сів} {матюк?}
+[nest_stranger] {мг_чужий} {матюк?}
+[nest_wake] {мг_прокинувся}
+[nest_idle] {мг_думка}
+[dlg_nest_m_open] {мг_розмова}
+[dlg_nest_m_reply] {мг_відповідь}
+
+@мг_сів
+A nest. Well, at least it's not a stick, damn it.
+Sat down. It pricks my arse, but I'll live.
+Oh, Odin's shack. What'll the old man throw us?
+High up. Handy for shitting on everyone.
+I'll sit here till the old man thinks of something.
+~1 Odin's nest. Not yours. So don't show off.
+~1 Put me here like a chick. Lovely, damn it.
+~23 Decent nest. Just don't tell Odin I praised it.
+~23 Sitting. Waiting. The errand better come with meat.
+~3 I'll sit. But don't go far, {дурню|дурепо}.
+@мг_чужий
+{stranger}, this is Odin's nest. Get lost while you're still in one piece.
+What are you staring at, {stranger}? No eggs for you.
+{stranger}, one more step and I'll peck your eye out.
+~1 Another stranger's mug. Does Odin breed them?
+~23 {stranger}, if {name} knows you, live. But hands off.
+~3 {stranger}, keep out. We're waiting for the old man.
+@мг_прокинувся
+Who the hell woke me? I was dreaming of Odin!
+I wasn't asleep. I was waiting for an errand. With my eyes shut.
+Wake me again and I'll drop a branch on you.
+~1 No, you're definitely taking the piss.
+~23 Ah, it's you. Fine, I won't peck.
+~3 Mm... you're here... fine. Back to sleep.
+@мг_думка
+Sitting in a nest like a stupid egg. What now?
+Wonder if the old man will throw us meat or ask for some crap again.
+From here I see who's slacking. You, {name}.
+The nest pricks. Maybe that's Odin hinting we should work.
+The wind up here blows feathers right up my arse.
+~1 Bored. Maybe peck Hugin? He won't notice.
+~1 How much longer do I squat here? I've chewed every twig.
+~23 Not bad here. High, quiet. Could nap.
+~23 Don't get into trouble while I'm waiting, you hear?
+~3 You know, {дурню|дурепо}... I sit here and think about you. Damn.
+@мг_розмова
+^nest_b.мясо Hugin, think the old man will at least throw us some meat?
+^nest_b.нудно How much longer do we sit here? Bored to death.
+^nest_b.одін Hugin, does the old man see us now? 'Cause I'm giving him the finger.
+^nest_b.колеться This nest pricks like your remarks.
+^nest_b.вітер It blows up here, damn. Feathers on end.
+~3 ^nest_b.наш Listen, Hugin... {name} is ours. Just keep quiet, got it?
+@мг_відповідь
+^nest_a.одін>nest_a.дуля He sees. That's why I'm giving him the finger. Let him know.
+^nest_a.одін>nest_a.спить Nah, he's asleep. He's old.
+^nest_a.гілки>nest_a.рипаю They creak 'cause I'm sitting on them. Deal with it.
+^nest_a.гілки>nest_a.рипаю Let them creak. You're not asleep anyway, nerd.
+^nest_a.доручення>nest_a.мясо Better be with meat. I don't care about the rest.
+^nest_a.доручення>nest_a.хуйня Some crap. As always. And we'll haul it.
+^nest_a.висота>nest_a.срати Tiny. Handy for shitting on.
+^nest_a.висота>nest_a.мурашка Tiny, yeah. Like an ant with an axe.
+^nest_a.хто>nest_a.пір'я Some loser. Moulted feathers, see for yourself.
+^nest_a.хто>nest_a.пір'я Odin himself, maybe. He moults too, the old man.
+^nest_a.місце>nest_a.злітай Move over yourself, smartass. Want more room — fly off.
+^nest_a.добре>nest_a.окей Well... the nest's not bad. Okay.
+^nest_a.добре>nest_a.окей He does. Just forgot the pillow, damn it.
+^nest_a.ми>nest_a.соплі Oh, don't start blubbering on me, Hugin.
+^nest_a.ми>nest_a.соплі There you go, all teary. Move closer, it's warmer.
+@м_кінець
+^nest_b.терпи I'm patient. But I grumble.
+^nest_b.яйця I'm not touching those eggs. Yet.
+^nest_b.чекати Mental, yeah. For you.
+^nest_b.гілки Forty-two. Did you really count them?
+^nest_b.чує Let him hear. I don't mind.
+^nest_b.старий Through our eyes? Then let him look where he should.
+^nest_b.пухом Fly to the geese yourself, nerd.
+^nest_b.пір'я Keeping them. With both wings, damn it.
+^nest_b.новини Post, yeah. Only there's no letters.
+^nest_b.мякнеш I'm not going soft. It's just warm here.
+
+@мзв_fire
+By the fire — bliss. I'm not getting off here.
+Got used to the warmth, damn it. Without a fire I'm mean.
+Fire-lover, that's me now. Throw on some wood.
+@мзв_storm
+Thunder, rain, a gale — now that's life!
+Got used to foul weather. The sun gets on my nerves now.
+Storm-bird, fuck yeah. Sounds cool.
+@мзв_mine
+Clink, clink, clink... You wore me out with that pick. But I got used to it.
+I smell ore like meat. Habit.
+Digger, that's me. You dig, I give orders.
+@мзв_fish
+Fish! More fish! Eat the rest yourself.
+I'm hooked on fish. Don't laugh.
+Fish glutton. So what, it's tasty.
+@мзв_portal
+Zip into a portal — and there. Fuck walking.
+Got used to portals. Walking is for losers.
+Wanderer, that's me. Nowhere without a portal.
+@мзв_foot
+On foot — and none of those portals. They make me sick.
+Got used to trudging. Portals are for the lazy.
+Walker. At least I see everything.
+@мзв_miser
+Coins jingling... I want some too. Just a little!
+Got used to the cash. I don't like giving it back.
+Miser? I'm thrifty, got it?
+@мзв_watch
+Got used to guarding the house. The road chafes me.
+The perch is my post. That's where I belong.
+Night watchman. Whoever pokes in — gets pecked.
+@мзв_cold
+Freezing, damn it! Where's the fire?!
+I'm freezing. You're freezing. Light something already.
+Night, cold, not a spark. Fucked.
+@мзв_pinch
+I nicked a few coins. Do you mind or what?
+A few coins into the stash. Don't whine.
+Took it for safekeeping. Mine now.
+@мзв_back
+Here, take your coins. With interest, even.
+Giving back the stash. Nah, don't mind. Well, a bit.
+Take the cash. I'm not a cheapskate anymore.

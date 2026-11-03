@@ -25,7 +25,9 @@ namespace HuginWhispers
         internal static int UnlockLevel = 5;
         internal static float Minutes = 10f, MinutesStep = 5f, MinutesTop = 20f; // the window at the gift's level, + a step a level
         internal static float NearRange = 30f;       // a death counts while you are this near
-        internal static float DamagePercent = 20f;   // your blows on the marked one
+        internal static float DamagePercent = 20f, DamagePercentTop = 40f; // your blows on the marked one: at the gift's level and at the longest window
+        // it grows with the window (which grows with the trust): read from the minutes, so a kept feud keeps its own
+        internal static float DamageFor(float minutes) { return Mathf.Lerp(DamagePercent, DamagePercentTop, MinutesTop > Minutes ? Mathf.Clamp01((minutes - Minutes) / (MinutesTop - Minutes)) : 1f); }
         internal static float HuntRange = 60f;       // Munin from the grave circles it while it is this near the grave
         internal static float KinRange = 50f;        // the marked one gone: one of its kind this near takes the mark
         internal static float GoneRange = 60f;       // where a missing one is judged gone (its zone surely loaded here)
@@ -359,6 +361,7 @@ namespace HuginWhispers
                 f.Ravens.Remove(id);
             }
             f.Paid = true;
+            Nicks.OnRevenge(p); // a deed for Munin's nickname
             Save(p);
             if (f.Ravens.Count == 0) End(p); else { ClearPin(); RemoveEffect(p); UntagGrave(f); }
             ScreamFx.CawAll(p, true, 0.75f, 1f);
@@ -373,7 +376,7 @@ namespace HuginWhispers
             if (Plugin.Instance != null) Plugin.Instance.Log("Blood revenge lost: " + why);
             string tag = why == "time" ? "revenge_late" : why == "gone" ? "revenge_gone" : "revenge_other";
             if (!Say(p, tag, f))
-                RavenMsg.Center(p, why == "time" ? Lang.T("Мунін: «Не встиг{|ла}. Гад живе, а ти — як був{|ла}.»") : why == "gone" ? Lang.T("Мунін: «Втекла, падлюка. Нема кого рвати.»") : Lang.T("Мунін: «Ту падлюку завалили без тебе. Не рахується.»"));
+                RavenMsg.Center(p, why == "time" ? Lang.T("Мунін: «Не встиг{|ла}. Гад живе, а ти — як бу{в|ла}.»") : why == "gone" ? Lang.T("Мунін: «Втекла, падлюка. Нема кого рвати.»") : Lang.T("Мунін: «Ту падлюку завалили без тебе. Не рахується.»"));
             End(p);
         }
 
@@ -421,7 +424,7 @@ namespace HuginWhispers
             Feud f = _feud;
             if (f == null || f.Paid || f.Started <= 0.0 || target == null) return 1f;
             ZNetView nv = target.GetComponent<ZNetView>();
-            return nv != null && nv.IsValid() && nv.GetZDO().m_uid == f.Target ? 1f + DamagePercent / 100f : 1f;
+            return nv != null && nv.IsValid() && nv.GetZDO().m_uid == f.Target ? 1f + DamageFor(f.Minutes) / 100f : 1f;
         }
 
         // ---------------------------------------------------------------- the grave's Munin
@@ -485,7 +488,7 @@ namespace HuginWhispers
         {
             SE_Stats se = RavenFx.Template(ref _effect, EffectName);
             se.m_name = Lang.W("Кровна помста");
-            se.m_tooltip = Lang.F("Мунін позначив {0}. Вбий, поки не мине час (ти маєш бути поруч, добити може й друг), — і він поверне навички, втрачені через смерть. По ньому ти б'єш на {1}% сильніше.", Who(f, true), RavenAbilities.R(DamagePercent));
+            se.m_tooltip = Lang.F("Мунін позначив {0}. Вбий, поки не мине час (ти маєш бути поруч, добити може й друг), — і він поверне навички, втрачені через смерть. По ньому ти б'єш на {1}% сильніше.", Who(f, true), RavenAbilities.R(DamageFor(f.Minutes)));
             se.m_icon = AbilityIcons.ForEffect("mrevenge", true);
             se.m_ttl = Mathf.Max(1f, Left(f));
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
@@ -507,7 +510,7 @@ namespace HuginWhispers
             {
                 if (f.IsPlayer) { Composer.Extra["killer"] = f.Name; Composer.Extra["killer_gen"] = f.Name; }
                 else Composer.ExtraCreature("killer", f.Token);
-                Composer.Extra["left"] = RavenAbilities.Span(f.Started > 0.0 ? Left(f) : f.Minutes * 60f);
+                Composer.Extra["left"] = RavenAbilities.SpokenSpan(f.Started > 0.0 ? Left(f) : f.Minutes * 60f);
                 string line = Plugin.Instance.ComposeTagged(p, true, tag);
                 return string.IsNullOrEmpty(line) ? null : Grammar.Fix(line, p);
             }

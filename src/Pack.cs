@@ -103,7 +103,10 @@ namespace HuginWhispers
             if (HeardAt.Count > 64) HeardAt.Clear();
             Prune();
             if (with == me.GetZDOID() && Friends(me, withMunin, who, munin) && NewFight(me, withMunin, who, munin))
+            {
                 BondLog.Note(RavenSeat.On(me, withMunin), who, munin, BondLog.Pack);
+                Nicks.OnPack(me, RavenSeat.On(me, withMunin));
+            }
             Recent.Add(new Blow { Target = id, By = who, Munin = munin, At = Time.time });
         }
 
@@ -137,6 +140,7 @@ namespace HuginWhispers
             BindFx.Nova(p, "chain", Body.Center(t), 1.4f, 0.5f);
             if (!NewFight(p, munin, o, om)) return; // (the same fight: the blow more, not another count)
             BondLog.Note(RavenSeat.On(p, munin), o, om, BondLog.Pack);
+            Nicks.OnPack(p, RavenSeat.On(p, munin)); // a deed for its nickname
             Bonds.Change(p, munin, o, om, PairBond);
             if (Time.time >= _talkAt && Plugin.Instance != null) { _talkAt = Time.time + TalkGap; Plugin.Instance.StartCoroutine(TalkLater(p, munin, o, om)); }
         }

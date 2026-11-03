@@ -1,0 +1,194 @@
+@сп_first_death_by_м
+your first death with me — {m_who}, {m_when}. Back then I thought you were tough. Naive me.
+{m_where_in}, {m_when}. {m_who} — and you lie there for the first time, me sitting on a corpse. Romantic.
+~1 by {m_who}, damn. First death with me — and from such crap.
+~2 {m_who}, {m_when}. That's how it started. The valkyries know your face since.
+~2 by {m_who}, {m_where_in}. I'm still looking for that bastard. Find it — tear it.
+~3 {m_when}, by {m_who}... That's when I got scared the first time. Don't tell the nerd.
+@сп_first_death_cause_м
+first death with me — by {m_cause}. Didn't even need an enemy, you managed alone.
+{m_when}, {m_where_in}. By {m_cause}. I laughed until it hit me you weren't getting up.
+~1 by {m_cause}! First death with me — and so dumb.
+~2 {m_when} — by {m_cause}. That's how our friendship began. Dumb start.
+~2 by {m_cause}, {m_where_in}. I thought you were joking.
+~3 by {m_cause}, {m_when}... I sat over you a long time. Quiet, imagine that.
+@сп_death_by_м
+{m_who}, {m_when}. They spread you like butter on bread.
+by {m_who}, {m_where_in}. I remembered that bastard. Face to face.
+~1 {m_when} — {m_who}, and you're in the ground. What a sack.
+~2 death by {m_who}, {m_when}. Happens. With you — constantly.
+~2 {m_where_in}, {m_when}. {m_who}. I swore out loud. Well, as always.
+~3 {m_when}, {m_who}... I sat in your grave thinking how I'd tear that bastard apart.
+@сп_death_cause_м
+by {m_cause}, {m_where_in}. What kind of person are you, huh?
+{m_when} — by {m_cause}. Never saw a dumber death. Well, except your other ones.
+~1 by {m_cause}. Did you even try?
+~2 {m_when}, by {m_cause}. Dumb, but your style.
+~2 by {m_cause}, {m_where_in}. I was pulling feathers off my head.
+~3 by {m_cause}, {m_when}. Once more and we're not friends. Lying. We are.
+@сп_death_here_м
+here you lay down, {m_when}. I smell this place.
+oh, familiar place. {m_when} I sat on your corpse here.
+~1 here, {m_when}, you croaked. Walk around, or again.
+~2 here, {m_when}. This ground is yours, you paid for it in blood.
+~2 here again. {m_when} this is exactly where they put you down.
+~3 here, {m_when}... I don't like this place. Let's go.
+@сп_death_again_here_м
+{m_times} here, damn. What did you forget here?
+you croaked here {m_times}. Build a house here, why walk far.
+~1 {m_times} on one spot. What a ram, honestly.
+~2 {m_times} here. I know every blade of grass by now.
+~2 here — {m_times}. Maybe screw this place?
+~3 {m_times} here... Let's go, yeah? I feel awful here.
+@сп_grudge_м
+{m_who} — {m_times}. That bastard is hunting you.
+I hate {m_who} now. {m_times} — that's personal.
+~1 {m_times} by {m_who}. Do you owe it something?
+~2 {m_who} — {m_times}. Someday we'll tear that bastard. Promise.
+~2 we have a score with {m_who}: {m_times}. Not in our favour.
+~3 {m_who}... {m_times}. I'll peck it first. In the eye.
+@сп_near_м
+{m_hp} health, {m_where_in}. I was already dividing up your boots.
+{m_when} you had {m_hp} health left. I nearly crapped myself.
+~1 {m_hp} health and you keep swinging. Dumb, but alive.
+~2 {m_when}, {m_hp} health. First time I wanted to shove a potion down your throat.
+~2 after {m_who} — {m_hp} health. Barely, damn, barely.
+~3 {m_hp} health... Don't do that. I haven't finished scolding you yet.
+@сп_boss_м
+you tore {m_who} apart {m_when}. Now that was something!
+{m_who}, {m_where_in}. Our best brawl. Still buzzing.
+~1 you actually took {m_who} down. And I bet against you. Lost.
+~2 {m_when} — {m_who}. Blood, yelling, and you on top. Bliss.
+~2 the fight with {m_who}, {m_when}. I went hoarse cawing.
+~3 {m_when} you took down {m_who}. I told all the lads.
+@сп_boss_friend_м
+we took {m_who} as a gang: you, {m_friend} and me. Me in charge, obviously.
+{m_when}, {m_who}. {m_friend} were there. Good lads, ours.
+~1 took it down as a crowd. You did the least, damn.
+~2 {m_who}, {m_when}. {m_friend} were there. A crowd is already a gang.
+~2 you took {m_who} together. I yelled loudest. That counts.
+~3 {m_when} — {m_who}. You, {m_friend} and me. What a gang.
+@сп_biome_м
+{m_where_in}, {m_when}. First time there and you're already scratching your head.
+I remember the first day {m_where_in}. Stank like your bag.
+~1 {m_where_in}, {m_when}. You barged in there brainless. As always.
+~2 {m_where_in} together first time, {m_when}. New land — new bastards for me.
+~2 {m_when} we were first {m_where_in}. I ate something on day one. Don't ask what.
+~3 {m_where_in}, {m_when}. A good day. Our first time there together.
+@сп_biome_death_м
+{m_where_in} you didn't last a day. The locals were happy.
+first day {m_where_in} — straight into the ground. {m_when}. Fast, damn.
+~1 {m_where_in}: walked in — and croaked. A record.
+~2 {m_when}, {m_where_in}. The land told you: "Nope".
+~2 {m_where_in} they met us with teeth, not bread.
+~3 {m_where_in}, {m_when}. You lay down on day one. But you came back. Respect.
+@сп_dungeon_м
+{m_where_in}, underground, {m_when}. Dark, damp, and dead things. Bliss.
+our first dungeon, {m_when}. You were noisy as a pig at the trough.
+~1 first dungeon, {m_where_in}. You got lost there twice. Twice!
+~2 {m_when} we first crawled into a hole. You came out with loot, me with cobwebs in my beak.
+~2 {m_where_in}, {m_when}. First hole together. Stank of corpses.
+~3 first dungeon together, {m_when}. I was scared down there. Don't tell the nerd.
+@сп_slaughter_м
+{m_count} in a minute, {m_where_in}! Now that I get!
+{m_when} — {m_count} in a minute. I drooled.
+~1 {m_count} in a minute. Brainless, but damn beautiful.
+~2 {m_count} in a minute, {m_when}. That was meat.
+~2 {m_where_in}, {m_count} in a minute. I went hoarse with joy.
+~3 {m_count} in a minute, {m_when}. You were a beast. My beast.
+@сп_voyage_м
+{m_km} by sea, {m_when}. I threw up three times.
+the longest sail — {m_km}. I sat on the mast swearing the whole way.
+~1 {m_km}, {m_when}. And you didn't drown us. A miracle.
+~2 {m_km} without a stop, {m_when}. Wind in the face, you at the helm. Fine.
+~2 {m_when} — {m_km} by sea. I snatched fish out of the water. Tasty.
+~3 {m_km} by sea, {m_when}. What a ride that was.
+@сп_fall_м
+{m_m} down, {m_when}. I flew alongside laughing.
+{m_when} — {m_m}. You landed so hard the ground shook.
+~1 {m_m} fall. And alive. Fools are lucky.
+~2 {m_m}, {m_when}. I thought: that's it, there goes my perch.
+~2 {m_when} you flew {m_m}. Without wings. Without wings!
+~3 {m_m}... I crapped myself in fear. Stop climbing cliffs.
+@сп_tame_м
+you tamed {m_who} {m_when}. Less food for me.
+{m_when} — {m_who}. One more mouth on our heads.
+~1 you tamed {m_who}. You pet it, and me? Me?
+~2 {m_who}, {m_when}. Decent beast. Dumb, but ours.
+~2 {m_when} you tamed {m_who}. I pecked it first. For order.
+~3 you tamed {m_who} {m_when}. Good heart you've got. Don't show anyone.
+@сп_home_м
+{m_where_in}, {m_when}. First house with me. I sat on the beam and crapped. For luck.
+the house {m_where_in}. The first night was cold as your heart.
+~1 the house {m_where_in}, {m_when}. Crooked, drafty. Your style.
+~2 {m_when} you put a bed {m_where_in}. Somewhere to sleep since.
+~2 {m_where_in}, {m_when}. Our den. Stinks, but ours.
+~3 {m_where_in} — our house. First time I slept properly there.
+@сп_tomb_м
+{m_min} in the grave. I sniffed your socks. Out of boredom.
+{m_min} I waited for you to crawl over.
+~1 {m_min} in the grave. You took your sweet time. I remember.
+~2 {m_min} in the grave. Cramped, dark, stinking. Like your bag.
+~2 {m_min}. That's how long I sat in the grave swearing. Out loud.
+~3 {m_min} in the grave. I knew you'd come. You're nothing without me.
+@сп_metal_м
+{m_item}, {m_when}. You carried it around like an egg.
+{m_when}, {m_item} in your hands for the first time. Eyes shining. Like mine at meat.
+~1 {m_item}, {m_when}. And you instantly thought you're cool. Nope.
+~2 {m_item}, {m_when}. New metal — new bastards for it.
+~2 {m_when} you found {m_item}. I wanted something too, but nobody gave me anything.
+~3 {m_item}, {m_when}. A good day. You were happy, and me with you.
+@сп_badday_м
+{m_times} in a day, {m_when}. I didn't leave the graves.
+{m_when} you croaked {m_times}. I counted the curses. Lost count.
+~1 {m_times} in a day. What a master.
+~2 {m_when}, {m_times}. A bad day. You have many.
+~2 {m_times} in one day, {m_when}. I even got drunk that evening. On puddle water.
+~3 {m_when}... {m_times} in a day. And you got up and went on. Respect.
+@сп_r_near_м
+after {m_who} — {m_hp} health. I was already trying on your helmet.
+{m_hp} health, {m_when}. And you were grinning, dummy.
+~1 {m_hp} health and you go back in. Where did you lose your brain?
+~2 {m_when}, {m_hp} health. Since then I yell when you start a fight.
+~2 you barely got away from {m_who}, {m_when}. Barely.
+~3 {m_hp} health... {m_when}. Don't scare me like that again. I'm old.
+@сп_r_hard_м
+{m_who}, {m_when}. You gave {m_lost} health, but finished the bastard.
+the fight with {m_who}, {m_when}. Long, crooked, but ours.
+~1 you struggled with {m_who} so long I fell asleep. Twice.
+~2 {m_who}, {m_when}. Expensive, but worth it.
+~2 {m_when} — {m_who}. A hard brawl. You didn't run. Good.
+~3 {m_when}, {m_who}. You fought like me. No higher praise.
+@сп_r_escaped_м
+{m_who}, {m_when}. Ran off with your arrow. A gift.
+{m_when} the prey got away. I still remember that face.
+~1 {m_who}, {m_when}. Gone. You're a blind shot, not a hunter.
+~2 {m_when} the prey got away: {m_who}. I clacked my beak in rage.
+~2 {m_who}, {m_when}. You stared after it like a ram at a new gate.
+~3 {m_who}, {m_when}. Gone. Never mind, we'll meet again.
+@сп_r_fled_м
+you ran from {m_who}, {m_when}. I nearly fell off the shoulder.
+{m_who}, {m_when}. You ran like the wind. Wish you charged like that.
+~1 {m_when} you ran from {m_who}. Coward.
+~2 {m_who}, {m_when}. You backed off. Smart. Rare, but smart.
+~2 from {m_who}, {m_when}. But alive, and that's something.
+~3 {m_when} you ran from {m_who}. Rightly. What would I do with you dead?
+@сп_r_star_м
+{m_who} at {m_stars}, {m_when}! Now that's meat!
+{m_when} — {m_who} at {m_stars}. Doesn't happen every day.
+~1 {m_stars}, {m_when}. I thought you'd crap yourself. You didn't. Weird.
+~2 {m_who} at {m_stars}. {m_when}. Good work.
+~2 {m_when} you took down {m_who} at {m_stars}. I told everyone. Twice.
+~3 {m_stars}, {m_when}. That's us! That's what we did!
+@сп_r_newkill_м
+{m_who}, {m_when}. New blood on the menu.
+{m_when} you killed {m_who} for the first time. I tasted it right away. Meh.
+~1 {m_who}, {m_when}. One more beast you don't fear. Wrongly.
+~2 {m_when} — {m_who}. Now you know where to hit. And I know what to eat.
+~2 {m_who}, {m_when}. A new line on the menu. Noted.
+~3 {m_when} you first beat {m_who}. I was proud of you.
+@спогад_знову_м
+I'll tell it again, because I want to:
+I know, I know, you've heard it. Listen anyway:
+~2 Once more:
+~3 You've heard it, but I love this story:

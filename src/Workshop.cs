@@ -1581,7 +1581,7 @@ namespace HuginWhispers
             h -= 34f;
             _pic = Mathf.Clamp(h - 380f, 220f, 512f); // the picture gives way so the model box below has room
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(GUILayout.Width(330f), GUILayout.Height(h)); Catalog(h); GUILayout.EndVertical();
+            GUILayout.BeginVertical(GUILayout.Width(LeftWidth), GUILayout.MaxWidth(LeftWidth), GUILayout.Height(h)); Catalog(h); GUILayout.EndVertical();
             GUILayout.BeginVertical(GUILayout.Width(520f), GUILayout.Height(h)); Picture();
             // under the picture: scrolled when it does not fit (a thing for a raven has more rows), the saved list always reachable
             _midScroll = GUILayout.BeginScrollView(_midScroll, GUILayout.Height(Mathf.Max(120f, h - _pic - 92f))); ModelBox(); GUILayout.EndScrollView();
@@ -1601,9 +1601,8 @@ namespace HuginWhispers
             _search = GUILayout.TextField(_search ?? "");
             if (GUILayout.Button("×", GUILayout.Width(24f))) _search = "";
             GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < WsCatalog.Cats.Length; i++) if (GUILayout.Button(WsCatalog.Cats[i], i == _cat ? _on : GUI.skin.button)) _cat = i;
-            GUILayout.EndHorizontal();
+            int pick = Rows(WsCatalog.Cats, _cat);
+            if (pick >= 0) _cat = pick;
             if (assets) AssetBar();
             GUILayout.BeginHorizontal();
             GUILayout.Label("<color=#9A9A9A>" + (assets ? "Не в моді: лише з цієї теки" : "Лише деталі самої гри") + "</color>", _small);
@@ -1685,12 +1684,33 @@ namespace HuginWhispers
         }
 
         // the asset sets as buttons, the folder read again (files added or taken away), the folder opened
+        // buttons laid in rows that fit the left column (one row grew it past the window when a set was added — 2026-11-02);
+        // the one clicked, or −1
+        private const float LeftWidth = 330f;
+        private int Rows(string[] names, int on)
+        {
+            int clicked = -1;
+            float used = 0f;
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < names.Length; i++)
+            {
+                GUIStyle st = i == on ? _on : GUI.skin.button;
+                float w = st.CalcSize(new GUIContent(names[i])).x + 4f;
+                if (used > 0f && used + w > LeftWidth - 6f) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); used = 0f; }
+                if (GUILayout.Button(names[i], st, GUILayout.Width(w))) clicked = i;
+                used += w + st.margin.horizontal;
+            }
+            GUILayout.EndHorizontal();
+            return clicked;
+        }
+
         private void AssetBar()
         {
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Усі набори", _set.Length == 0 ? _on : GUI.skin.button)) _set = "";
-            foreach (string set in WsAssets.Sets) if (GUILayout.Button(set, _set == set ? _on : GUI.skin.button)) _set = set;
-            GUILayout.EndHorizontal();
+            List<string> names = new List<string> { "Усі набори" };
+            names.AddRange(WsAssets.Sets);
+            int sel = _set.Length == 0 ? 0 : names.IndexOf(_set);
+            int pick = Rows(names.ToArray(), sel);
+            if (pick == 0) _set = ""; else if (pick > 0) _set = names[pick];
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Перечитати теку"))
             {

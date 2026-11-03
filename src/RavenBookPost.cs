@@ -528,6 +528,9 @@ namespace HuginWhispers
                 if (_mCount != null) _mCount.text = clean.Length + " / " + Post.MaxChars;
             });
             _mField = f;
+            CaretReady(f);
+            f.stringPosition = f.text.Length; // (the letter goes on where it stopped)
+            f.ActivateInputField(); // (the caret blinks at once: write)
 
             RectTransform under = Rect("Under", paper);
             HBox(under, 8f, TextAnchor.MiddleLeft);

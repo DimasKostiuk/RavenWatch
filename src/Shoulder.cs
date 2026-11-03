@@ -228,6 +228,7 @@ namespace HuginWhispers
             ShoulderLife life = g.GetComponent<ShoulderLife>();
             Animator anim = g.GetComponentInChildren<Animator>();
             if (anim != null) Landing.Remove(anim);
+            if (pin != null && pin.Player != null) SkinGuard.Fix(pin.Player.GetComponent<VisEquipment>()); // (no cloth goes along)
             if (PostBird.TakeOff(g, pin, life, munin)) return; // off with the post (Post): its own flight
             if (Perches.FlyTo(g, pin, life, munin)) return; // off to sit on a perch (Perches): its own flight there
             ShoulderFlyOff fly = g.AddComponent<ShoulderFlyOff>();
@@ -268,6 +269,17 @@ namespace HuginWhispers
         }
 
         // still with you: on the shoulder, landing on it, or hovering over it (not off on a strike, the dome, an outing, away)
+        // the bird itself, whoever drives it: "летить до тебе" on its way back, "у польоті" when something else flies it,
+        // null when it sits on the shoulder (or is not drawn): the state lines' last word, so no flight ever shows as "на плечі"
+        internal static string AirWord(Player pl, bool munin)
+        {
+            GameObject m = ModelOf(pl, munin);
+            if (m == null || !m.activeInHierarchy) return null;
+            RavenAct a = AnimDirector.Of(m);
+            if (a == RavenAct.Arrive) return Lang.T("летить до тебе");
+            return a == RavenAct.Sit || a == RavenAct.Land || a == RavenAct.Hover ? null : Lang.T("у польоті");
+        }
+
         internal static bool Present(Player pl, bool munin)
         {
             GameObject m = ModelOf(pl, munin);
@@ -546,7 +558,7 @@ namespace HuginWhispers
             foreach (string name in new string[] { munin ? MuninBone : HuginBone, munin ? "LeftShoulder" : "RightShoulder", "Spine2", "Spine1" })
             {
                 if (string.IsNullOrEmpty(name)) continue;
-                Transform t = Utils.FindChild(pl.transform, name, Utils.IterativeSearchType.DepthFirst);
+                Transform t = BodyClips.SkeletonBone(pl, pl.transform, name); // (not a bone of a raven sitting on him)
                 if (t != null) return t;
             }
             if (!_bonesLogged && Plugin.Instance != null)
@@ -634,6 +646,7 @@ namespace HuginWhispers
         internal static Unhooked From(Transform t)
         {
             if (t == null || t.parent == null) return null;
+            SkinGuard.Fix(t.GetComponentInParent<VisEquipment>()); // (no cloth goes along)
             Unhooked u = new Unhooked(t);
             t.SetParent(null, true);
             return u;
@@ -733,7 +746,7 @@ namespace HuginWhispers
         internal bool OutAway { get { return _airMode == 3 || _airMode == 4; } } // out on an outing or an order (not hanging over the shoulder)
         internal bool Landing { get { return _landOn; } }
         internal float CalmSince; // since when it has sat still on the shoulder (not in the air, not landing, not taken away)
-        private void OnEnable() { CalmSince = Time.time; } // back from a strike or the dome: it only now sits again
+        private void OnEnable() { CalmSince = Time.time; ArmW = 0f; _armSide = 0f; _armCheck = 0f; } // back from a strike or the dome: it only now sits again (on the shoulder: the arm it left from is down)
         internal static float LandTurnRate = 1.4f; // how soon in the landing it is turned as it sits (× the way done)
         // hand-tuned nudges over the landing (LandPanel): at 0, 25, 50, 75, 100 % of the clip part, metres in the
         // owner's frame (x right, y up, z forward), blended between
@@ -937,8 +950,9 @@ namespace HuginWhispers
             _lift = _liftSet ? Mathf.MoveTowards(_lift, lift, Time.deltaTime * (busy || _landOn ? 1f : 0.6f)) : lift;
             _liftSet = true;
             transform.position += Vector3.up * (_lift - Shoulder.PerchDrop);
+            ArmStep(big); // on your arm (ArmPerch): the seat on the forearm, a hop between the two
             SeatNow = transform.position; // where it sits (the landing record measures from here)
-            if (!busy && !_landOn && Life != null) transform.position += Life.PinNudge; // its own little hops and steps on the shoulder
+            if (!busy && !_landOn && Life != null && ArmW <= 0f) transform.position += Life.PinNudge; // its own little hops and steps on the shoulder
             if (Life != null)
             {
                 long ta = Perf.On ? Perf.Now : 0;
@@ -1049,7 +1063,74 @@ namespace HuginWhispers
         internal static float MeetAt = 0.8f; // of the landing's way: the feet about to touch
 
         // your shoulder rises to meet the bird and the head turns to it (your own game; the others see it by your data)
-        private void Meet() { if (Player != null) PlayerAnims.Gesture(Player, Munin, "shoulder_meet_"); }
+        private void Meet() { if (Player != null) BodyClips.Gesture(Player, Munin, "shoulder_meet_"); }
+
+        // «На руку» (ArmPerch): its owner's bits say the arm; every game moves the seat onto the forearm itself
+        internal float ArmW;              // 0 the shoulder .. 1 the arm: the hop's own time (eased where it is placed)
+        internal float ArmFullAt = -1f;   // when it last sat down on the arm
+        internal float StagedSeen = -1f;  // since when this game sees it stepping on to fly off from the arm
+        private float _armCheck, _armLook, _armSide; // (_armSide: 0 its own side's arm .. 1 your other arm, the flutter across)
+        private int _armBits;
+        private bool _armLeft;
+        private Transform _fore, _hand, _foreO, _handO;
+
+        private void ArmStep(float big)
+        {
+            if (Time.time >= _armCheck) { _armCheck = Time.time + 0.1f; _armBits = ArmPerch.Bits(Player); }
+            bool want = (_armBits & ArmPerch.Bit(Munin, ArmPerch.OnBit)) != 0;
+            if ((_armBits & ArmPerch.Bit(Munin, ArmPerch.StageBit)) == 0) StagedSeen = -1f;
+            else if (StagedSeen < 0f) StagedSeen = Time.time;
+            float was = ArmW;
+            ArmW = Mathf.MoveTowards(ArmW, want ? 1f : 0f, Time.deltaTime / Mathf.Max(0.05f, ArmPerch.HopSeconds));
+            if (ArmW >= 1f && was < 1f) ArmFullAt = Time.time;
+            if (Life != null && !InAir && ((was <= 0f && ArmW > 0f) || (was >= 1f && ArmW < 1f))) Life.Flap(ArmPerch.HopSeconds * 0.8f); // the hop: a beat of the wings
+            bool other = (_armBits & ArmPerch.Bit(Munin, ArmPerch.OtherBit)) != 0;
+            _armSide = Mathf.MoveTowards(_armSide, other ? 1f : 0f, Time.deltaTime / Mathf.Max(0.05f, ArmPerch.HopSeconds * 1.6f));
+            if (Life != null) Life.ArmLevel = ArmW * ArmW * (3f - 2f * ArmW); // (its legs: the forearm is level)
+            if (ArmW <= 0f) { _armLook = 0f; _armSide = 0f; if (Life != null) Life.ArmHand = null; return; }
+            if (!ArmBones()) { ArmW = 0f; return; }
+            if (Life != null) Life.ArmHand = _armSide < 0.5f ? _handO : _hand; // (your other hand: it watches it come)
+            float e = ArmW * ArmW * (3f - 2f * ArmW), so = _armSide * _armSide * (3f - 2f * _armSide);
+            Vector3 seat = Vector3.Lerp(_fore.position, _hand.position, ArmPerch.Along);
+            if (_armSide > 0f) seat = Vector3.Lerp(seat, Vector3.Lerp(_foreO.position, _handO.position, ArmPerch.Along), so) + Vector3.up * (Mathf.Sin(_armSide * Mathf.PI) * ArmPerch.HopUp * 1.5f * big); // (over in a little arc)
+            seat += Vector3.up * (ArmPerch.SeatUp * big);
+            // across the forearm as on a branch (both feet on it), facing your way (the user, 2026-10-29: a foot hung in the
+            // air when it sat askew on the fist); Across 0: turned only by Yaw from where you face. Eye to eye: round to your face
+            float yaw = _bodyYaw + Mathf.Lerp(_armLeft ? -ArmPerch.Yaw : ArmPerch.Yaw, _armLeft ? ArmPerch.Yaw : -ArmPerch.Yaw, so);
+            Vector3 along = Vector3.Lerp(_hand.position - _fore.position, _handO.position - _foreO.position, so);
+            along.y = 0f;
+            if (ArmPerch.Across > 0f && along.sqrMagnitude > 0.0001f)
+            {
+                Vector3 across = Vector3.Cross(Vector3.up, along), toYou = Player.transform.position - seat;
+                toYou.y = 0f;
+                if (Vector3.Dot(across, toYou) < 0f) across = -across; // (the side that faces you)
+                yaw = Mathf.LerpAngle(yaw, Mathf.Atan2(across.x, across.z) * Mathf.Rad2Deg, ArmPerch.Across);
+            }
+            bool eyes = (_armBits & ArmPerch.Bit(Munin, ArmPerch.EyesBit)) != 0;
+            _armLook = Mathf.MoveTowards(_armLook, eyes ? 1f : 0f, Time.deltaTime * 2.5f);
+            if (_armLook > 0f)
+            {
+                Vector3 to = Player.GetHeadPoint() - seat;
+                to.y = 0f;
+                if (to.sqrMagnitude > 0.0001f) yaw = Mathf.LerpAngle(yaw, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, _armLook * _armLook * (3f - 2f * _armLook));
+            }
+            Quaternion rot = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(Shoulder.Rotation);
+            float arc = Mathf.Sin(ArmW * Mathf.PI) * ArmPerch.HopUp * big; // (up over the way between, none at either end)
+            transform.position = Vector3.Lerp(transform.position, seat, e) + Vector3.up * arc;
+            transform.rotation = Quaternion.Slerp(transform.rotation, rot, e);
+        }
+
+        // the forearm and the hand on its side (looked up again when your body is made anew: armour put on)
+        private bool ArmBones()
+        {
+            if (_fore != null && _hand != null && _foreO != null && _handO != null) return true;
+            _armLeft = Bone != null && Bone.name.StartsWith("Left");
+            _fore = BodyClips.SkeletonBone(Player, null, _armLeft ? "LeftForeArm" : "RightForeArm");
+            _hand = BodyClips.SkeletonBone(Player, null, _armLeft ? "LeftHand" : "RightHand");
+            _foreO = BodyClips.SkeletonBone(Player, null, _armLeft ? "RightForeArm" : "LeftForeArm");
+            _handO = BodyClips.SkeletonBone(Player, null, _armLeft ? "RightHand" : "LeftHand");
+            return _fore != null && _hand != null && _foreO != null && _handO != null;
+        }
 
         private Transform _chest;
         private float _chestCheck;
@@ -1074,7 +1155,7 @@ namespace HuginWhispers
         {
             if (Bone == null || Player == null) return Quaternion.identity;
             if (_chest != null && Time.time >= _chestCheck) { _chestCheck = Time.time + 1f; if (!_chest.IsChildOf(Player.transform)) _chest = null; } // (a body made anew: looked up again)
-            if (_chest == null) { Animator an = Player.GetComponentInChildren<Animator>(); _chest = PlayerAnims.SkeletonBone(Player, an != null ? an.transform : Player.transform, "Spine2"); }
+            if (_chest == null) { Animator an = Player.GetComponentInChildren<Animator>(); _chest = BodyClips.SkeletonBone(Player, an != null ? an.transform : Player.transform, "Spine2"); }
             if (_chest == null) return Quaternion.identity;
             Quaternion rel = Quaternion.Inverse(_chest.rotation) * Bone.rotation;
             float dt = Time.deltaTime;
@@ -1152,7 +1233,8 @@ namespace HuginWhispers
         private readonly BeastPlan _beast = new BeastPlan();
         internal RavenMotor Motor { get { if (_motor == null) _motor = RavenMotor.Of(gameObject, Munin, Player); return _motor; } }
         private readonly HuntPlan _hunt = new HuntPlan();
-        private FlightPlan OutPlan(int mode) { return mode == Outing.Follow ? (FlightPlan)_follow : mode == Outing.Scout ? (FlightPlan)_scout : mode == Outing.Hunt ? (FlightPlan)_hunt : _circle; }
+        private readonly FishPlan _fish = new FishPlan();
+        private FlightPlan OutPlan(int mode) { return mode == Outing.Follow ? (FlightPlan)_follow : mode == Outing.Scout ? (FlightPlan)_scout : mode == Outing.Hunt ? (FlightPlan)_hunt : mode == Outing.Fish ? (FlightPlan)_fish : _circle; }
 
         internal static float TiredAfter = 25f, TiredChance = 0.7f; // s out: then it pants on the shoulder (this often)
         internal static float FarAway = 150f; // m: farther than this from you it is brought close at once (a portal; a scouting goes up to 120 m)
@@ -1177,7 +1259,7 @@ namespace HuginWhispers
             float dt = Time.deltaTime;
             Vector3 seat = transform.position;
             Quaternion seatRot = transform.rotation;
-            if (Time.time >= _hoverCheck) { _hoverCheck = Time.time + 0.25f; _hoverWant = Shoulder.Hovering(Player); }
+            if (Time.time >= _hoverCheck) { _hoverCheck = Time.time + 0.25f; _hoverWant = Shoulder.Hovering(Player) || Fireside.Down(Player, Munin); }
             Vector3 carry = Player.GetVelocity();
 
             if (Time.time >= _outCheck) { _outCheck = Time.time + 0.25f; _outNow = Outing.Of(Player, Munin); _ordNow = Orders.Of(Player, Munin); }
@@ -1191,6 +1273,7 @@ namespace HuginWhispers
             if (_airMode == 0)
             {
                 bool arriving = _arriveStart >= 0f; // still flying in (hidden wait or the game's arc): it comes first
+                if ((_ordNow != Orders.None || _outNow != Outing.None) && !_landOn && !arriving && ArmPerch.Waiting(this)) return false; // onto your arm first: it flies off from there
                 if (_ordNow != Orders.None && !_landOn && !arriving && AnimDirector.Take(gameObject, RavenAct.Command, this, "order: " + Orders.Names[_ordNow]))
                 {
                     _airMode = 4; _airPos = seat; _airTurn = seatRot;
@@ -1276,7 +1359,11 @@ namespace HuginWhispers
             {
                 // onto the seat: back from an outing it comes round to your side first; down from hovering, a little up
                 // and back first, then down onto it (not a lift straight down)
-                if (_homeSince < 0f) _homeSince = Time.time;
+                if (_homeSince < 0f)
+                {
+                    _homeSince = Time.time;
+                    if (_airMode == 3 || _airMode == 4) ArmPerch.Homing(this); // back from an outing or an order: now and then onto the arm you hold out
+                }
                 bool pre = _airMode == 2 && !m.Body.Final;
                 Vector3 preAim = Vector3.zero;
                 if (pre)

@@ -102,7 +102,9 @@ namespace HuginWhispers
                 Quaternion turn = rot;
                 if (!string.IsNullOrEmpty(d.m_childTransform) && parent != null)
                 {
-                    Transform child = Utils.FindChild(parent, d.m_childTransform, Utils.IterativeSearchType.DepthFirst);
+                    // on a body: its own bone, not a raven's of that name on the shoulder (SkinGuard)
+                    Transform child = parent.GetComponent<VisEquipment>() != null ? BodyClips.SkeletonBone(parent, null, d.m_childTransform) : null;
+                    if (child == null) child = Utils.FindChild(parent, d.m_childTransform, Utils.IterativeSearchType.DepthFirst);
                     if (child != null) { on = child; at = child.position; }
                 }
                 if (on != null && d.m_inheritParentRotation) turn = on.rotation;

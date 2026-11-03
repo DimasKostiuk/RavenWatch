@@ -1,5 +1,86 @@
 # Changelog
 
+## 2.9.0
+
+**English**
+
+- If something keeps the raven from flying to Odin after the ritual (a roof overhead, a fight nearby), it says so.
+- When one raven has flown off, the other can be sent into the nest or a raven tree alone.
+- Goods that Haldor sells say so in gold at the top of their description and on a recipe's material hover.
+- In Odin's nest the ravens have their own words and talks instead of perch and roof lines.
+- Gift cards in the book are bigger when the page is crowded: passive and locked gifts take one line under the ring.
+- A bathing raven no longer leaves big white squares on shallow water.
+- Hugin's omen of the day stays readable on its gift's card in the book.
+- Eight new raven habits: Fire-lover, Storm-bird, Digger, Fish glutton, Wanderer and Walker, Miser (pinches coins into its stash and gives it back with profit), Night watchman.
+- Bigger trait and habit rings in the book.
+- The book shows the favourite food by name once you know it.
+- The rune ring of an errand's place is fainter, with fewer runes.
+- Clearer errand texts: where to go, that beasts come to a watch or a siege, the nest that must not fall, the cache's keeper.
+- While the ravens clear the clouds, Hugin can no longer leave the sky for the dome, scouting or the decoy, nor Munin for taming; and paired gifts wait while Hugin teases a foe or Munin tames a beast.
+- A hood or cape put on while a raven sits on the shoulder no longer stretches after the raven when it flies off (with armour from Jotunn mods or AdventureBackpacks).
+- The raven awning no longer sinks into the wall, and wall perches can also hang on a post.
+- A raven's description is short now: who it is, trust, strength, blessing and burden; everything else is in the book.
+- Odin no longer gives a raven at the nest: your own raven finds you in the prologue.
+- During story scenes monsters keep away and none are born nearby.
+- The current story goal is shown under the map.
+
+**Українською**
+
+- Якщо після обряду щось не пускає ворона до Одіна (дах над головою, бій поруч), він про це каже.
+- Коли один ворон відлетів, другого можна посадити в гніздо чи на вороняче дерево самого.
+- Товари, які продає Хальдор, кажуть про це золотом угорі опису й у підказці матеріалу в рецепті.
+- У гнізді Одіна ворони мають свої фрази й розмови замість слів про жердину й дах.
+- Картки дарів у книзі більші, коли сторінка тісна: пасивні й закриті дари стають одним рядком під колом.
+- Ворон, що купається, більше не лишає великих білих квадратів на мілкій воді.
+- Сьогоднішнє віщування Хугіна можна перечитати на картці дару в книзі.
+- Вісім нових звичок воронів: Вогнелюб, Буревісник, Копач, Ласун на рибу, Кочівник і Пішохід, Скупердяй (тягне монети у свою схованку й віддає її з прибутком), Нічний сторож.
+- Більші кружки рис і звички в книзі.
+- Книга показує улюблену їжу на ім'я, щойно ти її знаєш.
+- Рунне коло місця доручення тьмяніше й з меншою кількістю рун.
+- Ясніші тексти доручень: куди йти, що на варту й облогу прийдуть звірі, що гніздо не має впасти, хто стереже схованку.
+- Поки ворони розганяють хмари, Хугін більше не покидає неба заради купола, розвідки чи обманки, а Мунін — заради приборкання; а парні дари чекають, поки Хугін дражнить ворога чи Мунін приборкує звіра.
+- Капюшон чи плащ, вдягнутий, коли ворон сидить на плечі, більше не тягнеться за вороном, коли той злітає (з бронею з модів на Jotunn чи AdventureBackpacks).
+- Воронячий піддашок більше не заходить у стіну, а настінні жердини можна вішати й на стовп.
+- Опис ворона тепер короткий: хто він, довіра, сила, благо й тягар; решта — у книзі.
+- Одін більше не дає ворона в гнізді: твій власний ворон знайде тебе в пролозі.
+- Під час сюжетних сцен монстри тримаються осторонь і поруч не з'являються.
+- Поточна мета сюжету видна під мапою.
+
+## 2.8.1
+
+**English**
+
+- You can wash a raven by hand even when it is sleepy, full or cold; if it can't be washed, it says why.
+- Hugin gets dirty again: in a fight, in the swamp and in the ash, not only Munin from the kills.
+- Odin's errands say plainly that things are handed in at the nest's bowl.
+- After the ritual the raven finishes speaking before it flies off to Odin.
+- The other raven no longer cuts in while one is still speaking aloud.
+- A raven eats only food from the lands you can already reach: one land past the last boss beaten.
+- With no one in your sights, a strike goes at the foe beside you, not at some creature far ahead.
+- A raven speaks in the same voice on a perch, at home and on your shoulder; a big visiting raven always in its own.
+- Ravens say times and distances in full words, not «min», «s» or «km».
+- A raven on the mast sits right on its top, on any ship, modded ones too.
+- Hugin foretells the day less often, and a foretold morning may bring the day's gift: more health, stamina or eitr till the next morning.
+- Six new raven tempers: Curious, Proud, Tender, Grumpy, Huntsman and Sweet Tooth, each with its own ways, wishes, friends and nicknames.
+- In the book the dirt tip shows the raven's state in colour: clean or dirty, and the fresh-feathers bonus in gold.
+
+**Українською**
+
+- Ворона можна помити руками, навіть коли він сонний, наїдений чи змерзлий; якщо не можна, пише чому.
+- Хугін знову брудниться: у бою, на болоті й у попелі, а не лише Мунін від убивств.
+- Доручення Одіна прямо кажуть, що речі віддають у чаші гнізда.
+- Після обряду ворон договорює, а тоді вже летить до Одіна.
+- Другий ворон більше не перебиває, поки перший ще говорить уголос.
+- Ворон їсть лише їжу з тих земель, куди ти вже можеш дійти: на край далі за останнього здоланого боса.
+- Коли в прицілі нікого, удар летить у ворога поруч, а не в якусь живність далеко попереду.
+- Ворон говорить тим самим голосом на жердині, вдома й на плечі, а великий ворон-гість — завжди своїм.
+- Ворони кажуть час, відстані й кількість повними словами, без «хв», «с» і «км», і голос читає числа правильно.
+- Ворон на щоглі сидить точно на її верхівці на будь-якому кораблі, і на модових теж.
+- Хугін віщує рідше, зате вранці з віщуванням може бути дар на день: більше здоров'я, витривалості чи ейтиру до наступного ранку.
+- Шість нових характерів ворона: Цікавий, Гордій, Лагідний, Буркотун, Ловчий і Ласогуб, кожен зі своїми звичками, проханнями, друзями й прізвиськами.
+- Хугін каже «бережи», а не «береги».
+- У книзі підказка про бруд показує стан ворона кольором: чистий чи брудний, а бонус свіжого пір'я — золотим.
+
 ## 2.8.0
 
 **English**
@@ -8,6 +89,14 @@
 - The raven's pouch does not open while the raven is away: it is on its back.
 - The gifts of both ravens no longer show as Hugin's own in the book, and with one raven on you they are not listed at all.
 - «Double Load»: the ravens also soften your falls from a height, even more with its third golden rune.
+- Third golden rune of «Shadow»: press the gift again in the shadow to step through it to where you look.
+- Third golden rune of «Odin's Wings»: hold crouch high in flight to dive, and the ground strikes and stuns the foes around you.
+- «Odin's Wings» gather speed: keep flying ahead and you go ever faster, sharp turns and climbing slow you, going down speeds you up.
+- In fast flight the wind rises and the feather trail thickens; stop sharply and you rear back against the air.
+- Flying with a bow, a crossbow or a staff looks alive and leans into the way.
+- Third golden rune of Munin's «Anger»: he pays back every blow you take in his anger to the one who struck you.
+- The second golden rune of every gift now gives it a new move of its own, not just a lower price.
+- The third golden rune of many gifts adds one more effect on top of the old one.
 - A gift ends when its raven is taken off or flies away, instead of going on without it.
 - A stranger's raven no longer gives you its gifts.
 - The paired gifts no longer take strength from one raven when the other has too little.
@@ -32,10 +121,23 @@
 - New Munin gift «Taming»: he lands on a wild beast's head and breaks it in — while he sits it tames faster and attacks nobody.
 - Rare ravens now have a trait of their own: each breed helps in its own way (see the knack card in the book) and has its own words.
 - Odin's feather has its own icon and is black and gold with a faint glow.
-- By deep water or on a ship a raven dives for a fish: a hungry Munin eats it, otherwise it brings it to you.
+- By deep water or on a ship a raven hovers over the water and dives for a fish: a hungry Munin eats it, otherwise it brings it to you.
 - Put on a thing you never wore before, and a raven looks you over and comments (not on every change).
+- From trust 3 a raven can sit on your arm like a falconer's bird: «On the arm» in the orders circle puts it there, and only then the arm row opens — feed it from your hand, toss it up (strength and food as for «Circle»), and «Ways» for its own; standing or sitting on a chair or bench.
+- Each raven has its own ways on your arm, one at trust 3 and one more at each next trust, five of ten (a stroke, eye to eye, a scratch under the beak, blowing on its feathers, a finger to peck, showing it the land, hopping to your other arm, spreading its wings, rocking it, giving a foot); each one you do gives a little trust, up to a limit a day, and now and then it does any of them by itself; its book card lists them.
+- Orders, outings and gifts given to a raven on your arm start with a toss of the arm, and now and then a trusting raven lands on your arm or steps onto it before flying off by itself.
+- Putting a raven on your arm puts away whatever is in your hands; take something in hand, strike, run or get hit, and the raven goes back to your shoulder at once. Tossed up or out flying, «On the arm» calls it back onto your arm.
+- During your gestures and reactions with the ravens your head no longer jerks after the camera: it moves with the gesture and then turns back to where you look softly.
+- You answer what your raven does: a flinch and a rubbed ear after a peck, a late grab at your bag after a theft, an elbow up against the spray after its bath, a look into the horn after it sips your mead, a hand to steady it tipsy, a hush in a quarrel, and a fist to the sky over a fallen boss while the ravens circle you.
+- By the fire your head turns to the raven telling a story, and at its end you laugh, lift your chin, rub your neck sheepishly or nod in thought; in the warmth you now and then warm your hands, and sitting a while, a raven sits down on the ground beside you, facing the flames.
 - Ravens pick up habits from how you play — mead, home or the road, fights, food, petting, night or day, the sea, dungeons: each with a plus and a minus, shown in the book.
 - Now and then a raven flies off to wash at the water's edge, sooner when it got dirty, and shakes the water off onto you.
+- Ravens get dirty — swamp mud, Ashlands ash, blood, bone dust: bits fall off them, a fly buzzes round the filthiest, and they hint they want a wash in their own way; the book shows how dirty each one is.
+- A bath that washes real dirt off gives fresh feathers for a while: its strike hits harder, more so after heavy dirt and more still in the hot tub. A filthy raven gains strength slower.
+- A raven dirty for a long while may ask you for the hot tub, and now and then dreams of one aloud.
+- Stand in the water and the «Perch» button becomes «Wash»: you wash the raven yourself.
+- A raven bathes in the game's hot tub, and joins you there when you sit in it.
+- Other players' ravens notice a dirty one: a friend tells it, an enemy jeers.
 - A raven plays tag with your tamed beast, by itself or on your word: look at the beast, and the «Perch» button in the orders circle becomes «Play».
 - A grazing deer or any meadow beast near you no longer counts as a fight for the ravens: their visits and moments go on; a boar or a neck coming at you still does.
 - The fight judge: after a fight worth it the raven on your shoulder rates it from one to five stars and has a word on it; the best fight is remembered.
@@ -54,13 +156,55 @@
 - Odin's kill errands count a kill for everyone who has one and dealt a good share of the damage to the beast, not only for the one who finished it.
 - A raven that comes down beside you while you sit or lie no longer walks in the air past a ledge or behind a wall: it only lands on a real floor next to you.
 - A raven that gets up from beside you or off your chest by itself no longer flies on with its legs down as if still standing.
+- All ravens' voices are now equally loud and clear: darker voices no longer sound muffled, and a raven nearby talks as loud as the one on your shoulder.
+- The Ravens page of the book is laid out anew: dirt, acquaintances and words on the margin, traits and habit in one grid, the ravens at home or lost in one line with their own card, and it all fits without scrolling.
+- Munin gains strength from more of a warrior's life: meat dishes, monsters killed in your base, kills in storms, frost and the harshest lands, kills from a ship's deck, and his share when you help someone else finish a beast.
+- The words a raven adds at the end of a line now fit what happened: a jab only after you slip, praise after a win, nothing tacked onto a memory or a lost friend, and a raven's pet word no longer comes every few lines.
+- Many more lines where the ravens repeated themselves: the fight judge and Hugin's tips, memories, words on the shoulder at work, habits, quirks, food, dirt, orders, home, passing ravens and wishes.
+- The habit «Wayfarer» is now «Restless».
+- Munin got many new lines built on a vivid picture with his swearing as the punch, and his flattest old ones were said again.
+- Hugin got many new lines in his own voice: dry facts, cold irony, counting and recording your deeds, never Munin's crude ways.
+- Longer gifts with high trust: Odin's Wings, Munin's Beast, Shadow, Fury, Tailwind and Decoy; Munin's Scream frightens for longer as trust grows.
+- Golden runes of «Shadow» make the strike from the shadow stronger with each rune.
+- The passives grow much more with trust: Light Step, Anger, Blood Fury, Last Chance, Loyalty and Blood Revenge.
+- Gift descriptions in the book are shorter and show the real numbers for your raven, including the strike damage.
+- «Decoy»: the fooled enemy takes more blows before it sees through it, and stands dazed for a moment when the decoy ends.
+- Odin's next errand comes sooner when you feed the ravens in the nest, beat a boss, win a fight for the sagas or fulfil a raven's wish; the nest window tells how.
+- A call Odin did not answer or a will you declined now waits less with higher trust.
+- The orders circle shows where the raven sits and what it will do where you look with its own icons: nest, Raven Tree, a player, an animal, bringing a thing, a roof, a ship, Odin's errand.
+- «Hugin's Leap» lasts longer and throws you much farther ahead on the run, more with trust.
+- A raven that flies off by itself (berries, a sign, the fire…) no longer shows as on your shoulder: the book and the circle say what it is doing.
+- The raven's item tooltip is shorter: each thing is said once, the passives one line each.
+- Hugin gains strength from a fight too, the thinking way: a fight the judge rated well, kills his gifts helped with, and trophies; no blood for him.
+- «Decoy» opens at trust 3, as the book always said.
+- A gift's golden runes show as a small medallion with I, II or III by its icon, in the gifts circle and in the book; a gift with all three glows.
+- Some gold nicknames now take longer to earn.
+- New nicknames for baths and dirt: many baths, washing by hand, the hot tub with you, and getting filthy with mud, ash, blood or carrion.
+- New nicknames for the ravens' own doings: fish caught in a dive, games with your beast and behind the ship, your new gear looked over, cutting the other raven off, a nest held through a siege, and a legendary one for a raven full of golden runes.
+- New legendary nicknames: for Odin's errands, fights worthy of a saga, full strike training, champions, the post, taming, revenge, omens and a close friendship with another player's raven.
+- The Guide has updated his advice and tells about the newer things: nature, a raven's wishes, a raven at home, bathing, words, the fight judge and «On the arm»; the small tips come no more than once a day.
+- «Guide's advice» in the book is now a list of topics: click one and the Guide flies in to tell it again.
+- The golden rune level mark by a gift is smooth, its numeral readable, and it also shows in the book on the ravens' page and in the golden rune's choice of a gift.
+- «Munin's Ward» is stronger: it takes two hard blows (three at trust 6, four at 7), light hits no longer wear it down, and with its third golden rune its runes strike twice as hard as Munin, also when it fades by itself (at half).
+- «There» no longer sends a raven to sit in a burning fire.
 
 **Українською**
+
+- Голоси всіх воронів тепер однаково гучні й чисті: темніші голоси більше не звучать глухо, а ворон поруч говорить так само гучно, як той, що на плечі.
 
 - Годівниця — не скриня: ворон удома викидає з неї все, що не їжа.
 - Торба ворона не відкривається, поки його немає поруч: вона в нього на спині.
 - Дари обох воронів більше не показуються в книзі як дари Хугіна, а з одним вороном на тобі їх не видно взагалі.
 - «Подвійна ноша»: ворони ще й пом'якшують падіння з висоти, а з третьою золотою руною — ще сильніше.
+- Третя золота руна «Тіні»: натисни дар ще раз у тіні — і ступиш крізь неї туди, куди дивишся.
+- Третя золота руна «Крил Одіна»: затисни «присісти» високо в польоті — піке, і земля б'є та оглушує ворогів довкола.
+- «Крила Одіна» розганяються: летиш довго вперед — швидшаєш, різкі повороти й набір висоти гальмують, зниження розганяє.
+- У швидкому польоті наростає вітер і густішає шлейф пір'я; різко зупинишся — тебе відкидає назад.
+- Політ з луком, арбалетом чи посохом живіший і нахилений уперед.
+- Третя золота руна «Злості» Муніна: кожен удар, що ти отримав у злості, він повертає кривдникові.
+- Друга золота руна тепер дає кожному дару новий хід, а не лише нижчу ціну.
+- Третя золота руна багатьох дарів додає до старого ефекту ще один.
+- Золоту руну в парний дар тепер вкладають через окремий вибір «Парні».
 - Дар закінчується, коли його ворона знімають або він відлітає, а не триває без нього.
 - Чужий ворон більше не дає тобі своїх дарів.
 - Парні дари більше не забирають сили в одного ворона, коли в другого її забракло.
@@ -85,10 +229,23 @@
 - Новий дар Муніна «Приборкання»: він сідає дикій тварині на голову й ламає її норов — поки сидить, вона приручається швидше й ні на кого не кидається.
 - Рідкісні ворони тепер мають свою рису: кожна порода допомагає по-своєму (дивись картку хисту в книзі) і має власні слова.
 - Перо Одіна має власну іконку і стало чорно-золотим, ледь світиться.
-- Біля глибокої води чи на кораблі ворон пірнає по рибу: голодний Мунін її з'їдає, інакше несе тобі.
+- Біля глибокої води чи на кораблі ворон зависає над водою й пірнає по рибу: голодний Мунін її з'їдає, інакше несе тобі.
 - Вдягнеш річ, якої досі не вдягали, — ворон оглядає тебе й коментує (не на кожну зміну).
+- З довіри 3 ворон може сидіти на твоїй руці, як у сокольника: «На руку» в колі наказів садить його туди, і лише тоді відкривається ряд руки — нагодувати з долоні, підкинути (сила й ситість — як за «Кружляй») і «Звички» для його власних; стоячи чи сидячи на стільці або лаві.
+- Кожен ворон має свої звички на руці, одну на довірі 3 і ще по одній на кожній наступній, п'ять із десяти (погладити, очі в очі, почухати під дзьобом, подути на пір'я, дати дзьобнути палець, показати світ, на іншу руку, розправити крила, погойдати, дай лапу); кожна, яку робиш ти, дає трохи довіри, з лімітом на день, а часом ворон сам робить будь-яку; картка в книзі їх перелічує.
+- Накази, вильоти й дари ворона на руці починаються змахом руки, а ворон, що довіряє, часом сам сідає на руку, коли повертається, або переступає на неї перед вильотом.
+- Коли садиш ворона на руку, зброя й знаряддя ховаються з рук; візьмеш щось у руки, вдариш, побіжиш чи тебе вдарять — ворон одразу повертається на плече. Підкинутого чи в польоті «На руку» кличе назад на руку.
+- Під час жестів і реакцій з воронами голова більше не смикається за камерою: рухається разом із жестом, а потім плавно повертається туди, куди дивишся.
+- Ти відповідаєш на те, що робить ворон: здригаєшся й тереш вухо після клювання, запізно хапаєшся за сумку після крадіжки, затуляєшся від бризок після купання, зазираєш у ріг після ковтка медовухи, притримуєш п'яного ворона, шикаєш на нього в сварці, а над переможеним босом здіймаєш кулак, і ворони кружляють довкола.
+- Біля вогнища голова повертається до ворона, що розповідає, а наприкінці історії ти смієшся, гордо піднімаєш підборіддя, ніяково чухаєш потилицю чи задумливо киваєш; у теплі часом грієш руки, а коли довго сидиш, ворон сідає на землю поруч і дивиться на вогонь.
 - Ворони набувають звичок від того, як ти граєш — медовуха, дім чи дорога, бої, їжа, пестощі, ніч чи день, море, підземелля: кожна з плюсом і мінусом, видно в книзі.
 - Часом ворон летить помитися на берег, швидше, коли забруднився, і обтрушується на тебе.
+- Ворони брудняться — болото, попіл Попелястих земель, кров, кістяний пил: з них сиплеться бруд, над найбруднішими кружляє муха, і кожен по-своєму натякає, що час митися; у книзі видно, наскільки він брудний.
+- Купання, що змило справжній бруд, дає на якийсь час свіже пір'я: удар сильніший, після сильного бруду ще більше, а в гарячій купелі — ще трохи. Дуже брудний ворон повільніше набирає силу.
+- Ворон, брудний уже довго, може попросити гарячу купіль, а часом і сам про неї мріє вголос.
+- Стань у воду — і кнопка «Жердина» стає «Помити»: миєш ворона сам.
+- Ворон купається в ігровій гарячій купелі, а коли ти в ній сидиш — залазить до тебе.
+- Ворони інших гравців помічають брудного: друг підкаже, ворог висміє.
 - Ворон грається в квача з твоїм прирученим звіром — сам або за наказом: подивись на звіра, і кнопка «Жердина» в колі наказів стане «Гратися».
 - Олень чи інший звір лук, що пасеться поруч, більше не вважається для воронів боєм: їхні візити й моменти тривають далі; кабан чи шия, що йдуть на тебе, — як і раніше бій.
 - Суддя бою: після вартого бою ворон на плечі ставить йому від однієї до п'яти зірок і каже своє слово; найкращий бій він пам'ятає.
@@ -107,6 +264,37 @@
 - Доручення Одіна на вбивство зараховують здобич кожному, хто має таке доручення і завдав звірові чималу частку шкоди, а не лише тому, хто добив.
 - Ворон, що спускається біля тебе, коли сидиш чи лежиш, більше не ходить у повітрі за краєм виступу чи за стіною: сідає лише на справжню підлогу поруч.
 - Ворон, що сам злітає з землі біля тебе чи з твоїх грудей, більше не летить із випущеними ногами, ніби досі стоїть.
+- Сторінку «Ворони» в книзі перебудовано: бруд, знайомі й слова — на полях, норов і звичка — в одній сітці, ворони вдома чи пропалі — одним рядком зі своєю карткою, і все вміщається без прокрутки.
+- Мунін набирає силу з більшого в житті воїна: м'ясні страви, монстри, вбиті у твоїй базі, вбивства в шторм, мороз і найсуворіших краях, вбивства з палуби корабля, а ще його частка, коли допомагаєш комусь добити звіра.
+- Слівця, які ворон додає в кінці фрази, тепер пасують до того, що сталося: шпилька — лише після промаху, похвала — після вдачі, на спогадах і втраті друга — нічого; улюблене слівце ворона більше не лізе через кілька фраз.
+- Набагато більше фраз там, де ворони повторювались: суддя бою й поради Хугіна, спогади, слова на плечі в роботі, звички, норов, їжа, бруд, накази, дім, зустрічі з чужими воронами, прохання.
+- Ворони говорять простіше: застарілі й незрозумілі слова замінено звичними, Левади тепер Луки, як у книзі, а звички «Мандрій», «Відлюдько» й «Ловчий» тепер «Непосида», «Відлюдник» і «Звіролов».
+- Виправлено багато фраз із неправильною формою для гравчині, малу літеру на початку речення та зламані фрази в «Жертві».
+- Мунін отримав багато нових фраз, де жарт тримається на яскравій картинці, а мат — як підкреслення; найплоскіші старі перероблено.
+- Хугін отримав багато нових фраз у власному голосі: сухий факт і влучний висновок, холодна іронія, рахунок твоїх подвигів і промахів — без Мунінової грубості.
+- Довші дари з високою довірою: Крила Одіна, Звір Муніна, Тінь, Лють, Попутний вітер і Обманка; Крик Муніна з довірою лякає довше.
+- Золоті руни «Тіні» з кожною руною посилюють удар із тіні.
+- Пасивки набагато сильніше ростуть із довірою: Легкий крок, Злість, Кривава лють, Останній шанс, Вірність і Кровна помста.
+- Описи дарів у книзі коротші й показують справжні числа твого ворона, зокрема шкоду удару.
+- «Обманка»: обдурений витримує більше ударів, перш ніж розкусить обман, а наприкінці на мить стоїть приголомшений.
+- Наступне доручення Одіна приходить раніше, якщо годуєш воронів у гнізді, перемагаєш боса, б'єшся як у сагах чи виконуєш прохання ворона; вікно гнізда підказує як.
+- Коли Одін не озвався чи ти відхилив його волю, з вищою довірою чекати менше.
+- Коло наказів показує власними іконками, де сидить ворон і що він зробить там, куди ти дивишся: гніздо, Вороняче дерево, гравець, тварина, принести річ, дах, корабель, доручення Одіна.
+- «Злет Хугіна» діє довше, а з розбігу кидає набагато далі вперед, і що вища довіра, то далі.
+- Ворон, що сам полетів (до ягід, таблички, вогню…), більше не показується на плечі: книга й коло пишуть, що він робить.
+- Підказка ворона в сумці й у торговця коротша: кожне сказано раз, пасивки — по рядку.
+- Хугін теж набирається сили з бою, але по-своєму: за бій, який добре оцінив Суддя, за вбивства з допомогою його дарів і за трофеї; крові йому не треба.
+- «Обманка» відкривається на 3-му рівні довіри, як і писала книга.
+- Золоті руни дару тепер видно як маленький медальйон із I, II чи III біля його іконки, і в колі дарів, і в книзі; дар з усіма трьома світиться.
+- Деякі золоті прізвиська тепер треба заслужити довше.
+- Нові прізвиська за купання і бруд: часті купання, миття власними руками, гаряча купіль із тобою і бруд до краю — болото, попіл, кров чи мертвечина.
+- Нові прізвиська за власні справи воронів: риба з пірнання, ігри з твоїм звіром і за кораблем, огляд обнови, перебивання іншого ворона, вистояна облога гнізда і легендарне — за ворона, повного золотих рун.
+- Нові легендарні прізвиська: за доручення Одіна, бої, гідні саги, повний вишкіл удару, ватажків, пошту, приборкання, помсту, віщування і дружбу з чужим вороном.
+- Провідник оновив поради й розповідає про нове: норов, прохання ворона, ворона вдома, купання, слова, суддю бою й «На руку»; дрібні поради — не частіше раз на день.
+- «Поради Провідника» в книзі тепер список тем: клікни — і Провідник прилетить розповісти знову.
+- Знак рівня золотої руни біля дару тепер гладкий, із помітною цифрою, і є також у книзі на сторінці «Ворони» та у виборі дару для золотої руни.
+- «Заслона Муніна» сильніша: витримує два сильні удари (три з довіри 6, чотири на 7), слабкі удари її більше не з'їдають, а з третьою золотою руною її руни б'ють удвічі сильніше за Муніна — і тоді, коли вона зникає сама (вполовину).
+- «Туди» більше не садить ворона в палаюче вогнище.
 
 ## 2.7.1
 

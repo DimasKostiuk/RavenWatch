@@ -1,0 +1,8 @@
+# RavenWatch — сюжетна будівля (цвинтар біля табору Гейд). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Надгробки: три камені
+note: Три камені, поставлені тісно один біля одного
+use: story
+id: nadhrobky_try
+part asset/Камені/StoneTorvald pos 0 0.4756 0 rot 0 0 0 scale 1 1 1 tint D9B88C  # з Майстерні: WatchStone2
+part asset/Камені/StoneTorvald pos 0 0.4756 0 rot 0 0 0 scale 1.6289 1 1 tint D9B88C  # з Майстерні: WatchStone2
+part asset/Камені/StoneTorvald pos -0.1 0.4756 0 rot 0 0 0 scale 0.95 1.1547 1 tint D9B88C  # з Майстерні: WatchStone2

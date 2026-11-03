@@ -11,12 +11,12 @@ namespace HuginWhispers
     {
         internal const string EffectName = "RavenWatch_Leap";
         internal static readonly int Hash = EffectName.GetStableHashCode();
-        internal static float Seconds = 7.5f, SecondsTop = 30f; // how long the spell holds: at trust level 1 and at the top level
+        internal static float Seconds = 10f, SecondsTop = 40f; // how long the spell holds: at trust level 1 and at the top level
         internal static float Duration() { return Mathf.Floor(Trust.LerpGift("leap", Seconds, SecondsTop) * GiftUp.Power("leap") + 0.5f); }
         internal static float Height = 12.5f;
         internal static float HeightNow() { return Height * Trust.Mul(false, 0.05f); } // as high and as far as it throws you now (trust)
-        internal static float ForwardNow() { return Forward * Trust.Mul(false, 0.05f); }
-        internal static float Forward = 30f; // meters ahead when jumping on the run
+        internal static float ForwardNow() { return Trust.LerpGift("leap", Forward, ForwardTop); } // (its own growth: the arc ahead grows much more than the height)
+        internal static float Forward = 45f, ForwardTop = 65f; // meters ahead when jumping on the run: at the level it opens on and at the top one
         private const float TurnDegrees = 60f; // steering in the air, per second
 
         private static readonly FieldInfo Body = AccessTools.Field(typeof(Character), "m_body");
@@ -85,7 +85,7 @@ namespace HuginWhispers
             float g = Mathf.Max(1f, -Physics.gravity.y);
             float grow = Trust.Mul(false, 0.05f);
             float flight = 2f * Mathf.Sqrt(2f * Mathf.Max(1f, Height * grow) / g);
-            Vector3 h = flat.normalized * (Forward * grow / flight);
+            Vector3 h = flat.normalized * (ForwardNow() / flight);
             vel.x = h.x; vel.z = h.z;
         }
 
@@ -99,6 +99,32 @@ namespace HuginWhispers
             _hSpeed = flat.magnitude;
             _flightStart = Time.time;
             _jumpedAt = Time.time;
+        }
+
+        // «Злет» II: once a jump, Jump in the air beats the wings again — up once more, and that way the keys point
+        private static bool _secondUsed;
+        private static readonly MethodInfo TakesInput = AccessTools.Method(typeof(Player), "TakeInput");
+        internal static void Second(Player p)
+        {
+            if (p == null || !On(p)) { _secondUsed = false; return; }
+            if (p.IsOnGround() || p.IsSwimming()) { _secondUsed = false; return; }
+            if (_secondUsed || Time.time - _jumpedAt < 0.3f || !(ZInput.GetButtonDown("Jump") || ZInput.GetButtonDown("JoyJump")) || !Twists.Two("leap")) return;
+            bool input = false;
+            try { input = TakesInput != null && (bool)TakesInput.Invoke(p, null); } catch { }
+            Rigidbody rb = Body != null ? Body.GetValue(p) as Rigidbody : null;
+            if (!input || rb == null) return;
+            _secondUsed = true;
+            object md = MoveDir != null ? MoveDir.GetValue(p) : null;
+            Vector3 want = md is Vector3 ? (Vector3)md : Vector3.zero;
+            want.y = 0f;
+            if (want.sqrMagnitude > 0.01f) { _dir = want.normalized; _hSpeed = Mathf.Max(_hSpeed, 6f); _flying = true; _flightStart = Time.time; }
+            Vector3 h = _flying ? _dir * _hSpeed : new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+            rb.linearVelocity = new Vector3(h.x, Speed() * Twists.SecondFlap, h.z);
+            _jumpedAt = Time.time;
+            ZSyncAnimation za = p.GetComponent<ZSyncAnimation>();
+            if (za != null) za.SetTrigger("jump"); // (the game's own jump, for every game: not the falling pose)
+            LeapFx.Flap(p);
+            LeapFx.Feathers(p);
         }
 
         // every physics step of the local player: keep the forward speed, steer gently with the move keys

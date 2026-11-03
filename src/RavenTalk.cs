@@ -98,6 +98,8 @@ namespace HuginWhispers
             "[plant] when=plant", "H dlg_plant_h", "M dlg_plant_m", "H? dlg_plant_h2", "",
             "[perch_a] when=perch", "H dlg_perch_h_open", "M dlg_perch_m_reply", "H? dlg_h_close", "",
             "[perch_b] when=perch", "M dlg_perch_m_open", "H dlg_perch_h_reply", "M? dlg_m_close", "",
+            "[nest_a] when=nest", "H dlg_nest_h_open", "M dlg_nest_m_reply", "H? dlg_h_close", "",
+            "[nest_b] when=nest", "M dlg_nest_m_open", "H dlg_nest_h_reply", "M? dlg_m_close", "",
         };
 
         internal static void Init(string dir)
@@ -688,6 +690,7 @@ namespace HuginWhispers
                 string word = Satiety.Say(p, cutter, "cut_in");
                 if (string.IsNullOrEmpty(word)) return;
                 lines.Insert(i + 1, new TalkBubble.Line { Munin = cutter, Text = TalkBubble.CutMark + word });
+                Nicks.OnCutIn(p, cutter); // a deed for its nickname
                 return; // (one a talk)
             }
         }

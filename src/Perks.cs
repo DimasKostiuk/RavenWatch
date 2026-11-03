@@ -292,8 +292,8 @@ namespace HuginWhispers
             Perk b, m; float bv, mv;
             bool hasB = Read(item, BonusKey, AllBonuses(munin), out b, out bv);
             bool hasM = Read(item, MinusKey, Minuses(munin), out m, out mv);
-            if (!hasB || !hasM) return Lang.F("<color=#9a9a9a>Благо й тягар цього ворона відкриються після покупки.</color>\n\n{0}", Power.Describe(item, munin, false));
-            return Lang.F("<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>\n\n{2}", Line(b, bv), Line(m, mv), Power.Describe(item, munin, true));
+            if (!hasB || !hasM) return ""; // (the blessing still hidden: said with the sleep, RavenTooltipPatch)
+            return Lang.F("\n\n<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>", Line(b, bv), Line(m, mv));
         }
 
         // the book: the bonus and the drawback as two plain lines; false while still hidden (not bought)
@@ -328,7 +328,10 @@ namespace HuginWhispers
         }
 
         // what it does when not away: on the shoulder, or up in the air on an order, a gift or its own outing
-        internal static string FlightWord(Player p, bool munin)
+        internal static string FlightWord(Player p, bool munin) { return OffWord(p, munin) ?? Lang.T("на плечі"); }
+
+        // the same, null when it sits on the shoulder (the state lines: a visit or an outing of its own is no "на плечі")
+        internal static string OffWord(Player p, bool munin)
         {
             if (Strike.Busy(p, munin)) return Lang.T("в атаці");
             if (!munin && Decoy.Mine()) return Lang.T("дражнить ворога");
@@ -338,13 +341,19 @@ namespace HuginWhispers
             if (o == Orders.Scout) return Lang.T("облітає");
             if (o == Orders.Chase) return Lang.T("у догонялках");
             if (o != Orders.None) return Lang.T("в польоті");
-            if (WorldVisit.Active(munin)) return Lang.T("роздивляється");
+            string visit = WorldVisit.Word(munin);
+            if (visit != null) return visit;
             int out_ = Outing.Of(p, munin);
             if (out_ == Outing.Hunt) return Lang.T("полює");
+            if (out_ == Outing.Fish) return Lang.T("пірнає по рибу");
             if (out_ != Outing.None) return Lang.T("гуляє");
             if (!munin && RavenSkills.Scouting()) return Lang.T("на розвідці");
             if (!munin && Dome.Mine()) return Lang.T("над куполом");
-            return Lang.T("на плечі");
+            if (munin && Tame.Mine()) return Lang.T("приборкує звіра");
+            if (Whirl.On()) return Lang.T("у вихорі");
+            if (Load.On()) return Lang.T("несе ношу");
+            if (ClearSky.Mine()) return Lang.T("розганяє хмари");
+            return Shoulder.AirWord(p, munin); // (anything else that flies it)
         }
 
         // twice a second: the name follows him as he comes and goes, and says when he is hungry
@@ -515,16 +524,19 @@ namespace HuginWhispers
         internal static string Passives(bool munin, bool onShoulder)
         {
             string text = "";
+            int n = 0;
             foreach (RavenAbility a in RavenAbilities.All)
             {
                 if (!a.Passive || a.Munin != munin) continue;
                 if ((a.Id == "lastchance" && !LastChance.Enabled) || (a.Id == "bloodfury" && !BloodFury.Enabled) || ((a.Id == "anger" || a.Id == "lightstep") && !WeakPassive.Enabled) || (Loyal.Is(a) && !Loyal.Enabled) || (BloodRevenge.Is(a) && !BloodRevenge.Enabled) || (Omen.Is(a) && !Omen.Enabled)) continue;
-                // one paragraph, no "name: value" lines: tooltip mods (SeneaL UI) split those into separate blocks
-                text += Lang.F("\n\n<color=orange><b>{0}</b></color> (пасивний ефект) — {1} <color=#9a9a9a>{2}{3},</color> {4}.", a.Plain, a.Short,
-                    (RavenAbilities.Free(a) ? Lang.T("без сили й перезарядки") : Lang.F("{0} сили{1}, раз на {2}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(munin), RavenAbilities.Span(a.Cooldown()))),
-                    (onShoulder ? "" : Lang.T(", лише поки ворон на плечі")), RavenAbilities.PassiveReady(a));
+                // a line each, no "name: value": tooltip mods (SeneaL UI) split those into separate blocks
+                text += Lang.F("\n• <color=orange><b>{0}</b></color> — {1} <color=#9a9a9a>{2} · {3}</color>", a.Plain, a.Short.TrimEnd('.'),
+                    (RavenAbilities.Free(a) ? Lang.T("без сили") : Lang.F("{0} сили{1}, раз на {2}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(munin), RavenAbilities.Span(a.Cooldown()))),
+                    RavenAbilities.PassiveReady(a));
+                n++;
             }
-            return text;
+            if (n == 0) return "";
+            return "\n\n" + (onShoulder ? Lang.T("Діють самі") : Lang.T("Діють самі, поки ворон на плечі")) + text;
         }
 
         private static string EffectName(bool munin) { return munin ? "RavenWatch_MuninPassive" : "RavenWatch_HuginPassive"; }

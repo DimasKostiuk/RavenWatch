@@ -1,0 +1,15 @@
+[req_teach] {пр_навчи_м}
+@пр_навчи_м
+Teach me a word. A juicy one. I'll repeat it so everyone loses it.
+I want a new word. Say something — I'll remember it and tease with it.
+I'm bored. Teach me a word, or I'll make up my own, damn.
+Give me a word, hell. One that makes Hugin flinch.
+~1 Teach me a word. Don't offer swears — I know them all already.
+~3 Teach me a word, bro. I'll say it only to you. Well, and to everyone.
+[anger_debt] {лють_борг}
+@лють_борг
+You owed me nothing. But he owes. Take the change, bastard!
+He hit you — I pay him back, damn. With interest.
+Debt paid, hell! Nobody hits my human for free.
+For every blow on you — two on him. That's my bookkeeping, damn.
+I counted everything, hell. Now I'm paying back.

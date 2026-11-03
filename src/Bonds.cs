@@ -125,7 +125,8 @@ namespace HuginWhispers
         private static float Pair(string a, string b)
         {
             if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return 0f;
-            if (a == b) return a == "bold" ? -35f : a == "calm" ? 20f : a == "fidget" ? 15f : a == "watchful" ? -5f : 10f;
+            if (a == b) return a == "bold" ? -35f : a == "proud" ? -20f : a == "huntsman" ? -15f : a == "calm" ? 20f : a == "fidget" || a == "sweettooth" ? 15f : a == "watchful" ? -5f : 10f; // (two grumpy ones grumble together: 10)
+            if (a == "tender" || b == "tender") return a == "grumpy" || b == "grumpy" ? 5f : 15f;
             if (a == "devoted" || b == "devoted") return 15f;
             string x = string.CompareOrdinal(a, b) < 0 ? a + "+" + b : b + "+" + a;
             switch (x)
@@ -137,6 +138,17 @@ namespace HuginWhispers
                 case "bold+watchful": return -25f;
                 case "bold+calm": return -10f;
                 case "bold+homebody": return -10f;
+                case "curious+wanderer": return 20f;
+                case "curious+fidget": return 15f;
+                case "curious+watchful": return 10f;
+                case "curious+grumpy": return -15f;
+                case "bold+proud": return -15f;
+                case "calm+proud": return 10f;
+                case "bold+huntsman": return 15f;
+                case "calm+huntsman": return -5f;
+                case "fidget+grumpy": return -20f;
+                case "grumpy+sweettooth": return -10f;
+                case "homebody+sweettooth": return 10f;
             }
             if (a == "watchful" || b == "watchful") return -10f;
             return 0f;
@@ -187,6 +199,14 @@ namespace HuginWhispers
         {
             if (item == null) return false;
             foreach (float v in Read(item).Score.Values) if (v >= FriendAt || v <= EnemyAt) return true;
+            return false;
+        }
+
+        // it is close friends with some other player's raven (Nicks: «Побратим»)
+        internal static bool HasClose(ItemDrop.ItemData item)
+        {
+            if (item == null) return false;
+            foreach (float v in Read(item).Score.Values) if (StateOf(v) == State.Close) return true;
             return false;
         }
 
@@ -441,14 +461,26 @@ namespace HuginWhispers
             return Composer.ComposeCross(Plugin.Instance.PhraseDir, s.Munin, tag, s.Level, Grammar.Female(s.P), Grammar.Female(t.P), v, Voice.CodeOn(s.P, s.Munin));
         }
 
+        // one of the two filthy (Bath, seen on its owner's ZDO): now and then the talk is about that — a friend tells it,
+        // an enemy jeers; the clean one speaks first ({dirt}: what the other is covered in), or null
+        internal static float DirtTalk = 0.5f;
+        private static Dictionary<string, string> Dirty(ref CrossTalk.Who a, ref CrossTalk.Who b)
+        {
+            int ka, kb, sa = Bath.Seen(a.P, a.Munin, out ka), sb = Bath.Seen(b.P, b.Munin, out kb);
+            if (Mathf.Max(sa, sb) < 2 || UnityEngine.Random.value > DirtTalk) return null;
+            if (sa > sb) { CrossTalk.Who t = a; a = b; b = t; kb = ka; } // (the dirtier one is spoken to)
+            return new Dictionary<string, string> { { "dirt", Bath.DirtWord(kb) } };
+        }
+
         // friends: a warm word both ways; then one flies over to sit beside the other a while
         private static bool Friends(Player me, bool my, Player o, bool tm)
         {
             CrossTalk.Who a = WhoOf(me, my), b = WhoOf(o, tm);
-            string l1 = Line(a, b, "bond_friend_open"), l2 = l1 != null ? Line(b, a, "bond_friend_reply") : null;
+            Dictionary<string, string> dirt = Dirty(ref a, ref b);
+            string l1 = Line(a, b, dirt != null ? "bond_dirt_friend" : "bond_friend_open", dirt), l2 = l1 != null ? Line(b, a, dirt != null ? "bond_dirt_friend_reply" : "bond_friend_reply", dirt) : null;
             if (l2 == null) return false;
             List<CrossTalk.Line> lines = new List<CrossTalk.Line> { new CrossTalk.Line { Who = 0, To = 1, Text = l1 }, new CrossTalk.Line { Who = 1, To = 0, Text = l2 } };
-            if (UnityEngine.Random.value < 0.5f) { string l3 = Line(a, b, "bond_friend_close"); if (l3 != null) lines.Add(new CrossTalk.Line { Who = 0, To = 1, Text = l3 }); }
+            if (dirt == null && UnityEngine.Random.value < 0.5f) { string l3 = Line(a, b, "bond_friend_close"); if (l3 != null) lines.Add(new CrossTalk.Line { Who = 0, To = 1, Text = l3 }); }
             CrossTalk.Script("bfriend", new List<CrossTalk.Who> { a, b }, lines);
             if (UnityEngine.Random.value < VisitChance) StartVisit(me, my, o, tm);
             return true;
@@ -458,7 +490,8 @@ namespace HuginWhispers
         private static bool Quarrel(Player me, bool my, Player o, bool tm)
         {
             CrossTalk.Who a = WhoOf(me, my), b = WhoOf(o, tm);
-            string l1 = Line(a, b, "bond_enemy_open"), l2 = l1 != null ? Line(b, a, "bond_enemy_reply") : null;
+            Dictionary<string, string> dirt = Dirty(ref a, ref b);
+            string l1 = Line(a, b, dirt != null ? "bond_dirt_enemy" : "bond_enemy_open", dirt), l2 = l1 != null ? Line(b, a, dirt != null ? "bond_dirt_enemy_reply" : "bond_enemy_reply", dirt) : null;
             if (l2 == null) return false;
             List<CrossTalk.Line> lines = new List<CrossTalk.Line> { new CrossTalk.Line { Who = 0, To = 1, Text = l1 }, new CrossTalk.Line { Who = 1, To = 0, Text = l2 } };
             if (UnityEngine.Random.value < 0.6f) { string l3 = Line(a, b, "bond_enemy_last"); if (l3 != null) lines.Add(new CrossTalk.Line { Who = 0, To = 1, Text = l3 }); }
@@ -483,6 +516,7 @@ namespace HuginWhispers
                 BeastLook.Puffs(Feathers.Feather(), at, ParticleSystemShapeType.Sphere, 0.15f, 10, 0.08f, 0.16f, 1.6f, 1.6f, 1.2f, w.Munin ? new Color(0.25f, 0.2f, 0.2f) : new Color(0.15f, 0.17f, 0.22f));
                 ShoulderLife life = model != null ? model.GetComponent<ShoulderLife>() : null;
                 if (life != null) { life.Act("Наїжачився"); }
+                if (ReferenceEquals(w.P, Player.m_localPlayer)) PlayerReact.Quarrel(w.P, w.Munin); // you hush yours
             }
             if (whos.Count > 0 && whos[0].P != null) ScreamFx.Caw(whos[0].P, whos[0].Munin, whos[0].Munin ? 0.9f : 1.3f, 0.6f);
             if (whos.Count > 1 && whos[1].P != null) ScreamFx.Caw(whos[1].P, whos[1].Munin, whos[1].Munin ? 0.85f : 1.25f, 0.6f);

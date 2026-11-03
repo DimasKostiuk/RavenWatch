@@ -185,6 +185,19 @@ namespace HuginWhispers
             return c;
         }
 
+        // Odin's nest is no perch and has no roof: its own words there (NestPatterns); greeting and enemy stay as they are
+        private static string NestTag(string tag)
+        {
+            switch (tag)
+            {
+                case "perch_land": case "perch_cozy": case "perch_cold": return "nest_land";
+                case "perch_stranger": return "nest_stranger";
+                case "perch_wake": return "nest_wake";
+                case "perch_idle": return "nest_idle";
+                default: return tag;
+            }
+        }
+
         // a single line from the raven on this seat (the holder only, now and then; 'chance' that it says anything)
         internal void Say(int seat, string tag, Dictionary<string, string> extra, float chance)
         {
@@ -192,6 +205,7 @@ namespace HuginWhispers
             if (ZNet.instance != null && ZNet.instance.IsDedicated()) return;
             Perches.Occupant o = At(seat);
             if (o == null || _birds[seat] == null) return;
+            if (IsNest) tag = NestTag(tag);
             string text = Composer.ComposePerch(Plugin.Instance.PhraseDir, o.Munin, tag, o.Level, o.Name, o.Female, extra, o.Voice);
             if (string.IsNullOrEmpty(text)) return;
             _speakFree = Time.time + GapSeconds + RavenSpeech.ReadSeconds(text);
@@ -321,8 +335,9 @@ namespace HuginWhispers
             if (friend != null) r.Add("friend");
             if (h.Level - m.Level >= 2) r.Add("gap_h"); else if (m.Level - h.Level >= 2) r.Add("gap_m");
             r.RemoveAll(x => UnityEngine.Random.value > 0.45f); // the weather is not always the talk
-            r.Add(UnityEngine.Random.value < 0.5f ? "perch" : "idle");
-            r.Add("perch");
+            string own = IsNest ? "nest" : "perch"; // (the nest's own talk: no perch in it)
+            r.Add(UnityEngine.Random.value < 0.5f ? own : "idle");
+            r.Add(own);
             return r;
         }
 
@@ -642,7 +657,7 @@ namespace HuginWhispers
             if (r == null) return;
             _birds[seat] = r;
             PerchLife life = r.AddComponent<PerchLife>();
-            life.Munin = o.Munin; life.Level = o.Level; life.Owner = o.Pid; life.VoiceCode = o.Voice; life.Timbre = o.Timbre; life.View = this; life.Seat = seat;
+            life.Munin = o.Munin; life.Level = o.Level; life.Owner = o.Pid; life.VoiceCode = o.Voice; life.Timbre = o.Timbre; life.CharId = o.Char; life.View = this; life.Seat = seat;
             PerchPose pose = r.GetComponent<PerchPose>();
             if (pose != null) { pose.Life = life; life.Pose = pose; }
             if (_hunted != null && _hunted[seat] != null) { if (_hunted[seat] == o.Token) life.BackFromHunt(); _hunted[seat] = null; }
@@ -735,7 +750,7 @@ namespace HuginWhispers
             Perches.Occupant ho = hs >= 0 ? At(hs) : null;
             if (ho != null && ho.Home) { Home.TakeBack(p, this, hs); return true; } // left here: back to you
             ItemDrop.ItemData mine = Perches.MineOn(p, this, munin);
-            if (mine != null && !IsGuard) { PlayerAnims.Gesture(p, munin, "call_"); Perches.CallBack(p, this, munin, mine); } // (you call it: a beckon; its own returns come without one)
+            if (mine != null && !IsGuard) { BodyClips.Gesture(p, munin, "call_"); Perches.CallBack(p, this, munin, mine); } // (you call it: a beckon; its own returns come without one)
             else if (IsGuard) Home.Leave(p, this, munin); // a guard perch: on guard, nothing else
             else Perches.Sit(p, this, munin);
             return true;

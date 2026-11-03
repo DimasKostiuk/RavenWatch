@@ -14,7 +14,7 @@ namespace HuginWhispers
     //   - walking: a point for every WalkMeters on foot (walked or run), at most WalkPerDay;
     //   - work: a point for each tree felled, log split or rock broken, two for a fish, at most WorkPerDay.
     // And Munin's side of it: a point for every few blows landed and for every wound taken from a creature, at most
-    // FightPerDay (on top of his kills, scrapes and deaths).
+    // FightPerDay (on top of his kills, scrapes and deaths); meat eaten, a base held, a kill in harsh weather, each with its own limit.
     // Craft, farm, work and fight give strength only: everyday chores must not fill the day's trust.
     // The game's own player statistics tell what was done (one hook for all of it), planting is seen when placed.
     internal static class HuginChores
@@ -30,6 +30,14 @@ namespace HuginWhispers
         private const string CraftKey = "RavenWatch_craft", FarmKey = "RavenWatch_farm", WorkKey = "RavenWatch_work", FightKey = "RavenWatch_fight";
         private const string MeadKey = "RavenWatch_mead", TrophyKey = "RavenWatch_trophy", WalkKey = "RavenWatch_walk";
         internal static float MeadPerDay = 10f, TrophyPerDay = 10f;
+        private const string MeatKey = "RavenWatch_meat", DefendKey = "RavenWatch_defend", HarshKey = "RavenWatch_harsh";
+        internal static float MeatPerDay = 10f, DefendPerDay = 30f, HarshPerDay = 20f;
+        // Hugin and a fight: no blood for him; he thinks a good fight over (FightJudge), helps in it (his blind, decoy, shadow)
+        // and learns from its trophies — each with its own day's limit
+        private const string ThinkKey = "RavenWatch_hthink", HelpKey = "RavenWatch_hhelp", LoreKey = "RavenWatch_hlore";
+        internal static float ThinkPerDay = 30f, HelpPerDay = 20f, LorePerDay = 10f;
+        internal static float[] ThinkByStars = { 0f, 0f, 0f, 5f, 10f, 15f }; // by the judge's stars
+        internal static float HelpKill = 2f, HelpBoss = 5f;
         private static int _hits;
         private static float _hurt;
         private static float _walked; // meters on foot not yet counted
@@ -95,7 +103,37 @@ namespace HuginWhispers
         internal static void OnMead() { Chore(MeadKey, MeadPerDay, true); Chore(MeadKey, MeadPerDay, true); }
 
         // a trophy picked up: a head for Munin (its own small limit: dropping and picking it up again pays little)
-        internal static void OnTrophy() { Chore(TrophyKey, TrophyPerDay, true); }
+        internal static void OnTrophy() { Chore(TrophyKey, TrophyPerDay, true); Chore(LoreKey, LorePerDay, false); }
+
+        // a fight the judge rated: Hugin turns it over in his head
+        internal static void OnFightJudged(int stars) { Chore(ThinkKey, ThinkPerDay, false, ThinkByStars[Mathf.Clamp(stars, 0, 5)]); }
+
+        // a kill his gifts helped with (blinded by him, lured by your decoy, struck from your shadow): those creatures are
+        // remembered here a while by their id, on this game (the one that owns Hugin), so a kill told by another game counts too
+        internal static float HelpWindow = 40f;
+        private static readonly Dictionary<ZDOID, float> Helped = new Dictionary<ZDOID, float>();
+        internal static void NoteHelp(ZDOID id)
+        {
+            if (id == ZDOID.None) return;
+            if (Helped.Count > 64) { List<ZDOID> old = new List<ZDOID>(); foreach (KeyValuePair<ZDOID, float> kv in Helped) if (Time.time - kv.Value > HelpWindow) old.Add(kv.Key); foreach (ZDOID o in old) Helped.Remove(o); }
+            Helped[id] = Time.time;
+        }
+        internal static void OnKilled(ZDOID id, bool boss)
+        {
+            float at;
+            if (id == ZDOID.None || !Helped.TryGetValue(id, out at)) return;
+            Helped.Remove(id);
+            if (Time.time - at <= HelpWindow) Chore(HelpKey, HelpPerDay, false, boss ? HelpBoss : HelpKill);
+        }
+
+        // a meat dish eaten: blood for Munin (a point, its own limit)
+        internal static void OnMeat() { Chore(MeatKey, MeatPerDay, true); }
+
+        // a monster killed in your own base: two points for holding it
+        internal static void OnDefended() { Chore(DefendKey, DefendPerDay, true); Chore(DefendKey, DefendPerDay, true); }
+
+        // a kill in a storm, in the frost or in the harshest lands: a point for not going soft
+        internal static void OnHarshKill() { Chore(HarshKey, HarshPerDay, true); }
 
         // a wound from a creature (falls, fire and the like do not count): Munin remembers the pain
         internal static void OnHurt(float damage)
@@ -122,17 +160,25 @@ namespace HuginWhispers
             if (key == FightKey) return Lang.T("бій");
             if (key == MeadKey) return Lang.T("медовуха");
             if (key == TrophyKey) return Lang.T("трофей");
+            if (key == MeatKey) return Lang.T("м'ясо");
+            if (key == DefendKey) return Lang.T("оборона");
+            if (key == HarshKey) return Lang.T("негода");
             if (key == WalkKey) return Lang.T("подорож");
+            if (key == ThinkKey) return Lang.T("обмірковує бій");
+            if (key == HelpKey) return Lang.T("допоміг у бою");
+            if (key == LoreKey) return Lang.T("нове знання");
             return null;
         }
 
         // a point, within the day's limit (kept in the character: the limit holds over a relog)
         private static void Chore(string key, float perDay) { Chore(key, perDay, false); }
 
-        private static void Chore(string key, float perDay, bool munin)
+        private static void Chore(string key, float perDay, bool munin) { Chore(key, perDay, munin, 1f); }
+
+        private static void Chore(string key, float perDay, bool munin, float amount)
         {
             Player p = Player.m_localPlayer;
-            if (p == null || p.m_customData == null || perDay <= 0f) return;
+            if (p == null || p.m_customData == null || perDay <= 0f || amount <= 0f) return;
             int day = Day(), d = -1;
             float done = 0f;
             string raw;
@@ -143,8 +189,9 @@ namespace HuginWhispers
             }
             if (d < day) done = 0f; // a new day (a later day from another world counts as today)
             if (done >= perDay) return;
-            p.m_customData[key] = Mathf.Max(d, day) + ":" + (done + 1f).ToString(System.Globalization.CultureInfo.InvariantCulture);
-            Power.Earn(munin, munin ? 1f : NightBonus(), Why(key), false);
+            float add = Mathf.Min(amount, perDay - done);
+            p.m_customData[key] = Mathf.Max(d, day) + ":" + (done + add).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            Power.Earn(munin, add * (munin ? 1f : NightBonus()), Why(key), false);
         }
 
         // twice a second (Power.Tick, while Hugin is worn): a night slept through, told once in the morning
@@ -173,7 +220,7 @@ namespace HuginWhispers
             return baseSeconds / (1f + Mathf.Max(0, comfort) / 15f);
         }
 
-        internal static void Reset() { _wasSleeping = false; _sleptFrom = -1; _sailed = 0f; _walked = 0f; _hits = 0; _hurt = 0f; _farmBits = 0f; }
+        internal static void Reset() { Helped.Clear(); _wasSleeping = false; _sleptFrom = -1; _sailed = 0f; _walked = 0f; _hits = 0; _hurt = 0f; _farmBits = 0f; }
     }
 
     // every stat of the local player passes here (the game counts the sailed distance straight into the profile)

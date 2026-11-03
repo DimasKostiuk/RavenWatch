@@ -1,245 +1,1046 @@
-#if RAVEN_ITEM && RAVEN_STORY
+﻿#if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using UnityEngine;
 
 namespace HuginWhispers
 {
     // An NPC's mind (Npcs.cs): our own BaseAI, so the game's path finding walks it (its navmesh, MoveTo, LookAt), and
-    // nothing of a monster's own wants (hunting, fleeing, wandering) gets in the way. It does one task at a time:
-    //   idle    stands; looks at whom (or where) it was told to, or at a player who comes near
-    //   go      walks (or runs) to a point; arrived → idle
-    //   follow  keeps near someone; far behind → runs; very far → steps in beside them
-    //   wander  strolls about a point, now and then a few steps somewhere else in its circle
-    //   sit     walks to a chair/bench and sits on it (or, with none, sits on the ground where it is)
-    //   attack  fights one foe until it falls or gets away
-    // And over every task, how it fights (Fight): off · defend (a foe that comes near it or the one it follows, or that
-    // hit it) · hunt (any foe it senses). A fight puts the task aside and takes it up again after.
+    // nothing of a monster's own wants (hunting, fleeing, wandering) gets in the way. The body under it (NpcBody) does
+    // the physical side: seats, beds, gestures.
     //
-    // Orders are words (Do), the same from the console, a scene, a rule:
-    //   go x y z [run] · follow <user:id> [m] · stay · look <user:id>|none · lookat x y z · tp x y z · wander [r] [x y z]
-    //   sit [x y z] · stand · emote <name> [loop] · fight off|defend|hunt · attack <user:id>
+    // What it is busy with comes in LAYERS, each holding at most one plan; the highest one with a plan is done, the
+    // others wait and go on from where they were when it is over:
+    //   Scene    a story scene's director (nothing else moves it while a scene has it; no fights either)
+    //   Fight    danger, met by its character (Fight below): a fighter fights, a peaceful one runs (to its base if it lives
+    //            somewhere), a wary one runs but fights back when caught. Over: back to what it was doing, an order too
+    //   Order    a player's order (follow me, go there, sit) — until done, or until it is let go («free»)
+    //   Whim     something it feels like now, outside its duties (a rest in work time, a stretch…): NpcWhims; short,
+    //            never over an order or a fight, and its work goes on after it
+    //   Job      its work at a base (stage 2: the stoker, the smelter…)
+    //   Routine  its day: a resident's schedule (NpcResident: day / evening by the fire / night in its bed), or the
+    //            template's habits («on day: wander home») for one who lives nowhere
+    //   Leisure  nothing to do: stands, looks about
+    // The one rule: a lower layer never interrupts a higher one. A one-off gesture or a line is not a plan: it plays
+    // over whatever it does and undoes nothing.
+    //
+    // Who writes a layer (the user 2026-11-03: the core says it, not each module): every plan has its owner (Plan.Whose:
+    // «story», «rescue», «stage», «player», «day», «work», «travel»… — Do/Put/Order say whose, else the layer's own,
+    // Owner). «free» and Put(null) let go only of the plan of the one who asks — and of what that one set on the layer:
+    // its look, its way of fighting (both kept per layer and per who set them: the highest one set wins, so a scene's «fight off» or «look
+    // keep» ends with the scene, and what was under it is back). Over another's plan only by the layer's rule (May):
+    //   Scene    stage (the author's test) > story > rescue: the story takes one in need, never the other way round
+    //   Whim     what it must do (pay, a meal, a rest worn out) over a whim of its own pleasure (Leisure), not over another
+    //   others   the last word stands (one player's order over another's, its day picked anew by the hour)
+    //
+    // Plans (one task each):
+    //   idle    stands where it is; looks at whom/where it was told, or at a player close by
+    //   go      walks (or runs) to a point; there: idle on the same layer (it waits there until let go)
+    //   follow  keeps near someone; runs when they run or when left behind; very far → steps in beside them
+    //   wander  strolls about a point (a resident: anywhere in its base, NpcBase)
+    //   sit     to a chair/bench near a point and sits on it (none: on the ground there)
+    //   sleep   to its bed and lies in it
+    //   pose    a held gesture where it stands (relax, rest…)
+    //   attack  one foe until it falls or gets away
+    //   flee    away from a foe (to its base when it has one) until it is safe for a few seconds
+    //   work    its job (NpcWorker: errand after errand), on the Job layer
+    //   chore   a small useful thing of its own (NpcChores: mend a piece, feed a beast or the ravens' feeder), as a whim
+    //   travel  a long way by itself (NpcTravel: to a settlement's heart, to the ravens' home), on the Order layer
+    //   eat     a meal (NpcMeals: to the pantry, a cooked bite from it, to a table, sits and eats); over, its layer is free
+    //
+    // Orders are words (Do), the same from the console, a scene, a rule — and the layer they are for:
+    //   go x y z [run] · follow <user:id> [m] · stay|stand · wander [r] [x y z] · sit [x y z] · sleep <bed user:id> · emote <name> [loop]
+    //   attack <user:id> · free (this layer's plan let go)
+    //   look <user:id>|none · lookat x y z · tp x y z · fight flee|wary|off|defend|hunt   (not plans: settings, kept on the layer told and by whoever set them)
+    // The Order, Job and Routine plans are kept in its ZDO: after a reload, or on a new owner's game, it goes on.
     // Runs where the NPC is owned (BaseAI.UpdateAI: only the owner).
+    //
+    // Its pace (Pace, one rule for every walk): the game's three — a walk, a jog, a run. At its ease (leisure, its day,
+    // a whim) it walks, a jog only to somewhere far; at work it walks, jogs to far work, runs only when it is urgent; told
+    // to go it walks near, jogs or runs far; following it keeps the leader's pace (and catches up); fights and flights
+    // run. Its own walking speed: its template's, and a little of its own (NpcActor).
     //
     // Never stuck: a walk that has not come closer for StuckSeconds steps the NPC near its goal (and says so in the
     // log and on the bus): a scene waiting for it never hangs.
     internal sealed class NpcMind : BaseAI
     {
-        internal enum Task { Idle, Go, Follow, Wander, Sit, Attack }
-        internal enum Fight { Off, Defend, Hunt }
-        internal const float StuckSeconds = 8f, FarAway = 50f, DefendRange = 15f, Leash = 30f;
+        internal enum Layer { Leisure, Routine, Job, Whim, Order, Fight, Scene }
+        internal enum Task { Idle, Go, Follow, Wander, Sit, Pose, Attack, Sleep, Flee, Work, Eat, Travel, Chore }
 
-        private Task _task = Task.Idle, _before = Task.Idle;
-        private Fight _fight = Fight.Defend;
-        private Vector3 _to, _home, _lookAt;
-        private bool _run, _hasLookAt;
-        private float _near = 1.2f, _keep = 3f, _radius = 6f;
-        private ZDOID _follow = ZDOID.None, _look = ZDOID.None, _foe = ZDOID.None;
-        private float _best, _bestAt, _nextWander, _nextFoeCheck, _foeSince;
-        private Chair _chair;
-        private bool _seated, _told;
+        // a module's own task (Eat, Travel, Chore…): a step of it (true: over) and what is put right when it is left off —
+        // hung here by NpcModules; the mind runs it without knowing whose it is
+        // (Unkept: after a reload, the task not among its kept plans — whatever mark of it is left on the person, off)
+        internal sealed class TaskOf { public Func<NpcMind, Plan, float, bool> Step; public Action<NpcMind, Plan> Left; public Action<NpcMind> Unkept; }
+        internal static readonly Dictionary<Task, TaskOf> Tasks = new Dictionary<Task, TaskOf>();
+
+        private void Unkept(Plan order)
+        {
+            foreach (KeyValuePair<Task, TaskOf> t in Tasks)
+                if (t.Value.Unkept != null && (order == null || order.Kind != t.Key)) t.Value.Unkept(this);
+        }
+        // how it meets a foe — its character in a fight (the template's «fight:»):
+        //   off     does nothing (a scene's figure)
+        //   flee    peaceful (the default): only runs, even when caught
+        //   wary    runs, but turns on a foe that caught up with it (CornerRange) or hit it; it backs off again when the
+        //           foe falls back past BackOff
+        //   defend  a fighter: fights a foe that comes near it (or whom it follows), or that hit it
+        //   hunt    a fighter: fights any foe it senses
+        internal enum Fight { Off, Flee, Wary, Defend, Hunt }
+        internal static float StuckSeconds = 25f; // (no gain this long: put by its goal where nobody sees it — the last resort but one, not a habit: its feet ask again, step round, slide a step long before; tuned live: raven npc walk set stuck)
+        internal const float WanderWalk = 35f, MealSeats = 8f, FarAway = 50f, DefendRange = 15f, Leash = 30f, FleeRange = 10f, SafeRange = 16f, CornerRange = 2.5f, BackOff = 8f;
+        private const int Layers = 7;
+        internal static readonly int KPlans = "RavenWatch_npcPlans".GetStableHashCode(); // string: the kept layers' plans
+
+        // one plan: what to do (kept) and how far it got (not kept: set again when it is taken up)
+        internal sealed class Plan
+        {
+            public Task Kind;
+            public Vector3 To, Home;
+            public bool Run;
+            public float Near = 1.2f, Keep = 3f, Radius = 6f;
+            public ZDOID Who = ZDOID.None;
+            public long Leader;      // follow: the player it follows by its own number (kept): its body's id is another after a death or a reload
+            public string Pose = "";
+            public bool InBase;      // wander: anywhere in the base round Home (NpcBase), not a circle
+            public float Until;      // a whim's end (Time.time; not kept)
+            public string Whose = ""; // a whim's owner (TakeWhim; not kept)
+            public float Hand;       // a reach into a chest ends (Time.time; its own — Until is the whim's end)
+            public bool Yield;       // nothing to do on its layer just now (no work, no supplies): it steps aside for the
+                                     // layers under it (its day: a walk, the fire) until there is (not kept)
+            public bool Looks; public Vector3 Look; // idle: looking out at this spot (not kept)
+            public bool Guest;       // let into a player's house (a visit, the dining table there: NpcPrivate; not kept)
+            public bool Speaks;      // a scene's: its own unasked words go on (a rescue's calls for help); else a scene keeps
+                                     // it quiet while it holds (NpcVoice.Free; not kept)
+            // how far it got
+            public Chair Seat;
+            public Vector3 Side; public bool HasSide; // (the spot by its seat it walks to: the free side nearest it — not kept)
+            public bool Seated, Started, OnPoint; // (OnPoint: seated on a bench/bed through the body, not on the ground)
+            public float Best, BestAt, NextWander, Since, FoeHealth = 1f, Lost;
+            public int Stage; public string Food = ""; // (a meal's step and its bite: NpcMeals)
+
+            internal string Code()
+            {
+                CultureInfo ci = CultureInfo.InvariantCulture;
+                return Kind.ToString().ToLowerInvariant() + "|" + Npcs.V(To) + "|" + Npcs.V(Home) + "|" + (Run ? 1 : 0) + "|" + Near.ToString("0.##", ci) + "|" + Keep.ToString("0.##", ci)
+                    + "|" + Radius.ToString("0.##", ci) + "|" + NpcKit.Save(Who) + "|" + Pose + "|" + (InBase ? 1 : 0) + "|" + Leader.ToString(ci); // (the kind by its name: a kind added later does not turn old saves into another)
+            }
+
+            internal static Plan Parse(string s)
+            {
+                string[] f = s.Split('|');
+                if (f.Length < 9) return null;
+                Task kind = Task.Idle; bool known = false;
+                foreach (Task t in Enum.GetValues(typeof(Task))) if (t.ToString().ToLowerInvariant() == f[0]) { kind = t; known = true; }
+                if (!known) return null;
+                // a lasting link has six fields of its own, «|» between them (NpcKit.Save): one field here — or all after it are
+                // read wrong (a way's word was read from its link's numbers, a follow's player lost after a reload)
+                int more = f[7].StartsWith("~", StringComparison.Ordinal) && f.Length >= 14 ? 5 : 0;
+                if (f.Length < 9 + more) return null;
+                Plan p = new Plan { Kind = kind, Run = f[3] == "1", Pose = f[8 + more], InBase = f.Length > 9 + more && f[9 + more] == "1" };
+                Vec(f[1].Split(' '), 0, out p.To);
+                Vec(f[2].Split(' '), 0, out p.Home);
+                p.Near = Errands.F(f[4], 1.2f); p.Keep = Errands.F(f[5], 3f); p.Radius = Errands.F(f[6], 6f);
+                p.Who = Id(new[] { more > 0 ? string.Join("|", f, 7, 6) : f[7] }, 0);
+                if (f.Length > 10 + more) long.TryParse(f[10 + more], NumberStyles.Integer, CultureInfo.InvariantCulture, out p.Leader);
+                return p;
+            }
+        }
+
+        private readonly Plan[] _plans = new Plan[Layers];
+        private Plan _cur;               // the plan being done (the top one)
+        private Layer _curLayer = Layer.Leisure;
+        private bool _loaded, _kept; // (_kept: its ZDO held plans or a way of fighting of its own)
+        // its way of fighting and where it looks: one per layer (Do «fight», «look», «lookat»), the highest set one counts
+        private readonly bool[] _fightSet = new bool[Layers];
+        private readonly Fight[] _fightBy = new Fight[Layers];
+        private Fight _fight { get { for (int i = Layers - 1; i >= 0; i--) if (_fightSet[i]) return _fightBy[i]; return Fight.Defend; } }
+        private readonly ZDOID[] _lookWho = new ZDOID[Layers];
+        private readonly float[] _lookTill = new float[Layers];
+        private readonly Vector3[] _lookPt = new Vector3[Layers];
+        private readonly bool[] _lookPtOn = new bool[Layers];
+        private readonly string[] _fightOwner = new string[Layers], _lookOwner = new string[Layers]; // (who set them: only that one takes them off)
+        // what one owner set on a layer, off (null: whatever is there — a new owner's game starting clean)
+        private void Unset(Layer l, string whose)
+        {
+            int i = (int)l;
+            if (whose == null || _fightOwner[i] == whose) _fightSet[i] = false;
+            if (whose == null || _lookOwner[i] == whose) { _lookWho[i] = ZDOID.None; _lookPtOn[i] = false; }
+        }
+
+        // the layer's owner when none is said
+        internal static string Owner(Layer l) { return l == Layer.Scene ? "story" : l == Layer.Order ? "player" : l == Layer.Job ? "work" : l == Layer.Routine ? "day" : l == Layer.Whim ? Leisure : "core"; }
+        private static int SceneRank(string whose) { return whose == "stage" ? 3 : whose == "story" ? 2 : whose == "rescue" ? 1 : 0; }
+
+        // may «whose» write this layer now (over the plan there, or let go of it)
+        internal bool May(Layer l, string whose)
+        {
+            Plan cur = _plans[(int)l];
+            if (cur == null || cur.Whose == whose || string.IsNullOrEmpty(cur.Whose)) return true;
+            if (l == Layer.Scene) return SceneRank(whose) >= SceneRank(cur.Whose);
+            if (l == Layer.Whim) return cur.Whose == Leisure && whose != Leisure;
+            return true;
+        }
+        // a plan given to it on a game that does not run it: never done there, gone when its owner changes — refused and said
+        // (orders from anywhere go through NpcActor.Order: sent to its owner)
+        private bool NotHere(string what)
+        {
+            ZNetView nv = Nv;
+            if (nv == null || !nv.IsValid() || nv.IsOwner()) return false;
+            Npcs.Log(Name() + ": «" + what + "» given on a game that does not run it — refused (NpcActor.Order sends it to its owner)");
+            return true;
+        }
+        private string _doWhose; // (the owner of the order being done: its plans are stamped with it in Set)
+        private float _nextFoeCheck;
         private Character _hurtBy;
         private float _hurtAt = -100f;
         internal string Status = "стоїть";
 
-        internal Task Now { get { return _task; } }
-        internal Fight Fighting { get { return _fight; } }
+        internal Task Now { get { return _cur != null ? _cur.Kind : Task.Idle; } }
+        internal Layer NowLayer { get { return _curLayer; } }
+        internal Plan Current { get { return _cur; } }
+        private bool Runs { get { return _fight == Fight.Flee || _fight == Fight.Wary; } } // (its first answer to a foe: away)
+        internal bool Fighter { get { return _fight == Fight.Defend || _fight == Fight.Hunt; } } // (a guard's job is for these)
 
+        // its way in a fight on every game (the owner's own; elsewhere as kept in its ZDO) — for its card
+        internal Fight Style
+        {
+            get
+            {
+                ZNetView nv = Nv;
+                if (nv == null || !nv.IsValid() || nv.IsOwner()) return _fight;
+                string s = nv.GetZDO().GetString(KPlans, "");
+                int at = s.IndexOf("fight=");
+                if (at < 0) return _fight;
+                int end = s.IndexOf(';', at); string w = s.Substring(at + 6, (end < 0 ? s.Length : end) - at - 6);
+                foreach (Fight f in Enum.GetValues(typeof(Fight))) if (f.ToString().ToLowerInvariant() == w) return f;
+                return _fight;
+            }
+        }
+        internal bool Asleep { get { return _cur != null && _cur.Kind == Task.Sleep && _cur.Seated; } }
+
+        // ---------------------------------------------------------------- its feet on a bend (every walk goes through here)
+        // The game's own MoveTowards for creatures: its speed is 1 − (the angle between where it faces and where it must
+        // go) / m_moveMinAngle (10°) — any bend of its way over ten degrees stops it dead while it turns on the spot, then
+        // it walks on straight: a person walked a line, halted a moment, walked another line (the user 2026-11-02). Here:
+        // where it walks turns towards where it must go at most so fast (an arc, as a player's feet), the body faces where
+        // it walks, a sharp bend slows it a little, never to a halt; the game's own speed-up and slow-down (Character
+        // m_acceleration) stay — the same inertia as a player's. Tuned live: raven npc walk set turn|turnrun|slowfrom|slowto|slowmin.
+        internal static float TurnWalk = 240f, TurnRun = 170f;           // °/s its way bends walking / running
+        internal static float SlowFrom = 35f, SlowTo = 130f, SlowMin = 0.3f; // a bend sharper than SlowFrom slows it, to SlowMin at SlowTo
+        private Vector3 _heading;
+        private float _headingAt = -10f;
+
+        internal void Steer(Vector3 dir, bool run)
+        {
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 1e-4f) { StopMoving(); return; }
+            dir.Normalize();
+            float dt = Mathf.Min(Time.deltaTime, 0.1f);
+            if (Time.time - _headingAt > 0.25f || _heading.sqrMagnitude < 0.5f) // (it stood a moment: it sets off from where it faces)
+            {
+                Vector3 f = transform.forward; f.y = 0f;
+                _heading = f.sqrMagnitude > 1e-4f ? f.normalized : dir;
+            }
+            _headingAt = Time.time;
+            _heading = Vector3.RotateTowards(_heading, dir, (run ? TurnRun : TurnWalk) * Mathf.Deg2Rad * dt, 0f);
+            _heading.y = 0f;
+            if (_heading.sqrMagnitude < 1e-4f) _heading = dir; else _heading.Normalize();
+            float bend = Vector3.Angle(_heading, dir);
+            float k = Mathf.InverseLerp(SlowFrom, SlowTo, bend); k = k * k * (3f - 2f * k);
+            LookTowards(_heading);
+            m_character.SetMoveDir(_heading * Mathf.Lerp(1f, SlowMin, k));
+            m_character.SetRun(run && bend < SlowFrom); // (no running through a sharp bend)
+        }
+
+        // for the schedule, jobs and whims (NpcResident, NpcWhims): a plan on a layer, or none
+        internal Plan Of(Layer l) { return _plans[(int)l]; }
+        internal void Put(Layer l, Plan p, string whose)
+        {
+            if (NotHere("put " + l)) return;
+            if (!_loaded) { _loaded = true; Load(); }
+            if (l == Layer.Whim && p != null) { Npcs.Log(Name() + ": a whim put with no term — refused (TakeWhim)"); return; }
+            if (!May(l, whose)) { Npcs.Log(Name() + ": [" + l + "] «" + whose + "» may not take it from «" + _plans[(int)l].Whose + "»"); return; }
+            if (p == null) { Release(l, whose); return; }
+            p.Whose = whose;
+            Set(l, p);
+        }
+
+        // a layer let go by its owner: its plan, what it set on the layer, a clip a scene left looping
+        private void Release(Layer l, string whose)
+        {
+            Set(l, null);
+            Unset(l, whose);
+            if (l == Layer.Scene && Body != null && Body.ClipBusy) Body.Clip("");
+        }
+
+        // a whim: the one way onto its layer, for every module. Each has an owner and a term (none lasts for ever, and what
+        // ends one is only its own: EndWhim). Never over an order, a fight or a scene. A whim for its own pleasure (Leisure:
+        // a rest, a stretch, a look round — NpcWhims) gives way to one it must do (its pay, a meal, a rest worn out): those
+        // chained one after another and its pay never came (2026-11-03); one it must do waits for no other. over: for a test
+        internal const string Leisure = "whim";
+        internal bool WhimFree(string whose) { Plan w = _plans[(int)Layer.Whim]; return _curLayer <= Layer.Whim && (w == null || (w.Whose == Leisure && whose != Leisure)); }
+        internal bool TakeWhim(Plan p, float seconds, string whose, bool over = false)
+        {
+            if (NotHere("whim " + whose)) return false;
+            if (!_loaded) { _loaded = true; Load(); }
+            if (p == null || seconds <= 0f) { Npcs.Log(Name() + ": whim of «" + whose + "» with no plan or term — refused"); return false; }
+            if (!over && !WhimFree(whose)) return false;
+            Plan was = _plans[(int)Layer.Whim];
+            if (was != null && was.Whose == Leisure && whose != Leisure) Npcs.Log(Name() + ": leaves its «" + was.Kind + "» for its «" + whose + "»");
+            p.Until = Time.time + seconds; p.Whose = whose ?? "";
+            Set(Layer.Whim, p);
+            return true;
+        }
+
+        internal void EndWhim(string whose) { Plan w = _plans[(int)Layer.Whim]; if (w != null && w.Whose == whose) Set(Layer.Whim, null); }
+
+        // run by another game now: nothing here is true any more (its ZDO is read again if it comes back). Not «left» as a
+        // plan left off: the one who runs it now decides, nothing is written from here
+        internal void OwnerChanged(bool here)
+        {
+            if (here) return; // (its plans are read at its first thought: _loaded)
+            for (int i = 0; i < Layers; i++) _plans[i] = null;
+            _cur = null; _curLayer = Layer.Leisure; _wayLeft = null; _loaded = false; _kept = false;
+            _via = null; _viaOpened = false; _hurtBy = null; _holdUntil = 0f; _drawn = 0f;
+            for (int i = 0; i < Layers; i++) Unset((Layer)i, null);
+            if (_feet != null) _feet.Forget();
+        }
+
+        private ZNetView _nvL;
+        private ZNetView Nv { get { if (_nvL == null) _nvL = GetComponent<ZNetView>(); return _nvL; } } // (found once: its card asks every second)
         private NpcActor _actor;
-        private NpcActor Actor { get { if (_actor == null) _actor = GetComponent<NpcActor>(); return _actor; } }
+        internal NpcActor Actor { get { if (_actor == null) _actor = GetComponent<NpcActor>(); return _actor; } }
+        private NpcBody _bodyL;
+        internal NpcBody Body { get { if (_bodyL == null) _bodyL = GetComponent<NpcBody>(); return _bodyL; } }
 
         public override bool UpdateAI(float dt)
         {
             if (!base.UpdateAI(dt)) return false;
-            try { Think(dt); }
-            catch (Exception e) { if (!_told) { _told = true; Npcs.Log("mind: " + e); } }
+            if (Actor == null || Actor.Def == null) { StopMoving(); return true; } // (no template here — another version: it stands still, as its log says)
+            if (Time.time < _thinkOff) { StopMoving(); return true; }
+            try { if (_feet != null) _feet.DoorTick(); Think(dt); }
+            catch (Exception e) { ThinkFailed(e); }
             return true;
         }
 
+        // a thought that throws: said, the plan it was on let go (the layer under it goes on: not the same throw every frame,
+        // not a person standing dead till the world is reloaded), a short pause before it thinks again
+        private const float ThinkPause = 2f;
+        private float _thinkOff;
+        private void ThinkFailed(Exception e)
+        {
+            _thinkOff = Time.time + ThinkPause;
+            Plan p = _cur;
+            Npcs.Log(Name() + ": mind failed on " + (p != null ? _curLayer + "/" + p.Kind : "no plan") + ", plan let go: " + e);
+            if (p == null) return;
+            bool held = false;
+            for (int i = 0; i < Layers; i++) if (_plans[i] == p) { _plans[i] = null; held = true; }
+            if (!held) _cur = null; // (it failed again while being left: dropped without that)
+            Save();
+        }
+
+        private static readonly int PerfMind = NpcPerf.Id("mind (думка, кадр)"), PerfFoe = NpcPerf.Id("foe (пошук ворога)");
+
         private void Think(float dt)
         {
+            long perf = NpcPerf.Now();
+            try { Think0(dt); } finally { NpcPerf.Add(PerfMind, perf); }
+        }
+
+        // a look now and then, where it is run, at what holds it from outside its mind: hung here by the story (StoryScenes:
+        // a scene's lock nobody renews), the mind runs it without knowing whose it is. One string read per person per SceneLook.
+        internal static Action<NpcActor> SceneWatch;
+        internal static float SceneLook = 5f;
+        private float _sceneLookAt;
+
+        private void Think0(float dt)
+        {
             if (m_character.IsDead()) return;
-            if (_task != Task.Attack && _task != Task.Sit && Time.time >= _nextFoeCheck) { _nextFoeCheck = Time.time + 0.5f; LookForFoe(); }
-            switch (_task)
+            if (!_loaded) { _loaded = true; Load(); }
+            NpcActor me0 = Actor;
+            if (SceneWatch != null && Time.time >= _sceneLookAt) { _sceneLookAt = Time.time + SceneLook; SceneWatch(me0); }
+            if (me0 != null && me0.Vitals != null && me0.Vitals.Down) { StopMoving(); Status = "без тями"; return; } // (senseless: NpcVitals)
+            if (Time.time < _holdUntil && _plans[(int)Layer.Fight] == null && _curLayer != Layer.Scene) // (a talk holds it — never a scene: its walk, its places go on)
             {
-                case Task.Go: Going(dt); break;
-                case Task.Follow: Following(dt); break;
-                case Task.Wander: Wandering(dt); break;
-                case Task.Sit: Sitting(dt); break;
-                case Task.Attack: Attacking(dt); break;
-                default: Idling(); break;
+                if (!SeatedNow && !Asleep) StopMoving();
+                GameObject by = Find(_holdBy);
+                if (by != null && !Asleep) LookAt(Eye(by));
+                Status = "слухає";
+                return;
+            }
+            if (me0 != null && me0.Gear != null && me0.Gear.InUse) { StopMoving(); Player you = Player.GetClosestPlayer(transform.position, 6f); if (you != null) LookAt(you.GetEyePoint()); Status = "показує спорядження"; return; } // (its cells open: it stands for you)
+            Plan whim = _plans[(int)Layer.Whim];
+            if (whim != null && Time.time > whim.Until) _plans[(int)Layer.Whim] = null; // (the whim is over: back to its duties)
+            // a fighter on a seat does not look for foes (it stands up when hit); a peaceful one on a seat still sees one
+            // coming and gets up to run; asleep, nobody sees anything (a blow wakes it)
+            // work that stepped aside: now and then a look whether there is some again
+            Plan job = _plans[(int)Layer.Job];
+            if (job != null && job.Yield && Time.time >= _nextWorkLook)
+            {
+                _nextWorkLook = Time.time + WorkLook;
+                if (_workerL == null) _workerL = GetComponent<NpcWorker>();
+                if (_workerL != null && _workerL.Ready()) job.Yield = false;
+            }
+            bool still = Asleep || (SeatedNow && !Runs);
+            if (_plans[(int)Layer.Fight] == null && _plans[(int)Layer.Scene] == null && !still && Time.time >= _nextFoeCheck && NpcClock.Take()) { _nextFoeCheck = Time.time + 0.5f * NpcClock.Slow(Actor); long pf = NpcPerf.Now(); LookForFoe(); NpcPerf.Add(PerfFoe, pf); } // (its turn on the clock)
+            Pick();
+            Plan p = _cur;
+            if (p == null) { Idling(null, 6f); Status = "стоїть"; return; }
+            switch (p.Kind)
+            {
+                case Task.Go: Going(dt, p); break;
+                case Task.Follow: Following(dt, p); break;
+                case Task.Wander: Wandering(dt, p); break;
+                case Task.Sit: Sitting(dt, p); break;
+                case Task.Pose: Posing(p); break;
+                case Task.Attack: Attacking(dt, p); break;
+                case Task.Sleep: Sleeping(dt, p); break;
+                case Task.Flee: Fleeing(dt, p); break;
+                case Task.Work: Working(dt, p); break;
+                default: // (a module's own task: NpcModules)
+                    TaskOf own;
+                    if (Tasks.TryGetValue(p.Kind, out own) && own.Step != null) { if (own.Step(this, p, dt)) Done(p); }
+                    else Idling(p, 6f);
+                    break;
             }
         }
 
-        // ---------------------------------------------------------------- the tasks
-        private void Idling()
+        // the top plan; when it changes, the old one is left as it was (stood up from its seat, its pose ended) and the
+        // new one starts afresh from where it is
+        private void Pick()
         {
+            Plan top = null; Layer at = Layer.Leisure;
+            for (int i = Layers - 1; i >= 0; i--) if (_plans[i] != null && !_plans[i].Yield) { top = _plans[i]; at = (Layer)i; break; }
+            if (top == _cur) return;
+            GiveUpVia(); // (a door on the old plan's way)
+            Leave(_cur);
+            _cur = top; _curLayer = at;
+            _doorTries = 0; _doorsTried.Clear(); _walkLabel = top != null ? at + "/" + top.Kind : ""; // (a new plan: its doors afresh; its label for the black box, made once)
+            if (top != null) { top.Started = false; top.Seated = false; top.OnPoint = false; top.Seat = null; top.HasSide = false; top.Best = float.MaxValue; top.BestAt = Time.time; }
+        }
+
+        private void Leave(Plan p)
+        {
+            if (p == null) return;
+            if (p.Seated) { if (Body != null && Body.Attached) Body.Detach(); else if (Body != null) Body.Gesture("", false); } // (off its seat, its bed, the ground it sat on)
+            if (p.Kind == Task.Pose && Body != null) Body.Gesture("", false);
+            TaskOf left; if (Tasks.TryGetValue(p.Kind, out left) && left.Left != null) left.Left(this, p); // (a module's task: what it puts right — NpcModules)
+            p.Seated = false; p.OnPoint = false; p.Seat = null; p.Started = false;
             StopMoving();
-            LookAround(6f);
+        }
+
+        // a plan that finished by itself (a meal eaten): its layer is free, the one under it goes on
+        private void Done(Plan p)
+        {
+            for (int i = 0; i < Layers; i++) if (_plans[i] == p) Set((Layer)i, null);
+        }
+
+        // on a seat or the ground, sitting (by the fire, at a table): for a chat (NpcChatter)
+        internal bool SeatedNow { get { return _cur != null && (_cur.Kind == Task.Sit || _cur.Kind == Task.Eat) && _cur.Seated; } }
+        internal bool AtTable { get { return _cur != null && _cur.Kind == Task.Eat && _cur.Seated; } }
+
+        // a meal's sitting down (NpcMeals): the same as «sit» — a seat near p.To, else the ground
+        internal void SitDown(float dt, Plan p) { Sitting(dt, p); }
+
+        // a long way left off for an order (follow me, stay, go there, sit): taken up again once that order is let go
+        private Plan _wayLeft;
+
+        // its way forgotten (settled on its way, sent off): «free» then leaves it where it is
+        internal void ForgetWay() { if (_wayLeft == null) return; _wayLeft = null; Save(); }
+
+        private void Set(Layer layer, Plan p)
+        {
+            if (p != null && string.IsNullOrEmpty(p.Whose)) p.Whose = _doWhose ?? Owner(layer); // (its owner: who gave the order, else the layer's own)
+            if (layer == Layer.Order)
+            {
+                Plan was = _plans[(int)layer];
+                if (p != null && p.Kind == Task.Travel) _wayLeft = null; // (a new way: the old one is over)
+                else if (p != null && was != null && was.Kind == Task.Travel) _wayLeft = was; // (an order over its way: kept for later)
+                else if (p == null && _wayLeft != null && (was == null || was.Kind != Task.Travel)) { p = _wayLeft; _wayLeft = null; } // (the order let go: on its way again)
+            }
+            _plans[(int)layer] = p;
+            if (layer == Layer.Order || layer == Layer.Job || layer == Layer.Routine) Save();
+        }
+
+        // ---------------------------------------------------------------- the plans
+        private void Idling(Plan p, float near)
+        {
+            if (Aside()) return; // (someone walks at it: a step out of their way)
+            StopMoving();
+            if (p != null && p.Looks) LookAt(p.Look); else LookAround(near);
+            if (p != null && !p.Started) { p.Started = true; Status = "стоїть"; }
         }
 
         // whom/where it was told to look at, else a player close by (the first bit of a mind: it notices you)
+        // standing about, someone walking straight at it close by: a step to the side it already stands on, for under a
+        // second (a seat, a bed, a talk keep it where it is)
+        private float _asideUntil, _asideLook;
+        private Vector3 _asideDir;
+        private bool Aside()
+        {
+            float now = Time.time;
+            if (now < _asideUntil) { m_character.SetWalk(true); Steer(_asideDir, false); return true; }
+            if (now < _asideLook || SeatedNow || Asleep || _curLayer == Layer.Order || _curLayer == Layer.Scene) return false; // (told to stand here, placed by a scene: it stays)
+            _asideLook = now + 0.3f;
+            Vector3 me = transform.position;
+            foreach (NpcActor o in NpcActor.Live)
+            {
+                if (o == null || o.Mind == null || o.Mind == this) continue;
+                Vector3 d = me - o.transform.position; d.y = 0f;
+                float m = d.magnitude;
+                if (m > 1.8f || m < 0.05f) continue;
+                Character c = o.GetComponent<Character>();
+                if (c == null || c.GetVelocity().magnitude < 0.5f) continue; // (it is walking, not standing about too)
+                Vector3 f = o.transform.forward; f.y = 0f; f.Normalize();
+                if (Vector3.Dot(d / m, f) < 0.75f) continue; // (at it)
+                Vector3 right = new Vector3(f.z, 0f, -f.x);
+                Vector3 dir = right * (Vector3.Dot(d, right) >= 0f ? 1f : -1f);
+                if (NoRoom(me + dir)) { dir = -dir; if (NoRoom(me + dir)) continue; }
+                _asideDir = dir; _asideUntil = now + 0.8f;
+                Steer(dir, false);
+                return true;
+            }
+            return false;
+        }
+
+        // a look at someone (E, Q, a «near» rule, an order) lasts this long after the last word, then it is let go
+        private const float LookFor = 8f;
+        private float _glanceUntil, _nextGlance;
         private void LookAround(float near)
         {
-            GameObject who = _look.IsNone() ? null : Find(_look);
-            if (who != null) { LookAt(Eye(who)); return; }
-            if (_hasLookAt) { LookAt(_lookAt); return; }
-            Player p = Player.GetClosestPlayer(transform.position, near);
-            if (p != null) LookAt(p.GetEyePoint());
+            for (int i = Layers - 1; i >= 0; i--) // (the highest layer's look: a scene's over a talk's over its raven's)
+            {
+                if (_lookPtOn[i]) { LookAt(_lookPt[i]); return; }
+                if (_lookWho[i].IsNone()) continue;
+                if (Time.time > _lookTill[i]) { _lookWho[i] = ZDOID.None; continue; } // (the talk is over: you are no longer its business)
+                GameObject who = Find(_lookWho[i]);
+                if (who != null) { LookAt(Eye(who)); return; }
+            }
+            // at its ease it minds its own: now and then a glance at a player close by, short (the user: they stared at you
+            // from afar as if you were in their way — they stop and look only when you speak to them, E or Q)
+            float now = Time.time;
+            if (now >= _nextGlance)
+            {
+                _nextGlance = now + UnityEngine.Random.Range(6f, 14f);
+                Player near0 = Player.GetClosestPlayer(transform.position, Mathf.Min(5f, Actor != null ? NpcPersona.Of(Actor).Notice : near));
+                if (near0 != null && UnityEngine.Random.value < 0.35f) { _glanceUntil = now + UnityEngine.Random.Range(1.5f, 3f); _glanceAt = near0; }
+            }
+            if (now < _glanceUntil && _glanceAt != null) LookAt(_glanceAt.GetEyePoint());
+        }
+        private Player _glanceAt;
+
+        // «there»: within its plan's Near and a little (its feet stop a step short) — one rule for it and for whoever waits
+        // on it (StoryScenes)
+        internal const float ArriveSlack = 0.6f;
+        internal static float Reach(float near) { return near + ArriveSlack; }
+
+        private void Going(float dt, Plan p)
+        {
+            float d = Utils.DistanceXZ(transform.position, p.To);
+            if (d <= Reach(p.Near) || AtSnap(p.To, Reach(p.Near))) { Arrived(p); return; }
+            if (d < p.Best - 0.5f) { p.Best = d; p.BestAt = Time.time; }
+            if (_feet != null && _feet.CantReach(p.To) && _curLayer == Layer.Whim) { Npcs.Log(Name() + ": no way to its whim's place — lets it go"); Set(Layer.Whim, null); return; } // (a whim: another one, not half a minute at a wall)
+            bool noWay = _feet != null && _feet.CantReach(p.To);
+            if (Time.time - p.BestAt > StuckSeconds || noWay)
+            {
+                if (noWay) _feet.Forgive(); // (told once: a scene, an order keep trying — not this every frame)
+                if (!Unstick(p.To, "stuck " + Mathf.RoundToInt(d) + " m from its goal")) // (seen: not there — not «arrived»)
+                {
+                    if (_curLayer == Layer.Whim) { Set(Layer.Whim, null); return; } // (a whim let go: its day goes on)
+                    if (_curLayer == Layer.Scene || _curLayer == Layer.Order) return; // (a scene, your order: it keeps trying; the last safety takes it home)
+                }
+                Arrived(p); return;
+            }
+            Pace pace = p.Run ? Pace.Run : PaceFor(d, false);
+            Move(dt, p.To, p.Near, pace);
+            Status = pace == Pace.Run ? "біжить" : pace == Pace.Jog ? "поспішає" : "іде";
         }
 
-        private void Going(float dt)
+        private void Following(float dt, Plan p)
         {
-            float d = Utils.DistanceXZ(transform.position, _to);
-            if (d <= _near + 0.6f) { Arrived(); return; }
-            if (d < _best - 0.5f) { _best = d; _bestAt = Time.time; }
-            if (Time.time - _bestAt > StuckSeconds) { Unstick(_to, "stuck " + Mathf.RoundToInt(d) + " m from its goal"); Arrived(); return; }
-            MoveTo(dt, _to, _near, _run);
-        }
-
-        private void Following(float dt)
-        {
-            GameObject who = Find(_follow);
-            if (who == null) { Status = "загубив, кого вів"; _task = Task.Idle; Npcs.Log(Name() + ": lost whom it followed"); return; }
+            GameObject who = Find(p.Who);
+            if (who == null && p.Leader != 0L && Time.time >= _leaderLook) // (the same player in a new body: after a death, a reload — looked for once a second)
+            {
+                _leaderLook = Time.time + 1f;
+                foreach (Player pl in Player.GetAllPlayers()) if (pl != null && pl.GetPlayerID() == p.Leader && !pl.IsDead()) { p.Who = pl.GetZDOID(); who = pl.gameObject; break; }
+            }
+            if (who == null)
+            {
+                // it waits a little (they may come back in range); gone for good (left, logged out): let go, on whatever layer it was told
+                if (p.Lost <= 0f) p.Lost = Time.time;
+                if (Time.time - p.Lost > 30f) { Npcs.Log(Name() + ": whom it followed is gone — let go"); Done(p); return; }
+                Status = "загубив, кого вів"; Idling(p, 6f); return;
+            }
+            p.Lost = 0f;
             Vector3 at = who.transform.position;
             float d = Utils.DistanceXZ(transform.position, at);
-            if (d > FarAway) { Unstick(at - who.transform.forward * 2f, "too far behind (" + Mathf.RoundToInt(d) + " m)"); return; }
-            if (d > _keep)
+            if (d > FarAway && Time.time >= _farTry) { _farTry = Time.time + 10f; if (Unstick(at - who.transform.forward * 2f, "too far behind (" + Mathf.RoundToInt(d) + " m)")) return; } // (seen: on foot after them, asked again in ten seconds)
+            if (d > p.Keep)
             {
-                if (d < _best - 0.5f || d < _keep + 2f) { _best = d; _bestAt = Time.time; }
-                if (Time.time - _bestAt > StuckSeconds) { Unstick(at - who.transform.forward * 2f, "could not keep up"); return; }
-                MoveTo(dt, at, _keep, d > 8f);
+                if (d < p.Best - 0.5f || d < p.Keep + 2f) { p.Best = d; p.BestAt = Time.time; }
+                if (Time.time - p.BestAt > StuckSeconds) { Unstick(at - who.transform.forward * 2f, "could not keep up"); return; }
+                Character lead = who.GetComponent<Character>();
+                float speed = lead != null ? Utils.DistanceXZ(lead.GetVelocity(), Vector3.zero) : 0f;
+                Pace pace = speed > 5.5f ? Pace.Run : speed > 2.5f ? Pace.Jog : Pace.Walk; // (the leader's own pace)
+                if (d > p.Keep + 6f && pace != Pace.Run) pace = pace + 1; // (left behind: one pace up, to catch up)
+                Move(dt, at, p.Keep, pace);
                 Status = "іде слідом";
             }
-            else { StopMoving(); LookAt(Eye(who)); _best = d; _bestAt = Time.time; Status = "поруч"; }
+            else { StopMoving(); LookAt(Eye(who)); p.Best = d; p.BestAt = Time.time; Status = "поруч"; }
         }
 
-        private void Wandering(float dt)
+        private float _farTry, _leaderLook;
+
+        private void Wandering(float dt, Plan p)
         {
-            float d = Utils.DistanceXZ(transform.position, _to);
-            bool walking = d > 1.2f && Time.time - _bestAt < StuckSeconds;
-            if (walking) { if (d < _best - 0.5f) { _best = d; _bestAt = Time.time; } MoveTo(dt, _to, 1f, false); Status = "походжає"; return; }
+            if (!p.Started) { p.Started = true; p.To = transform.position; p.NextWander = Time.time + 1f; }
+            float d = Utils.DistanceXZ(transform.position, p.To);
+            bool walking = d > 1.2f && Time.time - p.BestAt < StuckSeconds;
+            if (walking) { if (d < p.Best - 0.5f) { p.Best = d; p.BestAt = Time.time; } Move(dt, p.To, 1f, PaceFor(d, false)); Status = "походжає"; return; }
             StopMoving();
             LookAround(8f);
-            if (Time.time < _nextWander) return;
-            _nextWander = Time.time + UnityEngine.Random.Range(6f, 15f);
-            Vector2 r = UnityEngine.Random.insideUnitCircle * _radius;
-            Vector3 p = _home + new Vector3(r.x, 0f, r.y);
-            float h;
-            if (ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(p, out h)) p.y = h;
-            if (Pathfinding.instance != null && !Pathfinding.instance.HavePath(transform.position, p, m_pathAgentType)) return; // (try another spot next time)
-            _to = p; _best = float.MaxValue; _bestAt = Time.time;
+            Status = "походжає";
+            if (Time.time < p.NextWander) return;
+            p.NextWander = Time.time + UnityEngine.Random.Range(10f, 25f); // (a while where it is before the next spot)
+            Vector3 spot;
+            if (p.InBase) spot = NpcPrivate.Spot(Actor, NpcBase.For(p.Home)); // (its own base, inside the fence — not in a player's house)
+            else
+            {
+                Vector2 r = UnityEngine.Random.insideUnitCircle * p.Radius;
+                spot = p.Home + new Vector3(r.x, 0f, r.y);
+                spot = NpcKit.Floor(spot);
+            }
+            if (NpcKit.OnFoot(transform.position, spot, WanderWalk) > WanderWalk && ++p.Lost < 6) { p.NextWander = Time.time + 1f; return; } // (a few more spots first; then it goes all the same — no whole way from where it stands at all (a room the way finder keeps apart): it walks, steps round, is put there if stuck — not kept in it for good)
+            p.Lost = 0; // (a whole way there on foot, not long: not a spot behind a house it walks into the wall of and stands — the game's «a path» is also half of one)
+            p.To = spot; p.Best = float.MaxValue; p.BestAt = Time.time;
         }
 
-        private void Sitting(float dt)
+        private void Sitting(float dt, Plan p)
         {
-            if (_chair == null) // on the ground: walks to the spot (when given one), then the «sit» pose
+            if (!p.Started)
             {
-                float gd = Utils.DistanceXZ(transform.position, _to);
-                if (!_seated && gd > 1.4f && Time.time - _bestAt < StuckSeconds)
-                {
-                    if (gd < _best - 0.5f) { _best = gd; _bestAt = Time.time; }
-                    MoveTo(dt, _to, 1f, false); Status = "іде сісти"; return;
-                }
-                if (!_seated) { _seated = true; Actor.Emote("sit", true); Status = "сидить на землі"; StoryBus.Raise("npc_sat", Name(), 0, transform.position); }
-                StopMoving();
-                return;
+                p.Started = true;
+                p.Seat = p.Kind == Task.Eat || p.Guest ? NearestChair(p.To, MealSeats, true, this) : NearestChair(p.To, 4f, false, this); // (at a table — a meal, an evening at the dining table: anywhere round it in its room; a long table's seats stand far from its middle) // (a meal: anywhere round its dining table — on foot, not in the next building)
+                if (p.Seat == null) { p.To = ClearGround(p.To); Npcs.Log(Name() + ": no seat near — sits on the ground"); } // (not on a bed, a table, a wall)
+                else p.HasSide = SideOf(p.Seat, transform.position, out p.Side);
             }
-            Transform seat = _chair.m_attachPoint != null ? _chair.m_attachPoint : _chair.transform;
-            if (!_seated)
+            if (p.Seated)
             {
-                float d = Utils.DistanceXZ(transform.position, seat.position);
-                if (d > 1.4f)
-                {
-                    if (d < _best - 0.5f) { _best = d; _bestAt = Time.time; }
-                    if (Time.time - _bestAt > StuckSeconds) Unstick(seat.position, "could not reach its seat");
-                    else { MoveTo(dt, seat.position, 1f, false); Status = "іде сісти"; return; }
-                }
-                _seated = true;
-                Actor.Emote("", false);
-                m_animator.SetBool(_chair.m_attachAnimation, true);
-                Status = "сидить";
-                StoryBus.Raise("npc_sat", Name(), 0, seat.position);
+                if (p.OnPoint && (Body == null || !Body.Attached)) { p.Seated = false; p.Started = false; p.OnPoint = false; return; } // (its seat was taken down under it: finds another)
+                StopMoving(); return; // (on a seat the body holds it; on the ground the pose does)
             }
-            // held on the seat as the game holds a player (no gravity, no drift)
+            Transform seat = p.Seat != null ? (p.Seat.m_attachPoint != null ? p.Seat.m_attachPoint : p.Seat.transform) : null;
+            Vector3 goal = seat != null && p.HasSide ? p.Side : seat != null ? seat.position : p.To;
+            float d = Utils.DistanceXZ(transform.position, goal);
+            bool there = seat != null && p.HasSide ? d <= 0.5f || Utils.DistanceXZ(transform.position, seat.position) <= 0.9f : d <= 1.4f || AtSnap(goal, 1.4f); // (by its seat: at the side it came to, or right at it)
+            if (!there)
+            {
+                if (d < p.Best - 0.5f) { p.Best = d; p.BestAt = Time.time; }
+                if (seat != null && _feet != null && _feet.CantReach(goal)) { NpcWalk.KeepOff(seat.position); Npcs.Log(Name() + ": no way to its seat — another"); p.Started = false; p.Seat = null; p.HasSide = false; return; } // (behind a table, up on a floor apart: it is kept off it a while — NpcWalk.Avoided)
+                if (seat == null && _feet != null && _feet.CantReach(goal)) there = true; // (its spot on the ground: here will do)
+                else if (Time.time - p.BestAt <= StuckSeconds) { Move(dt, goal, seat != null && p.HasSide ? 0.3f : 1f, PaceFor(d, false)); Status = "іде сісти"; return; } // (to its side of the seat itself: it sits from half a metre — stopped a metre off, it stood «not there» till the stuck rule put it on)
+                if (seat != null && !Unstick(goal, "could not reach its seat")) { seat = null; p.Seat = null; } // (seen: no jump onto it — it sits on the ground where it is)
+            }
             StopMoving();
-            transform.position = seat.position;
-            transform.rotation = seat.rotation;
-            if (m_body != null) { m_body.useGravity = false; m_body.linearVelocity = Vector3.zero; m_body.angularVelocity = Vector3.zero; }
+            p.Seated = true;
+            if (_feet != null) _feet.There(seat != null ? "ok (seat)" : "ok (ground)");
+            if (seat != null && Taken(seat, this)) { seat = null; Npcs.Log(Name() + ": its seat was taken — sits on the ground"); } // (someone sat there while it walked)
+            if (seat != null && Body != null)
+            {
+                p.OnPoint = true;
+                Piece piece = p.Seat.GetComponentInParent<Piece>();
+                Body.Attach(seat, p.Seat.m_attachAnimation, piece != null ? piece.gameObject : p.Seat.gameObject, p.Seat.m_detachOffset);
+                Status = "сидить";
+            }
+            else { FaceFire(); if (Body != null) Body.Gesture("sit", true); Status = "сидить на землі"; }
+            StoryBus.Raise("npc_sat", Name(), 0, transform.position);
         }
 
-        private void StandUp()
+        // to its bed (Who: the bed's ZDO) and into it, as the game puts a player to bed; no bed there: it stands and says so
+        private void Sleeping(float dt, Plan p)
         {
-            if (_task != Task.Sit) return;
-            if (_chair != null && _seated)
+            if (p.Seated)
             {
-                m_animator.SetBool(_chair.m_attachAnimation, false);
-                Transform seat = _chair.m_attachPoint != null ? _chair.m_attachPoint : _chair.transform;
-                transform.position = seat.TransformPoint(_chair.m_detachOffset);
-                if (m_body != null) { m_body.position = transform.position; m_body.useGravity = true; }
+                if (p.OnPoint && (Body == null || !Body.Attached)) { p.Seated = false; p.OnPoint = false; } // (the bed was taken down under it)
+                else { StopMoving(); return; }
             }
-            else if (_seated) Actor.Emote("", false);
-            _seated = false; _chair = null;
+            GameObject go = Find(p.Who);
+            Bed bed = go != null ? go.GetComponent<Bed>() : null;
+            if (bed == null || bed.m_spawnPoint == null) { StopMoving(); Status = "не знайшов ліжка"; return; }
+            Vector3 at = bed.m_spawnPoint.position;
+            float d = Utils.DistanceXZ(transform.position, at);
+            if (d > 1.6f)
+            {
+                if (d < p.Best - 0.5f) { p.Best = d; p.BestAt = Time.time; }
+                if (Time.time - p.BestAt <= StuckSeconds) { Move(dt, at, 1f, PaceFor(d, false)); Status = "іде спати"; return; }
+                if (!Unstick(at, "could not reach its bed")) { Move(dt, at, 1f, PaceFor(d, false)); return; } // (seen: tries on — a bed is never sat by from afar)
+            }
+            StopMoving();
+            p.Seated = true;
+            if (_feet != null) _feet.There("ok (bed)");
+            if (Body != null) { p.OnPoint = true; Body.Attach(bed.m_spawnPoint, "attach_bed", bed.gameObject, new Vector3(0f, 0.5f, 0f)); } // (the game's own way off a bed)
+            Status = "спить";
+            StoryBus.Raise("npc_slept", Name(), 0, transform.position);
+        }
+
+        // its job: the worker does the errands, this lends it its feet (Walk/Halt/Face)
+        private NpcWorker _workerL;
+        private const float WorkLook = 6f;
+        private float _nextWorkLook;
+        private void Working(float dt, Plan p)
+        {
+            if (_workerL == null) _workerL = GetComponent<NpcWorker>();
+            if (_workerL == null) { Idling(p, 6f); return; }
+            if (!p.Started) { p.Started = true; _workerL.Reset(); } // (taken up again after a fight, an order, a whim: the errand afresh)
+            _workerL.Step(dt);
+            Status = _workerL.Doing.Length > 0 ? _workerL.Doing : "працює";
+            if (_workerL.Idle) { p.Yield = true; _nextWorkLook = Time.time + WorkLook; Npcs.Log(Name() + ": no work just now (" + _workerL.Doing + ") — its own day meanwhile"); } // (nothing to do: not standing about)
+        }
+
+        // for the worker: to a spot (true once there; a walk that gets nowhere steps it there, as every walk does)
+        internal bool Walk(float dt, Vector3 to, float near, bool urgent)
+        {
+            float d = Utils.DistanceXZ(transform.position, to);
+            if (d <= near || AtSnap(to, near)) { StopMoving(); if (_feet != null) _feet.There("ok (work)"); return true; } // (at the walkable spot by it: there)
+            if (_cur != null)
+            {
+                if (d < _cur.Best - 0.5f) { _cur.Best = d; _cur.BestAt = Time.time; }
+                if (Time.time - _cur.BestAt > StuckSeconds) { Vector3 by = Beside(to, near); bool path = Pathfinding.instance != null && Pathfinding.instance.HavePath(transform.position, by, m_pathAgentType); if (!Unstick(by, "could not reach its work (goal " + Npcs.V(to) + ", it at " + Npcs.V(transform.position) + ", spot by it " + Npcs.V(by) + (path ? ", a way there" : ", no way there") + ")") && d > near + 2f) return false; return true; } // (seen and far: no reaching into a chest eleven metres off — it keeps trying; the last safety takes it home if it never gets there)
+            }
+            Move(dt, to, near * 0.8f, PaceFor(d, urgent));
+            return false;
+        }
+
+        // ---------------------------------------------------------------- its pace
+        internal enum Pace { Walk, Jog, Run }
+
+        // the one rule: by what it is busy with (the layer), how far, and whether it is urgent
+        // the pace is picked as a way begins and kept along it (no run → jog → walk at every few metres as it nears): up
+        // only when it has fallen far behind (a leader walked off), down to a walk only for its last steps
+        private Plan _pacePlan; private Pace _pace;
+        private Pace PaceFor(float dist, bool urgent)
+        {
+            Pace want = PaceRule(dist, urgent);
+            if (!ReferenceEquals(_cur, _pacePlan)) { _pacePlan = _cur; _pace = want; }
+            else if (want > _pace) _pace = want;
+            else if (want < _pace && dist < 4f) _pace = want;
+            return _pace;
+        }
+
+        private Pace PaceRule(float dist, bool urgent)
+        {
+            switch (_curLayer)
+            {
+                case Layer.Fight: return Pace.Run;
+                case Layer.Scene: return Pace.Walk;                                                  // (a scene says «run» itself)
+                case Layer.Order: return dist > 30f ? Pace.Run : dist > 12f ? Pace.Jog : Pace.Walk;
+                case Layer.Job: return urgent ? (dist > 15f ? Pace.Run : Pace.Jog) : (dist > 25f ? Pace.Jog : Pace.Walk);
+                default: return dist > 80f ? Pace.Jog : Pace.Walk;                                   // (at its ease: a walk — about its base never a run)
+            }
+        }
+
+        private NpcWalk _feet;
+        private string _walkLabel = "";
+        internal NpcWalk Feet { get { if (_feet == null) _feet = new NpcWalk(this); return _feet; } }
+
+        private void Move(float dt, Vector3 to, float near, Pace pace)
+        {
+            if (ThroughDoor(dt, to, pace)) return; // (no way there but through a shut door: NpcDoors)
+            m_character.SetWalk(pace == Pace.Walk); // (the game: walk / jog / run — not walking is a jog)
+            if (Body != null && (Body.Attached || Body.HeldGesture.Length > 0)) // (it walks: no seat under it, no pose held — a body held sitting does not walk, it was slid along seated, 2026-11-01)
+            {
+                Npcs.Log(Name() + ": walks off " + (Body.Attached ? "attached to a seat" : "in a held pose «" + Body.HeldGesture + "»") + " (" + _curLayer + "/" + (_cur != null ? _cur.Kind.ToString() : "-") + ") — let go");
+                if (Body.Attached) Body.Detach(); else Body.Gesture("", false);
+            }
+            if (Body != null && _curLayer != Layer.Scene) Body.LoopOff(); // (a scene may walk it with a clip that loops: its own to end)
+            Feet.Step(dt, to, near, pace == Pace.Run, _walkLabel); // (its feet: NpcWalk — the one way it walks)
+        }
+
+        // standing on the walkable spot by a goal it could not stand on itself (a chest, a seat in a row: Move went there
+        // instead): as good as there — else it stood by it «not there yet», and was stepped at last
+        // where to step it when it could not reach a goal: the walkable spot by it (its own side of a wall, not the side it
+        // stood on), else a little short of it on its way
+        private Vector3 Beside(Vector3 to, float near)
+        {
+            Vector3 v;
+            if (Pathfinding.instance != null && NpcKit.Valid(out v, to, Mathf.Max(1.5f, near + 1f), m_pathAgentType)) return v;
+            return to + (transform.position - to).normalized * near * 0.8f;
+        }
+
+        private bool AtSnap(Vector3 to, float near)
+        {
+            return Feet.By(to, near); // (its follower stopped by it, within reach)
+        }
+
+        // room for a body here: nothing built or a rock in it, nobody standing on it
+        private static readonly int Solids = LayerMask.GetMask("piece", "Default", "static_solid", "terrain");
+        private bool NoRoom(Vector3 p)
+        {
+            if (Physics.CheckCapsule(p + Vector3.up * 0.5f, p + Vector3.up * 1.5f, 0.3f, Solids, QueryTriggerInteraction.Ignore)) return true;
+            foreach (NpcActor o in NpcActor.Live) if (o != null && o.gameObject != gameObject && Utils.DistanceXZ(o.transform.position, p) < 0.6f) return true;
+            return false;
+        }
+
+        // ---------------------------------------------------------------- through a door (NpcDoors): to the spot before it,
+        // open it, straight through, shut it behind (only one it opened); asked once a second while it has no way
+        private Door _via;
+        private Vector3 _viaNear, _viaFar;
+        private int _viaStage;
+        private float _viaSince, _nextWayLook;
+        private bool _viaOpened;
+        // the doors tried for one goal: a way through a door that still left no way there was taken again and again, and
+        // each try told it it was not stuck — it never stepped on either (2026-10-31: residents stood by a door for
+        // minutes). Three tries for a goal, then the doors are left for it and its own «stuck» rule steps it on
+        private Vector3 _doorGoal; private int _doorTries;
+        private readonly HashSet<Door> _doorsTried = new HashSet<Door>();
+        private float _doorAt;
+        private const int DoorTries = 3; // (three doors a goal, never the same one twice: a house door, then the yard's gate — one door only left it standing at the gate, 2026-11-01; the same door again sent it back and forth, 2026-10-31)
+
+        private static readonly int PerfDoorWay = NpcPerf.Id("door way (чи треба двері)");
+        private bool ThroughDoor(float dt, Vector3 to, Pace pace)
+        {
+            if (_via == null)
+            {
+                if (Time.time < _nextWayLook || Pathfinding.instance == null) return false;
+                if (_curLayer == Layer.Fight && _cur != null && _cur.Kind == Task.Attack) return false; // (no gate opened to chase a foe out — nor to let it in)
+                _nextWayLook = Time.time + 1f;
+                // the walkable spot by its goal: a chest, a table, a seat stands where nobody can stand — a way «into» it is
+                // never found, an open door or not, and it went looking for doors inside the very room it was in
+                if (Utils.DistanceXZ(to, _doorGoal) > 2f || Time.time - _doorAt > 60f) { _doorGoal = to; _doorTries = 0; _doorsTried.Clear(); } // (another goal, or a minute since: its doors afresh)
+                if (_doorTries >= DoorTries || Utils.DistanceXZ(transform.position, to) < 1.5f) return false; // (its doors led nowhere for this goal: no more — asked before the way finder, which is the costly part)
+                // its feet know whether their way gets there (a whole way asked here every second cost up to ten
+                // milliseconds a time — the people's worst frames, 2026-11-02): a door looked for only when it does not
+                if (_feet == null || !_feet.NeedsDoor(to)) return false;
+                Vector3 goal;
+                if (!NpcKit.Valid(out goal, to, 2.5f, m_pathAgentType)) goal = to;
+                long pw = NpcPerf.Now();
+                Door d = NpcDoors.Toward(transform.position, goal, m_pathAgentType, _doorsTried);
+                NpcPerf.Add(PerfDoorWay, pw);
+                if (d == null) { _doorTries = DoorTries; _doorAt = Time.time; return false; } // (no door leads there: not looked for again for this goal — it was asked every second)
+                if (d == null || NpcPrivate.DoorOff(this, d)) return false; // (a player's house: not at its ease)
+                if (++_doorTries >= DoorTries) Npcs.Log(Name() + ": its doors lead nowhere for this goal — the last try");
+                _doorsTried.Add(d); _doorAt = Time.time;
+                _via = d; _viaStage = 0; _viaSince = Time.time; _viaOpened = false;
+                NpcDoors.Sides(d, transform.position, out _viaNear, out _viaFar);
+                Npcs.Log(Name() + ": no way there — through a door");
+            }
+            if (_via == null || Time.time - _viaSince > 20f) { GiveUpVia(); return false; }
+            NewGoal(); // (a way round a door is no being stuck)
+            m_character.SetWalk(pace == Pace.Walk);
+            if (_viaStage == 0)
+            {
+                if (Utils.DistanceXZ(transform.position, _viaNear) > 0.9f) { Feet.Step(dt, _viaNear, 0.5f, pace == Pace.Run, "door"); return true; }
+                _viaOpened = NpcDoors.Open(_via, transform.position);
+                if (!_viaOpened && NpcDoors.Closed(_via)) { StopMoving(); LookAt(_via.transform.position + Vector3.up); return true; } // (someone told it a moment ago: its state on its way — it waits, within its 20 s)
+                _viaStage = 1; _viaSince = Time.time;
+            }
+            if (Time.time - _viaSince < 0.6f && _viaOpened) { StopMoving(); LookAt(_via.transform.position + Vector3.up); return true; } // (the door swings open)
+            Vector3 dir = _viaFar - transform.position; dir.y = 0f;
+            if (dir.magnitude > 0.7f) { Steer(dir.normalized, pace == Pace.Run); return true; }
+            if (_viaOpened && !NpcDoors.Shut(_via, this)) Feet.Track(_via, _viaNear); // (someone in the doorway: its feet shut it once it is free)
+            EndVia();
+            _nextWayLook = Time.time + 5f; // (through: a while on foot before any other door)
+            return false;
+        }
+
+        private void EndVia() { _via = null; _viaOpened = false; _nextWayLook = Time.time + 0.5f; if (_feet != null) _feet.Forget(); } // (through: its way from here, not the one from before the door)
+
+        // its way through given up (another plan took over, it took too long): a door it opened is not left open
+        private void GiveUpVia() { if (_via != null && _viaOpened && !NpcDoors.Shut(_via, this)) Feet.Track(_via, _viaNear); EndVia(); }
+
+        // ---------------------------------------------------------------- held by someone talking to it (its menu, its talk
+        // window): it stops and looks at them (a few seconds, renewed while the window is open: NpcActor «hold»)
+        private float _holdUntil;
+        private ZDOID _holdBy = ZDOID.None;
+        internal void Hold(ZDOID by) { _holdUntil = Time.time + 4f; _holdBy = by; for (int i = 0; i < Layers; i++) if (_lookWho[i] == by) _lookTill[i] = Mathf.Max(_lookTill[i], Time.time + LookFor); }
+
+        // its hand into a chest, as a player reaches into one: facing it, its lid up (NpcLid) and the game's «interact»
+        // move; true once the hand is in (ReachFor s later) — the one way every module takes from or puts into a chest (a
+        // meal's bite, its pay); hand: the caller's own moment, 0 before
+        internal const float ReachFor = 1.1f;
+        internal bool Reach(Container c, ref float hand)
+        {
+            if (c == null) return false;
+            Face(c.transform.position);
+            if (hand <= 0f) { if (!Open(c, ReachFor + 2f)) return false; hand = Time.time + ReachFor; return false; }
+            if (Time.time < hand) return false;
+            hand = 0f;
+            return true;
+        }
+
+        // a chest opened by it now, as a player opens one (the one way for every module: a worker's chest, a chore's, a
+        // meal's, its pay): not one a player or another person has open; its owner's game keeps its contents, so taken over
+        // first; its lid up for so many seconds (NpcLid), facing it, the game's «interact» move when the lid comes up. False:
+        // not now (open by someone, not ours to take)
+        internal bool Open(Container c, float seconds)
+        {
+            ZNetView nv = c != null ? c.GetComponentInParent<ZNetView>() : null;
+            if (nv == null || !nv.IsValid()) return false;
+            if (nv.GetZDO().GetInt(ZDOVars.s_inUse, 0) != 0 && !NpcLid.Mine(c, Actor)) return false;
+            if (!nv.IsOwner()) { nv.ClaimOwnership(); if (!nv.IsOwner()) return false; }
+            bool up = NpcLid.Mine(c, Actor);
+            NpcLid.Peek(c, Actor, seconds);
+            Face(c.transform.position);
+            if (!up && m_animator != null) m_animator.SetTrigger("interact");
+            return true;
+        }
+
+        internal void NewGoal() { if (_cur != null) { _cur.Best = float.MaxValue; _cur.BestAt = Time.time; } }
+        internal void Halt() { StopMoving(); }
+        internal void Face(Vector3 at) { LookAt(at); }
+
+        // a long way (NpcTravel): a jog towards a point a little ahead on the way, by the game's paths where there are
+        // some, else straight on (round nothing: over water it swims)
+        private Vector3 _legTo = new Vector3(float.MaxValue, 0f, 0f), _legFor;
+        private float _legUntil;
+        internal void Head(float dt, Vector3 to, float ahead, bool walk = false)
+        {
+            if (Utils.DistanceXZ(transform.position, to) < 60f && ThroughDoor(dt, to, walk ? Pace.Walk : Pace.Jog)) return; // (near its goal: a gate on the way is opened)
+            Vector3 dir = to - transform.position; dir.y = 0f;
+            float d = dir.magnitude;
+            if (d < 0.1f) { StopMoving(); return; }
+            // a leg at a time: a point «ahead» on the line, kept till it is half walked or its far goal changes (its feet
+            // follow the way finder to it; a point moved every frame would be a new walk every frame)
+            if (_legTo.x == float.MaxValue || (to - _legFor).sqrMagnitude > 1f || Utils.DistanceXZ(transform.position, _legTo) < ahead * 0.5f || Time.time > _legUntil)
+            {
+                _legFor = to;
+                _legTo = d > ahead ? transform.position + dir / d * ahead : to;
+                float h;
+                if (ZoneSystem.instance != null && ZoneSystem.instance.GetGroundHeight(_legTo, out h)) _legTo.y = h;
+                _legUntil = Time.time + ahead / 1.5f + 5f;
+            }
+            m_character.SetWalk(walk); // (a jog; a walk when it limps)
+            Feet.Step(dt, _legTo, 1f, false, "travel");
+        }
+
+        private void Posing(Plan p)
+        {
+            StopMoving();
+            if (p.Looks) LookAt(p.Look); else LookAround(6f);
+            if (p.Started) return;
+            p.Started = true;
+            if (Body != null) Body.Gesture(p.Pose, true);
+            Status = "стоїть (" + p.Pose + ")";
         }
 
         // ---------------------------------------------------------------- fighting
         // a foe for its way of fighting (none while sitting: it stands up only when told, or when hit)
+        private static readonly List<Character> Seen = new List<Character>(); // (who is about now: NpcFoes, one list for everyone)
+
         private void LookForFoe()
         {
-            if (_fight == Fight.Off) return;
+            if (_fight == Fight.Off || Now == Task.Travel) return;
             Character foe = null;
             if (_hurtBy != null && !_hurtBy.IsDead() && !_hurtBy.IsPlayer() && Time.time - _hurtAt < 20f) foe = _hurtBy;
             if (foe == null)
             {
-                Vector3 guard = transform.position;
-                GameObject leader = _task == Task.Follow ? Find(_follow) : null;
-                float range = _fight == Fight.Hunt ? m_viewRange : DefendRange;
-                float best = range;
-                foreach (Character c in Character.GetAllCharacters())
+                Plan below = Below();
+                GameObject leader = below != null && below.Kind == Task.Follow ? Find(below.Who) : null;
+                float best = _fight == Fight.Hunt ? m_viewRange : Runs ? (Actor != null ? NpcPersona.Of(Actor).FleeAt * FleeScale(Actor) : FleeRange) : DefendRange; // (a timid one runs sooner; a module may say sooner still)
+                float lookout = Runs ? 0f : LookOut(Actor); // (on watch: as far as it sees — a module's word)
+                bool watch = lookout > 0f;
+                if (watch) best = Mathf.Max(best, lookout);
+                Seen.Clear();
+                NpcFoes.Near(transform.position, best, Seen); // (only the cells within its sight: NpcFoes)
+                if (leader != null) NpcFoes.Near(leader.transform.position, best, Seen); // (and round the one it follows)
+                foreach (Character c in Seen)
                 {
-                    if (c == null || c == m_character || c.IsDead() || c.IsPlayer() || !IsEnemy(m_character, c)) continue;
-                    float d = Vector3.Distance(c.transform.position, guard);
+                    if (c == null || c == m_character || c.IsDead() || c.IsPlayer() || !IsEnemy(m_character, c) || Neutral(c)) continue;
+                    if (!Runs && !InWatch(c.transform.position)) continue; // (a guard's post, a resident's base: not after foes far off)
+                    float d = Vector3.Distance(c.transform.position, transform.position);
                     if (leader != null) d = Mathf.Min(d, Vector3.Distance(c.transform.position, leader.transform.position));
                     if (d >= best) continue;
-                    if (_fight == Fight.Hunt && !CanSenseTarget(c)) continue;
+                    if ((_fight == Fight.Hunt || (watch && d > DefendRange)) && !CanSenseTarget(c)) continue;
                     best = d; foe = c;
                 }
             }
             if (foe != null) StartFight(foe);
         }
 
-        private void StartFight(Character foe)
+        // the modules' words on its fighting (NpcModules): where it keeps watch (true/false; null — not theirs: the first
+        // that says wins — a guard by its post before a resident by its base; none: anywhere), how far it looks out on watch
+        // (0: not on watch), how much sooner a peaceful one runs (×)
+        internal static readonly List<Func<NpcActor, Vector3, bool?>> Watches = new List<Func<NpcActor, Vector3, bool?>>();
+        internal static readonly List<Func<NpcActor, float>> LookOuts = new List<Func<NpcActor, float>>();
+        internal static readonly List<Func<NpcActor, float>> FleeScales = new List<Func<NpcActor, float>>();
+
+        private bool InWatch(Vector3 at)
         {
-            ZNetView nv = foe.GetComponent<ZNetView>();
-            if (nv == null || !nv.IsValid()) return;
-            if (_task != Task.Attack)
-            {
-                _before = _task == Task.Sit ? Task.Idle : _task;
-                if (_task != Task.Wander) _home = transform.position; // (a wanderer keeps its circle's middle)
-            }
-            StandUp();
-            Actor.Emote("", false);
-            _foe = nv.GetZDO().m_uid; _task = Task.Attack; _foeSince = Time.time;
-            Status = "б'ється";
-            Npcs.Log(Name() + ": fights " + foe.m_name);
+            NpcActor a = Actor;
+            if (a == null) return true;
+            for (int i = 0; i < Watches.Count; i++) { bool? w = Watches[i](a, at); if (w.HasValue) return w.Value; }
+            return true;
         }
 
-        private void Attacking(float dt)
+        private static float LookOut(NpcActor a)
         {
-            GameObject go = Find(_foe);
+            float far = 0f;
+            if (a != null) for (int i = 0; i < LookOuts.Count; i++) far = Mathf.Max(far, LookOuts[i](a));
+            return far;
+        }
+
+        private static float FleeScale(NpcActor a)
+        {
+            float k = 1f;
+            for (int i = 0; i < FleeScales.Count; i++) k *= FleeScales[i](a);
+            return k;
+        }
+
+        // no foe unless it means harm: a peaceful beast (a deer, a hare), one that is calm until angered (the dwarves)
+        private static bool Neutral(Character c)
+        {
+            BaseAI ai = c.GetBaseAI();
+            if (ai == null) return false;
+            if (ai is AnimalAI) return true;
+            return ai.IsAggravatable() && !ai.IsAggravated();
+        }
+
+        // the plan a fight put aside (the top one under the Fight layer)
+        private Plan Below() { for (int i = (int)Layer.Fight - 1; i >= 0; i--) if (_plans[i] != null) return _plans[i]; return null; }
+
+        private void StartFight(Character foe)
+        {
+            if (_plans[(int)Layer.Scene] != null) return; // (a scene has it: it does not run off to fight)
+            ZNetView nv = foe.GetComponent<ZNetView>();
+            if (nv == null || !nv.IsValid()) return;
+            bool flee = Runs;
+            Plan f = new Plan { Kind = flee ? Task.Flee : Task.Attack, Who = nv.GetZDO().m_uid, Home = transform.position, Since = Time.time, FoeHealth = foe.GetHealthPercentage() };
+            Set(Layer.Fight, f);
+            Pick();
+            if (Body != null && Body.ClipBusy) Body.Clip(""); // (into a fight or a flight: no gesture left on its body)
+            Status = flee ? "тікає" : "б'ється";
+            Npcs.Log(Name() + (flee ? ": runs from " : ": fights ") + foe.m_name);
+        }
+
+        private void Attacking(float dt, Plan p)
+        {
+            GameObject go = Find(p.Who);
             Character foe = go != null ? go.GetComponent<Character>() : null;
             Humanoid me = m_character as Humanoid;
-            if (foe == null || foe.IsDead() || me == null) { EndFight(foe != null && foe.IsDead() ? "won" : "lost sight"); return; }
-            float d = Vector3.Distance(transform.position, foe.transform.position);
-            GameObject leader = _before == Task.Follow ? Find(_follow) : null;
-            Vector3 anchor = leader != null ? leader.transform.position : _home;
+            if (foe == null || foe.IsDead() || me == null) { EndFight((foe != null && foe.IsDead()) || (foe == null && p.FoeHealth < 0.35f) ? "won" : "lost sight"); return; } // (a slain foe is gone from the world at once: low health just before = won)
+            p.FoeHealth = foe.GetHealthPercentage();
+            Status = "б'ється";
+            Plan below = Below();
+            GameObject leader = below != null && below.Kind == Task.Follow ? Find(below.Who) : null;
+            Vector3 anchor = leader != null ? leader.transform.position : p.Home;
             if (Vector3.Distance(foe.transform.position, anchor) > Leash && _fight != Fight.Hunt) { EndFight("it ran too far"); return; }
+            float d = Vector3.Distance(transform.position, foe.transform.position);
+            bool farWeapon = NpcGear.Ranged(me != null ? me.GetCurrentWeapon() : null);
+            if (!InWatch(foe.transform.position) && !(_hurtBy == foe && Time.time - _hurtAt < 5f) && (d > (farWeapon ? 22f : 8f) || !InWatch(transform.position))) { EndFight("left its watch"); return; } // (back to its post / its base — not the moment a foe steps over its edge: one with a bow shoots on while it is in range, the user saw a guard aim and walk off)
+            if (_fight == Fight.Wary && d > BackOff) { p.Kind = Task.Flee; p.BestAt = 0f; p.Since = Time.time; Npcs.Log(Name() + ": backs off again"); return; } // (the foe fell back: away again)
+            NpcActor self = Actor;
+            if (self != null && self.Vitals != null && self.Vitals.Retreats) { DrawStop(me); p.Kind = Task.Flee; p.BestAt = 0f; p.Since = Time.time; Npcs.Log(Name() + ": hurt — falls back"); return; } // (healed, it comes back: NpcVitals)
+            if (self != null && self.Gear != null) { self.Gear.Draw(me); self.Gear.Wield(me, d > 3f); } // (off its back; the far weapon unless the foe is on it, the near one then)
             ItemDrop.ItemData weapon = me.GetCurrentWeapon();
+            if (NpcGear.Ranged(weapon)) { Shoot(dt, p, foe, me, weapon, d); return; }
+            DrawStop(me);
             float reach = weapon != null ? Mathf.Max(1.6f, weapon.m_shared.m_aiAttackRange) : 1.6f;
             if (d > reach)
             {
-                MoveTo(dt, foe.transform.position, reach * 0.8f, true);
-                if (Time.time - _foeSince > 40f) { EndFight("could not reach it"); return; }
+                Move(dt, foe.transform.position, reach * 0.8f, Pace.Run);
+                if (Time.time - p.Since > 40f) EndFight("could not reach it");
                 return;
             }
             StopMoving();
@@ -249,122 +1050,507 @@ namespace HuginWhispers
                 m_character.StartAttack(foe, false);
         }
 
+        // ---------------------------------------------------------------- shooting (a bow drawn as a player draws it; a crossbow
+        // shot when its reload time is up). Not too near (it steps back), not too far, and only with a clear line to the foe.
+        private static readonly System.Reflection.FieldInfo DrawTimeField = HarmonyLib.AccessTools.Field(typeof(Humanoid), "m_attackDrawTime");
+        private float _drawn;
+        private static int _sightMask;
+
+        private void Shoot(float dt, Plan p, Character foe, Humanoid me, ItemDrop.ItemData weapon, float d)
+        {
+            Status = "стріляє";
+            bool bow = weapon.m_shared.m_attack.m_bowDraw;
+            float far = bow ? 18f : 22f;
+            Vector3 aim = foe.GetCenterPoint();
+            if (_sightMask == 0) _sightMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain");
+            bool clear = !Physics.Linecast(m_character.GetEyePoint(), aim, _sightMask, QueryTriggerInteraction.Ignore);
+            if ((d > far || !clear) && Time.time - p.Since > 40f) { DrawStop(me); EndFight("could not reach it"); return; } // (no line to it all that while: given up)
+            if (d > far || !clear) { DrawStop(me); Move(dt, foe.transform.position, Mathf.Min(far * 0.6f, d - 1f), Pace.Run); return; } // (nearer, or round to where it can see it)
+            if (d < 5f) { DrawStop(me); Vector3 away = transform.position - foe.transform.position; away.y = 0f; Move(dt, transform.position + away.normalized * 5f, 0.5f, Pace.Run); return; } // (too near for a shot: a step back)
+            StopMoving();
+            LookAt(aim);
+            if (!IsLookingAt(aim, 12f) || m_character.InAttack()) return;
+            if (!bow)
+            {
+                float reload = Mathf.Max(1.5f, weapon.m_shared.m_attack.m_reloadTime > 0f ? weapon.m_shared.m_attack.m_reloadTime * 1.2f : 3f);
+                if (Time.time - weapon.m_lastAttackTime > reload) m_character.StartAttack(foe, false);
+                return;
+            }
+            if (_drawn <= 0f)
+            {
+                if (Time.time - weapon.m_lastAttackTime < 0.6f) return;
+                if (!weapon.m_shared.m_attack.StartDraw(me, weapon)) return; // (no arrows left: its near weapon takes over — NpcGear)
+                _drawn = 0.001f;
+            }
+            _drawn += dt * NpcKnack.Of(Actor, "bow"); // (a good archer draws quicker)
+            if (DrawTimeField != null) DrawTimeField.SetValue(me, _drawn);
+            ZSyncAnimation za = m_animator; // (the game's own, found once)
+            string state = weapon.m_shared.m_attack.m_drawAnimationState;
+            if (za != null && !string.IsNullOrEmpty(state)) { za.SetBool(state, true); za.SetFloat("drawpercent", me.GetAttackDrawPercentage()); }
+            if (me.GetAttackDrawPercentage() >= 0.98f) { m_character.StartAttack(foe, false); DrawStop(me); }
+        }
+
+        private void DrawStop(Humanoid me)
+        {
+            if (_drawn <= 0f || me == null) return;
+            _drawn = 0f;
+            if (DrawTimeField != null) DrawTimeField.SetValue(me, 0f);
+            ItemDrop.ItemData w = me.GetCurrentWeapon();
+            ZSyncAnimation za = m_animator; // (the game's own, found once)
+            if (w != null && za != null && !string.IsNullOrEmpty(w.m_shared.m_attack.m_drawAnimationState)) za.SetBool(w.m_shared.m_attack.m_drawAnimationState, false);
+        }
+
+        // its health ran out (NpcVitals): whatever it did ends, a fight or a flight first
+        internal void Downed()
+        {
+            DrawStop(m_character as Humanoid);
+            NpcGear.AtEase(Actor, m_character as Humanoid); // (down: its weapons away — not held when it gets up)
+            _plans[(int)Layer.Fight] = null; _hurtBy = null;
+            Leave(_cur); _cur = null;
+            if (Body != null && Body.ClipBusy) Body.Clip(""); // (it falls: no gesture left on it when it gets up)
+            StopMoving();
+        }
+
+        // away from the foe: a resident towards its home when home is the other way, else straight away; safe (the foe
+        // gone, or SafeRange off for 4 s): back to what it was doing; never longer than a minute
+        private void Fleeing(float dt, Plan p)
+        {
+            GameObject go = Find(p.Who);
+            Character foe = go != null ? go.GetComponent<Character>() : null;
+            if (foe == null || foe.IsDead()) { EndFight("safe"); return; }
+            Vector3 me = transform.position, from = foe.transform.position;
+            float d = Utils.DistanceXZ(me, from);
+            if (d > SafeRange)
+            {
+                if (p.BestAt <= 0f) p.BestAt = Time.time;
+                if (Time.time - p.BestAt > 4f) { EndFight("safe"); return; }
+                StopMoving(); LookAt(foe.GetCenterPoint()); Status = "озирається";
+                return;
+            }
+            p.BestAt = 0f;
+            if (_fight == Fight.Wary && (d < (Actor != null ? NpcPersona.Of(Actor).CornerAt : CornerRange) || (_hurtBy == foe && Time.time - _hurtAt < 1.5f)))
+            {
+                p.Kind = Task.Attack; p.Since = Time.time; p.Home = me; // (caught: it turns and fights)
+                Status = "відбивається"; Npcs.Log(Name() + ": cornered — fights back " + foe.m_name);
+                return;
+            }
+            if (Time.time - p.Since > 60f) { EndFight("ran long enough"); return; }
+            Vector3 away = me - from; away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = transform.forward;
+            Vector3 to = me + away.normalized * 8f;
+            NpcActor a = Actor;
+            Vector3 shelter;
+            if (Shelter(me, from, out shelter)) { Move(dt, shelter, 2.5f, Pace.Run); Status = "біжить до захисту"; return; }
+            if (a != null && NpcResident.Is(a))
+            {
+                Vector3 home = NpcRules.Home(a);
+                if (Utils.DistanceXZ(home, from) > d + 2f) to = home; // (home is the other way from the foe: run home)
+            }
+            Move(dt, to, 1f, Pace.Run);
+            Status = "тікає";
+        }
+
+        // someone to run to: a player or a fighter (not down) within 30 m, not on the foe's side of it; looked for once a second
+        private float _shelterAt; private bool _shelterOk; private Vector3 _shelter;
+        private bool Shelter(Vector3 me, Vector3 foe, out Vector3 at)
+        {
+            if (Time.time - _shelterAt < 1f) { at = _shelter; return _shelterOk; }
+            _shelterAt = Time.time; _shelterOk = false;
+            Vector3 toFoe = foe - me; toFoe.y = 0f; toFoe.Normalize();
+            float best = 30f * 30f;
+            foreach (Player pl in Player.GetAllPlayers()) if (pl != null && !pl.IsDead()) Consider(pl.transform.position, me, toFoe, ref best);
+            foreach (NpcActor o in NpcActor.Live)
+            {
+                if (o == null || o.Mind == null || o.Mind == this || (o.Vitals != null && o.Vitals.Down)) continue;
+                Fight f = o.Mind.Style;
+                if (f == Fight.Defend || f == Fight.Hunt) Consider(o.transform.position, me, toFoe, ref best);
+            }
+            at = _shelter;
+            return _shelterOk;
+        }
+
+        private void Consider(Vector3 p, Vector3 me, Vector3 toFoe, ref float best)
+        {
+            Vector3 d = p - me; d.y = 0f;
+            float sq = d.sqrMagnitude;
+            if (sq >= best || (sq > 4f && Vector3.Dot(d.normalized, toFoe) > 0.6f)) return; // (past the foe: not that way)
+            best = sq; _shelter = p; _shelterOk = true;
+        }
+
+        internal float FoughtAt = -1000f; internal bool FoughtWon, FoughtRan; // (its last fight, for its words: NpcVoice)
+
         private void EndFight(string why)
         {
+            FoughtAt = Time.time; FoughtWon = why == "won"; FoughtRan = Runs;
+            NpcGear.AtEase(Actor, m_character as Humanoid); // (its weapons back on its back — a guard keeps them in hand)
             Npcs.Log(Name() + ": fight over (" + why + ")");
+            Set(Layer.Fight, null);
+            _hurtBy = null;
             StoryBus.Raise("npc_fight_over", Name(), why == "won" ? 1 : 0, transform.position);
+            NpcActor me = Actor; // (a fight at home won or run from: remembered — one that only lost sight of its foe, not)
+            if (me != null && NpcResident.Is(me) && (why == "won" || FoughtRan) && Utils.DistanceXZ(transform.position, NpcRules.Home(me)) < 40f) NpcMemory.Remember(me, why == "won" ? "fight_won" : "fight_lost", 0L, "");
             if (Actor != null) Actor.FireRule("fight_over");
-            _foe = ZDOID.None; _hurtBy = null;
-            _task = _before == Task.Attack ? Task.Idle : _before;
-            _best = float.MaxValue; _bestAt = Time.time;
-            Status = "стоїть";
         }
 
         // hit (even when it cannot be hurt: NpcDamagePatch tells it): a foe to answer, unless it is a player
         internal void HurtBy(Character attacker)
         {
-            if (attacker == null || attacker == m_character) return;
+            if (attacker == null || attacker == m_character || Now == Task.Travel) return; // (on its way: nothing reaches it)
             _hurtBy = attacker; _hurtAt = Time.time;
-            if (!attacker.IsPlayer() && _fight != Fight.Off && _task != Task.Attack) StartFight(attacker);
+            if (!attacker.IsPlayer() && _fight != Fight.Off && _plans[(int)Layer.Fight] == null) StartFight(attacker); // (a fighter answers, a peaceful or wary one runs — a wary one turns on it once caught)
         }
 
         // ---------------------------------------------------------------- small things
-        private void Arrived()
+        private void Arrived(Plan p)
         {
             StopMoving();
-            _task = Task.Idle;
+            if (_feet != null) _feet.There("ok");
+            // a whim's walk to somewhere to do a thing there (wash: kneels at the water): its pose there, until the whim ends
+            if ((_curLayer == Layer.Whim || _curLayer == Layer.Scene) && !string.IsNullOrEmpty(p.Pose)) { bool whim = _curLayer == Layer.Whim; p.Kind = Task.Pose; p.Started = false; if (whim && Actor != null && UnityEngine.Random.value < 0.4f) NpcChatter.Mutter(Actor, "wash"); return; } // (a scene's walk there too: one in need hiding where it was shown — NpcRescue)
+            p.Kind = Task.Idle; p.Started = false; // (it waits there, on the same layer, until let go)
+            if (_curLayer == Layer.Order || _curLayer == Layer.Job || _curLayer == Layer.Routine) Save();
             Status = "прийшов";
             StoryBus.Raise("npc_arrived", Name(), 0, transform.position);
         }
 
         // stepped to the place (on the ground), not left standing in a hole: the scene goes on
-        private void Unstick(Vector3 to, string why)
+        // true: it was put there; false: someone could see it jump — it stays (the caller makes do: sits where it is…)
+        // the last safety (NpcWalk: it meant to walk a long while and got nowhere — an island, a nook nothing eases it out
+        // of): home, by its heart, with the game's puff before and after where someone sees it; what it was after when it
+        // stuck is let go (a whim ended, its errand afresh) so it does not walk into the same trap — then its day goes on
+        internal void HomeFromStuck(string why)
         {
-            float h;
-            if (ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(to, out h)) to.y = h + 0.1f;
-            transform.position = to;
-            if (m_body != null) { m_body.position = to; m_body.linearVelocity = Vector3.zero; }
-            _best = float.MaxValue; _bestAt = Time.time;
-            Npcs.Log(Name() + ": " + why + " — stepped to " + Mathf.RoundToInt(to.x) + "," + Mathf.RoundToInt(to.z));
-            StoryBus.Raise("npc_stuck", Name(), 0, to);
+            NpcActor a = Actor;
+            if (a == null || !NpcResident.Is(a) || _curLayer == Layer.Scene) return; // (a scene holds it: the story says where it goes)
+            Vector3 home = NpcKit.Floor(NpcRules.Home(a)) + Vector3.up * 0.1f;
+            Vector3 v;
+            if (Pathfinding.instance != null && NpcKit.Valid(out v, home, 4f, m_pathAgentType)) home = v + Vector3.up * 0.1f;
+            // the last safety (NpcWalk: it got nowhere Home s unseen, HomeSeen s seen): home — seen, it goes and comes in a
+            // puff of smoke (the user 2026-11-02: a body held in a wall or a thing is never left there)
+            bool seen = NpcWalk.Watched(transform.position) || NpcWalk.Watched(home);
+            if (Body != null && Body.Attached) Body.Detach(true);
+            if (seen) a.Appear();
+            NpcWalk.Jumped(this, transform.position, home, seen ? "додому з димком (застряг надовго)" : "додому (застряг)");
+            transform.position = home;
+            if (m_body != null) { m_body.position = home; m_body.linearVelocity = Vector3.zero; }
+            if (seen) a.Appear();
+            if (_curLayer == Layer.Whim) Set(Layer.Whim, null);
+            else if (_curLayer == Layer.Job && _workerL != null) _workerL.Reset();
+            if (_cur != null) { _cur.Best = float.MaxValue; _cur.BestAt = Time.time; }
+            Npcs.Log(Name() + ": " + why + " — home to its heart" + (seen ? " (seen: in a puff)" : ""));
+            StoryBus.Raise("npc_home_from_stuck", Name(), seen ? 1 : 0, home);
         }
 
-        private void Begin(Task t, string status)
+        private bool Unstick(Vector3 to, string why, bool told = false)
         {
-            StandUp();
-            if (t != Task.Idle) Actor.Emote("", false);
-            _task = t; Status = status;
-            _best = float.MaxValue; _bestAt = Time.time;
+            if (!told && (NpcWalk.Watched(transform.position) || NpcWalk.Watched(to)) && Utils.DistanceXZ(transform.position, to) > 1.5f) // (never a jump before a player's eyes — here or there; told to (tp): always)
+            {
+                if (_cur != null) { _cur.Best = float.MaxValue; _cur.BestAt = Time.time; }
+                Npcs.Log(Name() + ": " + why + " — seen, not put there; makes do where it is");
+                StoryBus.Raise("npc_stuck", Name(), 1, transform.position);
+                return false;
+            }
+            if (_feet != null) _feet.Stuck("put there (unseen): " + why);
+            if (Body != null && Body.Attached) Body.Detach(true);
+            to = NpcKit.Floor(to) + Vector3.up * 0.1f; // (the floor there, not the roof over it)
+            NpcWalk.Jumped(this, transform.position, to, "перенесено (застряг)");
+            transform.position = to;
+            if (m_body != null) { m_body.position = to; m_body.linearVelocity = Vector3.zero; }
+            if (_cur != null) { _cur.Best = float.MaxValue; _cur.BestAt = Time.time; }
+            Npcs.Log(Name() + ": " + why + " — stepped to " + Mathf.RoundToInt(to.x) + "," + Mathf.RoundToInt(to.z));
+            StoryBus.Raise("npc_stuck", Name(), 0, to);
+            return true;
+        }
+
+        // ---------------------------------------------------------------- kept in its ZDO (Order, Job, Routine)
+        private static readonly Layer[] Kept = { Layer.Routine, Layer.Job, Layer.Order }; // (a fight or a scene is never taken up again after a reload)
+
+        private void Save()
+        {
+            ZNetView nv = Nv;
+            if (nv == null || !nv.IsValid() || !nv.IsOwner()) return;
+            // by the layer's name, not its number: a layer added or moved later does not turn old saves into another one
+            Fight kept = Fight.Defend; foreach (Layer l in Kept) if (_fightSet[(int)l]) kept = _fightBy[(int)l]; // (its own way of fighting: a scene's is not kept — Kept goes up from its day)
+            StringBuilder sb = new StringBuilder("fight=").Append(kept.ToString().ToLowerInvariant());
+            foreach (Layer l in Kept)
+            {
+                Plan p = _plans[(int)l];
+                if (p != null) sb.Append(';').Append(l.ToString().ToLowerInvariant()).Append('=').Append(p.Code());
+            }
+            if (_wayLeft != null) sb.Append(";way=").Append(_wayLeft.Code());
+            nv.GetZDO().Set(KPlans, sb.ToString());
+        }
+
+        private void Load()
+        {
+            ZNetView nv = Nv;
+            string s = nv != null && nv.IsValid() ? nv.GetZDO().GetString(KPlans, "") : "";
+            if (s.Length == 0) { Unkept(null); return; } // (nothing kept: no task's marks left on it either)
+            _kept = true;
+            foreach (string part in s.Split(';'))
+            {
+                int eq = part.IndexOf('=');
+                if (eq <= 0) continue;
+                string key = part.Substring(0, eq), val = part.Substring(eq + 1);
+                if (key == "fight") { foreach (Fight f in Enum.GetValues(typeof(Fight))) if (f.ToString().ToLowerInvariant() == val) { _fightBy[(int)Layer.Routine] = f; _fightSet[(int)Layer.Routine] = true; _fightOwner[(int)Layer.Routine] = Owner(Layer.Routine); } continue; }
+                if (key == "way") { Plan w = Plan.Parse(val); if (w != null && w.Kind == Task.Travel) _wayLeft = w; continue; }
+                foreach (Layer l in Kept)
+                {
+                    if (l.ToString().ToLowerInvariant() != key) continue;
+                    if (l == Layer.Routine && NpcResident.Is(Actor)) continue; // (a resident's day comes from the hour: picked anew — a spot kept from the last time is stale, the fire it found then is not the one now)
+                    Plan p = Plan.Parse(val);
+                    if (p != null && p.Kind == Task.Follow) { if (p.Leader == 0L) continue; p.Who = ZDOID.None; } // (a body's id means nothing after a reload: the player it followed is looked for by its number; one with no number: not kept)
+                    if (p != null) _plans[(int)l] = p;
+                }
+            }
+            if (_plans[(int)Layer.Order] == null && _wayLeft != null) { _plans[(int)Layer.Order] = _wayLeft; _wayLeft = null; } // (the order over its way not kept — whom it followed: on its way again)
+            Plan order = _plans[(int)Layer.Order];
+            Unkept(order); // (a mark left from a task not kept)
+            Npcs.Log(Name() + ": went on with what it was doing (" + s + ")");
         }
 
         // ---------------------------------------------------------------- orders
-        internal void Do(string order)
+        internal void Do(string order) { Do(order, Layer.Order); }
+
+        // its template's way of fighting, when it has none kept of its own (a fresh NPC; not one reloaded)
+        internal void Default(string fight)
         {
-            if (string.IsNullOrEmpty(order)) return;
+            if (!_loaded) { _loaded = true; Load(); }
+            if (!_kept) Do("fight " + fight, Layer.Routine);
+        }
+
+        internal void Do(string order, Layer layer) { Do(order, layer, null); }
+
+        private static readonly HashSet<string> PlanWords = new HashSet<string> { "go", "follow", "wander", "sit", "sleep", "stand", "stay", "free", "travel" };
+        internal void Do(string order, Layer layer, string whose)
+        {
+            if (string.IsNullOrEmpty(order) || NotHere(order)) return;
             string[] w = order.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (w.Length == 0) return;
+            if (!_loaded) { _loaded = true; Load(); } // (an order before its first thought: what it kept first, the order over it)
+            if (string.IsNullOrEmpty(whose)) whose = Owner(layer);
+            bool plan = PlanWords.Contains(w[0]) || (w[0] == "emote" && Array.IndexOf(w, "loop") > 1);
+            if (plan && !May(layer, whose)) { Npcs.Log(Name() + ": [" + layer + "] «" + whose + "» may not take it from «" + _plans[(int)layer].Whose + "»: " + order); return; }
+            _doWhose = whose;
+            try { Do0(w, order, layer); } finally { _doWhose = null; }
+        }
+
+        private void Do0(string[] w, string order, Layer layer)
+        {
             Vector3 v;
             switch (w[0])
             {
                 case "go":
                     if (!Vec(w, 1, out v)) return;
-                    _to = v; _run = Array.IndexOf(w, "run") > 0; _near = 1.2f;
-                    Begin(Task.Go, _run ? "біжить" : "іде");
+                    int ni = Array.IndexOf(w, "near");
+                    Set(layer, new Plan { Kind = Task.Go, To = v, Run = Array.IndexOf(w, "run") > 0, Near = ni > 0 && w.Length > ni + 1 ? Mathf.Clamp(Errands.F(w[ni + 1], 1.2f), 0.3f, 10f) : 1.2f });
                     break;
                 case "follow":
-                    _follow = Id(w, 1); if (_follow.IsNone()) return;
-                    _keep = w.Length > 2 ? Mathf.Clamp(Errands.F(w[2], 3f), 1.5f, 20f) : 3f;
-                    Begin(Task.Follow, "іде слідом");
+                    ZDOID who = Id(w, 1); if (who.IsNone()) return;
+                    GameObject led = Find(who); Player leader = led != null ? led.GetComponent<Player>() : null;
+                    Set(layer, new Plan { Kind = Task.Follow, Who = who, Leader = leader != null ? leader.GetPlayerID() : 0L, Keep = w.Length > 2 ? Mathf.Clamp(Errands.F(w[2], 3f), 1.5f, 20f) : 3f });
                     break;
                 case "wander":
-                    _radius = w.Length > 1 ? Mathf.Clamp(Errands.F(w[1], 6f), 2f, 40f) : 6f;
-                    _home = Vec(w, 2, out v) ? v : transform.position;
-                    _to = transform.position; _nextWander = Time.time + 1f;
-                    Begin(Task.Wander, "походжає");
+                    Set(layer, new Plan { Kind = Task.Wander, Radius = w.Length > 1 ? Mathf.Clamp(Errands.F(w[1], 6f), 2f, 40f) : 6f, Home = Vec(w, 2, out v) ? v : transform.position });
                     break;
                 case "sit":
-                    Vector3 near = Vec(w, 1, out v) ? v : transform.position;
-                    Begin(Task.Sit, "сідає");
-                    _chair = NearestChair(near, 4f); _seated = false; _to = near;
-                    if (_chair == null) Npcs.Log(Name() + ": no seat near — sits on the ground");
+                    Set(layer, new Plan { Kind = Task.Sit, To = Vec(w, 1, out v) ? v : transform.position });
                     break;
-                case "stand": case "stay": Begin(Task.Idle, "стоїть"); StopMoving(); break;
-                case "look": _look = w.Length > 1 && w[1] == "none" ? ZDOID.None : Id(w, 1); if (_look.IsNone()) _hasLookAt = false; break;
-                case "lookat": if (Vec(w, 1, out v)) { _lookAt = v; _hasLookAt = true; _look = ZDOID.None; } break;
-                case "tp": if (Vec(w, 1, out v)) Unstick(v, "told to step"); break;
+                case "sleep":
+                    ZDOID bedId = Id(w, 1); if (bedId.IsNone()) return;
+                    Set(layer, new Plan { Kind = Task.Sleep, Who = bedId });
+                    break;
+                case "stand": case "stay":
+                    Set(layer, new Plan { Kind = Task.Idle, To = transform.position });
+                    break;
+                case "free": Release(layer, _doWhose); break; // (its plan, its look and way of fighting on this layer, a clip a scene left looping)
+                case "travel": // travel x y z heart|hall [user:id]
+                    if (!Vec(w, 1, out v)) return;
+                    Set(layer, new Plan { Kind = Task.Travel, To = v, Pose = w.Length > 4 ? w[4] : "hall", Who = Id(w, 5) }); // (where to: its module's word — NpcTravel)
+                    break;
+                case "clip": // clip <name>|none [seconds] — one of our clips on its body (NpcBody.Clip), over what it does
+                    if (w.Length < 2 || Body == null) return;
+                    if (!Body.Clip(w[1], w.Length > 2 ? Errands.F(w[2], 0f) : 0f)) Npcs.Log(Name() + ": no clip «" + w[1] + "»");
+                    break;
                 case "emote":
                     if (w.Length < 2) return;
-                    if (_task != Task.Idle && _task != Task.Wander) Begin(Task.Idle, "стоїть");
-                    StopMoving();
-                    Actor.Emote(w[1] == "none" ? "" : w[1], Array.IndexOf(w, "loop") > 1);
-                    break;
-                case "fight":
-                    _fight = w.Length > 1 && w[1] == "off" ? Fight.Off : w.Length > 1 && w[1] == "hunt" ? Fight.Hunt : Fight.Defend;
-                    if (_fight == Fight.Off && _task == Task.Attack) EndFight("told to stop");
+                    if (Array.IndexOf(w, "loop") > 1) { Set(layer, new Plan { Kind = Task.Pose, Pose = w[1], To = transform.position }); break; }
+                    // a one-off gesture is not a plan: it plays over what it does (not on a seat, not mid-fight)
+                    bool sat = _cur != null && _cur.Kind == Task.Sit && _cur.Seated;
+                    if (!sat && Now != Task.Attack && Body != null) Body.Gesture(w[1] == "none" ? "" : w[1], false);
                     break;
                 case "attack":
                     GameObject go = Find(Id(w, 1));
                     Character c = go != null ? go.GetComponent<Character>() : null;
                     if (c != null && !c.IsDead()) StartFight(c);
                     break;
+                case "look": { int i = (int)layer; _lookWho[i] = w.Length > 1 && w[1] == "none" ? ZDOID.None : Id(w, 1); _lookPtOn[i] = false; _lookOwner[i] = _doWhose; _lookTill[i] = Array.IndexOf(w, "keep") > 1 ? float.MaxValue : Time.time + LookFor; break; } // (a look at someone is a while, not for good: «keep» — a scene's; on its layer)
+                case "lookat": if (Vec(w, 1, out v)) { int i = (int)layer; _lookPt[i] = v; _lookPtOn[i] = true; _lookWho[i] = ZDOID.None; _lookOwner[i] = _doWhose; } break;
+                case "tp": if (Vec(w, 1, out v)) Unstick(v, "told to step", true); break;
+                case "fight":
+                    string fw = w.Length > 1 ? w[1] : "flee";
+                    _fightBy[(int)layer] = fw == "off" ? Fight.Off : fw == "hunt" ? Fight.Hunt : fw == "defend" ? Fight.Defend : fw == "wary" ? Fight.Wary : Fight.Flee; _fightOwner[(int)layer] = _doWhose; _fightSet[(int)layer] = true;
+                    if (_fight == Fight.Off && _plans[(int)Layer.Fight] != null) EndFight("told to stop");
+                    Save();
+                    break;
                 default: Npcs.Log(Name() + ": unknown order «" + order + "»"); return;
             }
-            Npcs.Log(Name() + ": " + order);
+            Npcs.Log(Name() + ": [" + layer + "] " + order);
         }
 
-        private static Chair NearestChair(Vector3 at, float range)
+        // a free bench or chair (not on a ship: those move) near the spot
+        // the nearest free seat round a spot: every seat of every piece there (a chair, a stool, a bench's places, a throne —
+        // a seat is often a part of its piece apart from what you hit, so the pieces are asked, not what is hit)
+        private static readonly List<Piece> SeatPieces = new List<Piece>();
+        // a seat of any kind there, taken or not (its own, while it sits on it: NpcToil)
+        internal static bool SeatNear(Vector3 at, float range)
         {
-            Chair best = null;
-            float bd = range;
-            foreach (Collider col in Physics.OverlapSphere(at, range, LayerMask.GetMask("piece", "piece_nonsolid", "Default", "Default_small")))
+            SeatPieces.Clear();
+            Piece.GetAllPiecesInRadius(at, range, SeatPieces);
+            foreach (Piece pc in SeatPieces) if (pc != null && pc.GetComponentInChildren<Chair>() != null) return true;
+            return false;
+        }
+
+
+        // a meal's seat round its dining table (NpcMeals asks before it sets off: one it can walk to)
+        internal static Chair MealSeat(Vector3 table) { return NearestChair(table, MealSeats, true); }
+
+        // a seat in the same room as the table: nothing tall (a wall, a door) between them at chest height — the table,
+        // the seat and the furniture round it do not count. Not the way finder's paths: it maps the land a bit at a time,
+        // only where someone walked lately, and answers «no way» to a place it has not mapped yet (2026-10-31)
+        private static readonly int Walls = LayerMask.GetMask("piece", "Default", "static_solid");
+        private static readonly RaycastHit[] WallHits = new RaycastHit[16];
+        private static bool SameRoom(Vector3 table, Vector3 seat, Chair ch)
+        {
+            Vector3 a = table + Vector3.up * 1.2f, b = seat + Vector3.up * 0.9f;
+            Vector3 dir = b - a; float len = dir.magnitude;
+            if (len < 0.1f) return true;
+            int n = Physics.RaycastNonAlloc(a, dir / len, WallHits, len, Walls, QueryTriggerInteraction.Ignore);
+            Piece own = ch.GetComponentInParent<Piece>();
+            for (int i = 0; i < n; i++)
             {
-                Chair ch = col.GetComponentInParent<Chair>();
-                if (ch == null || ch.m_inShip) continue;
-                Transform s = ch.m_attachPoint != null ? ch.m_attachPoint : ch.transform;
-                float d = Vector3.Distance(s.position, at);
-                if (d < bd) { bd = d; best = ch; }
+                Collider c = WallHits[i].collider;
+                if (c == null || (own != null && c.GetComponentInParent<Piece>() == own)) continue;
+                if (c.bounds.size.y >= 1.6f) return false; // (tall: a wall, a door, a pillar — furniture is lower)
             }
-            return best;
+            return true;
+        }
+
+        private static readonly Collider[] Near = new Collider[16];
+        private static bool Crowded(Vector3 p, Piece own)
+        {
+            int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.45f, p + Vector3.up * 1.5f, 0.3f, Near, Walls, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++) if (Near[i] != null && (own == null || Near[i].GetComponentInParent<Piece>() != own)) return true;
+            return false;
+        }
+
+        // the spot by a seat to walk to: before it, beside it or behind it — the free one nearest «from» (a bench against
+        // a table is sat on from its open side; a chair in the middle of a room from wherever it comes)
+        private static bool SideOf(Chair ch, Vector3 from, out Vector3 side)
+        {
+            Transform pt = ch.m_attachPoint != null ? ch.m_attachPoint : ch.transform;
+            Vector3 at = pt.position, fwd = Vector3.ProjectOnPlane(pt.forward, Vector3.up);
+            if (fwd.sqrMagnitude < 1e-4f) fwd = Vector3.forward;
+            fwd.Normalize();
+            side = at; bool any = false; float best = float.MaxValue;
+            Piece own = ch.GetComponentInParent<Piece>();
+            foreach (float ang in new[] { 0f, 90f, -90f, 180f })
+            {
+                Vector3 p = NpcKit.Floor(at + Quaternion.Euler(0f, ang, 0f) * fwd * 0.75f);
+                if (Mathf.Abs(p.y - at.y) > 1.2f) continue; // (off a ledge, up a wall)
+                if (Crowded(p, own)) continue; // (a table, a wall there: no room to stand — the seat itself not counted)
+                float d = (ang == 0f ? 0f : 0.4f) + Utils.DistanceXZ(p, from); // (before it a little rather)
+                if (d < best) { best = d; side = p; any = true; }
+            }
+            return any;
+        }
+        internal static Vector3 SeatPoint(Chair ch) { return ch.m_attachPoint != null ? ch.m_attachPoint.position : ch.transform.position; }
+
+        private static readonly int PerfSeat = NpcPerf.Id("seat search (пошук сидіння)");
+        private static Chair NearestChair(Vector3 at, float range, bool onFoot, NpcMind me = null)
+        {
+            long perf = NpcPerf.Now();
+            try { return NearestChair0(at, range, onFoot, me); } finally { NpcPerf.Add(PerfSeat, perf); }
+        }
+
+        private static Chair NearestChair0(Vector3 at, float range, bool onFoot, NpcMind me)
+        {
+            SeatPieces.Clear();
+            Piece.GetAllPiecesInRadius(at, range, SeatPieces);
+            List<KeyValuePair<float, Chair>> free = new List<KeyValuePair<float, Chair>>();
+            foreach (Piece pc in SeatPieces)
+            {
+                if (pc == null) continue;
+                foreach (Chair ch in pc.GetComponentsInChildren<Chair>())
+                {
+                    if (ch == null || ch.m_inShip) continue;
+                    Transform pt = ch.m_attachPoint != null ? ch.m_attachPoint : ch.transform;
+                    float d = Vector3.Distance(pt.position, at);
+                    if (d < range && !Taken(pt, me) && !NpcWalk.Avoided(pt.position) && !NpcWalk.Avoided(ch.transform.position)) free.Add(new KeyValuePair<float, Chair>(d, ch));
+                }
+            }
+            free.Sort((x, y) => x.Key.CompareTo(y.Key));
+            foreach (KeyValuePair<float, Chair> f in free)
+            {
+                if (!onFoot) return f.Value;
+                Transform pt = f.Value.m_attachPoint != null ? f.Value.m_attachPoint : f.Value.transform;
+                if (SameRoom(at, pt.position, f.Value)) return f.Value; // (round the table itself: surely its own — a way from a table's middle is not found, it stands in it; further: near on foot, the next house not)
+            }
+            return null;
+        }
+
+        // a spot of bare ground near this one: nothing built under it or round it (a bed, a table, a wall), else the spot
+        private static Vector3 ClearGround(Vector3 at)
+        {
+            int built = LayerMask.GetMask("piece", "piece_nonsolid");
+            for (int ring = 0; ring <= 3; ring++)
+                for (int i = 0; i < (ring == 0 ? 1 : 8); i++)
+                {
+                    Vector3 p = NpcKit.Floor(at + Quaternion.Euler(0f, i * 45f + ring * 20f, 0f) * Vector3.forward * (ring * 1.2f)); // (the floor it is on — a paved yard, a deck — not the land under it: the capsule sat inside the paving and everything was «built»)
+                    if (Mathf.Abs(p.y - at.y) > 1.2f) continue;
+                    if (!Busy(p, built)) return p;
+                }
+            return at;
+        }
+
+        // sat on the ground by a fire: facing it, not its back to it
+        private void FaceFire()
+        {
+            Fireplace best = null; float bd = 4f;
+            foreach (Collider c in Physics.OverlapSphere(transform.position, 4f, NpcKit.Built))
+            {
+                Fireplace f = c.GetComponentInParent<Fireplace>();
+                if (f == null || !f.IsBurning()) continue;
+                float d = Utils.DistanceXZ(f.transform.position, transform.position);
+                if (d < bd) { bd = d; best = f; }
+            }
+            if (best == null) return;
+            Vector3 d2 = best.transform.position - transform.position; d2.y = 0f;
+            if (d2.sqrMagnitude < 0.01f) return;
+            transform.rotation = Quaternion.LookRotation(d2.normalized); // (turned at once as it sits down: a turn by turns needs it to stand)
+            Rigidbody rb = GetComponent<Rigidbody>(); if (rb != null) rb.rotation = transform.rotation;
+        }
+
+        // something built in the way of sitting here — a fire is not (one sits by it), the floor under it neither
+        private static readonly Collider[] Round = new Collider[16];
+        private static bool Busy(Vector3 p, int mask)
+        {
+            int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.35f, p + Vector3.up * 1.2f, 0.4f, Round, mask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++) if (Round[i] != null && Round[i].GetComponentInParent<Fireplace>() == null) return true;
+            return false;
+        }
+
+        private static bool Taken(Transform seat, NpcMind me)
+        {
+            foreach (NpcActor o in NpcActor.Live) // (on its way to it: taken too — two went for one seat, the second put on the ground at last)
+            {
+                if (o == null || o.Mind == null || o.Mind == me) continue;
+                Plan q = o.Mind.Current;
+                if (q != null && q.Seat != null && (q.Seat.m_attachPoint != null ? q.Seat.m_attachPoint : q.Seat.transform) == seat) return true;
+            }
+            foreach (KeyValuePair<Character, NpcBody> kv in NpcBody.Held) if (kv.Value != null && kv.Value.Point == seat) return true;
+            foreach (Player p in Player.GetAllPlayers()) if (p != null && p.IsAttached() && Vector3.Distance(p.transform.position, seat.position) < 0.3f) return true;
+            return false;
         }
 
         private static bool Vec(string[] w, int at, out Vector3 v)
@@ -372,26 +1558,16 @@ namespace HuginWhispers
             v = Vector3.zero;
             if (w.Length < at + 3) return false;
             float x, y, z;
-            if (!float.TryParse(w[at], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out x)) return false;
-            if (!float.TryParse(w[at + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y)) return false;
-            if (!float.TryParse(w[at + 2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out z)) return false;
+            if (!float.TryParse(w[at], NumberStyles.Float, CultureInfo.InvariantCulture, out x)) return false;
+            if (!float.TryParse(w[at + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)) return false;
+            if (!float.TryParse(w[at + 2], NumberStyles.Float, CultureInfo.InvariantCulture, out z)) return false;
             v = new Vector3(x, y, z);
             return true;
         }
 
-        // "user:id" → a ZDOID
-        private static ZDOID Id(string[] w, int at)
-        {
-            if (w.Length <= at) return ZDOID.None;
-            int c = w[at].IndexOf(':');
-            long u; uint i;
-            if (c <= 0 || !long.TryParse(w[at].Substring(0, c), out u) || !uint.TryParse(w[at].Substring(c + 1), out i)) return ZDOID.None;
-            return new ZDOID(u, i);
-        }
+        private static ZDOID Id(string[] w, int at) { return w.Length > at ? NpcKit.Resolve(w[at]) : ZDOID.None; } // ("user:id")
 
-        internal static string IdOf(ZDOID id) { return id.UserID + ":" + id.ID; }
-
-        private static GameObject Find(ZDOID id) { return ZNetScene.instance != null && !id.IsNone() ? ZNetScene.instance.FindInstance(id) : null; }
+        private static GameObject Find(ZDOID id) { return NpcKit.Find(id); }
 
         private static Vector3 Eye(GameObject go)
         {
@@ -399,7 +1575,24 @@ namespace HuginWhispers
             return c != null ? c.GetEyePoint() : go.transform.position + Vector3.up * 1.6f;
         }
 
-        private string Name() { NpcActor a = Actor; return a != null ? (a.Tag.Length > 0 ? a.Tag : a.Id) : name; }
+        internal string Name() { NpcActor a = Actor; return a != null ? (a.Tag.Length > 0 ? a.Tag : a.Id) : name; }
+
+        // for the log, the window and the studio: «Order: іде слідом»
+        internal string Describe() { return (_cur != null ? LayerWord(_curLayer) + ": " : "") + Status; }
+
+        internal static string LayerWord(Layer l)
+        {
+            switch (l)
+            {
+                case Layer.Scene: return "сцена";
+                case Layer.Order: return "наказ";
+                case Layer.Fight: return "бій";
+                case Layer.Job: return "робота";
+                case Layer.Whim: return "примха";
+                case Layer.Routine: return "розпорядок";
+                default: return "дозвілля";
+            }
+        }
     }
 }
 #endif

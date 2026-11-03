@@ -517,12 +517,24 @@ namespace HuginWhispers
 
         private static void NestOdin(RectTransform col, Player p)
         {
+            NestOdinState(col, p);
+            TMP_Text note = T(col, Lang.T("Шкали милості з часом не спадають: шкалу обнуляє лише доручення її групи."), 13f, PSoft, F.Italic);
+            note.alignment = TextAlignmentOptions.BottomLeft;
+        }
+
+        private static void NestOdinState(RectTransform col, Player p)
+        {
             NwTitle(col);
             ErrandRun r = Errands.Of(p);
             if (r != null) { NestErrand(col, p, r); Spring(col); return; }
             PaperLabel(col, Lang.T("Воля Одіна"));
             string blocked = Nest.Blocked(p);
-            if (blocked != null) { NwTicking(T(col, blocked, 16f, PSoft, F.Italic), () => Nest.Blocked(Player.m_localPlayer)); Spring(col); return; } // (its time left ticks)
+            if (blocked != null)
+            {
+                NwTicking(T(col, blocked, 16f, PSoft, F.Italic), () => Nest.Blocked(Player.m_localPlayer)); // (its time left ticks)
+                if (Nest.CooldownLeft(p) > 0f) { PaperLabel(col, Lang.T("Як швидше")); T(col, Nest.HasteHelp(p), 14f, PSoft, F.Italic); }
+                Spring(col); return;
+            }
             if (Nest.OdinOver(_nwAt))
             {
                 T(col, Lang.T("Над гніздом золоте сяйво: Одін змилувався."), 19f, GoldInk, F.Head);

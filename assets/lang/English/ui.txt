@@ -3,19 +3,14 @@
 # Made and checked by tools/l10n.js: node tools/l10n.js sync (adds the new texts with an empty side), node tools/l10n.js check.
 Думка Хугіна	Hugin's Thought
 Хугін усе бачить і має що сказати.	Hugin sees everything and has something to say about it.
-Хугін бачить кожен твій крок і нічого не пропускає: бої, знахідки, рани, ворогів за кущами. Спитай — і почуєш, що про все це записано в його літописі. А коли довкола тихо, він згадає щось із того, що ви пройшли разом. Наведи приціл на іншого гравця — і думка буде про нього: хто він, що в нього в руках, що ви пройшли разом; а його ворон може й відповісти.	Hugin sees your every step and misses nothing: fights, finds, wounds, enemies behind the bushes. Ask, and you'll hear what his chronicle says about all of it. And when it's quiet, he'll recall something from the road you've walked together. Aim at another player and the thought is about them: who they are, what they hold, what you've been through together — and their raven may even answer.
 Розвідка	Scouting
 Мапа відкривається довкола, вороги позначаються на мапі.	The map opens up around you; enemies are marked on it.
-Хугін відлітає на розвідку, і мапа відкривається на {0} м довкола (з довірою до {1} м). Через {2} с він вертається на плече й розповідає, що бачив, і лише тоді на мапі з'являються позначки: вороги ближче {3} м — своїми трофеями на {4} с (боси блимають), родовища руди ближче {5} м — іконкою руди на {6} хв. Руду краю Хугін показує лише тоді, коли його бос уже переможений: мідь і олово після Прадавнього, залізо після Кістянки, срібло після Модер і так далі. Ще він помічає входи під землю — склепи, поховальні камери, печери, шахти — і позначає їх на мапі на той самий час.	Hugin flies off to scout, and the map opens {0} m around you (up to {1} m with trust). After {2} s he's back on your shoulder telling you what he saw, and only then do the marks appear: enemies closer than {3} m as their trophies for {4} s (bosses blink), ore deposits closer than {5} m as an ore icon for {6} min. Hugin only shows a land's ore once its boss is beaten: copper and tin after The Elder, iron after Bonemass, silver after Moder, and so on. He also spots the ways underground — crypts, burial chambers, caves, mines — and marks them for the same time.
 Світло Хугіна	Hugin's Light
 Над головою світляк, світить ширше за смолоскип.	A wisp over your head, shining wider than a torch.
-Над головою літає світляк і світить на {0}% ширше за смолоскип, а від нього тихо розлітаються руни. Туман Туманних земель він не розганяє. Натисни дар ще раз — і світляк згасне; перезарядка однаково рахується від запуску.	A wisp hovers over your head and shines {0}% wider than a torch, quietly shedding runes. It does not clear the Mistlands' mist. Use the gift again to put it out; the cooldown still counts from the start.
 Злет Хугіна	Hugin's Leap
 Підкидає високо вгору; поки діє, кожен стрибок такий, а падіння не шкодить.	Throws you high into the air; while it lasts, every jump is like that, and falls don't hurt.
-Підкидає на {0} м угору, а на бігу — дугою вперед приблизно на {1} м; у повітрі кермуєш клавішами руху. Поки діє, кожен стрибок із землі такий самий, а падіння не шкодить. Скінчиться в повітрі — приземлення болітиме, як завжди.	Throws you {0} m up, or about {1} m forward in an arc when running; in the air you steer with the movement keys. While it lasts, every jump from the ground is the same, and falls don't hurt. If it ends in mid-air, the landing hurts as usual.
 Тінь	Shadow
 Монстри тебе не бачать і не чують; підкрадись і вдар зі спини.	Monsters can neither see nor hear you; sneak up and strike from behind.
-Хугін ховає тебе в тінь: монстри не бачать і не чують тебе{0}, а ті, що гналися, втрачають слід. Удар, постріл чи закляття знімають тінь, а перший удар — з тіні: ×{1} шкоди{2}; бонуси PoV до скритної атаки додаються зверху. Біг, стрибки, двері, їжа та інше тінь не знімають.	Hugin hides you in shadow: monsters can neither see nor hear you{0}, and those chasing you lose your trail. A hit, a shot or a spell breaks the shadow, and that first strike is from the shadow: ×{1} damage{2}; Path of Valheiman's sneak attack bonuses stack on top. Running, jumping, doors, eating and the rest don't break it.
  (боси бачать)	 (bosses see you)
  і ворог приголомшений	 and the enemy is staggered
 Під крилом	Under the Wing
@@ -26,25 +21,18 @@
 Мунін летить туди, куди ти дивишся, і рве кігтями до трьох ворогів.	Munin flies where you're looking and rakes up to three enemies with his talons.
 Злість (пасивний ефект)	Anger (passive)
 коли тебе вдарили, Мунін злиться, і ти якийсь час б'єш сильніше.	when you're hit, Munin gets angry, and for a while you hit harder.
-Коли тебе вдарили, Мунін злиться: {0} ти завдаєш на {1}% більше шкоди. Бере силу Муніна; спрацьовує не частіше ніж раз на {2}.	When you're hit, Munin gets angry: for {0} you deal {1}% more damage. Uses Munin's strength; triggers no more than once every {2}.
 Кривава лють (пасивний ефект)	Blood Rage (passive)
 коли здоров'я падає нижче 30%, Мунін шаленіє, і ти б'єш сильніше й швидше.	when your health drops below 30%, Munin goes berserk, and you hit harder and faster.
-Коли здоров'я падає нижче {0}%, Мунін шаленіє — {1} с ти завдаєш на {2}% більше шкоди й б'єш на {3}% швидше (разом із Люттю ще швидше). Бере силу Муніна; якщо сили бракує або ще не минула перезарядка — не спрацює.	When your health drops below {0}%, Munin goes berserk — for {1} s you deal {2}% more damage and attack {3}% faster (faster still with Fury). Uses Munin's strength; if there's not enough strength or the cooldown isn't over, it won't trigger.
 Думка Муніна	Munin's Thought
 Мунін усе бачить і все пам'ятає.	Munin sees everything and remembers everything.
-Мунін усе бачить і все пам'ятає: кожну твою дурницю, кожну рану, кожного ворога поруч. Спитай, якщо не боїшся відповіді. А в тиші він нагадає щось із вашого спільного минулого — і не завжди те, що хотілося б. Наведи приціл на іншого гравця — і Мунін пройдеться по ньому; його ворон може й огризнутися.	Munin sees everything and remembers everything: every stupid thing you've done, every wound, every enemy nearby. Ask, if you're not afraid of the answer. And in the quiet he'll bring up something from your shared past — not always what you'd like. Aim at another player and Munin will tear into them; their raven may snap back.
 Легкий крок (пасивний ефект)	Light Step (passive)
 коли біжиш і поруч нема ворогів, витривалість якийсь час відновлюється швидше.	when you run with no enemies around, your stamina recovers faster for a while.
-Коли біжиш і поруч нема ворогів, Хугін підказує дорогу: {0} витривалість відновлюється на {1}% швидше. Бере силу Хугіна; спрацьовує не частіше ніж раз на {2}.	When you run with no enemies around, Hugin shows you the way: for {0} your stamina recovers {1}% faster. Uses Hugin's strength; triggers no more than once every {2}.
 Останній шанс (пасивний ефект)	Last Chance (passive)
 Хугін рятує від смертельного удару — лишається 1 здоров'я і кілька секунд невразливості, щоб утекти.	Hugin saves you from a deadly blow — you're left with 1 health and a few seconds of invulnerability to get away.
-Коли удар мав би тебе вбити, Хугін рятує — лишається 1 здоров'я і {0} с ніщо тебе не ранить, щоб утекти. Діє на все: удари, падіння, отруту, вогонь. Бере силу Хугіна; якщо сили бракує або ще не минула перезарядка — не врятує.	When a hit would kill you, Hugin saves you — you're left with 1 health, and for {0} s nothing can hurt you, so run. Works on everything: hits, falls, poison, fire. Uses Hugin's strength; if there's not enough strength or the cooldown isn't over, he won't save you.
 Вірність (пасивний ефект)	Loyalty (passive)
 коли ти гинеш, Хугін може не піти в могилу й лишитися на плечі.	when you die, Hugin may stay on your shoulder instead of going into the grave.
-Коли ти гинеш, Хугін із шансом {0}% не йде в могилу разом з рештою речей: лишається на плечі й зустрічає тебе після відродження — бігти по нього до надгробка не треба. Сили не бере й перезарядки не має; не діє, поки Хугін відлетів.	When you die, Hugin has a {0}% chance not to go into the grave with the rest of your things: he stays on your shoulder and meets you when you respawn — no need to run back to the tombstone for him. Uses no strength and has no cooldown; doesn't work while Hugin is away.
 Впертість (пасивний ефект)	Stubbornness (passive)
 коли ти гинеш, Мунін може вчепитися в плече й не піти в могилу.	when you die, Munin may dig into your shoulder and refuse to go into the grave.
-Коли ти гинеш, Мунін із шансом {0}% вчіплюється кігтями в плече й нікуди не йде — ні в могилу, ні до валькірій. Після відродження він уже сидить на своєму місці й, звісно, усе тобі пригадає. Сили не бере й перезарядки не має; не діє, поки Мунін відлетів.	When you die, Munin has a {0}% chance to sink his talons into your shoulder and go nowhere — not into the grave, not to the valkyries. When you respawn he's already sitting in his spot and will, of course, remind you of everything. Uses no strength and has no cooldown; doesn't work while Munin is away.
 Крик	Scream
 Вороги поруч втрачають рівновагу й тікають.	Enemies nearby lose their balance and run.
 Мунін кричить так, що вороги ближче {0} м втрачають рівновагу й {1} с тікають від тебе. Боси лише втрачають рівновагу.	Munin screams so loud that enemies closer than {0} m lose their balance and run from you for {1} s. Bosses only lose their balance.
@@ -56,13 +44,10 @@
 +{0}% до швидкості руху, а біг коштує на {1}% менше витривалості.	+{0}% movement speed, and running costs {1}% less stamina.
 Зцілення Муніна	Munin's Mending
 Як випита медовуха: здоров'я відновлюється до повного, і ані краплі понад.	Like a mead: health recovers to full, and not a drop more.
-Як випита медовуха: здоров'я поступово відновлюється до повного й ні краплі понад максимум. Якщо тебе поранять, поки діє, все одно закінчиш із повним здоров'ям. Із медовухами перезарядку не ділить.	Like a mead: health slowly recovers to full and not a drop over the maximum. If you get hurt while it lasts, you'll still end up at full health. Doesn't share a cooldown with meads.
 Заслона Муніна	Munin's Ward
 Перед тобою стіна з рун: вона приймає на себе удар спереду, хоч який сильний.	A wall of runes in front of you: it takes a hit from the front, however hard.
-Мунін кидає руни, і перед тобою на {0} стає півколо червонуватих рун. Перший удар спереду (з усієї передньої половини) заслона бере на себе цілком, хоч би який він був: ні шкоди, ні відкидання, ні отрути, ні оглушення. Скільки той удар мав би зняти, видно червоним числом над тобою. Удар, що мав би тебе оглушити, оглушує того, хто бив, а близького ворога ще й відкидає назад. Тримає удари монстрів і босів, стріли, закляття й удари по площі, а з увімкненим PvP і удари гравців; отрута, вогонь, падіння й удар у спину проходять, як завжди. З {1}-го рівня довіри заслона витримує два удари, на {2}-му — три; скільки ще витримає, показують знаки-руни над нею, а після кожного удару вона тріскається й тьмяніє. Вдале парирування заряду не забирає: удар бере твій щит, а заслона чекає далі. Та якщо парирування мало б тебе оглушити (чи забракне витривалості), удар бере заслона: мінус заряд, і оглушується той, хто бив. Діє й під куполом.	Munin throws runes, and a half-circle of reddish runes stands in front of you for {0}. The ward takes the first hit from the front (the whole front half) entirely, however hard it is: no damage, no knockback, no poison, no stagger. How much that hit would have taken shows as a red number above you. A hit that would have staggered you staggers the attacker instead, and knocks a close enemy back. It holds hits from monsters and bosses, arrows, spells and area attacks, and with PvP on, players' hits too; poison, fire, falls and hits from behind go through as usual. From trust level {1} the ward holds two hits, at level {2} three; the rune marks above it show how many are left, and after each hit it cracks and dims. A good parry doesn't use a charge: your shield takes the hit and the ward keeps waiting. But if the parry would have staggered you (or you run out of stamina), the ward takes the hit: one charge less, and the attacker is staggered. Works under the dome too.
 Крила Одіна	Odin's Wings
 Великий дар Хугіна: ти летиш, а обидва ворони — за твоєю спиною.	Hugin's great gift: you fly, with both ravens at your back.
-Хмара пір'я, Хугін злітає першим, а слідом підкидає й тебе. {0} ти летиш туди, куди дивиться камера (вбік — A/D), Пробіл — угору, присісти — униз, завжди з однаковою швидкістю, але з розгоном і гальмуванням; без клавіш висиш у повітрі. Хугін і Мунін летять за спиною, за Хугіном тягнеться слід пір'я. Не вище {1} м над землею; у польоті не можна атакувати зброєю, але ворони б'ють («Удар в очі», «Кігті»); не діють «Під крилом», «Розвідка» й «Злет» (Хугін тримає для тебе крила), а в повітрі ще «Крик», «Лють» і «Попутний вітер». Поки дар діє, можна сісти й піти пішки: опустись до самої землі з «присісти»; а пробіл на землі замість звичайного стрибка знову підкидає в небо. Натисни дар ще раз або дочекайся кінця — плавно опустишся, як на плащі левітації, без шкоди від падіння; на землі дар просто закінчиться. Не злітає під землею, під дахом, з води, верхи й з перевантаженням.	A cloud of feathers, Hugin takes off first and then lifts you after him. For {0} you fly where the camera looks (sideways — A/D), Space — up, crouch — down, always at the same speed, but with acceleration and braking; with no keys you hang in the air. Hugin and Munin fly behind you, a trail of feathers behind Hugin. No higher than {1} m above the ground; you can't attack with weapons in flight, but the ravens strike (“Eye Peck”, “Talons”); “Under the Wing”, “Scouting” and “Leap” don't work (Hugin is holding the wings for you), and in the air neither do “Scream”, “Fury” and “Tailwind”. While the gift lasts you can land and walk: come down to the ground with crouch; and Space on the ground, instead of a normal jump, throws you back into the sky. Use the gift again or wait for the end — you'll float down gently, as if on a cloak of levitation, with no fall damage; on the ground the gift simply ends. Won't take off underground, under a roof, from water, while riding or overburdened.
 Звір Муніна	Munin's Beast
 Мунін будить у тобі звіра: удвічі більш{ий|а}, сильніш{ий|а} і міцніш{ий|а}. Потім — втома.	Munin wakes the beast in you: twice your size, stronger and tougher. Then — exhaustion.
 <color=#9a9a9a>відкриється на {0}-му рівні довіри</color>	<color=#9a9a9a>opens at trust level {0}</color>
@@ -94,7 +79,7 @@
 звір пішов	beast gone
 Втома звіра	Beast's Toll
 Звір пішов і забрав сили: витривалість відновлюється вдвічі повільніше	The beast left and took your strength with it: stamina recovers half as fast
-Все, звір виліз. Тепер ти — ганчірка. Відсапуйся.	That's it, the beast crawled back in. Now you're a wet rag. Catch your breath.
+Все, звір заліз назад. Тепер ти — мокра ганчірка. Віддихайся.	That's it, the beast crawled back in. Now you're a wet rag. Catch your breath.
 Під землею звір не вміщається — і ти знову собою	The beast doesn't fit underground — and you're yourself again
 звір: рух обірвано (удар/блок/перекид)	beast: move cut short (hit/block/roll)
 звір: рух «{0}»	beast: move “{0}”
@@ -117,8 +102,8 @@
 привітат	say hi
 навідат	visit
 перевіряю, чи ти живий	checking you're alive
-Левади	Meadows
-на Левадах	in the Meadows
+Луки	Meadows
+на Луках	in the Meadows
 Чорнолісся	Black Forest
 у Чорноліссі	in the Black Forest
 Болото	Swamp
@@ -144,7 +129,6 @@
 не видаляй: так мод знає, які фрази вже дописав	don't delete: this is how the mod knows which lines it already added
 зірка|зірки|зірок	star|stars
 ворога|ворогів|ворогів	enemy|enemies
-{0} км	{0} km
 {0} м	{0} m
 хвилину|хвилини|хвилин	minute|minutes
 вдруге	a second time
@@ -878,7 +862,7 @@
 Кухарчуку	Kitchen Boy
 Тридцять приготованих страв	Thirty dishes cooked
 Гепало	Klutz
-П'ятдесят разів бачив, як ти гепаєшся	Saw you fall flat fifty times
+Сто разів бачив, як ти гепаєшся	Saw you fall flat a hundred times
 Везунчик	Lucky
 Везунчику	Lucky
 Тридцять разів ти ледь не вме{р|рла} — і вижи{в|ла}	Thirty times you nearly died — and lived
@@ -910,19 +894,19 @@
 П'ятдесят разів ти глади{в|ла} тварин. Не його	Fifty times you petted animals. Not him
 Ягодоїд	Berry-eater
 Ягодоїде	Berry-eater
-Тисяча ягід, грибів і всякого зібраного	A thousand berries, mushrooms and all sorts gathered
+Три тисячі ягід, грибів і всякого зібраного	Three thousand berries, mushrooms and all sorts gathered
 Підвальник	Cellar Dweller
 Підвальнику	Cellar Dweller
 Тридцять разів лазив з тобою під землю	Went underground with you thirty times
 Бобер	Beaver
 Бобре	Beaver
-Три тисячі ударів сокирою при ньому	Three thousand axe swings in front of him
+Десять тисяч ударів сокирою при ньому	Ten thousand axe swings in front of him
 Шахтар	Miner
 Шахтарю	Miner
-Три тисячі ударів кайлом при ньому	Three thousand pickaxe swings in front of him
+Десять тисяч ударів кайлом при ньому	Ten thousand pickaxe swings in front of him
 Ботан	Nerd
 Ботане	Nerd
-Сто п'ятдесят разів ти чогось навчився	A hundred and fifty times you learned something
+Триста разів ти чогось навчився	Three hundred times you learned something
 Віслюк	Pack Mule
 Віслюче	Pack Mule
 Годину ви разом тягли більше, ніж можна	An hour together hauling more than you should
@@ -979,6 +963,116 @@
 Тамада	Toastmaster
 Тамадо	Toastmaster
 Говорив із воронами шістьох різних людей, і двоє з тих воронів мали заслужене ім'я	Talked with the ravens of six different people, and two of those ravens had earned names
+Посланець	Herald
+Посланцю	Herald
+Наймит	Hireling
+Наймите	Hireling
+Ярл	Jarl
+Ярле	Jarl
+Отаман	Warlord
+Отамане	Warlord
+Сенсей	Sensei
+Сенсею	Sensei
+Кат	Executioner
+Кате	Executioner
+Звіробій	Beastslayer
+Звіробою	Beastslayer
+Шкуродер	Skinner
+Шкуродере	Skinner
+Листоноша	Postman
+Листоноше	Postman
+Кур'єр	Courier
+Кур'єре	Courier
+Приборкувач	Tamer
+Приборкувачу	Tamer
+Месник	Avenger
+Меснику	Avenger
+Віщун	Seer
+Віщуне	Seer
+Побратиме	Sworn Brother
+Корєш	Homie
+Корєшу	Homie
+Сто доручень Одіна, і серед них хоча б одне золоте	A hundred of Odin's errands, at least one of them golden
+Десять боїв, гідних саги	Ten fights worthy of a saga
+Довів вишкіл удару до кінця	Took strike training all the way
+П'ятнадцять ватажків упали при ньому	Fifteen champions fell in front of him
+П'ятдесят листів і посилок доніс до чужих рук	Carried fifty letters and parcels into other hands
+Тридцять звірів приборкав, сидячи в них на голові	Tamed thirty beasts sitting on their heads
+Двадцять разів помстився за твою смерть	Avenged your death twenty times
+П'ятдесят ранків віщував тобі небо й набіги	Foretold the sky and the raids for you on fifty mornings
+Найближчий друг ворона іншої людини — і п'ятдесят боїв зграєю	The closest friend of another person's raven, and fifty fights as a pack
+Плюскало	Splasher
+Хлюпик	Drip
+Хлюпику	Drip
+Мийдодір	Scrubber
+Мийдодіре	Scrubber
+Водолаз	Diver
+Водолазе	Diver
+Мазунчику	Darling
+Мочалка	Sponge
+Мочалко	Sponge
+Барин	Gentleman
+Барине	Gentleman
+Буржуй	Fat Cat
+Буржую	Fat Cat
+Замазура	Grubby
+Замазуро	Grubby
+Свинота	Swine
+Свиното	Swine
+Болотяник	Bogling
+Болотянику	Bogling
+Жабоїд	Frog-eater
+Жабоїде	Frog-eater
+Сажотрус	Sweep
+Сажотрусе	Sweep
+Головешка	Cinder
+Головешко	Cinder
+Упир	Ghoul
+Упирю	Ghoul
+Могильник	Gravedigger
+Могильнику	Gravedigger
+Трупоїд	Carrion
+Трупоїде	Carrion
+Десять купань	Ten baths
+Сто купань	A hundred baths
+Тридцять разів ти ми{в|ла} його власними руками	Thirty times you washed him with your own hands
+Двадцять разів купався з тобою в гарячій купелі	Twenty times he bathed with you in a hot tub
+Двадцять разів заріс брудом по самий дзьоб	Twenty times caked in dirt up to the beak
+Десять разів вимазався болотом до краю	Ten times smeared with swamp mud to the brim
+Десять разів засипаний попелом до краю	Ten times buried in ash to the brim
+Десять разів по дзьоб у чужій крові	Ten times up to the beak in others' blood
+Десять разів вивалявся в мертвечині до краю	Ten times rolled in carrion to the brim
+Баклан	Cormorant
+Баклане	Cormorant
+Пелікан	Pelican
+Пелікане	Pelican
+Нянька	Nanny
+Нянько	Nanny
+Дражнило	Teaser
+Чайка	Gull
+Чайко	Gull
+Альбатрос	Albatross
+Альбатросе	Albatross
+Модник	Dandy
+Моднику	Dandy
+Прискіпа	Nitpicker
+Прискіпо	Nitpicker
+Перебивало	Interrupter
+Встрявало	Butt-in
+Оборонець	Defender
+Оборонцю	Defender
+Цербер	Cerberus
+Цербере	Cerberus
+Обранець	Chosen One
+Обранцю	Chosen One
+Блатний	Fixer
+П'ятдесят риб, яких сам вихопив з води	Fifty fish he snatched from the water himself
+Сто разів грався в доганялки з твоїм звіром	A hundred games of tag with your beast
+Тридцять разів грався за кормою корабля	Thirty games behind the ship's stern
+Сорок разів оглянув на тобі обнову	Forty times he looked over your new gear
+Багато разів перебив іншого ворона на півслові	Many times he cut the other raven off mid-word
+Вистояв з тобою облогу гнізда	Held the nest with you through a siege
+Усі п'ять золотих рун у ньому, і один дар доведений до третьої	All five golden runes in him, and one gift raised to the third
 <color={0}>{1} має прізвисько — «{2}»</color>\n<size=75%>Ще {3} на вибір: книга воронів, «Образ»</size>	<color={0}>{1} has a nickname — “{2}”</color>\n<size=75%>{3} more to choose from: Book of Ravens, “Look”</size>
  заслужив прізвисько «	 earned the nickname “
  має нове прізвисько «	 has a new nickname “
@@ -1003,7 +1097,7 @@
 Тримається плеча: сам відлітає рідше і ненадовго, здебільшого летить слідом за тобою. На плечі спокійний, у повітрі плавний.	Sticks to your shoulder: flies off on its own less often and not for long, mostly following you. Calm on the shoulder, smooth in the air.
 Мандрівник	Wanderer
 Любить небо: сам відлітає частіше й літає довше, охочіше кружляє й розвідує. Широкі дуги, довгі ковзання.	Loves the sky: flies off on its own more often and for longer, readily circles and scouts. Wide arcs, long glides.
-Непосида	Fidget
+Непосида	Restless
 Не всидить: сам зривається частіше, але ненадовго. На плечі весь час вовтузиться, у повітрі смикається й міняє манеру.	Can't sit still: flies off on its own more often, but not for long. Fusses on the shoulder all the time, jerks about in the air and keeps changing its style.
 Спокійний	Calm
 Нічим не збентежиш: сам відлітає трохи рідше, на плечі сидить тихо, у повітрі найрівніший.	Nothing rattles it: flies off on its own a little less often, sits quietly on the shoulder, flies the steadiest of all.
@@ -1200,7 +1294,6 @@
 Сісти тут	Sit Here
 Туди	There
 ● сидить · покликати	● sitting · call back
-сидить на жердині · покликати	sitting on a perch · call back
 ● летить по здобич	● flying off for the loot
 На гравця	On a Player
 {0} · {1} м · {2}	{0} · {1} m · {2}
@@ -1222,7 +1315,6 @@
 чужий	a stranger's
 сидить, де ти показала	sitting where you pointed
 сидить, де ти показав	sitting where you pointed
-на жердині · {0}	on a perch · {0}
 в польоті · поруч	in flight · with me
 в польоті · кружляє	in flight · circling
 в польоті · облітає	in flight · surveying
@@ -1245,7 +1337,7 @@
 Наведи на дар — тут буде, що він робить. У центрі — накази.	Point at a gift — what it does shows here. Orders are in the middle.
 <b>Накази</b>	<b>Orders</b>
 Наведи на кнопку — тут буде, що вона робить.	Point at a button — what it does shows here.
-<b>{0}{1}</b>  <color=#BFB59A>+{2} ситості · +{3} довіри{4}</color>	<b>{0}{1}</b>  <color=#BFB59A>+{2} satiety · +{3} trust{4}</color>
+<b>{0}{1}</b>\n<color=#BFB59A>+{2} ситості · +{3} довіри{4}</color>	<b>{0}{1}</b>\n<color=#BFB59A>+{2} satiety · +{3} trust{4}</color>
  · нема в сумці	 · not in your bag
 Зараз він нічого не їсть.	It won't eat anything right now.
 <color=#BFB59A>Наведи на їжу.</color>	<color=#BFB59A>Point at a food.</color>
@@ -1285,7 +1377,7 @@
 Місце	Spot
 {0}\nБіля нього майструють, як за верстаком.	{0}\nCraft by it, as at a workbench.
 Стіл, за яким роблять речі для воронів.	A table where things for ravens are made.
-\nСтавиться лише на стіну.	\nGoes on walls only.
+\nСтавиться на стіну чи стовп.	\nGoes on a wall or a post.
 Жердина для ворона.	A perch for a raven.
 {0} сидить на жердині	{0} is sitting on a perch
 {0} полетів роздивитися щось поруч	{0} flew off to look at something nearby
@@ -1371,18 +1463,13 @@
 −{0} вантажопідйомності	−{0} carry weight
 Немає такого блага чи тягаря. Список: raven perks	No such boon or burden. The list: raven perks
 Благо й тягар на одну характеристику — так не можна.	A boon and a burden on the same stat — not allowed.
-<color=#9a9a9a>Благо й тягар цього ворона відкриються після покупки.</color>\n\n{0}	<color=#9a9a9a>This raven's boon and burden are revealed after purchase.</color>\n\n{0}
-<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>\n\n{2}	<color=#7CFC7C>Boon: {0}</color>\n<color=#FF6B6B>Burden: {1}</color>\n\n{2}
 благо {0}, тягар {1}	boon {0}, burden {1}
  — дари дорожчі, довіра тане, краде	 — gifts cost more, trust melts, it steals
  — дари дорожчі, сила не йде, краде	 — gifts cost more, no strength gained, it steals
  — нагодуй (J → «Погодувати» чи книга)	 — feed it (J → “Feed” or the book)
  — лінивий, удар слабший	 — lazy, weaker strike
 \nСитість: {0}{1}	\nSatiety: {0}{1}
-\n\n<color=orange><b>{0}</b></color> (пасивний ефект) — {1} <color=#9a9a9a>{2}{3},</color> {4}.	\n\n<color=orange><b>{0}</b></color> (passive) — {1} <color=#9a9a9a>{2}{3},</color> {4}.
-без сили й перезарядки	no strength or cooldown
 {0} сили{1}, раз на {2}	{0} strength{1}, once every {2}
-, лише поки ворон на плечі	, only while the raven is on your shoulder
 {0}\nСила: {1}/{2}{3}{4}	{0}\nStrength: {1}/{2}{3}{4}
 свої осі	own axes
 повернути	turn
@@ -1412,9 +1499,6 @@
 шар {0}: {1}«{2}»	layer {0}: {1}“{2}”
 {0} на {1}° за кадр	{0} by {1}° per frame
 тіло на {0}° за кадр	body by {0}° per frame
-щодня +10, нові предмети й рецепти, нові руни, моноліти Path of Valheiman і Вегвізири (+20, повторне читання +5, до 5 каменів на день), рівні навичок, сон у ліжку, відпочинок біля вогню (у затишку швидше), ремесло й готування, врожай, ягоди й мед, робота (рубка дерев, видобуток, риболовля; уночі в 1,5 раза більше), плавання на кораблі, піші подорожі (до 30 на день), нові біоми й підземелля, розмови з торговцями	+10 every day, new items and recipes, new runes, Path of Valheiman monoliths and Vegvisirs (+20, rereading +5, up to 5 stones a day), skill levels, sleeping in a bed, resting by a fire (faster in comfort), crafting and cooking, harvests, berries and honey, work (chopping, mining, fishing; 1.5× at night), sailing, journeys on foot (up to 30 a day), new biomes and dungeons, talking with traders
-новий рівень персонажа (+{0}), {1}	a new character level (+{0}), {1}
-щодня +10, твої вбивства (звичайний ворог +1, сильний — троль, елітний драугр, ґ'ялль тощо — від 2 до 6, боси від 30 до 100, своя тварина +1; зірки додають), удари по ворогах і рани від них, парирування (+2), знищені гнізда (+5), відбитий рейд (+20), медовуха (+2), трофеї (+1), нові руни й Вегвізири (+10), коли ледве виживаєш (+10), і твоя смерть (+40); уночі все в 1,5 раза більше	+10 every day, your kills (an ordinary enemy +1, a strong one — troll, elite draugr, gjall and so on — 2 to 6, bosses 30 to 100, your own animal +1; stars add more), hitting enemies and taking wounds from them, parries (+2), destroyed nests (+5), a repelled raid (+20), mead (+2), trophies (+1), new runes and Vegvisirs (+10), barely surviving (+10), and your death (+40); everything 1.5× at night
 відпочив	rested
 {0}/{1} сили.{2}	{0}/{1} strength.{2}
 Мунін видихся: 	Munin is spent:
@@ -1422,12 +1506,6 @@
 \nГолодний ворон — дорогі дари (×{0}). Нагодуй його.	\nA hungry raven means costly gifts (×{0}). Feed it.
 \nЙди когось убий — тоді поговоримо.	\nGo kill something — then we'll talk.
 \nДай йому перепочити, сили прийдуть.	\nLet him rest, the strength will come.
-Думка −{0}, Крик −{1}, Лють −{2}, Крила −{3}, Зцілення −{4}, Заслона −{5}, Звір −{6}, Кігті −{7}	Thought −{0}, Scream −{1}, Fury −{2}, Tailwind −{3}, Mending −{4}, Ward −{5}, Beast −{6}, Talons −{7}
-Сила: <color=orange>{0}/{1}</color> ({2}){3}	Strength: <color=orange>{0}/{1}</color> ({2}){3}
-Сила витрачається на дари ({0})	Strength is spent on gifts ({0})
-{0}\nЗаряджається{1}: {2}.	{0}\nCharges{1}: {2}.
- в бою	 in battle
- у мирі	 in peace
 своя тварина	your own animal
 бос	boss
 сильний ворог	strong enemy
@@ -1518,13 +1596,10 @@
 ● чужий — власник {0}	● a stranger's — owner {0}
 інший	another
 ● спить · довіра 0	● asleep · trust 0
-● сидить на жердині · {0}	● sitting on a perch · {0}
 ● {0} — накази не виконує	● {0} — won't follow orders
 ● в атаці	● attacking
 ● виконує «{0}»	● doing “{0}”
 ● на плечі	● on the shoulder
-Норов	Nature
-відкриється після покупки	revealed after purchase
  <color={0}>(ображений)</color>	 <color={0}>(sulking)</color>
 ще жодного	none yet
 <b><color={0}>Довіра {1}</color></b> · рівень {2} із {3}\n\nРосте, коли годуєш голодного ворона (улюблена їжа — удвічі), коли питаєш його думку (ви ж розмовляєте, до 10 на день) і коли ви разом живете — у мирі й у бою. Коли шкала повна, проведи ритуал біля Жертовних каменів — ворон перейде на новий рівень: більше сили, сильніші дари, нове вбрання.\n\nТане, коли ти гинеш, знімаєш ворона з плеча чи він голодує (ситість 0).	<b><color={0}>{1}'s Trust</color></b> · level {2} of {3}\n\nGrows when you feed it while it's hungry (its favorite food counts double), when you ask for its thoughts (you do talk, up to 10 a day) and as you live together — in peace and in battle. When the bar is full, perform the rite at the Sacrificial Stones and the raven reaches a new level: more strength, stronger gifts, new outfits.\n\nMelts when you die, take the raven off your shoulder, or let it starve (satiety 0).
@@ -1537,8 +1612,8 @@
 <b><color={0}>Ситість</color></b>\n\n{1} має ситість від 0 до 100{2}. Вона тане сама (≈{3} за ігровий день{4}) і від кожного дару ({5}% його ціни в силі). Годувати можна скільки завгодно, аж до 100.\n	<b><color={0}>Satiety</color></b>\n\n{1} has satiety from 0 to 100{2}. It drops by itself (≈{3} per game day{4}) and with every gift ({5}% of its strength cost). You can feed it as much as you like, all the way to 100.\n
 , зараз <color={0}>{1} — {2}</color>	, now <color={0}>{1} — {2}</color>
 , з хистом «Невибагливий»	, with the “Frugal” knack
-\n\n<b>Їжа.</b> Що далі від дому здобута, то ситніша: від +15 (Луки) до +35 (Попелясті землі). Раціон залежить від довіри: {0}. Клас — біом походження: від 1 (Луки) до 5 (Попелясті землі). Нижчий або вищий клас ворон відмовиться їсти; їжа не витратиться. Довіру дає лише та частина їжі, що вгамовує справжній голод (нижче {1}); ситому — нуль. За день з їжі — не більше {2} довіри{3}. Нагодований ворон ще й {4} хв б'є на {5}% сильніше.	\n\n<b>Food.</b> The farther from home it was found, the more filling: from +15 (Meadows) to +35 (Ashlands). What it eats depends on trust: {0}. The class is the biome it comes from: 1 (Meadows) to 5 (Ashlands). A lower or higher class the raven refuses; the food isn't used up. Trust comes only from the part of the food that eases real hunger (below {1}); a full raven gives none. No more than {2} trust a day from food{3}. A fed raven also strikes {5}% harder for {4} min.
-1–2-й рівні — класи 1–3, 3–5-й — 2–4, 6–7-й — 2–5	levels 1–2 — classes 1–3, 3–5 — 2–4, 6–7 — 2–5
+\n\n<b>Їжа.</b> Що далі від дому здобута, то ситніша: від +15 (Луки) до +35 (Попелясті землі). Раціон залежить від довіри: {0}. З кожним рівнем ворон їсть їжу з краю на один далі за останнього здоланого боса, а з 3-го рівня вже не їсть простої їжі з Лук. Іншої відмовиться; їжа не витратиться. Довіру дає лише та частина їжі, що вгамовує справжній голод (нижче {1}); ситому — нуль. За день з їжі — не більше {2} довіри{3}. Нагодований ворон ще й {4} хв б'є на {5}% сильніше.	\n\n<b>Food.</b> The farther from home it was found, the more filling: from +15 (Meadows) to +35 (Ashlands). What it eats depends on trust: {0}. With each level the raven eats food from one land past the last boss beaten, and from level 3 it no longer eats plain Meadows food. Other food it refuses; the food isn't used up. Trust comes only from the part of the food that eases real hunger (below {1}); a full raven gives none. No more than {2} trust a day from food{3}. A fed raven also strikes {5}% harder for {4} min.
+на кожному рівні — на край далі за останнього боса	on each level — one land past the last boss
  (сьогодні лишилось {0})	 ({0} left today)
 \n\n<b>Улюблена їжа</b> — своя в кожного ворона і спершу прихована. Він натякає на неї, коли просить їсти; а нагодуєш нею — і дізнаєшся напевно. Ситить у {0} раза більше, довіри вдвічі більше, бонус до удару вдвічі довший.	\n\n<b>Favorite food</b> — every raven has its own, hidden at first. It hints at it when it begs for food; feed it that and you'll know for sure. Fills {0} times more, gives twice the trust, and the strike bonus lasts twice as long.
 <b><color={0}>Чим годувати {1}</color></b> · {2}{3}	<b><color={0}>What to feed {1}</color></b> · {2}{3}
@@ -1665,7 +1740,6 @@
 спорядження: шапки, намиста й інші речі для ворона	gear: hats, necklaces and other things for the raven
 після ритуалу на цей рівень ворон може принести від Одіна річ	after the rite to this level the raven may bring a thing from Odin
 найвища довіра: усе спорядження відкрите	highest trust: all gear unlocked
-«Заслона» витримує два удари	“Ward” holds two hits
 «Заслона» витримує три удари	“Ward” holds three hits
 \n\n<color={0}><b>Відкриває</b></color>	\n\n<color={0}><b>Unlocks</b></color>
 \n\n<color={0}>Ще дичиться: часом сам відлітає на кілька хвилин{1}.</color>	\n\n<color={0}>Still shy: sometimes flies off by itself for a few minutes{1}.</color>
@@ -1850,8 +1924,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Шапка	Hat
 {0}Торба на спину ворона. ПКМ — надіти Хугіну, Shift+ПКМ — Мунінові (або в Книзі воронів, вкладка «Образ»). Поклади туди їжу — до {1} шматків. Коли ворон зголодніє, поїсть із неї сам.	{0}A pouch for the raven's back. Right-click — put it on Hugin, Shift+right-click — on Munin (or in the Book of Ravens, tab “Look”). Put food in it — up to {1} pieces. When the raven gets hungry, it eats from it by itself.
 {0}Річ для ворона ({1}). Надівається з {2}-го рівня довіри: ПКМ — Хугіну, Shift+ПКМ — Мунінові (або в Книзі воронів, вкладка «Образ»).	{0}A thing for a raven ({1}). Worn from trust level {2}: right-click — on Hugin, Shift+right-click — on Munin (or in the Book of Ravens, tab “Look”).
-Ворон думки. Правий клік у сумці — і він сяде тобі на праве плече (пояс лишається вільним). Має одне випадкове благо й один тягар.\n\nДари Хугіна (розвідка, світло, купол, злет, тінь, удар в очі та інші) відкриваються з довірою й заряджаються в мирі. Що він уміє, коли й за скільки сили — у книзі воронів (<color=orange>G</color> → «Ворони»).	The raven of thought. Right-click it in your bag and it sits on your right shoulder (your belt stays free). Has one random boon and one burden.\n\nHugin's gifts (scouting, light, dome, leap, shadow, eye peck and more) open with trust and charge in peace. What he can do, when, and for how much strength — in the Book of Ravens (<color=orange>G</color> → “Ravens”).
-Ворон пам'яті. Правий клік у сумці — і він сяде тобі на ліве плече (пояс лишається вільним). Має одне випадкове благо й один тягар.\n\nДари Муніна (крик, лють, попутний вітер, зцілення, кігті та інші) відкриваються з довірою й заряджаються в бою. Що він уміє, коли й за скільки сили — у книзі воронів (<color=orange>G</color> → «Ворони»).	The raven of memory. Right-click it in your bag and it sits on your left shoulder (your belt stays free). Has one random boon and one burden.\n\nMunin's gifts (scream, fury, tailwind, mending, talons and more) open with trust and charge in battle. What he can do, when, and for how much strength — in the Book of Ravens (<color=orange>G</color> → “Ravens”).
 Ворон Мунін	Munin the Raven
 Ворон Хугін	Hugin the Raven
 Камінь долі ворона	Raven's Fate Stone
@@ -1860,8 +1932,7 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 \nВірний: {0}	\nLoyal to: {0}
 \nПрізвисько: <color={0}>{1}</color>	\nNickname: <color={0}>{1}</color>
  ({0} ×{1} біля Жертовних каменів)	 ({0} ×{1} at the Sacrificial Stones)
-\n\n<color=#9a9a9a>Після покупки ворон спить, поки не розбудиш його ритуалом{0}.</color>	\n\n<color=#9a9a9a>After purchase the raven sleeps until you wake it with the rite{0}.</color>
-\n\n<color=#FF5A5A><b>Ворон спить</b></color> — розбуди його ритуалом{0}, тоді запрацюють дари, благо й тягар.	\n\n<color=#FF5A5A><b>The raven is asleep</b></color> — wake it with the rite{0}, then its gifts, boon and burden start working.
+\n\n<color=#FF5A5A><b>Спить</b></color> — розбуди ритуалом{0}.	\n\n<color=#FF5A5A><b>Asleep</b></color> — wake it with the ritual{0}.
 Посади на плече ворона,\nякому хочеш змінити долю.	Put the raven whose fate\nyou want to change on your shoulder.
 Книга воронів	Book of Ravens
 Накази воронам	Raven orders
@@ -2035,6 +2106,7 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Улюблена їжа: <color=#FFD54F>★ {0}</color>	Favorite food: <color=#FFD54F>★ {0}</color>
 на «{0}»	starts with “{0}”
 Улюблена їжа: <color=#FFD54F>???</color>{0}	Favorite food: <color=#FFD54F>???</color>{0}
+Улюблена: ???	Favorite: ???
 Знаєш, чого мені хочеться? Чогось {0}. Це підказка, якщо що.	Know what I'm craving? Something {0}. That's a hint, in case you missed it.
 Не те щоб я натякав, але зараз би щось {0}. Отак.	Not that I'm hinting, but I could really go for something {0} right now. There.
 Моя улюблена їжа — {0}. Більше не скажу. Ну, може, згодом.	My favorite food is {0}. That's all I'm saying. Well, maybe later.
@@ -2220,9 +2292,13 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 спільна справа	a shared deed
 розмова	a talk
 наказ	an order
-довіра 1–2: їжа класів 1–3	trust 1–2: food of classes 1–3
-довіра 3–5: їжа класів 2–4	trust 3–5: food of classes 2–4
-довіра 6–7: їжа класів 2–5	trust 6–7: food of classes 2–5
+довіра 1: їжа з Лук і Чорнолісся	trust 1: food of the Meadows and the Black Forest
+довіра 2: їжа з Лук, Чорнолісся й Болота	trust 2: food of the Meadows, the Black Forest and the Swamp
+довіра 3: їжа від Чорнолісся до Гір	trust 3: food from the Black Forest to the Mountains
+довіра 4: їжа від Чорнолісся до Рівнин	trust 4: food from the Black Forest to the Plains
+довіра 5: їжа від Чорнолісся до Туману	trust 5: food from the Black Forest to the Mistlands
+довіра 6: їжа від Чорнолісся до Попелястих земель	trust 6: food from the Black Forest to the Ashlands
+довіра 7: їжа від Чорнолісся до Далекої півночі	trust 7: food from the Black Forest to the Deep North
 {0} ще спить: спершу ритуал.	{0} is still asleep: the rite first.
 {0} не твій — з твоїх рук не їсть.\nЙого господар: {1}.	{0} isn't yours — it won't eat from your hands.\nIts master: {1}.
 нема кого годувати	nobody to feed
@@ -2379,7 +2455,7 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Просунутий стіл ворона	Advanced Raven Table
 Чорний мармур і деревина Іґґдрасіля — не соромно й Одіновим воронам. Тут роблять речі, від яких у ворогів тремтять коліна.	Black marble and Yggdrasil wood — fit even for Odin's ravens. Things that make enemies' knees shake are made here.
 Воронячий піддашок	Raven Awning
-Дерев’яний піддашок на стіну з ліхтарем: два сухі місця для воронів, хоч би яка злива	A wooden awning for the wall with a lantern: two dry spots for ravens, whatever the downpour
+Дерев’яний піддашок із ліхтарем на стіну чи стовп: два сухі місця для воронів, хоч би яка злива	A wooden awning with a lantern for a wall or a post: two dry spots for ravens, whatever the downpour
 Окута жердина	Iron-Bound Perch
 Дві тесані колоди, окуті залізом, і перекладина між ними: міцніша за просту жердину	Two hewn logs bound in iron with a bar between them: sturdier than a simple perch
 Жердина двергрів	Dvergr Perch
@@ -2432,7 +2508,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 \# Підстановки подій: {top} {top_gen} {top_ins} {top_genpl} — кого вбито найбільше; {count}; {killer...} — хто вбив; {attacker...} — хто ледь не вбив; {boss...}; {fish}; {km}; {biome} {biome_in} — новий біом.	\# Event placeholders: {top} {top_gen} {top_ins} {top_genpl} — who was killed most; {count}; {killer...} — who killed you; {attacker...} — who nearly did; {boss...}; {fish}; {km}; {biome} {biome_in} — a new biome.
 \# Про монстрів пиши без родових закінчень («здоровило», а не «великий»); про гравця — обидві форми: {зняв|зняла}, мод вибере за персонажем.	\# About monsters write without gendered words; about the player both forms where they differ: {himself|herself}, the mod picks by the character.
 \# Рядки з # на початку пропускаються. Файл можна правити під час гри. Видалиш — мод створить заново.	\# Lines starting with # are skipped. You can edit the file while playing. Delete it — the mod makes it again.
-Хугін розправляє крила, і довкола тебе на {0} м здіймається купол з рун. Монстри, що за тобою гналися, підбігають до краю й кружляють довкола, чекаючи, — увійти не можуть і не атакують. Під куполом ніхто нікого не ранить: ні ти звідти, ні тебе ззовні, тож стріляти з-під крила не вийде. Купол — як дах над головою: дощ і вітер лишаються зовні, але холод — ні; розпали всередині вогнище, і грітимешся, як у хаті. Захищає всіх, хто стоїть усередині. Боси на купол не зважають і заходять під нього, але проти боса купол крихкий: він приймає на себе лише {1} по тих, хто всередині, і на останньому розлітається. Під землею не розкривається. Коли купол зникає, монстри кидаються на тебе, тож будь напоготові.	Hugin spreads his wings, and a dome of runes rises {0} m around you. Monsters chasing you run up to its edge and circle it, waiting — they can't get in and don't attack. Under the dome nobody hurts anybody: not you from inside, not you from outside, so no shooting from under the wing. The dome is like a roof: rain and wind stay outside, but the cold doesn't — light a fire inside and you'll warm up as if at home. It shields everyone standing inside. Bosses ignore the dome and walk right in, and against a boss it is fragile: it takes only {1} on those inside, and shatters on the last. It won't open underground. When the dome fades, the monsters rush you, so be ready.
 удар|удари|ударів	hit|hits
 готовий|готові|готові	ready|ready
 {0} Ейктюра	{0} of Eikthyr
@@ -2442,7 +2517,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Посадити {0}	Seat {0}
 Обманка	Decoy
 Хугін кружляє над ворогом і дражнить його: той б'ється лише з вороном.	Hugin circles an enemy and taunts it: it fights nobody but the raven.
-Хугін летить до ворога, на якого ти дивишся (або до найближчого, до {0} м), кружляє над його головою й дражнить. {1} той не зважає ні на кого, крім ворона: ходить за ним і махає в повітря, і його удари нікого не ранять (Хугін ухиляється, летить пір'я; ворону це не шкодить). Та якщо гравці вдарять його {2} рази, він розкусить обманку й кинеться на того, хто бив, а Хугін повернеться. З {3}-го рівня довіри Хугін заодно водить за носа ще одного ворога поруч, з {4}-го — двох. Боси на це не купуються. Натисни дар ще раз — Хугін одразу повернеться.	Hugin flies to the enemy you are looking at (or the nearest one, up to {0} m away), circles its head and taunts it. For {1} it pays no mind to anyone but the raven: it follows him and swings at the air, and its blows hurt nobody (Hugin dodges, feathers fly; the raven takes no harm). But if players hit it {2} times, it sees through the trick and goes for whoever hit it, and Hugin comes back. From trust level {3} Hugin also leads one more enemy nearby by the nose, from level {4} two. Bosses don't fall for it. Press the gift again and Hugin comes back at once.
 ВОНО ТЕБЕ ВДАРИЛО?! РОЗІРВИ ЙОГО, КУРВА!	IT HIT YOU?! RIP IT APART, FUCK!
 РВИ! ТОПЧИ! ЇБАШ ЇХ УСІХ!	RIP! STOMP! FUCK THEM ALL UP!
 ГОТОВИЙ! ДАВАЙ НАСТУПНОГО, СУКА!	DONE! NEXT ONE, BITCH!
@@ -2459,7 +2533,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
  (твоя версія — у {0})	 (your version is in {0})
 «{0}» знову як у моді{1}	“{0}” is as in the mod again{1}
  | гра: 	 | game: 
-Думка −{0}, Розвідка −{1}, Світло −{2}, Злет −{3}, Тінь −{4}, Під крилом −{5}, Крила Одіна −{6}, Удар в очі −{7}, Обманка −{8}	Thought −{0}, Scouting −{1}, Light −{2}, Leap −{3}, Shadow −{4}, Under the Wing −{5}, Odin's Wings −{6}, Eye Peck −{7}, Decoy −{8}
 Хугін дражнить ворога — зараз повернеться	Hugin is taunting an enemy — he'll be right back
 <color=#FFD54F><b>дражнить ворога · ще {0} · натисни, щоб повернути</b></color>	<color=#FFD54F><b>taunting an enemy · {0} more · press to call him back</b></color>
 <color=#FF5A5A><b>Хугін дражнить ворога</b></color>	<color=#FF5A5A><b>Hugin is taunting an enemy</b></color>
@@ -2487,8 +2560,8 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Убий: {0} — {1}/{2}	Kill: {0} — {1}/{2}
  чи 	 or
 Ще бракує: {0} — {1}/{2}.	Still missing: {0} — {1}/{2}.
-Віддано ворону: {0}	Handed to the raven: {0}
-Віддай ворону: {0} — у сумці {1}/{2}	Hand to the raven: {0} — in your bag {1}/{2}
+Віддано в чашу гнізда: {0}	Handed in at the nest's bowl: {0}
+Віддай у чашу гнізда: {0} — у сумці {1}/{2}	Hand in at the nest's bowl: {0} — in your bag {1}/{2}
 Дійш{ов|ла} до позначеного місця	Reached the marked place
 Дійди до позначеного на мапі місця	Reach the place marked on the map
 Дійди до позначеного на мапі місця — ще {0} м	Reach the place marked on the map — {0} m to go
@@ -2509,7 +2582,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Перемі{{г|гла}}: {0}	Defeated: {0}
 Знайди й убий: {0}{1} — він десь у колі на мапі	Find and kill: {0}{1} — somewhere in the ring on the map
 (крок «{0}», якого ця версія мода не знає)	(a step “{0}” this version of the mod does not know)
-обдурений б'є сусідніх ворогів	the fooled one hits the enemies beside it
 Золотої руни нема.	No golden rune.
 {0} не твій.	{0} is not yours.
 Цей дар не покращується рунами.	This gift is not raised by runes.
@@ -2545,7 +2617,8 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Коли загориться {0} руни, Одін може покликати й на золоте доручення.	Once {0} runes burn, Odin may also call you to a golden errand.
 Тепер Одін може покликати й на золоте доручення. Що більше рун горить, то частіше.	Now Odin may also call you to a golden errand. The more runes burn, the more often.
 від {0}	from {0}
-Місце позначене на мапі синім колом: до нього ~{0} м.	The place is marked on the map with a blue ring: ~{0} m to it.
+Куди йти: синє коло на мапі світу. На місці його видно як золоте коло рун. Ще ~{0} м.	Where to go: the blue ring on the world map. Once there, it shows as a gold ring of runes. ~{0} m to go.
+Ти на місці — у золотому колі рун (на мапі воно синє).	You are there — inside the gold ring of runes (blue on the map).
 Відстежити	Track
 Відкрити мапу на місці доручення.	Open the map at the errand's place.
 відкрито {0} із {1}	{0} of {1} open
@@ -2628,7 +2701,7 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Ловці в лісі	Hunters in the Woods
 Одін хоче знати, чи не розучи{вся|лася} ти полювати.	Odin wants to know if you've forgotten how to hunt.
 Знак для Одіна	A Sign for Odin
-Вполюй трьох оленів і принеси ворону трофей оленя: Одін хоче бачити, що ти ходиш його лісами.	Hunt three deer and bring the raven a deer trophy: Odin wants to see you walk his woods.
+Вполюй трьох оленів і поклади трофей оленя в чашу гнізда: Одін хоче бачити, що ти ходиш його лісами.	Hunt three deer and lay a deer trophy in the nest's bowl: Odin wants to see you walk his woods.
 Подивись, що там	See What's There
 Хугін бачив щось у тому боці. Сходи й глянь сам{|а}.	Hugin saw something that way. Go and look for yourself.
 Риба для ворона	Fish for the Raven
@@ -2770,25 +2843,13 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 У сумці нема нічого, що прийняв би Одін: трофеї, м'ясо, руда, метал, дерево, шкури, мед, їжа, монети, самоцвіти.	Nothing in your bag Odin would take: trophies, meat, ore, metal, wood, hides, mead, food, coins, gems.
 Зцілення Муніна — ще й для {0} поруч	Munin's Healing — for {0} near you as well
 Мунін гравця {0} лікує й тебе	{0}'s Munin heals you too
-позначає ще скрині, а ворогів із зірками — з їхніми зірками	also marks chests, and enemies with stars show their stars
-нежить поруч тікає від світла	the undead near you flee the light
-затисни стрибок у падінні — і ширяєш	hold Jump while falling and you glide
-удар із тіні ще вдвічі сильніший	the strike from the shadow is twice as strong again
-під куполом лікує тебе: 2% здоров'я за секунду	heals you under the dome: 2% health a second
+удар із тіні ще вдвічі сильніший, а дар, натиснутий у тіні, — крок тінню: двічі за тінь переносить на 15 м туди, куди дивишся	the strike from the shadow is twice as strong again, and the gift pressed in the shadow is a shadow step: twice a shadow it takes you 15 m to where you look
 засліплення вдвічі довше, і удар його не знімає	the blindness lasts twice as long, and a blow does not end it
-на 15% швидше й швидший розгін	15% faster and quicker to speed up
+на 15% швидше й швидший розгін, а затиснувши «присісти» високо в польоті, падаєш у піке: земля б'є ворогів довкола й оглушує їх на 5 с, і що вище ти був, то сильніше	15% faster and quicker to speed up, and holding crouch high in flight you dive: the ground strikes the foes around and stuns them for 5 s, the harder the higher you were
 ще й біг витрачає на 15% менше витривалості	running also drains 15% less stamina
 лишає не 1, а 25% здоров'я	leaves you 25% health, not 1
 кровотеча вдвічі сильніша	the bleeding is twice as strong
-злість триває вдвічі довше	the anger lasts twice as long
-кожен твій удар у люті лікує на 2% здоров'я	each of your blows in the fury heals 2% health
-ще й відкидає ворогів	also throws enemies back
-ще й біжиш на 15% швидше	you also run 15% faster
-ще й пливеш на 30% швидше	you also swim 30% faster
-лікує й гравців поруч (до 10 м)	heals the players near you too (within 10 m)
-стріли й закляття, що влучили в заслону, б'ють у стрільця	arrows and spells that hit the ward strike their shooter
-без втоми після звіра	no weariness after the beast
-I — сильніший: {0} +{1}%\nII — дешевший і швидше готовий: −{2}% сили й перезарядки\nIII — {3}	I — stronger: {0} +{1}%\nII — cheaper and sooner ready: −{2}% strength and cooldown\nIII — {3}
+злість триває вдвічі довше, а кожен удар, що ти отримав у злості, Мунін повертає кривдникові — у півтора раза сильніше	the anger lasts twice as long, and every blow you take in it Munin pays back to the one who struck, half as hard again
 скриня	chest
 зелене	green
 горіле	charred
@@ -3002,6 +3063,9 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 {0} постав з-під землі!	{0} has risen from the ground!
 Земля над курганом здригнулася…	The ground over the barrow shudders…
 Вийди з кургану: біля входу на тебе чекає {0}	Come out of the barrow: {0} awaits you at the entrance
+Земля біля схованки здригнулася…	The ground by the cache shudders…
+Здолай: {0} — він біля схованки	Defeat {0} — it stands by the cache
+Схованку стереже {0}: він встане, щойно ти будеш поруч	{0} guards the cache: it rises as soon as you are near
 посидь довше	sit longer
 Досиді{в|ла} біля вогню до світанку	Sat by the fire until dawn
 Досиди біля вогню до світанку з воронами на плечах — зараз {0:00}:{1:00}	Sit by the fire until dawn with your ravens on your shoulders — now {0:00}:{1:00}
@@ -3101,39 +3165,24 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 <color=#8E1E1E>Нема пергаменту</color> — Хальдор продає по {0} монет.	<color=#8E1E1E>No parchment</color> — Haldor sells it for {0} coins.
 Одін дав випробування «{0}» і книгу воронів. Що треба — у книзі (B), «Шлях Одіна».	Odin gave you the trial “{0}” and the Book of Ravens. What to do is in the book (B), “Odin's Path”.
 час вийшов	time ran out
-Покладено в чашу: {0}	Laid in the bowl: {0}
-Поклади в чашу гнізда: {0} — у сумці {1}/{2}	Lay in the nest's bowl: {0} — in your bag {1}/{2}
 Ворон спить	The Raven Sleeps
-Ворон ще спить і тебе не знає.\n\nЩоб збудити: повісь трофей Ейктюра на його Жертовний камінь, візьми ще {wake} і проведи обряд у книзі (B → «Розвиток»).\n\nНа плече — ПКМ по ворону в сумці. Хугін сідає праворуч, Мунін — ліворуч.\n\nНе до вподоби благо чи тягар — Камінь долі ворона (у Хальдора) їх перекине.	Your raven is still asleep and doesn't know you.\n\nTo wake it: hang Eikthyr's trophy on his Sacrificial Stone, bring {wake} more and hold the rite in the book (B → “Growth”).\n\nTo the shoulder: right-click the raven in your bag. Hugin sits on the right, Munin on the left.\n\nDon't like its blessing or burden? The Raven's Fate Stone (from Haldor) rerolls them.
-Одін пішов	Odin Has Left
-Випробування не виконано. Вдруге Одін його не дасть.\n\nВорона тепер можна лише купити — у Хальдора.\n\nГніздо не розбирай: з вороном у ньому Одін даватиме доручення.	The trial was not done. Odin won't give it twice.\n\nNow a raven can only be bought — from Haldor.\n\nKeep the nest: with a raven in it, Odin will give you errands.
-Гніздо для Одіна	A Nest for Odin
-Ейктюр упав — тепер можна звести Вороняче гніздо: молоток → RavenWatch. Окрім дерева, живиці й пір'я, треба 2 роги Ейктюра.\n\nЗбудуй і натисни E на гніздо — Одін прийде з випробуванням і дасть тобі книгу воронів (B): там видно, що робити й скільки лишилось. Виконаєш вчасно — дасть ворона.\n\nНе хочеш чекати — у Хальдора ворони продаються.	Eikthyr has fallen — now you can build the Raven's Nest: hammer → RavenWatch. Besides wood, resin and feathers, it takes 2 of Eikthyr's antlers.\n\nBuild it and press E on the nest — Odin will come with a trial and give you the Book of Ravens (B): it shows what to do and how much is left. Finish in time and he gives you a raven.\n\nDon't want to wait? Haldor sells ravens.
 Ворон твій	Your Raven
-Ворон прокинувся і тепер твій. Чужих він клює.\n\nКнига воронів — B: стан, дари, довіра, образ.\n\nСпершу він дичиться й інколи відлітає. Звикне.	Your raven has woken and is yours now. It pecks strangers.\n\nThe Book of Ravens — B: state, gifts, trust, look.\n\nAt first it's shy and sometimes flies off. It will get used to you.
 Дари і сила	Gifts and Strength
 Дари — у колі Q. Кожен коштує сили.\n\nОбидва ворони щодня набирають трохи самі. Хугін — ще в мирі й роботі, Мунін — у бою.\n\nУдари ворона ростуть із вишколом: B → «Розвиток».	Gifts are on the Q wheel. Each costs strength.\n\nBoth ravens gain a little on their own every day. Hugin also gains it in peace and work, Munin in battle.\n\nThe raven's strikes grow with training: B → “Growth”.
 Ворон голодний	Your Raven Is Hungry
 Ворон голодний. Хугін їсть ягоди, мед, гриби й рибу, Мунін — сире м'ясо. Підходить лише їжа його рівня — яка, видно в книзі.\n\nГодуй з кола J («Погодувати»). Їжа — головний шлях до довіри. Улюблену він має свою й сам натякне на неї.\n\nГолодний ворон краде їжу із сумки, а на нулі слабне й клює тебе.	Your raven is hungry. Hugin eats berries, honey, mushrooms and fish; Munin eats raw meat. Only food of its level will do — the book shows which.\n\nFeed it from the J wheel (“Feed”). Food is the main road to trust. It has a favorite of its own and will hint at it.\n\nA hungry raven steals food from your bag, and at zero it weakens and pecks you.
 Смерть	Death
-Смерть забирає в ворона довіру (на 1–2 рівнях — менше).\n\nВорони лягають у могилу з речами й стережуть її. Ворон із плеча, щойно забереш його, сяде назад на плече. Прийдеш по нього за 10 хвилин — він поверне половину втраченої довіри.\n\nЗагуби{в|ла} ворона зовсім — поверни його обрядом: B → «Ворони», сторінка ворона. Раз на 5 днів.	Death costs your raven trust (less at levels 1–2).\n\nYour ravens lie in the grave with your things and guard it. A raven from your shoulder sits back on it as soon as you take it. Come back for it within 10 minutes and it returns half the trust it lost.\n\nLost your raven for good? Bring it back with a rite: B → “Ravens”, the raven's page. Once every 5 days.
+Смерть забирає у ворона довіру (на 1–2 рівнях — менше).\n\nВорони лягають у могилу з речами й стережуть її. Ворон із плеча, щойно забереш його, сяде назад на плече. Прийдеш по нього за 10 хвилин — він поверне половину втраченої довіри.\n\nЗагуби{в|ла} ворона зовсім — поверни його обрядом: B → «Ворони», сторінка ворона. Раз на 5 днів.	Death costs your raven trust (less at levels 1–2).\n\nYour ravens lie in the grave with your things and guard it. A raven from your shoulder sits back on it as soon as you take it. Come back for it within 10 minutes and it returns half the trust it lost.\n\nLost your raven for good? Bring it back with a rite: B → “Ravens”, the raven's page. Once every 5 days.
 Чужий ворон	A Stranger's Raven
-Цей ворон не твій. Дари він дає, але не росте, нічого не пам'ятає й клює тебе.\n\nСвого загубленого ворона поверни обрядом: B → «Ворони», сторінка ворона. Старий тоді розсиплеться пір'ям.	This raven is not yours. It gives its gifts, but it doesn't grow, remembers nothing and pecks you.\n\nBring your own lost raven back with a rite: B → “Ravens”, the raven's page. The old one then crumbles into feathers.
-Тепер ворон слухає наказів — коло J.\n\n«Туди»: наведи приціл на гравця, тварину, річ чи будову, і ворон полетить туди. Ще є «Поруч», «Кружляй», трюки й «Усіх назад».\n\nЯкщо ситість нижча за 15, ворон наказів не виконує.	Now your raven takes orders — the J wheel.\n\n“There”: aim at a player, an animal, an item or a building, and the raven flies there. There's also “With Me”, “Circle”, tricks and “Recall all”.\n\nWith satiety below 15, the raven won't obey.
+Цей ворон не твій: дарів не дає, не росте, нічого не пам'ятає й клює тебе.\n\nСвого загубленого ворона поверни обрядом: B → «Ворони», сторінка ворона. Старий тоді розсиплеться пір'ям.	This raven is not yours: it gives no gifts, doesn't grow, remembers nothing and pecks you.\n\nBring your own lost raven back with a rite: B → “Ravens”, the raven's page. The old one then crumbles into feathers.
 Спорядження	Gear
-Ворон дасть себе вбрати: B → «Образ». Чотири місця — голова, шия, спина, лапи. Кожна річ дає свою силу.\n\nРечі роблять на столах ворона (молоток → RavenWatch): простий — біля кузні, просунутий — біля столу ґалдра, його речі — з 5-го рівня.\n\nТорба на спині годує ворона сама.	Your raven will let you dress it: B → “Look”. Four places — head, neck, back, legs. Each item gives its own power.\n\nItems are made at the raven tables (hammer → RavenWatch): the simple one by the forge, the advanced one by the galdr table; its items from level 5.\n\nA pouch on its back feeds the raven by itself.
 Жердини	Perches
 Молоток → RavenWatch: жердини для воронів.\n\nE біля жердини садить Хугіна, Shift+E — Муніна. Там ворон відпочиває й набирається сили. Під дахом і в затишку — швидше.\n\nПокликати його назад можна звідусіль.	Hammer → RavenWatch: perches for your ravens.\n\nE by a perch seats Hugin, Shift+E seats Munin. There the raven rests and gains strength — faster under a roof and in comfort.\n\nYou can call it back from anywhere.
-Посади воронів у Вороняче гніздо (E угорі), поклади дари в чашу й поклич Одіна. Він дає доручення — раз на день, а з довірою частіше.\n\nГнізда нема — молоток → RavenWatch, треба ще 2 роги Ейктюра.\n\nВиконані доручення запалюють руни. Усе — у книзі (B), «Шлях Одіна».	Seat your ravens in the Raven's Nest (E on top), lay gifts in the bowl and call Odin. He gives errands — once a day, more often as trust grows.\n\nNo nest? Hammer → RavenWatch; it also takes 2 of Eikthyr's antlers.\n\nFinished errands light runes. It's all in the book (B), “Odin's Path”.
 Ворон береже тебе	Your Raven Guards You
 Перша руна	The First Rune
-Загорілася руна. Руни Фреї фарбують ворона, руни Бальдра дають ефект, руни Геймдаля — слід у польоті.\n\nПовісити руну: B → «Образ», ромби довкола ворона. Усі руни — у «Шляху Одіна».\n\nРуна твоя, не ворона: віддаси ворона — він її не понесе.	A rune has lit up. Runes of Freya color the raven, Runes of Baldr give an effect, Runes of Heimdall leave a trail in flight.\n\nTo hang a rune: B → “Look”, the diamonds around the raven. All runes are on “Odin's Path”.\n\nThe rune is yours, not the raven's: give the raven away and it won't carry it.
-Одін кличе на золоті доручення. За кожне — золота руна.\n\nЇї вкладають у дар ворона назавжди: дар сильнішає, дешевшає, а на третьому рівні отримує свою грань.\n\nДо трьох рівнів на дар, до п'яти золотих рун на ворона — усього десять. Коли отримаєш десяту, золоті доручення скінчаться.	Odin calls you to golden errands. Each one gives a golden rune.\n\nIt is set into one of the raven's gifts for good: the gift gets stronger, cheaper, and at the third level gains a facet of its own.\n\nUp to three levels per gift, up to five golden runes per raven — ten in all. Once you get the tenth, golden errands end.
+Загорілася руна. Руни Фреї фарбують ворона, руни Бальдра дають ефект, руни Геймдаля — слід у польоті.\n\nПовісити руну: B → «Образ», ромби довкола ворона. Усі руни — у «Шляху Одіна».\n\nРуна твоя, не ворона: віддаси ворона — він її не понесе.	A rune has lit up. Runes of Freya color the raven, runes of Baldr give an effect, runes of Heimdall leave a trail in flight.\n\nTo hang a rune: B → “Look”, the diamonds around the raven. All runes are on “Odin's Path”.\n\nThe rune is yours, not the raven's: give the raven away and it won't carry it.
 Пошта воронів	Raven Mail
-Поруч гравець із воронами. Йому можна слати листи й посилки.\n\nКонверт у кутку книги (B). Лист — 20 сили й пергамент (у Хальдора), посилка — 30 сили й одна річ до 2 кг, з 3-го рівня довіри ворона.	A player with ravens is nearby. You can send them letters and parcels.\n\nThe envelope is in the corner of the book (B). A letter costs 20 strength and a parchment (from Haldor); a parcel costs 30 strength and holds one item up to 2 kg, from the raven's trust level 3.
 Провідник розповість усе знову ({0} тем, коли до них дійде).	The Guide will tell everything again ({0} topics, as they come up).
-Ворона в тебе ще нема — поклич Одіна: він дасть випробування	You have no raven yet — call Odin: he will give you a trial
-Ворона в тебе нема — його можна купити в Хальдора	You have no raven — Haldor sells them
 Відкриється, коли ворон дійде {0}-го рівня довіри.	Opens when the raven reaches trust level {0}.
 Посилку — з {0}-го рівня довіри.	Parcels — from trust level {0}.
 Лист — з {0}-го рівня довіри.	Letters — from trust level {0}.
@@ -3147,22 +3196,12 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 нагорода — {0} · ще {1}	reward — {0} · {1} left
 Покласти в чашу для випробування	Lay in the bowl for the trial
 Подивитися випробування	Look at the trial
-Прийняти випробування Одіна	Accept Odin's trial
-Ти кличеш Одіна…	You're calling Odin…
-Покликати Одіна	Call Odin
-Одін прийде лише до того, хто здолав Ейктюра.	Odin only comes to those who have beaten Eikthyr.
-Одін більше не дасть випробування. Ворона продає Хальдор.	Odin won't give the trial again. Haldor sells ravens.
 Посади сюди своїх воронів, коли вони будуть.	Seat your ravens here once you have them.
 Одін прийняв.	Odin has accepted.
-Ти кличеш Одіна. Зачекай біля гнізда.	You call Odin. Wait by the nest.
-Одін мовчить.	Odin is silent.
-Сяйво згасло: Одін пішов від гнізда. Поклич знову, коли будеш готов{ий|а}.	The glow has faded: Odin has left the nest. Call again when you're ready.
-Над гніздом золоте сяйво: Одін прийшов. E на чашу — прийняти випробування.	A golden glow over the nest: Odin has come. E on the bowl — accept the trial.
 Одін дотримав слова: {0} тепер твій. Він ще спить.	Odin kept his word: {0} is yours now. It is still asleep.
 Випробування провалено: {0}. Одін пішов.	The trial has failed: {0}. Odin has left.
 Ти відмови{вся|лася} від випробування. Одін пішов.	You refused the trial. Odin has left.
 Поради Провідника	The Guide's Tips
-Усе, що Провідник уже розповів: перечитати.	Everything the Guide has told you, to read again.
 ще з поштою	still on the post
 після смерті	after death
 портал	in a portal
@@ -3171,8 +3210,6 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 {0} сидить у гнізді	{0} is sitting in the nest
 Поклич його звідти (E на гнізді).	Call it from there (E on the nest).
 {0} полетів у гніздо. Там він відпочине й набереться сили (до {1} на день; {2}).	{0} flew to the nest. There it will rest and gather strength (up to {1} a day; {2}).
-у гнізді · {0}	in the nest · {0}
-сидить у гнізді · покликати	sitting in the nest · call back
 \nСтавиться лише просто неба, не під дахом.	\nGoes under the open sky only, not under a roof.
 Гніздо ставлять лише просто неба: над ним не має бути даху.	The nest goes under the open sky only: no roof above it.
  · у гнізді	 · in the nest
@@ -3213,7 +3250,7 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 {мисливцю|мисливице}	mighty hunter
 роззяво	gawker
 стратегу	strategist
-ґаво	dimwit
+{філософе|філософко}	philosopher
 незграбо	clumsy
 Ага.	Uh-huh.
 Так.	Right.
@@ -3235,7 +3272,6 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Клік — призначити клавішу.	Click — set a key.
 Клік — змінити клавішу ({0}).	Click — change the key ({0}).
 Основа: {0} ({1}{2})\n+ вишкіл {3}-го рівня: +{4}%\n+ довіра {5}-го рівня: +{6}%\n+ ситий: {7}\n{8}{9}{10}= {11} × {12}{13} = {14}\n\n{15}Удар не залежить від твоєї зброї. Боса один виліт ранить не більше ніж на {16}% здоров'я.	Base: {0} ({1}{2})\n+ training level {3}: +{4}%\n+ trust level {5}: +{6}%\n+ fed: {7}\n{8}{9}{10}= {11} × {12}{13} = {14}\n\n{15}The strike doesn't depend on your weapon. One flight can't take more than {16}% of a boss's health.
-Мунін будить у тобі звіра, як у берсерка: ти плавно виростаєш до {0}× себе — справжнім тілом, тож тебе й б'ють як велетня, а в тісному можна застрягти. {1} ти завдаєш на {2}% більше шкоди, броня на {3}% міцніша, тебе не оглушити й не відкинути, рука сягає далі, а удар ногою (без зброї, колесо миші) відкидає на {5}% далі. Бонуси додаються до «Злості» й «Кривавої люті»; «Лють» із звіром не працює, і «Крила Одіна» теж. Не в підземеллях (і зайдеш туди — звір вийде). Мунін на плечі лишається свого розміру. <color=#FF8A7A>Розплата: потім ти плавно меншаєш назад, і {4} витривалість відновлюється вдвічі повільніше.</color>	Munin wakes the beast in you, like a berserker's: you smoothly grow to {0}× your size — a real body, so you're hit like a giant and can get stuck in tight places. For {1} you deal {2}% more damage, your armor is {3}% stronger, you can't be staggered or knocked back, your reach is longer, and your kick (no weapon, mouse wheel button) throws them {5}% farther. The bonuses stack with “Anger” and “Blood Rage”; “Fury” doesn't work with the beast, nor do “Odin's Wings”. Not in dungeons (walk into one and the beast leaves). Munin on your shoulder keeps his own size. <color=#FF8A7A>The price: afterwards you smoothly shrink back, and for {4} your stamina recovers half as fast.</color>
 Одна з рун ще не знайшла свого ефекту.	One of the runes has not found its effect yet.
 \nЩе клік — скасувати, і обидва повернуться на плечі.	\nClick again to cancel, and both come back to your shoulders.
 Усіх назад	Recall all
@@ -3345,7 +3381,6 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Сплести руни	Weave runes
 Ця руна зараз у в'язі. Розплети в'язь, щоб вдягти її окремо.	This rune is in your bindrune now. Unweave it to wear the rune on its own.
 Воронячі в'язі	Bindrunes
-Ти знайш{ов|ла} Вороняче дерево. Біля його коріння руни сплітаються у в'язь — силу, що діє на тобі.\n\nРуни Бальдра кажуть, що станеться, руни Геймдаля — коли, руни Фреї — як. Зелене дерево бере 2 руни, крижане — 3, горіле — 4. Слухає воно лише ворона з довірою 2, 4 чи 6.\n\nЩоб сплести — посади своїх воронів на жердину на верхівці дерева, стань біля нього й встій на арені. В'язь у тебе одна; вмикає й вимикає її коло Q або книга, а розплести її можна лише біля дерева.	You found a Raven Tree. At its roots runes weave into a bindrune — a power that works on you.\n\nBaldr's runes say what happens, Heimdall's say when, Freya's say how. The green tree takes 2 runes, the icy one 3, the charred one 4. It listens only to a raven with trust 2, 4 or 6.\n\nTo weave, seat your ravens on the perch at the top of the tree, stand by it and hold out in the arena. You have one bindrune; the Q circle or the book turns it on and off, and it can be unwoven only at a tree.
 Одна руна — лише на одне місце.	One rune can take only one place.
 Арену перервано. В'язь не сплелась — руни лишились у книзі.	The arena was broken off. The bindrune did not hold — the runes stay in the book.
 Сонце Бальдра	Baldr's Sun
@@ -3370,40 +3405,40 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Перша руна в'язі лише з рун Бальдра — кнопка «{0}»: {1}	First rune of the bindrune (Baldr's runes only) — button “{0}”: {1}
 вчасно забрали з могили	taken from the grave in time
 {0} — у в'язі +{1}% сили.	{0} — +{1}% power in a bindrune.
-удар ворона +{0}%	raven's strike +{0}%
-п'ята частина удару — вогнем, ціль горить	a fifth of the strike is fire, the target burns
+удар ворона (дар «Удар в очі» чи «Кігті») сильніший на {0}%	the raven's strike (the gift «Eye Peck» or «Talons») is {0}% stronger
+п'ята частина шкоди від удару ворона — вогнем, і ціль загоряється	a fifth of the raven's strike damage is fire, and the target catches fire
 ворон голодніє на {0}% повільніше	the raven gets hungry {0}% slower
-голодуючи, б'є на повну силу	strikes at full strength even when starving
+навіть голодний, ворон б'є на повну силу	even hungry, the raven strikes at full strength
 ворон літає на {0}% швидше	the raven flies {0}% faster
-на плече повертається ще на 20% швидше	returns to your shoulder another 20% faster
-довіра росте на {0}% швидше	trust grows {0}% faster
-ситий ворон на плечі лікує тебе на 1% здоров'я кожні 10 с	a well-fed raven on your shoulder heals you 1% of health every 10 s
+а назад на плече летить ще на 20% швидше	and flies back to your shoulder 20% faster still
+довіра цього ворона до тебе росте на {0}% швидше	this raven's trust in you grows {0}% faster
+коли ворон ситий і сидить на плечі, він кожні 10 с лікує тебе на 1% здоров'я	while the raven is fed and on your shoulder, it heals you for 1% health every 10 s
 дари ворона перезаряджаються на {0}% швидше	the raven's gifts recharge {0}% faster
-уночі дари ворона на {0}% сильніші	at night the raven's gifts are {0}% stronger
-і в печерах та підземеллях теж	in caves and dungeons too
-удар ворона +{0}%, але голодніє на 20% швидше	raven's strike +{0}%, but it gets hungry 20% faster
-удар лікує тебе на 10% завданої шкоди	the strike heals you for 10% of the damage dealt
-дальність удару й розвідки ворона +{0}%	raven's strike and scouting range +{0}%
+уночі всі дари цього ворона на {0}% сильніші	at night all of this raven's gifts are {0}% stronger
+те саме в печерах і підземеллях	the same in caves and dungeons
+удар ворона сильніший на {0}%, але ворон голодніє на 20% швидше	the raven's strike is {0}% stronger, but the raven gets hungry 20% faster
+удар ворона лікує тебе на 10% завданої ним шкоди	the raven's strike heals you for 10% of the damage it deals
+ворон дістає ціль для удару й розвідує на {0}% далі	the raven reaches strike targets and scouts {0}% farther
 шкода твоєї зброї +{0}%	your weapon damage +{0}%
-опір вогню	fire resistance
+вогонь шкодить тобі вдвічі менше	fire hurts you half as much
 броня +{0}%	armor +{0}%
-опір морозу	frost resistance
+мороз шкодить тобі вдвічі менше	frost hurts you half as much
 здоров'я відновлюється на {0}% швидше	health regenerates {0}% faster
 отрута шкодить на {0}% менше	poison hurts {0}% less
 ти шумиш на {0}% тихіше	you make {0}% less noise
-удар зі скритності +10%	sneak attack +10%
-твої удари лікують на {0}% завданої шкоди	your hits heal you for {0}% of the damage dealt
+удар зі скритності по ворогу, що тебе не помітив, сильніший на 10%	a sneak attack on an enemy that hasn't noticed you is 10% stronger
+твої удари лікують тебе на {0}% завданої шкоди	your hits heal you for {0}% of the damage dealt
 біг забирає на {0}% менше витривалості	running costs {0}% less stamina
-перекат дешевший на {0}%	dodge rolls cost {0}% less
+перекат забирає на {0}% менше витривалості	dodging takes {0}% less stamina
 ти рухаєшся на {0}% швидше	you move {0}% faster
 витривалість відновлюється на {0}% швидше	stamina regenerates {0}% faster
-у присяді ти швидший на {0}%	you are {0}% faster while crouching
+у присяді ти рухаєшся на {0}% швидше	you move {0}% faster while crouching
 падіння шкодить на {0}% менше	falls hurt {0}% less
-вантаж +{0}	carry weight +{0}
+можеш нести на {0} більше ваги	you can carry {0} more weight
 стрибок вищий на {0}%	jump {0}% higher
 Сили від іскор ця руна не має: лише вигляд.	This rune gains no power from sparks: looks only.
-Діє, коли руна висить на вороні: на нього самого.	Works while the rune hangs on a raven: on the raven itself.
-Діє, коли руна висить на вороні, а він сидить у тебе на плечі.	Works while the rune hangs on a raven and it sits on your shoulder.
+Сила йде самому ворону, на якому висить руна.	The power goes to the raven the rune hangs on.
+Сила йде тобі, поки ворон із цією руною сидить у тебе на плечі.	The power goes to you while the raven with this rune sits on your shoulder.
 + зіркова руна Фреї: +{0}%\n	+ a sparked rune of Freya: +{0}%
 СИДИТЬ · ПЕРЕСАДИТИ	SITS · MOVE
 морозна хвиля ({0} м): {1}% шкоди зброї морозом, мороз сповільнює ворогів	a frost wave ({0} m): {1}% of weapon damage as frost, the frost slows enemies
@@ -3468,8 +3503,9 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Іскри рун: {0} — сила +{1}%.	Rune sparks: {0} — power +{1}%.
 Зарубка на різі — або Іскра Одіна: вона падає на випадкову руну, що горить, і лишається на ній, тоді руна на вороні дає силу, а не лише вигляд. Зламаний модифікатор нагороди не дає.	A notch on the tally stick — or a Spark of Odin: it falls on a random burning rune and stays on it, and then the rune on a raven gives power, not just looks. A broken modifier gives no reward.
 іскра|іскри|іскор	spark|sparks
-Без іскор — лише вигляд. Іскри Одіна з доручень дадуть їй силу:	No sparks — looks only. Sparks of Odin from errands will give it power:
-З {0} іскрами ще й: {1}	With {0} sparks also: {1}
+Поки без іскор руна лише фарбує ворона. Силу їй дають іскри Одіна — вони інколи випадають за виконані доручення:	Without sparks the rune only colours the raven. Sparks of Odin give it power — they sometimes drop for errands done:
+Іскор на руні: {0} із {1}. Що вона дає:	Sparks on the rune: {0} of {1}. What it gives:
+, а ще {0}	, and also {0}
 У в'язі сама не діє, зате кожна її іскра дає в'язі +{0}% сили.	In a bindrune it does nothing alone, but each of its sparks gives the bindrune +{0}% power.
 Іскра Одіна впала на руну {0} — тепер у неї {1}{2}	A Spark of Odin fell on the rune {0} — now it has {1}{2}
 + руна «{0}» ({1}): +{2}%\n	+ rune “{0}” ({1}): +{2}%\n
@@ -3560,8 +3596,6 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Хугін, блага: {0}\nХугін, золоті: {1}\nХугін, тягарі: {2}\nМунін, блага: {3}\nМунін, золоті: {4}\nМунін, тягарі: {5}	Hugin, boons: {0}\nHugin, golden: {1}\nHugin, burdens: {2}\nMunin, boons: {3}\nMunin, golden: {4}\nMunin, burdens: {5}
 <color={0}>Благо: {1}</color>\n<color=#FF6B6B>Тягар: {2}</color>	<color={0}>Boon: {1}</color>\n<color=#FF6B6B>Burden: {2}</color>
 <b><color={0}>Благо й тягар</color></b>\n\nКожен ворон при покупці отримує одне випадкове благо (тобі на користь) і один тягар (тобі на шкоду). Що пасує його норову, випадає частіше. Зрідка благо буває <color={1}>золотим</color> — сильнішим за звичайні. Не подобається, що випало? <color={1}>Камінь долі</color> (у Хальдора) перекине їх наново — тоді зміниться й тягар.	<b><color={0}>Boon and burden</color></b>\n\nEvery raven gets one random boon (good for you) and one burden (bad for you) when bought. The ones that suit its nature come up more often. Now and then the boon is <color={1}>golden</color> — stronger than the usual ones. Don't like what you got? A <color={1}>Fate Stone</color> (from Haldor) rolls them again — and the burden changes too.
-Хугін зривається з плеча, летить до істоти, на яку ти дивишся (від {0} до {1} м — що вищий вишкіл, то далі; у прямій видимості; звір у прицілі задалеко чи не видно — бере найближчого попереду, а як нема, то збоку чи позаду; нікого — летить, куди дивишся), пірнає й дзьобає. Б'є і монстрів, і дичину — оленів, кабанів, — але не приручених, не тих, кого ти саме приручаєш, і не своїх. Хто не чекав удару (не помітив тебе), отримує перший удар критом (крім як у Тіні). Шкода колюча; після удару вертається на плече. Ціль осліплена на {2} с (бос — на {3} с): нікого не бачить і не чує, губить того, за ким гналася, — час утекти чи зайти зі спини; перший справжній удар по ній (твій чи друга; підпал чи отрута не рахуються) знімає осліплення. Сила удару своя, не від зброї: росте з вишколом, з довірою, за кожного боса, якого ти переміг з Хугіном на плечі, і коли він ситий. Хугін може дзьобнути ту саму ціль двічі; крит б'є вдвічі сильніше. Боса один виліт ранить не більше ніж на {4}% його здоров'я. Не знайшов нікого — половина сили вертається, а пауза вдвічі коротша. На 10, 20, 25 і 30 рівнях вишколу Хугін вивчає прийом на вибір — назавжди. Усе це — у книзі воронів, вкладка «Розвиток».	Hugin leaps off your shoulder and flies at the creature you're looking at ({0} to {1} m — the more training, the farther; in line of sight; if the one in your sights is too far or hidden, he takes the nearest ahead, then to the side or behind; if there's nobody, he flies where you look), dives and pecks. He hits monsters and game alike — deer, boars — but not tamed ones, not the one you're taming, and not your own. Whoever didn't expect it (didn't notice you) takes the first hit as a crit (except in Shadow). Pierce damage; after the hit he returns to your shoulder. The target is blinded for {2} s (a boss for {3} s): it sees and hears no one and loses whoever it was chasing — time to run or get behind it; the first real hit on it (yours or a friend's; burning and poison don't count) lifts the blindness. The strike's strength is his own, not the weapon's: it grows with training, with trust, with every boss you beat with Hugin on your shoulder, and when he's fed. Hugin may peck the same target twice; a crit hits twice as hard. One flight can't take more than {4}% of a boss's health. Found no one — half the strength comes back and the wait is half as long. At training 10, 20, 25 and 30 Hugin learns a technique of your choice — for good. It's all in the Book of Ravens, tab “Growth”.
-Мунін зривається з плеча, летить до істоти, на яку ти дивишся (від {0} до {1} м — що вищий вишкіл, то далі; звір у прицілі задалеко чи не видно — бере найближчого попереду, а як нема, то збоку чи позаду; нікого — летить, куди дивишся), і рве кігтями — і монстрів, і дичину, але не приручених, не тих, кого ти саме приручаєш, і не своїх; хто не чекав, отримує перший удар критом (крім як у Тіні) — рубляча шкода, сильніша за Хугінову; ще двох ворогів поруч він зачепить по дорозі. Першу ціль може роздерти двічі чи тричі, інших зачіпає раз; хитає їх, а тоді вертається. Мунін частіше за Хугіна б'є критом (×2). Кожному лишає рвану рану на {2} с (бос — {3} с): стікає кров'ю — ще {4}% від удару — і кульгає на {5}% повільніше. Сила удару своя, не від зброї: росте з вишколом, з довірою, за кожного боса, якого ти переміг з Муніном на плечі, і коли він ситий. Боса один виліт ранить не більше ніж на {6}% його здоров'я. Не знайшов нікого — половина сили вертається, а пауза вдвічі коротша. На 10, 20, 25 і 30 рівнях вишколу Мунін вивчає прийом на вибір — назавжди. Усе це — у книзі воронів, вкладка «Розвиток».	Munin leaps off your shoulder and flies at the creature you're looking at ({0} to {1} m — the more training, the farther; if the one in your sights is too far or hidden, he takes the nearest ahead, then to the side or behind; if there's nobody, he flies where you look) and tears into it with his talons — monsters and game alike, but not tamed ones, not the one you're taming, and not your own; whoever didn't expect it takes the first hit as a crit (except in Shadow) — slash damage, harder than Hugin's; he'll catch two more enemies nearby on the way. The first target he may rake twice or three times, the others once; he staggers them, then comes back. Munin crits more often than Hugin (×2). Each one is left with a torn wound for {2} s (a boss {3} s): it bleeds — another {4}% of the hit — and limps {5}% slower. The strike's strength is his own, not the weapon's: it grows with training, with trust, with every boss you beat with Munin on your shoulder, and when he's fed. One flight can't take more than {6}% of a boss's health. Found no one — half the strength comes back and the wait is half as long. At training 10, 20, 25 and 30 Munin learns a technique of your choice — for good. It's all in the Book of Ravens, tab “Growth”.
 Падальник: повернулось {0} сили	Carrion Eater: {0} strength back
 Мітка мисливця	Hunter's Mark
 Ціль, яку вразив Хугін, {0} с отримує на {1}% більше шкоди від твоїх ударів — і стріл, і заклять, і клинка.	A target Hugin hit takes {1}% more damage from your blows for {0} s — arrows, spells and blades alike.
@@ -3868,7 +3902,7 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Давно не був {0}. Неси мене туди.	Haven't been {0} for ages. Carry me there.
 Скучив за краєм. Покажи мені, як там {0}.	I miss that land. Show me how it is {0}.
 Той {0} тебе ледь не зжер. Знайди такого й розмаж.	That {0} nearly ate you. Find one and smear it.
-Руки сверблять. Покладемо {0} штук — {1}. Я дивлюсь.	My claws itch. Let's drop {0} of them — {1}. I'm watching.
+Руки сверблять. Покладемо штук {0} — {1}. Я дивлюсь.	My claws itch. Let's drop {0} of them — {1}. I'm watching.
 Посидь зі мною біля вогню хвилин {0}. Просто посидь.	Sit with me by a fire for {0} minutes. Just sit.
 Дай мені {0}. Моє буде. Не питай навіщо.	Give me {0}. Mine. Don't ask why.
 Мені б {0}. Для скарбнички. Ти ж розумієш.	I'd like {0}. For my hoard. You understand.
@@ -4161,20 +4195,16 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 обживається {0} хв	settling in, {0} min
 влучаєш сильною атакою, стрілою чи чарами	you land a heavy blow, an arrow or a spell
 блокуєш удар щитом	you block a blow with a shield
-атака дешевша на {0}% (посох — ейтир, лук — і натяг)	attacks cost {0}% less (staff: eitr, bow: the draw too)
-броня +{0}% (зі щитом — блок дешевший, з посохом — ейтир швидше)	armour +{0}% (with a shield: cheaper blocks, with a staff: faster eitr)
+атака забирає на {0}% менше витривалості; з посохом — на стільки ж менше ейтиру, з луком — ще й натяг дешевший	attacks take {0}% less stamina; with a staff, that much less eitr; with a bow, drawing is cheaper too
+броня +{0}%; але якщо в руці щит — замість броні блок забирає на {0}% менше витривалості, а якщо посох — ейтир відновлюється на {0}% швидше	armour +{0}%; but with a shield in hand, blocking takes {0}% less stamina instead, and with a staff, eitr comes back {0}% faster
 Подвійна ноша	Double Load
 Обидва ворони підхоплюють частину вантажу й летять поруч.	Both ravens take part of the load and fly beside you.
-Хугін і Мунін беруть частину твоєї ноші й летять поруч, важко махаючи крилами: {0} ти несеш на {1} більше, а впавши з висоти, втрачаєш на {2} менше здоров'я: вони притримують тебе мотузками. Поки тягнуть, жоден їхній дар не працює, як і тоді, коли ворони відлітають з плеча. Натисни дар ще раз — кинуть ношу раніше. Скінчиться, а вантаж завеликий — ходитимеш повільно, як завжди. Бурчатимуть усю дорогу. Платять обидва.	Hugin and Munin take part of your load and fly beside you, beating their wings heavily: for {0} you carry {1} more, and a fall from a height costs you {2} less health: they hold you up on the ropes. While they carry it, none of their gifts work, just as when the ravens leave the shoulder. Use the gift again and they drop the load early. When it ends and the load is too heavy, you walk slowly as usual. They will grumble all the way. Both pay.
 Розігнати хмари	Clear the Clouds
 Обидва ворони кружляють угорі — і довкола тебе ясно.	Both ravens circle high overhead, and the sky clears around you.
-Хугін і Мунін злітають над тобою й розганяють хмари: {0} у кожного, хто ближче {1} м від тебе, ясна погода — дощ ущухає, сніг не мете, не мокнеш, у горах не так холодно. Ясно там, де ти: підеш — і хмари розходяться попереду; хто вийде з кола, тому погода плавно вернеться. Туман Туманних земель відступає видимим колом. Під землею, під дахом і там, де погоду тримає сам край (боси, особливі місця), не діє. Платять обидва.	Hugin and Munin fly up over you and drive the clouds away: for {0}, everyone closer than {1} m to you gets clear weather — the rain stops, no snow blows, you stay dry, the mountains are less cold. The sky is clear where you are: walk on and the clouds part ahead; whoever leaves the circle gets their weather back slowly. The Mistlands' mist pulls back in a visible circle. Does not work underground, under a roof, or where the land itself holds the weather (bosses, special places). Both pay.
 Вихор	Whirlwind
 Обидва ворони кружляють довкола й без упину б'ють усіх поруч, доки стане сили.	Both ravens circle round you and strike everyone near without pause, as long as their strength lasts.
-Хугін і Мунін злітають з плечей і вихором кружляють довкола тебе, трохи швидші, ніж завжди: кожного ворога ближче {0} м вони б'ють один за одним без перерви — своїми ударами, як «Удар в очі» й «Кігті», з тими самими критами й мітками, — і на плече між ударами не вертаються. Кожен удар коштує тому ворону, що б'є, {1} сили (щоб почати, треба по {3} в кожного); щойно в одного вона скінчиться — обидва вертаються, і починається перезарядка. Натисни дар ще раз — повернуться раніше, і решта сили лишиться. Коли довкола нікого бити, вихор за кілька секунд стихає. Боси отримують половину шкоди. У залік воронам ідуть лише перші {2} ударів: вбивства після них не дають сили й не рахуються в доручення. Під куполом не діє.	Hugin and Munin leave your shoulders and whirl round you, a little faster than usual: every enemy closer than {0} m is struck one after another without pause — with their own blows, like Eye Peck and Talons, the same crits and marks — and they don't go back to the shoulder between blows. Each blow costs the raven striking it {1} strength (to start, each needs {3}); as soon as one runs out, both come back and the cooldown begins. Use the gift again to call them back early and keep the strength left. With nobody left to strike, the whirlwind dies down in a few seconds. Bosses take half damage. Only the first {2} blows count for the ravens: kills after them give no strength and do not count for errands. Does not work under the dome.
 <color=#9a9a9a>відкриється, коли обидва ворони будуть на {0}-му рівні довіри</color>	<color=#9a9a9a>opens once both ravens reach trust level {0}</color>
 удари холодять — вороги довкола сповільнені	the blows chill — enemies around are slowed
-ясно ще й у радіусі вдвічі ширшому	clear in a circle twice as wide too
 ще й без перевантаження, а падіння м'якше: −75% шкоди	and no overload, and softer falls: −75% damage
 вага, яку беруть ворони	the weight the ravens take
 Тримайся ближче. Я не люблю ловити тих, хто тікає.	Stay close. I don't like chasing runners.
@@ -4223,6 +4253,9 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Що, дощику захотілось? Тримай.	Fancy some rain? Here you go.
 Ворони тягнуть ношу — кігті зайняті	The ravens are carrying the load — their claws are busy
 Ворони у вихорі	The ravens are in the whirlwind
+Ворони розганяють хмари	The ravens are clearing the clouds
+Хугін дражнить ворога	Hugin is teasing a foe
+Мунін приборкує звіра	Munin is taming a beast
 потрібні обидва ворони на плечах	both ravens must be on your shoulders
 {0} спить — спершу обряд	{0} is asleep — the ritual first
 {0} в атаці	{0} is on a strike
@@ -4278,7 +4311,7 @@ I — сильніший: {0} +{1}%\nII — дешевший і швидше г�
 Копчений	Smoky
 Ковбаса	Sausage
 Ковбасо	Sausage
-Півгодини ви разом коптилися в диму	Half an hour smoking together in the smoke
+Дві години ви разом коптилися в диму	Two hours smoking together in the smoke
 Бурулька	Icicle
 Бурулько	Icicle
 Відморозок	Frostbitten
@@ -4450,8 +4483,8 @@ Esc — скасувати	Esc — cancel
 Хугін хоче бачити море з корабля, а не з берега. Стань до стерна й веди — довго.	Hugin wants to see the sea from a ship, not from the shore. Take the helm and steer — for a long time.
 Хугін каже, що з тобою за стерном навіть море не таке страшне. Веди корабель — довго.	Hugin says with you at the helm even the sea isn't so frightening. Steer the ship — for a long time.
 Морський змій	The Sea Serpent
-Мунін бачив у морі змія завдовжки з корабель. Убий його й принеси голову.	Munin saw a serpent in the sea as long as a ship. Kill it and bring its head.
-Мунін каже, що морський змій — то просто довгий вугор. Доведи йому, що ні: убий і принеси голову.	Munin says a sea serpent is just a long eel. Prove him wrong: kill it and bring its head.
+Мунін бачив у морі змія завдовжки з корабель. Убий його й принеси голову в чашу гнізда.	Munin saw a serpent in the sea as long as a ship. Kill it and bring its head to the nest's bowl.
+Мунін каже, що морський змій — то просто довгий вугор. Доведи йому, що ні: убий і принеси голову в чашу.	Munin says a sea serpent is just a long eel. Prove him wrong: kill it and bring its head to the bowl.
 Випробування Хугіна	Hugin's Trial
 Одін хоче знати, чи вмієш ти бачити. Збери, що дає ліс, вполюй оленів і поклади в чашу гнізда трофей оленя.	Odin wants to know whether you can see. Gather what the woods give, hunt deer and lay a deer trophy in the nest's bowl.
 Випробування Муніна	Munin's Trial
@@ -4495,7 +4528,7 @@ Esc — скасувати	Esc — cancel
 Хугін каже, що Одін любить і рибу, і печене. Вибирай сам{|а}: налови риби або приготуй страв.	Hugin says Odin likes both fish and roast. Your choice: catch fish or cook dishes.
 Дар у чашу	A Gift in the Bowl
 Хугін хоче покласти Одіну дар: шкури троля чи трофей вовка.	Hugin wants to lay a gift before Odin: troll hides or a wolf trophy.
-Хугін каже, що Одін рад і шкурі, і трофею, аби від тебе. Віддай шкури троля чи трофей вовка.	Hugin says Odin is glad of a hide or a trophy, as long as it's from you. Hand over troll hides or a wolf trophy.
+Хугін каже, що Одін рад і шкурі, і трофею, аби від тебе. Віддай у чашу гнізда шкури троля чи трофей вовка.	Hugin says Odin is glad of a hide or a trophy, as long as it's from you. Hand troll hides or a wolf trophy in at the nest's bowl.
 Олені Хугіна	Hugin's Deer
 Хугін жаліє оленів. Добу, від найближчого світанку, не вбивай жодного — ні оленя, ні кабана.	Hugin pities the deer. For a day, from the next dawn, kill none — no deer, no boar.
 Хугін каже, що олені вже впізнають тебе й тікають. Дай їм добу спокою — ні оленя, ні кабана.	Hugin says the deer already know your face and run. Give them a day of peace — no deer, no boar.
@@ -4521,14 +4554,14 @@ Esc — скасувати	Esc — cancel
 У Тумані ходять шукачі-солдати. Мунін хоче, щоб їх поменшало, і щоб ти не ста{в|ла} їхньою вечерею.	Seeker soldiers walk the Mistlands. Munin wants fewer of them, and wants you not to become their supper.
 Мунін каже, що шукачі-солдати — то просто великі таргани. Розчави кількох.	Munin says seeker soldiers are just big cockroaches. Squash a few.
 Ґьялл над Туманом	A Gjall over the Mist
-Мунін бачив ґьялла — ту летючу торбу з кислотою. Збий двох або принеси його трофей, якщо вже маєш.	Munin saw a gjall — that flying sack of acid. Bring down two, or bring its trophy if you already have one.
-Мунін каже, що ґьялл літає гірше за нього, а гордиться більше. Збий двох або принеси трофей.	Munin says a gjall flies worse than he does and is prouder of it. Bring down two or bring a trophy.
+Мунін бачив ґьялла — ту летючу торбу з кислотою. Збий двох або принеси в чашу його трофей, якщо вже маєш.	Munin saw a gjall — that flying sack of acid. Bring down two, or bring its trophy to the bowl if you already have one.
+Мунін каже, що ґьялл літає гірше за нього, а гордиться більше. Збий двох або принеси в чашу трофей.	Munin says a gjall flies worse than he does and is prouder of it. Bring down two or bring a trophy to the bowl.
 Занепала валькірія	The Fallen Valkyrie
-Над Попелищами кружляють занепалі валькірії. Поклади двох або принеси Муніну трофей однієї.	Fallen valkyries circle over the Ashlands. Lay two down or bring Munin the trophy of one.
-Мунін каже, що валькірії колись носили воїнів до Одіна, а тепер тільки верещать. Поклади двох або принеси трофей.	Munin says valkyries once carried warriors to Odin and now they only shriek. Lay two down or bring a trophy.
+Над Попелищами кружляють занепалі валькірії. Поклади двох або принеси в чашу гнізда трофей однієї.	Fallen valkyries circle over the Ashlands. Lay two down or bring the trophy of one to the nest's bowl.
+Мунін каже, що валькірії колись носили воїнів до Одіна, а тепер тільки верещать. Поклади двох або принеси в чашу трофей.	Munin says valkyries once carried warriors to Odin and now they only shriek. Lay two down or bring a trophy to the bowl.
 Кісткозмій	The Bonemaw
 У гарячому морі біля Попелищ плаває кісткозмій. Мунін хоче двох таких або трофей одного.	A bonemaw serpent swims in the hot sea by the Ashlands. Munin wants two of them, or the trophy of one.
-Мунін каже, що кісткозмій смачно хрумтить, коли падає. Поклади двох або принеси трофей.	Munin says a bonemaw crunches nicely when it falls. Lay two down or bring a trophy.
+Мунін каже, що кісткозмій смачно хрумтить, коли падає. Поклади двох або принеси в чашу трофей.	Munin says a bonemaw crunches nicely when it falls. Lay two down or bring a trophy to the bowl.
 Звірі Попелищ	Beasts of the Ashlands
 Мунін хоче, щоб у Попелищах стало тихіше: двоє морґенів або шестеро вулкальників.	Munin wants the Ashlands quieter: two morgens or six voltures.
 Мунін каже, що морґени страшні лише на вигляд. Перевір: двоє морґенів або шестеро вулкальників.	Munin says morgens only look scary. Check it: two morgens or six voltures.
@@ -4564,15 +4597,15 @@ Esc — скасувати	Esc — cancel
 Мунін каже, що з тобою й ніч не така довга. Стань у рунне коло й вартуй — він уже кличе гостей.	Munin says with you even the night isn't so long. Stand in the rune ring and keep watch — he's already calling guests.
 Варта біля каменя	Watch by the Stone
 Хугін каже, що вночі біля рунного каменя ходять ті, кому не слід. Постій там на варті.	Hugin says that at night, those who shouldn't walk by the runestone. Stand watch there.
-Хугін каже, що камінь уночі шепоче, а слухати його краще удвох. Постій на варті біля нього.	Hugin says the stone whispers at night, and it's better heard by two. Stand watch beside it.
+Хугін каже, що камінь уночі шепоче, а на шепіт сходяться звірі. Постій на варті біля нього й відбийся.	Hugin says the stone whispers at night, and beasts gather to the whisper. Stand watch beside it and fight them off.
 у колі варти	in the watch ring
 уночі	at night
 Почати варту	Begin the watch
-Варта почалася. Тримай коло до кінця — і не помри.	The watch has begun. Hold the ring to the end — and don't die.
+Варта почалася. Звірі йдуть хвилями — тримай коло до кінця і не помри.	The watch has begun. Beasts come in waves — hold the ring to the end and don't die.
 Варта на паузі: повернись у коло.	The watch is paused: go back into the ring.
 Варту зірвано. Почни її знову, уночі, біля рунного кілка.	The watch is broken. Begin it again, at night, by the rune stake.
 Варту відстояно	Watch kept
-Вартуй уночі в рунному колі — {0} хв; почни біля кілка посередині	Keep watch at night in the rune ring — {0} min; begin by the stake in the middle
+Вартуй уночі в рунному колі — {0} хв; почни біля кілка посередині. Звірі цього краю нападатимуть хвилями, щораз більше	Keep watch at night in the rune ring — {0} min; begin by the stake in the middle. Beasts of this land will attack in waves, more each time
 Варта: {0} / {1} хв	Watch: {0} / {1} min
  (на паузі — повернись у коло)	 (paused — go back into the ring)
 Рунний кілок	Rune stake
@@ -4606,13 +4639,13 @@ Esc — скасувати	Esc — cancel
 На голову ворона	On the raven's head
 Сік старих коренів	Sap of Old Roots
 Хугін чув, що в Тумані зі старих коренів сочиться сік. Добудь його й принеси в чашу гнізда.	Hugin heard that sap seeps from the old roots in the Mistlands. Gather it and bring it to the nest's bowl.
-Хугін каже, що сік із туманних коренів пахне так, ніби дерево пам'ятає більше за нього. Добудь і принеси.	Hugin says the sap of the misty roots smells as if the tree remembers more than he does. Gather it and bring it.
+Хугін каже, що сік із туманних коренів пахне так, ніби дерево пам'ятає більше за нього. Добудь і принеси в чашу.	Hugin says the sap of the misty roots smells as if the tree remembers more than he does. Gather it and bring it to the bowl.
 Мир із дверграми	Peace with the Dvergr
 Хугін просить за двергрів: добу, від найближчого світанку, не чіпай жодного.	Hugin pleads for the dvergr: for a day, from the next dawn, touch none of them.
 Хугін каже, що двергри — єдині в Тумані, з ким можна поговорити. Дай їм добу спокою.	Hugin says the dvergr are the only ones in the Mistlands worth talking to. Give them a day of peace.
 Дерево з попелу	Wood from the Ash
 Хугін хоче на гніздо дерева, що виросло в Попелищах і не згоріло. Нарубай сам{|а} й принеси в чашу.	Hugin wants wood for the nest that grew in the Ashlands and never burned. Chop it yourself and bring it to the bowl.
-Хугін каже, що дерево, яке не згоріло в Попелищах, — найкраще для гнізда. Нарубай і принеси.	Hugin says wood that survived the Ashlands is the best for a nest. Chop it and bring it.
+Хугін каже, що дерево, яке не згоріло в Попелищах, — найкраще для гнізда. Нарубай і принеси в чашу.	Hugin says wood that survived the Ashlands is the best for a nest. Chop it and bring it to the bowl.
 Мир попелозаврам	Peace for the Asksvin
 Хугін просить за попелозаврів: добу, від найближчого світанку, не вбивай жодного.	Hugin pleads for the asksvin: for a day, from the next dawn, kill none of them.
 Хугін каже, що попелозаври дивляться на нього, як на рівню. Дай їм добу спокою.	Hugin says the asksvin look at him as an equal. Give them a day of peace.
@@ -4629,8 +4662,8 @@ Esc — скасувати	Esc — cancel
 Мунін хоче, щоб на Півночі стало менше тих, хто не вміє лежати тихо: десятеро кістяків або восьмеро гоблінів.	Munin wants fewer of those in the North who can't lie still: ten skeletons or eight goblins.
 Мунін каже, що мерзлим мерцям однаково холодно — хоч живим, хоч мертвим. Допоможи їм визначитися.	Munin says the frozen dead are cold either way, alive or dead. Help them make up their minds.
 Гекса	The Witch
-Мунін ненавидить гекс: кажуть, вони перекривлюють воронів. Поклади двох або принеси трофей.	Munin hates the jotun witches: they say they mock ravens. Lay two down or bring a trophy.
-Мунін каже, що гекса каркає гірше за нього, а гордиться більше. Поклади двох або принеси трофей.	Munin says a witch caws worse than he does and is prouder of it. Lay two down or bring a trophy.
+Мунін ненавидить гекс: кажуть, вони перекривлюють воронів. Поклади двох або принеси в чашу трофей.	Munin hates the jotun witches: they say they mock ravens. Lay two down or bring a trophy to the bowl.
+Мунін каже, що гекса каркає гірше за нього, а гордиться більше. Поклади двох або принеси в чашу трофей.	Munin says a witch caws worse than he does and is prouder of it. Lay two down or bring a trophy to the bowl.
 Варта в заметіль	Watch in the Blizzard
 Мунін хоче, щоб ти постоя{в|ла} в рунному колі серед північної ночі. Хто прийде з заметілі — того й бий.	Munin wants you to stand in the rune ring through a northern night. Whoever comes out of the blizzard, strike them.
 Мунін каже, що з тобою й північна ніч не така довга. Стань у коло — він уже кличе гостей із заметілі.	Munin says even a northern night isn't so long with you. Step into the ring, he's already calling guests from the blizzard.
@@ -4648,7 +4681,7 @@ Esc — скасувати	Esc — cancel
 Хугін каже, що ластоноги смішніші за Муніна і значно чемніші. Дай їм добу спокою.	Hugin says seals are funnier than Munin and far more polite. Give them a day of peace.
 Мерзле дерево	Frozen Wood
 Хугін хоче на гніздо дерева з Півночі — того, що не боїться морозу. Нарубай сам{|а} й принеси в чашу.	Hugin wants northern wood for the nest, the kind that doesn't fear the frost. Chop it yourself and bring it to the bowl.
-Хугін каже, що в мерзлому дереві гніздо не промерзне навіть у заметіль. Нарубай і принеси.	Hugin says a nest of frozen wood won't freeze even in a blizzard. Chop it and bring it.
+Хугін каже, що в мерзлому дереві гніздо не промерзне навіть у заметіль. Нарубай і принеси в чашу.	Hugin says a nest of frozen wood won't freeze even in a blizzard. Chop it and bring it to the bowl.
 Криґень і гекса	Jotunn and Witch
 Одін кличе сам. На Півночі криґень і гекса виросли понад міру і ходять разом. Здолай обох.	Odin calls himself. In the North a jotunn and a witch have grown beyond measure and walk together. Defeat both.
 {0} приніс доручення від Одіна: «{1}» — з дальшої землі, тому й ціна вища	{0} brought an errand from Odin: “{1}”, from a farther land, so it pays more
@@ -4743,7 +4776,7 @@ Esc — скасувати	Esc — cancel
 Гніздо б'ють! Тримається: {0}%	The nest is under attack! Holding: {0}%
 Облогу зірвано. Почни її знову іншої ночі, біля гнізда.	The siege is broken. Begin it again another night, by the nest.
 Облогу відбито	Siege beaten off
-Уночі стань у рунне коло біля гнізда й почни облогу — {0} хвилі звірів	At night, stand in the rune ring by the nest and begin the siege: {0} waves of beasts
+Уночі стань у рунне коло біля гнізда й почни облогу — {0} хвилі звірів, з останньою їхній ватажок. Вони битимуть і гніздо: розламають — доручення пропаде	At night, stand in the rune ring by the nest and begin the siege: {0} waves of beasts, their leader with the last. They will strike the nest too: if it breaks, the errand is lost
 Облога: хвиля {0} з {1} · гніздо тримається: {2}%	Siege: wave {0} of {1} · the nest is holding: {2}%
  (ти поза колом)	 (you're outside the ring)
 із заходу	from the west
@@ -4977,17 +5010,15 @@ Esc — скасувати	Esc — cancel
 Ик.	Hic.
 Кровна помста (пасивний ефект)	Blood Revenge (passive)
 Мунін позначає того, хто тебе вбив: помстися вчасно — і він поверне навички, втрачені через смерть.	Munin marks whoever killed you: take revenge in time and he gives back the skills the death took.
-Коли тебе вбивають, Мунін позначає саме цього вбивцю — звіра, боса чи гравця. Після відродження в тебе {0}: убий його, поки ти поруч (до {1} м; добити може й друг), — і Мунін поверне навички, які забрала смерть, а воронам — довіру, втрачену через неї. Поки мітка діє, над ним кружляють червоні руни, мапа показує, де він, по ньому ти б'єш на {2}% сильніше, а Мунін із могили злітає й кружляє над ним. Зник без сліду — мітку бере такий самий звір поруч; нема — втік. Сили не бере й перезарядки не має; Мунін має сидіти на плечі, коли ти гинеш.	When you are killed, Munin marks that very killer — a beast, a boss or a player. Once you are up again you have {0}: see it die while you are near (within {1} m; a friend may finish it) and Munin gives back the skills the death took, and your ravens the trust it cost them. While the mark lasts, red runes circle over its head, the map shows where it is, your blows hit it {2}% harder, and Munin rises from the grave and circles over it. Gone without a trace — one of its kind nearby takes the mark; none — it got away. Takes no strength and has no cooldown; Munin must sit on your shoulder when you die.
 Віщування (пасивний ефект)	Omen (passive)
 Деколи вранці Хугін каже, що несе день: набіг, погоду, недобрий знак; набіг можна відвести або накликати.	Some mornings Hugin tells what the day holds: a raid, the weather, a bad omen; a raid can be turned aside or called.
-Деякими ранками (з шансом {0}%) Хугін каже, що несе день: чи прийде до наступного ранку набіг і який, і яка буде погода там, де ти стоїш. Набіг можна відвести на добу (−{1} сили Хугіна, не частіше ніж раз на {2}; тоді він прийде напевно й злішим) або накликати зараз, біля своєї бази, коли хочеш трофеїв. Часом ранок приносить недобрий знак: загинеш до наступного ранку — ворони втратять менше довіри. У морі Хугін попереджає, що вітер от-от поверне, і чує змія у воді. Набіги віщує, лише коли RavenWatch стоїть і на сервері.	Some mornings ({0}% chance) Hugin tells what the day holds: whether a raid comes before the next morning and which one, and the weather where you stand. A raid can be turned aside for a day (−{1} of Hugin's strength, at most once every {2}; then it comes for sure, and stronger) or called right now near your base, when you want trophies. Sometimes the morning brings a bad omen: die before the next morning and your ravens lose less trust. At sea Hugin warns that the wind is about to turn and hears a serpent in the water. Raids are foretold only when RavenWatch is on the server too.
 <color=#FF5A5A><b>мітка на {0} · ще {1}</b></color>	<color=#FF5A5A><b>{0} marked · {1} left</b></color>
 <color=#FFD54F><b>{0} на помсту</b></color>	<color=#FFD54F><b>{0} for revenge</b></color>
 Кровна помста: Мунін позначив {0}.\nВбий за {1} — і він поверне навички, втрачені через смерть.	Blood Revenge: Munin has marked {0}.\nKill it within {1} and he gives back the skills the death took.
 Мунін: «Тварюка здиміла. Але ось її рідня — сойде.»	Munin: "The beast is gone. But here's its kin — that'll do."
 Кровну помсту здійснено!\nМунін повернув навички, втрачені через смерть.	Blood Revenge done!\nMunin gave back the skills the death took.
 Кровну помсту здійснено!\nСмерть цього разу не забрала навичок — Мунін задоволений і так.	Blood Revenge done!\nThe death took no skills this time — Munin is pleased anyway.
-Мунін: «Не встиг{|ла}. Гад живе, а ти — як був{|ла}.»	Munin: "Too slow. The bastard lives, and you're no better off."
+Мунін: «Не встиг{|ла}. Гад живе, а ти — як бу{в|ла}.»	Munin: "Too slow. The bastard lives, and you're no better off."
 Мунін: «Втекла, падлюка. Нема кого рвати.»	Munin: "Got away, the scum. Nothing left to tear."
 Мунін: «Ту падлюку завалили без тебе. Не рахується.»	Munin: "Somebody dropped it without you. Doesn't count."
 Помста: {0}	Revenge: {0}
@@ -5073,11 +5104,9 @@ Esc — скасувати	Esc — cancel
 Віщування	Omen
 ще {0} с · Esc — хай буде	{0} s left · Esc — let it be
 кровна помста	blood revenge
-Тепер ворон береже тебе в скруті: Хугін рятує від смертельного удару, Мунін люто б'ється, коли тобі погано.\n\nДалі — більші дари: з 5-го рівня Хугін віщує ранками, а Мунін мститься твоєму вбивці; з 6-го — Крила Одіна і Звір Муніна.\n\nДорогу ти вже знаєш. Прилітатиму рідше.	Now your raven guards you in a pinch: Hugin saves you from a deadly blow, Munin fights like mad when you are in trouble.\n\nBigger gifts come next: from level 5 Hugin foretells in the mornings and Munin avenges your killer; from level 6 — Odin's Wings and Munin's Beast.\n\nYou know the way now. I'll come by less often.
 бракує сили або ще рано	not enough strength, or too soon
 Приборкання	Taming
 Мунін сідає на голову дикій тварині й ламає її норов: приручення йде набагато швидше.	Munin lands on a wild beast's head and breaks it in: the taming goes much faster.
-Наведи приціл на дику тварину, яку можна приручити (до {0} м), — Мунін злітає їй на голову, дзьобає між рогів і лається, поки вона не скориться. Поки він сидить ({1}), приручення йде в {2} швидше, а тварина ні на кого не кидається й не насторожується. Годувати її однаково треба. Часом вона брикається — Мунін тоді лається ще дужче. Поки Мунін на тварині, інші його дари недоступні; натисни дар ще раз — і він повернеться. Приручилась — він вертається сам, страшенно гордий.	Aim at a wild beast that can be tamed (within {0} m) — Munin flies onto its head, pecks between its horns and swears until it gives in. While he sits ({1}) the taming goes {2} faster, and the beast attacks nobody and stays calm. You still have to feed it. Now and then it bucks — then Munin swears even louder. While Munin is on the beast his other gifts are not available; press the gift again and he comes back. Once it is tame he comes back by himself, terribly proud.
 поки Мунін сидить, звір ситий — годувати не треба	while Munin sits, the beast stays fed — no feeding needed
 швидкість приручення	taming speed
 Мунін приборкує звіра.\nНатисни «Приборкання» ще раз — і він повернеться.	Munin is taming a beast.\nPress «Taming» again and he comes back.
@@ -5113,7 +5142,6 @@ Esc — скасувати	Esc — cancel
 Як у сагах	Like in the sagas
 {0} оцінює бій: {1} — {2}	{0} judges the fight: {1} — {2}
 бій як у сагах	a fight like in the sagas
-риба	fish
 Медолюб	Mead-lover
 ти часто ділишся з ним медовухою	you often share your mead with it
 п'яний б'є на 15% сильніше	tipsy, it strikes 15% harder
@@ -5170,7 +5198,7 @@ Esc — скасувати	Esc — cancel
 день без пестощів — дметься: довіра росте на 15% повільніше	a day without petting and it sulks: trust grows 15% slower
 менше стояти без діла, поки він на плечі	spend less time standing idle with it on your shoulder
 щодня трохи постояти спокійно — тоді ти його гладиш	stand calmly for a while every day — that is when you stroke it
-Відлюдько	Loner
+Відлюдник	Loner
 коли в світі є інші гравці, ви тримаєтеся осторонь	when other players are in the world, you keep apart
 коли поруч нікого, удар на 10% сильніший	with nobody near, strike 10% stronger
 з чужими воронами дружить удвічі повільніше	makes friends with other ravens twice as slowly
@@ -5225,20 +5253,13 @@ Esc — скасувати	Esc — cancel
 Назріває: {0} зі 100 (від {1} — з'явиться).	Forming: {0} of 100 (at {1} it appears).
 Щоб з'явилась: {0}.	To get it: {0}.
 Щоб не з'явилась: {0}.	To avoid it: {0}.
-Звички ворон набуває від того, як ви граєте останніми днями: медовуха, мандри чи дім, бої, годування, пестощі, ніч чи день, море, підземелля… Кожна дає і плюс, і мінус. Звичка з'являється за кілька днів такої поведінки, тримається щонайменше п'ять днів і минає, якщо поведінка зміниться. Не більше двох разом.	A raven picks up habits from how you have played these last days: mead, journeys or home, fights, feeding, petting, night or day, the sea, dungeons… Each gives a plus and a minus. A habit appears after a few days of such play, stays at least five days and goes once the play changes. No more than two at once.
 {0} (дні {1}–{2})	{0} (days {1}–{2})
 Колись був: {0}.	Once was: {0}.
-Звички	Habits
-<color={0}><b>{1}</b></color> <color={2}>{3}</color>	<color={0}><b>{1}</b></color> <color={2}>{3}</color>
-назріває: {0} <color={1}>{2}</color>	forming: {0} <color={1}>{2}</color>
-ще не набув — наведи, щоб дізнатися, які бувають	none yet — hover to see what they are
-Мандрій	Wayfarer
 Вояка	Warrior
 Гурман	Gourmet
 Мазунчик	Darling
-Ловчий	Huntsman
-Звички ворона	A raven's habits
-Твій ворон набув звички. Звички беруться з того, як ти граєш останні дні: п'єш медовуху, сидиш удома чи мандруєш, б'єшся, годуєш, гладиш…\n\nКожна дає і плюс, і мінус. Тримається щонайменше п'ять днів, а тоді минає, якщо ти граєш інакше. Не більше двох разом.\n\nУ книзі (B) під норовом — рядок «Звички». Наведи на звичку: там написано, як її позбутися або як зберегти.	Your raven has picked up a habit. Habits come from how you have played these last days: drinking mead, staying home or travelling, fighting, feeding, petting…\n\nEach gives a plus and a minus. It stays at least five days, then goes if you play differently. No more than two at once.\n\nIn the book (B), under the nature row — the «Habits» row. Hover over a habit: it says how to lose it or how to keep it.
+Звіролов	Huntsman
+Звички ворона	A Raven's Habits
 купання	a bath
 це не приручений звір	that is not a tamed beast
 звір задалеко	the beast is too far
@@ -5250,10 +5271,857 @@ Esc — скасувати	Esc — cancel
 гра зі звіром	a game with the beast
 Гратися зі звіром	Play with the beast
 Грається з твоїм прирученим звіром у квача: смикає за хвіст, тікає, тоді сам ганяється за звіром.	Plays tag with your tamed beast: tugs its tail, runs off, then chases the beast itself.
-Кнопка подвійна: зазвичай — «Жердина», а коли дивишся на свого прирученого звіра — «Гратися».	A two-in-one button: usually «Perch», and when you look at your tamed beast — «Play».
 Гратися	Play
 {0} · {1}	{0} · {1}
 Грається з твоїм прирученим звіром у квача: смикає за хвіст, тікає, тоді сам ганяється за звіром. Хто переможе — як пощастить. Ворону — трохи довіри, звірові — наче його нагодували.	Plays tag with your tamed beast: tugs its tail, runs off, then chases the beast itself. Who wins is down to luck. A little trust for the raven, and the beast is as good as fed.
 помитися	to have a bath
 {0} летить купатися.	{0} flies off for a bath.
 Зараз не можна: нема берега поруч, ніч, холод, бій, голодний чи зайнятий.	Not now: no shore near, night, cold, a fight, hungry or busy.
+миття	a wash
+купання з тобою	a bath with you
+попелом	ash
+кров'ю	blood
+мертвечиною	carrion
+болотом	swamp mud
+Не під час бою.	Not during a fight.
+{0} і так чистий.	{0} is clean already.
+Кнопка потрійна: зазвичай — «Жердина»; коли дивишся на свого прирученого звіра — «Гратися»; коли стоїш у воді — «Помити».	A triple button: usually «Perch»; when you look at your tamed beast, «Play»; when you stand in water, «Wash».
+Помити	Wash
+ти у воді · помити ворона	you're in water · wash the raven
+Ворон сідає у воду біля тебе, а ти його миєш: бризки, тремтіння, і він знову чистий. Довіри за це більше, ніж коли купається сам.	The raven hops into the water beside you and you wash it: splashes, shivers, and it's clean again. More trust than when it bathes on its own.
++ свіже пір'я: +{0}% (ще {1})\n	+ fresh feathers: +{0}% ({1} left)\n
+до тебе у воду	into the water with you
+до тебе в купіль	into the hot tub with you
+Нема вільного місця у воді поруч.	No free spot in the water nearby.
+Не вийшло: місця для ворона нема.	Didn't work: no room for the raven.
+запорошений	dusty
+брудний	dirty
+дуже брудний	filthy
+, від крові вбитих	, from the blood of its kills
+\n\nЗараз найбільше на ньому: {0}.	\n\nMostly on it now: {0}.
+попіл	ash
+кров	blood
+кістяний пил	bone dust
+болото	swamp mud
+Кроків тінню більше нема, але тінь ще тримає	No shadow steps left, but the shadow still holds
+Тінь туди не веде	The shadow does not lead there
+Крок тінню ({0} з {1})	Shadow step ({0} of {1})
+Мунін рахує кожен удар по тобі	Munin counts every blow on you
+Кривавий борг: Мунін повертає {0} шкоди	Blood debt: Munin pays back {0} damage
+Ти мені винен не був. А от він — винен. Тримай здачу, падло!	You owed me nothing. That one does. Here's your change, scum!
+Піке!	Dive!
+піке	dive
+Піке з {0} м	Dive from {0} m
+\n\n<color={0}>Дуже брудний (від {1}) набирає силу на {2}% повільніше.</color>	\n\n<color={0}>Filthy (from {1}) it gains strength {2}% slower.</color>
+Стань у воду — не глибше, ніж по шию.	Stand in the water — no deeper than your neck.
+Там глибоко — сісти нема на що.	Too deep there — nothing to sit on.
+Сліпучий блиск: осліплено {0}	Blinding glare: {0} blinded
+Тінь накрила й {0}	The shadow covers {0} too
+Хугін гравця {0} сховав у тінь і тебе	{0}'s Hugin hid you in the shadow too
+Хугін поцупив: {0}	Hugin snatched: {0}
+Мунін вирвав трофей: {0}	Munin tore off a trophy: {0}
+Друге дихання: Хугін підказав ритм	Second wind: Hugin set your pace
+Наука Хугіна: {0} б'є тебе вдвічі слабше, {1} с	Hugin's lesson: {0} hits you half as hard, {1} s
+Кров за кров: {0} стікає кров'ю	Blood for blood: {0} is bleeding
+Злість Муніна передалась ще {0}	Munin's anger spread to {0} more
+РИТМ	RHYTHM
+Лють жере кров: +{0} с	The fury feeds on blood: +{0} s
+Слід вітру	Wind's Wake
+Вітер Муніна гравця {0} несе й тебе	{0}'s Munin wind carries you too
+Мунін вичистив з тебе всю гидоту	Munin washed all the filth off you
+Мітка Муніна на звірові «{0}»: удари по ньому слабші	Munin's mark on «{0}»: blows on it are weaker
+Хугін розвідує на пів радіуса попереду, туди, куди ти дивишся	Hugin scouts half a reach ahead, where you look
+погаснувши, світляк спалахує: вороги поруч сліпнуть на 3 с	put out, the wisp flares: foes near are blinded for 3 s
+у повітрі ще раз стрибок — другий помах крил, і змінюєш напрям	jump once more in the air: a second wing beat that changes your course
+тінь накриває й найближчого друга поруч	the shadow also covers the nearest friend
+ворогів, що опинились під куполом, викидає за край	foes caught under the dome are thrown out past its edge
+часом Хугін вихоплює в ураженого ворога одну річ з його здобичі	now and then Hugin snatches one thing of its loot off the foe he struck
+Хугін веде обдуреного туди, куди ти дивився: у воду, зі скелі, під стріли	Hugin leads the fooled one where you looked: into water, off a cliff, under your arrows
+у польоті можна стріляти з лука, арбалета й посохів	in flight you can shoot bows, crossbows and staffs
+друге дихання: коли витривалість скінчиться, Хугін раз повертає половину	second wind: when your stamina runs out, Hugin gives half of it back once
+той, хто мало тебе не вбив, 10 с б'є тебе вдвічі слабше	the one who nearly killed you hits you half as hard for 10 s
+з того, кого вбив удар Муніна, він часом вириває ще один трофей	from the one Munin's blow killed he sometimes tears an extra trophy
+злість передається друзям поруч	the anger spreads to friends nearby
+у люті тебе ніщо не хитає	nothing staggers you in the fury
+через 2 с крик лунає вдруге з того самого місця	2 s later the scream rings out again from the same spot
+ритм: кожен третій удар поспіль, поки тебе не вдарили, на 50% сильніший	rhythm: every third blow in a row, while you are not hit, is 50% stronger
+слід вітру: друзі поруч біжать із половиною твого прискорення	wind's wake: friends nearby run with half your speed boost
+змиває отруту, горіння, мороз і мокрість	washes off poison, burning, frost and wet
+удар упритул, що взяла заслона, наполовину вертається нападникові	a close blow the ward took goes half back into the striker
+звір на бігу збиває з ніг дрібних ворогів на шляху	the running beast knocks down small foes in its way
+тварина, приручена з Муніном, отримує на п'яту частину менше шкоди	a beast tamed with Munin takes a fifth less damage
+вихор потроху затягує ворогів до тебе	the whirl slowly draws foes toward you
+під ясним небом рослини ростуть у півтора раза швидше	under the clear sky plants grow half again as fast
+ворони самі підбирають речі, що лежать довкола	the ravens pick up items lying around by themselves
+позначає ще скрині, ворогів із зірками — з їхніми зірками, а над позначеними 10 с горять руни	also marks chests, starred foes with their stars, and runes burn over the marked ones for 10 s
+нежить поруч тікає від світла, а ворогів у твоєму світлі ти б'єш на 10% сильніше	the undead near flee the light, and you hit foes in your light 10% harder
+затисни стрибок у падінні — і ширяєш, а в ширянні відновлюється витривалість	hold Jump while falling to glide, and gliding restores stamina
+під куполом лікує тебе: 2% здоров'я за секунду, а наприкінці купол вибухає рунами й валить тих, хто кружляв біля краю	under the dome you heal 2% health a second, and at its end the dome bursts in runes and knocks down those prowling its edge
+обдурений б'є сусідніх ворогів, а наприкінці Хугін дзьобає його в очі — 5 с сліпоти	the fooled one hits the foes beside it, and at the end Hugin pecks its eyes: 5 s of blindness
+кожен твій удар у люті лікує на 2% здоров'я, а той, хто вкинув тебе в лють, стікає кров'ю	each of your blows in the fury heals 2% health, and the one who threw you into it bleeds
+ще й відкидає ворогів, а ті, хто почув крик, 10 с не можуть блокувати	also throws foes back, and those who heard it cannot block for 10 s
+ще й біжиш на 15% швидше, а кожне вбивство продовжує лють на 3 с (до 15 с)	you also run 15% faster, and each kill extends the fury by 3 s (up to 15 s)
+ще й пливеш на 30% швидше, а корабель із тобою на борту йде під вітрилом на 20% швидше	you also swim 30% faster, and a ship with you aboard sails 20% faster
+лікує й гравців поруч (до 10 м), а коли здоров'я вже повне — відновлює витривалість	also heals players nearby (up to 10 m), and once your health is full it restores stamina
+без втоми після звіра, а рик при перевтіленні розганяє слабких ворогів	no weariness after the beast, and its waking roar scatters weak foes
+ясно ще й у радіусі вдвічі ширшому, а вночі світить ясний місяць	clear in twice the radius, and at night a clear moon shines
+I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й перезарядки\nIII — {4}	I — stronger: {0} +{1}%\nII — {2}; and −{3}% strength and cooldown\nIII — {4}
+дешевший і швидше готовий	cheaper and ready sooner
+Злість Муніна гравця {0} передалась і тобі: +{1}% шкоди	{0}'s Munin anger caught you too: +{1}% damage
+У польоті — тільки лук, арбалет чи посох	In flight: only a bow, a crossbow or a staff
+У польоті руки — це крила	In flight your arms are wings
+Який парний дар покращити?	Which paired gift to raise?
+Руна ляже в того ворона, у кого ще є місце.	The rune goes into whichever raven still has room.
+«{0}» — рівень {1}?	“{0}” — level {1}?
+<color=#FF6B6B>Назавжди.</color> Руна ляже в {0}: з дару її вже не витягти, вона лишиться в цьому вороні, навіть якщо віддаси його іншому.	<color=#FF6B6B>Forever.</color> The rune goes into {0}: it can never be taken out of the gift, it stays in that raven even if you give it to someone else.
+Парні	Paired
+натягує лук чи перезаряджає (1/0)	drawing a bow or reloading (1/0)
+у руках лук, арбалет чи посох (1/0)	a bow, a crossbow or a staff in hand (1/0)
+після покупки	after purchase
+Звичка	Habit
+Звичка · назріває	Habit · forming
+ще не набув	none yet
+ · <b><color={0}>брудний</color></b>	 · <b><color={0}>dirty</color></b>
+<b>Знайомі {0}</b>\nЩе нікого. Зустрінете інших гравців і їхніх воронів — тут буде, хто з ким дружить.	<b>{0}'s acquaintances</b>\nNobody yet. Meet other players and their ravens — here you will see who is friends with whom.
+Удома {0}	At home {0}
+пропав {0}	lost {0}
+список ›	list ›
+журнал ›	journal ›
+{0} пропав	{0} is lost
+ціна: {0}	price: {0}
+Повернути ›	Bring back ›
+Журнал · {0}	Journal · {0}
+Запас варти	Guard store
+Поки тебе не було	While you were away
+нічого не сталося	nothing happened
+Як стереже	How it guards
+Як живе вдома	How it lives at home
+Ціна	Price
+усе готово	all is ready
+бракує трофеїв	not enough trophies
+Повернеться з тим самим рівнем довіри, вишколом і переможеними босами; шкала до наступного рівня почнеться з нуля, частину спогадів він забуде. Не частіше ніж раз на {0} днів.	It comes back with the same trust level, training and defeated bosses; the bar to the next level starts from zero, and it forgets some of its memories. No more often than once every {0} days.
+Мунін: де вони	Munin: where they are
+Хугін: де вони	Hugin: where they are
+<b>Слова {0}</b>\nНавчиш його слів, коли довіра сягне {1}-го рівня.	<b>{0}'s words</b>\nYou can teach it words once trust reaches level {1}.
+м'ясо	meat
+оборона	defense
+негода	harsh weather
+бій у морі	fight at sea
+допомога в бою	helping in a fight
+удар із тіні ×{0}	the strike from the shadow ×{0}
+Спитай — і Хугін розкаже, що бачив: бої, знахідки, рани, ворогів поруч. У тиші згадає щось із вашої дороги. Наведи приціл на гравця — думка буде про нього, а його ворон може відповісти.	Ask, and Hugin tells what he has seen: fights, finds, wounds, foes nearby. In the quiet he recalls something from your road. Aim at a player and the thought is about them; their raven may answer.
+Хугін облітає край: мапа відкривається на {0} м. Через {1} с він вертається й позначає ворогів ближче {2} м (на {3} с, боси блимають), руду ближче {4} м (на {5} хв, лише там, де бос краю вже переможений) і входи під землю.	Hugin flies over the land: the map opens {0} m around. After {1} s he comes back and marks foes closer than {2} m (for {3} s, bosses blink), ore closer than {4} m (for {5} min, only where the land's boss is beaten) and the ways underground.
+Над головою світляк: світить на {0}% ширше за смолоскип. Туман Туманних земель не розганяє. Натисни ще раз — згасне.	A wisp over your head: it lights {0}% wider than a torch. It does not clear the Mistlands mist. Press again to put it out.
+Підкидає на {0} м угору, а з розбігу — дугою на ~{1} м уперед; у повітрі кермуєш. Поки діє, кожен стрибок такий самий, а падіння не шкодить. Скінчиться в повітрі — приземлення болітиме.	Throws you {0} m up, or ~{1} m ahead in an arc on the run; you steer in the air. While it lasts every jump is the same and falls do not hurt. If it ends in the air, the landing hurts as usual.
+Довкола тебе на {0} м купол із рун. Монстри кружляють біля краю й не заходять; усередині ніхто нікого не ранить — ні ззовні, ні звідти. Дощ і вітер лишаються зовні (холод — ні), вогнище всередині гріє, як у хаті. Бос заходить і ламає купол за {1}. Під землею не розкривається. Зникне — монстри кинуться, будь напоготові.	A dome of runes {0} m around you. Monsters circle at its edge and do not come in; inside nobody hurts anybody, from outside or from within. Rain and wind stay outside (the cold does not); a fire inside warms you like a house. A boss walks in and breaks the dome in {1}. It does not open underground. When it fades the monsters rush you, so be ready.
+Хугін летить до цілі в прицілі (до {0} м; нема — до найближчої) і дзьобає: {1} колючої шкоди, крит ×2 — {2}% (хто тебе не помітив — завжди); може дзьобнути двічі. Ціль сліпне на {3} с (бос — {4} с) і губить погоню, доки її не вдарять. Б'є монстрів і дичину, не приручених. Боса — не більше {5}% здоров'я за виліт. Не знайшов цілі — пів сили назад і пауза вдвічі коротша. Сила росте з вишколом, довірою, перемогами над босами й ситістю; прийоми — у вкладці «Розвиток».	Hugin flies to the target in your sight (up to {0} m; none: the nearest one) and pecks: {1} pierce damage, a ×2 crit at {2}% (always on one that has not noticed you); he may peck twice. The target is blind for {3} s (a boss {4} s) and loses its chase until it is hit. He strikes monsters and game, not tamed ones. A boss loses at most {5}% of its health per flight. No target found: half the strength back and half the wait. The strength grows with training, trust, bosses beaten and a full belly; the techniques are in the «Growth» tab.
+Мунін летить до цілі в прицілі (до {0} м; нема — до найближчої) і рве кігтями: {1} рублячої шкоди, першу ціль — до трьох разів, ще двох поруч зачепить по дорозі. Крит ×2 — {2}% (хто тебе не помітив — завжди). Рвана рана на {3} с (бос — {4} с): кровить ще на {5}% від удару й кульгає на {6}% повільніше. Не б'є приручених. Боса — не більше {7}% здоров'я за виліт. Не знайшов цілі — пів сили назад і пауза вдвічі коротша. Сила росте з вишколом, довірою, перемогами над босами й ситістю; прийоми — у вкладці «Розвиток».	Munin flies to the target in your sight (up to {0} m; none: the nearest one) and tears with his claws: {1} slash damage, the first target up to three times, two more nearby on the way. A ×2 crit at {2}% (always on one that has not noticed you). A torn wound for {3} s (a boss {4} s): it bleeds {5}% of the blow more and limps {6}% slower. He does not strike tamed ones. A boss loses at most {7}% of its health per flight. No target found: half the strength back and half the wait. The strength grows with training, trust, bosses beaten and a full belly; the techniques are in the «Growth» tab.
+Коли тебе вдарили, Мунін злиться: {0} ти б'єш на {1}% сильніше. Не частіше ніж раз на {2}.	When you are hit, Munin gets angry: for {0} you hit {1}% harder. At most once every {2}.
+Коли здоров'я нижче {0}%, Мунін шаленіє: {1} с ти б'єш на {2}% сильніше й на {3}% швидше (з Люттю — ще швидше).	When your health drops below {0}%, Munin goes wild: for {1} s you hit {2}% harder and {3}% faster (with Fury faster still).
+Спитай, якщо не боїшся відповіді: Мунін пам'ятає кожну твою дурницю, рану й ворога поруч. У тиші нагадає щось зі спільного минулого — не завжди приємне. Наведи приціл на гравця — Мунін пройдеться по ньому, а його ворон може огризнутися.	Ask if you are not afraid of the answer: Munin remembers every blunder of yours, every wound and every foe nearby. In the quiet he brings up something from your past together, not always pleasant. Aim at a player and Munin has a go at them; their raven may snap back.
+Коли біжиш і ворогів поруч нема, Хугін веде ритм: {0} витривалість відновлюється на {1}% швидше. Не частіше ніж раз на {2}.	When you run with no foes nearby, Hugin keeps the pace: for {0} stamina comes back {1}% faster. At most once every {2}.
+Удар, що мав би вбити, — зброя, падіння, отрута чи вогонь, — лишає тобі 1 здоров'я, і {0} с ніщо не ранить: час утекти.	A blow that would kill you (a weapon, a fall, poison or fire) leaves you 1 health, and for {0} s nothing hurts you: time to flee.
+Коли ти гинеш, Хугін із шансом {0}% не йде в могилу: лишається на плечі й зустрічає тебе після відродження. Не діє, поки він відлетів.	When you die, Hugin has a {0}% chance not to go into the grave: he stays on your shoulder and meets you after you respawn. Not while he is away.
+Коли ти гинеш, Мунін із шансом {0}% вчіплюється в плече й не йде в могилу — а після відродження все тобі пригадає. Не діє, поки він відлетів.	When you die, Munin has a {0}% chance to dig into your shoulder and not go into the grave, and after you respawn he reminds you of everything. Not while he is away.
+Коли тебе вбивають, Мунін позначає вбивцю — звіра, боса чи гравця. Убий його за {0}, будучи ближче {1} м (добити може й друг), — і він поверне навички й довіру, забрані смертю. По міченому б'єш на {2}% сильніше, а руни над ним і мапа показують, де він. Зник — мітку бере такий самий звір поруч. Мунін має бути на плечі, коли ти гинеш.	When you are killed, Munin marks the killer: a beast, a boss or a player. Kill it within {0} while closer than {1} m (a friend may finish it) and he gives back the skills and trust the death took. You hit the marked one {2}% harder, and the runes over it and the map show where it is. Gone: one of its kind nearby takes the mark. Munin must be on your shoulder when you die.
+Деякими ранками ({0}%) Хугін віщує день: чи буде набіг до наступного ранку і яка погода. Набіг можна відвести на добу (−{1} сили, раз на {2}; тоді прийде напевно й злішим) або накликати зараз біля бази. Недобрий знак: загинеш до ранку — ворони втратять менше довіри. Інколи ({3}%) ще й дар до ранку: +{4} здоров'я, витривалості чи ейтиру. У морі попереджає про зміну вітру й змія. Набіги — лише якщо RavenWatch стоїть і на сервері.	Some mornings ({0}%) Hugin foretells the day: whether a raid comes before the next morning, and the weather. A raid can be turned aside for a day (−{1} strength, once every {2}; then it surely comes, and angrier) or called now near your base. A bad omen: die before morning and the ravens lose less trust. Sometimes ({3}%) a gift till morning too: +{4} health, stamina or eitr. At sea he warns of the wind turning and of a serpent. Raids only if RavenWatch is on the server too.
+Наведи приціл на дику тварину (до {0} м) — Мунін сідає їй на голову й ламає норов: {1} приручення йде в {2} швидше, і вона ні на кого не кидається. Годувати однаково треба. Поки він там, інші його дари недоступні; натисни ще раз — повернеться.	Aim at a wild animal (up to {0} m): Munin sits on its head and breaks its temper. For {1} taming goes {2} faster and it attacks nobody. You still have to feed it. While he is there his other gifts are not available; press again and he comes back.
+Як медовуха: здоров'я поступово відновлюється до повного, навіть якщо тебе ранять. Перезарядку з медовухами не ділить.	Like mead: your health comes back to full bit by bit, even if you are hit. It does not share the wait with meads.
+Хугін кружляє над ворогом у прицілі (до {0} м) і дражнить: {1} той б'ється лише з вороном і нікого не ранить. Після {2} ударів гравців розкусить обманку.{3} Наприкінці обдурені {4} с стоять приголомшені. Боси не купуються. Натисни ще раз — Хугін повернеться.	Hugin circles over the foe in your sight (up to {0} m) and teases it: for {1} it fights only the raven and hurts nobody. After {2} hits from players it sees through it.{3} At the end the fooled ones stand dazed for {4} s. Bosses do not fall for it. Press again and Hugin comes back.
+ Заодно дурить ще двох ворогів поруч.	 He fools two more foes nearby too.
+ Заодно дурить ще одного ворога поруч.	 He fools one more foe nearby too.
+Ти летиш {0}: W — куди дивиться камера, A/D — убік, Пробіл — угору, присісти — униз; без клавіш висиш. Не вище {1} м над землею. Ворони летять за спиною й б'ють, а зброєю атакувати не можна; купол, розвідка й злет недоступні. Присядеш біля землі — станеш на ноги, Пробіл — знову в небо. Кінець чи ще раз дар — плавно опустишся без шкоди. Не злітає під землею, під дахом, з води, верхи й з перевантаженням.	You fly for {0}: W where the camera looks, A/D aside, Space up, crouch down; no keys and you hover. At most {1} m over the ground. The ravens fly at your back and strike; you cannot attack with a weapon; the dome, scouting and the leap are not available. Crouch near the ground to stand, Space to go up again. At the end, or the gift again, you float down without harm. It does not lift off underground, under a roof, from water, mounted or overloaded.
+Ти виростаєш у {0}× — справжнім тілом, тож у тісному можна застрягти. {1}: +{2}% шкоди, +{3}% броні, тебе не оглушити й не відкинути, удар ногою відкидає на {5}% далі. Додається до Злості й Кривавої люті; з Люттю й Крилами Одіна не працює. Не в підземеллях. <color=#FF8A7A>Потім {4} витривалість відновлюється вдвічі повільніше.</color>	You grow {0}× with a real body, so you can get stuck in tight places. For {1}: +{2}% damage, +{3}% armour, you cannot be stunned or pushed, a kick pushes {5}% farther. Adds to Anger and Blood Rage; does not work with Fury or Odin's Wings. Not in dungeons. <color=#FF8A7A>Afterwards, for {4}, stamina comes back half as fast.</color>
+{0} ворони несуть частину ноші: +{1} ваги, а падіння з висоти ранить на {2} менше. Поки тягнуть, їхні дари не працюють. Натисни ще раз — кинуть раніше. Платять обидва.	For {0} the ravens carry part of your load: +{1} weight, and a fall from a height hurts {2} less. While they carry it their gifts do not work. Press again and they drop it sooner. Both pay.
+{0} довкола тебе на {1} м ясно: ні дощу, ні снігу, у горах тепліше, туман Туманних земель відступає. Ясне коло йде з тобою. Не діє під землею, під дахом і там, де погоду тримає край. Платять обидва.	For {0} it is clear {1} m around you: no rain, no snow, warmer in the mountains, the Mistlands mist draws back. The clear circle moves with you. Not underground, under a roof or where the land holds the weather. Both pay.
+Ворони кружляють довкола й без упину б'ють кожного ворога ближче {0} м — як «Удар в очі» й «Кігті», з критами й мітками. Кожен удар — {1} сили того, хто б'є (почати — по {3} у кожного); скінчиться в одного — обидва вертаються. Натисни ще раз — повернуться раніше; нікого бити — стихає. Боси — пів шкоди. У залік ідуть лише перші {2} ударів. Під куполом не діє.	The ravens circle around you and strike every foe closer than {0} m without a break, like «Eye Peck» and «Talons», with crits and marks. Each blow costs the striking raven {1} strength (to start: {3} each); when one runs out, both come back. Press again and they come back sooner; nobody to strike and it dies down. Bosses take half damage. Only the first {2} blows count. Not under the dome.
+Одіна годуванням уже не квапиш: чекай свого часу.	You cannot hurry Odin with food any more: wait for your time.
+{0} наївся в гнізді: Одін озветься на {1} раніше.	{0} ate its fill in the nest: Odin will answer {1} sooner.
+• нагодуй воронів у гнізді: що ситніша їжа, то більше ({0})\n• переможи боса: −{1} хв\n• бій як у сагах (★★★★★): −{2} хв\n• виконай прохання ворона: −{3} хв\n• що вища довіра, то коротша пауза	• feed the ravens in the nest: the better the food, the more ({0})\n• beat a boss: −{1} min\n• a fight for the sagas (★★★★★): −{2} min\n• fulfil a raven's wish: −{3} min\n• the higher the trust, the shorter the pause
+ще до {0}	up to {0} more
+на цю паузу вже досить	enough for this pause
+Одін бачив {0}: наступне доручення на {1} раніше.	Odin saw {0}: the next errand {1} sooner.
+перемогу над босом	a boss beaten
+Шкали милості з часом не спадають: шкалу обнуляє лише доручення її групи.	The favour bars do not fade with time: only an errand of its group empties a bar.
+Як швидше	How to hurry
+виконане прохання ворона	a raven's wish fulfilled
+Гніздо	Nest
+Дерево	Tree
+У це гніздо	Into this nest
+пірнає по рибу	diving for a fish
+читає табличку	reading a sign
+зриває ягоди	picking berries
+сів на жердину	resting on a perch
+летить по блискітку	after something shiny
+сидить на могилі	sitting on a grave
+вмостився на ліжку	nestled on a bed
+на щоглі	on the mast
+п'є воду	drinking water
+дражнить бджіл	teasing the bees
+сидить на звірі	sitting on a beast
+сидить на торговці	sitting on the trader
+гріється біля вогню	warming by the fire
+роздивляється руни	looking at the runes
+ганяє птахів	chasing birds
+катається	riding along
+порпається в кістках	rummaging in bones
+купається	bathing
+сидить {0} · покликати	sits {0} · call back
+на вічі воронів біля вогню	at the ravens' gathering by the fire
+на Воронячому дереві	on the Raven Tree
+приборкує звіра	taming a beast
+у вихорі	in the whirl
+несе ношу	carrying your load
+розганяє хмари	clearing the clouds
+● сидить {0} · {1}	● sits {0} · {1}
+летить до тебе	flying to you
+\n• <color=orange><b>{0}</b></color> — {1} <color=#9a9a9a>{2} · {3}</color>	\n• <color=orange><b>{0}</b></color> — {1} <color=#9a9a9a>{2} · {3}</color>
+без сили	no strength
+Діють самі	Work by themselves
+Діють самі, поки ворон на плечі	Work by themselves while the raven is on your shoulder
+Ворон думки. Правий клік — сяде на праве плече. Усе про нього — у книзі воронів (<color=orange>G</color>).	The raven of thought. Right-click and he sits on your right shoulder. All about him is in the Book of Ravens (<color=orange>G</color>).
+Ворон пам'яті. Правий клік — сяде на ліве плече. Усе про нього — у книзі воронів (<color=orange>G</color>).	The raven of memory. Right-click and he sits on your left shoulder. All about him is in the Book of Ravens (<color=orange>G</color>).
+\n\n<color=#9a9a9a>Спить — розбуди ритуалом{0}, тоді відкриються благо й тягар.</color>	\n\n<color=#9a9a9a>Asleep: wake it with the ritual{0}, then its blessing and burden show.</color>
+обмірковує бій	thinks the fight over
+допоміг у бою	helped in the fight
+нове знання	new knowledge
+Монстри не бачать і не чують тебе{0}, погоня губить слід. Тінь знімає лише удар, постріл чи закляття, і перший удар із тіні — ×{1} шкоди{2}.{3}	Monsters neither see nor hear you{0}, and the chase loses your trail. Only a hit, a shot or a spell breaks the shadow, and the first strike from it deals ×{1} damage{2}.{3}
+ Бонуси PoV до скритної атаки — зверху.	 PoV sneak attack bonuses add on top.
+Крила	Tailwind
+<b>Набирається в бою</b>	<b>Comes in battle</b>
+<b>Набирається в мирі</b>	<b>Comes in peace</b>
+(уночі ×1,5; більшість — до межі на день)	(×1.5 at night; most up to a daily limit)
+Щодня	Daily
+Вбивства	Kills
+звичайний ворог {0} (+1 за зірку), сильний {1}–{2}, бос {3}–{4}; з корабля ×2, допомога — половина	an ordinary foe {0} (+1 a star), a strong one {1}–{2}, a boss {3}–{4}; from a ship ×2, a helped kill half
+Бій	Fight
+удари й рани, парирування {0}, оборона бази {0}, рейд {1}, гніздо {2}, негода {3}	blows and wounds, a parry {0}, defending the base {0}, a raid {1}, a nest {2}, foul weather {3}
+Біль	Pain
+ледве вижив {0}, твоя смерть {1}	barely surviving {0}, your death {1}
+Інше	Other
+медовуха {0}, трофей {1}, м'ясна страва {1}, нові руни{2} {3}	mead {0}, a trophy {1}, a meat dish {1}, new runes{2} {3}
+ і моноліти	 and monoliths
+{0}, сон у ліжку {1}% сили, торговець {2}	{0}, sleeping in a bed {1}% strength, a trader {2}
+Відкриття	Discovery
+рецепти й предмети, нові руни{0} {1} (знову {2}), біоми й підземелля {3}, навички {4}{5}	recipes and items, new runes{0} {1} (again {2}), biomes and dungeons {3}, skills {4}{5}
+, рівень персонажа {0}	, a character level {0}
+Справи	Work
+ремесло, господарство, робота, піші подорожі, корабель, відпочинок біля вогню — по {0}	crafting, farming, work, travelling on foot, sailing, resting by a fire — {0} each
+лише думки: оцінка Судді {0}–{1}, вбивство з його допомогою {2} (бос {3}), трофей {4}	only thoughts: the judge's rating {0}–{1}, a kill he helped with {2} (a boss {3}), a trophy {4}
+свіже пір'я +{0}% · ще {1}	fresh feathers +{0}% · {1} left
+<b>Бруд</b>\n\n{0} брудниться в болотах, у попелі, у бою{1} і в кістках. Дощ трохи змиває, купання — усе.\n\nПомити: сам летить до води чи в купіль; або стань у воду — «Жердина» в наказах стане «Помити».\n\n<b>Свіже пір'я</b> на {2} хв, якщо змито бруд: від {3} — удар +{4}%, від {5} — +{6}%. У гарячій купелі ще +{7}%.{8}	<b>Dirt</b>\n\n{0} gets dirty in swamps, in ash, in fights{1} and in bones. Rain washes a little off, a bath washes it all.\n\nTo wash: it flies to water or a hot tub by itself; or stand in the water — «Perch» in the orders turns into «Wash».\n\n<b>Fresh feathers</b> for {2} min if dirt was washed off: from {3} — strike +{4}%, from {5} — +{6}%. In a hot tub +{7}% more.{8}
+<b>Сила</b> <color=orange>{0}/{1}</color>	<b>Strength</b> <color=orange>{0}/{1}</color>
+Скупай мене в гарячій купелі	Bathe me in a hot tub
+скупати його в гарячій купелі	bathe him in a hot tub
+Я смерджу вже сам від себе. Гаряча купіль, ти і я. Сьогодні.	I stink even to myself. Hot tub, you and me. Today.
+Я брудний уже надто довго. Гаряча купіль — от чого я хочу.	I've been dirty far too long. A hot tub — that's what I want.
+ти у воді	you're in the water
+руки зайняті	your hands are busy
+ти б'єшся	you're fighting
+ти біжиш	you're running
+не зараз	not now
+довіра {0}+	trust {0}+
+поруч бій	a fight nearby
+Нема в сумці нічого, що {0} їсть.	Nothing in your bag that {0} eats.
+На плече	To the shoulder
+На руку	On the arm
+Ворон перестрибує з руки назад на плече, рука опускається.	The raven hops from your arm back onto your shoulder, and the arm comes down.
+Погладити	Stroke
+Другою рукою гладиш ворона на руці.	You stroke the raven on your arm with the other hand.
+Нагодувати з руки	Feed from the hand
+Даєш з долоні його їжу з сумки: улюблену, якщо знаєш її, інакше ту, якої найбільше.	You give it its food from your bag off your palm: its favourite if you know it, otherwise what you have most of.
+Очі в очі	Eye to eye
+Підносиш ворона до обличчя, і він дивиться тобі в очі й щось тобі каже.	You raise the raven to your face, and it looks you in the eye and tells you something.
+Підкинути	Toss up
+Змах рукою, і ворон злітає. Дивишся вдалину — облетить місцину попереду, інакше покружляє над тобою й повернеться.	A swing of the arm and the raven takes off. Look into the distance and it scouts the land ahead, otherwise it circles over you and comes back.
+● на руці	● on the arm
+з плеча на руку	from the shoulder to the arm
+Виставляєш руку, і ворон перестрибує на неї з плеча. Зброю чи знаряддя в руках ховаєш (R — дістати). Візьмеш щось у руки, вдариш, побіжиш чи стрибнеш — він сам повернеться на плече.	You hold out your arm and the raven hops onto it from your shoulder. Weapons or tools in your hands are put away (R to take them out). Take something in hand, strike, run or jump, and it goes back to your shoulder by itself.
+Ворон летить до тебе на руку. Ще клік — сяде на плече.	The raven is flying to your arm. Click again and it lands on your shoulder.
+Кличе ворона з польоту: він повертається й сідає тобі на руку.	Calls the raven back from its flight: it returns and lands on your arm.
+● летить на руку	● flying to your arm
+у польоті · покликати на руку	in flight · call it to your arm
+Ворон ще спить і тебе не знає.\n\nЩоб збудити: посади його на плече (ПКМ по ворону в сумці), іди до Жертовних каменів, повісь трофей Ейктюра на його камінь, май у сумці ще {wake} — і проведи обряд: B → «Розвиток».\n\nНе до вподоби благо чи тягар — Камінь долі ворона (у Хальдора) їх перекине.	The raven is still asleep and doesn't know you.\n\nTo wake it: put it on your shoulder (right-click the raven in your bag), go to the Sacrificial Stones, hang Eikthyr's trophy on his stone, bring another {wake} in your bag — and do the rite: B → “Growth”.\n\nDon't like the boon or the burden? The Raven's Fate Stone (from Haldor) rerolls them.
+Ворон прокинувся і тепер твій. Чужих він клює.\n\nКнига воронів — B: «Ворони» (стан і норов), «Дари», «Розвиток» (довіра й обряди).\n\nСпершу він дичиться й інколи відлітає. Звикне.	The raven has woken and is yours now. It pecks strangers.\n\nThe Book of Ravens — B: “Ravens” (state and nature), “Gifts”, “Growth” (trust and rites).\n\nAt first it is shy and sometimes flies off. It will get used to you.
+Коло J — накази ворону: «Поруч», «Кружляй», «Облетіти», трюки й «Усіх назад».\n\n«Туди»: наведи приціл на гравця, тварину, річ чи будову, і ворон полетить туди.\n\nГолодний ворон (ситість до 15) наказів не слухає.	The J wheel — orders for your raven: “With Me”, “Circle”, “Survey”, tricks and “Recall all”.\n\n“There”: aim at a player, an animal, a thing or a building, and the raven flies there.\n\nA hungry raven (satiety up to 15) won't obey orders.
+Прохання ворона	A Raven's Wish
+Ворон про щось попросив. Це його власне бажання, не доручення Одіна: приймати не треба, просто зроби.\n\nЩо саме — у книзі: печатка біля його імені на «Ворони». За виконане — довіра й іскринки. Не встигнеш — прохання мине саме.	Your raven has asked for something. It is its own wish, not Odin's errand: nothing to accept, just do it.\n\nWhat exactly — in the book: the seal by its name on “Ravens”. Fulfil it for trust and sparklets; left undone, the wish passes by itself.
+Ворон дасть себе вбрати: B → «Образ». Чотири місця — голова, шия, спина, лапи. Кожна річ дає свою силу.\n\nРечі роблять на столах ворона (молоток → RavenWatch): простий — біля кузні, просунутий — біля столу ґалдра. Речі з просунутого надіваються з 5-го рівня.\n\nТорба на спині годує ворона сама.	The raven will let you dress it: B → “Look”. Four places — head, neck, back, legs. Each thing gives a power of its own.\n\nThings are made at the raven tables (hammer → RavenWatch): the simple one by a forge, the advanced one by a Galdr table. Things from the advanced one are worn from level 5.\n\nA pouch on the back feeds the raven by itself.
+Посади воронів у Вороняче гніздо (E угорі), тоді E на чашу — вікно гнізда. Там можна дати Одінові дари (з ними він охочіше відповідає) і покликати його.\n\nОдін приходить не завжди: не прийшов — клич наступного дня. Прийняв — ворон полетить і повернеться з дорученням. З довірою доручення частішають.\n\nГнізда нема — молоток → RavenWatch, треба ще 2 роги Ейктюра. Виконані доручення запалюють руни: «Шлях Одіна» в книзі.	Seat your ravens in the Raven's Nest (E at the top), then E on the bowl — the nest's window. There you can give Odin gifts (he answers more willingly with them) and call him.\n\nOdin doesn't always come: if he didn't, call again the next day. If you accept, a raven flies off and returns with an errand. With trust, errands come more often.\n\nNo nest? Hammer → RavenWatch, it also takes 2 of Eikthyr's antlers. Finished errands light runes: “Odin's Path” in the book.
+Тепер ворон береже тебе в скруті: Хугін рятує від смертельного удару, Мунін люто б'ється, коли тобі погано.\n\nДалі — більші дари: з 5-го рівня Хугін віщує ранками, а Мунін мститься твоєму вбивці; з 6-го — Крила Одіна і Звір Муніна.	Now your raven guards you in trouble: Hugin saves you from a deadly blow, Munin fights fiercely when you are in a bad way.\n\nGreater gifts lie ahead: from level 5 Hugin foretells in the mornings and Munin takes revenge on your killer; from level 6 — Odin's Wings and Munin's Beast.
+Ти знайш{ов|ла} Вороняче дерево. Біля коріння руни сплітаються у в'язь — силу, що діє на тобі: Бальдр — що станеться, Геймдаль — коли, Фрея підсилює.\n\nЗелене дерево бере 2 руни (ворон із довірою від 2), крижане — 3 (від 4), горіле — 4 (від 6).\n\nПосади воронів на жердину на верхівці й встій на арені. В'язь одна; вмикає її коло Q чи книга, розплітають — біля дерева.	You found a Raven Tree. By its roots runes weave into a bindrune — a power acting on you: Baldr — what happens, Heimdall — when, Freya strengthens.\n\nThe green tree takes 2 runes (a raven with trust 2 or more), the icy one 3 (4 or more), the charred one 4 (6 or more).\n\nSeat your ravens on the perch at the top and hold out in the arena. You have one bindrune; the Q wheel or the book turns it on, and it is unwoven only at the tree.
+Одін кличе на золоті доручення. За кожне — золота руна.\n\nЇї вкладають у дар ворона назавжди: I — дар сильнішає, II — дістає свій прийом, III — свою грань.\n\nДо п'яти золотих рун на ворона, усього десять. Коли отримаєш десяту, золоті доручення скінчаться.	Odin calls you to golden errands. Each gives a golden rune.\n\nIt goes into a raven's gift for good: I — the gift grows stronger, II — gets a move of its own, III — a facet of its own.\n\nUp to five golden runes per raven, ten in all. Once you get the tenth, golden errands end.
+Поруч гравець із воронами. Йому можна слати листи й посилки.\n\nКонверт у кутку книги (B). Лист — 20 сили й пергамент (у Хальдора), з 2-го рівня довіри ворона; посилка — 30 сили й одна річ до 2 кг, з 3-го.	A player with ravens is near. You can send them letters and parcels.\n\nThe envelope is in the book's corner (B). A letter — 20 strength and a parchment (from Haldor), from raven trust level 2; a parcel — 30 strength and one thing up to 2 kg, from level 3.
+Норов	Nature
+У кожного ворона свій норов: характер (як поводиться й куди літає), хист (його сильна сторона) і примха (маленька вада).\n\nУсе це — у книзі: B → «Ворони». Наведи на картку — там пояснення. Примху довіра не змінить, до неї просто звикають.	Every raven has a nature of its own: a temper (how it behaves and where it flies), a knack (its strong side) and a quirk (a small flaw).\n\nAll of it is in the book: B → “Ravens”. Hover a card for the details. Trust won't change the quirk — you just get used to it.
+Ворон удома	A Raven at Home
+Ворона можна лишити вдома: глянь на жердину й натисни {home} (із Shift — Муніна). Він житиме там і стерегтиме, що бачить, а плече звільниться для іншого.\n\nНа вартовій жердині він лише вартує й б'є ворогів довкола. Б'є тільки ситий — не забувай його годувати.\n\nЗабрати — E біля тієї жердини: звідусіль його не покличеш.	You can leave a raven at home: look at a perch and press {home} (with Shift — Munin). It will live there and guard what it sees, and your shoulder is free for another.\n\nOn a guard perch it only keeps watch and strikes enemies around. It strikes only when fed — don't forget to feed it.\n\nTo take it back — E at that perch: it can't be called from afar.
+Твій ворон набув звички — від того, як ти граєш останні дні.\n\nКожна дає і плюс, і мінус. Тримається щонайменше п'ять днів, а тоді минає, якщо граєш інакше. Не більше двох разом.\n\nУ книзі (B → «Ворони») — картка «Звичка» біля норову. Наведи на неї: там написано, як її позбутися або зберегти.	Your raven has picked up a habit — from how you've played these last days.\n\nEach has a plus and a minus. It stays at least five days, then passes if you play differently. No more than two at once.\n\nIn the book (B → “Ravens”) — the “Habit” card beside its nature. Hover it: it says how to lose it or keep it.
+Брудний ворон	A Dirty Raven
+Ворон забруднився: болото, попіл, кров чи земля. Часом він сам злітає митися до води поруч.\n\nПомити можна й самому: стань у воду — у колі J з'явиться «Помити». Гаряча купіль іще краща.\n\nВідмитий ворон якийсь час б'є сильніше.	Your raven got dirty: mud, ash, blood or earth. Now and then it flies off by itself to wash in water nearby.\n\nYou can wash it yourself: stand in the water — “Wash” appears on the J wheel. A hot tub is better still.\n\nA washed raven strikes harder for a while.
+Слова ворона	A Raven's Words
+Ворон учиться слів: підхоплює їх із чату поруч або просить навчити.\n\nНове слово чекає в книзі (печатка ᚨ біля імені): його можна лишити чи викинути й обрати, коли казати. Спершу ворон слово перекручує, а що частіше каже — то чистіше.	Your raven is learning words: it picks them up from chat nearby or asks you to teach it.\n\nA new word waits in the book (the ᚨ seal by its name): keep it or throw it out, and choose when it says it. At first the raven mangles a word; the more it says it, the cleaner.
+Суддя бою	Judge of the Fight
+Після доброго бою ворон оцінює його — від однієї до п'яти зірок. Хугін підкаже, що було не так, Мунін покепкує.\n\nБій як у сагах дає трохи довіри, а після доброго бою ворон часом покаже свою схованку.	After a good fight your raven rates it — one to five stars. Hugin points out what went wrong, Munin mocks.\n\nA fight worthy of the sagas gives a little trust, and after a good one the raven sometimes shows you its cache.
+Тепер ворон сідає на руку. У колі J біля його крила — кнопки: на руку й назад, погладити, нагодувати з руки, глянути в очі, підкинути.\n\nЗброю з тієї руки буде прибрано. Рушиш у бій — ворон сам стрибне на плече.	Your raven now sits on your arm. On the J wheel, by its wing — buttons: onto the arm and back, stroke, feed from the hand, eye to eye, toss up.\n\nWhatever is in that hand is put away. Go into a fight and the raven hops back to your shoulder by itself.
+мало здоров'я	low health
+Провідника зараз нема.	The Guide is not here now.
+Не зараз.	Not now.
+Під дах Провідник не залітає. Вийди надвір.	The Guide does not fly in under a roof. Step outside.
+Посеред бою Провідник не прилетить.	The Guide will not come in the middle of a fight.
+Провідник уже летить до тебе: вислухай його спершу.	The Guide is already flying to you: hear him out first.
+Зараз говорить інший ворон. Спробуй за хвилину.	Another raven is talking now. Try again in a minute.
+Теми, про які Провідник уже розповідав: обери — і він прилетить розповісти знову.	Topics the Guide has already told: pick one and he will fly in to tell it again.
+Натисни на тему — Провідник прилетить і розповість її знову.	Click a topic — the Guide will fly in and tell it again.
+послухати	listen
+Провідник летить до тебе.	The Guide is flying to you.
+Перед тобою на {0} півколо рун. Удар спереду воно бере цілком — ні шкоди, ні відкидання, ні оглушення, а хто бив, сам оглушується. Тримає удари монстрів і босів, стріли й закляття (гравців — у PvP); отрута, вогонь, падіння й удар у спину проходять. Витримує {1} (знаки над заслоною); слабкі удари (до {2}% твого здоров'я) бере, не витрачаючи заряду. Вдале парирування заряду не забирає. Діє й під куполом.	A half-ring of runes in front of you for {0}. It takes a hit from the front whole — no damage, no knockback, no stagger, and the striker is staggered instead. It holds hits from monsters and bosses, arrows and spells (players only in PvP); poison, fire, falls and hits in the back get through. It holds {1} (the marks over the ward); light hits (up to {2}% of your health) it takes without spending a charge. A perfect parry takes no charge. Works under the dome too.
+стріли й закляття, що влучили в заслону, б'ють у стрільця, а коли заслона розбивається, її руни летять уперед і б'ють ворогів удвічі сильніше за удар Муніна (зникла сама — вполовину слабше)	arrows and spells that hit the ward strike the shooter, and when the ward breaks, its runes fly ahead and hit enemies twice as hard as Munin's strike (half that if it fades by itself)
+«Заслона» витримує чотири удари	“Ward” holds four hits
+чотири удари	four hits
+Почухати під дзьобом	Scratch under the beak
+Подути на пір'я	Blow on the feathers
+Дати дзьобнути палець	Let it peck a finger
+Показати світ	Show it the world
+На іншу руку	To the other arm
+Розправити крила	Spread the wings
+Погойдати	Rock it
+Дай лапу	Give a foot
+Чухаєш його пальцем під дзьобом, а він заплющує очі й тягне шию.	You scratch it under the beak with a finger, and it closes its eyes and stretches its neck.
+Підносиш ближче й дмухаєш на пір'я: воно стає дибки, і ворон обтрушується.	You bring it close and blow on its feathers: they stand on end and the raven shakes itself.
+Підставляєш палець під дзьоб. Як дзьобне — залежить від ворона.	You hold a finger under its beak. How it pecks depends on the raven.
+Піднімаєш руку й повільно повертаєшся довкола: ворон роздивляється місцину й каже, що про неї думає.	You raise your arm and slowly turn around: the raven looks over the land and says what it thinks of it.
+Ворон перепурхує на другу руку й лишається там. Ще раз — назад.	The raven flutters over to your other arm and stays there. Again — and back.
+Піднімаєш руку, і ворон розкриває крила, хизуючись.	You raise your arm and the raven spreads its wings, showing off.
+Легенько гойдаєш рукою, як вітер гілку, а ворон тримає рівновагу.	You rock your arm gently, like the wind a branch, and the raven keeps its balance.
+Ворон піднімає лапу, а ти торкаєшся її пальцем.	The raven raises its foot and you touch it with a finger.
+<b>На руці:</b> {0}.	<b>On the arm:</b> {0}.
+У кожного ворона свої звички на руці: на довірі 3 він знає одну, з кожною новою довірою — ще одну. А часом на руці сам робить будь-яку.	Each raven has its own ways on your arm: at trust 3 it knows one, and one more with each new trust. And now and then it does any of them on your arm by itself.
+Звички	Ways
+{0} з {1} · {2}	{0} of {1} · {2}
+показати	show
+на руці	on the arm
+Там вогонь — ворон не сяде, обпече лапи.	There's fire there: the raven won't sit, it would burn its feet.
+секунду|секунди|секунд	second|seconds
+метр|метри|метрів	metre|metres
+кілометр|кілометри|кілометрів	kilometre|kilometres
+витривалості	stamina
+ейтиру	eitr
+здоров'я	health
+Дар Хугіна до ранку: +{0} {1}	Hugin's gift till morning: +{0} {1}
+Дар віщування	Gift of the omen
+Хугін вивіщував тобі дар: +{0} {1} до наступного ранку.	Hugin foretold you a gift: +{0} {1} till the next morning.
+Цікавий	Curious
+Гордій	Proud
+Лагідний	Tender
+Буркотун	Grumpy
+Ловчий	Huntsman
+Ласогуб	Sweet Tooth
+Усе мусить роздивитись: частіше сам летить до табличок, рун, кущів і блискучого й приносить більше знахідок.	Has to look at everything: flies off on its own more often to signs, runes, bushes and shiny things, and brings back more finds.
+Красень і знає це: найохайніший, часто миється й чепуриться, любить обнови й убори, у повітрі красується.	Handsome and knows it: the tidiest of all, washes and preens often, loves new gear and finery, shows off in the air.
+Тягнеться до тебе: найчастіше підставляє шию, тримається поруч і легко дружить з іншими воронами.	Reaches for you: offers its neck to be stroked most often, keeps close and makes friends with other ravens easily.
+Усім незадоволений: бурчить, до людей холодніший, з чужими воронами частіше свариться. Медовуха його розм'якшує.	Displeased with everyone: grumbles, cooler to people, quarrels with other ravens more often. Mead softens him.
+Живе полюванням: частіше просить полювати й битися, частіше пірнає по рибу й приносить здобич. Кров на пір'ї йому байдуже.	Lives for the hunt: asks to hunt and fight more often, dives for fish more often and brings back prey. Blood on its feathers doesn't bother it.
+Думає шлунком: голодний, частіше сам лізе в сумку по їжу, охочіше ділиться нею з другом і дуже любить медовуху.	Thinks with its stomach: when hungry it reaches into your bag for food sooner, shares food with a friend more readily and loves mead.
+Носопхай	Nosy
+Носопхаю	Nosy
+Чомучка	Whybird
+Чомучко	Whybird
+Павич	Peacock
+Павичу	Peacock
+Чепурун	Dandy
+Чепуруне	Dandy
+Голубок	Dove
+Голубку	Dove
+Лагідько	Softy
+Лагідьку	Softy
+Сич	Old Owl
+Сичу	Old Owl
+Сухар	Crust
+Сухарю	Crust
+Кігтяр	Talon
+Кігтярю	Talon
+Слідопит	Tracker
+Слідопите	Tracker
+Ласоїд	Gobbler
+Ласоїде	Gobbler
+Смакун	Foodie
+Смакуне	Foodie
+Характер: Цікавий	Temper: Curious
+Характер: Гордій	Temper: Proud
+Характер: Лагідний	Temper: Tender
+Характер: Буркотун	Temper: Grumpy
+Характер: Ловчий	Temper: Huntsman
+Характер: Ласогуб	Temper: Sweet Tooth
+{0} зараз літає у своїх справах.	{0} is off about its own business.
+Мунін не полетить до Одіна, поки тут б'ються.	Munin won't fly to Odin while there's fighting here.
+Хугін не полетить до Одіна, поки тут б'ються.	Hugin won't fly to Odin while there's fighting here.
+Мунін чекає неба, щоб злетіти до Одіна.\nВийди з-під даху.	Munin is waiting for open sky to fly to Odin.\nStep out from under the roof.
+Хугін чекає неба, щоб злетіти до Одіна.\nВийди з-під даху.	Hugin is waiting for open sky to fly to Odin.\nStep out from under the roof.
+Сьогоднішнє віщування	Today's omen
+Ще попереду: Хугін віщує вранці.	Still to come: Hugin foretells in the morning.
+Сьогодні його не було.	There was none today.
+Хугін сьогодні змовчав.	Hugin kept quiet today.
+Хугіну сьогодні нічого віщувати.	Hugin has nothing to foretell today.
+Набіг: {0} — {1}.	Raid: {0} — {1}.
+Набіг: {0} — його час уже настав.	Raid: {0} — its time has already come.
+Вогнелюб	Fire-lover
+ви подовгу грієтеся біля вогню	you spend long hours warming by a fire
+біля вогню сила відновлюється на 15% швидше	by a fire its strength comes back 15% faster
+уночі далеко від тепла мерзне: дари на 10% дорожчі	at night far from warmth it freezes: gifts cost 10% more
+кілька днів менше сидіти біля вогню	sit by a fire less for a few days
+щодня грітися біля вогню	warm up by a fire every day
+Буревісник	Storm-bird
+ви часто надворі в дощ і бурю	you are often out in rain and storms
+у негоду летить на 10% швидше	in foul weather it flies 10% faster
+у ясну днину нудьгує: частіше відлітає сам	on a clear day it is bored: flies off by itself more often
+кілька днів ховатися від негоди	keep out of foul weather for a few days
+виходити в дощ і бурю	go out in rain and storms
+Копач	Digger
+ти багато копаєш руду й камінь	you mine a lot of ore and stone
+руду чує на 20% далі	it hears ore 20% further
+хвилину після удару кайлом глухне: ворогів помічає на 30% ближче	for a minute after a pick's blow it is deafened: notices foes 30% closer
+кілька днів не брати кайла	leave the pickaxe for a few days
+копати щодня	mine every day
+Ласун на рибу	Fish glutton
+ти часто рибалиш	you fish often
+риба насичує його на 20% більше, а по рибу пірнає частіше	fish fills it 20% more, and it dives for fish more often
+інша їжа насичує на 15% менше	other food fills it 15% less
+кілька днів не рибалити	don't fish for a few days
+рибалити щодня	fish every day
+Кочівник	Wanderer
+ти часто ходиш порталами	you often travel by portal
+дві хвилини після порталу дари на 15% дешевші	for two minutes after a portal gifts cost 15% less
+довго в дорозі без порталу (понад 10 хвилин) — летить на 10% повільніше	long on the road without a portal (over 10 minutes): it flies 10% slower
+ходити пішки, без порталів	walk, without portals
+ходити порталами щодня	travel by portal every day
+Пішохід	Walker
+ви багато ходите пішки й не беретеся за портали	you walk a lot and leave portals alone
+у дорозі далеко від дому дари на 10% дешевші	on the road far from home gifts cost 10% less
+дві хвилини після порталу приходить до тями: дари на 15% дорожчі	for two minutes after a portal it comes to its senses: gifts cost 15% more
+частіше ходити порталами	use portals more often
+щодня ходити пішки й без порталів	walk every day, no portals
+Скупердяй	Miser
+ти носиш при собі купу монет	you carry a pile of coins on you
+його схованка щодня росте на десяту частину; коли відвикне — віддасть усе	its stash grows by a tenth each day; when the habit goes, it gives it all back
+раз на день тягне з твоєї сумки трохи монет у схованку	once a day it pinches a few coins from your bag into its stash
+тримати монети в скрині, а не при собі	keep your coins in a chest, not on you
+носити при собі багато монет	carry a lot of coins on you
+Нічний сторож	Night watchman
+ти часто лишаєш його вартувати дім	you often leave it to guard your home
+на жердині бачить ворогів на 30% далі	on a perch it sees foes 30% further
+у мандрах розвідка на 15% вужча	on the road its scouting is 15% narrower
+частіше брати його з собою	take it with you more often
+лишати його на варті чи вдома на кілька днів	leave it on guard or at home for a few days
+{0} віддає свою схованку: {1}.	{0} gives back its stash: {1}.
+{0} потягнув {1} у свою схованку (там уже {2}).	{0} pinched {1} into its stash ({2} there now).
+У схованці: {0}.	In its stash: {0}.
+Звички ворон набуває від того, як ви граєте останніми днями: медовуха, мандри чи дім, бої, годування, пестощі, ніч чи день, море, підземелля, вогонь, негода, кайло, риба, портали, монети, варта… Кожна дає і плюс, і мінус. Звичка з'являється за кілька днів такої поведінки, тримається щонайменше п'ять днів і минає, якщо поведінка зміниться. Не більше двох разом.	A raven picks up habits from how you have played these last days: mead, journeys or home, fights, feeding, petting, night or day, the sea, dungeons, fire, foul weather, the pickaxe, fish, portals, coins, guard duty… Each gives a plus and a minus. A habit appears after a few days of such play, stays at least five days and goes once the play changes. No more than two at once.
+(без тями)	
+Дати медовуху зцілення	
+Потрібна медовуха зцілення	
+Дії	
+Серце оселі	
+Живе: {0}/{1}	
+Дошка	
+Назва	
+Назва оселі	
+Мешканці	
+Ще ніхто тут не живе. Найми когось і вибери цю оселю — або оселі тут того, хто вже з тобою.	
+Мешканці {0}/{1}	
+Чутки	
+Записки	
+Поки тихо: усе гаразд.	
+Без назви сюди не пошлеш нікого з найманих. Shift+E — дати назву.	
+без роботи	
+без ліжка	
+Чутка: людина в біді (подробиці — на дошці)	
+{0} голодує — без їжі кине роботу, а згодом піде	
+{0} голодний|голодна	
+{0} не має ліжка	
+{0}: ящик повний	
+{0} без роботи	
+Місця більше нема	
+Задалеко від його бази (до {0} м).	
+Тут його ділянка ({0} м довкола).	
+сокира	
+кайло	
+чекає, де працювати (кнопка «Ділянка»)	
+{0} зламана — полагодь або дай іншу	
+потрібна {0} у спорядженні	
+підбирає	
+на ділянці нема що рубати	
+на ділянці нема що копати	
+рубає дерево	
+розрубує колоду	
+копає	
+дуже голодний|голодна	
+голодний|голодна	
+не голодний|голодна	
+ситий|сита	
+Його тут уже нема.	
+Його зараз веде інша гра — спробуй ще раз.	
+Цієї роботи не візьме.	
+Людина в біді	
+Річ, яку загубив|загубила {0}	
+Комора кухаря {0}	
+Готове звідси їдять мешканці бази	
+Їдальня	
+Відпусти	
+За мною	
+Іде за тобою, доки не відпустиш.	
+повертається до своїх справ	
+іде за тобою	
+Стій	
+Стоїть, де стоїть, доки не відпустиш.	
+Іде туди, куди покажеш, і чекає там.	
+іде туди	
+Встань	
+Сядь	
+Сідає на найближчу лаву чи стілець, а як нема — на землю поруч.	
+Наказ знято: повертається до своїх справ	
+ і на свою базу.	
+Меню закриється: наведи {0} і натисни {1}.	
+Відкриває свій вибір.	
+Наведи {0} і натисни {1}	
+здоров'я 	
+ · без тями	
+Наведи {0} і натисни {1}. Ще {2} с.	
+Яка це людина: хода, вдача, ритм дня, з людьми, у бою — і чим живе.	
+Історія	
+встає о {0}, лягає о {1}	
+жайворонок: 	
+сова: 	
+мирний|мирна — тікає	
+обережний|обережна — тікає, а загнаний|загнана відбивається	
+боєць|бійчиня — захищає себе й тих, кого супроводжує	
+боєць|бійчиня — сам|сама шукає ворогів	
+тримається осторонь бою	
+робота: 	
+живе на базі	
+найнятий|найнята, ще без дому	
+ніде не живе	
+має ліжко	
+тримає комору	
+має ящик запасів	
+Мені б {0} — {1}.	
+одна чутка	
+{0} просить: {1} (віддячить: {2})	
+Ой… а де ж воно? Нема.	
+…ні, забув|забула. Згадаю — скажу.	
+Тримай: {0}.	
+Ой, дякую! Саме те, що треба.	
+у кільці ворогів	
+у полоні в таборі	
+без сил від голоду	
+поранена, довкола звірі	
+загубила свою річ	
+мерзне в горах	
+тікає від погоні	
+її стереже велетень	
+заблукала — шукай за голосом	
+поранена, кличе на допомогу	
+Людина в біді: {0}. {1}, {2}. Лишилось: {3}. Позначено на мапі.	
+Безіменне серце чуток не чує — дай йому назву.	
+Чуток поки нема. Наступні — десь за {0}.	
+Чуток поки нема.	
+{0} д. {1} год.	
+{0} год.	
+{0} км	
+Вони мертві! Розв'яжи мене, прошу.	
+Пастка! Вибач… вони змусили мене кликати.	
+Виселити	
+Оселити тут	
+Більше ніде не живе: ні дому, ні ліжка, ні розпорядку, ні роботи.	
+Показує на 30 с, що він вважає своєю базою: золоті вогники по межі на землі й позначки на мапі.	
+Спершу оселі його.	
+Межі ще рахуються — спробуй за мить.	
+Межі бази: 	
+Його ліжко: тут спить уночі.	
+лук	
+ (майстер)	
+на все руки — без особливого хисту	
+вдається: 	
+не його: 	
+Зараз пригадаю, які оселі знаю…	
+До «{0}»	
+Ні, ходімо зі мною.	
+Я не знаю жодної оселі. Постав «Серце оселі» й дай йому назву — тоді й скажеш, куди йти.	
+Чого тобі?	
+Більше й казати нічого.	
+Живу, ходжу, дивлюсь. Дай мені роботу — не відмовлюсь.	
+Та нічого. Йду, куди веде дорога.	
+прибирає	
+не чіпає	
+Прибирає все. Відкрий, щоб вибрати, чого не чіпати.	
+Не чіпає {0} з {1} видів речей.	
+Прибирає. Натисни — не чіпатиме.	
+Не чіпає. Натисни — прибиратиме.	
+Ось я й тут. Тут і житиму.	
+Тут нема для мене місця. Піду до Дому воронів.	
+Ох… дякую. Думав|Думала, вже не встану.	
+Піду додому… потихеньку.	
+Зараз: 	
+Спершу оселі його: працюють на своїй базі.	
+Комора	
+Ящик	
+Комора кухаря: звідти бере сире, туди складає готове — а мешканці бази звідти їдять.	
+Його ящик запасів: звідти бере, туди складає.	
+Де він вартує: стоїть там і обходить довкола (до {0} м). Б'є лише ворогів, що підходять до посту (до {1} м) — далі за ними не женеться; мирних звірів не чіпає.	
+Дім, який він доглядає: вогнища й світильники, підлога, двері, побиті стіни.	
+Де він працює: {0} м довкола місця, на яке наведеш (до {1} м від бази). Поза базою він без її захисту.	
+Зараз обходить усю базу. Натисни — знову межею (або дай йому пост).	
+Ходить усією базою, куди схоче, і валить кожного ворога, що з'явиться в її межах. Пост тоді знімається.	
+Не працює: удень походжає базою.	
+<color=#FFD54F><b>{0}</b></color>	
+{0}\nСерце поселення: дай йому назву (Shift+E) — і найманих людей можна буде послати сюди, вони прийдуть самі й оселяться тут (до {1} людей). На дошці (E) — хто тут живе і чого бракує. Ударом не зламати, лише молотом розібрати.	
+Серце оселі.	
+Різьблений стовп із вороном, дошка записок під дашком, ліхтар і полиця з хлібом: тут збираються ті, хто живе з тобою	
+Це ліжко не для тебе: тут спав хтось інший.	This bed is not for you: someone else slept here.
+Цього не розібрати: воно належить цьому місцю.	This cannot be taken apart: it belongs to this place.
+Цього так не полагодиш: воно належить цьому місцю.	This is not mended like this: it belongs to this place.
+Вогнище Варти	Hearth of the Watch
+Горить чужим, холодним вогнем. Воно світить, та не гріє.	It burns with a strange, cold fire. It gives light, but no warmth.
+Горить вогнем Варти.	It burns with the fire of the Watch.
+Холодне. Попіл ще пам'ятає вогонь.	Cold. The ash still remembers the fire.
+Розпалити (дрова)	Light it (wood)
+Торкнутися вогню Пером Варти	Touch the fire with the Feather of the Watch
+Щоб розпалити, потрібні дрова.	You need wood to light it.
+Не наш це вогонь… Холодний, як її руки.	That is not our fire... Cold as her hands.
+Ось він. Вогонь Варти. Довго ж ми чекали.	There it is. The fire of the Watch. We waited long enough.
+Попіл не займається. Зала ще замкнена — її відмикає не твій ключ.	The ash will not catch. The Hall is still locked — and not by a key of yours.
+Уламок чиєїсь пам'яті: ворони тих, хто продав себе Хель, блукають без господаря, а Хальдор їх ловить.	A shard of someone's memory: the ravens of those who sold themselves to Hel wander without a master, and Haldor catches them.
+у сюжеті	
+Остання різьба Ейріка	Eirik's last carving
+Без тями	
+Мешканця побили, і він лежить без тями. Не помре.\n\nМедовуха зцілення одразу поставить його на ноги. Без неї він згодом підведеться сам і поплентається додому відлежуватись.	
+Люди в біді	
+На дошці Серця оселі з'явилась чутка про людину в біді, а на мапі — позначка.\n\nНе барись: допоможи їй і поговори з нею. Врятованих можна покликати жити у свою оселю.	
+Серце оселі — домівка для людей, яких ти врятуєш.\n\nДай йому назву, інакше сюди нікого не покличеш. На дошці серця видно, хто тут живе, чого бракує і які ходять чутки.\n\nУ скарбничку внизу клади монети — з неї робітники беруть платню.	
+Робота мешканців	
+Кожному мешканцю можна дати роботу, ящик і ліжко. Більшості робіт потрібен ящик: звідти беруть і туди складають.\n\nДеяким роботам треба ще щось: лісорубу — сокира й ділянка, вартовому — пост, слузі — дім.	
+Ціна праці	
+Мешканцям треба їсти, відпочивати й отримувати платню.\n\nЇдять вони готову їжу з комори — ящика кухаря чи ящика біля столу. Ситі, відпочилі й вчасно оплачені працюють краще, а довго невдоволені колись підуть.	
+Прохання мешканців	
+Мешканець про щось просить. Спитай його сам або глянь на дошку серця.\n\nПринесеш — віддячить.	
+Ворона в тебе нема — свій знайде тебе сам, а чужого продає Хальдор	You have no raven — your own will find you, a stray one Haldor sells
+до тебе: ворожо	
+до тебе: холодно	
+до тебе: тепло	
+до тебе: як до рідних	
+до тебе: рівно	
+Шафка ще не тут.	
+до всіх рівно.	
+ходить по-старечому, руки за спиною	
+ступає, як вояк	
+ходить пружно	
+ходить перевальцем	
+накульгує	
+ходить тихо, похнюпившись	
+{0} не битиметься — зброя ні до чого.	
+Відкриває десять комірок поруч із твоєю торбою: броня, одяг, сокира чи кайло для роботи. Не боєць — зброї не візьме.	
+Відкриває його десять комірок поруч із твоєю торбою: поклади зброю, щит, броню, стріли чи болти — він вдягне найкраще. Лук чи арбалет бере лише зі стрілами чи болтами. Лісорубу — сокиру, рудокопу — кайло; вони зношуються — забери й полагодь на верстаті або дай нові.	
+Дай оселі назву — і на дошці з'явиться перша чутка про людину в біді.	
+Тут нема столу для їжі в межах цієї оселі.	
+Їдальня тут: мешканці їстимуть за цим столом і вечорами збиратимуться біля нього.	
+Їдальню знято: їстимуть за найближчим столом.	
+Скарбничка	
+Скринька внизу: {0} монет. Робітники самі беруть платню раз на 5 днів — разом {1}. Платять вчасно — працюють охочіше й вправнішають.	
+Стіл їдальні зламано — їдальню знято. Обери новий стіл.	
+Не обрано: їдять за столом біля комори, вечорами сидять біля вогню.	
+Обрано стіл: тут їдять і вечорами здебільшого сидять. Інколи хтось вибере вогонь надворі.	
+Стіл їдальні зник: поки що їдять де знайдуть. Обери інший.	
+Інший стіл їдальні	
+Обрати їдальню	
+Перенести їдальню: покажи інший стіл. Їжу братимуть зі скринь довкола нього, а сідатимуть на лави й стільці поруч.	
+Покажи стіл — тут мешканці обідатимуть і збиратимуться вечорами. Їжу братимуть зі скринь довкола, сідатимуть на лави й стільці поруч.	
+Зняти їдальню	
+Без їдальні мешканці їдять де випаде: за столом біля комори чи біля скрині з готовим, а вечорами сидять біля вогню.	
+настрій {0}%	
+втомлений|втомлена	
+Нема столу їдальні — обери інший на дошці	
+Нема що їсти	
+{0} без платні — поклади монети в скарбничку (бере {1} раз на 5 днів)	
+{0} невдоволений|невдоволена	
+Тут дому нема: потрібна підлога під дахом — обери інший.	
+Дім не замкнений — він доглядає лише те, що під дахом.	
+Здоров'я	
+Броня	
+Розбір: {0}	
+Не знайшов місця: {0}	
+база ще оглядається	
+на базі нема столу (їжа — у ящику біля столу або в коморі кухаря)	
+ящик біля столу особистий — потрібен звичайний	
+біля столу (до {0} м) нема ящика	
+у ящику біля столу лише не готове: {0} — їдять тільки страви з вогнища, печі чи казана	
+у ящику біля столу нема страв (з вогнища, печі чи казана)	
+кілька днів тому	
+давно	
+нічого не пам'ятає.	
+просить: {0}	
+Без тями — спершу постав його на ноги (медовуха зцілення, E).	
+настрій {0}% · втома {1}%	
+ситість {0}%	
+(мертвий|мертва)	
+Мені б {0}.	
+Віддячу: {0}. Чекатиму ще {1}.	
+Їх нема… дякую. Меду б мені…	
+Моя річ лишилась {0} звідси, кроків за {1}. Там вони…	
+{0} не дочекався|дочекалася тебе й пішов|пішла…	
+{0} не дочекався|дочекалася допомоги…	
+{0} врятовано! Поговори з ним|нею.	
+Я… більше не можу…	
+Ще трохи — і я впаду! Швидше!	
+Що ж… бувай. Дякую, що не кину{в|ла} мене там.	
+Що ж… бувай. Дякую тобі.	
+Витримає ще {0}	
+удари	
+ударів	
+Оселився|Оселилася тут.	
+Оселився|Оселилася біля Серця оселі.	
+Оселився|Оселилася в оселі «{0}».	
+Поруч нема Серця оселі — оселити можна лише біля нього.	
+Тут уже живе {0} — більше на одну оселю не можна.	
+Житиме біля Серця оселі: база довкола, розпорядок дня.	
+Житиме біля Серця оселі поруч: база довкола, розпорядок дня.	
+Житиме в оселі «{0}»: база довкола, розпорядок дня.	
+Його тримає сюжет — зараз не виселити.	
+Куди саме? Скажи — дійду сам|сама.	
+Та вже нічого.	
+Я — {0}. Роблю своє.	
+Задалеко — покажи ближче.	
+Добре. Дійду сам|сама.	
+іде ховатися	
+нема свого ліжка	
+ліжко не під дахом	
+голодно	
+дуже голодно	
+все та сама їжа	
+втома	
+мокне під дощем	
+не платять	
+на базі не горить вогонь	
+Ух… втомився|втомилась. Посиджу трохи.	
+Досить з мене. Піду до Дому воронів.	
+Платня — {0}. Дякую.	
+Руки вже звикають до роботи.	
+Скарбничка порожня… Знову без платні.	
+Ремесло: {0}%. Платня: {1} раз на 5 днів.	
+Скрині довкола місця, яке покажеш (до {0} м): звідси він бере пальне для дому у свою скриню, сюди розкладає те, що ти приніс у його скриню. Нема місця на складі — шукає по скринях бази.	
+Скриня, куди кладеш речі для нього: час від часу він її перевіряє і розносить усе на склад — туди, де лежить те саме, в будь-яку вільну скриню складу, а нема місця — по скринях бази (не в доми інших гравців). Сюжетні й особливі речі не чіпає.	
+Не бачу скрині там, куди ти дивишся.	
+Ця скриня ще не готова.	
+Це його робоча скриня — для розбору потрібна інша.	
+Скриня для розбору: що покладеш сюди, він рознесе на склад.	
+Це поза його базою — склад має бути в ній.	
+Тут склад: скринь довкола — {0}.	
+Тут склад — але скринь довкола поки нема.	
+Сюжетна будівля Зали Варти: лише для автора, гравці її не будують.	
+\n\n<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>	
+Старий лист	Old letter
+Прочитати	Read
+Стовп із вороном на верхівці, дошка під дашком, ліхтар. Такі ставили там, де жили люди: біля них збирались.\nПід кресленням дряпнуто: «дерево, пір'я, ріг того, хто перший упав».	A post with a raven on top, a board under a little roof, a lantern. They were raised where people lived: folk gathered by them.\nScratched under the drawing: «wood, feathers, the antler of the one who fell first».
+\nСила: <color=orange>{0}/{1}</color>	
+{0} сів біля тебе — у торбі нема місця.	
+Мунін знайшов тебе.	
+Хугін знайшов тебе.	
+Щось шукало тебе — і не знайшло Муніна на плечі.\nКоли він сяде, згадає.	
+Щось шукало тебе — і не знайшло Хугіна на плечі.\nКоли він сяде, згадає.	
+Мунін здригнувся — і ніби щось пригадав.\nТепер він знає, чий він.	
+Хугін здригнувся — і ніби щось пригадав.\nТепер він знає, чий він.	
+Освойся у Вальхеймі	Find your feet in Valheim
+Хтось кличе тебе	Someone is calling you
+Два сліди	Two trails
+Лети за вороном Ейріка	Follow Eirik's raven
+Ворон Ейріка	Eirik's raven
+Зазирни в покинуту хату	Look into the abandoned hut
+Покинута хата	Abandoned hut
+Роздивись щит	Look at the shield
+Щит	Shield
+Ворон Ейріка чекає	Eirik's raven is waiting
+У хаті хтось є	Someone is in the hut
+Візьми оберіг	Take the charm
+Хтось шукає тебе	Someone is looking for you
+Знайди Залу Варти	Find the Hall of the Watch
+Зала Варти	Hall of the Watch
+Брама Зали зачинена	The Hall's gate is shut
+Знайди камені біля табору	Find the stones by the camp
+Камені	Stones
+Біля каменів хтось є	Someone is by the stones
+Іди з Гейд до Зали	Go to the Hall with Heid
+Гейд відчиняє браму	Heid opens the gate
+Зайди до Зали Варти	Enter the Hall of the Watch
+Оглянь Залу	Look around the Hall
+Тут дуже холодно	It is very cold here
+Розпали вогнище — тут дуже холодно	Light the hearth — it is very cold here
+Вогнище горить… синім	The hearth burns… blue
+Обшукай Залу	Search the Hall
+Збудуй серце оселі	Build a hearth heart
+Хтось уже збудував серце	Someone has already built a heart
+Перше серце вже горить у світі. Про те, що сталось, розкаже книга.	The first heart already burns in this world. The book will tell you what happened.
+Це не наш.	Not one of ours.
+Чужий. І старий.	A stranger. And old.
+…ти ж обіцяв.	…you promised.
+…за мною.	…follow me.
+…тут. Ти тут стояв.	…here. You stood here.
+…Знайоме місце. Знайомий запах. Ти — ні.	…A familiar place. A familiar smell. You — no.
+…Зала.	…The Hall.
+…Ти. З каменя.	…You. From the stone.
+Я вирізав твоє ім'я.	I carved your name.
+Своє не вирізав. Хтось мав пам'ятати.	Not mine. Someone had to remember.
+Я послав ворона. Думав, дочекаюсь.	I sent the raven. Thought I would live to see you.
+Ти колись дав мені це. Сказав: тримай, поки не повернусь.	You gave me this once. You said: keep it till I come back.
+Я тримав. Довго.	I kept it. For a long time.
+Я тебе… шукав? Не пам'ятаю чого. Але шукав.	I was… looking for you? I don't remember why. But I was.
+Туман. Століття туману. Не питай.	Fog. Centuries of fog. Don't ask.
+Той чужий ворон кружляв над старою залою. Глянемо?	That strange raven was circling over the old hall. Shall we look?
+…зачинено. У неї ключ.	…shut. She has the key.
+…Ти?	…You?
+Вибач. Руки вже не ті. Я Гейд — доглядаю ці камені.	Forgive me. My hands aren't what they were. I am Heid — I tend these stones.
+У тебе ворон. Свій. Значить, ти з Варти. Як і я.	You have a raven. Your own. So you are of the Watch. Like me.
+…Знайоме місце. А вона — ні.	…A familiar place. But not her.
+Дивиться так, ніби я їй щось винен.	She looks at me like I owe her something.
+Я встала кілька зим тому. Лікую, кого є.	I rose a few winters ago. I heal whoever there is.
+Ночі тут недобрі. Ходімо до Зали — переночуєш під дахом.	The nights here are bad. Come to the Hall — you'll sleep under a roof.
+Ходімо.	Come.
+Ключ? Знайшла. Тут усе чиєсь і нічиє.	The key? I found it. Everything here is someone's and no one's.
+Сама сплю на каменях. У Залі… голоси. Дивні.	I sleep by the stones myself. In the Hall… voices. Strange ones.
+Заходь. Подивись, що тут лишилось.	Come in. See what is left.
+Холодно, правда? Тут завжди так.	Cold, isn't it? It's always like this here.
+Дрова в торбі є? Спробуй. Хоча… не старайся. Не загориться.	Got wood in your bag? Try. Though… don't bother. It won't catch.
+…Воно горить.	…It's burning.
+Воно не мало загорітись. Я пробувала. Роками.	It shouldn't have caught. I tried. For years.
+Синє. Вогонь не буває синім.	Blue. Fire isn't blue.
+Синій вогонь. І ти віриш, що це добрий знак?	Blue fire. And you think that's a good sign?
+Колись він був золотий. …Хоча звідки мені знати.	It used to be golden. …Though how would I know.
+Не гріє. Нічого. Оглянься тут, а я приберу трохи.	No warmth. Never mind. Look around, I'll tidy up a little.
+Стовп із вороном. Я такий бачив. Біля нього не було тихо — і не було страшно.	A pillar with a raven. I've seen one. It was never quiet by it — and never frightening.
+Креслення. Дерево, пір'я, ріг. Навіть ти впораєшся.	A plan. Wood, feathers, an antler. Even you can manage.
+Збудуй. Там, де житимуть люди.	Build it. Where people will live.
+Тільки не тут. Тут холодно навіть мені.	Just not here. Even I am cold here.
+Пролог	Prologue
+Старий щит	Old shield
+Щит, що лежить на землі в місці Муніна. Світиться, коли гравець на етапі «Роздивись щит»; E — починається сцена, прилітає ворон Ейріка, потім свій Мунін.	A shield lying on the ground at Munin's place. It glows while the player is on the stage «Look at the shield»; E starts the scene: Eirik's raven comes, then your own Munin.
+Камінь імен вартових	Watchmen's name stone
+Низький камінь, на верхівці якого вирізано імена загиблих вартових	A low stone with the names of fallen watchmen carved on its top
+Великий камінь імен вартових	Great watchmen's name stone
+Великий камінь, на верхівці якого вирізано імена загиблих вартових	A great stone with the names of fallen watchmen carved on its top
+Камінь пам'яті	Memory stone
+Камінь пам'яті Зали Варти	The memory stone of the Hall of the Watch
+Камінь полеглих вартових	Stone of the fallen watchmen
+Високий рунний камінь, вкритий іменами вартових, що полягли	A tall rune stone covered with the names of watchmen who fell
+Камінь з ім'ям Торвальда	Torvald's stone
+Камінь із вирізаним ім'ям Торвальда — того, хто згасає	A stone carved with the name of Torvald — the one who is fading
+Лист із кресленням серця оселі. Лежить на другому поверсі Зали й світиться, поки гравець його не прочитав; після репліки ворона серце оселі відкривається для будівництва.	A letter with the plan of a hearth heart. It lies on the Hall's upper floor and glows until the player reads it; after the raven's line the hearth heart can be built.
+Камінь, який Ейрік вирізав у Залі перед тим, як згаснути. Читається лише після першого розпалювання вогню Зали	The stone Eirik carved in the Hall before he faded. It can only be read once the Hall's fire is lit for the first time
+Вівтар Варти	Altar of the Watch
+Вівтар у Залі Варти: тут викликають загублений перстень Драупніра	The altar in the Hall of the Watch: here the lost ring Draupnir is called
+Вогонь Зали Варти. Холодний, доки вартовий не розпалить його Пером Варти	The fire of the Hall of the Watch. Cold until a watchman lights it with the Watch Feather
+Жердина Варти	Perch of the Watch
+Кована жердина на стіні Зали Варти, з ланцюгом і пером. Така є лише в Залі	A wrought perch on the wall of the Hall of the Watch, with a chain and a feather. There is only one, in the Hall
+Знак Варти над входом	Sign of the Watch over the entrance
+Знак Варти над входом до Зали: перо з руною Геймдалля	The sign of the Watch over the Hall's entrance: a feather with Heimdall's rune
+Оберіг	Charm
+Кістяний ворончик на шнурку. Хтось беріг його дуже довго. Тримаєш — і ніби хтось шукає тебе.	A little bone raven on a cord. Someone kept it for a very long time. Hold it — and it feels like someone is looking for you.
+Перо Варти	Watch Feather
+Чорне перо з руною Геймдалля. Звідки воно в тебе, ти не пам'ятаєш. Не поспішай його викидати… поки що.	A black feather with Heimdall's rune. You don't remember where you got it. Don't throw it away… not yet.

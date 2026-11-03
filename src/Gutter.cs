@@ -48,6 +48,8 @@ namespace HuginWhispers
             "Мені з тебе ржачно.", "Ну ти й довбойоб, курва.", "Сракою чую — буде біда.", "Тьху. Ссикло.", "Позорище, бля.",
             "Мудозвон.", "Пень з вухами.", "Ну його в пизду.", "Та ну нахуй.", "До сраки таке.", "Їбать-копать.", "Хай тебе грець.", "Йо-майо.", "Шоб тебе підняло та гепнуло.", "Ну й лажа.", "Дурне, як сто кабанів.", "Тьху, нездара.", "Хрін тобі, а не слава.", "Чорт лисий.", "Ото халепа.", "Їй-бо, без мізків.", "Сто чортів тобі.", "Твою ж дивізію.", "Мать твою за ногу.", "Охрініти.", "Ну ти й жук.", "Позорище ходяче.", "Тьху, гнида.", "Валенок, їй-бо.", "Лох педальний.", "Дубина стоєросова.", "Ну ти й баклан.", "Обрубок, курва.", "Шоб тобі пусто було.",
         };
+        // a cry at the world, not at you: for a line about nothing you did
+        private static readonly string[] CurseCry = { "Ну шо за пиздець.", "Ну його в пизду.", "Та ну нахуй.", "До сраки таке.", "Їбать-копать.", "Йо-майо.", "Ну й лажа.", "Твою ж дивізію.", "Охрініти.", "Ото халепа.", "Сракою чую — буде біда." };
         private static readonly string[] CurseWarm = { "Ех ти, дурне моє.", "Ну ти й кабанчик, бля.", "Йой, братан.", "Та ну тебе, холєра.", "Свій, хоч і з прибабахом.", "Ото, курва. Ото.",
             "Дурне, але моє.", "Хуйло ти моє рідне.", "Свій, хоч і довбень.", "Ех ти, халепа ходяча.", "Горе моє, курва.", "Ну ти й жук, братан.", "Тримайся, бляха.", "Йой, малий.", "Мій ти мудозвон.", "Шо б я без тебе робив.", "Ну й нехай, живемо.", "Біда моя, курва, кривонога.", "Ото ми з тобою, бля.", "Пацан, шо тут скажеш.", "Люблю, але мовчу, сука.",
         };
@@ -75,8 +77,12 @@ namespace HuginWhispers
             if (swears < (rabid ? 2 : 1) && UnityEngine.Random.value < (rabid ? 0.7f : 0.38f * k)) { string w = Wedged(s, warm ? WedgeWarm : Wedge); if (w != null) { s = w; swears++; } }
             // a grunt in front (a swearing one only while the line has room for it: two swears a line at most)
             if (UnityEngine.Random.value < 0.16f * k) { s = Grunted(s, swears < 2 ? Grunt : GruntClean); swears = Count(s); }
-            // an old curse on the end
-            if (swears < 2 && UnityEngine.Random.value < (rabid ? 0.25f : 0.13f * k) && Ends(s) && s.Length < 120) s = s + " " + Pick(warm ? CurseWarm : Curse);
+            // an old curse on the end: at you after a slip; elsewhere only a cry at the world, half as often; never after a win,
+            // in a talk or on a sincere moment (LineMood)
+            int mood = LineMood.Now;
+            bool slip = mood == LineMood.Fail, plain = mood == LineMood.Neutral;
+            if ((slip || plain) && swears < 2 && !Patterns.LastSentenceSwears(s) && UnityEngine.Random.value < (rabid ? 0.25f : 0.13f * k) * (slip ? 1f : 0.5f) && Ends(s) && s.Length < 120)
+                s = s + " " + Pick(warm ? CurseWarm : slip ? Curse : CurseCry);
             return s;
         }
 
@@ -91,21 +97,29 @@ namespace HuginWhispers
         };
         private static readonly string[] HuginWedge = { "ну", "от", "значить", "власне", "як його", "слухай", "бач", "ага" };
         private static readonly string[] HuginGrunt = { "Ну,", "Слухай,", "Ага,", "Хм,", "Так,", "Ну от,", "Знаєш,", "Ну-ну,", "От" };
+        // the jabs say what you are after a slip, so they come only after one (LineMood.Fail); the ravens' habits («Браво.»,
+        // «Логічно.») are Manner's, not here
         private static readonly string[] HuginJab =
         {
-            "Незграба.", "Роззява.", "Недотепа.", "Генію.", "Ну ти й {бовдур|бовдурка}.", "Ледащо.", "Ну-ну.", "Браво.", "Я записав.",
-            "Ну ти й {йолоп|йолопка}.", "Хто б сумнівався.", "Логічно.", "Сирота.", "Ну ти й ґава.", "Ну й вайло.", "Мисливець року.",
+            "Незграба.", "Роззява.", "Недотепа.", "Генію.", "Ну ти й {бовдур|бовдурка}.", "Ну ти й {йолоп|йолопка}.", "Ну ти й диво.", "Ну й руки.",
+            "Талант.", "Майстер.", "Ну хто так робить?",
         };
         private static readonly string[] HuginJabWarm = { "Ех ти.", "Горе моє.", "Ну-ну, генію.", "Недотепа {мій|моя}.", "Що б ти без мене роби{в|ла}.", "Чудо ти моє." };
+        private static float _jabNext; // not a jab every slip: a couple of minutes between them
 
         internal static string Plain(string s, int tier)
         {
             if (!On || string.IsNullOrEmpty(s) || !Lang.IsSource) return s;
             s = Swap(s, 1f, Plainer);
+            if (LineMood.Now == LineMood.Sincere) return s;
             if (UnityEngine.Random.value < 0.12f) { string w = Wedged(s, HuginWedge); if (w != null) return w; } // one habit a line, not a pile of them
             if (UnityEngine.Random.value < 0.1f) return Grunted(s, HuginGrunt);
-            // a jab on the end only after a real sentence: not after a short tail already there («…Трохи.», his «Я записав.»)
-            if (UnityEngine.Random.value < (tier >= 3 ? 0.05f : 0.09f) && Ends(s) && !s.EndsWith("?") && s.Length < 110 && LastWords(s) > 2) return s + " " + Pick(tier >= 3 ? HuginJabWarm : HuginJab);
+            // a jab on the end only after a slip and a real sentence: not after a short tail already there («…Трохи.», his «Я записав.»)
+            if (LineMood.Now == LineMood.Fail && UnityEngine.Time.time >= _jabNext && UnityEngine.Random.value < (tier >= 3 ? 0.08f : 0.15f) && Ends(s) && !s.EndsWith("?") && s.Length < 110 && LastWords(s) > 2)
+            {
+                _jabNext = UnityEngine.Time.time + 120f;
+                return s + " " + Pick(tier >= 3 ? HuginJabWarm : HuginJab);
+            }
             return s;
         }
 

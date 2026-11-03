@@ -12,7 +12,7 @@ namespace HuginWhispers
     // every game flies it (ShoulderPin.AirStep), reading the mode.
     internal static class Outing
     {
-        internal const int None = 0, Follow = 1, CircleRight = 2, CircleLeft = 3, WideRight = 4, WideLeft = 5, Scout = 6, Hunt = 7;
+        internal const int None = 0, Follow = 1, CircleRight = 2, CircleLeft = 3, WideRight = 4, WideLeft = 5, Scout = 6, Hunt = 7, Fish = 8;
         // Hunt (the user, 2026-10-15): Munin chases one of the game's birds near (a gull, a crow) for a few seconds; the bird
         // on the player's ZDO (HuntH/M: "user:id") so every game chases the same one
         internal const string HuntH = "RavenWatch_OutTH", HuntM = "RavenWatch_OutTM";
@@ -29,6 +29,9 @@ namespace HuginWhispers
         // a find is picked up this long before the outing ends: it flies about with it in its beak, to be seen, then home
         internal static float LootLead = 6f;
         private static readonly bool[] Looted = { false, false };
+        // tossed up off your arm (ArmPerch): a flight for the look of it — no find, no rest for the wings, no deed for its
+        // nickname (or a toss hammered over and over would farm them)
+        private static readonly bool[] Tossed = { false, false };
         internal static float LastAt = -1000f; // when the last outing began (the director counts from it)
 
         internal static bool IsWide(int m) { return m == WideRight || m == WideLeft; }
@@ -70,7 +73,7 @@ namespace HuginWhispers
                 if (Of(p, munin) == None) continue;
                 if (why == null && Time.time < Until[i])
                 {
-                    if (!Looted[i] && Mode[i] != Scout && Until[i] - Time.time <= LootLead) { Looted[i] = true; Finds(p, munin); }
+                    if (!Looted[i] && Mode[i] != Scout && Mode[i] != Fish && Until[i] - Time.time <= LootLead) { Looted[i] = true; Finds(p, munin); }
                     continue;
                 }
                 int was = Mode[i];
@@ -79,8 +82,9 @@ namespace HuginWhispers
                 else
                 {
                     if (was == Scout) Report(p, munin); // back from scouting: what it saw ahead
+                    else if (was == Fish) { if (FishDoneAt[i]) WorldVisit.FishCaught(p, munin); } // (the fish: only when it really dived)
                     else if (!Looted[i]) Finds(p, munin); // (an outing shorter than the lead)
-                    Power.Rested(munin, RestStrength * Norov.RestMul(RavenSeat.On(p, munin))); // an outing that ran its time rests the wings (knack «Легке крило»: more)
+                    if (!Tossed[i]) Power.Rested(munin, RestStrength * Norov.RestMul(RavenSeat.On(p, munin))); // an outing that ran its time rests the wings (knack «Легке крило»: more)
                 }
             }
         }
@@ -110,20 +114,22 @@ namespace HuginWhispers
         {
             if (mode == Scout) return ScoutSeconds;
             if (mode == Hunt) return Random.Range(HuntMin, HuntMax);
+            if (mode == Fish) return FishMost;
             float k = Norov.OutLength(item);
             if (Senses.Sailing) return Random.Range(SailMin, SailMax) * k;
             if (Senses.Traveling) return Random.Range(RoadMin, RoadMax) * k;
             return (mode == Follow ? Random.Range(FollowMin, FollowMax) : Random.Range(CircleMin, CircleMax)) * k;
         }
 
-        internal static bool Start(Player p, bool munin, int mode)
+        internal static bool Start(Player p, bool munin, int mode, bool tossed = false)
         {
             if (p == null || Shoulder.ModelOf(p, munin) == null || Indoors()) return false;
             LastAt = Time.time;
+            ArmPerch.Stage(p, munin); // (now and then it steps onto your arm first and goes from there)
             Set(p, munin, mode);
             Until[munin ? 1 : 0] = Time.time + Length(mode, RavenSeat.On(p, munin));
-            Looted[munin ? 1 : 0] = false;
-            Nicks.OnOuting(p, munin);
+            Looted[munin ? 1 : 0] = tossed; Tossed[munin ? 1 : 0] = tossed;
+            if (!tossed) Nicks.OnOuting(p, munin);
             if (mode == Hunt) Say(munin, "out_hunt");
             else if (mode != Scout) Say(munin, mode == Follow ? "out_follow" : IsWide(mode) ? "out_sail" : "out_circle");
             return true;
@@ -138,6 +144,36 @@ namespace HuginWhispers
             bool went = Start(p, munin, Hunt);
             if (went && Plugin.Instance != null) { GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(bird) : null; Plugin.Instance.Log("Outing: " + Plugin.RavenName(munin) + " hunts " + (g != null ? Utils.GetPrefabName(g) + " " + Mathf.RoundToInt(Vector3.Distance(g.transform.position, p.transform.position)) + " m off" : "a bird")); }
             return went;
+        }
+
+        // Fish (the user, 2026-10-28): a dive for a fish, flown (FishPlan): the spot over the water and how long it hangs there
+        // on the player's ZDO (FishH/M: the water's point; FishTH/TM: the seconds) so every game flies the same; the owner's
+        // game ends it when the bird is up again (FishDone), the fish comes home with it
+        internal const string FishH = "RavenWatch_OutFH", FishM = "RavenWatch_OutFM", FishTH = "RavenWatch_OutFTH", FishTM = "RavenWatch_OutFTM";
+        internal static float FishMost = 30f; // s: a safety, the dive ends it far sooner
+        private static readonly bool[] FishDoneAt = new bool[2];
+        internal static bool StartFish(Player p, bool munin, Vector3 water, float hang)
+        {
+            ZDO z = NetFlag.Zdo(p, true);
+            if (z == null) return false;
+            z.Set(munin ? FishM : FishH, water);
+            z.Set(munin ? FishTM : FishTH, hang);
+            FishDoneAt[munin ? 1 : 0] = false;
+            return Start(p, munin, Fish);
+        }
+        internal static bool FishSpot(Player p, bool munin, out Vector3 water, out float hang)
+        {
+            ZDO z = NetFlag.Zdo(p, false);
+            water = z != null ? z.GetVec3(munin ? FishM : FishH, Vector3.zero) : Vector3.zero;
+            hang = z != null ? z.GetFloat(munin ? FishTM : FishTH, 3f) : 3f;
+            return water != Vector3.zero;
+        }
+        // up again with it (the owner's game): the outing over, home
+        internal static void FishDone(Player p, bool munin)
+        {
+            if (p == null || !ReferenceEquals(p, Player.m_localPlayer) || Of(p, munin) != Fish) return;
+            FishDoneAt[munin ? 1 : 0] = true;
+            Until[munin ? 1 : 0] = Mathf.Min(Until[munin ? 1 : 0], Time.time);
         }
 
         // the bird it hunts (every game: from the player's ZDO), or null (gone, out of sight)

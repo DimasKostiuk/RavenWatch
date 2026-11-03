@@ -1,0 +1,51 @@
+@мсуд_1
+What a brawl. Like two hens over grain, only the hen is you.
+Alive, damn? Well, at least you can do one thing — not croak.
+The enemy got embarrassed fighting such a loser.
+I saw you miss from the shoulder. Miss everything. Everything!
+One star, and that's out of pity, idiot.
+They beat you like a sack of flour. Shame.
+If that was a fight, I'm a swan.
+What were you doing out there? Say it was a dance, or it's a disgrace.
+@мсуд_2
+You won, but looking like you lost.
+Two stars. The second because I'm kind today.
+Blood poured out of you like beer from a barrel. But you're standing.
+You hit, they hit, and luck alone decided it.
+Victory, damn. Crooked, limping, but victory.
+Once more like that and I'll finish you myself, to end the suffering.
+@мсуд_3
+Well, okay. Nothing to laugh at, nothing to praise.
+Three stars. Like soup without meat — edible.
+You did your job. No spark, but done.
+No guts, no glory. Boring.
+It'll do. I've seen worse. From you, too.
+Middling. At least not a disgrace.
+@мсуд_4
+Now that's chopping! Guts flying!
+Four stars, damn. Don't get used to it, I'll take them back.
+You gave it to them! I even cawed with joy.
+What, someone taught you? Confess, who.
+That went beautifully. I'd pour you a beer if I had hands.
+Good killing. A bit more and I'll be bragging about you.
+@мсуд_5
+Five stars, hell yeah! Where'd you learn that?
+I flew off the shoulder, it was that beautiful!
+That's my master, damn it! Who else says weakling?
+Not a scratch — and all of them in the ground. Legend.
+Skalds will sing this! And I'll caw along.
+Did you just come from Valhalla? What a fight!
+I'll tell all the ravens. Let them be jealous.
+What a brawl! I even forgot I'm hungry.
+@сп_fight_м
+{m_when} you smashed them so well I licked my beak. {m_stars}.
+The brawl {m_when}. {m_stars}. That was a show, damn.
+{m_when} — {m_stars}. First time I wasn't ashamed to sit on you.
+~1 Once in your life you fought well, {m_when}. {m_stars}. Once.
+~2 Remember {m_when}? {m_stars}. Blood everywhere and you standing. Respect.
+~3 {m_when} you fought {m_grade}. That's when I knew you're one of us.
+@сп_fight_тут_м
+Here — {m_stars}, damn. The ground still smells of blood.
+Here you tore them like rags. {m_stars}.
+Here you fought {m_grade}. I puffed up my feathers right here.
+I remember this place. {m_stars}. What a brawl that was.

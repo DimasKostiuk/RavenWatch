@@ -59,7 +59,10 @@ namespace HuginWhispers
         // cleaned of Russian words and slips at the same time: too many lines changed to swap them one by one (a revision only
         // adds lines, so the old ones would stay beside the new), so both phrase files from before it are deleted once and
         // made again from the mod's lines — the Ukrainian ones, and a built-in language's ones (a language you made yourself,
-        // with no built-in lines, is left alone: there is nothing to make it again from)
+        // with no built-in lines, is left alone: there is nothing to make it again from).
+        // Again at rev 103 (the text review of 2026-10-28): Hugin's tails split by mood, words people no longer use made plain,
+        // the players' forms mended in many lines — the files from before it are made again the same way.
+        private const int RemadeAt = 103;
         internal static void RemakeVoices(string dir)
         {
 #if RAVEN_ITEM
@@ -80,13 +83,13 @@ namespace HuginWhispers
                     if (!File.Exists(path)) continue;
                     string text = File.ReadAllText(path, Encoding.UTF8);
                     bool made = false;
-                    for (int rev = 64; rev <= Patterns.Revision; rev++) if (text.Contains("# patterns rev " + rev + " ")) { made = true; break; } // (made with the new voice and the talks' threads already; 64: the talks' lines re-marked, the old ones must not stay beside them)
+                    for (int rev = RemadeAt; rev <= Patterns.Revision; rev++) if (text.Contains("# patterns rev " + rev + " ")) { made = true; break; } // (made from the reviewed lines already)
                     if (made) continue;
                     File.Delete(path);
-                    if (Plugin.Instance != null) Plugin.Instance.Log("Phrase file made again (Hugin's new voice, Munin's cleaned lines): " + path);
+                    if (Plugin.Instance != null) Plugin.Instance.Log("Phrase file made again (the reviewed lines of rev " + RemadeAt + "): " + path);
                 }
             }
-            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Phrase files: the rev 63 remake failed: " + e.Message); }
+            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Phrase files: the rev " + RemadeAt + " remake failed: " + e.Message); }
 #endif
         }
 
@@ -1140,6 +1143,41 @@ namespace HuginWhispers
             { "морем уже {sail_km}, а корито досі не потонуло. Диво, курва.", "морем {нахитався|нахиталася} вже {sail_km}, а корито досі не потонуло. Диво, курва." }, // 2.4.0: the lifetime numbers said plainly
             { "в базі вже {base_hours} твого життя. Домосід, ссикло хатнє.", "{base_hours} життя ти {просидів|просиділа} в базі. Домосід, ссикло хатнє." }, // 2.4.0: the lifetime numbers said plainly
             { "{m_when} ти при мені вперше {мандрував|мандрувала} поруч з тим, кого звуть {m_friend}. Я записав ім'я. Про всяк випадок.", "{m_when} у твоїй дорозі вперше з'явилося ім'я {m_friend}. Я записав. Про всяк випадок." }, // 2.4.x: the friend memory said plainer
+            { "онучо смердюча", "шкарпетко смердюча" }, // 2.8: plain words in the whole lines (the text review, rev 103)
+            { "ДІРЯВА ТИ ОНУЧО", "ДІРЯВА ТИ ШКАРПЕТКО" }, // 2.8: plain words in the whole lines (the text review, rev 103)
+            { "кашовар хуїв", "кухар хуїв" }, // 2.8: plain words in the whole lines (the text review, rev 103)
+            { "вже кунять почав", "вже дрімати почав" }, // 2.8: plain words in the whole lines (the text review, rev 103)
+            { "[here_meadows] Левади", "[here_meadows] Луки" }, // 2.8: plain words in the whole lines (the text review, rev 103)
+            { "а не травниця з сусіднього", "а не знахарка з сусіднього" }, // 2.8: plain words in the whole lines (the text review, rev 103)
+            { "Все, звір здувся. Тепер ти — ганчірка мокра. Відсапуйся.", "Все, звір заліз назад. Тепер ти — мокра ганчірка. Віддихайся." }, // 2.8: no such word «відсапуйся»
+            // 2.8: tails that leaned on a line before them, but follow any line («Туман густий, як молоко. І все одно ти мені подобаєшся.»)
+            { "І все одно ти мені подобаєшся.", "Мені з тобою добре. Тільки не звикай." },
+            { "Бо дзьобну, сука.", "Ще слово — і дзьобну, сука." },
+            { "І пір'я пригладь, бо стирчить, як у лоха.", "Пір'я пригладь, бо стирчить, як у лоха." },
+            { "І не каркай.", "Не каркай мені тут." },
+            { "Але ти тримайся.", "Тримайся там." },
+            { "Наступного разу візьми друзів.", "Удвох тут було б веселіше. Подумай." },
+            { "Головне — не повторюй цього надто часто.", "Дивись під ноги." },
+            { "Відтепер — твоя рука моя жердина. Береги її.", "Відтепер — твоя рука моя жердина. Бережи її." }, // 2.8.1: «бережи», not the Russian «береги»
+            { "Я того {killer_gen} запам'ятав, бля. {left} — і вперед, рвати.", "Я того {killer_gen} запам'ятав, бля. Маєш {left} — і вперед, рвати." }, // 2.8.1: the time is said in words now, it cannot start a sentence
+            { "Мітка стоїть на {killer_gen}. {left} — і навички вернуться. Шевелись.", "Мітка стоїть на {killer_gen}. Маєш {left} — і навички вернуться. Шевелись." }, // 2.8.1: the time is said in words now, it cannot start a sentence
+            { "I remembered that {killer_gen}, damn. {left} — and go tear it.", "I remembered that {killer_gen}, damn. You've got {left} — then go tear it." }, // 2.8.1: the same in English
+            { "The mark's on {killer_gen}. {left} — and your skills come back. Move it.", "The mark's on {killer_gen}. You've got {left} — and your skills come back. Move it." }, // 2.8.1: the same in English
+            { "{n} хвилин на воді — і я щасливий.", "Хвилин {n} на воді — і я щасливий." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Пір'я для гнізда. {n} штук, м'якого.", "Пір'я для гнізда. Штук {n}, м'якого." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Гніздо холодне. Принеси пір'я, {n} штук.", "Гніздо холодне. Принеси пір'я, штук {n}." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "{n} пір'їн — і гніздо буде як нове.", "Штук {n} пір'я — і гніздо буде як нове." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Мені б пір'я, {n} штук. Для затишку.", "Мені б пір'я, штук {n}. Для затишку." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Гніздо голе. Пір'я, {n} штук.", "Гніздо голе. Пір'я, штук {n}." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "{n} пір'їн. М'яких. Не з мене.", "Пір'я, штук {n}. М'якого. Не з мене." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Неси пір'я, {n} штук, бо в гнізді холодно.", "Неси пір'я, штук {n}, бо в гнізді холодно." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Пір'я хочу, {n} штук. Для гнізда.", "Пір'я хочу, штук {n}. Для гнізда." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Принеси пір'я — {n} штук. Гніздо само себе не встелить.", "Принеси пір'я — штук {n}. Гніздо само себе не встелить." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "{n} монет. Ворон без скарбу — просто птах.", "Монет {n}. Ворон без скарбу — просто птах." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Хочу крові. {foe_genpl} — {n} штук. Поїхали.", "Хочу крові. {foe_genpl} — штук {n}. Поїхали." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Тягни пір'я, {n} штук. Гніздо — не твоя хата, хай буде м'яко.", "Тягни пір'я, штук {n}. Гніздо — не твоя хата, хай буде м'яко." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "{n} монет. Сюди. Не питай.", "Монет {n}. Сюди. Не питай." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
+            { "Скарбничка хоче жерти. {n} монет.", "Скарбничка хоче жерти. Монет {n}." }, // 2.8.1: the count is said in words now (the voice reads digits as «два»): «штук {n}», not «{n} штук»
         };
     }
 }

@@ -190,11 +190,12 @@ namespace HuginWhispers
         internal static bool Listed(Entry e) { return e != null && (Tuning || Builtin.ContainsKey(e.Prefab) || (e.Gear != null && (e.Gear.BuiltIn || Perches.FromFiles))); }
 
         // This raven may wear this piece now. The level counts once the raven is back from Odin (a ritual's new
-        // level opens its pieces on its return); Odin's gifts are kept in the raven.
-        internal static bool IsOpen(ItemDrop.ItemData item, Entry e)
+        // level opens its pieces on its return); Odin's gifts are kept in the raven. asPlayer: by the game's own rules
+        // even while the author tunes the outfits (a raven's wish must never ask for what a player could not have yet)
+        internal static bool IsOpen(ItemDrop.ItemData item, Entry e, bool asPlayer = false)
         {
             if (e == null) return false;
-            if (Tuning) return true;
+            if (Tuning && !asPlayer) return true;
             // a thing made at the raven table: worn from the wardrobe's level on, once this raven has been given it
             if (OwnHat(e))
             {

@@ -29,7 +29,7 @@ namespace RavenWatchVoice
 #else
         public const string Guid = StoreGuid, Name = "RavenWatch_Voice";
 #endif
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
 
         private Engine _engine;
 

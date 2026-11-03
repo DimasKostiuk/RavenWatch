@@ -33,16 +33,16 @@ namespace HuginWhispers
         private RenderTexture _rt;
         private static readonly string[] Views = { "Спереду", "Збоку", "Ззаду", "Зліва", "Згори" };
 
-        private PAnimClip Sel { get { return PlayerAnims.Find(_sel); } }
+        private PAnimClip Sel { get { return BodyClips.Find(_sel); } }
         private static Player Me { get { return Player.m_localPlayer; } }
 
-        internal void Opened() { if (PlayerAnims.Clips.Count == 0) PlayerAnims.Load(); }
+        internal void Opened() { if (BodyClips.Clips.Count == 0) BodyClips.Load(); }
 
         // leaving the tab: the preview stops, the picture goes
         internal void Closed()
         {
             _play = false;
-            if (Me != null) PlayerAnims.Stop(Me, PlayerAnims.PreviewSlot, 0.3f);
+            if (Me != null) BodyClips.Stop(Me, BodyClips.PreviewSlot, 0.3f);
             FreeCam();
         }
 
@@ -78,13 +78,14 @@ namespace HuginWhispers
         private void Clips()
         {
             GUILayout.Label("<b>Кліпи</b>  <color=#9a9a9a>(анімації персонажа поверх анімації гри)</color>");
-            List<string> names = new List<string>(PlayerAnims.Clips.Keys);
+            List<string> names = new List<string>();
+            foreach (KeyValuePair<string, PAnimClip> kv in BodyClips.Clips) if (!kv.Value.IsPart) names.Add(kv.Key); // (a part is made from its clip)
             names.Sort();
             int col = 0;
             GUILayout.BeginHorizontal();
             foreach (string n in names)
             {
-                PAnimClip c = PlayerAnims.Find(n);
+                PAnimClip c = BodyClips.Find(n);
                 string label = n + (c.FromNet ? " ⇣" : c.FromFile ? "" : " ·");
                 if (GUILayout.Toggle(_sel == n, label, "Button", GUILayout.Width(155f)) && _sel != n) Select(n);
                 if (++col % 3 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
@@ -93,12 +94,12 @@ namespace HuginWhispers
             GUILayout.Label("<color=#9a9a9a>· — вбудований, ще не у файлі · ⇣ — прийшов від іншого гравця</color>");
             GUILayout.BeginHorizontal();
             _newName = GUILayout.TextField(_newName, GUILayout.Width(170f));
-            GUI.enabled = Valid(_newName) && PlayerAnims.Find(_newName) == null;
+            GUI.enabled = Valid(_newName) && BodyClips.Find(_newName) == null;
             if (GUILayout.Button("Новий", GUILayout.Width(70f)))
             {
                 PAnimClip c = new PAnimClip { Name = _newName, Length = 1f, Loop = true };
                 c.AddKey(0f);
-                PlayerAnims.Clips[c.Name] = c;
+                BodyClips.Clips[c.Name] = c;
                 Select(c.Name);
                 _dirty = true;
                 _note = "Створено «" + c.Name + "». Додай кістки праворуч і ключі.";
@@ -106,12 +107,12 @@ namespace HuginWhispers
             if (GUILayout.Button("Копія вибраного", GUILayout.Width(130f)) && Sel != null)
             {
                 PAnimClip c = Sel.Copy(_newName);
-                PlayerAnims.Clips[c.Name] = c;
+                BodyClips.Clips[c.Name] = c;
                 Select(c.Name);
                 _dirty = true;
             }
             GUI.enabled = true;
-            if (GUILayout.Button("Перечитати файли", GUILayout.Width(130f))) { PlayerAnims.Load(); if (Sel == null) _sel = null; _note = "Кліпи й стани перечитано."; }
+            if (GUILayout.Button("Перечитати файли", GUILayout.Width(130f))) { BodyClips.Load(); if (Sel == null) _sel = null; _note = "Кліпи й стани перечитано."; }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(PAnimLog.On ? "■ Зупинити запис і зберегти" : "● Записувати (лог анімацій)", GUILayout.Width(230f)))
@@ -143,33 +144,33 @@ namespace HuginWhispers
             GUILayout.Space(6);
             GUILayout.Label("<b>" + c.Name + "</b>" + (_dirty ? "  <color=#FFB04A>є незбережені зміни</color>" : ""));
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Зберегти", GUILayout.Width(90f))) { _note = "Збережено: " + PlayerAnims.Save(c); _dirty = false; }
-            if (GUILayout.Button("Скопіювати для мода", GUILayout.Width(160f))) { GUIUtility.systemCopyBuffer = PlayerAnims.AsCode(c); _note = "Кліп скопійовано рядком C# (для вбудованих)."; }
+            if (GUILayout.Button("Зберегти", GUILayout.Width(90f))) { _note = "Збережено: " + BodyClips.Save(c); _dirty = false; }
+            if (GUILayout.Button("Скопіювати для мода", GUILayout.Width(160f))) { GUIUtility.systemCopyBuffer = BodyClips.AsCode(c); _note = "Кліп скопійовано рядком C# (для вбудованих)."; }
             if (GUILayout.Button(_askDelete ? "Точно видалити?" : "Видалити", GUILayout.Width(120f)))
             {
                 if (!_askDelete) _askDelete = true;
-                else { PlayerAnims.Delete(c); _sel = null; _askDelete = false; Closed(); _note = "Видалено (і файл)."; return; }
+                else { BodyClips.Delete(c); _sel = null; _askDelete = false; Closed(); _note = "Видалено (і файл)."; return; }
             }
             GUILayout.EndHorizontal();
             // back to the mod's own clip: the saved file goes (a copy kept in player_anims_backup), the built-in comes back
-            if (PlayerAnims.HasBuiltin(c.Name) && (c.FromFile || _dirty))
+            if (BodyClips.HasBuiltin(c.Name) && (c.FromFile || _dirty))
             {
                 if (GUILayout.Button(_askRevert ? "Точно? Твої правки цього кліпу зникнуть (копія — у player_anims_backup)" : "↺ Повернути як було в моді", GUILayout.Width(_askRevert ? 470f : 220f)))
                 {
                     if (!_askRevert) _askRevert = true;
-                    else { _askRevert = false; _dirty = false; _note = PlayerAnims.Revert(c.Name); Restart(); }
+                    else { _askRevert = false; _dirty = false; _note = BodyClips.Revert(c.Name); Restart(); }
                 }
             }
             else _askRevert = false;
             GUILayout.BeginHorizontal();
             _rename = GUILayout.TextField(_rename, GUILayout.Width(170f));
-            GUI.enabled = Valid(_rename) && _rename != c.Name && PlayerAnims.Find(_rename) == null;
+            GUI.enabled = Valid(_rename) && _rename != c.Name && BodyClips.Find(_rename) == null;
             if (GUILayout.Button("Перейменувати", GUILayout.Width(120f)))
             {
-                PlayerAnims.Delete(c);
+                BodyClips.Delete(c);
                 c.Name = _rename;
-                PlayerAnims.Clips[c.Name] = c;
-                PlayerAnims.Save(c);
+                BodyClips.Clips[c.Name] = c;
+                BodyClips.Save(c);
                 _sel = c.Name;
                 _note = "Перейменовано й збережено. Правила з цим кліпом поправ у «Станах».";
             }
@@ -199,9 +200,9 @@ namespace HuginWhispers
             GUILayout.Label("Рух кліпу:", GUILayout.Width(90f));
             if (GUILayout.Button(c.Drive == null ? "за часом" : "від «" + c.Drive + "»", GUILayout.Width(150f)))
             {
-                int i = c.Drive == null ? -1 : System.Array.IndexOf(PlayerAnims.Values, c.Drive);
+                int i = c.Drive == null ? -1 : System.Array.IndexOf(BodyClips.Values, c.Drive);
                 i++;
-                c.Drive = i >= PlayerAnims.Values.Length ? null : PlayerAnims.Values[i];
+                c.Drive = i >= BodyClips.Values.Length ? null : BodyClips.Values[i];
                 if (c.Drive != null && Mathf.Abs(c.DriveMax - c.DriveMin) < 1e-4f) { c.DriveMin = 0f; c.DriveMax = 10f; }
                 _dirty = true; Show();
             }
@@ -209,11 +210,11 @@ namespace HuginWhispers
             GUILayout.EndHorizontal();
             if (c.Drive != null)
             {
-                int vi = System.Array.IndexOf(PlayerAnims.Values, c.Drive);
-                GUILayout.Label("<color=#9a9a9a>Початок кліпу — коли «" + PlayerAnims.ValueNames[vi] + "» = від, кінець — коли = до. Між ними — плавно.</color>");
+                int vi = System.Array.IndexOf(BodyClips.Values, c.Drive);
+                GUILayout.Label("<color=#9a9a9a>Початок кліпу — коли «" + BodyClips.ValueNames[vi] + "» = від, кінець — коли = до. Між ними — плавно.</color>");
                 float a = Num("від", c.DriveMin, -720f, 720f, 0.5f), b = Num("до", c.DriveMax, -720f, 720f, 0.5f);
                 if (a != c.DriveMin || b != c.DriveMax) { c.DriveMin = a; c.DriveMax = b; _dirty = true; }
-                PlayerAnimator an = Me != null ? PlayerAnimator.For(Me) : null;
+                BodyAnimator an = Me != null ? BodyAnimator.For(Me) : null;
                 if (an != null) GUILayout.Label("Зараз «" + c.Drive + "» = " + an.ValueOf(c.Drive).ToString("0.0"));
             }
         }
@@ -223,17 +224,17 @@ namespace HuginWhispers
         private void Preview(PAnimClip c)
         {
             GUILayout.Space(6);
-            GUILayout.Label("<b>На тобі</b>  <color=#9a9a9a>(шар " + PlayerAnims.PreviewSlot + " — над усіма станами)</color>");
+            GUILayout.Label("<b>На тобі</b>  <color=#9a9a9a>(шар " + BodyClips.PreviewSlot + " — над усіма станами)</color>");
             GUILayout.BeginHorizontal();
             bool play = GUILayout.Toggle(_play, _play ? " ⏸ Пауза" : " ▶ Грати", "Button", GUILayout.Width(110f));
             if (play != _play) { _play = play; Show(); }
-            if (GUILayout.Button("■ Зняти з себе", GUILayout.Width(120f))) { _play = false; if (Me != null) PlayerAnims.Stop(Me, PlayerAnims.PreviewSlot, 0.3f); }
+            if (GUILayout.Button("■ Зняти з себе", GUILayout.Width(120f))) { _play = false; if (Me != null) BodyClips.Stop(Me, BodyClips.PreviewSlot, 0.3f); }
             if (GUILayout.Button("Підкинути вгору", GUILayout.Width(130f))) Toss();
             GUILayout.EndHorizontal();
             float sp = Num("Швидкість", _speed, 0.1f, 3f, 0.05f);
             if (Mathf.Abs(sp - _speed) > 1e-4f) { _speed = sp; Show(); }
-            PlayerAnimator a = Me != null ? PlayerAnimator.Of(Me) : null;
-            if (_play && a != null) _scrub = a.TimeIn(PlayerAnims.PreviewSlot);
+            BodyAnimator a = Me != null ? BodyAnimator.Of(Me) : null;
+            if (_play && a != null) _scrub = a.TimeIn(BodyClips.PreviewSlot);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Мить", GUILayout.Width(60f));
             float s = GUILayout.HorizontalSlider(_scrub, 0f, c.Length, GUILayout.Width(300f));
@@ -249,18 +250,18 @@ namespace HuginWhispers
             PAnimClip c = Sel;
             Player p = Me;
             if (c == null || p == null) return;
-            PlayerAnimator a = PlayerAnimator.For(p);
-            if (a.ClipIn(PlayerAnims.PreviewSlot) != c.Name || !a.Playing(PlayerAnims.PreviewSlot)) PlayerAnims.Play(p, PlayerAnims.PreviewSlot, c.Name, 0.2f, _speed);
-            else if (_play) PlayerAnims.Play(p, PlayerAnims.PreviewSlot, c.Name, 0.01f, _speed); // again from its start, at the new speed
-            a.Hold(PlayerAnims.PreviewSlot, _play ? -1f : (_key >= 0 && _key < c.Keys.Count ? c.Keys[_key].T : _scrub));
+            BodyAnimator a = BodyAnimator.For(p);
+            if (a.ClipIn(BodyClips.PreviewSlot) != c.Name || !a.Playing(BodyClips.PreviewSlot)) BodyClips.Play(p, BodyClips.PreviewSlot, c.Name, 0.2f, _speed);
+            else if (_play) BodyClips.Play(p, BodyClips.PreviewSlot, c.Name, 0.01f, _speed); // again from its start, at the new speed
+            a.Hold(BodyClips.PreviewSlot, _play ? -1f : (_key >= 0 && _key < c.Keys.Count ? c.Keys[_key].T : _scrub));
         }
 
         // a new base (the frozen pose taken again): the clip comes in anew
         private void Restart()
         {
             if (Me == null || Sel == null) return;
-            PlayerAnimator a = PlayerAnimator.Of(Me);
-            if (a != null) a.Refreeze(PlayerAnims.PreviewSlot);
+            BodyAnimator a = BodyAnimator.Of(Me);
+            if (a != null) a.Refreeze(BodyClips.PreviewSlot);
             Show();
         }
 
@@ -317,7 +318,7 @@ namespace HuginWhispers
                 PAnimEvent e = c.Events[i];
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(e.T.ToString("0.00") + " с — " + e.Sound + " ×" + e.Volume.ToString("0.0"), GUILayout.Width(330f));
-                if (GUILayout.Button("▶", GUILayout.Width(30f)) && Me != null) PlayerAnims.Sound(e.Sound, Me.transform.position + Vector3.up * 1.2f, e.Volume);
+                if (GUILayout.Button("▶", GUILayout.Width(30f)) && Me != null) BodyClips.Sound(e.Sound, Me.transform.position + Vector3.up * 1.2f, e.Volume);
                 if (GUILayout.Button("×", GUILayout.Width(30f))) { c.Events.RemoveAt(i); _dirty = true; GUILayout.EndHorizontal(); break; }
                 GUILayout.EndHorizontal();
             }
@@ -431,22 +432,22 @@ namespace HuginWhispers
         {
             GUILayout.Label("<b>Кістки</b>  <color=#9a9a9a>(повороти у власних осях кістки)</color>");
             GUILayout.BeginHorizontal();
-            for (int g = 0; g < PlayerAnims.Groups.Length; g++)
+            for (int g = 0; g < BodyClips.Groups.Length; g++)
             {
                 if (g == 4) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
-                if (GUILayout.Toggle(_group == g, PlayerAnims.GroupNames[g], "Button", GUILayout.Width(130f)) && _group != g)
+                if (GUILayout.Toggle(_group == g, BodyClips.GroupNames[g], "Button", GUILayout.Width(130f)) && _group != g)
                 {
                     // another part of the body: its first bone the clip turns (or its first at all) is the one being edited
                     _group = g;
                     string pick = null;
-                    foreach (string b in PlayerAnims.Groups[g]) if (c.Bones.Contains(b)) { pick = b; break; }
-                    _bone = pick ?? PlayerAnims.Groups[g][0];
+                    foreach (string b in BodyClips.Groups[g]) if (c.Bones.Contains(b)) { pick = b; break; }
+                    _bone = pick ?? BodyClips.Groups[g][0];
                 }
             }
             GUILayout.EndHorizontal();
-            PlayerAnimator a = Me != null ? PlayerAnimator.For(Me) : null;
+            BodyAnimator a = Me != null ? BodyAnimator.For(Me) : null;
             GUILayout.BeginHorizontal();
-            foreach (string b in PlayerAnims.Groups[_group])
+            foreach (string b in BodyClips.Groups[_group])
             {
                 bool used = c.Bones.Contains(b), missing = a != null && a.Missing(b);
                 string label = (used ? "● " : "") + JointName(b) + (missing ? " (нема)" : "");
@@ -455,39 +456,39 @@ namespace HuginWhispers
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6);
-            GUILayout.Label("<b>" + PlayerAnims.GroupNames[_group] + " · " + JointName(_bone) + "</b>  <color=#9a9a9a>(" + _bone + ") — " + JointHint(_bone) + "</color>");
+            GUILayout.Label("<b>" + BodyClips.GroupNames[_group] + " · " + JointName(_bone) + "</b>  <color=#9a9a9a>(" + _bone + ") — " + JointHint(_bone) + "</color>");
             GUILayout.Label(_key >= 0 && _key < c.Keys.Count ? "ключ " + c.Keys[_key].T.ToString("0.00") + " с  <color=#9a9a9a>· на картинці жовта точка — цей суглоб, лінія — те, що він рухає</color>" : "<color=#FFB04A>вибери ключ ліворуч, щоб правити</color>");
             if (!c.Bones.Contains(_bone))
             {
-                if (GUILayout.Button("Додати цю кістку в кліп", GUILayout.Width(220f))) { c.AddBone(_bone); c.SetMode(_bone, PlayerAnims.DefaultMode(_bone)); _dirty = true; }
+                if (GUILayout.Button("Додати цю кістку в кліп", GUILayout.Width(220f))) { c.AddBone(_bone); c.SetMode(_bone, BodyClips.DefaultMode(_bone)); _dirty = true; }
                 return;
             }
             if (_key < 0 || _key >= c.Keys.Count) return;
             PAnimKey k = c.Keys[_key];
             Vector3 v = k.V.ContainsKey(_bone) ? k.V[_bone] : Vector3.zero;
             Vector3 was = v;
-            bool meters = _bone == PlayerAnims.Move, whole = _bone == PlayerAnims.Body || meters;
+            bool meters = _bone == BodyClips.Move, whole = _bone == BodyClips.Body || meters;
             int mode = c.ModeOf(_bone);
             if (!whole)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Як рахувати:", GUILayout.Width(100f));
-                for (int m = 0; m < PlayerAnims.ModeNames.Length; m++)
-                    if (GUILayout.Toggle(mode == m, PlayerAnims.ModeNames[m], "Button", GUILayout.Width(125f)) && mode != m)
+                for (int m = 0; m < BodyClips.ModeNames.Length; m++)
+                    if (GUILayout.Toggle(mode == m, BodyClips.ModeNames[m], "Button", GUILayout.Width(125f)) && mode != m)
                     {
                         c.SetMode(_bone, m); mode = m; _dirty = true;
-                        string other = PlayerAnims.Mirror(_bone);
+                        string other = BodyClips.Mirror(_bone);
                         if (_mirror && other != null && c.Bones.Contains(other)) c.SetMode(other, m);
                         Show();
                     }
                 GUILayout.EndHorizontal();
-                GUILayout.Label("<color=#9a9a9a>" + (mode == PlayerAnims.Aim ? "Куди дивиться: ставиш напрямок частини (вниз, уперед, у бік, назад) — і вона туди дивиться, хоч що робить гра під нею." : mode == PlayerAnims.Frame ? "Повернути: частина повертається від того, як її тримає гра (у ходьбі нога й далі ходить, лише зігнута)." : "Свої осі кістки: у кожної кістки вони свої — для тонкої правки, коли інше не підходить.") + "</color>");
+                GUILayout.Label("<color=#9a9a9a>" + (mode == BodyClips.Aim ? "Куди дивиться: ставиш напрямок частини (вниз, уперед, у бік, назад) — і вона туди дивиться, хоч що робить гра під нею." : mode == BodyClips.Frame ? "Повернути: частина повертається від того, як її тримає гра (у ходьбі нога й далі ходить, лише зігнута)." : "Свої осі кістки: у кожної кістки вони свої — для тонкої правки, коли інше не підходить.") + "</color>");
                 GUILayout.Label("<color=#FFB04A>Увага: спосіб діє на всі ключі кліпу. Перемкнеш у готовому кліпі — старі числа в інших ключах почнуть означати інше, і поза зламається.</color>");
             }
             // both sides at once only when asked (off by default: a leg moves alone)
-            if (PlayerAnims.Mirror(_bone) != null)
+            if (BodyClips.Mirror(_bone) != null)
             {
-                string otherSide = PlayerAnims.Mirror(_bone).StartsWith("Left") ? "ліву" : "праву";
+                string otherSide = BodyClips.Mirror(_bone).StartsWith("Left") ? "ліву" : "праву";
                 _mirror = GUILayout.Toggle(_mirror, _mirror ? " ⇄ Дзеркало: правка йде й на " + otherSide + " сторону (натисни — вимкнути)" : " Лише ця сторона  (натисни — правити обидві разом, дзеркально)", "Button");
             }
             // the three numbers in plain words, the same way round for both sides (shown = stored × sign)
@@ -496,10 +497,10 @@ namespace HuginWhispers
             float side = _bone.StartsWith("Left") ? -1f : 1f;
             bool limb = IsLimb(_bone);
             if (meters) axis = new[] { "Вбік (+ вправо), м", "Вгору (+), м", "Вперед (+), м" };
-            else if (_bone == PlayerAnims.Body) { axis = new[] { "Нахил: + уперед, − назад", "Поворот: + вправо", "Нахил убік: + вправо" }; sign = new Vector3(1f, 1f, -1f); }
-            else if (mode == PlayerAnims.Aim) { axis = new[] { "Вниз/вгору: −90 донизу, 0 рівно, 90 вгору", "Куди: 0 уперед, 90 від тіла, 180 назад", "Скрутка: + назовні" }; sign = new Vector3(1f, side, side); }
-            else if (mode == PlayerAnims.Frame && limb) { axis = new[] { "Уперед (+) / назад (−)", "Скрутка: + назовні", "Від тіла (+) / до тіла (−)" }; sign = new Vector3(-1f, side, side); }
-            else if (mode == PlayerAnims.Frame) { axis = new[] { "Нахил: + уперед, − назад", "Поворот: + вправо", "Нахил убік: + вправо" }; sign = new Vector3(1f, 1f, -1f); }
+            else if (_bone == BodyClips.Body) { axis = new[] { "Нахил: + уперед, − назад", "Поворот: + вправо", "Нахил убік: + вправо" }; sign = new Vector3(1f, 1f, -1f); }
+            else if (mode == BodyClips.Aim) { axis = new[] { "Вниз/вгору: −90 донизу, 0 рівно, 90 вгору", "Куди: 0 уперед, 90 від тіла, 180 назад", "Скрутка: + назовні" }; sign = new Vector3(1f, side, side); }
+            else if (mode == BodyClips.Frame && limb) { axis = new[] { "Уперед (+) / назад (−)", "Скрутка: + назовні", "Від тіла (+) / до тіла (−)" }; sign = new Vector3(-1f, side, side); }
+            else if (mode == BodyClips.Frame) { axis = new[] { "Нахил: + уперед, − назад", "Поворот: + вправо", "Нахил убік: + вправо" }; sign = new Vector3(1f, 1f, -1f); }
             else axis = new[] { "X (свої осі)", "Y (свої осі)", "Z (свої осі)" };
             if (meters) { v.x = Num(axis[0], v.x, -2f, 2f, 0.01f); v.y = Num(axis[1], v.y, -2f, 3f, 0.01f); v.z = Num(axis[2], v.z, -2f, 2f, 0.01f); }
             else
@@ -523,7 +524,7 @@ namespace HuginWhispers
             GUI.enabled = true;
             if (GUILayout.Button("Прибрати з кліпу", GUILayout.Width(130f))) { c.RemoveBone(_bone); _dirty = true; Show(); return; }
             GUILayout.EndHorizontal();
-            if (PlayerAnims.Mirror(_bone) != null)
+            if (BodyClips.Mirror(_bone) != null)
             {
                 GUILayout.Space(4);
                 GUILayout.BeginHorizontal();
@@ -551,8 +552,8 @@ namespace HuginWhispers
 
         private static string JointName(string b)
         {
-            if (b == PlayerAnims.Body) return "Поворот тіла";
-            if (b == PlayerAnims.Move) return "Зсув тіла";
+            if (b == BodyClips.Body) return "Поворот тіла";
+            if (b == BodyClips.Move) return "Зсув тіла";
             switch (Part(b))
             {
                 case "Hips": return "Таз";
@@ -576,8 +577,8 @@ namespace HuginWhispers
         // what turning this joint moves
         private static string JointHint(string b)
         {
-            if (b == PlayerAnims.Body) return "нахиляє й повертає всього персонажа довкола центру";
-            if (b == PlayerAnims.Move) return "зсуває всього персонажа (у метрах)";
+            if (b == BodyClips.Body) return "нахиляє й повертає всього персонажа довкола центру";
+            if (b == BodyClips.Move) return "зсуває всього персонажа (у метрах)";
             switch (Part(b))
             {
                 case "Hips": return "таз: тягне за собою все — і корпус, і ноги";
@@ -620,14 +621,14 @@ namespace HuginWhispers
                 if (ReferenceEquals(t, null)) return null; // (known to be missing: not looked for every frame)
                 if (t != null) return t;
             }
-            t = PlayerAnims.SkeletonBone(an.GetComponentInParent<Player>(), an.transform, name);
+            t = BodyClips.SkeletonBone(an.GetComponentInParent<Player>(), an.transform, name);
             _markerBones[name] = t;
             return t;
         }
 
         private void Marker(Player p)
         {
-            Transform joint = MarkerBone(p, _bone == PlayerAnims.Body || _bone == PlayerAnims.Move ? "Hips" : _bone);
+            Transform joint = MarkerBone(p, _bone == BodyClips.Body || _bone == BodyClips.Move ? "Hips" : _bone);
             if (joint == null) { if (_marker != null) _marker.SetActive(false); return; }
             if (_marker == null)
             {
@@ -658,13 +659,13 @@ namespace HuginWhispers
             _marker.transform.localScale = Vector3.one * 0.07f * big;
             // the line: down the chain the joint moves (two bones on), or none for the whole body
             List<Vector3> pts = new List<Vector3> { joint.position };
-            string n = _bone == PlayerAnims.Body || _bone == PlayerAnims.Move ? null : PlayerAnims.NextOf(_bone);
+            string n = _bone == BodyClips.Body || _bone == BodyClips.Move ? null : BodyClips.NextOf(_bone);
             for (int i = 0; i < 2 && n != null; i++)
             {
                 Transform t = MarkerBone(p, n);
                 if (t == null) break;
                 pts.Add(t.position);
-                n = PlayerAnims.NextOf(n);
+                n = BodyClips.NextOf(n);
             }
             _line.positionCount = pts.Count;
             for (int i = 0; i < pts.Count; i++) _line.SetPosition(i, pts[i]);
@@ -691,7 +692,7 @@ namespace HuginWhispers
 
         private void MirrorTo(PAnimClip c, PAnimKey k, string bone)
         {
-            string other = PlayerAnims.Mirror(bone);
+            string other = BodyClips.Mirror(bone);
             if (other == null) return;
             if (!c.Bones.Contains(other)) { c.AddBone(other); c.SetMode(other, c.ModeOf(bone)); }
             Vector3 v = k.V[bone];
@@ -703,18 +704,18 @@ namespace HuginWhispers
         private void Rules(float h)
         {
             Player p = Me;
-            PlayerAnimator a = p != null ? PlayerAnimator.For(p) : null;
+            BodyAnimator a = p != null ? BodyAnimator.For(p) : null;
             _rules = GUILayout.BeginScrollView(_rules, GUILayout.Height(h));
             GUILayout.Label("<b>Стани</b>  <color=#9a9a9a>Кожна гра сама вибирає кожному гравцю кліпи за його рухом. У шарі грає перше правило згори, умова якого справджується; жодне — шар згасає. Що грає код (дар), має перевагу над правилами свого шару.</color>");
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Зберегти стани", GUILayout.Width(140f))) { _note = "Стани збережено: " + PlayerAnims.SaveRules(); _rulesDirty = false; }
-            if (GUILayout.Button("+ Правило", GUILayout.Width(110f))) { PlayerAnims.Rules.Add(new PAnimRule { Name = "rule" + (PlayerAnims.Rules.Count + 1), Clip = _sel ?? "", When = "air>0.3" }); _rulesDirty = true; }
+            if (GUILayout.Button("Зберегти стани", GUILayout.Width(140f))) { _note = "Стани збережено: " + BodyClips.SaveRules(); _rulesDirty = false; }
+            if (GUILayout.Button("+ Правило", GUILayout.Width(110f))) { BodyClips.Rules.Add(new PAnimRule { Name = "rule" + (BodyClips.Rules.Count + 1), Clip = _sel ?? "", When = "air>0.3" }); _rulesDirty = true; }
             if (_rulesDirty) GUILayout.Label("<color=#FFB04A>є незбережені зміни</color>");
             GUILayout.EndHorizontal();
 
-            for (int i = 0; i < PlayerAnims.Rules.Count; i++)
+            for (int i = 0; i < BodyClips.Rules.Count; i++)
             {
-                PAnimRule r = PlayerAnims.Rules[i];
+                PAnimRule r = BodyClips.Rules[i];
                 bool live = a != null && a.RuleIn(r.Slot) == r.Name;
                 GUILayout.Space(4);
                 GUILayout.BeginHorizontal();
@@ -723,12 +724,12 @@ namespace HuginWhispers
                 string nm = GUILayout.TextField(r.Name, GUILayout.Width(110f));
                 if (nm != r.Name && Valid(nm)) { r.Name = nm; _rulesDirty = true; }
                 GUILayout.Label("шар", GUILayout.Width(30f));
-                for (int s = 0; s < PlayerAnims.Slots - 1; s++) if (GUILayout.Toggle(r.Slot == s, s.ToString(), "Button", GUILayout.Width(26f)) && r.Slot != s) { r.Slot = s; _rulesDirty = true; }
+                for (int s = 0; s < BodyClips.Slots - 1; s++) if (GUILayout.Toggle(r.Slot == s, s.ToString(), "Button", GUILayout.Width(26f)) && r.Slot != s) { r.Slot = s; _rulesDirty = true; }
                 if (GUILayout.Button(string.IsNullOrEmpty(r.Clip) ? "(кліп)" : r.Clip, GUILayout.Width(150f))) { r.Clip = NextClip(r.Clip); _rulesDirty = true; }
-                GUILayout.Label(live ? "<color=#7CFC7C>грає</color>" : PlayerAnims.Find(r.Clip) == null ? "<color=#FF7A7A>нема кліпу</color>" : "", GUILayout.Width(80f));
-                if (GUILayout.Button("↑", GUILayout.Width(26f)) && i > 0) { PlayerAnims.Rules.RemoveAt(i); PlayerAnims.Rules.Insert(i - 1, r); _rulesDirty = true; GUILayout.EndHorizontal(); break; }
-                if (GUILayout.Button("↓", GUILayout.Width(26f)) && i < PlayerAnims.Rules.Count - 1) { PlayerAnims.Rules.RemoveAt(i); PlayerAnims.Rules.Insert(i + 1, r); _rulesDirty = true; GUILayout.EndHorizontal(); break; }
-                if (GUILayout.Button("×", GUILayout.Width(26f))) { PlayerAnims.Rules.RemoveAt(i); _rulesDirty = true; GUILayout.EndHorizontal(); break; }
+                GUILayout.Label(live ? "<color=#7CFC7C>грає</color>" : BodyClips.Find(r.Clip) == null ? "<color=#FF7A7A>нема кліпу</color>" : "", GUILayout.Width(80f));
+                if (GUILayout.Button("↑", GUILayout.Width(26f)) && i > 0) { BodyClips.Rules.RemoveAt(i); BodyClips.Rules.Insert(i - 1, r); _rulesDirty = true; GUILayout.EndHorizontal(); break; }
+                if (GUILayout.Button("↓", GUILayout.Width(26f)) && i < BodyClips.Rules.Count - 1) { BodyClips.Rules.RemoveAt(i); BodyClips.Rules.Insert(i + 1, r); _rulesDirty = true; GUILayout.EndHorizontal(); break; }
+                if (GUILayout.Button("×", GUILayout.Width(26f))) { BodyClips.Rules.RemoveAt(i); _rulesDirty = true; GUILayout.EndHorizontal(); break; }
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("коли", GUILayout.Width(40f));
@@ -745,12 +746,12 @@ namespace HuginWhispers
             GUILayout.Space(10);
             GUILayout.Label("<b>Твій рух зараз</b>  <color=#9a9a9a>(для умов: назва, знак, число; між частинами &; ще tag:назва, !tag:назва)</color>");
             if (a != null)
-                for (int i = 0; i < PlayerAnims.Values.Length; i++)
-                    GUILayout.Label(PlayerAnims.Values[i] + " = " + a.ValueOf(PlayerAnims.Values[i]).ToString("0.0") + "   <color=#9a9a9a>" + PlayerAnims.ValueNames[i] + "</color>");
+                for (int i = 0; i < BodyClips.Values.Length; i++)
+                    GUILayout.Label(BodyClips.Values[i] + " = " + a.ValueOf(BodyClips.Values[i]).ToString("0.0") + "   <color=#9a9a9a>" + BodyClips.ValueNames[i] + "</color>");
             if (a != null)
             {
                 string slots = "";
-                for (int s = 0; s < PlayerAnims.Slots; s++) slots += "  шар " + s + ": " + (a.ClipIn(s) ?? "—") + (a.ClipIn(s) != null ? " (" + Mathf.RoundToInt(a.WeightIn(s) * 100f) + "%)" : "");
+                for (int s = 0; s < BodyClips.Slots; s++) slots += "  шар " + s + ": " + (a.ClipIn(s) ?? "—") + (a.ClipIn(s) != null ? " (" + Mathf.RoundToInt(a.WeightIn(s) * 100f) + "%)" : "");
                 GUILayout.Label("<b>Шари</b>" + slots);
             }
             GUILayout.Label("<color=#9a9a9a>Приклад: «air>0.4 & speed>3 & tag:odinwings» — у повітрі довше 0,4 с, швидше 3 м/с і на крилах Одіна.</color>");
@@ -759,7 +760,8 @@ namespace HuginWhispers
 
         private static string NextClip(string cur)
         {
-            List<string> names = new List<string>(PlayerAnims.Clips.Keys);
+            List<string> names = new List<string>();
+            foreach (KeyValuePair<string, PAnimClip> kv in BodyClips.Clips) if (!kv.Value.IsPart) names.Add(kv.Key); // (a part is made from its clip)
             names.Sort();
             if (names.Count == 0) return "";
             int i = names.IndexOf(cur);

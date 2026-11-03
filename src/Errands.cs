@@ -230,7 +230,7 @@ namespace HuginWhispers
             // starters
             "[errand starter_hunt]\nname: Ловці в лісі\ntext: Одін хоче знати, чи не розучи{вся|лася} ти полювати.\ntext2: Мунін побився з Хугіном об заклад, що ти ще не розучи{вся|лася} полювати. Не підведи його.\nwho: munin\nprice: 1 2\nupto: 2\n" +
             "slot how = manner 50 bow,sneak\nstep kill Boar,Deer,Neck,Greyling,Greydwarf 40 @how\n",
-            "[errand starter_trophy]\nname: Знак для Одіна\ntext: Вполюй трьох оленів і принеси ворону трофей оленя: Одін хоче бачити, що ти ходиш його лісами.\ntext2: Хугін хоче розповісти Одіну, як ти ходиш його лісами. Для розповіді бракує лише трофея оленя.\nwho: hugin\nprice: 1\nupto: 2\n" +
+            "[errand starter_trophy]\nname: Знак для Одіна\ntext: Вполюй трьох оленів і поклади трофей оленя в чашу гнізда: Одін хоче бачити, що ти ходиш його лісами.\ntext2: Хугін хоче розповісти Одіну, як ти ходиш його лісами. Для розповіді бракує лише трофея оленя.\nwho: hugin\nprice: 1\nupto: 2\n" +
             "slot how = manner 40 bow,sneak\nstep kill Deer 3 @how\nstep bring TrophyDeer 1\n",
             "[errand starter_walk]\nname: Подивись, що там\ntext: Хугін бачив щось у тому боці. Сходи й глянь сам{|а}.\ntext2: Хугін бачив щось у тому боці. Каже, з тобою дивитися цікавіше. Сходи глянь.\nwho: hugin\nprice: 1 3\n" +
             "slot place = around 200 600\nstep go place 40\n",
@@ -251,17 +251,17 @@ namespace HuginWhispers
             "step do Fuel 20-40 Resin\n",
             "[errand h_cook]\nname: Стіл для воїна\ntext: Хугін каже, що голодний воїн — поганий воїн. Приготуй щось путнє, і не одну страву.\ntext2: Хугін каже, що ти вже не та голодна потороча, що колись. Доведи: приготуй щось путнє, і не одну страву.\nwho: hugin\nprice: 1 2\nneeds: defeated_eikthyr\n" +
             "step do Cook 20\n",
-            "[errand h_trollcave]\nname: Печера троля\ntext: Хугін бачив печеру, з якої тягне холодом і тролем. Дійди до неї й здолай того, хто там живе.\ntext2: Хугін знайшов печеру, з якої тягне тролем, і хоче знати, хто з вас двох голосніше ричить. Дійди й здолай того, хто там живе.\nwho: hugin\nprice: 2 3\nneeds: defeated_eikthyr\nwithin: 2000\n" +
+            "[errand h_trollcave]\nname: Печера троля\ntext: Хугін бачив печеру, з якої тягне холодом і тролем. Дійди до неї й здолай того, хто там живе.\ntext2: Хугін знайшов печеру, з якої тягне тролем, і хоче знати, хто з вас двох голосніше ричить. Дійди й здолай того, хто там живе.\nland: BlackForest\nwho: hugin\nprice: 2 3\nneeds: defeated_eikthyr\nwithin: 2000\n" +
             "slot place = location TrollCave 300 3000 fresh\nstep go place 25\nstep kill Troll 1 near place 150\n",
             "[errand h_smelt]\nname: Вогонь кузні\ntext: Одін хоче чути, як співає твоя плавильня. Переплав руду — багато руди.\ntext2: Хугін любить, як співає твоя плавильня. Каже, краще за Муніна. Переплав руду — багато руди.\nwho: hugin\nprice: 1 3\nneeds: defeated_gdking\n" +
             "step do Smelt 30\n",
-            "[errand h_ooze]\nname: Слиз болотяний\ntext: Хугін збирає дивні речі. Цього разу йому треба болотяного слизу — і такого, що здобуто твоїми руками, а не вимінено.\ntext2: Хугін знову збирає дивні речі. Йому треба болотяного слизу, здобутого твоїми руками. Не питай навіщо.\nwho: hugin\nprice: 2\nneeds: defeated_gdking\nupto: 4\n" +
+            "[errand h_ooze]\nname: Слиз болотяний\ntext: Хугін збирає дивні речі. Цього разу йому треба болотяного слизу — і такого, що здобуто твоїми руками, а не вимінено.\ntext2: Хугін знову збирає дивні речі. Йому треба болотяного слизу, здобутого твоїми руками. Не питай навіщо.\nland: Swamp\nwho: hugin\nprice: 2\nneeds: defeated_gdking\nupto: 4\n" +
             "step loot Ooze 20\nstep bring Ooze 20\n",
-            "[errand h_crystal]\nname: Холодне світло\ntext: Хугін хоче кришталю з гір: каже, в ньому видно те, чого не видно оком. Тільки той, що вибито з гори твоїми руками.\ntext2: Хугін каже, що в кришталі видно те, чого не видно оком, і хоче тобі це показати. Тільки кришталь вибий сам{|а}.\nwho: hugin\nprice: 2 3\nneeds: defeated_bonemass\nupto: 5\n" +
+            "[errand h_crystal]\nname: Холодне світло\ntext: Хугін хоче кришталю з гір: каже, в ньому видно те, чого не видно оком. Тільки той, що вибито з гори твоїми руками.\ntext2: Хугін каже, що в кришталі видно те, чого не видно оком, і хоче тобі це показати. Тільки кришталь вибий сам{|а}.\nland: Mountain\nwho: hugin\nprice: 2 3\nneeds: defeated_bonemass\nupto: 5\n" +
             "step loot Crystal 10\nstep bring Crystal 10\n",
-            "[errand h_needles]\nname: Жала рівнин\ntext: Хугін хоче голок із тих комарів-вбивць. Обережно: вони кусають боляче.\ntext2: Хугін хоче голок із тих комарів-вбивць. Каже, ти вже досить товстошкір{ий|а}, щоб їх не боятися.\nwho: hugin\nprice: 2 3\nneeds: defeated_dragon\nupto: 6\n" +
+            "[errand h_needles]\nname: Жала рівнин\ntext: Хугін хоче голок із тих комарів-вбивць. Обережно: вони кусають боляче.\ntext2: Хугін хоче голок із тих комарів-вбивць. Каже, ти вже досить товстошкір{ий|а}, щоб їх не боятися.\nland: Plains\nwho: hugin\nprice: 2 3\nneeds: defeated_dragon\nupto: 6\n" +
             "slot how = manner 40 bow,fire,frost\nstep kill Deathsquito 10 @how\nstep bring Needle 10\n",
-            "[errand h_pelts]\nname: Шкури для гнізда\ntext: Хугін хоче вистелити гніздо вовчими шкурами. Тільки не купленими — знятими з вовків твоїми руками.\ntext2: Хугін хоче вистелити гніздо вовчими шкурами, щоб тобі було де погрітися. Тільки знятими твоїми руками.\nwho: hugin\nprice: 2\nneeds: defeated_bonemass\nupto: 6\n" +
+            "[errand h_pelts]\nname: Шкури для гнізда\ntext: Хугін хоче вистелити гніздо вовчими шкурами. Тільки не купленими — знятими з вовків твоїми руками.\ntext2: Хугін хоче вистелити гніздо вовчими шкурами, щоб тобі було де погрітися. Тільки знятими твоїми руками.\nland: Mountain\nwho: hugin\nprice: 2\nneeds: defeated_bonemass\nupto: 6\n" +
             "step loot WolfPelt 5\nstep bring WolfPelt 5\n",
             "[errand h_trophywall]\nname: Трофеї на стіну\ntext: Одін любить, коли пам'ятають, кого здолано. Вполюй звірів і повісь їхні трофеї на підставки.\ntext2: Хугін хоче, щоб на стіні висіло те, про що він потім розповідатиме. Вполюй звірів і повісь їхні свіжі трофеї на підставки.\nwho: hugin\nprice: 1\n" +
             "step do TrophyHang 3 fresh\n",
@@ -306,12 +306,12 @@ namespace HuginWhispers
             "[errand h_mist_shrooms]\nname: Гриби Туману\ntext: Хугін каже, що в Тумані ростуть гриби, від яких видно більше, ніж треба. Збери їх.\ntext2: Хугін хоче грибів з Туману. Каже, Мунін від них дуже смішно бачить. Збери, а він розкаже.\nland: Mistlands\nwho: hugin\nprice: 2\nneeds: defeated_goblinking\nstep do Pick 20 MushroomJotunPuffs,MushroomMagecap\n",
             "[errand h_ash_berries]\nname: Ягоди з попелу\ntext: Хугін не вірить, що в Попелищах щось росте. Доведи йому: збери, що там дає земля.\ntext2: Хугін каже, що як уже й у Попелищах щось росте, то й Мунін колись подобрішає. Збери, що там дає земля.\nland: AshLands\nwho: hugin\nprice: 2\nneeds: defeated_queen\nstep do Pick 20 Vineberry,MushroomSmokePuff,Fiddleheadfern\n",
             "[errand h_sail]\nname: Довга вода\ntext: Хугін хоче бачити море з корабля, а не з берега. Стань до стерна й веди — довго.\ntext2: Хугін каже, що з тобою за стерном навіть море не таке страшне. Веди корабель — довго.\nwho: hugin\ngroup: road\nprice: 1 2\nneeds: defeated_gdking\nstep do Sail 120\n",
-            "[errand m_serpent]\nname: Морський змій\ntext: Мунін бачив у морі змія завдовжки з корабель. Убий його й принеси голову.\ntext2: Мунін каже, що морський змій — то просто довгий вугор. Доведи йому, що ні: убий і принеси голову.\nland: Ocean\nwho: munin\nprice: 3\nneeds: defeated_bonemass\nslot how = manner 40 bow,fire,frost\nstep kill Serpent 1 @how\nstep bring TrophySerpent 1\n",
+            "[errand m_serpent]\nname: Морський змій\ntext: Мунін бачив у морі змія завдовжки з корабель. Убий його й принеси голову в чашу гнізда.\ntext2: Мунін каже, що морський змій — то просто довгий вугор. Доведи йому, що ні: убий і принеси голову в чашу.\nland: Ocean\nwho: munin\nprice: 3\nneeds: defeated_bonemass\nslot how = manner 40 bow,fire,frost\nstep kill Serpent 1 @how\nstep bring TrophySerpent 1\n",
             // one of two ways, a day of peace
             "[errand m_any_head]\nname: Голова для Муніна\ntext: Мунін хоче бачити, як падає щось велике. Що — йому байдуже: троль чи двоє драугрів-ватажків.\ntext2: Мунін каже, що він не перебірливий: троль чи двоє драугрів-ватажків — аби впали від твоєї руки.\nwho: munin\ngroup: blood\nprice: 2 3\nneeds: defeated_gdking\nupto: 4\nstep any kill Troll 1 | kill Draugr_Elite 2\n",
             "[errand m_any_plains]\nname: Рахунок рівнин\ntext: Мунін хоче, щоб рівнини тебе запам'ятали: три гобліни-громили або двоє локсів.\ntext2: Мунін каже, що рівнини мусять тебе боятися. Вибери сам{|а}, кого: трьох громил чи двох локсів.\nland: Plains\nwho: munin\ngroup: blood\nprice: 2 3\nneeds: defeated_dragon\nupto: 6\nstep any kill GoblinBrute 3 | kill Lox 2\n",
             "[errand h_any_feast]\nname: Стіл для Одіна\ntext: Хугін хоче, щоб Одіну було що покласти на стіл: налови риби або приготуй страв.\ntext2: Хугін каже, що Одін любить і рибу, і печене. Вибирай сам{|а}: налови риби або приготуй страв.\nwho: hugin\nprice: 1 2\nneeds: defeated_eikthyr\nstep any do Fish 5 | do Cook 15\n",
-            "[errand h_any_gift]\nname: Дар у чашу\ntext: Хугін хоче покласти Одіну дар: шкури троля чи трофей вовка.\ntext2: Хугін каже, що Одін рад і шкурі, і трофею, аби від тебе. Віддай шкури троля чи трофей вовка.\nwho: hugin\nprice: 1 2\nneeds: defeated_bonemass\nupto: 5\nstep any bring TrollHide 5 | bring TrophyWolf 1\n",
+            "[errand h_any_gift]\nname: Дар у чашу\ntext: Хугін хоче покласти Одіну дар: шкури троля чи трофей вовка.\ntext2: Хугін каже, що Одін рад і шкурі, і трофею, аби від тебе. Віддай у чашу гнізда шкури троля чи трофей вовка.\nwho: hugin\nprice: 1 2\nneeds: defeated_bonemass\nupto: 5\nstep any bring TrollHide 5 | bring TrophyWolf 1\n",
             "[errand h_spare_deer]\nname: Олені Хугіна\ntext: Хугін жаліє оленів. Добу, від найближчого світанку, не вбивай жодного — ні оленя, ні кабана.\ntext2: Хугін каже, що олені вже впізнають тебе й тікають. Дай їм добу спокою — ні оленя, ні кабана.\nwho: hugin\nprice: 1\nupto: 3\nstep spare Deer,Boar 1\n",
             "[errand m_spare_greydwarf]\nname: Слово Муніна\ntext: Мунін програв грейдворфам суперечку й мусить тримати слово: добу не чіпай жодного грейдворфа.\ntext2: Мунін пообіцяв грейдворфам добу миру й уже шкодує. Не роби з нього брехуна: добу жодного грейдворфа.\nwho: munin\nprice: 1 2\nneeds: defeated_eikthyr\nupto: 3\nstep spare Greydwarf,Greydwarf_Elite,Greydwarf_Shaman 1\n",
             "[errand h_spare_lox]\nname: Мир локсам\ntext: Хугін просить за локсів: добу не вбивай жодного.\ntext2: Хугін каже, що локси — найспокійніші звірі в цих краях, і просить за них. Добу жодного локса.\nland: Plains\nwho: hugin\nprice: 1 2\nneeds: defeated_dragon\nupto: 7\nstep spare Lox 1\n",
@@ -321,9 +321,9 @@ namespace HuginWhispers
             "[errand m_frostcave]\nname: Морозні печери\ntext: У морозних печерах засіли культисти з ульвами. Мунін хоче, щоб їх поменшало: шестеро ульвів або двоє культистів.\ntext2: Мунін каже, що культисти моляться не тому, кому треба. Поясни їм: шестеро ульвів або двоє культистів.\nland: Mountain\nwho: munin\ngroup: blood\nprice: 2 3\nneeds: defeated_bonemass\nupto: 6\nstep any kill Ulv 6 | kill Fenring_Cultist 2\n",
             "[errand m_abomination]\nname: Гидь з болота\ntext: На болоті з коріння піднялася гидь. Мунін хоче бачити, як вона падає.\ntext2: Мунін каже, що гидь — це болото, яке забагато про себе думає. Поклади її.\nland: Swamp\nwho: munin\nprice: 2 3\nneeds: defeated_gdking\nupto: 5\nslot how = manner 40 fire,stagger,bow\nstep kill Abomination 1 @how\n",
             "[errand m_seekers]\nname: Солдати шукачів\ntext: У Тумані ходять шукачі-солдати. Мунін хоче, щоб їх поменшало, і щоб ти не ста{в|ла} їхньою вечерею.\ntext2: Мунін каже, що шукачі-солдати — то просто великі таргани. Розчави кількох.\nland: Mistlands\nwho: munin\nprice: 2 3\nneeds: defeated_goblinking\nslot how = manner 50 stagger,fire,frost,magic,bow\nstep kill SeekerBrute 3-5 @how\n",
-            "[errand m_gjall]\nname: Ґьялл над Туманом\ntext: Мунін бачив ґьялла — ту летючу торбу з кислотою. Збий двох або принеси його трофей, якщо вже маєш.\ntext2: Мунін каже, що ґьялл літає гірше за нього, а гордиться більше. Збий двох або принеси трофей.\nland: Mistlands\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_goblinking\nstep any kill Gjall 2 | bring TrophyGjall 1\n",
-            "[errand m_valkyrie]\nname: Занепала валькірія\ntext: Над Попелищами кружляють занепалі валькірії. Поклади двох або принеси Муніну трофей однієї.\ntext2: Мунін каже, що валькірії колись носили воїнів до Одіна, а тепер тільки верещать. Поклади двох або принеси трофей.\nland: AshLands\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_queen\nstep any kill FallenValkyrie 2 | bring TrophyFallenValkyrie 1\n",
-            "[errand m_bonemaw]\nname: Кісткозмій\ntext: У гарячому морі біля Попелищ плаває кісткозмій. Мунін хоче двох таких або трофей одного.\ntext2: Мунін каже, що кісткозмій смачно хрумтить, коли падає. Поклади двох або принеси трофей.\nland: Ocean\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_queen\nstep any kill BonemawSerpent 2 | bring TrophyBonemawSerpent 1\n",
+            "[errand m_gjall]\nname: Ґьялл над Туманом\ntext: Мунін бачив ґьялла — ту летючу торбу з кислотою. Збий двох або принеси в чашу його трофей, якщо вже маєш.\ntext2: Мунін каже, що ґьялл літає гірше за нього, а гордиться більше. Збий двох або принеси в чашу трофей.\nland: Mistlands\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_goblinking\nstep any kill Gjall 2 | bring TrophyGjall 1\n",
+            "[errand m_valkyrie]\nname: Занепала валькірія\ntext: Над Попелищами кружляють занепалі валькірії. Поклади двох або принеси в чашу гнізда трофей однієї.\ntext2: Мунін каже, що валькірії колись носили воїнів до Одіна, а тепер тільки верещать. Поклади двох або принеси в чашу трофей.\nland: AshLands\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_queen\nstep any kill FallenValkyrie 2 | bring TrophyFallenValkyrie 1\n",
+            "[errand m_bonemaw]\nname: Кісткозмій\ntext: У гарячому морі біля Попелищ плаває кісткозмій. Мунін хоче двох таких або трофей одного.\ntext2: Мунін каже, що кісткозмій смачно хрумтить, коли падає. Поклади двох або принеси в чашу трофей.\nland: Ocean\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_queen\nstep any kill BonemawSerpent 2 | bring TrophyBonemawSerpent 1\n",
             "[errand m_ash_beasts]\nname: Звірі Попелищ\ntext: Мунін хоче, щоб у Попелищах стало тихіше: двоє морґенів або шестеро вулкальників.\ntext2: Мунін каже, що морґени страшні лише на вигляд. Перевір: двоє морґенів або шестеро вулкальників.\nland: AshLands\nwho: munin\ngroup: blood\nprice: 2 3\nneeds: defeated_queen\nstep any kill Morgen 2 | kill Volture 6\n",
             // Odin's feather carried
             "[errand h_carry_stone]\nname: Перо до каменя\ntext: Одін хоче, щоб перо його ворона лягло біля рунного каменя. Візьми його в чаші гнізда й донеси — пішки, бо крізь портал воно не піде.\ntext2: Хугін каже, що довірив би Одінове перо лише тобі. Візьми його в чаші гнізда й донеси до рунного каменя — без порталів.\nwho: hugin\ngroup: road\nprice: 2 3\nslot place = location Runestone 300 1500\nstep carry place 8\n",
@@ -331,27 +331,27 @@ namespace HuginWhispers
             "[errand golden_feather]\nname: Перо для ватажка\ntext: Одін кличе сам. Донеси перо його ворона туди, де звір виріс понад міру, і поклади його на землю. Звір прийде на нього.\nwho: any\nkind: golden\nslot place = around 500 1500\nslot boss = champion near place 15 30\nstep carry place 8\nstep kill_champion boss\nmaymods: nodeath 30\n",
             // a watch kept at night
             "[errand m_hold]\nname: Нічна варта\ntext: Мунін хоче побачити, як ти тримаєш коло вночі. Стань біля рунного кілка й вартуй, а він подивиться, хто прийде.\ntext2: Мунін каже, що з тобою й ніч не така довга. Стань у рунне коло й вартуй — він уже кличе гостей.\nwho: munin\ngroup: blood\nprice: 2 3\nneeds: defeated_eikthyr\nslot place = around 150 500\nstep hold place 180 10\n",
-            "[errand h_hold_stone]\nname: Варта біля каменя\ntext: Хугін каже, що вночі біля рунного каменя ходять ті, кому не слід. Постій там на варті.\ntext2: Хугін каже, що камінь уночі шепоче, а слухати його краще удвох. Постій на варті біля нього.\nwho: hugin\ngroup: blood\nprice: 2 3\nneeds: defeated_eikthyr\nslot place = location Runestone 200 1500\nstep hold place 240 12\n",
+            "[errand h_hold_stone]\nname: Варта біля каменя\ntext: Хугін каже, що вночі біля рунного каменя ходять ті, кому не слід. Постій там на варті.\ntext2: Хугін каже, що камінь уночі шепоче, а на шепіт сходяться звірі. Постій на варті біля нього й відбийся.\nwho: hugin\ngroup: blood\nprice: 2 3\nneeds: defeated_eikthyr\nslot place = location Runestone 200 1500\nstep hold place 240 12\n",
             // a raven leads you
             "[errand h_follow_stone]\nname: Хугін знає дорогу\ntext: Хугін знайшов рунний камінь, якого ти ще не бачи{в|ла}, і поведе тебе до нього сам. Іди за ним і прочитай, що там написано.\ntext2: Хугін каже, що ти ходиш як заблуканий віл, тож цього разу дорогу покаже він. Іди за ним до рунного каменя.\nwho: hugin\ngroup: road\nprice: 2 3\nslot place = location Runestone 300 900\nslot path = route place\nstep follow path\nstep read place 30\n",
             "[errand m_follow_champion]\nname: Мунін веде на звіра\ntext: Мунін вистежив звіра, що виріс понад міру. Він поведе тебе до нього — не відставай.\ntext2: Мунін каже, що знайшов тобі здобич до пари. Іди за ним і не відставай — він не чекатиме вічно.\nwho: munin\ngroup: blood\nprice: 2 3\nslot path = route 300 600\nslot boss = champion near path 15 30\nstep follow path\nstep kill_champion boss\n",
             // Hugin's late lands (2026-10-25: Mistlands and Ashlands were thin for him)
-            "[errand h_mist_sap]\nname: Сік старих коренів\ntext: Хугін чув, що в Тумані зі старих коренів сочиться сік. Добудь його й принеси в чашу гнізда.\ntext2: Хугін каже, що сік із туманних коренів пахне так, ніби дерево пам'ятає більше за нього. Добудь і принеси.\nland: Mistlands\nwho: hugin\nprice: 2\nneeds: defeated_goblinking\nstep loot Sap 10\nstep bring Sap 10\n",
+            "[errand h_mist_sap]\nname: Сік старих коренів\ntext: Хугін чув, що в Тумані зі старих коренів сочиться сік. Добудь його й принеси в чашу гнізда.\ntext2: Хугін каже, що сік із туманних коренів пахне так, ніби дерево пам'ятає більше за нього. Добудь і принеси в чашу.\nland: Mistlands\nwho: hugin\nprice: 2\nneeds: defeated_goblinking\nstep loot Sap 10\nstep bring Sap 10\n",
             "[errand h_spare_dvergr]\nname: Мир із дверграми\ntext: Хугін просить за двергрів: добу, від найближчого світанку, не чіпай жодного.\ntext2: Хугін каже, що двергри — єдині в Тумані, з ким можна поговорити. Дай їм добу спокою.\nland: Mistlands\nwho: hugin\nprice: 1 2\nneeds: defeated_goblinking\nstep spare Dverger,DvergerMage,DvergerMageFire,DvergerMageIce,DvergerMageSupport 1\n",
-            "[errand h_ash_wood]\nname: Дерево з попелу\ntext: Хугін хоче на гніздо дерева, що виросло в Попелищах і не згоріло. Нарубай сам{|а} й принеси в чашу.\ntext2: Хугін каже, що дерево, яке не згоріло в Попелищах, — найкраще для гнізда. Нарубай і принеси.\nland: AshLands\nwho: hugin\nprice: 2\nneeds: defeated_queen\nstep loot Blackwood 30\nstep bring Blackwood 30\n",
+            "[errand h_ash_wood]\nname: Дерево з попелу\ntext: Хугін хоче на гніздо дерева, що виросло в Попелищах і не згоріло. Нарубай сам{|а} й принеси в чашу.\ntext2: Хугін каже, що дерево, яке не згоріло в Попелищах, — найкраще для гнізда. Нарубай і принеси в чашу.\nland: AshLands\nwho: hugin\nprice: 2\nneeds: defeated_queen\nstep loot Blackwood 30\nstep bring Blackwood 30\n",
             "[errand h_spare_asksvin]\nname: Мир попелозаврам\ntext: Хугін просить за попелозаврів: добу, від найближчого світанку, не вбивай жодного.\ntext2: Хугін каже, що попелозаври дивляться на нього, як на рівню. Дай їм добу спокою.\nland: AshLands\nwho: hugin\nprice: 1 2\nneeds: defeated_queen\nstep spare Asksvin 1\n",
             // the Deep North (2026-10-25)
             "[errand m_jotun]\nname: Криґні на снігу\ntext: Мунін хоче побачити, як падають криґні. Велике падає гучно.\ntext2: Мунін каже, що криґні високі лише доти, доки стоять. Поклади кількох.\nland: DeepNorth\nwho: munin\nprice: 2 3\nneeds: defeated_fader\nslot how = manner 50 stagger,fire,bow,magic,sneak\nstep kill JotunWarrior,JotunWarriorDualWield 3-5 @how\n",
             "[errand m_frosttroll]\nname: Троль із Півночі\ntext: Мунін бачив тролів, що вросли в кригу. Одін хоче, щоб вони більше не вставали.\ntext2: Мунін каже, що північні тролі — ті самі лісові, тільки замерзлі й ще дурніші. Поклади кількох.\nland: DeepNorth\nwho: munin\nprice: 2 3\nneeds: defeated_fader\nslot how = manner 40 stagger,fire,bow,magic\nstep kill TrollFrost 2-3 @how\n",
             "[errand m_north_beast]\nname: Звір під кригою\ntext: Мунін хоче голову великого північного звіра. Котрого — вирішиш сам{|а}.\ntext2: Мунін каже, що на Півночі під снігом сидить таке, від чого навіть йому лячно. Тим більше хоче його голову.\nland: DeepNorth\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_fader\nstep any kill Elaking 1 | kill Writhan 2 | bring TrophyElaking 1\n",
             "[errand m_north_dead]\nname: Мерзлі мерці\ntext: Мунін хоче, щоб на Півночі стало менше тих, хто не вміє лежати тихо: десятеро кістяків або восьмеро гоблінів.\ntext2: Мунін каже, що мерзлим мерцям однаково холодно — хоч живим, хоч мертвим. Допоможи їм визначитися.\nland: DeepNorth\nwho: munin\ngroup: blood\nprice: 2 3\nneeds: defeated_fader\nstep any kill Skeleton_DeepNorth 10 | kill GoblinDeepNorth 8\n",
-            "[errand m_witch]\nname: Гекса\ntext: Мунін ненавидить гекс: кажуть, вони перекривлюють воронів. Поклади двох або принеси трофей.\ntext2: Мунін каже, що гекса каркає гірше за нього, а гордиться більше. Поклади двох або принеси трофей.\nland: DeepNorth\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_fader\nstep any kill JotunWitch 2 | bring TrophyJotunWitch 1\n",
+            "[errand m_witch]\nname: Гекса\ntext: Мунін ненавидить гекс: кажуть, вони перекривлюють воронів. Поклади двох або принеси в чашу трофей.\ntext2: Мунін каже, що гекса каркає гірше за нього, а гордиться більше. Поклади двох або принеси в чашу трофей.\nland: DeepNorth\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_fader\nstep any kill JotunWitch 2 | bring TrophyJotunWitch 1\n",
             "[errand m_hold_north]\nname: Варта в заметіль\ntext: Мунін хоче, щоб ти постоя{в|ла} в рунному колі серед північної ночі. Хто прийде з заметілі — того й бий.\ntext2: Мунін каже, що з тобою й північна ніч не така довга. Стань у коло — він уже кличе гостей із заметілі.\nland: DeepNorth\nwho: munin\ngroup: blood\nprice: 3\nneeds: defeated_fader\nslot place = around 150 500 in:DeepNorth\nstep hold place 180 10\n",
             "[errand h_lingon]\nname: Брусниця з-під снігу\ntext: Хугін каже, що на Півночі під снігом ростуть кислі червоні ягоди. Збери їх.\ntext2: Хугін каже, що брусниця з-під снігу — єдине, що на Півночі не намагається тебе вбити. Збери її.\nland: DeepNorth\nwho: hugin\nprice: 2\nneeds: defeated_fader\nstep do Pick 30 Lingonberry\n",
             "[errand h_frostcore]\nname: Морозні ядра\ntext: Хугін бачив, як на Півночі висять ядра, у яких спить мороз. Зніми кілька.\ntext2: Хугін каже, що морозне ядро холодне, як Мунінові жарти. Зніми кілька, а він подивиться.\nland: DeepNorth\nwho: hugin\nprice: 2 3\nneeds: defeated_fader\nstep do Pick 3-5 FrostCore\n",
             "[errand h_tame_moose]\nname: Лось біля вогню\ntext: Хугін хоче, щоб на Півночі в тебе був друг, а не тільки вороги. Приручи лося.\ntext2: Хугін каже, що лось і ворон добре мовчать разом. Приручи лося.\nland: DeepNorth\nwho: hugin\nprice: 2\nneeds: defeated_fader\nstep do Tame 1 Moose\n",
             "[errand h_spare_seal]\nname: Мир ластоногам\ntext: Хугін просить за ластоногів: добу, від найближчого світанку, не вбивай жодного.\ntext2: Хугін каже, що ластоноги смішніші за Муніна і значно чемніші. Дай їм добу спокою.\nland: DeepNorth\nwho: hugin\nprice: 1 2\nneeds: defeated_fader\nstep spare Seal,Seal_Pup 1\n",
-            "[errand h_north_wood]\nname: Мерзле дерево\ntext: Хугін хоче на гніздо дерева з Півночі — того, що не боїться морозу. Нарубай сам{|а} й принеси в чашу.\ntext2: Хугін каже, що в мерзлому дереві гніздо не промерзне навіть у заметіль. Нарубай і принеси.\nland: DeepNorth\nwho: hugin\nprice: 2\nneeds: defeated_fader\nstep loot Frostwood 30\nstep bring Frostwood 30\n",
+            "[errand h_north_wood]\nname: Мерзле дерево\ntext: Хугін хоче на гніздо дерева з Півночі — того, що не боїться морозу. Нарубай сам{|а} й принеси в чашу.\ntext2: Хугін каже, що в мерзлому дереві гніздо не промерзне навіть у заметіль. Нарубай і принеси в чашу.\nland: DeepNorth\nwho: hugin\nprice: 2\nneeds: defeated_fader\nstep loot Frostwood 30\nstep bring Frostwood 30\n",
             // Odin's trial for a raven (Trial.cs): its raven is the one who would bring it — Hugin's peaceful, Munin's bloody
             "[errand trial_hugin]\nname: Випробування Хугіна\ntext: Одін хоче знати, чи вмієш ти бачити. Збери, що дає ліс, вполюй оленів і поклади в чашу гнізда трофей оленя.\nwho: hugin\nkind: trial\n" +
             "step do Pick 20\nstep kill Deer 3\nstep bring TrophyDeer 1\n",
@@ -533,15 +533,36 @@ namespace HuginWhispers
             float shows = Norov.Shows(level);
             List<ErrandDef> l = null;
             if (!golden && UnityEngine.Random.value < AheadChance) { l = Fitting(p, munin, false, true, true); if (noServer) l.RemoveAll(NeedsServer); }
+            if (l != null && l.Count < AheadMin) l = null; // (a land ahead with one or two errands: that one would come every time)
             if (l == null || l.Count == 0) { l = Fitting(p, munin, golden); if (noServer) l.RemoveAll(NeedsServer); }
             if (l.Count == 0) { l = Fitting(p, munin, golden, false, false); if (noServer) l.RemoveAll(NeedsServer); } // all of them done lately: one again rather than none
             float sum = 0f;
+            bool gentleLately = GentleLately(p);
             // (Odin's favour leans the weights: Favour)
             float[] w = new float[l.Count];
-            for (int i = 0; i < l.Count; i++) { w[i] = Weigh(p, l[i], level) * Norov.Mul(Lean(ch, Bent(l[i])), shows) * Habit(qu, l[i]); sum += w[i]; }
+            for (int i = 0; i < l.Count; i++)
+            {
+                string bent = Bent(l[i]);
+                w[i] = Weigh(p, l[i], level) * Norov.Mul(Lean(ch, bent), shows) * Habit(qu, l[i]) * (gentleLately && bent == "gentle" ? GentleAgain : 1f);
+                sum += w[i];
+            }
             float at = UnityEngine.Random.value * sum;
             for (int i = 0; i < l.Count; i++) { at -= w[i]; if (at <= 0f) return l[i]; }
             return l.Count > 0 ? l[l.Count - 1] : null;
+        }
+
+        // a tame or a «spare them» among the last few errands: another such one comes this much less for a while
+        internal static int AheadMin = 3, GentleMemory = 3;
+        internal static float GentleAgain = 0.25f;
+        private static bool GentleLately(Player p)
+        {
+            List<string> h = History(p);
+            for (int i = h.Count - 1; i >= 0 && i >= h.Count - GentleMemory; i--)
+            {
+                ErrandDef d = Find(h[i]);
+                if (d != null && Bent(d) == "gentle") return true;
+            }
+            return false;
         }
 
         // its weight now: the template's, Odin's favour, more while you stand in the land it is about, and by the raven's
@@ -625,6 +646,24 @@ namespace HuginWhispers
                 case "watchful/road": return 1.2f;
                 case "devoted/gentle": return 1.3f;
                 case "devoted/fire": return 1.2f;
+                case "curious/road": return 1.4f;
+                case "curious/craft": return 1.2f;
+                case "curious/fire": return 0.7f;
+                case "proud/champion": return 1.3f;
+                case "proud/craft": case "proud/hunt": return 0.8f;
+                case "tender/gentle": return 1.6f;
+                case "tender/fire": return 1.3f;
+                case "tender/champion": return 0.7f;
+                case "grumpy/fire": return 1.3f;
+                case "grumpy/gentle": return 0.7f;
+                case "grumpy/road": return 0.8f;
+                case "huntsman/hunt": return 1.6f;
+                case "huntsman/champion": return 1.3f;
+                case "huntsman/gentle": return 0.6f;
+                case "huntsman/craft": return 0.8f;
+                case "sweettooth/craft": return 1.5f;
+                case "sweettooth/fire": return 1.3f;
+                case "sweettooth/road": return 0.8f;
             }
             return 1f;
         }
@@ -904,7 +943,6 @@ namespace HuginWhispers
             ErrandTalk.Tick();
             RavenTree.MapTick();    // the found raven trees' marks
             Nest.Tick();            // ravens in a nest waiting for Odin, his glow
-            Trial.Tick();           // Odin coming to one with no ravens
             Requests.Tick();        // the ravens' own wishes
             Words.Tick();           // and the words you taught them
             Player p = Player.m_localPlayer;
@@ -1053,6 +1091,8 @@ namespace HuginWhispers
             if (golden) { RuneBook.AddGold(p, 1); if (bonus > 0) RuneBook.AddNotches(p, bonus); }
             else RuneBook.AddNotches(p, r.Price + bonus);
             ErrandTalk.Done(r.Munin);
+            Nicks.OnErrand(p, r.Munin, golden); // a deed for the raven's nickname
+            if (r.Id == "golden_siege") Nicks.OnSiege(p); // (the nest held: both ravens on you)
 #if RAVEN_STORY
             StoryBus.Raise("errand_done", r.Id, golden ? 0 : r.Price);
 #endif
@@ -1160,6 +1200,25 @@ namespace HuginWhispers
         }
         internal static int I(string s, int def) { int v; return int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out v) ? v : def; }
         internal static float F(string s, float def) { float v; return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? v : def; }
+
+        // n of a thing into the bag, stack by stack; what does not fit falls at its feet (the game's AddItem(prefab, n)
+        // gives one stack at most, and when it fits only in part it says «no» with the part already in: never drop it all then)
+        internal static void Give(Player p, GameObject prefab, int n)
+        {
+            ItemDrop d = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            if (p == null || d == null || n <= 0) return;
+            int max = Mathf.Max(1, d.m_itemData.m_shared.m_maxStackSize);
+            Inventory inv = p.GetInventory();
+            while (n > 0)
+            {
+                int part = Mathf.Min(n, max);
+                n -= part;
+                if (inv.CanAddItem(prefab, part) && inv.AddItem(prefab, part)) continue;
+                ItemDrop.ItemData it = d.m_itemData.Clone();
+                it.m_dropPrefab = prefab;
+                ItemDrop.DropItem(it, part, p.transform.position + p.transform.forward + Vector3.up, Quaternion.identity);
+            }
+        }
 
         // what the book and the nest show: the name, the words, every step with its state
         internal static string Describe(Player p, ErrandRun r)

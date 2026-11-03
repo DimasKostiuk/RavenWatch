@@ -42,7 +42,7 @@ namespace HuginWhispers
             if (m_time < _nextTick) return;
             _nextTick = m_time + Interval;
             float missing = c.GetMaxHealth() - c.GetHealth();
-            if (missing <= 0.01f) return;
+            if (missing <= 0.01f) { if (Facets.On("heal")) ((Player)c).AddStamina(((Player)c).GetMaxStamina() * Twists.HealBreath); return; } // («Зцілення» III: whole — the rest into stamina)
             float left = Mathf.Max(Interval, m_ttl - m_time);
             float amount = Mathf.Min(missing, missing * Mathf.Min(1f, Interval / left));
             if (amount > 0.01f) c.Heal(amount, true);

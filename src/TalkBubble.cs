@@ -137,12 +137,14 @@ namespace HuginWhispers
         private float _height = 40f;
         private float _lookAt;        // when to look again whether both are still on the shoulder
         // A line that breaks in (its text starts with CutMark, an invisible mark that travels with the talk to the other
-        // games): the line before it stops mid-word — its voice dies, its words end on a dash — and this one comes at
-        // once, no thinking dots. Where it cuts: the same share of the line in every game (from its words).
+        // games): this one comes at once, no thinking dots, over the line before it — that one talks on a moment
+        // (CutOverlap), then stops mid-word: its voice dies, its words end on a dash. Where it breaks in: the same share
+        // of the line in every game (from its words).
         internal const char CutMark = '\u200B';
         internal static bool Cuts(Line l) { return l.Text != null && l.Text.Length > 0 && l.Text[0] == CutMark; }
         internal static float CutFrom = 0.5f, CutTo = 0.72f;
-        private float _cutAt = -1f;
+        internal static float CutOverlap = 1f; // seconds both talk at once: the one broken into says a word or so more over the other
+        private float _cutAt = -1f, _cutEndAt = -1f;
         private GameObject _cutVoice;
         private Row _cutRow;
         private int[] _voice;         // each line's sound, asked all at once when the talk starts (RavenVoice: the next is made while one plays)
@@ -297,6 +299,7 @@ namespace HuginWhispers
         {
             Line l = _lines[_next];
             Drop(_typing); _typing = null;
+            if (Cuts(l) && (_cutVoice != null || _cutRow != null)) _cutEndAt = Time.time + CutOverlap; // the one broken into talks on a moment over this one
             Row row = AddRow(l.Munin, l.Text, l.Name);
             ToChat(l);
             _thinking = false;
@@ -316,6 +319,7 @@ namespace HuginWhispers
             else if (_next < _lines.Count && Cuts(_lines[_next])) { _cutAt = Time.time + Pace(l.Text) * CutShare(l.Text); _cutVoice = null; _cutRow = null; } // (no voice: the next breaks in early)
             if (_crowd != null) { CrowdSpeaking(l, Pace(l.Text)); return; } // on several perches: the speaker's beak, everyone's look at it
             if (_perch != null) { _perch.Speaking(l.Munin, Pace(l.Text)); return; } // on a perch: the beak and the other one's look
+            if (_local && _owner != null && ReferenceEquals(_owner, Player.m_localPlayer)) Fireside.Line(_owner, l.Munin, Pace(l.Text), _next >= _lines.Count); // your head on the speaker
             // the raven itself opens its beak (on whoever's shoulder it sits)
             GameObject model = Shoulder.ModelOf(_owner, l.Munin);
             Animator anim = model != null ? model.GetComponentInChildren<Animator>() : null;
@@ -353,13 +357,17 @@ namespace HuginWhispers
                 bool gone = _crowd != null ? CrowdGone() : _perch != null ? (_perch.Bird(false) == null || _perch.Bird(true) == null) : (!Shoulder.Present(_owner, false) || !Shoulder.Present(_owner, true));
                 if (gone) { _ending = true; _next = _lines.Count; }
             }
-            if (!_ending && _cutAt > 0f && Time.time >= _cutAt) // broken into: this one stops, the next comes at once
+            if (!_ending && _cutAt > 0f && Time.time >= _cutAt) // broken into: the next comes at once (Say), this one goes on a moment
             {
                 _cutAt = -1f;
+                _thinking = true; _at = Time.time;
+            }
+            if (_cutEndAt > 0f && Time.time >= _cutEndAt) // and now it stops mid-word
+            {
+                _cutEndAt = -1f;
                 RavenVoice.Cut(_cutVoice); _cutVoice = null;
                 if (_cutRow != null) WordReveal.Stop(_cutRow.Body);
                 _cutRow = null;
-                _thinking = true; _at = Time.time;
             }
             if (!_ending && Time.time >= _at)
             {
@@ -464,7 +472,7 @@ namespace HuginWhispers
                 else { RavenVoice.Drop(_voice[_next]); _voice[_next] = -1; }
             }
             // another raven is speaking (a card, another talk): this line waits its turn a while, then goes without its voice
-            if (_clip != null && RavenVoice.BusyNear(SpeakerAt(_lines[_next])))
+            if (_clip != null && !Cuts(_lines[_next]) && RavenVoice.BusyNear(SpeakerAt(_lines[_next]))) // (a line breaking in does not wait for the one it breaks)
             {
                 if (Time.time < _at + RavenVoice.MaxWait + RavenVoice.TurnWait) return true;
                 Destroy(_clip); _clip = null;

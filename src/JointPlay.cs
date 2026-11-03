@@ -529,12 +529,7 @@ namespace HuginWhispers
             me.m_customData[CoinsKey] = day.ToString(CultureInfo.InvariantCulture) + ";" + (n + 1).ToString(CultureInfo.InvariantCulture);
             GameObject go = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab("Coins") : null;
             if (go == null) return;
-            if (!me.GetInventory().AddItem(go, coins))
-            {
-                GameObject drop = UnityEngine.Object.Instantiate(go, me.transform.position + me.transform.forward + Vector3.up, Quaternion.identity);
-                ItemDrop it = drop.GetComponent<ItemDrop>();
-                if (it != null) it.SetStack(coins);
-            }
+            Errands.Give(me, go, coins);
             me.Message(MessageHud.MessageType.TopLeft, Lang.F("За перемогу в догонялках: {0}", Lang.N(coins, "монета|монети|монет")));
         }
 

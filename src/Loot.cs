@@ -137,7 +137,7 @@ namespace HuginWhispers
         {
             float m = 1f;
             Norov.Character c = Norov.CharOf(item);
-            if (c != null) m *= c.Id == "wanderer" ? 1.3f : c.Id == "fidget" ? 1.2f : c.Id == "homebody" ? 0.7f : c.Id == "calm" ? 0.8f : 1f;
+            if (c != null) m *= c.Id == "curious" ? 1.4f : c.Id == "wanderer" ? 1.3f : c.Id == "fidget" || c.Id == "huntsman" ? 1.2f : c.Id == "sweettooth" ? 1.1f : c.Id == "tender" ? 0.9f : c.Id == "homebody" ? 0.7f : c.Id == "calm" ? 0.8f : 1f;
             if (Norov.HasQuirk(item, "magpie")) m *= 1.2f;
             if (Norov.HasQuirk(item, "thief")) m *= 1.3f;
             if (!munin && Perks.Has("picker")) m *= 1.5f;

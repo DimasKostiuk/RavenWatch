@@ -1,0 +1,130 @@
+@пл_набіг
+we have guests. Uninvited and toothy.
+a raid. Hold the wall, I'll hold you.
+counting: there are more of them than us. And we're two.
+~1 swing bravely, they don't bite. They bite.
+~1 did you at least close the gate? No? Wonderful.
+~1 don't panic. I'll panic, I'm better at it.
+~2 we hold the line. You below, me on you.
+~2 that one on the left is yours. The one on the right too.
+~2 the house is ours. Let them leave.
+~3 we'll beat them off together. As always.
+~3 I'm not going anywhere. With you to the last enemy.
+~3 hit calmly, I'm watching your back.
+@пл_їзда
+it shakes so much my thoughts got mixed up.
+fast. Finally someone besides me can move.
+if we fall, fall on the beast, not on me.
+~1 you steer like a drunk. The beast is smarter than you.
+~1 slower. My feathers are flying off.
+~1 claws in. Don't be offended if I scratch.
+~2 nice pace. Keep it straight.
+~2 wind in the face. I love it.
+~2 an obedient beast. Unlike some.
+~3 we're racing. And I'm happy.
+~3 I'd ride like this till evening.
+~3 you, the beast and me. Not bad company.
+@пл_візок
+you pull like an ox. No offence to the ox.
+the wheel creaks. Or your back.
+a full cart. I hope something in it is edible.
+~1 faster. I'll grow old at this rate.
+~1 mind the holes. I feel every one.
+~1 you and the cart are one. Both creak.
+~2 smooth road — and you almost stop groaning.
+~2 a bit more. I'm counting steps.
+~2 pull, pull. I'm offering moral support.
+~3 pull slowly, I'm in no hurry.
+~3 you're strong. I noticed.
+~3 we'll get it there. Together we get everything there.
+@пл_стілець
+let's sit. The world can wait.
+silence at last. Even I'll be quiet. For a minute.
+sitting is a skill too. You have talent.
+~1 you sit longer than you fight.
+~1 enemies don't sit. Just saying.
+~1 comfy? Me too. Don't get used to it.
+~2 sit, rest. You've earned it.
+~2 nice to sit like this. Quiet.
+~2 you on the chair, me on you. Order.
+~3 I'll sit with you. I have nowhere to be.
+~3 we sit, we're silent. The best conversation.
+~3 you're warm. Sit a bit longer.
+@пл_затишок
+a roof overhead. I like this roof.
+fire, quiet, you. Almost perfect.
+even my feathers dry here.
+~1 cozy. Suspiciously cozy.
+~1 you're quieter at home. I like you better that way.
+~1 don't go soft. Enemies know about the house too.
+~2 home. Sounds nice.
+~2 it's calm here. Let's stay a bit.
+~2 the house is warm. So are you.
+~3 I love it when we're home.
+~3 it's good here. With you — especially.
+~3 I'd stay here. Together with you.
+@пл_торг
+the trader is smiling. That means you'll overpay.
+it won't get cheaper. But try.
+your silver melts like snow in spring.
+~1 just don't buy what glitters. That's my thing, not yours.
+~1 count your coins. The trader already has.
+~1 that's not a discount, it's a trap.
+~2 a fair price. Almost honest.
+~2 buy useful, not pretty.
+~2 haggle. He haggles too.
+~3 buy yourself something good. You've earned it.
+~3 and look for something for me. Shiny. Small.
+~3 good choice. I'd have taken the same.
+@пл_піч
+hot. My feathers smell singed.
+the metal is melting, and me with it.
+it roars like a dragon. Just more useful.
+~1 one more step and you'll be roasted, raven included.
+~1 don't overfill the ore. The furnace isn't bottomless.
+~1 a bit further from the fire. Please.
+~2 it burns nicely. There'll be metal.
+~2 warm. Could doze off.
+~2 we wait. Metal doesn't hurry.
+~3 I love watching the embers. With you close.
+~3 something good will come from this metal.
+~3 warm and calm. Good work.
+@пл_город
+every seed into the ground — and I get hungrier.
+there'll be a harvest. Or boars.
+the soil smells. Of worms. Tasty.
+~1 plant straighter. The boars will laugh.
+~1 you dig like a hen.
+~1 bending again. Sliding off again.
+~2 a nice row. Almost straight.
+~2 it grows. Slowly, but it grows.
+~2 there'll be food. For me especially.
+~3 you plant well. Calm work.
+~3 I love it when you plant. Quiet, and smells of earth.
+~3 will you share when it grows? Just a little.
+@пл_зілля
+glug. One gulp.
+smells of potion. But it's good for you.
+you drink, I sniff. Fair.
+~1 drinking again? You'll never have enough.
+~1 don't spill on me.
+~1 drink up. It won't add brains, but it adds life.
+~2 it works. I can see it.
+~2 better now. I can feel it.
+~2 drink slower. You have time.
+~3 drink. I'm calmer when you're better.
+~3 get well. I'm bored without you.
+~3 that's better. Much better.
+@пл_трофей
+another head on the wall. Soon there'll be no room.
+it stares like it's alive. Brr.
+a fine trophy. Crooked nail.
+~1 hanging it is easier than earning it. You know.
+~1 is that the one that nearly killed you? I remember.
+~1 nail it straighter. I like order.
+~2 hangs well. Guests will be scared.
+~2 the wall grows. So does our glory.
+~2 a good one. I remember that fight.
+~3 our shared victory. On the wall.
+~3 I'm proud. Silently, but very.
+~3 a bit more and there'll be a whole saga here.

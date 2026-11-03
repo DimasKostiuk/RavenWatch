@@ -96,6 +96,7 @@ namespace HuginWhispers
             if (was == RavenAct.Outing && act != RavenAct.Outing) Outing.Interrupted(m);
             if (was == RavenAct.Command && act != RavenAct.Command && act != RavenAct.Land) Orders.Interrupted(m, act); // (Land: it came home, the order was over)
             Flags(m, act);
+            if (was == RavenAct.Sit && act >= RavenAct.Outing) ArmPerch.Launched(m); // off your arm: a toss (ArmPerch)
             if (was != act) Log(m, was + " → " + act + " (" + e.Why + ")");
             return true;
         }

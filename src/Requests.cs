@@ -26,6 +26,7 @@ namespace HuginWhispers
     //   cache   — its cache 150–300 m away, never near a base: a ring on the map, it caws faster the nearer you are (a
     //             finder), on the spot it flies down onto it; 3 blows of a pickaxe there and its small chest comes up
     //   meet    — come up to a player whose raven is its friend or its enemy
+    //   tub     — bathe it in the hot tub with you: only a raven dirty a long while (Bath.DirtyMinutes), once you have a tub
     // Paid in trust (mostly), a little satiety, and sparklets («іскринки»: 1, the harder ones 2): SparksForRune of them
     // light a rune of your own choosing (the book: «Запалити руну») — Odin's errands give a spark to a random one.
     // NickAt done: the nickname «Повірник» (Nicks). Checked only on what the mod hears anyway (ate, killed, a
@@ -48,6 +49,7 @@ namespace HuginWhispers
         internal static float PeakY = 160f;                 // m: «a mountain top»
         internal static float TrustPerSpark = 12f;          // trust for a wish done, per sparklet it gives
         internal static float SatietyGift = 8f;
+        internal static float TubDirtyMin = 30f;            // min dirty (from 50) on end before it may ask for the hot tub
         internal static float CoinsChance = 0.3f;           // «Дай блискуче» from the Mountains on: a heap of coins instead of a thing
         internal const string FeatherPrefab = "Feathers";
         // «Дай блискуче»: its things (their lands: Satiety.Lands); the ancient ones of the latest lands are rarer by Fresh
@@ -154,6 +156,7 @@ namespace HuginWhispers
                 case "cache": return Lang.T("Знайди мою схованку");
                 case "meet": return Lang.T("Познайом мене з вороном-другом чи ворогом");
                 case "teach": return Lang.T("Навчи мене слова");
+                case "tub": return Lang.T("Скупай мене в гарячій купелі");
             }
             return r.Type;
         }
@@ -178,6 +181,7 @@ namespace HuginWhispers
                 case "cache": return Lang.T("знайти його схованку");
                 case "meet": return Lang.T("познайомити його з вороном-другом чи ворогом");
                 case "teach": return Lang.T("навчити його слова (книга воронів)");
+                case "tub": return Lang.T("скупати його в гарячій купелі");
             }
             return r.Type;
         }
@@ -188,7 +192,7 @@ namespace HuginWhispers
             if (r == null) return "";
             if (r.Type == "sit" || r.Type == "sail" || r.Type == "ride" || r.Type == "dress") return Lang.F("{0} / {1} хв", r.Have / 60, r.Need / 60);
             if (r.Type == "cache") return r.Dug > 0 ? Lang.F("копаєш: {0} / {1}", r.Dug, DigHits) : "";
-            if (r.Type == "show" || r.Type == "meet" || r.Type == "fight" || r.Type == "teach") return "";
+            if (r.Type == "show" || r.Type == "meet" || r.Type == "fight" || r.Type == "teach" || r.Type == "tub") return "";
             return r.Have + " / " + r.Need;
         }
 
@@ -437,6 +441,7 @@ namespace HuginWhispers
             add("dress", 0.8f);
             add("feathers", 0.7f);
             add("teach", 0.9f); // (only from trust 3, with a free place for a word: Words)
+            add("tub", 2.5f);   // (only dirty a long while, a tub known: seldom there, wanted then)
             if (munin) { add("revenge", 1.4f); add("hunt", 1.1f); add("fight", 1f); add("ride", 0.8f); }
             else { add("sit", 1.1f); add("sail", 0.9f); }
             return w;
@@ -449,6 +454,8 @@ namespace HuginWhispers
             switch (character + "/" + type)
             {
                 case "homebody/sit": return 2f;
+                case "homebody/tub": case "calm/tub": return 1.5f;
+                case "bold/tub": return 0.5f;
                 case "homebody/dress": case "homebody/feathers": return 1.6f;
                 case "homebody/want": return 1.3f;
                 case "homebody/show": case "homebody/sail": return 0.5f;
@@ -475,6 +482,34 @@ namespace HuginWhispers
                 case "devoted/dress": return 1.8f;
                 case "devoted/meet": case "devoted/teach": return 1.6f;
                 case "devoted/want": case "devoted/feathers": return 1.4f;
+                case "curious/show": return 2f;
+                case "curious/cache": return 1.8f;
+                case "curious/shiny": return 1.4f;
+                case "curious/sit": return 0.6f;
+                case "proud/dress": return 2.2f;
+                case "proud/tub": return 2f;
+                case "proud/feathers": return 1.4f;
+                case "proud/fight": return 0.6f;
+                case "proud/hunt": return 0.7f;
+                case "tender/meet": return 1.8f;
+                case "tender/sit": return 1.6f;
+                case "tender/teach": return 1.4f;
+                case "tender/want": return 1.3f;
+                case "tender/fight": case "tender/revenge": return 0.6f;
+                case "grumpy/revenge": return 1.6f;
+                case "grumpy/sit": case "grumpy/want": return 1.3f;
+                case "grumpy/meet": return 0.5f;
+                case "grumpy/dress": return 0.6f;
+                case "grumpy/show": return 0.7f;
+                case "huntsman/hunt": return 2.2f;
+                case "huntsman/fight": return 1.6f;
+                case "huntsman/revenge": return 1.4f;
+                case "huntsman/ride": return 1.3f;
+                case "huntsman/sit": case "huntsman/dress": return 0.6f;
+                case "sweettooth/want": return 2f;
+                case "sweettooth/sit": return 1.2f;
+                case "sweettooth/shiny": return 0.7f;
+                case "sweettooth/fight": return 0.8f;
             }
             return 1f;
         }
@@ -521,11 +556,11 @@ namespace HuginWhispers
             item.m_customData[LastKey] = was.Length > 0 && was[0].Length > 0 ? type + "," + was[0] : type;
         }
 
-        // «Відданий» asks a day sooner, «Непосида» a day later (both ravens' wishes share the days)
+        // «Відданий» and «Лагідний» ask a day sooner, «Непосида» a day later (both ravens' wishes share the days)
         private static int DaysOf(ItemDrop.ItemData item)
         {
             Norov.Character c = Norov.CharOf(item);
-            return c == null ? 0 : c.Id == "devoted" ? -1 : c.Id == "fidget" ? 1 : 0;
+            return c == null ? 0 : c.Id == "devoted" || c.Id == "tender" ? -1 : c.Id == "fidget" ? 1 : 0;
         }
 
         // «Непосида»: fewer wishes, but longer ones (and paid as the harder ones)
@@ -629,6 +664,9 @@ namespace HuginWhispers
                     r.Need = UnityEngine.Random.Range(2, 5) * 60;
                     return r;
                 }
+                case "tub":
+                    if (Bath.DirtyMinutes(item) < TubDirtyMin || !Bath.TubKnown(p)) return null;
+                    return r;
                 case "sit":
                     if (munin) return null;
                     r.Need = UnityEngine.Random.Range(3, 6) * 60;
@@ -639,9 +677,10 @@ namespace HuginWhispers
                     return r;
                 case "dress":
                 {
+                    if (Trust.SettledLevel(item) < Outfits.WardrobeLevel) return null; // (it lets itself be dressed only from the wardrobe's level on)
                     List<string> looks = new List<string>();
                     foreach (Outfits.Entry e in Outfits.Catalog())
-                        if (Outfits.Listed(e) && (e.Gear == null || Outfits.OwnHat(e)) && Outfits.IsOpen(item, e) && Outfits.Worn(item, e.Slot) != e.Prefab) looks.Add(e.Prefab);
+                        if (Outfits.Listed(e) && (e.Gear == null || Outfits.OwnHat(e)) && Outfits.IsOpen(item, e, true) && Outfits.Worn(item, e.Slot) != e.Prefab) looks.Add(e.Prefab);
                     if (looks.Count == 0) return null; // (nothing open to put on yet: the wardrobe opens with trust)
                     r.Arg = looks[UnityEngine.Random.Range(0, looks.Count)];
                     r.Need = UnityEngine.Random.Range(3, 6) * 60;
@@ -700,23 +739,23 @@ namespace HuginWhispers
                 case "revenge":
                     return SayFoe(p, munin, "req_revenge", Lang.F("Той {0} тебе ледь не зжер. Знайди такого й розмаж.", Foe(r.Arg)), r.Arg);
                 case "hunt":
-                    if (r.Mode == "night") return SayFoe(p, munin, "req_hunt_night", Lang.F("Уночі. {1} — штук {0}. Вдень не рахується.", r.Need, Foe(r.Arg)), r.Arg, "n", r.Need.ToString(CultureInfo.InvariantCulture));
-                    if (r.Mode == "raven") return SayFoe(p, munin, "req_hunt_raven", Lang.F("Цього разу б'ю я. {1} — штук {0}. Ти тільки підставляй.", r.Need, Foe(r.Arg)), r.Arg, "n", r.Need.ToString(CultureInfo.InvariantCulture));
-                    return SayFoe(p, munin, "req_hunt", Lang.F("Руки сверблять. Покладемо {0} штук — {1}. Я дивлюсь.", r.Need, Foe(r.Arg)), r.Arg, "n", r.Need.ToString(CultureInfo.InvariantCulture));
+                    if (r.Mode == "night") return SayFoe(p, munin, "req_hunt_night", Lang.F("Уночі. {1} — штук {0}. Вдень не рахується.", r.Need, Foe(r.Arg)), r.Arg, "n", RavenAbilities.SpokenCount(r.Need));
+                    if (r.Mode == "raven") return SayFoe(p, munin, "req_hunt_raven", Lang.F("Цього разу б'ю я. {1} — штук {0}. Ти тільки підставляй.", r.Need, Foe(r.Arg)), r.Arg, "n", RavenAbilities.SpokenCount(r.Need));
+                    return SayFoe(p, munin, "req_hunt", Lang.F("Руки сверблять. Покладемо штук {0} — {1}. Я дивлюсь.", r.Need, Foe(r.Arg)), r.Arg, "n", RavenAbilities.SpokenCount(r.Need));
                 case "fight":
                     return Say(p, munin, r.Need >= 2 ? "req_fight2" : "req_fight", r.Need >= 2 ? Lang.T("Хочу бачити справжній бій. Звір із двома зірками, і я на плечі.") : Lang.T("Хочу бачити бій. Знайди звіра з зіркою, а я подивлюсь з плеча."));
                 case "ride":
-                    return Say(p, munin, "req_ride", Lang.F("Покатай мене верхи. Хвилин {0}. Хочу відчути себе вершником.", r.Need / 60), "n", (r.Need / 60).ToString(CultureInfo.InvariantCulture));
+                    return Say(p, munin, "req_ride", Lang.F("Покатай мене верхи. Хвилин {0}. Хочу відчути себе вершником.", r.Need / 60), "n", RavenAbilities.SpokenCount(r.Need / 60));
                 case "sit":
-                    return Say(p, munin, "req_sit", Lang.F("Посидь зі мною біля вогню хвилин {0}. Просто посидь.", r.Need / 60), "n", (r.Need / 60).ToString(CultureInfo.InvariantCulture));
+                    return Say(p, munin, "req_sit", Lang.F("Посидь зі мною біля вогню хвилин {0}. Просто посидь.", r.Need / 60), "n", RavenAbilities.SpokenCount(r.Need / 60));
                 case "sail":
-                    return Say(p, munin, "req_sail", Lang.F("Поплаваймо. Хвилин {0} під вітрилом, я на плечі.", r.Need / 60), "n", (r.Need / 60).ToString(CultureInfo.InvariantCulture));
+                    return Say(p, munin, "req_sail", Lang.F("Поплаваймо. Хвилин {0} під вітрилом, я на плечі.", r.Need / 60), "n", RavenAbilities.SpokenCount(r.Need / 60));
                 case "dress":
-                    return Say(p, munin, "req_dress", munin ? Lang.F("Оце хочу: {0}. Вдягни й не знімай хвилин {1}.", LookName(r.Arg), r.Need / 60) : Lang.F("Мені б оце: {0}. Хвилин {1} поносити — і досить.", LookName(r.Arg), r.Need / 60), "look", LookName(r.Arg), "n", (r.Need / 60).ToString(CultureInfo.InvariantCulture));
+                    return Say(p, munin, "req_dress", munin ? Lang.F("Оце хочу: {0}. Вдягни й не знімай хвилин {1}.", LookName(r.Arg), r.Need / 60) : Lang.F("Мені б оце: {0}. Хвилин {1} поносити — і досить.", LookName(r.Arg), r.Need / 60), "look", LookName(r.Arg), "n", RavenAbilities.SpokenCount(r.Need / 60));
                 case "feathers":
-                    return Say(p, munin, "req_feathers", munin ? Lang.F("Гніздо лисіє. Принеси пір'я — штук {0}.", r.Need) : Lang.F("Гнізду б пір'я. Штук {0}, м'якого.", r.Need), "n", r.Need.ToString(CultureInfo.InvariantCulture));
+                    return Say(p, munin, "req_feathers", munin ? Lang.F("Гніздо лисіє. Принеси пір'я — штук {0}.", r.Need) : Lang.F("Гнізду б пір'я. Штук {0}, м'якого.", r.Need), "n", RavenAbilities.SpokenCount(r.Need));
                 case "shiny":
-                    if (r.Need > 1) return Say(p, munin, "req_coins", munin ? Lang.F("Монети. {0}. Дзенькають — значить, мої.", r.Need) : Lang.F("Скарбничці б монет. {0}, не менше.", r.Need), "n", r.Need.ToString(CultureInfo.InvariantCulture));
+                    if (r.Need > 1) return Say(p, munin, "req_coins", munin ? Lang.F("Монети. {0}. Дзенькають — значить, мої.", r.Need) : Lang.F("Скарбничці б монет. {0}, не менше.", r.Need), "n", RavenAbilities.SpokenCount(r.Need));
                     return Say(p, munin, "req_shiny", munin ? Lang.F("Дай мені {0}. Моє буде. Не питай навіщо.", ItemName(r.Arg)) : Lang.F("Мені б {0}. Для скарбнички. Ти ж розумієш.", ItemName(r.Arg)), "thing", ItemName(r.Arg));
                 case "cache":
                     return Say(p, munin, "req_cache", munin ? Lang.T("Я дещо заховав. Знайдеш — твоє. Не знайдеш — ну й лох.") : Lang.T("Я сховав скарб. Знайди його — дивись на мапу і слухай мене."));
@@ -724,6 +763,8 @@ namespace HuginWhispers
                     return Say(p, munin, "req_teach", munin
                         ? Pick(Lang.T("Навчи мене слова. Якогось смачного. Повторю так, що всі охриніють."), Lang.T("Хочу нове слово. Скажи щось — я запам'ятаю і буду дражнитись."), Lang.T("Мені нудно. Навчи якогось слова, бо вигадаю своє."))
                         : Pick(Lang.T("Навчи мене якогось слова. Я повторюватиму — не завжди вчасно, обіцяю."), Lang.T("У мене прохання: скажи мені нове слово. Ворони вміють повторювати."), Lang.T("Хочу вивчити слово. Твоє, людське. Напиши його в книзі.")));
+                case "tub":
+                    return Say(p, munin, "req_tub", munin ? Lang.T("Я смерджу вже сам від себе. Гаряча купіль, ти і я. Сьогодні.") : Lang.T("Я брудний уже надто довго. Гаряча купіль — от чого я хочу."));
                 case "meet":
                     return Say(p, munin, "req_meet", munin ? Lang.T("Хочу побачити тих, з ким у мене свої рахунки. Підведи мене до них.") : Lang.T("Познайом мене ближче з моїми знайомими воронами. Підійди до когось."));
             }
@@ -741,6 +782,7 @@ namespace HuginWhispers
             float trust = Trust.Gift(item, munin, TrustPerSpark * r.Reward, Lang.T("прохання"));
             Satiety.Change(item, SatietyGift);
             Nicks.Add(item, "reqs", 1);
+            Nest.Deed(p, Nest.RequestMinutes, Lang.T("виконане прохання ворона"));
             if (r.Type != "teach") Speak(p, munin, Say(p, munin, "req_done", munin ? Lang.T("Ну. Можеш, коли хочеш.") : Lang.T("Дякую. Я це запам'ятаю.")), false); // (a word taught: it tries the word instead)
             string spark = Lang.N(r.Reward, "іскринка|іскринки|іскринок");
             RavenMsg.Center(p, Lang.F("{0}: прохання виконано! +{1}{2}", Plugin.RavenName(munin), spark, sparks >= SparksForRune ? Lang.T("\nУ книзі можна запалити руну.") : ""));
@@ -788,6 +830,15 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- what moves it on
+
+        // a bath in the hot tub with you (Bath.Done)
+        internal static void OnTubBath(Player p, bool munin, ItemDrop.ItemData item)
+        {
+            Req r = Of(item);
+            if (!Waiting(r) || r.Type != "tub" || Trust.Stranger(item, p)) return;
+            r.Have = r.Need;
+            Complete(p, munin, item, r);
+        }
 
         internal static void OnFed(Player p, bool munin, ItemDrop.ItemData item, string prefab)
         {
@@ -1376,7 +1427,7 @@ namespace HuginWhispers
                 return why ?? Goal(Of(item));
             }
             Req cur = Of(item);
-            return cur == null ? "Прохання нема. Типи: want show revenge hunt fight ride sit sail dress feathers shiny cache meet; також done, clear, sparks N, next." : cur.Code() + "\n" + Goal(cur) + (cur.HasPlace ? " · до місця " + Mathf.RoundToInt(Flat(p.transform.position, cur.Place)) + " м" : "");
+            return cur == null ? "Прохання нема. Типи: want show revenge hunt fight ride sit sail dress feathers shiny cache meet tub; також done, clear, sparks N, next." : cur.Code() + "\n" + Goal(cur) + (cur.HasPlace ? " · до місця " + Mathf.RoundToInt(Flat(p.transform.position, cur.Place)) + " м" : "");
         }
 
         internal static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Requests: " + s); }

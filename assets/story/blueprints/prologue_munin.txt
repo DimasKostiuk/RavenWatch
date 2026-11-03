@@ -1,0 +1,9 @@
+# RavenWatch blueprint 1
+name prologue_munin
+pieces 5
+ground 0.098
+stone_pillar -3.799 -0.182 -1.455 -0.72468 0.04396 -0.32169 0.6078
+stone_fence -0.434 -0.982 5.593 0.17837 -0.95918 -0.18754 -0.11393
+RavenWatch_story_shchyt_munina -0.775 0.11 1.465 0 -0.9925 0 -0.12229
+stone_fence -2.692 -0.25 3.737 0 -0.95093 0 -0.30942
+stone_fence -4.546 -0.573 -1.697 0 -0.78558 0 0.61876

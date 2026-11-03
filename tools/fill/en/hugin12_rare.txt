@@ -1,0 +1,78 @@
+@розвідка_кінець
+I'll be back with a map you couldn't draw.
+Scouting is reading the world ahead. I read.
+You stay. I'll look for you.
+@світло
+here's light. Darkness is no excuse for mistakes.
+light above you. Now your mistakes will be easier to see.
+take it. Odin doesn't like his ravens groping in the dark.
+@світло_кінець
+There's light. Add the brains yourself.
+Now you can see. What to do with it is your question.
+@вщ_знак
+A bad sign. I wouldn't risk anything today. You will.
+The runes fell crooked. Be more careful than usual. That is, careful at all.
+I see a shadow behind your shoulder. Not mine.
+@вщ_набіг_без
+A raid — {when}. Who's coming, you'll learn. As always, at the last moment.
+{when} there'll be noise under the walls. Prepare in advance. Just once.
+@вщ_погода
+The signs say: {land} {weather}. Signs are rarely wrong. You often are.
+{land} {weather}. Dress for the forecast, not for your mood.
+@вщ_спокій
+Calm for a few days. Use it wisely. I know you won't.
+I see no raid. That's not a promise, it's an observation.
+@хб_друг_вітання
+Glad to see you, {addr}. No irony. Almost.
+{addr}! A conversation at last.
+@хб_ворог_хвіст
+I remember. I always remember.
+The chronicle about you no longer fits.
+@хб_крадіжка
+{friend}, your bag isn't shut and I'm curious. Took: {food}.
+Took from {friend}: {food}. Let's call it a tax on carelessness.
+@хб_пограбовано
+We've been robbed. {raven} stole: {food}. I'm writing the thief's name in big runes.
+{raven} took: {food}. Theft is the shortest road into my chronicle.
+@хсм_вт_хвіст
+I'll tell you the rest when you grow up.
+That is not advice. That is a diagnosis.
+@хсм_пгр_хвіст
+We'll come back to this conversation.
+I won't take revenge. I'll just remember.
+@хсм_кр_суть
+{food}. Someone else's bag is my library of taste.
+Borrowed {food}. No promise to return it.
+@хсм_т_суть
+{friend} is reliable. A rare quality in this world.
+With {friend} around even you make fewer mistakes. Noticeably.
+@хсм_лпп_хвіст
+Be polite. I'm watching.
+There are few people like that. Look after them.
+@хл_тепло
+{friend} is one of those I remember kindly. A short list.
+{friend} is here. Today is already better.
+@хл_шпилька
+{friend} has come. Get ready to hear about {>his|her} deeds.
+{friend} is here. Check your bag is all there.
+@хмд_ковток
+A sip. To calibrate the mood.
+One sip. Scientifically justified.
+@хн_заслужив
+{nick}. A name with a history. Mine.
+Now I'm {nick}. I'll write it on the first page.
+@св_скарб
+{thing}. Found it while you were looking at your feet. Irony.
+Here's {thing}. The earth gives treasure to those who look from above.
+@хулов_несу
+{thing}. From the water, first try. Please make a note.
+Here: {thing}. Fishing is patience and a beak.
+@хобн_броня
+New armour. Now the enemies will hit you more expensively.
+{thing}. Fits well. Wear it carefully — there's no one to mend it.
+@хобн_зброя
+{thing}. Now your mistakes will be sharper.
+A new weapon. I hope you know which end to hit with.
+@хзв_lost
+{habit}? Grew out of it. People change. Ravens even more so.
+{habit} is in the past. Recording it as a finished chapter.

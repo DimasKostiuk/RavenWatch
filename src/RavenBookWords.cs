@@ -6,48 +6,32 @@ using UnityEngine.UI;
 
 namespace HuginWhispers
 {
-    // «Слова ворона» in the book (Words): a wax seal with the rune ᚨ (Ansuz: Odin's rune of speech) beside the raven's
-    // name on «Ворони», from trust 3; under it how many words of how many it can keep. It breathes gold while a word
+    // «Слова ворона» in the book (Words): a medallion on the margin of «Ворони» (RavenBookRail), the raven speaking;
+    // under it how many words of how many it can keep (from trust 3). It breathes gold while a word
     // caught from the chat waits for your «Лишити / Викинути». A click opens the card: each word, how clean it says it
     // (●○○ … ●●●), its moment (a click on it: the next one), ✕ to forget it; the free places; the caught word. The card
     // stays open over the page drawn anew (as the food list). The wish «Навчи мене» has its own field in the wish's card
     // (WordField, used by RavenBookRequest).
     internal static partial class RavenBook
     {
-        private static readonly Color WordsWax = C("#2c4f4a");
         private static bool? _wordsFor;    // whose words' card is open (it stays open over a redraw)
         private static Vector2 _wordsAt;
 
-        private static void WordsSeal(RectTransform top, bool m, ItemDrop.ItemData item)
+        // the medallion on the page's margin (RavenBookRail): words / slots; faded while it knows none and caught none;
+        // it breathes while a caught word waits; a click opens the card. Below trust FromLevel: «—», when it opens
+        private static void WordsMedal(RectTransform rail, bool m, ItemDrop.ItemData item)
         {
             List<Words.Word> words = Words.Of(item);
             int slots = Words.Slots(item);
-            if (slots == 0 && words.Count == 0) return;
             string heard = Words.Heard(item);
-            RectTransform box = Rect("Words", top);
-            Fixed(box.gameObject, 54f, 66f);
-            RectTransform seal = Rect("Seal", box);
-            seal.anchorMin = seal.anchorMax = seal.pivot = new Vector2(0.5f, 1f);
-            seal.sizeDelta = new Vector2(46f, 46f);
-            seal.anchoredPosition = new Vector2(0f, -2f);
-            if (heard.Length > 0) // a caught word waits: it breathes, as a wish waiting
-            {
-                Image glow = Img(seal, "Glow", BookArt.Glow, A(Gold, 0.7f));
-                Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-10f, -10f), new Vector2(10f, 10f));
-                SparkBreath b = glow.gameObject.AddComponent<SparkBreath>();
-                b.Low = 0.15f; b.High = 0.8f;
-            }
-            Image ring = Img(seal, "Ring", BookArt.Circle, Color.Lerp(WordsWax, Color.black, 0.35f));
-            Image face = Img(seal, "Face", BookArt.Circle, WordsWax);
-            Stretch(face.rectTransform, Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
-            TMP_Text g = T(seal, "ᚨ", 22f, C("#e6f0dc"), F.Rune, TextAlignmentOptions.Center);
-            Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            TMP_Text n = T(box, Mathf.Min(words.Count, slots) + "/" + slots, 13f, InkSoft, F.Body, TextAlignmentOptions.Bottom);
-            Stretch(n.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            foreach (Image i in seal.GetComponentsInChildren<Image>(true)) i.raycastTarget = i == ring;
-            ring.raycastTarget = true;
-            Tip(ring.gameObject, () => WordsTip(m, item));
-            Clickable(ring.gameObject, () => { _wordsEdit = -1; WordsCard(m, null); });
+            Medal md = Medallion(rail, "Words", "rail_words");
+            bool open = slots > 0 || words.Count > 0;
+            md.Num.text = open ? "<b>" + Mathf.Min(words.Count, slots) + "/" + slots + "</b>" : "<b>—</b>";
+            if (words.Count == 0 && heard.Length == 0) md.Fade.alpha = 0.45f;
+            if (heard.Length > 0) MedalBreath(md);
+            if (!open) { Tip(md.Disc.gameObject, () => Lang.F("<b>Слова {0}</b>\nНавчиш його слів, коли довіра сягне {1}-го рівня.", Plugin.RavenNameGen(m), Words.FromLevel)); return; }
+            Tip(md.Disc.gameObject, () => WordsTip(m, item));
+            MedalClick(md, () => { _wordsEdit = -1; WordsCard(m, null); });
         }
 
         private static string WordsTip(bool m, ItemDrop.ItemData item)
@@ -277,6 +261,7 @@ namespace HuginWhispers
             });
             f.onSubmit.AddListener(s => TeachNow(m));
             _teachField = f;
+            CaretReady(f);
             f.ActivateInputField();
         }
 

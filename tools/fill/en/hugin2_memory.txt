@@ -1,0 +1,194 @@
+@сп_first_death_by
+your first death with me around: {m_who}, {m_when}. I didn't know yet it was only the beginning.
+{m_where_in}, {m_when}. {m_who} — and you lie dead before my eyes for the first time. One doesn't forget that.
+~1 first death, by {m_who}. I wrote it down and thought: "Well, at least not a tree".
+~2 by {m_who} — the first death I saw, {m_when}. I've been counting since.
+~2 {m_who}, {m_where_in}. The first page of a chapter I'd rather not have started.
+~3 {m_when}, by {m_who}. That's when I first thought I could lose you.
+@сп_first_death_cause
+your first death with me around — by {m_cause}. Didn't even need an enemy.
+{m_when}, {m_where_in}: by {m_cause}. That's how our story began. Sad, but honest.
+~1 by {m_cause}, {m_when}. I expected drama and got a joke.
+~2 {m_when} — the first death, by {m_cause}. Back then I still thought you were careful.
+~2 by {m_cause}, {m_where_in}. The first line. The other pages look alike.
+~3 by {m_cause}, {m_when}... That's when I first screamed. You didn't hear.
+@сп_death_by
+{m_who}, {m_when}. I still keep away from those. You don't.
+by {m_who}, {m_where_in}. A short page, because the fight was short.
+~1 {m_when} — {m_who}. You fight bravely. And briefly.
+~2 {m_where_in}, {m_when}: death by {m_who}. You never learned anything from it.
+~2 death by {m_who}, {m_when}. I wrote it as it was. No embellishment.
+~3 {m_when}, {m_who}... I sat in the grave waiting for you. You came.
+@сп_death_cause
+by {m_cause}, {m_where_in}. The enemies didn't even have to try.
+{m_when} — death by {m_cause}. I put a question mark next to it. It's still there.
+~1 by {m_cause}. Again. No, I'm not surprised.
+~2 {m_when}, by {m_cause}. A stupid death, but yours.
+~2 by {m_cause}, {m_where_in}. I remember, because that's hard to forget.
+~3 by {m_cause}, {m_when}. I sat beside you a long time afterwards, quiet.
+@сп_death_here
+here, {m_when}, I waited for you by the grave. A long time.
+I don't like this place. {m_when} it took you.
+~1 you already lay down here once, {m_when}. Let's not make it a tradition.
+~2 here, {m_when}. Remember? I do.
+~2 here again. {m_when} your saga paused right here.
+~3 here, {m_when}, you fell and I got scared. Stay close to me.
+@сп_death_again_here
+{m_times} in one place. This place loves you more than I do.
+you've died here {m_times}. Walk around it, please. Just once.
+~1 {m_times} here. Did you lose something here?
+~2 {m_times} on this very spot. I know every stone here by now.
+~2 here — {m_times}. Maybe change the route?
+~3 {m_times} here... Let's go. I don't like it here.
+@сп_grudge
+{m_who} and you — {m_times}. The score isn't yours.
+I spot {m_who} from afar. Learned it on you: {m_times}.
+~1 {m_times} by {m_who}. Maybe just make peace?
+~2 {m_who} — {m_times}. Someday you'll get even. I'm waiting.
+~2 an old score with {m_who}: {m_times}.
+~3 {m_who}... {m_times}. Next time I peck first.
+@сп_near
+{m_hp} health, {m_where_in}. I was already saying goodbye.
+{m_when} you walked the edge: {m_hp} health. The edge held.
+~1 {m_hp} health. And you kept fighting. Brave. Senseless.
+~2 {m_when} — {m_hp} health. Since then I watch your wounds more.
+~2 after {m_who} you had {m_hp} health left. I remember every drop.
+~3 {m_hp} health, {m_when}... I don't want to see that again. Hear me?
+@сп_boss
+you beat {m_who} {m_when}. I copy this page out most neatly.
+{m_who}, {m_where_in}. One of the pages I reread.
+~1 you actually beat {m_who}. I'm still looking for the trick.
+~2 {m_when} — the fight with {m_who}. You didn't give up.
+~2 {m_who}, {m_when}. A good page. Not one blot.
+~3 {m_when} you beat {m_who}. I cawed across the whole forest.
+@сп_boss_friend
+you took {m_who} together: you, {m_friend} and me. I count too.
+{m_when}, {m_who}. {m_friend} were there. Better remembered together.
+~1 beaten as a crowd. Your share — the smallest, but there.
+~2 {m_who}, {m_when}. {m_friend} were there, and it went easier.
+~2 you beat {m_who} together. I wrote down who yelled loudest. You.
+~3 {m_when} — {m_who}. You, {m_friend} and me. A fine flock.
+@сп_biome
+{m_where_in} we were together for the first time, {m_when}. You knew nothing there yet.
+{m_when}, {m_where_in}. A new chapter of my chronicle. The first page is yours.
+~1 {m_where_in}, {m_when}. You went there without a plan. As always.
+~2 {m_where_in} together, for the first time, {m_when}. Beautiful. And scary.
+~2 I remember the first day {m_where_in}. {m_when}. You kept looking around.
+~3 {m_where_in}, {m_when}. Our first time there together. I remember that wind well.
+@сп_biome_death
+{m_where_in} you didn't last a day. {m_when}. The land had its say.
+first day {m_where_in} — and the first grave right there. {m_when}.
+~1 {m_where_in}: came, looked around — into the grave. A record.
+~2 {m_when}, {m_where_in}. The first day there cost you your life.
+~2 {m_where_in} they met you with claws, not bread.
+~3 {m_where_in}, {m_when}. You fell on the very first day. Then you came back. That's what matters.
+@сп_dungeon
+{m_where_in}, underground, {m_when}. I held onto you with both feet.
+our first dungeon, {m_when}. Darkness, damp and your footsteps. Loud ones.
+~1 first dungeon, {m_where_in}. You rattled like a cart full of pots.
+~2 {m_when} we first went underground. You came out with loot, I with dust in my feathers.
+~2 {m_where_in}, {m_when}. Our first dungeon. I still remember that smell.
+~3 first dungeon together, {m_when}. I thought: with you even underground isn't scary.
+@сп_slaughter
+{m_count} in a minute, {m_where_in}. I didn't even get to caw.
+{m_when} — {m_count} in a minute. That one gets an exclamation mark.
+~1 {m_count} in a minute. And no plan. Just an axe and anger.
+~2 {m_count} in a minute, {m_when}. You were scary to look at. In a good way.
+~2 {m_where_in}, {m_count} in a minute. A hot day.
+~3 {m_count} in a minute, {m_when}. I was proud. Silently, as always.
+@сп_voyage
+{m_km} by sea, {m_when}. I never got used to the rocking.
+our longest voyage — {m_km}. I remember every wave. Well, almost.
+~1 {m_km}, {m_when}. And you didn't drown us once. Odd.
+~2 {m_km} without a stop, {m_when}. The wind was good then.
+~2 {m_when} — {m_km} by sea. I sat on the mast watching the distance. Beautiful.
+~3 {m_km} by sea, {m_when}. The best voyage. Because together.
+@сп_fall
+{m_m} down, {m_when}. I flew after you screaming.
+{m_when} — {m_m}. You fell loudly. I remember the sound.
+~1 {m_m} fall. And you even got up, like that's normal.
+~2 {m_m}, {m_when}. Since then I hate it when you walk to the edge.
+~2 {m_when} you flew {m_m}. Without wings. Brave. Senseless.
+~3 {m_m}... I thought that was it. Don't do that again.
+@сп_tame
+you tamed {m_who} {m_when}. One more freeloader since then.
+{m_when} — {m_who}. Finally someone obeys you. Everyone but me.
+~1 you tamed {m_who}. Hope you don't forget to feed it. Like me.
+~2 {m_when} you tamed {m_who}. You're more patient than you look.
+~2 {m_who}, {m_when}. A nice beast. Almost as clever as me. Almost.
+~3 you tamed {m_who} {m_when}. You have a good heart. I noticed.
+@сп_home
+{m_where_in}, {m_when}. The first bed with me around. I picked a spot on the beam.
+home {m_where_in}. {m_when}. The first night there was cold. I remember.
+~1 home {m_where_in}, {m_when}. The roof leaked from day one.
+~2 {m_when} you put a bed {m_where_in}. Somewhere to come back to since.
+~2 {m_where_in}, {m_when}. Our corner. Crooked, but ours.
+~3 {m_where_in} — our home, {m_when}. I like coming back there. Tell no one.
+@сп_tomb
+{m_min} in your grave. I counted every moment. Many.
+{m_min} I sat in the grave listening to you run. You ran long.
+~1 {m_min} in the grave. You took your time. I remember.
+~2 {m_min} in the grave. Dark, cramped and boring. But you came.
+~2 {m_min}. That's how long I waited in the grave. I've disliked the dark since.
+~3 {m_min} in the grave. I never doubted you'd come. Well, almost.
+@сп_metal
+{m_item}, {m_when}. You held it like a treasure. Because it was one.
+{m_when}, {m_item} in your hands for the first time. I remember your smile.
+~1 {m_item}, {m_when}. You started bragging right away. To me.
+~2 {m_item}, {m_when}. New metal — new chances. And new enemies.
+~2 {m_when} you first found {m_item}. I wrote down the date. An important one.
+~3 {m_item}, {m_when}. You were glowing with joy. Me too, a little.
+@сп_badday
+{m_times} in one day, {m_when}. I hardly left the graves that day.
+{m_when} — the day you died {m_times}. I circled it in black.
+~1 {m_times} in a day. Even the valkyries laughed.
+~2 {m_when}, {m_times}. A bad day. It happens. Not often, I hope.
+~2 {m_times} in one day, {m_when}. I got tired of writing.
+~3 {m_when}... {m_times} in a day. But next morning you got up. That's what I remember best.
+@сп_r_near
+after {m_who} — {m_hp} health. I was already spreading my wings for help.
+{m_hp} health, {m_when}. You were smiling. I wasn't.
+~1 {m_hp} health after {m_who}. Was that the plan?
+~2 {m_when}, {m_hp} health. Since then I get nervous when you rush in.
+~2 you barely got away from {m_who}, {m_when}. {m_hp} health. Barely.
+~3 {m_hp} health... {m_when}. I stopped breathing then.
+@сп_r_hard
+{m_who}, {m_when}. You gave {m_lost} health, but got your way.
+the fight with {m_who}, {m_when}. Long, nasty and yours.
+~1 {m_when} you struggled with {m_who} so long I dozed off.
+~2 {m_who}, {m_when}. {m_lost} health for one victory. Expensive, but worth it.
+~2 {m_when} — {m_who}. A hard fight. You didn't step back.
+~3 {m_when}, {m_who}. You fought to the end. I respect that.
+@сп_r_escaped
+{m_who}, {m_when}. The prey left with your arrow. A souvenir.
+{m_when} the prey got away. I still remember where it ran.
+~1 {m_who}, {m_when}. Gone. You shot like into fog.
+~2 {m_when} the prey got away: {m_who}. It happens. Not as often as with you, but it happens.
+~2 {m_who}, {m_when}. You stared after it a long time.
+~3 {m_who}, {m_when}. Gone. Never mind, we'll catch up someday.
+@сп_r_fled
+you ran from {m_who} {m_when}. Smart. Rare, but smart.
+{m_who}, {m_when}. You backed off so fast I barely held on.
+~1 {m_when} you ran from {m_who}. Your legs are your best weapon.
+~2 {m_who}, {m_when}. You backed off. Rightly.
+~2 from {m_who}, {m_when}. A retreat I wrote down as a win. Because you're alive.
+~3 {m_when} you ran from {m_who}. I need you alive more than a hero in a grave.
+@сп_r_star
+{m_who} at {m_stars}, {m_when}. I jumped on your shoulder.
+{m_when} — {m_who} at {m_stars}. You don't have many wins like that. This one's the best.
+~1 {m_stars}, {m_when}. You probably didn't believe it yourself.
+~2 {m_who} at {m_stars}. {m_when}. Good work.
+~2 {m_when} you felled {m_who} at {m_stars}. I wrote it twice, so it won't get lost.
+~3 {m_stars}, {m_when}. I was proud of you then. Out loud.
+@сп_r_newkill
+{m_when}, {m_who}. A new beast on your list.
+{m_when} you killed {m_who} for the first time. New page, new beast.
+~1 {m_who}, {m_when}. One more beast you're not afraid of. Wrongly.
+~2 {m_who}, {m_when}. A new line in the list of prey.
+~2 {m_when} — {m_who}. Now you know where to hit.
+~3 {m_when} you first beat {m_who}. I cawed. Quietly, but proudly.
+@спогад_знову
+I've told it, but I'll tell it again:
+You know this page. So what:
+~2 Once more, because it's worth it:
+~3 I know you've heard it. But I like remembering:

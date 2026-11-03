@@ -172,6 +172,7 @@ namespace HuginWhispers
                 ScoutDir[munin ? 1 : 0] = f.sqrMagnitude > 0.0001f ? f.normalized : Vector3.forward;
             }
             bool leftChase = order != Chase && Of(p, munin) == Chase;
+            bool fromArm = ArmPerch.Stage(p, munin); // (written with the order: every game lets it step onto your arm first)
             Set(p, munin, order);
             if (leftChase) NoTagAlone(p, munin); // taken off the game by another order: no tag alone
             Outing.LastAt = Time.time; // it has just been out on your word: the director counts its own outings from here
@@ -180,7 +181,7 @@ namespace HuginWhispers
             float wait = WaitOf(order);
             if (wait > 0f) ReadyAt[Slot(munin, order)] = Time.time + wait;
             Say(p, munin, Plugin.RavenName(munin) + ": " + Names[order]); // which order it took
-            PlayerAnims.Gesture(p, munin, order == Circle ? "order_circle_" : order == Follow ? "order_follow_" : "order_send_"); // your hand: round overhead, by your side, or off ahead
+            if (!fromArm) BodyClips.Gesture(p, munin, order == Circle ? "order_circle_" : order == Follow ? "order_follow_" : "order_send_"); // your hand: round overhead, by your side, or off ahead (from the arm: its toss)
             if (order != Chase && order != Fetch && order != Beast) Voice(p, munin, order); // and its own word on it (the chase: one of the two, GiveBoth; the fetching: none yet)
             return true;
         }

@@ -1,0 +1,193 @@
+@про_ворога
+{seen}. Bigger than you, faster than you. But, luckily, dumber. For now.
+{seen} nearby. Statistics say: run. You don't read statistics.
+I see {seen}. Two options: fight with your head, or as usual.
+{seen} looks at you with interest. First time anyone has.
+{seen}. Reminder: sagas end badly for those who don't look around.
+@порада
+Think first, swing later. The order matters.
+Shield — left. Enemy — ahead. You know the rest. I hope.
+Retreat is a plan too. Better than yours.
+Hit the weak spot. Not your own.
+@рани
+less and less blood in you, and fewer decisions too.
+your health is melting. Your pride, I see, isn't.
+you lose blood faster than I can write it down.
+~1 an interesting way to live: giving enemies your blood drop by drop.
+~2 counting your wounds. A long list.
+~3 you're wounded. I noticed before you did. Stop.
+@рани_порада
+Retreating now is cheaper than a grave later.
+Potion. Not tomorrow — now.
+The dead need no lessons. The living do.
+@про_вбивство
+{top} on the ground, and you didn't even stumble. Recording it as a miracle.
+{top} — minus one. Forty more and the land will be empty. Then you'll be bored.
+{top} will never see the end of your mistake. Lucky you.
+another {top} in the chronicle. The chapter "Victims of your stubbornness" grows.
+~1 a victory. Accidental, but I'll count it.
+~2 clean. Almost no wasted moves. Almost.
+~3 nice. I'd say "like in the sagas", but you'd get cocky.
+@вбивство_кінець
+The next one will be smarter. Don't relax.
+Now search it. Clever people do.
+Recorded. Neatly.
+@смерть_загальна
+again? The valkyries keep a window seat for you now.
+another death. I've started a separate volume for them.
+death isn't the end. But it isn't a plan either.
+in the sagas heroes die once. You — regularly.
+~1 dying takes skill too. You have it. Often.
+~2 lying here again. Running for the gear again. Learning again. Or not?
+~3 nearly lost you again. Don't do that. I haven't told you everything yet.
+@смерть_кінець
+Will you draw conclusions? Rhetorical question.
+Write down the cause. I already have.
+Run for your gear. Carefully this time.
+@ледь_живе
+you just walked the edge. The edge held. Barely.
+a little more and this chapter of the saga would have been the last.
+~3 I'm still shaking. Don't do that.
+@про_падіння
+you tested the height. It's real. Conclusions?
+flight — nine out of ten. Landing — zero.
+gravity won again. The score isn't in your favour.
+no wings. Just a reminder.
+~1 you fall so often the ground recognises you.
+~2 jumping is easy. Landing is a science.
+~3 in one piece? Good. I checked twice.
+@про_будову
+you build as if a roof were a rumour.
+an interesting choice: a wall without a roof. Bold. Wet.
+another beam. Your level is by eye. Your eye is by luck.
+~1 Odin built too. Asgard still stands. Your house is a matter of time.
+~2 not bad. The trolls might even knock before breaking it.
+~3 it's coming along. A few more winters and it'll be a home.
+@будова_кінець
+Supports. I repeat: supports.
+A roof is not decoration.
+@про_рубку
+the tree fell the right way. At least someone here knows what they're doing.
+another tree. The forest noticed. The forest will remember.
+you chop with confidence. You hit — not always.
+~1 the tree stood a hundred years. You managed in a minute. That's not a compliment.
+~2 firewood for two winters already. When will you build?
+~3 you chop better than last winter. I keep a comparison.
+@про_копання
+ore, sweat, dust. That's how swords are forged. And colds.
+you dig systematically. Shame it's not where the ore is.
+~1 the vein is on the right. You hit the left. Tradition.
+~2 a little more and there'll be metal. And with metal, new ways to die.
+~3 a good vein. You found it. I only hinted.
+@про_плавання
+in the water you're slow. The serpent knows. Now you do too.
+you're swimming. Technically, yes.
+~1 armour and water are a bad pair. You've combined them.
+~2 the shore is closer than it looks. Don't give up.
+~3 row. I'm counting strokes. A bit more.
+@про_дощ
+you get wet, I get wet, and nobody gets smarter.
+rain washes away tracks. Your mistakes — no.
+~1 it's drier under a tree. You got that knowledge for free.
+~2 the rain will end. You'll survive. Probably.
+~3 take cover. I don't like it when you're cold.
+@про_грозу
+lightning strikes the tallest. Don't be the tallest.
+Thor is thundering. Don't answer him — he's stronger.
+~1 standing in a storm with iron in your hands. Brave. Senseless.
+~3 let's wait it out. Thunder isn't an enemy you defeat.
+@про_туман
+in fog the quiet one wins. So not you.
+fog hides the enemies. And you from common sense.
+~1 we see three steps ahead. You think two. Balance.
+~3 stay close. In the fog I'm your eyes.
+@про_сніг
+cold isn't a test of character. It's a test of clothing.
+snow covers everything. Even the tracks of your mistakes. For a while.
+~1 you freeze because you dress for yesterday's weather.
+~3 to the fire. Now. I'm asking, not ordering.
+@про_нудьгу
+we're standing. In this time you could have read a saga. A short one. About you.
+silence. The best time to think. I suggest you try.
+nothing's happening. Suspicious. Our life isn't like that.
+~1 you stand so confidently, as if that were the plan.
+~2 stand a bit longer and the enemies will come themselves. That's a strategy too.
+~3 nice like this. Quiet. Don't tell anyone I like it.
+@нудьга_кінець
+Let's go. The world won't scout itself.
+Pick a direction. Any. Except this one.
+@ніч
+night. Beasts wake, the wise go to bed. You're in between.
+at night everything is twice as dangerous. You — twice as careless.
+~1 you decided to travel at night. Recording it as an experiment.
+~3 night. Let's sit by the fire. Morning is wiser. You especially.
+@їжа
+food on time. Recording it under "Rare events".
+tasty. I almost changed my mind about criticising you. Almost.
+~1 you're feeding me. So you want something.
+~2 thank you. This meal counts in your favour.
+~3 tasty. And with care. I noticed.
+@голод
+reminder: a raven without food is a raven without advice. Imagine the consequences.
+I last ate long ago. Do you remember when? I do.
+~1 a hungry raven counts every misstep of yours. There are many.
+~2 share, and I'll forget some of your blunders. Some.
+~3 I'm hungry. But I say it quietly. Because I know you'll feed me.
+@голод_прохання
+Food is the shortest road to my leniency.
+Feed me. Simple logic.
+@готування
+cooking from a recipe? Or by instinct, as always?
+fire, meat, you. Two out of three are reliable.
+~1 yesterday it smelled good too. Then there was charcoal.
+~3 smells like home. A rarity for us.
+@ремесло
+another thing. I hope you know what it's for.
+the workbench is more patient than me. But not by much.
+~1 made it. Now find out what it is.
+~3 good work. Neat. I'll remember.
+@тут
+every stone here has a story. Mostly sad.
+an unknown land. So the traps are unknown too.
+~1 you walk here as if it were all yours. The locals disagree.
+~3 a nice place. I'd stay here. Not for long.
+@ягоди
+berries. A wise choice. At least they don't need killing.
+picking berries with the forest at your back. The forest sees.
+~3 give me one. For observation. Scientific.
+@сон
+sleep is the smartest thing you'll do today.
+slept half the day. The world managed without you. Worrying.
+~3 slept well? Good. You'll need your head today.
+@пл_спокій
+sitting on you and thinking for two. Someone has to.
+from the shoulder I see everything. Mostly nothing interesting.
+~1 your shoulder is warm. Your brain too, I hope.
+~3 calm. Let's sit a while. I'm in no hurry.
+@пл_вбивство
+saw it from the shoulder. The blow was right, the angle wasn't.
+clean. I barely flinched.
+~3 good. I felt that blow in my wings.
+@хгл_суть
+Petting accepted. Recorded as a sign of respect.
+Careful. Feathers aren't your hair.
+More. Scientific observations continue.
+I don't like it. Don't stop.
+@про_боса
+{boss} is history. And we're in the chronicle.
+{boss} is down. The skalds have a year of work.
+~1 we beat {boss}. I still don't understand how, but I wrote it down.
+~3 we did it. Together. That gets remembered.
+@про_море
+the sea is calm. So there's a surprise ahead.
+a fair wind. Don't get used to it: wind is no friend.
+~1 hold the course. Not the one in your head.
+~3 good sailing. I love this wind.
+@про_підземелля
+underground has its own rules. First: no noise.
+darkness, dust and old bones. Someone here was clever once too.
+~3 stay with me. I remember the way back.
+@портал
+a portal. Convenient. Unnatural. But convenient.
+one step and another land. The mind can't keep up with the body.
+~3 hold on to me. It's easy to get lost here.

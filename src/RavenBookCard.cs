@@ -213,6 +213,24 @@ namespace HuginWhispers
             return r;
         }
 
+        // how wide the card must be for its foot's buttons in one row (the words beside them wrap, so they don't count)
+        private static float FootNeed(Card c)
+        {
+            if (c.Foot == null) return 0f;
+            HorizontalLayoutGroup hg = c.Foot.GetComponent<HorizontalLayoutGroup>();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(c.Foot);
+            float need = hg.padding.horizontal;
+            foreach (Transform t in c.Foot)
+            {
+                if (!t.gameObject.activeSelf || t == c.FootWords) continue;
+                LayoutElement le = t.GetComponent<LayoutElement>();
+                if (le != null && le.ignoreLayout) continue;
+                need += LayoutUtility.GetPreferredWidth((RectTransform)t) + hg.spacing;
+            }
+            RectOffset fp = c.Frame.GetComponent<VerticalLayoutGroup>().padding;
+            return need + fp.horizontal;
+        }
+
         // the card's size from what is on it, then its place: by null — the middle of the book; else over the clicked
         // thing (no room above: under it), or (left) to its left; keep — where it stood (drawn again). Returns that place.
         private static Vector2 PlaceCard(Card c, RectTransform by, bool left = false, Vector2? keep = null)
@@ -220,9 +238,10 @@ namespace HuginWhispers
             RectTransform f = c.Frame;
             f.anchorMin = f.anchorMax = new Vector2(0.5f, 0f); // the layer's units: (0, 0) the book's lower middle
             f.pivot = new Vector2(0.5f, 0f);
-            f.sizeDelta = new Vector2(c.Width, 0f);
+            float w = Mathf.Min(Mathf.Max(c.Width, FootNeed(c)), BookW - 16f); // (the buttons never wrap: a longer translation or a third button widens the card)
+            f.sizeDelta = new Vector2(w, 0f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(f);
-            float w = c.Width, h = LayoutUtility.GetPreferredHeight(f);
+            float h = LayoutUtility.GetPreferredHeight(f);
             f.sizeDelta = new Vector2(w, h);
             const float over = 26f; // the plaque and the close button stand out over the top edge
             Vector2 at;

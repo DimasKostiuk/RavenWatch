@@ -19,6 +19,8 @@ namespace HuginWhispers
         internal bool Neutral;                         // held in the idle's first moment: no breath, no look about (the book's «Стоп»)
         internal float Yaw, Lift, Crouch;              // turning round on the bar (°), a little hop (m), crouched to push off (0..1)
         internal float LeanAdd;                        // ° more lean (the turn's keys)
+        internal readonly float[] LegAdd = new float[8]; // the legs' own turns on top (a bath: paddling) — hip, knee, ankle, toes, left then right
+        internal float LegsFree;                         // 0..1: the feet off the bar (paddling in the water: no grip)
         internal float StepL, StepR;                   // a foot up as it steps round (0..1+, PerchTurn.StepFold each)
         internal float Roll;                           // ° the body leans over the standing leg
         private Transform _chest;                      // Spine1: what leans over the standing foot
@@ -116,7 +118,7 @@ namespace HuginWhispers
         {
             if (_body == null) _body = GetComponentInChildren<SkinnedMeshRenderer>();
             if (_posed && _body != null && !_body.isVisible && Life != null && !Life.Stage) return; // off screen: it stays as it was posed (the test pictures always pose)
-            if (Life != null && !Life.Active && Mathf.Abs(Sit - Mathf.Round(Sit)) < 0.001f && Mathf.Abs(Yaw) < 0.01f && Crouch < 0.001f && Mathf.Abs(LeanAdd) < 0.01f && StepL < 0.001f && StepR < 0.001f)
+            if (Life != null && !Life.Active && Mathf.Abs(Sit - Mathf.Round(Sit)) < 0.001f && Mathf.Abs(Yaw) < 0.01f && Crouch < 0.001f && Mathf.Abs(LeanAdd) < 0.01f && StepL < 0.001f && StepR < 0.001f && LegsFree < 0.001f)
             {
                 if (_still) return;
                 _still = true; // one more full pass, then frozen
@@ -136,12 +138,13 @@ namespace HuginWhispers
             float w = Sit * Sit * (3f - 2f * Sit);
             for (int k = 0; k < Count; k++) _mix[k] = Mathf.Lerp(Stand != null && Stand.Length > k ? Stand[k] : 0f, Pose[k], w) + CrouchAdd[k] * Crouch;
             for (int k = 0; k < 4; k++) { _mix[k] += PerchTurn.StepFold[k] * StepL; _mix[4 + k] += PerchTurn.StepFold[k] * StepR; } // a foot up: that leg folded
+            if (LegsFree > 0f) for (int k = 0; k < 8; k++) _mix[k] += LegAdd[k]; // paddling
             float[] p = _mix;
             // turned round on the bar first (the turn's yaw): the bends below go about the bird's own side as it faces now
             Quaternion yaw = Quaternion.AngleAxis(Yaw, Vector3.up);
             transform.localRotation = yaw * _baseRot;
             // where the toes grip, standing: they stay there, the body sinks into the bent legs; a foot up does not hold
-            float wl = 1f - 0.95f * Mathf.Clamp01(StepL), wr = 1f - 0.95f * Mathf.Clamp01(StepR);
+            float wl = 1f - 0.95f * Mathf.Clamp01(StepL + LegsFree), wr = 1f - 0.95f * Mathf.Clamp01(StepR + LegsFree);
             Vector3 feet = Feet(wl, wr);
             Transform parent = transform.parent;
             Vector3 side = (parent != null ? parent.rotation : Quaternion.identity) * (yaw * Vector3.right);

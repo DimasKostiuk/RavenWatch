@@ -5,7 +5,6 @@ namespace HuginWhispers
     // (Patterns.Revision 101).
     //   world_bath              in the water, washing
     //   bath_shake              back on your shoulder, it shakes the water off — onto you
-    //   bath_dirty              it is filthy now (the swamp, a fight, the bones)
     //   beast_play_start(_kind) the game begins ({beast}: the beast's name; kind: wolf, boar, lox, asksvin, hen)
     //   beast_play_tease        running off with the beast after it
     //   beast_play_swap         now it is after the beast
@@ -18,7 +17,6 @@ namespace HuginWhispers
             "# --- купання, гра зі звіром (rev 101)",
             "[world_bath] {хкуп_мию}",
             "[bath_shake] {хкуп_струс}",
-            "[bath_dirty] {хкуп_брудний}",
             "[beast_play_start] {хгра_старт}",
             "[beast_play_start_wolf] {хгра_вовк}",
             "[beast_play_start_boar] {хгра_кабан}",
@@ -91,7 +89,6 @@ namespace HuginWhispers
             "# --- купання, гра зі звіром (rev 101)",
             "[world_bath] {мкуп_мию}",
             "[bath_shake] {мкуп_струс}",
-            "[bath_dirty] {мкуп_брудний}",
             "[beast_play_start] {мгра_старт}",
             "[beast_play_start_wolf] {мгра_вовк}",
             "[beast_play_start_boar] {мгра_кабан}",
@@ -111,7 +108,7 @@ namespace HuginWhispers
             "На! Тепер і ти помитий. Не дякуй.",
             "Струсився на тебе. Спеціально, бля.",
             "Мокро? А мені вже ні.",
-            "Обтрусився. Ти просто стояв{|ла} не там.",
+            "Обтрусився. Ти просто стоя{в|ла} не там.",
             "@мкуп_брудний",
             "Я весь у багнюці й кишках. Пора у воду.",
             "Від мене смердить, як від драугра. Мити треба.",
@@ -144,7 +141,7 @@ namespace HuginWhispers
             "Шо, кишка тонка?",
             "Повзеш, як равлик! Бігом!",
             "Ха! Мимо! Ще раз!",
-            "Ну ти й тюхтій!",
+            "Ну ти й незграба!",
             "@мгра_зміна",
             "Тепер я ловлю! Тікай, бо дзьобну!",
             "Біжи, тварюко! Я йду!",

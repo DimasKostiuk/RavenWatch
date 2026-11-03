@@ -300,6 +300,7 @@ namespace HuginWhispers
                 return;
             }
             Errands.OnChampion(id);
+            Nicks.OnChampion(p); // a deed for the ravens' nicknames
 #if RAVEN_STORY
             StoryBus.Raise("champion", id, 0);
 #endif
@@ -630,6 +631,29 @@ namespace HuginWhispers
                 if (_povRarity != null && z.GetInt("pt.crar", 0) != 0) _povRarity.Invoke(null, new object[] { c, Enum.ToObject(_povRarity.GetParameters()[1].ParameterType, 0) });
             }
             catch (Exception e) { Errands.Log("champion: keeping it ours: " + e.Message); }
+            finally { _busy = false; }
+        }
+
+        // a person of the story (NpcBody): no other mod's rarity, traits or stars on it — asked of them through their
+        // own methods, as for a champion, but with nothing of ours put in their place
+        internal static void Disown(Character c)
+        {
+            if (_busy || c == null) return;
+            _busy = true;
+            try
+            {
+                Component elite = c.GetComponent("EliteController");
+                if (elite != null) UnityEngine.Object.Destroy(elite);
+                ZNetView nv = c.GetComponent<ZNetView>();
+                if (nv == null || !nv.IsValid() || !nv.IsOwner() || c.IsDead()) return;
+                ZDO z = nv.GetZDO();
+                Look();
+                if (_povMods != null || _povRarity != null) Claim(z);
+                if (c.GetLevel() != 1) c.SetLevel(1);
+                if (_povMods != null && z.GetInt("pt.crmod", 0) != 0) _povMods.Invoke(null, new object[] { c, Enum.ToObject(_povMods.GetParameters()[1].ParameterType, 0) });
+                if (_povRarity != null && z.GetInt("pt.crar", 0) != 0) _povRarity.Invoke(null, new object[] { c, Enum.ToObject(_povRarity.GetParameters()[1].ParameterType, 0) });
+            }
+            catch (Exception e) { Errands.Log("npc: keeping other mods off: " + e.Message); }
             finally { _busy = false; }
         }
 

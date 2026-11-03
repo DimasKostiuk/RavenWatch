@@ -1,6 +1,7 @@
 #if RAVEN_ITEM
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using UnityEngine;
 
@@ -12,11 +13,14 @@ namespace HuginWhispers
     // card: turn it aside a day (Hugin's strength, once in a few days; it comes back grown) or call it now, here, when
     // you are ready for its trophies. Now and then the morning brings a bad omen: die before the next morning and your
     // ravens lose less trust. At sea Hugin also warns of a wind about to turn and of a serpent in these waters.
+    // A morning he speaks may bring the day's gift too (BoonChance): +BoonAmount health, stamina or eitr till the next
+    // morning (kept in the character, so a relog keeps it; added to what the food gives: OmenBoonPatch).
     internal static class Omen
     {
         internal static bool Enabled = true;
         internal static int UnlockLevel = 5;
-        internal static float ChanceFirst = 40f, ChanceTop = 80f;   // % of mornings he speaks: at the gift's level, at the top
+        internal static float ChanceFirst = 30f, ChanceTop = 40f;   // % of mornings he speaks: at the gift's level, at the top (2.8.1: 40→80 was nearly every day)
+        internal static float BoonChance = 50f, BoonAmount = 20f;  // the day's gift on a morning he speaks: how often, how much
         internal static float BadChance = 20f, BadDeathMul = 0.5f;  // «Недобрий знак»: how often, the trust a death takes
         internal static float DeflectCost = 40f, DeflectDays = 3f;  // turning a raid aside: Hugin's strength, once in so many days
         internal static float CardSeconds = 45f;
@@ -27,6 +31,12 @@ namespace HuginWhispers
         private const string BadKey = "RavenWatch_badOmen";     // the character: the bad omen lasts till then (world time)
         private const string TurnKey = "RavenWatch_omenTurned"; // the character: the next raid may be turned aside then
         internal const string BadName = "RavenWatch_BadOmen";
+        private const string BoonKey = "RavenWatch_omenBoon";      // the character: the day's gift lasts till then (world time)
+        private const string BoonKindKey = "RavenWatch_omenBoonKind"; // the character: 0 health, 1 stamina, 2 eitr
+        internal const string BoonName = "RavenWatch_OmenBoon";
+        private static SE_Stats _boon;
+        private static float _boonSayAt = -1f, _boonLookAt;
+        private static int _boonSay = -1;
         private static SE_Stats _bad;
         private static float _nextLook, _awakeSince = -1f, _badSayAt = -1f, _nextSea, _windSaidFor = -1f, _seaSaidAt = -100f;
         private static readonly HashSet<ZDOID> Serpents = new HashSet<ZDOID>();
@@ -61,6 +71,8 @@ namespace HuginWhispers
             OmenFate.TickGrown();
             if (p == null || p != Player.m_localPlayer) return;
             if (_badSayAt > 0f && Time.time >= _badSayAt) { _badSayAt = -1f; Say(p, "omen_bad"); }
+            if (_boonSayAt > 0f && Time.time >= _boonSayAt) { _boonSayAt = -1f; Say(p, BoonTag(_boonSay)); }
+            if (Time.time >= _boonLookAt) { _boonLookAt = Time.time + 5f; KeepBoonIcon(p); }
             if (Time.time < _nextLook) return;
             _nextLook = Time.time + 1f;
             Sea(p);
@@ -76,7 +88,7 @@ namespace HuginWhispers
             if (p.m_customData.TryGetValue(DayKey, out seen) && seen == today) return;
             if (!Ready(p)) return; // (Hugin not here yet: the morning waits for him)
             p.m_customData[DayKey] = today; // (once a morning, spoken or not)
-            if (UnityEngine.Random.Range(0f, 100f) >= ChanceNow()) { Log("morning: Hugin keeps quiet"); return; }
+            if (UnityEngine.Random.Range(0f, 100f) >= ChanceNow()) { Keep(p, TodayQuiet); Log("morning: Hugin keeps quiet"); return; }
             bool bad = UnityEngine.Random.Range(0f, 100f) < BadChance;
             OmenFate.Ask(a => Speak(p, a, bad));
         }
@@ -86,11 +98,16 @@ namespace HuginWhispers
         {
             if (p == null || p != Player.m_localPlayer || !Ready(p)) return;
             string land, weather = Forecast(p, out land);
-            string sky = weather != null ? Lang.F("{0} {1}", land, weather) : null; // «на Левадах зранку ясно, вдень дощ»
+            string sky = weather != null ? Lang.F("{0} {1}", land, weather) : null; // «на Луках зранку ясно, вдень дощ»
             bool raid = a != null && a.State == OmenFate.Raid, calm = a != null && a.State == OmenFate.Calm;
-            if (!raid && !calm && sky == null && !bad) { Log("morning: nothing to foretell here"); return; }
+            if (!raid && !calm && sky == null && !bad) { Keep(p, TodayNothing); Log("morning: nothing to foretell here"); return; }
+            string shownRaid = null;
+            if (raid) RaidToken(a.Event, out shownRaid);
+            Keep(p, TodaySaid, shownRaid, raid ? ZNet.instance.GetTimeSeconds() + a.Left : 0.0, sky, calm, bad);
             ScreamFx.CawAll(p, false, 1.25f, 0.6f);
+            Nicks.OnOmen(p); // a deed for Hugin's nickname
             if (bad) Bad(p);
+            if (UnityEngine.Random.Range(0f, 100f) < BoonChance) Boon(p, bad ? 18f : 9f);
             if (raid)
             {
                 string when = When(a.Left), shown;
@@ -112,6 +129,57 @@ namespace HuginWhispers
             Log("morning: " + (a == null ? "no word from the server" : a.State == OmenFate.Calm ? "calm" : a.State == OmenFate.Now ? "a raid is on" : "raids off") + (sky != null ? ", weather " + sky : ""));
         }
 
+        // ---------------------------------------------------------------- the day's word, kept for the book
+
+        // what Hugin foretold this morning (or that he kept quiet), in the character, for the gift's tooltip: a message on
+        // the screen is soon gone, often under another one (the day's number)
+        private const string TodayKey = "RavenWatch_omenToday"; // "<world>:<day>" US state US raid US raid's world time US sky US calm US bad
+        private const string TodayQuiet = "quiet", TodayNothing = "nothing", TodaySaid = "said";
+        private const char Sep = '\u001f';
+
+        private static string Today()
+        {
+            EnvMan em = EnvMan.instance;
+            return em != null && ZNet.instance != null ? ZNet.instance.GetWorldUID() + ":" + em.GetDay() : null;
+        }
+
+        private static void Keep(Player p, string state, string raid = null, double raidAt = 0.0, string sky = null, bool calm = false, bool bad = false)
+        {
+            string today = Today();
+            if (p == null || today == null) return;
+            p.m_customData[TodayKey] = string.Join(Sep.ToString(), new string[] { today, state, raid ?? "", raidAt.ToString("R", CultureInfo.InvariantCulture), sky ?? "", calm ? "1" : "0", bad ? "1" : "0" });
+        }
+
+        internal static string TodayText(Player p)
+        {
+            string today = Today(), v;
+            if (p == null || today == null) return "";
+            string head = Lang.F("<color=#FFD54F><b>{0}</b></color>", Lang.T("Сьогоднішнє віщування"));
+            string[] f = p.m_customData.TryGetValue(TodayKey, out v) ? v.Split(Sep) : null;
+            if (f == null || f.Length < 7 || f[0] != today)
+            {
+                string seen;
+                bool looked = p.m_customData.TryGetValue(DayKey, out seen) && seen == today;
+                EnvMan em = EnvMan.instance;
+                float frac = (float)(ZNet.instance.GetTimeSeconds() % em.m_dayLengthSec) / em.m_dayLengthSec;
+                return head + "\n" + (!looked && frac <= 0.4f ? Lang.T("Ще попереду: Хугін віщує вранці.") : Lang.T("Сьогодні його не було."));
+            }
+            if (f[1] == TodayQuiet) return head + "\n" + Lang.T("Хугін сьогодні змовчав.");
+            if (f[1] == TodayNothing) return head + "\n" + Lang.T("Хугіну сьогодні нічого віщувати.");
+            StringBuilder sb = new StringBuilder(head);
+            double at;
+            if (f[2].Length > 0 && double.TryParse(f[3], NumberStyles.Float, CultureInfo.InvariantCulture, out at))
+            {
+                float left = (float)(at - ZNet.instance.GetTimeSeconds());
+                sb.Append('\n').Append(left > 0f ? Lang.F("Набіг: {0} — {1}.", f[2], When(left)) : Lang.F("Набіг: {0} — його час уже настав.", f[2]));
+            }
+            if (f[4].Length > 0) sb.Append('\n').Append(Lang.F("Небо: {0}.", f[4]));
+            if (f[5] == "1") sb.Append('\n').Append(Lang.T("Набігу до наступного ранку не буде."));
+            if (f[6] == "1" && WorldTime.LeftHere(p.m_customData, BadKey) > 0f) sb.Append('\n').Append(Lang.T("Недобрий знак: загинеш до ранку — ворони втратять менше довіри."));
+            if (WorldTime.LeftHere(p.m_customData, BoonKey) > 0f) sb.Append('\n').Append(Lang.F("Дар Хугіна до ранку: +{0} {1}", RavenAbilities.R(BoonAmount), BoonWhat(BoonKind(p))));
+            return sb.ToString();
+        }
+
         // ---------------------------------------------------------------- the bad omen
 
         private static void Bad(Player p)
@@ -120,21 +188,82 @@ namespace HuginWhispers
             if (em == null) return;
             double next = em.GetMorningStartSec(em.GetDay() + 1);
             float secs = Mathf.Max(60f, (float)(next - ZNet.instance.GetTimeSeconds()));
-            WorldTime.Set(p.m_customData, BadKey, secs);
+            WorldTime.SetHere(p.m_customData, BadKey, secs); // (kept with its world: carried to a world whose clock is behind, it does not last for hours)
+            ShowBad(p, secs);
+            _badSayAt = Time.time + 9f;
+        }
+
+        private static void ShowBad(Player p, float secs)
+        {
             SE_Stats se = RavenFx.Template(ref _bad, BadName);
             se.m_name = Lang.W("Недобрий знак");
             se.m_tooltip = Lang.T("Хугін бачив недобрий знак. Загинеш до наступного ранку — ворони втратять менше довіри.");
             se.m_icon = AbilityIcons.ForEffect("homen", false);
             se.m_ttl = secs;
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
-            _badSayAt = Time.time + 9f;
+        }
+
+        // ---------------------------------------------------------------- the day's gift
+
+        private static readonly string[] BoonTags = { "omen_boon_hp", "omen_boon_stamina", "omen_boon_eitr" };
+        private static string BoonTag(int kind) { return BoonTags[Mathf.Clamp(kind, 0, 2)]; }
+        private static string BoonWhat(int kind) { return kind == 1 ? Lang.T("витривалості") : kind == 2 ? Lang.T("ейтиру") : Lang.T("здоров'я"); }
+
+        // one of the three, till the next morning; Hugin says it a moment after the morning's word
+        private static void Boon(Player p, float sayAfter)
+        {
+            EnvMan em = EnvMan.instance;
+            if (em == null || ZNet.instance == null) return;
+            double next = em.GetMorningStartSec(em.GetDay() + 1);
+            float secs = Mathf.Max(60f, (float)(next - ZNet.instance.GetTimeSeconds()));
+            int kind = UnityEngine.Random.Range(0, 3);
+            WorldTime.SetHere(p.m_customData, BoonKey, secs); // (likewise)
+            p.m_customData[BoonKindKey] = kind.ToString();
+            ShowBoon(p, kind, secs);
+            p.Message(MessageHud.MessageType.TopLeft, Lang.F("Дар Хугіна до ранку: +{0} {1}", RavenAbilities.R(BoonAmount), BoonWhat(kind)));
+            _boonSay = kind; _boonSayAt = Time.time + sayAfter;
+            Log("morning: the day's gift, +" + BoonAmount + " " + BoonTag(kind));
+        }
+
+        private static void ShowBoon(Player p, int kind, float secs)
+        {
+            SE_Stats se = RavenFx.Template(ref _boon, BoonName);
+            se.m_name = Lang.W("Дар віщування");
+            se.m_tooltip = Lang.F("Хугін вивіщував тобі дар: +{0} {1} до наступного ранку.", RavenAbilities.R(BoonAmount), BoonWhat(kind));
+            se.m_icon = AbilityIcons.ForEffect("homen", false);
+            se.m_ttl = secs;
+            p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
+        }
+
+        // the gift and the bad omen outlive a relog (they are in the character): their icons are put back, with the time left
+        private static void KeepBoonIcon(Player p)
+        {
+            if (p.IsDead()) return; // (back with the new body)
+            float left = WorldTime.LeftHere(p.m_customData, BoonKey);
+            if (left > 0f && !p.GetSEMan().HaveStatusEffect(BoonName.GetStableHashCode())) ShowBoon(p, BoonKind(p), left);
+            left = WorldTime.LeftHere(p.m_customData, BadKey);
+            if (left > 0f && !p.GetSEMan().HaveStatusEffect(BadName.GetStableHashCode())) ShowBad(p, left);
+        }
+
+        private static int BoonKind(Player p)
+        {
+            string v; int k;
+            return p.m_customData.TryGetValue(BoonKindKey, out v) && int.TryParse(v, out k) ? Mathf.Clamp(k, 0, 2) : 0;
+        }
+
+        // From the food's total (OmenBoonPatch): what the day's gift adds now, for this player only
+        internal static void AddBoon(Player p, ref float hp, ref float stamina, ref float eitr)
+        {
+            if (p == null || p != Player.m_localPlayer || p.m_customData == null || WorldTime.LeftHere(p.m_customData, BoonKey) <= 0f) return;
+            int kind = BoonKind(p);
+            if (kind == 0) hp += BoonAmount; else if (kind == 1) stamina += BoonAmount; else eitr += BoonAmount;
         }
 
         // From Trust.OnDeath: the share of the trust a death takes (the bad omen: less)
         internal static float DeathMul()
         {
             Player p = Player.m_localPlayer;
-            return p != null && WorldTime.Left(p.m_customData, BadKey) > 0f ? BadDeathMul : 1f;
+            return p != null && WorldTime.LeftHere(p.m_customData, BadKey) > 0f ? BadDeathMul : 1f;
         }
 
         // ---------------------------------------------------------------- the card's buttons
@@ -286,7 +415,7 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the weather ahead
 
         // the day ahead where you stand, by parts: «зранку ясно, вдень і надвечір дощ, уночі гроза» (null: nothing to say);
-        // land: where, said before it («на Левадах»)
+        // land: where, said before it («на Луках»)
         internal static string Forecast(Player p, out string land)
         {
             land = "";
@@ -435,7 +564,7 @@ namespace HuginWhispers
             if (Vector3.Angle(dNow, dThen) < 60f || UnityEngine.Random.value > 0.6f) return;
             string said = Lang.F("{0}, {1}", Toward(dThen), WindWord(pThen));
             _seaSaidAt = Time.time;
-            string line = Line(p, "omen_wind", "wind", said, "soon", RavenAbilities.Span((float)ahead));
+            string line = Line(p, "omen_wind", "wind", said, "soon", RavenAbilities.SpokenSpan((float)ahead));
             RavenSkills.SayFromShoulder(p, false, line ?? Lang.F("Скоро вітер поверне: дутиме {0}.", said));
             Log("the wind turns in " + Mathf.RoundToInt((float)ahead) + " s: " + said);
         }
@@ -473,7 +602,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- the rest
 
-        internal static void Reset() { _awakeSince = -1f; _badSayAt = -1f; _munSummonAt = -1f; _windSaidFor = -1f; Serpents.Clear(); OmenFate.Reset(); RavenBook.HideOmen(); }
+        internal static void Reset() { _awakeSince = -1f; _badSayAt = -1f; _boonSayAt = -1f; _munSummonAt = -1f; _windSaidFor = -1f; Serpents.Clear(); OmenFate.Reset(); RavenBook.HideOmen(); }
 
         // the test panel: this morning's word now (the morning's roll and the day's mark left as they are)
         internal static string Test(Player p)
@@ -485,6 +614,14 @@ namespace HuginWhispers
         }
 
         private static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Omen: " + s); }
+    }
+
+    // the day's gift: on top of what the food gives (the game sets the maximum from this total)
+    [HarmonyLib.HarmonyPatch(typeof(Player), "GetTotalFoodValue")]
+    internal static class OmenBoonPatch
+    {
+        private static void Postfix(Player __instance, ref float __0, ref float __1, ref float __2) // (by place: health, stamina, eitr, whatever the game names them)
+        { try { Omen.AddBoon(__instance, ref __0, ref __1, ref __2); } catch (Exception e) { PatchGuard.Fail("OmenBoonPatch", e); } }
     }
 }
 #endif

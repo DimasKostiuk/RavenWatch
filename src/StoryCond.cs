@@ -1,4 +1,4 @@
-#if RAVEN_ITEM && RAVEN_STORY
+#if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -88,6 +88,9 @@ namespace HuginWhispers
 
         internal static bool Known(string kind) { return Kinds.ContainsKey(kind); }
 
+        // another part adds its own kinds (NpcTalk: a person's hired / mine / resident / job)
+        internal static void Register(string name, Kind k) { Kinds[name] = k; }
+
         // "eikthyr" → defeated_eikthyr; a whole key (defeated_…) as it is
         internal static string BossKey(string w)
         {
@@ -123,9 +126,9 @@ namespace HuginWhispers
             return true;
         }
 
-        private static string CmpCheck(string[] a, int at) { string op; int n; return ReadCmp(a, at, out op, out n) ? null : "потрібне число (N, >= N, < N…)"; }
+        internal static string CmpCheck(string[] a, int at) { string op; int n; return ReadCmp(a, at, out op, out n) ? null : "потрібне число (N, >= N, < N…)"; }
 
-        private static bool Compare(int have, string[] a, int at)
+        internal static bool Compare(int have, string[] a, int at)
         {
             string op; int n;
             if (!ReadCmp(a, at, out op, out n)) return false;

@@ -1,0 +1,8 @@
+# Люди сюжету, що живуть у світі (StoryPeople): сервер тримає кожного рівно одного; де живе — за станом Зали.
+# live: дім [spawn точка] [bed точка] — поки Зала не розпалена · kindled: те саме — з розпаленої Зали (1.2).
+# Точка: <місце>.<назва деталі> (імена — blueprints/<місце>.names.txt) або просто <місце>.
+
+[person heid]
+npc: heid
+live: torvald.vohnyshche spawn torvald.lava bed torvald.lizhko    # табір біля могил вартових
+kindled: hall.vohnyshche                                         # з розпаленої Зали — у Залі, біля вогнища Варти

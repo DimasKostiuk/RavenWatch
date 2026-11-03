@@ -328,7 +328,8 @@ namespace HuginWhispers
 
         // a share of a blow to every creature near a point (not the one it came from): marked as a raven's, so the
         // boss cap of the flight holds and it is cut like any raven blow
-        internal static void Splash(Player p, Vector3 at, float radius, float v, bool fire, Character skip, Dictionary<Character, float> capLeft, bool munin)
+        // (blunt: a blow of the ground, «Крила Одіна» III's dive — not fire nor lightning, and it pushes hard)
+        internal static void Splash(Player p, Vector3 at, float radius, float v, bool fire, Character skip, Dictionary<Character, float> capLeft, bool munin, bool blunt = false)
         {
             if (p == null || v <= 0.5f) return;
             foreach (Character c in Character.GetAllCharacters())
@@ -344,11 +345,11 @@ namespace HuginWhispers
                 }
                 if (d <= 0.5f) continue;
                 HitData hit = new HitData();
-                if (fire) hit.m_damage.m_fire = d; else hit.m_damage.m_lightning = d;
+                if (blunt) hit.m_damage.m_blunt = d; else if (fire) hit.m_damage.m_fire = d; else hit.m_damage.m_lightning = d;
                 hit.m_point = Body.Center(c);
                 Vector3 dir = Body.Center(c) - at;
                 hit.m_dir = dir.sqrMagnitude > 0.001f ? dir.normalized : Vector3.up;
-                hit.m_pushForce = 2f;
+                hit.m_pushForce = blunt ? 20f : 2f;
                 hit.m_staggerMultiplier = 0.2f;
                 hit.m_backstabBonus = 1f;
                 hit.m_blockable = false;

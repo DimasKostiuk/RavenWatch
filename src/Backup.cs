@@ -175,6 +175,20 @@ namespace HuginWhispers
             return false;
         }
 
+#if RAVEN_STORY
+        // the author's test (raven story unown): every copy of this kind gone from the character; how many
+        internal static int ForgetKind(Player p, bool munin)
+        {
+            if (p == null) return 0;
+            string kind = munin ? "m;" : "h;";
+            List<string> ids = new List<string>();
+            foreach (KeyValuePair<string, string> kv in p.m_customData)
+                if (kv.Key.StartsWith(CopyPrefix) && kv.Value.StartsWith(kind)) ids.Add(kv.Key.Substring(CopyPrefix.Length));
+            foreach (string id in ids) { p.m_customData.Remove(CopyPrefix + id); p.m_customData.Remove(GenPrefix + id); p.m_customData.Remove(BackPrefix + id); }
+            return ids.Count;
+        }
+#endif
+
         // the copy kept from a raven's own data (a raven at home: its perch keeps it, the character keeps the copy)
         internal static void SaveData(Player p, string id, bool munin, Dictionary<string, string> data)
         {

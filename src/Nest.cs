@@ -33,6 +33,82 @@ namespace HuginWhispers
         // the pause after an errand taken, by the trust of the raven that went: a game day at trust 1, ~0.6 of one at 7
         internal static float PauseMul(int level) { return 1f - 0.07f * Mathf.Clamp(level - 1, 0, 6); }
 
+        // the pause set anew: its length, and how much of it feeding in the nest may still take off (CutKey "cut;cap", s)
+        internal const string CutKey = "RavenWatch_nestCut";
+        internal static float FeedCutShare = 0.5f;                         // feeding takes off at most this share of a pause
+        internal static float[] FeedMinutes = { 1f, 1f, 1.5f, 2f, 3f, 4f }; // by food class (1 berries … 5 the best meals)
+        internal static float BossMinutes = 10f, SagaMinutes = 5f, RequestMinutes = 3f; // Odin sees a deed
+
+        private static void SetPause(Player p, float seconds)
+        {
+            WorldTime.SetHere(p.m_customData, NextKey, seconds);
+            p.m_customData[CutKey] = "0;" + (seconds * FeedCutShare).ToString("0", CultureInfo.InvariantCulture);
+        }
+
+        // a call that came to nothing or a will declined: a day, shortened by the trust as after an errand
+        private static float DayPause() { return DayLen * PauseMul(Mathf.Max(Trust.LevelWorn(false), Trust.LevelWorn(true))); }
+
+        // fed in the nest: the next errand a little sooner (the better the food, the more), up to FeedCutShare of the pause
+        internal static void FedHere(Player p, bool munin, Trust.Food food)
+        {
+            if (p == null || food == null || CooldownLeft(p) <= 0f) return;
+            float cut, cap;
+            CutOf(p, out cut, out cap);
+            float want = FeedMinutes[Mathf.Clamp(food.Class, 0, FeedMinutes.Length - 1)] * 60f, take = Mathf.Min(want, cap - cut);
+            if (take < 1f) { p.Message(MessageHud.MessageType.TopLeft, Lang.T("Одіна годуванням уже не квапиш: чекай свого часу.")); return; }
+            float done = Hasten(p, take);
+            if (done <= 0f) return;
+            p.m_customData[CutKey] = (cut + done).ToString("0", CultureInfo.InvariantCulture) + ";" + cap.ToString("0", CultureInfo.InvariantCulture);
+            p.Message(MessageHud.MessageType.TopLeft, Lang.F("{0} наївся в гнізді: Одін озветься на {1} раніше.", Plugin.RavenName(munin), RavenAbilities.Span(done)));
+        }
+
+        // what feeding in the nest may still take off this pause (s)
+        internal static float FeedCutLeft(Player p)
+        {
+            float cut, cap;
+            CutOf(p, out cut, out cap);
+            return Mathf.Max(0f, cap - cut);
+        }
+
+        // what feeding took off this pause and may at most (a pause from before this was kept: its share of what is left)
+        private static void CutOf(Player p, out float cut, out float cap)
+        {
+            cut = 0f; cap = 0f;
+            if (p == null) return;
+            string raw; string[] a;
+            if (p.m_customData.TryGetValue(CutKey, out raw) && (a = raw.Split(';')).Length == 2) { cut = Errands.F(a[0], 0f); cap = Errands.F(a[1], 0f); }
+            else cap = CooldownLeft(p) * FeedCutShare;
+        }
+
+        // the nest window: the ways to bring the next errand sooner
+        internal static string HasteHelp(Player p)
+        {
+            float feed = FeedCutLeft(p);
+            return Lang.F("• нагодуй воронів у гнізді: що ситніша їжа, то більше ({0})\n• переможи боса: −{1} хв\n• бій як у сагах (★★★★★): −{2} хв\n• виконай прохання ворона: −{3} хв\n• що вища довіра, то коротша пауза",
+                feed >= 1f ? Lang.F("ще до {0}", RavenAbilities.Span(feed)) : Lang.T("на цю паузу вже досить"), R(BossMinutes), R(SagaMinutes), R(RequestMinutes));
+        }
+
+        private static string R(float v) { return Mathf.RoundToInt(v).ToString(); }
+
+        // a deed Odin sees (a boss, a fight for the sagas, a raven's wish): the next errand sooner, wherever you are
+        internal static void Deed(Player p, float minutes, string what)
+        {
+            if (p == null || p != Player.m_localPlayer || minutes <= 0f) return;
+            float done = Hasten(p, minutes * 60f);
+            if (done > 0f) p.Message(MessageHud.MessageType.TopLeft, Lang.F("Одін бачив {0}: наступне доручення на {1} раніше.", what, RavenAbilities.Span(done)));
+        }
+
+        // takes up to so many seconds off the pause; what it really took
+        private static float Hasten(Player p, float seconds)
+        {
+            float left = CooldownLeft(p);
+            if (left <= 0f || seconds <= 0f) return 0f;
+            float done = Mathf.Min(left, seconds);
+            if (left - done < 1f) WorldTime.ClearHere(p.m_customData, NextKey); else WorldTime.SetHere(p.m_customData, NextKey, left - done);
+            Errands.Version++;
+            return done;
+        }
+
         internal static float CooldownLeft(Player p) { return p != null ? WorldTime.LeftHere(p.m_customData, NextKey) : 0f; }
 
         // the raven now at Odin's for an errand (and how long yet); false when none
@@ -149,7 +225,7 @@ namespace HuginWhispers
         // the call that came to nothing, or Odin's will declined: nothing lost, the gifts stay; the next call — tomorrow
         private static void NotToday(Player p)
         {
-            WorldTime.SetHere(p.m_customData, NextKey, DayLen);
+            SetPause(p, DayPause());
             p.m_customData.Remove(OdinKey);
             SetGlow(p, null);
             _session = 0f; _toldCame = false;
@@ -267,7 +343,7 @@ namespace HuginWhispers
             if (item == null) return Lang.T("Твоїх воронів у гнізді нема.");
             float away = UnityEngine.Random.Range(AwayMin, Mathf.Max(AwayMin, AwayMax));
             Trust.SendAway(item, away, Why);
-            WorldTime.SetHere(p.m_customData, NextKey, DayLen * PauseMul(Trust.Level(item)));
+            SetPause(p, DayLen * PauseMul(Trust.Level(item)));
             p.m_customData.Remove(OdinKey); // the next wait is a new one
             p.m_customData[FromKey] = ErrandSteps.Pt(v.transform.position.x) + "/" + ErrandSteps.Pt(v.transform.position.z); // (an errand at this nest: «Облога гнізда»)
             SetGlow(p, null);
@@ -314,7 +390,7 @@ namespace HuginWhispers
             if (p == null || Errands.Of(p) == null) return;
             ErrandTalk.Refuse(Errands.Of(p).Munin);
             Errands.Drop(p);
-            if (CooldownLeft(p) < DayLen) WorldTime.SetHere(p.m_customData, NextKey, DayLen);
+            if (CooldownLeft(p) < DayPause()) SetPause(p, DayPause());
             Errands.Version++;
         }
 
@@ -357,7 +433,7 @@ namespace HuginWhispers
             float wait = CooldownLeft(p);
             if (wait > 0f) return Lang.F("Наступне доручення — за {0}", RavenAbilities.Span(wait));
             if (Called(p)) return Came(p) ? Lang.T("Одін над гніздом") : Lang.T("Ворони кличуть Одіна");
-            if (!Trial.HasRaven(p) && !Trial.Running(p)) return Trial.Open(p) ? Lang.T("Ворона в тебе ще нема — поклич Одіна: він дасть випробування") : Lang.T("Ворона в тебе нема — його можна купити в Хальдора");
+            if (!Trial.HasRaven(p) && !Trial.Running(p)) return Lang.T("Ворона в тебе нема — свій знайде тебе сам, а чужого продає Хальдор");
             return Lang.T("Посади воронів у гніздо, поклади дари в чашу й поклич Одіна");
         }
     }
@@ -368,8 +444,6 @@ namespace HuginWhispers
         internal static readonly List<NestView> All = new List<NestView>();
         internal const string GlowKey = "RavenWatch_odinGlow";   // the nest's ZDO: whose Odin is over it (player id; 0 none)
         private const string RpcGlow = "RavenWatch_NestGlow";
-        internal const string TrialKey = "RavenWatch_trialGlow"; // the nest's ZDO: whose trial Odin is over it for (player id; 0 none)
-        private const string RpcTrial = "RavenWatch_NestTrialGlow";
         private ZNetView _nv;
         private Perches.Def _def;
         private PerchView _perch;
@@ -383,7 +457,7 @@ namespace HuginWhispers
             _perch = GetComponent<PerchView>();
             _def = Perches.DefOf(Utils.GetPrefabName(gameObject));
             All.Add(this);
-            if (_nv != null && _nv.GetZDO() != null) { _nv.Register<long, bool>(RpcGlow, OnGlow); _nv.Register<long, bool>(RpcTrial, OnTrialGlow); }
+            if (_nv != null && _nv.GetZDO() != null) _nv.Register<long, bool>(RpcGlow, OnGlow);
             int zones = 0;
             foreach (Transform t in GetComponentsInChildren<Transform>(true))
             {
@@ -476,17 +550,6 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the glow (Odin over it)
         internal void SendGlow(long pid, bool on) { if (Valid) _nv.InvokeRPC(ZNetView.Everybody, RpcGlow, pid, on); }
 
-        // Odin over it for one with no ravens (Trial): shown while that player is near
-        internal void SendTrialGlow(long pid, bool on) { if (Valid) _nv.InvokeRPC(ZNetView.Everybody, RpcTrial, pid, on); }
-
-        private void OnTrialGlow(long sender, long pid, bool on)
-        {
-            if (!Valid || !_nv.IsOwner()) return;
-            ZDO z = _nv.GetZDO();
-            if (on) z.Set(TrialKey, pid);
-            else if (z.GetLong(TrialKey, 0L) == pid) z.Set(TrialKey, 0L);
-        }
-
         private void OnGlow(long sender, long pid, bool on)
         {
             if (!Valid || !_nv.IsOwner()) return;
@@ -505,8 +568,6 @@ namespace HuginWhispers
             long pid = _nv.GetZDO().GetLong(GlowKey, 0L);
             bool show = false;
             if (pid != 0L && Here(pid)) for (int i = 0; i < _perch.Count; i++) { Perches.Occupant o = _perch.At(i); if (o != null && o.Pid == pid) { show = true; break; } }
-            long trial = _nv.GetZDO().GetLong(TrialKey, 0L);
-            if (trial != 0L && Here(trial)) show = true;
             if (show && _glow == null) MakeGlow();
             if (_glow != null && _glow.activeSelf != show) _glow.SetActive(show);
         }

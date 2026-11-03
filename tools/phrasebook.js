@@ -4,7 +4,9 @@
 // gives them in the phrase files' format to bring back into the code)
 const fs = require('fs'), path = require('path');
 const src = path.join(__dirname, '..', 'src');
-const files = ['Patterns.cs', 'TalkPatterns.cs', 'PerchPatterns.cs', 'CrossPatterns.cs', 'AboutPatterns.cs', 'StrikePatterns.cs', 'DeathPatterns.cs', 'EmotePatterns.cs', 'PassPatterns.cs', 'LifePatterns.cs', 'VarietyPatterns.cs', 'QuipPatterns.cs', 'PlacePatterns.cs', 'LifeTalkPatterns.cs', 'AgainPatterns.cs', 'WorldPatterns.cs', 'WardPatterns.cs', 'ErrandPatterns.cs', 'MorePatterns.cs', 'MomentPatterns.cs', 'PerkPatterns.cs', 'VictimPatterns.cs', 'BondPatterns.cs', 'JointPatterns.cs', 'RequestPatterns.cs', 'PeoplePatterns.cs', 'HomePatterns.cs', 'BondMomentPatterns.cs', 'PetPatterns.cs', 'PairPatterns.cs', 'MeadPatterns.cs', 'OmenPatterns.cs', 'TamePatterns.cs'];
+// every *Patterns file in Patterns.All order, read from Patterns.cs itself (a hand list here went stale twice)
+const allLine = fs.readFileSync(path.join(src, 'Patterns.cs'), 'utf8').split('\n').find(l => l.includes('_allH = l.ToArray()'));
+const files = ['Patterns.cs'].concat([...allLine.matchAll(/AddRange\((\w+)\.Hugin\)/g)].map(m => m[1] + '.cs'));
 
 function arrays(file, name) {
   const s = fs.readFileSync(path.join(src, file), 'utf8');

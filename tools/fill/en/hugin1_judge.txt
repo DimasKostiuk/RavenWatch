@@ -1,0 +1,86 @@
+@хсуд_1
+You survived. That's all I can say in your defence.
+The enemy made more mistakes than you. Barely.
+I counted your hits. One claw's worth is too many.
+A fight even I'm ashamed of. And I just sat there.
+If that was a plan, the plan was to die. Nearly worked.
+Swinging a weapon isn't fighting. Learn the difference.
+Skill didn't save you. The enemy's laziness did.
+One star for still standing.
+@хсуд_2
+A victory that tastes of blood. Yours.
+Two stars. One for winning, one out of pity.
+Lots of swings. Few hits.
+The enemy fell. You nearly did too. A draw in your favour.
+Crooked, long and loud. But yours.
+One more fight like that and I'll look for a replacement.
+@хсуд_3
+Three stars. Exactly halfway between a saga and a disgrace.
+No mistakes, no deeds. An ordinary work shift.
+Nothing to praise, nothing to scold. Boring, but alive.
+That's how people who live to be old fight.
+Fine. The enemy didn't even notice it lost.
+Average. But for you average is progress.
+@хсуд_4
+Four stars. No fifth, you'd get cocky.
+The enemy didn't even have time to get scared. Good.
+Clean. Quick. I'm almost proud.
+No shame telling that one by the fire.
+That's how it's done. No spare blood, no spare yelling.
+Nice. Odin probably looked up.
+@хсуд_5
+Five stars. I'll write it in big runes.
+You fought like a song. I forgot to caw.
+Not one wasted move. Where did that come from?
+The enemy had no chance. And knew it.
+You see that once in a hundred winters. I saw it.
+Flawless. Shame nobody but me saw it.
+Now that's a fight. Valhalla-worthy. But don't hurry.
+I'll tell this one until my feathers turn grey.
+@хсуд_порада_смерть
+Health near zero and you're still swinging. Back off sooner.
+A bit more and someone else would have won this. Heal in time.
+You fought on your last breath. That's not courage, it's a lottery.
+When everything goes red, run, don't hit harder.
+@хсуд_порада_спина
+You stood among them like a post. Keep them in front of you.
+Your back is not a shield. Stop catching blows with it.
+Two in front is a fight. Two behind is a funeral. Back up to a wall.
+You saw one enemy, three were hitting you. Look around.
+@хсуд_порада_кров
+You let so many through I lost count.
+Hit, another hit — all of them on you. Move.
+Armour is no reason to stand under blows.
+Hit first or step back. Standing and taking it is the worst of the three.
+@хсуд_порада_щит
+Is the shield for decoration? Raise it once.
+The enemy swings slowly. You'll parry if you watch.
+A dodge is a step aside. One step. Try it.
+You took every blow like a target at the range.
+@хсуд_порада_зілля
+You didn't fight, you held a potion tasting.
+Potions run out before enemies do. Learn without them.
+A bottle in your hand instead of a weapon — that's how you bury yourself.
+Drink less, hit more. Simple rule.
+@хсуд_порада_втеча
+Running is no shame. Coming back without a plan is.
+You ran well. Shame you didn't fight as well.
+The retreat worked. Now think why you needed one.
+Your legs work better than your arms. Train the arms.
+@хсуд_порада_довго
+The enemy had time to grow old. Hit the weak spot.
+You pecked at it like a woodpecker. Find where to hit.
+A long fight is many chances to slip. Finish faster.
+I had time to clean my feathers twice. Twice!
+@сп_fight
+{m_when} you fought so well I forgot to write. {m_stars}.
+The fight {m_when}. {m_stars}. Since then I look at you a bit differently.
+{m_when} — {m_stars}. Back then you looked like a warrior from a saga.
+~1 Once you actually fought properly. {m_when}. {m_stars}. Once.
+~2 I remember {m_when}: {m_grade}, {m_stars}. A good day.
+~3 {m_when} you fought {m_grade}. That's when I first thought I'm safe with you.
+@сп_fight_тут
+Here you fought {m_grade}. {m_stars}. The place remembers, so do I.
+This place. {m_stars}. I was proud of you here.
+Here — {m_stars}. The enemies are gone, the memory stayed.
+Here you fought {m_grade}. I still hear the steel ringing.

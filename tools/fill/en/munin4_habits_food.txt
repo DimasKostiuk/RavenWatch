@@ -1,0 +1,153 @@
+@мзв_hangover
+Why are you yelling? My head's splitting.
+Dry yesterday — bad today. That's how it goes.
+Don't shake so much, I'm sick.
+Give me a hair of the dog or I'll croak.
+The sun is too damn bright. Turn it off.
+Shut up. Just shut up and bring mead.
+@мзв_whine
+Home, damn. It's warm there and there's grub.
+How much more walking? I want my beam.
+Nothing here is mine. I want back.
+Where did you drag me, huh?
+Home is better. Always better.
+When we get home I'll sleep three days.
+@мзв_sneak
+Quiet is for cowards. CAW!
+Why are you hissing? It wasn't on purpose.
+Why hide? Walk up and punch it in the face!
+Oops. They heard. Good, fight.
+I'm not sneaking. I'm walking proudly.
+Caw! Let them know.
+@мзв_spook
+I wanted to catch it myself!
+It ran. And I yelled at it to stay.
+Meat! Was.
+Caw! Someone had to scare it.
+Sorry. I was hungry.
+The game got scared. Wimp.
+@мзв_refuse
+Eat that yourself.
+Am I a pig? Bring something decent.
+Ugh. I won't even sniff it.
+I want something sweet. Not this.
+You spoiled me, and now this? Nope.
+Let Hugin eat it. He doesn't care.
+@мзв_sulk
+Who's going to scratch me? The neighbour?
+Don't want to pet me? Fine. I'm offended.
+I sit here. Unpetted. Like an orphan.
+Pet me just once, cheapskate.
+Forgot about me? I'll remember.
+A whole day without affection. You brute.
+@мзв_warn
+Damn, behind you!
+Turn around, dummy, they're cutting!
+Beast behind!
+Left, left, damn!
+It's running at you!
+Hit, or they'll eat you!
+@прм_гучний
+CAW! Well, I said I can't do quiet.
+Cough. CAW. What?
+~1 Let them come. I'm bored.
+~1 Quiet? Screw quiet.
+~2 Oops. Slipped out, damn.
+~2 I'm quiet. CAW. See.
+~3 Sorry, bro. That's my voice.
+~3 Cawed. Happens. Don't sulk.
+@прм_ревнощі
+Grub for the nerd? And me?
+I'm here like an orphan and you feed Hugin.
+~1 I'll remember this. For a long time.
+~1 A chunk for him, a fig for me. Sure.
+~2 Don't look at me. I'm offended.
+~2 Next time me first, hear?
+~3 I want some too. Come on.
+~3 I'm jealous, damn. No idea why.
+@прм_ревнощі_кінець
+Okay, forget it.
+Fine. But the nerd owes me.
+~1 Forgiven. But I remember everything.
+~1 Fine. This time. Next time I peck.
+~2 Done, not angry. Almost.
+~2 Peace. Just don't do it often.
+~3 I can't sulk at you long.
+~3 Done, bro. Peace.
+@прм_відвага
+That's it, now I'm angry!
+It's staggering! Let's tear it!
+~1 Ha! Not scary now!
+~1 My turn, damn!
+~2 Finish the bastard!
+~2 I'm going! Cover me!
+~3 Together, bro! Take it down!
+~3 For you — even at a giant.
+@прм_монети
+{coins} glitter — so they're mine.
+~1 {coins}? Mine now. Don't look.
+~1 Borrowed {coins}. Forever.
+~2 {coins} — into my nest. Don't ask.
+~3 Saving for our old age: {coins}. A shiny old age.
+@улюблене_вперше
+{food}! Are you reading my mind?
+ooh, {food}. Now that's grub.
+~1 {food}. Well, for once you didn't screw up.
+~1 {food}?! Where were you before, cheapskate?
+~2 {food}! I drooled. On you.
+~2 {food}. That's it, I'm yours now. Almost.
+~3 {food}! Bro, you know me inside out.
+~3 {food}... What a gift. Thanks.
+@улюблене
+Mine! Give it here, quick.
+{food}. You're good today.
+~1 {food}. Finally it got through to you.
+~1 Oh, mine. This time I won't peck.
+~2 {food}. Sucking up? Smart move.
+~2 Mine again. What, in love? Sure.
+~3 {food}. You spoil me, bro.
+~3 My favourite. You're gold, damn.
+@обївся
+That's it, my belly's bursting.
+Full as a python. Now I'll crawl.
+~1 One more bite and I'll crap on your shoulder. From joy.
+~1 Fattening me for slaughter? What are you plotting?
+~2 Full. Don't touch me.
+~2 Stuffed. Hic. Pardon.
+~3 Full, bro. Thanks. Nap time.
+~3 Full to the throat. You like having me, huh?
+@ситий_їсть
+Not hungry. But I'll eat.
+Full, but I don't skip freebies.
+~1 Eating on principle. So you get nothing.
+~1 Give. Not because I want it. Because I can.
+~2 For later. I'll thank you in winter.
+~2 What, more? I'll take it.
+~3 Well, if you're giving — I'll take it, bro.
+~3 You feed me like family. Go on.
+@втеча_м
+{prey} — gone. What a lousy shot.
+lunch ran off. I'd have caught it, but you don't let me.
+~1 you shoot like a blind man into fog. Ugh.
+~1 it ran because you huff for the whole forest.
+~2 never mind, we'll catch it. Maybe.
+~2 gone. Well, at least we ran.
+~3 don't be sad, bro. The next one won't get away. I'll see to it.
+@гострю
+my claws cut like an axe.
+a bit more and I'll tear them myself, without you.
+~1 I learn faster than you. What a turtle.
+~1 training. On them. For now on them.
+~2 my paw's getting practised. Blood flows — it works.
+~2 sharpening my beak. Someone will get it.
+~3 sharpening for you, bro. So no one touches you.
+~3 a bit more and we'll be scary as devils.
+@бачив_смерть
+a big beast. Was.
+I saw it fall. Fell nicely.
+~1 took it down. And I pecked most, just so you know.
+~1 lucky you. And me. But mostly me.
+~2 one more head. A good day.
+~2 what a brawl! Blood splashed all the way to my tail.
+~3 together we're power, bro.
+~3 proud of us. Both.

@@ -61,6 +61,9 @@ namespace HuginWhispers
         }
         internal static float SneakH = 0.8f, SneakM = 1f, SneakHunch = 10f, SneakCrouch = 0.45f, SneakNeck = 8f; // Hugin a little less than Munin
         internal bool OnFloor;                              // down on the ground (HoverPlan): no shoulder slope under it
+        internal float ArmLevel;                            // on your arm (ArmPerch), 0..1: a level forearm, no leg bent down a shoulder
+        internal Transform ArmHand;                         // on your arm: your other hand (ShoulderPin); come near, it is watched
+        internal static float ArmWatch = 0.45f;
         internal float GroundLiftL, GroundLiftR, GroundCrouch; // its steps, hops and turns there (HoverPlan): a foot up, both bent // the hover's (HoverPlan): gliding share, its beats' pace, legs let down
         internal static float HoverHz = 2.1f; // hanging in the air during an emote: calmer beats than a startled flap (30% slower)
         internal static float GlideOut = 70f, GlideUp = 10f, GlideElbow = 45f;
@@ -89,13 +92,30 @@ namespace HuginWhispers
             { "scream", new GiftPose(85f, 50f, 70f, 0f, 0f, 0f, 2f) },  // wide open for a moment
             { "heal",   new GiftPose(0f, 0f, 0f, 70f, 15f, 70f, 0f) },  // one wing round your head
             { "dress",  new GiftPose(55f, 35f, 45f, 0f, 0f, 0f, 3f) },  // a thing put on: wings up, settling it with a shiver
+            { "shake",  new GiftPose(50f, 30f, 40f, 0f, 0f, 0f, 18f) }, // out of the bath: wings half open, beating the water off
         };
-        internal static float ScreamSeconds = 1.3f, HealSeconds = 2.5f;
-        private const string RpcHeal = "RavenWatch_PoseHeal";
+        internal static float ScreamSeconds = 1.3f, HealSeconds = 2.5f, BathShakeSeconds = 1.6f;
+        private const string RpcHeal = "RavenWatch_PoseHeal", RpcShakeH = "RavenWatch_ShakeH", RpcShakeM = "RavenWatch_ShakeM";
         private string _moment;
         private float _momentUntil;
 
-        internal static void Register() { RavenFx.Register(RpcHeal, p => Moment(p, true, "heal", HealSeconds)); }
+        internal static void Register()
+        {
+            RavenFx.Register(RpcHeal, p => Moment(p, true, "heal", HealSeconds));
+            RavenFx.Register(RpcShakeH, p => ShakeHere(p, false));
+            RavenFx.Register(RpcShakeM, p => ShakeHere(p, true));
+        }
+
+        // back on your shoulder after a bath (Bath): it shakes itself off — the body's shiver and its wings beating — here
+        // and on every game nearby
+        internal static void ShakeOff(Player p, bool munin) { RavenFx.Broadcast(munin ? RpcShakeM : RpcShakeH, p, x => ShakeHere(x, munin)); }
+        private static void ShakeHere(Player p, bool munin)
+        {
+            ShoulderLife life = Shoulder.LifeOf(p, munin);
+            if (life == null || life.Asleep) return;
+            Moment(p, munin, "shake", BathShakeSeconds);
+            if (life.SitNew) life._sitDir.React(life, SitTemplates.ShakeOffName, 0.2f);
+        }
 
         // Munin puts a wing round you: here and on every game nearby
         // a gift used with this raven (the owner's game): it wakes from a doze
@@ -884,6 +904,9 @@ namespace HuginWhispers
             if (_glanceAt == 1 && Player != null) { at = Player.GetHeadPoint(); has = true; }
             else if (_glanceAt == 2 && _foe != null && !_foe.IsDead()) { at = Body.Eye(_foe); has = true; }
             else if (_glanceAt == 3 && Player != null && ReferenceEquals(Player, Player.m_localPlayer)) { ShoulderLife o = Shoulder.LocalLife(!Munin); if (o != null) { at = o.HeadPoint; has = true; } }
+            // on your arm, your other hand come near (food, a finger, a stroke): it watches the hand, not about (studio
+            // 2026-10-29: its beak wandered, now at the food, now 20 cm off it)
+            if (ArmHand != null && ArmLevel > 0.5f && (ArmHand.position - _head.position).sqrMagnitude < ArmWatch * ArmWatch) { at = ArmHand.position; has = true; }
             if (has)
             {
                 Vector3 dir = at - _head.position;
@@ -1668,6 +1691,7 @@ namespace HuginWhispers
             Vector3 fwd = Player != null ? Vector3.ProjectOnPlane(Player.transform.forward, Vector3.up).normalized : ahead;
             float hold = -ShakeDeg * _shakeBody * ShakeWave(ShakeLag);
             if (OnFloor) w = 0f; // (the ground is level: no leg bent down a slope)
+            w *= 1f - ArmLevel; // (your forearm is level too: ArmPerch)
             crouch += GroundCrouch + _sneak * SneakCrouch;
             float tk = SitNew && _sitDir.Run != null && _sitDir.Run.T.Tuck ? _sitDir.ActW : 0f; // (the cold: one foot drawn up)
             float sc = ScratchEnv(), rub = sc > 0f ? Mathf.Sin((Time.time - _scratchAt) * ScratchHz * Mathf.PI * 2f) * ScratchRub * Mathf.Clamp01((sc - 0.6f) / 0.4f) : 0f;

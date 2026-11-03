@@ -20,6 +20,9 @@ namespace HuginWhispers
             "help", "quick", "visit", "diary",
 #if RAVEN_ITEM
             "book", "train", "mastery", "give", "power", "reroll", "perk", "perks", "wing", "studio", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "eyes", "gift", "perf", "netsize", "cells", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour", "victim", "breed", "bond", "joint", "loot", "play", "share", "gather", "people", "request",
+#if RAVEN_NPC
+            "blueprint",
+#endif
 #endif
         };
 
@@ -187,11 +190,24 @@ namespace HuginWhispers
                     case "beastplay": return BeastPlay.Cmd(p, a);
 #if RAVEN_STORY
                     case "story": return Story.Cmd(p, a);
+                    case "stage": return AnimStage.Cmd(p, a); // (the animation stage: the mannequin)
+#elif RAVEN_NPC
+                    case "story": return HallPanel.Toggle(); // (no story window before 3.0: the Hall's)
+#endif
+#if RAVEN_NPC
+                    case "hall": return HallPanel.Toggle();
+                    case "loc": return HallPanel.Toggle();
+                    case "locations": return HallPanel.Toggle();
+#endif
+#if RAVEN_NPC
                     case "npc": return Npcs.Cmd(p, a);
 #endif
                     case "nest": return Nest.Cmd(p, a);
                     case "trial": return Trial.Cmd(p, a);
                     case "tree": return RavenTree.Cmd(p, a);
+#if RAVEN_NPC
+                    case "blueprint": return Blueprint.Cmd(p, a);
+#endif
                     case "favour": return Favour.Cmd(p, a);
                     case "back": return ErrandMap.Back(p);
                     case "home": return ErrandMap.Home(p);

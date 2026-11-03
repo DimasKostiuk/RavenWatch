@@ -93,7 +93,7 @@ namespace HuginWhispers
                 {
                     marked = true;
                     Vector3 zc = zone; float rr = radius;
-                    System.Func<string> way = () => { Player me = Player.m_localPlayer; if (me == null) return null; Vector3 d = zc - me.transform.position; d.y = 0f; return Lang.F("Місце позначене на мапі синім колом: до нього ~{0} м.", Mathf.RoundToInt(Mathf.Max(0f, d.magnitude - rr))); };
+                    System.Func<string> way = () => { Player me = Player.m_localPlayer; if (me == null) return null; Vector3 d = zc - me.transform.position; d.y = 0f; int left = Mathf.RoundToInt(Mathf.Max(0f, d.magnitude - rr)); return left <= 0 ? Lang.T("Ти на місці — у золотому колі рун (на мапі воно синє).") : Lang.F("Куди йти: синє коло на мапі світу. На місці його видно як золоте коло рун. Ще ~{0} м.", left); };
                     Ticking(T(col, way(), 14f, InkSoft, F.Italic), way); // (as you go: the words, not the page)
                 }
             }

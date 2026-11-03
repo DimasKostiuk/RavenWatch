@@ -133,7 +133,7 @@ namespace HuginWhispers
             foreach (Pending w in Waiting.Values) if (w.Show != null && !w.Shown) { w.Shown = true; w.Show(0f); }
             foreach (Pending t in Turns) { t.Show(0f); if (t.Clip != null) UnityEngine.Object.Destroy(t.Clip); }
             foreach (AudioClip c in Ready.Values) if (c != null) UnityEngine.Object.Destroy(c);
-            Turns.Clear(); Waiting.Clear(); Ready.Clear(); ReadyAt.Clear(); Loudness.Clear();
+            Turns.Clear(); Waiting.Clear(); Ready.Clear(); ReadyAt.Clear(); Loudness.Clear(); Pcm.Clear();
             lock (Inbox) Inbox.Clear();
         }
 
@@ -184,6 +184,18 @@ namespace HuginWhispers
             // (a raven of a talk sounds from its model: on the shoulder bone, or just off it in flight)
             foreach (Speaking s in Speakers)
                 if (s.At != null && Time.time < s.Until && (s.At.IsChildOf(owner.transform) || (s.At.position - owner.transform.position).sqrMagnitude < 9f)) { munin = s.Munin; return true; }
+            return false;
+        }
+
+        // the same for one of the two: is this raven itself still saying something
+        internal static bool Busy(Player owner, bool munin)
+        {
+            if (owner == null || !_started) return false;
+            GameObject go = owner.gameObject;
+            foreach (Pending w in Waiting.Values) if (w.Talker == go && w.Munin == munin && w.Show != null && !w.Shown) return true;
+            foreach (Pending t in Turns) if (t.Talker == go && t.Munin == munin) return true;
+            foreach (Speaking s in Speakers)
+                if (s.Munin == munin && s.At != null && Time.time < s.Until && (s.At.IsChildOf(owner.transform) || (s.At.position - owner.transform.position).sqrMagnitude < 9f)) return true;
             return false;
         }
 
@@ -250,8 +262,17 @@ namespace HuginWhispers
             Say(raven.gameObject, bigMunin, guide ? GuideVoice : bigMunin ? BigMunin : BigHugin, text, s => raven != null && Plugin.IsSpawned(raven) && !Plugin.IsFlying(raven), guide ? "n" : bigMunin ? "m" : "h", 15f);
         }
 
+        // a big raven's voice (another player's, seen as a copy here); -1: this voice package has none for big Munin
+        internal static int BigVoice(bool munin) { return munin ? (BigMunin < VoiceCount ? BigMunin : -1) : BigHugin; }
+
         // a voice per character of Norov, in this order (voices.bin: Hugin's seven, then Munin's seven)
         private static readonly string[] VoiceChars = { "calm", "watchful", "fidget", "wanderer", "bold", "homebody", "devoted" };
+        // the six characters of 2.8.1: their own voices from NewVoices on in voices.bin (RavenWatch_Voice 1.4.0), six for each
+        // of the eight timbres (Hugin's four, then Munin's four, in HuginTimbres/MuninTimbres order); an older voice package:
+        // the manner of the character nearest to it (NewLike)
+        private static readonly string[] NewChars = { "curious", "proud", "tender", "grumpy", "huntsman", "sweettooth" };
+        private static readonly string[] NewLike = { "wanderer", "calm", "devoted", "bold", "watchful", "homebody" };
+        internal const int NewVoices = 59;
 
         // the voice of a raven: the manner by the character of the player's raven (Norov), the timbre its own — kept on it
         // (TimbreKey), else picked by its caw number (Voice: made from its id, the same in every game); a raven with no number
@@ -260,13 +281,21 @@ namespace HuginWhispers
         {
             int code = CodeOf(owner, munin, talker);
             Norov.Character c = owner != null ? Norov.OnPlayer(owner, munin) : null;
+#if RAVEN_ITEM
+            PerchLife perch = talker != null ? talker.GetComponent<PerchLife>() : null;
+            if (perch != null) c = Norov.CharById(perch.CharId); // (on a perch: its own, as on the shoulder; never the one its owner wears now)
+            else if (c == null) { Player o = OwnerOf(null, talker); if (o != null) c = Norov.OnPlayer(o, munin); } // (a shoulder raven's card with no owner given)
+#endif
             int v = c != null ? Array.IndexOf(VoiceChars, c.Id) : -1;
+            int nv = c != null && v < 0 ? Array.IndexOf(NewChars, c.Id) : -1;
+            if (nv >= 0) v = Array.IndexOf(VoiceChars, NewLike[nv]);
             if (v < 0) v = code >= 0 ? code % VoiceChars.Length : Mathf.Abs((talker != null ? talker.name : "raven").GetHashCode() + (owner != null ? owner.GetPlayerName().GetHashCode() : 0)) % VoiceChars.Length;
             int[] timbres = munin ? MuninTimbres : HuginTimbres;
             int t = KeptTimbre(owner, munin, talker);
             if (t < 0) t = code >= 0 ? FirstPick(code) : Mathf.Abs(((owner != null ? owner.GetPlayerName() : talker != null ? talker.name : "raven") + (munin ? "|munin voice" : "|hugin voice")).GetHashCode()) % Pool;
             int have = 0; foreach (int b in timbres) if (b + VoiceChars.Length <= VoiceCount) have++;
             if (t >= have) t %= Math.Max(1, have); // (an older voice package: one of the timbres it has)
+            if (nv >= 0) { int own = NewVoices + ((munin ? HuginTimbres.Length : 0) + t) * NewChars.Length + nv; if (own < VoiceCount) return own; }
             return timbres[t] + v;
         }
 
@@ -460,8 +489,8 @@ namespace HuginWhispers
         internal const float Fade = 40f; // m: a raven's voice is gone by here
         // the curve's time is distance / Fade
         private static readonly AnimationCurve Rolloff = new AnimationCurve(
-            new Keyframe(0f, 1f), new Keyframe(3f / Fade, 1f), new Keyframe(10f / Fade, 0.5f), new Keyframe(20f / Fade, 0.2f),
-            new Keyframe(30f / Fade, 0.07f), new Keyframe(1f, 0f));
+            new Keyframe(0f, 1f), new Keyframe(5f / Fade, 1f), new Keyframe(10f / Fade, 0.65f), new Keyframe(20f / Fade, 0.27f),
+            new Keyframe(30f / Fade, 0.09f), new Keyframe(1f, 0f));
 
         internal static GameObject Play(GameObject talker, AudioClip clip, bool munin)
         {
@@ -469,14 +498,16 @@ namespace HuginWhispers
             go.transform.SetParent(talker.transform, false);
             go.transform.localPosition = Vector3.up * (talker.GetComponent<Player>() != null ? 1.7f : 0.5f); // a shoulder raven: by the head
             AudioSource src = go.AddComponent<AudioSource>();
-            src.clip = clip; src.volume = _volume != null ? _volume.Value : 0.9f; src.spatialBlend = 1f; src.dopplerLevel = 0f; src.priority = 64; src.spread = 0f;
-            // a voice fades like one: full up to 3 m, half at 10, a fifth at 20, gone by 40 (the line keeps playing:
-            // come back while it lasts and you hear the rest)
+            src.volume = _volume != null ? _volume.Value : 0.9f; src.spatialBlend = 1f; src.dopplerLevel = 0f; src.priority = 64; src.spread = 0f;
+            // a voice fades like one: full up to 5 m (a raven on a perch nearby talks as loud as the one on you), two
+            // thirds at 10, a quarter at 20, gone by 40 (the line keeps playing: come back while it lasts and you hear the rest)
             src.rolloffMode = AudioRolloffMode.Custom; src.minDistance = 1f; src.maxDistance = Fade;
             src.SetCustomCurve(AudioSourceCurveType.CustomRolloff, Rolloff);
             // dry: the game's sfx group and the world's reverb zones put a strong echo on a voice
             src.reverbZoneMix = 0f; src.bypassReverbZones = true; src.bypassListenerEffects = true;
             Mood m = MoodOf(talker, munin);
+            clip = Even(clip, m.Timbre); // (a new clip: the one given is gone)
+            src.clip = clip;
             if (m.Calling && m.Life != null && !ReferenceEquals(m.Life.gameObject, talker)) { go.transform.SetParent(m.Life.transform, false); go.transform.localPosition = Vector3.zero; } // (calling from afar: from the raven itself, not your head)
             src.volume *= m.Volume; src.pitch = m.Pitch;
             if (m.Calling) src.maxDistance = Fade * CallReach; // (the same fall-off, stretched: heard farther)
@@ -492,6 +523,10 @@ namespace HuginWhispers
             src.Play();
             float len = clip.length / m.Pitch; // (a higher pitch plays it quicker)
             Speaking sp; sp.At = go.transform; sp.Until = Time.time + len + 0.25f; sp.Munin = munin; sp.Life = m.Life; Speakers.Add(sp);
+#if RAVEN_ITEM
+            Player me = Player.m_localPlayer; // a raven speaking near you: the others wait till its voice is done, not just its text's time
+            if (me != null && (go.transform.position - me.transform.position).sqrMagnitude < 900f) Cozy.Quiet(len + 0.5f);
+#endif
             float[] loud;
             if (Loudness.TryGetValue(clip, out loud)) { Loudness.Remove(clip); if (m.Life != null) m.Life.SayBeak(loud, LoudPerSecond * m.Pitch); }
             UnityEngine.Object.Destroy(go, len + (m.Echo ? 0.6f : 0.3f)); // (the echo's tail)
@@ -630,10 +665,86 @@ namespace HuginWhispers
 
         private static AudioClip MakeClip(float[] s, int rate)
         {
-            if (Loudness.Count > 32) { List<AudioClip> gone = null; foreach (AudioClip c in Loudness.Keys) if (c == null) { if (gone == null) gone = new List<AudioClip>(); gone.Add(c); } if (gone != null) foreach (AudioClip c in gone) Loudness.Remove(c); } // (clips dropped unplayed)
+            if (Loudness.Count > 32) { List<AudioClip> gone = null; foreach (AudioClip c in Loudness.Keys) if (c == null) { if (gone == null) gone = new List<AudioClip>(); gone.Add(c); } if (gone != null) foreach (AudioClip c in gone) { Loudness.Remove(c); Pcm.Remove(c); } } // (clips dropped unplayed)
             AudioClip made = MakeClipRaw(s, rate);
             Loudness[made] = LoudOf(s, rate);
+            Pcm[made] = s;
             return made;
+        }
+
+        // One loudness for every raven. The voices come out of the engine equally loud, but the darker timbres (Hugin's
+        // «Морф» and «Свід», the deep Munins) carry three or four times less of the highs than Hugin's own voice, so next to
+        // it they boom as if from a bath, and the thin timbre's high-pass takes their body away (up to 5 dB quieter).
+        // So as a line starts: a dark voice gets a soft lift of its highs (toward EvenBright, at most EvenLiftDb), and
+        // then the line is brought to EvenLufs as the ear hears it (K-weighted, as LUFS) AFTER its timbre's own filter.
+        private static readonly Dictionary<AudioClip, float[]> Pcm = new Dictionary<AudioClip, float[]>();
+        internal static float EvenLufs = -19f, EvenBright = 0.12f, EvenLiftDb = 5f, EvenLiftShare = 0.8f, EvenMaxGain = 2.5f;
+        private static AudioClip Even(AudioClip clip, int timbre)
+        {
+            float[] s;
+            if (clip == null || !Pcm.TryGetValue(clip, out s)) return clip;
+            Pcm.Remove(clip);
+            int rate = clip.frequency;
+            if (s.Length < rate / 5) return clip;
+            float[] y = (float[])s.Clone();
+            double all = Energy(s), high = Energy(Biquad((float[])s.Clone(), "hp", 1500, 0.707, 0, rate));
+            if (all <= 1e-9) return clip;
+            double lift = Math.Min(EvenLiftDb, Math.Max(0, EvenLiftShare * 10 * Math.Log10(EvenBright / Math.Max(1e-4, high / all))));
+            if (lift > 0.3) Biquad(y, "hs", 1500, 0.707, lift, rate);
+            float[] heard = (float[])y.Clone(); // as it will sound through the timbre's filter (Play adds it)
+            if (timbre == 1) Biquad(heard, "lp", HoarseCut, 1, 0, rate);
+            else if (timbre == 2) Biquad(heard, "lp", MuffledCut, 1, 0, rate);
+            else if (timbre == 3) Biquad(heard, "hp", ThinCut, 1, 0, rate);
+            double lufs = Lufs(heard, rate);
+            if (double.IsNaN(lufs)) return clip;
+            float g = (float)Math.Min(EvenMaxGain, Math.Max(0.4, Math.Pow(10, (EvenLufs - lufs) / 20)));
+            for (int i = 0; i < y.Length; i++)
+            {
+                float v = y[i] * g, a = v < 0f ? -v : v;
+                if (a > 0.8f) v = (v < 0f ? -1f : 1f) * (0.8f + 0.18f * (float)Math.Tanh((a - 0.8f) / 0.18f)); // soft peaks, no clicks
+                y[i] = v;
+            }
+            AudioClip made = MakeClipRaw(y, rate);
+            float[] loud;
+            if (Loudness.TryGetValue(clip, out loud)) { Loudness.Remove(clip); Loudness[made] = loud; }
+            UnityEngine.Object.Destroy(clip);
+            return made;
+        }
+
+        // loudness as the ear hears it (ITU BS.1770: K-weighting, 400 ms blocks, gated), NaN: silence
+        private static double Lufs(float[] x, int rate)
+        {
+            float[] k = Biquad(Biquad((float[])x.Clone(), "hs", 1681, 0.707, 4, rate), "hp", 38, 0.5, 0, rate);
+            int b = (int)(rate * 0.4f), h = b / 4;
+            List<double> blocks = new List<double>();
+            for (int o = 0; o + b <= k.Length; o += h) { double e = 0; for (int i = o; i < o + b; i++) e += k[i] * k[i]; blocks.Add(e / b); }
+            if (blocks.Count == 0) { double e = Energy(k) / Math.Max(1, k.Length); return e > 1e-9 ? -0.691 + 10 * Math.Log10(e) : double.NaN; }
+            double sum = 0; int n = 0;
+            foreach (double e in blocks) if (-0.691 + 10 * Math.Log10(e + 1e-12) > -70) { sum += e; n++; }
+            if (n == 0) return double.NaN;
+            double gate = 10 * Math.Log10(sum / n) - 10; sum = 0; n = 0;
+            foreach (double e in blocks) if (10 * Math.Log10(e + 1e-12) > gate) { sum += e; n++; }
+            return n == 0 ? double.NaN : -0.691 + 10 * Math.Log10(sum / n);
+        }
+
+        private static double Energy(float[] x) { double e = 0; for (int i = 0; i < x.Length; i++) e += x[i] * x[i]; return e; }
+
+        // one RBJ biquad in place: "lp" / "hp" (q) or "hs" (high shelf, gainDb)
+        private static float[] Biquad(float[] x, string type, double f0, double q, double gainDb, int rate)
+        {
+            double w = 2 * Math.PI * Math.Min(f0, rate * 0.45) / rate, c = Math.Cos(w), sn = Math.Sin(w), al = sn / (2 * q), b0, b1, b2, a0, a1, a2;
+            if (type == "hs")
+            {
+                double A = Math.Pow(10, gainDb / 40), r = 2 * Math.Sqrt(A) * al;
+                b0 = A * ((A + 1) + (A - 1) * c + r); b1 = -2 * A * ((A - 1) + (A + 1) * c); b2 = A * ((A + 1) + (A - 1) * c - r);
+                a0 = (A + 1) - (A - 1) * c + r; a1 = 2 * ((A - 1) - (A + 1) * c); a2 = (A + 1) - (A - 1) * c - r;
+            }
+            else if (type == "hp") { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = (1 + c) / 2; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
+            else { b0 = (1 - c) / 2; b1 = 1 - c; b2 = (1 - c) / 2; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
+            b0 /= a0; b1 /= a0; b2 /= a0; a1 /= a0; a2 /= a0;
+            double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+            for (int i = 0; i < x.Length; i++) { double v = b0 * x[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = x[i]; y2 = y1; y1 = v; x[i] = (float)v; }
+            return x;
         }
 
         private static AudioClip MakeClipRaw(float[] s, int rate)
@@ -730,7 +841,7 @@ namespace HuginWhispers
         }
     }
 
-    // a voice far away sounds dull: its highs are cut more the farther the listener (8 m: clear, 35 m: 2.2 kHz)
+    // a voice far away sounds dull: its highs are cut more the farther the listener (12 m: clear, 35 m: 2.2 kHz)
     internal sealed class VoiceMuffle : MonoBehaviour
     {
         private static AudioListener _ear;
@@ -745,7 +856,7 @@ namespace HuginWhispers
             if ((_ear == null || !_ear.isActiveAndEnabled) && Time.unscaledTime - _earLooked >= 1f) { _earLooked = Time.unscaledTime; _ear = UnityEngine.Object.FindAnyObjectByType<AudioListener>(); }
             if (_ear == null) return;
             float d = Vector3.Distance(_ear.transform.position, transform.position);
-            _lp.cutoffFrequency = Mathf.Min(Top, Mathf.Lerp(22000f, 2200f, Mathf.InverseLerp(8f, 35f, d)));
+            _lp.cutoffFrequency = Mathf.Min(Top, Mathf.Lerp(22000f, 2200f, Mathf.InverseLerp(12f, 35f, d)));
         }
     }
 

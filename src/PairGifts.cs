@@ -17,12 +17,12 @@ namespace HuginWhispers
     {
         internal static void Reset() { Whirl.Reset(); Load.Reset(); ClearSky.Reset(); PairFx.Reset(); }
 
-        // the gift's own gesture of yours, both arms (PlayerAnims: the others see it by your data); over whatever small
+        // the gift's own gesture of yours, both arms (BodyClips: the others see it by your data); over whatever small
         // gesture was playing, never in Odin's wings or a swing
         internal static void Gesture(Player p, string clip)
         {
             if (p == null || !ReferenceEquals(p, Player.m_localPlayer) || !RavenSkills.Animations || OdinWings.Flying() || p.InAttack()) return;
-            PlayerAnims.Play(p, 2, clip, 0.2f, UnityEngine.Random.Range(0.95f, 1.05f));
+            BodyClips.Play(p, 2, clip, 0.2f, UnityEngine.Random.Range(0.95f, 1.05f));
         }
 
         internal static void Tick()
@@ -40,6 +40,9 @@ namespace HuginWhispers
             if (a == null) return null;
             if (Load.On() && a.Id != "pload") return Lang.T("Ворони тягнуть ношу — кігті зайняті");
             if (Whirl.On() && a.Id != "pwhirl") return Lang.T("Ворони у вихорі");
+            // the clear sky: a strike comes back up to it, but none of them leaves the sky for long (the same ones keep
+            // the clear sky from starting: Why)
+            if (ClearSky.Mine() && (a.Id == "dome" || a.Id == "scout" || a.Id == "hdecoy" || a.Id == "mtame")) return Lang.T("Ворони розганяють хмари");
             return null;
         }
 
@@ -63,6 +66,8 @@ namespace HuginWhispers
             }
             if (RavenSkills.Scouting()) return Lang.T("Хугін на розвідці");
             if (Dome.Mine()) return Lang.T("Хугін тримає купол");
+            if (Decoy.Mine()) return Lang.T("Хугін дражнить ворога");
+            if (Tame.Mine()) return Lang.T("Мунін приборкує звіра");
             return null;
         }
 
@@ -269,6 +274,7 @@ namespace HuginWhispers
             bool counts = _blows < Counted;
             _blows++;
             Strike.VolleyHit(p, munin, v, peck, from, 1f, BossShare, counts);
+            Twists.Pull(p, peck.Target); // (II: drawn in)
         }
 
         // why: the line in the middle (null: pressed again, nothing to say but the word)
@@ -446,7 +452,7 @@ namespace HuginWhispers
         internal static float Radius = 25f, Seconds = 300f, Cost = 25f, Cooldown = 1800f;
         internal static float RadiusNow() { return Radius * (Facets.On("pclear") ? 2f : 1f); } // (golden runes III: twice as wide)
         internal static float Duration() { return Mathf.Round(Seconds * GiftUp.Power("pclear")); } // (golden runes I: longer)
-        private const string EndKey = "RavenWatch_ClearEnd", RadiusKey = "RavenWatch_ClearR";
+        internal const string EndKey = "RavenWatch_ClearEnd", RadiusKey = "RavenWatch_ClearR";
 
         private static bool _mine;
         private static double _until;
@@ -507,6 +513,7 @@ namespace HuginWhispers
             _until = WorldTime.Now + Duration();
             ZDO z = NetFlag.Zdo(p, true);
             if (z != null) { z.Set(EndKey, (float)_until); z.Set(RadiusKey, RadiusNow()); }
+            Twists.ClearFlags(p, true); // (II: plants grow; III: the moon at night)
             for (int i = 0; i < 2; i++) if (!Strike.Busy(p, i == 1) && Shoulder.Arrived(p, i == 1)) Orders.FlyWith(p, i == 1, Duration() + 30f, Orders.Circle);
             _lookAt = 0f;
             PairGifts.Gesture(p, "pair_clear"); // your arm sweeps the sky

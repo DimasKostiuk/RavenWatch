@@ -1,0 +1,336 @@
+clip shield_kneel
+length 17
+loop 0
+pivot 1.1
+curve ease
+feet ground
+mode Spine1 body
+mode Spine2 body
+mode RightHand body
+part kneels 0 4 hold
+part lifts 4 7 hold
+part looks 7 10 loop
+part lays 10 13 hold
+part rises 13 17 end
+mark 3.6 hand_on
+mark 16 stood
+
+# тіло: стоїть, стає на коліно, нахиляється, тримає, встає
+0 move 0 0 0
+0.5 move 0 0 0
+2.5 move 0 -0.42 0.05
+3.5 move 0 -0.47 0.1
+11.8 move 0 -0.47 0.1
+13 move 0 -0.42 0.05
+
+
+
+0 Spine1 0 0 0
+0.5 Spine1 0 0 0
+2.5 Spine1 4 0 0
+3.5 Spine1 35 0 10
+4.6 Spine1 35 0 10
+6.2 Spine1 8 0 0
+10.4 Spine1 8 0 0
+11.8 Spine1 35 0 10
+12.6 Spine1 35 0 10
+
+0 Spine2 0 0 0
+0.5 Spine2 0 0 0
+2.5 Spine2 4 0 0
+3.5 Spine2 30 0 10
+4.6 Spine2 30 0 10
+6.2 Spine2 6 0 0
+10.4 Spine2 6 0 0
+11.8 Spine2 30 0 10
+12.6 Spine2 30 0 10
+
+# погляд: на щит, поки тримає; вгору й навкруги, коли встає
+0 @Look 0 0.11 0.78
+4.6 @Look 0 0.11 0.78
+6.2 @Look 0 0.907 0.847
+7 @Look 0 0.907 0.847
+8.5 @Look 0.1 0.95 0.847
+10 @Look 0 0.907 0.847
+10.4 @Look 0 0.907 0.847
+11.8 @Look 0 0.11 0.78
+13 @Look 0 0.11 0.78
+
+0 @Look.w 0 0 0
+1.5 @Look.w 0 0 0
+3 @Look.w 1 0 0
+
+# щит: одразу з того місця, де лежав, угору перед груди, потім назад туди ж (без їзди по землі)
+
+0 @Prop 0 0.907 0.847
+
+0 @Prop.w 0 0 0
+4.6 @Prop.w 0 0 0
+6.2 @Prop.w 1 0 0
+10.4 @Prop.w 1 0 0
+12 @Prop.w 0 0 0
+17 @Prop.w 0 0 0
+
+0 @Prop.r -45 0 0
+6.2 @Prop.r -45 0 0
+7 @Prop.r -45 0 0
+8.5 @Prop.r -40 8 0
+10 @Prop.r -45 0 0
+10.4 @Prop.r -45 0 0
+17 @Prop.r -45 0 0
+
+
+# ліва рука: на самому щиті, де б він не лежав; зап'ясток зовні краю, пальці за край
+0 @LeftHand.on -0.34 0.09 -0.38
+4.6 @LeftHand.on -0.34 0.09 -0.38
+6.2 @LeftHand.on -0.36 0.03 -0.37
+10.4 @LeftHand.on -0.36 0.03 -0.37
+12 @LeftHand.on -0.34 0.09 -0.38
+17 @LeftHand.on -0.34 0.09 -0.38
+
+0 @LeftHand.on.f 0 -1 0
+0 @LeftHand.on.n 0.69 0 0.72
+
+0 @LeftHand.on.w 0 0 0
+2 @LeftHand.on.w 0 0 0
+3.6 @LeftHand.on.w 1 0 0
+12.2 @LeftHand.on.w 1 0 0
+13.4 @LeftHand.on.w 0 0 0
+17 @LeftHand.on.w 0 0 0
+
+# права рука: на коліні, коли тіло йде вниз і вгору; на краю, коли щит угорі
+0 @RightHand 0.2 0.62 0.42
+5.2 @RightHand 0.2 0.62 0.42
+6.6 @RightHand 0.38 0.66 0.53
+10.1 @RightHand 0.38 0.66 0.53
+11.4 @RightHand 0.2 0.62 0.42
+
+
+0 RightHand 0 0 0
+1.2 RightHand 0 0 0
+2.6 RightHand -45 0 0
+14.4 RightHand -45 0 0
+15.8 RightHand 0 0 0
+17 RightHand 0 0 0
+
+0 @RightHand.on 0.36 0.03 -0.37
+0 @RightHand.on.f 0 -1 0
+0 @RightHand.on.n -0.69 0 0.72
+
+0 @RightHand.on.w 0 0 0
+6 @RightHand.on.w 0 0 0
+6.6 @RightHand.on.w 1 0 0
+10.1 @RightHand.on.w 1 0 0
+10.7 @RightHand.on.w 0 0 0
+17 @RightHand.on.w 0 0 0
+
+# куди дивляться коліна: заднє вниз і вперед, переднє вгору і вперед
+0 @LeftFoot.p -0.15 0 1
+0.5 @LeftFoot.p -0.15 0 1
+2.5 @LeftFoot.p -0.15 -0.6 0.7
+
+0 @RightFoot.p 0.15 0 1
+0.5 @RightFoot.p 0.15 0 1
+2.5 @RightFoot.p 0.15 0.8 0.6
+
+# пальці: розкриті, поки рука йде до щита; стиснуті на краю; розкриті, коли відпускає
+0 LeftHandIndex1 0 0 0
+2 LeftHandIndex1 0 0 0
+3.6 LeftHandIndex1 -25 0 0
+4 LeftHandIndex1 -25 0 0
+4.5 LeftHandIndex1 28 0 0
+11.9 LeftHandIndex1 28 0 0
+12.3 LeftHandIndex1 -25 0 0
+13.4 LeftHandIndex1 0 0 0
+17 LeftHandIndex1 0 0 0
+0 LeftHandIndex2 0 0 0
+2 LeftHandIndex2 0 0 0
+3.6 LeftHandIndex2 -25 0 0
+4 LeftHandIndex2 -25 0 0
+4.5 LeftHandIndex2 28 0 0
+11.9 LeftHandIndex2 28 0 0
+12.3 LeftHandIndex2 -25 0 0
+13.4 LeftHandIndex2 0 0 0
+17 LeftHandIndex2 0 0 0
+
+0 LeftHandMiddle1 0 0 0
+2 LeftHandMiddle1 0 0 0
+3.6 LeftHandMiddle1 -25 0 0
+4 LeftHandMiddle1 -25 0 0
+4.5 LeftHandMiddle1 28 0 0
+11.9 LeftHandMiddle1 28 0 0
+12.3 LeftHandMiddle1 -25 0 0
+13.4 LeftHandMiddle1 0 0 0
+17 LeftHandMiddle1 0 0 0
+0 LeftHandMiddle2 0 0 0
+2 LeftHandMiddle2 0 0 0
+3.6 LeftHandMiddle2 -25 0 0
+4 LeftHandMiddle2 -25 0 0
+4.5 LeftHandMiddle2 28 0 0
+11.9 LeftHandMiddle2 28 0 0
+12.3 LeftHandMiddle2 -25 0 0
+13.4 LeftHandMiddle2 0 0 0
+17 LeftHandMiddle2 0 0 0
+
+0 LeftHandRing1 0 0 0
+2 LeftHandRing1 0 0 0
+3.6 LeftHandRing1 -25 0 0
+4 LeftHandRing1 -25 0 0
+4.5 LeftHandRing1 28 0 0
+11.9 LeftHandRing1 28 0 0
+12.3 LeftHandRing1 -25 0 0
+13.4 LeftHandRing1 0 0 0
+17 LeftHandRing1 0 0 0
+0 LeftHandRing2 0 0 0
+2 LeftHandRing2 0 0 0
+3.6 LeftHandRing2 -25 0 0
+4 LeftHandRing2 -25 0 0
+4.5 LeftHandRing2 28 0 0
+11.9 LeftHandRing2 28 0 0
+12.3 LeftHandRing2 -25 0 0
+13.4 LeftHandRing2 0 0 0
+17 LeftHandRing2 0 0 0
+
+0 LeftHandPinky1 0 0 0
+2 LeftHandPinky1 0 0 0
+3.6 LeftHandPinky1 -25 0 0
+4 LeftHandPinky1 -25 0 0
+4.5 LeftHandPinky1 28 0 0
+11.9 LeftHandPinky1 28 0 0
+12.3 LeftHandPinky1 -25 0 0
+13.4 LeftHandPinky1 0 0 0
+17 LeftHandPinky1 0 0 0
+
+0 RightHandIndex1 0 0 0
+5.2 RightHandIndex1 0 0 0
+6.2 RightHandIndex1 -25 0 0
+6.5 RightHandIndex1 -25 0 0
+6.8 RightHandIndex1 28 0 0
+10 RightHandIndex1 28 0 0
+10.35 RightHandIndex1 -25 0 0
+11.4 RightHandIndex1 0 0 0
+17 RightHandIndex1 0 0 0
+0 RightHandIndex2 0 0 0
+5.2 RightHandIndex2 0 0 0
+6.2 RightHandIndex2 -25 0 0
+6.5 RightHandIndex2 -25 0 0
+6.8 RightHandIndex2 28 0 0
+10 RightHandIndex2 28 0 0
+10.35 RightHandIndex2 -25 0 0
+11.4 RightHandIndex2 0 0 0
+17 RightHandIndex2 0 0 0
+
+0 RightHandMiddle1 0 0 0
+5.2 RightHandMiddle1 0 0 0
+6.2 RightHandMiddle1 -25 0 0
+6.5 RightHandMiddle1 -25 0 0
+6.8 RightHandMiddle1 28 0 0
+10 RightHandMiddle1 28 0 0
+10.35 RightHandMiddle1 -25 0 0
+11.4 RightHandMiddle1 0 0 0
+17 RightHandMiddle1 0 0 0
+0 RightHandMiddle2 0 0 0
+5.2 RightHandMiddle2 0 0 0
+6.2 RightHandMiddle2 -25 0 0
+6.5 RightHandMiddle2 -25 0 0
+6.8 RightHandMiddle2 28 0 0
+10 RightHandMiddle2 28 0 0
+10.35 RightHandMiddle2 -25 0 0
+11.4 RightHandMiddle2 0 0 0
+17 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+5.2 RightHandRing1 0 0 0
+6.2 RightHandRing1 -25 0 0
+6.5 RightHandRing1 -25 0 0
+6.8 RightHandRing1 28 0 0
+10 RightHandRing1 28 0 0
+10.35 RightHandRing1 -25 0 0
+11.4 RightHandRing1 0 0 0
+17 RightHandRing1 0 0 0
+0 RightHandRing2 0 0 0
+5.2 RightHandRing2 0 0 0
+6.2 RightHandRing2 -25 0 0
+6.5 RightHandRing2 -25 0 0
+6.8 RightHandRing2 28 0 0
+10 RightHandRing2 28 0 0
+10.35 RightHandRing2 -25 0 0
+11.4 RightHandRing2 0 0 0
+17 RightHandRing2 0 0 0
+
+0 RightHandPinky1 0 0 0
+5.2 RightHandPinky1 0 0 0
+6.2 RightHandPinky1 -25 0 0
+6.5 RightHandPinky1 -25 0 0
+6.8 RightHandPinky1 28 0 0
+10 RightHandPinky1 28 0 0
+10.35 RightHandPinky1 -25 0 0
+11.4 RightHandPinky1 0 0 0
+17 RightHandPinky1 0 0 0
+
+
+# ноги: від стійки гри (ліва попереду, права позаду) двома кроками на коліно; так само назад, у ту саму стійку
+0 @RightFoot 0.05 0.12 -0.3
+0.4 @RightFoot 0.05 0.12 -0.3
+0.8 @RightFoot 0.1 0.24 0
+1.2 @RightFoot 0.14 0.1 0.28
+
+0 @LeftFoot -0.09 0.12 0.28
+1.2 @LeftFoot -0.09 0.12 0.28
+1.9 @LeftFoot -0.13 0.24 -0.08
+2.6 @LeftFoot -0.14 0.12 -0.42
+
+0 @RightHand.w 0 0 0
+1.2 @RightHand.w 0 0 0
+2.6 @RightHand.w 1 0 0
+
+# встає: нахил і поштовх передньою ногою, рука від коліна; задня нога вперед, коли тіло вже майже вгорі; потім права назад у стійку
+13.4 move 0 -0.42 0.05
+14.8 move 0 -0.14 0.16
+15.6 move 0 -0.04 0.06
+16.4 move 0 0 0
+17 move 0 0 0
+
+13.4 Spine1 10 0 0
+14.4 Spine1 16 0 0
+16 Spine1 0 0 0
+17 Spine1 0 0 0
+13.4 Spine2 8 0 0
+14.4 Spine2 12 0 0
+16 Spine2 0 0 0
+17 Spine2 0 0 0
+
+14.2 @LeftFoot -0.14 0.12 -0.42
+14.8 @LeftFoot -0.14 0.18 -0.3
+15.25 @LeftFoot -0.12 0.24 -0.05
+15.7 @LeftFoot -0.09 0.12 0.28
+17 @LeftFoot -0.09 0.12 0.28
+
+15.7 @RightFoot 0.14 0.1 0.28
+16.05 @RightFoot 0.09 0.2 0
+16.4 @RightFoot 0.05 0.12 -0.3
+17 @RightFoot 0.05 0.12 -0.3
+
+14.8 @LeftFoot.p -0.15 -0.6 0.7
+16.4 @LeftFoot.p -0.15 0 1
+17 @LeftFoot.p -0.15 0 1
+14.8 @RightFoot.p 0.15 0.8 0.6
+16.4 @RightFoot.p 0.15 0 1
+17 @RightFoot.p 0.15 0 1
+
+14.4 @RightHand 0.2 0.66 0.42
+15.2 @RightHand 0.28 0.85 0.3
+15.8 @RightHand 0.3 0.95 0.15
+17 @RightHand 0.3 0.95 0.15
+14.2 @RightHand.w 1 0 0
+15.4 @RightHand.w 0 0 0
+17 @RightHand.w 0 0 0
+
+14 @Look 0 0.11 0.78
+14.8 @Look 0 1.8 3
+15.4 @Look -2.2 2.3 2.2
+16 @Look 2.2 2.3 2.2
+16.6 @Look 0 1.8 3
+17 @Look 0 1.8 3
+16.6 @Look.w 1 0 0
+17 @Look.w 0 0 0

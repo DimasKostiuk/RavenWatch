@@ -8,7 +8,7 @@ namespace HuginWhispers
     // and breaks into sparks that arc into the bird; the raven freezes, opens its wings and trembles in a swirl of violet
     // feathers, shakes itself and answers its new fate (glad, bristling, turning away; a golden one in a gold flash).
     // Only then the new blessing and burden are told and the raven says its word. The fate itself is rolled at the click
-    // (FateStone.Use): this is how it is shown. Everyone near sees it: the gesture (PlayerAnims, by the player's data),
+    // (FateStone.Use): this is how it is shown. Everyone near sees it: the gesture (BodyClips, by the player's data),
     // the stone and the sparks (an RPC), the raven (its sitting acts, sent as always).
     // «Поклик Одіна» (OdinCall) is shown the same way in Odin's gold, and ends with the raven flying off to him.
     internal static class FateRite
@@ -40,7 +40,7 @@ namespace HuginWhispers
         {
             _busyUntil = Time.time + AnswerAt + 0.5f;
             bool right = RightSide(p, munin);
-            if (RavenSkills.Animations) PlayerAnims.Play(p, 2, right ? "fate_offer_r" : "fate_offer_l", 0.25f, 1f);
+            if (RavenSkills.Animations) BodyClips.Play(p, 2, right ? "fate_offer_r" : "fate_offer_l", 0.25f, 1f);
             FateShow.Make(p, munin, right, gold, false);
             Send(p, munin, right, gold, false);
             yield return new WaitForSeconds(TurnAt);
@@ -63,7 +63,7 @@ namespace HuginWhispers
         {
             _busyUntil = Time.time + CallOffAt + 0.5f;
             bool right = RightSide(p, munin);
-            if (RavenSkills.Animations) PlayerAnims.Play(p, 2, right ? "fate_offer_r" : "fate_offer_l", 0.25f, 1f);
+            if (RavenSkills.Animations) BodyClips.Play(p, 2, right ? "fate_offer_r" : "fate_offer_l", 0.25f, 1f);
             FateShow.Make(p, munin, right, false, true);
             Send(p, munin, right, false, true);
             yield return new WaitForSeconds(TurnAt);
@@ -160,7 +160,7 @@ namespace HuginWhispers
             FateShow s = go.AddComponent<FateShow>();
             s._p = p; s._munin = munin; s._right = right; s._gold = gold; s._odin = odin;
             Animator an = p.GetComponentInChildren<Animator>();
-            s._hand = PlayerAnims.SkeletonBone(p, an != null ? an.transform : p.transform, right ? "RightHand" : "LeftHand"); // (the body's own hand: not another thing of that name on you)
+            s._hand = BodyClips.SkeletonBone(p, an != null ? an.transform : p.transform, right ? "RightHand" : "LeftHand"); // (the body's own hand: not another thing of that name on you)
         }
 
         private Vector3 HandAt { get { return _hand != null ? _hand.position : _p.transform.position + Vector3.up * 1.4f; } }

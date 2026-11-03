@@ -1,0 +1,210 @@
+# Пролог (story-lore.md «Пролог»). Два квести:
+#   prologue       — ОСОБИСТИЙ, у кожного свій: поклик ворона Ейріка, два сліди → свій ворон. Свій ворон = кінець.
+#                    Обидва ворони вже є (купив, сюжет пропустив) — особистого нема, одразу основний.
+#   prologue_main  — ОСНОВНИЙ, один на сервер, лише поки перше серце у світі не збудоване (світовий прапорець
+#                    prologue_done): Зала зачинена → могили, Гейд → брама, холод, синій вогонь, лист, перше серце.
+#                    Хто прийшов пізніше — читає про це в книзі.
+# Сцени — режисер StoryScenes (assets/story/scenes); сцени без файлу вважаються зіграними.
+# Могили вартових з табором Гейд — локація «torvald». Хата Ейріка (Відлуння) — «prologue_house».
+# Місце Муніна (ворон Ейріка, свій Мунін) — локація «prologue_munin» (поки тестова).
+#
+# Два сліди (вибір «prologue»): за вороном Ейріка → свій Мунін · через хату з Відлунням → свій Хугін.
+# Якщо ворон якогось виду вже є — розвилки нема, лише слід до того, якого ще нема.
+
+[quest prologue]
+name: Пролог
+starts: hall
+first: settle
+
+[stage settle]
+goal: Освойся у Вальхеймі
+fork: ownraven both -> end                # обидва вже є: особистий пролог відсічено
+wait: played 10, calm
+
+[stage start]
+goal: Освойся у Вальхеймі
+fork: ownraven munin -> house             # Мунін уже є: лише слід думки (по Хугіна), без поклику
+next: call                                # (Хугін уже є — або нема жодного: ворон Ейріка кличе)
+
+[stage call]
+goal: Хтось кличе тебе
+scene: raven_call                         # ворон Ейріка сідає поруч: «…ти ж обіцяв»
+next: roads
+
+# ---------------------------------------------------------------- розвилка
+[stage roads]
+goal: Два сліди
+choice: prologue
+fork: ownraven hugin -> to_munin          # Хугін уже є: без вибору — лише за вороном Ейріка
+
+[way munin]
+goal: Лети за вороном Ейріка
+mark: prologue_munin 20 Ворон Ейріка
+wait: near prologue_munin 10
+next: munin_shield
+
+[way hugin]
+goal: Зазирни в покинуту хату
+mark: prologue_house 15 Покинута хата
+wait: near prologue_house 8
+next: echo
+
+# ---------------------------------------------------------------- слід пам'яті: Мунін
+# (без розвилки — вибір записується сам)
+[stage to_munin]
+goal: Лети за вороном Ейріка
+start: choose prologue munin
+mark: prologue_munin 20 Ворон Ейріка
+wait: near prologue_munin 10
+next: munin_shield
+
+[stage munin_shield]
+goal: Роздивись щит
+mark: prologue_munin 10 Щит
+on: use prologue_munin.shchyt              # щит на підставці світиться (touch у locations.list); E — далі сцена
+next: munin_place
+
+[stage munin_place]
+goal: Ворон Ейріка чекає
+scene: munin_comes                        # ворон Ейріка сідає; прилітає твій Мунін
+next: end
+
+# ---------------------------------------------------------------- слід думки: хата, оберіг, Хугін
+[stage house]
+goal: Зазирни в покинуту хату
+start: choose prologue hugin
+mark: prologue_house 15 Покинута хата
+wait: near prologue_house 8
+next: echo
+
+[stage echo]
+goal: У хаті хтось є
+scene: echo                               # Відлуння (Ейрік): віддає оберіг і згасає
+
+[stage charm]
+goal: Візьми оберіг
+wait: item RavenWatch_item_obereh         # (сцена дає його в руки; повна торба — лежить біля ніг)
+
+[stage hugin_comes]
+goal: Хтось шукає тебе
+scene: hugin_comes                        # твій Хугін знаходить тебе; туман
+next: end
+
+
+# ================================================================ ОСНОВНИЙ ПРОЛОГ (один на сервер)
+# Починається, щойно особистий скінчився (або відсічений: обидва ворони вже були). Ворона тут уже не дають.
+# Кожен етап має fork на prologue_done: хтось інший збудував перше серце — пролог закінчився для всіх.
+
+[quest prologue_main]
+name: Зала Варти
+starts: quest prologue done, !world prologue_done
+first: to_hall
+
+[stage to_hall]
+goal: Знайди Залу Варти
+fork: world prologue_done -> over
+fork: hallgate open -> inside             # (брама вже відчинена іншим гравцем — одразу в Залу)
+mark: hall 30 Зала Варти
+wait: near hall 25
+
+[stage at_hall]
+goal: Брама Зали зачинена
+fork: world prologue_done -> over
+fork: hallgate open -> inside
+scene: gate_shut                          # ворон Ейріка на брамі, перелітає далі — до могил вартових
+next: to_camp
+
+[stage to_camp]
+goal: Знайди камені біля табору
+fork: world prologue_done -> over
+fork: hallgate open -> inside
+mark: torvald 20 Камені
+wait: near torvald 14
+
+[stage meet_heid]
+goal: Біля каменів хтось є
+fork: world prologue_done -> over
+fork: hallgate open -> inside
+scene: heid_meet                          # Гейд бачить твого ворона — вартовий; кличе до Зали
+next: with_heid
+
+[stage with_heid]
+goal: Іди з Гейд до Зали
+fork: world prologue_done -> over
+fork: hallgate open -> look_free          # (брама вже відчинена іншим гравцем)
+start: npc heid follow                    # іде за гравцем (над своїм днем, поки не відпустять)
+mark: hall 30 Зала Варти
+wait: near hall 15
+
+[stage gate]
+goal: Гейд відчиняє браму
+fork: world prologue_done -> over
+scene: heid_opens                         # «Ключ? Знайшла.» · «Сама сплю на каменях…»
+done: hallgate open
+next: look
+
+# брама вже відчинена до тебе: Гейд у Залі
+[stage inside]
+goal: Зайди до Зали Варти
+fork: world prologue_done -> over
+mark: hall 30 Зала Варти
+wait: near hall 15
+next: look
+
+[stage look_free]
+goal: Оглянь Залу
+start: npc heid free
+next: look
+
+[stage look]
+goal: Оглянь Залу
+fork: world prologue_done -> over
+fork: hearth 1 -> fire_seen               # (вогнище вже горить синім)
+wait: near hall.vohnyshche 5
+
+[stage cold]
+goal: Тут дуже холодно
+fork: world prologue_done -> over
+fork: hearth 1 -> fire_seen
+scene: cold_hall                          # Гейд: «Не старайся, не загориться.»
+
+[stage hearth]
+goal: Розпали вогнище — тут дуже холодно
+fork: world prologue_done -> over
+fork: hearth 1 -> fire_seen
+start: npc heid free
+wait: hearth 1
+
+[stage fire_seen]
+goal: Вогнище горить… синім
+fork: world prologue_done -> over
+scene: blue_fire                          # Гейд дивується; підозріла розмова
+
+[stage board]
+goal: Обшукай Залу
+fork: world prologue_done -> over
+fork: flag heart_found -> heart           # (креслення вже знайдено)
+on: use kreslennia_sertsia                # «Старий лист» на другому поверсі, світиться (сюжетна будівля в Залі)
+
+[stage heart_talk]
+goal: Старий лист
+fork: world prologue_done -> over
+scene: letter_read                        # ворон про лист; після сцени серце оселі відкривається
+done: heartlearn
+
+[stage heart]
+goal: Збудуй серце оселі
+fork: world prologue_done -> over
+on: heart_built
+done: world prologue_done                 # перше серце у світі: основний пролог скінчився для всіх
+next: storm
+
+[stage storm]
+goal: Буря
+scene: storm                              # буря для всіх
+next: end
+
+[stage over]
+goal: Хтось уже збудував серце
+start: msg Перше серце вже горить у світі. Про те, що сталось, розкаже книга.
+next: end

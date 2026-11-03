@@ -12,7 +12,9 @@
 // Warnings: short (an optional step that never comes on that thread), orphan (an answer to a thread nobody opens).
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), src = path.join(root, 'src');
-const files = ['Patterns.cs', 'TalkPatterns.cs', 'PerchPatterns.cs', 'CrossPatterns.cs', 'AboutPatterns.cs', 'StrikePatterns.cs', 'DeathPatterns.cs', 'EmotePatterns.cs', 'PassPatterns.cs', 'LifePatterns.cs', 'VarietyPatterns.cs', 'QuipPatterns.cs', 'PlacePatterns.cs', 'LifeTalkPatterns.cs', 'AgainPatterns.cs', 'WorldPatterns.cs', 'WardPatterns.cs', 'ErrandPatterns.cs', 'MorePatterns.cs', 'MomentPatterns.cs'];
+// every *Patterns file in Patterns.All order, read from Patterns.cs itself (a hand list here missed the newer files)
+const allLine = fs.readFileSync(path.join(src, 'Patterns.cs'), 'utf8').split('\n').find(l => l.includes('_allH = l.ToArray()'));
+const files = ['Patterns.cs'].concat([...allLine.matchAll(/AddRange\((\w+)\.Hugin\)/g)].map(m => m[1] + '.cs'));
 
 function arrays(file, name) {
   const s = fs.readFileSync(path.join(src, file), 'utf8');

@@ -111,6 +111,7 @@ namespace HuginWhispers
             _word = _weapon ? "gear_look_weapon" : "gear_look_armor";
             _wordMunin = munin;
             _wordUntil = now + WordWait;
+            Nicks.OnNewGear(p, munin); // a deed for its nickname
             if (Plugin.Instance != null) Plugin.Instance.Log("New gear: " + Plugin.RavenName(munin) + " looks you over (" + _thing + ")");
         }
 

@@ -104,7 +104,7 @@ namespace HuginWhispers
             ItemDrop.ItemData.SharedData sh = drop.m_itemData.m_shared = Copy(drop.m_itemData.m_shared);
             WsModel m = d.Model;
             sh.m_name = Lang.W(m.Name);
-            sh.m_description = Lang.WordF("rw_ws_" + d.Prefab + "_desc", () => d.Gear ? RavenGear.Description(m) : Lang.T(m.Note ?? "") + SoldLine(m));
+            sh.m_description = Lang.WordF("rw_ws_" + d.Prefab + "_desc", () => d.Gear ? RavenGear.Description(m) : SoldTop(m) + Lang.T(m.Note ?? ""));
             sh.m_itemType = d.Gear ? ItemDrop.ItemData.ItemType.Misc : ItemDrop.ItemData.ItemType.Material;
             sh.m_maxStackSize = d.Gear ? 1 : m.Stack > 0 ? m.Stack : 20;
             sh.m_weight = m.Weight > 0f ? m.Weight : 0.5f;
@@ -126,13 +126,59 @@ namespace HuginWhispers
                 if (!d.Replace && d.Model.Sell > 0 && d.Built != null) into.Add(d.Built.GetComponent<ItemDrop>().m_itemData.m_shared.m_name);
         }
 
-        // under a sold item's words: who sells it and from which boss on (the boss by the game's own name)
+        // a sold item's first words, in gold: who sells it and from which boss on (the boss by the game's own name)
         private static readonly string[] BossNames = { "$enemy_eikthyr", "$enemy_gdking", "$enemy_bonemass", "$enemy_dragon", "$enemy_goblinking", "$enemy_seekerqueen", "$enemy_fader" }; // (as Stage.BossKeys)
-        private static string SoldLine(WsModel m)
+        internal const string SoldInk = "#FFD54F";
+        private static string SoldText(WsModel m)
         {
             if (m.Sell <= 0) return "";
             int i = Array.IndexOf(Stage.BossKeys, m.SellAfter);
-            return i >= 0 && i < BossNames.Length ? Lang.F("\n\nПродає Хальдор, щойно переможено: {0}.", Lang.Game(BossNames[i])) : Lang.T("\n\nПродає Хальдор.");
+            return (i >= 0 && i < BossNames.Length ? Lang.F("\n\nПродає Хальдор, щойно переможено: {0}.", Lang.Game(BossNames[i])) : Lang.T("\n\nПродає Хальдор.")).Trim();
+        }
+
+        private static string SoldTop(WsModel m)
+        {
+            string s = SoldText(m);
+            return s.Length > 0 ? "<color=" + SoldInk + ">" + s + "</color>\n\n" : "";
+        }
+
+        // for a recipe's material by its game name: who sells it (plain text), or null when it is not a sold good.
+        // Asked every frame by the open crafting panel: kept per language, made again once the goods are built
+        private static readonly Dictionary<string, string> Sold = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> SoldWords = new Dictionary<string, string>(); // its own words, without the gold line
+        private static string _soldLang;
+        private static int _soldBuilt = -1;
+        internal static string SoldNote(string name)
+        {
+            string words;
+            return SoldNote(name, out words);
+        }
+
+        internal static string SoldNote(string name, out string words)
+        {
+            words = null;
+            if (string.IsNullOrEmpty(name)) return null;
+            string lang = Lang.Current + "/" + (Localization.instance != null ? Localization.instance.GetSelectedLanguage() : "");
+            int built = 0;
+            foreach (Def d in Defs) if (!d.Replace && d.Model.Sell > 0 && d.Built != null) built++;
+            if (lang != _soldLang || built != _soldBuilt)
+            {
+                _soldLang = lang;
+                _soldBuilt = built;
+                Sold.Clear();
+                SoldWords.Clear();
+                foreach (Def d in Defs)
+                {
+                    if (d.Replace || d.Model.Sell <= 0 || d.Built == null) continue;
+                    string n = d.Built.GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
+                    Sold[n] = SoldText(d.Model);
+                    SoldWords[n] = Lang.T(d.Model.Note ?? "");
+                }
+            }
+            string s;
+            if (!Sold.TryGetValue(name, out s)) return null;
+            SoldWords.TryGetValue(name, out words);
+            return s;
         }
 
         // its own copy of the shared data (the source item's stays as it was)
@@ -255,6 +301,12 @@ namespace HuginWhispers
         {
             if (g.transform.Find(GlintName) != null) return;
             foreach (ParticleSystem own in g.GetComponentsInChildren<ParticleSystem>(true)) return; // (one of its own already: the item kept its look)
+            Glint(g, 1f);
+        }
+
+        // the same sparkle, stronger (s × specks and light: a story thing that must be found, PrologueHeart's letter)
+        internal static GameObject Glint(GameObject g, float s)
+        {
             GameObject o = new GameObject(GlintName);
             o.layer = g.layer;
             o.transform.SetParent(g.transform, false);
@@ -269,12 +321,12 @@ namespace HuginWhispers
             main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.82f, 0.4f, 1f), new Color(1f, 0.97f, 0.75f, 1f));
             main.gravityModifier = -0.04f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 16;
+            main.maxParticles = Mathf.RoundToInt(16 * s);
             ParticleSystem.EmissionModule em = ps.emission;
-            em.rateOverTime = 5f;
+            em.rateOverTime = 5f * s;
             ParticleSystem.ShapeModule sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Sphere;
-            sh.radius = 0.12f;
+            sh.radius = 0.12f * Mathf.Sqrt(s);
             ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
             col.enabled = true;
             Gradient fade = new Gradient();
@@ -290,11 +342,12 @@ namespace HuginWhispers
             Light l = o.AddComponent<Light>();
             l.type = LightType.Point;
             l.color = new Color(1f, 0.8f, 0.45f);
-            l.range = 1.3f;
-            l.intensity = 0.6f;
+            l.range = 1.3f * s;
+            l.intensity = 0.6f * Mathf.Sqrt(s);
             l.shadows = LightShadows.None;
             LightLod lod = o.AddComponent<LightLod>();
             lod.m_lightDistance = 20f; lod.m_shadowLod = false;
+            return o;
         }
 
         // ---------------------------------------------------------------- icons and recipes (once the world is up)
@@ -352,6 +405,7 @@ namespace HuginWhispers
             foreach (Def d in Defs)
             {
                 if (d.Replace || d.Built == null || d.Model.Sell > 0) continue; // (Haldor sells it: made nowhere)
+                if (string.Equals(d.Model.Cost, "none", StringComparison.OrdinalIgnoreCase)) continue; // (cost: none — never made: the story gives it, or the console)
                 string name = "Recipe_" + d.Prefab;
                 if (db.m_recipes.Exists(x => x != null && x.name == name)) continue;
                 string st = d.Gear ? RavenGear.TableOf(d.Model) : string.IsNullOrEmpty(d.Model.Station) ? "piece_workbench" : d.Model.Station;
@@ -413,6 +467,20 @@ namespace HuginWhispers
     // known — so a perch or a raven's thing shows up (grey, the good's icon in its cost) as soon as you have held the
     // rest of its materials and know its station, before you ever bought the good. Only for that look: the good itself
     // stays unknown until you hold it (its «нова знахідка» still comes).
+    // a recipe's material that Haldor sells says so on its own hover, in gold (the game's crafting and building panels)
+    [HarmonyPatch(typeof(InventoryGui), "SetupRequirement")]
+    internal static class WsSoldReqPatch
+    {
+        private static void Postfix(Transform elementRoot, Piece.Requirement req)
+        {
+            if (elementRoot == null || req == null || req.m_resItem == null) return;
+            UITooltip tip = elementRoot.GetComponent<UITooltip>();
+            string sold = WsItems.SoldNote(req.m_resItem.m_itemData.m_shared.m_name);
+            if (tip == null || sold == null || string.IsNullOrEmpty(tip.m_text) || tip.m_text.Contains(sold)) return;
+            tip.m_text += "\n<color=" + WsItems.SoldInk + ">" + sold + "</color>";
+        }
+    }
+
     [HarmonyPatch(typeof(Player), "UpdateKnownRecipesList")]
     internal static class WsSoldKnownPatch
     {

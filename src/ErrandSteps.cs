@@ -383,7 +383,7 @@ namespace HuginWhispers
         }
     }
 
-    // bring <Prefab> <count>: handed to the raven (the nest's «Віддати»); taken from the bag then
+    // bring <Prefab> <count>: handed in at the nest's bowl («Віддати»); taken from the bag then
     internal sealed class BringStep : ErrandStep
     {
         private string _what = "";
@@ -405,11 +405,8 @@ namespace HuginWhispers
         internal override string Describe(ErrandRun r, int i, Player p)
         {
             int have = p != null ? Mathf.Min(_n, Trust.Have(p, _what)) : 0;
-            if (r.Def != null && r.Def.Trial) // (Odin's trial: no raven yet, it goes into the nest's bowl)
-                return r.Count[i] >= _n ? Lang.F("Покладено в чашу: {0}", ErrandSteps.Item(_what))
-                    : Lang.F("Поклади в чашу гнізда: {0} — у сумці {1}/{2}", ErrandSteps.Item(_what), have, _n);
-            return r.Count[i] >= _n ? Lang.F("Віддано ворону: {0}", ErrandSteps.Item(_what))
-                : Lang.F("Віддай ворону: {0} — у сумці {1}/{2}", ErrandSteps.Item(_what), have, _n);
+            return r.Count[i] >= _n ? Lang.F("Віддано в чашу гнізда: {0}", ErrandSteps.Item(_what))
+                : Lang.F("Віддай у чашу гнізда: {0} — у сумці {1}/{2}", ErrandSteps.Item(_what), have, _n);
         }
     }
 
@@ -692,8 +689,16 @@ namespace HuginWhispers
             RavenFx.Play("vfx_offering", at, Quaternion.identity);
             RavenFx.Play("sfx_offering", at, Quaternion.identity);
             if (GameCamera.instance != null) GameCamera.instance.AddShake(at, 60f, 2f, false);
-            RavenMsg.Center(p, Lang.T("Земля над курганом здригнулася…"));
+            RavenMsg.Center(p, Barrow(r) ? Lang.T("Земля над курганом здригнулася…") : Lang.T("Земля біля схованки здригнулася…"));
             Errands.Log("guardian of " + r.Id + " rises at " + Mathf.RoundToInt(at.x) + " " + Mathf.RoundToInt(at.z));
+        }
+
+        // its place is a barrow you clear first (golden_barrow), not a chest out in the open (golden_trail's cache)
+        private bool Barrow(ErrandRun r)
+        {
+            if (r == null || r.Def == null) return false;
+            foreach (string[] w in r.Def.Steps) if (w.Length > 1 && w[0] == "clear" && w[1] == _guard) return true;
+            return false;
         }
 
         internal override void Leave(ErrandRun r, int i, Player p) { if (_guard.Length > 0) FightMusic.Stop(); }
@@ -744,6 +749,8 @@ namespace HuginWhispers
             Champions.Mods m = Mods(r, 0);
             if (m == null) return Lang.T("Убий ватажка");
             if (r.Count[i] >= 1) return Lang.F("Перемі{{г|гла}}: {0}", Champions.Name(m));
+            if (_guard.Length > 0 && !Barrow(r)) return r.Mark("risen" + i).Length > 0 ? Lang.F("Здолай: {0} — він біля схованки", Champions.Name(m))
+                : Lang.F("Схованку стереже {0}: він встане, щойно ти будеш поруч", Champions.Name(m));
             if (_guard.Length > 0) return r.Mark("risen" + i).Length > 0 ? Lang.F("Здолай: {0} — він біля входу в курган", Champions.Name(m))
                 : Lang.F("Вийди з кургану: біля входу на тебе чекає {0}", Champions.Name(m));
             string w = Champions.Words(m);

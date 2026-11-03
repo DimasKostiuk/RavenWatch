@@ -17,10 +17,12 @@ namespace HuginWhispers
         internal static bool Enabled = true;
         internal static float Cost = 50f;
         internal static float CooldownMinutes = 30f, CooldownMinutesTop = 10f; // at the level it opens and at the top one
-        internal static float Seconds = 15f;
+        internal static float Seconds = 15f, SecondsTop = 25f; // at the level it opens on and at the top one
         internal static float Threshold = 0.3f;     // share of health
-        internal static float DamagePercent = 30f;
-        internal static float SpeedPercent = 20f;
+        internal static float DamagePercent = 30f, DamagePercentTop = 50f;
+        internal static float SpeedPercent = 20f, SpeedPercentTop = 30f;
+        internal static float DamageNow() { return Trust.LerpFrom(true, RavenAbilities.StrongUnlock, DamagePercent, DamagePercentTop); }
+        internal static float SpeedNow() { return Trust.LerpFrom(true, RavenAbilities.StrongUnlock, SpeedPercent, SpeedPercentTop); }
         private const string Key = "RavenWatch_bloodFury";
         private static SE_Stats _template;
         private static bool _busy;
@@ -28,7 +30,7 @@ namespace HuginWhispers
         private static float Left(Player p) { return p != null ? WorldTime.Left(p.m_customData, Key) : 0f; }
 
         internal static float Cooldown() { return Trust.RoundTime(Trust.LerpFrom(true, RavenAbilities.StrongUnlock, CooldownMinutes, CooldownMinutesTop) * 60f); }
-        internal static float Duration() { return Mathf.Floor(Seconds * Trust.Mul(true, 0.05f) * GearFx.FuryMul() * GiftUp.Power("bloodfury") + 0.5f); } // (Кігтясте намисто: longer)
+        internal static float Duration() { return Mathf.Floor(Trust.LerpFrom(true, RavenAbilities.StrongUnlock, Seconds, SecondsTop) * GearFx.FuryMul() * GiftUp.Power("bloodfury") + 0.5f); } // (Кігтясте намисто: longer)
         internal static void ResetCooldown() { Player p = Player.m_localPlayer; if (p != null) p.m_customData.Remove(Key); }
 
         internal static string ReadyText()
@@ -68,6 +70,7 @@ namespace HuginWhispers
         {
             Start(p);
             RavenFx.Broadcast(RpcFx, p, Spawn);
+            if (!test) Twists.BloodForBlood(p); // («Кривава лють» III)
             if (test || RavenSkills.PassiveSpeaks())
             {
                 string line = Plugin.Instance != null ? Plugin.Instance.ComposeTagged(p, true, "bloodfury") : null;
@@ -83,11 +86,11 @@ namespace HuginWhispers
         {
             SE_Stats se = RavenFx.Template(ref _template, EffectName);
             se.m_name = Lang.W("Кривава лють");
-            se.m_tooltip = Lang.F("+{0}% шкоди, +{1}% до швидкості атаки", Mathf.RoundToInt(DamagePercent), Mathf.RoundToInt(SpeedPercent));
+            se.m_tooltip = Lang.F("+{0}% шкоди, +{1}% до швидкості атаки", Mathf.RoundToInt(DamageNow()), Mathf.RoundToInt(SpeedNow()));
             se.m_icon = AbilityIcons.ForEffect("bloodfury", true);
             se.m_ttl = Mathf.Max(1f, Duration());
             se.m_modifyAttackSkill = Skills.SkillType.All;
-            se.m_damageModifier = 1f + Mathf.Max(0f, DamagePercent) / 100f;
+            se.m_damageModifier = 1f + Mathf.Max(0f, DamageNow()) / 100f;
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
         }
 

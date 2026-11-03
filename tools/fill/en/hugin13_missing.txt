@@ -1,0 +1,9 @@
+[req_teach] {пр_навчи}
+@пр_навчи
+Teach me some word. I'll repeat it — not always at the right time, I promise.
+I have a request: tell me a new word. Ravens can repeat.
+I want to learn a word. Yours, a human one. Write it in the book of ravens.
+My vocabulary is bigger than yours. But one word is missing. Give me a hint.
+One new word — and I'll repeat it at the worst moment. A fair trade.
+~1 Teach me a word. Any. I'll say it better anyway.
+~3 Tell me a word that is dear to you. I'll keep it safe.

@@ -149,6 +149,7 @@ namespace HuginWhispers
         internal long Owner;
         internal int VoiceCode = -1; // its own voice (Voice), from the seat's record
         internal int Timbre = -1;    // its kept speaking timbre (RavenVoice.TimbreKey), from the seat's record
+        internal string CharId = ""; // its character (Norov), from the seat's record: the manner of its voice
         internal PerchView View;
         internal int Seat;
         internal PerchPose Pose;
@@ -735,7 +736,7 @@ namespace HuginWhispers
             if (_act == Act.Step) Walk(along);
             else if (_turnAt < 0f && Pose != null && (Pose.StepL > 0f || Pose.StepR > 0f || Pose.Roll > 0f)) { Pose.StepL = 0f; Pose.StepR = 0f; Pose.Roll = 0f; }
             if (_act != Act.Step) TuckFoot();
-            Vector3 move = along * _stepX + Sidle(along, dt);
+            Vector3 move = along * _stepX + Sidle(along, dt) + up * WaveLift(); // (in the water: riding its waves)
             float reach = Composes && _sitDir.Run != null ? _sitDir.Run.T.Reach * SitW * (_sidleWant > 0.01f && !_sidleBack ? Mathf.Clamp01(1f - Mathf.Abs(_sidleWant - _sidleNow) / _sidleWant) : 1f) : 0f; // (leans over once it is there)
             if (reach > 0.0001f)
             {

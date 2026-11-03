@@ -35,6 +35,7 @@ namespace HuginWhispers
             public float Hp, MaxHp; // boss blows it can still take
             public float HitAt = -99f; // the last boss blow it took (the shell flashes)
             public DomeLook Look;
+            public bool Finished; // (its end done once)
         }
 
         private static readonly Dictionary<long, State> Active = new Dictionary<long, State>();
@@ -65,6 +66,7 @@ namespace HuginWhispers
             Apply(s);
             Send(s);
             _nextResend = Time.time + ResendEvery;
+            if (Twists.Two("dome")) Twists.DomeClear(p, s.Pos, s.Radius); // («Під крилом» II: the ones inside thrown out)
         }
 
         // pressed again: Hugin folds his wings and comes back to the shoulder
@@ -151,6 +153,8 @@ namespace HuginWhispers
             if (Active.TryGetValue(s.Owner, out cur) && ReferenceEquals(cur, s)) Active.Remove(s.Owner);
             if (s.Look != null) s.Look.Close(burst);
             s.Look = null;
+            if (s.Owner == Me && !s.Finished && Facets.On("dome") && Player.m_localPlayer != null) Twists.DomeFinale(Player.m_localPlayer, s.Pos, s.Radius); // («Під крилом» III: its end bursts)
+            s.Finished = true;
         }
 
         // from the skills' Update

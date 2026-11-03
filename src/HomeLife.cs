@@ -323,7 +323,14 @@ namespace HuginWhispers
         // «поки тебе не було: 2 вбивства, 5 ударів, знахідки: Бурштин, Монети ×50; полював 1 раз, їв 3 рази»
         internal static string Report(string raw, bool munin, string mode)
         {
-            if (string.IsNullOrEmpty(raw)) return "";
+            List<string> parts = ReportParts(raw);
+            return parts.Count > 0 ? Lang.T("поки тебе не було — ") + string.Join(" · ", parts.ToArray()) : "";
+        }
+
+        // the same, each a part of its own (the book's journal card: a row each)
+        internal static List<string> ReportParts(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return new List<string>();
             int bar = raw.IndexOf('/');
             string[] w = (bar >= 0 ? raw.Substring(0, bar) : raw).Split(',');
             int[] n = new int[Slots];
@@ -345,7 +352,7 @@ namespace HuginWhispers
             if (n[7] > 0) parts.Add(Lang.F("кликав тебе на поміч: {0}", n[7]));
             if (n[9] > 0) parts.Add(Lang.F("сумував без годівниці днів: {0} (довіра тане)", n[9]));
             if (n[10] > 0) parts.Add(Lang.F("тренувався в парі: {0}", n[10]));
-            return parts.Count > 0 ? Lang.T("поки тебе не було — ") + string.Join(" · ", parts.ToArray()) : "";
+            return parts;
         }
 
         internal static string ItemName(string spec)

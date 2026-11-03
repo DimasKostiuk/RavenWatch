@@ -687,7 +687,7 @@ namespace HuginWhispers
         internal static bool Quieted { get { return Time.time < _quietUntil; } } // a raven near is talking right now
         internal static bool Cosy { get { return _cozy; } } // sitting by a fire (or on a seat) a while: the talks with others' ravens ask it
 
-        private static bool Sitting(Player p)
+        internal static bool Sitting(Player p)
         {
             // anything the player sits or holds on: chairs, benches, thrones, a ship's bench or helm, from any mod (they all
             // attach the player the same way); not a saddle: riding is no rest
@@ -732,6 +732,7 @@ namespace HuginWhispers
             {
                 string line = Plugin.Instance.ComposeMemory(p, munin);
                 if (string.IsNullOrEmpty(line)) continue;
+                Fireside.Story(p, munin, RavenSpeech.ReadSeconds(line), Composer.LastMemoryKind); // your head on the teller, then how you take it
                 RavenSkills.SayFromShoulder(p, munin, line);
                 Director.Spoke(Director.Voice.Fireside, RavenSpeech.ReadSeconds(line));
                 _lastStory = Time.time;

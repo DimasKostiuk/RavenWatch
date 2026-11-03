@@ -382,7 +382,8 @@ namespace HuginWhispers
             if (_clip != null) // its voice, from the raven saying it; the next line only after it is over
             {
                 GameObject from = model != null ? model : w.P != null ? w.P.gameObject : null;
-                if (from != null) { WordReveal.Begin(row.Body, _clip.length); RavenVoice.Play(from, _clip, w.Munin); _at = Mathf.Max(_at, Time.time + _clip.length + 0.4f); }
+                float len = _clip.length; // (taken before Play: it plays a new, levelled clip and drops this one)
+                if (from != null) { WordReveal.Begin(row.Body, len); RavenVoice.Play(from, _clip, w.Munin); _at = Mathf.Max(_at, Time.time + len + 0.4f); }
                 else Destroy(_clip);
                 _clip = null;
             }

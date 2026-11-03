@@ -1,0 +1,4 @@
+# Звуки сюжету (StorySounds): «назва звук звук…» — грає перший, який є в грі. Звук: sfx_… або звук істоти «Істота/вид»
+# (Ghost/idle, Ghost/alert, Ghost/death, Wraith/idle…). Сцена: «sound whisper npc.echo», згасання людини: «npc echo fade 4 whisper».
+# Послухати звуки гри — raven sounds (вкладка «Звуки»).
+whisper Ghost/idle Ghost/alert sfx_ghost_idle                 # шепіт: привид згасає (пролог) — і далі в інших сценах

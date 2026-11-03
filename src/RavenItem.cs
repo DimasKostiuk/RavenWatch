@@ -26,8 +26,8 @@ namespace HuginWhispers
         internal static int RerollPrice = 1000;
         internal static int LetterPrice = 50;
         // no numbers here: costs and pauses come from the server's settings and grow with trust — the book shows them
-        private static readonly string HuginDescription = Lang.K("Ворон думки. Правий клік у сумці — і він сяде тобі на праве плече (пояс лишається вільним). Має одне випадкове благо й один тягар.\n\nДари Хугіна (розвідка, світло, купол, злет, тінь, удар в очі та інші) відкриваються з довірою й заряджаються в мирі. Що він уміє, коли й за скільки сили — у книзі воронів (<color=orange>G</color> → «Ворони»).");
-        private static readonly string MuninDescription = Lang.K("Ворон пам'яті. Правий клік у сумці — і він сяде тобі на ліве плече (пояс лишається вільним). Має одне випадкове благо й один тягар.\n\nДари Муніна (крик, лють, попутний вітер, зцілення, кігті та інші) відкриваються з довірою й заряджаються в бою. Що він уміє, коли й за скільки сили — у книзі воронів (<color=orange>G</color> → «Ворони»).");
+        private static readonly string HuginDescription = Lang.K("Ворон думки. Правий клік — сяде на праве плече. Усе про нього — у книзі воронів (<color=orange>G</color>).");
+        private static readonly string MuninDescription = Lang.K("Ворон пам'яті. Правий клік — сяде на ліве плече. Усе про нього — у книзі воронів (<color=orange>G</color>).");
 
         internal static GameObject Hugin;
         internal static GameObject Munin;
@@ -196,6 +196,17 @@ namespace HuginWhispers
             if (Reroll == null) Reroll = BuildReroll(find("Thunderstone") ?? feathers);
             if (Letter == null) Letter = BuildLetter(find("LeatherScraps") ?? feathers);
             if (Feather == null) Feather = BuildFeather(feathers);
+#if RAVEN_NPC
+            NpcKeepsake.Build(find, Clone); // (what people in need lose: NpcRescue)
+#endif
+        }
+
+        private static IEnumerable<GameObject> Ours()
+        {
+            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter, Feather }) yield return g;
+#if RAVEN_NPC
+            foreach (GameObject g in NpcKeepsake.All()) yield return g;
+#endif
         }
 
         // the game's network prefab list: dropped ravens must exist for everyone
@@ -203,7 +214,7 @@ namespace HuginWhispers
         {
             if (!Enabled || scene == null || scene.m_prefabs == null) return;
             BuildAll(n => scene.m_prefabs.Find(g => g != null && g.name == n));
-            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter, Feather })
+            foreach (GameObject g in Ours())
                 if (g != null && !scene.m_prefabs.Contains(g)) scene.m_prefabs.Add(g);
         }
 
@@ -214,7 +225,7 @@ namespace HuginWhispers
             Power.NoticePov();
             BuildAll(n => db.GetItemPrefab(n));
             bool added = false;
-            foreach (GameObject g in new GameObject[] { Hugin, Munin, Reroll, Letter, Feather })
+            foreach (GameObject g in Ours())
                 if (g != null && !db.m_items.Contains(g)) { db.m_items.Add(g); added = true; }
             if (added && UpdateRegisters != null) UpdateRegisters.Invoke(db, null);
         }
@@ -249,6 +260,19 @@ namespace HuginWhispers
         private static ItemDrop.ItemData _wornHugin, _wornMunin;
 
         internal static void ForgetWorn() { _wornFrame = -1; }
+
+        // a fresh raven item of that kind (its own data, never the prefab's) — Odin's gift, your own raven; null: none made yet
+        internal static ItemDrop.ItemData NewRaven(bool munin)
+        {
+            GameObject prefab = munin ? Munin : Hugin;
+            ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            if (drop == null) return null;
+            ItemDrop.ItemData item = drop.m_itemData.Clone();
+            item.m_dropPrefab = prefab;
+            item.m_stack = 1;
+            item.m_customData = new Dictionary<string, string>(item.m_customData); // (never the prefab's own)
+            return item;
+        }
 
         internal static void Worn(Player p, out ItemDrop.ItemData hugin, out ItemDrop.ItemData munin)
         {
@@ -491,7 +515,9 @@ namespace HuginWhispers
         }
     }
 
-    // a raven's own bonus and drawback under its description; at the trader they are still a secret
+    // a raven's own bonus and drawback under its description; at the trader they are still a secret. Short (the user
+    // 2026-11-02): who it is, trust, strength, blessing and burden — the gifts, how strength grows and the passives live in
+    // the book (its «Сила» tip) and in the shoulder effect's tooltip
     [HarmonyPatch(typeof(ItemDrop.ItemData), "GetTooltip", new Type[] { typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(bool) })]
     internal static class RavenTooltipPatch
     {
@@ -504,7 +530,8 @@ namespace HuginWhispers
             if (!string.IsNullOrEmpty(owner)) rank += Lang.F("\nВірний: {0}", owner); // whose raven it is
             Nicks.Nick nick = Perks.Rolled(item) ? Nicks.Current(item) : null;
             if (nick != null) rank += Lang.F("\nПрізвисько: <color={0}>{1}</color>", Nicks.Hex(nick.K), nick.Name);
-            __result += rank + Sleeping(item) + "\n\n" + Perks.Describe(item) + Perks.Passives(munin, RavenSeat.IsSeated(item));
+            if (Perks.Rolled(item)) rank += Lang.F("\nСила: <color=orange>{0}/{1}</color>", Mathf.FloorToInt(Power.Get(item)), Mathf.RoundToInt(Trust.Strength(item)));
+            __result += rank + Sleeping(item) + Perks.Describe(item);
         }
 
         // asleep or not, at a glance: with many ravens in the chest it is easy to lose track (one line, no "name: value")
@@ -512,9 +539,10 @@ namespace HuginWhispers
         {
             Trust.Step wake = Trust.Steps().Count > 0 ? Trust.Steps()[0] : null;
             string how = wake != null ? Lang.F(" ({0} ×{1} біля Жертовних каменів)", wake.Name, wake.Count) : "";
-            if (!Perks.Rolled(item)) return Lang.F("\n\n<color=#9a9a9a>Після покупки ворон спить, поки не розбудиш його ритуалом{0}.</color>", how); // at the trader
+            if (!Perks.Rolled(item)) return Lang.F("\n\n<color=#9a9a9a>Спить — розбуди ритуалом{0}, тоді відкриються благо й тягар.</color>", how) // at the trader
+                + "\n\n<color=#b8a27a><i>" + Lang.T("Уламок чиєїсь пам'яті: ворони тих, хто продав себе Хель, блукають без господаря, а Хальдор їх ловить.") + "</i></color>"; // (story-lore.md: why Haldor sells ravens)
             if (Trust.Active(item)) return "";
-            return Lang.F("\n\n<color=#FF5A5A><b>Ворон спить</b></color> — розбуди його ритуалом{0}, тоді запрацюють дари, благо й тягар.", how);
+            return Lang.F("\n\n<color=#FF5A5A><b>Спить</b></color> — розбуди ритуалом{0}.", how);
         }
     }
 

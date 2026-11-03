@@ -1,0 +1,62 @@
+# RavenWatch: місця сюжету (по одному в кожному світі). Див. src/Loc.cs — Locs.
+# loc <креслення>  name: назва  biome: біом гри  from: start мін макс далеко | <інше місце> мін макс [edge — між стінами]
+# clear: м без будівель гравців  nobuild: м без будування  states: стани через кому, субстани стану в дужках через / (закинута (розпалена / ...))  ruin: стани-руїни 1..N
+# grass: yes — уся трава лишається; N — голий ґрунт лише N м від середини, далі трава; без рядка — ґрунт під підлогою
+# touch: <назва деталі> <умови> — деталь світиться, поки умови (StoryCond) справджуються, E на ній — подія «use <місце>.<назва>»
+# follows: hall — стан іде за Залою (1 до розпаленої, 2 з неї: табір Гейд)
+# sink: на скільки м нижче в землі, ніж збережено  fog: yes|no (туман Хели в руїні)  ruinlit: що горить і в руїні (префаби через пробіл)  litfrom: крок префаби — горять у руїні з цього кроку (1.2 hearth)  keys: основа ключів світу (лише Зала: старі)
+
+loc zala
+name: Зала Варти
+biome: Meadows
+from: start 300 1500 3000
+clear: 40
+nobuild: 30
+states: закинута (гейд / розпалена), відремонтована (фаза_1 / фаза_2), обжита
+ruin: 1
+fog: yes
+ruinlit: Candle_resin
+litfrom: 1.2 hearth
+sink: 0.5
+lockbeds: yes
+keys: ravenwatch_hall
+
+loc torvald
+name: Камінь Торвальда
+biome: Meadows
+from: zala 35 45 edge
+clear: 20
+nobuild: 15
+states: табір (без_яду), без табору
+ruin: 0
+fog: no
+lockchests: yes
+lockbeds: yes
+grass: 5
+keys: ravenwatch_loc_torvald
+follows: hall
+tint: piece_chest_private 5A6E8C
+
+loc prologue_house
+name: Будинок привида
+biome: Meadows
+from: start 130 170 400
+clear: 20
+nobuild: 18
+states: закинута
+ruin: 1
+fog: no
+lockbeds: yes
+litwhile: fire_pit !flag echo_gone
+
+loc prologue_munin
+name: Місце Муніна
+biome: Meadows
+from: start 50 90 250
+clear: 5
+nobuild: 6
+states: закинута
+ruin: 1
+fog: no
+grass: 6
+touch: shchyt step prologue munin_shield

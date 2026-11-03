@@ -268,7 +268,7 @@ namespace HuginWhispers
             if (Of(item).Exists(x => Same(x.Text, word))) return;
             item.m_customData[HeardKey] = Day.ToString(CultureInfo.InvariantCulture) + "\t" + word;
             p.m_customData[NextHearKey] = (Day + HearEveryDays).ToString(CultureInfo.InvariantCulture);
-            Say(p, munin, string.Format(Pick(munin ? MuninHeard : HuginHeard), Mangle(word, 1, munin)), false);
+            Say(p, munin, Fill(Pick(munin ? MuninHeard : HuginHeard), Mangle(word, 1, munin)), false);
             p.Message(MessageHud.MessageType.TopLeft, Lang.F("{0} підхопив слово «{1}». Лишити чи викинути — у книзі воронів, ᚨ біля імені.", Plugin.RavenName(munin), word));
             Log(Plugin.RavenName(munin) + " caught a word from the chat: " + word);
             RavenBook.Refresh();
@@ -344,7 +344,7 @@ namespace HuginWhispers
             int mi = munin ? 1 : 0;
             Word w = Due(item, mi, m);
             if (w == null) return;
-            string line = string.Format(Pick(Lines(munin, m)), Mangle(w.Text, Stage(w), munin));
+            string line = Fill(Pick(Lines(munin, m)), Mangle(w.Text, Stage(w), munin));
             Said(item, mi, w);
             Say(p, munin, line, true);
         }
@@ -384,7 +384,7 @@ namespace HuginWhispers
         internal static void Tried(Player p, bool munin, string word)
         {
             if (p == null || !Shoulder.Present(p, munin)) return;
-            Say(p, munin, string.Format(Pick(munin ? MuninTried : HuginTried), Mangle(word, 1, munin), word), false);
+            Say(p, munin, Fill(Pick(munin ? MuninTried : HuginTried), Mangle(word, 1, munin), word), false);
         }
 
         internal static void Forgot(Player p, bool munin)
@@ -433,7 +433,7 @@ namespace HuginWhispers
                     Word w = Due(item, mi, Moment.Any);
                     if (w != null)
                     {
-                        string line = string.Format(Pick(Lines(munin, Moment.Any)), Mangle(w.Text, Stage(w), munin));
+                        string line = Fill(Pick(Lines(munin, Moment.Any)), Mangle(w.Text, Stage(w), munin));
                         Said(item, mi, w);
                         _saying = true;
                         try { RavenSkills.SayFromShoulder(p, munin, line); } finally { _saying = false; }
@@ -520,6 +520,14 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the lines ({0}: the word)
 
         private static string Pick(string[] l) { return l[UnityEngine.Random.Range(0, l.Length)]; }
+
+        // the word into a line ({0}, {1}): not string.Format — the lines carry the forms by gender in braces ({в|ла}),
+        // which Format takes for blanks and throws on (2026-10-29 log: Words.Tick FormatException)
+        private static string Fill(string line, params string[] a)
+        {
+            for (int i = 0; i < a.Length; i++) line = line.Replace("{" + i + "}", a[i] ?? "");
+            return line;
+        }
 
         private static string[] Lines(bool munin, Moment m)
         {

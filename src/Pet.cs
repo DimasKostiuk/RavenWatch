@@ -5,7 +5,7 @@ namespace HuginWhispers
 {
     // Standing a while, now and then you stroke one of your ravens (the user, 2026-10-24): the hand on its side goes up to
     // it and smooths its back, the bird leans into it (Підставляє шию), and sometimes it says a word (PetPatterns:
-    // petted). Everyone near sees it: the gesture (PlayerAnims, by the player's data), the bird (its sitting acts).
+    // petted). Everyone near sees it: the gesture (BodyClips, by the player's data), the bird (its sitting acts).
     internal static class Pet
     {
         internal static float StillAfter = 25f;            // standing this long before the first stroke
@@ -45,8 +45,9 @@ namespace HuginWhispers
         {
             bool h = Sits(p, false), m = Sits(p, true);
             if (!h && !m) return;
-            bool munin = h && m ? Random.value < 0.5f : m;
-            if (!PlayerAnims.Gesture(p, munin, "pet_")) return; // (another gesture under way: not now, nor its leaning in and word)
+            float ph = h ? Norov.PetW(RavenSeat.On(p, false)) : 0f, pm = m ? Norov.PetW(RavenSeat.On(p, true)) : 0f;
+            bool munin = h && m ? Random.value * (ph + pm) < pm : m; // («Лагідний» is the one stroked more)
+            if (!BodyClips.Gesture(p, munin, "pet_", Gestures.Pri.Ambient)) return; // (another gesture under way: not now, nor its leaning in and word)
             ShoulderLife life = Shoulder.LifeOf(p, munin);
             if (life != null && life.SitNew) life.SitDirectorNow.React(life, "Підставляє шию", 0.5f);
             Habits.Stroked(p, munin); // («Мазунчик»)

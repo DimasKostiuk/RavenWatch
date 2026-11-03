@@ -1,0 +1,69 @@
+@мб_друг_вітання
+Yo, {addr}! Alive, damn!
+Oh, one of ours! Hey there, hell!
+@мсм_вт_хвіст
+Beat it while your feathers are whole, damn.
+And don't stick your beak up at me, hell.
+@мсм_пгр_хвіст
+I'll find that bastard by the stink, damn.
+I remembered its beak. And its butt, hell.
+@мб_крадіжка
+{friend}, an open bag is an invitation, damn. Minus {food}.
+Nicked from {friend}: {food}. Tasty, hell. Someone else's is always tastier.
+@мб_пограбовано
+{raven} nicked our {food}! I'll pluck it like a chicken, damn!
+We've been robbed, hell! {raven} took {food}! War!
+@мсм_кр_суть
+{food} is mine now. Guard your bag, loser.
+Snap — and {food} is in my beak. Thanks for the treat, damn.
+@мсм_т_суть
+{friend} is one of ours, hell. I won't peck that one.
+With {friend} you can go scouting. And for beer, damn.
+@мсм_лпп_хвіст
+Say something nice. I can't, damn.
+What a person. Not like you, hell.
+@мл_тепло
+{friend}! A decent face, damn. Nice.
+{friend} is here. That's it, the day's a success, hell.
+@мл_шпилька
+{friend} again. Hold your bag, or it'll get nicked, damn.
+Oh, {friend}. I went sour, hell.
+@ммд_ковток
+Give me a sip or I'll peck, damn.
+Mead! A sip for me, cheapskate, hell.
+@мн_заслужив
+Now I'm {nick}, damn! Whoever forgets gets a beak on the head.
+{nick}. Sounds like me, hell. Scary and pretty.
+@св_скарб_м
+Look what I found: {thing}! It was mine, but, damn, I'm giving it.
+{thing}! It shone, hell. Couldn't resist.
+@мулов_несу
+Here, {thing}. Nearly ate it myself, damn.
+Dived — and here: {thing}. Wet as a rat, but, hell, with a catch.
+@мобн_броня
+{thing}? Well, at least not rags, damn. Almost like a person.
+New gear! Just don't whine the first time it gets scratched, hell.
+@мобн_зброя
+{thing}? Sharp, damn. Finally something to chop someone properly with.
+A new toy. Swing it at enemies, not at me, hell.
+@мзв_lost
+{habit}? Screw that, I'm over it.
+Was {habit}, now I'm not. Growing up, damn.
+@мп_старт
+I remembered that {killer_gen}, damn. {left} — and go tear it.
+I marked {killer_gen}. You have {left}, hell. Don't dawdle.
+@мп_сплачено
+That's it, damn! Debt paid. Skills back.
+The bastard's dead! Revenge is the tastiest thing there is, hell.
+@пр_бій
+I want a brawl, damn. Find a starred beast and tear it in front of me.
+Ordinary ones are for losers. Give me a starred one, hell.
+@пр_полюємо
+We hunt, damn! {foe_genpl} — {n} of them. I'm counting.
+Bag {foe_genpl} — {n} of them, hell. No slacking.
+@пр_помста
+That {foe} nearly ate you, damn. Find one like it — and into dust.
+{foe} insulted us, hell. Go and pay the debt back.
+@звір
+GROW, BEAST! LET THEM KNOW, HELL!
+CLAWS HIGHER! TEETH SHARPER! TEAR, DAMN!

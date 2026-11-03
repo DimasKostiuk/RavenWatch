@@ -1,0 +1,7 @@
+# RavenWatch — сюжетна будівля (цвинтар біля табору Гейд). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Надгробки: високий і низький
+note: Високий рунний камінь, а біля нього низький
+use: story
+id: nadhrobky_vysokyi
+part asset/Камені/WatchStoneTall pos 0 0.4414 0 rot 0 0 0 scale 0.7187 0.4633 0.4633 tint FFFFFF  # з Майстерні: WatchStone3
+part asset/Камені/StoneTorvald pos 0 0.4756 -0.02 rot -2 0 0 scale 1.1178 1 0.6255 tint FFFFFF  # з Майстерні: WatchStone3

@@ -55,7 +55,7 @@ namespace HuginWhispers
             _nearFor = v; _nearFrame = Time.frameCount;
             _near.Clear(); _nearD.Clear();
             Vector3 at = v.transform.position;
-            float far = GuardRadius + 3f, rr = far * far; // (the widest any seat strikes, and a little: the seats sit off its middle)
+            float far = GuardRadius * 1.3f + 3f, rr = far * far; // («Нічний сторож»: up to 1.3×) // (the widest any seat strikes, and a little: the seats sit off its middle)
             foreach (Character c in Character.GetAllCharacters())
             {
                 if (c == null) continue;
@@ -79,7 +79,7 @@ namespace HuginWhispers
             List<Character> near = Near(v);
             if (near.Count == 0) { s.NextBlow = Time.time + LookQuiet; return; }
             Vector3 at = v.SeatT(seat).position + Vector3.up * 0.15f;
-            float rr = Radius(o.Mode) * Radius(o.Mode);
+            float reach = Radius(o.Mode) * Habits.GuardMul(item), rr = reach * reach; // («Нічний сторож» sees further)
             Character target = null;
             foreach (Character c in near) // nearest first: the first one in reach it sees is the one
             {

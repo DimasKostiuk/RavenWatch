@@ -10,7 +10,7 @@ namespace HuginWhispers
 {
     // «Студія» on you (the player's own animation, our clips over the game's):
     //   ylook <name> [views]                              — you as you stand now
-    //   ypose <name> <clip> [moments=6] [views] [air]     — one of our clips (PlayerAnims) held on you moment by moment
+    //   ypose <name> <clip> [moments=6] [views] [air]     — one of our clips (BodyClips) held on you moment by moment
     //   yplay <name> <clip> [fps=8] [views] [air]         — the clip played on you in time
     //   yfilm <name> [seconds=4] [fps=6] [views]          — you as you move now (the game's animation, the rules, the gifts)
     //   ywait <name> <event> [seconds=3] [fps=8] [views] [give up after s] — waits for it (the raven events, jump, dodge,
@@ -21,6 +21,8 @@ namespace HuginWhispers
     //   ytakeoff <name> [seconds=2.6] [fps=10] [views]  — Odin's wings started and the take-off filmed from its first frame
     //   armor <ItemPrefab|none>, armors                  — put armour on you (none: what the studio put on, off and away); the list
     //   yreload                                          — our clips and rules read again (config/RavenWatch/player_anims)
+    //   react <ear|steal|shake|sip|steady|palm|wave|quarrel|boss|story|warm|fire_<mood>|down|up> [h|m] — your answer to the raven
+    //                                                       (PlayerReact, Fireside) played at once
     // air: you are tossed up first (16 m/s) and shot on the way up: the clip over the game's falling pose (the wings).
     // Views: front, back, side (your right), left, top, three (from the front right), feet (low, from the front).
     // The report with every sheet: per frame what plays on each layer, the motion, where each limb points in the body's
@@ -55,22 +57,33 @@ namespace HuginWhispers
             if (fwd.sqrMagnitude < 0.0001f) fwd = Vector3.ProjectOnPlane(p.transform.forward, Vector3.up);
             fwd.Normalize();
             Vector3 right = Vector3.Cross(Vector3.up, fwd);
+            // close views (c + a view: cfront, cside, ctop, cthree, cleft): framed on your hands, chest and a raven on your arm
+            Vector3 near = mid, sum = Vector3.zero; int nn = 0;
+            foreach (string n in new[] { "LeftHand", "RightHand", "Spine2" }) { Transform t = HeroBone(p, n); if (t != null) { sum += t.position; nn++; } }
+            foreach (bool mu in new[] { false, true }) { GameObject am = ArmPerch.Holding(p, mu) ? Shoulder.ModelOf(p, mu) : null; if (am != null) { sum += am.transform.position + Vector3.up * 0.1f; nn++; } }
+            if (nn > 0) near = sum / nn;
             for (int i = 0; i < r.Cams.Count; i++)
             {
                 Vector3 from;
-                switch (r.Views[i])
+                string view = r.Views[i];
+                bool close = view.Length > 1 && view[0] == 'c';
+                if (close) view = view.Substring(1);
+                Vector3 at = close ? near : mid;
+                float cs = close ? 0.85f : size, cd = close ? cs * 2.1f : d;
+                switch (view)
                 {
-                    case "back": from = mid - fwd * d + Vector3.up * size * 0.15f; break;
-                    case "left": from = mid - right * d + Vector3.up * size * 0.1f; break;
-                    case "top": from = mid + Vector3.up * d * 1.05f + fwd * size * 0.05f; break;
-                    case "three": from = mid + (fwd + right).normalized * d + Vector3.up * size * 0.35f; break;
-                    case "feet": from = mid + fwd * d * 0.8f - Vector3.up * size * 0.3f; break;
-                    case "side": from = mid + right * d + Vector3.up * size * 0.1f; break;
-                    default: from = mid + fwd * d + Vector3.up * size * 0.15f; break; // front
+                    case "back": from = at - fwd * cd + Vector3.up * cs * 0.15f; break;
+                    case "left": from = at - right * cd + Vector3.up * cs * 0.1f; break;
+                    case "top": from = at + Vector3.up * cd * 1.05f + fwd * cs * 0.05f; break;
+                    case "three": from = at + (fwd + right).normalized * cd + Vector3.up * cs * 0.35f; break;
+                    case "feet": from = at + fwd * cd * 0.8f - Vector3.up * cs * 0.3f; break;
+                    case "side": from = at + right * cd + Vector3.up * cs * 0.1f; break;
+                    default: from = at + fwd * cd + Vector3.up * cs * 0.15f; break; // front
                 }
                 r.Cams[i].farClipPlane = 80f;
+                if (close) r.Cams[i].nearClipPlane = 0.05f;
                 r.Cams[i].transform.position = from;
-                r.Cams[i].transform.rotation = Quaternion.LookRotation(mid - from, r.Views[i] == "top" ? fwd : Vector3.up); // (from above: your way is up on the picture)
+                r.Cams[i].transform.rotation = Quaternion.LookRotation(at - from, view == "top" ? fwd : Vector3.up); // (from above: your way is up on the picture)
             }
             r.Mid = mid;
             r.Lamp.range = size * 3.5f;
@@ -89,7 +102,7 @@ namespace HuginWhispers
             }
             Transform b;
             if (HeroBones.TryGetValue(name, out b) && b != null && b.IsChildOf(an.transform) && b.gameObject.activeInHierarchy) return b; // (a body rebuilt by new armour: looked up again)
-            b = PlayerAnims.SkeletonBone(p, an.transform, name);
+            b = BodyClips.SkeletonBone(p, an.transform, name);
             if (b != null) HeroBones[name] = b;
             return b;
         }
@@ -153,11 +166,11 @@ namespace HuginWhispers
         private static IEnumerator HeroPose(string name, string clip, int moments, string views, bool play, float fps, bool air)
         {
             Player p = Player.m_localPlayer;
-            PAnimClip c = PlayerAnims.Find(clip);
+            PAnimClip c = BodyClips.Find(clip);
             if (p == null) { Note(name, "no player"); yield break; }
-            if (c == null) { Note(name, "no clip «" + clip + "»; there are: " + string.Join(", ", new List<string>(PlayerAnims.Clips.Keys).ToArray())); yield break; }
-            PlayerAnimator a = PlayerAnimator.For(p);
-            const int Slot = PlayerAnims.PreviewSlot;
+            if (c == null) { Note(name, "no clip «" + clip + "»; there are: " + string.Join(", ", new List<string>(BodyClips.Clips.Keys).ToArray())); yield break; }
+            BodyAnimator a = BodyAnimator.For(p);
+            const int Slot = BodyClips.PreviewSlot;
             List<float> at = new List<float>();
             int rows;
             if (!play)
@@ -178,7 +191,7 @@ namespace HuginWhispers
             try
             {
                 if (air) { Toss(p); float up = Time.time + 0.25f; while (Time.time < up) yield return null; }
-                PlayerAnims.Play(p, Slot, c.Name, play ? 0.01f : 0.15f, 1f);
+                BodyClips.Play(p, Slot, c.Name, play ? 0.01f : 0.15f, 1f);
                 if (!play) { a.Hold(Slot, 0f); float settle = Time.time + 0.35f; while (Time.time < settle) yield return null; } // (faded in fully)
                 float start = Time.time;
                 for (int i = 0; i < rows; i++)
@@ -196,11 +209,11 @@ namespace HuginWhispers
             finally
             {
                 if (a != null) a.Hold(Slot, -1f);
-                PlayerAnims.Stop(p, Slot, 0.3f);
+                BodyClips.Stop(p, Slot, 0.3f);
                 HeroFree(sheets, r);
             }
             StringBuilder sb = new StringBuilder();
-            sb.Append("«").Append(c.Name).Append("» (").Append(PlayerAnims.N(c.Length)).Append(" s").Append(c.Loop ? ", loop" : "").Append(c.Frozen ? ", frozen base" : "").Append(") ")
+            sb.Append("«").Append(c.Name).Append("» (").Append(BodyClips.N(c.Length)).Append(" s").Append(c.Loop ? ", loop" : "").Append(c.Frozen ? ", frozen base" : "").Append(") ")
               .Append(play ? "played in time, " + fps.ToString("0.#", CultureInfo.InvariantCulture) + " frames a second" : "held moment by moment").Append(air ? ", tossed up (over the game's falling pose)" : "")
               .Append("; frames at ");
             for (int i = 0; i < at.Count; i++) sb.Append(i > 0 ? ", " : "").Append(at[i].ToString("0.00", CultureInfo.InvariantCulture)).Append(" s");
@@ -254,7 +267,7 @@ namespace HuginWhispers
                 if (me != null)
                 {
                     bool air = !me.IsOnGround();
-                    if (what == "attack" && me.InAttack()) break;
+                    if (what == "attack" && (me.InAttack() || me.IsDrawingBow())) break; // (a bow drawn counts: the draw is its own state)
                     if (what == "air" && air) break;
                     if (what == "land" && wasAir && !air) break;
                     if (what == "wings" && OdinWings.Flying() && !wasWings) break;
@@ -276,7 +289,7 @@ namespace HuginWhispers
             bool munin = which.StartsWith("m");
             GameObject m = Shoulder.ModelOf(p, munin);
             bool right = m != null ? Vector3.Dot(m.transform.position - p.transform.position, p.transform.right) >= 0f : !munin;
-            PlayerAnims.Play(p, 2, right ? "fate_offer_r" : "fate_offer_l", 0.25f, 1f);
+            BodyClips.Play(p, 2, right ? "fate_offer_r" : "fate_offer_l", 0.25f, 1f);
             FateShow.Make(p, munin, right, false, false);
             return "fate shown on the " + (right ? "right" : "left");
         }
@@ -387,14 +400,14 @@ namespace HuginWhispers
             {
                 _p = p;
                 HeroBones.Clear(); // (fresh: the armour may have rebuilt the body since)
-                foreach (string[] g in PlayerAnims.Groups) foreach (string n in g) { Transform t = HeroBone(p, n); if (t != null) _all.Add(t); }
+                foreach (string[] g in BodyClips.Groups) foreach (string n in g) { Transform t = HeroBone(p, n); if (t != null) _all.Add(t); }
             }
 
             // a bone's direction (to the next in its chain) in the body's frame, as the clips' aim numbers
             private string Aim(Transform v, string bone)
             {
                 Transform t = HeroBone(_p, bone);
-                string nx = PlayerAnims.NextOf(bone);
+                string nx = BodyClips.NextOf(bone);
                 Transform n = nx != null ? HeroBone(_p, nx) : null;
                 if (t == null || n == null) return "—";
                 Vector3 d = Quaternion.Inverse(v.rotation) * (n.position - t.position);
@@ -420,10 +433,10 @@ namespace HuginWhispers
                 _frames.Append(" body ").Append(Mathf.RoundToInt(Mathf.DeltaAngle(0f, e.x))).Append("/").Append(Mathf.RoundToInt(Mathf.DeltaAngle(0f, e.z)));
                 for (int i = 0; i < Limbs.Length; i++) _frames.Append(" ").Append(Short[i]).Append(" ").Append(Aim(v, Limbs[i]));
                 // what plays
-                PlayerAnimator a = PlayerAnimator.Of(_p);
+                BodyAnimator a = BodyAnimator.Of(_p);
                 if (a != null)
                 {
-                    for (int s = 0; s < PlayerAnims.Slots; s++)
+                    for (int s = 0; s < BodyClips.Slots; s++)
                     {
                         string c = a.ClipIn(s);
                         if (c == null || a.WeightIn(s) < 0.01f) continue;
@@ -443,6 +456,30 @@ namespace HuginWhispers
                     Transform hand = HeroBone(_p, rightSide ? "RightHand" : "LeftHand");
                     if (_times.Count == 1) _frames.Append(" [").Append(munin ? "Munin" : "Hugin").Append(" head bone: ").Append(rh.name).Append(" under ").Append(rh.parent != null ? rh.parent.name : "-").Append("]");
                     if (hand != null) _frames.Append(" | ").Append(rightSide ? "rHand" : "lHand").Append("→").Append(munin ? "Munin" : "Hugin").Append(" head ").Append(Mathf.RoundToInt(Vector3.Distance(hand.position, rh.position) * 100f)).Append(" cm");
+                }
+                // a raven on your arm: the other hand's fingertips (a hand ahead of the wrist) to the nearest of its bones — under 5 cm: INSIDE (in its body), to 9: touch
+                foreach (bool munin in new[] { false, true })
+                {
+                    if (!ArmPerch.Holding(_p, munin)) continue;
+                    GameObject am = Shoulder.ModelOf(_p, munin);
+                    if (am == null) continue;
+                    bool birdRight = Vector3.Dot(am.transform.position - _p.transform.position, _p.transform.right) >= 0f;
+                    Transform fh = HeroBone(_p, birdRight ? "LeftHand" : "RightHand"), ff = HeroBone(_p, birdRight ? "LeftForeArm" : "RightForeArm");
+                    if (fh == null || ff == null) continue;
+                    Vector3 tip = fh.position + (fh.position - ff.position).normalized * 0.09f;
+                    float best = 99f; string bn = "-";
+                    float foot = 99f, spine = 99f;
+                    foreach (Transform bt in am.GetComponentsInChildren<Transform>())
+                    {
+                        float dd = Vector3.Distance(tip, bt.position);
+                        if (dd < best) { best = dd; bn = bt.name; }
+                        string ln = bt.name.ToLowerInvariant();
+                        if ((ln.Contains("talon") || ln.Contains("toe") || ln.Contains("foot")) && dd < foot) foot = dd;
+                        if ((ln.Contains("spine") || ln.Contains("hip") || ln.Contains("chest")) && dd < spine) spine = dd;
+                    }
+                    Transform bh = RavenHead(am);
+                    _frames.Append(" | free hand tip→arm bird ").Append(Mathf.RoundToInt(best * 100f)).Append(" cm (").Append(bn).Append(")").Append(best < 0.05f ? " INSIDE" : best < 0.09f ? " touch" : "")
+                           .Append(" head ").Append(bh != null ? Mathf.RoundToInt(Vector3.Distance(tip, bh.position) * 100f) : -1).Append(" back ").Append(Mathf.RoundToInt(spine * 100f)).Append(" feet ").Append(Mathf.RoundToInt(foot * 100f));
                 }
                 _frames.Append(_p.IsOnGround() ? " ground" : " air").Append(_p.InWater() ? " water" : "").Append('\n');
                 Faults(v, at);

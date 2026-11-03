@@ -1,0 +1,205 @@
+@про_ворога
+there's {seen}. A big dumb lump with teeth. Like your uncle, only more honest, damn it.
+{seen} stares at you like you stare at my food. Only hungrier, hell.
+{seen} is coming. In your place I'd crap myself. Good thing I'm on the shoulder.
+I see {seen}. A brawl's coming and I've got no snacks, no beer, damn it.
+{seen} sniffs the air. Sniffs you. I pity the beast, damn.
+~1 {seen} is close and you stand there like a monument to your own stupidity, hell.
+~1 {seen} is already licking its lips. You're lunch on legs, damn.
+~2 {seen} is coming. Punch it in the face, I'll scream for courage, hell.
+~3 {seen} is close, bro. Hold on, because if you get eaten I'll be damn sad.
+~3 {seen}. Shall we tear it together? You cut, I cheer really, really hard.
+@рани
+you're leaking like a holey barrel. I'm already dipping bread, damn it. Heal!
+you're a pale stain with legs. The valkyries are whispering already, hell.
+blood on you, blood under me. It doesn't suit me, damn it.
+~1 a bit more and I'll be sitting not on a shoulder but on a grave, damn.
+~1 you sway like a drunk at a funeral. Your own funeral, hell.
+~2 they beat you so hard I felt it. And nobody touched me.
+~3 hey, hold on, hear me? Without you I'm nothing. Tell no one, damn.
+~3 you're bleeding and I'm shaking, hell. Don't do this to me, bro.
+@про_вбивство
+{top} — flat on the ground like a plank. At least something you do comes out straight, hell.
+{top} — into the dirt, and I'm thrilled. Blood smells like a holiday, damn.
+another {top} taken apart for spare parts. A real craftsman, damn it.
+crack — and no more {top}. I didn't even get to blink, damn.
+~1 {top} is down because you got lucky, not because you're good, hell.
+~1 killing {top} is no feat, damn. The feat is not getting killed.
+~2 crunch — and {top} is gone. Music to my ears, hell.
+~2 {top} on the ground, you standing. A rarity, damn. I'll note it.
+~3 nicely done on {top}, bro. I cawed with pride, damn it.
+~3 what a blow! A couple more like that and I'll respect you, damn.
+@смерть_загальна
+dead again? The valkyries already say: "Oh hell, this one again". I'm ashamed, and I'm a raven.
+you die more often than I crap. And I crap a lot, damn.
+your grave is like a second house. The key's under the stone, damn.
+you lie there beautifully. Shame you're dead, hell.
+~1 how many more times, damn? Odin has already hung a sign with your name.
+~1 off to the other world again? Do they give you a discount there?
+~2 death doesn't suit you. Little suits you at all, damn.
+~2 running for the gear again. I know the way by heart, hell.
+~3 don't do that, hear me? I worry, damn. A little.
+~3 get up, bro. Without you I've got nobody to sit on, damn it.
+@ледь_живе
+a bit more and you're jelly, damn.
+{attacker} nearly made you kick the bucket. The bucket, hell!
+you're hanging by a hair, and the hair is damn thin.
+~1 I've already split your boots, damn. The left one's mine.
+~3 don't scare me like that, hell. My heart's in my heels. No idea where my heels are.
+@про_падіння
+you hit the ground so hard someone in Hel knocked on the ceiling: "What the hell up there?"
+you fly like a sack of potatoes and land even worse, damn.
+the ground hugged you again. Are you two dating, hell?
+you landed so hard the birds left three forests, damn.
+~1 no wings, no brains. What do you have besides bruises, damn?
+~1 you fall more often than Hugin shows off. And he shows off constantly, damn.
+~2 thud! In one piece? Pity. I mean good, damn.
+~3 careful, bro. I fall too when you fall, hell.
+@про_будову
+building? This house will stand exactly until a troll sneezes.
+you hammer so hard the woodpeckers retired, damn.
+the wall is crooked like your fate. But it stands, hell. For now.
+~1 some architect. Boars would refuse to live in this.
+~1 build, build. And who'll put the roof on, Odin?
+~2 oh, another beam. Soon it'll be a shed. A nice damn shed.
+~3 looks good, bro. Almost like people do it, hell.
+~3 build. I'll make a nest here, damn. Under the roof. If there's a roof.
+@про_рубку
+you chop so badly the tree falls from shame, not from the axe, damn.
+the forest fears you. Not your strength, hell, your stupidity.
+tree — crack, chips — in my face. Thanks a lot, damn.
+~1 you chop, I count. Tree — one, you — zero, at least it stood straight, damn.
+~1 another tree dead for your crooked house. Murderer, hell.
+~2 you swing that axe like a granny with a broom. But it falls, damn.
+~3 good chopping, bro. The forest is smoking nervously.
+~3 one more tree and we're rich, damn. In firewood.
+@про_копання
+dig, dig. Maybe you'll dig down to your brains. Your own, damn it, not the dwarves'.
+dust everywhere on me. Beak, feathers and, hell, my soul.
+clang-clang with the pickaxe. My head's a bell, damn.
+~1 you dig so badly the dwarves underground are laughing, hell.
+~1 the ore would crawl out itself if you stopped missing it, damn.
+~2 oh, shiny! Mine? At least one thing, damn it, mine.
+~3 dig, bro. When you're rich, buy me a shiny thing, damn.
+~3 what ore! We're getting rich, hell. I can already hear the coins.
+@про_плавання
+you swim like an axe with ambitions. Sinking, but trying, damn.
+the water's as cold as your heart. I'm wet, hell.
+you flounder and the fish laugh. I can hear them, damn.
+~1 a bit more and fishermen will be fishing you out, hell.
+~1 wet as a rat and just as smart, damn.
+~2 row, row. The shore won't swim to us, damn it.
+~3 hold on, bro. I can't swim, but I'll scream encouragingly, damn.
+@про_дощ
+it pours like Thor's bucket. Someone up there is in a mood. Like me, damn.
+the sky is crying. Probably saw you, hell.
+the rain gets under my feathers like you into someone's bag, damn.
+~1 I'm wet because of you. And the sky, but mostly you, damn it.
+~1 find a roof, I'm a sponge already, damn.
+~2 puddles, mud, you. Three troubles, hell, all mine.
+~3 wet, cold. Huddle up, bro. Just no snot, damn.
+@про_грозу
+it thunders so hard I prayed, damn. Me! A raven!
+Thor's hammering up there. Probably looking for you, hell.
+one bolt and it's roast raven. No thanks, damn it.
+~1 standing in the storm like a lightning rod, damn. A dumb one.
+~2 thunder. Hide, or we'll fry, hell.
+~3 don't be scared, bro. I'm scared too, damn. Together it's less scary.
+@про_туман
+fog like milk. Only you can't drink it, damn.
+can't see a thing. Like in your head, as always, hell.
+something will crawl out of the fog and eat you. I'm curious, damn it.
+~1 get lost in the fog and I won't look for you. Well, I will. But slowly, damn.
+~2 quiet in the fog, like a graveyard. Don't like it, hell.
+~3 stay by me, bro. At least I can smell, damn.
+@про_сніг
+so cold my beak froze to my tongue, damn.
+snow, snow, snow. White, wet and, hell, soulless.
+~1 you'll freeze stiff and I'm on you like on an ice floe, damn.
+~1 snow up to the knees and brains, damn it, up to the ankles.
+~2 cold. Light a fire, or I'll croak, damn.
+~3 we warm each other, bro. You me, me you. Well, mostly you me, hell.
+@про_нудьгу
+we're standing. I know every blade of grass by name. This one's Gala. She's damn more interesting than you.
+so bored I made friends with a fly, damn.
+silence. Even the wind fell asleep, hell.
+~1 you stand like a monument to laziness. Pigeons would sit on you, damn.
+~1 nobody's dying. Boredom is, damn it, deadly.
+~2 do something already, damn. Sing a song. No, don't sing.
+~3 we sit, we're quiet. Fine, hell. Like two old men on a bench.
+@їжа
+oh, grub! That's it, you're not a jerk today. Until evening, damn.
+yum. So tasty my claws are shaking, hell.
+I eat and think: you're not so damn hopeless after all.
+~1 finally, damn it! I was already trying your ear on.
+~1 for once you did something useful, damn.
+~2 grub is sacred. You're a saint today, hell. Almost.
+~3 yum. You feed me better than Odin, just don't tell him, or we're both done for.
+~3 tasty, bro. You spoil me, damn.
+@голод
+I'm so hungry your helmet smells like soup. With you inside, hell.
+my belly growls so loud the enemies look around, damn.
+I want to eat like a wolf. Well, like a very angry raven, damn it.
+~1 feed me or I start with you. A finger. Then, damn, another.
+~1 I'm so hungry I see you roasted. With onions, hell.
+~2 hungry Munin is angry Munin. And angry, damn, I bite.
+~3 bro, some grub. Please, hell. See, I'm polite.
+@готування_м
+smells so good I'm drooling on you, damn.
+cooking? Just don't burn it like last time, hell.
+~1 some cook. Even wolves run from your stew, damn.
+~2 frying? Give me a piece or I'll peck, damn it.
+~3 oh, this will be tasty. First piece is mine, bro. I'm in charge, damn.
+@ремесло_м
+carving? Mind your fingers, you'll need them, damn.
+oh, another piece of iron. Is it at least sharp, hell?
+~1 a jack of all trades. Both hands, damn, out of your butt.
+~2 craft away. I'll see what, damn it, comes out.
+~3 nice thing, bro. Good for smacking a bastard, damn.
+@ніч_м
+night. Either we eat someone or they eat us. Fifty-fifty, hell, and you're blind on top.
+dark as inside a troll's shirt. Smells the same, damn.
+at night all the filth crawls out. You among it, damn it.
+~1 prowling at night? Maybe the dark will eat you, damn.
+~2 night. Time to cut and not sleep, hell.
+~3 at night stay by me, bro. I see better in the dark, damn.
+@тут_м
+a place like your face: seems fine, but you don't want to live, damn.
+it stinks so bad even I'm disgusted, hell.
+~1 every bush here wants to eat you. I understand them, damn it.
+~2 here you need eyes in the back of your head. You've got one, damn, and it's sleepy.
+~3 decent place, bro. Just, hell, don't relax.
+@ягоди_м
+picking berries? Are you a viking or a granny at the market, damn?
+a handful of berries, and none, damn it, for me.
+~1 picking berries while something behind you is already sniffing, hell.
+~3 give me one, bro. Well, two. Well, damn, all of them.
+@пл_спокій_м
+I sit on you like a nail in a board. Only, damn, useless.
+the shoulder is warm, but you're cold as a fish, hell.
+I've grown roots here, damn.
+~1 do something, or I'll peck you myself to get you moving, damn it.
+~2 we sit. At least not in silence, damn. I'm talking.
+~3 I'm fine here, bro. Just, hell, tell no one.
+@пл_вбивство_м
+saw it twitch from the front row. Worth the ticket, damn.
+blood flew all the way to me. A souvenir, hell.
+~1 crooked, but a corpse. As always, damn.
+~2 fell nicely, damn it. The shoulder even shook.
+~3 what a blow, bro! I nearly flew off the shoulder with joy, damn.
+@мгл_суть
+That's it, that's it. A bit more and I'll start respecting you. And we damn well don't need that.
+There, scratch there. Oh, damn. Oh, hell. Don't stop.
+Pet me, pet me. Just don't tell Hugin, damn it.
+You pet me and I think whom to peck, damn. From happiness.
+My feathers puffed up. Because of you, hell. Happy?
+@жт_зілля
+glug-glug. What a drink, damn. Give me a sip.
+you drink potions like water. Won't your belly burst?
+~1 chugging again? A drunk, damn, not a warrior.
+~3 drink, bro. Be healthy, hell.
+@жт_стілець
+sat down like a king on a throne. King of, damn, dung and sticks.
+you sit, and I sit on you. Hierarchy, hell.
+~1 sprawled out. Meanwhile the enemies are growing, damn it.
+~3 sit, bro. You've earned it, damn.

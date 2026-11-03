@@ -60,7 +60,7 @@ namespace HuginWhispers
             try
             {
                 if (prof.m_playerStats != null && prof.m_playerStats.Length > 0 && prof.m_playerStats[0] != null) return prof.m_playerStats[0][t];
-                return prof.GetStat(t);
+                return 0f; // (GetStat now wants a difficulty — the game update of 2026-10-28; the totals are in m_playerStats[0])
             }
             catch { return 0f; } // a stat this game version does not know
         }
@@ -114,7 +114,7 @@ namespace HuginWhispers
 
         private static void Km(Dictionary<string, string> v, string key, float meters)
         {
-            if (meters >= 100f) v[key] = Lang.F("{0} км", Lang.Num(meters / 1000f, "0.0"));
+            if (meters >= 100f) v[key] = Composer.Distance(meters); // («три кілометри», not «3.0 км»)
         }
 
         // 1 514 rather than 1514

@@ -17,7 +17,7 @@ namespace HuginWhispers
     // The size is every game's own: the owner writes from-to-when on the player's ZDO and everyone eases it alike.
     internal static class Beast
     {
-        internal static float Seconds = 30f, SecondsTop = 40f;
+        internal static float Seconds = 30f, SecondsTop = 60f;
         internal static float Size = 2f, GrowSeconds = 1.6f, ShrinkSeconds = 1.6f;
         internal static float DamagePercent = 50f, ArmorPercent = 50f;
         internal static float KickPush = 1.5f; // the kick (no weapon, the wheel button) throws this many times as far
@@ -97,12 +97,12 @@ namespace HuginWhispers
             p.GetSEMan().RemoveStatusEffect(TiredHash, true); // a new beast: the old weariness forgotten
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
             Grow(p, Size, GrowSeconds);
-            PlayerAnims.Tag(p, Tag, true);
+            BodyClips.Tag(p, Tag, true);
             _nextFlourish = Time.time + 6f; // (the waking roar first)
             _nextRage = Time.time + UnityEngine.Random.Range(5f, 7f); // (after the waking line)
             _reactAt = Time.time + 4f;
             _lastHp = p.GetHealth();
-            if (RavenSkills.Animations) PlayerAnims.Play(p, 2, WakeClip, 0.15f, 1f);
+            if (RavenSkills.Animations) BodyClips.Play(p, 2, WakeClip, 0.15f, 1f);
             if (!PAnimLog.On) PAnimLog.Begin(LogName); // (a recording already running, by hand or a flight's tail, is left alone)
             RavenFx.Broadcast(RpcUp, p, Wake);
         }
@@ -115,7 +115,7 @@ namespace HuginWhispers
             if (p == null) { EndLog(Lang.T("гравця нема")); return; }
             p.GetSEMan().RemoveStatusEffect(Hash, true);
             Grow(p, 1f, fast ? 0.4f : ShrinkSeconds);
-            PlayerAnims.Tag(p, Tag, false);
+            BodyClips.Tag(p, Tag, false);
             StopFlourish(p, 0.3f);
             EndLog(fast ? Lang.T("звір обірвався") : Lang.T("звір пішов"));
             if (p.IsDead()) return;
@@ -128,7 +128,7 @@ namespace HuginWhispers
             t.m_ttl = TiredSeconds;
             t.m_staminaRegenMultiplier = TiredRegen;
             p.GetSEMan().AddStatusEffect(t, true, 0, 0f, 0);
-            RavenSkills.GiftSay(true, "beast_end", Lang.T("Все, звір виліз. Тепер ти — ганчірка. Відсапуйся."));
+            RavenSkills.GiftSay(true, "beast_end", Lang.T("Все, звір заліз назад. Тепер ти — мокра ганчірка. Віддихайся."));
         }
 
         // from the skills' Update (the local player; the sizes and the looks: every player)
@@ -205,7 +205,7 @@ namespace HuginWhispers
 
         private static void Flourish(Player p)
         {
-            PlayerAnimator a = PlayerAnimator.Of(p);
+            BodyAnimator a = BodyAnimator.Of(p);
             bool mine = a != null && a.Playing(2) && a.ClipIn(2) != null && a.ClipIn(2).StartsWith("beast_", StringComparison.Ordinal);
             if (mine && (p.InAttack() || p.IsBlocking() || p.InDodge())) { PAnimLog.Event(Lang.T("звір: рух обірвано (удар/блок/перекид)")); StopFlourish(p, 0.15f); return; } // the swing is the game's
             if (Time.time < _nextFlourish) return;
@@ -216,13 +216,13 @@ namespace HuginWhispers
             if (i == _lastFlourish) i = (i + 1 + UnityEngine.Random.Range(0, Flourishes.Length - 1)) % Flourishes.Length;
             _lastFlourish = i;
             PAnimLog.Event(Lang.F("звір: рух «{0}»", Flourishes[i]));
-            PlayerAnims.Play(p, 2, Flourishes[i], 0.2f, UnityEngine.Random.Range(0.9f, 1.1f));
+            BodyClips.Play(p, 2, Flourishes[i], 0.2f, UnityEngine.Random.Range(0.9f, 1.1f));
         }
 
         private static void StopFlourish(Player p, float fade)
         {
-            PlayerAnimator a = PlayerAnimator.Of(p);
-            if (a != null && a.Playing(2) && a.ClipIn(2) != null && a.ClipIn(2).StartsWith("beast_", StringComparison.Ordinal)) PlayerAnims.Stop(p, 2, fade);
+            BodyAnimator a = BodyAnimator.Of(p);
+            if (a != null && a.Playing(2) && a.ClipIn(2) != null && a.ClipIn(2).StartsWith("beast_", StringComparison.Ordinal)) BodyClips.Stop(p, 2, fade);
         }
 
         private static void EndLog(string why) { if (PAnimLog.What == LogName) PAnimLog.End(why); }
@@ -577,7 +577,7 @@ namespace HuginWhispers
         {
             if (p == null || Mat() == null || EyeMesh() == null) return null;
             Animator an = p.GetComponentInChildren<Animator>();
-            Transform head = an != null ? PlayerAnims.SkeletonBone(p, an.transform, "Head") : null; // (not a raven's head on your shoulder)
+            Transform head = an != null ? BodyClips.SkeletonBone(p, an.transform, "Head") : null; // (not a raven's head on your shoulder)
             if (head == null) return null;
             Transform b = p.transform;
             float s = b.localScale.x;

@@ -21,7 +21,7 @@ namespace HuginWhispers
         public const string Guid = "ko4erga.ravenwatch";
         public const string Name = "RavenWatch";
 #if RAVEN_ITEM
-        public const string Version = "2.8.0";
+        public const string Version = "2.9.0";
 #else
         public const string Version = "1.1.8";
 #endif
@@ -166,7 +166,7 @@ namespace HuginWhispers
             {
                 Grammar.MigrateFiles(_phraseDir); // first: old lines turn into new ones, so a revision does not add them twice
                 Grammar.MuninVoice(_phraseDir); // Munin's new voice: his old files deleted once, made again below
-                Grammar.RemakeVoices(_phraseDir); // rev 63: Hugin's new voice and Munin's cleaned lines: both pattern files deleted once, made again below
+                Grammar.RemakeVoices(_phraseDir); // rev 103 (rev 63 before it): the reviewed lines; both pattern files from before it deleted once, made again below
                 using (Lang.Phrase()) { Phrases.EnsureDefaults(PhraseDir); Composer.EnsureDefaults(PhraseDir); } // (their headers in the phrases' language)
             }
             catch (System.Exception e) { Logger.LogError("Phrase files: " + e.Message); }
@@ -237,12 +237,13 @@ namespace HuginWhispers
             HFloat(sec, "Munin scream cooldown minutes at level 1", 40f, 45f, "Pause between two screams at the trust level the gift opens on.", v => RavenSkills.ScreamCooldown = v * 60f);
             HFloat(sec, "Munin scream cooldown minutes at top level", 25f, 30f, "And at the top level; the levels between in equal steps.", v => RavenSkills.ScreamCooldownTop = v * 60f);
             HFloat(sec, "Munin scream radius", 6f, "Enemies this close lose their balance.", v => RavenSkills.ScreamRadius = v);
-            HFloat(sec, "Munin scream fear seconds", 4f, 3f, "How long the enemies it reaches run from you (not bosses). 0 = they only lose their balance.", v => Fear.Seconds = Mathf.Clamp(v, 0f, 10f));
+            HFloat(sec, "Munin scream fear seconds", 4f, 3f, "How long the enemies it reaches run from you (not bosses) at the trust level the gift opens on. 0 = they only lose their balance.", v => Fear.Seconds = Mathf.Clamp(v, 0f, 10f));
+            HFloat(sec, "Munin scream fear seconds at top level", 8f, "And at the top level.", v => Fear.SecondsTop = Mathf.Clamp(v, 0f, 15f));
             HFloat(sec, "Munin fury cost", 60f, 40f, "Strength Munin's fury takes.", v => Power.FuryCost = v);
             HFloat(sec, "Munin fury cooldown minutes at level 1", 45f, 40f, "Pause between two furies at the trust level the gift opens on.", v => RavenSkills.FuryCooldown = v * 60f);
             HFloat(sec, "Munin fury cooldown minutes at top level", 25f, 20f, "And at the top level; the levels between in equal steps.", v => RavenSkills.FuryCooldownTop = v * 60f);
-            HFloat(sec, "Munin fury seconds at level 1", 10f, "How long the fury lasts at the trust level the gift opens on.", v => Fury.Seconds = v);
-            HFloat(sec, "Munin fury seconds at top level", 20f, "And at the top level.", v => Fury.SecondsTop = v);
+            HFloat(sec, "Munin fury seconds at level 1", 15f, 10f, "How long the fury lasts at the trust level the gift opens on.", v => Fury.Seconds = v);
+            HFloat(sec, "Munin fury seconds at top level", 30f, 20f, "And at the top level.", v => Fury.SecondsTop = v);
             string furyFx = Hide(sec, "Munin fury effect color", "#BDC2CC", "Color of the effect around you on Munin's fury, as #RRGGBB (raven grey; the boss power's own is red).").Value;
             Color fc;
             if (ColorUtility.TryParseHtmlString(furyFx, out fc)) Fury.FxColor = fc;
@@ -282,8 +283,10 @@ namespace HuginWhispers
             HFloat(sec, "Small passives cost", 10f, "Strength a small passive takes when it starts.", v => WeakPassive.Cost = v);
             HFloat(sec, "Small passives cooldown minutes", 30f, "How often a small passive can start at most.", v => WeakPassive.CooldownMinutes = v);
             HFloat(sec, "Small passives minutes", 5f, "How long a small passive lasts.", v => WeakPassive.Seconds = v * 60f);
-            HFloat(sec, "Munin anger damage percent", 10f, "How much more damage you deal while Munin is angry.", v => WeakPassive.AngerPercent = v);
-            HFloat(sec, "Hugin light step stamina percent", 10f, "How much faster stamina comes back during Hugin's light step.", v => WeakPassive.StepPercent = v);
+            HFloat(sec, "Munin anger damage percent", 15f, 10f, "How much more damage you deal while Munin is angry, at the trust level it opens on.", v => WeakPassive.AngerPercent = v);
+            HFloat(sec, "Munin anger damage percent at top level", 35f, "And at the top level; the levels between in equal steps.", v => WeakPassive.AngerPercentTop = v);
+            HFloat(sec, "Hugin light step stamina percent", 15f, 10f, "How much faster stamina comes back during Hugin's light step, at the trust level it opens on.", v => WeakPassive.StepPercent = v);
+            HFloat(sec, "Hugin light step stamina percent at top level", 40f, "And at the top level; the levels between in equal steps.", v => WeakPassive.StepPercentTop = v);
             Use(Hide(sec, "Small passives from trust level", 2, "Hugin's light step and Munin's anger work from this level of trust on."), v => RavenAbilities.WeakUnlock = v);
             ConfigEntry<int> strong = Hide(sec, "Strong passives from trust level", 4, "Hugin's last chance and Munin's blood fury work from this level of trust on.");
             if (strong.Value == 3) strong.Value = 4; // the first default, before the small passives took level 2
@@ -292,13 +295,17 @@ namespace HuginWhispers
             HFloat(sec, "Munin blood fury cost", 50f, 40f, "Strength the blood fury takes; with less it does not start.", v => BloodFury.Cost = v);
             HFloat(sec, "Munin blood fury cooldown minutes at first level", 30f, "How long before it can start again, at the trust level it opens.", v => BloodFury.CooldownMinutes = v);
             HFloat(sec, "Munin blood fury cooldown minutes at top level", 10f, "And at the top level; the levels between in equal steps.", v => BloodFury.CooldownMinutesTop = v);
-            HFloat(sec, "Munin blood fury seconds", 15f, "How long it lasts.", v => BloodFury.Seconds = v);
+            HFloat(sec, "Munin blood fury seconds", 15f, "How long it lasts at the trust level it opens on.", v => BloodFury.Seconds = v);
+            HFloat(sec, "Munin blood fury seconds at top level", 25f, "And at the top level.", v => BloodFury.SecondsTop = v);
             HFloat(sec, "Munin blood fury health percent", 30f, "It starts when your health falls below this share.", v => BloodFury.Threshold = Mathf.Clamp(v, 1f, 99f) / 100f);
-            HFloat(sec, "Munin blood fury damage percent", 30f, "How much more damage you deal.", v => BloodFury.DamagePercent = v);
+            HFloat(sec, "Munin blood fury damage percent", 30f, "How much more damage you deal at the trust level it opens on.", v => BloodFury.DamagePercent = v);
+            HFloat(sec, "Munin blood fury damage percent at top level", 50f, "And at the top level.", v => BloodFury.DamagePercentTop = v);
             HFloat(sec, "Munin blood fury attack speed percent", 20f, "How much faster you attack (multiplies with Fury).", v => BloodFury.SpeedPercent = v);
+            HFloat(sec, "Munin blood fury attack speed percent at top level", 30f, "And at the top level.", v => BloodFury.SpeedPercentTop = v);
             Use(Hide(sec, "Ravens stay after death", true, "Hugin's «Loyalty» and Munin's «Stubbornness»: when you die, each raven on your shoulder may stay there instead of going into the grave."), v => Loyal.Enabled = v);
             HFloat(sec, "Munin death strength minutes", 10f, "Your death gives Munin strength at most once in this many minutes (0: every death).", v => Power.DeathGainMinutes = Mathf.Max(0f, v));
             HFloat(sec, "Ravens stay after death chance", 30f, "The chance (%) for each raven, rolled on its own.", v => Loyal.Chance = Mathf.Clamp01(v / 100f));
+            HFloat(sec, "Ravens stay after death chance at top level", 60f, "And at the top level of trust.", v => Loyal.ChanceTop = Mathf.Clamp01(v / 100f));
             Use(Hide(sec, "Ravens stay after death from trust level", 3, "That passive works from this level of trust on."), v => Loyal.UnlockLevel = Mathf.Clamp(v, 1, 7));
             HFloat(sec, "Munin taming cost", 40f, "Strength Munin's «Taming» takes.", v => Tame.Cost = Mathf.Max(0f, v));
             HFloat(sec, "Munin taming cooldown minutes at first level", 10f, "Pause between two tamings at the trust level the gift opens on, counted from the start.", v => Tame.CooldownMinutes = Mathf.Max(0f, v));
@@ -315,10 +322,13 @@ namespace HuginWhispers
             HFloat(sec, "Munin blood revenge minutes at most", 20f, "The time never grows beyond this.", v => BloodRevenge.MinutesTop = Mathf.Max(1f, v));
             HFloat(sec, "Munin blood revenge range", 30f, "The marked one must die this near you to count (an ally may finish it).", v => BloodRevenge.NearRange = Mathf.Clamp(v, 5f, 200f));
             HFloat(sec, "Munin blood revenge damage percent", 20f, "How much harder your blows hit the marked one.", v => BloodRevenge.DamagePercent = Mathf.Max(0f, v));
+            HFloat(sec, "Munin blood revenge damage percent at most", 40f, "With the longest window (the top trust level).", v => BloodRevenge.DamagePercentTop = Mathf.Max(0f, v));
             Use(Hide(sec, "Hugin omen", true, "Hugin's passive «Omen»: some mornings he tells the raid and the weather the day holds; a raid may be turned aside or called now."), v => Omen.Enabled = v);
             Use(Hide(sec, "Hugin omen trust level", 5, "The trust level Hugin's omen opens on."), v => Omen.UnlockLevel = Mathf.Clamp(v, 1, 7));
-            HFloat(sec, "Hugin omen chance at first level", 40f, "The chance (%) Hugin speaks on a morning, at the trust level the gift opens on.", v => Omen.ChanceFirst = Mathf.Clamp(v, 0f, 100f));
-            HFloat(sec, "Hugin omen chance at top level", 80f, "And at the top level.", v => Omen.ChanceTop = Mathf.Clamp(v, 0f, 100f));
+            HFloat(sec, "Hugin omen chance at first level", 30f, 40f, "The chance (%) Hugin speaks on a morning, at the trust level the gift opens on.", v => Omen.ChanceFirst = Mathf.Clamp(v, 0f, 100f));
+            HFloat(sec, "Hugin omen chance at top level", 40f, 80f, "And at the top level.", v => Omen.ChanceTop = Mathf.Clamp(v, 0f, 100f));
+            HFloat(sec, "Hugin omen boon chance", 50f, "The chance (%) a morning Hugin speaks also brings the day's gift: more health, stamina or eitr till the next morning.", v => Omen.BoonChance = Mathf.Clamp(v, 0f, 100f));
+            HFloat(sec, "Hugin omen boon amount", 20f, "How much the day's gift adds to health, stamina or eitr.", v => Omen.BoonAmount = Mathf.Max(0f, v));
             HFloat(sec, "Hugin omen turn aside cost", 40f, "Hugin's strength to turn a foretold raid aside for a day.", v => Omen.DeflectCost = Mathf.Max(0f, v));
             HFloat(sec, "Hugin omen turn aside days", 3f, "A raid can be turned aside at most once in this many days.", v => Omen.DeflectDays = Mathf.Clamp(v, 0f, 7f));
             HFloat(sec, "Hugin omen bad sign chance", 20f, "The chance (%) a spoken morning brings a bad omen (die before the next morning: the ravens lose less trust).", v => Omen.BadChance = Mathf.Clamp(v, 0f, 100f));
@@ -329,6 +339,7 @@ namespace HuginWhispers
             HFloat(sec, "Hugin last chance cost", 50f, "Strength the last chance takes; with less it does not save you.", v => LastChance.Cost = v);
             HFloat(sec, "Hugin last chance cooldown minutes", 10f, "How long before Hugin can save you again.", v => LastChance.CooldownMinutes = v);
             HFloat(sec, "Hugin last chance safe seconds", 4f, 2f, "How long nothing hurts you after the save.", v => LastChance.SafeSeconds = v);
+            HFloat(sec, "Hugin last chance safe seconds at top level", 8f, "And at the top level.", v => LastChance.SafeSecondsTop = v);
             HFloat(sec, "Hugin light cost", 20f, "Strength Hugin's light takes.", v => Power.LightCost = v);
             HFloat(sec, "Hugin light cooldown seconds", 600f, 300f, "Pause between two lights, counted from the start.", v => RavenSkills.LightCooldown = v);
             HFloat(sec, "Hugin light seconds", 300f, "How long the wisp shines over your head.", v => RavenLight.Seconds = v);
@@ -341,13 +352,13 @@ namespace HuginWhispers
             HFloat(sec, "Hugin leap cost", 50f, 30f, "Strength Hugin's leap takes.", v => Power.LeapCost = v);
             HFloat(sec, "Hugin leap cooldown minutes at level 1", 30f, "Pause between two leaps at the trust level the gift opens on, counted from the start.", v => RavenSkills.LeapCooldown = v * 60f);
             HFloat(sec, "Hugin leap cooldown minutes at top level", 24f, "And at the top level; the levels between in equal steps.", v => RavenSkills.LeapCooldownTop = v * 60f);
-            HFloat(sec, "Hugin leap seconds at level 1", 7.5f, 5f, "How long every jump from the ground goes high and falls do not hurt at the trust level the gift opens on. Runs out in the air: the landing hurts as usual.", v => Leap.Seconds = v);
-            HFloat(sec, "Hugin leap seconds at top level", 30f, 20f, "And at the top level (the leap opens at level 4: 19, 23, 26, 30 s by default).", v => Leap.SecondsTop = v);
+            HFloat(sec, "Hugin leap seconds at level 1", 10f, 7.5f, "How long every jump from the ground goes high and falls do not hurt at the trust level the gift opens on. Runs out in the air: the landing hurts as usual.", v => Leap.Seconds = v);
+            HFloat(sec, "Hugin leap seconds at top level", 40f, 30f, "And at the top level (the leap opens at level 4: 10, 20, 30, 40 s by default).", v => Leap.SecondsTop = v);
             HFloat(sec, "Hugin shadow cost", 60f, "Strength Hugin's shadow takes.", v => Power.ShadowCost = v);
             HFloat(sec, "Hugin shadow cooldown minutes at level 1", 40f, "Pause between two shadows at the trust level the gift opens on, counted from the start.", v => RavenSkills.ShadowCooldown = v * 60f);
             HFloat(sec, "Hugin shadow cooldown minutes at top level", 20f, "And at the top level; the levels between in equal steps.", v => RavenSkills.ShadowCooldownTop = v * 60f);
-            HFloat(sec, "Hugin shadow seconds at level 1", 10f, "How long monsters and other players do not see you at the trust level the gift opens on. A swing, a shot or a cast ends it sooner.", v => Shadow.Seconds = v);
-            HFloat(sec, "Hugin shadow seconds at top level", 20f, "And at the top level.", v => Shadow.SecondsTop = v);
+            HFloat(sec, "Hugin shadow seconds at level 1", 15f, 10f, "How long monsters and other players do not see you at the trust level the gift opens on. A swing, a shot or a cast ends it sooner.", v => Shadow.Seconds = v);
+            HFloat(sec, "Hugin shadow seconds at top level", 35f, 20f, "And at the top level.", v => Shadow.SecondsTop = v);
             HFloat(sec, "Hugin dome cost", 60f, "Strength Hugin's dome («Under the Wing») takes.", v => Power.DomeCost = v);
             HFloat(sec, "Hugin dome cooldown minutes at level 1", 10f, "Pause between two domes at the trust level it opens on, counted from the start.", v => RavenSkills.DomeCooldown = v * 60f);
             HFloat(sec, "Hugin dome cooldown minutes at top level", 7f, "And at the top level; the levels between in equal steps.", v => RavenSkills.DomeCooldownTop = v * 60f);
@@ -386,11 +397,14 @@ namespace HuginWhispers
             HFloat(sec, "Strike miss refund percent", 50f, "A strike that reached nobody gives back this share of its strength and lets off this share of its pause.", v => Strike.MissRefund = Mathf.Clamp(v, 0f, 100f) / 100f);
             HFloat(sec, "Strike crit percent per trust level", 5f, "Points of crit chance for each trust level above the first.", v => Strike.CritPerTrust = v);
             HFloat(sec, "Hugin shadow strike multiplier", 3f, "The first hit from the shadow deals this many times the damage (Path of Valheiman's sneak attack passives add on top).", v => Shadow.StrikeMultiplier = Mathf.Max(1f, v));
+            HFloat(sec, "Hugin shadow strike multiplier golden I", 4f, "The same with the first golden rune in the gift.", v => Shadow.StrikeGoldI = Mathf.Max(1f, v));
+            HFloat(sec, "Hugin shadow strike multiplier golden II", 5f, "The same with the second golden rune (the third doubles it).", v => Shadow.StrikeGoldII = Mathf.Max(1f, v));
             Use(Hide(sec, "Hugin shadow strike staggers", true, "The first hit from the shadow also staggers the enemy."), v => Shadow.Stun = v);
             HFloat(sec, "Hugin shadow self opacity percent", 80f, 60f, "How solid you see your own dark shape in the shadow (others do not see you at all). 100 = not see-through.", v => Shadow.SelfOpacity = Mathf.Clamp(v, 5f, 100f) / 100f);
             Use(Hide(sec, "Hugin shadow fools bosses", false, "Bosses do not see you in the shadow either (and take the strike)."), v => Shadow.FoolsBosses = v);
             HFloat(sec, "Hugin leap height", 12.5f, 25f, "Meters a jump throws you up.", v => Leap.Height = v); // halved in 1.3 (the old 25 is moved to the new default)
-            HFloat(sec, "Hugin leap forward meters", 30f, "Jumping on the run: about how far ahead you land (an arc up and forward). Standing still you go straight up. 0 = always straight up.", v => Leap.Forward = v);
+            HFloat(sec, "Hugin leap forward meters", 45f, 30f, "Jumping on the run: about how far ahead you land (an arc up and forward) at the trust level the gift opens on. Standing still you go straight up. 0 = always straight up.", v => Leap.Forward = v);
+            HFloat(sec, "Hugin leap forward meters at top level", 65f, "And at the top level.", v => Leap.ForwardTop = v);
             string wisp = Hide(sec, "Hugin light wisp color", "#FFEDB3", "Color of the wisp over your head, as #RRGGBB (the Wisplight's own is blue, about #6EC8FF). Takes effect on the next light.").Value;
             Color wc;
             if (ColorUtility.TryParseHtmlString(wisp, out wc)) RavenLight.WispColor = wc;
@@ -398,8 +412,8 @@ namespace HuginWhispers
             HFloat(sec, "Munin wings cost", 30f, "Strength Munin's wings take.", v => Power.WingsCost = v);
             HFloat(sec, "Munin wings cooldown minutes at level 1", 20f, "Pause between two wings at the trust level the gift opens on.", v => RavenSkills.WingsCooldown = v * 60f);
             HFloat(sec, "Munin wings cooldown minutes at top level", 10f, "And at the top level.", v => RavenSkills.WingsCooldownTop = v * 60f);
-            HFloat(sec, "Munin wings seconds at level 1", 20f, "How long you run faster at the trust level the gift opens on.", v => Wings.Seconds = v);
-            HFloat(sec, "Munin wings seconds at top level", 40f, "And at the top level.", v => Wings.SecondsTop = v);
+            HFloat(sec, "Munin wings seconds at level 1", 30f, 20f, "How long you run faster at the trust level the gift opens on.", v => Wings.Seconds = v);
+            HFloat(sec, "Munin wings seconds at top level", 60f, 40f, "And at the top level.", v => Wings.SecondsTop = v);
             HFloat(sec, "Munin wings speed percent", 50f, "How much faster you move.", v => Wings.SpeedPercent = v);
             HFloat(sec, "Munin wings run stamina percent", 30f, "How much less stamina running costs while the wings carry you.", v => Wings.RunStaminaPercent = v);
             HFloat(sec, "Munin heal cost", 40f, "Strength Munin's healing takes.", v => Power.HealCost = v);
@@ -407,16 +421,19 @@ namespace HuginWhispers
             HFloat(sec, "Munin heal cooldown minutes at top level", 10f, "And at the top level.", v => RavenSkills.HealCooldownTop = v * 60f);
             HFloat(sec, "Munin heal seconds", 10f, "How long the healing takes to bring you to full health, like a mead.", v => RavenHeal.Seconds = v);
             HFloat(sec, "Hugin decoy cost", 35f, "Strength Hugin's decoy («Обманка») takes.", v => Power.DecoyCost = v);
-            HFloat(sec, "Hugin decoy seconds at level 1", 8f, "How long the enemy fights nobody but Hugin, at the lowest trust level the gift has.", v => Decoy.Seconds = Mathf.Clamp(v, 1f, 30f));
-            HFloat(sec, "Hugin decoy seconds at top level", 20f, "And at the top level.", v => Decoy.SecondsTop = Mathf.Clamp(v, 1f, 30f));
+            HFloat(sec, "Hugin decoy seconds at level 1", 10f, 8f, "How long the enemy fights nobody but Hugin, at the lowest trust level the gift has.", v => Decoy.Seconds = Mathf.Clamp(v, 1f, 30f));
+            HFloat(sec, "Hugin decoy seconds at top level", 25f, 20f, "And at the top level.", v => Decoy.SecondsTop = Mathf.Clamp(v, 1f, 30f));
             HFloat(sec, "Hugin decoy cooldown minutes at level 1", 10f, "Pause between two decoys at the lowest trust level the gift has.", v => Decoy.Cooldown = Mathf.Max(0.1f, v) * 60f);
             HFloat(sec, "Hugin decoy cooldown minutes at top level", 5f, "And at the top level.", v => Decoy.CooldownTop = Mathf.Max(0.1f, v) * 60f);
             HFloat(sec, "Hugin decoy range", 30f, "Meters to the enemy Hugin flies to.", v => Decoy.Range = Mathf.Clamp(v, 5f, 100f));
-            Use(Hide(sec, "Hugin decoy hits to break", 3, "Blows from players on a lured enemy before it sees through it."), v => Decoy.HitsToBreak = Mathf.Clamp(v, 1, 20));
+            ConfigEntry<int> hits = Hide(sec, "Hugin decoy hits to break", 5, "Blows from players on a lured enemy before it sees through it.");
+            if (hits.Value == 3) hits.Value = 5; // (the old default)
+            Use(hits, v => Decoy.HitsToBreak = Mathf.Clamp(v, 1, 20));
+            HFloat(sec, "Hugin decoy stun seconds", 3f, "When the decoy ends (time up, seen through or called back), the fooled enemies stand dazed this long. 0 = not at all.", v => Decoy.StunSeconds = Mathf.Clamp(v, 0f, 10f));
             HFloat(sec, "Hugin wings cost", 100f, 80f, "Strength Odin's wings (Hugin's flight) take.", v => Power.FlightCost = v);
             HFloat(sec, "Hugin wings cooldown minutes", 40f, 20f, "Pause between two flights.", v => RavenSkills.FlightCooldown = v * 60f);
-            HFloat(sec, "Hugin wings seconds at level 1", 60f, "How long you fly at the lowest trust level the gift has.", v => OdinWings.Seconds = Mathf.Max(5f, v));
-            HFloat(sec, "Hugin wings seconds at top level", 75f, "And at the top level.", v => OdinWings.SecondsTop = Mathf.Max(5f, v));
+            HFloat(sec, "Hugin wings seconds at level 1", 75f, 60f, "How long you fly at the lowest trust level the gift has.", v => OdinWings.Seconds = Mathf.Max(5f, v));
+            HFloat(sec, "Hugin wings seconds at top level", 120f, 75f, "And at the top level.", v => OdinWings.SecondsTop = Mathf.Max(5f, v));
             HFloat(sec, "Hugin wings speed", 13f, "Metres a second ahead.", v => OdinWings.Speed = Mathf.Clamp(v, 2f, 40f));
             HFloat(sec, "Hugin wings climb speed", 7f, "Metres a second up or down.", v => OdinWings.ClimbSpeed = Mathf.Clamp(v, 1f, 20f));
             HFloat(sec, "Hugin wings max height", 40f, "Metres over the ground (or the sea) you may fly at most.", v => OdinWings.MaxHeight = Mathf.Clamp(v, 5f, 200f));
@@ -425,7 +442,7 @@ namespace HuginWhispers
             HFloat(sec, "Munin beast cost", 100f, "Strength Munin's beast takes.", v => Power.BeastCost = v);
             HFloat(sec, "Munin beast cooldown minutes", 30f, "Pause between two beasts.", v => RavenSkills.BeastCooldown = v * 60f);
             HFloat(sec, "Munin beast seconds at level 1", 30f, "How long the beast lasts at the lowest trust level the gift has.", v => Beast.Seconds = Mathf.Max(5f, v));
-            HFloat(sec, "Munin beast seconds at top level", 40f, "And at the top level.", v => Beast.SecondsTop = Mathf.Max(5f, v));
+            HFloat(sec, "Munin beast seconds at top level", 60f, 40f, "And at the top level.", v => Beast.SecondsTop = Mathf.Max(5f, v));
             HFloat(sec, "Munin beast size", 2f, "How many times bigger you grow (a real body).", v => Beast.Size = Mathf.Clamp(v, 1.1f, 3f));
             HFloat(sec, "Munin beast damage percent", 50f, "How much more damage you do.", v => Beast.DamagePercent = Mathf.Max(0f, v));
             HFloat(sec, "Munin beast speed percent", 50f, "How much faster you move as the beast (the big body steps slower).", v => Beast.SpeedPercent = Mathf.Max(0f, v));
@@ -441,8 +458,10 @@ namespace HuginWhispers
             HFloat(sec, "Munin ward cooldown minutes at top level", 6f, 10f, "And at the top level.", v => RavenSkills.WardCooldownTop = v * 60f);
             HFloat(sec, "Munin ward seconds", 120f, "How long the ward stands if no blow breaks it.", v => Ward.Seconds = Mathf.Max(5f, v));
             Use(Hide(sec, "Munin ward trust level", 4, "The trust level Munin's ward opens on."), v => Ward.UnlockLevel = Mathf.Clamp(v, 1, 7));
-            Use(Hide(sec, "Munin ward two blows at trust level", 6, "From this trust level the ward takes two blows instead of one."), v => Ward.TwoBlowsAt = Mathf.Clamp(v, 1, 8));
-            Use(Hide(sec, "Munin ward three blows at trust level", 7, "From this trust level the ward takes three blows."), v => Ward.ThreeBlowsAt = Mathf.Clamp(v, 1, 8));
+            Use(Hide(sec, "Munin ward blows", 2, "How many hard blows the ward takes at first."), v => Ward.Blows = Mathf.Clamp(v, 1, 4));
+            Use(Hide(sec, "Munin ward one more blow at trust level", 6, "From this trust level the ward takes one hard blow more."), v => Ward.ThreeBlowsAt = Mathf.Clamp(v, 1, 8));
+            Use(Hide(sec, "Munin ward two more blows at trust level", 7, "From this trust level the ward takes two hard blows more."), v => Ward.FourBlowsAt = Mathf.Clamp(v, 1, 8));
+            Use(Hide(sec, "Munin ward free blow percent", 10f, "A blow under this percent of your health that would not stagger you is stopped without spending a charge."), v => Ward.FreeShare = Mathf.Clamp(v, 0f, 100f) / 100f);
             HFloat(sec, "Munin ward front degrees", 180f, "How wide the guarded front is, in degrees (180: the whole front half).", v => Ward.FrontDegrees = Mathf.Clamp(v, 30f, 360f));
             HFloat(sec, "Munin ward push", 40f, "How hard a monster close by is pushed back when the ward takes its blow (0: not at all).", v => Ward.PushForce = Mathf.Max(0f, v));
             Use(Hide(sec, "Munin ward shows damage", true, "Show over you in red the damage the blow taken by the ward would have done."), v => Ward.ShowNumber = v);
@@ -472,7 +491,7 @@ namespace HuginWhispers
             PerchTurn.Load(); // the raven's turn on a perch tuned in the test window (tab «Розворот»), if any
             FlightTemplates.Load(); // the flight templates (built in + config/RavenWatch/templates)
             SitTemplates.Load();    // the sitting templates (built in + config/RavenWatch/sit_templates)
-            PlayerAnims.Load();     // the player's own animations (built in + config/RavenWatch/player_anims)
+            BodyClips.Load();     // the player's own animations (built in + config/RavenWatch/player_anims)
             SitSystem.Load();       // the sitting body's tuning (tab «Сидіння», sit.txt), if any
             BlackBox.Key = Hide(sec, "Flight black box key", KeyCode.None, "For testing (admins): saves the last 15 s of your ravens' flight (a file in config/RavenWatch/rec and a replay in the test window, tab «Flight»). It only listens: the key still works for the game and other mods. None: off.").Value;
             Outing.On = Config.Bind(sec, "Raven outings", true, "«Adaptive ravens»: now and then a raven leaves the shoulder to stretch its wings (flies along behind you or circles above), then comes back. Never underground, under a roof or in a fight.").Value;
@@ -500,7 +519,7 @@ namespace HuginWhispers
             if (heads.Value == Trust.OldHeads || heads.Value == Trust.ThreeHeads) heads.Value = Trust.Heads; // the lists from before (no waking; 3-4 heads)
             Use(heads, v => Trust.Heads = v);
             Use(Hide(sec, "Hugin foods", Trust.HuginFoods, "What Hugin eats and the trust it gives a hungry raven: ItemName:points or ItemName:points:class (1 Meadows .. 5 Ashlands; satiety = 10 + 5 × class; without a class it is taken from a built-in table), comma-separated. Trust 1–2 accepts classes 1–3, trust 3–5 classes 2–4, trust 6–7 classes 2–5. Other classes are refused without consuming the item."), v => Trust.HuginFoods = v);
-            Use(Hide(sec, "Munin foods", Trust.MuninFoods, "What Munin eats and the trust it gives. The same trust-level class limits apply: levels 1–2 accept classes 1–3, levels 3–5 classes 2–4, and levels 6–7 classes 2–5. Other classes are refused without consuming the item."), v => Trust.MuninFoods = v);
+            Use(Hide(sec, "Munin foods", Trust.MuninFoods, "What Munin eats and the trust it gives. The same trust-level limits apply: food from up to one land past the last boss beaten (level 1 = Eikthyr), and from level 3 no class 1 (Meadows) food. Other food is refused without consuming the item."), v => Trust.MuninFoods = v);
             HFloat(sec, "Strength at level 1", 100f, "A raven's most strength at the first level of trust.", v => Trust.MinStrength = v);
             HFloat(sec, "Strength at the top level", 300f, "And at the last; the levels between share the difference equally.", v => Trust.MaxStrength = v);
             HFloat(sec, "Points per level", 100f, "Trust from level 1 to 2; every next level takes this much more.", v => Trust.PerLevelPoints = Mathf.Max(1f, v));
@@ -765,6 +784,9 @@ namespace HuginWhispers
 
         // a raven is on its way or talking now: the guide waits
         internal bool RavenBusy { get { return _pendingKey != null || _quipEndsAt > 0f; } }
+#if RAVEN_ITEM
+        internal bool GuideOnWay { get { return _pendingKey != null && Guide.IsGuide(_pendingKey); } } // (the book: «he is already flying to you»)
+#endif
 
         internal string AdminVisit(bool munin)
         {
@@ -804,6 +826,14 @@ namespace HuginWhispers
             Perches.RegisterRpcs();
             FateRite.Register();
             Home.RegisterRpcs();
+#endif
+#if RAVEN_ITEM && RAVEN_NPC
+            HallSpawn.RegisterRpcs(); // (the Hall of the Watch: its place, its one builder)
+#if RAVEN_STORY
+            StoryScenes.RegisterRpcs(); // (a scene's raven: its orders to the players near)
+            StoryAir.RegisterRpcs();    // (a scene's storm, bolts, Thor: to every game)
+            StoryHush.RegisterRpcs();   // (a scene's quiet ring: no monsters born or coming near)
+#endif
 #endif
         }
 
@@ -884,7 +914,7 @@ namespace HuginWhispers
 
         // the creature died on another PC: that PC tells the killer
         // the prefab and the tamed mark go last: an older mod on the other side reads what it knows and stops there
-        internal static void SendKill(long killerUid, string token, int boss, int stars, string prefab, bool tamed, bool raven, bool own)
+        internal static void SendKill(long killerUid, string token, int boss, int stars, string prefab, bool tamed, bool raven, bool own, ZDOID id)
         {
             if (ZRoutedRpc.instance == null || killerUid == 0) return;
             ZPackage pkg = new ZPackage();
@@ -894,7 +924,8 @@ namespace HuginWhispers
             pkg.Write(prefab ?? "");
             pkg.Write(tamed);
             pkg.Write(raven); // (the raven's blow killed it)
-            pkg.Write(own); // (last: the player's own blow, not a pet's or a fire's)
+            pkg.Write(own); // (the player's own blow, not a pet's or a fire's)
+            pkg.Write(id); // (last: the creature, for Hugin's help)
             ZRoutedRpc.instance.InvokeRoutedRPC(killerUid, RpcKill, pkg);
         }
 
@@ -908,11 +939,13 @@ namespace HuginWhispers
             bool tamed = pkg.GetPos() < pkg.Size() && pkg.ReadBool();
             bool raven = pkg.GetPos() < pkg.Size() && pkg.ReadBool();
             bool own = pkg.GetPos() < pkg.Size() ? pkg.ReadBool() : !raven; // (from an older mod: not told)
+            ZDOID id = pkg.GetPos() < pkg.Size() ? pkg.ReadZDOID() : ZDOID.None;
             Diary.Killed(null, token);
             Diary.Add(Ev.Kill, token, boss);
 #if RAVEN_ITEM
             if (raven && Whirl.Quiet()) return; // («Вихор» past its first blows: the kill gives nothing)
             Power.OnKill(boss, stars, prefab, tamed, token);
+            if (!tamed) HuginChores.OnKilled(id, boss == 1); // (Hugin's gifts helped: remembered here)
             PerkFx.OnKill(Player.m_localPlayer, boss == 1, tamed); // (held by another game: your blessings on a kill all the same)
             if (!tamed) Errands.OnKill(prefab, token, stars, boss == 1, raven);
             if (!tamed) Requests.OnKill(prefab, token, stars, boss == 1, raven, own);
@@ -936,6 +969,21 @@ namespace HuginWhispers
             ServerConfig.Update();
 #if RAVEN_ITEM
             RavenTree.ServerTick(); // (the server: the raven trees into a world that has none yet)
+#endif
+#if RAVEN_ITEM && RAVEN_NPC
+            NpcCensus.Tick(); // (the census of our things: a slice a frame, read by those below)
+            NpcRescue.ServerTick(); // (the server: people in need heard of at the named hearts)
+            NpcStray.ServerTick(); // (the server: one of yours left far off with nobody near — put back where it belongs)
+            HallSpawn.ServerTick(); // (the server: the Hall of the Watch's place, once a world)
+            HallSpawn.Tick(); // (the one who comes near builds it)
+            HallState.ServerTick(); // (the server: a change of the Hall waiting till nobody sees it)
+            HallState.Tick(); // (its state laid on the pieces loaded round you)
+            HallFog.Tick(); // (the abandoned Hall's bluish mist)
+            HallCold.Tick(); // (and its cold, inside)
+            NpcMap.Tick(); // (the marks of people in need even with nobody loaded near: throttled inside)
+#endif
+#if RAVEN_ITEM && RAVEN_STORY
+            StoryPeople.ServerTick(); // (the server: the story's people kept once in the world, where they live — Heid)
 #endif
             RavenMsg.Tick();
             // the «для авторів» build: the test window on its own key (no console needed)
@@ -993,6 +1041,7 @@ namespace HuginWhispers
             }
 
 #if RAVEN_ITEM
+            if (RavenSkills.Silenced()) return; // (a module wants quiet: a story scene playing)
             if (Guide.Tick(this, p)) return; // the Guide: the one raven you talk to since 1.2
 #endif
             if (!_visitsEnabled.Value || p.IsDead() || Mute.SelfMuted) return;
@@ -1741,6 +1790,12 @@ namespace HuginWhispers
             if (Plugin.Instance != null && Plugin.Instance.WindowOpen) __result = true;
 #if RAVEN_ITEM
             if (DevPanel.Wants) __result = true; // the test window has the mouse (F8 toggles): cursor free, the game's input paused
+#if RAVEN_STORY
+            if (StoryPanel.Wants) __result = true; // the story window has the mouse (Shift+F8 toggles)
+#endif
+#if RAVEN_NPC
+            if (HallPanel.Wants) __result = true; // the Hall's window has the mouse (Shift+F9 toggles)
+#endif
 #endif
         }
     }

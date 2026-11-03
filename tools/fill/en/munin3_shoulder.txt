@@ -1,0 +1,130 @@
+@пл_набіг_м
+guests, damn! Uninvited! Smash them!
+crawling in like cockroaches. Squash them.
+oh, the meat came by itself. Handy.
+~1 don't stand there like a stump, hit!
+~1 want to lose the house? Swing, dummy.
+~1 scared? Me too. But hit.
+~2 we hold the house. Just let them try.
+~2 hit this one, hit that one. Hit everyone.
+~2 going fine. Blood, screams, all as it should be.
+~3 we'll beat them off together, bro. As always.
+~3 you in front, me on you. Let them be afraid.
+~3 smash them, and I'll scream. Scarily.
+@пл_їзда_м
+ride, damn! Let the wind whistle!
+shakes like a cart of potatoes. Bliss.
+the beast stinks, you stink. Only I smell nice.
+~1 steer, don't sleep, dummy.
+~1 if I fall, I'll peck the back of your head.
+~1 crawling like a turtle. Spur it on!
+~2 good gallop. I like it.
+~2 faster, even faster!
+~2 decent beast. It listens. Unlike you.
+~3 we're flying, bro! This is life!
+~3 all day like this. You, the beast and me.
+~3 I'm holding on. Ride, don't be scared.
+@пл_візок_м
+pull, horsey! Giddy-up!
+the wheel creaks, you creak. Music.
+what's in the cart? Any grub?
+~1 pull faster, lazy butt.
+~1 don't hit a hole, I'll fly off.
+~1 you puff like a smith's bellows.
+~2 a bit more, a bit more. Pull.
+~2 strong like an ox. An ox is dumb, but strong.
+~2 the road is smooth — and that's bliss.
+~3 pull, and I'll caw you a song.
+~3 we'll get there, bro. Where else would we go.
+~3 you pull, I steer. A team.
+@пл_стілець_м
+sit, sit. Don't sit your butt off.
+oh, a break. Finally.
+we sit like two grandpas on a bench.
+~1 you sit, the enemies grow. Get up.
+~1 sprawled like a king. Ugh.
+~1 sitting and sitting. Grow roots while you're at it.
+~2 well, let's sit. What else.
+~2 I'll sit with you. Just don't chatter.
+~2 so quiet. Suspicious.
+~3 nice sitting, bro.
+~3 sit. I'm here, not going anywhere.
+~3 I love when you sit. The shoulder doesn't shake.
+@пл_затишок_м
+house, fire, grub. What else do you need?
+warm, damn. Even my feathers fluffed up.
+at home it's like under mum's wing.
+~1 cozy here, and you still stink.
+~1 don't go soft, enemies come and you're in slippers.
+~1 the house is crooked but warm. Like you.
+~2 good here. We're not going anywhere, right?
+~2 I'll sit and warm up. Don't move.
+~2 warm, quiet. Bliss.
+~3 our house, bro. Ours.
+~3 I love when we're home. Tell no one.
+~3 here I'm happy, damn. Well, almost.
+@пл_торг_м
+the trader is a crook. Keep your eyes open.
+the money melts like snow. Why so much?
+buy something sharp, not pretty.
+~1 buying junk again? Ugh.
+~1 haggle, cheapskate. He's fooling you.
+~1 you've got the money, he's got the brains.
+~2 decent price. Take it.
+~2 watch he doesn't cheat you.
+~2 good stuff. Fine.
+~3 buy me a shiny thing, yeah?
+~3 take what you need. I'll help haggle from the shoulder. By screaming.
+~3 nice haggling, bro.
+@пл_піч_м
+hot as hell. I like it.
+smoke in my beak. Cough, damn.
+it melts. You melt too, all sweaty.
+~1 step back, we'll roast!
+~1 don't sleep, pour the ore!
+~1 heat right up my butt. Thanks a lot.
+~2 burns nicely. There'll be metal.
+~2 roars like a beast. Good sound.
+~2 warm. Feathers drying.
+~3 I love watching fire. With you.
+~3 from this iron you'll knock someone's head off. Nice.
+~3 sitting, warming up. Fine.
+@пл_город_м
+digging in the dirt like a mole.
+plant, plant. The boars will thank you.
+worms! Give me one.
+~1 you plant crooked, dummy.
+~1 a viking with a hoe. Ugh.
+~1 you bent and I nearly flew off, damn.
+~2 it grows slowly. Fine.
+~2 a nice bed. For you.
+~2 there'll be grub — that's good.
+~3 plant me some berries, yeah?
+~3 so calm. The soil smells.
+~3 you plant, I guard. A team.
+@пл_зілля_м
+glug. Bottoms up!
+stinks like a swamp. But it works.
+give me a sip too. Cheapskate.
+~1 drinking again? Drunkard.
+~1 don't spill, I'm sitting right here.
+~1 drink faster, enemies won't wait.
+~2 it works. I can see it works.
+~2 that went down well.
+~2 now you can fight some more.
+~3 drink, bro. Cheers.
+~3 get well. I'm bored without you.
+~3 that's better. I can see.
+@пл_трофей_м
+another head. A collection, damn.
+hangs like it's alive. I want to peck it.
+oh, that bastard. I remember how it stank.
+~1 crooked. Rehang it, dummy.
+~1 hanging it isn't killing it. Anyone can do this.
+~1 barely took it down and now you hang it like a hero.
+~2 hangs nicely. Let the guests piss themselves.
+~2 our wall grows, damn.
+~2 a good trophy. I pecked it too.
+~3 our trophy, bro. Ours.
+~3 I'm proud, hear me? A little.
+~3 a couple more heads and it's like a jarl's hall.

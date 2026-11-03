@@ -1,0 +1,6 @@
+# RavenWatch — сюжетна будівля Зали Варти (3.0). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Камінь пам'яті
+note: Камінь пам'яті Зали Варти
+use: story
+id: kamin_pamiati
+part asset/Зала/MemoryStone pos 0 1 0 rot 0 0 0 scale 2.1 2.1 2.1  # камінь пам'яті (Meshy, 2026-10-31), ~2 м

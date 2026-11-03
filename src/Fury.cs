@@ -13,7 +13,7 @@ namespace HuginWhispers
         internal const string EffectName = "RavenWatch_Fury";
         internal static readonly int Hash = EffectName.GetStableHashCode();
         internal static float Multiplier = 1.35f;
-        internal static float Seconds = 10f, SecondsTop = 20f; // at trust level 1 and at the top level
+        internal static float Seconds = 15f, SecondsTop = 30f; // at trust level 1 and at the top level
         internal static float Duration() { return Mathf.Floor(Trust.LerpGift("fury", Seconds, SecondsTop) * GearFx.FuryMul() * GiftUp.Power("fury") + 0.5f); } // (Кігтясте намисто: longer)
         private static SE_Stats _template;
         private static float _set = -1f;   // the speed we wrote last
@@ -47,7 +47,7 @@ namespace HuginWhispers
         {
             float m = 1f;
             if (On(c)) m *= 1f + (Multiplier - 1f) * Trust.Mul(true, 0.1f);
-            if (BloodFury.On(c)) m *= 1f + Mathf.Max(0f, BloodFury.SpeedPercent) / 100f;
+            if (BloodFury.On(c)) m *= 1f + Mathf.Max(0f, BloodFury.SpeedNow()) / 100f;
             return m;
         }
 

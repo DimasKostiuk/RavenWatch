@@ -80,6 +80,39 @@ namespace HuginWhispers
             return text;
         }
 
+        // any ZDO's weight on one send (a person's: «raven npc net»), and its biggest strings (where the weight is)
+        internal static int Weigh(ZDO z, out string biggest)
+        {
+            biggest = "";
+            if (z == null) return 0;
+            ZPackage whole = new ZPackage();
+            z.Serialize(whole);
+            List<KeyValuePair<int, float>> floats; List<KeyValuePair<int, Vector3>> vecs; List<KeyValuePair<int, Quaternion>> quats;
+            List<KeyValuePair<int, int>> ints; List<KeyValuePair<int, long>> longs; List<KeyValuePair<int, string>> strings;
+            List<KeyValuePair<int, byte[]>> bytes; ZDOConnection conn;
+            ZDOExtraData.GetData(z.m_uid, out floats, out vecs, out quats, out ints, out longs, out strings, out bytes, out conn);
+            List<KeyValuePair<int, int>> sizes = new List<KeyValuePair<int, int>>();
+            foreach (KeyValuePair<int, string> e in strings) sizes.Add(new KeyValuePair<int, int>(e.Key, (e.Value ?? "").Length));
+            sizes.Sort((a, b) => b.Value.CompareTo(a.Value));
+            List<string> top = new List<string>();
+            for (int i = 0; i < sizes.Count && i < 3; i++) if (sizes[i].Value > 40) top.Add(Name(sizes[i].Key) + " " + sizes[i].Value);
+            biggest = string.Join(", ", top.ToArray());
+            return whole.Size() + SendHeader;
+        }
+
+        private static string Name(int hash)
+        {
+            if (hash == ZDOVars.s_items) return "items(спорядження)";
+#if RAVEN_NPC
+            if (hash == NpcWorker.KCarry) return "carry(ноша)";
+            if (hash == NpcMind.KPlans) return "plans";
+            if (hash == NpcLocker.KLocker) return "locker";
+#endif
+            return hash.ToString();
+        }
+
+        internal static float PerSecond(int bytes) { return bytes * SendsPerSecond / 1024f; }
+
         private static string Kb(float b) { return (b / 1024f).ToString("0.0"); }
 
         // the game's keys: ZDOVars; ours: every "RavenWatch_"/"HuginWhispers_" string in this assembly's code, with the

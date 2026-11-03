@@ -22,7 +22,7 @@ namespace HuginWhispers
         private static readonly double[] Wordiness = { 0.3, 0.5, 0.72 };
         // how it calls you, in the forms {for him|for her}; index 0: by name, as before
         private static string[] HuginCalls { get { return Lang.Habits(HuginCallsSrc); } } // (translated on every read)
-        private static readonly string[] HuginCallsSrc = Lang.Keys(null, "{друже|подруго}", "генію", "{розумнику|розумнице}", "недотепо", "{героє|героїне}", "бідолахо", "{мисливцю|мисливице}", "роззяво", "стратегу", "ледащо", "ґаво", "незграбо", "{учню|ученице}", "{вікінгу|войовнице}");
+        private static readonly string[] HuginCallsSrc = Lang.Keys(null, "{друже|подруго}", "генію", "{розумнику|розумнице}", "недотепо", "{героє|героїне}", "бідолахо", "{мисливцю|мисливице}", "роззяво", "стратегу", "ледащо", "{філософе|філософко}", "незграбо", "{учню|ученице}", "{вікінгу|войовнице}");
         private static string[] MuninCalls { get { return Lang.Habits(MuninCallsSrc); } } // (translated on every read)
         private static readonly string[] MuninCallsSrc = Lang.Keys(null, "{малий|мала}", "лошаро", "{дурню|дурепо}", "чмо", "{гівнюче|гівнючко}", "{засранцю|засранко}", "{придурку|придурко}", "мудило", "{пиздюче|пиздючко}", "{шмаркачу|шмаркачко}", "терпило", "кабанчику", "ссикло", "{братан|сеструхо}", "{мужик|тітко}", "їбанько", "{довбойобе|довбойобко}", "{сучий сину|суча доню}", "харчу ходячий", "{телепню|телепко}");
         private static string[] HuginOpen { get { return Lang.Habits(HuginOpenSrc); } } // (translated on every read)
@@ -33,6 +33,12 @@ namespace HuginWhispers
         private static readonly string[] HuginEndSrc = Lang.Keys(null, "Я записав.", "Кра.", "Ну-ну.", "Отак от.", "Логічно.", "Хто б сумнівався.", "Браво.", "Ага.");
         private static string[] MuninEnd { get { return Lang.Habits(MuninEndSrc); } } // (translated on every read)
         private static readonly string[] MuninEndSrc = Lang.Keys(null, "Ото.", "Тьху.", "Я сказав.", "Кар!", "І все, нахуй.", "Бля.", "Вкурив?", "Шо, нє?", "Ото так, курва.");
+        // where each end fits (LineMood): a sound goes anywhere but a sincere moment, a verdict only on what you did
+        private const int F = 1 << LineMood.Fail, W = 1 << LineMood.Win, N = 1 << LineMood.Neutral, T = 1 << LineMood.Talk, Sound = F | W | N | T;
+        private static readonly int[] HuginEndFits = { 0, Sound, Sound, Sound, F, F | W, F | W, Sound };
+        private static readonly int[] MuninEndFits = { 0, F | N | T, Sound, Sound, F | N, F | N | T, Sound, Sound, F | W };
+        // a habit, not a tic: one raven's end at most once in a few minutes (by the raven's own stir)
+        private static readonly Dictionary<uint, float> EndNext = new Dictionary<uint, float>();
 
         // this raven speaks next (its number, -1: none known: the plain manner); address: the line may call you by its word
         internal static void Use(int code, bool munin, bool address)
@@ -79,12 +85,33 @@ namespace HuginWhispers
                     }
                 }
             }
+            if (LineMood.Now == LineMood.Sincere) return s; // a memory, a friend lost: no habits on it
             float r = UnityEngine.Random.value;
             string open = _open > 0 ? (_munin ? MuninOpen : HuginOpen)[_open] : null, end = _end > 0 ? (_munin ? MuninEnd : HuginEnd)[_end] : null;
             // not two exclamations in a row («Бляха. Курва. …», «…, бля. Тьху.»), and a swear habit only where the line has room for it
             if (open != null && r < 0.1f && !s.StartsWith(open.TrimEnd('.'), System.StringComparison.Ordinal) && !ShortFirst(s) && Fits(open, s)) return open + " " + Up(s);
-            if (end != null && r >= 0.1f && r < 0.27f && !s.EndsWith(end, System.StringComparison.Ordinal) && !ShortLast(s) && Fits(end, s)) return s + " " + end;
+            if (end != null && r >= 0.1f && r < 0.27f && EndFits(end, s) && !ShortLast(s) && Fits(end, s))
+            {
+                EndNext[_seed] = UnityEngine.Time.time + UnityEngine.Random.Range(240f, 360f);
+                return s + " " + end;
+            }
             return s;
+        }
+
+        // this raven's end on this line: the line's mood fits it, it was not said a moment ago, and its word is not in the line
+        // already («…вкурив? Вкурив?»)
+        private static bool EndFits(string end, string s)
+        {
+            if (((_munin ? MuninEndFits : HuginEndFits)[_end] & (1 << LineMood.Now)) == 0) return false;
+            float next;
+            if (EndNext.TryGetValue(_seed, out next) && UnityEngine.Time.time < next) return false;
+            string word = end.TrimEnd('.', '!', '?').ToLowerInvariant();
+            int comma = word.IndexOf(',');
+            if (comma > 0) word = word.Substring(0, comma);
+            string low = s.ToLowerInvariant();
+            for (int i = low.IndexOf(word, System.StringComparison.Ordinal); i >= 0; i = low.IndexOf(word, i + 1, System.StringComparison.Ordinal))
+                if ((i == 0 || !char.IsLetter(low[i - 1])) && (i + word.Length >= low.Length || !char.IsLetter(low[i + word.Length]))) return false; // (a whole word: «ага» is not in «багато»)
+            return true;
         }
 
         // a swearing habit only on a line with no swear of its own («…, курва. Бля.» is one too many); a plain one anywhere

@@ -37,6 +37,7 @@ namespace HuginWhispers
             internal float Dist;
         }
 
+        internal static float WaterDeep = 0.3f; // m of water over the bottom it would still stand in
         private static int _mask;
         private static int Mask { get { if (_mask == 0) _mask = LayerMask.GetMask("Default", "static_solid", "terrain", "piece", "Default_small", "vehicle"); return _mask; } }
         private static readonly RaycastHit[] Hits = new RaycastHit[16];
@@ -100,6 +101,8 @@ namespace HuginWhispers
             ZNetView mover = ship != null ? ship.GetComponent<ZNetView>() : cart != null ? cart.GetComponent<ZNetView>() : null;
             Vector3 at;
             if (!Top(hit, out at)) { t.Why = Lang.T("Там нема де сісти зверху."); return t; }
+            if (OnFire(hit.collider, at)) { t.Why = Lang.T("Там вогонь — ворон не сяде, обпече лапи."); return t; }
+            if (WaterFx.SurfaceAt(at) - at.y > WaterDeep) { t.Why = Lang.T("Там глибоко — сісти нема на що."); return t; } // (the ray goes through the water to the bottom: deep, it would stand under it)
             Vector3 way = at - p.transform.position;
             t.Dist = way.magnitude;
             if (t.Dist > Range) { t.Why = Lang.F("Задалеко: {0} м (до {1}).", Mathf.RoundToInt(t.Dist), Mathf.RoundToInt(Range)); return t; }
@@ -118,6 +121,19 @@ namespace HuginWhispers
             t.At = at; t.Fwd = fwd;
             if (mover != null) t.Follow = SitOn.OnThing(mover, at);
             return t;
+        }
+
+        // a fire burning there (a campfire, a brazier, a hearth, a torch): not onto the flames (the user, 2026-10-29: it
+        // sat right in a fire pit)
+        internal static float FireClear = 1.2f; // m round a burning fireplace's middle
+        private static bool OnFire(Collider c, Vector3 at)
+        {
+            if (EffectArea.IsPointInsideArea(at, EffectArea.Type.Burning, 0.3f) != null) return true;
+            Fireplace f = c != null ? c.GetComponentInParent<Fireplace>() : null;
+            if (f == null || !f.IsBurning()) return false;
+            Vector3 d = at - f.transform.position;
+            d.y = 0f;
+            return d.magnitude < FireClear;
         }
 
         private static int _itemMask;

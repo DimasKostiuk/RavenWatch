@@ -31,6 +31,7 @@ namespace HuginWhispers
 
         // a gathering seen lately (the bridge asks it before it looks for birds on the spots)
         internal static bool Active { get { return Time.time < _activeUntil; } }
+        internal static bool Sent(bool munin) { return Active && _sent[munin ? 1 : 0]; } // (this one of mine sits there now)
 
         private static int _mask;
         private static int Mask { get { if (_mask == 0) _mask = LayerMask.GetMask("Default", "static_solid", "terrain", "piece"); return _mask; } }

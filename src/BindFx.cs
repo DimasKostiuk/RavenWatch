@@ -395,6 +395,14 @@ namespace HuginWhispers
             UnityEngine.Object.Destroy(root, 1f);
         }
 
+        // a bolt from the sky onto a point (the story's storm: StoryAir)
+        internal static void SkyBolt(Vector3 ground, float height)
+        {
+            Vector2 lean = UnityEngine.Random.insideUnitCircle * height * 0.15f;
+            PlayBolt(new List<Vector3> { ground + new Vector3(lean.x, height, lean.y), ground }, Style.Lightning, 0.5f);
+            Sparks(ground, Style.Lightning, 14);
+        }
+
         // a jagged bolt through the points (flickers a few times, then fades)
         private static void PlayBolt(List<Vector3> pts, Style s, float life)
         {
@@ -826,7 +834,7 @@ namespace HuginWhispers
         private void Thirst(Transform root)
         {
             Animator an = Who.GetComponentInChildren<Animator>();
-            Transform hand = PlayerAnims.SkeletonBone(Who, an != null ? an.transform : Who.transform, "RightHand"); // (the body's own hand)
+            Transform hand = BodyClips.SkeletonBone(Who, an != null ? an.transform : Who.transform, "RightHand"); // (the body's own hand)
             Transform at = hand != null ? hand : root;
             Vector3 local = hand != null ? Vector3.zero : Who.transform.InverseTransformPoint(Who.GetCenterPoint());
             BindFx.Style s = BindFx.Style.Blood;

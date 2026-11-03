@@ -369,6 +369,8 @@ namespace HuginWhispers
             return r != null ? r.Title : null;
         }
 
+        internal static string LastMemoryKind; // the last story's kind (Memory.Add: death, boss, fall…; mem_stats): how you take it by the fire
+
         private static Remark Recollect(string dir, Player p, bool munin, ItemDrop.ItemData item, string ctx, Dictionary<string, string> values, bool numbers)
         {
             string friend;
@@ -399,6 +401,7 @@ namespace HuginWhispers
                 Remark r = new Remark();
                 r.Tag = "memory";
                 r.Title = Fill(text, v);
+                LastMemoryKind = o.M != null ? o.M.Kind : o.Tag;
                 return r;
             }
             return null;
@@ -435,12 +438,16 @@ namespace HuginWhispers
                     if (m.Extra == "star") v["m_stars"] = Lang.N(m.N, "зірка|зірки|зірок");
                     break;
                 case "slaughter": v["m_count"] = Lang.N(m.N, "ворога|ворогів|ворогів"); break;
-                case "voyage": v["m_km"] = Lang.F("{0} км", Lang.Num(m.N / 1000f, "0.0")); break;
-                case "fall": v["m_m"] = Lang.F("{0} м", m.N); break;
+                case "voyage": v["m_km"] = Distance(m.N); break;
+                case "fall": v["m_m"] = Lang.N(m.N, "метр|метри|метрів"); break;
 #if RAVEN_ITEM
                 case "fight": int st; if (!int.TryParse(m.Extra, out st)) st = 4; v["m_grade"] = Lang.LowerFirst(FightJudge.Grade(st)); v["m_stars"] = FightJudge.Stars(st); break;
 #endif
+#if RAVEN_ITEM
+                case "tomb": v["m_min"] = RavenAbilities.SpokenSpan(m.N * 60f); break; // («дві хвилини»: the voice would say «два»)
+#else
                 case "tomb": v["m_min"] = Lang.N(m.N, "хвилину|хвилини|хвилин"); break;
+#endif
                 case "grudge": case "badday": case "death": v["m_times"] = Times(m.N); break;
             }
         }
@@ -640,6 +647,9 @@ namespace HuginWhispers
             if (candidates.Count == 0) return null;
             string pick = candidates[Rng.Next(candidates.Count)];
             LastTagged[tag] = pick;
+#if RAVEN_ITEM
+            LineMood.For(tag);
+#endif
             return Fill(Again(dir, munin, tag, munin ? Gutter.Dirty(pick, Tone.Tier, Beast.On() && Tone.Own) : pick, values, t => AllKnown(t, values)), values); // (a whole line: Munin's street mouth too)
         }
 
@@ -692,6 +702,14 @@ namespace HuginWhispers
                 case 7: return Lang.T("всьоме");
                 default: return Lang.T("вкотре");
             }
+        }
+
+        // a way as a raven says it, the word in full (the voice reads «км» as letters): whole kilometres, under one the metres by tens
+        // (кілометр and метр are masculine: the voice's digits fit them)
+        internal static string Distance(float meters)
+        {
+            if (meters >= 950f) return Lang.N(Mathf.Max(1, Mathf.RoundToInt(meters / 1000f)), "кілометр|кілометри|кілометрів");
+            return Lang.N(Mathf.Max(10, Mathf.RoundToInt(meters / 10f) * 10), "метр|метри|метрів");
         }
 
         private static string Capital(string s) { return s.Length > 0 && char.IsLower(s[0]) ? Lang.UpperFirst(s) : s; }
@@ -842,7 +860,7 @@ namespace HuginWhispers
             if (fish > 0) v["fish"] = fish.ToString();
             if (s.N(Ev.Death) > 0) v["times"] = Times(s.N(Ev.Death));
             if (s.Level > 0) v["level"] = s.Level.ToString();
-            if (s.Meters > 0) v["km"] = Lang.F("{0} км", Lang.Num(s.Meters / 1000f, "0.0"));
+            if (s.Meters > 0) v["km"] = Distance(s.Meters);
             string[] here;
             if (p != null && Biomes.TryGetValue(p.GetCurrentBiome().ToString(), out here))
             {
@@ -943,7 +961,7 @@ namespace HuginWhispers
         private static Dictionary<string, string[]> Biomes { get { return Lang.Map(BiomesSrc); } } // (translated per language)
         private static readonly Dictionary<string, string[]> BiomesSrc = new Dictionary<string, string[]>
         {
-            { "Meadows", Lang.Keys("Левади", "на Левадах") },
+            { "Meadows", Lang.Keys("Луки", "на Луках") },
             { "BlackForest", Lang.Keys("Чорнолісся", "у Чорноліссі") },
             { "Swamp", Lang.Keys("Болото", "на Болоті") },
             { "Mountain", Lang.Keys("Гора", "у Горах") },
@@ -988,7 +1006,7 @@ namespace HuginWhispers
         {
             foreach (KeyValuePair<string, string> kv in values) text = text.Replace("{" + kv.Key + "}", kv.Value);
             text = Grammar.Fix(text); // {male|female}: the player's own gender
-            if (text.Length > 0) text = Lang.UpperFirst(text);
+            if (text.Length > 0) text = Lang.UpperSentences(Lang.UpperFirst(text));
             return text.Replace("\\n", "\n");
         }
 

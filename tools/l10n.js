@@ -11,9 +11,9 @@ const skip = new Set(["Grammar.cs", "Lang.cs",
   // the phrase data (its own files per language, not this table)
   "Patterns.cs", "VarietyPatterns.cs", "CrossPatterns.cs", "TalkPatterns.cs", "AboutPatterns.cs", "Quips.cs", "QuipPatterns.cs", "LifePatterns.cs",
   "LifeTalkPatterns.cs", "DefaultsEvents.cs", "PerchPatterns.cs", "PlacePatterns.cs", "AgainPatterns.cs", "EmotePatterns.cs", "PassPatterns.cs",
-  "WorldPatterns.cs", "Defaults.cs", "StrikePatterns.cs", "DeathPatterns.cs", "WardPatterns.cs", "ErrandPatterns.cs", "MorePatterns.cs", "MomentPatterns.cs", "HomePatterns.cs",
+  "WorldPatterns.cs", "Defaults.cs", "StrikePatterns.cs", "DeathPatterns.cs", "WardPatterns.cs", "ErrandPatterns.cs", "MorePatterns.cs", "MomentPatterns.cs", "HomePatterns.cs", "FillPatterns.cs",
   // the author's own tools (test windows, console, workshop, flight internals): stay Ukrainian
-  "Workshop.cs", "Commands.cs", "FlightPanel.cs", "PlayerAnimPanel.cs", "SitPanel.cs", "TemplatePanel.cs", "LooksPanel.cs", "LandPanel.cs",
+  "Workshop.cs", "Commands.cs", "AnimStage.cs", "FlightPanel.cs", "PlayerAnimPanel.cs", "SitPanel.cs", "TemplatePanel.cs", "LooksPanel.cs", "LandPanel.cs",
   "WingPanel.cs", "PhotoPanel.cs", "TakeoffPanel.cs", "DevPanel.cs", "SoundPanel.cs", "LookDiag.cs", "Dummy.cs", "EyeGlow.cs", "PerchTurn.cs",
   "PerchTurnStage.cs", "SitTemplates.cs", "TakeoffKeys.cs", "FlightStage.cs", "FlightTemplates.cs", "Landings.cs", "Motor.cs", "RavenFlight.cs",
   "AnimDirector.cs", "BlackBox.cs", "PlayerAnimLog.cs", "DevKit.cs", "FlightPlans.cs", "FlightRec.cs", "SitDirector.cs"]);
@@ -94,7 +94,7 @@ function asked() {
     }
   }
   // the built-in models' own words (assets/gear, perches, items: «name:» and «note:» lines), shown through Lang
-  for (const sub of ["gear", "perches", "items"]) {
+  for (const sub of ["gear", "perches", "items", "story/perches", "story/items"]) {
     const d = path.join(root, "assets", sub);
     if (!fs.existsSync(d)) continue;
     for (const f of fs.readdirSync(d).filter(n => n.endsWith(".txt"))) {
@@ -103,6 +103,37 @@ function asked() {
         if (!m) return;
         if (!out.has(m[2])) out.set(m[2], []);
         out.get(m[2]).push("assets/" + sub + "/" + f + ":" + (i + 1));
+      });
+    }
+  }
+  // the story's own texts (assets/story quests + scenes: goals, mark labels, lines said and shown), as StoryQuests and
+  // StoryScenes hand them to Lang.T — the same cut (StoryFiles.Lines: « #» starts a note)
+  const put = (text, where) => { text = (text || "").trim(); if (!text || !cyr.test(text)) return; if (!out.has(text)) out.set(text, []); out.get(text).push(where); };
+  const rest = (line, n) => { const w = line.split(/[ \t]+/).filter(Boolean); if (w.length <= n) return ""; let pos = 0; for (let i = 0; i < n; i++) pos = line.indexOf(w[i], pos) + w[i].length; return line.slice(pos).trim(); };
+  for (const kind of ["quests", "scenes"]) {
+    const d = path.join(root, "assets", "story", kind);
+    if (!fs.existsSync(d)) continue;
+    for (const f of fs.readdirSync(d).filter(n => n.endsWith(".txt"))) {
+      fs.readFileSync(path.join(d, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+        let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note);
+        line = line.trim();
+        if (!line || line.startsWith("#") || line.startsWith("[")) return;
+        const where = "assets/story/" + kind + "/" + f + ":" + (i + 1);
+        if (kind === "quests") {
+          const c = line.indexOf(":"); if (c <= 0) return;
+          const key = line.slice(0, c).trim().toLowerCase(), val = line.slice(c + 1).trim();
+          if (key === "goal" || key === "name") put(val, where);
+          else if (key === "mark") { const m = val.split(/ +/); const r = parseInt(m[1], 10); put(r > 0 ? m.slice(2).join(" ") : m.slice(1).join(" "), where); }
+          else if (key === "start" || key === "done") val.split(";").forEach(x => { x = x.trim(); if (x.startsWith("msg ")) put(rest(x, 1), where); });
+          return;
+        }
+        if (line.startsWith("if ")) { const c = line.indexOf(":"); if (c < 0) return; line = line.slice(c + 1).trim(); }
+        const w = line.split(/[ \t]+/);
+        if (w[0] === "say") put(rest(line, 2), where);
+        else if (w[0] === "msg" || w[0] === "sub") put(rest(line, 1), where);
+        else if (w[0] === "bird" && w[1] === "say") put(rest(line, 2), where);
+        else if (w[0] === "npc" && w[2] === "say") put(rest(line, 3), where);
+        else if (w[0] === "do" && w[1] === "msg") put(rest(line, 2), where);
       });
     }
   }

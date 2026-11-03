@@ -144,7 +144,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Minimap), "UpdatePins")]
     internal static class ErrandMapTintPatch
     {
-        private static void Postfix() { try { if (ErrandMap.Ours.Count > 0 || ErrandMap.Trees.Count > 0) ErrandMap.Tint(); } catch { } }
+        private static void Postfix()
+        {
+            try { if (ErrandMap.Ours.Count > 0 || ErrandMap.Trees.Count > 0) ErrandMap.Tint(); } catch { }
+#if RAVEN_NPC
+            try { if (StoryMap.Count > 0) StoryMap.Tint(); } catch { } // (the story's main tasks: in gold)
+#endif
+        }
     }
 }
 #endif

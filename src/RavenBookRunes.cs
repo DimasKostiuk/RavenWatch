@@ -27,8 +27,39 @@ namespace HuginWhispers
             foreach (string r in d.New) if (!_freshRunes.Contains(r)) _freshRunes.Add(r);
             RuneBook.Seen(p);
 
-            // ---- right: the runes
-            RectTransform col = Column("Right", 644f, 40f, 500f, 4f); // (tight: three kinds, up to ten golden runes and the в'язь fit with no scroll)
+            // ---- right: the runes, drawn tighter step by step until the page fits with no scroll (more golden runes, a в'язь)
+            for (_runeTight = 0; ; _runeTight++)
+            {
+                RectTransform col = RunesRight(p, d);
+                if (_runeTight >= RuneTightMax || RunesFit(col)) break;
+                UnityEngine.Object.DestroyImmediate(col.parent.gameObject);
+            }
+            _runeTight = 0;
+        }
+
+        // how tight the right page is drawn: 0 roomy … RuneTightMax; the sizes for each step
+        private static int _runeTight;
+        private const int RuneTightMax = 4;
+        private static readonly float[] TightRuneH = { 58f, 58f, 54f, 52f, 50f };     // a rune cell's height (its stone gets smaller)
+        private static readonly float[] TightRuneGap = { 4f, 0f, 0f, 0f, 0f };        // between rune rows
+        private static readonly int[] TightHeadPad = { 4, 0, 0, 0, 0 };               // over each kind's title
+        private static readonly float[] TightColGap = { 4f, 2f, 2f, 2f, 2f };         // between the column's pieces
+        private static readonly int[] TightGoldCols = { 5, 5, 6, 7, 8 };              // golden runes a row (the cells narrower to fit 500)
+        private static readonly float[] TightGoldW = { 94f, 94f, 78f, 66f, 57f };
+        private static readonly float[] TightGoldH = { 80f, 80f, 72f, 66f, 60f };
+        private static readonly float[] TightGoldStone = { 48f, 48f, 44f, 40f, 36f };
+        private static readonly float[] TightBindH = { 100f, 80f, 72f, 64f, 60f };     // the в'язь card (its emblem with it)
+
+        private static bool RunesFit(RectTransform col)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(col);
+            return LayoutUtility.GetPreferredHeight(col) <= ((RectTransform)col.parent).rect.height + 0.5f;
+        }
+
+        private static RectTransform RunesRight(Player p, RuneBook.Data d)
+        {
+            int t = _runeTight;
+            RectTransform col = Column("Right", 644f, 40f, 500f, TightColGap[t]);
             RectTransform head = Rect("Head", col);
             HBox(head, 8f, TextAnchor.LowerLeft);
             T(head, Lang.T("Руни"), 26f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
@@ -40,14 +71,14 @@ namespace HuginWhispers
             for (int k = 0; k < WearCatalog.Kinds; k++)
             {
                 RectTransform row = Rect("Kind", col);
-                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, TightHeadPad[t], 0);
                 T(row, Lang.T(RuneBook.KindTitles[k]), 18f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(row);
                 TMP_Text what = T(row, Lang.T(RuneBook.KindWhat[k]), 13f, Brown, F.Italic, TextAlignmentOptions.BottomRight);
                 what.textWrappingMode = TextWrappingModes.NoWrap;
                 RectTransform grid = Rect("Grid", col);
                 GridLayoutGroup g = grid.gameObject.AddComponent<GridLayoutGroup>();
-                g.cellSize = new Vector2(56f, 58f); g.spacing = new Vector2(6f, 4f);
+                g.cellSize = new Vector2(56f, TightRuneH[t]); g.spacing = new Vector2(6f, TightRuneGap[t]);
                 g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 8;
                 foreach (RuneDef r in RuneBook.All) if ((int)r.Kind == k) RuneCell(grid, p, d, r);
             }
@@ -57,16 +88,16 @@ namespace HuginWhispers
             else
             {
                 RectTransform row = Rect("Gold", col);
-                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+                HBox(row, 6f, TextAnchor.LowerLeft, 0, 0, TightHeadPad[t], 0);
                 T(row, Lang.T("Золоті руни"), 18f, GoldInk, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(row);
                 TMP_Text n = T(row, Lang.F("у тебе {0} · усього {1}", d.Gold, d.GoldEver), 14f, Brown, F.Body, TextAlignmentOptions.BottomRight);
                 n.textWrappingMode = TextWrappingModes.NoWrap;
                 RectTransform grid = Rect("GoldGrid", col);
                 GridLayoutGroup g = grid.gameObject.AddComponent<GridLayoutGroup>();
-                // five a row (free ones first, then the ones in gifts; more than ten: the column scrolls), each with its words under it: «вільна», or the gift and the raven
-                g.cellSize = new Vector2(94f, 80f); g.spacing = new Vector2(5f, 4f);
-                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 5;
+                // five a row, more and smaller when tight (free ones first, then the ones in gifts), each with its words under it: «вільна», or the gift and the raven
+                g.cellSize = new Vector2(TightGoldW[t], TightGoldH[t]); g.spacing = new Vector2(5f, 4f);
+                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = TightGoldCols[t];
                 for (int i = 0; i < d.Gold; i++) GoldCell(grid);
                 // the ones put into gifts stay in sight: in their raven's colour, the gift on hover
                 int spent = 0;
@@ -77,7 +108,11 @@ namespace HuginWhispers
                     ItemDrop.ItemData it = mu ? wm : wh;
                     if (it == null || Trust.Stranger(it, p)) continue;
                     foreach (System.Collections.Generic.KeyValuePair<string, int> kv in GiftUp.Of(it))
-                        for (int lv = 1; lv <= kv.Value; lv++) { SpentGoldCell(grid, mu, kv.Key, lv); spent++; }
+                    {
+                        RavenAbility ga = RavenAbilities.Find(kv.Key);
+                        int from = mu && ga != null && ga.Pair && !Trust.Stranger(wh, p) ? GiftUp.LevelIn(wh, kv.Key) : 0; // (a paired gift's levels are both ravens' runes: Munin's count on from Hugin's)
+                        for (int lv = 1; lv <= kv.Value; lv++) { SpentGoldCell(grid, mu, kv.Key, from + lv); spent++; }
+                    }
                 }
                 if (d.Gold == 0 && spent == 0) T(col, Lang.T("Усі золоті руни вже вкладені в дари."), 14f, InkSoft, F.Italic);
             }
@@ -85,7 +120,7 @@ namespace HuginWhispers
             if (d.Bind.Length > 0)
             {
                 RectTransform brow = Rect("Binds", col);
-                HBox(brow, 6f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+                HBox(brow, 6f, TextAnchor.LowerLeft, 0, 0, TightHeadPad[t], 0);
                 T(brow, Lang.T("В'язь"), 18f, Ink, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
                 Spring(brow);
                 bool on = BindRun.On;
@@ -98,6 +133,7 @@ namespace HuginWhispers
                 BindCell(col, p, d);
             }
             else if (d.Opened >= 2) T(col, Lang.T("Десь у світі ростуть Воронячі дерева. Біля їхнього коріння руни сплітаються у в'язі."), 14f, InkSoft, F.Italic);
+            return col;
         }
 
         // the stick of notches: five cuts, the done ones gold
@@ -186,14 +222,15 @@ namespace HuginWhispers
             bool on = BindRun.On;
             Bind b = Bind.Parse(d.Bind);
             RectTransform cell = Rect("Bind", col);
-            Fixed(cell.gameObject, -1f, 100f);
+            float h = TightBindH[_runeTight], e = h - 4f;
+            Fixed(cell.gameObject, -1f, h);
             Torn(cell, on ? new Color(0.66f, 0.52f, 0.23f, 0.25f) : BookArt.Card, C("#7a5ab0"), 1.5f);
             RectTransform holder = Rect("Holder", cell);
-            At(holder, 4f, 2f, 96f, 96f);
-            BindEmblem(holder, b, d.BindRunes, 96f);
+            At(holder, 4f, 2f, e, e);
+            BindEmblem(holder, b, d.BindRunes, e);
             BindPower w = BindRun.PowerOf(d.Bind);
             TMP_Text n = T(cell, w != null ? Short(d, d.BindRunes, w) : BindRunes(d), 14f, on ? Ink : InkSoft, F.Body, TextAlignmentOptions.Left);
-            Stretch(n.rectTransform, Vector2.zero, Vector2.one, new Vector2(108f, 6f), new Vector2(-10f, -6f));
+            Stretch(n.rectTransform, Vector2.zero, Vector2.one, new Vector2(e + 12f, 6f), new Vector2(-10f, -6f));
             n.richText = true; n.raycastTarget = false;
             n.enableAutoSizing = true; n.fontSizeMin = 10f; n.fontSizeMax = 14f;
             Tip(cell.gameObject, () => "<b>" + Lang.T("В'язь") + "</b>\n\n" + (w != null ? w.Sentence() : "") + "\n\n" + (BindRun.On ? Lang.T("Діє на тобі.") : Lang.T("Вимкнена: не спрацьовує й не відновлює заряди.")) + "\n" + Lang.T("Розплести її можна лише біля Воронячого дерева."));
@@ -269,7 +306,8 @@ namespace HuginWhispers
         {
             RectTransform s = Rect("Stone", cell);
             s.anchorMin = s.anchorMax = s.pivot = new Vector2(0.5f, 1f);
-            s.sizeDelta = new Vector2(48f, 48f); s.anchoredPosition = new Vector2(0f, -2f);
+            float z = TightGoldStone[_runeTight];
+            s.sizeDelta = new Vector2(z, z); s.anchoredPosition = new Vector2(0f, -2f);
             return s;
         }
 
@@ -277,13 +315,13 @@ namespace HuginWhispers
         private static void GoldWords(RectTransform cell, string first, string second, Color ink)
         {
             TMP_Text t = T(cell, first + (second != null ? "\n<size=90%><color=#" + ColorUtility.ToHtmlStringRGB(Brown) + ">" + second + "</color></size>" : ""), 11f, ink, F.Body, TextAlignmentOptions.Bottom);
-            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 0f), new Vector2(0f, -50f));
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 0f), new Vector2(0f, -TightGoldStone[_runeTight] - 2f));
             t.richText = true; t.raycastTarget = false; t.textWrappingMode = TextWrappingModes.NoWrap;
             t.enableAutoSizing = true; t.fontSizeMin = 8f; t.fontSizeMax = 11f;
         }
 
-        // ---- a golden rune into a gift: which raven → which gift → «так, назавжди» (one card, step by step)
-        private static void GoldAsk(RectTransform at, bool? munin, string gift)
+        // ---- a golden rune into a gift: which raven (or «Парні») → which gift → «так, назавжди» (one card, step by step)
+        private static void GoldAsk(RectTransform at, bool? munin, string gift, bool pair = false)
         {
             ClosePopup();
             HideTip();
@@ -294,7 +332,38 @@ namespace HuginWhispers
             panel.GetComponent<VerticalLayoutGroup>().spacing = 8f;
             RectTransform row = card.Foot;
 
-            if (!munin.HasValue)
+            if (pair && gift == null)
+            {
+                T(panel, Lang.T("Який парний дар покращити?"), 21f, PInk, F.Head);
+                T(panel, Lang.T("Руна ляже в того ворона, у кого ще є місце."), 15f, PSoft, F.Body);
+                foreach (RavenAbility a in RavenAbilities.All)
+                {
+                    if (!a.Pair || !GiftUp.Upgradable.Contains(a.Id)) continue;
+                    RavenAbility ab = a;
+                    int lv = GiftUp.Level(a.Id);
+                    string why;
+                    PairRaven(p, a.Id, out why);
+                    RectTransform r = GoldGiftRow(panel, a, lv, why == null);
+                    Tip(r.gameObject, () => "<b>" + ab.Plain + "</b>\n\n" + GiftUp.LevelsText(ab.Id) + (why != null ? "\n\n<color=#FF6B6B>" + why + "</color>" : ""));
+                    if (why == null) Clickable(r.gameObject, () => GoldAsk(at, null, ab.Id, true));
+                }
+                AskButton(row, Lang.T("Назад"), false, () => GoldAsk(at, null, null));
+            }
+            else if (pair)
+            {
+                RavenAbility a = RavenAbilities.Find(gift);
+                string none;
+                bool m = PairRaven(p, gift, out none);
+                int lv = GiftUp.Level(gift) + 1;
+                T(panel, Lang.F("«{0}» — рівень {1}?", a != null ? a.Plain : gift, GiftUp.Roman(lv)), 21f, PInk, F.Head);
+                T(panel, GiftUp.LevelsText(gift), 15f, PInk, F.Body);
+                T(panel, Lang.F("<color=#FF6B6B>Назавжди.</color> Руна ляже в {0}: з дару її вже не витягти, вона лишиться в цьому вороні, навіть якщо віддаси його іншому.", m ? Lang.T("Муніна") : Lang.T("Хугіна")).Replace("#FF6B6B", BadHex), 15f, PInk, F.Body);
+                Action yes = () => { ClosePopup(); string why = GiftUp.Invest(Player.m_localPlayer, m, gift); Tell(why ?? Lang.F("Золота руна в дарі «{0}»: рівень {1}.", a != null ? a.Plain : gift, GiftUp.Roman(lv))); Show(_tab, true); };
+                AskButton(row, Lang.T("Назад"), false, () => GoldAsk(at, null, null, true));
+                CardButton(row, Lang.T("Так, назавжди"), true, yes, "ᚨ");
+                _nickYes = yes;
+            }
+            else if (!munin.HasValue)
             {
                 T(panel, Lang.T("Золота руна — у дар якого ворона?"), 21f, PInk, F.Head);
                 foreach (bool m in new bool[] { true, false })
@@ -304,6 +373,7 @@ namespace HuginWhispers
                     if (item == null) continue;
                     CardButton(row, Lang.F("{0} ({1}/{2})", Plugin.RavenName(w), GiftUp.Used(item), GiftUp.MaxPerRaven), true, () => GoldAsk(at, w, null), "ᚨ");
                 }
+                if (AnyPairOpen()) CardButton(row, Lang.T("Парні"), true, () => GoldAsk(at, null, null, true), "ᚨ");
                 if (Trust.Worn(false) == null && Trust.Worn(true) == null) T(panel, Lang.T("Жодного ворона нема на плечі."), 15f, PSoft, F.Italic);
             }
             else if (gift == null)
@@ -314,15 +384,11 @@ namespace HuginWhispers
                 T(panel, Lang.F("Золотих рун у ньому: {0} з {1}.", GiftUp.Used(item), GiftUp.MaxPerRaven), 15f, PSoft, F.Body);
                 foreach (RavenAbility a in RavenAbilities.All)
                 {
-                    if ((a.Pair ? !BothWorn : a.Munin != m) || !GiftUp.Upgradable.Contains(a.Id)) continue; // (a paired gift takes a rune from either raven, both on you)
+                    if (a.Pair || a.Munin != m || !GiftUp.Upgradable.Contains(a.Id)) continue; // (paired gifts have their own «Парні» list)
                     RavenAbility ab = a;
                     int lv = GiftUp.LevelIn(item, a.Id);
                     string why = GiftUp.CanInvest(p, m, a.Id);
-                    RectTransform r = PaperChoice(panel, false, why == null);
-                    HBox(r, 8f, TextAnchor.MiddleLeft, 10, 10, 5, 5);
-                    TMP_Text n = T(r, a.Plain, 17f, why == null ? PInk : PSoft, F.Head);
-                    n.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-                    T(r, lv > 0 ? GiftUp.Roman(lv) : "—", 16f, lv > 0 ? BookArt.GoldInk : PSoft, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
+                    RectTransform r = GoldGiftRow(panel, a, lv, why == null);
                     Tip(r.gameObject, () => "<b>" + ab.Plain + "</b>\n\n" + GiftUp.LevelsText(ab.Id) + (why != null ? "\n\n<color=#FF6B6B>" + why + "</color>" : ""));
                     if (why == null) Clickable(r.gameObject, () => GoldAsk(at, m, ab.Id));
                 }
@@ -342,6 +408,43 @@ namespace HuginWhispers
                 _nickYes = yes;
             }
             PlaceCard(card, at);
+        }
+
+        // a gift's line in the golden rune card: its icon, then the light block with its name and level (returned: the
+        // block, for the tip and the click)
+        private static RectTransform GoldGiftRow(Transform panel, RavenAbility a, int lv, bool can)
+        {
+            RectTransform line = Rect("GiftLine", panel);
+            HBox(line, 8f, TextAnchor.MiddleLeft);
+            RectTransform pic = Rect("Pic", line);
+            Fixed(pic.gameObject, 32f, 32f);
+            Image ic = Img(pic, "Icon", AbilityIcons.For(a.Id, a.Munin), can ? Color.white : new Color(1f, 1f, 1f, 0.45f));
+            ic.preserveAspect = true;
+            Stretch(ic.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            if (lv > 0) GoldBadge(pic, 32f, a.Pair ? 0 : a.Munin ? -1 : 1, lv);
+            RectTransform r = PaperChoice(line, false, can);
+            r.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            HBox(r, 8f, TextAnchor.MiddleLeft, 10, 10, 5, 5);
+            Shrink(T(r, a.Plain, 17f, can ? PInk : PSoft, F.Head), 12f); // (one line: a longer name gets smaller, then «…»)
+            T(r, lv > 0 ? GiftUp.Roman(lv) : "—", 16f, lv > 0 ? BookArt.GoldInk : PSoft, F.Head).textWrappingMode = TextWrappingModes.NoWrap;
+            return r;
+        }
+
+        // «Парні» only with both ravens on you and at least one paired gift open
+        private static bool AnyPairOpen()
+        {
+            if (!BothWorn) return false;
+            foreach (RavenAbility a in RavenAbilities.All) if (a.Pair && GiftUp.Upgradable.Contains(a.Id) && RavenAbilities.Unlocked(a)) return true;
+            return false;
+        }
+
+        // which raven a paired gift's rune goes into: the one that can take it, the emptier one when both can
+        private static bool PairRaven(Player p, string id, out string why)
+        {
+            string h = GiftUp.CanInvest(p, false, id), m = GiftUp.CanInvest(p, true, id);
+            why = h != null && m != null ? h : null;
+            if (h == null && m == null) return GiftUp.Used(Trust.Worn(true)) < GiftUp.Used(Trust.Worn(false));
+            return h != null && m == null;
         }
 
         // "on which raven?" by the clicked rune: the two ravens on you, the one wearing it marked; «Зняти» when worn

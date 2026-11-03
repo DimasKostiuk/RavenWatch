@@ -1,0 +1,7 @@
+# RavenWatch — сюжетна будівля Зали Варти (3.0). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Знак Варти над входом
+note: Знак Варти над входом до Зали: перо з руною Геймдалля
+use: story
+id: znak_varty
+mount: wall
+part asset/Зала/HallSign pos 0 0.762 0.062 rot 0 0 0 scale 1.6 1.6 1.6  # Знак Варти (Meshy, 2026-10-31), ~1,2 × 1,5 м, на стіну

@@ -1,0 +1,3 @@
+vohnyshche fire_pit 1.14 0 2.37
+lava piece_logbench01 4.848 0.024 -2.635
+lizhko bed -1.48 0.02 -1.031

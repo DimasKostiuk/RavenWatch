@@ -39,6 +39,7 @@ namespace HuginWhispers
         internal static void Put(Character c, bool munin, Strike.Mods mods, bool first)
         {
             if (c == null || c.IsDead() || ZRoutedRpc.instance == null) return;
+            if (!munin) HuginChores.NoteHelp(c.GetZDOID()); // (his peck: a kill soon after is his help)
             float secs = munin ? (c.IsBoss() ? WoundBossSeconds : WoundSeconds) : (c.IsBoss() ? BlindBossSeconds : BlindSeconds);
             if (secs <= 0f) return;
             bool firm = !munin && Facets.On("hstrike");
@@ -56,6 +57,19 @@ namespace HuginWhispers
             pkg.Write(secs);
             pkg.Write(flags); // (an older game reads up to the seconds and leaves this)
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, Rpc, pkg); // every game, this one too
+        }
+
+        // blinded for so long by something else than a strike (Twists: the light's flash, the decoy's last peck)
+        internal static void BlindFor(Character c, float secs)
+        {
+            if (c == null || c.IsDead() || secs <= 0f || ZRoutedRpc.instance == null) return;
+            HuginChores.NoteHelp(c.GetZDOID()); // (only Hugin's gifts blind this way: a kill soon after is his help)
+            ZPackage pkg = new ZPackage();
+            pkg.Write(c.GetZDOID());
+            pkg.Write(Blind);
+            pkg.Write(secs);
+            pkg.Write((byte)0);
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, Rpc, pkg);
         }
 
         private static void OnMark(long sender, ZPackage pkg)

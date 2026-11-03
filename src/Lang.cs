@@ -233,6 +233,21 @@ namespace HuginWhispers
         internal static string Lower(string s) { return string.IsNullOrEmpty(s) || NounCapitals.Contains(Target) ? s : s.ToLowerInvariant(); }
         internal static string LowerFirst(string s) { return string.IsNullOrEmpty(s) || NounCapitals.Contains(Target) ? s : char.ToLowerInvariant(s[0]) + s.Substring(1); }
         internal static string UpperFirst(string s) { return string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1); }
+        // a capital after a sentence's end inside the line too: «Біля хати вороги! Вовк лізе!» where a filled-in name or a
+        // part starts the next sentence (never after «...»: «о, Луки... і ти» goes on the same sentence)
+        internal static string UpperSentences(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            char[] c = null;
+            for (int i = 1; i + 2 < s.Length; i++)
+            {
+                if (s[i + 1] != ' ' || !char.IsLower(s[i + 2]) || (s[i] != '.' && s[i] != '!' && s[i] != '?')) continue;
+                if (s[i] == '.' && s[i - 1] == '.') continue;
+                if (c == null) c = s.ToCharArray();
+                c[i + 2] = char.ToUpperInvariant(s[i + 2]);
+            }
+            return c == null ? s : new string(c);
+        }
 
         internal static string Num(float v, string format)
         {

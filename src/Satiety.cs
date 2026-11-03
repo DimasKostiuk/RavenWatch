@@ -258,13 +258,13 @@ namespace HuginWhispers
 
         internal static float FillOfClass(int c) { return 10f + 5f * Mathf.Clamp(c, 1, 5); } // 15 .. 35
 
-        internal static float FillOf(Trust.Food f, bool fav) { return f == null ? 0f : f.Fill * (fav ? FavFillMul : 1f); }
+        internal static float FillOf(Trust.Food f, bool fav, ItemDrop.ItemData item = null) { return f == null ? 0f : f.Fill * (fav ? FavFillMul : 1f) * Habits.FillMul(item, f.Prefab); } // («Ласун на рибу»)
 
         // trust from this food now: only for the part of it that fills a real hunger (below AskAt); a full bar takes none
         internal static float TrustOf(ItemDrop.ItemData item, Trust.Food f, bool fav)
         {
             if (item == null || f == null || Trust.Need(item) <= 0f || Trust.Full(item)) return 0f;
-            float before = Value(item), fill = FillOf(f, fav);
+            float before = Value(item), fill = FillOf(f, fav, item);
             float under = Mathf.Clamp(Mathf.Min(before + fill, AskAt) - before, 0f, fill);
             return Mathf.Min(f.Points * under / AskAt * (fav ? FavTrustMul : 1f), Trust.FoodLeftToday(item)); // the day's limit from food
         }
@@ -281,7 +281,7 @@ namespace HuginWhispers
             {
                 if (Trust.Have(p, f.Prefab) <= 0) continue;
                 bool fav = KnownFav(item, f.Prefab);
-                float fill = FillOf(f, fav);
+                float fill = FillOf(f, fav, item);
                 bool fits = before + fill <= StuffedAt + 0.01f;
                 float score = (fits ? 100000f : 0f) + TrustOf(item, f, fav) * 100f + (fits ? fill : -fill);
                 if (score > bestScore) { bestScore = score; best = f; }
@@ -294,7 +294,7 @@ namespace HuginWhispers
         {
             if (item == null || f == null) return "";
             bool fav = KnownFav(item, f.Prefab);
-            float before = Value(item), after = Mathf.Min(100f, before + FillOf(f, fav));
+            float before = Value(item), after = Mathf.Min(100f, before + FillOf(f, fav, item));
             float t = TrustOf(item, f, fav);
             return Lang.F("ситість {0} → {1}{2}", Mathf.RoundToInt(before), Mathf.RoundToInt(after), (t >= 0.05f ? Lang.F(" · довіра +{0}", Lang.Num(t, "0.#")) : ""));
         }
@@ -330,6 +330,14 @@ namespace HuginWhispers
             if (string.IsNullOrEmpty(f)) return null;
             foreach (Trust.Food x in Trust.EdibleFoods(munin, item)) if (x.Prefab == f) return x;
             return null;
+        }
+
+        // the book's narrow row under the bar: the food itself once known ("★ Хмарка"), else "Улюблена: ???"
+        internal static string FavShort(ItemDrop.ItemData item, bool munin)
+        {
+            Trust.Food f = FavFood(item, munin);
+            if (f == null) return "";
+            return FavKnown(item) ? "★ " + f.Name : Lang.T("Улюблена: ???");
         }
 
         // "Улюблена: Хмарка" or "Улюблена: ???" (with the hints let slip so far)
@@ -444,7 +452,7 @@ namespace HuginWhispers
         {
             int i = munin ? 1 : 0;
             if (Zone(item) > Hungry || !Trust.Active(item) || Trust.Stranger(item, p) || Trust.Away(item)) { NextSteal[i] = -1f; Warned[i] = false; return; }
-            if (NextSteal[i] < 0f) { NextSteal[i] = Time.time + StealMinutes * 30f * GearFx.StealWaitMul(item) * Habits.StealWaitMul(item); return; } // the first a little sooner
+            if (NextSteal[i] < 0f) { NextSteal[i] = Time.time + StealMinutes * 30f * GearFx.StealWaitMul(item) * Habits.StealWaitMul(item) * Norov.StealW(item); return; } // the first a little sooner
             if (Time.time < NextSteal[i]) return;
             string off;
             if (RavenSkills.OffShoulder(p, munin, out off)) return;
@@ -458,7 +466,7 @@ namespace HuginWhispers
                 RavenSkills.SayFromShoulder(p, munin, !string.IsNullOrEmpty(warn) ? warn : munin ? Lang.T("Даю тобі хвилину. Потім сам полізу в сумку.") : Lang.T("Я дуже голодний. Ще хвилина — і я візьму сам, вибач наперед."));
                 return;
             }
-            NextSteal[i] = Time.time + Mathf.Max(1f, StealMinutes) * 60f * GearFx.StealWaitMul(item) * Habits.StealWaitMul(item); // (Монета на удачу: less often)
+            NextSteal[i] = Time.time + Mathf.Max(1f, StealMinutes) * 60f * GearFx.StealWaitMul(item) * Habits.StealWaitMul(item) * Norov.StealW(item); // (Монета на удачу: less often; «Ласогуб»: sooner)
             Warned[i] = false;
             string name = Plugin.RavenName(munin);
             Trust.Food f = StealPick(p, munin, tier);
@@ -467,7 +475,7 @@ namespace HuginWhispers
             {
                 // a hungry raven grabs 2–3 pieces (as many as the bag has), but fills up as on the first one only
                 bool fav = IsFav(item, f.Prefab);
-                float fill = FillOf(f, fav);
+                float fill = FillOf(f, fav, item);
                 int want = UnityEngine.Random.Range(2, 4);
                 List<string> order = new List<string>();
                 Dictionary<string, int> took = new Dictionary<string, int>();
@@ -504,6 +512,7 @@ namespace HuginWhispers
             }
             if (said == null) return; // nothing to take: it just goes on being hungry
             ScreamFx.CawAll(p, munin, munin ? 0.85f : 1.3f, 0.5f);
+            PlayerReact.Stolen(p, munin);
             RavenSkills.SayFromShoulder(p, munin, said);
         }
 

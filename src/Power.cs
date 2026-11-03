@@ -1,6 +1,7 @@
 #if RAVEN_ITEM
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Globalization;
 using System.Reflection;
 using HarmonyLib;
@@ -22,8 +23,9 @@ namespace HuginWhispers
         internal static float MuninThoughtCost = 1f;
         internal static float ThoughtCost = 1f, ScoutCost = 40f, ScreamCost = 30f, FuryCost = 60f, LightCost = 20f, WingsCost = 30f, LeapCost = 50f, HealCost = 40f, ShadowCost = 60f, DomeCost = 60f, WardCost = 40f, FlightCost = 100f, BeastCost = 100f, DecoyCost = 35f;
 
-        private static readonly string HowHuginSrc = Lang.K("щодня +10, нові предмети й рецепти, нові руни, моноліти Path of Valheiman і Вегвізири (+20, повторне читання +5, до 5 каменів на день), рівні навичок, сон у ліжку, відпочинок біля вогню (у затишку швидше), ремесло й готування, врожай, ягоди й мед, робота (рубка дерев, видобуток, риболовля; уночі в 1,5 раза більше), плавання на кораблі, піші подорожі (до 30 на день), нові біоми й підземелля, розмови з торговцями");
-        internal static string HowHugin { get { string s = Lang.T(HowHuginSrc); return _pov ? Lang.F("новий рівень персонажа (+{0}), {1}", Mathf.RoundToInt(PovLevelGain), s) : s; } }
+
+        // Path of Valheiman installed (its words in the texts only then)
+        internal static bool Pov { get { NoticePov(); return _pov; } }
 
         // with Path of Valheiman installed, its character levels charge Hugin too: say so in the tooltip
         private static bool _povNoticed, _pov;
@@ -32,10 +34,8 @@ namespace HuginWhispers
             if (_povNoticed) return;
             _povNoticed = true;
             if (AccessTools.TypeByName("PassiveTree.Progress") != null)
-                _pov = true; // (said in the tooltip: HowHugin)
+                _pov = true; // (said in the tooltip: Describe)
         }
-        private static readonly string HowMuninSrc = Lang.K("щодня +10, твої вбивства (звичайний ворог +1, сильний — троль, елітний драугр, ґ'ялль тощо — від 2 до 6, боси від 30 до 100, своя тварина +1; зірки додають), удари по ворогах і рани від них, парирування (+2), знищені гнізда (+5), відбитий рейд (+20), медовуха (+2), трофеї (+1), нові руни й Вегвізири (+10), коли ледве виживаєш (+10), і твоя смерть (+40); уночі все в 1,5 раза більше");
-        internal static string HowMunin { get { return Lang.T(HowMuninSrc); } }
 
         // ---------------------------------------------------------------- the number
 
@@ -96,7 +96,7 @@ namespace HuginWhispers
             if (deed) Trust.Deed(munin, amount, why); // what you do together builds trust too (a raven away gets none: Trust.DeedFor)
             if (item != null && Trust.Away(item)) return; // flown off: it did not see it, no strength
             if (item == null || amount <= 0f || !Trust.Active(item)) return; // an asleep raven does not charge
-            amount *= Satiety.GainMul(munin) * GearFx.StrengthMul(item) * Habits.RegenMul(item); // hungry: none comes; fed: faster (Збруя гінця: faster; «Звички»)
+            amount *= Satiety.GainMul(munin) * GearFx.StrengthMul(item) * Habits.RegenMul(item) * Bath.GainMul(item); // hungry: none comes; fed: faster (Збруя гінця: faster; «Звички»; filthy: slower)
             if (amount <= 0f) return;
             float max = Trust.Strength(item);
             float before = Get(item);
@@ -135,13 +135,45 @@ namespace HuginWhispers
             return true;
         }
 
+        // The strength in the tooltips (the item's, the book's): what it has, what the gifts cost, how it comes — short
+        // groups, each opened by a gold word (no "name: value" lines: tooltip mods split those into blocks)
+        private const string Gold = "#D8B45A", Num = "#FFB84D", Soft = "#A89A80";
+        private static string N(float v) { return "<color=" + Num + ">" + Mathf.RoundToInt(v) + "</color>"; }
+        private static string Group(string word, string text) { return "\n<color=" + Gold + "><b>" + word + "</b></color>  " + text; }
+
+        private static readonly string[] HuginGifts = Lang.Keys("Думка", "Розвідка", "Світло", "Злет", "Тінь", "Під крилом", "Крила Одіна", "Удар в очі", "Обманка");
+        private static readonly string[] MuninGifts = Lang.Keys("Думка", "Крик", "Лють", "Крила", "Зцілення", "Заслона", "Звір", "Кігті");
+
         internal static string Describe(ItemDrop.ItemData item, bool munin, bool owned)
         {
-            string costs = munin
-                ? Lang.F("Думка −{0}, Крик −{1}, Лють −{2}, Крила −{3}, Зцілення −{4}, Заслона −{5}, Звір −{6}, Кігті −{7}", Mathf.RoundToInt(MuninThoughtCost), Mathf.RoundToInt(ScreamCost), Mathf.RoundToInt(FuryCost), Mathf.RoundToInt(WingsCost), Mathf.RoundToInt(HealCost), Mathf.RoundToInt(WardCost), Mathf.RoundToInt(BeastCost), Mathf.RoundToInt(Strike.CostOf(true, Trust.Worn(true))))
-                : Lang.F("Думка −{0}, Розвідка −{1}, Світло −{2}, Злет −{3}, Тінь −{4}, Під крилом −{5}, Крила Одіна −{6}, Удар в очі −{7}, Обманка −{8}", Mathf.RoundToInt(ThoughtCost), Mathf.RoundToInt(ScoutCost), Mathf.RoundToInt(LightCost), Mathf.RoundToInt(LeapCost), Mathf.RoundToInt(ShadowCost), Mathf.RoundToInt(DomeCost), Mathf.RoundToInt(FlightCost), Mathf.RoundToInt(Strike.CostOf(false, Trust.Worn(false))), Mathf.RoundToInt(DecoyCost));
-            string head = owned ? Lang.F("Сила: <color=orange>{0}/{1}</color> ({2}){3}", Mathf.FloorToInt(Get(item)), Mathf.RoundToInt(Trust.Strength(item)), costs, Satiety.CostNote(munin)) : Lang.F("Сила витрачається на дари ({0})", costs);
-            return Lang.F("{0}\nЗаряджається{1}: {2}.", head, (munin ? Lang.T(" в бою") : Lang.T(" у мирі")), (munin ? HowMunin : HowHugin));
+            NoticePov();
+            float[] cost = munin
+                ? new float[] { MuninThoughtCost, ScreamCost, FuryCost, WingsCost, HealCost, WardCost, BeastCost, Strike.CostOf(true, Trust.Worn(true)) }
+                : new float[] { ThoughtCost, ScoutCost, LightCost, LeapCost, ShadowCost, DomeCost, FlightCost, Strike.CostOf(false, Trust.Worn(false)), DecoyCost };
+            string[] names = munin ? MuninGifts : HuginGifts;
+            StringBuilder gifts = new StringBuilder();
+            for (int i = 0; i < names.Length; i++) gifts.Append(i > 0 ? " · " : "").Append(Lang.T(names[i])).Append(' ').Append(N(cost[i]));
+            StringBuilder b = new StringBuilder();
+            if (owned) b.Append(Lang.F("<b>Сила</b> <color=orange>{0}/{1}</color>", Mathf.FloorToInt(Get(item)), Mathf.RoundToInt(Trust.Strength(item)))).Append("\n");
+            b.Append(Group(Lang.T("Дари"), gifts.ToString() + Satiety.CostNote(munin)));
+            b.Append("\n\n").Append(munin ? Lang.T("<b>Набирається в бою</b>") : Lang.T("<b>Набирається в мирі</b>"))
+             .Append(" <color=" + Soft + ">").Append(Lang.T("(уночі ×1,5; більшість — до межі на день)")).Append("</color>");
+            if (munin)
+            {
+                b.Append(Group(Lang.T("Щодня"), N(DailyGain)));
+                b.Append(Group(Lang.T("Вбивства"), Lang.F("звичайний ворог {0} (+1 за зірку), сильний {1}–{2}, бос {3}–{4}; з корабля ×2, допомога — половина", N(1), N(2), N(6), N(30), N(100))));
+                b.Append(Group(Lang.T("Бій"), Lang.F("удари й рани, парирування {0}, оборона бази {0}, рейд {1}, гніздо {2}, негода {3}", N(2), N(RaidGain), N(NestGain), N(1))));
+                b.Append(Group(Lang.T("Біль"), Lang.F("ледве вижив {0}, твоя смерть {1}", N(NearDeathGain), N(DeathGain))));
+                b.Append(Group(Lang.T("Інше"), Lang.F("медовуха {0}, трофей {1}, м'ясна страва {1}, нові руни{2} {3}", N(2), N(1), (_pov ? Lang.T(" і моноліти") : ""), N(NewStoneMunin))));
+            }
+            else
+            {
+                b.Append(Group(Lang.T("Щодня"), Lang.F("{0}, сон у ліжку {1}% сили, торговець {2}", N(DailyGain), N(HuginChores.SleepShare * 100f), N(TraderGain))));
+                b.Append(Group(Lang.T("Відкриття"), Lang.F("рецепти й предмети, нові руни{0} {1} (знову {2}), біоми й підземелля {3}, навички {4}{5}", (_pov ? Lang.T(" і моноліти") : ""), N(NewStoneHugin), N(RereadHugin), N(PlaceGain), N(SkillGain), (_pov && PovLevelGain > 0f ? Lang.F(", рівень персонажа {0}", N(PovLevelGain)) : ""))));
+                b.Append(Group(Lang.T("Справи"), Lang.F("ремесло, господарство, робота, піші подорожі, корабель, відпочинок біля вогню — по {0}", N(1))));
+                b.Append(Group(Lang.T("Бій"), Lang.F("лише думки: оцінка Судді {0}–{1}, вбивство з його допомогою {2} (бос {3}), трофей {4}", N(5), N(15), N(HuginChores.HelpKill), N(HuginChores.HelpBoss), N(1))));
+            }
+            return b.ToString();
         }
 
         // ---------------------------------------------------------------- Munin: blood
@@ -202,6 +234,7 @@ namespace HuginWhispers
                 string key = string.IsNullOrEmpty(bossBase) ? token : bossBase;
                 if (key == _bossPaid && Time.time - _bossPaidAt < BossAgainSeconds && Time.time >= _bossPaidAt) return 0f; // another phase of the same fight
                 _bossPaid = key; _bossPaidAt = Time.time;
+                _bossNow = true;
                 return v;
             }
             if (!string.IsNullOrEmpty(prefab) && KillList(KillSpecial, ref _special, ref _specialFrom).TryGetValue(prefab, out v)) { why = name ?? Lang.T("сильний ворог"); return Mathf.Round(v * (1f + 0.5f * stars)); }
@@ -209,18 +242,37 @@ namespace HuginWhispers
             return 1f + stars;
         }
 
+        private static bool _bossNow; // (KillWorth: this kill was a boss, not another phase of the same fight)
+
         internal static void OnKill(int boss, int stars, string prefab, bool tamed, string token)
         {
             string why;
+            _bossNow = false;
             float worth = KillWorth(boss, stars, prefab, tamed, token, out why);
             if (worth > 0f) Gain(true, worth, why);
+            if (_bossNow) Nest.Deed(Player.m_localPlayer, Nest.BossMinutes, Lang.T("перемогу над босом"));
+            if (worth > 0f && !tamed && boss == 0 && MuninDeeds.OnShip(Player.m_localPlayer)) Gain(true, worth * (MuninDeeds.SeaMul - 1f), Lang.T("бій у морі")); // from a deck: twice (not a boss: a raft in Bonemass's swamp is no sea)
+            MuninDeeds.OnKill(Player.m_localPlayer, prefab, tamed); // a base held, harsh weather
             Satiety.OnKill(); // a hungry Munin pecks at it
             Beast.OnKill(boss > 0); // the beast's Munin howls over it
         }
 
-        internal static void OnNearDeath() { Gain(true, 10f, Lang.T("ледве {вижив|вижила}")); }
-        internal static void OnNest() { Gain(true, 5f, Lang.T("гніздо")); }
-        internal static void OnRaid() { Gain(true, 20f, Lang.T("рейд")); }
+        internal static float AssistPart = 0.5f;
+
+        // a kill you helped with (a good share of its health was yours, someone else finished it): half its worth
+        internal static void OnAssist(int boss, int stars, string prefab, string token)
+        {
+            string why;
+            float worth = KillWorth(boss, stars, prefab, false, token, out why);
+            if (worth > 0f) Gain(true, Mathf.Max(1f, Mathf.Round(worth * AssistPart)), Lang.T("допомога в бою"));
+        }
+
+        internal static float NearDeathGain = 10f, NestGain = 5f, RaidGain = 20f, DeathGain = 40f; // Munin (the tooltip says the same: Describe)
+        internal static float TraderGain = 10f, PlaceGain = 15f, SkillGain = 3f;              // Hugin
+
+        internal static void OnNearDeath() { Gain(true, NearDeathGain, Lang.T("ледве {вижив|вижила}")); }
+        internal static void OnNest() { Gain(true, NestGain, Lang.T("гніздо")); }
+        internal static void OnRaid() { Gain(true, RaidGain, Lang.T("рейд")); }
         internal static float DeathGainMinutes = 10f;
         private const string DeathGainKey = "RavenWatch_deathPower";
 
@@ -234,7 +286,7 @@ namespace HuginWhispers
                 if (WorldTime.Left(p.m_customData, DeathGainKey) > 0f) return;
                 WorldTime.Set(p.m_customData, DeathGainKey, DeathGainMinutes * 60f);
             }
-            Gain(true, 40f, Lang.T("твоя смерть"), false);
+            Gain(true, DeathGain, Lang.T("твоя смерть"), false);
         }
 
         // ---------------------------------------------------------------- Hugin: thought
@@ -253,7 +305,7 @@ namespace HuginWhispers
             Gain(false, give, what);
         }
 
-        internal static void OnSkillLevel() { Gain(false, 3f, Lang.T("навичка")); }
+        internal static void OnSkillLevel() { Gain(false, SkillGain, Lang.T("навичка")); }
 
         internal static float PovLevelGain = 15f;
         private const string PovMaxKey = "RavenWatch_povmax";
@@ -341,7 +393,7 @@ namespace HuginWhispers
             string key = "RavenWatch_trader_" + name;
             if (WorldTime.Left(p.m_customData, key) > 0f) return;
             WorldTime.Set(p.m_customData, key, GameDaySeconds());
-            Gain(false, 10f, Lang.T("торговець"));
+            Gain(false, TraderGain, Lang.T("торговець"));
         }
 
         internal static string Spot(Vector3 p) { return Mathf.RoundToInt(p.x / 4f) + "," + Mathf.RoundToInt(p.z / 4f); }
@@ -369,7 +421,7 @@ namespace HuginWhispers
             if (raw.Contains(token)) return;
             if (raw.Length > 6000) raw = Trim(raw); // old dungeons fall out, nothing breaks
             p.m_customData[PlacesKey] = raw + token;
-            Gain(false, 15f, why);
+            Gain(false, PlaceGain, why);
         }
 
         // raven forget: the land's first visit can pay again

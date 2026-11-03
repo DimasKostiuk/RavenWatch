@@ -137,6 +137,12 @@ namespace HuginWhispers
                 case "watchful": like = Warrior; hate = Daredevil; s -= 10f; break;
                 case "bold": like = Warrior; hate = Keeper; break;
                 case "devoted": s -= 5f; break;
+                case "curious": like = Roamer; hate = Keeper; break;
+                case "proud": like = Builder; hate = Daredevil; break;
+                case "tender": like = Keeper; s += 10f; break;
+                case "grumpy": like = Keeper; hate = Daredevil; s -= 10f; break;
+                case "huntsman": like = Warrior; hate = Builder; break;
+                case "sweettooth": like = Builder; hate = Roamer; break;
             }
             if (style >= 0 && style == like) s += 25f;
             if (style >= 0 && style == hate) s -= 25f;
@@ -155,11 +161,17 @@ namespace HuginWhispers
                 if (ch == "watchful") return 0.7f;
                 if (ch == "bold" && what == Fought) return 1.5f;
                 if (ch == "devoted" && (what == Fought || what == Guarded)) return 2f;
+                if (ch == "tender") return 1.3f;
+                if (ch == "grumpy") return 0.8f;
+                if (ch == "huntsman" && what == Fought) return 1.5f;
+                if (ch == "sweettooth") return 1.2f;
                 return 1f;
             }
             if (ch == "fidget") return 1.3f;
             if (ch == "calm") return 0.6f;
             if (ch == "watchful") return 1.5f;
+            if (ch == "grumpy") return 1.3f;
+            if (ch == "tender" || ch == "proud") return 1.2f;
             return 1f;
         }
 

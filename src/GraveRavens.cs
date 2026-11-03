@@ -167,6 +167,7 @@ namespace HuginWhispers
             p.SetHealth(p.GetHealth() - dmg); // to death, if it comes to that (the game ends a life at 0 by itself)
             if (DamageText.instance != null) DamageText.instance.ShowText(HitData.DamageModifier.Normal, p.GetTopPoint(), dmg, true);
             PeckSeen(t, p, munin);
+            PlayerReact.Ear(p, munin);
             string[] lines = munin ? MuninPeck : HuginPeck;
             RavenMsg.Center(p, Plugin.RavenName(munin) + ": «" + lines[Random.Range(0, lines.Length)] + "»");
             // the others near see the swoop and hear the caw too (each game flies its own picture of the grave's bird)

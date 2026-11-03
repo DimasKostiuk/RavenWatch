@@ -5,9 +5,55 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // Where Munin's newer strength comes from: a nest broken, a raid outlasted, a perfect block, mead, a trophy.
+    // Where Munin's newer strength comes from: a nest broken, a raid outlasted, a perfect block, mead, a trophy,
+    // meat eaten, a monster killed in a base, a kill in harsh weather, a kill from a ship's deck.
     internal static class MuninDeeds
     {
+        internal static float SeaMul = 2f;
+        private static readonly string[] MeatWords = { "Meat", "Jerky", "Sausage", "BloodPudding", "Chicken", "LoxPie", "SerpentStew", "Misthare", "NeckTail" };
+
+        internal static bool OnShip(Player p) { return p != null && (p.GetStandingOnShip() != null || p.GetControlledShip() != null); }
+
+        // a meat dish (the game's names: CookedMeat, BoarJerky, Sausages, BloodPudding, LoxPie…), not raw meat
+        internal static bool Meat(ItemDrop.ItemData item)
+        {
+            if (item == null || item.m_dropPrefab == null || item.m_shared.m_food <= 0f) return false;
+            string n = item.m_dropPrefab.name;
+            foreach (string w in MeatWords) if (n.IndexOf(w, System.StringComparison.Ordinal) >= 0) return true;
+            return false;
+        }
+
+        internal static int BaseValueNeeded = 3; // the game's own base count (raids want 3 too): a lone campfire is no base
+
+        // a kill of yours (own or told by the game that held it): a monster in a base, a kill in harsh weather
+        internal static void OnKill(Player p, string prefab, bool tamed)
+        {
+            if (p == null || tamed || !Monster(prefab)) return;
+            if (p.GetBaseValue() >= BaseValueNeeded) HuginChores.OnDefended();
+            if (Harsh(p)) HuginChores.OnHarshKill();
+        }
+
+        // not a deer or a hare (an unknown prefab counts as a monster)
+        private static bool Monster(string prefab)
+        {
+            GameObject go = !string.IsNullOrEmpty(prefab) && ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(prefab) : null;
+            Character c = go != null ? go.GetComponent<Character>() : null;
+            return c == null || c.m_faction != Character.Faction.AnimalsVeg;
+        }
+
+        // a storm or a blizzard, freezing, or the Ashlands and the Deep North themselves
+        // (not «Cold»: any night away from a fire gives it, and the night has its own bonus)
+        private static bool Harsh(Player p)
+        {
+            Heightmap.Biome b = p.GetCurrentBiome();
+            if (b == Heightmap.Biome.AshLands || b == Heightmap.Biome.DeepNorth) return true;
+            SEMan se = p.GetSEMan();
+            if (se != null && se.HaveStatusEffect(SEMan.s_statusEffectFreezing)) return true;
+            EnvSetup e = EnvMan.instance != null ? EnvMan.instance.GetCurrentEnvironment() : null;
+            string n = e != null ? e.m_name ?? "" : "";
+            return n.IndexOf("storm", System.StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("thunder", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         // a raid you stood through: inside its area when it ends, after at least a minute of it
         private static readonly FieldInfo ActiveEvent = AccessTools.Field(typeof(RandEventSystem), "m_activeEvent");
         private static readonly MethodInfo InsideArea = AccessTools.Method(typeof(RandEventSystem), "IsInsideRandomEventArea");
@@ -91,13 +137,15 @@ namespace HuginWhispers
         } catch (System.Exception e) { PatchGuard.Fail("ParryPatch", e); } }
     }
 
-    // a mead drunk (the game's meads are all "Mead…")
+    // a mead drunk (the game's meads are all "Mead…"), or a meat dish eaten
     [HarmonyPatch(typeof(Player), "ConsumeItem")]
     internal static class MeadPatch
     {
         private static void Postfix(Player __instance, ItemDrop.ItemData item, bool __result)
         {
-            if (__result && __instance == Player.m_localPlayer && item != null && item.m_dropPrefab != null && item.m_dropPrefab.name.StartsWith("Mead")) { HuginChores.OnMead(); Nicks.OnMead(__instance); }
+            if (!__result || __instance != Player.m_localPlayer || item == null || item.m_dropPrefab == null) return;
+            if (item.m_dropPrefab.name.StartsWith("Mead")) { HuginChores.OnMead(); Nicks.OnMead(__instance); }
+            else if (MuninDeeds.Meat(item)) HuginChores.OnMeat();
         }
     }
 

@@ -1,0 +1,6 @@
+# RavenWatch — сюжетна будівля (цвинтар біля табору Гейд). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Двобічний рунний камінь
+note: Високий камінь з рунами з обох боків, зарослий мохом
+use: story
+id: kamin_dvobichnyi
+part asset/Камені/WatchStoneTwin pos 0 0.952 0 rot 0 0 0 scale 1 1 1  # Meshy «norse runestone twosided» (2026-11-02), 1,35 × 1,9 × 1,14 м, Blender 40k + 2048

@@ -343,6 +343,7 @@ namespace HuginWhispers
             string e = z != null ? z.GetString(ZDOVars.s_emote, "") : "";
             return string.Equals(e, "rest", System.StringComparison.OrdinalIgnoreCase) || string.Equals(e, "relax", System.StringComparison.OrdinalIgnoreCase);
         }
+        private static bool Stay(ShoulderPin pin) { return Still(pin.Player) || Fireside.Down(pin.Player, pin.Munin); } // (by the fire: as long as the owner keeps it there)
         private static bool Still(Player p) { return p != null && !p.IsSleeping() && (Lying(p) || p.IsSitting()) && p.GetVelocity().sqrMagnitude < 0.25f; }
 
         private void Rethink(RavenMotor m, ShoulderPin pin, Vector3 carry)
@@ -350,7 +351,9 @@ namespace HuginWhispers
             Player p = pin.Player;
             _rethinkAt = Time.time + Random.Range(RethinkMin, RethinkMax);
             Way want = Way.Air;
-            if (Still(p))
+            bool fire = Fireside.Down(p, pin.Munin);
+            if (fire) want = Way.Ground; // (by the fire with you: down by it, nowhere else)
+            else if (Still(p))
             {
                 bool other; bool taken = OnChest.TryGetValue(p, out other) && other != pin.Munin;
                 float r = Random.value;
@@ -359,7 +362,7 @@ namespace HuginWhispers
             }
             if (want == _way) return; // (down already: it keeps its spot, checked when it chose it)
             Vector3 rel = Vector3.zero;
-            if (want == Way.Ground && !GroundSpot(p, out rel)) want = Way.Air; // (no floor by you: it stays over the shoulder)
+            if (want == Way.Ground && !(fire ? FireSpot(p, out rel) : GroundSpot(p, out rel))) want = Way.Air; // (no floor by you: it stays over the shoulder)
             if (want == _way) return;
             TakeOff(m, pin, carry); // (off the floor or your chest first: its standing pose let go, a push up)
             Leave(pin);
@@ -387,9 +390,9 @@ namespace HuginWhispers
             if (!mine) Read(m, pin, carry);
             else
             {
-                if (Time.time >= _rethinkAt && (_rethinkAt <= 0f || Random.value < RethinkChance || (_way != Way.Air && !Still(pin.Player)))) Rethink(m, pin, carry);
+                if (Time.time >= _rethinkAt && (_rethinkAt <= 0f || Random.value < RethinkChance || (_way != Way.Air && !Stay(pin)))) Rethink(m, pin, carry);
                 else if (Time.time >= _rethinkAt) _rethinkAt = Time.time + Random.Range(RethinkMin, RethinkMax);
-                if (_way != Way.Air && !Still(pin.Player)) TakeOff(m, pin, carry);
+                if (_way != Way.Air && !Stay(pin)) TakeOff(m, pin, carry);
             }
             if (_way != Way.Air) { Down(m, pin, facing, carry, dt); if (mine) Write(pin); return; }
             if (life != null) { life.Hovering = true; }
@@ -568,6 +571,33 @@ namespace HuginWhispers
             return false;
         }
 
+        // by the fire (Fireside.Down): a spot between you and the flames, a little to a side, not in the embers
+        internal static float FireKeep = 1f; // m from the fire's middle at least
+        private static bool FireSpot(Player p, out Vector3 rel)
+        {
+            Vector3 f;
+            if (Fireside.FireAt(p, out f))
+            {
+                Vector3 to = Vector3.ProjectOnPlane(f - p.transform.position, Vector3.up);
+                if (to.sqrMagnitude > 0.01f)
+                    for (int i = 0; i < 8; i++)
+                    {
+                        rel = Quaternion.Euler(0f, Random.Range(-60f, 60f), 0f) * to.normalized * Random.Range(0.7f, 1.2f);
+                        if (Vector3.ProjectOnPlane(p.transform.position + rel - f, Vector3.up).magnitude >= FireKeep && FloorOk(p, rel)) return true;
+                    }
+            }
+            return GroundSpot(p, out rel);
+        }
+        private static bool NearFire(Player p, Vector3 rel) { Vector3 f; return Fireside.FireAt(p, out f) && Vector3.ProjectOnPlane(p.transform.position + rel - f, Vector3.up).magnitude < FireKeep; }
+        // its face to the flames (a little off), or to you when there is no fire
+        private static float YawFire(ShoulderPin pin, Vector3 from)
+        {
+            Vector3 f;
+            if (!Fireside.FireAt(pin.Player, out f)) return YawTo(pin, from);
+            Vector3 d = Vector3.ProjectOnPlane(f - from, Vector3.up);
+            return (d.sqrMagnitude > 0.001f ? Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg : 0f) + Random.Range(-25f, 25f);
+        }
+
         private void Down(RavenMotor m, ShoulderPin pin, Quaternion facing, Vector3 carry, float dt)
         {
             ShoulderLife life = pin.Life;
@@ -578,7 +608,9 @@ namespace HuginWhispers
                 if (life != null) { life.Hovering = true; life.Dangle = 1f; life.HoverGlide = 0f; }
                 Vector3 aim = spot + Vector3.up * 0.35f;
                 m.Steer(aim, 3f, true, 0f, dt, carry, 1f);
-                m.Body.FaceHint(Vector3.ProjectOnPlane(pin.Player.transform.position - spot, Vector3.up), 0.6f);
+                Vector3 fireAt = Vector3.zero;
+                bool toFire = Fireside.Down(pin.Player, pin.Munin) && Fireside.FireAt(pin.Player, out fireAt) && (fireAt - spot).sqrMagnitude > 0.01f;
+                m.Body.FaceHint(Vector3.ProjectOnPlane((toFire ? fireAt : pin.Player.transform.position) - spot, Vector3.up), 0.6f); // (by the fire: it comes in facing the flames)
                 m.Finish(dt, Mathf.Clamp01(1f - Vector3.Distance(pin.transform.position, aim) / 1.5f));
                 if (Vector3.Distance(pin.transform.position, aim) < 0.25f || (Vector3.Distance(pin.transform.position, aim) < 0.6f && m.Body.Speed < 1f))
                 {
@@ -586,8 +618,15 @@ namespace HuginWhispers
                     m.Grounded();
                     if (life != null) { life.Hovering = false; life.Dangle = 0f; life.HoverGlide = 0f; life.VanillaFly = false; life.Flap(0.3f); }
                     _foot = spot; _act = 0; _downAt = Time.time;
-                    if (ReferenceEquals(pin.Player, Player.m_localPlayer)) _yaw = YawTo(pin, spot);
-                    _yawCur = _yaw;
+                    _landFrom = pin.transform.position; // (from where it was in the air: eased down, no snap)
+                    _yawCur = (pin.transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation))).eulerAngles.y; // (its facing as it came in)
+                    _fire = Fireside.Down(pin.Player, pin.Munin);
+                    if (ReferenceEquals(pin.Player, Player.m_localPlayer))
+                    {
+                        _yaw = _fire ? YawFire(pin, spot) : YawTo(pin, spot);
+                        if (Mathf.Abs(Mathf.DeltaAngle(_yawCur, _yaw)) > 12f) { _actKind = 1; _hopN++; Begin(pin, 1, Vector3.ProjectOnPlane(spot - pin.Player.transform.position, Vector3.up), _yaw); } // (round to it in steps, once down)
+                        if (_fire) Fireside.Landed(pin.Player, pin.Munin);
+                    }
                     _hopAt = Time.time + Random.Range(1.5f, 4f);
                     _peckAt = Time.time + Random.Range(1f, 3f);
                 }
@@ -604,16 +643,22 @@ namespace HuginWhispers
             else if (life != null) { float c = (Time.time - _downAt) / 0.4f; life.GroundCrouch = c < 1f ? Mathf.Sin(c * Mathf.PI) * 0.6f : 0f; life.GroundLiftL = life.GroundLiftR = 0f; } // (just down: the blow taken in its legs)
             if (_way == Way.Ground && _act == 0) _foot.y = _floorY;
             if (_act == 0) _yawCur = Mathf.MoveTowardsAngle(_yawCur, _yaw, dt * 40f); // (a last little settle of its facing)
-            pin.transform.position = _foot + Vector3.up * up;
+            Vector3 at = _foot + Vector3.up * up;
+            float land = (Time.time - _downAt) / LandEase;
+            if (land < 1f) at = Vector3.Lerp(_landFrom, at, land * land * (3f - 2f * land)); // (the last bit of the way down, eased)
+            pin.transform.position = at;
             pin.transform.rotation = Quaternion.Euler(0f, _yawCur, 0f) * Quaternion.AngleAxis(pitch, Vector3.right) * Quaternion.Euler(Shoulder.Rotation);
             if (life != null && life.SitNew && _act == 0 && Time.time >= _peckAt)
             {
-                _peckAt = Time.time + Random.Range(2.5f, 7f) * (pin.Munin ? 0.7f : 1f);
-                string what = _way == Way.OnYou ? (Random.value < 0.5f ? "Дрімає" : "Досліджує тебе") : (Random.value < 0.6f ? "Клює землю" : Random.value < 0.5f ? "Чистить пір'я" : "Розглядає знахідку");
+                _peckAt = Time.time + Random.Range(2.5f, 7f) * (pin.Munin ? 0.7f : 1f) * (_fire ? 1.6f : 1f);
+                string what = _fire && ReferenceEquals(pin.Player, Player.m_localPlayer) ? Fireside.GroundAct(pin.Player, pin.Munin) : _way == Way.OnYou ? (Random.value < 0.5f ? "Дрімає" : "Досліджує тебе") : (Random.value < 0.6f ? "Клює землю" : Random.value < 0.5f ? "Чистить пір'я" : "Розглядає знахідку");
                 life.SitDirectorNow.React(life, what, 0f);
             }
         }
         private float _yawCur;
+        internal static float LandEase = 0.3f; // s: from the air onto its spot
+        private Vector3 _landFrom;
+        private bool _fire; // down by the fire with you (Fireside): faces the flames, moves less
         private static float YawTo(ShoulderPin pin, Vector3 from)
         {
             Vector3 d = Vector3.ProjectOnPlane(pin.Player.transform.position - from, Vector3.up);
@@ -716,6 +761,7 @@ namespace HuginWhispers
             _munin = pin.Munin;
             if (!ReferenceEquals(pin.Player, Player.m_localPlayer)) return; // (the others: Read starts each move the owner made)
             if (_act != 0 || Time.time < _hopAt) return;
+            if (_fire && Random.value < 0.6f) { _hopAt = Time.time + Random.Range(4f, 9f); return; } // (warm: it stays put a while)
             Vector3 you = pin.Player.transform.position;
             Vector3 rel = Vector3.ProjectOnPlane(_foot - you, Vector3.up);
             float r = Random.value, kindBias = pin.Munin ? 0.15f : 0f; // (Munin hops more)
@@ -729,8 +775,8 @@ namespace HuginWhispers
                 float rr = toRel.magnitude;
                 if (rr < 0.6f || rr > 1.6f) toRel = (rel.sqrMagnitude > 0.01f ? Quaternion.Euler(0f, a, 0f) * rel.normalized : Vector3.forward) * Mathf.Clamp(rr, 0.6f, 1.6f); // (never onto you, never far)
             }
-            if (kind != 1 && !FloorOk(pin.Player, toRel)) { kind = 1; toRel = rel; } // (no floor there: it only turns about)
-            float yawEnd = kind == 1 ? YawTo(pin, _foot) : _yawCur;
+            if (kind != 1 && (!FloorOk(pin.Player, toRel) || (_fire && NearFire(pin.Player, toRel)))) { kind = 1; toRel = rel; } // (no floor there, or the embers: it only turns about)
+            float yawEnd = kind == 1 ? (_fire ? YawFire(pin, _foot) : YawTo(pin, _foot)) : _yawCur;
             if (kind != 1) { Vector3 dd = Vector3.ProjectOnPlane(you + toRel - _foot, Vector3.up); if (dd.sqrMagnitude > 0.0001f) yawEnd = Mathf.Atan2(dd.x, dd.z) * Mathf.Rad2Deg; }
             _actKind = kind; _hopN++;
             Begin(pin, kind, toRel, yawEnd);

@@ -42,31 +42,31 @@ namespace HuginWhispers
         {
             WearKind F = WearKind.Freya, B = WearKind.Baldr, H = WearKind.Heimdall;
             // Фрея: the raven
-            P("f_sontse", F, "strike", 0.08f, 0.16f, 0.25f, Lang.K("удар ворона +{0}%"), "ignite", Lang.K("п'ята частина удару — вогнем, ціль горить"));
-            P("f_inii", F, "hunger", 0.10f, 0.20f, 0.30f, Lang.K("ворон голодніє на {0}% повільніше"), "starvefree", Lang.K("голодуючи, б'є на повну силу"));
-            P("f_burya", F, "fly", 0.10f, 0.20f, 0.30f, Lang.K("ворон літає на {0}% швидше"), "homefast", Lang.K("на плече повертається ще на 20% швидше"));
-            P("f_moh", F, "trust", 0.10f, 0.20f, 0.30f, Lang.K("довіра росте на {0}% швидше"), "fedheal", Lang.K("ситий ворон на плечі лікує тебе на 1% здоров'я кожні 10 с"));
+            P("f_sontse", F, "strike", 0.08f, 0.16f, 0.25f, Lang.K("удар ворона (дар «Удар в очі» чи «Кігті») сильніший на {0}%"), "ignite", Lang.K("п'ята частина шкоди від удару ворона — вогнем, і ціль загоряється"));
+            P("f_inii", F, "hunger", 0.10f, 0.20f, 0.30f, Lang.K("ворон голодніє на {0}% повільніше"), "starvefree", Lang.K("навіть голодний, ворон б'є на повну силу"));
+            P("f_burya", F, "fly", 0.10f, 0.20f, 0.30f, Lang.K("ворон літає на {0}% швидше"), "homefast", Lang.K("а назад на плече летить ще на 20% швидше"));
+            P("f_moh", F, "trust", 0.10f, 0.20f, 0.30f, Lang.K("довіра цього ворона до тебе росте на {0}% швидше"), "fedheal", Lang.K("коли ворон ситий і сидить на плечі, він кожні 10 с лікує тебе на 1% здоров'я"));
             P("f_popil", F, "cool", 0.05f, 0.10f, 0.15f, Lang.K("дари ворона перезаряджаються на {0}% швидше"), null, null);
-            P("f_nich", F, "night", 0.10f, 0.20f, 0.30f, Lang.K("уночі дари ворона на {0}% сильніші"), "cave", Lang.K("і в печерах та підземеллях теж"));
-            P("f_krov", F, "blood", 0.15f, 0.30f, 0.45f, Lang.K("удар ворона +{0}%, але голодніє на 20% швидше"), "steal", Lang.K("удар лікує тебе на 10% завданої шкоди"));
-            P("f_zoloto", F, "range", 0.15f, 0.30f, 0.45f, Lang.K("дальність удару й розвідки ворона +{0}%"), null, null);
+            P("f_nich", F, "night", 0.10f, 0.20f, 0.30f, Lang.K("уночі всі дари цього ворона на {0}% сильніші"), "cave", Lang.K("те саме в печерах і підземеллях"));
+            P("f_krov", F, "blood", 0.15f, 0.30f, 0.45f, Lang.K("удар ворона сильніший на {0}%, але ворон голодніє на 20% швидше"), "steal", Lang.K("удар ворона лікує тебе на 10% завданої ним шкоди"));
+            P("f_zoloto", F, "range", 0.15f, 0.30f, 0.45f, Lang.K("ворон дістає ціль для удару й розвідує на {0}% далі"), null, null);
             // Бальдр: you in a fight
-            P("b_zharyny", B, "dmg", 0.04f, 0.08f, 0.12f, Lang.K("шкода твоєї зброї +{0}%"), "fireres", Lang.K("опір вогню"));
-            P("b_inii", B, "armor", 0.03f, 0.06f, 0.09f, Lang.K("броня +{0}%"), "frostres", Lang.K("опір морозу"));
-            P("b_iskry", B, "atkstam", 0.05f, 0.10f, 0.15f, Lang.K("атака дешевша на {0}% (посох — ейтир, лук — і натяг)"), null, null);
+            P("b_zharyny", B, "dmg", 0.04f, 0.08f, 0.12f, Lang.K("шкода твоєї зброї +{0}%"), "fireres", Lang.K("вогонь шкодить тобі вдвічі менше"));
+            P("b_inii", B, "armor", 0.03f, 0.06f, 0.09f, Lang.K("броня +{0}%"), "frostres", Lang.K("мороз шкодить тобі вдвічі менше"));
+            P("b_iskry", B, "atkstam", 0.05f, 0.10f, 0.15f, Lang.K("атака забирає на {0}% менше витривалості; з посохом — на стільки ж менше ейтиру, з луком — ще й натяг дешевший"), null, null);
             P("b_svitliachky", B, "regen", 0.10f, 0.20f, 0.30f, Lang.K("здоров'я відновлюється на {0}% швидше"), null, null);
             P("b_spory", B, "poison", 0.25f, 0.50f, 0.75f, Lang.K("отрута шкодить на {0}% менше"), null, null);
-            P("b_dym", B, "noise", 0.15f, 0.30f, 0.45f, Lang.K("ти шумиш на {0}% тихіше"), "sneak", Lang.K("удар зі скритності +10%"));
-            P("b_tuman", B, "leech", 0.01f, 0.02f, 0.03f, Lang.K("твої удари лікують на {0}% завданої шкоди"), null, null);
-            P("b_runy", B, "guard", 0.04f, 0.08f, 0.12f, Lang.K("броня +{0}% (зі щитом — блок дешевший, з посохом — ейтир швидше)"), null, null);
+            P("b_dym", B, "noise", 0.15f, 0.30f, 0.45f, Lang.K("ти шумиш на {0}% тихіше"), "sneak", Lang.K("удар зі скритності по ворогу, що тебе не помітив, сильніший на 10%"));
+            P("b_tuman", B, "leech", 0.01f, 0.02f, 0.03f, Lang.K("твої удари лікують тебе на {0}% завданої шкоди"), null, null);
+            P("b_runy", B, "guard", 0.04f, 0.08f, 0.12f, Lang.K("броня +{0}%; але якщо в руці щит — замість броні блок забирає на {0}% менше витривалості, а якщо посох — ейтир відновлюється на {0}% швидше"), null, null);
             // Геймдаль: your legs
             P("h_vohon", H, "run", 0.05f, 0.10f, 0.15f, Lang.K("біг забирає на {0}% менше витривалості"), null, null);
-            P("h_snih", H, "dodge", 0.10f, 0.20f, 0.30f, Lang.K("перекат дешевший на {0}%"), null, null);
+            P("h_snih", H, "dodge", 0.10f, 0.20f, 0.30f, Lang.K("перекат забирає на {0}% менше витривалості"), null, null);
             P("h_blyskavka", H, "speed", 0.03f, 0.06f, 0.09f, Lang.K("ти рухаєшся на {0}% швидше"), null, null);
             P("h_svitliachky", H, "stamregen", 0.10f, 0.20f, 0.30f, Lang.K("витривалість відновлюється на {0}% швидше"), null, null);
-            P("h_dym", H, "crouch", 0.10f, 0.20f, 0.30f, Lang.K("у присяді ти швидший на {0}%"), null, null);
+            P("h_dym", H, "crouch", 0.10f, 0.20f, 0.30f, Lang.K("у присяді ти рухаєшся на {0}% швидше"), null, null);
             P("h_bile_pirya", H, "fall", 0.25f, 0.50f, 0.75f, Lang.K("падіння шкодить на {0}% менше"), null, null);
-            P("h_runy", H, "carry", 15f, 30f, 50f, Lang.K("вантаж +{0}"), null, null);
+            P("h_runy", H, "carry", 15f, 30f, 50f, Lang.K("можеш нести на {0} більше ваги"), null, null);
             P("h_pirya", H, "jump", 0.10f, 0.20f, 0.30f, Lang.K("стрибок вищий на {0}%"), null, null);
         }
 
@@ -112,17 +112,17 @@ namespace HuginWhispers
             if (s == null) return Lang.T("Сили від іскор ця руна не має: лише вигляд.");
             int n = d.StarsOf(rune);
             StringBuilder sb = new StringBuilder();
-            if (n <= 0) sb.Append(Lang.T("Без іскор — лише вигляд. Іскри Одіна з доручень дадуть їй силу:"));
-            else sb.Append("<color=#C9A227>").Append(SparkWord(n)).Append(":</color> ").Append(Words(s, n));
-            sb.Append("\n<size=85%>");
+            sb.Append(n <= 0 ? Lang.T("Поки без іскор руна лише фарбує ворона. Силу їй дають іскри Одіна — вони інколи випадають за виконані доручення:")
+                : Lang.F("Іскор на руні: {0} із {1}. Що вона дає:", n, Max));
+            // the ladder in whole words: every step says what it gives, the one you have now in gold
             for (int i = 1; i <= Max; i++)
             {
-                if (i > 1) sb.Append("  ·  ");
                 bool now = i == n;
-                sb.Append(now ? "<b>" : "").Append(SparkWord(i)).Append(' ').Append(s.Flat ? "+" : "").Append(Num(s, i)).Append(s.Flat ? "" : "%").Append(now ? "</b>" : "");
+                sb.Append('\n').Append(now ? "<color=#C9A227><b>" : "").Append(SparkWord(i)).Append(" — ").Append(Words(s, i));
+                if (i == Max && s.Extra.Length > 0) sb.Append(Lang.F(", а ще {0}", Lang.T(s.ExtraWords)));
+                sb.Append(now ? "</b></color>" : "");
             }
-            if (s.Extra.Length > 0) sb.Append('\n').Append(Lang.F("З {0} іскрами ще й: {1}", Max, Lang.T(s.ExtraWords)));
-            sb.Append("</size>\n").Append(s.Kind == WearKind.Freya ? Lang.T("Діє, коли руна висить на вороні: на нього самого.") : Lang.T("Діє, коли руна висить на вороні, а він сидить у тебе на плечі."));
+            sb.Append('\n').Append(s.Kind == WearKind.Freya ? Lang.T("Сила йде самому ворону, на якому висить руна.") : Lang.T("Сила йде тобі, поки ворон із цією руною сидить у тебе на плечі."));
             if (n > 0) sb.Append('\n').Append(Lang.F("У в'язі сама не діє, зате кожна її іскра дає в'язі +{0}% сили.", Mathf.RoundToInt(BindPerStar * 100f)));
             return sb.ToString();
         }
@@ -402,13 +402,25 @@ namespace HuginWhispers
     }
 
     // «Іскри» with a staff in hand: its spells take less eitr
-    [HarmonyPatch(typeof(Attack), "GetAttackEitr")]
+    // (every GetAttackEitr: the game 1.0 has two, and a patch by name alone fails on the pair — Valheim10Compatibility
+    // hid that here, a vanilla game would not)
+    [HarmonyPatch]
     internal static class RuneEitrPatch
     {
+        private static System.Collections.Generic.IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            foreach (System.Reflection.MethodInfo m in typeof(Attack).GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly))
+                if (m.Name == "GetAttackEitr" && m.ReturnType == typeof(float)) yield return m;
+        }
+
         private static readonly System.Reflection.FieldInfo Who = AccessTools.Field(typeof(Attack), "m_character"); // (whose attack: looked up once; gone in a game update — the rune just does not cut, and the log says so)
         private static bool _told;
+        private static int _depth; // (one of the pair calling the other: the cut once, on the outer one)
+        private static void Prefix() { _depth++; }
         private static void Postfix(Attack __instance, ref float __result)
         {
+            if (--_depth > 0) return;
+            if (_depth < 0) _depth = 0;
             if (RuneStars.EitrCut <= 0f) return;
             if (Who == null) { if (!_told && Plugin.Instance != null) { _told = true; Plugin.Instance.Log("Runes: no Attack.m_character in this game: «Іскри» cannot cut a staff's eitr"); } return; }
             if (ReferenceEquals(Who.GetValue(__instance), Player.m_localPlayer)) __result *= 1f - RuneStars.EitrCut;

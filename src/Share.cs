@@ -71,7 +71,7 @@ namespace HuginWhispers
                 ItemDrop.ItemData g = RavenSeat.On(me, giver), r = RavenSeat.On(me, !giver);
                 if (!IsHungry(r) || !Shoulder.Settled(me, !giver, 3f) || !CanGive(me, giver)) continue;
                 _ownNext = Time.time + OwnGapMinutes * 60f; // (looked at: a roll, then a rest either way)
-                if (Random.value > OwnChance || RavenSkills.Hushed(me)) return false;
+                if (Random.value > OwnChance * Norov.ShareW(g) || RavenSkills.Hushed(me)) return false; // («Ласогуб»: shares more)
                 Satiety.Change(g, -ShareFill);
                 Satiety.Change(r, ShareFill);
                 Shown(me, giver);

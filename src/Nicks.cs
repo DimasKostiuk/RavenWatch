@@ -129,6 +129,18 @@ namespace HuginWhispers
             N("c_bold_2", Lang.K("Шибайголова"), Lang.K("Шибайголово"), Kind.Norov, 0, Lang.K("Характер: Зухвалий")),
             N("c_devoted_1", Lang.K("Вірнопер"), Lang.K("Вірнопере"), Kind.Norov, 0, Lang.K("Характер: Відданий")),
             N("c_devoted_2", Lang.K("Хвостик"), Lang.K("Хвостику"), Kind.Norov, 0, Lang.K("Характер: Відданий")),
+            N("c_curious_1", Lang.K("Носопхай"), Lang.K("Носопхаю"), Kind.Norov, 0, Lang.K("Характер: Цікавий")),
+            N("c_curious_2", Lang.K("Чомучка"), Lang.K("Чомучко"), Kind.Norov, 0, Lang.K("Характер: Цікавий")),
+            N("c_proud_1", Lang.K("Павич"), Lang.K("Павичу"), Kind.Norov, 0, Lang.K("Характер: Гордій")),
+            N("c_proud_2", Lang.K("Чепурун"), Lang.K("Чепуруне"), Kind.Norov, 0, Lang.K("Характер: Гордій")),
+            N("c_tender_1", Lang.K("Голубок"), Lang.K("Голубку"), Kind.Norov, 0, Lang.K("Характер: Лагідний")),
+            N("c_tender_2", Lang.K("Лагідько"), Lang.K("Лагідьку"), Kind.Norov, 0, Lang.K("Характер: Лагідний")),
+            N("c_grumpy_1", Lang.K("Сич"), Lang.K("Сичу"), Kind.Norov, 0, Lang.K("Характер: Буркотун")),
+            N("c_grumpy_2", Lang.K("Сухар"), Lang.K("Сухарю"), Kind.Norov, 0, Lang.K("Характер: Буркотун")),
+            N("c_huntsman_1", Lang.K("Кігтяр"), Lang.K("Кігтярю"), Kind.Norov, 0, Lang.K("Характер: Ловчий")),
+            N("c_huntsman_2", Lang.K("Слідопит"), Lang.K("Слідопите"), Kind.Norov, 0, Lang.K("Характер: Ловчий")),
+            N("c_sweettooth_1", Lang.K("Ласоїд"), Lang.K("Ласоїде"), Kind.Norov, 0, Lang.K("Характер: Ласогуб")),
+            N("c_sweettooth_2", Lang.K("Смакун"), Lang.K("Смакуне"), Kind.Norov, 0, Lang.K("Характер: Ласогуб")),
             N("k_heavy", Lang.K("Кувалда"), Lang.K("Кувалдо"), Kind.Norov, 0, Lang.K("Хист: Важкий удар")),
             N("k_far", Lang.K("Ракета"), Lang.K("Ракето"), Kind.Norov, 0, Lang.K("Хист: Далекий виліт")),
             N("k_quick", Lang.K("Метеор"), Lang.K("Метеоре"), Kind.Norov, 0, Lang.K("Хист: Швидке крило")),
@@ -204,7 +216,7 @@ namespace HuginWhispers
             D("e_level", Lang.K("Учень"), Lang.K("Учню"), Kind.Simple, 0, Lang.K("Двадцять разів ти чогось навчився"), (i, m) => Count(i, "level") >= 20),
             D("e_cook", Lang.K("Кухарчук"), Lang.K("Кухарчуку"), Kind.Simple, 0, Lang.K("Тридцять приготованих страв"), (i, m) => Count(i, "cook") >= 30),
             // what you do every day, with the raven watching (Diary's events, OnEvent; the times in seconds: Tick)
-            D("d_falls", Lang.K("Гепало"), Lang.K("Гепало"), Kind.Deed, 0, Lang.K("П'ятдесят разів бачив, як ти гепаєшся"), (i, m) => Count(i, "fall") >= 50),
+            D("d_falls", Lang.K("Гепало"), Lang.K("Гепало"), Kind.Deed, 0, Lang.K("Сто разів бачив, як ти гепаєшся"), (i, m) => Count(i, "fall") >= 100),
             D("d_neardeath", Lang.K("Везунчик"), Lang.K("Везунчику"), Kind.Deed, 0, Lang.K("Тридцять разів ти ледь не вме{р|рла} — і вижи{в|ла}"), (i, m) => Count(i, "near") >= 30),
             D("d_flee", Lang.K("Драпака"), Lang.K("Драпако"), Kind.Deed, 0, Lang.K("Тридцять разів ви разом драпали від ворога"), (i, m) => Count(i, "flee") >= 30),
             D("d_escaped", Lang.K("Мазило"), Lang.K("Мазило"), Kind.Deed, 0, Lang.K("П'ятдесят разів поранений звір утік від тебе"), (i, m) => Count(i, "escaped") >= 50),
@@ -215,11 +227,11 @@ namespace HuginWhispers
             D("d_build", Lang.K("Виконроб"), Lang.K("Виконробе"), Kind.Deed, 0, Lang.K("Три тисячі збудованих тобою шматків під його наглядом"), (i, m) => Count(i, "build") >= 3000),
             D("d_cook", Lang.K("Кухар"), Lang.K("Кухарю"), Kind.Deed, 0, Lang.K("Двісті страв, приготованих при ньому"), (i, m) => Count(i, "cook") >= 200),
             D("d_pet", Lang.K("Цуцик"), Lang.K("Цуцику"), Kind.Deed, 0, Lang.K("П'ятдесят разів ти глади{в|ла} тварин. Не його"), (i, m) => Count(i, "pet") >= 50),
-            D("d_pick", Lang.K("Ягодоїд"), Lang.K("Ягодоїде"), Kind.Deed, 0, Lang.K("Тисяча ягід, грибів і всякого зібраного"), (i, m) => Count(i, "pick") >= 1000),
+            D("d_pick", Lang.K("Ягодоїд"), Lang.K("Ягодоїде"), Kind.Deed, 0, Lang.K("Три тисячі ягід, грибів і всякого зібраного"), (i, m) => Count(i, "pick") >= 3000),
             D("d_dungeon", Lang.K("Підвальник"), Lang.K("Підвальнику"), Kind.Deed, 0, Lang.K("Тридцять разів лазив з тобою під землю"), (i, m) => Count(i, "dungeon") >= 30),
-            D("d_chop", Lang.K("Бобер"), Lang.K("Бобре"), Kind.Deed, 0, Lang.K("Три тисячі ударів сокирою при ньому"), (i, m) => Count(i, "chop") >= 3000),
-            D("d_mine", Lang.K("Шахтар"), Lang.K("Шахтарю"), Kind.Deed, 0, Lang.K("Три тисячі ударів кайлом при ньому"), (i, m) => Count(i, "mine") >= 3000),
-            D("d_level", Lang.K("Ботан"), Lang.K("Ботане"), Kind.Deed, 0, Lang.K("Сто п'ятдесят разів ти чогось навчився"), (i, m) => Count(i, "level") >= 150),
+            D("d_chop", Lang.K("Бобер"), Lang.K("Бобре"), Kind.Deed, 0, Lang.K("Десять тисяч ударів сокирою при ньому"), (i, m) => Count(i, "chop") >= 10000),
+            D("d_mine", Lang.K("Шахтар"), Lang.K("Шахтарю"), Kind.Deed, 0, Lang.K("Десять тисяч ударів кайлом при ньому"), (i, m) => Count(i, "mine") >= 10000),
+            D("d_level", Lang.K("Ботан"), Lang.K("Ботане"), Kind.Deed, 0, Lang.K("Триста разів ти чогось навчився"), (i, m) => Count(i, "level") >= 300),
             D("d_heavy", Lang.K("Віслюк"), Lang.K("Віслюче"), Kind.Deed, 0, Lang.K("Годину ви разом тягли більше, ніж можна"), (i, m) => Count(i, "heavy") >= 3600),
             D("d_swim", Lang.K("Качка"), Lang.K("Качко"), Kind.Deed, 0, Lang.K("Півгодини плавав з тобою. На плечі. Мокрий"), (i, m) => Count(i, "swim") >= 1800),
             D("d_fed", Lang.K("Годованець"), Lang.K("Годованцю"), Kind.Deed, 0, Lang.K("Сто п'ятдесят разів ти його нагодував"), (i, m) => Count(i, "fed") >= 150),
@@ -237,7 +249,7 @@ namespace HuginWhispers
             D("d_skydive", Lang.K("Парашутист"), Lang.K("Парашутисте"), Kind.Deed, 0, Lang.K("Десять разів ти розби{вся|лася} на смерть, падаючи з висоти"), (i, m) => Count(i, "falldeath") >= 10),
             D("d_shame", Lang.K("Ганьба"), Lang.K("Ганьбо"), Kind.Deed, 0, Lang.K("Тричі тебе вбила Шия, Грейлінг чи вепр"), (i, m) => Count(i, "shame") >= 3),
             D("d_donor", Lang.K("Донор"), Lang.K("Доноре"), Kind.Deed, 0, Lang.K("П'ять разів тебе висмоктав смертоносний комар"), (i, m) => Count(i, "squito") >= 5),
-            D("d_smoked", Lang.K("Копчений"), Lang.K("Копчений"), Kind.Deed, 0, Lang.K("Півгодини ви разом коптилися в диму"), (i, m) => Count(i, "smoke") >= 1800),
+            D("d_smoked", Lang.K("Копчений"), Lang.K("Копчений"), Kind.Deed, 0, Lang.K("Дві години ви разом коптилися в диму"), (i, m) => Count(i, "smoke") >= 7200),
             D("d_icicle", Lang.K("Бурулька"), Lang.K("Бурулько"), Kind.Deed, 0, Lang.K("Дві години ви разом мерзли"), (i, m) => Count(i, "cold") >= 7200),
             D("d_nudist", Lang.K("Нудист"), Lang.K("Нудисте"), Kind.Deed, 0, Lang.K("Година пригод без жодної броні"), (i, m) => Count(i, "naked") >= 3600),
             D("d_statue", Lang.K("Пам'ятник"), Lang.K("Пам'ятнику"), Kind.Deed, 0, Lang.K("Пів години ти стоя{в|ла} на одному місці, а він дивився"), (i, m) => Count(i, "statue") >= 1),
@@ -251,6 +263,23 @@ namespace HuginWhispers
             D("d_disco", Lang.K("Диско"), Lang.K("Диско"), Kind.Deed, 0, Lang.K("Сто танців. Він теж танцював"), (i, m) => Count(i, "dance") >= 100),
             D("d_jockey", Lang.K("Жокей"), Lang.K("Жокею"), Kind.Deed, 0, Lang.K("Година верхи на звірах"), (i, m) => Count(i, "ride") >= 3600),
             D("d_carter", Lang.K("Візник"), Lang.K("Візнику"), Kind.Deed, 0, Lang.K("Десять кілометрів із возом"), (i, m) => Count(i, "cart") >= 10000),
+            // the ravens' own new doings (2.8.0): fish, games, new gear looked over, cut-ins, the nest held
+            D("d_fishdive", Lang.K("Баклан"), Lang.K("Баклане"), Kind.Deed, 0, Lang.K("П'ятдесят риб, яких сам вихопив з води"), (i, m) => Count(i, "fishdive") >= 50),
+            D("d_beastplay", Lang.K("Нянька"), Lang.K("Нянько"), Kind.Deed, 0, Lang.K("Сто разів грався в доганялки з твоїм звіром"), (i, m) => Count(i, "beastplay") >= 100),
+            D("d_shipplay", Lang.K("Чайка"), Lang.K("Чайко"), Kind.Deed, 0, Lang.K("Тридцять разів грався за кормою корабля"), (i, m) => Count(i, "shipplay") >= 30),
+            D("d_newgear", Lang.K("Модник"), Lang.K("Моднику"), Kind.Deed, 0, Lang.K("Сорок разів оглянув на тобі обнову"), (i, m) => Count(i, "newgear") >= 40),
+            D("d_cutin", Lang.K("Перебивало"), Lang.K("Перебивало"), Kind.Deed, 0, Lang.K("Багато разів перебив іншого ворона на півслові"), (i, m) => Count(i, "cutins") >= (m ? 100 : 40)),
+            D("d_siege", Lang.K("Оборонець"), Lang.K("Оборонцю"), Kind.Deed, 0, Lang.K("Вистояв з тобою облогу гнізда"), (i, m) => Count(i, "sieges") >= 1),
+            // the dirt and the baths (2.8.0)
+            D("e_bath", Lang.K("Плюскало"), Lang.K("Плюскало"), Kind.Simple, 0, Lang.K("Десять купань"), (i, m) => Count(i, "baths") >= 10),
+            D("d_baths", Lang.K("Мийдодір"), Lang.K("Мийдодіре"), Kind.Deed, 0, Lang.K("Сто купань"), (i, m) => Count(i, "baths") >= 100),
+            D("d_scrub", Lang.K("Мазунчик"), Lang.K("Мазунчику"), Kind.Deed, 0, Lang.K("Тридцять разів ти ми{в|ла} його власними руками"), (i, m) => Count(i, "scrubs") >= 30),
+            D("d_tub", Lang.K("Барин"), Lang.K("Барине"), Kind.Deed, 0, Lang.K("Двадцять разів купався з тобою в гарячій купелі"), (i, m) => Count(i, "tubs") >= 20),
+            D("d_filthy", Lang.K("Замазура"), Lang.K("Замазуро"), Kind.Deed, 0, Lang.K("Двадцять разів заріс брудом по самий дзьоб"), (i, m) => Count(i, "filthy") >= 20),
+            D("d_mud", Lang.K("Болотяник"), Lang.K("Болотянику"), Kind.Deed, 0, Lang.K("Десять разів вимазався болотом до краю"), (i, m) => Count(i, "filthy_mud") >= 10),
+            D("d_ash", Lang.K("Сажотрус"), Lang.K("Сажотрусе"), Kind.Deed, 0, Lang.K("Десять разів засипаний попелом до краю"), (i, m) => Count(i, "filthy_ash") >= 10),
+            D("d_gore", Lang.K("Упир"), Lang.K("Упирю"), Kind.Deed, 2, Lang.K("Десять разів по дзьоб у чужій крові"), (i, m) => Count(i, "filthy_blood") >= 10),
+            D("d_bones", Lang.K("Могильник"), Lang.K("Могильнику"), Kind.Deed, 0, Lang.K("Десять разів вивалявся в мертвечині до краю"), (i, m) => Count(i, "filthy_bones") >= 10),
             // the legends: a feat, or hundreds of hours together
             D("l_angel", Lang.K("Ангел"), Lang.K("Ангеле"), Kind.Legend, 1, Lang.K("П'ятдесят разів витягнув тебе з того світу («Останній шанс»)"), (i, m) => Count(i, "saved") >= 50),
             D("l_berserk", Lang.K("Берсерк"), Lang.K("Берсерку"), Kind.Legend, 2, Lang.K("Сто п'ятдесят разів впадав у криваву лють"), (i, m) => Count(i, "fury") >= 150),
@@ -262,6 +291,16 @@ namespace HuginWhispers
             D("l_eternal", Lang.K("Дідуган"), Lang.K("Дідугане"), Kind.Legend, 0, Lang.K("Чотириста днів разом"), (i, m) => Count(i, "days") >= 400),
             D("l_envoy", Lang.K("Улюбленець"), Lang.K("Улюбленцю"), Kind.Legend, 0, Lang.K("Сто днів поспіль на найвищій довірі — і жодного дня голоду"), (i, m) => Count(i, "envoy") >= 100),
             D("l_skald", Lang.K("Тамада"), Lang.K("Тамадо"), Kind.Legend, 0, Lang.K("Говорив із воронами шістьох різних людей, і двоє з тих воронів мали заслужене ім'я"), (i, m) => Talkers(i, 1) >= 6 && List(i, "RavenWatch_n_famed").Count >= 2),
+            D("l_errands", Lang.K("Посланець"), Lang.K("Посланцю"), Kind.Legend, 0, Lang.K("Сто доручень Одіна, і серед них хоча б одне золоте"), (i, m) => Count(i, "errands") >= 100 && Count(i, "goldens") >= 1),
+            D("l_saga", Lang.K("Ярл"), Lang.K("Ярле"), Kind.Legend, 0, Lang.K("Десять боїв, гідних саги"), (i, m) => Count(i, "sagas") >= 10),
+            D("l_master", Lang.K("Сенсей"), Lang.K("Сенсею"), Kind.Legend, 0, Lang.K("Довів вишкіл удару до кінця"), (i, m) => Strike.Level(i) >= Strike.MaxLevel),
+            D("l_champions", Lang.K("Звіробій"), Lang.K("Звіробою"), Kind.Legend, 0, Lang.K("П'ятнадцять ватажків упали при ньому"), (i, m) => Count(i, "champs") >= 15),
+            D("l_post", Lang.K("Листоноша"), Lang.K("Листоноше"), Kind.Legend, 0, Lang.K("П'ятдесят листів і посилок доніс до чужих рук"), (i, m) => Count(i, "post") >= 50),
+            D("l_tamer", Lang.K("Приборкувач"), Lang.K("Приборкувачу"), Kind.Legend, 2, Lang.K("Тридцять звірів приборкав, сидячи в них на голові"), (i, m) => Count(i, "mtamed") >= 30),
+            D("l_revenge", Lang.K("Месник"), Lang.K("Меснику"), Kind.Legend, 2, Lang.K("Двадцять разів помстився за твою смерть"), (i, m) => Count(i, "revenge") >= 20),
+            D("l_seer", Lang.K("Віщун"), Lang.K("Віщуне"), Kind.Legend, 1, Lang.K("П'ятдесят ранків віщував тобі небо й набіги"), (i, m) => Count(i, "omens") >= 50),
+            D("l_brother", Lang.K("Побратим"), Lang.K("Побратиме"), Kind.Legend, 0, Lang.K("Найближчий друг ворона іншої людини — і п'ятдесят боїв зграєю"), (i, m) => Count(i, "pack") >= 50 && Bonds.HasClose(i)),
+            D("l_chosen", Lang.K("Обранець"), Lang.K("Обранцю"), Kind.Legend, 0, Lang.K("Усі п'ять золотих рун у ньому, і один дар доведений до третьої"), (i, m) => GiftUp.Used(i) >= GiftUp.MaxPerRaven && TopGift(i)),
         };
 
         // The same deed in Munin's own word (his manner): Hugin keeps the word in Deeds, Munin gets "<id>_m" with this one —
@@ -365,6 +404,27 @@ namespace HuginWhispers
             { "l_eternal", Lang.Keys("Пращур", "Пращуре") },
             { "l_envoy", Lang.Keys("Пестунчик", "Пестунчику") },
             { "l_skald", Lang.Keys("Горлодер", "Горлодере") },
+            { "d_fishdive", Lang.Keys("Пелікан", "Пелікане") },
+            { "d_beastplay", Lang.Keys("Дражнило", "Дражнило") },
+            { "d_shipplay", Lang.Keys("Альбатрос", "Альбатросе") },
+            { "d_newgear", Lang.Keys("Прискіпа", "Прискіпо") },
+            { "d_cutin", Lang.Keys("Встрявало", "Встрявало") },
+            { "d_siege", Lang.Keys("Цербер", "Цербере") },
+            { "l_chosen", Lang.Keys("Блатний", "Блатний") },
+            { "e_bath", Lang.Keys("Хлюпик", "Хлюпику") },
+            { "d_baths", Lang.Keys("Водолаз", "Водолазе") },
+            { "d_scrub", Lang.Keys("Мочалка", "Мочалко") },
+            { "d_tub", Lang.Keys("Буржуй", "Буржую") },
+            { "d_filthy", Lang.Keys("Свинота", "Свиното") },
+            { "d_mud", Lang.Keys("Жабоїд", "Жабоїде") },
+            { "d_ash", Lang.Keys("Головешка", "Головешко") },
+            { "d_bones", Lang.Keys("Трупоїд", "Трупоїде") },
+            { "l_errands", Lang.Keys("Наймит", "Наймите") },
+            { "l_saga", Lang.Keys("Отаман", "Отамане") },
+            { "l_master", Lang.Keys("Кат", "Кате") },
+            { "l_champions", Lang.Keys("Шкуродер", "Шкуродере") },
+            { "l_post", Lang.Keys("Кур'єр", "Кур'єре") },
+            { "l_brother", Lang.Keys("Корєш", "Корєшу") },
         };
 
         private static List<Nick> _deeds;
@@ -663,6 +723,30 @@ namespace HuginWhispers
         internal static void OnFury(Player p) { ItemDrop.ItemData r = Own(p, true); if (r != null) Add(r, "fury", 1); }
 
         internal static void OnScout(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "scouts", 1); }
+
+        // the later legends (2.8.0): Odin's errands, fights worthy of a saga, champions, the post, taming, revenge, omens, the pack
+        internal static void OnErrand(Player p, bool munin, bool golden) { ItemDrop.ItemData r = Own(p, munin); if (r == null) return; Add(r, "errands", 1); if (golden) Add(r, "goldens", 1); }
+        internal static void OnSaga(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "sagas", 1); }
+        internal static void OnChampion(Player p) { foreach (ItemDrop.ItemData r in Mine(p)) Add(r, "champs", 1); }
+        internal static void OnPost(Player p, ItemDrop.ItemData r) { if (r != null && !Trust.Stranger(r, p)) Add(r, "post", 1); }
+        internal static void OnTamed(Player p) { ItemDrop.ItemData r = Own(p, true); if (r != null) Add(r, "mtamed", 1); }
+        internal static void OnRevenge(Player p) { ItemDrop.ItemData r = Own(p, true); if (r != null) Add(r, "revenge", 1); }
+        internal static void OnOmen(Player p) { ItemDrop.ItemData r = Own(p, false); if (r != null) Add(r, "omens", 1); }
+        internal static void OnPack(Player p, ItemDrop.ItemData r) { if (r != null && !Trust.Stranger(r, p)) Add(r, "pack", 1); }
+        // a bath counts only if it washed something off (a clean raven dipping in the tub with you every few minutes: not a deed)
+        internal static void OnBath(Player p, ItemDrop.ItemData r, string how, float dirt) { if (r == null || dirt < Bath.HandFrom || Trust.Stranger(r, p)) return; Add(r, "baths", 1); if (how == Bath.Hand) Add(r, "scrubs", 1); else if (how == Bath.Tub) Add(r, "tubs", 1); }
+        // filthy counts once until it is clean again (the rain rinsing a little and the swamp soiling it back: not again)
+        private const string FilthyKey = "RavenWatch_n_filthyNow";
+        internal static void OnClean(ItemDrop.ItemData r) { if (r != null) r.m_customData.Remove(FilthyKey); }
+        internal static void OnFilthy(ItemDrop.ItemData r, int kind) { if (r == null || Get(r, FilthyKey) != null) return; r.m_customData[FilthyKey] = "1"; Add(r, "filthy", 1); Add(r, "filthy_" + Bath.KindIds[Mathf.Clamp(kind, 0, 3)], 1); } // dirty to the brim just now, mostly of this kind
+        internal static void OnFishDive(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "fishdive", 1); }
+        internal static void OnBeastPlay(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "beastplay", 1); }
+        internal static void OnShipPlay(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "shipplay", 1); }
+        internal static void OnNewGear(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "newgear", 1); }
+        internal static void OnCutIn(Player p, bool munin) { ItemDrop.ItemData r = Own(p, munin); if (r != null) Add(r, "cutins", 1); }
+        internal static void OnSiege(Player p) { foreach (ItemDrop.ItemData r in Mine(p)) Add(r, "sieges", 1); }
+        // one of its gifts at the third golden level
+        private static bool TopGift(ItemDrop.ItemData item) { foreach (int v in GiftUp.Of(item).Values) if (v >= GiftUp.MaxLevel) return true; return false; }
 
         // the last blow on a boss was this raven's: each boss once
         internal static void OnFelled(Player p, ItemDrop.ItemData r, string prefab)

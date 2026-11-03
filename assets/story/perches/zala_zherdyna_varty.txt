@@ -1,0 +1,12 @@
+# RavenWatch — сюжетна будівля Зали Варти (3.0). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Жердина Варти
+note: Кована жердина на стіні Зали Варти, з ланцюгом і пером. Така є лише в Залі
+use: story
+id: zherdyna_varty
+perday: 100
+mount: wall
+pose: -50 90 -45 16 -50 90 -45 16 0 -15 -10
+stand: 0 0 0 0 0 0 0 0 0 -15 -10
+part asset/Зала/HallPerch pos 0 0 0.579 rot 0 0 0 scale 1 1 1  # Жердина Варти (Meshy, 2026-11-01): плита на стіні, перекладина 1,9 м
+part @seat pos -0.55 0.13 1.07 rot 0 0 0 scale 1 1 1  # місце ворона
+part @seat pos 0.55 0.13 1.07 rot 0 0 0 scale 1 1 1  # місце ворона

@@ -34,10 +34,12 @@ namespace HuginWhispers
             if (c == null) return 1f;
             switch (c.Id)
             {
+                case "sweettooth": return 1.5f;
                 case "bold": case "fidget": case "loud": return 1.4f;
-                case "wanderer": case "showoff": case "thief": return 1.2f;
-                case "calm": case "timid": case "picky": return 0.6f;
-                case "homebody": case "watchful": case "sleepy": return 0.8f;
+                case "grumpy": return 1.3f;
+                case "wanderer": case "curious": case "showoff": case "thief": return 1.2f;
+                case "calm": case "tender": case "timid": case "picky": return 0.6f;
+                case "homebody": case "watchful": case "proud": case "sleepy": return 0.8f;
                 default: return 1f;
             }
         }
@@ -74,6 +76,7 @@ namespace HuginWhispers
             RavenJournal.Note(p, item, "sipped your mead");
             if (life.SitNew) life.SitDirectorNow.React(life, "Витирає дзьоб", 1.2f + later);
             PerkFx.Say(munin, "mead_sip", 0.8f, 0f);
+            PlayerReact.Sipped(p, munin, later);
             NextSay[i] = Time.time + later + Random.Range(8f, 14f);
             NextHic[i] = Time.time + later + Random.Range(4f, 8f);
             CircleAt[i] = Time.time + CircleAfter + later;
@@ -149,7 +152,7 @@ namespace HuginWhispers
                 if (Time.time >= NextHic[i])
                 {
                     NextHic[i] = Time.time + Random.Range(HiccupMin, HiccupMax);
-                    if (life != null && life.SitNew && AnimDirector.Of(Shoulder.ModelOf(p, munin)) == RavenAct.Sit) life.SitDirectorNow.React(life, "Здригається", 0f);
+                    if (life != null && life.SitNew && AnimDirector.Of(Shoulder.ModelOf(p, munin)) == RavenAct.Sit) { life.SitDirectorNow.React(life, "Здригається", 0f); PlayerReact.Hiccup(p, munin); }
                 }
                 if (Time.time >= NextSay[i])
                 {

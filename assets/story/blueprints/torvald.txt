@@ -1,0 +1,60 @@
+# RavenWatch blueprint 1
+name torvald
+pieces 56
+ground -0.002
+RavenWatch_story_kamin_imen_velykyi -1.588 0.067 -3.844 0 -0.02858 0 -0.99959
+RavenWatch_story_kamin_polehlykh 3.886 -0.005 0.809 0 -0.72703 0 -0.68661
+itemstandh 1.69 -0.051 1.415 0 -0.53158 0 0.84701 item:CarrotSoup:0:1:0
+itemstandh 0.738 0 1.535 0 -0.02858 0 -0.99959 item:BombBlob_Poison:0:1:0
+RavenWatch_story_kamin_polehlykh -6.173 -0.295 0.364 -0.65327 0.06329 0.05441 -0.75251
+RavenWatch_story_kamin_polehlykh 3.604 -0.042 2.872 0 -0.81525 0 0.57911
+RavenWatch_story_kamin_imen_velykyi 2.065 -0.003 4.292 0 -0.97481 0 0.22305
+RavenWatch_story_kamin_imen 0.016 -0.283 5.366 -0.46522 0.59589 -0.13858 -0.63975
+itemstandh -1.303 0.758 5.968 0 -0.53158 0 0.84701 item:MeadHealthMedium:0:1:0
+RavenWatch_story_kamin_imen -1.304 0.055 6.002 0 -0.97481 0 0.22305
+RavenWatch_story_kamin_torvalda 2.668 0.005 -4.542 0 -0.16698 0 0.98596
+RavenWatch_story_kamin_imen_velykyi 0.593 -0.578 -4.7 -0.25652 0.94858 -0.13144 0.13083
+piece_logbench01 4.848 0.024 -2.635 0 -0.84701 0 -0.53158
+piece_pot3 0.366 -0.059 -2.199 0 -0.02858 0 -0.99959
+piece_chest_private 1.004 -0.029 -1.927 0 -0.81525 0 0.57911
+wood_roof_45 -0.827 1 -1.865 0 -0.97481 0 0.22305
+wood_pole_log 0.508 1 -1.399 0 -0.72703 0 -0.68661
+bed -1.48 0.02 -1.031 0 -0.84701 0 -0.53158
+wood_roof -0.124 1.557 -0.662 0 -0.97481 0 0.22305
+darkwood_raven -6.032 -0.042 -1.566 -0.14567 0.3276 -0.48713 0.79634
+wood_roof_45 -2.628 1 -0.995 0 -0.97481 0 0.22305
+wood_wall_log_4x0.5 -1.293 1.75 -0.529 0 -0.97481 0 0.22305
+wood_roof -1.925 1.557 0.208 0 -0.97481 0 0.22305
+wood_pole_log -3.094 1 0.34 0 -0.97481 0 0.22305
+fire_pit 1.14 0 2.37 0 -0.81525 0 0.57911
+Piece_grausten_pillar_arch_small 5.398 0.904 -4.769 0 0.84701 0 0.53158
+RavenWatch_story_nadhrobky_try 1.044 -0.037 6.558 0 -0.97481 0 0.22305
+RavenWatch_story_nadhrobky_para -0.619 -0.286 7.694 -0.21778 -0.91602 -0.26372 0.20959
+RavenWatch_story_nadhrobky_para -4.413 -0.272 -2.841 -0.47945 0.46787 -0.11648 -0.73325
+RavenWatch_story_kamin_dvobichnyi 6.581 -0.1 2.111 0 0.57911 0 0.81525
+RavenWatch_story_kamin_dvobichnyi -7.833 -0.395 0.537 -0.28155 0.06097 0.09294 0.95309
+RavenWatch_story_nadhrobky_vysokyi 1.539 -0.056 7.86 0 0.91256 0 -0.40894
+RavenWatch_story_nadhrobky_vysokyi -3.528 0.007 -3.146 0 0.02858 0 0.99959
+RavenWatch_story_nadhrobky_vysokyi -1.24 -0.103 8.862 0 -0.97481 0 0.22305
+RavenWatch_story_nadhrobky_vysokyi -1.408 -0.195 9.01 0 -0.22305 0 -0.97481
+RavenWatch_story_nadhrobky_vysokyi -1.427 -0.148 9.117 0 0.22305 0 0.97481
+RavenWatch_story_nadhrobky_try 6.72 -0.47 0.115 0 0.72703 0 0.68661
+RavenWatch_story_kamin_imen 6.461 -0.322 4.099 0.3667 0.75312 0.10943 -0.53512
+stone_fence -7.572 0.146 -2.849 0 0.97481 0 -0.22305
+stone_fence -9.373 0.006 -1.979 -0.11017 0.96655 -0.06983 -0.22084
+stone_fence -10.94 -0.174 -0.798 -0.11396 0.90485 -0.06347 -0.40525
+stone_fence -5.771 0.126 -3.719 0 0.97481 0 -0.22305
+stone_fence -12.172 -0.673 0.872 -0.11667 0.81094 0.06385 -0.56982
+wood_fine_stack -9.8 -0.79 1.105 0 0.81525 0 -0.57911
+Piece_grausten_pillarbase_small 6.464 -0.071 -2.255 0 0.97481 0 -0.22305
+Piece_grausten_pillarbase_small 5.398 -0.076 -4.769 0 0.97481 0 -0.22305
+wood_roof 0.848 -0.462 -2.569 0.00794 0.92657 -0.13037 0.35271
+stone_wall_1x1 6.66 2.446 6.369 0 -0.84701 0 -0.53158
+RavenWatch_story_nadhrobky_try 5.526 -0.165 3.897 0 -0.91256 0 0.40894
+RavenWatch_story_nadhrobky_try -6.687 -0.27 -0.36 -0.17138 -0.96001 -0.02795 0.21959
+RavenWatch_story_kamin_dvobichnyi -4.573 -0.538 9.245 -0.18498 -0.15694 0.34393 -0.90712
+stone_pile -3.267 -0.262 7.119 0 0.16698 0 -0.98596
+stone_pile 3.098 -0.414 6.874 0.27086 -0.20943 -0.18265 -0.92164
+stone_pile 2.539 0.081 7.278 0 -0.22305 0 -0.97481
+stone_pile 2.394 -0.198 8.128 0 -0.57911 0 -0.81525
+stone_pillar 6.66 0.946 6.369 0 -0.84701 0 -0.53158

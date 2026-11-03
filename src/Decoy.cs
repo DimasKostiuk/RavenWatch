@@ -17,10 +17,11 @@ namespace HuginWhispers
     // circle is a formula of the world's clock), and the game that owns it counts the blows and calls it off.
     internal static class Decoy
     {
-        internal static float Seconds = 8f, SecondsTop = 20f;
+        internal static float Seconds = 10f, SecondsTop = 25f;
         internal static float Cooldown = 600f, CooldownTop = 300f; // seconds: 10 min at its first level, 5 at the top
         internal static float Range = 30f;
-        internal static int HitsToBreak = 3;
+        internal static int HitsToBreak = 5;
+        internal static float StunSeconds = 3f; // when it ends (time, seen through, pressed again): the fooled ones stand dazed this long
         internal static int GangOneAt = 6, GangTwoAt = 7;
         internal static float GangReach = 5f;
         // the circle fits the creature: low and tight round a small one, wide and high round a big one
@@ -39,6 +40,7 @@ namespace HuginWhispers
             public float Until, Seed, NextSwing;
             public int Hits;
             public bool Strikes; // «Обманка» III: its swings land on the creatures next to it
+            public bool Leads; public Vector3 Lead; // «Обманка» II: Hugin draws it to this place
         }
         private static readonly Dictionary<ZDOID, Lure> Lured = new Dictionary<ZDOID, Lure>();
 
@@ -111,8 +113,12 @@ namespace HuginWhispers
             pkg.Write(seed);
             pkg.Write(WorldTime.Now);
             pkg.Write(who.Count);
-            foreach (Character c in who) pkg.Write(c.GetZDOID());
+            foreach (Character c in who) { pkg.Write(c.GetZDOID()); HuginChores.NoteHelp(c.GetZDOID()); } // (a kill of a fooled one: his help)
             pkg.Write(Facets.On("hdecoy")); // (read after the creatures; an older mod stops before it)
+            Vector3 lead = Vector3.zero;
+            bool leads = Twists.Two("hdecoy") && LeadPoint(p, out lead);
+            pkg.Write(leads); // («Обманка» II: where Hugin draws it)
+            pkg.Write(leads ? lead : Vector3.zero);
             pkg.SetPos(0);
             Started(pkg); // here at once (and the flight), then the others
             if (ZRoutedRpc.instance != null) ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcStart, pkg);
@@ -148,6 +154,11 @@ namespace HuginWhispers
                 }
                 if (pkg.GetPos() < pkg.Size() && pkg.ReadBool())
                     foreach (Lure lu in Lured.Values) if (lu.Caster == caster && lu.Start == start) lu.Strikes = true;
+                if (pkg.GetPos() < pkg.Size() && pkg.ReadBool())
+                {
+                    Vector3 lead = pkg.ReadVector3();
+                    foreach (Lure lu in Lured.Values) if (lu.Caster == caster && lu.Start == start) { lu.Leads = true; lu.Lead = lead; }
+                }
                 // the bird: the caster's own Hugin, drawn on every game near enough
                 Character target = Find(main);
                 Player me = Player.m_localPlayer;
@@ -165,6 +176,10 @@ namespace HuginWhispers
         // over for a caster's lures: time, pressed again, or seen through (broken: the creature; by: who struck it)
         private static void End(ZDOID caster, ZDOID broken, ZDOID by)
         {
+            // the fooled ones stand dazed a moment (told to every game; the one that drives each holds it)
+            List<Character> dazed = new List<Character>();
+            foreach (KeyValuePair<ZDOID, Lure> kv in Lured) { if (kv.Value.Caster != caster) continue; Character c = Find(kv.Key); if (c != null && !c.IsDead()) dazed.Add(c); }
+            Daze.Put(dazed, StunSeconds);
             ZPackage pkg = new ZPackage();
             pkg.Write(caster);
             pkg.Write(broken);
@@ -221,6 +236,30 @@ namespace HuginWhispers
             return head + Vector3.up * (OrbitUp + tall * OrbitUpPer) + new Vector3(Mathf.Cos(a) * r, bob * Mathf.Sin(a * 1.7f), Mathf.Sin(a) * r);
         }
 
+        // «Обманка» II: Hugin circles a little ahead of it, on the way to the place you looked at, and it follows him
+        // there (the same on every game: the place came with the message); there he circles over it as ever
+        internal static float LeadAhead = 4f, LeadNear = 1.5f, LeadReach = 40f;
+        internal static Vector3 LeadOf(Character main)
+        {
+            Lure l;
+            if (main == null || !Lured.TryGetValue(main.GetZDOID(), out l) || !l.Leads) return Vector3.zero;
+            Vector3 d = l.Lead - main.transform.position; d.y = 0f;
+            return d.magnitude <= LeadNear ? Vector3.zero : Vector3.ClampMagnitude(d, LeadAhead);
+        }
+
+        private static int _leadMask;
+        private static bool LeadPoint(Player p, out Vector3 at)
+        {
+            at = Vector3.zero;
+            if (GameCamera.instance == null) return false;
+            if (_leadMask == 0) _leadMask = LayerMask.GetMask("Default", "static_solid", "terrain", "piece");
+            Transform cam = GameCamera.instance.transform;
+            RaycastHit hit;
+            if (!Physics.Raycast(cam.position, cam.forward, out hit, LeadReach + 10f, _leadMask) || Vector3.Distance(hit.point, p.transform.position) > LeadReach) return false;
+            at = hit.point;
+            return true;
+        }
+
         // lured now (the mark over its head): on every game
         internal static bool IsLured(ZDOID id) { Lure l; return Lured.TryGetValue(id, out l) && Time.time < l.Until; }
 
@@ -240,11 +279,11 @@ namespace HuginWhispers
             ZDOID id = c.GetZDOID();
             Lure l;
             if (!Lured.TryGetValue(id, out l)) return false;
-            if (Time.time >= l.Until || c.IsDead()) { Lured.Remove(id); return false; } // (time up: the caster's game calls Hugin home)
+            if (Time.time >= l.Until || c.IsDead()) { if (!c.IsDead() && id == l.Main) LastPeck(l.Caster, c); Lured.Remove(id); return false; } // (time up: the caster's game calls Hugin home)
             Character main = l.Main == id ? c : Find(l.Main);
             if (main == null || main.IsDead()) { Lured.Remove(id); return false; }
             if (MoveToM == null || LookAtM == null) return false; // the game changed: it thinks for itself
-            Vector3 at = Orbit(main, l.Seed, l.Start);
+            Vector3 at = Orbit(main, l.Seed, l.Start) + LeadOf(main);
             try
             {
                 AiTarget.Set(ai, null); // nobody but him
@@ -269,6 +308,15 @@ namespace HuginWhispers
         }
 
         internal static float NeighbourReach = 3f;
+        internal static float PeckBlind = 5f; // («Обманка» III: the last peck)
+
+        // «Обманка» III: time up, Hugin's last peck in its eyes (only the caster's game: its own runes)
+        private static void LastPeck(ZDOID caster, Character c)
+        {
+            Player me = Player.m_localPlayer;
+            if (me == null || me.GetZDOID() != caster || !Facets.On("hdecoy")) return;
+            Marks.BlindFor(c, c.IsBoss() ? 1f : PeckBlind);
+        }
 
         // «Обманка» III: the nearest other creature in reach takes the swing (its weapon's damage, by its stars)
         // (a close blow only: a bow or a spit does not hit the one beside it; bosses and harmless animals are not hit)
@@ -330,7 +378,11 @@ namespace HuginWhispers
                 Character c = Find(kv.Key);
                 if (Time.time < kv.Value.Until && c != null && !c.IsDead()) live = true;
             }
-            if (mine && !live) End(me, ZDOID.None, ZDOID.None);
+            if (mine && !live)
+            {
+                foreach (KeyValuePair<ZDOID, Lure> kv in Lured) if (kv.Value.Caster == me && kv.Key == kv.Value.Main) { Character c = Find(kv.Key); if (c != null && !c.IsDead()) LastPeck(me, c); }
+                End(me, ZDOID.None, ZDOID.None);
+            }
         }
     }
 
@@ -390,7 +442,7 @@ namespace HuginWhispers
 
         private void LateUpdate()
         {
-            bool lured = _c != null && !_c.IsDead() && Decoy.IsLured(_id);
+            bool lured = _c != null && !_c.IsDead() && (Decoy.IsLured(_id) || Daze.Is(_id)); // (lured, or dazed by a dive)
             _alpha = Mathf.MoveTowards(_alpha, lured ? 1f : 0f, Time.deltaTime * (lured ? 4f : 2f));
             if (_c == null || (!lured && _alpha <= 0f)) { Destroy(gameObject); return; }
             float radius = Mathf.Clamp(Body.Radius(_c), 0.15f, 6f);
@@ -515,7 +567,7 @@ namespace HuginWhispers
                 if (_motor.Home(seat, _owner, _body.HomeSpeed(Strike.ReturnSpeed, _owner.GetVelocity(), Time.time - _t0), dt, true, _born, false, Vector3.zero) || _motor.Stuck) Land();
                 return;
             }
-            Vector3 at = Decoy.Orbit(_target, _seed, _start);
+            Vector3 at = Decoy.Orbit(_target, _seed, _start) + Decoy.LeadOf(_target);
             if (_phase == 0)
             {
                 float left = _motor.Steer(at, Strike.Speed * 1.1f, false, 0.4f, dt, Vector3.zero, 1f, true);

@@ -566,7 +566,7 @@ namespace HuginWhispers
 
         // ---- a kill shared with a helper (the user, 2026-10-27): Odin's kill errands count it for whoever has one and
         // took at least AssistShare of the creature's health with their own blows (their ravens' too), not only for the
-        // one who finished it. Only the errands: strength, blessings, wishes and the rest stay the finisher's.
+        // one who finished it. The errands, and half the kill's strength for Munin: blessings, wishes and the rest stay the finisher's.
         internal static float AssistShare = 0.3f;
         private const float ShareKeep = 60f; // s after the last blow that its record is still kept
         private sealed class Share { public float At; public readonly Dictionary<Player, float> By = new Dictionary<Player, float>(2); }
@@ -633,6 +633,7 @@ namespace HuginWhispers
             string prefab = pkg.ReadString(), token = pkg.ReadString();
             int stars = pkg.ReadInt();
             bool boss = pkg.ReadBool();
+            Power.OnAssist(boss ? 1 : 0, stars, prefab, token);
             ErrandHow.Dying = id;
             try { Errands.OnKill(prefab, token, stars, boss, false); }
             finally { ErrandHow.Dying = ZDOID.None; }
@@ -708,9 +709,10 @@ namespace HuginWhispers
                 if (raven && Whirl.Quiet()) return; // («Вихор» past its first blows: the kill gives nothing)
                 Memory.OnKill(token, stars);
                 if (!tamed && __instance.m_faction != Character.Faction.AnimalsVeg) FightJudge.Kill(stars, boss == 1);
-                if (!tamed) Habits.Killed(__instance.m_faction == Character.Faction.AnimalsVeg); // («Вояка», «Ловчий»)
+                if (!tamed) Habits.Killed(__instance.m_faction == Character.Faction.AnimalsVeg); // («Вояка», «Звіролов»)
                 Bath.Killed(); // (Munin: the blood on him)
                 Power.OnKill(boss, stars, prefab, tamed, token);
+                if (!tamed) HuginChores.OnKilled(__instance.GetZDOID(), boss == 1); // (Hugin's gifts helped)
                 PerkFx.OnKill(Player.m_localPlayer, boss == 1, tamed); // «Кровожер», «Кривава учта», «Занудьгував»
                 ErrandHow.Dying = __instance.GetZDOID(); // (the way it was killed: by this one's own blows)
                 if (!tamed) Errands.OnKill(prefab, token, stars, boss == 1, raven);
@@ -724,7 +726,7 @@ namespace HuginWhispers
 #endif
                 return;
             }
-            Plugin.SendKill(killer.GetZDOID().UserID, token, boss, stars, prefab, tamed, raven, by == killer);
+            Plugin.SendKill(killer.GetZDOID().UserID, token, boss, stars, prefab, tamed, raven, by == killer, __instance.GetZDOID());
         } catch (System.Exception e) { PatchGuard.Fail("CreatureDeathPatch", e); } }
     }
 

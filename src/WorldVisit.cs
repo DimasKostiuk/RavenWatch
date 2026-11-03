@@ -25,8 +25,8 @@ namespace HuginWhispers
     // And four of their own, not on the director's clock: your grave, when you come back to it (it sits on it while you
     // gather your things); your bed while you sleep in it; at sea, the top of the mast — a lookout that cries «Земля!»
     // when land comes up ahead (a land you have never set foot on: by its name); and a fish (the user, 2026-10-27): by
-    // deep water or on a ship, now and then it dives in with a splash and comes up with a fish of that land — a hungry
-    // Munin eats it there, Hugin (and a fed Munin) brings it to you in his beak (RavenFetch.Hold).
+    // deep water or on a ship, now and then it flies out over the water, hangs there and dives for a fish of that land
+    // (flown as an outing: FishPlan) — a hungry Munin eats it, Hugin (and a fed Munin) brings it to you (RavenFetch.Hold).
     // Its own look of the animation director (AnimDirector.Schedule calls Schedule), not the outings': about every
     // MinMinutes–MaxMinutes, × the menu's «Ravens touch the world», × its character (Norov.OutChance). Never in a fight,
     // underground, on a ship, swimming, asleep (but the bed), hungry, hurt, or just after an order; under a roof only
@@ -47,10 +47,10 @@ namespace HuginWhispers
         internal const string SignsKey = "RavenWatch_signs";   // the player's: the signs read ("x,y,z,hash;…", the last 80)
         private const int SignsKept = 80;
         internal const int Sign = 1, Berry = 2, Perch = 3, Shiny = 4, Grave = 5, Bed = 6, Mast = 7, Water = 8, Bees = 9, Beast = 10,
-            TraderHead = 11, Fire = 12, Rune = 13, Birds = 14, Ride = 15, Bones = 16, Fish = 17, Bathe = 18;
+            TraderHead = 11, Fire = 12, Rune = 13, Birds = 14, Ride = 15, Bones = 16, Bathe = 18; // (the fish is no visit: an outing, Outing.Fish)
         // the dive for a fish: how far out it looks for deep water, how deep, the splash, the pause after one (a hungry
         // Munin sooner), the satiety a fish gives the one that eats it
-        internal static float FishNear = 14f, FishDeep = 0.8f, FishStay = 1.5f, FishAgainMin = 180f, FishAgainMax = 420f, FishHungryMul = 0.4f, FishSatiety = 25f, FishSay = 0.7f;
+        internal static float FishNear = 14f, FishDeep = 0.8f, FishHangMin = 2.5f, FishHangMax = 4f, FishAgainMin = 180f, FishAgainMax = 420f, FishHungryMul = 0.4f, FishSatiety = 25f, FishSay = 0.7f;
         // a fish of each land (Munin's loot has the same); the sea's own; none known: the meadows' one
         private static readonly Dictionary<Heightmap.Biome, string> FishOf = new Dictionary<Heightmap.Biome, string>
         {
@@ -86,12 +86,40 @@ namespace HuginWhispers
 
         internal static bool Active(bool munin) { return Now[munin ? 1 : 0] != null; }
 
+        // what it is doing out there, for its state line (null: no visit)
+        internal static string Word(bool munin)
+        {
+            Stay s = Now[munin ? 1 : 0];
+            if (s == null) return null;
+            switch (s.Kind)
+            {
+                case Sign: return Lang.T("читає табличку");
+                case Berry: return Lang.T("зриває ягоди");
+                case Perch: return Lang.T("сів на жердину");
+                case Shiny: return Lang.T("летить по блискітку");
+                case Grave: return Lang.T("сидить на могилі");
+                case Bed: return Lang.T("вмостився на ліжку");
+                case Mast: return Lang.T("на щоглі");
+                case Water: return Lang.T("п'є воду");
+                case Bees: return Lang.T("дражнить бджіл");
+                case Beast: return Lang.T("сидить на звірі");
+                case TraderHead: return Lang.T("сидить на торговці");
+                case Fire: return Lang.T("гріється біля вогню");
+                case Rune: return Lang.T("роздивляється руни");
+                case Birds: return Lang.T("ганяє птахів");
+                case Ride: return Lang.T("катається");
+                case Bones: return Lang.T("порпається в кістках");
+                case Bathe: return Lang.T("купається");
+                default: return Lang.T("роздивляється");
+            }
+        }
+
         // the corner line when it sets off (Perches.Confirm), or null when it is not a visit
         internal static string Note(bool munin)
         {
             Stay s = Now[munin ? 1 : 0];
             if (s == null) return null;
-            string what = s.Kind == TraderHead ? Lang.F("сісти на голову: {0}", s.Text) : s.Kind == Fire ? Lang.T("погрітися біля вогню") : s.Kind == Rune ? Lang.T("почитати рунічний камінь") : s.Kind == Ride ? Lang.T("на чужий корабель чи віз") : s.Kind == Bones ? Lang.T("порпатися в кістках") : s.Kind == Water ? Lang.T("до води напитися") : s.Kind == Bees ? Lang.T("до вулика — ой") : s.Kind == Beast ? Lang.T("подражнити звіра") : s.Kind == Sign ? Lang.T("роздивитися табличку") : s.Kind == Berry ? Lang.T("до куща з ягодами") : s.Kind == Shiny ? Lang.T("до чогось блискучого") : s.Kind == Grave ? Lang.T("до твоєї могили") : s.Kind == Bed ? Lang.T("до тебе на ліжко") : s.Kind == Mast ? Lang.T("на щоглу — дозорцем") : s.Kind == Bathe ? Lang.T("помитися") : Lang.T("посидіти поруч");
+            string what = s.Kind == TraderHead ? Lang.F("сісти на голову: {0}", s.Text) : s.Kind == Fire ? Lang.T("погрітися біля вогню") : s.Kind == Rune ? Lang.T("почитати рунічний камінь") : s.Kind == Ride ? Lang.T("на чужий корабель чи віз") : s.Kind == Bones ? Lang.T("порпатися в кістках") : s.Kind == Water ? Lang.T("до води напитися") : s.Kind == Bees ? Lang.T("до вулика — ой") : s.Kind == Beast ? Lang.T("подражнити звіра") : s.Kind == Sign ? Lang.T("роздивитися табличку") : s.Kind == Berry ? Lang.T("до куща з ягодами") : s.Kind == Shiny ? Lang.T("до чогось блискучого") : s.Kind == Grave ? Lang.T("до твоєї могили") : s.Kind == Bed ? Lang.T("до тебе на ліжко") : s.Kind == Mast ? Lang.T("на щоглу — дозорцем") : s.Kind == Bathe ? (s.Text == Bath.Hand ? Lang.T("до тебе у воду") : s.Text == Bath.Tub ? Lang.T("до тебе в купіль") : Lang.T("помитися")) : Lang.T("посидіти поруч");
             return Lang.F("{0} полетів {1}. (Повернути — J)", Plugin.RavenName(munin), what);
         }
 
@@ -119,7 +147,7 @@ namespace HuginWhispers
             bool h = Ready(p, false), m = Ready(p, true);
             munin = m;
             if (!h && !m) return false;
-            float wh = h ? Norov.OutChance(RavenSeat.On(p, false)) : 0f, wm = m ? Norov.OutChance(RavenSeat.On(p, true)) : 0f;
+            float wh = h ? Norov.OutChance(RavenSeat.On(p, false)) * Norov.VisitW(RavenSeat.On(p, false)) : 0f, wm = m ? Norov.OutChance(RavenSeat.On(p, true)) * Norov.VisitW(RavenSeat.On(p, true)) : 0f; // («Цікавий»: goes more)
             munin = h && m ? Random.value * (wh + wm) < wm : m;
             return true;
         }
@@ -146,7 +174,6 @@ namespace HuginWhispers
                 case Bed: return Lang.T("ліжко");
                 case Mast: return Lang.T("щогла");
                 case Water: return Lang.T("вода");
-                case Fish: return Lang.T("риба");
                 case Bathe: return Lang.T("купання");
                 case Bees: return Lang.T("вулик");
                 case Beast: return Lang.T("звір");
@@ -163,7 +190,9 @@ namespace HuginWhispers
         private static void NextLook()
         {
             float wanted = Random.Range(MinMinutes, MaxMinutes) * 60f;
-            _next = Time.time + wanted / Mathf.Max(0.05f, Mul);
+            Player p = Player.m_localPlayer; // («Цікавий» on you: sooner)
+            float keen = p != null ? Mathf.Max(Norov.VisitW(RavenSeat.On(p, false)), Norov.VisitW(RavenSeat.On(p, true))) : 1f;
+            _next = Time.time + wanted / Mathf.Max(0.05f, Mul) / Mathf.Max(1f, keen);
         }
 
         private static bool CanGo(Player p)
@@ -267,65 +296,134 @@ namespace HuginWhispers
             bool hungry = mi != null && Satiety.Zone(mi) <= Satiety.Hungry;
             Vector3 at;
             if (!DeepWater(p, out at)) { _fishNext = Time.time + 30f; return false; } // (no water here: a look again soon)
-            bool munin = hungry || (h && m ? Random.value < 0.5f : m);
-            _fishNext = Time.time + Random.Range(FishAgainMin, FishAgainMax) * (hungry ? FishHungryMul : 1f) * Habits.SeaMul(RavenSeat.On(p, munin)) / Mathf.Max(0.05f, Mul); // («Моряк»: sooner)
-            return Go(p, munin, new Thing { Kind = Fish, At = at, Root = p.transform, Weight = 1f });
+            float fh = h ? Norov.FishW(RavenSeat.On(p, false)) : 0f, fm = m ? Norov.FishW(mi) : 0f;
+            bool munin = hungry || (h && m ? Random.value * (fh + fm) < fm : m); // («Ловчий»: goes more)
+            _fishNext = Time.time + Random.Range(FishAgainMin, FishAgainMax) * (hungry ? FishHungryMul : 1f) * Habits.FishMul(RavenSeat.On(p, munin)) / Mathf.Max(0.05f, Mul) / Mathf.Max(1f, Mathf.Max(fh, fm)); // («Моряк», «Ловчий»: sooner)
+            return Outing.StartFish(p, munin, at, Random.Range(FishHangMin, FishHangMax)); // (flown: FishPlan; the fish when it is up again: FishCaught)
         }
 
         // a bath (Bath): by the water's edge, its own pause after each (by its character and its dirt); the dirtier, the
-        // more eager of the two goes
-        private static float _bathNext = -1f, _bathLast = -999f, _bathShoreAt;
+        // more eager of the two goes. A hot tub near is better than the shore (heated: night or cold, no matter); you sitting
+        // in it, a raven joins you a while after you get in, and again now and then while you stay
+        private static float _bathNext = -1f, _bathLast = -999f, _bathShoreAt, _tubNext;
+        private static bool _inTub;
+        internal static bool NoShore { get { return Time.time < _bathShoreAt; } } // (no water's edge near when last looked: Bath's hints)
         private static bool ToBath(Player p) { return ToBath(p, -1); }
         private static bool ToBath(Player p, int force)
         {
             if (force < 0 && _bathNext < 0f) { _bathNext = Time.time + Random.Range(Bath.AgainMin, Bath.AgainMax) * 30f; return false; } // (half a pause after you come in)
+            Bath.TubAt tub = Bath.TubNear(p);
+            bool inTub = Bath.InTub(p, tub), warm = tub != null && tub.Warm;
+            if (inTub && !_inTub) _tubNext = Mathf.Max(_tubNext, Time.time + Random.Range(8f, 20f)); // (just got in: it comes after you soon)
+            _inTub = inTub;
             ItemDrop.ItemData hi = RavenSeat.On(p, false), mi = RavenSeat.On(p, true);
             bool early = Time.time - _bathLast > Bath.MinGap && (Bath.Dirty(hi) || Bath.Dirty(mi)); // (filthy: sooner than its pause)
-            if ((force < 0 && ((Time.time < _bathNext && !early) || Time.time < _bathShoreAt || Mul <= 0f)) || Now[0] != null || Now[1] != null || p.IsDead() || Senses.Fight || Senses.Underground || Senses.Indoors
-                || Senses.Swimming || Senses.Sleeping || Senses.OnShip || Shoulder.Hovering(p)) return false;
-            bool h = (force < 0 || force == 0) && Bather(p, false, hi), m = (force < 0 || force == 1) && Bather(p, true, mi);
+            bool withYou = inTub && Time.time >= _tubNext;
+            if ((force < 0 && ((Time.time < _bathNext && !early && !withYou) || (Time.time < _bathShoreAt && tub == null) || Mul <= 0f)) || Now[0] != null || Now[1] != null || p.IsDead() || Senses.Fight || Senses.Underground
+                || (Senses.Indoors && tub == null) || (Senses.Swimming && !inTub) || Senses.Sleeping || Senses.OnShip || Shoulder.Hovering(p)) return false;
+            bool h = (force < 0 || force == 0) && Bather(p, false, hi, warm), m = (force < 0 || force == 1) && Bather(p, true, mi, warm);
             if (!h && !m) return false;
             Vector3 at;
-            if (!Shore(p, out at)) { _bathShoreAt = Time.time + 45f; return false; } // (no water's edge here: a look again in a while, dirty or not)
+            string how = "";
+            if (tub != null && Bath.TubSpot(p, tub, inTub, out at) && (inTub || SitHere.Seen(p, at, tub.Piece.transform))) how = inTub ? Bath.Tub : "";
+            else if (inTub) { _tubNext = Time.time + 20f; return false; } // (no room in it now: a look again soon)
+            else if (Senses.Indoors || !Shore(p, out at)) { _bathShoreAt = Time.time + 45f; return false; } // (no water's edge here: a look again in a while, dirty or not)
             float wh = h ? Bath.Eager(hi) : 0f, wm = m ? Bath.Eager(mi) : 0f;
             bool munin = h && m ? Random.value * (wh + wm) < wm : m;
             _bathNext = Time.time + Bath.Pause(munin ? mi : hi) / Mathf.Max(0.05f, Mul);
+            if (inTub) _tubNext = Time.time + Random.Range(180f, 300f);
             _bathLast = Time.time;
-            return Go(p, munin, new Thing { Kind = Bathe, At = at, Root = p.transform, Weight = 1f });
+            return Go(p, munin, new Thing { Kind = Bathe, At = at, Root = p.transform, Weight = 1f, Text = how });
         }
-        private static bool Bather(Player p, bool munin, ItemDrop.ItemData item) { return item != null && OnYouStill(p, munin) && Outing.ReadyRaven(p, munin) && Fed(p, munin) && Bath.Weather(item); }
+        private static bool Bather(Player p, bool munin, ItemDrop.ItemData item, bool warm) { return item != null && OnYouStill(p, munin) && Outing.ReadyRaven(p, munin) && Fed(p, munin) && (warm || Bath.Weather(item)); }
+
+        // the perch's button while you stand in the water (Bath.Wading): it hops off into the water by you and you wash it;
+        // null when it went, else why not
+        internal static string HandWash(Player p, bool munin)
+        {
+            if (p == null) return Lang.T("Нема гравця.");
+            string why = Bath.HandWhyNot(p, munin);
+            if (why != null) return why;
+            if (!Bath.Wading(p)) return Lang.T("Стань у воду — не глибше, ніж по шию.");
+            Bath.TubAt tub = Bath.TubNear(p);
+            bool inTub = Bath.InTub(p, tub);
+            Vector3 at;
+            if (!(inTub ? Bath.TubSpot(p, tub, true, out at) : WaterBeside(p, out at))) return Lang.T("Нема вільного місця у воді поруч.");
+            if (!Go(p, munin, new Thing { Kind = Bathe, At = at, Root = p.transform, Weight = 1f, Text = Bath.Hand })) return Lang.T("Не вийшло: місця для ворона нема.");
+            _bathLast = Time.time;
+            if (!inTub && Bath.Depth(p) < Bath.KneelTo) { EmoteTalk.OursUntil = Time.time + 1f; p.StartEmote("kneel", true); Bath.Knelt(); } // (shallow: down on a knee to it, up again after; deeper you stand)
+            Bath.Scrub(p, munin); // (your hands at it)
+            return null;
+        }
+
+        // a free spot on the water right in front of you (not deeper than the raven may stand in)
+        private static bool WaterBeside(Player p, out Vector3 at)
+        {
+            at = Vector3.zero;
+            if (ZoneSystem.instance == null) return false;
+            float water = p.GetLiquidLevel();
+            Vector3 me = p.transform.position, fwd = Vector3.ProjectOnPlane(p.transform.forward, Vector3.up).normalized;
+            foreach (float turn in new[] { 0f, 35f, -35f, 70f, -70f, 110f, -110f })
+            {
+                Vector3 pt = me + Quaternion.Euler(0f, turn, 0f) * fwd * 0.65f;
+                if (water - ZoneSystem.instance.GetGroundHeight(pt) < 0.03f || WaterFx.Covered(pt, water)) continue; // (dry ground there; ice, a pier over it)
+                pt.y = Mathf.Max(ZoneSystem.instance.GetGroundHeight(pt), water - Bath.Sink); // (in the water, not on it)
+                if (SitHere.Taken(pt) || !SitHere.Free(pt)) continue;
+                at = pt;
+                return true;
+            }
+            return false;
+        }
+
+        // the console (raven bath fish): a fishing now, if there is deep water near
+        internal static string FishNow(Player p)
+        {
+            if (p == null) return Lang.T("Нема гравця.");
+            _fishNext = 0f;
+            return ToFish(p) ? "off fishing" : "no fishing now (no deep water within 14 m, a visit on, a fight, or not ready)";
+        }
 
         // the console (raven bath now): a bath now, if there is water near and it may
         internal static string BathNow(Player p, bool munin)
         {
             if (p == null) return Lang.T("Нема гравця.");
-            return ToBath(p, munin ? 1 : 0) ? Lang.F("{0} летить купатися.", Plugin.RavenName(munin)) : Lang.T("Зараз не можна: нема берега поруч, ніч, холод, бій, голодний чи зайнятий.");
+            return ToBath(p, munin ? 1 : 0) ? Lang.F("{0} летить купатися.", Plugin.RavenName(munin)) : Lang.T("Зараз не можна: нема берега поруч, ніч, холод, бій, голодний чи зайнятий.") + " (" + BathWhy(p, munin) + ")";
+        }
+
+        // which of the bars it was (the console's: for the tests)
+        private static string BathWhy(Player p, bool munin)
+        {
+            ItemDrop.ItemData item = RavenSeat.On(p, munin);
+            Vector3 at;
+            if (item == null) return "not on you";
+            if (Now[0] != null || Now[1] != null) return "a visit going on";
+            if (Senses.Fight) return "fight";
+            if (Senses.Underground) return "underground";
+            if (Senses.Indoors) return "indoors";
+            if (Senses.Swimming) return "swimming";
+            if (Senses.Sleeping) return "sleeping";
+            if (Senses.OnShip) return "on a ship";
+            if (Shoulder.Hovering(p)) return "hovering";
+            if (!OnYouStill(p, munin)) return "not settled on you";
+            if (!Outing.ReadyRaven(p, munin)) return "not ready (asleep, sulking, stuffed, busy)";
+            if (!Fed(p, munin)) return "hungry";
+            if (EnvMan.IsNight()) return "night";
+            if (EnvMan.IsCold() || EnvMan.IsFreezing()) return "cold";
+            if (!Shore(p, out at)) return "no shore within 13 m";
+            return "?";
         }
 
         // a raven that may go for a fish: on you, free to fly, awake and not sleepy, not sulking, not stuffed, Hugin not
         // off scouting (Outing.ReadyRaven) — hunger no bar here: a hungry Munin fishes for himself
         private static bool Fisher(Player p, bool munin) { return OnYouStill(p, munin) && Outing.ReadyRaven(p, munin); }
 
-        // the splash, here and on every game near (the raven's flight they see anyway: SitHere)
-        private const string SplashRpc = "RavenWatch_FishSplash";
-        private static void Splash(Vector3 at)
-        {
-            SplashHere(at);
-            if (ZRoutedRpc.instance != null) ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, SplashRpc, at);
-        }
-        private static void SplashHere(Vector3 at)
+        // a small splash, each game its own: the sound now and then; the game's fish splash only for a dive into deep
+        // water (fish: in the shallows of a bath, the bottom right under it, it shows as a big white square)
+        internal static void SplashSmall(Vector3 at, bool sound, bool fish = false)
         {
             Player me = Player.m_localPlayer;
             if (me == null || Vector3.Distance(me.transform.position, at) > RavenFx.HearRange) return;
-            RavenFx.Play("vfx_water_surface_fish", at, Quaternion.identity);
-            RavenFx.Play("fx_land_water", at, Quaternion.identity);
-        }
-        // a small splash of the bath's wings, each game its own (PerchLife.Bathe), the sound now and then
-        internal static void SplashSmall(Vector3 at, bool sound)
-        {
-            Player me = Player.m_localPlayer;
-            if (me == null || Vector3.Distance(me.transform.position, at) > RavenFx.HearRange) return;
-            RavenFx.Play("vfx_water_surface_fish", at, Quaternion.identity);
+            if (fish) RavenFx.Play("vfx_water_surface_fish", at, Quaternion.identity);
             if (sound) RavenFx.Play("fx_land_water", at, Quaternion.identity);
         }
 
@@ -343,7 +441,7 @@ namespace HuginWhispers
                     Vector3 pt = me + Quaternion.Euler(0f, turn + a * 45f, 0f) * Vector3.forward * d;
                     if (ZoneSystem.instance.GetGroundHeight(pt) > sea - FishDeep) continue;
                     pt.y = sea;
-                    if (SitHere.Taken(pt) || !SitHere.Seen(p, pt, null)) continue;
+                    if (WaterFx.Covered(pt, sea) || SitHere.Taken(pt) || !SitHere.Seen(p, pt, null)) continue; // (ice, a pier: no dive through it)
                     at = pt;
                     return true;
                 }
@@ -351,85 +449,104 @@ namespace HuginWhispers
         }
 
         // up out of the water: a fish of the land it dived in — a hungry Munin eats it, else home in the beak
-        private static void Catch(Player p, bool munin, Stay s, ItemDrop.ItemData item)
+        internal static void FishCaught(Player p, bool munin)
         {
+            ItemDrop.ItemData item = RavenSeat.On(p, munin);
+            Vector3 at; float hang;
+            if (item == null || p.IsDead() || !Outing.FishSpot(p, munin, out at, out hang)) return;
             string prefab;
-            if (WorldGenerator.instance == null || !FishOf.TryGetValue(WorldGenerator.instance.GetBiome(s.At), out prefab)) prefab = "Fish1";
+            if (WorldGenerator.instance == null || !FishOf.TryGetValue(WorldGenerator.instance.GetBiome(at), out prefab)) prefab = "Fish1";
             if (ObjectDB.instance == null || ObjectDB.instance.GetItemPrefab(prefab) == null) prefab = "Fish1";
             GameObject go = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(prefab) : null;
             if (go == null) return;
+            Nicks.OnFishDive(p, munin); // a deed for its nickname (eaten or brought)
             string thing = Lang.Game(go.GetComponent<ItemDrop>().m_itemData.m_shared.m_name);
             if (munin && Satiety.Zone(item) <= Satiety.Hungry)
             {
                 Satiety.Change(item, FishSatiety);
-                if (Director.May(Director.Voice.Event)) Speak(p, munin, s, "world_fish_eaten", Director.Voice.Event, null, "thing", Lang.Lower(thing));
+                PerkFx.Say(munin, "world_fish_eaten", 1f, 0f, "thing", Lang.Lower(thing));
                 if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Raven world: Munin ate a fish he caught (" + prefab + ")");
                 return;
             }
             if (!RavenFetch.Hold(p, munin, prefab, 1)) return;
-            if (Random.value < FishSay && Director.May(Director.Voice.Event)) Speak(p, munin, s, "world_fish", Director.Voice.Event, null, "thing", Lang.Lower(thing));
+            PerkFx.Say(munin, "world_fish", FishSay, 0f, "thing", Lang.Lower(thing));
             if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Raven world: " + Plugin.RavenName(munin) + " brings a fish it caught (" + prefab + ")");
         }
 
-        // the top of the pole itself, in the ship's own axes: the mast object also holds the sail, yard and ropes, and their
-        // world box (swollen further when the ship rolls) put the seat in the air beside the pole. The pole = the tallest
-        // thin plain mesh under the mast (sails are cloth/skinned, ropes lines); its mesh box's end that points up the ship.
-        // The game turns the mast object round to the wind, so the pole stands on its pivot: a thin mesh standing there
-        // first (a shroud as a mesh is as tall and thin, but leans off to the side), any tall thin one only after that.
-        // No such mesh (a mod's ship) → the old way over all renderers, but measured in the ship's axes.
-        internal static float MastAxisNear = 0.6f; // m off the mast's pivot for a pole
+        // The top of the pole itself, in the ship's own axes, for any ship (a mod's too). The game turns the mast object
+        // round to the wind on its pivot, so the pole stands on that pivot: the seat is the highest point of the mast's
+        // parts right on that axis. Measured in the ship's axes from each mesh's own points or its own box — never the
+        // renderers' world boxes, which swell as the ship rolls and put the seat metres up in the air beside the pole.
+        //   1. a mesh that can be read: its very points within MastAxisNear of the axis (exact, even in one mesh with
+        //      the yard and the ropes in it);
+        //   2. else the meshes' own boxes the axis runs through (the top of the pole's box; a pole too thick for 1. too);
+        //   3. no part on the axis (a mast object pivoted off its pole): the tallest thin part, else all of them.
+        // Sails (cloth, skinned), lines and particles are never a seat. Kept per ship prefab: the mast is always the same.
+        internal static float MastAxisNear = 0.5f; // m off the mast's axis that still counts as the pole
+        private static readonly Dictionary<string, Vector3> MastTops = new Dictionary<string, Vector3>(); // ship prefab → top, in its axes
         private static bool MastTop(Ship ship, out Vector3 top)
         {
             top = Vector3.zero;
             Transform st = ship.transform;
+            string key = Utils.GetPrefabName(ship.gameObject);
+            Vector3 local;
+            if (!MastTops.TryGetValue(key, out local))
+            {
+                string how;
+                if (!MeasureMast(ship, out local, out how)) return false;
+                MastTops[key] = local;
+                if (Plugin.Instance != null) Plugin.Instance.Log("Raven world: mast of " + key + ": " + how + ", top " + local.ToString("F2"));
+            }
+            top = st.TransformPoint(local);
+            return true;
+        }
+
+        private static bool MeasureMast(Ship ship, out Vector3 top, out string how)
+        {
+            top = Vector3.zero; how = null;
+            Transform st = ship.transform;
             Vector3 pivot = st.InverseTransformPoint(ship.m_mastObject.transform.position);
-            MeshFilter pole = null;
-            float best = 0f;
-            bool onAxis = false;
-            Vector3 poleTop = Vector3.zero;
+            float exact = float.MinValue, boxed = float.MinValue;
+            string exactBy = null, boxBy = null;
+            // the tallest thin part and all the parts, for a mast object pivoted off its pole
+            float thinTall = 0f; Vector3 thinTop = Vector3.zero; string thinBy = null;
+            bool any = false; Vector3 min = Vector3.zero, max = Vector3.zero;
+            Vector3[] c = new Vector3[8];
             foreach (MeshFilter f in ship.m_mastObject.GetComponentsInChildren<MeshFilter>())
             {
                 MeshRenderer r = f.GetComponent<MeshRenderer>();
-                if (f.sharedMesh == null || r == null || !r.enabled) continue;
-                Bounds mb = f.sharedMesh.bounds;
+                Mesh mesh = f.sharedMesh;
+                if (mesh == null || r == null || !r.enabled || !f.gameObject.activeInHierarchy) continue;
                 Transform t = f.transform;
-                // which of the mesh's axes runs up the ship, and how long/wide the mesh is in the ship's axes
-                Vector3[] ax = { t.right, t.up, t.forward };
-                int up = 0;
-                float dot = 0f;
-                for (int i = 0; i < 3; i++) { float d = Vector3.Dot(st.InverseTransformDirection(ax[i]), Vector3.up); if (Mathf.Abs(d) > Mathf.Abs(dot)) { dot = d; up = i; } }
-                Vector3 ext = mb.extents;
-                Vector3 end = mb.center; end[up] += dot >= 0f ? ext[up] : -ext[up];
-                Vector3 lo = mb.center; lo[up] -= dot >= 0f ? ext[up] : -ext[up];
-                float tall = st.InverseTransformPoint(t.TransformPoint(end)).y - st.InverseTransformPoint(t.TransformPoint(lo)).y;
-                float wide = 0f;
-                for (int i = 0; i < 3; i++) if (i != up) wide = Mathf.Max(wide, (t.TransformVector(i == 0 ? Vector3.right * ext.x : i == 1 ? Vector3.up * ext.y : Vector3.forward * ext.z)).magnitude * 2f);
-                if (tall < 1.5f || tall < wide * 3f) continue;
-                Vector3 mid = st.InverseTransformPoint(t.TransformPoint(mb.center));
-                bool axis = new Vector2(mid.x - pivot.x, mid.z - pivot.z).magnitude < MastAxisNear;
-                if ((onAxis && !axis) || (onAxis == axis && tall <= best)) continue;
-                best = tall; pole = f; onAxis = axis; poleTop = st.InverseTransformPoint(t.TransformPoint(end));
-            }
-            if (pole == null)
-            {
-                bool any = false;
-                Vector3 min = Vector3.zero, max = Vector3.zero;
-                foreach (Renderer r in ship.m_mastObject.GetComponentsInChildren<Renderer>())
+                Bounds mb = mesh.bounds;
+                Vector3 lo = Vector3.zero, hi = Vector3.zero;
+                for (int i = 0; i < 8; i++)
                 {
-                    if (r is SkinnedMeshRenderer || r is LineRenderer || r is ParticleSystemRenderer) continue;
-                    Bounds b = r.bounds;
-                    for (int i = 0; i < 8; i++)
+                    c[i] = st.InverseTransformPoint(t.TransformPoint(new Vector3((i & 1) == 0 ? mb.min.x : mb.max.x, (i & 2) == 0 ? mb.min.y : mb.max.y, (i & 4) == 0 ? mb.min.z : mb.max.z)));
+                    if (i == 0) { lo = hi = c[i]; } else { lo = Vector3.Min(lo, c[i]); hi = Vector3.Max(hi, c[i]); }
+                }
+                if (!any) { min = lo; max = hi; any = true; } else { min = Vector3.Min(min, lo); max = Vector3.Max(max, hi); }
+                if (mesh.isReadable)
+                {
+                    Vector3[] v = mesh.vertices;
+                    for (int i = 0; i < v.Length; i++)
                     {
-                        Vector3 c = st.InverseTransformPoint(new Vector3((i & 1) == 0 ? b.min.x : b.max.x, (i & 2) == 0 ? b.min.y : b.max.y, (i & 4) == 0 ? b.min.z : b.max.z));
-                        if (!any) { min = max = c; any = true; } else { min = Vector3.Min(min, c); max = Vector3.Max(max, c); }
+                        Vector3 q = st.InverseTransformPoint(t.TransformPoint(v[i]));
+                        if (q.y > exact && new Vector2(q.x - pivot.x, q.z - pivot.z).sqrMagnitude <= MastAxisNear * MastAxisNear) { exact = q.y; exactBy = f.name; }
                     }
                 }
-                if (!any) return false;
-                poleTop = new Vector3((min.x + max.x) * 0.5f, max.y, (min.z + max.z) * 0.5f);
+                // (its own box too, read or not: a pole thicker than the margin has no points near the axis, only its box round it)
+                if (pivot.x >= lo.x - MastAxisNear && pivot.x <= hi.x + MastAxisNear && pivot.z >= lo.z - MastAxisNear && pivot.z <= hi.z + MastAxisNear && hi.y > boxed) { boxed = hi.y; boxBy = f.name; }
+                float tall = hi.y - lo.y, wide = Mathf.Max(hi.x - lo.x, hi.z - lo.z);
+                if (tall >= 1.5f && tall >= wide * 3f && tall > thinTall) { thinTall = tall; thinBy = f.name; thinTop = new Vector3((lo.x + hi.x) * 0.5f, hi.y, (lo.z + hi.z) * 0.5f); }
             }
-            top = st.TransformPoint(poleTop + Vector3.up * 0.02f);
-            if (AnimDirector.LogOn && Plugin.Instance != null)
-                Plugin.Instance.Log("Raven world: mast of " + Utils.GetPrefabName(ship.gameObject) + ": " + (pole != null ? "pole " + pole.name + " " + best.ToString("0.0") + " m" + (onAxis ? "" : " (off the pivot)") : "no pole, all parts") + ", top " + poleTop.ToString("F2"));
+            float rise = pivot.y + 1.5f; // (a top must stand well over the mast's foot)
+            if (exact > rise) { top = new Vector3(pivot.x, exact, pivot.z); how = "on the axis, points of " + exactBy; }
+            else if (boxed > rise) { top = new Vector3(pivot.x, boxed, pivot.z); how = "on the axis, box of " + boxBy; }
+            else if (thinBy != null) { top = thinTop; how = "off the axis, thin part " + thinBy; }
+            else if (any) { top = new Vector3((min.x + max.x) * 0.5f, max.y, (min.z + max.z) * 0.5f); how = "off the axis, all parts"; }
+            else return false;
+            top += Vector3.up * 0.02f;
             return true;
         }
 
@@ -731,7 +848,8 @@ namespace HuginWhispers
                     Vector3 pt = me + Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward * d;
                     float g = ZoneSystem.instance.GetGroundHeight(pt);
                     if (g < sea - 0.15f || g > sea + 0.3f) continue;
-                    pt.y = Mathf.Max(g, sea);
+                    if (g < sea && WaterFx.Covered(pt, sea)) continue; // (frozen over, under a pier: no bath there)
+                    pt.y = Mathf.Max(g, sea - Bath.Sink); // (in the shallows: on the bottom, the water up its legs — never standing on the water)
                     if (SitHere.Taken(pt) || !SitHere.Free(pt) || !SitHere.Seen(p, pt, null)) continue;
                     at = pt;
                     return true;
@@ -780,7 +898,7 @@ namespace HuginWhispers
             Vector3 fwd = way.sqrMagnitude > 0.01f ? way.normalized : Vector3.forward;
             int k = munin ? 1 : 0;
             // the bed: while you sleep; the grave: while you gather your things; the beehive: cut short once it lands
-            float stay = t.Kind == Bed ? 9999f : t.Kind == Grave ? 120f : t.Kind == Mast ? Random.Range(MastMin, MastMax) : t.Kind == Bees || t.Kind == Fish ? 60f : t.Kind == Bathe ? Bath.StayOf(RavenSeat.On(p, munin)) + 1.5f
+            float stay = t.Kind == Bed ? 9999f : t.Kind == Grave ? 120f : t.Kind == Mast ? Random.Range(MastMin, MastMax) : t.Kind == Bees ? 60f : t.Kind == Bathe ? Bath.StayOf(RavenSeat.On(p, munin), t.Text) + 1.5f
                 : t.Kind == Fire ? Random.Range(FireStayMin, FireStayMax) : t.Kind == Bones ? Random.Range(BonesStayMin, BonesStayMax) : Random.Range(StayMin, StayMax);
             Stay s = new Stay { Kind = t.Kind, Text = t.Text, At = t.At, Of = t.Root.position, Item = t.Item, Ship = t.Ship, Npc = t.Npc, Started = Time.time, Until = Time.time + stay };
             Now[k] = s; // (before the spot: Perches.Confirm asks Note for its corner line)
@@ -807,7 +925,7 @@ namespace HuginWhispers
                 if (p == null || item == null || s.View == null || (!Perches.OnSpot(item) && Time.time - s.Started > 6f)) { Now[k] = null; continue; }
                 if (!Perches.OnSpot(item)) continue; // (still being seated)
                 if (s.Kind == Mast) s.CalmFrom = Senses.Sailing ? -1f : s.CalmFrom < 0f ? Time.time : s.CalmFrom;
-                bool end = Time.time >= s.Until || p.IsDead() || Senses.Fight || Senses.Underground || Senses.Swimming
+                bool end = Time.time >= s.Until || p.IsDead() || Senses.Fight || Senses.Underground || (Senses.Swimming && !(s.Kind == Bathe && !string.IsNullOrEmpty(s.Text))) // (in the tub or the water with it: deep, maybe)
                     || (s.Kind == Bed ? !p.InBed() : Senses.Sleeping)
                     || (s.Kind == Mast && (!Senses.OnShip || s.Ship == null || (s.CalmFrom >= 0f && Time.time - s.CalmFrom > 20f)))
                     || (s.Kind == Ride && (s.View.transform.position - p.transform.position).sqrMagnitude > RideFar * RideFar) // (carried off too far: home)
@@ -826,9 +944,8 @@ namespace HuginWhispers
                 if (!end) continue;
                 Now[k] = null;
                 if (s.Kind == Bones && s.Landed && !p.IsDead()) Dig(p, munin, s); // (what he pulled out flies home in his beak)
-                else if (s.Kind == Fish && s.Landed && !p.IsDead()) Catch(p, munin, s, item); // (eaten there, or home in the beak)
-                else if (s.Kind == Bathe) { if (s.Landed && Time.time >= s.Until && !p.IsDead()) Bath.Done(p, munin, item); } // (washed through: clean, and the shake on you)
-                else if (s.Landed && Time.time >= s.Until && s.Kind != Bed && s.Kind != Grave && s.Kind != Mast && s.Kind != Fish) RavenLoot.After(p, munin); // (a visit that ran its time: now and then a find)
+                else if (s.Kind == Bathe) { if (s.Landed && Time.time >= s.Until && !p.IsDead()) Bath.Done(p, munin, item, s.Text ?? ""); } // (washed through: clean, and the shake on you)
+                else if (s.Landed && Time.time >= s.Until && s.Kind != Bed && s.Kind != Grave && s.Kind != Mast) RavenLoot.After(p, munin); // (a visit that ran its time: now and then a find)
                 Perches.CallQuiet(p, item, munin);
             }
         }
@@ -839,8 +956,7 @@ namespace HuginWhispers
             if (s.Kind == Bones) PeckedNow(s.Of); // (a pile once a day)
             if (s.Kind == TraderHead) s.NextGrumble = Time.time + GrumbleFirst;
             if (s.Kind == Bees) { PeckAgain(s); s.Until = Time.time + BeesStay; } // a poke, and the bees are out
-            if (s.Kind == Fish) { Splash(s.At); PeckAgain(s); s.Until = Time.time + FishStay; } // into the water with a splash, and up again soon
-            if (s.Kind == Bathe) { Splash(s.At); BatheOn(s, s.Until - Time.time - 1f); } // into the water, and the bath on every game
+            if (s.Kind == Bathe) { s.Until = Time.time + Bath.StayOf(item, s.Text) + 0.6f; if (!Bath.InTubAt(p, s.At)) { SplashSmall(s.At, true); WaterFx.Ring(s.At, 1.2f); WaterFx.Spray(s.At, 10, 1f); } BatheOn(s, s.Until - Time.time - 0.3f); } // (its time counted from the landing: a long flight ate it) // into the water, and the bath on every game
             if (s.Kind == Berry)
             {
                 PeckedNow(s.Of);
@@ -866,6 +982,8 @@ namespace HuginWhispers
         // the bath on the spot: one more on its count, with how long (SpotFollow → PerchLife.Bathe)
         private static void BatheOn(Stay s, float seconds)
         {
+            PerchLife here = s.View != null ? s.View.LifeAt(0) : null;
+            if (here != null) here.Bathe(seconds); // (here at once, the moment it lands: no wait for the count)
             ZDO z = s.View != null ? s.View.Zdo : null;
             if (z == null || !s.View.Owner) return;
             int n = (z.GetInt(SpotFollow.BatheKey, 0) >> 8) + 1;
@@ -930,7 +1048,7 @@ namespace HuginWhispers
                     return;
                 case Bathe:
                     s.Done = true;
-                    if (Random.value < 0.6f && Director.May(Director.Voice.Shoulder)) Speak(p, munin, s, "world_bath", Director.Voice.Shoulder, null);
+                    if (Random.value < (s.Text == "" || s.Text == null ? 0.6f : 0.85f) && Director.May(Director.Voice.Shoulder)) Speak(p, munin, s, s.Text == Bath.Hand ? "bath_hand" : s.Text == Bath.Tub ? "bath_tub" : "world_bath", Director.Voice.Shoulder, null); // (by your hands, in the tub with you: their own words)
                     return;
                 default:
                     s.Done = true;
@@ -963,7 +1081,6 @@ namespace HuginWhispers
         internal static void Register()
         {
             ZRoutedRpc.instance.Register<ZPackage>(GrumbleRpc, new System.Action<long, ZPackage>(OnGrumble));
-            ZRoutedRpc.instance.Register<Vector3>(SplashRpc, new System.Action<long, Vector3>((sender, at) => { if (sender != ZDOMan.GetSessionID()) SplashHere(at); })); // (a fish dive's splash)
         }
 
         private static void OnGrumble(long sender, ZPackage pkg)
@@ -998,7 +1115,7 @@ namespace HuginWhispers
         // Munin dug about in the bones: now and then something comes out — in his beak home to you (RavenFetch.Hold)
         private static void Dig(Player p, bool munin, Stay s)
         {
-            Bath.Soil(RavenSeat.On(p, munin), Bath.BonesDirt); // (the dirt of the bones on it)
+            Bath.Soil(RavenSeat.On(p, munin), Bath.BonesDirt, Bath.Bones); // (the dirt of the bones on it)
             float roll = Random.value;
             for (int i = 0; i < BoneFinds.Length; i++)
             {

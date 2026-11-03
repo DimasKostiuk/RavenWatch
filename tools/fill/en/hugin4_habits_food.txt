@@ -1,0 +1,147 @@
+@хзв_hangover
+Not so loud. And not so bright.
+No mead yesterday. No mood today.
+My head is a bell and someone is ringing it.
+If anyone caws, it won't be me.
+Mead is medicine. I'm ill. Draw your own conclusions.
+Don't look at me. I'm not flying today.
+@хзв_whine
+We're far from home. I'm counting every step.
+At home there's a warm beam. Here — your shoulder. You feel the difference.
+A bit more and we go back, right?
+I'm not complaining. Just reminding you where home is.
+Foreign lands. Foreign wind. I want back.
+Promise we'll be home by evening.
+@хзв_sneak
+Sorry, it slipped out. Habit.
+Quiet isn't my thing. I'm a raven, not a mouse.
+Well, now they definitely know we're here.
+I coughed. Very loudly.
+Sneaking is boring. Let's just fight.
+Caw! I mean... shh.
+@хзв_spook
+Couldn't help it. It looked so tasty.
+Oops. Did I scare it? I scared it.
+The hunter in me woke up before my brain.
+Caw! There it goes. My fault.
+Sorry. I wanted to help. It came out loud.
+Prey! Was.
+@хзв_refuse
+No. I remember the taste of better.
+That's chicken feed. I'm not a chicken.
+Give it to Munin. He eats anything.
+I'll wait for something sweet. A long wait.
+Sniffed it. Enough.
+You know what I like. So why this?
+@хзв_sulk
+I can be petted. Just saying.
+A whole day without a single touch. Noted.
+The feathers won't smooth themselves.
+I'm here. On the shoulder. Unpetted.
+Petting others? Or no one? Equally hurtful.
+One hand, one stroke. It's not hard.
+@хзв_warn
+Behind you! Don't turn slowly!
+Someone on the left! Quick!
+Run or hit — just don't stand!
+They're coming! Lots!
+Careful, teeth!
+To arms! They're close!
+@пр_гучний
+Oops. Was that loud? That was loud.
+I didn't shout. I announced.
+~1 Silence is boring. I fixed it.
+~1 Let them hear. We fear no one. I think.
+~2 Sorry, my throat did it.
+~2 I'll try quieter. No promises.
+~3 I know, I know. Quiet. Almost.
+~3 Cawed from joy. Don't be cross.
+@пр_ревнощі
+Right. Food for Munin, a glance for me. Fair.
+I'm here too, by the way. Hungry.
+~1 He won't even say thanks. I would.
+~1 Feed him, feed him. I'm noting who loves whom.
+~2 I'm not looking. I don't care. At all.
+~2 Next time me first. Deal?
+~3 I want some too. Not just food. Attention.
+~3 Fine. I love you anyway. Offended.
+@пр_ревнощі_кінець
+fine, enough. What's next?
+forgotten. Almost.
+~1 fine, but Munin owes me now.
+~1 forgiven. With a note in the chronicle.
+~2 done, I'm not sulking. Almost.
+~2 well, peace. Just not too often.
+~3 I can't stay cross with you long.
+~3 peace. You know I'm yours.
+@пр_відвага
+Now or never!
+It's weakening! Follow me!
+~1 I'm brave! Well, right now.
+~1 Caw! Watch what I can do!
+~2 My moment! Hold on, big one!
+~2 Now I'm not scared either!
+~3 Together we'll finish it!
+~3 For you — even at a giant.
+@улюблене_вперше
+{food}... You just found my weakness.
+wait. {food}? You couldn't have known. But you do.
+~1 {food}. Lucky guess, but I'm not complaining.
+~1 finally. {food}. I thought you'd never figure it out.
+~2 {food}! Oh. I don't even know what to say. Tasty.
+~2 {food}. Now you hold a trump card. Don't abuse it.
+~3 {food}! You know me better than I thought.
+~3 {food}... Thank you. Really, thank you.
+@улюблене
+Mine again. You're learning.
+{food}. Fine, today you're my favourite two-legged.
+~1 {food}. You remembered. Astonishing.
+~1 Mine. This time I won't even grumble.
+~2 {food}. Bribery works. Keep going.
+~2 {food} again. I'm starting to trust you.
+~3 {food}. You always know how to make me happy.
+~3 My favourite. And you — a little too.
+@обївся
+That's it. I'm a little bag of feathers.
+One more bite and I won't take off even from a tree.
+~1 Fattening me up? I noticed. I notice everything.
+~1 Enough. I'm a raven, not a piglet.
+~2 Full. My thoughts are as slow as me.
+~2 Thank you. I need nothing else. Except a nap.
+~3 Full as at Odin's feast. Thank you.
+~3 Enough, friend. I'll sit quietly and digest.
+@ситий_їсть
+Not hungry, but polite.
+Food is never too much. Only ravens get too heavy.
+~1 I'll eat it. But don't think it changes anything.
+~1 Taking it because it's given. Don't get cocky.
+~2 Thanks. I'll keep it for later.
+~2 Full, but refusing is rude.
+~3 You always look after me. I noticed.
+~3 I'll eat it later. Or now. Now.
+@втеча
+the prey got away. I managed to wave a wing at it.
+gone. I'd have chased it, but you didn't ask.
+~1 you aim so long that animals have time to grow old.
+~1 lunch ran off. Dinner will probably run too.
+~2 never mind, we'll catch up. Someday.
+~2 gone. Well, at least we ran.
+~3 don't be sad. I used to miss too. Long ago.
+@вишкіл
+my beak hits truer. I can feel it.
+a bit more and I won't need your axe.
+~1 I learn faster than you. It's not hard.
+~1 better every time. Me, not you.
+~2 my hand... my beak is getting practised.
+~2 training on enemies. Good for everyone but them.
+~3 striking beside you is the best school.
+~3 a bit more and we'll be a terrifying pair.
+@свідок
+it was big. Was.
+I don't see that every day. I'll remember.
+~1 it fell. And I pecked it longest, not you.
+~1 nice. This time you even stayed on your feet.
+~2 one more big head. A good day.
+~2 I saw everything. Every blow.
+~3 together we're a terrible force.
+~3 I'm proud of us. Both of us.

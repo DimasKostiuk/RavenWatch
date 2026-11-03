@@ -1,0 +1,345 @@
+@хбр_мул
+Heavy as a wet rag.
+Frogs could lay eggs in my feathers.
+Every feather — in the bog.
+The swamp came along with me. All of it.
+@хбр_хочу
+I'm not being fussy. I'm just dirty.
+Water, any water. Please.
+If you see water, tell me. I'll jump in.
+The chronicle later. A wash first.
+@хбр_сухо
+I'm searching for water. None.
+Wasteland. Not a drop. And I'm dirty.
+I could only wash in dust here.
+I'll endure till the first river.
+@хбр_попіл
+I sneeze ash.
+I'm a grey raven now. That's insulting.
+I smell of a burnt-out fire.
+My feathers creak with soot.
+@хбр_кров
+Someone else's blood. Sticks like my own.
+I look like a battlefield.
+When it dries, it'll crust. Disgusting.
+Blood in my feathers. The enemies would approve.
+@хбр_кістки
+The dust of old dead in my feathers.
+I smell of a crypt. Don't come close.
+Bone dust. I sneeze it.
+I reek of the grave. Literally.
+@хбр_гордий
+Dirty, but you can see I worked.
+Battle marks don't wash off right away.
+Let everyone see where I've been.
+I'm in no hurry to wash. Let them know.
+@хж_плітка_удар
+{friend} got hit so hard today I cawed.
+Did you miss {friend} taking one in the ribs? Shame. I didn't.
+{friend} offered {>his|her} head like there's nothing valuable in it.
+I counted the blows on {friend}. Broke the count.
+@хж_плітка_падіння
+{friend} tested the ground today. The ground won.
+Did you see {friend} go down? Flat, like a sack.
+{friend} flew down without wings. Brave. Senseless.
+I'll remember {friend}'s fall longer than {>he|she} will.
+@хж_плітка_смерть
+{friend} had a lie-down today. Short, but nice.
+The valkyries know {friend}'s face by now.
+{friend} met the ground face first. For good.
+{friend} had a short trip today. To the grave.
+@хж_плітка_тікав
+{friend} ran so fast the dust rose in a pillar.
+You should have seen {friend} retreat. Faster than the wind.
+{friend} showed every enemy {>his|her} back today.
+{friend}'s best weapon is legs.
+@хж_свій_тікає
+We run. A wise choice. A rare one.
+Retreat is an art too. You're an artist.
+Running? I'm holding on. Run.
+Good pace. Shame it's backwards.
+@хж_свій_плаває
+You swim like a log. A wet log.
+The water's cold. I feel it with my feet.
+Swim faster before something eats us.
+Wonderful. Now we're both wet.
+@хж_свій_емоція
+Pretty. But why?
+Dancing? The enemies are impressed. With shame.
+Waving your arms like a windmill.
+The audience is delighted. I mean horrified.
+@хж_звір_удар
+{friend} got hit. Dodge next time, beast.
+{friend} took a blow. Like master, like beast.
+Oh. {friend} whimpered. Or was that me?
+{friend} has a scratch now. It suits {>him|her}.
+@хж_звір_смерть
+{friend} didn't make it. A pity. A little.
+{friend} went to the other world. Without warning.
+{friend} is lying down. For good. Who'll carry us now?
+Farewell, {friend}. You weren't the worst.
+@хж_звір_бій
+{friend} bites. Better than you fight.
+{friend} went into battle. Brave. Dumb.
+Look, {friend} is growling! Almost scary.
+{friend} fights for you. Appreciate it.
+@хж_звір_стоїть
+{friend} chews. {>His|Her} only deed today.
+{friend} stares into nowhere. A philosopher.
+{friend} has stood so long {>he's|she's} grown roots.
+{friend} is scratching. The busiest {>he|she} has been all day.
+@хж_звір_спина
+{friend}, ride smoothly. I'm not a sack.
+Sitting on {friend}. High up. Nice view.
+{friend} didn't even notice. Or put up with it.
+Riding {friend}. Finally I'm taller than you.
+@хж_пророк_ні
+It didn't come true. Fate changed its mind.
+The prophecy took a day off.
+I saw something else. Must have mixed up the day.
+Nothing happened. Now I'm the prophet of silence.
+@нак_поруч
+Going beside you. Don't fall behind.
+Next to you, like a shadow. With a beak.
+Staying close. You're my landmark.
+~1 Beside, then. Just don't step on me.
+~2 Flying beside you. Calmer that way.
+~3 Next to you is the best place.
+@нак_коло
+I'll look from above at what's what.
+A circle over you. No one will sneak up.
+From above everything is more honest.
+~1 I'll circle. At least someone here looks around.
+~2 I'll scout the surroundings.
+~3 I'm above you. As always.
+@нак_розвідка
+Flying ahead. Don't follow too fast.
+I'll scout. I'll tell you later.
+I'll see what's behind the hill.
+~1 Fine, I'll take the risk. As always.
+~2 I'll look and come back.
+~3 I'll be quick. Wait for me.
+@нак_трюк_початок
+Attention.
+One, two...
+Watch closely.
+~1 Only for you. And for me.
+~2 Here.
+~3 Look what I can do.
+@нак_трюк
+Not every raven can. I can.
+I won't repeat it. Well, unless you ask.
+Almost effortless. Almost.
+~1 Saw that? Now you try.
+~2 Well? Beautiful, right.
+~3 That's for you. Only for you.
+@св_торговець
+I'm sitting here. {trader} doesn't mind. Probably.
+From here I see the goods and the prices. The prices are worse.
+{trader} smells of money. Cosy.
+~1 Buy something. I'm not sitting here for nothing.
+~2 A nice shop. A nice hat. Or whatever that is.
+~3 Take what you need, I'll keep an eye on him.
+@св_вогонь
+Fire. The best thing two-legs ever invented.
+Warming up. Don't call me for a minute.
+My feathers dry, and me with them.
+~1 Warm up too. You give off cold.
+~2 Warm. Quiet. Could even doze.
+~3 I'll sit a bit longer. With you beside me.
+@св_чуже
+Sitting on someone else's. I feel rich.
+No owner around. So now I'm the owner.
+Nice here. I wonder whose it is.
+~1 Don't look at me like that. I'm not taking anything. Yet.
+~2 A nice thing. Someone else's, sadly.
+~3 Let's go home. Everything there is ours.
+@хд_звіт
+It was boring here without you. But I managed.
+The house is whole, the feeder isn't. Well, almost.
+I guarded everything. You can check.
+~1 Report: I worked, you didn't.
+~2 All calm. Almost no adventures.
+~3 I waited for you. Now I can tell it all.
+@хд_голодний
+Empty feeder. Empty me.
+A hungry raven keeps no watch.
+Feed me and I'm on guard again.
+~1 Without food I only watch. I don't defend.
+~2 Pour me something. Then we'll talk.
+~3 Feed me, {name}. I'm doing my best for you.
+@хд_забули
+I counted the days. Many days.
+The feeder is covered in dust.
+You weren't here. Neither was food.
+~1 You abandoned me. I remember.
+~2 I thought you wouldn't come back.
+~3 I missed you. Feed me and we'll forget it.
+@хд_тривога
+Enemies by the house! Quick!
+{foe} is prowling by the house!
+I'm holding as I can. Hurry.
+~1 {foe} in our home! Where are you?
+~2 Strangers by the house. I hit, you help.
+~3 I won't give them our house. Holding on.
+@хд_зламали
+The perch is splinters. I'll ride on you.
+They broke my home. I'm outraged.
+No perch. Lots of anger.
+~1 Build a new one. A sturdier one.
+~2 No perch. But I'm still here.
+~3 What matters is you're whole. We'll make a perch.
+@хд_пара
+Munin, slower. You nearly knocked me down.
+Again, Munin. With your head this time.
+Munin flaps his wings like an axe.
+~1 You clipped me again, Munin. Practise.
+~2 Better, Munin. Much better.
+~3 Munin and I are a decent pair. Don't tell him.
+@хб_женеш
+{addr}, hold on to your feathers! You're flying.
+Where are you rushing? Prey ahead or behind?
+~1 Running like from the tax man.
+~2 Careful, {addr}! You'll fly off on the turn.
+~3 Good luck, {addr}! May you have somewhere to run.
+@хб_поспіх
+Can't talk, {addr}! We're busy.
+Make way, {addr}! We have business.
+~1 Later, {addr}. Something important. Probably.
+~2 Bye, {addr}! See you.
+~3 Sorry, {addr}, we have to run. I'll tell you tonight.
+@хб_назустріч
+Hello and goodbye, {addr}!
+Met and passed. As always.
+~1 You're going the wrong way, {addr}. Though who am I to say.
+~2 What's back there, {addr}? Dangerous?
+~3 Take care out there, {addr}!
+@хб_наввипередки
+Last one carries the mead!
+We'll outrun you, {addr}. No doubt.
+~1 Run, run, {addr}. Second anyway.
+~2 Come on, {addr}! Who's faster?
+~3 A good race, {addr}! Again sometime?
+@хб_зброя
+{addr}, going to war? Don't invite me.
+Weapons ready means someone's ready to die.
+~1 Don't wave that iron near me.
+~2 Hunting, {addr}? Good luck.
+~3 Take care, {addr}. Weapons are no joke.
+@хб_ніч
+Night wanderers, like us.
+Dark, and you're running. Brave.
+~1 {addr}, in the dark your human is even clumsier.
+~2 Stay near the light, {addr}.
+~3 Sweet dreams, {addr}. Once you get there.
+@хб_приятель
+{addr}! Long time no see. Since yesterday.
+Oh, {addr}! Still alive? Wonderful.
+~1 {addr}, your human without a helmet again?
+~2 Hi, {addr}! Drop by the fire.
+~3 Glad to see you, {addr}. Really.
+@хб_чужий
+Who's that? Not ours. But interesting.
+An unknown raven. I'll note it just in case.
+~1 An odd bird ran past. Messy feathers.
+~2 Hello, stranger. Next time we'll get acquainted.
+~3 A stranger, but not mean-looking. Fine.
+@хб_знаменитий
+{raven} in person! I'll write down this day.
+{raven} himself? Humbler than they say.
+~1 {raven}? Heard, heard. Exaggerated.
+~2 Hi, {raven}! I've heard a lot about you.
+~3 {raven}, your fame runs ahead of you. Deservedly.
+@хб_колега
+Colleague, how are things among the clever?
+Another Hugin! Finally someone who thinks.
+~1 Colleague, you're probably not as clever as me. But keep trying.
+~2 Hi, colleague. Keeping a chronicle?
+~3 Good to see another wise raven.
+@хб_поранений
+{friend} can barely walk. Hold on, {addr}.
+A trail of blood leads to you, {addr}. Not the best omen.
+~1 Who did that to {friend}? Was it at least a good fight?
+~2 Run to the fire, {addr}. It's easier there.
+~3 Get well, {addr}. You're needed.
+@хб_мокрі
+At least find a dry corner, {addr}.
+Wet ravens are sad ravens.
+~1 {addr}, you look like a wet rag.
+~2 Under a roof, {addr}! You'll catch cold.
+~3 Dry off, {addr}. Or you'll get sick.
+@пр_хочу
+I have one wish. It goes: {food}.
+{food}. Just saying I'd like that.
+~1 Feed me something good. For example: {food}.
+~3 I'd love {food}. Will you make me happy?
+@пр_край
+Show me {place} again. I miss that wind.
+Let's fly to {place_in}. I'll see how it is.
+I'd like {place}. Just for a minute.
+~2 Remember {place}? Let's go there.
+@пр_вершина
+I want a mountain. High, high.
+The highest peak — and me on it. Well, on you.
+Take me where the clouds are below.
+~3 Let's go to the peak. We'll look at the world together.
+@пр_море
+The sea. Deep, blue, no shore.
+I want waves. Lots of waves.
+Shall we sail far? I'll be quiet. Almost.
+Open sea. Just you, me and the wind.
+@пр_підземелля
+I want to go underground. It's interesting there.
+Cave or crypt — lead me into the dark.
+I wonder what they hide underground.
+A dungeon. You take the torch, I'll bring the courage.
+@пр_блискуче
+I want {thing}. I really need it.
+{thing}. Find it, please.
+My treasure box misses: {thing}.
+~1 {thing}. Because I want it.
+@пр_схованка
+I hid something valuable. Will you look?
+A treasure is waiting. A circle on the map, I'll hint the rest.
+A game: I hide, you seek. Go.
+There's a cache. The closer you get, the more I caw.
+@пр_познайом
+Go up to the ravens I know. I have things to tell them.
+I want to see my own. Take me to them.
+There's a raven I didn't finish talking to. Find it.
+I need raven company. Not only yours.
+@пр_нагадую
+Not forgetting? {goal}.
+I remember. Do you? {goal}.
+A small reminder: {goal}.
+I'll quietly remind you: {goal}.
+@пр_тепліше
+Warmer, warmer.
+Close now. Warmer.
+There, that way. Warmer.
+Going well. Warmer.
+@пр_холодніше
+Not there. Cold.
+Turn around. Colder.
+No, no, back. Cold.
+You're moving away. Colder.
+@пр_тут
+Here! Dig.
+Stop. Under you.
+Here, here! Get the pickaxe.
+Found it! Here.
+@пр_пливемо
+I want the ship. {n} minutes. I command.
+Sail, waves, {n} minutes. Please.
+{n} minutes on the water and I'm happy.
+Let's sail. {n} minutes, no less.
+@пр_прикрась
+Put {look} on me. {n} minutes. I want to show off.
+{look} would suit me. {n} minutes.
+I want {look} on me. {n} minutes and that's it.
+Being handsome is hard. Help me: {look}, {n} minutes.
+@пр_перо
+Feathers for the nest. {n} of them, soft.
+The nest is cold. Bring feathers, {n} of them.
+{n} feathers and the nest will be like new.
+I'd like feathers, {n} of them. For comfort.

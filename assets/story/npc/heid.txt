@@ -1,0 +1,22 @@
+# Гейд (story-lore.md «Пролог», «Два роди каменів»): знахарка; її табір — біля могил вартових, вона доглядає їхні камені.
+# Вигляд — автора (F9 «Вигляд» → «Зберегти» пише сюди напряму, якщо є config/RavenWatch/story/source.txt).
+[npc heid]
+name: Гейд
+body: human
+model: 1
+skin: 0.93 0.82 0.72
+haircolor: 0.22 0.17 0.13
+hair: Hair18_2
+beard: none
+gear: ArmorDress7 CapeDeerHide HelmetAshlandsMediumHood writhan_explode_aoe PT_BeltSwamp
+fight: flee
+walk: 0.95
+persona: chatty=0.35 curiosity=0.4 bravery=0.4 diligence=0.9
+greet: …
+on near 5: look player
+# Її ворон (NpcRaven): німий «Хугін» від Хель — чорний з холодним відливом, бліді очі. У Залі здебільшого на жердині.
+raven: hugin
+raven_look: hel
+raven_inside: perch 70, circle 10, shoulder 20
+raven_outside: perch 20, circle 45, shoulder 35
+raven_pet: 60

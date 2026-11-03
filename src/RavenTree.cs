@@ -595,17 +595,19 @@ namespace HuginWhispers
             if (Nest != null && mine.Count == 0 && !Trial.HasRaven(p)) { Trial.NoRavenUse(p, Nest); return true; }
             if (mine.Count > 0)
             {
-                foreach (bool m in mine) { ItemDrop.ItemData item = Perches.MineOn(p, Perch, m); if (item != null) { PlayerAnims.Gesture(p, m, "call_"); Perches.CallBack(p, Perch, m, item); } }
+                foreach (bool m in mine) { ItemDrop.ItemData item = Perches.MineOn(p, Perch, m); if (item != null) { BodyClips.Gesture(p, m, "call_"); Perches.CallBack(p, Perch, m, item); } }
                 return true;
             }
             string other = Other(p);
             if (other != null) { RavenMsg.Center(p, Lang.F("Тут ворони гравця {0}.", other)); return true; }
             // both at once or none: every raven you wear must really sit on your shoulder (not still flying back, not on
-            // a perch, not away) — else one would go up and the other be left behind
+            // a perch) — else one would go up and the other be left behind. One flown off (to Odin, with a letter, shy)
+            // is not waited for: the one with you goes up alone
             foreach (bool m in new bool[] { false, true })
             {
                 ItemDrop.ItemData worn = Trust.Worn(m);
                 if (worn == null || Trust.Stranger(worn, p) || !Trust.Active(worn)) continue; // (none, not yours, still asleep: it never goes anyway)
+                if (Trust.AwayLeft(worn) > 0f && !Perches.On(worn)) continue;
                 if (Shoulder.NotOnShoulder(p, m) == null) continue;
                 string name = Plugin.RavenName(m);
                 RavenMsg.Center(p, Perches.OnSpot(worn) ? Lang.F("{0} сидить не на тобі. Поклич його спершу на плече.", name) // (a «sit here» spot: the ground, a stone)

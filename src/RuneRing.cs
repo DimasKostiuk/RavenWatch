@@ -7,16 +7,17 @@ namespace HuginWhispers
     // step's place (Want: the one ring of the running step, gone when no step asks for it).
     internal static class RuneRing
     {
-        // a band of gold light round the ring at knee height (above the grass), and runes rising from it
-        internal static GameObject Build(string name, Vector3 at, float radius)
+        // a band of gold light round the ring at knee height (above the grass), and runes rising from it;
+        // soft (an errand's place): a thinner, fainter band and fewer runes, a mark and not a wall
+        internal static GameObject Build(string name, Vector3 at, float radius, bool soft = false)
         {
             GameObject ring = new GameObject(name);
             const int seg = 96;
             LineRenderer line = ring.AddComponent<LineRenderer>();
             line.useWorldSpace = true; line.loop = true; line.positionCount = seg;
-            line.widthMultiplier = 0.14f;
+            line.widthMultiplier = soft ? 0.08f : 0.14f;
             line.sharedMaterial = LineMat();
-            line.startColor = line.endColor = new Color(1f, 0.8f, 0.35f, 0.9f);
+            line.startColor = line.endColor = new Color(1f, 0.8f, 0.35f, soft ? 0.4f : 0.9f);
             line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; line.receiveShadows = false;
             for (int i = 0; i < seg; i++)
             {
@@ -27,7 +28,7 @@ namespace HuginWhispers
             }
             GameObject tpl = FxLib.Template(FxLib.OursPrefix + "runes");
             if (tpl == null) { RavenTree.Log("rune ring: no rune effect, the band of light only"); return ring; }
-            int n = Mathf.Max(8, Mathf.RoundToInt(radius * 1.44f)); // (36 round the arena's 25 m)
+            int n = Mathf.Max(soft ? 5 : 8, Mathf.RoundToInt(radius * (soft ? 0.6f : 1.44f))); // (36 round the arena's 25 m)
             for (int i = 0; i < n; i++)
             {
                 float a = i * Mathf.PI * 2f / n;
@@ -43,7 +44,7 @@ namespace HuginWhispers
                     m.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.16f);      // ×4: 0.4–0.65 m
                     m.startLifetime = new ParticleSystem.MinMaxCurve(2.5f, 3.5f);
                     m.gravityModifier = -0.04f;                                   // rising up to ~2 m
-                    ParticleSystem.EmissionModule e = ps.emission; e.rateOverTime = 4f;
+                    ParticleSystem.EmissionModule e = ps.emission; e.rateOverTime = soft ? 2f : 4f;
                 }
                 g.SetActive(true);
             }
@@ -73,7 +74,7 @@ namespace HuginWhispers
             if (!Loaded(at)) return; // (its ground read once: not from the world as made, before the zone is here)
             if (_step != null) Object.Destroy(_step);
             _at = at; _radius = radius;
-            _step = Build("RavenWatch_ErrandRing", at, radius);
+            _step = Build("RavenWatch_ErrandRing", at, radius, true);
         }
 
         private static bool Loaded(Vector3 at) { return ZoneSystem.instance != null && ZoneSystem.instance.IsZoneLoaded(at); }

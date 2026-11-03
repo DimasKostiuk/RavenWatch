@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0
+
+**English**
+
+- New icon.
+- Ravens speak more naturally: less sing-song, the rolled «р» only now and then.
+- Each raven character borrows real recorded intonation, so the voices differ more.
+- Swearing is said with feeling, not squealed.
+- Stress fixed in over a thousand words.
+
+**Українською**
+
+- Нова іконка.
+- Ворони говорять природніше: менше «співу», розкочене «р» лише зрідка.
+- Кожен характер ворона бере справжню інтонацію з запису, тож голоси різняться більше.
+- Матюки звучать з почуттям, а не вереском.
+- Виправлено наголоси в понад тисячі слів.
+
 ## 1.2.0
 
 **English**

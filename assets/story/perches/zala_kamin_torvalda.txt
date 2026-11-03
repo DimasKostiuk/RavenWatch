@@ -1,0 +1,6 @@
+# RavenWatch — сюжетна будівля Зали Варти (3.0). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+name: Камінь з ім'ям Торвальда
+note: Камінь із вирізаним ім'ям Торвальда — того, хто згасає
+use: story
+id: kamin_torvalda
+part asset/Зала/StoneTorvald pos 0 0.903 0 rot 0 0 0 scale 1.9 1.9 1.9  # рунний камінь (Meshy, 2026-10-31), ~1,8 м

@@ -18,8 +18,8 @@ namespace HuginWhispers
         internal static readonly int Hash = EffectName.GetStableHashCode();
         private const string Key = "RavenWatch_Shadow"; // on the player's ZDO: every game hides that player
         private const string RpcFx = "RavenWatch_ShadowFx", RpcIn = "RavenWatch_ShadowIn";
-        internal static float Seconds = 10f, SecondsTop = 20f; // at trust level 1 and at the top level
-        internal static float StrikeMultiplier = 3f;
+        internal static float Seconds = 15f, SecondsTop = 35f; // at trust level 1 and at the top level
+        internal static float StrikeMultiplier = 3f, StrikeGoldI = 4f, StrikeGoldII = 5f; // the strike: plain, with golden rune I, with II (III doubles it)
         internal static bool Stun = true;
         internal static bool FoolsBosses = false;
         internal static float SelfOpacity = 0.8f; // how you see yourself in the shadow (dark, a little see-through)
@@ -31,6 +31,10 @@ namespace HuginWhispers
         private static float _strikeUntil, _firstHit = -1f;
 
         internal static float Duration() { return Mathf.Floor(Trust.LerpGift("shadow", Seconds, SecondsTop) * GiftUp.Power("shadow") + 0.5f); }
+
+        // the strike from the shadow at golden level lv (0: none); now: at the raven's own level
+        internal static float StrikeAt(int lv) { float m = Mathf.Max(1f, lv >= 2 ? StrikeGoldII : lv == 1 ? StrikeGoldI : StrikeMultiplier); return lv >= GiftUp.MaxLevel ? m * 2f : m; }
+        internal static float StrikeNow() { return StrikeAt(GiftUp.Level("shadow")); }
 
         internal static bool Anyone { get { return InShadow.Count > 0 || InMurk.Count > 0; } }
 
@@ -52,22 +56,67 @@ namespace HuginWhispers
 
         internal static void Register() { RavenFx.Register(RpcFx, Spawn); RavenFx.Register(RpcIn, Feathers.In); }
 
-        internal static void Start(Player p)
+        // seconds: how long (a friend's Hugin hides you too, «Тінь» II); -1: as your own raven makes it
+        internal static void Start(Player p, float seconds = -1f)
         {
             SE_Stats se = RavenFx.Template(ref _template, EffectName);
             se.m_name = Lang.W("Тінь");
-            se.m_tooltip = Lang.F("Тебе не бачать і не чують. Удар, постріл чи закляття знімуть тінь, а перший удар — з тіні: ×{0} шкоди{1}", StrikeMultiplier.ToString("0.#"), (Stun ? Lang.T(" і ворог приголомшений") : ""));
+            se.m_tooltip = Lang.F("Тебе не бачать і не чують. Удар, постріл чи закляття знімуть тінь, а перший удар — з тіні: ×{0} шкоди{1}", StrikeNow().ToString("0.#"), (Stun ? Lang.T(" і ворог приголомшений") : ""));
             se.m_icon = AbilityIcons.ForEffect("shadow", false);
-            se.m_ttl = Mathf.Max(1f, Duration());
+            se.m_ttl = Mathf.Max(1f, seconds > 0f ? seconds : Duration());
             p.GetSEMan().AddStatusEffect(se, true, 0, 0f, 0);
             _wasOn = true;
             _revealed = false;
             _strikeUntil = 0f;
             _firstHit = -1f;
+            _steps = 0;
             Publish(p);
             Mark(p, true); // now, not on the next frame: the monsters below must already count you hidden
             RavenFx.Broadcast(RpcIn, p, Feathers.In); // the feathers fly in and wrap you
             Calm(p);
+        }
+
+        // «Тінь» III, the shadow step: the gift pressed again in the shadow — you scatter into feathers and stand up to
+        // StepReach ahead where the camera looks (not through walls; on the floor under that point: a ledge, a roof),
+        // still in the shadow. StepsPer times a shadow.
+        internal static int StepsPer = 2;
+        internal static float StepReach = 15f;
+        private static int _steps, _stepMask;
+        private static int StepMask { get { if (_stepMask == 0) _stepMask = LayerMask.GetMask("Default", "static_solid", "terrain", "piece", "Default_small", "vehicle"); return _stepMask; } }
+        private static readonly FieldInfo MaxAir = AccessTools.Field(typeof(Character), "m_maxAirAltitude");
+
+        internal static void Step(Player p)
+        {
+            if (p == null || !On(p)) return;
+            if (_steps >= StepsPer) { RavenMsg.Center(p, Lang.T("Кроків тінню більше нема, але тінь ще тримає")); return; }
+            Vector3 to;
+            if (p.IsAttached() || p.InWater() || !StepPoint(p, out to)) { RavenMsg.Center(p, Lang.T("Тінь туди не веде")); return; }
+            _steps++;
+            RavenFx.Broadcast(RpcFx, p, Spawn); // a puff of feathers where you stood
+            Rigidbody body = p.GetComponent<Rigidbody>();
+            p.transform.position = to;
+            if (body != null) { body.position = to; body.linearVelocity = Vector3.zero; }
+            if (MaxAir != null) MaxAir.SetValue(p, to.y); // (a step down off a ledge is no fall)
+            RavenFx.Broadcast(RpcIn, p, Feathers.In); // and they wrap you again where you stand now
+            Calm(p);
+            p.Message(MessageHud.MessageType.TopLeft, Lang.F("Крок тінню ({0} з {1})", _steps, StepsPer));
+        }
+
+        private static bool StepPoint(Player p, out Vector3 to)
+        {
+            to = p.transform.position;
+            Vector3 dir = GameCamera.instance != null ? GameCamera.instance.transform.forward : p.transform.forward;
+            Vector3 from = p.transform.position + Vector3.up * 1.2f;
+            float reach = StepReach;
+            RaycastHit hit;
+            if (Physics.SphereCast(from, 0.35f, dir, out hit, reach, StepMask)) reach = Mathf.Max(0f, hit.distance - 0.4f); // up to the wall, not into it
+            if (reach < 2f) return false;
+            Vector3 at = from + dir * reach;
+            if (!Physics.Raycast(at + Vector3.up * 0.5f, Vector3.down, out hit, 40f, StepMask)) return false; // the floor under it
+            to = hit.point + Vector3.up * 0.05f;
+            float sea = ZoneSystem.instance != null ? ZoneSystem.instance.m_waterLevel : 30f;
+            if (to.y < sea - 0.3f && to.y < 1000f) return false; // (not to the sea floor; the dungeons lie far up)
+            return !Physics.CheckCapsule(to + Vector3.up * 0.5f, to + Vector3.up * 1.6f, 0.3f, StepMask); // room to stand
         }
 
         // a swing, a shot or a cast: the shadow goes, the hits of this attack still come from it
@@ -489,11 +538,12 @@ namespace HuginWhispers
             Player me = Player.m_localPlayer;
             if (hit == null || me == null || hit.m_attacker != me.GetZDOID() || hit.m_skillRaiseAmount <= Strike.Marker || !Shadow.Strikes(__instance)) return; // by id: no lookup for every blow in the area; a raven's blow or bleed (marked) is not yours: it must not take your strike from the shadow
             __state = true;
-            hit.ApplyModifier(Mathf.Max(1f, Shadow.StrikeMultiplier) * (Facets.On("shadow") ? 2f : 1f)); // («Тінь» III: twice again)
+            hit.ApplyModifier(Shadow.StrikeNow()); // (golden runes: I ×4, II ×5, III twice that)
             hit.m_backstabBonus = 1f; // ours replaces the game's own sneak attack, they do not stack
             BaseAI ai = __instance.GetBaseAI();
             if (ai != null && Alerted != null) Alerted.SetValue(ai, false); // seen here as unaware; the owner's game sets it right again
             Shadow.StrikeFx(__instance, hit);
+            HuginChores.NoteHelp(__instance.GetZDOID()); // (struck from his shadow: a kill soon after is his help)
         } catch (System.Exception e) { PatchGuard.Fail("ShadowStrikePatch", e); } }
 
         private static void Postfix(Character __instance, HitData hit, bool __state)

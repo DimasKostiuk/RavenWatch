@@ -223,7 +223,7 @@ namespace HuginWhispers
         internal override string Describe(ErrandRun r, int i, Player p)
         {
             if (r.Count[i] >= Need) return Lang.T("Облогу відбито");
-            if (!_on) return Lang.F("Уночі стань у рунне коло біля гнізда й почни облогу — {0} хвилі звірів", Need);
+            if (!_on) return Lang.F("Уночі стань у рунне коло біля гнізда й почни облогу — {0} хвилі звірів, з останньою їхній ватажок. Вони битимуть і гніздо: розламають — доручення пропаде", Need);
             int pct = Mathf.RoundToInt(_hp / Mathf.Max(1f, _max) * 100f);
             string line = Lang.F("Облога: хвиля {0} з {1} · гніздо тримається: {2}%", Mathf.Max(1, _wave), Need, pct);
             return Off(r, i, p) > 0f ? line + Lang.T(" (ти поза колом)") : line;

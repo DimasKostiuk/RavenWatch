@@ -83,6 +83,7 @@ namespace HuginWhispers
             z.Set(MateKey + s, mate);
             Satiety.Flew(munin, Orders.HungerTrick);
             Orders.StartShip(p, munin, Seconds + 1f);
+            Nicks.OnShipPlay(p, munin); // a deed for its nickname
         }
 
         // ---- with another player's raven: my game (the lower id decides, as for the talks) asks theirs

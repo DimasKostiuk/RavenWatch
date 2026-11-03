@@ -19,6 +19,6 @@ try {
     foreach ($f in 'manifest.json','README.md','CHANGELOG.md','icon.png') { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z, "$pkg\$f", $f, 'Optimal') }
     [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z, "$root\build\RavenWatch_Voice.dll", 'plugins/RavenWatch_Voice.dll', 'Optimal')
     foreach ($f in 'RavenVoice.exe','RavenVoice.exe.config','Microsoft.ML.OnnxRuntime.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','onnxruntime.dll','onnxruntime_providers_shared.dll') { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z, "$out\$f", "plugins/voice/$f", 'Optimal') }
-    foreach ($f in 'model.onnx','vocab.txt','stress_dict.tsv','voices.bin','NOTICE.txt','language.txt') { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z, "$data\$f", "plugins/voice/$f", 'Optimal') }
+    foreach ($f in 'model.onnx','vocab.txt','stress_dict.tsv','voices.bin','contours.tsv','NOTICE.txt','language.txt') { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z, "$data\$f", "plugins/voice/$f", 'Optimal') }
 } finally { $z.Dispose() }
 "== RavenWatch_Voice $ver -> $zip  (" + [math]::Round((Get-Item $zip).Length / 1MB, 1) + " MB)"

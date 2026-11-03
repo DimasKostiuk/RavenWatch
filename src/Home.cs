@@ -302,10 +302,10 @@ namespace HuginWhispers
             data[FedDayKey] = (EnvMan.instance != null ? EnvMan.instance.GetDay() : 0).ToString(); // (its day without the feeder counts from here)
             data.Remove(LogKey);
             string[] w = o.Raw.Split('|');
-            string[] x = new string[12];
-            for (int i = 0; i < 12; i++) x[i] = i < w.Length ? w[i] : "";
+            string[] x = new string[13];
+            for (int i = 0; i < 13; i++) x[i] = i < w.Length ? w[i] : "";
             if (x[8].Length == 0) x[8] = "-1";
-            x[9] = c.Mode; x[10] = Backup.Id(c.Item) ?? ""; x[11] = RavenVoice.KeptTimbre(c.Item).ToString(); // (11: its speaking timbre)
+            x[9] = c.Mode; x[10] = Backup.Id(c.Item) ?? ""; x[11] = RavenVoice.KeptTimbre(c.Item).ToString(); x[12] = Norov.CharIdOf(c.Item); // (11: its speaking timbre, 12: its character)
             c.View.Send(c.Seat, string.Join("|", x) + "\n" + c.View.Outfit(c.Seat) + "\n" + c.View.Zdo.GetString(Perches.SeatKey(c.Seat) + "w", "") + "\n" + Backup.Pack(data));
             c.Sent = Time.time;
         }
@@ -393,6 +393,9 @@ namespace HuginWhispers
                 return;
             }
             string log = data.ContainsKey(LogKey) ? data[LogKey] : "";
+            string mode, since;
+            bool guard = data.TryGetValue(HomeKey, out mode) && mode == OnGuard;
+            double sat = data.TryGetValue(SinceKey, out since) ? WorldTime.Now - PD(since) : 0; // («Нічний сторож»: how long it sat there)
             Strip(data);
             GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(munin ? RavenItem.MuninPrefab : RavenItem.HuginPrefab) : null;
             ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
@@ -400,6 +403,7 @@ namespace HuginWhispers
             ItemDrop.ItemData item = drop.m_itemData.Clone();
             item.m_dropPrefab = prefab; item.m_stack = 1; item.m_equipped = false;
             item.m_customData = data;
+            Habits.FromPerch(p, item, munin, guard, sat);
             bool shoulderFree = RavenSeat.On(p, munin) == null;
             if (!shoulderFree || !RavenSeat.OntoShoulderCell(p, item)) // its shoulder free on SeneaL UI's cells: straight onto it, the bag never asked
             {
