@@ -29,7 +29,7 @@ namespace HuginWhispers
         // where a line is cut: a share of it from its own words (the same in every game)
         private static float CutShare(string text) { int h = 0; foreach (char c in text ?? "") h = h * 31 + c; return Mathf.Lerp(CutFrom, CutTo, (h & 0xFFFF) / 65535f); }
 
-        internal static float Pace(string text) { return Mathf.Clamp(RavenSpeech.ReadSeconds(text) * 0.65f, 3f, 10f); }
+        internal static float Pace(string text) { return Mathf.Clamp(RavenSpeech.ReadSeconds(text) * 0.65f, RavenSpeech.Hold(3f), RavenSpeech.Hold(10f)); }
         // after the last line the talk closes: that one is kept long enough to be read through, not just a pace
         internal static float After(string text, bool last, float mul) { float pace = Pace(text) * mul; return last ? Mathf.Max(pace + 2f, RavenSpeech.ReadSeconds(text) * mul) : pace; }
         private static float Think(string text) { return Mathf.Clamp(0.6f + (text != null ? text.Length : 0) / 90f, 0.8f, 1.8f); }

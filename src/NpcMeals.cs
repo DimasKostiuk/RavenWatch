@@ -13,7 +13,8 @@ namespace HuginWhispers
     //                pantry: it sits at it (a bench or a chair by it, else the ground beside it); a chest by the dining
     //                table is the first pantry after the cook's
     // A meal is one plan (NpcMind Task.Eat): to the pantry → a bite out of it → to the table → sits and eats → full.
-    // Taken in the evening before the fire when it is not full, and in the day when it is hungry (NpcResident).
+    // Taken in the evening before the fire when it is not full, and in the day when it is hungry (NpcResident). The last bite
+    // of a pantry taken while a hungry neighbour stands by: that one holds it against it (NpcAttitude.Quarrel «food»).
     // Light: the chests of a base come from the workers' shared look (NpcWorker.InBaseOf), the tables of a base are
     // looked for once in half a minute; nothing runs while nobody eats.
     internal static class NpcMeals
@@ -60,7 +61,7 @@ namespace HuginWhispers
         }
 
         // how much a bite fills (better food: more)
-        private static float Fill(ItemDrop.ItemData it) { return it == null ? 40f : Mathf.Clamp(25f + Worth(it) * 0.4f, 35f, 90f); }
+        internal static float Fill(ItemDrop.ItemData it) { return it == null ? 40f : Mathf.Clamp(25f + Worth(it) * 0.4f, 35f, 90f); }
 
         // ---------------------------------------------------------------- the pantry and the tables
         // a cook's chest (its own word for it: «Комора»)
@@ -111,6 +112,14 @@ namespace HuginWhispers
         private static readonly HashSet<ZDOID> Pantries = new HashSet<ZDOID>(); // (chests found as a pantry: their hover says so)
         internal static bool IsPantry(ZDOID id) { return Pantries.Contains(id); }
 
+        // the pantry's last bite taken by «a»: one of its people, hungry and near, holds it against it (the first such one)
+        private const float LastBiteSeen = 15f;
+        private static void LastBite(NpcActor a, Vector3 at)
+        {
+            foreach (NpcActor o in NpcHeart.Residents(NpcKit.GetRef(a.Zdo, NpcResident.KHeart)))
+                if (o != null && o != a && NpcHunger.IsHungry(o) && Utils.DistanceXZ(o.transform.position, at) < LastBiteSeen) { NpcAttitude.Quarrel(o, a, "food"); return; }
+        }
+
         internal static Container Pantry(NpcBase b, Vector3 me)
         {
             if (b == null || !b.Ready) return null;
@@ -136,6 +145,30 @@ namespace HuginWhispers
             return Nearest(all, me, c => true); // (no pantry anywhere: the nearest chest of the base with something cooked in it — the plainest taken from it, as ever)
         }
 
+        // what the base has to eat (the board, a heart's notes): how much a meal's worth of fullness lies in its chests, as Pantry would take from them — no ways asked (Pantry
+        // comes to the nearest chest with food whether a way is known or not: so «nothing to eat» is the same answer). A look at each chest's list: only when asked,
+        // a heart at most once in NpcBoard.Every s while you are near
+        internal static float Supply(NpcBase b)
+        {
+            if (b == null || !b.Ready) return 0f;
+            float sum = 0f;
+            HashSet<string> cooked = Cooked;
+            foreach (Container c in NpcWorker.InBaseOf<Container>(b, b.Centre))
+            {
+                if (!Open(c) || c.GetInventory() == null) continue;
+                foreach (ItemDrop.ItemData it in c.GetInventory().GetAllItems()) if (it.m_shared.m_food > 0f && cooked.Contains(it.m_shared.m_name)) sum += Fill(it) * it.m_stack;
+            }
+            return sum;
+        }
+
+        // for how many game days that feeds these people (0: no one to feed or nothing)
+        internal static float DaysOf(float supply, List<NpcActor> who)
+        {
+            float need = 0f;
+            foreach (NpcActor a in who) if (a != null) need += NpcHunger.NeedPerDay(a);
+            return need > 0f ? supply / need : 0f;
+        }
+
         // of these chests, those that also pass ok: the nearest it can walk to (straight, or through a door) with cooked food
         // in it first — else the nearest of them all (the way finder builds its map in parts: «no way» may only be «not yet»)
         private static Container Nearest(List<Container> all, Vector3 me, System.Func<Container, bool> ok)
@@ -156,7 +189,7 @@ namespace HuginWhispers
             if (!NpcKit.Valid(out spot, at, 2.5f, NpcKit.Walker)) return "no spot to stand by it";
             bool start = NpcKit.Valid(out from, me, 2f, NpcKit.Walker);
             if (!start) from = me;
-            if (Pathfinding.instance.HavePath(from, spot, NpcKit.Walker)) return "a way (?)";
+            if (NpcWalk.Have(from, spot)) return "a way (?)";
             return (start ? "" : "it stands off the walkable, ") + "no way" + (NpcDoors.Toward(from, spot, NpcKit.Walker) != null ? ", a door" : ", no door") + " (spot " + Npcs.V(spot) + ", from " + Npcs.V(from) + ")";
         }
 
@@ -166,7 +199,7 @@ namespace HuginWhispers
             Vector3 spot, from;
             if (!NpcKit.Valid(out spot, at, 2.5f, NpcKit.Walker)) return false; // (nowhere to stand by it)
             if (NpcKit.Valid(out from, me, 2f, NpcKit.Walker)) me = from; // (it may stand where no way starts: in a corner it was stepped into)
-            return Pathfinding.instance.HavePath(me, spot, NpcKit.Walker) || NpcDoors.Toward(me, spot, NpcKit.Walker) != null;
+            return NpcWalk.Have(me, spot) || NpcDoors.Toward(me, spot, NpcKit.Walker) != null;
         }
 
         // a chest it may take from: a built one (not a ship's hold, not a person's cells), not a private one
@@ -215,14 +248,16 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the meal, step by step (true: over)
         //   0 find the pantry · 1 to it, a bite out · 2 to the table, sits · 3 eats
         // its meal's steps in the log as they change (where a meal stops is seen, not guessed)
-        private static readonly Dictionary<NpcMind, string> Was = new Dictionary<NpcMind, string>();
-        private static void Trace(NpcMind m, NpcMind.Plan p, Container c)
+        private static readonly Dictionary<NpcMind, KeyValuePair<int, string>> Was = new Dictionary<NpcMind, KeyValuePair<int, string>>();
+        private static void Trace(NpcMind m, NpcMind.Plan p)
         {
-            string now = p.Stage + " " + m.Status + (c != null ? " (" + Mathf.RoundToInt(Utils.DistanceXZ(m.transform.position, c.transform.position) * 10f) / 10f + " m from " + c.m_name + (c.IsInUse() ? ", open" : "") + ")" : "");
-            string was;
-            if (Was.TryGetValue(m, out was) && was.Substring(0, Mathf.Min(was.Length, 12)) == now.Substring(0, Mathf.Min(now.Length, 12))) return;
+            KeyValuePair<int, string> was;
+            if (Was.TryGetValue(m, out was) && was.Key == p.Stage && was.Value == m.Status) return; // (every frame of every meal: its text made only when it changed)
             if (Was.Count > 50) Was.Clear();
-            Was[m] = now;
+            Was[m] = new KeyValuePair<int, string>(p.Stage, m.Status);
+            GameObject tg = p.Stage == 1 ? NpcKit.Find(p.Who) : null;
+            Container c = tg != null ? tg.GetComponentInChildren<Container>() : null;
+            string now = p.Stage + " " + m.Status + (c != null ? " (" + Mathf.RoundToInt(Utils.DistanceXZ(m.transform.position, c.transform.position) * 10f) / 10f + " m from " + c.m_name + (c.IsInUse() ? ", open" : "") + ")" : "");
             Npcs.Log((m.Actor != null ? m.Actor.Id : "?") + ": meal — " + now);
         }
 
@@ -239,7 +274,7 @@ namespace HuginWhispers
         internal static bool Step(NpcMind m, NpcMind.Plan p, float dt)
         {
             try { return StepOf(m, p, dt); }
-            finally { GameObject tg = p.Stage == 1 ? NpcKit.Find(p.Who) : null; Trace(m, p, tg != null ? tg.GetComponentInChildren<Container>() : null); }
+            finally { Trace(m, p); }
         }
 
         private static bool StepOf(NpcMind m, NpcMind.Plan p, float dt)
@@ -251,7 +286,7 @@ namespace HuginWhispers
             {
                 case 0:
                 {
-                    if (!r.Base.Ready) { m.Status = "думає, де поїсти"; return Time.time - p.BestAt > 30f; } // (its base still being looked over)
+                    if (!r.Base.Ready) { m.Status = Lang.K("думає, де поїсти"); return Time.time - p.BestAt > 30f; } // (its base still being looked over)
                     Container c = Pantry(r.Base, m.transform.position);
                     if (c == null) { NpcChatter.MutterOnce(a, "nofood"); Npcs.Log(a.Id + ": nothing to eat — " + Why(r.Base)); return true; }
                     ZNetView nv = c.GetComponentInParent<ZNetView>();
@@ -265,19 +300,20 @@ namespace HuginWhispers
                 {
                     GameObject go = NpcKit.Find(p.Who);
                     Container c = go != null ? go.GetComponentInChildren<Container>() : null;
-                    if (c == null) { p.Stage = 0; return p.Lost++ > 2f; } // (gone: another pantry, a few tries)
-                    m.Status = "іде їсти";
+                    if (c == null) { p.Stage = 0; return p.Tries++ > 2f; } // (gone: another pantry, a few tries)
+                    m.Status = Lang.K("іде їсти");
                     if (!m.Walk(dt, c.transform.position, 1.8f, false)) return false;
                     ZNetView nv = c.GetComponentInParent<ZNetView>();
                     if (nv == null || !nv.IsValid()) return true;
-                    if (nv.GetZDO().GetInt(ZDOVars.s_inUse, 0) != 0 && !NpcLid.Mine(c, a)) { m.Status = "чекає біля комори"; if (Time.time - p.Since > 25f) { SetBusy(c); p.Stage = 0; return p.Lost++ > 2f; } return false; } // (a player has it open: it waits a while — most close it soon — then another chest with food)
+                    if (nv.GetZDO().GetInt(ZDOVars.s_inUse, 0) != 0 && !NpcLid.Mine(c, a)) { m.Status = Lang.K("чекає біля комори"); if (Time.time - p.Since > 25f) { SetBusy(c); p.Stage = 0; return p.Tries++ > 2f; } return false; } // (a player has it open: it waits a while — most close it soon — then another chest with food)
                     // its hand into the chest, as a player reaches into one: a moment facing it, then the bite
-                    if (!m.Reach(c, ref p.Hand)) { m.Status = "бере їжу"; return false; } // (its hand into it: NpcMind.Reach)
+                    if (!m.Reach(c, ref p.Hand)) { m.Status = Lang.K("бере їжу"); return false; } // (its hand into it: NpcMind.Reach)
                     ItemDrop.ItemData bite = Plainest(c.GetInventory());
-                    if (bite == null) { p.Stage = 0; return p.Lost++ > 2f; } // (eaten up meanwhile)
+                    if (bite == null) { p.Stage = 0; return p.Tries++ > 2f; } // (eaten up meanwhile)
                     p.Food = bite.m_dropPrefab != null ? bite.m_dropPrefab.name : bite.m_shared.m_name; // (its prefab: its look in the hand, its name when eaten)
-                    p.Radius = Fill(bite); // (how much it will fill)
+                    p.Count = Fill(bite); // (how much it will fill)
                     c.GetInventory().RemoveItem(bite, 1);
+                    if (Plainest(c.GetInventory()) == null) LastBite(a, c.transform.position); // (the pantry empty now: one hungry near holds it against it)
                     NpcLid.Close(c); // (the bite in hand: its lid down, with its sound)
                     m.Face(c.transform.position);
                     Transform picked = NpcHeart.DiningOf(r.Base);
@@ -292,18 +328,18 @@ namespace HuginWhispers
                 case 2:
                     m.SitDown(dt, p);
                     if (!p.Seated) return false;
-                    p.Stage = 3; p.Since = Time.time; p.Keep = Random.Range(EatMin, EatMax);
+                    p.Stage = 3; p.Since = Time.time; p.Clock = Random.Range(EatMin, EatMax);
                     NpcEat.Set(a, p.Food); // (the bite in its hand, to its mouth: seen on every game)
                     if (Random.value < 0.3f) NpcChatter.Mutter(a, "meal");
                     return false;
                 default:
                     if (!p.Seated) { NpcEat.Set(a, ""); p.Stage = 2; p.Started = false; return false; } // (stood up: sits again, the bite still in hand)
                     m.SitDown(dt, p);
-                    m.Status = "їсть";
-                    if (Time.time - p.Since < p.Keep) return false;
-                    if (a.Hunger != null) { GameObject fp = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(p.Food) : null; ItemDrop fd = fp != null ? fp.GetComponent<ItemDrop>() : null; a.Hunger.Eat(p.Radius, fd != null && Localization.instance != null ? Localization.instance.Localize(fd.m_itemData.m_shared.m_name).ToLowerInvariant() : ""); }
+                    m.Status = Lang.K("їсть");
+                    if (Time.time - p.Since < p.Clock) return false;
+                    if (a.Hunger != null) { GameObject fp = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(p.Food) : null; ItemDrop fd = fp != null ? fp.GetComponent<ItemDrop>() : null; a.Hunger.Eat(p.Count, fd != null && Localization.instance != null ? Localization.instance.Localize(fd.m_itemData.m_shared.m_name).ToLowerInvariant() : ""); }
                     NpcEat.Set(a, "");
-                    Npcs.Log(a.Id + ": ate " + p.Food + " (+" + Mathf.RoundToInt(p.Radius) + ", now " + Mathf.RoundToInt(NpcHunger.Full(a)) + ")");
+                    Npcs.Log(a.Id + ": ate " + p.Food + " (+" + Mathf.RoundToInt(p.Count) + ", now " + Mathf.RoundToInt(NpcHunger.Full(a)) + ")");
                     return true;
             }
         }

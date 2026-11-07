@@ -22,10 +22,21 @@ namespace HuginWhispers
         // (chopping, mining), nor is a scratch (cold, poison, a campfire underfoot).
         internal static bool Fight { get { float t = Time.time; return FoeNear || t - HitFoeAt < 6f || t - HurtByFoeAt < 6f; } }
         internal static bool FoeNear, Attacking, Jumped;
+        internal static bool FoeHunts;            // an enemy within FoeRange is after you
+        internal static float CloseRange = 12f;   // an enemy this close counts whatever it is doing
+        // something is on you now: blows lately, one close by, one hunting you. An enemy merely somewhere within FoeRange is not (the story's «calm»)
+        internal static bool Pressed(Player p)
+        {
+            float t = Time.time;
+            if (t - HitFoeAt < 6f || t - HurtByFoeAt < 6f || FoeHunts) return true;
+            if (!FoeNear) return false;
+            return NearestFoe == null || p == null || Vector3.Distance(NearestFoe.transform.position, p.transform.position) < CloseRange;
+        }
         internal static float HurtAt = -100f, Health01 = 1f, Walked;
         internal static float HitFoeAt = -100f, HurtByFoeAt = -100f; // set by the hit patches in Diary.cs
         internal static float HitMonsterAt = -100f; // you hit a monster (not a wild animal, not a tamed one)
         internal static Character Foe, Boss;      // the nearest enemy within LookRange, a boss within BossRange
+        internal static Character NearestFoe;     // the nearest enemy within FoeRange: what makes FoeNear (Foe may be none: it is only as far as the ravens watch)
         internal static Heightmap.Biome Biome;
 
         private static float _nextScan, _hpWas = -1f;
@@ -77,8 +88,10 @@ namespace HuginWhispers
         {
             Vector3 me = p.transform.position;
             Character foe = null, boss = null;
-            float best = LookRange * LookRange;
+            float best = LookRange * LookRange, bestAny = float.MaxValue;
             bool near = false;
+            Character any = null;
+            bool hunts = false;
             foreach (Character c in Character.GetAllCharacters())
             {
                 if (c == null || c == p || c.IsDead() || c.IsPlayer()) continue;
@@ -87,9 +100,11 @@ namespace HuginWhispers
                 if (d > FoeRange * FoeRange || !BaseAI.IsEnemy(p, c)) continue;
                 if (c.m_faction == Character.Faction.AnimalsVeg && !AfterYou(c, p)) continue; // (the game counts every deer a foe of yours: a grazing one is no fight)
                 near = true;
+                if (AfterYou(c, p)) hunts = true;
+                if (d < bestAny) { bestAny = d; any = c; }
                 if (!c.IsBoss() && d < best) { best = d; foe = c; }
             }
-            FoeNear = near; Foe = foe; Boss = boss;
+            FoeNear = near; Foe = foe; Boss = boss; NearestFoe = any; FoeHunts = hunts;
         }
 
         // a beast of the meadows is a foe only once it comes for you (a boar, a neck at you; a deer never)

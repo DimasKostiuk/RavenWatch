@@ -45,7 +45,8 @@ namespace HuginWhispers
         private Inventory _carry;
         private string _carryLoaded;
         private bool _carryDirty;          // changed here, not yet written (one write a step, not one a log)
-        private Container _chestNow;       // its chest, found once a thought
+        private Container _chestNow;       // its chest, looked up once a second (a link read, its piece found: not every frame); told another: at once
+        private float _chestLook;
         private string _targetSeen; private ZDOID _target = ZDOID.None;
 
         // the errand under way
@@ -65,76 +66,100 @@ namespace HuginWhispers
             public HashSet<string> Collect;            // after: drops of these (prefab names) near At go into its carry
             public string Word = "";
             public bool Urgent;                         // it must not wait (a fire about to go out): a run to it, not a walk
+            public string Move;                         // its body's move there (a clip); null: its job's (Job.Move), "" none
         }
 
         private void Awake() { _a = GetComponent<NpcActor>(); _mind = GetComponent<NpcMind>(); }
 
         // ---------------------------------------------------------------- its job and chest
-        internal string JobId { get { ZDO z = _a != null ? _a.Zdo : null; return z != null ? z.GetString(KJob, "") : ""; } }
+        internal string JobId { get { ZDO z = _a != null ? _a.Zdo : null; return z != null ? NpcLocker.Text(z, KJob) : ""; } }
         internal Job Job { get { return Jobs.Find(JobId); } }
         internal bool Works { get { return Job != null; } }
 
-        internal ZDOID ChestId { get { return NpcKit.GetRef(_a != null ? _a.Zdo : null, KChest); } }
+        internal ZDOID ChestId { get { return NpcLocker.Ref(_a != null ? _a.Zdo : null, KChest); } }
 
         internal Container Chest { get { GameObject go = NpcKit.Find(ChestId); return go != null ? go.GetComponentInChildren<Container>() : null; } }
 
-        // its buttons on the person's round menu (NpcMenu)
+        // its button on the person's round menu (NpcMenu): «Робота» — its ring is the job's own settings (set once: its chest,
+        // post, house…) with «Змінити роботу» first; no job, or a job with nothing to set: the jobs' ring at once
         internal static IEnumerable<NpcMenu.Button> MenuButtons()
         {
-            yield return new NpcMenu.Button { Order = 80, Title = "Робота", IconNow = a => { Job j = a.Worker != null ? a.Worker.Job : null; return j != null ? j.Icon : "n-job"; },
+            yield return new NpcMenu.Button { Order = 50, Title = Lang.K("Робота"), IconNow = a => { Job j = a.Worker != null ? a.Worker.Job : null; return j != null ? j.Icon : "n-job"; },
                 Desc = a => Lang.T("Зараз: ") + Jobs.Word(a.Worker != null ? a.Worker.JobId : "") + "." + (a.Worker != null && a.Worker.Works ? " " + Lang.F("Ремесло: {0}%. Платня: {1} раз на 5 днів.", Mathf.RoundToInt(NpcToil.Craft(a, a.Worker.JobId) * 100f), NpcToil.Wage(a)) : ""),
                 Now = a => a.Worker != null && a.Worker.Works, Not = a => NpcResident.Is(a) ? null : Lang.T("Спершу оселі його: працюють на своїй базі."),
-                Sub = a => JobRing() };
+                Sub = WorkRing };
+        }
+
+        private static readonly NpcMenu.Button ChangeJob = new NpcMenu.Button { Order = 0, Title = Lang.K("Змінити роботу"), Icon = "n-job",
+            Desc = a => Lang.T("Інша робота або без роботи."), Sub = a => JobRing() };
+        private static List<NpcMenu.Button> _settings;
+
+        // the ring under «Робота»: the settings its job has (made on each opening — a few buttons, read once)
+        private static List<NpcMenu.Button> WorkRing(NpcActor a)
+        {
+            if (_settings == null) { _settings = new List<NpcMenu.Button>(Settings()); _settings.Sort((x, y) => x.Order.CompareTo(y.Order)); }
+            List<NpcMenu.Button> ring = null;
+            foreach (NpcMenu.Button b in _settings)
+                if (b.Shown == null || b.Shown(a)) { if (ring == null) ring = new List<NpcMenu.Button> { ChangeJob }; ring.Add(b); }
+            return ring ?? JobRing();
+        }
+
+        // a job's own settings, each for the jobs it names (Shown)
+        private static IEnumerable<NpcMenu.Button> Settings()
+        {
             // a cook's chest is the base's pantry (NpcMeals): what it cooks goes there, the residents eat from it
-            yield return new NpcMenu.Button { Order = 90, Title = "Ящик", Icon = "n-chest", Place = "на ящик", Shown = a => NpcResident.Is(a) && a.Worker != null && a.Worker.Job != null && a.Worker.Job.NeedsChest, Where = a => a.Worker != null ? NpcKit.WhereIs(a.Worker.ChestId) : null,
+            yield return new NpcMenu.Button { Order = 90, Title = Lang.K("Ящик"), Icon = "n-chest", Place = Lang.K("на ящик"), Shown = a => NpcResident.Is(a) && a.Worker != null && a.Worker.Job != null && a.Worker.Job.NeedsChest, Where = a => a.Worker != null ? NpcKit.WhereIs(a.Worker.ChestId) : null,
                 TitleNow = a => IsCook(a) ? Lang.T("Комора") : Lang.T("Ящик"), IconNow = a => IsCook(a) ? "n-pantry" : "n-chest",
                 Desc = a => IsCook(a) ? Lang.T("Комора кухаря: звідти бере сире, туди складає готове — а мешканці бази звідти їдять.") : Lang.T("Його ящик запасів: звідти бере, туди складає."), Now = a => a.Worker != null && !a.Worker.ChestId.IsNone(),
                 AtPlace = SetChest };
             // a guard's post: where it stands its watch (round it it walks; foes it fights only near it)
-            yield return new NpcMenu.Button { Order = 92, Title = "Пост", Icon = "n-post", Place = "на місце посту", Shown = a => a.Worker != null && a.Worker.JobId == "guard",
+            yield return new NpcMenu.Button { Order = 92, Title = Lang.K("Пост"), Icon = "n-post", Place = Lang.K("на місце посту"), Shown = a => a.Worker != null && a.Worker.JobId == "guard",
                 Where = a => { Vector3 at; return a.Worker != null && a.Worker.Post(out at) ? (Vector3?)at : null; },
                 Desc = a => Lang.F("Де він вартує: стоїть там і обходить довкола (до {0} м). Б'є лише ворогів, що підходять до посту (до {1} м) — далі за ними не женеться; мирних звірів не чіпає.", Mathf.RoundToInt(PostRound), Mathf.RoundToInt(PostReach)),
                 Now = a => { Vector3 at; return a.Worker != null && a.Worker.Post(out at); }, AtPlace = SetPost };
             // a servant's storeroom: where it takes its supplies from and puts away what you bring
-            yield return new NpcMenu.Button { Order = 97, Title = "Склад", Icon = "n-store", Place = "на місце складу", Shown = a => a.Worker != null && a.Worker.JobId == "servant",
+            yield return new NpcMenu.Button { Order = 97, Title = Lang.K("Склад"), Icon = "n-store", Place = Lang.K("на місце складу"), Shown = a => a.Worker != null && a.Worker.JobId == "servant",
                 Where = a => { Vector3 at; return a.Worker != null && a.Worker.StoreAt(out at) ? (Vector3?)at : null; },
                 Desc = a => Lang.F("Скрині довкола місця, яке покажеш (до {0} м): звідси він бере пальне для дому у свою скриню, сюди розкладає те, що ти приніс у його скриню. Нема місця на складі — шукає по скринях бази.", Mathf.RoundToInt(StoreReach)),
                 Now = a => { Vector3 at; return a.Worker != null && a.Worker.StoreAt(out at); }, AtPlace = SetStore };
             // a servant's chest to sort out: what you put in it, it carries off to the storeroom
-            yield return new NpcMenu.Button { Order = 98, Title = "Розбір", Icon = "n-inbox", Place = "на скриню для розбору", Shown = a => a.Worker != null && a.Worker.JobId == "servant",
+            yield return new NpcMenu.Button { Order = 98, Title = Lang.K("Розбір"), Icon = "n-inbox", Place = Lang.K("на скриню для розбору"), Shown = a => a.Worker != null && a.Worker.JobId == "servant",
                 Where = a => { Container c = a.Worker != null ? a.Worker.Inbox : null; return c != null ? (Vector3?)c.transform.position : null; },
                 Desc = a => { string n = Nowhere(a); return Lang.T("Скриня, куди кладеш речі для нього: час від часу він її перевіряє і розносить усе на склад — туди, де лежить те саме, в будь-яку вільну скриню складу, а нема місця — по скринях бази (не в доми інших гравців). Сюжетні й особливі речі не чіпає.") + (n.Length > 0 ? "\n" + Lang.F("Не знайшов місця: {0}", n) : ""); },
                 Now = a => a.Worker != null && a.Worker.Inbox != null, AtPlace = SetInbox };
             // a servant's house: another one, or the same again to see its edges
-            yield return new NpcMenu.Button { Order = 94, Title = "Дім", Icon = "n-house", Place = "на дім, який доглядатиме", Shown = a => a.Worker != null && a.Worker.JobId == "servant",
+            yield return new NpcMenu.Button { Order = 94, Title = Lang.K("Дім"), Icon = "n-house", Place = Lang.K("на дім, який доглядатиме"), Shown = a => a.Worker != null && a.Worker.JobId == "servant",
                 Where = a => { Vector3 at; return a.Worker != null && a.Worker.HouseAt(out at) ? (Vector3?)at : null; },
                 Desc = a => { NpcHouse h = a.Worker != null ? a.Worker.House : null; return Lang.T("Дім, який він доглядає: вогнища й світильники, підлога, двері, побиті стіни.") + (h != null ? h.Trouble() : ""); },
                 Now = a => { Vector3 at; return a.Worker != null && a.Worker.HouseAt(out at); }, AtPlace = SetHouse };
             // a lumberjack's, a miner's plot (NpcHew)
-            yield return new NpcMenu.Button { Order = 96, Title = "Ділянка", Icon = "n-area", Place = "на ділянку", Shown = a => a.Worker != null && (a.Worker.JobId == "lumber" || a.Worker.JobId == "miner"),
+            yield return new NpcMenu.Button { Order = 96, Title = Lang.K("Ділянка"), Icon = "n-area", Place = Lang.K("на ділянку"), Shown = a => a.Worker != null && (a.Worker.JobId == "lumber" || a.Worker.JobId == "miner"),
                 Where = a => { Vector3 at; return NpcHew.Area(a, out at) ? (Vector3?)at : null; },
                 Desc = a => Lang.F("Де він працює: {0} м довкола місця, на яке наведеш (до {1} м від бази). Поза базою він без її захисту.", Mathf.RoundToInt(NpcHew.Radius), Mathf.RoundToInt(NpcHew.FarFromBase)),
                 Now = a => { Vector3 at; return NpcHew.Area(a, out at); }, AtPlace = NpcHew.SetArea };
             // a cleaner's (a servant's) choice of what it picks up (NpcTidy)
             yield return NpcTidy.Button();
             // …or a round of the whole base: anywhere in it, every foe that turns up in it
-            yield return new NpcMenu.Button { Order = 93, Title = "Обхід бази", Icon = "n-patrol", Shown = a => a.Worker != null && a.Worker.JobId == "guard",
+            yield return new NpcMenu.Button { Order = 93, Title = Lang.K("Обхід бази"), Icon = "n-patrol", Shown = a => a.Worker != null && a.Worker.JobId == "guard",
                 Desc = a => Patrols(a) ? Lang.T("Зараз обходить усю базу. Натисни — знову межею (або дай йому пост).") : Lang.T("Ходить усією базою, куди схоче, і валить кожного ворога, що з'явиться в її межах. Пост тоді знімається."),
                 Now = a => Patrols(a), Do = (a, p) => SetPatrol(a, !Patrols(a)) };
         }
 
         private static bool IsCook(NpcActor a) { return a.Worker != null && a.Worker.JobId == "cook"; }
 
+        // why this one will not take this job (null: it will): the story's word (NpcLevers), who it is (NpcNature: however it stands with you), the job's own rule. The button and SetJob both ask here
+        internal static string WhyNot(NpcActor a, Job j) { return j == null ? null : NpcLevers.NoJob(a, j.Id) ?? NpcNature.WontTake(a, j.Id) ?? j.Can(a); }
+
         internal static string SetJob(NpcActor a, string id)
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
             if (!NpcResident.Is(a) && !string.IsNullOrEmpty(id)) return "Спершу оселі його: працюють на своїй базі.";
             Job j = Jobs.Find(id);
-            string cannot = j != null ? NpcLevers.NoJob(a, j.Id) ?? j.Can(a) : null; // (the story may forbid a job: NpcLevers)
+            string cannot = WhyNot(a, j);
             if (cannot != null) return cannot;
-            a.Zdo.Set(KJob, j != null ? j.Id : "");
-            // a settler fights by its role: on guard it fights; else it is wary (runs, fights back when caught)
-            if (a.Def != null && a.Def.Generated && a.Mind != null) a.Mind.Do("fight " + (j != null && j.Id == "guard" ? "defend" : a.Def.Fight), NpcMind.Layer.Routine);
+            NpcLocker.Put(a.Zdo, KJob, j != null ? j.Id : "");
+            // a settler fights by its role: on guard it fights; else by its nature (NpcNature.Manner)
+            if (a.Def != null && a.Def.Generated && a.Mind != null) a.Mind.Do("fight " + (j != null && j.Id == "guard" ? "defend" : NpcNature.Manner(a)), NpcMind.Layer.Routine);
             a.Redress(); // (on guard: its weapons in hand; off it: on its back — NpcGear)
             NpcWorker w = a.GetComponent<NpcWorker>();
             if (w != null) { w.Reset(); if (j == null) w.DropCarry(); }
@@ -143,12 +168,12 @@ namespace HuginWhispers
 
         internal NpcActor Actor { get { return _a; } }
 
-        internal bool Post(out Vector3 at) { ZDO z = _a != null ? _a.Zdo : null; at = z != null ? z.GetVec3(KPost, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
+        internal bool Post(out Vector3 at) { ZDO z = _a != null ? _a.Zdo : null; at = z != null ? NpcLocker.Vec(z, KPost, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
 
-        internal bool HouseAt(out Vector3 at) { ZDO z = _a != null ? _a.Zdo : null; at = z != null ? z.GetVec3(KHouse, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
+        internal bool HouseAt(out Vector3 at) { ZDO z = _a != null ? _a.Zdo : null; at = z != null ? NpcLocker.Vec(z, KHouse, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
         internal NpcHouse House { get { Vector3 at; return HouseAt(out at) ? NpcHouse.For(at) : null; } }
 
-        internal Container Inbox { get { GameObject go = NpcKit.Find(NpcKit.GetRef(_a != null ? _a.Zdo : null, KInbox)); return go != null ? go.GetComponentInChildren<Container>() : null; } }
+        internal Container Inbox { get { GameObject go = NpcKit.Find(NpcLocker.Ref(_a != null ? _a.Zdo : null, KInbox)); return go != null ? go.GetComponentInChildren<Container>() : null; } }
 
         // its chest to sort out: the built chest pointed at (not its own)
         internal static string SetInbox(NpcActor a, Vector3 aim)
@@ -160,8 +185,8 @@ namespace HuginWhispers
             ZNetView nv = best.GetComponent<ZNetView>();
             if (nv == null || !nv.IsValid()) return Lang.T("Ця скриня ще не готова.");
             if (a.Worker != null && nv.GetZDO().m_uid == a.Worker.ChestId) return Lang.T("Це його робоча скриня — для розбору потрібна інша.");
-            NpcKit.SetRef(a.Zdo, KInbox, nv.GetZDO().m_uid);
-            a.Zdo.Set(KNowhere, "");
+            NpcLocker.PutRef(a.Zdo, KInbox, nv.GetZDO().m_uid);
+            NpcLocker.Put(a.Zdo, KNowhere, "");
             NpcWorker w = a.Worker; if (w != null) w.Reset();
             return Lang.T("Скриня для розбору: що покладеш сюди, він рознесе на склад.");
         }
@@ -169,7 +194,7 @@ namespace HuginWhispers
         // what it found no place for (its words for them), kept so every game can show it
         internal static string Nowhere(NpcActor a)
         {
-            string s = a != null && a.Zdo != null ? a.Zdo.GetString(KNowhere, "") : "";
+            string s = a != null && a.Zdo != null ? NpcLocker.Text(a.Zdo, KNowhere) : "";
             if (s.Length == 0) return "";
             System.Collections.Generic.List<string> l = new System.Collections.Generic.List<string>();
             foreach (string n in s.Split(',')) if (n.Length > 0) l.Add(Localization.instance != null ? Localization.instance.Localize(n) : n);
@@ -180,7 +205,7 @@ namespace HuginWhispers
         {
             if (_a == null || _a.Zdo == null || !_a.Owned) return;
             string s = string.Join(",", new System.Collections.Generic.List<string>(names).ToArray());
-            if (_a.Zdo.GetString(KNowhere, "") != s) _a.Zdo.Set(KNowhere, s);
+            if (NpcLocker.Text(_a.Zdo, KNowhere) != s) NpcLocker.Put(_a.Zdo, KNowhere, s);
         }
 
         // what it carries now (a servant putting things away)
@@ -196,7 +221,7 @@ namespace HuginWhispers
             return false;
         }
 
-        internal bool StoreAt(out Vector3 at) { ZDO z = _a != null ? _a.Zdo : null; at = z != null ? z.GetVec3(KStore, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
+        internal bool StoreAt(out Vector3 at) { ZDO z = _a != null ? _a.Zdo : null; at = z != null ? NpcLocker.Vec(z, KStore, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
 
         // its storeroom: the chests round the spot pointed at (in its base)
         internal static string SetStore(NpcActor a, Vector3 aim)
@@ -206,7 +231,7 @@ namespace HuginWhispers
             if (!NpcBase.For(NpcRules.Home(a)).Inside(aim)) return Lang.T("Це поза його базою — склад має бути в ній.");
             int n = 0;
             foreach (Container c in a.Worker != null ? a.Worker.InBase<Container>() : new List<Container>()) if (c.GetComponent<Piece>() != null && Utils.DistanceXZ(c.transform.position, aim) <= StoreReach) n++;
-            a.Zdo.Set(KStore, aim);
+            NpcLocker.Put(a.Zdo, KStore, aim);
             NpcWorker w = a.Worker; if (w != null) w.Reset();
             return n > 0 ? Lang.F("Тут склад: скринь довкола — {0}.", n) : Lang.T("Тут склад — але скринь довкола поки нема.");
         }
@@ -218,19 +243,19 @@ namespace HuginWhispers
             if (Utils.DistanceXZ(aim, NpcRules.Home(a)) > NpcBase.Reach) return "Цей дім далеко від його бази.";
             Player me = Player.m_localPlayer;
             if (me != null) { Vector3 back = me.transform.position - aim; back.y = 0f; if (back.sqrMagnitude > 0.01f) aim += back.normalized * 0.7f; } // (pointed at a wall: the floor before it)
-            a.Zdo.Set(KHouse, aim);
+            NpcLocker.Put(a.Zdo, KHouse, aim);
             NpcWorker w = a.Worker; if (w != null) w.Reset();
             NpcHouse.For(aim).ShowSoon(); // (its edges, to see which house it took)
             return "Цей дім тепер його турбота. Межі дому — бірюзові вогники.";
         }
 
-        internal static bool Patrols(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null && z.GetBool(KPatrol, false); }
+        internal static bool Patrols(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null && NpcLocker.Flag(z, KPatrol); }
 
         internal static string SetPatrol(NpcActor a, bool on)
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
-            a.Zdo.Set(KPatrol, on);
-            if (on) a.Zdo.Set(KPost, Vector3.zero); // (one or the other)
+            NpcLocker.Put(a.Zdo, KPatrol, on);
+            if (on) NpcLocker.Put(a.Zdo, KPost, Vector3.zero); // (one or the other)
             NpcWorker w = a.Worker; if (w != null) w.Reset();
             return on ? "Обходить усю базу." : "Знову обходить межу бази.";
         }
@@ -239,8 +264,8 @@ namespace HuginWhispers
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
             if (!NpcBase.For(NpcRules.Home(a)).Inside(aim)) return "Це поза його базою — пост має бути в ній.";
-            a.Zdo.Set(KPost, aim);
-            a.Zdo.Set(KPatrol, false); // (one or the other)
+            NpcLocker.Put(a.Zdo, KPost, aim);
+            NpcLocker.Put(a.Zdo, KPatrol, false); // (one or the other)
             NpcWorker w = a.Worker; if (w != null) w.Reset();
             return "Тут його пост.";
         }
@@ -253,7 +278,7 @@ namespace HuginWhispers
             if (best == null) return "Не бачу ящика там, куди ти дивишся.";
             ZNetView nv = best.GetComponent<ZNetView>();
             if (nv == null || !nv.IsValid()) return "Цей ящик ще не готовий.";
-            NpcKit.SetRef(a.Zdo, KChest, nv.GetZDO().m_uid);
+            NpcLocker.PutRef(a.Zdo, KChest, nv.GetZDO().m_uid);
             NpcWorker w = a.GetComponent<NpcWorker>();
             if (w != null) w.Reset();
             return "Тепер це його ящик запасів.";
@@ -268,11 +293,11 @@ namespace HuginWhispers
             for (int i = 0; i < Jobs.All.Count; i++)
             {
                 Job j = Jobs.All[i];
-                _jobRing.Add(new NpcMenu.Button { Order = i, Title = j.Word.Substring(0, 1).ToUpperInvariant() + j.Word.Substring(1), Icon = j.Icon, Desc = a => Lang.T(j.Desc),
-                    Now = a => a.Worker != null && a.Worker.JobId == j.Id, Not = a => NpcLevers.NoJob(a, j.Id) ?? j.Can(a), Do = (a, p) => SetJob(a, j.Id),
+                _jobRing.Add(new NpcMenu.Button { Order = i, Title = j.Word, TitleNow = a => { string w = Jobs.Word(j.Id); return w.Substring(0, 1).ToUpperInvariant() + w.Substring(1); }, Icon = j.Icon, Desc = a => Lang.T(j.Desc),
+                    Now = a => a.Worker != null && a.Worker.JobId == j.Id, Not = a => WhyNot(a, j), Do = (a, p) => SetJob(a, j.Id),
                     Place = j.Place, AtPlace = j.Place != null ? (Func<NpcActor, Vector3, string>)((a, at) => j.Assign(a, at)) : null }); // (a servant: pointed at its house)
             }
-            _jobRing.Add(new NpcMenu.Button { Order = 99, Title = "Без роботи", Icon = "n-none", Desc = a => Lang.T("Не працює: удень походжає базою."),
+            _jobRing.Add(new NpcMenu.Button { Order = 99, Title = Lang.K("Без роботи"), Icon = "n-none", Desc = a => Lang.T("Не працює: удень походжає базою."),
                 Now = a => a.Worker == null || !a.Worker.Works, Do = (a, p) => SetJob(a, "") });
             return _jobRing;
         }
@@ -407,12 +432,13 @@ namespace HuginWhispers
             return put;
         }
 
-        // a chest a worker of its base keeps its supplies in
-        internal static bool IsWorkChest(ZDOID id)
+        // the chests workers keep their supplies in, in one look (a servant asks this of every chest for every thing it holds: asked of each, it was chests × things × people)
+        private static readonly HashSet<ZDOID> Work = new HashSet<ZDOID>();
+        internal static HashSet<ZDOID> WorkChests()
         {
-            if (id.IsNone()) return false;
-            foreach (NpcActor o in NpcActor.Live) if (o != null && o.Worker != null && o.Worker.Works && o.Worker.ChestId == id) return true;
-            return false;
+            Work.Clear();
+            foreach (NpcActor o in NpcActor.Live) if (o != null && o.Worker != null && o.Worker.Works) { ZDOID c = o.Worker.ChestId; if (!c.IsNone()) Work.Add(c); }
+            return Work;
         }
 
         private bool StoreInChest(Container c)
@@ -430,14 +456,71 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the errands (NpcMind: Task.Work, every thought)
         internal void Reset()
         {
+            _chestLook = 0f;
             if (_e != null && _stage != Stage.Find && Time.time - _stageSince < 0.5f) return; // (an errand just found by Ready(): kept)
             FlushCarry();
             SetTarget(ZDOID.None);
             NpcHew.PutAway(_a); // (an axe, a pickaxe in its hand: away)
+            if (_a != null) NpcChores.Hammer(_a, false); // (a servant cut off mending: into a fight it went with the hammer)
             _e = null; _stage = Stage.Find; _stageSince = Time.time; _next = 0f;
         }
 
-        private void Go(Stage s) { FlushCarry(); _stage = s; _stageSince = Time.time; _next = 0f; if (_mind != null) _mind.NewGoal(); }
+        private void Go(Stage s) { if (_stage == Stage.Use && s != Stage.Use) LoopOff(); FlushCarry(); _stage = s; _stageSince = Time.time; _next = 0f; _moved = false; _inAt = -1f; _inGo = null; _inThing = null; if (_mind != null) _mind.NewGoal(); }
+
+        // its body's move at an errand (a clip of ours, NpcBody.Clip: every game sees it): only while a player sees it (NpcClock.Seen), its walk
+        // waits for the clip to go off (NpcBody.ClipFirst). MoveAt: s till its hand is there (the clips' «mark in»/«got» 1.1–1.4)
+        internal static float MoveAt = 1.2f, BrowFrom = 40f, BrowChance = 0.3f;
+        private bool _moved;
+        private bool Moves(string clip) { return !string.IsNullOrEmpty(clip) && _a.Body != null && NpcClock.Seen(_a) && _a.Body.Clip(clip); }
+
+        // a move that lasts (its clip has parts «in» and «loop», maybe «rest» and «out»): its way in, then a round of its loop for LoopMin…LoopMax s,
+        // now and then a rest for RestMin…RestMax s (RestChance), each length drawn anew — no two stirs alike —, as long as the errand lasts; its way out
+        // as it leaves. Each part played anew gets its own «vary» too (BodyAnimator.Vary). A clip with no «loop» part: played once (Moves above)
+        internal static float LoopMin = 2f, LoopMax = 6f, RestMin = 0.8f, RestMax = 2.5f, RestChance = 0.45f;
+        private string _loop, _loopRest, _loopOut; private float _loopNext; private bool _resting;
+
+        // a step in before its hands move (the user 2026-11-07): its walk ends 1.6–2.2 m from a fire or a smelter, its arm reaches 0.85; while
+        // a player sees it, it walks on to StepInTo m off the thing's nearest surface, StepInFor s at most (under the stuck guard's 12): not there
+        // by then, it works from where it stands, its hands down. Unseen: as ever. The thing's collider looked up once a step
+        internal static float StepInTo = 0.5f, StepInFor = 3f;
+        private float _inAt = -1f; private Component _inThing; private GameObject _inGo; // (the errand's thing, found once a step in)
+        private bool StepIn(float dt, Component thing)
+        {
+            if (thing == null || _a.Body == null || !NpcClock.Seen(_a)) return false;
+            if (_inThing != thing) { _inThing = thing; _inAt = Time.time; }
+            if (Time.time - _inAt > StepInFor) return false;
+            Vector3 me = transform.position, p = NpcMind.Nearest(thing, me);
+            if (Utils.DistanceXZ(me, p) <= NpcMind.ArmReach) return false; // (at its hand already)
+            Vector3 dir = me - p; dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) return false;
+            Vector3 to = p + dir.normalized * StepInTo; to.y = me.y;
+            return !_mind.Walk(dt, to, 0.15f, false);
+        }
+        // the thing it works on within its arm (NpcMind.AtArm): a move of its hands only then — from a step off its hands stay down
+        private bool AtTarget() { GameObject go = _inGo != null ? _inGo : _e != null && !_e.Target.IsNone() ? NpcKit.Find(_e.Target) : null; return go != null && _mind.AtArm(go.transform); }
+        private bool LoopStart(string clip)
+        {
+            if (string.IsNullOrEmpty(clip) || BodyClips.Find(clip + ".loop") == null) return false;
+            PAnimClip intro = BodyClips.Find(clip + ".in");
+            if (!Moves(intro != null ? clip + ".in" : clip + ".loop")) return false;
+            _loop = clip + ".loop"; _loopRest = BodyClips.Find(clip + ".rest") != null ? clip + ".rest" : null; _loopOut = BodyClips.Find(clip + ".out") != null ? clip + ".out" : ""; // (its parts' names made once a round of work)
+            _resting = false; _loopNext = Time.time + (intro != null ? intro.Length : 0f);
+            return true;
+        }
+        private void LoopTick()
+        {
+            if (_loop == null || Time.time < _loopNext || _a.Body == null) return;
+            bool rest = !_resting && _loopRest != null && UnityEngine.Random.value < RestChance;
+            float len = rest ? UnityEngine.Random.Range(RestMin, RestMax) : UnityEngine.Random.Range(LoopMin, LoopMax);
+            _a.Body.Clip(rest ? _loopRest : _loop, len + 1f);
+            _resting = rest; _loopNext = Time.time + len;
+        }
+        private void LoopOff()
+        {
+            if (_loop == null) return;
+            if (_a.Body != null) _a.Body.Clip(_loopOut); // (its way out, or none: the clip ends)
+            _loop = null;
+        }
 
         // nothing it can do now (no job, no chest, nothing to do and nothing to carry): its mind lets its day go on meanwhile
         internal bool Idle;
@@ -463,9 +546,10 @@ namespace HuginWhispers
             if (_mind == null || _a == null) return;
             Idle = false;
             Job job = Job;
-            Container chest = _chestNow = Chest;
-            if (job == null) { _mind.Halt(); Doing = "без роботи"; Idle = true; return; }
-            if (job.NeedsChest && !NpcLocker.Ready(_a)) { _mind.Halt(); Doing = "чекає свої речі"; Idle = true; return; } // (its locker on its way here)
+            if (Time.time >= _chestLook) { _chestLook = Time.time + 1f; _chestNow = Chest; }
+            Container chest = _chestNow;
+            if (job == null) { _mind.Halt(); Doing = Lang.K("без роботи"); Idle = true; return; }
+            if (job.NeedsChest && !NpcLocker.Ready(_a)) { _mind.Halt(); Doing = Lang.K("чекає свої речі"); Idle = true; return; } // (its locker on its way here)
             if (chest == null && job.NeedsChest) { _mind.Halt(); Doing = ChestId.IsNone() ? "чекає на ящик запасів" : "ящик запасів далеко"; Idle = true; return; }
             switch (_stage)
             {
@@ -484,22 +568,29 @@ namespace HuginWhispers
                     Go(!string.IsNullOrEmpty(_e.Take) && Carrying(_e.Take) < _e.Count ? Stage.ToChest : Stage.ToTarget);
                     return;
                 case Stage.ToChest:
-                    Doing = "іде до ящика";
+                    if (chest == null) { Drop(); return; } // (a job that needs none has a chest here too — a servant — and it may be taken away while it walks)
+                    Doing = Lang.K("іде до ящика");
                     if (!_mind.Walk(dt, chest.transform.position, 2f, _e != null && _e.Urgent)) return;
+                    if (StepIn(dt, chest)) return; // (to its rim, its hand going in: NpcMind.Open)
                     if (CarriesAnything && _e != null) StoreExcept(chest, _e.Take); // (leftovers of another errand back first)
                     int want = _e != null ? _e.Count - Carrying(_e.Take) : 0;
                     int got = want > 0 ? TakeFromChest(chest, _e.Take, want) : 0;
-                    if (got < 0) { Doing = "ящик відкритий — чекає"; _mind.Halt(); return; } // (a player is in it)
+                    if (got < 0) { Doing = Lang.K("ящик відкритий — чекає"); _mind.Halt(); return; } // (a player is in it)
                     if (got == 0 && Carrying(_e.Take) == 0) { Drop(); return; }
                     Go(Stage.ToTarget);
                     return;
                 case Stage.ToTarget:
+                    if (Gone) { Go(Stage.Rest); return; }
                     Doing = _e.Word;
                     if (!_mind.Walk(dt, _e.At, _e.Near, _e.Urgent)) return;
                     Go(Stage.Use);
                     return;
                 case Stage.Use:
+                    if (Gone) { Go(Stage.Rest); return; }
+                    if (!_moved && !string.IsNullOrEmpty(_e.Move ?? job.Move) && !_e.Target.IsNone()) { if (_inGo == null) _inGo = NpcKit.Find(_e.Target); if (_inGo != null && StepIn(dt, _inGo.transform)) return; } // (in to the thing its hands work on)
                     _mind.Halt(); _mind.Face(_e.At + Vector3.up);
+                    if (!_moved) { _moved = true; string move = AtTarget() ? _e.Move ?? job.Move : null; if (LoopStart(move)) { _next = Time.time + MoveAt; return; } if (Moves(move)) { _next = Time.time + MoveAt; return; } } // (its hand there first: the work happens as it reaches; a move that lasts loops while it works)
+                    LoopTick();
                     if (Time.time < _next) return;
                     _next = Time.time + StepEvery * Ways.WorkStep * NpcHunger.Slow(_a) / NpcKnack.Of(_a, JobId) / NpcToil.Pace(_a); // (a diligent one quicker, a hungry one slower, one with a knack for it quicker still; its mood and its craft: NpcToil)
                     if (Time.time - _stageSince > 60f || _e.Use == null || _e.Use(this, _e)) Go(_e.Collect != null ? Stage.Collect : Stage.Rest);
@@ -519,7 +610,7 @@ namespace HuginWhispers
                     Go(!Room || job.StoreAfterEach ? Stage.Store : Stage.Rest);
                     return;
                 case Stage.Store:
-                    Doing = "несе до ящика";
+                    Doing = Lang.K("несе до ящика");
                     if (!CarriesAnything || chest == null) { Go(Stage.Rest); return; } // (no chest: a job that needs none — what it still carries from an old job stays carried)
                     if (!_mind.Walk(dt, chest.transform.position, 2f, false)) return;
                     if (!StoreInChest(chest) && Time.time - _stageSince < 30f) { Doing = CarriesAnything ? "ящик повний або відкритий" : Doing; _mind.Halt(); return; }
@@ -527,6 +618,7 @@ namespace HuginWhispers
                     return;
                 default: // Rest: a breath between errands
                     _mind.Halt();
+                    if (!_moved) { _moved = true; if (NpcToil.Tired(_a) >= BrowFrom && UnityEngine.Random.value < BrowChance) Moves(UnityEngine.Random.value < 0.5f ? "wipe_brow" : "back_ache"); } // (worn: its brow wiped or its back stretched, now and then)
                     if (_e != null) { SetTarget(ZDOID.None); _e = null; }
                     if (Time.time - _stageSince < Breath * Ways.WorkBreath) return; // (a diligent one rests less)
                     _stage = Stage.Find; _next = 0f;
@@ -534,7 +626,10 @@ namespace HuginWhispers
             }
         }
 
-        private void Drop() { SetTarget(ZDOID.None); _e = null; _stage = Stage.Rest; _stageSince = Time.time; Doing = "у ящику нема потрібного"; }
+        // the thing of its errand no more (taken down, picked up): the one word for every job — its Use need not ask
+        private bool Gone { get { return _e != null && !_e.Target.IsNone() && ZDOMan.instance != null && ZDOMan.instance.GetZDO(_e.Target) == null; } }
+
+        private void Drop() { SetTarget(ZDOID.None); _e = null; _stage = Stage.Rest; _stageSince = Time.time; Doing = Lang.K("у ящику нема потрібного"); }
 
         private void StoreExcept(Container chest, string keep)
         {
@@ -550,7 +645,7 @@ namespace HuginWhispers
         {
             get
             {
-                string t = _a != null && _a.Zdo != null ? _a.Zdo.GetString(KTarget, "") : "";
+                string t = _a != null && _a.Zdo != null ? NpcLocker.Text(_a.Zdo, KTarget) : "";
                 if (t != _targetSeen) { _targetSeen = t; _target = NpcKit.Resolve(t); }
                 return _target;
             }
@@ -559,7 +654,7 @@ namespace HuginWhispers
         private void SetTarget(ZDOID id)
         {
             if (_a == null || _a.Zdo == null || !_a.Owned || Target == id) return;
-            NpcKit.SetRef(_a.Zdo, KTarget, id);
+            NpcLocker.PutRef(_a.Zdo, KTarget, id);
         }
 
         private NpcPersona Ways { get { return NpcPersona.Of(_a); } }
@@ -601,42 +696,49 @@ namespace HuginWhispers
         // the same for anyone (meals: a base's chests and tables), nearest to «me» first
         internal static List<T> InBaseOf<T>(NpcBase b, Vector3 me) where T : Component
         {
-            if (!ReferenceEquals(_seenWorld, ZNet.instance)) { Seen.Clear(); _seenWorld = ZNet.instance; } // (another world: nothing of the old one kept)
-            string key = typeof(T).Name + "@" + Mathf.RoundToInt(b.Centre.x) + "," + Mathf.RoundToInt(b.Centre.z);
-            KeyValuePair<float, List<Component>> had;
             List<Component> all = b.Things(typeof(T)); // (the base's own look at its things: NpcBase — one for everyone there)
-            if (all == null && Seen.TryGetValue(key, out had) && Time.time - had.Key < LookAgain) all = had.Value;
-            else if (all == null)
-            {
-                all = new List<Component>();
-                HashSet<Component> seen = new HashSet<Component>();
-                if (typeof(T) == typeof(Fireplace) || typeof(T) == typeof(Smelter) || typeof(T) == typeof(CookingStation) || typeof(T) == typeof(Beehive) || typeof(T) == typeof(Fermenter) || typeof(T) == typeof(Container) || typeof(T) == typeof(Bed) || typeof(T) == typeof(Chair))
-                {
-                    List<Piece> pieces = new List<Piece>();
-                    Piece.GetAllPiecesInRadius(b.Centre, NpcBase.Reach, pieces);
-                    foreach (Piece pc in pieces) { T t = pc != null ? pc.GetComponentInChildren<T>() : null; if (t != null && seen.Add(t) && b.Inside(t.transform.position)) all.Add(t); }
-                }
-                else
-                {
-                    int mask = typeof(T) == typeof(ItemDrop) ? LayerMask.GetMask("item") : LayerMask.GetMask("piece_nonsolid", "Default", "Default_small", "item");
-                    foreach (Collider c in Physics.OverlapSphere(b.Centre, NpcBase.Reach, mask))
-                    {
-                        T t = c.GetComponentInParent<T>();
-                        if (t != null && seen.Add(t) && b.Inside(t.transform.position)) all.Add(t);
-                    }
-                }
-                Seen[key] = new KeyValuePair<float, List<Component>>(Time.time, all);
-            }
+            if (all == null) all = Looked<T>(b);
             List<T> l = new List<T>(all.Count);
             foreach (Component c in all) if (c != null) l.Add((T)c); // (gone since: left out)
             l.Sort((x, y) => (x.transform.position - me).sqrMagnitude.CompareTo((y.transform.position - me).sqrMagnitude));
             return l;
         }
 
+        // what the base's look does not hold (bushes, things on the ground): looked over here, a shared look every LookAgain s; measured («work look»)
+        private static readonly int PerfLook = NpcPerf.Id("work look (речі довкола бази)");
+        private static List<Component> Looked<T>(NpcBase b) where T : Component
+        {
+            if (!ReferenceEquals(_seenWorld, ZNet.instance)) { Seen.Clear(); _seenWorld = ZNet.instance; } // (another world: nothing of the old one kept)
+            string key = typeof(T).Name + "@" + Mathf.RoundToInt(b.Centre.x) + "," + Mathf.RoundToInt(b.Centre.z);
+            KeyValuePair<float, List<Component>> had;
+            if (Seen.TryGetValue(key, out had) && Time.time - had.Key < LookAgain) return had.Value;
+            List<Component> all = new List<Component>();
+            HashSet<Component> seen = new HashSet<Component>();
+            long perf = NpcPerf.Now();
+            if (typeof(T) == typeof(Fireplace) || typeof(T) == typeof(Smelter) || typeof(T) == typeof(CookingStation) || typeof(T) == typeof(Beehive) || typeof(T) == typeof(Fermenter) || typeof(T) == typeof(Container) || typeof(T) == typeof(Bed) || typeof(T) == typeof(Chair))
+            {
+                List<Piece> pieces = new List<Piece>();
+                Piece.GetAllPiecesInRadius(b.Centre, NpcBase.Reach, pieces);
+                foreach (Piece pc in pieces) { T t = pc != null ? pc.GetComponentInChildren<T>() : null; if (t != null && seen.Add(t) && b.Inside(t.transform.position)) all.Add(t); }
+            }
+            else
+            {
+                int mask = typeof(T) == typeof(ItemDrop) ? LayerMask.GetMask("item") : LayerMask.GetMask("piece_nonsolid", "Default", "Default_small", "item");
+                foreach (Collider c in Physics.OverlapSphere(b.Centre, NpcBase.Reach, mask))
+                {
+                    T t = c.GetComponentInParent<T>();
+                    if (t != null && seen.Add(t) && b.Inside(t.transform.position)) all.Add(t);
+                }
+            }
+            NpcPerf.Add(PerfLook, perf);
+            Seen[key] = new KeyValuePair<float, List<Component>>(Time.time, all);
+            return all;
+        }
+
     }
 
     // ---------------------------------------------------------------- two workers never on one thing
-    // A worker's thing of the moment is in its own ZDO (NpcWorker.KTarget, written by its owner once an errand, cleared
+    // A worker's thing of the moment is in its locker (NpcWorker.KTarget, written by its owner once an errand, cleared
     // after): every game sees every worker's, with no message of its own. Free = no other worker near (loaded here)
     // has it.
     internal static class Reserve

@@ -1,8 +1,16 @@
 # Люди сюжету, що живуть у світі (StoryPeople): сервер тримає кожного рівно одного; де живе — за станом Зали.
-# live: дім [spawn точка] [bed точка] — поки Зала не розпалена · kindled: те саме — з розпаленої Зали (1.2).
+# live: дім [spawn точка] [bed точка] [when <умови світу>] — перший рядок, чиї умови справджуються; останній, без when, — інакше.
 # Точка: <місце>.<назва деталі> (імена — blueprints/<місце>.names.txt) або просто <місце>.
 
 [person heid]
 npc: heid
+live: hall.vohnyshche when state zala >= 1.2                   # з розпаленої Зали — у Залі, біля вогнища Варти
 live: torvald.vohnyshche spawn torvald.lava bed torvald.lizhko    # табір біля могил вартових
-kindled: hall.vohnyshche                                         # з розпаленої Зали — у Залі, біля вогнища Варти
+after: world heid_called                                         # її нема у світі, поки хтось уперше не постояв біля брами (сцена gate_shut)
+# (що вона робить від сюжету: команда «npc heid hold …», StoryHold)
+# Її власне життя між командами (StoryLife): spot: <набір> <місце> [by <місце>] <вид> [sit] [clip … from … out …] [hours а-б] [stay а-б] [want н]
+spot: home torvald.vohnyshche fire sit want 0.2
+spot: home torvald.kamin by torvald.stovp think hours 6-11 want 0.5    # зранку біля каменя Торвальда
+spot: home torvald.lava seat sit
+spot: home torvald.lizhko by torvald.stovp tend clip heid_search.loop from heid_search.bends out heid_search.rises hours 11-18 stay 30-60
+spot: home hall.vohnyshche fire want 0.2                              # у Залі, коли вона вже там

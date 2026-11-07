@@ -10,24 +10,53 @@ namespace HuginWhispers
 {
     // The author's shots (the user 2026-11-02: «a simple sequencer — I set the camera and the angles myself»): a shot is
     // a camera — where it stands, where it looks, how wide — kept in the frame of one of the story's places, so it is
-    // the same in every world that place stands in (as the names of its pieces: HallParts).
-    //   files   assets/story/blueprints/<place>.shots.txt (built in) · config/RavenWatch/blueprints/<place>.shots.txt (the
-    //           author's, read first); written by the window «Режисер» into both (the mod's own folder when
-    //           story/source.txt says where it is — StoryFiles.Source)
+    // the same in every world that place stands in (as the names of its pieces: LocParts).
+    //   files   assets/story/blueprints/<place>.shots.txt: built in; on the author's machine read and written there by the
+    //           window «Режисер» (Blueprint.Data, StoryFiles.Source). The frame's height is the one the place was built at
+    //           (Loc.Where), so a shot sits the same on a slope as on flat land
     //   line    «name x y z qx qy qz qw fov» (fov 0: the shot's default)
     //   a shot is named «<place>.<name>» in a scene: camera shot prologue_house.door · camera move <a> <b> 4
+    //   «player» (PlayerFrame) is a place too, for a scene that plays anywhere: its frame is the player himself as he
+    //   stands when the shot begins (his feet, the way his body faces), so the shot sits the same round every player. The
+    //   land round him is not known, so such a camera is pulled in towards his head when something stands between them
     // The moves made of them (Shot, Move, Orbit) are poses asked each frame by StoryCamera.
     internal static class StoryShots
     {
         internal sealed class Shot { public string Name = ""; public Vector3 At; public Quaternion Rot = Quaternion.identity; public float Fov; }
 
         private const string Kind = "shots";
+        internal const string PlayerFrame = "player";
+        private const float PulledIn = 0.3f; // m short of what stands between the camera and his head
+
+        // the player's own frame: his feet, the way his body faces
+        private static bool OfPlayer(out Vector3 at, out Quaternion turn)
+        {
+            Player p = Player.m_localPlayer;
+            at = Vector3.zero; turn = Quaternion.identity;
+            if (p == null) return false;
+            at = p.transform.position;
+            turn = Quaternion.Euler(0f, p.transform.eulerAngles.y, 0f);
+            return true;
+        }
+
+        // a camera of the player's frame: nearer than whatever stands between it and his head (once, when the shot begins)
+        internal static Vector3 ClearOf(Vector3 cam)
+        {
+            Player p = Player.m_localPlayer;
+            if (p == null) return cam;
+            Vector3 head = p.GetHeadPoint(), d = cam - head;
+            float far = d.magnitude;
+            if (far < 0.01f) return cam;
+            int mask = GameCamera.instance != null ? (int)GameCamera.instance.m_blockCameraMask : (int)RavenMotor.Mask;
+            RaycastHit hit;
+            return Physics.SphereCast(head, 0.2f, d / far, out hit, far, mask, QueryTriggerInteraction.Ignore) ? head + d / far * Mathf.Max(0.5f, hit.distance - PulledIn) : cam;
+        }
         private static readonly Dictionary<string, List<Shot>> _tables = new Dictionary<string, List<Shot>>();
 
         // read the files again (the windows' «Перечитати»: StoryScenes.Reload)
         internal static void Again() { _tables.Clear(); }
 
-        private static string AuthorFile(string of) { return Path.Combine(Blueprint.Root, of + "." + Kind + ".txt"); }
+        private static string AuthorFile(string of) { return Path.Combine(Blueprint.Data, of + "." + Kind + ".txt"); }
 
         internal static List<Shot> Of(string of)
         {
@@ -66,14 +95,8 @@ namespace HuginWhispers
             string text = b.ToString();
             try
             {
-                Directory.CreateDirectory(Blueprint.Root);
+                Directory.CreateDirectory(Blueprint.Data);
                 File.WriteAllText(AuthorFile(of), text, new UTF8Encoding(false));
-                if (StoryFiles.Source != null) // (the mod's own folder: the shots go out with it)
-                {
-                    string dir = Path.Combine(StoryFiles.Source, "blueprints");
-                    Directory.CreateDirectory(dir);
-                    File.WriteAllText(Path.Combine(dir, of + "." + Kind + ".txt"), text, new UTF8Encoding(false));
-                }
                 return null;
             }
             catch (Exception e) { return "не записалось: " + e.Message; }
@@ -86,16 +109,59 @@ namespace HuginWhispers
         internal static string Take(string of, string name, StoryCamera.Pose now)
         {
             Loc l = Locs.Get(of);
-            if (l == null) return "нема місця «" + of + "»";
+            if (l == null && of != PlayerFrame) return "нема місця «" + of + "»";
             if (!Blueprint.GoodName(name)) return "Назва кадру: латиниця, цифри, _ чи -.";
             Vector3 local; Quaternion turn;
-            if (!l.ToLocal(now.At, out local) || !l.Turn(out turn)) return "«" + of + "» ще не стоїть у цьому світі — кадр нема до чого прив'язати.";
+            if (l == null)
+            {
+                Vector3 feet;
+                if (!OfPlayer(out feet, out turn)) return "Нема гравця.";
+                local = Quaternion.Inverse(turn) * (now.At - feet);
+            }
+            else if (!l.ToLocal(now.At, out local) || !l.Turn(out turn)) return "«" + of + "» ще не стоїть у цьому світі — кадр нема до чого прив'язати.";
             List<Shot> t = Of(of);
             Shot s = t.Find(x => x.Name == name);
             if (s == null) { s = new Shot { Name = name }; t.Add(s); }
             s.At = local; s.Rot = Quaternion.Inverse(turn) * now.Rot; s.Fov = now.Fov;
             string why = Write(of);
             return why ?? "Кадр «" + of + "." + name + "» записано.";
+        }
+
+        // a shot named anew: its files, and every scene's line that names it (camera shot|move <of>.<old>)
+        internal static string Rename(string of, string old, string name)
+        {
+            if (!Blueprint.GoodName(name)) return "Назва кадру: латиниця, цифри, _ чи -.";
+            List<Shot> t = Of(of);
+            Shot s = t.Find(x => x.Name == old);
+            if (s == null) return "нема кадру «" + old + "»";
+            if (name == old) return null;
+            if (t.Exists(x => x.Name == name)) return "Кадр «" + name + "» уже є в «" + of + "».";
+            s.Name = name;
+            string why = Write(of);
+            if (why != null) return why;
+            string from = of + "." + old, to = of + "." + name;
+            int lines = 0;
+            HashSet<string> files = new HashSet<string>();
+            foreach (StoryScenes.SceneDef sc in StoryScenes.Scenes) files.Add(sc.From);
+            foreach (string f in files)
+            {
+                string text = StoryScenes.FileText(f);
+                if (string.IsNullOrEmpty(text)) continue;
+                string[] ls = text.Replace("\r", "").Split('\n');
+                bool changed = false;
+                for (int i = 0; i < ls.Length; i++)
+                {
+                    string l = ls[i].TrimStart();
+                    if (!l.StartsWith("camera ") && !(l.StartsWith("if ") && l.Contains(": camera "))) continue;
+                    string[] w = ls[i].Split(' ');
+                    for (int k = 0; k < w.Length; k++) if (w[k] == from) { w[k] = to; changed = true; lines++; }
+                    ls[i] = string.Join(" ", w);
+                }
+                if (!changed) continue;
+                why = StoryScenes.SaveFile(f, string.Join("\n", ls));
+                if (why != null) return why;
+            }
+            return "Кадр «" + from + "» тепер «" + to + "» (рядків у сценах: " + lines + ").";
         }
 
         internal static string Remove(string of, string name)
@@ -127,7 +193,16 @@ namespace HuginWhispers
             int dot = full.IndexOf('.');
             if (dot <= 0) return false;
             string of = full.Substring(0, dot), name = full.Substring(dot + 1);
-            if (of == "hall") of = HallSpawn.Name; // (the Hall by its story word)
+            Loc byWord = of != PlayerFrame ? Locs.Get(of) : null;
+            if (byWord != null) of = byWord.Id; // (a place by its alias too: «hall»)
+            if (of == PlayerFrame)
+            {
+                Shot own = Of(of).Find(x => x.Name == name);
+                Vector3 feet; Quaternion his;
+                if (own == null || !OfPlayer(out feet, out his)) return false;
+                pose = new StoryCamera.Pose { At = ClearOf(feet + his * own.At), Rot = his * own.Rot, Fov = own.Fov };
+                return true;
+            }
             Loc l = Locs.Get(of);
             Shot s = l != null ? Of(of).Find(x => x.Name == name) : null;
             Vector3 at; Quaternion turn;
@@ -193,8 +268,8 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- the author's free camera
-        // flown on its own while the player stands: right mouse held — look and the wheel for the width; WASD, Q/E down and
-        // up, Shift fast, Ctrl slow (not while typing in the window)
+        // flown on its own while the player stands: right mouse held — look and the wheel for the width; WASD, Q/E or Ctrl/Space down
+        // and up, Shift fast, Alt slow (not while typing in the window)
         // flying = the camera is driven by it now: any other shot, a scene or the camera given back ends it by itself
         internal static bool Flying { get { return StoryCamera.Driving(FlyPose); } }
         private static Vector3 _at;
@@ -226,9 +301,9 @@ namespace HuginWhispers
                 if (Input.GetKey(KeyCode.S)) m -= rot * Vector3.forward;
                 if (Input.GetKey(KeyCode.D)) m += rot * Vector3.right;
                 if (Input.GetKey(KeyCode.A)) m -= rot * Vector3.right;
-                if (Input.GetKey(KeyCode.E)) m += Vector3.up;
-                if (Input.GetKey(KeyCode.Q)) m -= Vector3.up;
-                float speed = Input.GetKey(KeyCode.LeftShift) ? 14f : Input.GetKey(KeyCode.LeftControl) ? 1f : 4f;
+                if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.Space)) m += Vector3.up;
+                if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftControl)) m -= Vector3.up;
+                float speed = Input.GetKey(KeyCode.LeftShift) ? 14f : Input.GetKey(KeyCode.LeftAlt) ? 1f : 4f;
                 _at += m * speed * dt;
             }
             return new StoryCamera.Pose { At = _at, Rot = rot, Fov = _fov };

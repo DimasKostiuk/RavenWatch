@@ -42,7 +42,7 @@ namespace HuginWhispers
         internal static bool Animations = true;
         private static readonly FieldInfo ZAnim = AccessTools.Field(typeof(Character), "m_zanim");
         // how long words stay over the head: long enough to read them (about 20 letters a second), 6 to 18 s
-        internal static float SaySeconds(string line) { return Mathf.Max(Mathf.Clamp(4f + (line != null ? line.Length : 0) / 20f, 6f, 18f), RavenSpeech.ReadSeconds(line)); }
+        internal static float SaySeconds(string line) { return Mathf.Max(RavenSpeech.Seconds(line ?? "", RavenSpeech.Pace.Shout), RavenSpeech.ReadSeconds(line)); }
 
         private static readonly Dictionary<string, float> ReadyAt = new Dictionary<string, float>(); // ability id -> when it can be used again
         // kept in the character too (world time), so leaving and loading the world again does not make them ready
@@ -276,8 +276,9 @@ namespace HuginWhispers
 
         // the book's coloured dot on a gift: 0 none (passive, asleep, away, not worn), 1 ready, 2 waiting, 3 short of strength
         internal const int DotNone = 0, DotReady = 1, DotWait = 2, DotWeak = 3;
-        // the raven has left the shoulder for a moment (a strike, scouting, over the dome): nobody to feed, no ritual;
-        // why says what it is doing ("в атаці", "на розвідці ще 40 с", "тримає купол")
+        // the raven has left the shoulder for a moment (a strike, scouting, over the dome, an outing of its own — a hunt, a fish —
+        // or sitting somewhere near on a visit): nobody to feed, no ritual; why says what it is doing ("в атаці", "на розвідці ще
+        // 40 с", "тримає купол", "на полюванні"). The user 2026-11-05: a raven off hunting could be fed
         internal static bool OffShoulder(Player p, bool munin, out string why)
         {
             why = null;
@@ -285,7 +286,17 @@ namespace HuginWhispers
             else if (Orders.Busy(p, munin)) why = Orders.BusyText(p, munin);
             else if (!munin && Scouting()) why = Lang.F("на розвідці, ще {0}", RavenAbilities.Span(ScoutLeft()));
             else if (!munin && Dome.Mine()) why = Lang.T("тримає купол");
+            else if (p != null && Outing.Of(p, munin) != Outing.None) why = OutingWhy(Outing.Of(p, munin));
+            else if (WorldVisit.Active(munin)) why = Lang.T("сидить неподалік");
             return why != null;
+        }
+
+        private static string OutingWhy(int mode)
+        {
+            if (mode == Outing.Hunt) return Lang.T("на полюванні");
+            if (mode == Outing.Fish) return Lang.T("ловить рибу");
+            if (mode == Outing.Scout) return Lang.T("оглядає місцину");
+            return Lang.T("літає довкола");
         }
 
         internal static int Dot(RavenAbility a)
@@ -490,7 +501,7 @@ namespace HuginWhispers
             { long ts = Perf.On ? Perf.Now : 0; try { StoryQuests.Tick(); } catch (Exception e) { Fault("StoryQuests.Tick", e); } if (Perf.On) Perf.Step("StoryQuests.Tick", ts); } // (the story's track: the quests' stages, twice a second)
 #endif
 #if RAVEN_NPC
-            { long ts = Perf.On ? Perf.Now : 0; try { HallPanel.Tick(); HallPreview.Tick(); } catch (Exception e) { Fault("HallPanel.Tick", e); } if (Perf.On) Perf.Step("HallPanel.Tick", ts); } // (the Hall's window and the author's look at its states: asleep without the blueprints folder)
+            { long ts = Perf.On ? Perf.Now : 0; try { LocPanel.Tick(); LocPreview.Tick(); } catch (Exception e) { Fault("LocPanel.Tick", e); } if (Perf.On) Perf.Step("LocPanel.Tick", ts); } // (the Hall's window and the author's look at its states: asleep without the blueprints folder)
 #endif
             { long ts = Perf.On ? Perf.Now : 0; try { Pet.Tick(); } catch (Exception e) { Fault("Pet.Tick", e); } if (Perf.On) Perf.Step("Pet.Tick", ts); } // (standing a while: a stroke for a raven now and then)
             { long ts = Perf.On ? Perf.Now : 0; try { Gestures.Tick(); Fireside.Tick(); } catch (Exception e) { Fault("Gestures.Tick", e); } if (Perf.On) Perf.Step("Gestures.Tick", ts); } // (a waiting gesture; the fireside: your head on the teller, palms to the fire)

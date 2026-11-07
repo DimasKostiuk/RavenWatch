@@ -15,16 +15,22 @@ namespace HuginWhispers
     //   [chat table]          a talk at a table (fire: by the fire; any: either); talks part by an empty line,
     //   - Хто це смажив?      its lines «- » in turn: the one who starts, the other, the one who starts…
     //   - Кухар.
+    //   ? folk cook, !raid    a line «? …» in a talk: only while these hold (StoryCond, «he» the one who starts: the moment
+    //                         — day, night, daypart, weather, raid — and its home — folk, job, hired)
     //   [say hungry]          one person's lines, one per line (hungry · starving · nofood · meal · leave)
+    //   [chat quarrel]        words between two at odds, or ill-matched and both low (Spat): it cools them, not warms (NpcAttitude.Quarrel)
     // Who starts: the one of the two the game runs here with the lower id (never both); how often: their chattiness.
-    // Light: a look round every few seconds per resident, the lines are the actor's own Say (one message each).
+    // Light: a look round every few seconds per resident, none with no player in earshot; the lines are the actor's own Say
+    // (one message each). A talk is not picked again soon (Lately); a talk the composer makes (its lines «{@q_food}»…) is picked first
+    // more often than a written one (MadeFirst), so the written stories stay rare.
     internal static class NpcChatter
     {
-        private sealed class Lines { public readonly List<string[]> Talks = new List<string[]>(); public readonly List<string> One = new List<string>(); }
+        private sealed class Chat { public string[] Said; public List<Cond> When; }
+        private sealed class Lines { public readonly List<Chat> Talks = new List<Chat>(); public readonly List<string> One = new List<string>(); }
 
         private static readonly string Builtin =
             "[chat table]\n" +
-            "- Хто це смажив?\n- Кухар.\n- Передай йому, що м'ясо ще пручалося.\n\n" +
+            "? folk cook\n- Хто це смажив?\n- Кухар.\n- Передай йому, що м'ясо ще пручалося.\n\n" +
             "- Знову риба.\n- Учора теж була риба.\n- То це та сама?\n\n" +
             "- Смачно.\n- Ти завжди так кажеш.\n- Бо мені завжди мало.\n\n" +
             "- Хліб сьогодні м'який.\n- Бо хтось нарешті дров у піч підклав.\n\n" +
@@ -32,7 +38,7 @@ namespace HuginWhispers
             "- Як думаєш, Одін теж отак сидить і їсть?\n- Він тільки п'є. А м'ясо віддає вовкам.\n- Тоді нам ще пощастило.\n\n" +
             "- Добре, що є що їсти.\n- Добре, що є з ким.\n\n" +
             "- Завтра знову на роботу.\n- Не нагадуй, бо шматок у горлі стане.\n\n" +
-            "- Скажи кухарю, що солі мало.\n- От піди й скажи, у нього ніж.\n\n" +
+            "? folk cook\n- Скажи кухарю, що солі мало.\n- От піди й скажи, у нього ніж.\n\n" +
             "- Мій дід колись цілого кабана з'їв.\n- Сам?\n- З друзями. Але найбільше — дід.\n\n" +
             "- Чуєш уночі вовків?\n- Чую. А мені здавалося, що то ти хропеш.\n\n" +
             "- Що там у казані?\n- Краще не питай. Їж, поки тепле.\n\n" +
@@ -40,13 +46,13 @@ namespace HuginWhispers
             "- Тепло.\n- Ага.\n- Отак би й сидіти до весни.\n\n" +
             "- Бачиш іскри? Кажуть, то душі полеглих летять до Вальгалли.\n- То чого вони гаснуть?\n- Не всі долітають.\n\n" +
             "- Розкажи щось.\n- Жив собі троль.\n- І що?\n- Досі живе. За отим пагорбом.\n\n" +
-            "- Зорі сьогодні ясні.\n- Отже, завтра буде холодно.\n\n" +
+            "? night, weather clear\n- Зорі сьогодні ясні.\n- Отже, завтра буде холодно.\n\n" +
             "- Чуєш, як дрова тріщать?\n- Чую. Сирі хтось приніс.\n\n" +
             "- Драконицю колись бачити доводилось?\n- Раз. Більше не хочу.\n\n" +
             "- Добре, що в нас є дах.\n- І вогонь.\n- І ліжко. Ліжко — головне.\n\n" +
             "- Як твоя спина?\n- Як у старого віслюка. А твоя?\n- Як у віслюка, якого той віслюк возив.\n\n" +
             "- Знаєш, чому ворони кружляють над базою?\n- Чому?\n- Рахують нас. Про всяк випадок.\n\n" +
-            "- Тихо сьогодні.\n- Не кажи вголос, бо почують.\n\n" +
+            "? !raid\n- Тихо сьогодні.\n- Не кажи вголос, бо почують.\n\n" +
             "[say hungry]\n" +
             "Шлунок бурчить, як троль у печері.\nПоїсти б…\nХоч би сухарик якийсь.\nКоли вже вечеря?\nНа порожній шлунок і сокира важча.\n" +
             "[say starving]\n" +
@@ -94,7 +100,7 @@ namespace HuginWhispers
             "- Знову ти.\n- Знову я.\n- Ну то йди вже своєю дорогою.\n\n" +
             "- Що нового?\n- Курка втекла.\n- У нас нема курей.\n- От і я про те.\n\n" +
             "- А ворони сьогодні тихі.\n- Не наврочи.\n\n" +
-            "- Погода яка!\n- Яка?\n- Отака.\n\n" +
+            "? weather clear\n- Погода яка!\n- Яка?\n- Отака.\n\n" +
             "- Ти куди?\n- Туди.\n- А я звідти. Нічого там цікавого.\n\n" +
             "- Ложки моєї ніхто не бачив?\n- Бачили. Учора. У тебе в руці.\n\n" +
             "- Дерева ще рубати й рубати.\n- Дерева не закінчуються. На відміну від нас.\n\n" +
@@ -116,31 +122,31 @@ namespace HuginWhispers
             "- Чуєш, а хто перший сів за цей стіл?\n- Не знаю. Але місце біля вогню — моє.\n\n" +
             "- Ти щось сьогодні все мовчиш.\n- Їм.\n- А, ну тоді добре.\n\n" +
             "[chat fire]\n" +
-            "- Чуєш, як ліс дихає вночі?\n- Чую. Краще б він спав.\n\n" +
+            "? night\n- Чуєш, як ліс дихає вночі?\n- Чую. Краще б він спав.\n\n" +
             "- Колись я бачив|бачила, як падає зоря.\n- І яке бажання?\n- Щоб не впала на мене.\n\n" +
             "- Вогонь сьогодні неспокійний.\n- Це вітер.\n- Або хтось думає про нас.\n\n" +
             "- Як гадаєш, звідки ми тут?\n- Валькірії принесли.\n- А звідки вони нас узяли?\n- Не питай того, на що нема відповіді.\n\n" +
             "- Заспівай щось.\n- Не вмію.\n- То тим смішніше буде.\n\n" +
             "- Я вчора знову чув|чула той голос уві сні.\n- Який?\n- Той, що каже: можна все забути й відпочити.\n- Не слухай. Тримайся за те, що маєш.\n\n" +
-            "- Дим іде прямо вгору.\n- Отже, завтра ясно.\n- Або що вітру нема.\n- Ну так, я ж і кажу.\n\n" +
+            "? weather clear\n- Дим іде прямо вгору.\n- Отже, завтра ясно.\n- Або що вітру нема.\n- Ну так, я ж і кажу.\n\n" +
             "- Мені тут подобається.\n- Мені теж.\n- Тільки не кажи нікому, а то ще більше роботи дадуть.\n\n" +
             "- Пам'ятаєш, як ми тут уперше сіли?\n- Ага. Тоді й вогню путнього не було.\n\n" +
             "- Подай поліно.\n- Та дотягнися вже.\n- Ти ближче.\n- А в тебе ноги молодші.\n\n" +
-            "- Знаєш, що найкраще в ночі?\n- Що?\n- Що вона закінчується.\n\n" +
+            "? night\n- Знаєш, що найкраще в ночі?\n- Що?\n- Що вона закінчується.\n\n" +
             "- Цікаво, чи ворони мерзнуть.\n- У них пір'я.\n- У мене теж шуба, а я мерзну.\n\n" +
             "[chat meet]\n" +
             "- Куди йдеш?\n- По дрова.\n- І я.\n- То чого ми стоїмо?\n\n" +
             "- Кабана біля паркану бачили?\n- Бачив|Бачила. Він мене теж.\n\n" +
-            "- Ти сьогодні ранній птах.\n- Не спалося.\n- Мені теж. То хтось хропів.\n\n" +
+            "? daypart morning\n- Ти сьогодні ранній птах.\n- Не спалося.\n- Мені теж. То хтось хропів.\n\n" +
             "- О, ти тут.\n- А де мені ще бути?\n- Та мало де. Світ великий.\n\n" +
             "- Новину чули?\n- Яку?\n- Нема новин.\n- Ну й добре.\n\n" +
-            "- Гарний ранок.\n- Вже обід.\n- То гарний обід.\n\n" +
+            "? daypart day\n- Гарний ранок.\n- Вже обід.\n- То гарний обід.\n\n" +
             "- Мою сокиру ніхто не брав?\n- Ніхто. Вона там, де ти її завжди лишаєш.\n- А де я її лишаю?\n- Отож.\n\n" +
             "- Глянь, ворон на даху.\n- Рахує нас.\n- Всі на місці?\n- Здається, так.\n\n" +
             "- Що, втома?\n- Ні.\n- А чого сидиш?\n- Відпочиваю від того, що не втомився|втомилась.\n\n" +
             "- Що робиш?\n- Думаю.\n- Про що?\n- Про те, чи не піти мені робити щось.\n- І?\n- Ще думаю.\n\n" +
-            "- Небо сьогодні яке синє.\n- Як очі валькірії.\n- Звідки знаєш?\n- Так кажуть.\n\n" +
-            "- Чого ти сьогодні хмуришся?\n- Погода.\n- Та гарна ж погода.\n- От це й гнітить.\n\n" +
+            "? day, weather clear\n- Небо сьогодні яке синє.\n- Як очі валькірії.\n- Звідки знаєш?\n- Так кажуть.\n\n" +
+            "? weather clear\n- Чого ти сьогодні хмуришся?\n- Погода.\n- Та гарна ж погода.\n- От це й гнітить.\n\n" +
             // topics: a question and an answer on the same thing (made each time — NpcPhrases q_*/a_*)
             "[chat any]\n" +
             "- {@q_sleep}\n- {@a_sleep}\n\n" +
@@ -167,10 +173,39 @@ namespace HuginWhispers
             "[say wash]\n" +
             "Ух, аж дух перехопило!\nОт тепер я людина. Майже.\nВода холодна, а на душі тепло.\n" +
             "[say mend]\n" +
-            "Тук-тук — і як нове.\nЩе одна латка — і хата вічна.\nЛагоджу, лагоджу… Хто ж її так б'є?\n";
+            "Тук-тук — і як нове.\nЩе одна латка — і хата вічна.\nЛагоджу, лагоджу… Хто ж її так б'є?\n" +
+            // 2026-11-05: words between two at odds (Spat; a line about the other one: no he|she forms — they would be the speaker's)
+            "[chat quarrel]\n" +
+            "- Хто з'їв останню рибу?\n- Я. А що?\n- Нічого. Я просто з ранку не їв|їла.\n\n" +
+            "- Ти знову на моєму місці.\n- Тут не написано, чиє.\n- Тепер буде написано. Сокирою.\n\n" +
+            "- Може, хоч раз до роботи візьмешся?\n- Я свою роботу знаю.\n- Знаєш. Тільки не робиш.\n\n" +
+            "- Не дивись на мене так.\n- А як на тебе дивитися?\n- Ніяк. Дивись у свою миску.\n\n" +
+            "- Знову хропіння всю ніч.\n- Це не я.\n- А хто? Троль під ліжком?\n\n" +
+            "- Де моя ложка?\n- Звідки мені знати?\n- Бо вона в тебе в руці.\n\n" +
+            "- Тобі заплатили, а мені — дулю.\n- Отже, краще працюю.\n- Отже, краще підлизуєшся.\n\n" +
+            "- Коли лізли сірі, тебе ніде не було видно.\n- Я… стеріг|стерегла комору.\n- Під бочкою, ага.\n\n" +
+            "- Ще слово — і я пересяду.\n- То пересідай.\n- …Не дочекаєшся.\n\n" +
+            "- Ти завжди все знаєш краще.\n- Бо так воно і є.\n- От тому з тобою й важко.\n\n" +
+            // 2026-11-05: talks the composer makes (a topic's question and answer, NpcPhrases q_/a_): the written ones above stay as the rarer
+            // stories (Pick: a made one first more often)
+            "[chat table]\n" +
+            "- {@q_food}\n- {@a_food}\n\n" +
+            "- {@q_food}\n- {@a_food}\n- {@chat_reply}\n\n" +
+            "[chat fire]\n" +
+            "- {@q_sleep}\n- {@a_sleep}\n\n" +
+            "? daypart evening\n- {@chat_open}\n- {@chat_reply}\n- {@chat_reply}\n\n" +
+            "[chat any]\n" +
+            "- {@q_work}\n- {@a_work}\n\n" +
+            "? !weather clear\n- {@q_weather}\n- {@a_weather}\n\n" +
+            "- {@q_ravens}\n- {@a_ravens}\n\n" +
+            "- {@q_home}\n- {@a_home}\n- {@chat_reply}\n\n" +
+            // what the world's story did, between two of whom the one who starts knows it (StoryTales: its memory)
+            "? npcremembers tale_gate\n- {@с_розмова_брама}\n- {@chat_reply}\n\n" +
+            "? npcremembers tale_blue_fire\n- {@с_розмова_вогонь}\n- {@chat_reply}\n\n" +
+            "? npcremembers tale_first_heart\n- {@с_розмова_серце}\n- {@chat_reply}\n\n";
 
         private static Dictionary<string, Lines> _all;
-        internal static void Reload() { _all = null; }
+        internal static void Reload() { _all = null; Lately.Clear(); }
 
         private static Lines Of(string kind)
         {
@@ -181,6 +216,7 @@ namespace HuginWhispers
 
         private static void Load()
         {
+            NpcTalk.Register(); // (the conditions known before its words are read)
             _all = new Dictionary<string, Lines>();
             Parse(Builtin);
             if (RavenLooks.FromFiles && Directory.Exists(NpcTalk.Dir))
@@ -195,7 +231,8 @@ namespace HuginWhispers
         {
             Lines cur = null; bool talks = false;
             List<string> talk = new List<string>();
-            Action flush = () => { if (cur != null && talk.Count > 0) cur.Talks.Add(talk.ToArray()); talk.Clear(); };
+            List<Cond> when = null;
+            Action flush = () => { if (cur != null && talk.Count > 0) cur.Talks.Add(new Chat { Said = talk.ToArray(), When = when }); talk.Clear(); when = null; };
             foreach (string raw in text.Split('\n'))
             {
                 string line = raw.Trim();
@@ -212,21 +249,30 @@ namespace HuginWhispers
                 }
                 if (cur == null) continue;
                 if (line.Length == 0) { if (talks) flush(); continue; }
-                if (talks) talk.Add(line.StartsWith("-") ? line.Substring(1).Trim() : line);
+                if (talks && line.StartsWith("?"))
+                {
+                    List<string> errors = new List<string>();
+                    when = StoryCond.Parse(line.Substring(1).Trim(), errors);
+                    foreach (string e in errors) Npcs.Log("chatter «" + line + "»: " + e);
+                }
+                else if (talks) talk.Add(line.StartsWith("-") ? line.Substring(1).Trim() : line);
                 else cur.One.Add(line);
             }
             flush();
         }
 
         // ---------------------------------------------------------------- one person's line
-        internal static void Mutter(NpcActor a, string kind)
+        // how: a mutter in passing (Unasked: only while the ring is quiet), or something it must say (Event: it waits its turn — leaving hungry)
+        internal static void Mutter(NpcActor a, string kind) { Mutter(a, kind, NpcActor.Voice.Unasked); }
+        internal static void Mutter(NpcActor a, string kind, NpcActor.Voice how)
         {
             if (a == null || Busy(a) || !NpcVoice.Free(a)) return; // (asleep, talked to, held quiet by a scene or the story)
+            if (how == NpcActor.Voice.Unasked && !NpcActor.FloorFree(a.transform.position, a)) return; // (someone near is speaking)
             Lines l = Of("say " + kind);
             bool written = l != null && l.One.Count > 0, made = NpcPhrases.Has(a, kind);
             Player to = Player.GetClosestPlayer(a.transform.position, 20f);
-            if (made && (!written || UnityEngine.Random.value < 0.5f)) { string s = NpcPhrases.Compose(a, kind, to); if (!string.IsNullOrEmpty(s)) { a.Say(s); return; } } // (written and made lines take turns)
-            if (written) a.Say(a.Form(NpcPhrases.Inline(a, l.One[UnityEngine.Random.Range(0, l.One.Count)], to))); // (its own form: «живий|жива»)
+            if (made && (!written || UnityEngine.Random.value < 0.5f)) { string s = NpcPhrases.Compose(a, kind, to); if (!string.IsNullOrEmpty(s)) { a.Say(s, null, how); return; } } // (written and made lines take turns)
+            if (written && !NpcVoice.OwnWordsOnly(a)) a.Say(a.Form(NpcPhrases.Inline(a, l.One[UnityEngine.Random.Range(0, l.One.Count)], to)), null, how); // (its own form: «живий|жива»; the common people's lines, as the book's)
         }
 
         // the same, not again for a while (an empty pantry is said once in a few minutes, not at every look)
@@ -264,6 +310,7 @@ namespace HuginWhispers
             if (a == null || m == null || Busy(a) || (!force && !NpcVoice.Free(a))) return false;
             bool seated = m.SeatedNow;
             if (!force && !seated && !AtEase(m)) return false;
+            if (!force && Player.GetClosestPlayer(a.transform.position, Earshot) == null) return false; // (nobody would hear: no lines, no messages)
             float range = force ? 6f : seated ? 5f : 4f; // (round a fire they sit two steps off it: across it some four apart)
             NpcActor other = null; float best = range * range;
             foreach (NpcActor o in NpcActor.Live)
@@ -274,6 +321,7 @@ namespace HuginWhispers
                 if (d < best) { best = d; other = o; }
             }
             if (other == null) return false;
+            if (!force && !NpcActor.FloorFree(a.transform.position, a, other)) return false; // (someone else near is speaking: not a third voice over it)
             if (force) seated = seated && other.Mind.SeatedNow;
             else
             {
@@ -283,22 +331,68 @@ namespace HuginWhispers
                 if (UnityEngine.Random.value > chance) return false;
             }
             string where = !seated ? "meet" : m.AtTable || other.Mind.AtTable ? "table" : "fire";
-            List<string[]> pool = new List<string[]>();
-            Lines l = Of("chat " + where); if (l != null) pool.AddRange(l.Talks);
-            l = Of("chat any"); if (l != null) pool.AddRange(l.Talks);
+            List<Chat> pool = new List<Chat>();
+            bool spat = Spat(a, other);
+            if (spat) Fitting(pool, "chat quarrel", a); // (two at odds, or ill-matched and both low: words instead of a talk)
+            if (pool.Count == 0) { spat = false; Fitting(pool, "chat " + where, a); Fitting(pool, "chat any", a); }
             if (pool.Count == 0) return false;
-            string[] lines = pool[UnityEngine.Random.Range(0, pool.Count)];
+            string[] lines = Pick(pool).Said;
             if (Talking.Count > 64) Talking.Clear();
             float until = Time.time + 6f * lines.Length + 4f;
             Talking[a] = until; Talking[other] = until;
             if (!seated) { Stop(a, other, until); Stop(other, a, until); }
             r.StartCoroutine(Talk(a, other, lines, seated));
-            Npcs.Log(a.Id + ": talks with " + other.Id + " (" + where + ")");
+            Npcs.Log(a.Id + ": " + (spat ? "quarrels" : "talks") + " with " + other.Id + " (" + where + ")");
+            if (spat) { NpcAttitude.Quarrel(a, other, "table"); NpcAttitude.Quarrel(other, a, "table"); } // (a quarrel cools them both: NpcAttitude)
+            else { NpcAttitude.TellPerson(a, other, TalkWarms); NpcAttitude.TellPerson(other, a, TalkWarms); } // (they get to know each other: NpcAttitude, person to person)
             return true;
         }
 
-        // strolling at its ease: nothing over its own day (no work, no whim, no order)
-        private static bool AtEase(NpcMind m) { return m.NowLayer <= NpcMind.Layer.Routine && (m.Now == NpcMind.Task.Wander || m.Now == NpcMind.Task.Idle); }
+        // words instead of a talk: one of the two cold to the other (half the times: the other half a talk warms them back),
+        // or two who get on badly (Fit) and are both low (a third of the times)
+        internal static float SpatCold = 0.5f, SpatLow = 0.35f, IllMatched = 25f, LowMood = 40f;
+        private static bool Spat(NpcActor a, NpcActor o)
+        {
+            if (NpcAttitude.OfPerson(a, o) <= -15f || NpcAttitude.OfPerson(o, a) <= -15f) return UnityEngine.Random.value < SpatCold;
+            return NpcAttitude.Fit(a, o) < IllMatched && NpcToil.Mood(a) < LowMood && NpcToil.Mood(o) < LowMood && UnityEngine.Random.value < SpatLow;
+        }
+
+        // the talks of this kind whose conditions hold now («he»: the one who starts)
+        private static void Fitting(List<Chat> into, string kind, NpcActor a)
+        {
+            Lines l = Of(kind);
+            if (l == null) return;
+            NpcActor was = NpcTalk.Speaker;
+            NpcTalk.Speaker = a;
+            try { foreach (Chat c in l.Talks) if (StoryCond.All(null, c.When)) into.Add(c); }
+            finally { NpcTalk.Speaker = was; }
+        }
+
+        // one not heard lately (up to half of those that fit, of each kind of talk, are kept back; all the people of this game share it)
+        internal static float TalkWarms = 3f; // points warmer to each other a talk
+        private const float Earshot = 25f; // (as far as a line's bubble is seen: NpcActor.RPC_Say)
+        private static readonly List<Chat> Lately = new List<Chat>();
+        // a made talk (its lines from the composer, «{@…}»: new words each time) first MadeFirst of the times there is one; the written
+        // stories are the rarer, so they are not heard word for word too often
+        internal static float MadeFirst = 0.6f;
+        private static bool Made(Chat c) { foreach (string l in c.Said) if (l.IndexOf("{@", StringComparison.Ordinal) >= 0) return true; return false; }
+
+        private static Chat Pick(List<Chat> pool)
+        {
+            List<Chat> fresh = pool.FindAll(c => !Lately.Contains(c));
+            if (fresh.Count == 0) fresh = pool;
+            List<Chat> made = fresh.FindAll(Made);
+            if (made.Count > 0 && made.Count < fresh.Count) fresh = UnityEngine.Random.value < MadeFirst ? made : fresh.FindAll(c => !Made(c));
+            Chat c0 = fresh[UnityEngine.Random.Range(0, fresh.Count)];
+            Lately.Add(c0);
+            int mine = 0; // (of this pool only: a short list of quarrels must not forget what the table's long one has said)
+            foreach (Chat c in Lately) if (pool.Contains(c)) mine++;
+            for (int i = 0; i < Lately.Count && mine > pool.Count / 2;) { if (pool.Contains(Lately[i])) { Lately.RemoveAt(i); mine--; } else i++; }
+            return c0;
+        }
+
+        // standing at its ease: nothing over its own day but a place it went to for its pleasure (NpcPlaces; no work, no duty, no order)
+        private static bool AtEase(NpcMind m) { return m.AtLeisure && (m.Now == NpcMind.Task.Wander || m.Now == NpcMind.Task.Idle); }
 
         // stands for the talk (a whim of its own: over by itself), turned to the other
         private static void Stop(NpcActor a, NpcActor to, float until)
@@ -325,7 +419,7 @@ namespace HuginWhispers
                 if (!NpcVoice.Free(a) || !NpcVoice.Free(b)) { finished = false; break; } // (a scene took one of them, you spoke to one, the story hushed them)
                 who.Say(who.Form(NpcPhrases.Inline(who, lines[i], Player.GetClosestPlayer(who.transform.position, 20f)))); // («{@theme}»: a made line in a written talk)
                 if (fire) NpcFireside.Line(who, who == a ? b : a);
-                yield return new WaitForSeconds(Mathf.Clamp(2.5f + lines[i].Length * 0.06f, 3f, 6f));
+                yield return new WaitForSeconds(RavenSpeech.Seconds(lines[i], RavenSpeech.Pace.Chatter));
             }
             if (fire) NpcFireside.End(a, b, finished && a != null && b != null);
             if (a != null) { Talking.Remove(a); if (!seated && a.Mind != null) Free(a.Mind); }

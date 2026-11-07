@@ -123,7 +123,7 @@ namespace HuginWhispers
         {
             if (p.Stage == 0)
             {
-                if (p.Lost >= 3f) return true; // (three done)
+                if (p.Tries >= 3f) return true; // (three done)
                 WearNTear best = null; float bd = float.MaxValue;
                 foreach (WearNTear w in Of(r.Base).Broken)
                 {
@@ -135,7 +135,7 @@ namespace HuginWhispers
                 Of(r.Base).Broken.Remove(best); // (taken: another resident mends another one)
                 Vector3 stand = Stand(best.transform.position, r.Base.Centre);
                 if (best.transform.position.y - stand.y > 4f) return false; // (a roof out of a hammer's reach from the ground: another)
-                if (Pathfinding.instance != null && !Pathfinding.instance.HavePath(m.transform.position, stand, NpcKit.Walker) && NpcDoors.Toward(m.transform.position, stand, NpcKit.Walker) == null) return false; // (out of its reach, not even through a door: another)
+                if (Pathfinding.instance != null && !NpcWalk.Have(m.transform.position, stand) && NpcDoors.Toward(m.transform.position, stand, NpcKit.Walker) == null) return false; // (out of its reach, not even through a door: another)
                 p.Who = NpcKit.IdOf(best); p.To = stand; p.Look = best.transform.position; p.Stage = 1;
                 m.NewGoal();
                 return false;
@@ -145,20 +145,20 @@ namespace HuginWhispers
             if (piece == null || piece.GetHealthPercentage() >= 0.999f) { Hammer(a, false); p.Stage = 0; return false; }
             if (p.Stage == 1)
             {
-                m.Status = "іде лагодити";
+                m.Status = Lang.K("іде лагодити");
                 if (!m.Walk(dt, p.To, 1.2f, false)) return false;
-                p.Stage = 2; p.Since = Time.time; p.Keep = 0f;
+                p.Stage = 2; p.Since = Time.time; p.Clock = 0f;
                 Hammer(a, true);
             }
             m.Halt(); m.Face(p.Look);
-            m.Status = "лагодить";
-            if (Time.time - p.Since < p.Keep) return false;
-            p.Keep += 1.3f; // (a blow every 1.3 s)
+            m.Status = Lang.K("лагодить");
+            if (Time.time - p.Since < p.Clock) return false;
+            p.Clock += 1.3f; // (a blow every 1.3 s)
             Humanoid body = a.GetComponent<Humanoid>(); // (the hammer's own blow: the game's animation for it)
             ItemDrop.ItemData inHand = body != null ? body.GetCurrentWeapon() : null;
             ZSyncAnimation za = a.GetComponent<ZSyncAnimation>();
             if (za != null && inHand != null && !string.IsNullOrEmpty(inHand.m_shared.m_attack.m_attackAnimation)) za.SetTrigger(inHand.m_shared.m_attack.m_attackAnimation);
-            if (p.Keep < 4f) return false; // (three blows, then whole)
+            if (p.Clock < 4f) return false; // (three blows, then whole)
             if (piece.Repair())
             {
                 Piece pc = piece.GetComponent<Piece>();
@@ -166,8 +166,8 @@ namespace HuginWhispers
                 Npcs.Log(a.Id + ": mended " + Utils.GetPrefabName(piece.gameObject));
             }
             Hammer(a, false);
-            p.Lost += 1f; p.Stage = 0;
-            if (p.Lost == 1f && Random.value < 0.4f) NpcChatter.Mutter(a, "mend");
+            p.Tries += 1f; p.Stage = 0;
+            if (p.Tries == 1f && Random.value < 0.4f) NpcChatter.Mutter(a, "mend");
             return false;
         }
 
@@ -220,7 +220,7 @@ namespace HuginWhispers
                 {
                     if (beast == null || beast.IsDead() || !Food(r.Base, m.transform.position, beast, out it, out from)) continue;
                     p.Who = NpcKit.IdOf(from); p.Home = beast.transform.position; p.Food = it.m_dropPrefab != null ? it.m_dropPrefab.name : "";
-                    p.Radius = 2f; p.Stage = 1; Keep(); _beast[m] = beast; // (a couple for a beast)
+                    p.Count = 2f; p.Stage = 1; Keep(); _beast[m] = beast; // (a couple for a beast)
                     m.NewGoal(); return false;
                 }
                 bool meat;
@@ -228,7 +228,7 @@ namespace HuginWhispers
                 {
                     if (f == null || !FeederShort(f, out meat) || !RavenFood(r.Base, m.transform.position, f, meat, out it, out from)) continue;
                     p.Who = NpcKit.IdOf(from); p.Home = f.transform.position; p.Food = it.m_dropPrefab != null ? it.m_dropPrefab.name : "";
-                    p.Radius = 5f; p.Stage = 1; Keep(); _feeder[m] = f; // (a handful for the ravens)
+                    p.Count = 5f; p.Stage = 1; Keep(); _feeder[m] = f; // (a handful for the ravens)
                     m.NewGoal(); return false;
                 }
                 return true;
@@ -238,26 +238,26 @@ namespace HuginWhispers
                 GameObject go = NpcKit.Find(p.Who);
                 Container c = go != null ? go.GetComponentInChildren<Container>() : null;
                 if (c == null || p.Food.Length == 0) return true;
-                m.Status = "бере їжу";
+                m.Status = Lang.K("бере їжу");
                 if (!m.Walk(dt, c.transform.position, 1.8f, false)) return false;
                 if (c.IsInUse() && !NpcLid.Mine(c, m.Actor)) return true; // (a player has it open: this chore let go)
                 if (!m.Open(c, 1.2f)) return false; // (its lid up, facing it: NpcMind.Open, the one way)
                 int take = 0;
                 foreach (ItemDrop.ItemData it in new List<ItemDrop.ItemData>(c.GetInventory().GetAllItems()))
                 {
-                    if (take >= (int)p.Radius || it.m_dropPrefab == null || it.m_dropPrefab.name != p.Food) continue;
-                    int k = Mathf.Min((int)p.Radius - take, it.m_stack);
+                    if (take >= (int)p.Count || it.m_dropPrefab == null || it.m_dropPrefab.name != p.Food) continue;
+                    int k = Mathf.Min((int)p.Count - take, it.m_stack);
                     c.GetInventory().RemoveItem(it, k); take += k;
                 }
                 if (take == 0) return true;
-                p.Radius = take; p.Stage = 2; m.Face(c.transform.position); m.NewGoal();
+                p.Count = take; p.Stage = 2; m.Face(c.transform.position); m.NewGoal();
                 return false;
             }
             // 2: to the beast (it may have moved) or the feeder
             Character beastNow; FeederView feeder;
             _beast.TryGetValue(m, out beastNow); _feeder.TryGetValue(m, out feeder);
             Vector3 to = beastNow != null ? beastNow.transform.position : feeder != null ? feeder.transform.position : p.Home;
-            m.Status = beastNow != null ? "несе їжу звірові" : "несе їжу воронам";
+            m.Status = beastNow != null ? Lang.K("несе їжу звірові") : Lang.K("несе їжу воронам");
             if (!m.Walk(dt, to, beastNow != null ? 2f : 1.6f, false)) return false;
             m.Face(to);
             Give(a, p, beastNow, feeder);
@@ -276,8 +276,8 @@ namespace HuginWhispers
         {
             GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(p.Food) : null;
             ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
-            int n = (int)p.Radius;
-            p.Stage = 3; p.Radius = 0f;
+            int n = (int)p.Count;
+            p.Stage = 3; p.Count = 0f;
             if (drop == null || n <= 0) return;
             if (feeder != null && feeder.Box != null)
             {
@@ -301,7 +301,7 @@ namespace HuginWhispers
             NpcActor a = m.Actor;
             if (a == null) return;
             if (p.Pose == Mend) { Hammer(a, false); if (p.Stage == 2) p.Stage = 1; return; }
-            if (p.Pose == Tend && p.Stage == 2 && p.Radius > 0f) { Give(a, p, null, null); p.Stage = 0; }
+            if (p.Pose == Tend && p.Stage == 2 && p.Count > 0f) { Give(a, p, null, null); p.Stage = 0; }
             _beast.Remove(m); _feeder.Remove(m);
         }
     }

@@ -119,7 +119,7 @@ lived RavenWatch_story_zherdyna_varty 8.002 7.014 -0.222
 lived RavenWatch_story_zherdyna_varty 8.039 7.172 4.038
 lived RavenWatch_story_zherdyna_varty 5.148 5.868 5.683
 fixed piece_chest 0.021 -1.108 -8.134
-lit piece_chest_wood -2.406 -1.11 -6.353
++1.2 piece_chest_wood -2.406 -1.11 -6.353
 lived RavenWatch_perch_vartova_zherdyna 3.763 -1.609 9.844
 fixed wood_fine_stack 9.281 -2.557 9.531
 fixed wood_fine_stack 6.309 -1.935 9.272
@@ -630,3 +630,8 @@ fixed ashwood_beam_2m 23.43 -0.382 -7.391
 fixed ashwood_beam_2m 20.254 -0.021 -6.19
 fixed stave_deco_pole_2m 20.854 -1.286 -10.388
 repaired Piece_grausten_pillarbase_small -5.788 0.89 5.979
+repaired piece_mistletoe -2.291 0.262 -6.603
+lived piece_mistletoe -2.939 0.147 -6.594
+lived piece_mistletoe -2.566 -0.019 -7.277
+repaired stone_floor_2x2 13.168 -1.61 0.813
+ruin stone_wall_2x1 12.668 -1.61 0.817

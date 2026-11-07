@@ -533,7 +533,7 @@ namespace HuginWhispers
             Vector3 right = Vector3.Cross(Vector3.up, fwd);
             float yaw = Mathf.Clamp(Vector3.SignedAngle(fwd, way, Vector3.up), -LookOffMaxYaw, LookOffMaxYaw);
             Quaternion want = Quaternion.AngleAxis(yaw, Vector3.up) * Quaternion.AngleAxis(LookOffPitch, right);
-            _head.rotation = _sac.Step(want, Time.deltaTime, Munin, Nerves, 1.3f) * _head.rotation;
+            _head.rotation = RavenHead.Limit(_sac.Step(want, Time.deltaTime, Munin, Nerves, 1.3f), Vector3.up) * _head.rotation;
         }
 
         // the fly-in (the game's clip on the animator): the body's top bones put where they are when it sits, so
@@ -925,7 +925,7 @@ namespace HuginWhispers
             if (_nodSet && Quaternion.Angle(_head.localRotation, _nodWrote) < 0.01f) _head.localRotation = _nodBase;
             else _nodBase = _head.localRotation;
             _nodSet = true;
-            _head.rotation = _gLook * _head.rotation;
+            _head.rotation = RavenHead.Limit(_gLook, up) * _head.rotation;
             _nodWrote = _head.localRotation;
         }
 
@@ -1273,7 +1273,7 @@ namespace HuginWhispers
             if (_wrote && Quaternion.Angle(local, _written) < 0.01f) local = _base;
             _base = local;
             _head.localRotation = local;
-            _head.rotation = Stabilize() * _look * _head.rotation; // a bird's head holds still a moment when the body turns
+            _head.rotation = RavenHead.Limit(Stabilize() * _look, Vector3.up) * _head.rotation; // a bird's head holds still a moment when the body turns
             _written = _head.localRotation;
             _wrote = true;
 
@@ -2171,7 +2171,7 @@ namespace HuginWhispers
             float a = 1f - Mathf.Exp(-Dt / Mathf.Max(0.02f, (Munin ? 0.08f : 0.3f) / Nerves)); // eased (a constant-speed turn reads as a twitch)
             _flYaw = Mathf.Lerp(_flYaw, Mathf.Clamp(_flWantYaw, -FlyLookYaw, FlyLookYaw) * upright, a);
             _flPitch = Mathf.Lerp(_flPitch, Mathf.Clamp(_flWantPitch, -FlyLookPitch, FlyLookPitch) * upright, a);
-            _head.rotation = Quaternion.AngleAxis(_flYaw, facing * Vector3.up) * Quaternion.AngleAxis(_flPitch, facing * Vector3.right) * _head.rotation;
+            _head.rotation = RavenHead.Limit(Quaternion.AngleAxis(_flYaw, facing * Vector3.up) * Quaternion.AngleAxis(_flPitch, facing * Vector3.right), facing * Vector3.up) * _head.rotation;
         }
 
         // in flight: the head stays level while the body banks; the tail turns into the turn
@@ -2213,8 +2213,8 @@ namespace HuginWhispers
             }
             if (_head != null)
             {
-                _head.rotation = Quaternion.AngleAxis(-roll * HeadLevel, fwd)
-                    * Quaternion.AngleAxis(-torsoPitch * 0.42f, facing * Vector3.right) * _head.rotation;
+                _head.rotation = RavenHead.Limit(Quaternion.AngleAxis(-roll * HeadLevel, fwd)
+                    * Quaternion.AngleAxis(-torsoPitch * 0.42f, facing * Vector3.right), facing * Vector3.up) * _head.rotation;
                 if (!Hovering) FlightLook(facing, upright); // hanging over the shoulder the head is Nod's (both at once turned it twice)
             }
             if (_tailB != null && _tailB.T != null)

@@ -13,7 +13,9 @@ namespace HuginWhispers
     //   grows:  it is there once the player is on such a stage and within Approach m of the place; small (Min m) far
     //           off, wider as he comes, full (Max) when he is at the place or the scene plays; it never shrinks while he
     //           steps about — it fades slowly (Fade m/s) once nobody wants it
-    //   Max:    the scene's «guard: <m>» (off — none), else by the place's size (Loc.Reach), MaxLo–MaxHi m
+    //   Max:    the scene's «guard: <m>» (off — none), else by the place's size (Loc.Reach), MaxLo–MaxHi m; never less
+    //           than the scene's «calm» looks (Senses.FoeRange) and CalmMargin m more — a monster the scene would wait for
+    //           is run off, not waited for (the user 2026-11-03: a boar 15 m off held the shield's scene)
     //   soft:   the whole round — no monster is born within it (and BirthMargin m more); a monster that is not chasing
     //           anyone runs out of it; one in a fight may follow its foe in
     //   hard:   the core (HardShare of it, HardLo–HardHi m) — nobody stays in it; a monster whose target stands in it
@@ -26,22 +28,50 @@ namespace HuginWhispers
     internal static class StoryHush
     {
         internal static float Approach = 150f, Min = 8f, MaxLo = 16f, MaxHi = 40f, Default = 30f, Grow = 8f, Fade = 1.5f;
+        internal static float CalmMargin = 8f;
         internal static float HardShare = 0.35f, HardLo = 8f, HardHi = 14f, BirthMargin = 30f, Shoot = 60f, Jitter = 0.2f;
         internal static float Life = 8f, Renew = 3f;
         internal static readonly int KFoe = "RavenWatch_sceneFoe".GetStableHashCode();
         private const string Rpc = "RavenWatch_StoryHush";
 
-        // ---------------------------------------------------------------- the rounds this game wants (StoryQuests)
+        // ---------------------------------------------------------------- the rounds this game wants (Look, from the stages)
         private sealed class Mine { public Vector3 At; public float Max, R; public bool Full, Wanted; }
         private static readonly Dictionary<string, Mine> _mine = new Dictionary<string, Mine>();
         private static float _sendAt;
         private static bool _changed;
 
         // a pass of the story begins: what is not wanted again in it fades
-        internal static void Pass() { foreach (Mine m in _mine.Values) m.Wanted = false; }
+        private static void Pass() { foreach (Mine m in _mine.Values) m.Wanted = false; }
+
+        // twice a second (StoryQuests.Each): the rounds this player's story wants — the scene playing (round its place, else round
+        // him); a stage that plays a scene with a place; a stage whose mark leads to a scene (its next stage's, or its ways')
+        internal static void Look(Player p)
+        {
+            Pass();
+            StoryScenes.SceneDef now = StoryScenes.Current;
+            if (now != null) WantAt("scene", now, now.Place.Length > 0 ? now.Place : null, p, true);
+            foreach (StoryQuests.QuestDef q in StoryQuests.Quests)
+            {
+                StoryQuests.StageDef s = StoryQuests.StageNow(p, q);
+                if (s == null) continue;
+                if (s.Scene.Length > 0) { StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene); if (sc != null && sc.Place.Length > 0 && sc != now) WantAt(q.Id + "." + s.Id, sc, sc.Place, p, false); }
+                if (s.Ways.Count == 0) { if (s.MarkAt.Length > 0) WantAt(q.Id + "." + s.Id + ".m", StoryQuests.Leads(q, s.Next), s.MarkAt, p, false); }
+                else foreach (StoryQuests.StageDef w in s.Ways) if (w.MarkAt.Length > 0) WantAt(q.Id + "." + s.Id + "." + w.Id, StoryQuests.Leads(q, w.Next), w.MarkAt, p, false);
+            }
+        }
+
+        // (a mark that leads to no scene wants no quiet)
+        private static void WantAt(string key, StoryScenes.SceneDef sc, string place, Player p, bool full)
+        {
+            if (sc == null) return;
+            Vector3 at;
+            if (place == null) at = p.transform.position; // (a scene with no place: round the player)
+            else if (!StoryWhere.Find(place, out at)) return;
+            Want(key, at, MaxFor(sc, place), full);
+        }
 
         // a round wanted this pass: its place, its full size, full now (the scene plays) or by the player's distance
-        internal static void Want(string key, Vector3 at, float max, bool full)
+        private static void Want(string key, Vector3 at, float max, bool full)
         {
             if (max <= 0f) return;
             Mine m;
@@ -53,6 +83,11 @@ namespace HuginWhispers
         internal static float MaxFor(StoryScenes.SceneDef sc, string place)
         {
             if (sc != null && sc.Guard == 0f) return 0f;
+            return Mathf.Max(MaxOwn(sc, place), Senses.FoeRange + CalmMargin);
+        }
+
+        private static float MaxOwn(StoryScenes.SceneDef sc, string place)
+        {
             if (sc != null && sc.Guard > 0f) return sc.Guard;
             string piece;
             Loc loc = string.IsNullOrEmpty(place) ? null : StoryWhere.Place(place, out piece);
@@ -89,7 +124,11 @@ namespace HuginWhispers
             if (gone != null) { foreach (string k in gone) _mine.Remove(k); _changed = true; }
             if (!_changed && Time.time < _sendAt) return;
             if (_mine.Count == 0 && !_changed) return;
-            _changed = false; _sendAt = Time.time + Renew;
+            bool any = _changed || _sent.Count > 0; // (still far from every place it wants: nothing to tell anyone, the whole time he is on that stage)
+            if (!any) foreach (Mine m in _mine.Values) if (m.R > 0.5f) { any = true; break; }
+            _sendAt = Time.time + Renew;
+            if (!any) return;
+            _changed = false;
             Send();
         }
 
@@ -238,7 +277,11 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(SpawnSystem), "Spawn")]
     internal static class StoryHushSpawn
     {
-        private static bool Prefix(Vector3 spawnPoint) { return !StoryHush.NoBirth(spawnPoint); }
+        private static bool Prefix(Vector3 spawnPoint)
+        {
+            try { return !StoryHush.NoBirth(spawnPoint); }
+            catch (Exception e) { PatchGuard.Fail("StoryHushSpawn", e); return true; }
+        }
     }
 
     [HarmonyPatch(typeof(CreatureSpawner), "Spawn")]
@@ -246,7 +289,8 @@ namespace HuginWhispers
     {
         private static bool Prefix(CreatureSpawner __instance, ref ZNetView __result)
         {
-            if (!StoryHush.NoBirth(__instance.transform.position)) return true;
+            try { if (!StoryHush.NoBirth(__instance.transform.position)) return true; }
+            catch (Exception e) { PatchGuard.Fail("StoryHushPoint", e); return true; }
             __result = null;
             return false;
         }
@@ -257,7 +301,8 @@ namespace HuginWhispers
     {
         private static bool Prefix(SpawnArea __instance, ref bool __result)
         {
-            if (!StoryHush.NoBirth(__instance.transform.position)) return true;
+            try { if (!StoryHush.NoBirth(__instance.transform.position)) return true; }
+            catch (Exception e) { PatchGuard.Fail("StoryHushNest", e); return true; }
             __result = false;
             return false;
         }

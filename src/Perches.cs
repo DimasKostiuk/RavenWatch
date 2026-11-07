@@ -55,6 +55,15 @@ namespace HuginWhispers
         private static readonly string[] SeatKeys = { "RavenWatch_seat0", "RavenWatch_seat1", "RavenWatch_seat2", "RavenWatch_seat3" };
         internal static string SeatKey(int i) { return i >= 0 && i < SeatKeys.Length ? SeatKeys[i] : "RavenWatch_seat" + i; }
 
+        // what a story piece does by its file's «script:» (a piece the story only touches — a letter, a carving — needs none: locations.list
+        // «touch:», LocTouch). A new behaviour: a line here
+        internal static readonly Dictionary<string, Action<GameObject>> Scripts = new Dictionary<string, Action<GameObject>>
+        {
+#if RAVEN_ITEM && RAVEN_NPC
+            { "hearth", g => g.AddComponent<LocHearth>() }, // (its fires: cold, Hel's, the Watch's — kept by its place)
+#endif
+        };
+
         internal sealed class Def
         {
             internal string Id, Name, Note, Cost, Prefab;
@@ -72,6 +81,7 @@ namespace HuginWhispers
             internal bool Feeder;         // «Годівниця» (use: feeder): a box the ravens at home eat from (Home), no seats
             internal bool Heart;          // «Серце оселі» (use: heart): a settlement's centre for the NPCs (NpcHeart), no seats
             internal bool Story;          // a building of the story (use: story — the Hall of the Watch): no seats, no cost, unbreakable; in the hammer only for the author
+            internal string Script = "";  // a story piece's own behaviour by its file's «script:» (Scripts) — never by its id in the code
             internal float Feed = 1f;     // a feeder's thrift: the same food fills this much more from it ("feed:")
         }
 
@@ -147,7 +157,7 @@ namespace HuginWhispers
                 if (!IsPerchUse(m.Use) && !table && !nest && !tree && !feeder && !heart && !story) continue;
                 if (!table && !feeder && !heart && !story && m.Seats == 0) { Log(m.Name + ": no raven seat, left out"); continue; }
                 Def d = new Def();
-                d.Table = table; d.Nest = nest; d.Tree = tree; d.Guard = guard; d.Feeder = feeder; d.Heart = heart; d.Story = story; d.Feed = m.Feed > 0f ? m.Feed : 1f;
+                d.Table = table; d.Nest = nest; d.Tree = tree; d.Guard = guard; d.Feeder = feeder; d.Heart = heart; d.Story = story; d.Feed = m.Feed > 0f ? m.Feed : 1f; d.Script = m.Script ?? "";
                 d.Id = string.IsNullOrEmpty(m.Id) ? IdFor(m.Name) : m.Id;
                 d.Prefab = (table ? "RavenWatch_table_" : nest ? "RavenWatch_nest_" : tree ? "RavenWatch_tree_" : feeder ? "RavenWatch_feeder_" : heart ? "RavenWatch_heart_" : story ? "RavenWatch_story_" : "RavenWatch_perch_") + d.Id;
                 d.Name = m.Name; d.Note = m.Note; d.Cost = string.IsNullOrEmpty(m.Cost) ? DefaultCost : m.Cost;
@@ -367,13 +377,11 @@ namespace HuginWhispers
                 Piece lpS = likeS != null ? likeS.GetComponent<Piece>() : null;
                 if (lpS != null) piece.m_placeEffect = lpS.m_placeEffect;
                 if (seats > 0) root.AddComponent<PerchView>(); // (the Hall's own perch: ravens sit on it like on any perch)
-#if RAVEN_ITEM && RAVEN_NPC
-                if (d.Id == "vohnyshche_varty") root.AddComponent<HallHearth>(); // (its fires: cold, Hel's, the Watch's)
-                if (d.Id == "rizba_eirika") root.AddComponent<EirikCarving>(); // (E: read when it can be; the story hears it)
-#if RAVEN_STORY
-                if (d.Id == "kreslennia_sertsia") root.AddComponent<HeartBoard>(); // (E: the heart's old drawing — the prologue)
-#endif
-#endif
+                if (d.Script.Length > 0)
+                {
+                    Action<GameObject> script;
+                    if (Scripts.TryGetValue(d.Script, out script)) script(root); else Log(d.Name + ": no behaviour «" + d.Script + "» in this build (script:)");
+                }
                 Log(d.Name + " built as " + d.Prefab + ": " + parts + " parts" + (seats > 0 ? ", " + seats + " seat(s)" : "") + " (a building of the story)");
                 return root;
             }
@@ -925,6 +933,7 @@ namespace HuginWhispers
         private static bool Reserved(PerchView v, int seat) { foreach (Pending pd in _pending) if (pd.View == v && pd.Seat == seat) return true; return false; }
 
         // why this raven cannot go to the perch now, or null
+        internal static bool ForScene; // (a scene moves him: not an order he may refuse — asleep or sulking he flies all the same)
         internal static string WhyNot(Player p, bool munin, out ItemDrop.ItemData item)
         {
             item = RavenSeat.On(p, munin);
@@ -933,9 +942,9 @@ namespace HuginWhispers
             if (Trust.Stranger(item, p)) return Lang.F("{0} не твій — він не сяде, куди ти скажеш.", name);
             if (On(item)) return Text(munin, item) + ".";
             if (Trust.Away(item)) return Lang.F("{0} {1}.", name, Trust.AwayWord(munin, item));
-            if (!Trust.Active(item)) return Lang.F("{0} ще спить.", name);
+            if (!ForScene && !Trust.Active(item)) return Lang.F("{0} ще спить.", name);
             if (!Moving && !Shoulder.Arrived(p, munin)) return Lang.F("{0} ще летить до тебе.", name); // (after loading in: not yet on the shoulder; a move goes from the air)
-            string sulk = Quirks.Sulk(p, munin);
+            string sulk = ForScene ? null : Quirks.Sulk(p, munin);
             if (sulk != null) return sulk + ".";
             if (!Moving && !Shoulder.Free(p, munin)) return Lang.F("{0} зараз зайнятий у польоті.", name); // on an order or an outing: it goes from the air (FlyTo)
             if (Waiting(munin)) return Lang.F("Зачекай: {0} уже летить до жердини.", name);
@@ -960,7 +969,7 @@ namespace HuginWhispers
             Transform st = v.SeatT(seat);
             Vector3 way = st.position - p.transform.position, front = st.forward;
             way.y = 0f; front.y = 0f;
-            bool flip = Vector3.Dot(way, front) < 0f;
+            bool flip = !ForScene && Vector3.Dot(way, front) < 0f; // (a scene turned its seat as it wants it: to the player)
             if (v.IsSpot && SitOn.Follows(v)) flip = false; // on a player: facing their way, as on a shoulder
             else if (WallAhead(v, seat, flip) && !WallAhead(v, seat, !flip)) flip = !flip; // its beak would be in the wall: the other way
             string outfit = Outfits.Code(item); // (what it shows: as on the shoulder)
@@ -1963,6 +1972,9 @@ namespace HuginWhispers
                 if (ghost != _ghost) { _ghost = ghost; _def = Perches.DefOf(Utils.GetPrefabName(ghost)); } // the name once per ghost, not every frame
                 Perches.Def d = _def;
                 if (d != null && d.Nest) { NestSky(__instance, ghost); return; }
+#if RAVEN_NPC
+                if (d != null && d.Heart) { HeartApart(__instance, ghost); return; }
+#endif
                 if (d == null || !d.Wall) return;
                 if (_args == null)
                 {
@@ -1999,6 +2011,19 @@ namespace HuginWhispers
             Invalid(p);
             if (Time.time - _skyTold > 3f) { _skyTold = Time.time; p.Message(MessageHud.MessageType.Center, Lang.T("Гніздо ставлять лише просто неба: над ним не має бути даху.")); }
         }
+
+#if RAVEN_NPC
+        // a settlement's heart stands apart from every other (NpcHeart.Apart): too near one — red ghost, and why
+        private static float _heartTold;
+        private static void HeartApart(Player p, GameObject ghost)
+        {
+            if (StatusF == null || StatusF.GetValue(p).ToString() != "Valid") return;
+            NpcHeart near = NpcHeart.Crowding(ghost.transform.position, null);
+            if (near == null) return;
+            Invalid(p);
+            if (Time.time - _heartTold > 3f) { _heartTold = Time.time; p.Message(MessageHud.MessageType.Center, NpcHeart.TooNear(near)); }
+        }
+#endif
 
         private static void Invalid(Player p)
         {

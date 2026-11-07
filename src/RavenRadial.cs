@@ -44,6 +44,7 @@ namespace HuginWhispers
             ItemDrop.ItemData hugin = null, munin = null;
             if (p != null) RavenItem.Worn(p, out hugin, out munin);
             bool any = hugin != null || munin != null;
+            if (!RavenBook.Given(p)) { hugin = munin = null; any = false; } // (no book yet: the raven only sits — the book's entry says why: RavenBook.NoBook)
             list.Add(Book()); // first, always in the same place; also with no raven (a lost one comes back from the book)
             if (any) // the ravens' own circle, either face (also on their keys: Q the gifts, J the orders)
             {

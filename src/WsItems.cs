@@ -297,6 +297,7 @@ namespace HuginWhispers
         // the grass is hard to find (the thunderstone's own sparks are taken off them in Make). Only an item in the
         // world shows it: the bag and the icons never build the item's object.
         private const string GlintName = "RavenWatch_Glint";
+        internal static bool IsGlint(Component c) { return c != null && c.gameObject.name == GlintName; } // (a sign to the player, no lamp of the world: LocState.Lights leaves it on)
         private static void Glint(GameObject g)
         {
             if (g.transform.Find(GlintName) != null) return;
@@ -304,8 +305,56 @@ namespace HuginWhispers
             Glint(g, 1f);
         }
 
-        // the same sparkle, stronger (s × specks and light: a story thing that must be found, PrologueHeart's letter)
-        internal static GameObject Glint(GameObject g, float s)
+        // a story thing that must be found (LocTouch: the Hall's old letter, Munin's shield): the one look for all of them. StoryMore: × how many specks, StoryRise: × how high they go,
+        // StoryBig: × each speck's size (the user 2026-11-06: Munin's shield lost in the grass — the specks must rise over it, ~1.5 m, and be seen)
+        internal static float StorySize = 3f, StoryMore = 1.6f, StoryRise = 2.2f, StoryBig = 2f;
+        internal static GameObject StoryGlint(GameObject g) { return Glint(g, StorySize, StoryMore, StoryRise, StoryBig); }
+
+        // the gold of Glint as a small thread rising over a person (StoryCallMark): a few specks, straight up, about half a metre, no light
+        internal static float CallRate = 11f, CallHigh = 0.8f, CallWide = 0.04f, CallSize = 1.7f; // (the user 2026-11-07: bigger — more specks, higher, each ×CallSize)
+        internal static GameObject CallLine()
+        {
+            GameObject o = new GameObject(GlintName);
+            ParticleSystem ps = o.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true;
+            main.playOnAwake = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(1.0f, 1.4f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0f, 0f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.025f * CallSize, 0.05f * CallSize);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.82f, 0.4f, 1f), new Color(1f, 0.97f, 0.75f, 1f));
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 24;
+            ParticleSystem.EmissionModule em = ps.emission;
+            em.rateOverTime = CallRate;
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Sphere;
+            sh.radius = CallWide;
+            ParticleSystem.VelocityOverLifetimeModule v = ps.velocityOverLifetime; // (straight up, as high as asked in its life: CallHigh)
+            v.enabled = true;
+            v.space = ParticleSystemSimulationSpace.World;
+            v.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            v.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            v.y = new ParticleSystem.MinMaxCurve(CallHigh / 1.4f, CallHigh / 1f);
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient fade = new Gradient();
+            fade.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.2f), new GradientAlphaKey(0f, 1f) });
+            col.color = new ParticleSystem.MinMaxGradient(fade);
+            ParticleSystemRenderer pr = o.GetComponent<ParticleSystemRenderer>();
+            pr.material = FxLib.Glow(true);
+            pr.renderMode = ParticleSystemRenderMode.Billboard;
+            pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            pr.receiveShadows = false;
+            ps.Play();
+            return o;
+        }
+
+        // the same sparkle, stronger (s × specks and light; more × specks alone; rise × how high they go: their speed and their lift together)
+        internal static GameObject Glint(GameObject g, float s, float more = 1f, float rise = 1f, float big = 1f)
         {
             GameObject o = new GameObject(GlintName);
             o.layer = g.layer;
@@ -316,14 +365,14 @@ namespace HuginWhispers
             main.loop = true;
             main.playOnAwake = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.8f, 1.6f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.03f, 0.12f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.07f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.03f * rise, 0.12f * rise);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.03f * big, 0.07f * big);
             main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.82f, 0.4f, 1f), new Color(1f, 0.97f, 0.75f, 1f));
-            main.gravityModifier = -0.04f;
+            main.gravityModifier = -0.04f * rise;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = Mathf.RoundToInt(16 * s);
+            main.maxParticles = Mathf.RoundToInt(16 * s * more);
             ParticleSystem.EmissionModule em = ps.emission;
-            em.rateOverTime = 5f * s;
+            em.rateOverTime = 5f * s * more;
             ParticleSystem.ShapeModule sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Sphere;
             sh.radius = 0.12f * Mathf.Sqrt(s);

@@ -78,7 +78,7 @@ namespace HuginWhispers
         {
             if (a == null) return Way.Curl;
             NpcPersona w = NpcPersona.Of(a);
-            string fight = a.Def != null ? a.Def.Fight : "flee";
+            string fight = NpcNature.Manner(a);
             if (w.Bravery >= 0.6f || fight == "defend" || fight == "hunt") return Way.Side;
             if (w.Bravery < 0.35f || w.Stoop > 0.3f) return Way.Back; // (timid, or old and bent)
             return Way.Curl;
@@ -92,7 +92,7 @@ namespace HuginWhispers
 
         private void Roll()
         {
-            int seed = (_a.Zdo != null ? _a.Zdo.m_uid.GetHashCode() : _a.Id.GetStableHashCode()) ^ (int)(ZNet.instance != null ? ZNet.instance.GetTimeSeconds() / 10.0 : Time.time / 10f);
+            int seed = (_a.Zdo != null ? (int)NpcKit.Seed(_a.Zdo) : _a.Id.GetStableHashCode()) ^ (int)(ZNet.instance != null ? ZNet.instance.GetTimeSeconds() / 10.0 : Time.time / 10f);
             System.Random r = new System.Random(seed);
             _side = r.NextDouble() < 0.5 ? 1f : -1f;
             _pace = R(r, 0.85f, 1.25f);

@@ -477,13 +477,17 @@ namespace HuginWhispers
     {
         private static bool Prefix(BaseAI __instance, float dt, ref bool __result)
         {
-            Dome.State s = Dome.ThinkingAbout;
-            MonsterAI ai = __instance as MonsterAI;
-            if (s == null || ai == null || !ReferenceEquals(ai, Dome.Thinking) || !Dome.CanProwl()) return true;
-            try { Dome.Prowl(ai, s, dt); }
-            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Dome prowl failed: " + e.Message); return true; }
-            __result = true;
-            return false;
+            try
+            {
+                Dome.State s = Dome.ThinkingAbout;
+                MonsterAI ai = __instance as MonsterAI;
+                if (s == null || ai == null || !ReferenceEquals(ai, Dome.Thinking) || !Dome.CanProwl()) return true;
+                try { Dome.Prowl(ai, s, dt); }
+                catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Dome prowl failed: " + e.Message); return true; }
+                __result = true;
+                return false;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("DomeFleePatch", pgx); return true; }
         }
     }
 
@@ -492,8 +496,11 @@ namespace HuginWhispers
     {
         private static bool Prefix(Character __instance, HitData hit)
         {
-            try { return !Dome.Refuses(__instance, hit); }
-            catch { return true; }
+            try
+            {
+                return !Dome.Refuses(__instance, hit);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("DomeDamagePatch", pgx); return true; }
         }
     }
 

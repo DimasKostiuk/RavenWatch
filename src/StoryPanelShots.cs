@@ -8,8 +8,9 @@ namespace HuginWhispers
     // The story window's tabs for a scene's look (the user 2026-11-02: tools first — he sets the shots himself):
     //   «Камера»      a shot put together by buttons (from where, at what, how soft, how wide), shown at once on your own
     //                 screen, its line for the scene file to copy; the camera where it is now kept as a place to film from
-    //   «Атмосфера»   weather, bolts, Thor, a shake, music — the game's own lists — shown at once (here, or for everyone),
-    //                 each with its scene line
+    //   «Атмосфера»   weather, bolts, Thor, a shake — the game's own lists — and what is heard (music ours and the game's, how
+    //                 loud the rest of the world is, the sounds of the catalogue), shown at once (here, or for everyone), each with
+    //                 its scene line
     // Nothing here is kept but the places: a scene file is where a shot lives (StoryScenes).
     internal partial class StoryPanel
     {
@@ -117,8 +118,7 @@ namespace HuginWhispers
         {
             List<string> l = new List<string>();
             foreach (StoryPlaces.Place pl in StoryPlaces.All) l.Add(pl.Name);
-            l.Add("hall");
-            foreach (Loc loc in Locs.All) if (!loc.IsHall) l.Add(loc.Id);
+            foreach (Loc loc in Locs.All) l.Add(loc.Id);
             return l;
         }
 
@@ -144,7 +144,22 @@ namespace HuginWhispers
         private string _envPick = "ThunderStorm", _musicPick = "";
         private float _envSecs = 60f, _bolts = 3f, _shake = 0.6f;
         private bool _airAll, _boltAhead = true;
-        private Vector2 _envScroll, _musicScroll;
+        private Vector2 _envScroll, _musicScroll, _soundScroll;
+        private float _mixWorld = 1f, _mixAmbient = 1f, _mixMusic = 1f;
+
+        // one channel of the mix: moved, heard at once
+        private void MixRow(string title, string word, ref float v, string all)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(title, GUILayout.Width(120f));
+            float was = v;
+            v = Mathf.Round(GUILayout.HorizontalSlider(v, 0f, 1f) * 20f) / 20f;
+            if (v != was) StoryAudio.Panel("mix " + word + " " + F1N(v) + " 0.3", _airAll);
+            GUILayout.TextField("mix " + word + " " + F1N(v) + " 2" + all, GUILayout.Width(170f));
+            GUILayout.EndHorizontal();
+        }
+
+        private static string F1N(float v) { return v.ToString("0.##", CultureInfo.InvariantCulture); }
 
         private void AirTabDraw()
         {
@@ -201,19 +216,33 @@ namespace HuginWhispers
             GUILayout.EndVertical();
             GUILayout.Space(12);
 
-            // music
+            // what is heard (the audio core; held by this window until «Скинути»)
             GUILayout.BeginVertical();
-            GUILayout.Label("Музика", _head);
-            _musicScroll = GUILayout.BeginScrollView(_musicScroll, GUILayout.Height(330f));
-            if (MusicMan.instance != null) foreach (MusicMan.NamedMusic m in MusicMan.instance.m_music) if (m != null && !string.IsNullOrEmpty(m.m_name) && GUILayout.Button(m.m_name, m.m_name == _musicPick ? _sel : GUI.skin.button)) _musicPick = m.m_name;
+            GUILayout.Label("Музика: наша і гри", _head);
+            _musicScroll = GUILayout.BeginScrollView(_musicScroll, GUILayout.Height(120f));
+            foreach (string m in AudioBank.Names()) if (AudioBank.IsTrack(m) && GUILayout.Button(m, m == _musicPick ? _sel : GUI.skin.button)) _musicPick = m;
+            foreach (string m in Audio.GameTracks()) if (GUILayout.Button(m, m == _musicPick ? _sel : GUI.skin.button)) _musicPick = m;
             GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
             GUI.enabled = _musicPick.Length > 0;
-            if (GUILayout.Button("Показати")) StoryAir.Play("music " + _musicPick, _airAll);
+            if (GUILayout.Button("Показати")) StoryAudio.Panel("music " + _musicPick + " 2", _airAll);
             GUI.enabled = true;
-            if (GUILayout.Button("Тиша")) StoryAir.Play("music off", _airAll);
+            if (GUILayout.Button("Тиша")) StoryAudio.Panel("music off 2", _airAll);
+            if (GUILayout.Button("Музика гри")) StoryAudio.Panel("music game 2", _airAll);
             GUILayout.EndHorizontal();
-            if (_musicPick.Length > 0) Line("", "music " + _musicPick + all);
+            if (_musicPick.Length > 0) Line("", "music " + _musicPick + " 3" + all);
+            GUILayout.Label("Решта звуків", _head);
+            MixRow("Світ", "world", ref _mixWorld, all);
+            MixRow("Вітер, море, фон", "ambient", ref _mixAmbient, all);
+            MixRow("Музика", "music", ref _mixMusic, all);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Скинути все")) { StoryAudio.PanelEnd(_airAll); _mixWorld = _mixAmbient = _mixMusic = 1f; }
+            if (GUILayout.Button("Що звучить")) Note = Audio.Report();
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Звуки каталогу", _head);
+            _soundScroll = GUILayout.BeginScrollView(_soundScroll, GUILayout.Height(90f));
+            foreach (string m in AudioBank.Names()) if (GUILayout.Button("▶ " + m)) { StoryAudio.PanelSound(m); Note = "sound " + m + " player"; }
+            GUILayout.EndScrollView();
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }

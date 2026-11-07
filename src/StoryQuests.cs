@@ -16,19 +16,25 @@ namespace HuginWhispers
     //
     //   [quest prologue]
     //   name: Пролог
+    //   chapter: prologue                the saga's chapter its entries go into (StorySaga; needed once a stage has «saga:»)
     //   starts: hall                     conditions (StoryCond) — the quest starts by itself once they hold
     //   first: settle
+    //   nudge: raven_nudge 12            a stage with a mark standing this many minutes of real play: this scene plays (nothing is
+    //                                    skipped, the scene only shows the way: place «goal.mark»), and again after as many
     //
     //   [stage settle]
     //   goal: Освойся                    the line shown (the panel now, the tracker later)
-    //   fork: hallgate open -> inside    checked on entering and while waiting: holds → straight to that stage
+    //   fork: gate hall open -> inside   checked on entering and while waiting: holds → straight to that stage
     //   mark: hall 30 Зала Варти         the golden «!» on the map while this stage lasts (place, ring metres, label)
     //   start: msg …                     actions on entering, split by «;»
     //   wait: played 10, calm            passes once all hold …
     //   on: use eirik_carving            … or once this event comes (with wait: both)
     //   scene: raven_call                … or plays the scene and passes when it ends
-    //   done: hallgate open; flag x      actions on passing
+    //   done: gate hall open; flag x     actions on passing
     //   next: call                       the next stage, or «end» (the quest done); none = the next one in the file
+    //   call: heid                       the person to talk to now: a thread of gold over its head (StoryCallMark), for this player alone
+    //   saga: Хтось тебе кликав.         the book's «Сага» entry once the stage is passed (not when a fork skips it): kept in
+    //                                    the character in the order lived (Story.AddSaga), so what came before the book is there too
     //
     // Ways — the player's own choice (the user 2026-11-02): a stage may hold several [way <id>] blocks instead of its own
     // wait/on/scene. All of them stand at once (each its goal line and map mark); the first one done wins (file order
@@ -39,17 +45,17 @@ namespace HuginWhispers
     //   choice: prologue                 the choice's name (none = the quest's id; two choosing stages in one quest name theirs)
     //   done: …                          the stage's own done runs after the way's, whichever way it was
     //   [way munin]
-    //   goal: Лети за вороном            a way knows goal, mark, wait, on, done, next (none = the stage's next)
+    //   goal: Лети за вороном            a way knows goal, mark, wait, on, done, next (none = the stage's next), saga
     //   mark: hall 30 Зала Варти
     //   wait: near hall 25
     //   next: to_hall
-    internal static class StoryQuests
+    internal static partial class StoryQuests
     {
         internal sealed class Fork { public List<Cond> When; public string To = "", Text = ""; }
 
         internal sealed class StageDef
         {
-            public string Id = "", Goal = "", Scene = "", Next = "", OnName = "", OnArgs = "", WaitText = "", MarkAt = "", MarkLabel = "", Choice = "";
+            public string Id = "", Goal = "", Scene = "", Next = "", OnName = "", OnArgs = "", WaitText = "", MarkAt = "", MarkLabel = "", Choice = "", Saga = "", Call = "";
             public float MarkRadius;
             public List<Cond> Wait;
             public readonly List<Fork> Forks = new List<Fork>();
@@ -59,8 +65,15 @@ namespace HuginWhispers
 
         internal sealed class QuestDef
         {
-            public string Id = "", Name = "", First = "", StartsText = "", From = "";
+            public string Id = "", Name = "", First = "", StartsText = "", From = "", Chapter = "", NudgeScene = "";
+            public int NudgeMinutes;
             public List<Cond> Starts;
+            public bool Server;   // («owner: server»: one stage for the whole world, StoryQuestsServer)
+            public List<Cond> Who; // («who:»: the players it leads)
+            public readonly List<Fork> Forks = new List<Fork>(); // (a server quest's own forks: on every stage)
+            public string Raw, AtNow = "", OwedFrom = "", Latch = ""; // session: the world's word on it as last read · the stage this game has seen passed
+            public bool Owed, OwedRan; // (actions granted and not run yet: the world's word)
+            public float AskUntil, ClaimUntil, ClaimAskedAt, ActAskAt; // session: an answer awaited from the server · this game's claim on its scene
             public readonly List<StageDef> Stages = new List<StageDef>();
             internal StageDef Stage(string id) { foreach (StageDef s in Stages) if (s.Id == id) return s; return null; }
         }
@@ -81,235 +94,64 @@ namespace HuginWhispers
 
         internal static QuestDef Find(string id) { Load(); foreach (QuestDef q in Quests) if (q.Id == id) return q; return null; }
 
-        // ---------------------------------------------------------------- reading
-        internal static void Load() { if (!_loaded) Reload(); }
-
-        internal static void Reload()
-        {
-            _loaded = true;
-            StoryTrackConds.Register();
-            Quests.Clear(); Errors.Clear();
-            foreach (KeyValuePair<string, string> kv in StoryFiles.All(StoryFiles.Quests, Folder, Blueprint.On)) Parse(kv.Key, kv.Value); // (built in; the mod's own folder on the author's machine — StoryFiles)
-            foreach (QuestDef q in Quests) Validate(q);
-            StoryScenes.Load(); // (the scenes the stages name: checked against them)
-            foreach (QuestDef q in Quests) ValidateRefs(q);
-            foreach (string e in Errors) Story.Log("quests: " + e);
-            Story.Log("quests: " + Quests.Count + " loaded" + (Errors.Count > 0 ? ", " + Errors.Count + " problems" : ""));
-            StoryBus.Listen("story", Hear);
-            Version++;
-        }
-
-        private static void Parse(string file, string text)
-        {
-            QuestDef q = null; StageDef s = null, w = null; // (w: the way being read, inside s)
-            foreach (KeyValuePair<int, string> ln in StoryFiles.Lines(text))
-            {
-                string line = ln.Value, at = file + ":" + ln.Key + ": ";
-                if (line.StartsWith("[") && line.EndsWith("]"))
-                {
-                    string[] h = line.Substring(1, line.Length - 2).Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (h.Length == 2 && h[0] == "quest" && Story.GoodName(h[1]))
-                    {
-                        if (Find0(h[1]) != null) { Errors.Add(at + "квест «" + h[1] + "» уже є — цей пропущено"); q = null; s = null; continue; }
-                        q = new QuestDef { Id = h[1], From = file }; Quests.Add(q); s = null; w = null;
-                    }
-                    else if (h.Length == 2 && h[0] == "stage" && q != null && Story.GoodName(h[1]))
-                    {
-                        if (q.Stage(h[1]) != null) Errors.Add(at + "етап «" + h[1] + "» двічі");
-                        s = new StageDef { Id = h[1] }; q.Stages.Add(s); w = null;
-                    }
-                    else if (h.Length == 2 && h[0] == "way" && s != null && Story.GoodName(h[1]))
-                    {
-                        foreach (StageDef o in s.Ways) if (o.Id == h[1]) Errors.Add(at + "шлях «" + h[1] + "» двічі");
-                        w = new StageDef { Id = h[1] }; s.Ways.Add(w);
-                    }
-                    else Errors.Add(at + "не розумію «" + line + "»");
-                    continue;
-                }
-                int c = line.IndexOf(':');
-                if (c <= 0 || q == null) { Errors.Add(at + "рядок поза квестом або без «:»"); continue; }
-                string key = line.Substring(0, c).Trim().ToLowerInvariant(), val = line.Substring(c + 1).Trim();
-                if (s == null)
-                {
-                    switch (key)
-                    {
-                        case "name": q.Name = val; break;
-                        case "starts": q.StartsText = val; q.Starts = Conds(val, at); break;
-                        case "first": q.First = val; break;
-                        default: Errors.Add(at + "невідоме поле квесту «" + key + "»"); break;
-                    }
-                    continue;
-                }
-                if (w != null && key != "goal" && key != "mark" && key != "wait" && key != "on" && key != "done" && key != "next")
-                {
-                    Errors.Add(at + "у шляху лише goal, mark, wait, on, done, next — «" + key + "» тут ні до чого"); continue;
-                }
-                StageDef d = w ?? s; // (what the line belongs to: the way, else the stage)
-                switch (key)
-                {
-                    case "goal": d.Goal = val; break;
-                    case "choice": if (Story.GoodName(val) && val.IndexOf('.') < 0) s.Choice = val; else Errors.Add(at + "choice: назва без крапок і пробілів"); break;
-                    case "wait": d.WaitText = val; d.Wait = Conds(val, at); break;
-                    case "on":
-                        {
-                            int sp = val.IndexOf(' ');
-                            d.OnName = (sp < 0 ? val : val.Substring(0, sp)).ToLowerInvariant();
-                            d.OnArgs = sp < 0 ? "" : val.Substring(sp + 1).Trim();
-                            break;
-                        }
-                    case "scene": d.Scene = val; break;
-                    case "mark":
-                        {
-                            string[] m = val.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
-                            if (m.Length == 0) { Errors.Add(at + "mark: <місце> [радіус] <напис>"); break; }
-                            d.MarkAt = m[0];
-                            int r = m.Length > 1 ? Errands.I(m[1], -1) : -1;
-                            d.MarkRadius = r > 0 ? r : 0f;
-                            d.MarkLabel = r > 0 ? (m.Length > 2 ? m[2] : "") : (m.Length > 1 ? val.Substring(val.IndexOf(m[1], m[0].Length)) : "");
-                            break;
-                        }
-                    case "next": d.Next = val; break;
-                    case "start": Actions(val, d.Start, at); break;
-                    case "done": Actions(val, d.Done, at); break;
-                    case "fork":
-                        {
-                            int arrow = val.LastIndexOf("->");
-                            if (arrow < 0) { Errors.Add(at + "fork: <умови> -> <етап>"); break; }
-                            d.Forks.Add(new Fork { Text = val, When = Conds(val.Substring(0, arrow), at), To = val.Substring(arrow + 2).Trim() });
-                            break;
-                        }
-                    default: Errors.Add(at + "невідоме поле етапу «" + key + "»"); break;
-                }
-            }
-        }
-
-        private static QuestDef Find0(string id) { foreach (QuestDef q in Quests) if (q.Id == id) return q; return null; }
-
-        // conditions, their problems with the line's place in front
-        private static List<Cond> Conds(string val, string at)
-        {
-            List<string> errs = new List<string>();
-            List<Cond> l = StoryCond.Parse(val, errs);
-            foreach (string e in errs) Errors.Add(at + e);
-            return l;
-        }
-
-        private static void Actions(string val, List<string> into, string at)
-        {
-            foreach (string a in val.Split(';'))
-            {
-                string t = a.Trim();
-                if (t.Length == 0) continue;
-                string why = StoryActions.Check(t);
-                if (why != null) Errors.Add(at + why);
-                into.Add(t);
-            }
-        }
-
-        private static void Validate(QuestDef q)
-        {
-            string at = q.From + " [" + q.Id + "]: ";
-            if (q.Stages.Count == 0) { Errors.Add(at + "жодного етапу"); return; }
-            if (q.First.Length == 0) q.First = q.Stages[0].Id;
-            if (q.Stage(q.First) == null) Errors.Add(at + "first: нема етапу «" + q.First + "»");
-            for (int i = 0; i < q.Stages.Count; i++)
-            {
-                StageDef s = q.Stages[i];
-                if (s.Next.Length == 0) s.Next = i + 1 < q.Stages.Count ? q.Stages[i + 1].Id : "end";
-                if (s.Next != "end" && q.Stage(s.Next) == null) Errors.Add(at + s.Id + ": next — нема етапу «" + s.Next + "»");
-                foreach (Fork f in s.Forks) if (f.To != "end" && q.Stage(f.To) == null) Errors.Add(at + s.Id + ": fork — нема етапу «" + f.To + "»");
-                foreach (string a in s.Start) StoryActions.CheckGoto(q, a, at + s.Id + ": ", Errors);
-                foreach (string a in s.Done) StoryActions.CheckGoto(q, a, at + s.Id + ": ", Errors);
-                if (s.Ways.Count > 0) { ValidateWays(q, s, at); continue; }
-                if (s.Goal.Length == 0) Errors.Add(at + s.Id + ": без goal (гравець не знатиме, що робити)");
-            }
-            int unnamed = 0;
-            foreach (StageDef s in q.Stages) if (s.Ways.Count > 0 && s.Choice.Length == 0) unnamed++;
-            if (unnamed > 1) Errors.Add(at + "кілька етапів зі шляхами без choice: — назви кожен вибір");
-        }
-
-        // what a stage names elsewhere: its scene, its marks' places (a typo there — a scene «played» at once, a mark nowhere)
-        private static void ValidateRefs(QuestDef q)
-        {
-            string at = q.From + " [" + q.Id + "]: ";
-            foreach (StageDef s in q.Stages)
-            {
-                if (s.Scene.Length > 0 && StoryScenes.Find(s.Scene) == null) Errors.Add(at + s.Id + ": нема сцени «" + s.Scene + "» (зіграється одразу, нічого не показавши)");
-                foreach (StageDef d in s.Ways.Count > 0 ? s.Ways : new List<StageDef> { s })
-                {
-                    string why = d.MarkAt.Length > 0 ? StoryWhere.Why(d.MarkAt) : null;
-                    if (why != null) Errors.Add(at + d.Id + ": mark — " + why);
-                }
-            }
-        }
-
-        private static void ValidateWays(QuestDef q, StageDef s, string at)
-        {
-            at += s.Id + ": ";
-            if (s.Scene.Length > 0 || s.OnName.Length > 0 || (s.Wait != null && s.Wait.Count > 0)) Errors.Add(at + "етап зі шляхами чекає лише на шляхи — wait/on/scene перенеси в шлях");
-            if (s.Ways.Count > MaxWays) Errors.Add(at + "шляхів більше " + MaxWays);
-            foreach (StageDef w in s.Ways)
-            {
-                if (w.Next.Length == 0) w.Next = s.Next;
-                if (w.Next != "end" && q.Stage(w.Next) == null) Errors.Add(at + "шлях " + w.Id + ": next — нема етапу «" + w.Next + "»");
-                if (w.Goal.Length == 0) Errors.Add(at + "шлях " + w.Id + ": без goal");
-                if (w.OnName.Length == 0 && (w.Wait == null || w.Wait.Count == 0)) Errors.Add(at + "шлях " + w.Id + ": без wait/on — його виберуть одразу");
-                foreach (string a in w.Done) StoryActions.CheckGoto(q, a, at + "шлях " + w.Id + ": ", Errors);
-            }
-        }
-
-        internal const int MaxWays = 6;
-        internal const string ChoseFlag = "chose.";
-
-        // the name a stage's choice is kept under (its own, else the quest's)
-        internal static string ChoiceOf(QuestDef q, StageDef s) { return s.Choice.Length > 0 ? s.Choice : q.Id; }
-
         // ---------------------------------------------------------------- running
-        // every frame (RavenSkills): the played minutes, the events heard, the stages twice a second
+        // the modules' own looks (StoryModules fills them; the core names none): Frame — every frame, after the scene; Each — twice a
+        // second on every game, after the stages (StoryTales: a moment of the world; StoryHush: the quiet rounds; StoryCallMark: whom to talk to)
+        // A module that throws rests alone (Parts): it never stops the stages
+        internal static readonly Parts Frame = new Parts("Story frame");
+        internal static readonly Parts Each = new Parts("Story pass");
+
+        // every frame (RavenSkills): the played minutes, the scene, the stages twice a second
         internal static void Tick()
         {
             Player p = Player.m_localPlayer;
-            if (p == null || ZNet.instance == null) return;
+            if (p == null || ZNet.instance == null) { StoryScenes.Tick(); return; } // (left the world in a scene: stopped now, its people and camera given back — not played on after the next login)
             Load();
             StoryTrackConds.Count(p);
-            StoryOwn.Tick(p);
             StoryScenes.Tick();
-            StoryHush.Tick(p);
-            StoryProps.Look();
+            Frame.Run(p);
             if (Time.time < _next) return;
             _next = Time.time + 0.5f;
             _now.Clear(); _now.AddRange(_heard); _heard.Clear(); // (what is raised during this pass waits for the next one)
+            RunOwed();
             if (Time.time >= _startNext) { _startNext = Time.time + 2f; StartWaiting(p); }
             foreach (QuestDef q in Quests)
             {
-                if (Story.Quest(p, q.Id) == Story.Active) Step(p, q);
-                Mark(p, q);
+                try
+                {
+                    if (q.Server) ServerStep(p, q);
+                    else if (Story.Quest(p, q.Id) == Story.Active) Step(p, q);
+                    Mark(p, q);
+                }
+                catch (Exception e) { Failed(q.Id + " pass", e); } // (one quest's fault: the others and the modules go on)
             }
             ShowGoal(p);
-            Hush(p);
+            Each.Run(p);
         }
 
-        // the quiet rounds this player's story wants (StoryHush): the scene playing (round its place, else round him);
-        // a stage that plays a scene with a place; a stage whose mark leads to a scene (its next stage's, or its ways')
-        private static void Hush(Player p)
+        // said once per place and fault, not twice a second
+        private static readonly HashSet<string> _failed = new HashSet<string>();
+        private static void Failed(string where, Exception e) { if (_failed.Add(where + ": " + e.Message)) Story.Log("track: " + where + " failed: " + e); }
+
+        // the stage this player stands at in an active quest (null: not active, or a stage gone from the file)
+        internal static StageDef StageNow(Player p, QuestDef q) { return State(p, q) == Story.Active && Leads(p, q) ? q.Stage(At(p, q)) : null; }
+
+        // a stage of this player's (or a way of it) waits for this very event now: a touch it waits for is its, not the place's «elsedo:»
+        internal static bool Awaits(Player p, string name, string arg)
         {
-            StoryHush.Pass();
-            StoryScenes.SceneDef now = StoryScenes.Current;
-            if (now != null) HushAt("scene", now, now.Place.Length > 0 ? now.Place : null, p, true);
+            StoryEvent e = new StoryEvent { Name = name, Arg = arg ?? "" };
             foreach (QuestDef q in Quests)
             {
-                if (Story.Quest(p, q.Id) != Story.Active) continue;
-                StageDef s = q.Stage(Story.StageOf(p, q.Id));
+                StageDef s = StageNow(p, q);
                 if (s == null) continue;
-                if (s.Scene.Length > 0) { StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene); if (sc != null && sc.Place.Length > 0 && sc != now) HushAt(q.Id + "." + s.Id, sc, sc.Place, p, false); }
-                if (s.Ways.Count == 0) { if (s.MarkAt.Length > 0) HushAt(q.Id + "." + s.Id + ".m", Leads(q, s.Next), s.MarkAt, p, false); }
-                else foreach (StageDef w in s.Ways) if (w.MarkAt.Length > 0) HushAt(q.Id + "." + s.Id + "." + w.Id, Leads(q, w.Next), w.MarkAt, p, false);
+                if (s.OnName.Length > 0 && StoryBus.Matches(e, s.OnName, s.OnArgs)) return true;
+                foreach (StageDef w in s.Ways) if (w.OnName.Length > 0 && StoryBus.Matches(e, w.OnName, w.OnArgs)) return true;
             }
+            return false;
         }
 
-        // the scene the stages after this one come to (a few steps on: way → touch the shield → the scene); null — none:
-        // a mark that leads to no scene wants no quiet
-        private static StoryScenes.SceneDef Leads(QuestDef q, string next)
+        // the scene the stages after this one come to (a few steps on: way → touch the shield → the scene); null — none
+        internal static StoryScenes.SceneDef Leads(QuestDef q, string next)
         {
             for (int i = 0; i < 3; i++)
             {
@@ -321,35 +163,52 @@ namespace HuginWhispers
             return null;
         }
 
-        private static void HushAt(string key, StoryScenes.SceneDef sc, string place, Player p, bool full)
+        // what the player is to do now: the first active quest and its stage (false: nothing) — the screen's goal line, the book's «Сага»
+        internal static bool Now(Player p, out QuestDef q, out StageDef s)
         {
-            if (sc == null) return;
-            Vector3 at;
-            if (place == null) at = p.transform.position; // (a scene with no place: round the player)
-            else if (!StoryWhere.Find(place, out at)) return;
-            StoryHush.Want(key, at, StoryHush.MaxFor(sc, place), full);
+            Load();
+            foreach (QuestDef d in Quests)
+            {
+                s = StageNow(p, d);
+                if (s == null) continue;
+                q = d;
+                return true;
+            }
+            q = null; s = null;
+            return false;
+        }
+
+        // the player's stage now plays a scene as soon as it may
+        internal static bool WantsScene(Player p)
+        {
+            QuestDef q; StageDef s;
+            if (!Now(p, out q, out s) || s.Scene.Length == 0) return false;
+            if (!q.Server) return true;
+            StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene); // (a stage of the world may stand long with its scene for someone else: not about to start here unless it could)
+            return sc != null && StoryScenes.Near(p, sc) && StoryCond.All(p, sc.Needs);
+        }
+
+        // a stage's goal in words, its ways side by side (translated)
+        internal static string GoalText(StageDef s)
+        {
+            if (s.Ways.Count == 0) return Lang.T(s.Goal);
+            List<string> l = new List<string>();
+            foreach (StageDef w in s.Ways) if (w.Goal.Length > 0) l.Add("· " + Lang.T(w.Goal));
+            return (s.Goal.Length > 0 ? Lang.T(s.Goal) + "\n" : "") + string.Join("\n", l.ToArray());
+        }
+
+        // where the quest's mark stands on the map now (its first way's when the stage has ways): false — no mark
+        internal static bool MarkAt(QuestDef q, StageDef s, out Vector3 at)
+        {
+            return StoryMap.Where("story." + q.Id, out at) || (s.Ways.Count > 0 && StoryMap.Where("story." + q.Id + ".0", out at));
         }
 
         // the goal line on the screen (StoryScreen.Goal): the first active quest's stage — its ways side by side
         private static void ShowGoal(Player p)
         {
-            foreach (QuestDef q in Quests)
-            {
-                if (Story.Quest(p, q.Id) != Story.Active) continue;
-                StageDef s = q.Stage(Story.StageOf(p, q.Id));
-                if (s == null) continue;
-                string goal;
-                if (s.Ways.Count > 0)
-                {
-                    List<string> l = new List<string>();
-                    foreach (StageDef w in s.Ways) if (w.Goal.Length > 0) l.Add("· " + Lang.T(w.Goal));
-                    goal = (s.Goal.Length > 0 ? Lang.T(s.Goal) + "\n" : "") + string.Join("\n", l.ToArray());
-                }
-                else goal = Lang.T(s.Goal);
-                StoryScreen.Goal(Lang.T(q.Name), goal);
-                return;
-            }
-            StoryScreen.Goal("", "");
+            QuestDef q; StageDef s;
+            if (Now(p, out q, out s)) StoryScreen.Goal(Lang.T(q.Name), GoalText(s));
+            else StoryScreen.Goal("", "");
         }
 
         // the stage's mark on the map (StoryMap: set again each pass costs nothing when unchanged; gone with the stage)
@@ -358,7 +217,7 @@ namespace HuginWhispers
         private static void Mark(Player p, QuestDef q)
         {
             string key = "story." + q.Id;
-            StageDef s = Story.Quest(p, q.Id) == Story.Active ? q.Stage(Story.StageOf(p, q.Id)) : null;
+            StageDef s = StageNow(p, q);
             MarkOne(key, s);
             int had, n = s != null ? s.Ways.Count : 0;
             _wayMarks.TryGetValue(q.Id, out had);
@@ -366,25 +225,36 @@ namespace HuginWhispers
             if (had != n) _wayMarks[q.Id] = n;
         }
 
+        internal static float SceneMarkRadius = 10f;
         private static void MarkOne(string key, StageDef s)
         {
             Vector3 at;
-            if (s == null || s.MarkAt.Length == 0 || s.MarkAt == "hall" || !StoryWhere.Find(s.MarkAt, out at)) { StoryMap.Clear(key); return; } // (the Hall wears its own mark always: Loc.MapMark)
-            StoryMap.Set(key, at, Lang.T(s.MarkLabel.Length > 0 ? s.MarkLabel : s.Goal), s.MarkRadius);
+            string where = s != null ? s.MarkAt : "";
+            float radius = s != null ? s.MarkRadius : 0f;
+            if (s != null && where.Length == 0 && s.Scene.Length > 0) // (no mark of its own: where its scene plays, so nobody is left with no way back to it while it waits)
+            {
+                StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene);
+                if (sc != null && sc.Place.Length > 0 && sc.Place != StoryShots.PlayerFrame ) { where = sc.Place; radius = SceneMarkRadius; }
+            }
+            if (where.Length == 0 || !StoryWhere.Find(where, out at)) { StoryMap.Clear(key); return; }
+            StoryMap.Set(key, at, Lang.T(s.MarkLabel.Length > 0 ? s.MarkLabel : s.Goal), radius);
         }
 
-        // (a busy half second — a fight's kills — may fill the list; what moves a stage is never dropped)
-        private static void Hear(StoryEvent e) { if (_heard.Count < 256 || e.Name == "scene_done" || e.Name == "heart_built" || e.Name == "use") _heard.Add(e); }
+        // only what some stage waits for (an «on:», a scene's end) is kept for the next pass: a fight's hundred kills cost nothing
+        // and nothing a stage needs is ever dropped (the bound: a runaway loop of raises)
+        private static readonly HashSet<string> _wanted = new HashSet<string>();
+        private static void Hear(StoryEvent e) { if (_wanted.Contains(e.Name) && _heard.Count < 1024) _heard.Add(e); }
 
         // quests whose «starts:» now hold start by themselves
         private static void StartWaiting(Player p)
         {
             foreach (QuestDef q in Quests)
-                if (Story.Quest(p, q.Id).Length == 0 && q.Starts != null && q.Starts.Count > 0 && StoryCond.All(p, q.Starts)) Start(p, q);
+                if (State(p, q).Length == 0 && q.Starts != null && q.Starts.Count > 0 && Leads(p, q) && StoryCond.All(p, q.Starts) && Time.time >= q.AskUntil) { if (q.Server) StartOnServer(q); else Start(p, q); }
         }
 
         internal static void Start(Player p, QuestDef q)
         {
+            if (q.Server) { Ask(q, "", q.First, false, true); return; } // (the author's: from its first stage, whatever stands)
             Story.SetQuest(p, q.Id, Story.Active);
             Note(q.Id + ": почався");
             Enter(p, q, q.First);
@@ -404,9 +274,11 @@ namespace HuginWhispers
         private static void Enter0(Player p, QuestDef q, string id)
         {
             if (id == "end") { Finish(p, q, Story.Done); return; }
+            if (id.Length == 0) return; // (the action «end» in a row has finished the quest: nowhere to go)
             StageDef s = q.Stage(id);
             if (s == null) { Note(q.Id + ": нема етапу «" + id + "» — квест стоїть"); return; }
             Story.SetStage(p, q.Id, s.Id);
+            if (q.NudgeScene.Length > 0) Story.SetVar(p, NudgeVar(q), Mathf.Max(1, StoryTrackConds.Played(p)), true);
             Note(q.Id + " → " + s.Id);
             StoryBus.Raise("stage", q.Id + "." + s.Id, 0);
             string jump = Run(p, q, s.Start);
@@ -426,7 +298,8 @@ namespace HuginWhispers
         {
             StageDef s = q.Stage(Story.StageOf(p, q.Id));
             if (s == null) { Enter(p, q, q.First); return; } // (a stage gone from the file: from the top, said in the log)
-            if (Forked(p, q, s)) return;
+            if ((s.Scene.Length == 0 || StoryScenes.Playing != s.Scene) && Forked(p, q, s)) return; // (its own scene plays: the forks wait for its end, not walk away under it)
+            Nudge(p, q, s);
             if (s.Ways.Count > 0)
             {
                 foreach (StageDef w in s.Ways) if (Passed(p, w)) { Choose(p, q, s, w); return; }
@@ -434,8 +307,51 @@ namespace HuginWhispers
             }
             if (s.Scene.Length > 0 && StoryScenes.Playing != s.Scene && !HeardEvent("scene_done", s.Scene)) StoryScenes.TryPlay(s.Scene); // (not begun yet, stopped, or back after a relog: when it may)
             if (!Passed(p, s)) return;
+            Lived(p, q, s, null);
             string jump = Run(p, q, s.Done);
             Enter(p, q, jump ?? s.Next);
+        }
+
+        // a stage with a place to go to, standing long: the quest's «nudge» scene shows the way. A stage that only waits for time has no
+        // mark and no nudge. The clock is the character's (a relog goes on), minutes of real play; it starts anew only when the scene began
+        // (needs not met — asked again next pass, TryPlay says so in the log once): twice a second one read of a var, at worst
+        private static string NudgeVar(QuestDef q) { return "nudge_" + q.Id; }
+
+        private static void Nudge(Player p, QuestDef q, StageDef s)
+        {
+            if (q.NudgeScene.Length == 0) return;
+            int now = StoryTrackConds.Played(p), from = Story.Var(p, NudgeVar(q));
+            if (from <= 0) { Story.SetVar(p, NudgeVar(q), Mathf.Max(1, now), true); return; } // (stood on this stage since before this word)
+            if (now - from < q.NudgeMinutes * 60 || StoryScenes.Playing.Length > 0) return;
+            Vector3 mark;
+            if (!MarkAt(q, s, out mark)) return;
+            StoryScenes.TryPlay(q.NudgeScene);
+            if (StoryScenes.Playing != q.NudgeScene) return;
+            Story.SetVar(p, NudgeVar(q), Mathf.Max(1, now), true);
+            Note(q.Id + "." + s.Id + ": стоїть " + (now - from) / 60 + " хв — ворон показує дорогу");
+        }
+
+        // the place «goal.mark»: the mark of the stage the player stands at now; of its ways, the nearest
+        private const string GoalPrefix = "goal.";
+        internal static void Places() { StoryWhere.Prefixed[GoalPrefix] = GoalPlace; }
+        internal static int ReadCount; // (how many times the files were read: what is made from them once — the «Тест» tab)
+        private static bool GoalPlace(string rest, out Vector3 at)
+        {
+            at = Vector3.zero;
+            Player p = Player.m_localPlayer;
+            QuestDef q; StageDef s;
+            if (p == null || !Now(p, out q, out s)) return false;
+            if (s.Ways.Count == 0) return StoryMap.Where("story." + q.Id, out at);
+            bool any = false;
+            float best = float.MaxValue;
+            for (int i = 0; i < s.Ways.Count; i++)
+            {
+                Vector3 m;
+                if (!StoryMap.Where("story." + q.Id + "." + i, out m)) continue;
+                float d = Utils.DistanceXZ(m, p.transform.position);
+                if (d < best) { best = d; at = m; any = true; }
+            }
+            return any;
         }
 
         // a way done: the choice kept (one way per choice — an older one of the same name goes), its done, the stage's done, on
@@ -445,8 +361,11 @@ namespace HuginWhispers
             Choose(p, c, w.Id);
             Note(q.Id + "." + s.Id + ": вибрано шлях «" + w.Id + "»");
             StoryBus.Raise("way", c + "." + w.Id, 0);
-            string jump = Run(p, q, w.Done) ?? Run(p, q, s.Done);
-            Enter(p, q, jump ?? w.Next);
+            Lived(p, q, s, null);
+            Lived(p, q, s, w);
+            string jump = Run(p, q, w.Done); // (the stage's own done runs after it, whichever way, as the head says; only an «end» stops it: the quest is over)
+            string own = jump == null || jump.Length > 0 ? Run(p, q, s.Done) : null;
+            Enter(p, q, jump ?? own ?? w.Next);
         }
 
         internal static void Choose(Player p, string choice, string way)
@@ -462,6 +381,25 @@ namespace HuginWhispers
             string pre = ChoseFlag + choice + ".";
             foreach (string f in Story.Of(p).Flags) if (f.StartsWith(pre, StringComparison.Ordinal)) return f.Substring(pre.Length);
             return "";
+        }
+
+        // a stage (or its way) passed: its saga entry into the character (StorySaga reads them; the book may come later)
+        private static void Lived(Player p, QuestDef q, StageDef s, StageDef w)
+        {
+            if ((w ?? s).Saga.Length > 0) Story.AddSaga(p, q.Id + "." + s.Id + (w != null ? "." + w.Id : ""));
+        }
+
+        // the stage (or way) a saga entry «quest.stage[.way]» names (null: gone from the files)
+        internal static StageDef Entry(string entry, out QuestDef q)
+        {
+            q = null;
+            string[] w = entry.Split('.');
+            if (w.Length < 2 || w.Length > 3) return null;
+            q = Find(w[0]);
+            StageDef s = q != null ? q.Stage(w[1]) : null;
+            if (s == null || w.Length == 2) return s;
+            foreach (StageDef way in s.Ways) if (way.Id == w[2]) return way;
+            return null;
         }
 
         private static bool Passed(Player p, StageDef s)
@@ -482,7 +420,9 @@ namespace HuginWhispers
         {
             foreach (string a in acts)
             {
-                string jump = StoryActions.Do(p, q, a);
+                string jump = null;
+                try { jump = StoryActions.Do(p, q, a); }
+                catch (Exception e) { Failed(q.Id + " action «" + a + "»", e); } // (the row goes on: a stage half entered, its stage word already written, would never run the rest)
                 if (jump != null) return jump;
             }
             return null;
@@ -490,6 +430,7 @@ namespace HuginWhispers
 
         internal static void Finish(Player p, QuestDef q, string state)
         {
+            if (q.Server) { Ask(q, At(p, q), "end", false, true); return; } // (the author's panel: storycheck keeps the action «end» off a server's quest)
             Story.SetQuest(p, q.Id, state);
             Story.SetStage(p, q.Id, "");
             Note(q.Id + ": " + (state == Story.Done ? "пройдено" : "провалено"));
@@ -500,6 +441,7 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the author's (the panel, the console)
         internal static void Jump(Player p, QuestDef q, string stage)
         {
+            if (q.Server) { Note(q.Id + ": автор → " + stage); Ask(q, At(p, q), stage, false, true); return; }
             if (Story.Quest(p, q.Id) != Story.Active) Story.SetQuest(p, q.Id, Story.Active);
             Note(q.Id + ": автор → " + stage);
             Enter(p, q, stage);
@@ -507,8 +449,16 @@ namespace HuginWhispers
 
         internal static void Forget(Player p, QuestDef q)
         {
+            if (q.Server)
+            {
+                StoryWorld.SetText(KeyOf(q), "");
+                foreach (StageDef s in q.Stages) if (s.Scene.Length > 0) StoryWorld.Remove("scene." + s.Scene);
+                Note(q.Id + ": стерто для цього світу");
+                return;
+            }
             Story.SetQuest(p, q.Id, "");
             Story.SetStage(p, q.Id, "");
+            Story.ForgetSaga(p, q.Id);
             Note(q.Id + ": стерто для персонажа");
         }
 

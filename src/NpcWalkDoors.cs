@@ -47,7 +47,7 @@ namespace HuginWhispers
                 return false; // (the door it opened: DoorTick)
             }
             if (now < _doorLook) return false;
-            _doorLook = now + 0.2f;
+            _doorLook = now + 0.2f * _slow;
             RaycastHit h;
             if (!Physics.CapsuleCast(me + Vector3.up * 0.65f, me + Vector3.up * 1.4f, 0.3f, want, out h, 1.2f, Things2, QueryTriggerInteraction.Ignore)) return false;
             Door d = h.collider.GetComponentInParent<Door>();

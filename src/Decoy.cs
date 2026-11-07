@@ -638,7 +638,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Character), "Damage")]
     internal static class DecoyHarmlessPatch
     {
-        private static bool Prefix(HitData hit) { try { return !Decoy.Harmless(hit); } catch { return true; } }
+        private static bool Prefix(HitData hit) {
+            try
+            {
+                return !Decoy.Harmless(hit);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("DecoyHarmlessPatch", pgx); return true; }
+        }
     }
 
     // the players' blows on it are counted where it is owned
@@ -647,7 +653,11 @@ namespace HuginWhispers
     {
         private static void Prefix(Character __instance, HitData hit)
         {
-            try { ZNetView nv = __instance.GetComponent<ZNetView>(); if (nv != null && nv.IsValid() && nv.IsOwner()) Decoy.Struck(__instance, hit); } catch { }
+            try
+            {
+                ZNetView nv = __instance.GetComponent<ZNetView>(); if (nv != null && nv.IsValid() && nv.IsOwner()) Decoy.Struck(__instance, hit);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("DecoyStruckPatch", pgx); }
         }
     }
 }

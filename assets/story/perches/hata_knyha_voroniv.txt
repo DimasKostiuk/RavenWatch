@@ -1,0 +1,8 @@
+# RavenWatch — сюжетна річ хати Ейріка (пролог). Лише для автора: у молоті видно, тільки коли є config/RavenWatch/blueprints.
+# Модель: Meshy, спільнота (CC0, Meshy Terms §3.3), «simple book 04»; джерело — Desktop\VisualRW\meshes\Предмети\knyha_voroniv. Тимчасова, поки нема своєї.
+name: Книга воронів
+note: Книга Ейріка на столі в його хаті. Стоїть у шарі «lived»: є, поки хата для гравця обжита; Відлуння віддає її гравцеві (сцена echo, do book), і разом з обжитими речами вона зникає.
+use: story
+id: knyha_voroniv
+part asset/Предмети/BookRavens pos 0 0.039 0 rot 0 0 0 scale 0.157 0.157 0.157  # закрита, лежить плазом: ~30 × 8 × 22 см
+part @box pos 0 0.04 0 rot 0 0 0 scale 0.3 0.08 0.22  # щоб навести

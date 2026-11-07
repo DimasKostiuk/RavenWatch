@@ -147,6 +147,14 @@ namespace HuginWhispers
                 else if (OrdersMenu.IsOpen && (Pressed(Get(OrdersId)) || Pressed(Get(GiftsId)))) OrdersMenu.CloseNow();
                 return;
             }
+            // a raven on you, no book yet (the story: Eirik's house): it only sits — its keys say so and do nothing (RavenBook.Given)
+            if (!RavenBook.Given(own))
+            {
+                if (OrdersMenu.IsOpen) OrdersMenu.CloseNow();
+                foreach (string k in new[] { BookId, OrdersId, GiftsId })
+                    if (Pressed(Get(k)) && Free() && !own.InPlaceMode() && !GivesWay(Get(k).MainKey)) { RavenMsg.Center(own, RavenBook.NoBook(own)); break; }
+                return;
+            }
             // a building tool in hand: B, J and Q are the game's and other mods' (Path of Valheiman's Hugin flight is on B there)
             bool building = own != null && own.InPlaceMode() && !RavenBook.IsOpen && !OrdersMenu.IsOpen;
             // with the gifts or orders circle open (it poses as the trader's window, so not Free): it closes, the book opens

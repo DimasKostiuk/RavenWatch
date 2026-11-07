@@ -10,21 +10,26 @@ namespace HuginWhispers
 {
     // The scene director (story-plan.md part 7): a scene is a text file of steps played one after another; one scene at
     // a time. A quest's stage «scene: <id>» plays it and passes on «scene_done <id>». Played live: the player keeps
-    // the keys unless a shot holds the camera (StoryCamera). The world never pauses — a scene that goes wrong stops:
+    // the keys unless a shot, the bars or the black hold him (StoryCamera.TakesPlayer). All it took is given back in one place (Release). The world never pauses — a scene that goes wrong stops:
     //   death · a fight (hit, or a foe at you) · going off more than 60 m from where it plays
     // and its actors vanish; the stage plays it again later (after Retry seconds, when «needs» hold again).
     // Every step has its own time limit: a scene never hangs.
     //
     // Files: assets/story/scenes/*.txt — read where StoryFiles says (built in; on the author's machine the mod's own folder,
-    // edited in F9 «Сцени»). This file: reading, the kinds of steps, playing; the camera, the bird, the people of a
-    // scene in StoryScenesCamera / StoryScenesBird / StoryScenesCast.
+    // edited in F9 «Сцени»). This file: playing; reading: StoryScenesRead; the kinds of steps: StoryScenesKinds; the player's, the bird's, the people's
+    // verbs: StoryScenesPlayer / Bird / Cast; the camera: StoryScenesCamera.
     //   [scene raven_call]
     //   needs: calm                         conditions to begin (StoryCond)
     //   place: prologue_house               where it is filmed (the author's shots of that place: StoryShots)
+    //   alone: yes                          a scene of one's own: the other players are not drawn in this game while
+    //                                       it plays (StoryAlone — nobody walks into the shot)
     //   guard: 30 | off                     the quiet round the event (StoryHush): its full size in m; none — by the
     //                                       place's size; off — none. It grows round the place as the player comes on
     //                                       the stage that leads here; no place — round the player while it plays
-    // It begins only when every person it takes from the world (npc <who> …, not its own «spawn») is near and free.
+    // It never begins in a fight at you (FoeNear: what would stop it at once), whatever its «needs».
+    // It begins only when every person it takes from the world (npc <who> …, not its own «spawn») is near and free. It never waits for
+    // a raven of the game (the user 2026-11-07: the heart built, the hammer gone — and 23 s of nothing while it waited for one): a raven
+    // still waiting to be heard when it begins flies off, as it does when nobody comes (Plugin.RunOutVisit), and none comes while it plays.
     // Once is once: after a lasting step (do, own, drop, door) it is never played again — stopped then, or the game
     // left, its lasting steps still ahead run quietly and it counts as played.
     //   bird come 60 18 land 5              the story's raven: from 60 m behind you, 18 m up, lands 5 m before you
@@ -32,23 +37,38 @@ namespace HuginWhispers
     //   bird look player                    turns to you
     //   bird say …ти ж обіцяв.             a line over it
     //   bird circle 30 [4.5] [3.5]          round over you for 30 s (radius, metres over your head)
+    //   bird over [10]                      waits till it is really over you, within so many m (it set off from afar and circles)
     //   bird leave hall                     off that way and gone (the step does not wait for it)
     //   bird gone                           a puff of feathers
+    //   bird come … nowait                  the scene goes on as it flies in (then «bird circle»: it never sits)
+    //   bird come … as hugin|munin          your own raven's picture (plain black, its size asleep); … look <id> another look of assets/story/looks
+    //   bird come … at <place> side -0.5    on top of a thing, this far right (below zero: left) of its middle as you see it
+    //   bird shoulder [hugin|munin]         onto your shoulder (its kind's); then «own <kind> here» makes it yours
     //   say hugin|munin <текст>             your own raven says it (only if it is on your shoulder)
     //   msg <текст>                         a line in the middle of the screen
-    //   camera <from> [look <what>] [blend 2] [fov 50]   a shot (StoryCamera): from a place, «behind» or «over» you;
+    //   camera <from> [look <what>] [blend 2] [fov 50]   a shot (StoryCamera): from a place, «behind», «over» or «face» (close up);
     //                                       looking at player (default), bird, sky (up before you) or a place; the player stands still
     //   camera off [blend 1.5]              the camera back to the player (also when the scene ends or stops)
     //   bars on|off · sub <текст>           the black bars; a subtitle (waits while it is read)
-    //   weather <env> [s] [all] · weather off [all]     forced weather (ThunderStorm, Rain, Misty, Clear …)
+    //   weather <env> [s] [all] · weather off [all]     forced weather (ThunderStorm, Rain, Misty, Clear …); off when the scene ends or stops
     //   bolt near|ahead [n] [all] · bolt <place> [n] [spread] [all]   bolts from the sky (StoryAir; ahead = before the eyes)
-    //   thor [all] · shake <strength> [all] · music <name>|off [all]
+    //   thor [all] · shake <strength> [all]
     //                                       «all»: in every game of the world, round each player
     //   fade out|in [1.5]                   the whole picture to black and back (waits)
-    //   player face <place> · player emote <gesture>|stop    the player himself turned / a gesture
+    //   player face <place> · player emote <gesture>|stop    the player himself turns softly on the spot and looks there (does not wait) / a gesture
+    //   player stop [0.8]                   the walk on now ends where he is, slowing over the seconds (waits)
+    //   player back <m>                     he steps back that far, slowly, facing as he faces (waits; a clip of ours fades first)
+    //   player face <place> slow            the same turn, slower
+    //   player look <place|bird|npc.x>|forward    where his head looks till the scene ends (StoryLook; a shot on and no word: straight before him)
     //   player go <place> <m> [front] [run]  he walks to <m> from its middle, on the side he is on, and turns to it (front:
     //                                       the side its face looks to, turned as it is; goes through what is between). Waits till he
-    //                                       stands exactly so, at most StoryWalk.Most seconds; how near he got, in the log
+    //                                       stands exactly so, at most StoryWalk.Most seconds (a long walk: as long as its way needs); how near he got, in the log
+    //   player go <place> <m> before        square before the thing's middle, on its outer side, wherever he comes from (a gate)
+    //   player go … keep nowait             he goes on at the pace he came at, and the scene does not wait (it takes up his walk)
+    //   player go … soft                    he slows softly over the last metres and stops near it (no exact spot: nothing is taken there)
+    //   player gait tired|careful|…|none    how he carries himself till the scene ends (StoryGait, BodyGait)
+    //   player pace walk|jog|run · player arrive <place> [m]   the pace of the walk on now · the scene waits till he has got there,
+    //                                       or till only m are left (the next shot catches him still walking)
     //   player clip <clip[.part]>|none [nowait]  one of our clips on him, through Gestures (waits for it unless it loops,
     //                                       or «nowait»); the next one crossfades; let go when the scene ends or stops
     //   player mark <name> [seconds]        waits till the clip on him passes that «mark» (BodyClips), at most 30 s
@@ -60,21 +80,28 @@ namespace HuginWhispers
     //   wait 1.5                            seconds
     //   until near bird 3 | 20              until the conditions hold, at most 20 s
     //   if raven hugin: say hugin Це не наш. a step only when the conditions hold
-    //   do <action>                         a quest's action now (StoryActions: hallgate open, world x, flag x,
+    //   do <action>                         a quest's action now (StoryActions: gate hall open, world x, flag x,
     //                                       msg …; not goto/end) — the world changes at the scene's moment, not after it
     //   door <place> open|close             a door of the story's places opened or shut for everyone (hall.dveri_holovni)
     //   drop <item> <place|player|npc.x>    a thing left on the ground there (networked, anyone may pick it up)
     //   npc <who> take                      a person of the story into the scene (who: its template id or its tag; the
     //                                       nearest loaded one): it stops what it does — its mind's Scene layer, over all
     //   npc <who> go <place|player|bird|npc.x> [run] [near 1.6]   walks there — runs when farther than RunFrom m (waits till it is near: NpcMind.Reach)
+    //   npc <who> go <place.piece> before <m> [run]   to that spot exactly, square before the thing's middle on its outer side: a clip that follows
+    //                                       touches it. Not come to it: said (the log, the scene check's VERDICT)
     //   npc <who> face player|bird|<place>  turns and keeps looking (does not wait)
     //   npc <who> say <текст>               a line over it, as it says it to you (waits while it is read)
     //   npc <who> emote <gesture> [loop]    a gesture (wave, bow, kneel, cry…; loop: held)
-    //   npc <who> sit <place> · stay · free sits by a place · stands · back to its own day
-    //   npc <who> spawn <place>             made for this scene at a place (its template id), facing you; not kept in the
+    //   npc <who> mark <name> [seconds]     waits till the clip on that person passes that «mark» (BodyClips), at most 30 s: never a «wait» that counts a clip's seconds
+    //   npc <who> sit <place> · stay · free sits by a place · stands · back to its own day (free: «вільно», a standing word ends too)
+    //   do npc <who> hold <place> …         a word that outlives the scene (StoryHold): what it does when the scene lets it go
+    //   do npc <who> free                   the standing word gone; one the scene holds stays the scene's till its end
+    //   npc <who> spawn <place>             made for this scene at a place (its template id), facing you, coming in slowly
+    //   npc <who> spawn <place> at x y z    … always at that spot of the place (metres in its blueprint's frame), on its floor
+    //                                       (StoryScenesCast.SpawnIn s); not kept in the
     //                                       world — fades away when the scene ends or stops (NpcFade)
-    //   npc <who> fade [3] [sound]          fades away slowly (waits the seconds) and is gone; a story sound with it (StorySounds)
-    //   sound <name|sfx_…> [place|player|npc.x]   a story sound (StorySounds: whisper …) or the game's, heard there (this game)
+    //   npc <who> fade [3] [sound]          fades away slowly (waits the seconds) and is gone; a sound with it (AudioBank)
+    //   music · bed · mix · mute · unmute · ear · sound   what is heard, all of it held by the scene: StoryAudio (its header), Audio
     //   Every one taken is let go when the scene ends or stops (back to its own day where it is). A person is a network
     //   object: everyone near sees it walk and hears its lines; its words go to whichever game runs it.
     //   Places also «npc.<who>» (where that person stands now): for the camera, the bird, «until near npc.heid 3 | 20».
@@ -82,10 +109,11 @@ namespace HuginWhispers
     // game flies a picture of its own.
     internal static partial class StoryScenes
     {
-        internal sealed class Step { public string Text = "", Line = ""; public int Num; public List<Cond> If, Until; public float UntilSec = 10f; public string[] W = new string[0]; } // (Num: its line in the file — the window «Режисер» puts lines by it)
+        internal sealed class Step { private StepKind _kind; internal StepKind Kind { get { return _kind ?? (_kind = KindOf(W)); } } /* (its kind or verb, found once: the director asks every frame) */ public string Text = "", Line = ""; public int Num; public List<Cond> If, Until; public float UntilSec = 10f; public string[] W = new string[0]; } // (Num: its line in the file — the window «Режисер» puts lines by it)
         internal sealed class SceneDef
         {
-            public string Id = "", From = "", NeedsText = "", Place = "";
+            public string Id = "", From = "", NeedsText = "", Place = "", Check = "", Test = "";
+            public bool Alone; // («alone: yes»: the other players not drawn here while it plays — StoryAlone)
             public List<Cond> Needs;
             public float Guard = -1f; // (the quiet round's full size: «guard:»; none (-1) — by the place's size, StoryHush.MaxFor; 0 — off)
             public readonly List<Step> Steps = new List<Step>();
@@ -117,274 +145,6 @@ namespace HuginWhispers
 
         internal static SceneDef Find(string id) { Load(); foreach (SceneDef s in Scenes) if (s.Id == id) return s; return null; }
 
-        // ---------------------------------------------------------------- reading
-        internal static void Load() { Wire(); if (!_loaded) Reload(); }
-
-        internal static void Reload()
-        {
-            _loaded = true;
-            StoryTrackConds.Register(); // (the conditions and the modules' actions known before any «if»/«do» line is checked)
-            Scenes.Clear(); Errors.Clear();
-            foreach (KeyValuePair<string, string> kv in StoryFiles.All(StoryFiles.Scenes, Folder, Blueprint.On)) Parse(kv.Key, kv.Value); // (built in; the mod's own folder on the author's machine — StoryFiles)
-            foreach (SceneDef sc in Scenes) CheckPlaces(sc);
-            foreach (string e in Errors) Story.Log("scenes: " + e);
-            StoryShots.Again(); StorySounds.Again(); // (the author's shots and the story's sounds: from their files again too)
-            Story.Log("scenes: " + Scenes.Count + " loaded" + (Errors.Count > 0 ? ", " + Errors.Count + " problems" : ""));
-        }
-
-        private static readonly string[] NpcVerbs = { "take", "go", "face", "say", "emote", "sit", "stay", "free", "spawn", "fade", "prop", "clip" };
-
-        private static void Parse(string file, string text)
-        {
-            SceneDef s = null;
-            foreach (KeyValuePair<int, string> ln in StoryFiles.Lines(text))
-            {
-                string line = ln.Value, at = file + ":" + ln.Key + ": ";
-                if (line.StartsWith("[scene ") && line.EndsWith("]"))
-                {
-                    string id = line.Substring(7, line.Length - 8).Trim();
-                    if (!Story.GoodName(id)) { Errors.Add(at + "погана назва сцени"); s = null; continue; }
-                    if (Find0(id) != null) { Errors.Add(at + "сцена «" + id + "» уже є — ця пропущена"); s = null; continue; }
-                    s = new SceneDef { Id = id, From = file }; Scenes.Add(s);
-                    continue;
-                }
-                if (s == null) { Errors.Add(at + "рядок поза сценою"); continue; }
-                if (line.StartsWith("needs:")) { s.NeedsText = line.Substring(6).Trim(); s.Needs = Conds(s.NeedsText, at); continue; }
-                if (line.StartsWith("place:")) { s.Place = line.Substring(6).Trim(); continue; } // (where it is filmed: its shots are that place's — the window «Режисер»)
-                if (line.StartsWith("guard:"))
-                {
-                    string g = line.Substring(6).Trim();
-                    if (g == "off") s.Guard = 0f;
-                    else { float r = F(g, -1f); if (r > 0f && r <= 80f) s.Guard = r; else Errors.Add(at + "guard: <метрів 1–80> | off"); }
-                    continue;
-                }
-                Step st = new Step { Line = line, Text = line, Num = ln.Key };
-                if (line.StartsWith("if "))
-                {
-                    int c = line.IndexOf(':');
-                    if (c < 0) { Errors.Add(at + "if <умови>: <крок>"); continue; }
-                    st.If = Conds(line.Substring(3, c - 3), at);
-                    st.Text = line.Substring(c + 1).Trim();
-                }
-                st.W = st.Text.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                string why = Check(st);
-                if (why != null) { Errors.Add(at + why); continue; }
-                if (st.W[0] == "npc" && st.W.Length > 2 && st.W[2] != "free" && !s.Cast.Contains(st.W[1]) && !Spawned(s, st.W[1])) s.Cast.Add(st.W[1]); // (wanted from the world)
-                if (st.W[0] == "until") { int bar = st.Text.LastIndexOf('|'); st.Until = StoryCond.Parse(st.Text.Substring(5, bar - 5), null); st.UntilSec = F(st.Text.Substring(bar + 1).Trim(), 10f); }
-                s.Steps.Add(st);
-            }
-        }
-
-        // the places a scene's steps name (a typo: the step skipped in the game, said only in the log)
-        private static void CheckPlaces(SceneDef s)
-        {
-            string at = s.From + " [" + s.Id + "]: ";
-            if (s.Place.Length > 0 && StoryWhere.Why(s.Place) != null) Errors.Add(at + "place — " + StoryWhere.Why(s.Place));
-            PAnimClip was = null; // (two clips one after the other: is the join seen? said in the log only)
-            foreach (Step st in s.Steps)
-            {
-                string[] w = st.W;
-                if (w[0] == "player" && w.Length > 2 && w[1] == "clip")
-                {
-                    PAnimClip now = BodyClips.Find(w[2]);
-                    string ch;
-                    if (was != null && now != null && BodyClips.JoinGap(was, now, out ch) > BodyClips.JoinNear) Story.Log("scene " + s.Id + ":" + st.Num + ": the join " + was.Name + " > " + now.Name + " shows (" + ch + ")");
-                    was = now;
-                }
-                string place = null;
-                if (w[0] == "bird" && w.Length > 2 && (w[1] == "land" || w[1] == "leave")) place = w[2];
-                else if (w[0] == "bird" && w[1] == "come" && Array.IndexOf(w, "at") > 0 && Array.IndexOf(w, "at") + 1 < w.Length) place = w[Array.IndexOf(w, "at") + 1];
-                else if (w[0] == "npc" && w.Length > 3 && (w[2] == "go" || w[2] == "sit" || w[2] == "spawn" || w[2] == "face")) place = w[3];
-                else if ((w[0] == "door" || w[0] == "bolt") && w.Length > 1 && w[1] != "near" && w[1] != "ahead") place = w[1];
-                else if ((w[0] == "drop" || w[0] == "sound") && w.Length > 2) place = w[2];
-                else if ((w[0] == "prop" || (w[0] == "npc" && w.Length > 2 && w[2] == "prop")) && Array.IndexOf(w, "from") > 0 && Array.IndexOf(w, "from") + 1 < w.Length) place = w[Array.IndexOf(w, "from") + 1];
-                else if (w[0] == "camera" && Array.IndexOf(w, "look") > 0 && Array.IndexOf(w, "look") + 1 < w.Length) place = w[Array.IndexOf(w, "look") + 1];
-                if (place == null) continue;
-                string why = StoryWhere.Why(place);
-                if (why != null) Errors.Add(s.From + ":" + st.Num + ": " + why);
-            }
-        }
-
-        private static bool Spawned(SceneDef s, string who)
-        {
-            foreach (Step o in s.Steps) if (o.W.Length > 2 && o.W[0] == "npc" && o.W[1] == who && o.W[2] == "spawn") return true;
-            return false;
-        }
-
-        private static SceneDef Find0(string id) { foreach (SceneDef s in Scenes) if (s.Id == id) return s; return null; }
-
-        private static List<Cond> Conds(string val, string at)
-        {
-            List<string> errs = new List<string>();
-            List<Cond> l = StoryCond.Parse(val, errs);
-            foreach (string e in errs) Errors.Add(at + e);
-            return l;
-        }
-
-        // ---------------------------------------------------------------- the kinds of steps
-        // A registry, as StoryCond's conditions and StoryActions' actions (the user 2026-11-02: predictable, nothing patched
-        // on): a step's first word picks its kind, a new kind is one entry — the director itself never changes for it.
-        //   Min / Usage   words it needs after its own; how it is written (the errors)
-        //   Check(st)     load time: null — fine, else what is wrong (after Min)
-        //   Begin(p, st)  it starts; it may set its clock: Hold(s) — busy till then; _limit — its own time limit
-        //   Busy(p, st)   still going? (none: its clock — Hold — says)
-        //   Late(st)      it ran past its limit: what it began is put right (a walker stands where it is)
-        // The clock (_waitFor, _until, _limit) is the step's own: cleared as each step starts.
-        internal sealed class StepKind
-        {
-            public int Min;
-            public string Usage = "";
-            public Func<Step, string> Check;
-            public Action<Player, Step> Begin;
-            public Func<Player, Step, bool> Busy;
-            public Action<Step> Late;
-            public bool Lasting; // (it changes the world or the bag for good: once it ran, the scene is never played again — a stop finishes it quietly)
-        }
-
-        private static Dictionary<string, StepKind> _kinds;
-        private static Dictionary<string, StepKind> Kinds { get { if (_kinds == null) { _kinds = Builtin(); StoryModules.Steps(); } return _kinds; } } // (and the modules' own)
-
-        // a module's own step (the same way as the ones below)
-        internal static void Register(string word, StepKind k) { Kinds[word] = k; }
-
-        private static void Hold(float seconds) { _waitFor = Time.time + seconds; }
-
-        private static Dictionary<string, StepKind> Builtin()
-        {
-            StepKind air = new StepKind // (each game's own air, or everyone's with «all»: StoryAir)
-            {
-                Usage = "weather <env> [s] [all] · weather off · thor [all] · shake <сила> [all] · music <назва>|off [all]",
-                Check = st => st.W[0] != "thor" && st.W.Length < 2 ? st.W[0] + ": мало слів" : null,
-                Begin = (p, st) =>
-                {
-                    bool all = st.W[st.W.Length - 1] == "all";
-                    StoryAir.Play(all ? st.Text.Substring(0, st.Text.LastIndexOf("all")).Trim() : st.Text, all);
-                }
-            };
-            return new Dictionary<string, StepKind>
-            {
-                { "wait", new StepKind { Min = 1, Usage = "wait <секунд>", Begin = (p, st) => Hold(F(st.W[1], 1f)) } },
-                { "until", new StepKind { Usage = "until <умови> | <секунд>",
-                    Check = st =>
-                    {
-                        int bar = st.Text.LastIndexOf('|');
-                        if (bar < 0) return "until <умови> | <секунд>";
-                        List<string> errs = new List<string>();
-                        StoryCond.Parse(st.Text.Substring(5, bar - 5), errs);
-                        return errs.Count > 0 ? string.Join("; ", errs.ToArray()) : null;
-                    },
-                    Begin = (p, st) => { _until = Time.time + st.UntilSec; _limit = _until + 1f; },
-                    Busy = (p, st) => Time.time < _until && !StoryCond.All(p, st.Until) } },
-                { "msg", new StepKind { Min = 1, Usage = "msg <текст>",
-                    Begin = (p, st) => { if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, Lang.T(Rest(st.Text, 1))); } } },
-                { "say", new StepKind { Min = 2, Usage = "say hugin|munin <текст>",
-                    Check = st => st.W[1] != "hugin" && st.W[1] != "munin" ? "say hugin|munin <текст>" : null,
-                    Begin = (p, st) =>
-                    {
-                        string line = Lang.T(Rest(st.Text, 2));
-                        bool munin = st.W[1] == "munin";
-                        if (!Shoulder.Present(p, munin)) return; // (not on the shoulder: nothing said, nothing waited)
-                        Hold(ReadTime(line));
-                        RavenSkills.StoryLine(munin, line);
-                    } } },
-                { "sub", new StepKind { Min = 1, Usage = "sub <текст>",
-                    Begin = (p, st) => { string line = Lang.T(Rest(st.Text, 1)); float t = ReadTime(line); Hold(t); StoryScreen.Sub(line, t + 0.4f); } } },
-                { "bars", new StepKind { Min = 1, Usage = "bars on|off",
-                    Check = st => st.W[1] != "on" && st.W[1] != "off" ? "bars on|off" : null,
-                    Begin = (p, st) => StoryScreen.Bars(st.W[1] == "on") } },
-                { "camera", new StepKind { Min = 1, Usage = "camera <місце|behind|over|off> [look …] [blend N|cut] [fov N] · camera shot <кадр> · camera move <кадр> <кадр> <с> [ease …] [wait] · camera orbit <що> <радіус> <висота> <градусів> <с> [wait]",
-                    Busy = (p, st) => Time.time < _waitFor, // (a move or an orbit with «wait»)
-                    Begin = (p, st) => CameraStep(p, st.W) } },
-                { "fade", new StepKind { Min = 1, Usage = "fade out|in [секунд]   (увесь кадр у чорне й назад; крок чекає, поки скінчиться)",
-                    Check = st => st.W[1] != "out" && st.W[1] != "in" ? "fade out|in [секунд]" : null,
-                    Begin = (p, st) => { float s = st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f; StoryScreen.Fade(st.W[1] == "out", s); Hold(s); } } },
-                { "player", new StepKind { Min = 2, Usage = PlayerUsage,
-                    Check = st => st.W[1] != "face" && st.W[1] != "emote" && st.W[1] != "clip" && st.W[1] != "go" && st.W[1] != "mark" ? PlayerUsage : st.W[1] == "go" && st.W.Length < 4 ? PlayerUsage : null,
-                    Begin = (p, st) => PlayerStep(p, st.W),
-                    Busy = (p, st) => st.W[1] == "go" ? StoryWalk.On : st.W[1] == "mark" ? Time.time < _waitFor && MarkAhead(p, st.W[2]) : Time.time < _waitFor,
-                    Late = st => { if (st.W[1] == "go") StoryWalk.Stop(); } } },
-                { "prop", new StepKind { Min = 1, Usage = StoryProps.Usage,
-                    Check = st => { if (st.W[1] == "put") return null; string why; return st.W[1] != "take" ? StoryProps.Usage : StoryProps.Read(st.W, 2, out why) == null ? why : null; },
-                    Begin = (p, st) =>
-                    {
-                        if (st.W[1] == "put") { StoryProps.Put(p); Hold(0.5f); return; }
-                        string why;
-                        StoryProps.Ask ask = StoryProps.Read(st.W, 2, out why);
-                        why = ask != null ? StoryProps.Take(p, ask) : why;
-                        if (why != null) Note("prop: " + why);
-                        Hold(0.6f); // (the hand comes up to it)
-                    } } },
-                { "weather", air }, { "thor", air }, { "shake", air }, { "music", air },
-                { "bolt", new StepKind { Min = 1, Usage = "bolt near|ahead [n] [all] · bolt <місце> [n] [розкид] [all]",
-                    Begin = (p, st) =>
-                    {
-                        string[] w = st.W;
-                        bool all = w[w.Length - 1] == "all";
-                        int n = all ? w.Length - 1 : w.Length;
-                        string line;
-                        if (w[1] == "near" || w[1] == "ahead") line = "bolt " + w[1] + " " + (n > 2 ? w[2] : "1");
-                        else
-                        {
-                            Vector3 at;
-                            if (!StoryWhere.Find(w[1], out at)) { Note("bolt: нема місця «" + w[1] + "» — крок пропущено"); return; }
-                            line = "bolt " + V(at) + " " + (n > 2 ? w[2] : "1") + " " + (n > 3 ? w[3] : "0");
-                        }
-                        StoryAir.Play(line, all);
-                    } } },
-                { "do", new StepKind { Min = 1, Lasting = true, Usage = "do <дія квесту>",
-                    Check = st => { string why = StoryActions.Check(st.Text.Substring(2).Trim(), true); return why != null ? "do: " + why : null; },
-                    Begin = (p, st) => StoryActions.Do(p, null, st.Text.Substring(2).Trim()) } },
-                { "sound", new StepKind { Min = 1, Usage = "sound <назва|sfx_…> [місце|player|npc.x]",
-                    Begin = (p, st) =>
-                    {
-                        Vector3 at = p.transform.position + Vector3.up * 1.4f;
-                        if (st.W.Length > 2 && st.W[2] != "player" && !StoryWhere.Find(st.W[2], out at)) { Note("sound: нема місця «" + st.W[2] + "» — грає біля гравця"); at = p.transform.position + Vector3.up * 1.4f; }
-                        if (!StorySounds.Play(st.W[1], at)) Note("sound: «" + st.W[1] + "» — нема такого звуку в грі");
-                    } } },
-                { "drop", new StepKind { Min = 2, Lasting = true, Usage = "drop <предмет> <місце|player|npc.x>   (річ лишається на землі там)",
-                    Begin = (p, st) => Drop(p, st.W[1], st.W[2]) } },
-                { "door", new StepKind { Min = 2, Lasting = true, Usage = "door <місце> open|close",
-                    Check = st => st.W[2] != "open" && st.W[2] != "close" ? "door <місце> open|close" : null,
-                    Begin = (p, st) => Door(st.W[1], st.W[2] == "open") } },
-                { "bird", new StepKind { Min = 1, Usage = "bird come|land|look|say|circle|leave|gone …",
-                    Check = st =>
-                    {
-                        string v = st.W[1];
-                        if (Array.IndexOf(new[] { "come", "land", "look", "say", "circle", "leave", "gone" }, v) < 0) return "bird: невідоме «" + v + "»";
-                        return (v == "land" || v == "say" || v == "leave" || v == "look" || v == "circle") && st.W.Length < 3 ? "bird " + v + ": мало слів" : null;
-                    },
-                    Begin = (p, st) => BirdStep(p, st, st.W),
-                    Busy = (p, st) =>
-                    {
-                        string v = st.W[1];
-                        if (v == "come" || v == "land") return _bird != null && !_bird.Settled;
-                        return Time.time < _waitFor; // (say, circle: its clock)
-                    } } },
-                { "npc", new StepKind { Min = 2, Usage = "npc <хто> " + string.Join("|", NpcVerbs) + " …",
-                    Check = st =>
-                    {
-                        string v = st.W[2];
-                        if (Array.IndexOf(NpcVerbs, v) < 0) return "npc <хто> " + string.Join("|", NpcVerbs) + " …";
-                        if (v == "clip") return st.W.Length < 4 ? "npc <хто> clip <кліп>|none" : st.W[3] != "none" && BodyClips.Find(st.W[3]) == null ? "npc <хто> clip: нема кліпу «" + st.W[3] + "»" : null; // (our clips: BodyClips)
-                        if (v == "prop") { string pw; return st.W.Length < 4 || (st.W[3] != "put" && (st.W[3] != "take" || StoryProps.Read(st.W, 4, out pw) == null)) ? "npc <хто> " + StoryProps.Usage : null; }
-                    return (v == "go" || v == "face" || v == "say" || v == "emote" || v == "sit" || v == "spawn") && st.W.Length < 4 ? "npc <хто> " + v + ": мало слів" : null;
-                    },
-                    Begin = (p, st) => NpcStep(p, st, st.W),
-                    Busy = (p, st) => st.W[2] == "go" ? Walking() : Time.time < _waitFor,
-                    Late = st => { if (_walker != null) { _walker.Order("stay", NpcMind.Layer.Scene); _walker = null; } } } },
-            };
-        }
-
-        private static string Check(Step st)
-        {
-            string[] w = st.W;
-            StepKind k;
-            if (w.Length == 0) return "порожній крок";
-            if (!Kinds.TryGetValue(w[0], out k)) return "невідомий крок «" + w[0] + "» (є: " + string.Join(", ", new List<string>(Kinds.Keys).ToArray()) + ")";
-            if (w.Length - 1 < k.Min) return k.Usage.Length > 0 ? k.Usage : w[0] + ": мало слів";
-            return k.Check != null ? k.Check(st) : null;
-        }
-
         // ---------------------------------------------------------------- playing
         // asked by a quest's stage each pass: plays it when it may (one at a time, its needs, not just stopped)
         internal static void TryPlay(string id)
@@ -394,7 +154,16 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             if (p == null) return;
             SceneDef s = Find(id);
-            if (s != null && Story.Var(p, Committed(id)) > 0) { if (!p.IsDead()) Finish(p, s, Story.Var(p, Committed(id))); return; } // (stopped past its lasting step, or a relog: the rest done quietly, never played again)
+            int resume;
+            if (s != null && StoryWatch.Resume(id, out resume) && StoryQuests.OwnerOf(id) != null) // (a scene of the server, its director near me left it unfinished: taken up at the step it got to, without his own camera and body)
+            {
+                if (p.IsDead() || !Near(p, s) || Missing(p, s) != null) return; // (its people: till the old lock runs out, or the first of them would stop it)
+                resume = Mathf.Max(resume, StoryQuests.Committed(p, id)); // (its pulse may be two seconds old: a lasting step never twice)
+                if (StoryQuests.Mine(id)) { _handing = true; if (Play(s, resume)) { StoryWatch.Resumed(); Note("сцену «" + id + "» перейнято з кроку " + (resume + 1)); return; } _handing = false; }
+                return;
+            }
+            float stoppedAt;
+            if (s != null && StoryQuests.Committed(p, id) > 0) { if (StoryQuests.OwnerOf(id) != null && _stopped.TryGetValue(id, out stoppedAt) && Time.time - stoppedAt < Retry) return; /* (he left it: one who watches takes it up first) */ if (StoryQuests.OwnerOf(id) != null && !Near(p, s)) return; /* (nor one far off: whoever comes near finishes it) */ if (!p.IsDead() && StoryQuests.Mine(id)) Finish(p, s, StoryQuests.Committed(p, id)); return; } // (stopped past its lasting step, or a relog: the rest done quietly, never played again)
             float when;
             if (_stopped.TryGetValue(id, out when) && Time.time - when < Retry) return;
             if (s == null) // (no file for it: «played» at once, said so — the load check names it too: StoryQuests.Validate)
@@ -403,29 +172,56 @@ namespace HuginWhispers
                 StoryBus.Raise("scene_done", id, 0);
                 return;
             }
-            if (s.Needs != null && !StoryCond.All(p, s.Needs)) return;
+            string why, needs = StoryCond.Failing(p, s.Needs, out why);
+            if (needs != null) // (said when what it waits for changes, not each pass: a why's detail after «:», a foe's metres, not counted)
+            {
+                if (_toldNeeds == null || !_toldNeeds.StartsWith(id + ":")) _needsSince = Time.time;
+                string key = id + ":" + needs + ":" + (why != null && why.IndexOf(':') > 0 ? why.Substring(0, why.IndexOf(':')) : why);
+                if (_toldNeeds != key)
+                {
+                    _toldNeeds = key; Note("сцена «" + id + "» чекає: " + needs + (why != null ? " — " + why : ""));
+                    if (Time.time - LocTouch.UsedAt < 5f && Senses.Pressed(p)) RavenMsg.Center(p, Lang.T("Не зараз: поруч ворог.")); // (you touched it and nothing happened: why — the scene starts once it is quiet)
+                }
+                return;
+            }
+            Character foe = FoeNear(p);
+            if (foe != null) // (it would stop at once: it waits for the fight's end as for its needs)
+            {
+                if (_toldNeeds == null || !_toldNeeds.StartsWith(id + ":")) _needsSince = Time.time;
+                if (_toldNeeds != id + ":fight") { _toldNeeds = id + ":fight"; Note("сцена «" + id + "» чекає: бій — " + Localization.instance.Localize(foe.m_name) + " поруч"); }
+                return;
+            }
+            if (_toldNeeds != null && _toldNeeds.StartsWith(id + ":")) { _toldNeeds = null; Note("сцена «" + id + "» дочекалась за " + (Time.time - _needsSince).ToString("0") + " с"); }
             string missing = Missing(p, s);
             if (missing != null)
             {
                 Vector3 place;
                 if (s.Place.Length > 0 && StoryWhere.Find(s.Place, out place) && Utils.DistanceXZ(place, p.transform.position) > FarStop) _missingSince = Time.time; // (counted only while the player is there)
                 if (_toldMissing != id + missing) { _toldMissing = id + missing; _missingSince = Time.time; Note("сцена «" + id + "» чекає: «" + missing + "» нема поруч або зайнята"); }
-                else if (Time.time - _missingSince > CastWait) { _toldMissing = null; Note("«" + missing + "» так і не прийшла — сцена без неї"); Finish(p, s, 0); } // (never stuck for good: its lasting steps done, the story goes on)
+                else if (Time.time - _missingSince > CastWait && StoryQuests.Mine(id)) { _toldMissing = null; Note("«" + missing + "» так і не прийшла — сцена без неї"); Finish(p, s, 0); } // (never stuck for good: its lasting steps done, the story goes on)
                 return;
             }
             _toldMissing = null;
+            if (StoryQuests.OwnerOf(id) != null && !Near(p, s)) return; // (one far off must not hold the claim of a scene he cannot begin)
+            if (!StoryQuests.Mine(id)) return; // (a scene of the server: one player at a time, asked last, when all else lets it begin)
             Play(s);
         }
 
-        internal static void Play(SceneDef s) { Play(s, 0); }
+        internal static bool Play(SceneDef s) { return Play(s, 0); }
+
+        // near enough to where it plays (no place: anywhere)
+        internal static bool Near(Player p, SceneDef s)
+        {
+            Vector3 place;
+            return s.Place.Length == 0 || !StoryWhere.Find(s.Place, out place) || Utils.DistanceXZ(place, p.transform.position) <= FarStop;
+        }
 
         // ---------------------------------------------------------------- once is once
         // A scene that ran a lasting step (a thing given, a gate opened, a raven owned) is kept as begun in the character
-        // (var scene.<id> = the step after it); stopped then, or the game left, it is not played again: the lasting steps
-        // still ahead run quietly and it counts as played.
-        private static string Committed(string id) { return "scene." + id; }
-        private static string _toldMissing;
-        private static float _missingSince;
+        // (var scene.<id> = the step after it; a scene of the server: the world's, StoryQuests.Committed); stopped then, or the game left, it is not played again:
+        // the lasting steps still ahead run quietly and it counts as played.
+        private static string _toldMissing, _toldNeeds; // session: what the log was last told a scene waits for
+        private static float _missingSince, _needsSince;
         internal static float CastWait = 180f; // (s a scene waits for its people before it is done without them)
 
         private static void Finish(Player p, SceneDef s, int from)
@@ -435,11 +231,11 @@ namespace HuginWhispers
             {
                 Step st = s.Steps[i];
                 StepKind k;
-                if (!Kinds.TryGetValue(st.W[0], out k) || !k.Lasting || k.Begin == null) continue;
+                k = st.Kind; if (k == null || !k.Lasting || k.Begin == null) continue;
                 if (st.If != null && !StoryCond.All(p, st.If)) continue;
                 try { k.Begin(p, st); n++; } catch (Exception e) { Story.Log("scene finish: " + e.Message); }
             }
-            Story.SetVar(p, Committed(s.Id), 0);
+            StoryQuests.Commit(p, s.Id, 0);
             Note("сцена «" + s.Id + "» дограна тихо (почата раніше; кроків: " + n + ")");
             StoryBus.Raise("scene_done", s.Id, 0);
         }
@@ -456,27 +252,75 @@ namespace HuginWhispers
         }
 
         // from a step of it (the author's window: «▶» by a step) — the steps before it not played
-        internal static void Play(SceneDef s, int from)
+        // not begun while he is still in a portal or far from its place (a teleport lands seconds later: the scene played 150 m off
+        // its place, its walk lost in the black — the studio's check 2026-11-04); false then, and the log says why
+        internal static bool Play(SceneDef s, int from)
         {
             Player p = Player.m_localPlayer;
-            if (p == null || s == null) return;
+            if (p == null || s == null) return false;
+            Vector3 place;
+            if (p.IsTeleporting()) { Note("сцена «" + s.Id + "» не почалась: гравець ще в порталі"); return false; }
+            if (s.Place.Length > 0 && StoryWhere.Find(s.Place, out place) && Utils.DistanceXZ(place, p.transform.position) > FarStop)
+            { NoteOnce(s.Id + ":far", "сцена «" + s.Id + "» не почалась: гравець за " + Mathf.RoundToInt(Utils.DistanceXZ(place, p.transform.position)) + " м від «" + s.Place + "»"); return false; }
             if (_now != null) Stop("інша сцена");
+            _toldOnce = null;
             _now = s; _at = Mathf.Clamp(from, 0, s.Steps.Count) - 1; _anchor = p.transform.position; _hurtAt = Senses.HurtByFoeAt;
+            _ownOff = _handing; _handing = false; _server = StoryQuests.OwnerOf(s.Id) != null;
+            StoryWatch.Begin(s);
+            if (s.Alone) StoryAlone.Begin(); else StoryAlone.End();
+            StoryGait.Turns(p, true);
+            StoryAudio.Prepare(s); // (its files read now: its steps find them there)
+            if (from > 0) SetUp(p, s, from);
             _go = false; _held = false;
             Note("сцена «" + s.Id + "» почалась" + (from > 0 ? " з кроку " + (from + 1) : ""));
+            if (Plugin.Waiting) { Plugin.RunOutVisit(); Note("сцена «" + s.Id + "»: ворон гри зі словами, яких ніхто не вислухав, відлітає — сцена не чекає"); }
             StoryBus.Raise("scene_start", s.Id, 0);
             Next();
+            return true;
+        }
+
+        // played from a later step (the author's window): what the steps before it leave behind, put at once (StepKind.Setup) —
+        // he stands where his walks took him, the bars, the last shot, the thing in his hand, the bird on its seat; nothing
+        // lasting (a thing given, a raven owned), no clip, no line, no pause
+        private static bool _setup;
+        private static void SetUp(Player p, SceneDef s, int from)
+        {
+            Gestures.SceneEnd(p, 0f); // (a clip left from before: off first — what the steps put on stays)
+            for (int i = 0; i < from && i < s.Steps.Count; i++)
+            {
+                Step st = s.Steps[i];
+                StepKind k;
+                k = st.Kind; if (k == null || k.Setup == null || k.Lasting || (_ownOff && k.Seen == StepSeen.Own)) continue;
+                if (st.If != null && !StoryCond.All(p, st.If)) continue;
+                try { k.Setup(p, st); } catch (Exception e) { Story.Log("scene set-up: " + e.Message); }
+            }
+            _waitFor = 0f;
+        }
+
+        private static void PropStep(Player p, Step st)
+        {
+            if (st.W[1] == "put") { StoryProps.Put(p); Hold(0.5f); return; }
+            string why;
+            StoryProps.Ask ask = StoryProps.Read(st.W, 2, out why);
+            why = ask != null ? StoryProps.Take(p, ask) : why;
+            if (why != null) Note("prop: " + why);
+            Hold(0.6f); // (the hand comes up to it)
         }
 
         internal static void Stop(string why)
         {
             if (_now == null) return;
             string id = _now.Id;
+            Watching = false;
             _stopped[id] = Time.time;
+            int reached = _at;
             _now = null; _at = -1;
-            if (_bird != null) { Act("gone", ""); _bird = null; }
-            FreeCast(); StoryProps.Put(Player.m_localPlayer); Gestures.SceneEnd(Player.m_localPlayer, PoseFade); StoryWalk.Stop(); // (whatever was taken: back)
-            StoryCamera.Reset(); StoryScreen.Reset(); // (the player gets the camera back at once)
+            Let("its claim", () => StoryQuests.Unclaim(id));
+            Let("its watchers", () => StoryWatch.End(true, reached));
+            Let("the bird", () => { HandOver(true); if (_bird != null) Act("gone", ""); });
+            _bird = null;
+            Release(true);
+            Count(StopsOf, id); LastStopOf[id] = why;
             Note("сцена «" + id + "» перервана: " + why);
             StoryBus.Raise("scene_stop", id, 0);
         }
@@ -484,14 +328,56 @@ namespace HuginWhispers
         private static void Done()
         {
             string id = _now.Id;
+            Watching = false;
             _now = null; _at = -1;
-            Story.SetVar(Player.m_localPlayer, Committed(id), 0); // (played to the end: nothing left to finish)
-            if (_bird != null) Act("free", ""); // (left where it is, nobody's now: it flies off by itself a little later — StoryBird.Release)
+            StoryQuests.Commit(Player.m_localPlayer, id, 0); // (played to the end: nothing left to finish)
+            Let("its watchers", () => StoryWatch.End(false, -1));
+            Let("the bird", () => { HandOver(true); if (_bird != null) Act("free", ""); }); // (left where it is, nobody's now: it flies off by itself a little later — StoryBird.Release)
             _bird = null;
-            FreeCast(); StoryProps.Put(Player.m_localPlayer); Gestures.SceneEnd(Player.m_localPlayer, PoseFade); StoryWalk.Stop();
-            StoryCamera.Off(1f); StoryScreen.Bars(false); StoryScreen.Fade(false, 1f); // (a scene that forgot «camera off» or «fade in»: given back softly)
+            Release(false);
             Note("сцена «" + id + "» скінчилась");
             StoryBus.Raise("scene_done", id, 0);
+        }
+
+        // all a scene took, given back in one place (stopped: at once; played out: softly) — its people, the thing in his hand, his
+        // walk, look, gait, gesture, the others hidden, the camera and the screen, its weather; then the modules' own (Ends: what is heard)
+        internal static readonly List<Action<bool>> Ends = new List<Action<bool>>();
+        internal static readonly List<Action<bool>> OwnEnds = new List<Action<bool>>(); // (what a module holds of the director himself: given back too when a scene of the server goes on without him)
+        private static bool _weather, _weatherAll; // (this scene forced the weather: off with it — here, or in every game)
+
+        // Each part alone (Let): the scene is already over and nobody calls this again, so a fault in one must not leave the camera, the black or the keys taken
+        private static void Release(bool broken)
+        {
+            Player p = Player.m_localPlayer;
+            Let("its people", FreeCast);
+            Let("the thing in his hand", () => StoryProps.Put(p));
+            Let("his gesture", () => Gestures.SceneEnd(p, PoseFade));
+            Let("his walk", StoryWalk.Stop);
+            Let("his look", StoryLook.End);
+            Let("his turns", () => StoryGait.Turns(p, false));
+            Let("the others hidden", StoryAlone.End);
+            Let("his gait", () => StoryGait.Set(p, "none"));
+            if (broken) { Let("the camera", StoryCamera.Reset); Let("the screen", StoryScreen.Reset); } // (the player gets the camera back at once)
+            else { Let("the camera", () => StoryCamera.Off(1f)); Let("the screen", () => { StoryScreen.Bars(false); StoryScreen.Fade(false, 1f); }); } // (a scene that forgot «camera off» or «fade in»: given back softly)
+            bool weather = _weather, all = _weatherAll;
+            _weather = _weatherAll = false;
+            if (weather) Let("its weather", () => StoryAir.Play("weather off", all));
+            foreach (Action<bool> e in Ends) { Action<bool> end = e; Let("a module's end", () => end(broken)); }
+        }
+
+        private static void Let(string what, Action give)
+        {
+            try { give(); }
+            catch (Exception e) { Story.Log("scene release: " + what + ": " + e); }
+        }
+
+        // a fight at you: what stops a scene playing, and so what a scene never begins in, «needs: calm» or not (the user 2026-11-06:
+        // heart_lantern began three times by a greyling at his heart and broke off each time in a second and a half)
+        internal static float FoeStop = 12f;
+        private static Character FoeNear(Player p)
+        {
+            Character foe = Senses.NearestFoe; // (the same foe «calm» asks of: Senses.Pressed; a boss too)
+            return foe != null && !foe.IsDead() && Vector3.Distance(foe.transform.position, p.transform.position) < FoeStop ? foe : null;
         }
 
         // every frame (StoryQuests.Tick)
@@ -500,44 +386,88 @@ namespace HuginWhispers
             if (_now == null) return;
             Player p = Player.m_localPlayer;
             if (p == null) { Stop("гравця нема"); return; } // (the same full stop as any other: its people let go, the camera given back)
-            if (p.IsDead()) { Stop("смерть"); return; }
-            if (Senses.HurtByFoeAt > _hurtAt + 0.01f) { Stop("удар"); return; }
-            if (Senses.Fight && Senses.Foe != null && Vector3.Distance(Senses.Foe.transform.position, p.transform.position) < 12f) { Stop("ворог поруч: " + Localization.instance.Localize(Senses.Foe.m_name)); return; }
+            StoryAlone.Tick();
+            if (!_ownOff) // (one's own scene ends with these; a scene of the server only gives him back what it held of him, and goes on)
+            {
+                string hit = p.IsDead() ? "смерть" : Senses.HurtByFoeAt > _hurtAt + 0.01f ? "удар" : null;
+                Character foe = hit == null ? FoeNear(p) : null;
+                if (foe != null) hit = "ворог поруч: " + Localization.instance.Localize(foe.m_name);
+                if (hit != null) { if (_server) OwnOff(p, hit); else { Stop(hit); return; } }
+            }
             if (Utils.DistanceXZ(_anchor, p.transform.position) > FarStop) { Stop("гравець відійшов від місця сцени"); return; } // (from where it began: the bird comes from afar)
+            if (!_ownOff) StoryLook.Tick(p);
+            HandOver(false);
+            StoryQuests.Renew(_now.Id);
+            StoryWatch.Tick();
             if (_cast.Count > 0 && Time.time >= _renewAt) { _renewAt = Time.time + LockRenew; foreach (NpcActor a in _cast.Values) Lock(a, true); } // (the people it holds: still its)
             if (_held) { if (!_go) return; _go = false; _held = false; Next(); return; } // (step by step: the author's «Далі»)
             Step cur = _now.Steps[_at];
             if (Time.time > (_limit > 0f ? _limit : _stepAt + Mathf.Max(StepMax, _waitFor - _stepAt + 5f))) // (its own limit, else the general one on its clock)
             {
-                StepKind lk;
-                if (Kinds.TryGetValue(cur.W[0], out lk) && lk.Late != null) lk.Late(cur);
-                Note("крок «" + cur.Line + "» задовгий — далі");
+                if (cur.Kind != null && cur.Kind.Late != null) cur.Kind.Late(cur);
+                Note("крок «" + cur.Line + "» задовгий — далі"); Count(LatesOf, _now.Id); LastLateOf[_now.Id] = cur.Line;
                 Next();
                 return;
             }
             if (Waiting(p)) return;
-            if (StepMode) { _held = true; return; } // (this step done: the next one when the author says)
+            if (StepHolds) { _held = true; return; } // (this step done: the next one when the author says)
             Next();
         }
 
-        // the author's step-by-step (F9 «Сцени»): each step played, then held till «Далі» (no time limit while held)
+        // the director of a scene of the server is hit, or dies: what it held of him given back at once, it goes on without its Own steps (StoryWatch)
+        private static bool _ownOff, _handing, _server;
+        private static void OwnOff(Player p, string why)
+        {
+            _ownOff = true;
+            Note("сцена «" + _now.Id + "» йде далі без кроків гравця: " + why);
+            Let("the camera", StoryCamera.Reset);
+            Let("the screen", StoryScreen.Reset);
+            Let("the thing in his hand", () => StoryProps.Put(p));
+            Let("his gesture", () => Gestures.SceneEnd(p, PoseFade));
+            Let("his walk", StoryWalk.Stop);
+            Let("his look", StoryLook.End);
+            Let("his gait", () => StoryGait.Set(p, "none"));
+            Let("his turns", () => StoryGait.Turns(p, false));
+            foreach (Action<bool> e in OwnEnds) { Action<bool> end = e; Let("a module's own end", () => end(true)); } // (not Ends: its music, sounds and weather are everyone's, and it goes on. A «mix», «mute» of the scene stays till its end: no scene of the server uses them)
+        }
+
+        // the author's step-by-step (F9 «Сцени»): each step played, then held till «Далі» (no time limit while held). Never on a
+        // black screen: there is nothing to look at, so what happens under a fade goes on by itself
         internal static bool StepMode;
         private static bool _held, _go;
+        private static bool StepHolds { get { return StepMode && !StoryScreen.Dark; } }
         internal static bool Held { get { return _held; } }
+        // each scene: how many times it stopped, how many of its steps were cut off at their time limit, and the last of each (a check compares
+        // its own scene's, before and after: the same reason twice read «OK», and another scene's stop, after, hid this one's)
+        internal static readonly Dictionary<string, int> StopsOf = new Dictionary<string, int>(), LatesOf = new Dictionary<string, int>();
+        internal static readonly Dictionary<string, string> LastStopOf = new Dictionary<string, string>(), LastLateOf = new Dictionary<string, string>();
+        internal static int CountOf(Dictionary<string, int> d, string id) { int c; return d.TryGetValue(id, out c) ? c : 0; }
+        private static void Count(Dictionary<string, int> d, string id) { d[id] = CountOf(d, id) + 1; }
+
+        // the author's look from outside (the window «Режисер»): the scene plays on his own body as ever, but its shots, bars and
+        // fades are not taken: his free camera stays his, and he sees it as the others near see it. Till the scene ends or stops
+        internal static bool Watching;
         internal static void Go() { if (_held) _go = true; }
+
 
         // the current step still going? its kind says (none: its clock)
         private static bool Waiting(Player p)
         {
             Step st = _now.Steps[_at];
-            StepKind k;
-            if (!Kinds.TryGetValue(st.W[0], out k)) return false;
+            StepKind k = st.Kind;
+            if (k == null || (_ownOff && k.Seen == StepSeen.Own)) return false; // (his own step, and he is given back: nothing to wait for)
             return k.Busy != null ? k.Busy(p, st) : Time.time < _waitFor;
         }
 
-        // a person of the scene on its way (npc go): run here — its mind says (its walk turns into standing there when it
-        // arrives: NpcMind.Arrived); run on another game — where it stands, by the same rule and a step more (what we see
-        // lags). There: it stands for the scene (its day would take it off)
+        // a person's walk over, and it is not there: never in silence — what follows (a clip that touches the thing) plays in the air
+        private static void WalkerShort()
+        {
+            float far = Utils.DistanceXZ(_walker.transform.position, _walkTo);
+            if (far <= _walkNear + 0.3f) return;
+            StoryWalk.Helds++;
+            Story.Log("npc go: HELD, " + _walker.Id + " stopped " + far.ToString("0.00") + " m from its spot (it was to come within " + _walkNear.ToString("0.00") + "): the scene goes on");
+        }
+
         private static bool Walking()
         {
             if (_walker == null) return false;
@@ -545,6 +475,7 @@ namespace HuginWhispers
             if (_walker.Owned) { NpcMind.Plan walk = _walker.Mind != null ? _walker.Mind.Of(NpcMind.Layer.Scene) : null; walking = walk != null && walk.Kind == NpcMind.Task.Go; }
             else walking = Utils.DistanceXZ(_walker.transform.position, _walkTo) > _walkNear + 1f;
             if (walking) return true;
+            WalkerShort();
             _walker.Order("stay", NpcMind.Layer.Scene);
             _walker = null;
             return false;
@@ -562,15 +493,25 @@ namespace HuginWhispers
                 if (st.If != null && !StoryCond.All(p, st.If)) { Note("  " + (_at + 1) + ". пропущено (умова): " + st.Line); continue; }
                 Note("  " + (_at + 1) + ". " + st.Line);
                 Begin(p, st);
-                StepKind lk;
-                if (_now != null && Kinds.TryGetValue(st.W[0], out lk) && lk.Lasting) Story.SetVar(p, Committed(_now.Id), _at + 1, true); // (begun for good: the steps from the next one on are what a stop leaves)
-                if (_now != null && (Waiting(p) || StepMode)) return; // (step by step: one at a time, even the ones that do not wait)
+                if (_now != null && st.Kind != null && st.Kind.Lasting) StoryQuests.Commit(p, _now.Id, _at + 1); // (begun for good: the steps from the next one on are what a stop leaves)
+                if (_now != null && (Waiting(p) || StepHolds)) return; // (step by step: one at a time, even the ones that do not wait)
             }
         }
 
         // ---------------------------------------------------------------- the author's editing (F9 «Сцени»)
         // a scene file's text as it is used now (the author's copy, else the built-in one); saved as his copy and read again
         internal static string FileText(string file) { return StoryFiles.Text(StoryFiles.Scenes, Folder, Blueprint.On, file); }
+        // where a step's line stands in the file's lines now, -1: it is another line there — the file changed since it was read (by hand, by
+        // another chat), so its numbers are old: read again, nothing written (2026-11-04: a shot written over the scene's «needs»)
+        internal static int FileLine(Step st, List<string> lines)
+        {
+            int i = st.Num - 1;
+            if (i >= 0 && i < lines.Count && StoryFiles.Bare(lines[i]) == st.Line) return i;
+            Reload();
+            return -1;
+        }
+        internal const string FileMoved = "Файл сцени змінився: перечитав його, спробуй ще раз.";
+
         internal static string SaveFile(string file, string text) { string why = StoryFiles.Save(StoryFiles.Scenes, Folder, file, text); if (why == null) Reload(); return why; }
 
         private static string Rest(string text, int from)
@@ -584,62 +525,54 @@ namespace HuginWhispers
 
         private static void Begin(Player p, Step st)
         {
-            StepKind k;
-            if (Kinds.TryGetValue(st.W[0], out k) && k.Begin != null) k.Begin(p, st);
+            StepKind k = st.Kind; // (its verb's own entry, where it has verbs)
+            if (k == null || k.Begin == null || (_ownOff && k.Seen == StepSeen.Own)) return;
+            try { k.Begin(p, st); }
+            catch (Exception e) { Note("крок «" + st.Line + "» зламався: " + e.Message + " — далі"); Story.Log("scene step: " + e); } // (the scene goes on: a step's own limit never comes for one that never began)
         }
 
         // the player himself in a scene: turned to look at something, a gesture (his own game: he is the owner)
         private static readonly System.Reflection.FieldInfo FLookYaw = HarmonyLib.AccessTools.Field(typeof(Character), "m_lookYaw");
-        private const string PlayerUsage = "player face <місце|npc.x|bird> · player emote <жест>|stop · player go <місце> <м> [front] [run] · player clip <кліп[.частина]>|none [nowait] · player mark <назва> [секунд]";
         internal static float PoseFade = 0.4f;
 
-        // the clip on him has that mark still before it
-        private static bool MarkAhead(Player p, string name)
+        // when the clip on him has that mark; below zero: it has none
+        private static float MarkTime(Character p, string name)
         {
             BodyAnimator a = BodyAnimator.Of(p);
             PAnimClip c = a != null ? BodyClips.Find(a.ClipIn(2)) : null;
-            if (c != null) foreach (PAnimEvent m in c.Marks) if (m.Sound == name) return a.TimeIn(2) < m.T;
+            if (c != null) foreach (PAnimEvent m in c.Marks) if (m.Sound == name) return m.T;
+            return -1f;
+        }
+
+        private static bool MarkAhead(Character p, string name)
+        {
+            float t = MarkTime(p, name);
+            return t >= 0f && BodyAnimator.Of(p).TimeIn(2) < t;
+        }
+
+        // «npc <who> mark»: till the clip on it passes it; the clip may take a moment to come (it is run on another game)
+        internal static float MarkComes = 1f;
+        private static float _markFrom;
+        private static bool NpcMarkBusy(Player p, string[] w)
+        {
+            if (Time.time >= _waitFor) return false;
+            NpcActor a = Actor(w[1], p.transform.position);
+            Character c = a != null ? a.GetComponent<Character>() : null;
+            if (c == null) return false;
+            if (MarkTime(c, w[3]) >= 0f) return MarkAhead(c, w[3]);
+            if (Time.time < _markFrom + MarkComes) return true;
+            Note("npc mark: у кліпі на «" + w[1] + "» нема мітки «" + w[3] + "» — крок пропущено");
             return false;
         }
 
-        private static void PlayerStep(Player p, string[] w)
+        // a line said in the world, while a shot holds the camera (the game's own screen, where it shows, is hidden then): as a subtitle too
+        internal static void Spoken(string who, string line)
         {
-            if (w[1] == "mark")
-            {
-                if (!MarkAhead(p, w[2])) { Note("player mark: у кліпі на гравці нема попереду мітки «" + w[2] + "» — крок пропущено"); return; }
-                Hold(w.Length > 3 ? F(w[3], 30f) : 30f);
-                return;
-            }
-            if (w[1] == "clip")
-            {
-                if (w[2] == "none") { Gestures.SceneEnd(p, PoseFade); return; }
-                PAnimClip c = BodyClips.Find(w[2]);
-                if (c == null || !Gestures.Scene(p, w[2], PoseFade)) { Note("player clip: нема кліпу «" + w[2] + "» — крок пропущено"); return; }
-                if (!c.Loop && Array.IndexOf(w, "nowait") < 0) Hold(c.Length);
-                return;
-            }
-            if (w[1] == "go")
-            {
-                string why = StoryWalk.Go(p, w[2], F(w[3], 1f), Array.IndexOf(w, "front") > 0, Array.IndexOf(w, "run") > 0);
-                if (why != null) Note("player go: " + why + " — крок пропущено");
-                return;
-            }
-            if (w[1] == "emote")
-            {
-                if (w[2] == "stop") { Gestures.StopEmote(p); return; }
-                EmoteTalk.OursUntil = Time.time + 1f; // (the scene's gesture: the ravens do not talk about it)
-                p.StartEmote(w[2], Array.IndexOf(w, "loop") < 0);
-                return;
-            }
-            Vector3 at;
-            if (!StoryWhere.Find(w[2], out at)) { Note("player face: нема місця «" + w[2] + "» — крок пропущено"); return; }
-            Vector3 d = at - p.transform.position; d.y = 0f;
-            if (d.sqrMagnitude < 0.01f || FLookYaw == null) return;
-            FLookYaw.SetValue(p, Quaternion.LookRotation(d.normalized));
-            p.FaceLookDirection();
+            line = Grammar.Fix(line, Player.m_localPlayer); // (the forms for the director; the game's own lines do this where they are shown)
+            if (StoryCamera.Active) StoryScreen.Sub(who, line, RavenSpeech.Seconds(line, RavenSpeech.Pace.Scene) + 0.4f);
+            StoryWatch.Line(who, line); // (those near: as a subtitle, wherever they stand)
         }
 
-        private static float ReadTime(string line) { return Mathf.Clamp(1.2f + line.Length * 0.06f, 2f, 8f); }
 
         // ---------------------------------------------------------------- small things
         private static Vector3 Flat(Vector3 v) { v.y = 0f; return v.sqrMagnitude > 0.0001f ? v.normalized : Vector3.forward; }
@@ -648,6 +581,20 @@ namespace HuginWhispers
         private static string F(float v) { return v.ToString("0.###", CultureInfo.InvariantCulture); }
         private static string V(Vector3 v) { return F(v.x) + " " + F(v.y) + " " + F(v.z); }
         private static Vector3 PV(string[] a, int i) { return new Vector3(F(a[i], 0f), F(a[i + 1], 0f), F(a[i + 2], 0f)); }
+
+        // what a sound follows: the bird, a person of the story, else the player (StoryAudio)
+        internal static Transform FollowOf(string place)
+        {
+            Player p = Player.m_localPlayer;
+            if (place == "bird") return _bird != null ? _bird.transform : null;
+            if (place != null && place.StartsWith("npc.") && p != null) { NpcActor a = Actor(place.Substring(4), p.transform.position); return a != null ? a.transform : null; }
+            if (place == null || place == "player") return p != null ? p.transform : null;
+            return null;
+        }
+
+        // said once till a scene begins (asked twice a second by a stage that waits)
+        private static string _toldOnce;
+        private static void NoteOnce(string key, string s) { if (_toldOnce == key) return; _toldOnce = key; Note(s); }
 
         internal static void Note(string s)
         {

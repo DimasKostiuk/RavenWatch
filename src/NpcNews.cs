@@ -36,11 +36,11 @@ namespace HuginWhispers
             NextLook[a] = Time.time + 60f;
             int now = 0;
             for (int i = 0; i < Bosses.GetLength(0); i++) if (ZoneSystem.instance.GetGlobalKey(Bosses[i, 0])) now |= 1 << i;
-            int known = a.Zdo.GetInt(KKeys, -1);
+            int known = NpcLocker.Int(a.Zdo, KKeys, -1);
             if (known == now) return;
-            if (!NpcResident.Is(a) || known == -1) { a.Zdo.Set(KKeys, now); return; } // (not living anywhere, or new to it all: what fell meanwhile is no news — no burst when it settles again)
+            if (!NpcResident.Is(a) || known == -1) { NpcLocker.Put(a.Zdo, KKeys, now); return; } // (not living anywhere, or new to it all: what fell meanwhile is no news — no burst when it settles again)
             if (NpcLocker.Get(a, NpcMemory.KMemory) == null) return; // (its memory not here yet: the news waits, not lost)
-            a.Zdo.Set(KKeys, now);
+            NpcLocker.Put(a.Zdo, KKeys, now);
             for (int i = 0; i < Bosses.GetLength(0); i++) if ((now & ~known & (1 << i)) != 0) NpcMemory.Remember(a, "news_boss_" + Bosses[i, 1], 0L, "");
         }
 
@@ -75,7 +75,7 @@ namespace HuginWhispers
             if (now != Heightmap.Biome.None && !told.Contains(here) && !pending.Contains(here)) { pending.Add(here); p.m_customData[KPending] = string.Join(",", pending.ToArray()); } // (a land new to you: kept till you meet your people — a restart too)
             if (pending.Count == 0) return;
             NpcActor near = null; float best = 15f * 15f; // (told to the first of your people you meet: till then it waits)
-            foreach (NpcActor o in NpcActor.Live) { if (o == null || !NpcResident.Is(o)) continue; float d = (o.transform.position - p.transform.position).sqrMagnitude; if (d < best) { best = d; near = o; } }
+            foreach (NpcActor o in NpcActor.Live) { if (o == null || !NpcResident.Is(o) || !o.Def.Settler) continue; float d = (o.transform.position - p.transform.position).sqrMagnitude; if (d < best) { best = d; near = o; } }
             if (near == null) return;
             foreach (string land in pending)
             {
@@ -102,9 +102,13 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- a raid round its base now (NpcVoice.Sources)
         internal static void Themes(NpcActor a, Player p, List<KeyValuePair<string, float>> themes)
         {
+            if (RaidNear(a)) themes.Add(new KeyValuePair<string, float>("raid_now", 75f));
+        }
+
+        internal static bool RaidNear(NpcActor a)
+        {
             RandomEvent ev = RandEventSystem.instance != null ? RandEventSystem.instance.GetActiveEvent() : null;
-            if (ev == null || !NpcResident.Is(a)) return;
-            if (Utils.DistanceXZ(ev.m_pos, NpcRules.Home(a)) < ev.m_eventRange + 30f) themes.Add(new KeyValuePair<string, float>("raid_now", 75f));
+            return ev != null && a != null && NpcResident.Is(a) && Utils.DistanceXZ(ev.m_pos, NpcRules.Home(a)) < ev.m_eventRange + 30f;
         }
 
         // ---------------------------------------------------------------- the story's news: this person and its heart's

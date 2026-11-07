@@ -33,7 +33,11 @@ One text per line: `Ukrainian source<TAB>translation`. Leave the right side empt
 Tools (in the mod's sources): `node tools/l10n.js sync <Language>` adds every text the code asks for (empty right
 side), `node tools/l10n.js check <Language>` lists what is missing or broken (blanks, tags, formats).
 
-## 2. The ravens' words (phrase files)
+## 2. The people's words: `npc_patterns.txt`
+
+The same shape as the ravens' patterns, but a theme or a `@list` written here takes the place of the Ukrainian one and the rest stay Ukrainian, so it can be translated a theme at a time. Keep `[theme]`, `@list` and `~tone` names as they are. No marks `{~nod}` in it (a gesture goes into a talk).
+
+## 3. The ravens' words (phrase files)
 
 `hugin_patterns.txt`, `munin_patterns.txt`, `hugin_titles.txt`, `hugin_texts.txt`, `munin_titles.txt`,
 `munin_texts.txt`, `hugin_event_titles.txt`, `hugin_event_texts.txt`, `hugin_tails.txt`, `hugin_quips.txt`,

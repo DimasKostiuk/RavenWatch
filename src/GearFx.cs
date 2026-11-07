@@ -224,7 +224,7 @@ namespace HuginWhispers
         private static bool Perched(Player p, string id, bool munin)
         {
             string off;
-            return p != null && !p.IsDead() && On(munin, id) && !RavenSkills.OffShoulder(p, munin, out off) && Outing.Of(p, munin) == Outing.None; // (not off on an outing of its own either)
+            return p != null && !p.IsDead() && On(munin, id) && !RavenSkills.OffShoulder(p, munin, out off); // (an outing of its own counts too: OffShoulder)
         }
 
         // the shell took a blow: a word over you, a caw and a line (those two not more often than every few seconds)
@@ -255,7 +255,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Character), "AddNoise")]
     internal static class GearNoisePatch
     {
-        private static void Prefix(Character __instance, ref float __0) { if (GearFx.Quiet && ReferenceEquals(__instance, Player.m_localPlayer)) __0 *= GearFx.WrapsNoiseMul; }
+        private static void Prefix(Character __instance, ref float __0) {
+            try
+            {
+                if (GearFx.Quiet && ReferenceEquals(__instance, Player.m_localPlayer)) __0 *= GearFx.WrapsNoiseMul;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("GearNoisePatch", pgx); }
+        }
     }
 
     [HarmonyPatch(typeof(Player), "GetStealthFactor")]

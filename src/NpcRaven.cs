@@ -8,7 +8,7 @@ namespace HuginWhispers
     // A person's raven (story-lore.md «Хто має воронів»: only the Watch's — Торвальд's dim one, Гейд's mute Hugin…):
     // written in its template, drawn on every game near it on the story bird's engine (StoryBird), never an item.
     //   raven: hugin|munin                              its kind (Hugin on the right shoulder, Munin on the left)
-    //   raven_look: game|hel|dim|eirik                  its colours (game: the game's own)
+    //   raven_look: game|<file of assets/story/looks>   its colours (game: the game's own)
     //   raven_dim: 0..1                                 greyer and duller (the story may change it: «npcraven <who> dim»)
     //   raven_inside: perch 70, circle 10, shoulder 20  what it does while the person stays put under a roof
     //   raven_outside: perch 20, circle 50, shoulder 30 … and in the open
@@ -47,6 +47,8 @@ namespace HuginWhispers
 
         private static readonly Dictionary<NpcDef, Spec> _specs = new Dictionary<NpcDef, Spec>();
         private static readonly Spec NoRaven = new Spec();
+
+        internal static readonly string[] Words = { "raven", "raven_look", "raven_dim", "raven_pet", "raven_inside", "raven_outside" }; // (its template lines: the switch below)
 
         internal static Spec Of(NpcDef d)
         {
@@ -89,35 +91,17 @@ namespace HuginWhispers
             }
         }
 
-        // its colours as a look's text (RavenLooks), null: the game's own
+        // its colours as a look's text (StoryLooks: the story's files), null: the game's own. Washed by dim, its look's own least dim among them
         private static string LookText(string look, float dim, out string id)
         {
             id = "npc_" + look + "_" + Mathf.RoundToInt(dim * 20f);
-            if (look == "eirik" && dim <= 0f) { id = "story_eirik"; return StoryBird.LookText; }
-            if (look != "hel" && look != "dim" && look != "eirik" && dim <= 0f) return null;
-            if (look == "dim") dim = Mathf.Max(dim, 0.45f);
-            // body, head, tail · wings · tips: dark and light; the eyes
-            string[] dark = look == "hel" ? new[] { "07090B", "0A0E11", "1A2A30" } : look == "eirik" ? new[] { "08080A", "34322F", "5E5A55" } : new[] { "0A0A0C", "0C0C0E", "1C1C20" };
-            string[] light = look == "hel" ? new[] { "1C272B", "2A3D44", "4C6C75" } : look == "eirik" ? new[] { "26262C", "B4B0A9", "D6D2CB" } : new[] { "26262C", "2C2C32", "48484E" };
-            string eyes = look == "hel" ? "A6E4EC" : look == "eirik" ? "BFD2DC" : "D8B060";
-            float power = look == "hel" ? 3f : 2.5f;
-            System.Text.StringBuilder sb = new System.Text.StringBuilder("id: " + id + "\nname: " + id + "\nfor: any\n");
-            sb.Append("zone body ").Append(Grey(dark[0], dim)).Append(' ').Append(Grey(light[0], dim)).Append(" 100 80\n");
-            sb.Append("zone head ").Append(Grey(dark[0], dim)).Append(' ').Append(Grey(light[0], dim)).Append(" 100 80\n");
-            sb.Append("zone tail ").Append(Grey(dark[0], dim)).Append(' ').Append(Grey(light[0], dim)).Append(" 100 80\n");
-            sb.Append("zone wings ").Append(Grey(dark[1], dim)).Append(' ').Append(Grey(light[1], dim)).Append(" 100 85\n");
-            sb.Append("zone tips ").Append(Grey(dark[2], dim)).Append(' ').Append(Grey(light[2], dim)).Append(" 100 85\n");
-            sb.Append("eyes ").Append(Grey(eyes, dim * 0.8f)).Append(' ').Append((power * (1f - dim * 0.85f)).ToString("0.##", Inv)).Append('\n');
-            return sb.ToString();
-        }
-
-        // a colour washed towards a dull grey by 0..1
-        private static string Grey(string hex, float by)
-        {
-            Color c;
-            if (!ColorUtility.TryParseHtmlString("#" + hex, out c)) return hex;
-            c = Color.Lerp(c, new Color(0.42f, 0.42f, 0.43f), Mathf.Clamp01(by) * 0.7f);
-            return ColorUtility.ToHtmlStringRGB(c);
+            StoryLooks.Look l = StoryLooks.Get(look);
+            if (l == null && dim <= 0f) return null;
+            if (l == null) l = StoryLooks.Get("plain");
+            if (l == null) return null;
+            dim = Mathf.Max(dim, l.Dim);
+            if (dim <= 0f) { id = l.Id; return l.Text; }
+            return StoryLooks.Dimmed(l, id, dim);
         }
 
         // ---------------------------------------------------------------- hung on the people (NpcModules)
@@ -136,31 +120,36 @@ namespace HuginWhispers
             {
                 Min = 2,
                 Usage = "npcraven <хто> shoulder|circle|perch <місце>|leave|free|dim <0..1>   (ворон людини; сюжет тримає це " + HoldSeconds.ToString("0") + " с або до free)",
-                Check = w =>
+                VerbAt = 2, Verbs = new Dictionary<string, StoryActions.Kind>
                 {
-                    string m = w[2];
-                    if (m != "shoulder" && m != "circle" && m != "perch" && m != "leave" && m != "free" && m != "dim") return "npcraven <хто> shoulder|circle|perch <місце>|leave|free|dim <0..1>";
-                    if ((m == "perch" || m == "dim") && w.Length < 4) return "npcraven <хто> " + m + (m == "perch" ? " <місце>" : " <0..1>");
-                    return null;
-                },
-                Do = (p, q, w, rest) =>
-                {
-                    NpcActor who = StoryScenes.Actor(w[1], p.transform.position);
-                    if (who == null) { StoryQuests.Note("npcraven: нема «" + w[1] + "» поруч"); return null; }
-                    if (Of(who.Def) == null) { StoryQuests.Note("npcraven: у «" + w[1] + "» нема ворона (raven: у шаблоні)"); return null; }
-                    if (StoryScenes.HeldByOther(who)) { StoryQuests.Note("npcraven: «" + w[1] + "» зараз у сцені іншого гравця — не чіпаю"); return null; } // (one scene a person, its raven too)
-                    string m = w[2];
-                    if (m == "perch")
-                    {
-                        Vector3 at; float yaw;
-                        if (!SeatNear(w[3], out at, out yaw)) { StoryQuests.Note("npcraven: нема місця «" + w[3] + "»"); return null; }
-                        who.Act("raven perch " + F(at.x) + " " + F(at.y) + " " + F(at.z) + " " + F(yaw));
-                    }
-                    else if (m == "dim") who.Act("raven dim " + F(Mathf.Clamp01(Errands.F(w[3], 0f))));
-                    else who.Act("raven " + m);
-                    return null;
+                    { "shoulder", new StoryActions.Kind { Do = Word((who, w) => who.Act("raven shoulder")) } },
+                    { "circle", new StoryActions.Kind { Do = Word((who, w) => who.Act("raven circle")) } },
+                    { "leave", new StoryActions.Kind { Do = Word((who, w) => who.Act("raven leave")) } },
+                    { "free", new StoryActions.Kind { Do = Word((who, w) => who.Act("raven free")) } },
+                    { "dim", new StoryActions.Kind { Min = 1, Usage = "npcraven <хто> dim <0..1>", Do = Word((who, w) => who.Act("raven dim " + F(Mathf.Clamp01(Errands.F(w[3], 0f))))) } },
+                    { "perch", new StoryActions.Kind { Min = 1, Usage = "npcraven <хто> perch <місце>",
+                        Do = Word((who, w) =>
+                        {
+                            Vector3 at; float yaw;
+                            if (!SeatNear(w[3], out at, out yaw)) { StoryQuests.Note("npcraven: нема місця «" + w[3] + "»"); return; }
+                            who.Act("raven perch " + F(at.x) + " " + F(at.y) + " " + F(at.z) + " " + F(yaw));
+                        }) } },
                 }
             });
+        }
+
+        // a word to a person's raven: the person near, it has a raven, no other player's scene holds it
+        private static System.Func<Player, StoryQuests.QuestDef, string[], string, string> Word(System.Action<NpcActor, string[]> say)
+        {
+            return (p, q, w, rest) =>
+            {
+                NpcActor who = StoryScenes.Actor(w[1], p.transform.position);
+                if (who == null) { StoryQuests.Note("npcraven: нема «" + w[1] + "» поруч"); return null; }
+                if (Of(who.Def) == null) { StoryQuests.Note("npcraven: у «" + w[1] + "» нема ворона (raven: у шаблоні)"); return null; }
+                if (StoryScenes.HeldByOther(who)) { StoryQuests.Note("npcraven: «" + w[1] + "» зараз у сцені іншого гравця — не чіпаю"); return null; } // (one scene a person)
+                say(who, w);
+                return null;
+            };
         }
 
         // a story place's seat for it: a free perch seat by it, else its top (a named piece) or the place
@@ -180,7 +169,9 @@ namespace HuginWhispers
         private NpcActor _a;
         private Character _body;
         private Spec _spec;
-        private float _nextLook, _nextDecide, _heldUntil;
+        private float _nextLook, _nextDecide;
+        // the story's word holds it till then (world seconds): in the person's locker (NpcLocker.Lives), so a new owner keeps the word
+        internal static readonly int KHeldUntil = "RavenWatch_npcRavenHeld".GetStableHashCode();
         private int _situation = -1;
         private PerchView _perch; private int _perchSeat = -1;
 
@@ -219,7 +210,7 @@ namespace HuginWhispers
             ZDO z = _a.Zdo;
             if (z == null || _body == null) return;
             if (_lookOff > 0f && Time.time >= _lookOff) { _lookOff = 0f; if (_a.Mind != null && _a.Mind.NowLayer != NpcMind.Layer.Scene) _a.Habit("look none"); } // (its look at its raven over)
-            if (Time.time < _heldUntil) return; // (the story holds it)
+            if (NpcRescue.Now < NpcLocker.Long(z, KHeldUntil, 0L)) return; // (the story holds it)
             int sit = Situation();
             string mode = Mode(z);
             MindItsRaven(s, mode, sit);
@@ -265,7 +256,7 @@ namespace HuginWhispers
             if (_nextMind <= 0f) _nextMind = now + Random.Range(0.3f, 1f) * s.PetEvery; // (not all at once as they come)
             if (now < _nextMind || now - _modeSince < SettleFor) return;
             NpcBody b = _a.Body;
-            if (sit != 0 || b == null || b.ClipBusy || m.NowLayer > NpcMind.Layer.Whim || m.AtTable || _body.GetVelocity().magnitude > 0.3f) return; // (not on its way, not in a talk's gesture, not at a meal: asked again next second)
+            if (sit != 0 || b == null || !b.ClipFree || m.NowLayer > NpcMind.Layer.Whim || m.AtTable || _body.GetVelocity().magnitude > 0.3f) return; // (not on its way, not in a talk's gesture, not at a meal: asked again next second)
             Vector3 at; float yaw;
             if (mode == "shoulder") _a.Habit("clip pet_" + (s.Munin ? "l" : "r"));
             else if (ParsePerch(_a.Zdo.GetString(KState, ""), out at, out yaw) && Vector3.Distance(at, _a.transform.position) < LookNear && m.Now == NpcMind.Task.Idle)
@@ -336,7 +327,7 @@ namespace HuginWhispers
             NpcRaven r = Get(a);
             switch (w[1])
             {
-                case "free": r._heldUntil = 0f; r._nextDecide = 0f; r._nextLook = 0f; return;
+                case "free": NpcLocker.Put(z, KHeldUntil, 0L); r._nextDecide = 0f; r._nextLook = 0f; return;
                 case "dim": z.Set(KDim, w.Length > 2 ? Mathf.Clamp01(Errands.F(w[2], 0f)) : 0f); return;
                 case "shoulder": Write(z, "shoulder"); break;
                 case "circle": Write(z, "circle " + F(CircleR) + " " + F(CircleUp)); break;
@@ -348,7 +339,7 @@ namespace HuginWhispers
                     break;
                 default: return;
             }
-            r._heldUntil = Time.time + HoldSeconds;
+            NpcLocker.Put(z, KHeldUntil, (long)(NpcRescue.Now + HoldSeconds));
         }
 
         // ---------------------------------------------------------------- its picture (every game)
@@ -479,7 +470,7 @@ namespace HuginWhispers
                 if (r == null || r._a == null) continue;
                 ZDO z = r._a.Zdo;
                 sb.Append("\n  ").Append(r._a.Id).Append(": ").Append(z != null ? z.GetString(KState, "—") : "—")
-                  .Append(r._heldUntil > Time.time ? " (сюжет тримає ще " + Mathf.RoundToInt(r._heldUntil - Time.time) + " с)" : "")
+                  .Append(NpcLocker.Long(z, KHeldUntil, 0L) > NpcRescue.Now ? " (сюжет тримає ще " + Mathf.RoundToInt((float)(NpcLocker.Long(z, KHeldUntil, 0L) - NpcRescue.Now)) + " с)" : "")
                   .Append(r._bird != null ? ", " + r._bird.Describe() : ", не видно тут");
             }
             return sb.ToString();

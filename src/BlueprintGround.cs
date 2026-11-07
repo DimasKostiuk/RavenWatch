@@ -15,7 +15,8 @@ namespace HuginWhispers
     //     inside, or that ground near the water, and the place is refused (force: the author's word);
     //   - level: the footprint flat at that height, its edge eased back into the land over Margin metres, the inside
     //     painted bare (no grass through the floor), trees/rocks/bushes on it taken away;
-    //   - undo: the terrain as it was (the trees and rocks taken stay gone).
+    //   - undo: the terrain as it was (the trees and rocks taken stay gone);
+    //   - here: the author's square round him flat at his feet (raven blueprint ground <half m> | undo), the same way.
     internal static class BlueprintGround
     {
         internal const float NoGround = -0.15f; // (a blueprint saved before «ground»: just under the floor)
@@ -29,6 +30,9 @@ namespace HuginWhispers
         private static readonly FieldInfo FModP = typeof(TerrainComp).GetField("m_modifiedPaint", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly FieldInfo FInit = typeof(TerrainComp).GetField("m_initialized", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly MethodInfo MSave = typeof(TerrainComp).GetMethod("Save", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo FindObjects = HarmonyLib.AccessTools.Method(typeof(ZDOMan), "FindObjects");
+        private static readonly MethodInfo MakeObject = HarmonyLib.AccessTools.Method(typeof(ZNetScene), "CreateObject");
+        private static readonly int CompilerHash = "_TerrainCompiler".GetStableHashCode();
 
         // the last levelling, to put back on undo: per terrain piece its arrays as they were
         private sealed class Snap { internal TerrainComp Tc; internal float[] Level, Smooth; internal bool[] ModH, ModP; internal Color[] Paint; }
@@ -57,7 +61,7 @@ namespace HuginWhispers
         }
 
         // how far a point (blueprint frame) lies outside the rectangle; 0 inside
-        private static float Outside(Rect r, Vector3 lp)
+        internal static float Outside(Rect r, Vector3 lp)
         {
             float dx = Mathf.Max(0f, Mathf.Max(r.X0 - lp.x, lp.x - r.X1));
             float dz = Mathf.Max(0f, Mathf.Max(r.Z0 - lp.z, lp.z - r.Z1));
@@ -108,10 +112,13 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- check: may it stand here, and how high
-        internal static Fit Check(List<Blueprint.Part> parts, Vector3 at, Quaternion rot)
+        internal static Fit Check(List<Blueprint.Part> parts, Vector3 at, Quaternion rot) { return Check(Footprint(parts), at, rot); }
+
+        // the same for a ground given whole (a place of the story: its walls and the room round them — Loc.Room)
+        internal static Fit Check(Rect r, Vector3 at, Quaternion rot)
         {
             Fit f = new Fit();
-            Rect r = Footprint(parts);
+            BringIn(at, Reach(r));
             List<float> under = new List<float>();
             Walk(r, at, rot, Reach(r), (h, x, y, wp, outside) => { if (outside <= 0f) under.Add(wp.y); });
             if (under.Count < 4) { f.Why = "Землю тут ще не видно (підійди ближче до місця)."; return f; }
@@ -132,11 +139,25 @@ namespace HuginWhispers
         // bareRound > 0: earth only within that many m of its middle, grass round it (a camp's trodden ground)
         internal static string Level(List<Blueprint.Part> parts, Vector3 at, Quaternion rot, float ground, bool bare = true, List<Vector3> bareUnder = null, float bareRound = 0f)
         {
+            return Level(Footprint(parts), at, rot, ground, bare, bareUnder, bareRound);
+        }
+
+        // the author's own: a square of half m each way round him, turned as he faces, flat at his feet (the grass kept)
+        internal static string LevelHere(Player p, float half)
+        {
+            if (p == null) return "Нема гравця.";
+            half = Mathf.Clamp(half, 1f, 30f);
+            Rect r = new Rect { X0 = -half, X1 = half, Z0 = -half, Z1 = half };
+            Vector3 at = p.transform.position;
+            return Level(r, at, Quaternion.Euler(0f, p.transform.eulerAngles.y, 0f), at.y, false, null, 0f) + ". Назад: raven blueprint ground undo";
+        }
+
+        internal static string Level(Rect r, Vector3 at, Quaternion rot, float ground, bool bare, List<Vector3> bareUnder, float bareRound)
+        {
             Quaternion inv = Quaternion.Inverse(rot);
             if (FLevel == null || FSmooth == null || FModH == null || FPaint == null || FModP == null || MSave == null)
                 return "земля: гра змінилась, вирівняти не вдалось";
             _undo.Clear();
-            Rect r = Footprint(parts);
             float reach = Reach(r);
             Dictionary<Heightmap, TerrainComp> comps = new Dictionary<Heightmap, TerrainComp>();
             int moved = 0, capped = 0;
@@ -146,7 +167,7 @@ namespace HuginWhispers
                 TerrainComp tc;
                 if (!comps.TryGetValue(h, out tc))
                 {
-                    tc = h.GetAndCreateTerrainCompiler();
+                    tc = Compiler(h);
                     if (tc == null || (FInit != null && !(bool)FInit.GetValue(tc))) { comps[h] = null; return; }
                     ZNetView nv = tc.GetComponent<ZNetView>();
                     if (nv != null && nv.IsValid() && !nv.IsOwner()) nv.ClaimOwnership();
@@ -198,6 +219,39 @@ namespace HuginWhispers
             return "земля вирівняна (" + moved + " точок" + (capped > 0 ? ", " + capped + " вперлись у межу гри 8 м" : "") + ")" + (cleared > 0 ? ", прибрано дерев і каміння: " + cleared : "");
         }
 
+        // the terrain's changes of each piece of land within reach, far from every player too: one may stand in the world with no body (a
+        // hoe, the place built here before), and a second one made beside it would fight it. Brought in, the game loads it and redraws the
+        // land with it at once (TerrainComp.CheckLoad → Heightmap.Poke), so what is read after is the ground as it is. Its body goes with the
+        // game's next look round (nobody near): what was written stays in its ZDO
+        private static void BringIn(Vector3 at, float reach)
+        {
+            List<Heightmap> maps = new List<Heightmap>();
+            Heightmap.FindHeightmap(at, reach, maps);
+            foreach (Heightmap h in maps) if (h != null && !h.IsDistantLod && TerrainComp.FindTerrainCompiler(h.transform.position) == null) Made(h);
+        }
+
+        private static TerrainComp Compiler(Heightmap h)
+        {
+            TerrainComp tc = TerrainComp.FindTerrainCompiler(h.transform.position);
+            return tc ?? Made(h) ?? h.GetAndCreateTerrainCompiler();
+        }
+
+        // the one this land has in the world's list, made (null: it has none yet)
+        private static TerrainComp Made(Heightmap h)
+        {
+            if (FindObjects == null || MakeObject == null || ZDOMan.instance == null || ZNetScene.instance == null) return null;
+            List<ZDO> all = new List<ZDO>();
+            FindObjects.Invoke(ZDOMan.instance, new object[] { ZoneSystem.GetZone(h.transform.position), all, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a piece of land, when a place is checked or levelled
+            foreach (ZDO z in all)
+            {
+                if (z == null || z.GetPrefab() != CompilerHash || ZNetScene.instance.HaveInstance(z)) continue;
+                MakeObject.Invoke(ZNetScene.instance, new object[] { z });
+                TerrainComp tc = TerrainComp.FindTerrainCompiler(h.transform.position);
+                if (tc != null) return tc;
+            }
+            return null;
+        }
+
         // under one of its floors (a 2×2 floor's half-diagonal and a little)
         private const float UnderFloor = 1.6f;
         private static bool Under(List<Vector3> floors, Vector3 local)
@@ -213,27 +267,49 @@ namespace HuginWhispers
         // trees, logs, rocks, bushes, pickables on the footprint and its eased edge: away (as the game clears round its own places)
         private static int Clear(Rect r, Vector3 at, Quaternion rot)
         {
+            if (FindObjects == null || ZDOMan.instance == null) return 0;
             Vector3 mid = new Vector3((r.X0 + r.X1) * 0.5f, 0f, (r.Z0 + r.Z1) * 0.5f);
-            Vector3 half = new Vector3((r.X1 - r.X0) * 0.5f + Margin, 60f, (r.Z1 - r.Z0) * 0.5f + Margin);
-            HashSet<ZNetView> seen = new HashSet<ZNetView>();
+            Vector3 centre = at + rot * mid;
+            float hx = (r.X1 - r.X0) * 0.5f + Margin + WildPad, hz = (r.Z1 - r.Z0) * 0.5f + Margin + WildPad;
+            float reach = Mathf.Sqrt(hx * hx + hz * hz);
+            Quaternion inv = Quaternion.Inverse(rot);
+            Vector2s lo = ZoneSystem.GetZone(centre - new Vector3(reach, 0f, reach)), hi = ZoneSystem.GetZone(centre + new Vector3(reach, 0f, reach));
+            List<ZDO> all = new List<ZDO>();
             int gone = 0;
-            foreach (Collider col in Physics.OverlapBox(at + rot * mid, half, rot))
-            {
-                ZNetView nv = col != null ? col.GetComponentInParent<ZNetView>() : null;
-                if (nv == null || !nv.IsValid() || !seen.Add(nv)) continue;
-                GameObject g = nv.gameObject;
-                if (g.GetComponent<Piece>() != null || g.GetComponent<Character>() != null || g.GetComponent<ItemDrop>() != null) continue;
-                bool wild = g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<Destructible>() != null
-                         || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<Pickable>() != null;
-                if (!wild) continue;
-                nv.ClaimOwnership();
-                ZNetScene.instance.Destroy(g);
-                gone++;
-            }
+            for (int x = lo.x; x <= hi.x; x++)
+                for (int y = lo.y; y <= hi.y; y++)
+                {
+                    all.Clear();
+                    FindObjects.Invoke(ZDOMan.instance, new object[] { new Vector2s((short)x, (short)y), all, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a zone, when a place is levelled
+                    foreach (ZDO z in all)
+                    {
+                        if (z == null || !Wild(z.GetPrefab())) continue;
+                        Vector3 d = inv * (z.GetPosition() - centre);
+                        if (Mathf.Abs(d.x) > hx || Mathf.Abs(d.z) > hz) continue;
+                        z.SetOwner(ZDOMan.GetSessionID());
+                        ZDOMan.instance.DestroyZDO(z); // (a body there goes with it: the game's own OnZDODestroyed)
+                        gone++;
+                    }
+                }
             return gone;
         }
 
-        // the world's own building (HallSpawn): its ground is kept, never undone by the author's «undo»
+        // by the world's list, not by bodies: far from every player they have none (a big rock reaches past its middle: WildPad)
+        private const float WildPad = 2f;
+        private static readonly Dictionary<int, bool> _wild = new Dictionary<int, bool>();
+        private static bool Wild(int hash)
+        {
+            bool w;
+            if (_wild.TryGetValue(hash, out w)) return w;
+            GameObject g = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(hash) : null;
+            w = g != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null && g.GetComponent<ItemDrop>() == null
+                && (g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<Destructible>() != null
+                    || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<Pickable>() != null);
+            _wild[hash] = w;
+            return w;
+        }
+
+        // the world's own building (LocBuild): its ground is kept, never undone by the author's «undo»
         internal static void Forget() { _undo.Clear(); }
 
         // ---------------------------------------------------------------- undo: the terrain as it was before the last levelling

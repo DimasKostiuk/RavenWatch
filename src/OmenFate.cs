@@ -247,6 +247,7 @@ namespace HuginWhispers
                 if (why != "") return why;
                 Dictionary<string, string> data; Vector3 at;
                 PlayerData(asker, out data, out at);
+                if (LocNoRaid.At(at)) return Lang.T("Тут доля не прийде: це місце під захистом."); // (no raid in the story's places: LocNoRaid)
                 bool grown = _grown;
                 string name = _event;
                 _decided = false; _grown = false; _event = null;

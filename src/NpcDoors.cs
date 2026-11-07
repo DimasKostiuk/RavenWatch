@@ -16,7 +16,7 @@ namespace HuginWhispers
         private static readonly Dictionary<long, KeyValuePair<float, List<Door>>> Seen = new Dictionary<long, KeyValuePair<float, List<Door>>>();
         private static object _world;
 
-        // the doors round a spot (built pieces; one look per 32 m square every few seconds)
+        // the doors round a spot (one look per 32 m square every few seconds)
         internal static List<Door> Around(Vector3 at) { return Near(at); } // (a servant's house: its doors)
 
         private static readonly int PerfDoors = NpcPerf.Id("door search (пошук дверей)");
@@ -33,33 +33,38 @@ namespace HuginWhispers
             KeyValuePair<float, List<Door>> had;
             if (Seen.TryGetValue(key, out had) && Time.time - had.Key < Again) return had.Value;
             List<Door> l = new List<Door>();
-            List<Piece> pieces = new List<Piece>();
-            Piece.GetAllPiecesInRadius(at, Look, pieces);
-            foreach (Piece pc in pieces)
+            NpcBase b = NpcBase.Covering(at); // (a base's own look round it: its doors, the pieces near not gone over)
+            if (b != null) { foreach (Component c in b.Round(typeof(Door))) { Door d = c as Door; if (d != null && Utils.DistanceXZ(d.transform.position, at) <= Look) l.Add(d); } }
+            else
             {
-                if (pc == null) continue;
-                bool door;
-                if (!IsDoor.TryGetValue(pc.m_name ?? "", out door)) { door = pc.GetComponentInChildren<Door>() != null; IsDoor[pc.m_name ?? ""] = door; } // (asked once a kind: a big base has thousands of pieces)
-                if (door) { Door d = pc.GetComponentInChildren<Door>(); if (d != null) l.Add(d); }
+                List<Piece> pieces = new List<Piece>();
+                Piece.GetAllPiecesInRadius(at, Look, pieces); // heavy: only where no base looks round, once a 32 m square every Again s
+                foreach (Piece pc in pieces)
+                {
+                    if (pc == null) continue;
+                    bool door;
+                    if (!IsDoor.TryGetValue(pc.m_name ?? "", out door)) { door = pc.GetComponentInChildren<Door>() != null; IsDoor[pc.m_name ?? ""] = door; } // (asked once a kind: a big base has thousands of pieces)
+                    if (door) { Door d = pc.GetComponentInChildren<Door>(); if (d != null) l.Add(d); }
+                }
             }
             if (Seen.Count > 64) Seen.Clear();
             Seen[key] = new KeyValuePair<float, List<Door>>(Time.time, l);
             return l;
         }
 
-        // a door that leads from here towards there: reachable on this side, the shortest way round first
-        internal static Door Toward(Vector3 from, Vector3 to, Pathfinding.AgentType agent, HashSet<Door> tried = null)
+        // a door that leads from here towards there: reachable on this side, the shortest way round first (m: who goes: a door shut to it is none)
+        internal static Door Toward(Vector3 from, Vector3 to, Pathfinding.AgentType agent, HashSet<Door> tried = null, NpcMind m = null)
         {
             if (Pathfinding.instance == null) return null;
             List<Door> doors = new List<Door>(Near(from));
-            doors.RemoveAll(d => d == null || (tried != null && tried.Contains(d)) || !Usable(d, null));
+            doors.RemoveAll(d => d == null || (tried != null && tried.Contains(d)) || !Usable(d, m));
             doors.Sort((a, b) => (Utils.DistanceXZ(from, a.transform.position) + Utils.DistanceXZ(a.transform.position, to)).CompareTo(Utils.DistanceXZ(from, b.transform.position) + Utils.DistanceXZ(b.transform.position, to)));
             for (int i = 0; i < doors.Count && i < 6; i++)
             {
                 Vector3 near, far;
                 Sides(doors[i], from, out near, out far);
                 if (Utils.DistanceXZ(far, to) > Utils.DistanceXZ(from, to) + 2f) continue; // (it would lead away)
-                if (Pathfinding.instance.HavePath(from, near, agent)) return doors[i];
+                if (NpcWalk.Have(from, near)) return doors[i];
             }
             return null;
         }
@@ -74,14 +79,15 @@ namespace HuginWhispers
         }
 
         // a door a person may open: no key to it, not under a ward this game's player may not use, not a player's house
-        // shut to it (NpcPrivate), not a door of the story's places (its own key, the story opens it — the Hall's gate)
+        // shut to it (NpcPrivate), and of the story's places only one the story has let be anyone's (LocState.OpenToPeople:
+        // the Hall's gate once it is open: a player shut it behind him and Heid stood outside for good, 2026-11-04)
         internal static bool Usable(Door d, NpcMind m)
         {
             if (d == null || d.m_keyItem != null) return false;
             if (Player.m_localPlayer != null && !PrivateArea.CheckAccess(d.transform.position, 0f, false, false)) return false;
             if (m != null && NpcPrivate.DoorOff(m, d)) return false;
             Piece pc = d.GetComponentInParent<Piece>();
-            return pc == null || !Blueprint.Marked(pc.GetComponent<ZNetView>());
+            return pc == null || !Blueprint.Marked(pc.GetComponent<ZNetView>()) || LocState.OpenToPeople(d);
         }
 
         internal static bool Closed(Door d)

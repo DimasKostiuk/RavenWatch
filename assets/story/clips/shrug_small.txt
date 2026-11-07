@@ -1,0 +1,21 @@
+clip shrug_small
+length 2.4
+loop 0
+pivot 1.1
+curve ease
+base frozen
+strength 0.35
+fade 0.3 0.6
+
+# під «shrug» гри (крок сцени player emote shrug одразу після): руки й голова на третину тихіші, рух той самий
+0 LeftArm 0 0 0
+0 LeftForeArm 0 0 0
+0 LeftHand 0 0 0
+0 RightArm 0 0 0
+0 RightForeArm 0 0 0
+0 RightHand 0 0 0
+0 LeftShoulder 0 0 0
+0 RightShoulder 0 0 0
+0 Neck 0 0 0
+0 Head 0 0 0
+2.4 Head 0 0 0

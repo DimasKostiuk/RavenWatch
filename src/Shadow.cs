@@ -580,13 +580,25 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(VisEquipment), "AttachItem")]
     internal static class ShadowGearItemPatch
     {
-        private static void Postfix(VisEquipment __instance, GameObject __result) { Shadow.NewGear(__instance, __result); }
+        private static void Postfix(VisEquipment __instance, GameObject __result) {
+            try
+            {
+                Shadow.NewGear(__instance, __result);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ShadowGearItemPatch", pgx); }
+        }
     }
 
     [HarmonyPatch(typeof(VisEquipment), "AttachBackItem")]
     internal static class ShadowGearBackPatch
     {
-        private static void Postfix(VisEquipment __instance, GameObject __result) { Shadow.NewGear(__instance, __result); }
+        private static void Postfix(VisEquipment __instance, GameObject __result) {
+            try
+            {
+                Shadow.NewGear(__instance, __result);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ShadowGearBackPatch", pgx); }
+        }
     }
 
     [HarmonyPatch(typeof(VisEquipment), "AttachArmor")]
@@ -594,7 +606,11 @@ namespace HuginWhispers
     {
         private static void Postfix(VisEquipment __instance, List<GameObject> __result)
         {
-            if (__result != null) foreach (GameObject g in __result) Shadow.NewGear(__instance, g);
+            try
+            {
+                if (__result != null) foreach (GameObject g in __result) Shadow.NewGear(__instance, g);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ShadowGearArmorPatch", pgx); }
         }
     }
 }

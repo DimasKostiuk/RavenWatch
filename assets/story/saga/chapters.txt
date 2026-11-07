@@ -1,0 +1,8 @@
+# Розділи саги (StorySaga): вкладка «Сага» в книзі, у порядку цього файлу.
+# Квест і подія світу кажуть свій розділ рядком «chapter: <назва>».
+#   name: — назва розділу в книзі
+#   done: — умови (StoryCond): розділ закінчено для цього гравця
+
+[chapter prologue]
+name: Пролог
+done: quest prologue done, world heart_first

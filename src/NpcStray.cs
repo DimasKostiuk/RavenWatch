@@ -11,7 +11,8 @@ namespace HuginWhispers
     // back where it belongs:
     //   a resident     at its home (its base's middle; its heart)
     //   on its way     at the end of its way (a heart: there it settles as it would on arriving — NpcTravel)
-    //   hired, homeless at the ravens' home (NpcTravel.Hall), to be hired again from there
+    //   moved out      by the heart it lived at (NpcResident.KMovedOut: still hired, to be settled again there or elsewhere)
+    //   hired, homeless at the ravens' home (NpcTravel.Refuge), to be hired again from there
     // Its locker goes with it (its gear, what it carries). A story person not hired, one in need, Odin — left where
     // the story put them. Nothing runs on a client; nothing is sent but the moved ZDOs.
     internal static class NpcStray
@@ -54,23 +55,29 @@ namespace HuginWhispers
             catch (System.Exception e) { Npcs.Log("strays: " + e.Message); }
         }
 
+        // (a module says: the story holds this one — StoryHold)
+        internal static System.Func<ZDO, bool> Told;
+
         // where it belongs (false: it is none of ours to bring back)
         private static bool Belongs(ZDO n, out Vector3 to, out string where)
         {
             to = Vector3.zero; where = "";
             bool resident = n.GetBool(NpcResident.KResident, false), hired = n.GetLong(NpcTalk.KHired, 0L) != 0L;
             if (!resident && !hired) return false; // (a story person not hired, one in need: where the story put it)
+            if (Told != null && Told(n)) return false; // (the story told it to stand where it is: its word, far from home or not)
             NpcMind.Plan way = Way(n);
             if (way != null) { to = way.To; where = "the end of its way"; return true; }
             if (resident) { to = n.GetVec3(NpcRules.KHome, Vector3.zero); where = "its home"; return to != Vector3.zero; }
-            to = NpcTravel.Hall; where = "the ravens' home";
+            to = NpcLocker.Vec(n, NpcResident.KMovedOut, Vector3.zero);
+            if (to != Vector3.zero) { where = "the heart it was moved out of"; return true; }
+            to = NpcTravel.Refuge; where = "the ravens' home";
             return to != Vector3.zero;
         }
 
         // its long way, as it kept it (on the order layer, or paused under an order: NpcMind «way»)
         private static NpcMind.Plan Way(ZDO n)
         {
-            foreach (string part in n.GetString(NpcMind.KPlans, "").Split(';'))
+            foreach (string part in NpcLocker.Text(n, NpcMind.KPlans).Split(';'))
             {
                 if (!part.StartsWith("order=") && !part.StartsWith("way=")) continue;
                 NpcMind.Plan p = NpcMind.Plan.Parse(part.Substring(part.IndexOf('=') + 1));
@@ -106,7 +113,7 @@ namespace HuginWhispers
         }
 
         // run now by a connected player's game (its zone loaded there): not moved under it — that game would write it back
-        private static bool RunByPeer(ZDO n)
+        internal static bool RunByPeer(ZDO n)
         {
             long owner = n.GetOwner();
             return owner != 0L && owner != ZDOMan.GetSessionID() && ZNet.instance.GetPeer(owner) != null;

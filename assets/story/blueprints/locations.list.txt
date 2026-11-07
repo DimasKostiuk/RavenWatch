@@ -1,25 +1,59 @@
 # RavenWatch: місця сюжету (по одному в кожному світі). Див. src/Loc.cs — Locs.
 # loc <креслення>  name: назва  biome: біом гри  from: start мін макс далеко | <інше місце> мін макс [edge — між стінами]
+# room: перед/зад боки — м своєї землі за стінами креслення (шукається, рівняється й чиститься разом із місцем)
 # clear: м без будівель гравців  nobuild: м без будування  states: стани через кому, субстани стану в дужках через / (закинута (розпалена / ...))  ruin: стани-руїни 1..N
 # grass: yes — уся трава лишається; N — голий ґрунт лише N м від середини, далі трава; без рядка — ґрунт під підлогою
-# touch: <назва деталі> <умови> — деталь світиться, поки умови (StoryCond) справджуються, E на ній — подія «use <місце>.<назва>»
-# follows: hall — стан іде за Залою (1 до розпаленої, 2 з неї: табір Гейд)
-# sink: на скільки м нижче в землі, ніж збережено  fog: yes|no (туман Хели в руїні)  ruinlit: що горить і в руїні (префаби через пробіл)  litfrom: крок префаби — горять у руїні з цього кроку (1.2 hearth)  keys: основа ключів світу (лише Зала: старі)
+# alias: hall — інші слова, якими дані сюжету кличуть це місце · refuge: yes — дім воронів: туди йдуть ненайняті люди
+# gate: <назва деталі> — головна брама: зачинена й замкнена, поки сюжет не відчинить (gate <місце> open) · hearthshut: <слова> — що каже вогнище, поки брама замкнена
+# touch: <назва деталі> [anim] [quiet] <умови>|- — деталь світиться (quiet — ні), поки умови (StoryCond) справджуються, E на ній — подія «use <місце>.<назва>»
+# read: <назва деталі> [<умови> ::] <слова> — що показує E (перший рядок, чиї умови справджуються; \n — новий рядок)
+# elsedo: <назва деталі> <дії> — дії сюжету на дотик, якого не чекає жоден твій етап (лист, прочитаний поза прологом: серце відкривається одразу)
+# mapmark: <умови> — золотий знак місця на мапі для того, для кого умови справджуються
+# becomes: <стан.субстан> <умови світу> — сервер переводить місце на цей крок, щойно умови справджуються (по порядку, лише вперед, за кадром)
+# follows: <стан> <умови світу> — цей стан, поки умови справджуються, інакше перший (табір Гейд)
+# cold: <умови світу> — у будівлі холодно, поки умови справджуються · fog: yes|no|<умови світу> — туман Хели в руїні (поки умови)
+# умови світу: world, wvar, placed, gate, hearth, state (state zala >= 1.2) — сервер питає їх без гравця
+# hidewhile: <назва деталі> <умови> — деталі для гравця нема, поки умови для нього справджуються (кілька рядків: досить будь-якого); умови світу — її нема для всіх (старий лист у Залі, прочитаний)
+# statewhile: <стан> <умови> — кожен гравець бачить місце у своєму стані: цей, поки умови справджуються, інакше перший (хата Ейріка: обжита до книги)
+# apart: <місце> <м> — середина щонайменше за стільки від середини іншого місця (Хугін і Мунін)
+# lockchests: yes — скрині не відкриваються · lockstations: yes — верстаки й кузні не станки · lockdoors: <умови> — двері замкнені для гравця, поки умови справджуються (opendoors: префаби чи назви деталей, яких це не стосується)
+# shutdoors: <умови> — двері не замкнені, але для гравця стоять зачинені, поки сам не відчинить (не видно, що за ними)
+# sink: на скільки м нижче в землі, ніж збережено  ruinlit: що горить і в руїні (префаби через пробіл)  litfrom: крок префаби — горять у руїні з цього кроку (1.2 hearth)  keys: основа ключів світу (лише Зала: старі)
 
 loc zala
 name: Зала Варти
+alias: hall
+refuge: yes
 biome: Meadows
-from: start 300 1500 3000
+from: start 300 600 1200
+room: 5 8
 clear: 40
-nobuild: 30
+nobuild: 38
 states: закинута (гейд / розпалена), відремонтована (фаза_1 / фаза_2), обжита
 ruin: 1
-fog: yes
+gate: dveri_holovni
+hearthshut: Попіл не займається. Зала ще замкнена — її відмикає не твій ключ.
+fog: hearth zala < 2                    # туман Хели, поки не горить вогонь Варти
+cold: state zala < 1.2                  # Хель тримає Залу, поки її не розпалено
+mapmark: world heart_first, !been zala   # після прологу: «іди туди» — тим, хто там ще не був
 ruinlit: Candle_resin
 litfrom: 1.2 hearth
 sink: 0.5
 lockbeds: yes
 keys: ravenwatch_hall
+becomes: 1.1 world heart_first          # серце оселі збудоване, кінець прологу: Гейд прибирає біля вогнища сліди того, що часто тут бувала (користувач 2026-11-07)
+becomes: 1.2 hearth zala 2, world heart_first   # вогонь Варти й перше серце у світі: розпалена
+# старий лист: подія сервера (користувач 2026-11-07): прочитали в сцені чи серце вже відкрите листом — його більше нема для всіх
+hidewhile: lyst world letter_read
+hidewhile: lyst world heart_found
+hidewhile: lyst world heart_first
+touch: lyst quest prologue done, hearth zala >= 1, !world heart_first, !world heart_found, !world letter_read, !step prologue_main heart_talk
+read: lyst Стовп із вороном на верхівці, дошка під дашком, ліхтар. Такі ставили там, де жили люди: біля них збирались.\nПід кресленням дряпнуто: «дерево, пір'я, ріг того, хто перший упав».
+elsedo: lyst heartlearn                 # прочитав поза хвилиною прологу: серце відкривається одразу (сцени чекати нема)
+# остання різьба Ейріка: читається лише при вогні Варти (перший акт)
+touch: rizba quiet -
+read: rizba hearth zala 2 :: Я Ейрік. Я лишився сам. Я ще пам'ятаю всіх.\nУ відрізаній гілці воля не вертається. Коли повернеться сік, встануть ті, чиї імена тут.\nВони не згадають нас. Не кажіть їм, ким вони були.\n\n(рядок свіжо зрубано)\n\nБережіть для них вогонь. Несіть його туди, де вони житимуть.
+read: rizba Текст пливе перед очима — нічого не розібрати.
 
 loc torvald
 name: Камінь Торвальда
@@ -34,20 +68,29 @@ lockchests: yes
 lockbeds: yes
 grass: 5
 keys: ravenwatch_loc_torvald
-follows: hall
+follows: 2 state zala >= 1.2           # табір зникає, щойно Зала розпалена (і вертається, якщо її повернули назад)
 tint: piece_chest_private 5A6E8C
 
 loc prologue_house
 name: Будинок привида
 biome: Meadows
 from: start 130 170 400
-clear: 20
-nobuild: 18
-states: закинута
+clear: 25
+nobuild: 24
+sink: 0.15
+states: закинута, обжита
 ruin: 1
 fog: no
 lockbeds: yes
+lockchests: yes
+lockstations: yes
+lockdoors: !step prologue house, !step prologue echo, !flag echo_gone
+shutdoors: step prologue house
+opendoors: wood_fence_gate dveri_nedobud
 litwhile: fire_pit !flag echo_gone
+litwhile: piece_groundtorch_wood !flag echo_gone
+statewhile: 2 !flag echo_gone
+touch: knyha step prologue echo, !flag book_taken
 
 loc prologue_munin
 name: Місце Муніна
@@ -58,5 +101,19 @@ nobuild: 6
 states: закинута
 ruin: 1
 fog: no
-grass: 6
+grass: 2.5
 touch: shchyt step prologue munin_shield
+
+loc prologue_hugin
+name: Місце Хугіна
+biome: Meadows
+from: start 60 140 300
+clear: 5
+apart: prologue_munin 100
+nobuild: 8
+states: закинута
+ruin: 1
+ruinlit: Candle_resin
+fog: no
+grass: 8
+touch: vkazivnyk step prologue hugin_sign

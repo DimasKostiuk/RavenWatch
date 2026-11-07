@@ -3,4 +3,5 @@ name: Вогнище Варти
 note: Вогонь Зали Варти. Холодний, доки вартовий не розпалить його Пером Варти
 use: story
 id: vohnyshche_varty
+script: hearth
 part asset/Зала/HallHearth pos 0 0.305 0 rot 0 0 0 scale 2 2 2  # Вогнище Варти (Meshy, 2026-10-31), ~1,9 м у колі

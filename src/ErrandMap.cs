@@ -146,9 +146,9 @@ namespace HuginWhispers
     {
         private static void Postfix()
         {
-            try { if (ErrandMap.Ours.Count > 0 || ErrandMap.Trees.Count > 0) ErrandMap.Tint(); } catch { }
+            try { if (ErrandMap.Ours.Count > 0 || ErrandMap.Trees.Count > 0) ErrandMap.Tint(); } catch (System.Exception e) { PatchGuard.Fail("ErrandMapTintPatch", e); }
 #if RAVEN_NPC
-            try { if (StoryMap.Count > 0) StoryMap.Tint(); } catch { } // (the story's main tasks: in gold)
+            try { if (StoryMap.Count > 0) StoryMap.Tint(); } catch (System.Exception e) { PatchGuard.Fail("ErrandMapTintPatch story", e); } // (the story's main tasks: in gold)
 #endif
         }
     }

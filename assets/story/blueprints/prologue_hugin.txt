@@ -1,0 +1,7 @@
+# RavenWatch blueprint 1
+name prologue_hugin
+pieces 3
+ground 0
+RavenWatch_story_vkazivnyk -0.231 -0.209 3.042 0 0.99675 0 -0.08051
+Candle_resin 0.77 0.02 5.219 0 0.48682 0 -0.8735
+stone_pile 1.153 -0.018 6.088 0 0.48682 0 -0.8735

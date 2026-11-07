@@ -1,0 +1,17 @@
+# Тестова воїтелька (для «Акторів» і перевірки бою; не з сюжету).
+[npc test_shieldmaiden]
+name: Сігрід
+body: human
+model: 1
+haircolor: 0.62 0.28 0.12
+hair: Hair3
+gear: ArmorBronzeChest ArmorBronzeLegs HelmetBronze SwordBronze ShieldBronzeBuckler
+health: 400
+speed: 1.1
+greet: Тримай щит вище, {name}.
+greet: Мунін каже, ти б'єшся, як мокра курка. Я так не думаю. Поки що.
+fight: defend
+talk: common
+on near 5: emote wave
+on fight_over: say Ще один. Хто наступний?
+on spawn: wander 10 home

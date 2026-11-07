@@ -1,0 +1,199 @@
+clip door_push
+length 4.2
+loop 0
+pivot 1.1
+curve ease
+fade 0.6 0.8
+mode Spine1 body
+mode Spine2 body
+mark 1.7 push2
+touch piece stave_gate 0.55
+say долоні на браму, налягає двічі, другий сильніше, не піддається, руки вниз; голова на руках до кінця (вгору дивиться вже сцена, після кроків назад); пальці не йдуть у текстуру дверей: руки на пару см далі від брами
+want 1-2.9 hand both on
+want 1-2.9 palm both forward
+mark 3.95 let_go
+want 3.3-4.2 head down 0
+
+# брама Зали зачинена (пролог, gate_shut): дерево за 0.55 м перед ним — долоні на дерево (лікті зігнуті), налягає раз,
+# ще раз сильніше — руки випрямляються, тіло вперед; не піддається; руки вниз, відхиляється, погляд угору на браму.
+
+# налягає тілом разом із руками: двічі, другий сильніше; тоді відхиляється
+# погляд: на руки, тоді вгору на верх брами
+
+0 @RightHand 0.24 0.95 0.06
+0.35 @RightHand 0.24 0.95 0.06
+0.9 @RightHand 0.25 1.36 0.48
+1.05 @RightHand 0.25 1.36 0.48
+1.35 @RightHand 0.25 1.36 0.48
+1.7 @RightHand 0.25 1.36 0.48
+2 @RightHand 0.25 1.36 0.48
+2.5 @RightHand 0.25 1.36 0.48
+2.9 @RightHand 0.25 1.36 0.48
+3.1 @RightHand 0.25 1.36 0.48
+3.35 @RightHand 0.25 1.36 0.48
+4.2 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.35 @RightHand.w 0 0 0
+1.05 @RightHand.w 1 0 0
+3.1 @RightHand.w 1 0 0
+3.95 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.6 -0.8 0
+
+0 @RightHand.f 0 1 0.15
+
+0 @RightHand.n 0 0 1
+
+0 RightHandIndex1 0 0 0
+0.9 RightHandIndex1 -25 0 0
+3.1 RightHandIndex1 -25 0 0
+3.9 RightHandIndex1 0 0 0
+
+0 RightHandIndex2 0 0 0
+0.9 RightHandIndex2 -25 0 0
+3.1 RightHandIndex2 -25 0 0
+3.9 RightHandIndex2 0 0 0
+
+0 RightHandMiddle1 0 0 0
+0.9 RightHandMiddle1 -25 0 0
+3.1 RightHandMiddle1 -25 0 0
+3.9 RightHandMiddle1 0 0 0
+
+0 RightHandMiddle2 0 0 0
+0.9 RightHandMiddle2 -25 0 0
+3.1 RightHandMiddle2 -25 0 0
+3.9 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+0.9 RightHandRing1 -25 0 0
+3.1 RightHandRing1 -25 0 0
+3.9 RightHandRing1 0 0 0
+
+0 RightHandRing2 0 0 0
+0.9 RightHandRing2 -25 0 0
+3.1 RightHandRing2 -25 0 0
+3.9 RightHandRing2 0 0 0
+
+0 RightHandPinky1 0 0 0
+0.9 RightHandPinky1 -25 0 0
+3.1 RightHandPinky1 -25 0 0
+3.9 RightHandPinky1 0 0 0
+
+0 RightHandPinky2 0 0 0
+0.9 RightHandPinky2 -25 0 0
+3.1 RightHandPinky2 -25 0 0
+3.9 RightHandPinky2 0 0 0
+
+0 @LeftHand -0.24 0.95 0.06
+0.45 @LeftHand -0.24 0.95 0.06
+1 @LeftHand -0.25 1.36 0.48
+1.15 @LeftHand -0.25 1.36 0.48
+1.45 @LeftHand -0.25 1.36 0.48
+1.8 @LeftHand -0.25 1.36 0.48
+2.1 @LeftHand -0.25 1.36 0.48
+2.6 @LeftHand -0.25 1.36 0.48
+3 @LeftHand -0.25 1.36 0.48
+3.2 @LeftHand -0.25 1.36 0.48
+3.45 @LeftHand -0.25 1.36 0.48
+4.2 @LeftHand -0.24 0.95 0.06
+
+0 @LeftHand.w 0 0 0
+0.45 @LeftHand.w 0 0 0
+1.15 @LeftHand.w 1 0 0
+3.2 @LeftHand.w 1 0 0
+4.05 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.6 -0.8 0
+
+0 @LeftHand.f 0 1 0.15
+
+0 @LeftHand.n 0 0 1
+
+0 LeftHandIndex1 0 0 0
+1 LeftHandIndex1 -25 0 0
+3.2 LeftHandIndex1 -25 0 0
+4 LeftHandIndex1 0 0 0
+
+0 LeftHandIndex2 0 0 0
+1 LeftHandIndex2 -25 0 0
+3.2 LeftHandIndex2 -25 0 0
+4 LeftHandIndex2 0 0 0
+
+0 LeftHandMiddle1 0 0 0
+1 LeftHandMiddle1 -25 0 0
+3.2 LeftHandMiddle1 -25 0 0
+4 LeftHandMiddle1 0 0 0
+
+0 LeftHandMiddle2 0 0 0
+1 LeftHandMiddle2 -25 0 0
+3.2 LeftHandMiddle2 -25 0 0
+4 LeftHandMiddle2 0 0 0
+
+0 LeftHandRing1 0 0 0
+1 LeftHandRing1 -25 0 0
+3.2 LeftHandRing1 -25 0 0
+4 LeftHandRing1 0 0 0
+
+0 LeftHandRing2 0 0 0
+1 LeftHandRing2 -25 0 0
+3.2 LeftHandRing2 -25 0 0
+4 LeftHandRing2 0 0 0
+
+0 LeftHandPinky1 0 0 0
+1 LeftHandPinky1 -25 0 0
+3.2 LeftHandPinky1 -25 0 0
+4 LeftHandPinky1 0 0 0
+
+0 LeftHandPinky2 0 0 0
+1 LeftHandPinky2 -25 0 0
+3.2 LeftHandPinky2 -25 0 0
+4 LeftHandPinky2 0 0 0
+
+0 Spine1 0 0 0
+1.05 Spine1 4 0 0
+1.35 Spine1 4 0 0
+1.7 Spine1 9 0 0
+2 Spine1 5 0 0
+2.5 Spine1 13 0 0
+2.9 Spine1 5 0 0
+3.5 Spine1 -3 0 0
+4.2 Spine1 0 0 0
+
+0 Spine2 0 0 0
+1.05 Spine2 2 0 0
+1.7 Spine2 5 0 0
+2 Spine2 3 0 0
+2.5 Spine2 7 0 0
+2.9 Spine2 2 0 0
+3.5 Spine2 -4 0 0
+4.2 Spine2 0 0 0
+
+0 @Look 0 1.5 2
+1.1 @Look 0 1.35 0.8
+3 @Look 0 1.4 0.8
+3.7 @Look 0 1.4 0.8
+
+0 @Look.w 0 0 0
+0.6 @Look.w 0.8 0 0
+3.8 @Look.w 0.8 0 0
+4.2 @Look.w 0 0 0
+
+0 move 0 0 0
+1.1 move 0 0 0
+1.7 move 0 -0.01 0.06
+2 move 0 0 0.02
+2.5 move 0 -0.02 0.1
+2.9 move 0 0 0.02
+3.5 move 0 0 -0.02
+4.2 move 0 0 0
+
+0 @LeftFoot -0.09 0.12 0.28
+4.2 @LeftFoot -0.09 0.12 0.28
+
+0 @RightFoot 0.05 0.12 -0.3
+4.2 @RightFoot 0.05 0.12 -0.3
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot.p 0.15 0 1

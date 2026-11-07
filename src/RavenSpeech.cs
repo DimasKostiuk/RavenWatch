@@ -82,13 +82,32 @@ namespace HuginWhispers
             return true;
         }
 
-        // time to read a line calmly while playing: about 11 letters a second plus a moment to notice it, 7 to 35 s
-        internal static float ReadSeconds(string text)
+        // How long any line stays on the screen: the ONE place (the user 2026-11-04: all of them +10%, then «the core, not patches»).
+        // A line's kind says its pace — the ravens' cards are read at ease while playing, a scene keeps its rhythm — and ReadScale is over
+        // all of them, and over a time written in seconds (Hold: a setting, the game's own delay). Nothing shows a line by a time of its own.
+        internal static float ReadScale = 1.1f;
+        internal enum Pace { Card, Shout, Scene, Bubble, Bird, Chatter }
+        private struct Rate { public float From, Per, Least, Most; public Rate(float f, float p, float l, float m) { From = f; Per = p; Least = l; Most = m; } }
+        private static readonly Rate[] Rates =
+        {
+            new Rate(3f, 1f / 11f, 7f, 35f),   // Card    a raven's card: about 11 letters a second and a moment to notice it
+            new Rate(4f, 1f / 20f, 6f, 18f),   // Shout   a gift's words over the raven (RavenSkills)
+            new Rate(1.2f, 0.06f, 2f, 8f),     // Scene   a scene's line, a subtitle: its rhythm
+            new Rate(2f, 0.06f, 4f, 12f),      // Bubble  a person's words over its head
+            new Rate(2.5f, 0.07f, 4f, 10f),    // Bird    the story's raven
+            new Rate(2.5f, 0.06f, 3f, 6f),     // Chatter two people talking: a line each
+        };
+        internal static float Seconds(string text, Pace pace)
         {
             if (string.IsNullOrEmpty(text)) return 0f;
-            int letters = System.Text.RegularExpressions.Regex.Replace(text, "<[^>]*>", "").Length;
-            return Mathf.Clamp(3f + letters / 11f, 7f, 35f);
+            int letters = pace == Pace.Card ? System.Text.RegularExpressions.Regex.Replace(text, "<[^>]*>", "").Length : text.Length;
+            Rate r = Rates[(int)pace];
+            return Mathf.Clamp(r.From + letters * r.Per, r.Least, r.Most) * ReadScale;
         }
+        internal static float Hold(float seconds) { return seconds * ReadScale; }
+
+        // a raven's card: the time to read it
+        internal static float ReadSeconds(string text) { return Seconds(text, Pace.Card); }
 
         // another player's raven (or one on a perch): it hangs over it in the world, not under your hotbar, and you
         // are not the one it speaks to, so it is noticed later; it is kept a little longer

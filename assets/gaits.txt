@@ -1,0 +1,31 @@
+# Хода (BodyGait): один рядок — один вид. Новий вид — новий рядок зі своєю назвою (латиницею); дати його комусь — «gait: <назва>»
+# у шаблоні NPC, гравцеві в сцені — «player gait <назва>». Спільні види (plain … careful) роздає NpcGait за віком, тілом, вдачею;
+# унікальні (як heid) — лише ті, кому їх написано. Копія автора config/RavenWatch/gaits.txt перечитується за секунду (манекен:
+# raven stage gait all, або raven stage gait <назва>).
+# speed — темп ніг (×), stoop — сутулість (1 ≈ 24°, мінус — груди вперед), head — голова (+ вниз, − підборіддя вгору),
+# swing — мах рук (×), sway — хитання стегон (°), bob — пружинить (м), limp — кульгає 0…1, back — шанс рук за спиною 0…1,
+# shoulders — плечі вперед (°, мінус — розправлені), shrug — плечі вгору (°), out — руки від тіла (°), toes — носки врозтіч (°),
+# twist — тіло крутиться за кроком (°), nod — голова киває за кроком (°), narrow — ступні ближче до однієї лінії (°, жіночий крок), spread — наскільки різні люди одного виду (0…1)
+# rest — стоячи вага на одній нозі: нахил таза (°), tilt — голова набік (°, бік і міра — свої в кожного), breath — дихання грудьми (°)
+# Рядки mood_<назва> — бажання постави (NpcGait.Moods: холод, переляк, смуток…): додаються за силою 0…1 поверх виду; speed і swing — множники, решта додається
+plain   speed=1    stoop=0     head=0   swing=1    sway=1   bob=0     limp=0   back=0   shoulders=0   shrug=0  out=0   toes=4   twist=2  nod=0  spread=0.3  rest=7 tilt=8 breath=1.6
+elder   speed=0.74 stoop=1.1   head=10  swing=0.3  sway=2.5 bob=0     limp=0   back=0.7 shoulders=10  shrug=0  out=0   toes=10  twist=0  nod=2  spread=0.2  rest=3.5 tilt=6 breath=2
+soldier speed=1.08 stoop=-0.45 head=-7  swing=1.5  sway=0   bob=0     limp=0   back=0   shoulders=-10 shrug=0  out=6   toes=6   twist=4  nod=0  spread=0.2  rest=2.6 tilt=2 breath=1.2
+spry    speed=1.16 stoop=-0.1  head=-4  swing=1.35 sway=1   bob=0.04  limp=0   back=0   shoulders=-3  shrug=0  out=3   toes=0   twist=7  nod=4  spread=0.25  rest=5.3 tilt=6 breath=1.6
+waddle  speed=0.86 stoop=0.15  head=0   swing=1.2  sway=10  bob=0.012 limp=0   back=0   shoulders=0   shrug=0  out=16  toes=20  twist=3  nod=0  spread=0.25  rest=8.8 tilt=6 breath=2
+limp    speed=0.8  stoop=0.3   head=5   swing=0.9  sway=3   bob=0     limp=0.85 back=0  shoulders=0   shrug=0  out=4   toes=0   twist=2  nod=2  spread=0.2  rest=8.8 tilt=6 breath=1.6
+meek    speed=0.86 stoop=0.55  head=18  swing=0.35 sway=0   bob=0     limp=0   back=0   shoulders=14  shrug=9  out=0   toes=-4  twist=0  nod=0  spread=0.2  rest=5.3 tilt=12 breath=1.6
+tired   speed=0.78 stoop=0.8   head=12  swing=0.4  sway=3   bob=0     limp=0   back=0   shoulders=12  shrug=0  out=0   toes=4   twist=0  nod=4  spread=0.2  rest=7 tilt=8 breath=2.4
+careful speed=0.82 stoop=0.35  head=10  swing=0.45 sway=0   bob=0     limp=0   back=0   shoulders=4   shrug=4  out=14  toes=0   twist=0  nod=0  spread=0.15  rest=3.5 tilt=6 breath=1.6
+# унікальні
+heid    speed=0.9  stoop=0.15  head=3   swing=0.3  sway=9   bob=0     limp=0   back=0   shoulders=4   shrug=-2 out=-10 toes=-2  twist=0  nod=2  narrow=5  spread=0  rest=7 tilt=4 breath=1.4
+# бажання
+mood_cold    stoop=0.2   head=4   swing=0.7  shrug=14 out=-12 shoulders=6  speed=0.96 rest=-2 breath=0.4
+mood_fright  stoop=0.4   head=-4  swing=0.8  shrug=22 out=-8  shoulders=8  speed=1.1  rest=-3 breath=1
+mood_joy     stoop=-0.25 head=-8  swing=1.25 bob=0.015 shoulders=-6 speed=1.06 rest=1
+mood_awe     stoop=-0.15 head=-20 swing=0.8  speed=0.9
+mood_grief   stoop=0.45  head=20  swing=0.6  shoulders=10 speed=0.86 rest=-1 breath=0.3
+mood_tired   stoop=0.4   head=6   swing=0.8  shoulders=6  speed=0.82 rest=1 breath=0.4
+mood_hungry  stoop=0.1   head=8   speed=0.92
+mood_low     stoop=0.15  head=12  swing=0.7  shoulders=6  speed=0.92
+mood_glad    stoop=-0.1  head=-4  swing=1.15 bob=0.008 speed=1.05

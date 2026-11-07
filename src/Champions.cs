@@ -19,11 +19,11 @@ namespace HuginWhispers
     // and its own drop with its trophy and gold when its owner takes it down (ChampionDropPatch).
     internal static class Champions
     {
-        internal const string Key = "RavenWatch_champ", PackKey = "RavenWatch_champPack", BornKey = "RavenWatch_champBorn";
+        internal const string Key = "RavenWatch_champ", PackKey = "RavenWatch_champPack", BornKey = "RavenWatch_champBorn", StruckKey = "RavenWatch_champStruck";
         internal static float OrphanDays = 5f; // game days: one whose owner stays away this long goes (its errand brings it again on return)
         internal const string RpcDead = "RavenWatch_ChampDead";
         internal static float SpawnNear = 70f;    // m: the zone's ring round its place (the step's map ring; in it, it appears)
-        internal static float CreditRange = 100f; // m: its death counts for the errand only with its owner this near, alive
+        internal static float CreditRange = 100f; // m: its death counts for the errand only with its owner this near, alive, and only if the owner struck it (OwnerStruck)
 
         // the creatures of each land (by the land's tier: Meadows 0 … Ashlands 6, the Deep North 7); only those that walk on land
         private static readonly string[][] ByTier =
@@ -173,6 +173,22 @@ namespace HuginWhispers
             return false;
         }
 
+        // a player's blow reached it (RPC_Damage, where it is simulated): its owner's first one is written once in its ZDO,
+        // so a change of who simulates it loses nothing; you or your raven, one blow is enough
+        internal static void Struck(Character c, Player by)
+        {
+            Mods m = Any ? Fast(c) : null;
+            if (m == null || by.GetPlayerID() != m.Owner) return;
+            ZNetView nv = c.GetComponent<ZNetView>();
+            if (nv != null && nv.IsValid() && nv.IsOwner() && !nv.GetZDO().GetBool(StruckKey)) nv.GetZDO().Set(StruckKey, true);
+        }
+
+        internal static bool OwnerStruck(Character c)
+        {
+            ZNetView nv = c != null ? c.GetComponent<ZNetView>() : null;
+            return nv != null && nv.IsValid() && nv.GetZDO().GetBool(StruckKey);
+        }
+
         // from its ZDO (when it wakes; its health): the ZDO read and parsed
         internal static Mods Of(Character c)
         {
@@ -265,6 +281,7 @@ namespace HuginWhispers
             pkg.Write(m.Owner);
             pkg.Write(m.Id);
             pkg.Write(c.transform.position);
+            pkg.Write(OwnerStruck(c));
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcDead, pkg);
         }
 
@@ -282,7 +299,8 @@ namespace HuginWhispers
 
         internal static void Register() { ZRoutedRpc.instance.Register<ZPackage>(RpcDead, new Action<long, ZPackage>(OnDead)); }
 
-        // counted only with the errand's owner there: alive and near where it fell (friends may help, not do it for you)
+        // counted only with the errand's owner in the fight: alive, near where it fell, and with a blow of their own in it
+        // (friends may help, not do it for you)
         private static void OnDead(long sender, ZPackage pkg)
         {
             long owner = pkg.ReadLong();
@@ -290,12 +308,20 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             if (p == null || p.GetPlayerID() != owner || pkg.GetPos() >= pkg.Size()) return;
             Vector3 at = pkg.ReadVector3();
+            bool struck = pkg.GetPos() >= pkg.Size() || pkg.ReadBool(); // (an older game does not say)
             float dist = Vector3.Distance(p.transform.position, at);
             if (p.IsDead() || dist > CreditRange)
             {
                 // not counted: on the way back into its ring the errand brings another one
                 Errands.Log("champion " + id + " killed " + Mathf.RoundToInt(dist) + " m from you" + (p.IsDead() ? " (you were dead)" : "") + ": not counted");
                 if (Errands.Wants(p, id)) RavenMsg.Center(p, Lang.T("Ватажок упав без тебе — Одін зараховує, лише коли ти жив{ий|а} поруч. Повернись у позначене коло: там з'явиться інший, але вже без золота."));
+                Spend(p, id);
+                return;
+            }
+            if (!struck)
+            {
+                Errands.Log("champion " + id + " killed with no blow of yours: not counted");
+                if (Errands.Wants(p, id)) RavenMsg.Center(p, Lang.T("Ватажка вбили без твого удару — Одін зараховує, лише коли ти сам{|а} б'єшся з ним. У позначеному колі з'явиться інший, але вже без золота."));
                 Spend(p, id);
                 return;
             }
@@ -455,7 +481,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Character), "Awake")]
     internal static class ChampionAwakePatch
     {
-        private static void Postfix(Character __instance) { try { ChampionLife.Put(__instance); } catch { } }
+        private static void Postfix(Character __instance) {
+            try
+            {
+                ChampionLife.Put(__instance);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionAwakePatch", pgx); }
+        }
     }
 
     // its health: the game's base × its stars × our factor — whoever sets its maximum (the game on its stars, another
@@ -473,14 +505,18 @@ namespace HuginWhispers
                 float max = __instance.GetMaxHealth();
                 __state = max > 0f ? Mathf.Clamp01(__instance.GetHealth() / max) : 1f;
             }
-            catch { }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionMaxHealthPatch", pgx); }
         }
 
         [HarmonyPriority(Priority.Last)]
         private static void Postfix(Character __instance, float __state)
         {
-            if (__state < 0f) return;
-            try { Champions.Mods m = Champions.Of(__instance); if (m != null) ChampionOwn.Health(__instance, m, __state); } catch { }
+            try
+            {
+                if (__state < 0f) return;
+                Champions.Mods m = Champions.Of(__instance); if (m != null) ChampionOwn.Health(__instance, m, __state);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionMaxHealthPatch", pgx); }
         }
     }
 
@@ -491,13 +527,13 @@ namespace HuginWhispers
         [HarmonyPriority(Priority.Last)]
         private static void Postfix(Humanoid ___m_character, ref float __result)
         {
-            if (!Champions.Any) return;
             try
             {
+                if (!Champions.Any) return;
                 Champions.Mods m = Champions.Fast(___m_character);
                 if (m != null) __result = (1f + 0.5f * Mathf.Max(0, m.Level - 1)) * m.Dmg;
             }
-            catch { }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionDamagePatch", pgx); }
         }
     }
 
@@ -508,8 +544,12 @@ namespace HuginWhispers
         [HarmonyPriority(Priority.Last)]
         private static void Postfix(Character __instance)
         {
-            if (__instance is Player) return;
-            try { Champions.Mods m = Champions.Of(__instance); if (m != null) ChampionOwn.Keep(__instance, m); } catch { }
+            try
+            {
+                if (__instance is Player) return;
+                Champions.Mods m = Champions.Of(__instance); if (m != null) ChampionOwn.Keep(__instance, m);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionLevelPatch", pgx); }
         }
     }
 
@@ -520,8 +560,12 @@ namespace HuginWhispers
         [HarmonyPriority(Priority.Last)]
         private static void Postfix(Character __instance, ref float __result)
         {
-            if (!Champions.Any) return;
-            try { if (Champions.Fast(__instance) != null) __result = 0f; } catch { }
+            try
+            {
+                if (!Champions.Any) return;
+                if (Champions.Fast(__instance) != null) __result = 0f;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionArmorPatch", pgx); }
         }
     }
 
@@ -533,15 +577,15 @@ namespace HuginWhispers
         [HarmonyPriority(Priority.Last)]
         private static void Prefix(ref HitData hit)
         {
-            if (!Champions.Any || hit == null) return;
             try
             {
+                if (!Champions.Any || hit == null) return;
                 Champions.Mods m = Champions.Fast(hit.GetAttacker());
                 if (m == null) return;
                 float f = ChampionOwn.ForeignDamage(hit.GetAttacker());
                 if (f > 0.0001f && Mathf.Abs(f - 1f) > 0.001f) hit.m_damage.Modify(1f / f);
             }
-            catch { }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionHitPatch", pgx); }
         }
     }
 
@@ -674,16 +718,16 @@ namespace HuginWhispers
     {
         private static void Prefix(HitData hit)
         {
-            if (!Champions.Any) return; // (every hit of the game: the attacker is looked up only while a champion is loaded)
             try
             {
+                if (!Champions.Any) return; // (every hit of the game: the attacker is looked up only while a champion is loaded)
                 Champions.Mods m = Champions.Fast(hit != null ? hit.GetAttacker() : null);
                 if (m == null) return;
                 float total = hit.GetTotalDamage();
                 if (m.Has("fire")) hit.m_damage.m_fire += total * 0.35f;
                 if (m.Has("frost")) hit.m_damage.m_frost += total * 0.35f;
             }
-            catch { }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionTouchPatch", pgx); }
         }
     }
 
@@ -693,13 +737,13 @@ namespace HuginWhispers
     {
         private static void Prefix(Character __instance, HitData hit)
         {
-            if (!Champions.Any) return;
             try
             {
+                if (!Champions.Any) return;
                 Champions.Mods m = Champions.Fast(__instance);
                 if (m != null && m.Has("tough") && hit != null) hit.ApplyModifier(0.65f);
             }
-            catch { }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionArmourPatch", pgx); }
         }
     }
 
@@ -709,13 +753,13 @@ namespace HuginWhispers
     {
         private static void Postfix(Character __instance, ref string __result)
         {
-            if (!Champions.Any) return;
             try
             {
+                if (!Champions.Any) return;
                 ChampionLife l = Champions.Life(__instance);
                 if (l != null) __result = l.Name;
             }
-            catch { }
+            catch (System.Exception pgx) { PatchGuard.Fail("ChampionNamePatch", pgx); }
         }
     }
 
@@ -741,7 +785,7 @@ namespace HuginWhispers
                 Champions.Mods m = Champions.Fast(c);
                 if (m == null) return;
                 bool near = Champions.OwnerNear(m, c.transform.position);
-                bool counted = near && !m.Spent; // (not its owner's kill: plain; one risen again: its trophy still — an errand may ask for it — but no gold, no double)
+                bool counted = near && !m.Spent && Champions.OwnerStruck(c); // (not its owner's kill: plain; one risen again: its trophy still — an errand may ask for it — but no gold, no double)
                 GameObject trophy = null;
                 foreach (CharacterDrop.Drop d in __instance.m_drops)
                 {

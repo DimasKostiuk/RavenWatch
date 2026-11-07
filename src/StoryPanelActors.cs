@@ -12,7 +12,7 @@ namespace HuginWhispers
         private void Actors()
         {
             Player p = Player.m_localPlayer;
-            string me = p.GetZDOID().UserID + ":" + p.GetZDOID().ID;
+            string me = NpcKit.Ref(p.GetZDOID());
             if (_npc == null || !NpcActor.Live.Contains(_npc)) _npc = null;
             GUILayout.BeginHorizontal();
 
@@ -77,12 +77,11 @@ namespace HuginWhispers
             if (_npc == null) GUILayout.Label("Обери актора посередині.", _hint);
             else
             {
-                Vector3 aim = Npcs.Aim(p);
                 GUILayout.Label("Зараз: " + (_npc.Mind != null ? _npc.Mind.Describe() : "без розуму (Одін стоїть)"), _hint);
                 GUILayout.Label("Рух", _head);
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("До мене")) _npc.Order("go " + Npcs.V(p.transform.position) + " run");
-                if (GUILayout.Button("Туди, куди дивлюсь")) _npc.Order("go " + Npcs.V(aim));
+                if (GUILayout.Button("Туди, куди дивлюсь")) _npc.Order("go " + Npcs.V(Npcs.Aim(p))); // (the ray only on the click, not every pass of the window)
                 if (GUILayout.Button("За мною")) _npc.Order("follow " + me + " 3");
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
@@ -103,7 +102,7 @@ namespace HuginWhispers
                 if (GUILayout.Button("Не дивись")) _npc.Order("look none");
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Сядь (де дивлюсь)")) _npc.Order("sit " + Npcs.V(aim));
+                if (GUILayout.Button("Сядь (де дивлюсь)")) _npc.Order("sit " + Npcs.V(Npcs.Aim(p)));
                 if (GUILayout.Button("Встань")) _npc.Order("stand");
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
@@ -141,7 +140,7 @@ namespace HuginWhispers
                     if (GUILayout.Button("Виселити")) Note = NpcResident.Unsettle(_npc);
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Його ліжко — куди дивлюсь")) Note = NpcResident.GiveBed(_npc, aim);
+                    if (GUILayout.Button("Його ліжко — куди дивлюсь")) Note = NpcResident.GiveBed(_npc, Npcs.Aim(p));
                     GUI.enabled = NpcResident.Is(_npc);
                     if (GUILayout.Button("Примха зараз")) Note = NpcWhims.Force(res, NpcWhims.All[UnityEngine.Random.Range(0, NpcWhims.All.Count)].Id);
                     GUI.enabled = true;

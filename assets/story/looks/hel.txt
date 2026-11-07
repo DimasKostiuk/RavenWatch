@@ -1,0 +1,10 @@
+# Ворон Хели: холодний, очі блідо-зелені.
+id: npc_hel
+name: npc_hel
+for: any
+zone body 07090B 1C272B 100 80
+zone head 07090B 1C272B 100 80
+zone tail 07090B 1C272B 100 80
+zone wings 0A0E11 2A3D44 100 85
+zone tips 1A2A30 4C6C75 100 85
+eyes A6E4EC 3

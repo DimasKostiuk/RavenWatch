@@ -52,7 +52,7 @@ namespace HuginWhispers
 
         private void NextBite()
         {
-            int seed = (_a.Zdo != null ? _a.Zdo.m_uid.GetHashCode() : _a.Id.GetStableHashCode()) ^ (_bite++ * 7919);
+            int seed = (_a.Zdo != null ? (int)NpcKit.Seed(_a.Zdo) : _a.Id.GetStableHashCode()) ^ (_bite++ * 7919);
             System.Random r = new System.Random(seed);
             float pace = 0.85f + (float)r.NextDouble() * 0.35f; // (its own: one eats slower than another)
             _up = Up * pace; _chew = Chew * pace * (0.8f + (float)r.NextDouble() * 0.5f); _down = Down * pace;

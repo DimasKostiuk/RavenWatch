@@ -50,7 +50,7 @@ namespace HuginWhispers
             TraderHead = 11, Fire = 12, Rune = 13, Birds = 14, Ride = 15, Bones = 16, Bathe = 18; // (the fish is no visit: an outing, Outing.Fish)
         // the dive for a fish: how far out it looks for deep water, how deep, the splash, the pause after one (a hungry
         // Munin sooner), the satiety a fish gives the one that eats it
-        internal static float FishNear = 14f, FishDeep = 0.8f, FishHangMin = 2.5f, FishHangMax = 4f, FishAgainMin = 180f, FishAgainMax = 420f, FishHungryMul = 0.4f, FishSatiety = 25f, FishSay = 0.7f;
+        internal static float FishNear = 14f, FishDeep = 0.8f, FishHangMin = 2.5f, FishHangMax = 4f, FishAgainMin = 600f, FishAgainMax = 1200f, FishHungryMul = 0.4f, FishSatiety = 25f, FishSay = 0.7f;
         // a fish of each land (Munin's loot has the same); the sea's own; none known: the meadows' one
         private static readonly Dictionary<Heightmap.Biome, string> FishOf = new Dictionary<Heightmap.Biome, string>
         {
@@ -284,7 +284,9 @@ namespace HuginWhispers
             return Go(p, munin, new Thing { Kind = Mast, At = top, Root = ship.transform, Ship = ship, Follow = SitOn.OnThing(snv, top) });
         }
 
-        // a dive for a fish: by deep water or on a ship, its own pause between; a hungry Munin goes first (and sooner)
+        // a dive for a fish: by deep water or on a ship, its own pause between; a hungry Munin goes first (and sooner). One that
+        // may not bring one now (FishBrings: a fish in your bag, or its day's FishPerDay brought) goes only to eat it: a hungry Munin
+        // (the user 2026-11-05: Cubariossa's raven brought fish all the time)
         private static float _fishNext = -1f;
         private static bool ToFish(Player p)
         {
@@ -294,6 +296,10 @@ namespace HuginWhispers
             if (!h && !m) return false;
             ItemDrop.ItemData mi = m ? RavenSeat.On(p, true) : null;
             bool hungry = mi != null && Satiety.Zone(mi) <= Satiety.Hungry;
+            bool inBag = FishInBag(p);
+            h = h && FishBrings(RavenSeat.On(p, false), inBag);
+            m = m && (hungry || FishBrings(mi, inBag));
+            if (!h && !m) { _fishNext = Time.time + 60f; return false; } // (nothing to go for now: a look again in a minute)
             Vector3 at;
             if (!DeepWater(p, out at)) { _fishNext = Time.time + 30f; return false; } // (no water here: a look again soon)
             float fh = h ? Norov.FishW(RavenSeat.On(p, false)) : 0f, fm = m ? Norov.FishW(mi) : 0f;
@@ -448,6 +454,35 @@ namespace HuginWhispers
             return false;
         }
 
+        // how many fish a raven brings you a game day (in the raven: «day:count»), and none while a fish is in your bag
+        internal static int FishPerDay = 3;
+        private const string FishDayKey = "RavenWatch_fishDay";
+        private static int FishToday(ItemDrop.ItemData raven)
+        {
+            string v; int day = EnvMan.instance != null ? EnvMan.instance.GetDay() : 0;
+            if (raven == null || !raven.m_customData.TryGetValue(FishDayKey, out v)) return 0;
+            string[] w = v.Split(':');
+            return w.Length == 2 && Errands.I(w[0], -1) == day ? Errands.I(w[1], 0) : 0;
+        }
+        private static void Brought(ItemDrop.ItemData raven)
+        {
+            if (raven == null) return;
+            int day = EnvMan.instance != null ? EnvMan.instance.GetDay() : 0;
+            raven.m_customData[FishDayKey] = day + ":" + (FishToday(raven) + 1);
+        }
+        private static bool FishBrings(ItemDrop.ItemData raven, bool inBag) { return raven != null && !inBag && FishToday(raven) < FishPerDay; }
+
+        // a fish of any land in your bag (the one it brought, or yours: either way you have fish)
+        private static bool FishInBag(Player p)
+        {
+            foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems()) // (a bag's few dozen things, once a dive is asked)
+            {
+                string n = it.m_dropPrefab != null ? it.m_dropPrefab.name : "";
+                foreach (string f in FishOf.Values) if (n == f) return true;
+            }
+            return false;
+        }
+
         // up out of the water: a fish of the land it dived in — a hungry Munin eats it, else home in the beak
         internal static void FishCaught(Player p, bool munin)
         {
@@ -468,7 +503,8 @@ namespace HuginWhispers
                 if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Raven world: Munin ate a fish he caught (" + prefab + ")");
                 return;
             }
-            if (!RavenFetch.Hold(p, munin, prefab, 1)) return;
+            if (!FishBrings(item, FishInBag(p)) || !RavenFetch.Hold(p, munin, prefab, 1)) return;
+            Brought(item);
             PerkFx.Say(munin, "world_fish", FishSay, 0f, "thing", Lang.Lower(thing));
             if (AnimDirector.LogOn && Plugin.Instance != null) Plugin.Instance.Log("Raven world: " + Plugin.RavenName(munin) + " brings a fish it caught (" + prefab + ")");
         }
@@ -1104,7 +1140,7 @@ namespace HuginWhispers
         private static void TraderSays(Trader npc, string key)
         {
             if (npc == null || Chat.instance == null) return;
-            Chat.instance.SetNpcText(npc.gameObject, Vector3.up * npc.m_dialogHeight, 20f, Mathf.Max(4f, npc.m_hideDialogDelay), "", Lang.T(key), false);
+            Chat.instance.SetNpcText(npc.gameObject, Vector3.up * npc.m_dialogHeight, 20f, RavenSpeech.Hold(Mathf.Max(4f, npc.m_hideDialogDelay)), "", Lang.T(key), false);
         }
 
         private static readonly string[] HaldorLines = Lang.Keys("Гей! Злазь з моєї голови, пташко!", "Я тут торгую, а не гніздо тримаю!", "Ще раз нагадиш на капелюх — продам тебе на пір'я.", "Чий це ворон? Плати за постій!", "Кшш! Ох, ці воїни зі своїми птахами…", "Тільки не дзьобай. Тільки не дзьобай…");

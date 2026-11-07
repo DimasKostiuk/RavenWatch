@@ -15,7 +15,7 @@ namespace HuginWhispers
     // (assets/book: the empty book rendered from the design by tools/book_chrome.ps1, the brush strokes, the portraits),
     // its fonts (assets/fonts, SIL OFL: Forum for headings, Alegreya for the words, Noto Sans Runic for the runes; the
     // game's own font when they cannot be made) and the shapes drawn here (seals, rings, rounded boxes).
-    internal static class BookArt
+    internal static partial class BookArt
     {
         // ---------------------------------------------------------------- colours of the design
 
@@ -38,6 +38,26 @@ namespace HuginWhispers
         private static readonly Dictionary<string, Texture2D> Textures = new Dictionary<string, Texture2D>();
         private static readonly Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
 
+        // ---------------------------------------------------------------- what a page had to make when it was drawn (made once, kept; told when the book closes)
+        private static int _lateN; private static double _lateMs;
+        private static readonly List<string> LateNames = new List<string>();
+
+        internal static void Late(string what, long from)
+        {
+            double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - from) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            _lateN++; _lateMs += ms;
+            if (ms >= 2.0 && LateNames.Count < 12) LateNames.Add(what + " " + ms.ToString("0"));
+        }
+
+        // one piece of the book's line in the log, and counted anew
+        internal static string LateTold()
+        {
+            if (_lateN == 0) return "";
+            string s = " · made at a click: " + _lateN + ", " + _lateMs.ToString("0") + " ms" + (LateNames.Count > 0 ? " (" + string.Join(", ", LateNames.ToArray()) + ")" : "");
+            _lateN = 0; _lateMs = 0.0; LateNames.Clear();
+            return s;
+        }
+
         private static byte[] Resource(string name)
         {
             using (Stream st = typeof(BookArt).Assembly.GetManifestResourceStream(name))
@@ -57,6 +77,7 @@ namespace HuginWhispers
             string key = readable ? name + ":r" : name; // a readable copy (kept in memory, for the shapes made from it) is its own
             if (Textures.TryGetValue(key, out t)) return t;
             t = null;
+            long late = System.Diagnostics.Stopwatch.GetTimestamp();
             try
             {
                 byte[] data = Resource("RavenWatch.book." + name + ".png");
@@ -69,6 +90,7 @@ namespace HuginWhispers
                 }
             }
             catch (Exception e) { Log("picture " + name + ": " + e.Message); t = null; }
+            Late(name, late);
             Textures[key] = t;
             return t;
         }
@@ -190,16 +212,45 @@ namespace HuginWhispers
             Log("fonts: " + (Heading != null ? "Forum " : "") + (Body != null ? "Alegreya " : "") + (Italic != null ? "Alegreya-Italic " : "") + (Runic != null ? "Runic" : "") + (Heading == null && Body == null ? "none, the game's own" : ""));
         }
 
+        // a TTF of the mod, on disk for those that read it from a path; null: not in the mod
+        private static string FontFile(string file)
+        {
+            byte[] data = Resource("RavenWatch.fonts." + file);
+            if (data == null) return null;
+            string dir = Path.Combine(BepInEx.Paths.CachePath, "RavenWatch-fonts");
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, file);
+            if (!File.Exists(path) || new FileInfo(path).Length != data.Length) File.WriteAllBytes(path, data);
+            return path;
+        }
+
+        // Alegreya for what is drawn by IMGUI (a person's round menu), where a TextMeshPro asset cannot draw: a Unity font
+        // made once, at the first menu opened. null: the skin's own font
+        private static Font _words;
+        private static bool _wordsTried;
+        internal static Font Words
+        {
+            get
+            {
+                if (_wordsTried) return _words;
+                _wordsTried = true;
+                try
+                {
+                    string path = FontFile("Alegreya-Regular.ttf");
+                    if (path != null) _words = new Font(path) { hideFlags = HideFlags.HideAndDontSave }; // (the game's asset cleanup on a world load must not take it)
+                    Log("IMGUI font: " + (_words != null ? _words.name + ", dynamic " + _words.dynamic : "none"));
+                }
+                catch (Exception e) { Log("IMGUI font: " + e.Message); }
+                return _words;
+            }
+        }
+
         private static TMP_FontAsset Make(string file, TMP_FontAsset fallback)
         {
             try
             {
-                byte[] data = Resource("RavenWatch.fonts." + file);
-                if (data == null) return null;
-                string dir = Path.Combine(BepInEx.Paths.CachePath, "RavenWatch-fonts");
-                Directory.CreateDirectory(dir);
-                string path = Path.Combine(dir, file);
-                if (!File.Exists(path) || new FileInfo(path).Length != data.Length) File.WriteAllBytes(path, data);
+                string path = FontFile(file);
+                if (path == null) return null;
                 TMP_FontAsset f = TMP_FontAsset.CreateFontAsset(path, 0, 72, 8, GlyphRenderMode.SDFAA, 2048, 2048);
                 if (f == null) return null;
                 f.name = "RavenWatch-" + Path.GetFileNameWithoutExtension(file); // no spaces: the name is used in <font=...> tags
@@ -237,6 +288,7 @@ namespace HuginWhispers
         {
             Sprite s;
             if (Sprites.TryGetValue(key, out s) && s != null) return s;
+            long late = System.Diagnostics.Stopwatch.GetTimestamp();
             Texture2D t = NewTex(w, h, mips);
             t.wrapMode = wrap;
             Color[] px = new Color[w * h];
@@ -248,6 +300,7 @@ namespace HuginWhispers
             s = Sprite.Create(t, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
             s.hideFlags = HideFlags.HideAndDontSave;
             Sprites[key] = s;
+            Late(key, late);
             return s;
         }
 
@@ -319,11 +372,25 @@ namespace HuginWhispers
             float bite = Mathf.Max(0f, Mathf.Sin(k + f[4] + o * 1.5f)); // once a tile a deeper bite
             return Fine * (d + 2.8f * Mathf.Pow(bite, 16f));
         }
-        // inside the paper: how far from its edge (texture px; negative: outside)
-        private static float PaperDepth(float x, float y, int n, bool torn, int v)
+        // each side's edge along the picture, a value a row (a side goes by one coordinate only): worked out once a picture. Asked
+        // for every pixel it was the dearest thing in the book, measured: 1125 of the 1460 ms all its pictures took
+        private static float[][] TornEdges(int n, bool torn, int v)
         {
             float b = TornBorder * Fine;
-            float d = Mathf.Min(Mathf.Min(x - TornIn(y - b, 0, torn, v), (n - x) - TornIn(y - b, 1, torn, v)), Mathf.Min(y - TornIn(x - b, 2, torn, v), (n - y) - TornIn(x - b, 3, torn, v)));
+            float[][] e = new float[4][];
+            for (int side = 0; side < 4; side++)
+            {
+                e[side] = new float[n];
+                for (int i = 0; i < n; i++) e[side][i] = TornIn(i + 0.5f - b, side, torn, v);
+            }
+            return e;
+        }
+
+        // inside the paper: how far from its edge (texture px; negative: outside); x, y: a pixel's middle
+        private static float PaperDepth(float x, float y, int n, bool torn, float[][] edges)
+        {
+            int ix = (int)x, iy = (int)y;
+            float d = Mathf.Min(Mathf.Min(x - edges[0][iy], (n - x) - edges[1][iy]), Mathf.Min(y - edges[2][ix], (n - y) - edges[3][ix]));
             float chip = Fine * (torn ? 9f : 5f), s2 = 0.7071f; // the corners: chipped off (torn) or just softened
             d = Mathf.Min(d, Mathf.Min((x + y - chip) * s2, ((n - x) + y - chip) * s2));
             return Mathf.Min(d, Mathf.Min((x + (n - y) - chip) * s2, ((n - x) + (n - y) - chip) * s2));
@@ -332,9 +399,12 @@ namespace HuginWhispers
         {
             int n = Mathf.RoundToInt((TornBorder * 2f + TornTile) * Fine);
             float b = TornBorder * Fine, w = line * Fine;
+            Sprite made;
+            if (Sprites.TryGetValue(key, out made) && made != null) return made; // (asked each time a card is drawn: its edges only when it is really made)
+            float[][] edges = TornEdges(n, torn, v);
             return Make(key, n, n, (x, y) =>
             {
-                float d = PaperDepth(x, y, n, torn, v);
+                float d = PaperDepth(x, y, n, torn, edges);
                 float a = Mathf.Clamp01((d + 1f) / 2f);
                 if (line > 0f) return new Color(1f, 1f, 1f, a * Mathf.Clamp01((w - d + 1f) / 2f));
                 float e = Mathf.Clamp01(d / (Fine * (torn ? 6f : 4f)));
@@ -398,6 +468,7 @@ namespace HuginWhispers
             if (s == null || s.texture == null || (s.packed && s.packingRotation != SpritePackingRotation.None)) return s; // a turned atlas piece: as it is
             Sprite done;
             if (Smoothed.TryGetValue(s, out done) && done != null) return done;
+            long late = System.Diagnostics.Stopwatch.GetTimestamp();
             RenderTexture rt = null, was = RenderTexture.active;
             try
             {
@@ -433,6 +504,7 @@ namespace HuginWhispers
                 }
             }
             Smoothed[s] = done;
+            Late("icon " + s.name, late);
             return done;
         }
 

@@ -1,0 +1,100 @@
+clip shade_eyes
+length 4
+loop 0
+pivot 1.1
+curve ease
+vary 0.4
+fade 0.5 0.6
+mode Spine1 body
+mode Spine2 body
+say приставити долоню до чола й дивитися вдалину
+
+# права долоня над очима козирком, голова трохи вгору й повільно водить поглядом, тоді рука вниз
+
+0 @RightHand 0.24 0.95 0.06
+0.3 @RightHand 0.24 0.95 0.06
+0.75 @RightHand 0.3 1.45 0.2
+1.1 @RightHand 0.04 1.8 0.22
+3 @RightHand 0.04 1.8 0.22
+3.4 @RightHand 0.24 1.3 0.2
+4 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+1 @RightHand.w 1 0 0
+3.2 @RightHand.w 1 0 0
+3.8 @RightHand.w 0 0 0
+4 @RightHand.w 0 0 0
+
+0 @RightHand.p 1 0.3 0
+
+0 @RightHand.f -0.9 0 0.44
+
+0 @RightHand.n 0 -1 0
+
+0 @Look 0 1.7 4
+1.4 @Look -1.2 1.9 4
+2.3 @Look 1.2 1.9 4
+3 @Look 0 1.8 4
+
+0 @Look.w 0 0 0
+0.8 @Look.w 0.6 0 0
+3.1 @Look.w 0.6 0 0
+3.7 @Look.w 0 0 0
+4 @Look.w 0 0 0
+
+0 RightHandIndex1 0 0 0
+0.4 RightHandIndex1 0 0 0
+1 RightHandIndex1 -25 0 0
+3.1 RightHandIndex1 -25 0 0
+3.7 RightHandIndex1 0 0 0
+4 RightHandIndex1 0 0 0
+
+0 RightHandIndex2 0 0 0
+0.4 RightHandIndex2 0 0 0
+1 RightHandIndex2 -25 0 0
+3.1 RightHandIndex2 -25 0 0
+3.7 RightHandIndex2 0 0 0
+4 RightHandIndex2 0 0 0
+
+0 RightHandMiddle1 0 0 0
+0.4 RightHandMiddle1 0 0 0
+1 RightHandMiddle1 -25 0 0
+3.1 RightHandMiddle1 -25 0 0
+3.7 RightHandMiddle1 0 0 0
+4 RightHandMiddle1 0 0 0
+
+0 RightHandMiddle2 0 0 0
+0.4 RightHandMiddle2 0 0 0
+1 RightHandMiddle2 -25 0 0
+3.1 RightHandMiddle2 -25 0 0
+3.7 RightHandMiddle2 0 0 0
+4 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+0.4 RightHandRing1 0 0 0
+1 RightHandRing1 -25 0 0
+3.1 RightHandRing1 -25 0 0
+3.7 RightHandRing1 0 0 0
+4 RightHandRing1 0 0 0
+
+0 RightHandRing2 0 0 0
+0.4 RightHandRing2 0 0 0
+1 RightHandRing2 -25 0 0
+3.1 RightHandRing2 -25 0 0
+3.7 RightHandRing2 0 0 0
+4 RightHandRing2 0 0 0
+
+0 RightHandPinky1 0 0 0
+0.4 RightHandPinky1 0 0 0
+1 RightHandPinky1 -25 0 0
+3.1 RightHandPinky1 -25 0 0
+3.7 RightHandPinky1 0 0 0
+4 RightHandPinky1 0 0 0
+
+0 RightHandPinky2 0 0 0
+0.4 RightHandPinky2 0 0 0
+1 RightHandPinky2 -25 0 0
+3.1 RightHandPinky2 -25 0 0
+3.7 RightHandPinky2 0 0 0
+4 RightHandPinky2 0 0 0

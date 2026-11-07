@@ -19,9 +19,9 @@ namespace HuginWhispers
         {
             "help", "quick", "visit", "diary",
 #if RAVEN_ITEM
-            "book", "train", "mastery", "give", "power", "reroll", "perk", "perks", "wing", "studio", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "eyes", "gift", "perf", "netsize", "cells", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour", "victim", "breed", "bond", "joint", "loot", "play", "share", "gather", "people", "request",
+            "book", "wipe", "train", "mastery", "give", "power", "reroll", "perk", "perks", "wing", "studio", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "audio", "eyes", "gift", "perf", "netsize", "cells", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour", "victim", "breed", "bond", "joint", "loot", "play", "share", "gather", "people", "request",
 #if RAVEN_NPC
-            "blueprint",
+            "blueprint", "jolt",
 #endif
 #endif
         };
@@ -72,6 +72,7 @@ namespace HuginWhispers
             pkg.Write(target);
             pkg.Write(line);
             ZRoutedRpc.instance.InvokeRoutedRPC(Plugin.ServerPeerId(), RpcAsk, pkg);
+            _answerUntil = Time.time + AnswerFor;
             t.AddString("raven: надіслано гравцю " + target + "…");
         }
 
@@ -113,8 +114,13 @@ namespace HuginWhispers
             ZRoutedRpc.instance.InvokeRoutedRPC(to, RpcOut, pkg);
         }
 
+        // an answer comes only to one who has just asked: else any game could write in anyone's chat in the server's voice
+        private const float AnswerFor = 60f;
+        private static float _answerUntil = -1f;
+
         private static void OnOut(long sender, ZPackage pkg)
         {
+            if (Time.time > _answerUntil) return;
             string text = pkg.ReadString();
             if (global::Console.instance != null) global::Console.instance.AddString(text);
             if (Chat.instance != null) Chat.instance.AddString(text);
@@ -192,15 +198,16 @@ namespace HuginWhispers
                     case "story": return Story.Cmd(p, a);
                     case "stage": return AnimStage.Cmd(p, a); // (the animation stage: the mannequin)
 #elif RAVEN_NPC
-                    case "story": return HallPanel.Toggle(); // (no story window before 3.0: the Hall's)
+                    case "story": return LocPanel.Toggle(); // (no story window before 3.0: the Hall's)
 #endif
 #if RAVEN_NPC
-                    case "hall": return HallPanel.Toggle();
-                    case "loc": return HallPanel.Toggle();
-                    case "locations": return HallPanel.Toggle();
+                    case "hall": return LocPanel.Toggle();
+                    case "loc": return LocPanel.Toggle();
+                    case "locations": return LocPanel.Toggle();
 #endif
 #if RAVEN_NPC
                     case "npc": return Npcs.Cmd(p, a);
+                    case "jolt": return JoltWatch.Cmd(a); // (the author's: which part of a frame jerked a body)
 #endif
                     case "nest": return Nest.Cmd(p, a);
                     case "trial": return Trial.Cmd(p, a);
@@ -219,6 +226,7 @@ namespace HuginWhispers
                     case "anim": if (a.Length > 1 && a[1].ToLowerInvariant() == "log") AnimDirector.LogOn = !AnimDirector.LogOn; return AnimDirector.Report(p);
                     case "test": DevPanel.Toggle(-1); return DevPanel.Said();
                     case "sounds": DevPanel.Toggle(DevPanel.SoundsTab); return DevPanel.Said();
+                    case "audio": if (a.Length > 1 && a[1].ToLowerInvariant() == "end") Audio.EndAll(); return Audio.Report(); // (what is held and by whom; «end» lets go of all of it)
                     case "wingui": DevPanel.Toggle(DevPanel.WingsTab); return DevPanel.Said();
                     case "panim": DevPanel.Toggle(DevPanel.PlayerTab); return DevPanel.Said();
                     case "land": DevPanel.Toggle(DevPanel.AnimTab); return DevPanel.Said();
@@ -227,6 +235,7 @@ namespace HuginWhispers
                     case "situi": DevPanel.Toggle(DevPanel.SitTab); return DevPanel.Said();
                     case "gift": return GiftCmd(p, a);
                     case "forget": return ForgetCmd(p, a);
+                    case "wipe": return WipeCmd(p, a);
                     case "workshop": DevPanel.Toggle(DevPanel.WorkshopTab); return DevPanel.Said();
                     case "photo": DevPanel.Toggle(DevPanel.PhotoTab); return DevPanel.Said();
                     case "roost": return Perches.CallAll(p);
@@ -243,6 +252,33 @@ namespace HuginWhispers
 
         // a character taken to another world by mistake: the ravens (and the game) forget the lands seen there
         private static readonly System.Reflection.FieldInfo KnownBiome = AccessTools.Field(typeof(Player), "m_knownBiome");
+
+        // the author's clean slate for a test (raven wipe yes): the character as if it never met the mod — its ravens and their
+        // copies, the story, every mark the mod keeps on it, the mod's things in its bag. Ravens left on perches at home and
+        // the world's own state (the Hall, the places) stay. Kept with the character when it is saved: leave and come back.
+        private static string WipeCmd(Player p, string[] a)
+        {
+            if (a.Length < 2 || a[1].ToLowerInvariant() != "yes") return "raven wipe yes — стерти з персонажа все про воронів і сюжет (для тесту; ворони на сідалах удома лишаються)";
+            string said = "";
+#if RAVEN_STORY
+            said = StoryOwn.Unown(p, false) + "\n" + StoryOwn.Unown(p, true) + "\n";
+#endif
+            int things = 0;
+            foreach (ItemDrop.ItemData it in new List<ItemDrop.ItemData>(p.GetInventory().GetAllItems()))
+            {
+                bool mun;
+                string prefab = it.m_dropPrefab != null ? it.m_dropPrefab.name : "";
+                if (!prefab.StartsWith("RavenWatch") && !RavenItem.IsRaven(it, out mun)) continue;
+                if (it.m_equipped) p.UnequipItem(it, false);
+                p.GetInventory().RemoveItem(it); things++;
+            }
+            int keys = 0;
+            foreach (string k in new List<string>(p.m_customData.Keys)) if (k.StartsWith("RavenWatch")) { p.m_customData.Remove(k); keys++; }
+#if RAVEN_STORY
+            Story.Reset();
+#endif
+            return said + "Речей мода з торби: " + things + ", позначок на персонажі: " + keys + ". Вийди зі світу й зайди знову — тоді він чистий.";
+        }
 
         private static string ForgetCmd(Player p, string[] a)
         {

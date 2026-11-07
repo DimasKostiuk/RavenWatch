@@ -43,6 +43,16 @@ namespace HuginWhispers
             Marks[key] = e;
         }
 
+        // where a mark stands now (false: none under that key) — the book's «на мапі»
+        internal static bool Where(string key, out Vector3 at)
+        {
+            Entry e;
+            at = Vector3.zero;
+            if (_map != Minimap.instance || !Marks.TryGetValue(key, out e)) return false;
+            at = e.At;
+            return true;
+        }
+
         internal static void Clear(string key)
         {
             Entry e;

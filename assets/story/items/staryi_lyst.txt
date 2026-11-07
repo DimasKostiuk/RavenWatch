@@ -1,0 +1,9 @@
+# RavenWatch — сюжетний предмет (2.9, пролог). Без рецепта (cost: none): лише вигляд листа в руках у сцені letter_read (StoryProps), гравцеві не дається.
+name: Старий лист
+note: Скручений аркуш із печаткою. Креслення серця оселі.
+use: item
+id: staryi_lyst
+cost: none
+stack: 1
+weight: 0.1
+part asset/Предмети/Scroll pos 0 0 0 rot 0 0 0 scale 0.15 0.15 0.15  # Сувій (Meshy, 2026-11-05: 2500 трикутників, 1024), ~0,3 × 0,07 м

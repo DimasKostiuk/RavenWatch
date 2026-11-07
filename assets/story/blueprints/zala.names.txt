@@ -1,3 +1,5 @@
 dveri_holovni stave_gate 1.23 -1.11 7.917
 dveri_holovni stave_gate -0.77 -1.11 7.935
 vohnyshche RavenWatch_story_vohnyshche_varty 0.176 -0.609 -0.072
+lyst RavenWatch_story_kreslennia_sertsia -8.805 6.776 4.521
+rizba RavenWatch_story_rizba_eirika 0.043 -0.181 -9.441

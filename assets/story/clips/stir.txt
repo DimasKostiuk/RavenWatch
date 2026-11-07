@@ -1,0 +1,129 @@
+clip stir
+length 6.2
+loop 0
+pivot 1.1
+curve ease
+vary 0.3
+fade 0.5 0.6
+mode Spine1 body
+mode Spine2 body
+say кухар помішує в казані: права рука по колу перед собою на рівні пояса, ліва на краю, тіло похитується, дивиться в казан, цикл з паузами випадкової довжини
+part in 0 1.2 hold
+part loop 1.2 3.2 loop
+part rest 5.15 5.2 hold
+part out 5.2 6.2 end
+
+# чотири кола правою рукою (0.25 с на чверть), ліва тримає край; нахил уперед у стегнах, вага з ноги на ногу в такт
+
+0 @RightHand 0.24 0.95 0.06
+0.4 @RightHand 0.24 0.95 0.06
+0.9 @RightHand 0.2 0.95 0.35
+1.2 @RightHand 0.18 1.02 0.38
+1.45 @RightHand 0.1 1.02 0.45
+1.7 @RightHand 0.02 1.02 0.38
+1.95 @RightHand 0.1 1.02 0.31
+2.2 @RightHand 0.18 1.02 0.38
+2.45 @RightHand 0.1 1.02 0.45
+2.7 @RightHand 0.02 1.02 0.38
+2.95 @RightHand 0.1 1.02 0.31
+3.2 @RightHand 0.18 1.02 0.38
+3.45 @RightHand 0.1 1.02 0.45
+3.7 @RightHand 0.02 1.02 0.38
+3.95 @RightHand 0.1 1.02 0.31
+4.2 @RightHand 0.18 1.02 0.38
+4.45 @RightHand 0.1 1.02 0.45
+4.7 @RightHand 0.02 1.02 0.38
+4.95 @RightHand 0.1 1.02 0.31
+5.2 @RightHand 0.18 1.02 0.38
+5.6 @RightHand 0.2 0.95 0.35
+6.2 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.4 @RightHand.w 0 0 0
+1 @RightHand.w 1 0 0
+5.3 @RightHand.w 1 0 0
+6.1 @RightHand.w 0 0 0
+6.2 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.8 -0.6 0
+
+0 @RightHand.f -0.2 -0.8 0.56
+
+0 @RightHand.n -0.97 0.2 -0.06
+
+0 @LeftHand -0.24 0.95 0.06
+0.5 @LeftHand -0.24 0.95 0.06
+1.1 @LeftHand -0.26 0.97 0.36
+5.2 @LeftHand -0.26 0.97 0.36
+5.9 @LeftHand -0.24 0.95 0.06
+6.2 @LeftHand -0.24 0.95 0.06
+
+0 @LeftHand.w 0 0 0
+0.5 @LeftHand.w 0 0 0
+1.1 @LeftHand.w 0.9 0 0
+5.2 @LeftHand.w 0.9 0 0
+6 @LeftHand.w 0 0 0
+6.2 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.8 -0.6 0
+
+0 @LeftHand.f 0.3 -0.4 0.86
+
+0 @LeftHand.n 0 -0.9 -0.42
+
+0 Spine1 0 0 0
+0.5 Spine1 0 0 0
+1.2 Spine1 18 0 0
+2.2 Spine1 19 3 0
+3.2 Spine1 18 0 0
+4.2 Spine1 19 3 0
+5.2 Spine1 18 0 0
+6 Spine1 0 0 0
+6.2 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.5 Spine2 0 0 0
+1.2 Spine2 8 0 0
+1.7 Spine2 8 2 2
+2.2 Spine2 8 -2 -2
+2.7 Spine2 8 2 2
+3.2 Spine2 8 0 0
+3.7 Spine2 8 2 2
+4.2 Spine2 8 -2 -2
+4.7 Spine2 8 2 2
+5.2 Spine2 8 0 0
+6 Spine2 0 0 0
+6.2 Spine2 0 0 0
+
+0 move 0 0 0
+0.5 move 0 0 0
+1.2 move 0 -0.04 0.03
+1.7 move 0.015 -0.04 0.03
+2.2 move -0.015 -0.04 0.03
+2.7 move 0.015 -0.04 0.03
+3.2 move 0 -0.04 0.03
+3.7 move 0.015 -0.04 0.03
+4.2 move -0.015 -0.04 0.03
+4.7 move 0.015 -0.04 0.03
+5.2 move 0 -0.04 0.03
+6 move 0 0 0
+6.2 move 0 0 0
+
+0 @LeftFoot -0.1 0.11 0.28
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot 0.04 0.08 -0.28
+
+0 @RightFoot.p 0.15 0 1
+
+0 @Look 0 1.6 2
+1 @Look 0.05 0.85 0.5
+5.2 @Look 0.05 0.85 0.5
+5.9 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+0.6 @Look.w 0.6 0 0
+5.4 @Look.w 0.6 0 0
+6 @Look.w 0 0 0
+6.2 @Look.w 0 0 0

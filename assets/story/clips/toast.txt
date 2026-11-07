@@ -1,0 +1,166 @@
+clip toast
+length 5.7
+loop 0
+pivot 1.1
+curve ease
+vary 0.4
+fade 0.5 0.6
+mode Spine1 body
+mode Spine2 body
+mark 1.5 cheer
+mark 3.1 sip
+prop Tankard r
+say тост гуляки: підняти кухоль угору перед собою «за нас», двічі трусонути, тоді надпити; все тіло: груди вперед, вага, ліва рука розкрита
+
+# кухоль угору перед собою, груди трохи назад-угору, ліва рука розкрита вбік долонею вгору; два малі ривки кухлем; до рота, ковток (як drink), вниз
+
+0 @RightHand 0.24 0.95 0.06
+0.3 @RightHand 0.24 0.95 0.06
+0.75 @RightHand 0.24 1.25 0.3
+1.15 @RightHand 0.34 1.64 0.44
+1.45 @RightHand 0.36 1.69 0.46
+1.65 @RightHand 0.33 1.62 0.43
+1.85 @RightHand 0.36 1.69 0.46
+2.1 @RightHand 0.34 1.64 0.44
+2.6 @RightHand 0.14 1.46 0.22
+3 @RightHand 0.11 1.5 0.19
+4 @RightHand 0.11 1.52 0.18
+4.5 @RightHand 0.12 1.44 0.19
+5 @RightHand 0.22 1.15 0.26
+5.7 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+0.9 @RightHand.w 1 0 0
+4.9 @RightHand.w 1 0 0
+5.5 @RightHand.w 0 0 0
+5.7 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.8 -0.6 0
+
+0 @RightHand.f -0.3 0 0.95
+3 @RightHand.f -0.3 0.5 0.81
+4 @RightHand.f -0.3 0.55 0.78
+4.5 @RightHand.f -0.3 0 0.95
+
+0 @RightHand.n -0.95 0 -0.3
+
+0 @LeftHand -0.24 0.95 0.06
+0.4 @LeftHand -0.24 0.95 0.06
+1.2 @LeftHand -0.42 1.08 0.2
+2.1 @LeftHand -0.42 1.08 0.2
+2.8 @LeftHand -0.28 0.98 0.12
+4.6 @LeftHand -0.28 0.98 0.12
+5.4 @LeftHand -0.24 0.95 0.06
+5.7 @LeftHand -0.24 0.95 0.06
+
+0 @LeftHand.w 0 0 0
+0.4 @LeftHand.w 0 0 0
+1.1 @LeftHand.w 0.7 0 0
+2.2 @LeftHand.w 0.7 0 0
+3 @LeftHand.w 0.3 0 0
+4.6 @LeftHand.w 0.3 0 0
+5.4 @LeftHand.w 0 0 0
+5.7 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.8 -0.6 0
+
+0 @LeftHand.f -0.5 0 0.86
+
+0 @LeftHand.n 0 1 0
+
+0 Spine1 0 0 0
+0.5 Spine1 0 0 0
+1.2 Spine1 -5 -6 0
+1.65 Spine1 -4 -4 0
+2.1 Spine1 -5 -6 0
+2.7 Spine1 -2 0 0
+4.4 Spine1 -2 0 0
+5.4 Spine1 0 0 0
+5.7 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.5 Spine2 0 0 0
+1.2 Spine2 -6 -4 0
+2.1 Spine2 -6 -4 0
+3 Spine2 -8 0 0
+4 Spine2 -8 0 0
+5 Spine2 0 0 0
+5.7 Spine2 0 0 0
+
+0 move 0 0 0
+0.5 move 0 0 0
+1.2 move 0.03 0.01 0.02
+1.65 move 0.03 -0.01 0.02
+2.1 move 0.03 0.01 0.02
+2.8 move 0 0 0
+5.7 move 0 0 0
+
+0 @LeftFoot -0.1 0.11 0.28
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot 0.04 0.08 -0.28
+
+0 @RightFoot.p 0.15 0 1
+
+0 @Look 0 1.6 2
+1.1 @Look 0.4 2 1.6
+2.1 @Look 0.4 2 1.6
+2.8 @Look 0 2.3 1.5
+4.4 @Look 0 2.3 1.5
+5 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+0.7 @Look.w 0.5 0 0
+4.6 @Look.w 0.5 0 0
+5.2 @Look.w 0 0 0
+5.7 @Look.w 0 0 0
+
+0 LeftHandIndex1 0 0 0
+0.5 LeftHandIndex1 0 0 0
+1.1 LeftHandIndex1 -30 0 0
+2.3 LeftHandIndex1 -30 0 0
+3 LeftHandIndex1 0 0 0
+
+0 LeftHandIndex2 0 0 0
+0.5 LeftHandIndex2 0 0 0
+1.1 LeftHandIndex2 -30 0 0
+2.3 LeftHandIndex2 -30 0 0
+3 LeftHandIndex2 0 0 0
+
+0 LeftHandMiddle1 0 0 0
+0.5 LeftHandMiddle1 0 0 0
+1.1 LeftHandMiddle1 -30 0 0
+2.3 LeftHandMiddle1 -30 0 0
+3 LeftHandMiddle1 0 0 0
+
+0 LeftHandMiddle2 0 0 0
+0.5 LeftHandMiddle2 0 0 0
+1.1 LeftHandMiddle2 -30 0 0
+2.3 LeftHandMiddle2 -30 0 0
+3 LeftHandMiddle2 0 0 0
+
+0 LeftHandRing1 0 0 0
+0.5 LeftHandRing1 0 0 0
+1.1 LeftHandRing1 -30 0 0
+2.3 LeftHandRing1 -30 0 0
+3 LeftHandRing1 0 0 0
+
+0 LeftHandRing2 0 0 0
+0.5 LeftHandRing2 0 0 0
+1.1 LeftHandRing2 -30 0 0
+2.3 LeftHandRing2 -30 0 0
+3 LeftHandRing2 0 0 0
+
+0 LeftHandPinky1 0 0 0
+0.5 LeftHandPinky1 0 0 0
+1.1 LeftHandPinky1 -30 0 0
+2.3 LeftHandPinky1 -30 0 0
+3 LeftHandPinky1 0 0 0
+
+0 LeftHandPinky2 0 0 0
+0.5 LeftHandPinky2 0 0 0
+1.1 LeftHandPinky2 -30 0 0
+2.3 LeftHandPinky2 -30 0 0
+3 LeftHandPinky2 0 0 0

@@ -98,6 +98,23 @@ namespace HuginWhispers
             _nearDeathPending = false;
         }
 
+        // a piece built by the player here (BuildPatch): from — what it was made from, made — the piece itself (null: the game made none)
+        internal static void Placed(Player p, Piece from, Piece made, bool cheated)
+        {
+            bool plant = from.GetComponent<Plant>() != null;
+            Add(plant ? Ev.Plant : Ev.Build, "", 0); // (a seed in the ground is gardening, not building)
+#if RAVEN_ITEM
+            if (plant && !cheated) HuginChores.OnPlanted();
+#if RAVEN_STORY
+            StoryHeart.Placed(p, from);
+#endif
+#if RAVEN_NPC
+            if (made != null) StoryBus.Raise("piece_placed", Utils.GetPrefabName(made.gameObject), 0, made.transform.position);
+            NpcPromises.Built(p, made); // (what you built may be what you promised someone)
+#endif
+#endif
+        }
+
         internal static void Add(Ev type, string arg, int value)
         {
 #if RAVEN_ITEM
@@ -555,6 +572,36 @@ namespace HuginWhispers
         internal static void Died(Character c, Player killer) { _lastDead = c; _lastKiller = killer; }
         internal static Player KillerOf(Character c) { return c != null && ReferenceEquals(c, _lastDead) ? _lastKiller : null; }
 
+        // a kill of yours, whichever game held the creature: this one (CreatureDeathPatch, with the creature) or another
+        // (Plugin.OnKill, told over the net). One list, so a kill counts the same on a server as alone
+        internal static void Mine(Character c, string token, int boss, int stars, string prefab, bool tamed, bool raven, bool own, ZDOID id)
+        {
+            Diary.Killed(c, token);
+            Diary.Add(Ev.Kill, token, boss);
+#if RAVEN_ITEM
+            if (raven && Whirl.Quiet()) return; // («Вихор» past its first blows: the kill gives nothing)
+            Player me = Player.m_localPlayer;
+            bool animal = c != null ? c.m_faction == Character.Faction.AnimalsVeg : !MuninDeeds.Monster(prefab);
+            Memory.OnKill(token, stars);
+            if (!tamed && !animal) FightJudge.Kill(stars, boss == 1);
+            if (!tamed) Habits.Killed(animal); // («Вояка», «Звіролов»)
+            Bath.Killed(); // (Munin: the blood on him)
+            Power.OnKill(boss, stars, prefab, tamed, token);
+            if (!tamed) HuginChores.OnKilled(id, boss == 1); // (Hugin's gifts helped)
+            PerkFx.OnKill(me, boss == 1, tamed); // «Кровожер», «Кривава учта», «Занудьгував»
+            ErrandHow.Dying = id; // (the way it was killed: by this one's own blows)
+            try { if (!tamed) Errands.OnKill(prefab, token, stars, boss == 1, raven); }
+            finally { ErrandHow.Dying = ZDOID.None; }
+            if (tamed) return;
+            Requests.OnKill(prefab, token, stars, boss == 1, raven, own && !raven); // a raven's own wish
+#if RAVEN_STORY
+            StoryBus.Kill(prefab, stars, boss == 1);
+#endif
+            Nicks.OnKill(me, stars, raven); // a deed for Munin's nickname
+            BindRun.OnKill(me); // a в'язь that fires on a kill
+#endif
+        }
+
         internal static Player Take(Character c)
         {
             ZDOID id = c.GetZDOID();
@@ -651,6 +698,9 @@ namespace HuginWhispers
             Player p = hit.GetAttacker() as Player;
             if (p == null) return;
             KillCredit.Hit(__instance, p);
+#if RAVEN_ITEM
+            Champions.Struck(__instance, p); // (its owner's own blow: what its errand and its gold ask)
+#endif
             if (!__instance.IsTamed()) __state = __instance.GetHealth();
         } catch (System.Exception e) { PatchGuard.Fail("KillCreditPatch", e); } }
 
@@ -680,6 +730,9 @@ namespace HuginWhispers
             Player killer = by as Player;
             Player credited = KillCredit.Take(__instance);
             if (killer == null && (by == null || by.IsTamed())) killer = credited; // a blow that names nobody: the last player who hit it
+            // his own blow: his hit, or one that names nobody and is his by the credit (his sword's lightning, a burn, a bleed: the user
+            // 2026-11-05 killed a starred wolf with a lightning proc and Munin's «fight» wish did not count). A pet's or a raven's — not
+            bool own = killer != null && (by == killer || (by == null && credited == killer));
             KillCredit.Died(__instance, killer); // (for its loot, made right after: the killer's blessings)
 #if RAVEN_ITEM
             if (!__instance.IsTamed()) // a helper's share: its errands count it too (whoever finished it, even a beast)
@@ -701,32 +754,8 @@ namespace HuginWhispers
 #else
             bool raven = false;
 #endif
-            if (killer == Player.m_localPlayer)
-            {
-                Diary.Killed(__instance, token);
-                Diary.Add(Ev.Kill, token, boss);
-#if RAVEN_ITEM
-                if (raven && Whirl.Quiet()) return; // («Вихор» past its first blows: the kill gives nothing)
-                Memory.OnKill(token, stars);
-                if (!tamed && __instance.m_faction != Character.Faction.AnimalsVeg) FightJudge.Kill(stars, boss == 1);
-                if (!tamed) Habits.Killed(__instance.m_faction == Character.Faction.AnimalsVeg); // («Вояка», «Звіролов»)
-                Bath.Killed(); // (Munin: the blood on him)
-                Power.OnKill(boss, stars, prefab, tamed, token);
-                if (!tamed) HuginChores.OnKilled(__instance.GetZDOID(), boss == 1); // (Hugin's gifts helped)
-                PerkFx.OnKill(Player.m_localPlayer, boss == 1, tamed); // «Кровожер», «Кривава учта», «Занудьгував»
-                ErrandHow.Dying = __instance.GetZDOID(); // (the way it was killed: by this one's own blows)
-                if (!tamed) Errands.OnKill(prefab, token, stars, boss == 1, raven);
-                ErrandHow.Dying = ZDOID.None;
-                if (!tamed) Requests.OnKill(prefab, token, stars, boss == 1, raven, by == killer && !raven); // a raven's own wish
-#if RAVEN_STORY
-                if (!tamed) StoryBus.Kill(prefab, stars, boss == 1);
-#endif
-                if (!tamed) Nicks.OnKill(Player.m_localPlayer, stars, raven); // a deed for Munin's nickname
-                if (!tamed) BindRun.OnKill(Player.m_localPlayer); // a в'язь that fires on a kill
-#endif
-                return;
-            }
-            Plugin.SendKill(killer.GetZDOID().UserID, token, boss, stars, prefab, tamed, raven, by == killer, __instance.GetZDOID());
+            if (killer == Player.m_localPlayer) { KillCredit.Mine(__instance, token, boss, stars, prefab, tamed, raven, own, __instance.GetZDOID()); return; }
+            Plugin.SendKill(killer.GetZDOID().UserID, token, boss, stars, prefab, tamed, raven, own, __instance.GetZDOID());
         } catch (System.Exception e) { PatchGuard.Fail("CreatureDeathPatch", e); } }
     }
 
@@ -750,6 +779,7 @@ namespace HuginWhispers
             Senses.HitFoeAt = Time.time;
             if (__instance.m_faction != Character.Faction.AnimalsVeg && !__instance.IsTamed()) Senses.HitMonsterAt = Time.time;
             if (!__instance.IsTamed()) ErrandHow.OnHit(__instance, hit); // (an errand's way of killing: a bow, a sneak attack…)
+            Strike.YouStruck(__instance); // (a boss's fall counts only for those who fought it)
 #endif
             switch (hit.m_skill) // what the blow came from: arrows and bolts, or the staffs
             {
@@ -816,14 +846,27 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(MineRock), "Damage")]
     internal static class RockHitPatch { private static void Prefix(HitData hit) { Mine.WorkHit(hit, Ev.Mine); } }
 
+    // A piece built by the player here: the ONE hook on building (the user 2026-11-04: «not patches, the core»), told to everyone who
+    // cares from here — the diary (building, gardening), Hugin's chores (a seed sown), the prologue's heart, the people (a new thing to
+    // look at: the bus «piece_placed», where it stands). PlacePiece hands over the piece it was made from; the very piece made comes
+    // from SetCreator, which the game calls inside it on the piece it has just put down
     [HarmonyPatch(typeof(Player), "PlacePiece")]
     internal static class BuildPatch
     {
-        private static void Postfix(Player __instance, Piece piece)
+        internal static Piece Made; // (the piece put down in this PlacePiece: SetCreator)
+        private static void Prefix() { Made = null; }
+        private static void Postfix(Player __instance, Piece piece, bool cheated)
         {
-            if (__instance != Player.m_localPlayer) return;
-            Diary.Add(piece != null && piece.GetComponent<Plant>() != null ? Ev.Plant : Ev.Build, "", 0); // a seed in the ground is gardening, not building
+            try { if (__instance == Player.m_localPlayer && piece != null) Diary.Placed(__instance, piece, Made, cheated); }
+            catch (Exception e) { PatchGuard.Fail("BuildPatch", e); }
+            finally { Made = null; }
         }
+    }
+
+    [HarmonyPatch(typeof(Piece), "SetCreator")]
+    internal static class BuildMadePatch
+    {
+        private static void Postfix(Piece __instance) { BuildPatch.Made = __instance; }
     }
 
     // A thing made (only when it really came into the bag: a click without the materials makes nothing). Food made

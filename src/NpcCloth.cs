@@ -6,7 +6,7 @@ namespace HuginWhispers
 {
     // The cloth a person wears (a cape: the game's MagicaCloth — Unity's Cloth for any other — simulated on its own
     // against the pose the game gave the bones).
-    // When our own code poses the body far from the game's — it falls and lies (NpcFall), later a scene, a mocap clip — the
+    // When our own code poses the body far from the game's — it falls and lies (NpcFall), a clip of ours that says «cloth off» (on the knees: NpcPose) — the
     // cloth keeps to the old pose and stands up stiff out of a lying body (the user saw Torvald's cape, 2026-11-01). So
     // while any such pose holds the body, its cloth is let go (a plain skinned mesh then: it follows our bones), and taken
     // up again, its motion cleared (no whip), once the last one lets the body go. Any code posing a body: Hold(body, itself,
@@ -14,6 +14,7 @@ namespace HuginWhispers
     internal static class NpcCloth
     {
         private sealed class Held { public readonly HashSet<object> By = new HashSet<object>(); public readonly List<Component> Off = new List<Component>(); public float Look; }
+        internal static bool DuringClips = true; // (a clip of ours on the body lets its cloth go too: NpcPose; live switch for comparing — studio «set NpcCloth.DuringClips false»)
         private static readonly Dictionary<GameObject, Held> Bodies = new Dictionary<GameObject, Held>();
 
         internal static void Hold(GameObject body, object by, bool on)
@@ -41,10 +42,12 @@ namespace HuginWhispers
 
         private static void LetGo(GameObject body, Held h)
         {
+            int had = h.Off.Count;
             foreach (Cloth c in body.GetComponentsInChildren<Cloth>())
                 if (c != null && c.enabled) { c.enabled = false; h.Off.Add(c); }
             foreach (Behaviour b in body.GetComponentsInChildren<Behaviour>()) // (the game's capes are MagicaCloth — found by its name: no reference to its library)
                 if (b != null && b.enabled && b.GetType().Name == "MagicaCloth") { b.enabled = false; h.Off.Add(b); }
+            if (h.Off.Count > had) Npcs.Log("cloth: " + body.name.Replace("(Clone)", "") + " — " + (h.Off.Count - had) + " piece(s) let go while our pose holds it");
         }
 
         // bodies gone from the world: forgotten

@@ -14,7 +14,7 @@ namespace HuginWhispers
     //   walk slower and stoop, the young are brisk)
     //   clothes only, never armour (the user): Hildir's shirts and dresses, now and then a plain cape, a hat, or rags
     // Kept in its ZDO (KName, KLook: small strings): every game shows the same person; the owner's dressing puts it on.
-    // Universal: any job, the guard's too (its fighting by its role: NpcWorker.SetJob); no knack of its own (NpcKnack).
+    // Which jobs it takes and how it fights: its nature (NpcNature: WontTake, Manner); on guard it fights (NpcWorker.SetJob); no knack of its own (NpcKnack).
     internal static class NpcSettlers
     {
         internal static readonly int KName = "RavenWatch_npcName".GetStableHashCode(); // string: its own name
@@ -39,13 +39,13 @@ namespace HuginWhispers
         {
             ZDO z = a != null ? a.Zdo : null;
             if (z == null || !a.Owned || z.GetString(KLook, "").Length > 0) return;
-            System.Random rnd = new System.Random((int)(z.m_uid.ID * 2654435761u) ^ (int)z.m_uid.UserID ^ Environment.TickCount);
+            System.Random rnd = new System.Random((int)NpcKit.Seed(z) ^ Environment.TickCount); // (made once and kept in its ZDO: chance is right here)
             Look l = new Look();
             l.Model = rnd.NextDouble() < 0.5 ? 0 : 1;
             double age = rnd.NextDouble();
             l.Age = age < 0.3 ? 0 : age < 0.82 ? 1 : 2;
             string[] names = l.Model == 0 ? Men : Women;
-            string name = names[rnd.Next(names.Length)];
+            string name = Name(names, rnd);
             l.Skin = Skins[rnd.Next(Skins.Length)];
             l.HairColor = l.Age == 2 && rnd.NextDouble() < 0.8 ? Greys[rnd.Next(Greys.Length)] : Hairs[rnd.Next(Hairs.Length)];
             List<string> hair = Existing("Hair", 1, 40), beard = Existing("Beard", 1, 40);
@@ -68,6 +68,18 @@ namespace HuginWhispers
             z.Set(KLook, Write(l));
             a.LookKept = null;
             Npcs.Log("a settler made: " + name + " (" + (l.Model == 0 ? "man" : "woman") + ", " + AgeWord(l.Age) + "): " + string.Join(" ", l.Gear.ToArray()));
+        }
+
+        // a name nobody near bears yet (the people of the census: the server sees the whole world, a client what it has
+        // loaded), nor one of the story's people (their templates' names, word by word); all taken — any
+        private static string Name(string[] names, System.Random rnd)
+        {
+            HashSet<string> taken = new HashSet<string>();
+            foreach (ZDO o in NpcCensus.Of(Npcs.HumanPrefab)) { string n = o.GetString(KName, ""); if (n.Length > 0) taken.Add(n); } // (the shared census: no pass of its own)
+            foreach (NpcDef d in NpcDefs.All()) if (!d.Generated) foreach (string w in Lang.T(d.Name).Split(' ')) taken.Add(w);
+            List<string> free = new List<string>();
+            foreach (string n in names) if (!taken.Contains(n)) free.Add(n);
+            return free.Count > 0 ? free[rnd.Next(free.Count)] : names[rnd.Next(names.Length)];
         }
 
         private static List<string> Existing(string start, int from, int to)
@@ -143,10 +155,18 @@ namespace HuginWhispers
             if (l == null) return "";
             if (l.Age == 1) return "";
             ZDO z = a.Zdo;
-            float j = z != null ? ((z.m_uid.ID * 2654435761u) % 1000u) / 1000f : 0.5f; // (0…1, its own)
+            float j = z != null ? ((NpcKit.Seed(z) * 2654435761u) % 1000u) / 1000f : 0.5f; // (0…1, its own: its lasting number)
             CultureInfo ci = CultureInfo.InvariantCulture;
-            if (l.Age == 0) return "walk=" + (1.05f + j * 0.1f).ToString("0.###", ci) + " tempo=" + (1.03f + j * 0.07f).ToString("0.###", ci) + " stoop=" + (j * 0.08f).ToString("0.###", ci);
-            return "walk=" + (0.76f + j * 0.12f).ToString("0.###", ci) + " tempo=" + (0.82f + j * 0.08f).ToString("0.###", ci) + " stoop=" + (0.45f + (1f - j) * 0.3f).ToString("0.###", ci);
+            if (l.Age == 0) return "walk=" + (1.05f + j * 0.1f).ToString("0.###", ci) + " stoop=" + (j * 0.08f).ToString("0.###", ci);
+            return "walk=" + (0.76f + j * 0.12f).ToString("0.###", ci) + " stoop=" + (0.45f + (1f - j) * 0.3f).ToString("0.###", ci);
+        }
+
+        // its winters (its card): within its age, the same number from its seed on every game and after a restart; nothing kept
+        internal static int Winters(NpcActor a, int age)
+        {
+            int least = age == 0 ? 18 : age == 2 ? 55 : 30, most = age == 0 ? 30 : age == 2 ? 75 : 50;
+            uint h = (NpcKit.Seed(a.Zdo) ^ 0x5bd1e995u) * 2654435761u;
+            return least + (int)((h >> 16) % (uint)(most - least + 1));
         }
 
         internal static string AgeWord(int age) { return Lang.T(age == 0 ? "молодий|молода" : age == 2 ? "старий|стара" : "дорослий|доросла"); }
@@ -167,7 +187,7 @@ namespace HuginWhispers
         {
             if (a == null || string.IsNullOrEmpty(key)) return 1f;
             ZDO z = a.Zdo;
-            string story = z != null ? z.GetString(KKnack, "") : "";
+            string story = z != null ? NpcLocker.Text(z, KKnack) : "";
             if (story.Length > 0)
                 foreach (string pair in story.Split(' '))
                 {
@@ -189,11 +209,11 @@ namespace HuginWhispers
             if (value[0] == '+' || value[0] == '-') v = now + v;
             v = Mathf.Clamp(v, Min, Max);
             Dictionary<string, string> d = new Dictionary<string, string>();
-            foreach (string pair in a.Zdo.GetString(KKnack, "").Split(' ')) { int eq = pair.IndexOf('='); if (eq > 0) d[pair.Substring(0, eq)] = pair.Substring(eq + 1); }
+            foreach (string pair in NpcLocker.Text(a.Zdo, KKnack).Split(' ')) { int eq = pair.IndexOf('='); if (eq > 0) d[pair.Substring(0, eq)] = pair.Substring(eq + 1); }
             d[key] = v.ToString("0.##", CultureInfo.InvariantCulture);
             List<string> l = new List<string>();
             foreach (KeyValuePair<string, string> e in d) l.Add(e.Key + "=" + e.Value);
-            a.Zdo.Set(KKnack, string.Join(" ", l.ToArray()));
+            NpcLocker.Put(a.Zdo, KKnack, string.Join(" ", l.ToArray()));
             return "хист " + key + " " + now.ToString("0.##", CultureInfo.InvariantCulture) + " → " + v.ToString("0.##", CultureInfo.InvariantCulture);
         }
 
@@ -208,7 +228,7 @@ namespace HuginWhispers
                 if (v >= 1.15f) good.Add(w + (v >= 1.6f ? Lang.T(" (майстер)") : ""));
                 else if (v <= 0.85f) poor.Add(w);
             }
-            if (good.Count == 0 && poor.Count == 0) return Lang.T("на все руки — без особливого хисту");
+            if (good.Count == 0 && poor.Count == 0) return Lang.T("на всі руки, але без особливого хисту");
             string s = good.Count > 0 ? Lang.T("вдається: ") + string.Join(", ", good.ToArray()) : "";
             if (poor.Count > 0) s += (s.Length > 0 ? "; " : "") + Lang.T("не його: ") + string.Join(", ", poor.ToArray());
             return s;

@@ -72,9 +72,15 @@ Each raven has its own **temper** (how it behaves on your shoulder and in the ai
 ### They speak, remember and talk to each other
 The ravens react to what happens to you — deaths, kills, bosses, new biomes, close calls, building, sailing — with thousands of lines, using your name and the monsters involved. Each raven **remembers** your shared story and tells it back by the fire. With both ravens on your shoulders they **talk to each other**; ravens of different players talk when you meet. Some of them become friends and some can't stand each other — you'll see it in what they do. Now and then a raven picks a **victim** — another player, a tamed animal, a trader, the other raven or you — and mocks them for a few minutes: what they do, how they fall, a peck on the head (say no in the config if you'd rather not be picked). With the optional voice addon (a separate package, coming soon) they say it all aloud.
 
+### The prologue and the Hall of the Watch
+A stranger's raven calls you, two trails lead to your own raven, and an abandoned house keeps the Book of ravens. Then the Hall of the Watch: its gate shut, a woman named Heid with the key, a hearth that burns the wrong colour and an old letter about the Heart of home. The book's «Saga» tab keeps what happened, and who saw it.
+
+### Settlers and the Heart of home
+Build a Heart of home and it hears of people in trouble out in the lands. Save them and they come to live by it: they eat, sleep, work, talk, quarrel and dream, remember what you did and tell you the news. Hire them as guards, cooks, gatherers, smelters, beekeepers and more.
+
 ## Start in 5 steps
 
-1. **Get a raven.** Buy **Hugin** or **Munin** from Haldor (1500 coins) — or wait: your own raven finds you in the prologue.
+1. **Get a raven.** Buy **Hugin** or **Munin** from Haldor (1500 coins) — or wait: your own raven finds you in the prologue. Either way you can talk to a raven only with the **Book of Ravens**, and that book is found in the prologue: buy a raven early and the prologue calls you at once.
 2. **Wake it.** A new raven sleeps. Hang Eikthyr's trophy on his Sacrificial Stone, bring **2 more Eikthyr trophies** and perform the ritual in the Book of Ravens (**B** → «Growth»).
 3. **Put it on your shoulder** — right-click it in your bag.
 4. **Feed it and take it along.** Trust grows; when the bar is full, a new ritual with the next boss's trophies opens the next level.
@@ -119,7 +125,7 @@ RavenWatch is complete without it — every line shows as text on a speech card.
 
 Haldor sells **Hugin the Raven** and **Munin the Raven** (1500 coins each). The ravens have **their own places — your shoulders**: Hugin always sits on the right, Munin on the left, as in the myths. Right-click a raven in your bag (or its hotbar key 1–8) to put it on your shoulder or take it off. Your belt stays free for Megingjord, and both ravens can sit on you at once, no other mods needed. With **SeneaL UI** the helmet cell gets two round «shoulders»: drag a raven there (or just onto the helmet) and it sits on its side and leaves your bag; click a shoulder to take it off.
 
-**Your own raven.** You don't have to buy a raven. A while after you arrive, a strange raven calls you: follow the story and one of your own ravens finds you. Bought ravens are strays that once belonged to someone else.
+**Your own raven.** You don't have to buy a raven. A while after you arrive, a strange raven calls you: follow the story and one of your own ravens finds you. Bought ravens are strays that once belonged to someone else. No trader sells the Book of Ravens: till the story gives it, a raven only sits on your shoulder.
 
 **Haldor's goods.** Haldor also sells four things the raven craft can't do without, each once you have beaten its boss: **Haldor's Buckle** (after Eikthyr) for the strapped raven things, **Dvergr Brackets** (after Bonemass) for the sturdier perches and forged things, **Overseas Feathers** (after Moder) for the feathered and late things, and **Seer's Ink** (after Yagluth) for the advanced raven table, its runic things and the magic perches. He also sells **Odin's Call**: a raven flies to Odin with it for a few minutes and comes back in one of his gifts it missed — once on each trust level from 3 to 7.
 
@@ -332,6 +338,12 @@ RavenWatch робить Хугіна й Муніна твоїми супутни
 
 ### Говорять, пам'ятають і розмовляють між собою
 Ворони відгукуються на те, що з тобою стається — смерті, вбивства, боси, нові біоми, «ледве вижив», будівництво, плавання — тисячами фраз, з твоїм ніком і назвами монстрів. Кожен ворон **пам'ятає** ваш спільний шлях і розповідає його біля вогню. З обома воронами на плечах вони **розмовляють між собою**; ворони різних гравців — коли ви зустрічаєтеся. Одні з них дружать, інші терпіти одне одного не можуть — це видно з того, що вони роблять. Зрідка ворон обирає **жертву** — іншого гравця, ручну тварину, торговця, другого ворона чи тебе — і кілька хвилин з неї глузує: що робить, як падає, ще й на голову сяде подзьобати (не хочеш бути жертвою — вимкни в конфігу). З окремим пакетом озвучки вони кажуть усе це вголос.
+
+### Пролог і Зала Варти
+Чужий ворон кличе тебе, два сліди ведуть до твого власного ворона, а покинута хата береже книгу воронів. Далі Зала Варти: брама зачинена, ключ у жінки на ім'я Гейд, вогнище горить не тим кольором, а старий лист розповідає про серце оселі. Вкладка «Сага» в книзі пам'ятає, що сталося і хто це бачив.
+
+### Поселенці й серце оселі
+Збудуй серце оселі, і воно чутиме про людей у біді по всіх землях. Врятуй їх, і вони прийдуть жити до нього: їдять, сплять, працюють, говорять, сваряться й мріють, пам'ятають, що ти зробив, і розповідають новини. Найми їх вартовими, кухарями, збирачами, плавильниками, пасічниками тощо.
 
 ## Старт у 5 кроків
 

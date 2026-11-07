@@ -52,6 +52,13 @@ namespace HuginWhispers
                 if (GUILayout.Button("Жінка", d.Model == 1 ? _sel : GUI.skin.button, GUILayout.Width(120f))) { d.Model = 1; Changed(); }
                 GUILayout.EndHorizontal();
 
+                GUILayout.Label("Зріст і статура", _head);
+                NpcPersona w = NpcPersona.OfTemplate(d); // (as in the world: a person written by hand is seeded by its template)
+                float h = Trait("Зріст", w.Height, 0.8f, 1.25f, "×" + w.Height.ToString("0.00"));
+                float b = Trait("Статура", w.Build, -1f, 1f, (w.Build < -0.15f ? "худий " : w.Build > 0.15f ? "огрядний " : "звичайний ") + w.Build.ToString("0.00"));
+                if (Mathf.Abs(h - w.Height) > 0.001f) { d.SetTrait("height", h); Changed(); }
+                if (Mathf.Abs(b - w.Build) > 0.001f) { d.SetTrait("build", b); Changed(); }
+
                 GUILayout.Label("Шкіра", _head);
                 d.Skin = ColourRow(d.Skin, SkinPresets, SkinNames);
                 GUILayout.Label("Волосся й борода", _head);
@@ -137,6 +144,17 @@ namespace HuginWhispers
         }
 
         private void Changed() { _redressAt = Time.unscaledTime + 0.25f; }
+
+        // a trait on a slider, in steps of 0.05 (written only when moved)
+        private float Trait(string label, float v, float lo, float hi, string shown)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, GUILayout.Width(110f));
+            float now = GUILayout.HorizontalSlider(v, lo, hi, GUILayout.Width(260f));
+            GUILayout.Label(shown, _hint);
+            GUILayout.EndHorizontal();
+            return Mathf.Abs(now - v) > 0.001f ? Mathf.Clamp(Mathf.Round(now * 20f) / 20f, lo, hi) : v;
+        }
 
         // a colour: presets + three sliders (as the game keeps it: 0..1 each)
         private Vector3 ColourRow(Vector3 c, Vector3[] presets, string[] names)
@@ -233,7 +251,7 @@ namespace HuginWhispers
                     continue;
                 }
                 int slot = SlotOf(s);
-                if (slot >= 0) _bySlot[slot].Add(g.name);
+                if (slot >= 0 && NpcGear.Wearable(id)) _bySlot[slot].Add(g.name); // (not a creature's attack: those are items too)
             }
             _hairs.Sort(System.StringComparer.Ordinal); _beards.Sort(System.StringComparer.Ordinal);
             foreach (List<string> l in _bySlot.Values) l.Sort(System.StringComparer.Ordinal);

@@ -634,7 +634,7 @@ namespace HuginWhispers
             if (other == null || !Trust.Active(other) || Trust.Away(other) || Trust.Hostile(other)) return;
             if (!Shoulder.Settled(p, !munin, 1f)) return; // the other one is out (a strike, an outing...): it does not answer from the air
             _replyMunin = !munin;
-            _replyAt = Time.time + Mathf.Clamp(RavenSpeech.ReadSeconds(line) * 0.6f, 2.5f, 7f);
+            _replyAt = Time.time + Mathf.Clamp(RavenSpeech.ReadSeconds(line) * 0.6f, RavenSpeech.Hold(2.5f), RavenSpeech.Hold(7f));
         }
 
         private static void Reply(Player p, bool munin)

@@ -19,6 +19,7 @@ namespace HuginWhispers
     //                                              at the centre on the floor and look at the front: that is the blueprint's
     //                                              origin and its «forward». The story places (StoryPlaces) inside go in too.
     //   raven blueprint list · preview <name>|off · place <name> · undo
+    //   raven blueprint ground <half m> | undo   — the ground round you flat at your feet (BlueprintGround), and back
     // A file: "# RavenWatch blueprint 1", "name …", "pieces N", then one piece a line: prefab x y z qx qy qz qw (relative),
     // and the places: "@mark <name> x y z yaw". Placed pieces carry RavenWatch_bp in their ZDO: they neither wear nor fall
     // without support (the ground under a building put somewhere else is never the ground it was built on).
@@ -29,6 +30,9 @@ namespace HuginWhispers
 
         internal static string Root { get { return Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "blueprints"); } }
         internal static bool On { get { return Directory.Exists(Root); } }
+        // where the author's data lives, read and written (blueprints, names, layers, shots, the list of places): the mod's own assets/story/blueprints on his
+        // machine (StoryFiles.Source), so there is one copy and no step of carrying it over; his folder has only what is his machine's (frames, jobs, marks)
+        internal static string Data { get { return StoryFiles.IsSource ? Path.Combine(StoryFiles.Source, "blueprints") : Root; } }
 
         // Item: what hangs on it (an item stand: a head, a weapon…), with its look — «item:<prefab>:<variant>:<quality>:<turn>»
         // after the rotation on its line (the user 2026-11-01: only the item stands; no chests, no armour stands, no signs)
@@ -68,21 +72,22 @@ namespace HuginWhispers
                 case "place": return Place(name, p.transform.position, Facing(p), a.Length > 3 && a[3].ToLowerInvariant() == "force");
                 case "undo": return Undo();
                 case "name": return NamePiece(p, name);
-                case "hall": return HallSpawn.Tell(p);
-                case "layer": return HallParts.Layer(HallParts.Aimed(p), name.ToLowerInvariant());
-                case "state": return HallState.Cmd(a);
+                case "hall": return Locs.Tell(p);
+                case "layer": return LocParts.Layer(LocParts.Aimed(p), name.ToLowerInvariant());
+                case "state": return LocState.Cmd(a);
                 case "frame": return Frame(p, name, a.Length > 3 ? a[3].ToLowerInvariant() : "");
                 case "looks": return Looks(p);
+                case "ground": return name.ToLowerInvariant() == "undo" ? (BlueprintGround.Undo().Length > 0 ? "Земля — як була." : "Нема що повертати.") : BlueprintGround.LevelHere(p, Num(name, 10f));
             }
-            return "raven blueprint save <name> [radius] · list · preview <name>|off · place <name> [force] · undo · name <piece name>|- · layer ruin|repaired|lived|fixed[,+1.1|,-1.1]|- · state [1|1.1|2|3] [in|out]|cancel · frame <name> [find|here] · hall   (or the window: raven story)";
+            return "raven blueprint save <name> [radius] · list · preview <name>|off · place <name> [force] · undo · name <piece name>|- · layer ruin|repaired|lived|fixed[,+1.1|,-1.1]|- · state [1|1.1|2|3] [in|out]|cancel · frame <name> [find|here] · ground <half m>|undo · hall   (or the window: raven story)";
         }
 
         // the author names the piece he looks at, in a building a blueprint put there (for the story's scripts:
-        // HallParts.Named). The name goes into the mod's names file, never into the world: added any time, even after a
+        // LocParts.Named). The name goes into the mod's names file, never into the world: added any time, even after a
         // release, it finds the piece in every world where that building stands
         private static string NamePiece(Player p, string name)
         {
-            return HallParts.Name(HallParts.Aimed(p), name);
+            return LocParts.Name(LocParts.Aimed(p), name);
         }
 
         // ---------------------------------------------------------------- what stands round you now (the window counts live)
@@ -112,7 +117,7 @@ namespace HuginWhispers
         }
 
         // which kinds of piece round you have a look of their own when ruined (the game shows its broken model at ≤ 25%
-        // strength — HallState's abandoned Hall) and which look new whatever their strength: one model for all, or no
+        // strength — LocState's abandoned Hall) and which look new whatever their strength: one model for all, or no
         // strength at all (our Meshy pieces). Into the log too, the whole list
         internal static string Looks(Player p)
         {
@@ -214,7 +219,7 @@ namespace HuginWhispers
             foreach (Spot s in marks)
                 sb.Append("@mark ").Append(s.Name).Append(' ').Append(F(s.Pos.x)).Append(' ').Append(F(s.Pos.y)).Append(' ').Append(F(s.Pos.z)).Append(' ').Append(F(s.Yaw)).Append('\n');
             bool kept = File.Exists(FileOf(name));
-            if (kept) File.Copy(FileOf(name), FileOf(name) + ".bak", true); // (the one before: one save back, by hand)
+            if (kept) File.Copy(FileOf(name), Path.Combine(Root, name + ".txt.bak"), true); // (the one before: one save back, by hand; in his folder, never in the mod's)
             File.WriteAllText(FileOf(name), sb.ToString(), new UTF8Encoding(false));
             List<string> names = new List<string>(kinds.Keys);
             names.Sort((x, y) => kinds[y].CompareTo(kinds[x]));
@@ -247,7 +252,7 @@ namespace HuginWhispers
             return parts;
         }
 
-        // the lines of a blueprint (a file of the author's, or one built into the mod: HallSpawn)
+        // the lines of a blueprint (a file of the author's, or one built into the mod: Loc)
         internal static List<Part> Parse(string[] lines, List<Spot> marks)
         {
             List<Part> parts = new List<Part>();
@@ -301,7 +306,7 @@ namespace HuginWhispers
         {
             List<string> list = new List<string>();
             if (!On) return list;
-            foreach (string f in Directory.GetFiles(Root, "*.txt")) { string n = Path.GetFileNameWithoutExtension(f); if (n.IndexOf('.') < 0) list.Add(n); } // (zala.names.txt, zala.layers.txt: a blueprint's files, not blueprints)
+            foreach (string f in Directory.GetFiles(Data, "*.txt")) { string n = Path.GetFileNameWithoutExtension(f); if (n.IndexOf('.') < 0) list.Add(n); } // (zala.names.txt, zala.layers.txt: a blueprint's files, not blueprints)
             list.Sort(StringComparer.OrdinalIgnoreCase);
             return list;
         }
@@ -325,7 +330,7 @@ namespace HuginWhispers
         {
             if (!GoodName(name) || !File.Exists(FileOf(name))) return "Нема креслення " + name;
             if (GhostName == name) GhostOff();
-            File.Copy(FileOf(name), FileOf(name) + ".deleted", true); // (by hand back: rename it .txt again)
+            File.Copy(FileOf(name), Path.Combine(Root, name + ".txt.deleted"), true); // (by hand back: rename it .txt again; in his folder, never in the mod's)
             File.Delete(FileOf(name));
             return "Креслення «" + name + "» видалено (копія — " + name + ".txt.deleted).";
         }
@@ -410,21 +415,73 @@ namespace HuginWhispers
             return "Ставлю «" + name + "»: " + parts.Count + " елементів" + (marks.Count > 0 ? ", міток " + marks.Count : "") + (ground.Length > 0 ? "; " + ground : "") + "…";
         }
 
-        // a building the mod puts into the world itself (HallSpawn): its places, then its pieces; done(made, missing) at the end
-        internal static void Spawn(List<Part> parts, List<Spot> marks, Vector3 at, Quaternion rot, string name, Action<int, int> done)
+        // a building the mod puts into the world itself (LocBuild): its places, then its pieces; done(made, missing) at the end
+        internal static void Spawn(List<Part> parts, List<Spot> marks, Vector3 at, Quaternion rot, string name, Func<Part, bool> landmark, Action<int, int> done)
         {
             Placing = true;
-            _last.Clear();
-            _lastName = name;
+            if (done == null) { _last.Clear(); _lastName = name; } // (the world's own building is no one's to undo)
             foreach (Spot s in marks)
                 StoryPlaces.Set(name + "." + s.Name, at + rot * s.Pos, Mathf.Repeat(rot.eulerAngles.y + s.Yaw, 360f));
-            Plugin.Instance.StartCoroutine(Build(parts, at, rot, name, done, done != null ? Quick : PerFrame));
+            Plugin.Instance.StartCoroutine(Build(parts, at, rot, name, done, done != null ? Ahead : PerFrame, landmark));
         }
 
-        // the world's own building (HallSpawn) goes up fast: it comes into sight as the player does, all at once is best
-        private const int Quick = 200;
+        // a cart in a place of the story is a thing to look at (the user 2026-11-05: one could store in it and drag it off): it stands where it was
+        // put, no chest, no pulling, no seat. What is saved in its ZDO stays there, unread
+        internal static void Still(Vagon v)
+        {
+            foreach (Rigidbody b in v.GetComponentsInChildren<Rigidbody>()) b.isKinematic = true; // heavy: once a cart of a place, when it comes into the world
+            foreach (Container c in v.GetComponentsInChildren<Container>()) UnityEngine.Object.Destroy(c); // heavy: as above
+            foreach (Chair c in v.GetComponentsInChildren<Chair>()) UnityEngine.Object.Destroy(c); // heavy: as above
+            ZNetView nv = v.GetComponent<ZNetView>();
+            UnityEngine.Object.Destroy(v);
+            if (nv != null && nv.IsValid() && nv.GetZDO().GetString(LocParts.KOf, "").Length > 0 && Plugin.Instance != null) Plugin.Instance.StartCoroutine(CartOnGround(nv)); // (a place's own, stamped: the author's hand-built one stands as he left it)
+        }
 
-        private static IEnumerator Build(List<Part> parts, Vector3 c, Quaternion baseRot, string name, Action<int, int> done, int perFrame = PerFrame)
+        // it stands on its ground, level (the user 2026-11-06: under the ground, and its textures fought). A blueprint keeps a cart as it settled on the
+        // author's land: tilted to his slope, and the place's Sink takes it down with the walls that belong in the earth. Measured, not written in the
+        // blueprint (a new save would lose a number): upright round its own heading, its lowest drawn part CartOver over the ground. Once it stands so,
+        // the same look finds nothing to do on later loads, so its ZDO is written once. Its ground may come a moment after it: a few looks, then given up
+        private const float CartOver = 0.02f, CartClose = 0.03f, CartTilted = 1f, CartLookEvery = 1f;
+        private const int CartLooks = 8;
+        private static IEnumerator CartOnGround(ZNetView nv)
+        {
+            for (int i = 0; i < CartLooks; i++)
+            {
+                yield return new WaitForSeconds(CartLookEvery);
+                if (nv == null || !nv.IsValid() || ZoneSystem.instance == null) yield break;
+                Transform t = nv.transform;
+                float ground;
+                if (!ZoneSystem.instance.GetGroundHeight(t.position, out ground)) continue;
+                Vector3 ahead = Vector3.ProjectOnPlane(t.forward, Vector3.up);
+                if (ahead.sqrMagnitude < 0.01f) ahead = Vector3.ProjectOnPlane(t.up, Vector3.up);
+                Quaternion level = Quaternion.LookRotation(ahead.normalized, Vector3.up);
+                float tilt = Quaternion.Angle(t.rotation, level);
+                Quaternion was = t.rotation;
+                t.rotation = level; // (measured as it will stand; put back below if this game may not move it)
+                float low = float.MaxValue;
+                foreach (Renderer r in nv.GetComponentsInChildren<Renderer>()) // heavy: a few times at most, once a cart of a place, when it comes into the world
+                    if (r.enabled && (r is MeshRenderer || r is SkinnedMeshRenderer)) low = Mathf.Min(low, r.bounds.min.y);
+                t.rotation = was;
+                if (low == float.MaxValue) continue; // (nothing drawn yet)
+                float lift = ground + CartOver - low;
+                if (Mathf.Abs(lift) < CartClose && tilt < CartTilted) yield break;
+                if (!nv.IsOwner()) nv.ClaimOwnership();
+                Vector3 to = t.position + Vector3.up * lift;
+                t.SetPositionAndRotation(to, level);
+                nv.GetZDO().SetPosition(to);
+                nv.GetZDO().SetRotation(level);
+                Plugin.Instance.Log("Blueprint: a cart of «" + nv.GetZDO().GetString(LocParts.KOf, "") + "» put on its ground: lifted " + lift.ToString("0.00") + " m, " + tilt.ToString("0.0") + " deg of tilt taken off");
+                yield break;
+            }
+            Plugin.Instance.Log("Blueprint: a cart of a place: its ground not read in " + CartLooks + " looks, it stands as it was");
+        }
+
+        // the world's own building goes up where nobody sees it (Loc.BuildAhead): gently, the frame rate first (2500 pieces: about 2 s)
+        private const int Ahead = 25;
+        private static readonly int KFar = "RavenWatch_bpFar".GetStableHashCode();
+        internal static bool IsFar(ZDO z) { return z.GetInt(KFar, 0) == 1; }
+
+        private static IEnumerator Build(List<Part> parts, Vector3 c, Quaternion baseRot, string name, Action<int, int> done, int perFrame = PerFrame, Func<Part, bool> landmark = null)
         {
             int made = 0, missing = 0;
             try
@@ -441,12 +498,15 @@ namespace HuginWhispers
                         if (nv != null && nv.IsValid())
                         {
                             nv.GetZDO().Set(Mark, 1);
-                            HallParts.Stamp(nv.GetZDO(), name, pt.Pos); // (which building, and where in it: the story's scripts find it by these — HallParts)
-                            _last.Add(nv.GetZDO().m_uid);
+                            LocParts.Stamp(nv.GetZDO(), name, pt.Pos); // (which building, and where in it: the story's scripts find it by these — LocParts)
+                            if (done == null) _last.Add(nv.GetZDO().m_uid);
                             BlueprintWearPatch.Forget(g);
+                            Vagon cart = g.GetComponent<Vagon>();
+                            if (cart != null) Still(cart); // (its Awake ran before the mark: BlueprintCartPatch catches it on every later load)
+                            if (landmark != null && landmark(pt)) { nv.GetZDO().Set(KFar, 1); nv.m_distant = true; nv.GetZDO().SetDistant(true); }
                         }
                         Fireplace fire = g.GetComponent<Fireplace>();
-                        if (fire != null) fire.m_infiniteFuel = true; // (its Awake ran before the mark: HallLightPatch catches it on every later load)
+                        if (fire != null) fire.m_infiniteFuel = true; // (its Awake ran before the mark: LocLightPatch catches it on every later load)
                         if (!string.IsNullOrEmpty(pt.Item)) Hang(g, nv, pt);
                         made++;
                     }
@@ -514,10 +574,10 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- helpers
-        // a piece a blueprint put into the world (its building stamped on it: HallParts), not the author's own by hand
+        // a piece a blueprint put into the world (its building stamped on it: LocParts), not the author's own by hand
         internal static bool Copy(ZNetView nv)
         {
-            return nv != null && nv.IsValid() && nv.GetZDO().GetString(HallParts.KOf, "").Length > 0;
+            return nv != null && nv.IsValid() && nv.GetZDO().GetString(LocParts.KOf, "").Length > 0;
         }
 
         internal static bool Marked(ZNetView nv)
@@ -542,7 +602,7 @@ namespace HuginWhispers
         // a place «zala.vognyshche» kept inside a blueprint by its own short name
         private static string Short(string n) { int d = n.LastIndexOf('.'); return d >= 0 ? n.Substring(d + 1) : n; }
 
-        internal static string FileOf(string name) { return Path.Combine(Root, name + ".txt"); }
+        internal static string FileOf(string name) { return Path.Combine(Data, name + ".txt"); }
         private static string F(float v) { return v.ToString("0.###", CultureInfo.InvariantCulture); }
         private static string Q(float v) { return v.ToString("0.#####", CultureInfo.InvariantCulture); }
         private static bool TryF(string s, out float v) { return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v); }
@@ -563,6 +623,28 @@ namespace HuginWhispers
     // the answer is kept per piece (a piece's mark never changes once placed; one just placed asks again). So does the
     // author's own Hall, the one he builds by hand (within its frame, BlueprintFrame): taking a beam away, or a layer
     // hidden while he looks at a state (its colliders off), must not bring the rest down
+    [HarmonyPatch(typeof(Vagon), "Awake")]
+    internal static class BlueprintCartPatch
+    {
+        private static void Postfix(Vagon __instance)
+        {
+            try { if (Blueprint.Marked(__instance.GetComponent<ZNetView>())) Blueprint.Still(__instance); }
+            catch (Exception e) { PatchGuard.Fail("BlueprintCartPatch", e); }
+        }
+    }
+
+    // A landmark piece of a place: the game's own far loading, for this piece and not for every wall of its kind. The game writes its prefab's
+    // word over the ZDO on every load (ZNetView.Awake), so the word is put on the view first. Every object made: one int read
+    [HarmonyPatch(typeof(ZNetView), "Awake")]
+    internal static class BlueprintFarPatch
+    {
+        private static void Prefix(ZNetView __instance)
+        {
+            try { if (ZNetView.m_initZDO != null && Blueprint.IsFar(ZNetView.m_initZDO)) __instance.m_distant = true; }
+            catch (Exception e) { PatchGuard.Fail("BlueprintFarPatch", e); }
+        }
+    }
+
     [HarmonyPatch(typeof(WearNTear), "UpdateWear")]
     internal static class BlueprintWearPatch
     {
@@ -597,8 +679,8 @@ namespace HuginWhispers
         {
             Vector3 c; Quaternion rot;
             string of;
-            return nv.GetZDO().GetString(HallParts.KOf, "").Length == 0 // (not a copy the blueprint placed)
-                && HallParts.AuthorFrame(w.transform.position, out of, out c, out rot);
+            return nv.GetZDO().GetString(LocParts.KOf, "").Length == 0 // (not a copy the blueprint placed)
+                && LocParts.AuthorFrame(w.transform.position, out of, out c, out rot);
         }
     }
 
@@ -623,11 +705,11 @@ namespace HuginWhispers
     // round the standing Hall of the Watch nothing is built, taken down, dug or levelled — as round the start's stones
     // (the game's own question, so its own «$msg_nobuildzone»)
     [HarmonyPatch(typeof(Location), "IsInsideNoBuildLocation")]
-    internal static class HallNoBuildPatch
+    internal static class LocNoBuildPatch
     {
         private static void Postfix(Vector3 point, ref bool __result)
         {
-            if (!__result && HallSpawn.InNoBuild(point)) __result = true;
+            if (!__result && Locs.InNoBuild(point)) __result = true;
         }
     }
 

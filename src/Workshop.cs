@@ -51,6 +51,7 @@ namespace HuginWhispers
         internal List<WsPart> Parts = new List<WsPart>();
         // marked for the mod: "perch" = a raven perch piece for the hammer (Perches.cs); its prefab id and its cost
         internal string Use = "", Id = "", Cost = "";
+        internal string Script = ""; // «script: hearth»: a story piece's own behaviour (Perches.Scripts)
         internal float PerDay; // a perch's strength a game day for each raven (0: the config's default)
         internal float Feed;   // a feeder: how much more the same food fills from it (0 or 1: as it is)
         // an item Haldor sells (use: item): its price, and the key (a boss beaten: defeated_eikthyr…) that opens it; such an item is not made anywhere
@@ -113,6 +114,7 @@ namespace HuginWhispers
             sb.Append("note: ").Append(m.Note.Replace("\n", " ")).Append('\n');
             if (!string.IsNullOrEmpty(m.Use)) sb.Append("use: ").Append(m.Use).Append('\n');
             if (!string.IsNullOrEmpty(m.Id)) sb.Append("id: ").Append(m.Id).Append('\n');
+            if (!string.IsNullOrEmpty(m.Script)) sb.Append("script: ").Append(m.Script).Append('\n');
             if (!string.IsNullOrEmpty(m.Cost)) sb.Append("cost: ").Append(m.Cost.Replace("\n", " ")).Append('\n');
             if (m.PerDay > 0f) sb.Append("perday: ").Append(F(m.PerDay)).Append('\n');
             if (m.Feed > 0f) sb.Append("feed: ").Append(F(m.Feed)).Append('\n');
@@ -166,6 +168,7 @@ namespace HuginWhispers
                 if (line.StartsWith("note:")) { m.Note = line.Substring(5).Trim(); continue; }
                 if (line.StartsWith("use:")) { m.Use = line.Substring(4).Trim(); continue; }
                 if (line.StartsWith("id:")) { m.Id = line.Substring(3).Trim(); continue; }
+                if (line.StartsWith("script:")) { m.Script = line.Substring(7).Trim(); continue; }
                 if (line.StartsWith("cost:")) { m.Cost = line.Substring(5).Trim(); continue; }
                 if (line.StartsWith("mount:")) { m.Mount = line.Substring(6).Trim(); continue; }
                 if (line.StartsWith("slot:")) { m.Slot = line.Substring(5).Trim(); continue; }

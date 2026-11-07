@@ -18,17 +18,18 @@ namespace HuginWhispers
     internal static class NpcTravel
     {
         internal static readonly int KTravel = "RavenWatch_npcTravel".GetStableHashCode(); // bool: on its way
-        internal const string ToHeart = "heart", ToHall = "hall", ToHome = "home"; // (home: back to its base after it lay senseless — slowly, NpcVitals)
-        private const float Watch = 130f, Edge = 110f, Arrive = 4f, ArriveHall = 10f, Longest = 900f, Stuck = 45f, Ahead = 30f;
+        internal const string ToHeart = "heart", ToRefuge = "hall", ToHome = "home", ToBack = "back"; // (home: back to its base after it lay senseless — slowly, NpcVitals; back: a resident led far off and left there walks home — NpcResident)
+        private const float Watch = 130f, Edge = 110f, Arrive = 4f, ArriveRefuge = 10f, Longest = 900f, Stuck = 45f, Ahead = 30f;
 
-        // the ravens' home: the Зала Варти once it stands (HallSpawn); the world's start until then
-        internal static Vector3 Hall
+        // the ravens' home: the story's place that takes in the unhired (locations.list «refuge: yes» — the Hall) once it stands; the world's start until then
+        internal static Vector3 Refuge
         {
             get
             {
                 Vector3 p;
                 Quaternion r;
-                if (HallSpawn.Built && HallSpawn.Where(out p, out r)) return p;
+                Loc home = Locs.Refuge;
+                if (home != null && home.Built && home.Where(out p, out r)) return home.Shape() && home.Gate.Length > 0 && !LocState.GateOpenOf(home) ? home.BeforeFront(p, r) : p; // (its great door still locked: before it, not pushing at its wall)
                 if (ZoneSystem.instance != null && ZoneSystem.instance.GetLocationIcon("StartTemple", out p)) return p;
                 if (ZoneSystem.instance != null && ZNet.instance != null && ZNet.instance.IsServer())
                 {
@@ -62,14 +63,14 @@ namespace HuginWhispers
             if (a == null) return true;
             if (!p.Started) { p.Started = true; p.Since = Time.time; p.Best = float.MaxValue; p.BestAt = Time.time; Mark(a, true); Npcs.Log(a.Id + ": on its way to the " + p.Pose + " (" + Mathf.RoundToInt(Utils.DistanceXZ(m.transform.position, p.To)) + " m)"); }
             float d = Utils.DistanceXZ(m.transform.position, p.To);
-            if (d <= (p.Pose == ToHall ? ArriveHall : Arrive)) { There(a, p); return true; }
+            if (d <= (p.Pose == ToRefuge ? ArriveRefuge : Arrive)) { There(a, p); return true; }
             if (d < p.Best - 1f) { p.Best = d; p.BestAt = Time.time; }
             bool far = d > Edge + 15f, forced = Time.time - p.Since > Longest || Time.time - p.BestAt > Stuck;
             bool seen = Watched(m.transform.position); // (never a step on before a player's eyes, forced or not: it walks on)
             if (far && !seen) { Jump(a, p, true); return false; }
             if (!far && forced && d > 20f && !seen) { Jump(a, p, false); return false; } // (stuck close by: right next to it)
             m.Head(dt, p.To, Ahead, p.Pose == ToHome);
-            m.Status = p.Pose == ToHall ? "іде до Дому воронів" : p.Pose == ToHome ? "шкутильгає додому" : "іде до оселі";
+            m.Status = p.Pose == ToRefuge ? Lang.K("іде до Дому воронів") : p.Pose == ToHome ? Lang.K("шкутильгає додому") : p.Pose == ToBack ? Lang.K("вертається додому") : Lang.K("іде до оселі");
             return false;
         }
 
@@ -90,12 +91,10 @@ namespace HuginWhispers
             if (ZoneSystem.instance != null && ZoneSystem.instance.GetGroundHeight(at, out h)) at.y = h + 0.3f; // (loaded here: the real ground, a dug moat too)
             else if (WorldGenerator.instance != null) at.y = Mathf.Max(WorldGenerator.instance.GetHeight(at.x, at.z), ZoneSystem.instance != null ? ZoneSystem.instance.m_waterLevel : 30f) + 0.5f;
             else at.y = p.To.y + 1f;
-            a.Appear(); // (a puff where it was)
+            a.Appear(); // (a puff where it was: it goes, nobody sees it come)
             Npcs.Log(a.Id + ": stepped on to its " + p.Pose + " (" + Mathf.RoundToInt(Utils.DistanceXZ(a.transform.position, at)) + " m)");
-            NpcWalk.Jumped(a, a.transform.position, at, "подорож (крок поза очима)");
-            a.transform.position = at;
-            Rigidbody rb = a.GetComponent<Rigidbody>();
-            if (rb != null) { rb.position = at; rb.linearVelocity = Vector3.zero; }
+            if (a.Body == null) return;
+            a.Body.Put(at, "подорож (крок поза очима)", false); // (the body's one way: NpcBody.Put; its own puff above, none where it comes)
             ZDO z = a.Zdo;
             if (z != null) z.SetPosition(at);
             p.Since = Time.time; p.Best = float.MaxValue; p.BestAt = Time.time;
@@ -105,6 +104,7 @@ namespace HuginWhispers
         {
             Mark(a, false);
             if (p.Pose == ToHome) Npcs.Log(a.Id + ": limped home");
+            else if (p.Pose == ToBack) Npcs.Log(a.Id + ": back home");
             else if (p.Pose == ToHeart)
             {
                 string said = NpcResident.Settle(a, p.To);
@@ -115,7 +115,7 @@ namespace HuginWhispers
                 {
                     NpcPhrases.SayOr(a, "no_room", Lang.T("Тут нема для мене місця. Піду до Дому воронів."));
                     a.Act("unhire");
-                    a.Order("travel " + Npcs.V(Hall) + " " + ToHall);
+                    a.Order("travel " + Npcs.V(Refuge) + " " + ToRefuge);
                 }
             }
             else

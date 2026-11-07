@@ -126,7 +126,8 @@ namespace HuginWhispers
         private static bool Ready(Player p, bool munin)
         {
             ItemDrop.ItemData item = Trust.Worn(munin);
-            return item != null && Trust.Active(item) && !Trust.Away(item) && !Trust.Stranger(item, p);
+            string off;
+            return item != null && Trust.Active(item) && !Trust.Away(item) && !Trust.Stranger(item, p) && !RavenSkills.OffShoulder(p, munin, out off); // (on your shoulder to look you over)
         }
     }
 

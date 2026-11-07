@@ -66,6 +66,35 @@ namespace HuginWhispers
             return "~" + t.GetPrefab() + "/" + p.x.ToString("0.##", ci) + "/" + p.y.ToString("0.##", ci) + "/" + p.z.ToString("0.##", ci) + "/" + sid + "/" + Ref(t.m_uid);
         }
 
+        // the seed of a person's own looks and ways (its build, height, gait, story), given once as it is born (Born) and kept
+        // in it: the same after a restart, on every game, after another template («become»: its ways stay). A person written
+        // by hand (Гейд, Торвальд) is seeded by its template — the same person in every world; a settler by its own number —
+        // its own in each. Till its seed reaches this game: its lasting number, else its id of this session (new at every
+        // world load: seeded by it, a person was another after each restart)
+        internal static readonly int KSeed = "RavenWatch_npcSeed".GetStableHashCode(); // int, never 0
+        internal static uint Seed(ZDO z)
+        {
+            if (z == null) return 0u;
+            int own = z.GetInt(KSeed, 0);
+            if (own != 0) return (uint)own;
+            NpcDef d = NpcDefs.Find(z.GetString(Npcs.KId, "")); // (its seed not here yet: the one Born gives it — one written by hand, its template's)
+            if (d != null && !d.Generated) { int t = d.Id.GetStableHashCode(); return (uint)(t != 0 ? t : 1); }
+            long sid = z.GetLong(KSid, 0L);
+            if (sid == 0L && z.IsOwner()) sid = Mark(z);
+            return sid != 0L ? (uint)sid ^ (uint)(sid >> 32) : (uint)(z.m_uid.ID * 2654435761u) ^ (uint)z.m_uid.UserID;
+        }
+
+        // its lasting number and its seed, once, where it is owned (NpcActor: its body made here owned — born here, an old save
+        // loaded here — or its owner come here later: a body first made unowned, as the server hands it out)
+        internal static void Born(ZDO z, NpcDef d)
+        {
+            if (z == null || !z.IsOwner()) return;
+            long sid = Mark(z);
+            if (d == null || z.GetInt(KSeed, 0) != 0) return; // (its template not here — another version: its seed waits for it)
+            int seed = !d.Generated ? d.Id.GetStableHashCode() : (int)((uint)sid ^ (uint)(sid >> 32));
+            z.Set(KSeed, seed != 0 ? seed : 1);
+        }
+
         // its own number (once, by its owner)
         internal static long Mark(ZDO t)
         {
@@ -145,10 +174,11 @@ namespace HuginWhispers
             bool done = true;
             foreach (int key in new[] { NpcResident.KHeart, NpcResident.KBed, NpcWorker.KChest, NpcWorker.KTarget, NpcLocker.KLocker })
             {
-                string raw = z.GetString(key, "");
+                bool own = key == NpcResident.KHeart || key == NpcLocker.KLocker; // (the rest live in its locker: NpcLocker.Lives)
+                string raw = own ? z.GetString(key, "") : NpcLocker.Text(z, key);
                 if (raw.Length == 0 || raw[0] == '~') continue;
                 ZDOID id = Parse(raw);
-                if (ZDOMan.instance.GetZDO(id) != null) { SetRef(z, key, id); continue; } // (good this session: kept lasting)
+                if (ZDOMan.instance.GetZDO(id) != null) { if (own) SetRef(z, key, id); else NpcLocker.PutRef(z, key, id); continue; } // (good this session: kept lasting)
                 if (key == NpcResident.KHeart)
                 {
                     NpcHeart h = NpcHeart.Near(NpcRules.Home(a), 3f);
@@ -157,7 +187,7 @@ namespace HuginWhispers
                     Npcs.Log(a.Id + ": found its heart again after a restart");
                 }
                 else if (key == NpcLocker.KLocker) { z.Set(key, ""); if (!NpcLocker.Adopt(a)) Npcs.Log(a.Id + ": its locker of before the restart not found near it"); }
-                else { z.Set(key, ""); Npcs.Log(a.Id + ": its " + (key == NpcResident.KBed ? "bed" : key == NpcWorker.KChest ? "chest" : "work target") + " link was lost in a restart — point it out again"); }
+                else { NpcLocker.Put(z, key, ""); Npcs.Log(a.Id + ": its " + (key == NpcResident.KBed ? "bed" : key == NpcWorker.KChest ? "chest" : "work target") + " link was lost in a restart — point it out again"); }
             }
             if (done) NpcLocker.Adopt(a); // (a locker left behind by a restart: taken back, once a session — or a full one for an empty one)
             return done;
@@ -199,16 +229,33 @@ namespace HuginWhispers
             return best;
         }
 
+        // the game's «Fireplace» is a torch on a wall too: a fire to sit by, warm at, turn to is one with the game's warmth round it (asked once a piece)
+        private static readonly Dictionary<Fireplace, bool> WarmOnes = new Dictionary<Fireplace, bool>(); // session
+        internal static bool Warms(Fireplace f)
+        {
+            if (f == null) return false;
+            bool w;
+            if (WarmOnes.TryGetValue(f, out w)) return w;
+            w = false;
+            foreach (EffectArea e in f.GetComponentsInChildren<EffectArea>(true)) if ((e.m_type & EffectArea.Type.Heat) != 0) { w = true; break; } // heavy: once a piece
+            if (WarmOnes.Count > 256) WarmOnes.Clear();
+            WarmOnes[f] = w;
+            return w;
+        }
+
         // two steps from the nearest burning fire round «around» (within range, and inside when given), on the side of
         // «me»; none: the fallback
         internal static Vector3 ByFire(Vector3 around, float range, Vector3 me, Vector3 fallback, Func<Vector3, bool> inside)
         {
             List<Fireplace> fires = new List<Fireplace>();
-            foreach (Collider col in Physics.OverlapSphere(around, range, Built))
-            {
-                Fireplace f = col.GetComponentInParent<Fireplace>();
-                if (f != null && !fires.Contains(f) && f.IsBurning() && (inside == null || inside(f.transform.position))) fires.Add(f);
-            }
+            NpcBase b = NpcBase.Covering(around); // (a base's own look round it: its fires, not every collider within 50 m)
+            if (b != null) { foreach (Component c in b.Round(typeof(Fireplace))) { Fireplace f = c as Fireplace; if (f != null && Warms(f) && Utils.DistanceXZ(f.transform.position, around) <= range && f.IsBurning() && (inside == null || inside(f.transform.position))) fires.Add(f); } }
+            else
+                foreach (Collider col in Physics.OverlapSphere(around, range, Built)) // heavy: only where no base looks round
+                {
+                    Fireplace f = col.GetComponentInParent<Fireplace>();
+                    if (f != null && Warms(f) && !fires.Contains(f) && f.IsBurning() && (inside == null || inside(f.transform.position))) fires.Add(f);
+                }
             fires.Sort((x, y) => Vector3.Distance(x.transform.position, around).CompareTo(Vector3.Distance(y.transform.position, around)));
             for (int i = 0; i < fires.Count && i < 4; i++) // (the nearest few: one up a tower out of reach gives way to the next)
             {
@@ -223,26 +270,6 @@ namespace HuginWhispers
         internal static bool UnderSky(Vector3 p)
         {
             return !Physics.Raycast(p + Vector3.up * 2.2f, Vector3.up, 40f, Roofs, QueryTriggerInteraction.Ignore);
-        }
-
-        // test: why each fire round here was not taken (the evening's «no fire» log)
-        internal static string FiresWhy(Vector3 around, float range, Vector3 me, Func<Vector3, bool> ours, Func<Vector3, bool> priv)
-        {
-            List<Fireplace> fires = new List<Fireplace>();
-            foreach (Collider col in Physics.OverlapSphere(around, range, Built)) { Fireplace f = col.GetComponentInParent<Fireplace>(); if (f != null && !fires.Contains(f)) fires.Add(f); }
-            if (fires.Count == 0) return "no fire within " + range + " m of its home";
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.Append(" (its home ").Append(Npcs.V(around)).Append(")");
-            foreach (Fireplace f in fires)
-            {
-                Vector3 p = f.transform.position;
-                if (!f.IsBurning()) continue; // (only the burning ones: what is out is out)
-                sb.Append(" · ").Append(f.name.Replace("(Clone)", "")).Append(" at ").Append(Npcs.V(p)).Append(", ").Append(Mathf.RoundToInt(Utils.DistanceXZ(p, around))).Append(" m from its home: ");
-                if (!ours(p) && !priv(p)) sb.Append("outside its base and its yard");
-                else if (priv(p)) sb.Append("in a player's house");
-                else sb.Append(FireSide(f, me) != null ? "fine" : "no spot round it walked to");
-            }
-            return sb.ToString();
         }
 
         // a place to sit by a fire: two steps (or one and a half) from it on a floor at its own height, on «me»'s side;
@@ -269,6 +296,16 @@ namespace HuginWhispers
             if (pf == null) return false;
             Vector3 g;
             if (pf.FindValidPoint(out g, p, r, t)) { v = g; return true; } // (should the game mend its own one day)
+            UnityEngine.AI.NavMeshQueryFilter f = Filter(pf, t);
+            UnityEngine.AI.NavMeshHit hit;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(p, out hit, r, f)) return false;
+            v = hit.position;
+            return true;
+        }
+
+        // the navmesh's own id and areas of a walker kind (read once for a way finder)
+        internal static UnityEngine.AI.NavMeshQueryFilter Filter(Pathfinding pf, Pathfinding.AgentType t)
+        {
             UnityEngine.AI.NavMeshQueryFilter f;
             if (!Filters.TryGetValue(t, out f))
             {
@@ -281,15 +318,44 @@ namespace HuginWhispers
                 catch (Exception e) { Npcs.Log("way finder: its walker settings not read — " + e.Message); f = new UnityEngine.AI.NavMeshQueryFilter { agentTypeID = 0, areaMask = -1 }; }
                 Filters[t] = f;
             }
-            UnityEngine.AI.NavMeshHit hit;
-            if (!UnityEngine.AI.NavMesh.SamplePosition(p, out hit, r, f)) return false;
-            v = hit.position;
-            return true;
+            return f;
         }
 
         // how people walk: on foot, never swimming — the way finder's «humanoid» swims, and their way to a hall across a
-        // stream went through the water (a studio shot, 2026-10-31: down the steps, into the river, stuck at the bank)
-        internal const Pathfinding.AgentType Walker = Pathfinding.AgentType.HumanoidNoSwim;
+        // stream went through the water (a studio shot, 2026-10-31: down the steps, into the river, stuck at the bank).
+        // Their own kind of walker in the game's way finder (2026-11-06, measured: the game's humanoid climbs 0.3 m, so a raised floor and
+        // its stairs were an island its map never joined to the ground — 30 of 40 ways ended short, people pushed at the stair and were put
+        // there in the end): the humanoid that does not swim, with WalkerClimb and WalkerRadius. Made once for each way finder (a world
+        // loaded: a new one), at the end of its list; the game's own kind if that fails (the log says why). Its map is built only where
+        // people ask (their bases): tiles of its own, beside the game's. Its slope stays the game's (one thing changed at a time).
+        internal static float WalkerClimb = 0.55f, WalkerRadius = 0.35f;
+        private static Pathfinding _walkerOf;
+        private static Pathfinding.AgentType _walker = Pathfinding.AgentType.HumanoidNoSwim;
+        internal static Pathfinding.AgentType Walker { get { Pathfinding pf = Pathfinding.instance; if (pf != null && !ReferenceEquals(pf, _walkerOf)) MakeWalker(pf); return _walker; } }
+        internal static bool OwnWalker { get { return Walker != Pathfinding.AgentType.HumanoidNoSwim; } }
+
+        private static void MakeWalker(Pathfinding pf)
+        {
+            _walkerOf = pf; _walker = Pathfinding.AgentType.HumanoidNoSwim;
+            Filters.Clear(); // (a new way finder: its ids are new)
+            try
+            {
+                System.Collections.IList list = (System.Collections.IList)HarmonyLib.AccessTools.Field(typeof(Pathfinding), "m_agentSettings").GetValue(pf);
+                object copy = HarmonyLib.AccessTools.Method(typeof(Pathfinding), "GetSettings").Invoke(pf, new object[] { Pathfinding.AgentType.HumanoidNoSwim });
+                Pathfinding.AgentType kind = (Pathfinding.AgentType)list.Count; // (the end of its list: no gap)
+                object s = HarmonyLib.AccessTools.Method(typeof(Pathfinding), "AddAgent").Invoke(pf, new object[] { kind, copy });
+                Type t = s.GetType();
+                System.Reflection.FieldInfo build = HarmonyLib.AccessTools.Field(t, "m_build");
+                UnityEngine.AI.NavMeshBuildSettings b = (UnityEngine.AI.NavMeshBuildSettings)build.GetValue(s);
+                b.agentClimb = WalkerClimb; b.agentRadius = WalkerRadius;
+                build.SetValue(s, b);
+                HarmonyLib.AccessTools.Field(t, "m_canSwim").SetValue(s, false);
+                HarmonyLib.AccessTools.Field(t, "m_areaMask").SetValue(s, HarmonyLib.AccessTools.Field(t, "m_areaMask").GetValue(copy));
+                _walker = kind;
+                Npcs.Log("way finder: people walk as their own kind " + (int)kind + " (climb " + b.agentClimb + ", radius " + b.agentRadius + ", slope " + b.agentSlope + ", height " + b.agentHeight + ")");
+            }
+            catch (Exception e) { Npcs.Log("way finder: own kind of walker not made — the game's humanoid: " + e); }
+        }
 
         internal static string FootWhy = ""; // (test: why the last OnFoot found no way)
         internal static float OnFoot(Vector3 a, Vector3 b, float max)
@@ -300,7 +366,7 @@ namespace HuginWhispers
             if (!NpcKit.Valid(out pb, b, 2.5f, NpcKit.Walker)) { FootWhy = "no walkable spot by its end"; return float.MaxValue; }
             if (Vector3.Distance(pa, pb) > max) { FootWhy = "too far straight"; return float.MaxValue; } // (too far even straight: no path asked)
             Way.Clear();
-            try { if (!Pathfinding.instance.GetPath(pa, pb, Way, NpcKit.Walker) || Way.Count == 0) { FootWhy = "no path (" + Way.Count + " points)"; return float.MaxValue; } } catch (Exception e) { FootWhy = "path threw " + e.GetType().Name; return float.MaxValue; }
+            try { if (!NpcWalk.Way(pa, pb, Way) || Way.Count == 0) { FootWhy = "no path (" + Way.Count + " points)"; return float.MaxValue; } } catch (Exception e) { FootWhy = "path threw " + e.GetType().Name; return float.MaxValue; }
             if (Vector3.Distance(Way[Way.Count - 1], pb) > 1.5f) { FootWhy = "only part of the way (ends " + Mathf.Round(Vector3.Distance(Way[Way.Count - 1], pb) * 10f) / 10f + " m short)"; return float.MaxValue; } // (only part of the way: none)
             FootWhy = "";
             float len = Vector3.Distance(pa, Way[0]);
@@ -343,7 +409,7 @@ namespace HuginWhispers
             l.Sort((a, b) => Utils.DistanceXZ(a, me).CompareTo(Utils.DistanceXZ(b, me)));
             Vector3 from;
             if (NpcKit.Valid(out from, me, 2.5f, NpcKit.Walker)) me = from; // (from the ground it walks: seated, in a corner, its own spot is off the way finder's floor)
-            for (int i = 0; i < l.Count && i < 3; i++) if (Pathfinding.instance.HavePath(me, l[i], NpcKit.Walker)) return true;
+            for (int i = 0; i < l.Count && i < 3; i++) if (NpcWalk.Have(me, l[i])) return true;
             return NpcDoors.Toward(me, l[0], NpcKit.Walker) != null;
         }
 

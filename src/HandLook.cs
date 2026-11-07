@@ -48,7 +48,7 @@ namespace HuginWhispers
             if (prefab == null) return null;
             List<Renderer> use = new List<Renderer>();
             LODGroup lod = prefab.GetComponentInChildren<LODGroup>(true);
-            if (lod != null && lod.GetLODs().Length > 0) use.AddRange(lod.GetLODs()[0].renderers);
+            if (lod != null && lod.enabled && lod.GetLODs().Length > 0) use.AddRange(lod.GetLODs()[0].renderers); // (an item of ours has the game's shape switched off and its own in place: WsItems.Dress)
             else use.AddRange(prefab.GetComponentsInChildren<MeshRenderer>(true)); // heavy: once per look made
             GameObject root = new GameObject("look");
             Matrix4x4 inv = prefab.transform.worldToLocalMatrix;
@@ -56,7 +56,7 @@ namespace HuginWhispers
             foreach (Renderer rd in use)
             {
                 MeshRenderer mr = rd as MeshRenderer;
-                MeshFilter mf = mr != null ? mr.GetComponent<MeshFilter>() : null;
+                MeshFilter mf = mr != null && mr.enabled ? mr.GetComponent<MeshFilter>() : null;
                 if (mf == null || mf.sharedMesh == null) continue;
                 GameObject part = new GameObject("part");
                 part.transform.SetParent(root.transform, false);

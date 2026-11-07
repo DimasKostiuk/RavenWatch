@@ -100,6 +100,57 @@ namespace HuginWhispers
             return whole.Size() + SendHeader;
         }
 
+        // every key of one ZDO by its name and bytes, heaviest first (a person's: «raven npc net <хто>» — what to move off it)
+        internal static string Dump(ZDO z, string title)
+        {
+            if (z == null) return title + ": —";
+            ZPackage whole = new ZPackage();
+            z.Serialize(whole);
+            List<KeyValuePair<int, float>> floats; List<KeyValuePair<int, Vector3>> vecs; List<KeyValuePair<int, Quaternion>> quats;
+            List<KeyValuePair<int, int>> ints; List<KeyValuePair<int, long>> longs; List<KeyValuePair<int, string>> strings;
+            List<KeyValuePair<int, byte[]>> bytes; ZDOConnection conn;
+            ZDOExtraData.GetData(z.m_uid, out floats, out vecs, out quats, out ints, out longs, out strings, out bytes, out conn);
+            List<KeyValuePair<string, int>> l = new List<KeyValuePair<string, int>>();
+            foreach (KeyValuePair<int, float> e in floats) l.Add(new KeyValuePair<string, int>(Named(e.Key) + " f", 8));
+            foreach (KeyValuePair<int, Vector3> e in vecs) l.Add(new KeyValuePair<string, int>(Named(e.Key) + " v", 16));
+            foreach (KeyValuePair<int, Quaternion> e in quats) l.Add(new KeyValuePair<string, int>(Named(e.Key) + " q", 20));
+            foreach (KeyValuePair<int, int> e in ints) l.Add(new KeyValuePair<string, int>(Named(e.Key) + " i", 8));
+            foreach (KeyValuePair<int, long> e in longs) l.Add(new KeyValuePair<string, int>(Named(e.Key) + " l", 12));
+            foreach (KeyValuePair<int, string> e in strings) { ZPackage one = new ZPackage(); one.Write(e.Value ?? ""); l.Add(new KeyValuePair<string, int>(Named(e.Key) + " s", 4 + one.Size())); }
+            foreach (KeyValuePair<int, byte[]> e in bytes) l.Add(new KeyValuePair<string, int>(Named(e.Key) + " b", 8 + (e.Value != null ? e.Value.Length : 0)));
+            l.Sort((a, b) => b.Value.CompareTo(a.Value));
+            StringBuilder s = new StringBuilder(title).Append(": ").Append(whole.Size() + SendHeader).Append(" Б, ").Append(l.Count).Append(" ключів —");
+            foreach (KeyValuePair<string, int> e in l) s.Append(' ').Append(e.Key).Append('=').Append(e.Value);
+            return s.ToString();
+        }
+
+        // this assembly's types (the ones it could load: a type of a mod not here is left out)
+        private static Type[] Types()
+        {
+            try { return Assembly.GetExecutingAssembly().GetTypes(); }
+            catch (ReflectionTypeLoadException e) { return e.Types; }
+        }
+
+        private static Dictionary<int, string> _names;
+        private static string Named(int hash)
+        {
+            if (_names == null)
+            {
+                _names = new Dictionary<int, string>();
+                foreach (FieldInfo f in typeof(ZDOVars).GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                    if (f.FieldType == typeof(int)) _names[(int)f.GetValue(null)] = f.Name.Replace("s_", "");
+                foreach (Type t in Types())
+                {
+                    if (t == null) continue;
+                    if (t.ContainsGenericParameters) continue; // (no static values to read in an open generic)
+                    foreach (FieldInfo f in t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                        if (f.FieldType == typeof(int) && f.IsInitOnly && f.Name.StartsWith("K", StringComparison.Ordinal)) _names[(int)f.GetValue(null)] = t.Name + "." + f.Name;
+                }
+            }
+            string n;
+            return _names.TryGetValue(hash, out n) ? n : hash.ToString();
+        }
+
         private static string Name(int hash)
         {
             if (hash == ZDOVars.s_items) return "items(спорядження)";
@@ -125,9 +176,7 @@ namespace HuginWhispers
                 if (f.FieldType == typeof(int)) _vanilla.Add((int)f.GetValue(null));
 
             _ours = new HashSet<int>();
-            Type[] types;
-            try { types = Assembly.GetExecutingAssembly().GetTypes(); }
-            catch (ReflectionTypeLoadException e) { types = e.Types; }
+            Type[] types = Types();
             const BindingFlags all = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
             foreach (Type t in types)
             {

@@ -454,6 +454,22 @@ namespace HuginWhispers
             return dir;
         }
 
+        // a text file of the current phrase language, whole: the player's copy (config) first, else the built-in one; null: none, or the source language
+        internal static string PhraseText(string file)
+        {
+            string pl = PhraseLanguage;
+            if (pl == Source) return null;
+            try
+            {
+                string own = Path.Combine(LangDir(pl), file);
+                if (File.Exists(own)) return File.ReadAllText(own, System.Text.Encoding.UTF8);
+                using (Stream st = typeof(Lang).Assembly.GetManifestResourceStream("RavenWatch.lang." + pl + "." + file))
+                    if (st != null) using (StreamReader r = new StreamReader(st, System.Text.Encoding.UTF8)) return r.ReadToEnd();
+            }
+            catch (Exception e) { if (Logger != null) Logger("Language file " + file + ": " + e.Message); }
+            return null;
+        }
+
         // the built-in lines of a phrase file in the current phrase language. neutral: the file holds no words (scenes
         // of tags), the same in every language. A language without that file gets nothing rather than Ukrainian.
         internal static string[] Lines(string file, string[] source, bool neutral = false)

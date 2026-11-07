@@ -1,0 +1,128 @@
+# People's words in this language (NpcPhrases): a theme or a @list here takes the place of the Ukrainian one; the rest stay as they are.
+# Keep [theme] and @list names as they are, ~tone marks too; {goal_what}, {name} are filled in.
+
+[goal_bed] {мета_ліжко}
+@мета_ліжко
+Just once I'd like to sleep in a bed of my own. Not on the ground, not wherever I drop.
+You know what I'm missing? A corner of my own. A bed nobody else takes.
+A bed of my own. Then I'd know I'm home here.
+~стар My bones are past the bare ground. A bed, now…
+~бурч I sleep like a dog, where I fall. A bed's a luxury these days, it seems.
+~мол Imagine, my own bed! I'd even put a hide on it.
+~весел I dream of a bed. Don't laugh, a soft bed!
+
+[goal_master] {мета_майстер}
+@мета_майстер
+I want people to look at my work and say: now that's a master. My trade: {goal_what}.
+A little more and my hands will know what to do by themselves. I want to be a real master.
+I learn every day. One day my work will be the best around.
+~смілив One day I'll be the best at this here. You'll see.
+~боязк I'm afraid of botching it… but I do want to learn it properly.
+~стар All these years and still learning. A master before I'm done, that's the wish.
+
+[goal_comfort] {мета_затишок}
+@мета_затишок
+You know what's missing here? {goal_what}. It would feel like home at once.
+I keep walking around and thinking: {goal_what}. Wouldn't hurt.
+Just one thing I'd want: {goal_what}. That's all I ask.
+~весел {goal_what}! Then we'd really live!
+~бурч We've got everything but what we need. {goal_what}, I say. Who's listening?
+~стар I don't need much. Well, {goal_what}, maybe.
+
+[goal_friend] {мета_друг}
+@мета_друг
+{goal_what}… A good soul. Someone I'd like to be friends with.
+We live side by side and we're still strangers. {goal_what}, that's who I'd like to know better.
+You know {goal_what}? I'd gladly be friends.
+~боязк I like {goal_what}… but how to start talking, I don't know.
+~весел {goal_what} is a good soul! We'll be friends, you'll see.
+~бурч Everyone here's a stranger. {goal_what}'s not so bad, though.
+
+[goal_thing] {мета_річ}
+@мета_річ
+I'm looking for one thing: {goal_what}. A memory of what won't come back.
+One thing gives me no peace: {goal_what}. I had one once, before this world.
+If you ever come across it… {goal_what}. Bring it, will you? It would mean a lot to me.
+~стар I'd like to hold it once more… {goal_what}. Like long ago.
+~мол You know what I dream of? {goal_what}! I don't know why myself.
+~бурч Nobody will bring it, I know. Still, {goal_what}… just once.
+
+[goal_done] {мета_збулась}
+@мета_збулась
+It came true! I didn't believe it would.
+What a day. The thing I thought about for so long, it's here!
+At last. Now I can dream of something else.
+~весел Ha! It worked! I'm the happiest one at this base today!
+~стар I've lived to see this too. Thanks to the gods… and to you.
+~бурч Well… good. Really good. Just don't tell anyone I was glad.
+
+[feel_fright] {почуття_переляк}
+@почуття_переляк
+Oh! What was that?!
+Gods… my heart's in my boots.
+Oh… my hands are shaking.
+~смілив Tch, that made me jump. Well, come on then, if you dare!
+~боязк I said it was dangerous here! I said so!
+~стар I'm too old for this… nearly fell over.
+~мол Mo-o-om… Oh. Nobody heard that.
+
+[feel_fright_greet] {почуття_переляк_вітання}
+@почуття_переляк_вітання
+Oh, it's you… You made me jump.
+Come up more quietly, my knees are still shaking.
+~бурч Why are you sneaking up? I'm barely alive as it is.
+~весел Phew, a friend! I thought those things were back.
+
+[feel_joy] {почуття_радість}
+@почуття_радість
+Now that's news!
+Ha! What a day!
+If only every day were like this!
+~бурч Well… at least something good today.
+~весел Hooray! Today I'm treating! In words, anyway.
+~стар I've lived to hear good news.
+
+[feel_joy_greet] {почуття_радість_вітання}
+@почуття_радість_вітання
+Oh, {name}! Did you hear? We've got good news today!
+Come in, come in! It's a good day.
+~бурч Well, hello. Today even I'm not grumbling.
+~мол You know already? Say you know!
+
+[feel_awe] {почуття_подив}
+@почуття_подив
+Gods… what was that?
+Did you see that?.. Tell me you saw that.
+I've never seen anything like it.
+~стар All my years, and I've never seen the like.
+~боязк That's… that's a bad sign, isn't it?
+~смілив Now that's a wonder. I'd like to know who did it.
+
+[feel_awe_greet] {почуття_подив_вітання}
+@почуття_подив_вітання
+Did you see? I still can't get over it.
+Oh, {name}… Such a thing happened here. I'm still not myself.
+~весел You missed it! You missed such a thing!
+
+[feel_grief] {почуття_смуток}
+@почуття_смуток
+It's gone empty here…
+I feel sad today.
+And so a person's gone. Who'll sit with me by the fire now?
+~бурч Leave me be right now. Just leave me be.
+~стар Everyone goes sometime. It's no easier for that.
+
+[feel_grief_greet] {почуття_смуток_вітання}
+@почуття_смуток_вітання
+Ah, it's you… Forgive me, I'm not much for talk today.
+Hello. Don't mind me, I'm just sad.
+~весел Hello… I don't even feel like joking, imagine that.
+
+[place_fav] {місце_моє}
+@місце_моє
+I like it here.
+My spot. I think better here.
+Here I am again. Habit.
+~стар I'll sit here, as always.
+~бурч At least nobody bothers me here.
+~весел Oh, my favorite spot!

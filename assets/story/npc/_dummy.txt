@@ -1,0 +1,7 @@
+# Манекен сцени анімацій (AnimStage, `raven stage`): лише для автора; не з сюжету. Тіло як у гравця, нічого свого не робить.
+[npc dummy]
+name: Манекен
+body: human
+model: 0
+fight: off
+persona: stoop=0 chatty=0 chrono=0 bravery=1

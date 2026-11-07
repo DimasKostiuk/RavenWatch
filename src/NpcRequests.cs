@@ -20,7 +20,7 @@ namespace HuginWhispers
     internal static class NpcRequests
     {
         internal static readonly int KRequest = "RavenWatch_npcRequest".GetStableHashCode(); // string "item|count|reward|rcount|until|why" ("" none) — in its locker
-        internal static readonly int KNext = "RavenWatch_npcRequestNext".GetStableHashCode(); // long: world seconds of the next ask
+        internal static readonly int KAskNext = "RavenWatch_npcRequestNext".GetStableHashCode(); // long: world seconds of the next ask — in its locker (NpcLocker.Lives)
         private const float DaysMin = 1.5f, DaysMax = 3f, Lasts = 3f;
         private const int PerBase = 2;
 
@@ -74,7 +74,7 @@ namespace HuginWhispers
 
         internal static void Tick(NpcActor a)
         {
-            if (a == null || !a.Owned || a.Zdo == null || !NpcResident.Is(a)) return;
+            if (a == null || !a.Owned || a.Zdo == null || !NpcResident.Is(a) || !a.Def.Settler) return; // (a person of the story has no way to take what it asked for)
             float look;
             if (NextLook.TryGetValue(a, out look) && Time.time < look) return;
             if (NextLook.Count > 64) NextLook.Clear();
@@ -86,14 +86,14 @@ namespace HuginWhispers
             if (req.Length > 0)
             {
                 Request r = Parse(req);
-                if (r == null || now > r.Until) { NpcLocker.Set(a, KRequest, ""); z.Set(KNext, now + (long)(Day * DaysMin)); Npcs.Log(a.Id + ": its request ran out"); }
+                if (r == null || now > r.Until) { NpcLocker.Set(a, KRequest, ""); NpcLocker.Put(z, KAskNext, now + (long)(Day * DaysMin)); Npcs.Log(a.Id + ": its request ran out"); }
                 else if (Player.GetClosestPlayer(a.transform.position, 8f) != null && UnityEngine.Random.value < 0.15f && NpcVoice.Free(a)) NpcPhrases.SayOr(a, "request_nag", Plain(a, r), Values(r));
                 return;
             }
-            long next = z.GetLong(KNext, 0L);
-            if (next == 0L) { z.Set(KNext, now + (long)(Day * UnityEngine.Random.Range(0.5f, DaysMax))); return; } // (new here: the first ask a little later)
+            long next = NpcLocker.Long(z, KAskNext, 0L);
+            if (next == 0L) { NpcLocker.Put(z, KAskNext, now + (long)(Day * UnityEngine.Random.Range(0.5f, DaysMax))); return; } // (new here: the first ask a little later)
             if (now < next) return;
-            z.Set(KNext, now + (long)(Day * UnityEngine.Random.Range(DaysMin, DaysMax)));
+            NpcLocker.Put(z, KAskNext, now + (long)(Day * UnityEngine.Random.Range(DaysMin, DaysMax)));
             if (Asking(a) >= PerBase) return;
             Request made = Make(a, now);
             if (made == null) return;
@@ -122,7 +122,7 @@ namespace HuginWhispers
             if (a == null || !a.Owned || a.Zdo == null) return "Його веде інша гра.";
             if (!NpcResident.Is(a)) return "Просять лише мешканці.";
             if (Kept(a) == null) return "Його шафка ще не тут — за мить.";
-            NpcLocker.Set(a, KRequest, ""); a.Zdo.Set(KNext, 1L); NextLook.Remove(a);
+            NpcLocker.Set(a, KRequest, ""); NpcLocker.Put(a.Zdo, KAskNext, 1L); NextLook.Remove(a);
             Tick(a);
             return (Kept(a) ?? "").Length > 0 ? "Просить: " + Text(a) : "Не вийшло (на базі вже двоє просять?).";
         }
@@ -219,14 +219,15 @@ namespace HuginWhispers
             return count > 1 ? count + " × " + name : name;
         }
 
-        private static string PayWords(Request r) { return r.Reward == "rumour" ? Lang.T("одна чутка") : Words(r.Reward, r.RewardCount); }
+        internal static string PayWords(Request r) { return r.Reward == "rumour" ? Lang.T("одна чутка") : Words(r.Reward, r.RewardCount); }
 
         // for the board, its talk: what it asks, for what, how long left
         internal static string Text(NpcActor a)
         {
             Request r = Of(a);
             if (r == null) return "";
-            return Plain(a, r) + " " + a.Form(Lang.F("Віддячу: {0}. Чекатиму ще {1}.", PayWords(r), NpcRescue.Left(r.Until - (long)NpcRescue.Now)));
+            string left = NpcRescue.Left(r.Until - (long)NpcRescue.Now);
+            return Plain(a, r) + " " + a.Form(Lang.F("Віддячу: {0}. Чекатиму ще {1}", PayWords(r), left)) + (left.EndsWith(".") ? "" : "."); // (an abbreviation's stop ends it: no «год..»)
         }
 
         internal static string Note(NpcActor a)
@@ -236,6 +237,16 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- brought (on the game of the one who brings it)
+        // how many of what it asks for you carry now (its scrap: «3 / 3»; -1: it asks for nothing)
+        internal static int Carried(Player p, NpcActor a)
+        {
+            Request r = Of(a);
+            if (r == null || p == null) return -1;
+            GameObject pf = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(r.Item) : null;
+            ItemDrop d = pf != null ? pf.GetComponent<ItemDrop>() : null;
+            return d != null ? p.GetInventory().CountItems(d.m_itemData.m_shared.m_name) : 0;
+        }
+
         internal static bool CanGive(Player p, NpcActor a)
         {
             Request r = Of(a);
@@ -263,12 +274,15 @@ namespace HuginWhispers
                 Errands.Give(p, ObjectDB.instance.GetItemPrefab(r.Reward), r.RewardCount); // (stack by stack; what does not fit at your feet)
                 paid = Lang.F("Тримай: {0}.", Words(r.Reward, r.RewardCount));
             }
-            LastPaid = a.Form(Lang.T("Ой, дякую! Саме те, що треба.") + " " + paid);
+            LastPaid = (NpcPhrases.Compose(a, "request_thanks", p) ?? Lang.T("Ой, дякую! Саме те, що треба.")) + " " + a.Form(paid);
+            NpcMemory.Tell(a, "request_done", p.GetPlayerID(), Words(r.Item, r.Count)); // (remembered first: a promise of it looks for this as soon as the request is gone — NpcPromises)
             a.Act("requestdone " + r.Until.ToString(CultureInfo.InvariantCulture)); // (its owner takes it off — that very request)
-            NpcMemory.Tell(a, "request_done", p.GetPlayerID(), Words(r.Item, r.Count));
             Npcs.Log(a.Id + ": got " + r.Count + " " + r.Item + ", paid " + r.RewardCount + " " + r.Reward);
             StoryBus.Raise("npc_request_done", a.Id, r.Count, a.transform.position);
         }
+
+        // when its request now runs out (world s; 0: none)
+        internal static long UntilOf(NpcActor a) { Request r = Parse(Kept(a)); return r != null ? r.Until : 0L; }
 
         // where it is owned: that request off (not another one asked since)
         internal static void Done(NpcActor a, string until)

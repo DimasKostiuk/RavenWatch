@@ -19,14 +19,14 @@ namespace HuginWhispers
         internal const float Radius = 25f, FarFromBase = 150f, BlowEvery = 1.6f;
 
         // ---------------------------------------------------------------- its plot
-        internal static bool Area(NpcActor a, out Vector3 at) { ZDO z = a != null ? a.Zdo : null; at = z != null ? z.GetVec3(KArea, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
+        internal static bool Area(NpcActor a, out Vector3 at) { ZDO z = a != null ? a.Zdo : null; at = z != null ? NpcLocker.Vec(z, KArea, Vector3.zero) : Vector3.zero; return at != Vector3.zero; }
 
         internal static string SetArea(NpcActor a, Vector3 aim)
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
             if (!NpcResident.Is(a)) return "Спершу оселі його: працюють від своєї бази.";
             if (Utils.DistanceXZ(aim, NpcRules.Home(a)) > FarFromBase) return Lang.F("Задалеко від його бази (до {0} м).", Mathf.RoundToInt(FarFromBase));
-            a.Zdo.Set(KArea, aim);
+            NpcLocker.Put(a.Zdo, KArea, aim);
             NpcWorker w = a.Worker; if (w != null) w.Reset();
             return Lang.F("Тут його ділянка ({0} м довкола).", Mathf.RoundToInt(Radius));
         }
@@ -221,16 +221,16 @@ namespace HuginWhispers
 
     internal sealed class Lumber : Job
     {
-        internal Lumber() { Id = "lumber"; Word = "лісоруб"; Icon = "n-lumber"; Place = "на ділянку лісу"; StoreAfterEach = false;
-            Desc = "Рубає дерева на своїй ділянці (25 м довкола, до 150 м від бази): спершу колоди, тоді пні, тоді дерева. Потрібна сокира в його спорядженні — вона зношується, як у тебе. Дерево, шишки, смолу несе в ящик."; }
+        internal Lumber() { Move = ""; Id = "lumber"; Word = Lang.K("лісоруб"); Icon = "n-lumber"; Place = Lang.K("на ділянку лісу"); StoreAfterEach = false;
+            Desc = Lang.K("Рубає дерева на своїй ділянці (25 м довкола, до 150 м від бази): спершу колоди, тоді пні, тоді дерева. Потрібна сокира в його спорядженні — вона зношується, як у тебе. Дерево, шишки, смолу несе в ящик."); }
         internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
         internal override NpcWorker.Errand Find(NpcWorker w) { return NpcHew.Find(w, true); }
     }
 
     internal sealed class Miner : Job
     {
-        internal Miner() { Id = "miner"; Word = "рудокоп"; Icon = "n-miner"; Place = "на ділянку з рудою чи камінням"; StoreAfterEach = false;
-            Desc = "Копає на своїй ділянці (25 м довкола, до 150 м від бази) руду й каміння, яке бере його кайло. Потрібне кайло в його спорядженні — воно зношується, як у тебе. Руду, камінь несе в ящик."; }
+        internal Miner() { Move = ""; Id = "miner"; Word = Lang.K("рудокоп"); Icon = "n-miner"; Place = Lang.K("на ділянку з рудою чи камінням"); StoreAfterEach = false;
+            Desc = Lang.K("Копає на своїй ділянці (25 м довкола, до 150 м від бази) руду й каміння, яке бере його кайло. Потрібне кайло в його спорядженні — воно зношується, як у тебе. Руду, камінь несе в ящик."); }
         internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
         internal override NpcWorker.Errand Find(NpcWorker w) { return NpcHew.Find(w, false); }
     }

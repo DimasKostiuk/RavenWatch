@@ -16,7 +16,9 @@ namespace HuginWhispers
     //   - With the bar full, a ritual at the Sacrificial stones (where the boss trophies are left) raises the level:
     //     the raven eats the next boss's trophies.
     //   - Trust is lost: on death (both worn ravens), when the raven is taken off, and while it starves (satiety 0).
-    //     A full bar is frozen: nothing is lost until the ritual, which starts the next bar from zero.
+    //     A full bar is frozen: nothing is lost until the ritual, which starts the next bar from zero. An offence (Offend: you told it to
+    //     shut up in front of a person) is the one thing that takes trust from a full bar too; at the top level, with no bar, it breaks its
+    //     days at the highest trust («Улюбленець»).
     //   - A level raises the raven's strength (100 at the first, 300 at the last) and its abilities.
     internal static class Trust
     {
@@ -235,7 +237,7 @@ namespace HuginWhispers
             if (ReferenceEquals(p, Player.m_localPlayer)) p.m_customData[BondedKey] = "1";
         }
 
-        // Odin's gift (Trial): this one's raven from the start, though still asleep — no one else can wake it, so it
+        // Odin's gift (Trial), your own raven of the prologue (StoryOwn): this one's raven from the start, though still asleep — no one else can wake it, so it
         // cannot be won on another character and handed over. (Not "bonded": the keys wait for it to wake.)
         internal static void Promise(ItemDrop.ItemData item, Player p)
         {
@@ -243,15 +245,6 @@ namespace HuginWhispers
             Write(item, OwnerKey, p.GetPlayerID().ToString());
             Write(item, OwnerNameKey, p.GetPlayerName());
         }
-
-#if RAVEN_STORY
-        // the character's own raven given back by the story (StoryOwn: the prologue): awake and this one's from the start —
-        // no ritual; the first level, an empty bar
-        internal static void WakeOwn(ItemDrop.ItemData item, Player p) { Bind(item, p); SetLevel(item, 1, 0f); }
-
-        // its own raven melted into this one (StoryOwn): the bar of this level full at once (the ritual still asks its heads)
-        internal static void FillBar(ItemDrop.ItemData item) { if (item != null && Level(item) >= 1) SetPoints(item, Need(item)); }
-#endif
 
         // This character has ever had a raven of its own (woken and bound to it): until then the keys (book, gifts,
         // orders) do nothing, there is nobody to send, only G → Ворони opens them. Kept on the character; one look at
@@ -445,7 +438,7 @@ namespace HuginWhispers
 
         // a thought asked for is a talk together: trust for that raven only, at most TalkDailyCap a game day
         // (talking by the fire is cheap: it must not fill the whole day's trust), and within the deeds' daily limit too
-        internal static void Talked(bool munin) { Together(munin, TalkTrust, TalkDailyCap, TalkDayKey, TalkKey, Lang.T("розмова")); }
+        internal static float Talked(bool munin) { return Together(munin, TalkTrust, TalkDailyCap, TalkDayKey, TalkKey, Lang.T("розмова")); }
         // an order flown (Orders): play together, as a talk is; its own little limit a game day
         internal static void Ordered(bool munin) { Together(munin, OrderTrust, OrderDailyCap, OrderDayKey, OrderKey, Lang.T("наказ")); }
         // its own little joys with you (a bath, a game with your tamed beast): their own limit a game day
@@ -459,17 +452,18 @@ namespace HuginWhispers
         private const string ArmDayKey = "RavenWatch_armDay", ArmKey = "RavenWatch_armToday";
         internal static void OnArm(bool munin) { Together(munin, ArmTrust, ArmDailyCap, ArmDayKey, ArmKey, Lang.T("на руці")); }
 
-        private static void Together(bool munin, float amount, float cap, string dayKey, string key, string why)
+        private static float Together(bool munin, float amount, float cap, string dayKey, string key, string why)
         {
             ItemDrop.ItemData item = Worn(munin);
-            if (item == null || amount <= 0f) return;
+            if (item == null || amount <= 0f) return 0f;
             int day = Day(), d;
             float today = 0f;
             if (int.TryParse(Read(item, dayKey), out d) && d >= day) float.TryParse(Read(item, key), NumberStyles.Float, CultureInfo.InvariantCulture, out today);
             float give = DeedFor(munin, Mathf.Min(amount, cap - today), why);
-            if (give <= 0f) return; // nothing taken in (a full bar, the day's deeds used up, not its owner): this limit stays
+            if (give <= 0f) return 0f; // nothing taken in (a full bar, the day's deeds used up, not its owner): this limit stays
             Write(item, dayKey, Mathf.Max(d, day).ToString());
             Write(item, key, (today + give).ToString("0.##", CultureInfo.InvariantCulture));
+            return give;
         }
 
         // the trust really taken in
@@ -878,6 +872,7 @@ namespace HuginWhispers
 
         internal static void OnDeath()
         {
+            if (!RavenBook.Given(Player.m_localPlayer)) return; // (no book yet: a raven that only sits loses nothing by your death)
             foreach (bool munin in new bool[] { false, true })
             {
                 ItemDrop.ItemData item = Worn(munin);
@@ -927,6 +922,18 @@ namespace HuginWhispers
             if (item == null) return;
             if (item.m_customData != null) item.m_customData.Remove(GraveBackKey);
             if (points > 0f) Add(item, munin, points, false, Lang.T("кровна помста"));
+        }
+
+        // you hurt it with a word (NpcTalkRaven): the points really lost (0: none — asleep, away, not yours); at the top level nothing to lose
+        // but its days at the highest trust, which start over (top: true then, only when there were some)
+        internal static float Offend(ItemDrop.ItemData item, float points, out bool top)
+        {
+            top = false;
+            if (item == null || points <= 0f || !Active(item) || Away(item) || Stranger(item, Player.m_localPlayer)) return 0f;
+            if (Need(item) <= 0f) { string days = Read(item, "RavenWatch_n_envoy"); top = !string.IsNullOrEmpty(days) && days != "0"; if (top) Write(item, "RavenWatch_n_envoy", "0"); return 0f; } // (Nicks: the envoy's days; none yet: nothing to say)
+            float before = Points(item);
+            SetPoints(item, before - points); // (a full bar too: the one loss that does not wait for the ritual)
+            return before - Points(item);
         }
 
         internal static void OnTakenOff(ItemDrop.ItemData item) { if (item != null) Lose(item, Need(item) * TakeOffLoss); }

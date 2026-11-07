@@ -5,23 +5,28 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // A person's round menu (npc-plan.md): Q while pointing at an NPC (E stays for quick orders later). Drawn as the
-    // ravens' circles are (OrdersMenu: its frames and icons, the book's tip plate over it): a dark disc in the middle
-    // with its name and what it does now, round buttons in a ring round it.
-    // Its buttons come from the parts of a person (Button below): the core's (За мною, Стій, Туди, Сядь), the
-    // resident's (Оселити/Виселити, Ліжко), the worker's (Робота, Ящик). A button follows what it does now (as the
-    // ravens' circles): «За мною» while it follows you is «Відпусти». A button with a ring of its own (Робота) turns
-    // the ring into its choices, the middle into «Назад». Its way in a fight is not here: each person has its own (its
-    // template, the story), never picked by a player. A button about a place: the menu
-    // closes, you point at the place and press Q again (within PickSeconds). One that cannot be pressed now is grey and
-    // says why.
+    // A person's round menu (npc-plan.md): Q while pointing at an NPC (E: its talk). Drawn as the ravens' circles are
+    // (OrdersMenu: its frames and icons, the book's tip plate under it — the user's mockup 2026-11-05): a dark disc in the middle with its name, what
+    // it does now and its state (DrawMiddle), round buttons in a ring round it.
+    // Its buttons come from the parts of a person (Button below): the core's (За мною, Стій, Туди, Сядь, Говорити), the
+    // profile's (Вдача), the resident's (Оселя), the worker's (Робота), the gear's (Спорядження).
+    // The main ring keeps every button in its own place for every person (the user, 2026-11-04: held Q and a flick
+    // without looking): one that is not for this person now leaves its place empty, the others do not move. What is
+    // set once (a job's chest, post, house…; the bed, moving out) lives in the rings under Робота and Оселя.
+    // An order going on lights its button; that button again, or the middle, lets it go («Відпусти»). A button with a
+    // ring of its own turns the ring into its choices, the middle into «Назад» (rings in rings: «Назад» one step). A
+    // button that undoes much (Виселити) asks a second press. Its way in a fight is not here: each person has its own
+    // (its template, the story), never picked by a player. A button about a place: the menu closes, you point at the
+    // place and press Q again (within PickSeconds; a right click drops it, PickCancel). One that cannot be pressed now is grey and says why.
     // Held Q: point and let go to pick; a short tap leaves it open for a click; right click, Esc or a click outside closes.
     // Orders go through the NPC (to its owner's game when it is not ours).
+    // Its look is the user's mockup (2026-11-04, Downloads/Меню персонажа - центр.html): its signs and frames made by
+    // tools/npc_icons.html, its words in Alegreya (BookArt.Words), its numbers and colours here.
     internal sealed class NpcMenu : MonoBehaviour
     {
         private static NpcMenu _inst;
         private const float HoldSeconds = 0.3f, PickSeconds = 30f; // (a place to show: half a minute — fifteen seconds was too short to walk to a table, 2026-11-01)
-        private const float DiscR = 70f, RingR = 140f, Btn = 68f; // reference px (×ScaleNow)
+        private const float DiscR = 78f, RingR = 140f, Btn = 68f, PlateOut = 66f; // reference px (×ScaleNow); the disc 156 and the plate 412 across (the user's mockup, 2026-11-04: the state fits, the lower buttons' words stay on the plate)
 
         internal static bool IsOpen { get { return _inst != null && _inst._open; } }
         private static int _closedFrame = -10;
@@ -46,18 +51,20 @@ namespace HuginWhispers
 
         // a button on the menu. Each part of a person gives its own (the core ones below, NpcResident.MenuButtons,
         // NpcWorker.MenuButtons): the menu only lays them out, draws them and calls them — a new part adds its buttons
-        // there, the menu is not touched.
+        // there, the menu is not touched. A new button on the main ring moves every other one: put it in a ring under one
+        // (Sub) unless it is pressed often.
         internal sealed class Button
         {
             public int Order;                              // its place round the ring (from the top, clockwise)
             public string Title, Icon;                     // its word, its picture (assets/menu)
-            public Func<NpcActor, string> TitleNow;        // (a word that changes with it: Оселити / Виселити)
+            public Func<NpcActor, string> TitleNow;        // (a word that changes with it: Оселити тут / Оселя)
             public Func<NpcActor, string> IconNow;         // (a picture that changes with it)
-            public Func<NpcActor, List<Button>> Sub;       // a ring of its own: pressed, the ring shows these, the middle «Назад»
+            public Func<NpcActor, List<Button>> Sub;       // a ring of its own: pressed, the ring shows these, the middle «Назад» (null for this person now: Do instead)
             public Func<NpcActor, string> Desc;            // the line over the circle
             public Func<NpcActor, bool> Now;               // lit: it does this now
             public Func<NpcActor, string> Not;             // why it cannot be pressed now (null: it can)
-            public Func<NpcActor, bool> Shown;             // on the ring at all (null: always) — e.g. an admin's own tool
+            public string Confirm;                         // it undoes much: the first press only asks (these words), a second one within ConfirmSeconds does it
+            public Func<NpcActor, bool> Shown;             // for this person now (null: always): on the main ring its place stays, empty; in a ring under one, left out
             public Func<NpcActor, Vector3?> Where;         // the thing it is about (its bed, its chest, its home): marked on the screen while the button is under the pointer
             public Func<NpcActor, Player, string> Do;      // pressed: what to tell you (null: nothing)
             public bool Stay;                              // pressed: the ring stays open (a switch among others: NpcTidy)
@@ -83,33 +90,30 @@ namespace HuginWhispers
             }
         }
 
-        // the core's own: moving it and its way in a fight
+        // the core's own: moving it, its talk. The main ring's places, from the top clockwise: Вдача 5, За мною 10, Стій 20,
+        // Туди 30, Сядь 40, Робота 50, Оселя 60, Спорядження 70, Говорити 80.
         private static IEnumerable<Button> Core()
         {
-            // «За мною» / while it follows: «Відпусти»
-            yield return new Button { Order = 10, Title = "За мною", Icon = "n-follow", Now = a => Ordered(a, NpcMind.Task.Follow),
-                TitleNow = a => Ordered(a, NpcMind.Task.Follow) ? Lang.T("Відпусти") : Lang.T("За мною"),
-                IconNow = a => Ordered(a, NpcMind.Task.Follow) ? "n-release" : "n-follow",
-                Desc = a => Ordered(a, NpcMind.Task.Follow) ? Freed(a) : Lang.T("Іде за тобою, доки не відпустиш."),
+            // an order's button lit while it goes on; pressed again, it lets it go (as the middle does)
+            yield return new Button { Order = 10, Title = Lang.K("За мною"), Icon = "n-follow", Now = a => Ordered(a, NpcMind.Task.Follow),
+                Desc = a => Ordered(a, NpcMind.Task.Follow) ? Lang.T("Іде за тобою.") + " " + AgainFrees() : Lang.T("Іде за тобою, доки не відпустиш."),
                 Do = (a, p) =>
                 {
-                    if (Ordered(a, NpcMind.Task.Follow)) { a.Order("free"); return a.Name + ": " + Lang.T("повертається до своїх справ"); }
+                    if (Ordered(a, NpcMind.Task.Follow)) return Free(a);
                     a.Order("follow " + NpcKit.Ref(p.GetZDOID()) + " 3"); return a.Name + ": " + Lang.T("іде за тобою");
                 } };
-            // «Стій» / while it stands by an order (or waits where it was sent): «Відпусти»
-            yield return new Button { Order = 20, Title = "Стій", Icon = "n-stay", Now = a => Ordered(a, NpcMind.Task.Idle),
-                TitleNow = a => Ordered(a, NpcMind.Task.Idle) ? Lang.T("Відпусти") : Lang.T("Стій"),
-                IconNow = a => Ordered(a, NpcMind.Task.Idle) ? "n-release" : "n-stay",
-                Desc = a => Ordered(a, NpcMind.Task.Idle) ? Freed(a) : Lang.T("Стоїть, де стоїть, доки не відпустиш."),
-                Do = (a, p) => { a.Order(Ordered(a, NpcMind.Task.Idle) ? "free" : "stay"); return null; } };
-            yield return new Button { Order = 30, Title = "Туди", Icon = "n-there", Place = "на місце", Now = a => Ordered(a, NpcMind.Task.Go), Desc = a => Lang.T("Іде туди, куди покажеш, і чекає там."),
+            // (it waits where it was sent as «Стій» too: «go» that arrived waits as idle)
+            yield return new Button { Order = 20, Title = Lang.K("Стій"), Icon = "n-stay", Now = a => Ordered(a, NpcMind.Task.Idle),
+                Desc = a => Ordered(a, NpcMind.Task.Idle) ? Lang.T("Стоїть.") + " " + AgainFrees() : Lang.T("Стоїть, де стоїть, доки не відпустиш."),
+                Do = (a, p) => { if (Ordered(a, NpcMind.Task.Idle)) return Free(a); a.Order("stay"); return null; } };
+            yield return new Button { Order = 30, Title = Lang.K("Туди"), Icon = "n-there", Place = Lang.K("на місце"), Now = a => Ordered(a, NpcMind.Task.Go), Desc = a => Lang.T("Іде туди, куди покажеш, і чекає там."),
                 AtPlace = (a, at) => { a.Order("go " + Npcs.V(at)); return a.Name + ": " + Lang.T("іде туди"); } };
-            // «Сядь» / while it sits by an order: «Встань»
-            yield return new Button { Order = 40, Title = "Сядь", Icon = "n-sit", Now = a => Ordered(a, NpcMind.Task.Sit),
-                TitleNow = a => Ordered(a, NpcMind.Task.Sit) ? Lang.T("Встань") : Lang.T("Сядь"),
-                IconNow = a => Ordered(a, NpcMind.Task.Sit) ? "n-stand" : "n-sit",
-                Desc = a => Ordered(a, NpcMind.Task.Sit) ? Freed(a) : Lang.T("Сідає на найближчу лаву чи стілець, а як нема — на землю поруч."),
-                Do = (a, p) => { a.Order(Ordered(a, NpcMind.Task.Sit) ? "free" : "sit " + Npcs.V(a.transform.position)); return null; } };
+            yield return new Button { Order = 40, Title = Lang.K("Сядь"), Icon = "n-sit", Now = a => Ordered(a, NpcMind.Task.Sit),
+                Desc = a => Ordered(a, NpcMind.Task.Sit) ? Lang.T("Сидить.") + " " + AgainFrees() : Lang.T("Сідає на найближчу лаву чи стілець, а як нема — на землю поруч."),
+                Do = (a, p) => { if (Ordered(a, NpcMind.Task.Sit)) return Free(a); a.Order("sit " + Npcs.V(a.transform.position)); return null; } };
+            // its talk, as E: the same way in (NpcActor.Interact: senseless, an echo… — the modules' own use first)
+            yield return new Button { Order = 80, Title = Lang.K("Говорити"), Icon = "n-talk", Desc = a => Lang.T("Розмова з ним — те саме, що E."),
+                Do = (a, p) => { a.Interact(p, false, false); return null; } };
         }
 
         // what an order of this kind is going on (the Order layer's plan; «go» that arrived waits as idle)
@@ -119,9 +123,19 @@ namespace HuginWhispers
             return p != null && p.Kind == kind;
         }
 
+        // an order of the menu's going on: the middle lets it go
+        private static bool Releasable(NpcActor a)
+        {
+            NpcMind.Plan p = a != null && a.Mind != null ? a.Mind.Of(NpcMind.Layer.Order) : null;
+            return p != null && (p.Kind == NpcMind.Task.Follow || p.Kind == NpcMind.Task.Idle || p.Kind == NpcMind.Task.Go || p.Kind == NpcMind.Task.Sit);
+        }
+
+        private static string Free(NpcActor a) { a.Order("free"); return a.Name + ": " + Lang.T("повертається до своїх справ"); }
+        private static string AgainFrees() { return Lang.T("Натисни ще раз або в центр кола — відпустиш."); }
         private static string Freed(NpcActor a) { return Lang.T("Наказ знято: повертається до своїх справ") + (NpcResident.Is(a) ? Lang.T(" і на свою базу.") : "."); }
 
-        private sealed class Item { internal Button B; internal string Title, Desc, Icon; internal bool Now, Off; internal Vector3? Where; }
+        // a place on the ring as it was when it was filled (Empty: the main ring's place of a button not for this person)
+        private sealed class Item { internal Button B; internal List<Button> Ring; internal string Title, Desc, Icon; internal bool Now, Off, Empty, Asks; internal Vector3? Where; internal Fitted Label; }
 
         private bool _open;
         private NpcActor _npc;
@@ -129,7 +143,15 @@ namespace HuginWhispers
         private float _held;
         private int _hover = -1;                 // a button, -2 the middle, -1 nothing
         private readonly List<Item> _items = new List<Item>();
-        private Button _sub;                      // the button whose ring is shown (null: the main ring)
+        private readonly List<Button> _subs = new List<Button>(); // the rings opened, one in another (none: the main ring)
+        private Button Top { get { return _subs.Count > 0 ? _subs[_subs.Count - 1] : null; } }
+        private bool _release;                    // the middle lets its order go (the main ring, an order of the menu going on)
+
+        // a button that asks a second press (Confirm): which, for whom, until when
+        private const float ConfirmSeconds = 5f;
+        private Button _asked;
+        private NpcActor _askedOf;
+        private float _askedUntil;
 
         // a place to point at after the menu (Туди, Ліжко, Ящик): for whom, which button, until when
         private static NpcActor _pickFor;
@@ -147,6 +169,53 @@ namespace HuginWhispers
             _inst.enabled = true;
         }
 
+        // ---------------------------------------------------------------- a thing shown after a window (a heart's board, a person's card): the ring and the arrow a button's Where draws
+        // (WhereMark) and a mark on the map, for PointSeconds or till you stand by it. One at a time; follow: a person who moves. Local only, nothing sent
+        private const float PointSeconds = 30f, PointNear = 3f;
+        internal sealed class Point { public Vector3 At; public Transform On; public string What = ""; public Minimap.PinData Pin; }
+        private static readonly List<Point> _points = new List<Point>();
+        private static float _pointUntil;
+        private static bool PointOn { get { return _points.Count > 0 && Time.time < _pointUntil; } }
+
+        internal static void ShowPlace(Vector3 at, Transform follow, string what) { ShowPlaces(new List<Point> { new Point { At = at, On = follow, What = what ?? "" } }); }
+
+        // all of a group at once (a board's «Без ліжка: Сігрід, Ейнар»): each goes as you reach it
+        internal static void ShowPlaces(List<Point> points)
+        {
+            if (_inst == null) { GameObject go = new GameObject("RavenWatch_NpcMenu"); DontDestroyOnLoad(go); _inst = go.AddComponent<NpcMenu>(); _inst.enabled = false; }
+            PointsOff();
+            if (points == null || points.Count == 0) return;
+            _points.AddRange(points);
+            _pointUntil = Time.time + PointSeconds;
+            if (Minimap.instance != null) foreach (Point p in _points) p.Pin = Minimap.instance.AddPin(p.At, Minimap.PinType.Icon3, p.What, false, false, 0L, default(Splatform.PlatformUserID));
+            _inst.enabled = true;
+        }
+
+        private static void PointOff(Point p) { if (p.Pin != null && Minimap.instance != null) Minimap.instance.RemovePin(p.Pin); p.Pin = null; }
+        private static void PointsOff() { foreach (Point p in _points) PointOff(p); _points.Clear(); }
+
+        private void PointTick()
+        {
+            if (_points.Count == 0) return;
+            Player me = Player.m_localPlayer;
+            bool over = !PointOn || me == null;
+            for (int i = _points.Count - 1; i >= 0; i--)
+            {
+                Point p = _points[i];
+                if (p.On != null) { p.At = p.On.position; if (p.Pin != null) p.Pin.m_pos = p.At; }
+                if (over || Utils.DistanceXZ(me.transform.position, p.At) <= PointNear) { PointOff(p); _points.RemoveAt(i); }
+            }
+            if (_points.Count == 0 && !_open && !Waiting) enabled = false;
+        }
+
+        private static void PointDraw()
+        {
+            if (Event.current.type != EventType.Repaint || !InWorld() || NpcTalk.ScenePlaying) return;
+            Textures();
+            float s = OrdersMenu.ScaleNow;
+            foreach (Point p in _points) WhereMark(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f + 60f * s), p.At, p.What, s);
+        }
+
         // ---------------------------------------------------------------- the key (RavenKeys: Q, the gifts' key)
         // true when it was ours: the menu open/closed, a place picked, or an NPC under the pointer
         internal static bool Key(KeyCode key)
@@ -154,8 +223,7 @@ namespace HuginWhispers
             if (IsOpen) { _inst.Close(); return true; }
             Player p = Player.m_localPlayer;
             if (p == null) return false;
-            if ((_pickFor != null || _pickAny) && Time.time < _pickUntil) { Pick(p); return true; }
-            _pickFor = null; _pickAny = false;
+            if (Waiting) { Pick(p); return true; }
             NpcActor a = Under(p);
             if (a == null || a.Mind == null) return false; // (Odin: no menu)
             if (!MayOrder(a)) return false; // (orders only for the hired ones — a stranger is talked to, E; an admin: all)
@@ -163,8 +231,9 @@ namespace HuginWhispers
             return true;
         }
 
-        // the person you look at: the game's own pointing first, else along your look (6 m) — the menu does not hang on
-        // the game counting it as «pointed at»
+        // the person you look at: the game's own pointing first, else along your look — the menu does not hang on the game
+        // counting it as «pointed at». Never farther than a talk (E): the game's own reach from your eyes (the user 2026-11-05:
+        // Q opened the menu of someone metres away)
         private static readonly RaycastHit[] Hits = new RaycastHit[16];
         internal static NpcActor Under(Player p)
         {
@@ -177,13 +246,15 @@ namespace HuginWhispers
             for (int i = 0; i < n; i++)
             {
                 NpcActor x = Hits[i].collider != null ? Hits[i].collider.GetComponentInParent<NpcActor>() : null;
-                if (x != null && Hits[i].distance < best) { best = Hits[i].distance; a = x; }
+                Vector3 at = Hits[i].distance > 0f ? Hits[i].point : Hits[i].collider.ClosestPoint(p.GetEyePoint()); // (begun inside it: no point of its own)
+                if (x == null || Hits[i].distance >= best || Vector3.Distance(p.GetEyePoint(), at) > p.m_maxInteractDistance) continue;
+                best = Hits[i].distance; a = x;
             }
             return a;
         }
 
         // who may give it orders here: the hired ones, anyone; an admin, all (its hover names the key only then)
-        internal static bool MayOrder(NpcActor a) { return NpcTalk.Hired(a) || Plugin.IsLocalAdmin(); }
+        internal static bool MayOrder(NpcActor a) { return a.Def != null && !a.Def.NoMenu && (NpcTalk.Hired(a) || Plugin.IsLocalAdmin()); } // (no template here: it only stands, so nothing to order — and E has nothing either)
 
         private static void Open(NpcActor a, KeyCode key)
         {
@@ -193,36 +264,58 @@ namespace HuginWhispers
                 DontDestroyOnLoad(go);
                 _inst = go.AddComponent<NpcMenu>();
             }
-            _inst._npc = a; _inst._key = key; _inst._held = 0f; _inst._hover = -1; _inst._sub = null;
+            _inst._npc = a; _inst._key = key; _inst._held = 0f; _inst._hover = -1; _inst._subs.Clear(); _inst._asked = null;
             _inst._open = true; _inst.enabled = true;
             _inst.Fill();
         }
 
         private void Close()
         {
-            _open = false; _npc = null; _hover = -1; _sub = null;
+            _open = false; _npc = null; _hover = -1; _subs.Clear(); _asked = null;
             _closedFrame = Time.frameCount;
             _clickHeld = MouseHeld();
-            enabled = false;
+            enabled = PointOn;
         }
 
         // ---------------------------------------------------------------- what is on it (as it is when opened)
-        private string _ask; // (the line over its name: what it asks for)
+        // what you have to do with it (the user 2026-11-05: small tasks — «поговорити з кимось для чогось» — seen where you meet it): the lines over its name,
+        // its request first, then a module's own (Tasks: your promises, NpcPromises; a small line's word, NpcArcs). One person may give two at once: two lines,
+        // more: the first and «і ще N». Read once as the ring is made, never each frame.
+        internal static readonly List<Action<NpcActor, Player, List<string>>> Tasks = new List<Action<NpcActor, Player, List<string>>>();
+        private const int TaskLines = 2;
+        private readonly List<string> _tasks = new List<string>();
+        private readonly Fitted[] _fitTasks = new Fitted[TaskLines];
 
         private void Fill()
         {
             _items.Clear();
+            _tasks.Clear();
+            Player me = Player.m_localPlayer;
             NpcRequests.Request ask = NpcRequests.Of(_npc); // (its request: read once as the ring is made, not every frame it is drawn)
-            _ask = ask != null ? "<b>!</b> " + Lang.F("просить: {0}", NpcRequests.Words(ask.Item, ask.Count)) : null;
+            if (ask != null) _tasks.Add(me != null && NpcPromises.Has(_npc, me.GetPlayerID(), "request") ? Grammar.Fix(Lang.T("ти обіця{в|ла}: "), me) + NpcRequests.Words(ask.Item, ask.Count) : Lang.F("просить: {0}", NpcRequests.Words(ask.Item, ask.Count)));
+            if (me != null) foreach (Action<NpcActor, Player, List<string>> t in Tasks) { try { t(_npc, me, _tasks); } catch (Exception e) { Npcs.Log("npc menu tasks: " + e.Message); } }
+            int more = _tasks.Count > TaskLines ? _tasks.Count - 1 : 0; // (two at most: the first, then how many more)
+            if (more > 0) _tasks.RemoveRange(1, _tasks.Count - 1);
+            for (int i = 0; i < _tasks.Count; i++) _tasks[i] = "<b>!</b> " + _tasks[i];
+            if (more > 0) _tasks.Add(Lang.F("і ще {0}", more));
             bool down = NpcVitals.IsDown(_npc);
-            foreach (Button b in _sub != null ? _sub.Sub(_npc) : All)
+            List<Button> ring = All;
+            while (Top != null && (ring = Top.Sub(_npc)) == null) _subs.RemoveAt(_subs.Count - 1); // (a ring that is no more for it — moved out meanwhile: the one under it)
+            if (Top == null) ring = All;
+            bool main = Top == null;
+            _release = main && !down && Releasable(_npc);
+            if (_asked != null && (_askedOf != _npc || Time.time > _askedUntil)) _asked = null;
+            foreach (Button b in ring)
             {
-                if (b.Shown != null && !b.Shown(_npc)) continue;
+                if (b.Shown != null && !b.Shown(_npc)) { if (main) _items.Add(new Item { B = b, Empty = true, Off = true }); continue; } // (its place kept: the others do not move)
                 string not = down && !b.AnyTime ? Lang.T("Без тями — спершу постав його на ноги (медовуха зцілення, E).") : b.Not != null ? b.Not(_npc) : null;
-                string desc = not ?? (b.Desc != null ? b.Desc(_npc) : "");
-                if (not == null && b.Place != null) desc += "\n" + Lang.F("Меню закриється: наведи {0} і натисни {1}.", Lang.T(b.Place), KeyName());
-                if (not == null && b.Sub != null) desc += "\n" + Lang.T("Відкриває свій вибір.");
-                _items.Add(new Item { B = b, Title = b.TitleNow != null ? b.TitleNow(_npc) : Lang.T(b.Title), Desc = desc, Icon = b.IconNow != null ? b.IconNow(_npc) : b.Icon, Now = b.Now != null && b.Now(_npc), Off = not != null, Where = b.Where != null ? b.Where(_npc) : null });
+                List<Button> own = not == null && b.Sub != null ? b.Sub(_npc) : null;
+                bool asks = not == null && b == _asked;
+                string desc = not ?? (asks ? _npc.Form(Lang.T(b.Confirm)) : b.Desc != null ? b.Desc(_npc) : "");
+                if (not == null && !asks && b.Place != null && own == null) desc += "\n" + Lang.F("Меню закриється: наведи {0} і натисни {1}.", Lang.T(b.Place), KeyName());
+                if (own != null) desc += "\n" + Lang.T("Відкриває свій вибір.");
+                string title = b.TitleNow != null ? b.TitleNow(_npc) : Lang.T(b.Title);
+                _items.Add(new Item { B = b, Ring = own, Title = asks ? Lang.T("Точно?") : title, Desc = desc, Icon = b.IconNow != null ? b.IconNow(_npc) : b.Icon, Now = b.Now != null && b.Now(_npc), Off = not != null, Asks = asks, Where = b.Where != null ? b.Where(_npc) : null });
             }
         }
 
@@ -233,7 +326,9 @@ namespace HuginWhispers
         {
             NpcActor a = _npc;
             Player p = Player.m_localPlayer;
-            if (a != null && !it.Off && it.B.Sub != null) { _sub = it.B; _hover = -1; _key = KeyCode.None; Fill(); return; } // (its own ring: the menu stays, now for clicks)
+            if (it.Empty) return; // (a place kept for a button not for this person)
+            if (a != null && !it.Off && it.Ring != null) { _subs.Add(it.B); _hover = -1; _key = KeyCode.None; Fill(); return; } // (its own ring: the menu stays, now for clicks)
+            if (a != null && !it.Off && it.B.Confirm != null && !(it.Asks && Time.time <= _askedUntil)) { _asked = it.B; _askedOf = a; _askedUntil = Time.time + ConfirmSeconds; _key = KeyCode.None; Fill(); return; } // (it undoes much: asked first, the menu stays for the second press)
             if (a != null && p != null && !it.Off && it.B.Stay && it.B.Do != null) { Say(it.B.Do(a, p)); Fill(); return; } // (a switch: flipped, the ring shown again as it is now)
             Close();
             if (a == null || p == null) return;
@@ -253,10 +348,49 @@ namespace HuginWhispers
         {
             NpcActor a = _pickFor; Button b = _pickButton;
             bool any = _pickAny;
-            _pickFor = null; _pickButton = null; _pickAny = false;
-            if (_inst != null && !_inst._open) _inst.enabled = false; // (its hint gone)
+            PickOff();
             if ((a == null && !any) || b == null || b.AtPlace == null) return;
             Say(b.AtPlace(a, Npcs.Aim(p)));
+        }
+
+        private static bool Waiting { get { return (_pickFor != null || _pickAny) && Time.time < _pickUntil; } }
+
+        private static void PickOff()
+        {
+            _pickFor = null; _pickButton = null; _pickAny = false;
+            if (_inst != null && !_inst._open) _inst.enabled = PointOn; // (its hint gone)
+        }
+
+        // no window over the world: the game's own question for its hero (Player.TakeInput), and the rings that are also the game's. Ours answer through StoreGui.IsVisible (book, talk, sheet)
+        private static bool InWorld()
+        {
+            return (Chat.instance == null || !Chat.instance.HasFocus()) && !global::Console.IsVisible() && !TextInput.IsVisible() && !StoreGui.IsVisible() && !InventoryGui.IsVisible() && !Menu.IsVisible()
+                && (TextViewer.instance == null || !TextViewer.instance.IsVisible()) && !Minimap.IsOpen() && !Hud.InRadial() && !Hud.IsPieceSelectionVisible();
+        }
+
+        // while it waits for a place: time up, the person gone, you dead or a scene begun end it. A right click drops it, unless a window has that click or a hammer is in hand (the game's build menu)
+        private static void PickCancel()
+        {
+            Player p = Player.m_localPlayer;
+            if (!Waiting || p == null || p.IsDead() || NpcTalk.ScenePlaying) { PickOff(); return; }
+            if (!Input.GetMouseButtonDown(1) || p.InPlaceMode() || !InWorld()) return;
+            PickOff();
+            _cancelHeld = true;
+        }
+
+        // That right click is never the game's block. The game reads its block in a fixed step, which comes before this Update in the frame of the press, so it is not enough to answer once
+        // the click is seen: from the first step on, the button held while a place is awaited, and until it is let go after a cancel, is no block (OrdersMenuNoSwingPatch). The hero
+        // keeps walking and the camera turning, so not the menu's whole shield. Asked each fixed step of the local player: two fields, then one key.
+        private static bool _cancelHeld;
+        internal static bool HoldsBlock
+        {
+            get
+            {
+                if (!_cancelHeld && !Waiting) return false;
+                if (RavenKeys.Held(KeyCode.Mouse1)) return true;
+                _cancelHeld = false;
+                return false;
+            }
         }
 
         private static void Say(string s) { if (MessageHud.instance != null && !string.IsNullOrEmpty(s)) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, s); }
@@ -264,7 +398,8 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the key held, the mouse
         private void Update()
         {
-            if (!_open) return;
+            PointTick();
+            if (!_open) { PickCancel(); return; }
             if (_npc == null || Player.m_localPlayer == null || Player.m_localPlayer.IsDead()) { Close(); return; }
             if (Time.time >= _nextHold) { _nextHold = Time.time + 2f; _npc.Act("hold " + NpcKit.Ref(Player.m_localPlayer.GetZDOID())); } // (it stands while you give it orders)
             if (Input.GetKeyDown(KeyCode.Escape)) { Close(); return; }
@@ -275,19 +410,31 @@ namespace HuginWhispers
                 {
                     bool longHold = _held >= HoldSeconds;
                     _held = 0f; _key = KeyCode.None; // (let go: from now on, clicks)
-                    if (longHold) { if (_hover >= 0 && _hover < _items.Count) Do(_items[_hover]); else if (_hover == -2 && _sub != null) Back(); else Close(); return; }
+                    if (longHold) { if (_hover >= 0 && _hover < _items.Count && !_items[_hover].Empty) Do(_items[_hover]); else if (_hover == -2 && MiddleDoes) Middle(); else Close(); return; }
                 }
             }
-            if (Input.GetMouseButtonDown(1)) { if (_sub != null) Back(); else Close(); return; }
+            if (Input.GetMouseButtonDown(1)) { if (Top != null) Back(); else Close(); return; }
         }
 
         private float _nextHold;
 
-        private void Back() { _sub = null; _hover = -1; Fill(); }
+        private void Back() { if (_subs.Count > 0) _subs.RemoveAt(_subs.Count - 1); _hover = -1; Fill(); }
+
+        // the middle: «Назад» in a ring under one, «Відпусти» on the main ring while an order goes on, else nothing
+        private bool MiddleDoes { get { return Top != null || _release; } }
+        private void Middle()
+        {
+            if (Top != null) { Back(); return; }
+            if (!_release) return;
+            NpcActor a = _npc;
+            Close();
+            if (a != null) Say(Free(a));
+        }
 
         private void OnGUI()
         {
-            if (!_open && (_pickFor != null || _pickAny)) { PickHint(); return; }
+            if (!_open && PointOn) PointDraw();
+            if (!_open && Waiting) { PickHint(); return; }
             if (!_open || _npc == null) return;
             Event e = Event.current;
             if (e.type == EventType.Layout) return;
@@ -304,76 +451,201 @@ namespace HuginWhispers
             {
                 if (r > ringR + Btn) Close();
                 else if (_hover >= 0) Do(_items[_hover]);
-                else if (_hover == -2 && _sub != null) Back();
+                else if (_hover == -2) Middle();
                 e.Use();
                 return;
             }
             if (e.type != EventType.Repaint) return;
             Textures();
             // the ring's plate and the middle disc
-            Disc(c, (ringR + Btn * 0.62f) * s, new Color(0.07f, 0.05f, 0.035f, 0.55f), new Color(0.66f, 0.52f, 0.23f, 0.35f));
-            bool back = _sub != null, backHot = back && _hover == -2;
+            Disc(c, (ringR + PlateOut) * s, new Color(0.07f, 0.05f, 0.035f, 0.55f), new Color(0.66f, 0.52f, 0.23f, 0.35f));
+            bool back = Top != null, backHot = (back || _release) && _hover == -2;
+            float ds = DiscR * 2.35f * s; GUI.color = new Color(0f, 0f, 0f, 0.6f); GUI.DrawTexture(new Rect(c.x - ds / 2f, c.y - ds / 2f + 4f * s, ds, ds), _soft); GUI.color = Color.white; // (its shadow on the plate)
             if (backHot) { float g = DiscR * 2.3f * s; GUI.color = new Color(0.94f, 0.78f, 0.43f, 0.35f); GUI.DrawTexture(new Rect(c.x - g / 2f, c.y - g / 2f, g, g), _soft); GUI.color = Color.white; }
             Disc(c, DiscR * s, new Color(0.07f, 0.05f, 0.035f, 0.95f), new Color(0.66f, 0.52f, 0.23f, backHot ? 0.95f : 0.6f));
             if (back)
             {
-                Text(new Rect(c.x - DiscR * s, c.y - 26f * s, DiscR * 2f * s, 24f * s), Lang.T(_sub.Title), _title, Gold, 16f * s);
+                Fitted top = Fit(ref _fitTop, Top.TitleNow != null ? Top.TitleNow(_npc) : Lang.T(Top.Title), _title, 16f, 11f, 140f, 1, true, s);
+                Text(new Rect(c.x - DiscR * s, c.y - 26f * s, DiscR * 2f * s, 24f * s), top.Text, _title, Gold, top.Size);
                 Text(new Rect(c.x - DiscR * 0.9f * s, c.y + 2f * s, DiscR * 1.8f * s, 24f * s), "← " + Lang.T("Назад"), _small, backHot ? Bright : Ink, 13f * s);
             }
-            else
-            {
-                Text(new Rect(c.x - DiscR * s, c.y - 26f * s, DiscR * 2f * s, 24f * s), _npc.Name, _title, Gold, 16f * s);
-                Text(new Rect(c.x - DiscR * 0.9f * s, c.y + 0f * s, DiscR * 1.8f * s, 34f * s), _npc.StatusNow, _small, Ink, 11f * s);
-                Character body = _npc.GetComponent<Character>();
-                if (body != null && NpcTalk.Hired(_npc)) Text(new Rect(c.x - DiscR * s, c.y + 30f * s, DiscR * 2f * s, 18f * s), Lang.T("здоров'я ") + Mathf.RoundToInt(body.GetHealthPercentage() * 100f) + "%" + (NpcVitals.IsDown(body) ? Lang.T(" · без тями") : ""), _small, body.GetHealthPercentage() < 0.35f ? new Color(0.95f, 0.45f, 0.35f) : Ink, 11f * s);
-                if (NpcResident.Is(_npc))
-                {
-                    float mood = NpcToil.Mood(_npc); Text(new Rect(c.x - DiscR * s, c.y + 44f * s, DiscR * 2f * s, 18f * s), Lang.F("настрій {0}% · втома {1}%", Mathf.RoundToInt(mood), Mathf.RoundToInt(NpcToil.Tired(_npc))), _small, mood < 30f ? new Color(0.95f, 0.45f, 0.35f) : Ink, 11f * s); // (NpcToil)
-                    float full = NpcHunger.Full(_npc); Text(new Rect(c.x - DiscR * s, c.y + 58f * s, DiscR * 2f * s, 18f * s), Lang.F("ситість {0}%", Mathf.RoundToInt(full)), _small, full < 15f ? new Color(0.95f, 0.45f, 0.35f) : full < 35f ? new Color(0.92f, 0.75f, 0.38f) : Ink, 11f * s); // (NpcHunger: red starving, amber hungry)
-                }
-                if (_ask != null) Text(new Rect(c.x - DiscR * 0.95f * s, c.y - 50f * s, DiscR * 1.9f * s, 18f * s), _ask, _small, AskInk, 10.5f * s); // (its request: a gold «!» over its name)
-            }
+            else DrawMiddle(c, s, backHot);
+            float labelWide = n > 1 ? Mathf.Min(120f, 2f * ringR * Mathf.Sin(Mathf.PI / n) - 8f) : 120f; // (as wide as the way to the next button)
             for (int i = 0; i < n; i++)
             {
                 Item it = _items[i];
                 float a = i * 360f / n;
                 Vector2 at = c + new Vector2(Mathf.Sin(a * Mathf.Deg2Rad), -Mathf.Cos(a * Mathf.Deg2Rad)) * ringR * s;
+                if (it.Empty) { float de = Btn * s; GUI.color = new Color(1f, 1f, 1f, 0.22f); GUI.DrawTexture(new Rect(at.x - de / 2f, at.y - de / 2f, de, de), OrdersMenu.Pic("n-frame-grey")); GUI.color = Color.white; continue; } // (its place kept, nothing on it)
                 bool hot = i == _hover;
-                float d = Btn * s * (hot ? 1.06f : 1f);
-                if (hot || it.Now)
+                float d = Btn * s;
+                if (it.Now)
                 {
                     float g = d * 1.5f;
-                    GUI.color = new Color(it.Now ? 1f : 0.94f, it.Now ? 0.76f : 0.78f, it.Now ? 0.23f : 0.43f, hot ? 0.55f : 0.35f);
+                    GUI.color = new Color(1f, 0.76f, 0.23f, 0.35f);
                     GUI.DrawTexture(new Rect(at.x - g / 2f, at.y - g / 2f, g, g), _soft);
                 }
+                float sh = d * 1.2f;
+                GUI.color = new Color(0f, 0f, 0f, 0.6f);
+                GUI.DrawTexture(new Rect(at.x - sh / 2f, at.y - sh / 2f + 2f * s, sh, sh), _soft); // (its shadow)
                 GUI.color = Color.white;
-                GUI.DrawTexture(new Rect(at.x - d / 2f, at.y - d / 2f, d, d), OrdersMenu.Pic(it.Off ? "n-frame-grey" : it.Now ? "n-frame-green" : "n-frame-dark"));
+                GUI.DrawTexture(new Rect(at.x - d / 2f, at.y - d / 2f, d, d), OrdersMenu.Pic(it.Off ? "n-frame-grey" : it.Now || it.Asks ? "n-frame-green" : hot ? "n-frame-hot" : "n-frame-dark"));
                 float ic = d * 0.5f;
-                GUI.color = it.Off ? new Color(0.5f, 0.5f, 0.5f, 0.8f) : IconInk;
+                GUI.color = it.Off ? OffIcon : hot ? Bright : IconInk;
                 GUI.DrawTexture(new Rect(at.x - ic / 2f, at.y - ic / 2f, ic, ic), OrdersMenu.Pic(it.Icon));
                 GUI.color = Color.white;
-                Text(new Rect(at.x - 60f * s, at.y + d * 0.5f + 1f * s, 120f * s, 18f * s), it.Title, _small, hot ? Bright : Gold, 12f * s);
+                Fitted label = Fit(ref it.Label, it.Title, _small, 12f, 9f, labelWide, 2, false, s); // (its word between its neighbours: two lines, smaller, never on theirs)
+                Rect word = new Rect(at.x - labelWide * s / 2f, at.y + Btn * s * 0.5f + 1f * s, labelWide * s, 18f * s);
+                Text(new Rect(word.x, word.y + 1f * s, word.width, word.height), label.Text, _small, new Color(0f, 0f, 0f, 0.9f), label.Size); // (its shadow: it stays read on any ground)
+                Text(word, label.Text, _small, it.Off ? OffWord : hot ? Bright : Gold, label.Size);
                 if (hot && it.Where.HasValue) WhereMark(at, it.Where.Value, it.Title, s);
             }
-            if (_hover >= 0 && _hover < n)
+            if (_hover == -2 && _release)
+            {
+                float w = 380f * s;
+                float h = Plate.Set(Lang.T("Відпусти"), Freed(_npc), w, s);
+                Plate.Place(c.x - w / 2f, PlateTop(c, ringR, h, s));
+            }
+            else if (_hover >= 0 && _hover < n && !_items[_hover].Empty)
             {
                 float w = 380f * s;
                 float h = Plate.Set(_items[_hover].Title, _items[_hover].Desc, w, s);
-                Plate.Place(c.x - w / 2f, Mathf.Max(4f, c.y - (ringR + Btn) * s - h - 8f * s));
+                Plate.Place(c.x - w / 2f, PlateTop(c, ringR, h, s));
             }
+        }
+
+        // ---------------------------------------------------------------- the middle on the main ring (the user's mockup, 2026-11-04)
+        // one column centred on the disc, top to bottom: its request, its name, what it does (≤2 lines) — or «← Відпусти»
+        // while an order of the menu goes on (its order is told by its lit button) — then its state: an icon and a number
+        // each, two by two (health, fullness, mood, strength = 100 − tiredness), one line when only health is known (hired,
+        // living nowhere), «без тями» alone when it lies senseless. Read each frame it is drawn: a few numbers of its own.
+        private struct Stat { public string Icon, Val; public Color Col; }
+        private readonly List<Stat> _stats = new List<Stat>(4);
+        private static readonly Color Warn = new Color(0.92f, 0.75f, 0.38f), Bad = new Color(0.95f, 0.45f, 0.35f);
+        private const float StatCol = 38f, StatGap = 10f, StatRow = 15f, StatRowGap = 2f, StatIcon = 13f, StatIconGap = 4f;
+
+        private void DrawMiddle(Vector2 c, float s, bool hot)
+        {
+            Character body = _npc.GetComponent<Character>();
+            bool down = body != null && NpcVitals.IsDown(body);
+            _stats.Clear();
+            if (body != null && NpcTalk.Hired(_npc))
+            {
+                if (down) _stats.Add(new Stat { Icon = "n-s-health", Val = Lang.T("без тями"), Col = Bad });
+                else
+                {
+                    float hp = body.GetHealthPercentage() * 100f;
+                    _stats.Add(Of("n-s-health", hp, hp < 35f ? Bad : Ink));
+                    if (NpcResident.Is(_npc))
+                    {
+                        float full = NpcHunger.Full(_npc), mood = NpcToil.Mood(_npc), strength = 100f - NpcToil.Tired(_npc);
+                        _stats.Add(Of("n-s-food", full, full < 15f ? Bad : full < 35f ? Warn : Ink)); // (NpcHunger: red starving, amber hungry)
+                        _stats.Add(Of("n-s-mood", mood, mood < 30f ? Bad : Ink));                     // (NpcToil)
+                        _stats.Add(Of("n-s-energy", strength, strength < 30f ? Warn : Ink));
+                    }
+                }
+            }
+            string doing = _release || down ? null : _npc.StatusText; // (senseless: its state says it)
+            const float wide = 112f, line = 136f;
+            int asks = _tasks.Count;
+            Fitted name = Fit(ref _fitName, _npc.Name, _title, 16f, 12f, line, 1, true, s);
+            Fitted act = !string.IsNullOrEmpty(doing) ? Fit(ref _fitDoing, doing, _small, 11f, 9f, wide, 2, true, s) : null;
+            int lines = act != null ? act.Lines : 0;
+            // the column's height (reference px), then each part from its top
+            float h = asks * 13f + (asks > 0 ? 3f : 0f) + 18f + (_release ? 1f + 16f : lines > 0 ? 2f + lines * 13f : 0f)
+                + (_stats.Count == 0 ? 0f : 6f + (_stats.Count > 1 ? StatRow * 2f + StatRowGap : StatRow));
+            float y = -h / 2f;
+            for (int i = 0; i < asks; i++) { Fitted t = Fit(ref _fitTasks[i], _tasks[i], _small, 10.5f, 9f, line, 1, true, s); Text(Row(c, y, line, 13f, s), t.Text, _small, AskInk, t.Size); y += 13f; } // (what you have to do with it: gold «!» lines over its name)
+            if (asks > 0) y += 3f;
+            Text(Row(c, y, line, 18f, s), name.Text, _title, Gold, name.Size); y += 18f;
+            if (_release) { y += 1f; Text(Row(c, y, wide, 16f, s), "← " + Lang.T("Відпусти"), _small, hot ? Bright : Gold, 13f * s); y += 16f; }
+            else if (lines > 0) { y += 2f; Text(Row(c, y, wide, lines * 13f, s), act.Text, _small, Ink, act.Size); y += lines * 13f; }
+            if (_stats.Count == 0) return;
+            y += 6f;
+            if (_stats.Count == 1) // one line, centred: no holes
+            {
+                _num.fontSize = Mathf.Max(8, Mathf.RoundToInt(11.5f * s));
+                float tw = _num.CalcSize(new GUIContent(_stats[0].Val)).x / s, all = StatIcon + StatIconGap + tw;
+                DrawStat(_stats[0], c.x - all * s / 2f, c.y + y * s, tw + 4f, s);
+                return;
+            }
+            for (int i = 0; i < _stats.Count; i++)
+            {
+                float left = (i % 2 == 0 ? -(StatCol + StatGap / 2f) : StatGap / 2f);
+                DrawStat(_stats[i], c.x + left * s, c.y + (y + (i / 2) * (StatRow + StatRowGap)) * s, StatCol - StatIcon - StatIconGap, s);
+            }
+        }
+
+        // ---------------------------------------------------------------- a text kept inside its place, in any language
+        // its size from its own down to min (screen px) till it fits this wide in at most this many lines — a word is never
+        // broken, so a word longer than the line shrinks it; still too long at min: cut at a word with «…» (cut), else left
+        // as it is. Worked out once per text, width and scale (kept in its own Fitted): not each frame it is drawn.
+        private sealed class Fitted { public string Source, Text; public float Scale, Wide, Size; public int Lines; }
+        private Fitted _fitName, _fitDoing, _fitTop;
+        private static readonly GUIContent Probe = new GUIContent();
+
+        private static Fitted Fit(ref Fitted kept, string text, GUIStyle st, float size, float min, float wide, int lines, bool cut, float s)
+        {
+            if (kept != null && kept.Source == text && kept.Scale == s && kept.Wide == wide) return kept;
+            Fitted f = kept ?? (kept = new Fitted());
+            f.Source = text; f.Scale = s; f.Wide = wide; f.Text = text ?? "";
+            float w = wide * s;
+            for (f.Size = size * s; ; f.Size -= 1f)
+            {
+                if (f.Size < min * s) { f.Size = min * s; break; }
+                if (Fits(f.Text, st, f.Size, w, lines)) break;
+            }
+            if (cut && !Fits(f.Text, st, f.Size, w, lines))
+            {
+                string[] words = f.Text.Split(' ');
+                for (int n = words.Length - 1; n >= 1; n--) { string t = string.Join(" ", words, 0, n) + "…"; if (Fits(t, st, f.Size, w, lines)) { f.Text = t; break; } }
+            }
+            st.fontSize = Mathf.RoundToInt(f.Size);
+            f.Lines = !st.wordWrap ? 1 : Mathf.Clamp(Mathf.RoundToInt(Height(st, f.Text, w) / Height(st, "Ag", 10000f)), 1, lines);
+            return f;
+        }
+
+        private static bool Fits(string text, GUIStyle st, float size, float wide, int lines)
+        {
+            st.fontSize = Mathf.RoundToInt(size);
+            bool wrap = st.wordWrap;
+            st.wordWrap = false;
+            float longest = 0f;
+            foreach (string word in text.Split(' ')) { Probe.text = word; longest = Mathf.Max(longest, st.CalcSize(Probe).x); }
+            st.wordWrap = wrap;
+            if (longest > wide) return false;
+            if (!wrap) { Probe.text = text; return st.CalcSize(Probe).x <= wide; }
+            return Height(st, text, wide) <= Height(st, "Ag", 10000f) * lines + 1f;
+        }
+
+        private static float Height(GUIStyle st, string text, float wide) { Probe.text = text; return st.CalcHeight(Probe, wide); }
+
+        private static Stat Of(string icon, float v, Color col) { return new Stat { Icon = icon, Val = Mathf.RoundToInt(v).ToString(), Col = col }; }
+
+        // a line of the middle's column: centred, this wide and high (reference px), its top y from the disc's centre
+        private static Rect Row(Vector2 c, float top, float wide, float high, float s) { return new Rect(c.x - wide * s / 2f, c.y + top * s, wide * s, high * s); }
+
+        // a state's icon (gold, or its number's colour when it is low) and its number after it, in a row StatRow high
+        private void DrawStat(Stat st, float x, float top, float numWide, float s)
+        {
+            float ic = StatIcon * s, mid = top + StatRow * s / 2f;
+            GUI.color = st.Col == Ink ? IconInk : st.Col;
+            GUI.DrawTexture(new Rect(x, mid - ic / 2f, ic, ic), OrdersMenu.Pic(st.Icon));
+            GUI.color = Color.white;
+            Text(new Rect(x + ic + StatIconGap * s, top, numWide * s, StatRow * s), st.Val, _num, st.Col, 11.5f * s);
         }
 
         // while it waits for a place: by the crosshair, what the key does there and how long it still waits
         private static readonly RavenBook.ScreenPlate PickPlate = new RavenBook.ScreenPlate("RavenWatch_NpcPickHint", 30010);
         private void PickHint()
         {
-            if (Event.current.type != EventType.Repaint) return;
+            if (Event.current.type != EventType.Repaint || _pickButton == null || !InWorld()) return; // (a window over it: the plate hides itself)
+            if (Player.m_localPlayer == null || Player.m_localPlayer.InPlaceMode()) return; // (a hammer in hand: neither the key nor the right click is ours, RavenKeys. It still waits: hammer away, it is back)
             float left = _pickUntil - Time.time;
-            if (left <= 0f || (_pickFor == null && !_pickAny) || _pickButton == null) { _pickFor = null; _pickButton = null; _pickAny = false; enabled = false; return; }
             float s = OrdersMenu.ScaleNow, w = 300f * s;
             string who = _pickFor != null ? _pickFor.Name : "";
             string title = "[" + KeyName() + "] " + Lang.T(_pickButton.Title) + (who.Length > 0 ? " — " + who : "");
-            string desc = Lang.F("Наведи {0} і натисни {1}. Ще {2} с.", Lang.T(_pickButton.Place), KeyName(), Mathf.CeilToInt(left));
+            string desc = Lang.F("Наведи {0} і натисни {1}. Ще {2} с.", Lang.T(_pickButton.Place), KeyName(), Mathf.CeilToInt(left)) + "\n" + Lang.T("Правий клік — скасувати.");
             float h = PickPlate.Set(title, desc, w, s);
             PickPlate.Place(Screen.width * 0.5f - w / 2f, Mathf.Min(Screen.height * 0.5f + 110f * s, Screen.height - h - 8f * s)); // (under the crosshair, clear of the game's own hover text that grows to its right)
         }
@@ -423,16 +695,24 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- drawing
         private static readonly RavenBook.ScreenPlate Plate = new RavenBook.ScreenPlate("RavenWatch_NpcMenuInfo", 30010);
-        private static readonly Color Gold = new Color(0.9f, 0.78f, 0.49f), Bright = new Color(1f, 0.85f, 0.54f), Ink = new Color(0.86f, 0.8f, 0.68f), AskInk = new Color(1f, 0.82f, 0.36f), IconInk = new Color(0.9f, 0.77f, 0.49f);
-        private static GUIStyle _title, _small;
+
+        // the tip plate's top: just under the ring's dark plate (the user's mockup, 2026-11-05), kept on the screen — no room under it: over it
+        private static float PlateTop(Vector2 c, float ringR, float h, float s)
+        {
+            float below = c.y + (ringR + PlateOut) * s + 14f * s;
+            return below + h <= Screen.height - 4f ? below : Mathf.Max(4f, c.y - (ringR + PlateOut) * s - h - 14f * s);
+        }
+        private static readonly Color Gold = new Color(0.9f, 0.78f, 0.49f), Bright = new Color(1f, 0.85f, 0.54f), Ink = new Color(0.86f, 0.8f, 0.68f), AskInk = new Color(1f, 0.82f, 0.36f), IconInk = new Color(0.9f, 0.77f, 0.49f), OffIcon = new Color(0.52f, 0.53f, 0.55f), OffWord = new Color(0.56f, 0.55f, 0.525f);
+        private static GUIStyle _title, _small, _num;
         private static Texture2D _disc, _soft, _ring;
 
         private static void Textures()
         {
+            if (_num == null) _num = new GUIStyle(GUI.skin.label) { font = BookArt.Words, alignment = TextAnchor.MiddleLeft, wordWrap = false, richText = false, clipping = TextClipping.Overflow, padding = new RectOffset(0, 0, 0, 0) };
             if (_title == null)
             {
-                _title = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, richText = true, clipping = TextClipping.Overflow };
-                _small = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, wordWrap = true, richText = true, clipping = TextClipping.Overflow };
+                _title = new GUIStyle(GUI.skin.label) { font = BookArt.Words, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, richText = true, clipping = TextClipping.Overflow };
+                _small = new GUIStyle(GUI.skin.label) { font = BookArt.Words, alignment = TextAnchor.UpperCenter, wordWrap = true, richText = true, clipping = TextClipping.Overflow };
             }
             if (_disc == null) _disc = Round(256, false);
             if (_soft == null) _soft = Round(128, true);

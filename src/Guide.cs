@@ -11,6 +11,8 @@ namespace HuginWhispers
     // ones (Minor) a game day apart. The book lists every topic he has brought (Told) and calls him to tell one again (Replay).
     // Most topics are noticed by the Guide himself (When, checked on the plugin's tick); a few are sent from the place
     // they happen (Queue: bought, woke, death). Several waiting: the most needed first (the list order).
+    // With the story the book comes from the prologue (RavenBook.Given): till then only the Bookless topics come (the
+    // people's, and NoBook: a raven bought before the book, sent the moment it is — Urgent, even on the quiet first day).
     internal static class Guide
     {
         internal static bool Enabled = true;
@@ -23,7 +25,8 @@ namespace HuginWhispers
         internal const int Bought = 1, Woke = 2, Gear = 3, Gifts = 6, Food = 7, Orders = 8, Perches = 9,
             Strong = 10, Rune = 11, Gold = 13, Death = 14, Lost = 15, Mail = 16, NestErrands = 17, Binds = 18, Habit = 19, // (12: the old tree topic, gone)
             Wish = 20, Nature = 21, Home = 22, Bath = 23, Words = 24, Judge = 25, Arm = 26,
-            PeopleHeart = 27, PeopleRescue = 28, PeopleJobs = 29, PeopleUpkeep = 30, PeopleDown = 31, PeopleAsk = 32; // (the people: 2.9+)
+            PeopleHeart = 27, PeopleRescue = 28, PeopleJobs = 29, PeopleUpkeep = 30, PeopleDown = 31, PeopleAsk = 32, // (the people: 2.9+)
+            NoBook = 33; // (the story: a raven with no book yet)
 
         // A minor topic (the little things of a raven's life) comes no sooner than a game day after the last talk, so a
         // player who reaches many of them at once (a veteran, a new version) hears one a day, not one every ten minutes.
@@ -37,11 +40,19 @@ namespace HuginWhispers
             public Func<Player, bool> When; // null: sent from elsewhere (Queue)
             public bool Known;              // a player who already had a woken raven before this Guide knows it (told silently)
             public bool Minor;              // waits a game day after the last talk (LastKey)
+            public bool Bookless;           // may come while he has no book of ravens (the story: the rest are about the book's keys and wait for it)
+            public bool Urgent;             // comes in a new character's quiet first day too
         }
 
         // in the order of need: when several wait, the first of them comes
         private static readonly List<Topic> Topics = new List<Topic>
         {
+#if RAVEN_STORY
+            // a raven bought before the book (Perks: sent at once, not to the prologue's own raven): the book comes only
+            // through the prologue — and the prologue hurries for him (quests/prologue.txt: «ownraven any, !book»)
+            new Topic { Id = NoBook, Known = true, Bookless = true, Urgent = true, Title = Lang.K("Ворон без книги"),
+                Text = Lang.K("Ворон тепер твій, але ще спить і тебе не знає. Посади його на плече (ПКМ по ворону в сумці): хай звикає до тебе.\n\nГоворити з ним, будити й водити за собою вчить Книга воронів. Її в тебе ще нема, і жоден торговець її не продасть: вона давно чекає на того, кого кличуть.\n\nСлухай небо. Чужий ворон знає дорогу до неї: іди на його поклик.") },
+#endif
             new Topic { Id = Bought, Known = true, Title = Lang.K("Ворон спить"),
                 Text = Lang.K("Ворон ще спить і тебе не знає.\n\nЩоб збудити: посади його на плече (ПКМ по ворону в сумці), іди до Жертовних каменів, повісь трофей Ейктюра на його камінь, май у сумці ще {wake} — і проведи обряд: B → «Розвиток».\n\nНе до вподоби благо чи тягар — Камінь долі ворона (у Хальдора) їх перекине.") },
             new Topic { Id = Woke, Known = true, Title = Lang.K("Ворон твій"),
@@ -90,16 +101,16 @@ namespace HuginWhispers
 
 #if RAVEN_NPC
             // ---- the people (NPC): their heart, the ones in need, their work, their keep
-            new Topic { Id = PeopleDown, Title = Lang.K("Без тями"),
+            new Topic { Bookless = true, Id = PeopleDown, Title = Lang.K("Без тями"),
                 When = p => PeopleNear(p, 40f, a => NpcVitals.IsDown(a)),
                 Text = Lang.K("Мешканця побили, і він лежить без тями. Не помре.\n\nМедовуха зцілення одразу поставить його на ноги. Без неї він згодом підведеться сам і поплентається додому відлежуватись.") },
-            new Topic { Id = PeopleRescue, Title = Lang.K("Люди в біді"),
+            new Topic { Bookless = true, Id = PeopleRescue, Title = Lang.K("Люди в біді"),
                 When = p => RumourNear(p),
                 Text = Lang.K("На дошці Серця оселі з'явилась чутка про людину в біді, а на мапі — позначка.\n\nНе барись: допоможи їй і поговори з нею. Врятованих можна покликати жити у свою оселю.") },
-            new Topic { Id = PeopleHeart, Title = Lang.K("Серце оселі"),
+            new Topic { Bookless = true, Id = PeopleHeart, Title = Lang.K("Серце оселі"),
                 When = p => HeartNear(p),
                 Text = Lang.K("Серце оселі — домівка для людей, яких ти врятуєш.\n\nДай йому назву, інакше сюди нікого не покличеш. На дошці серця видно, хто тут живе, чого бракує і які ходять чутки.\n\nУ скарбничку внизу клади монети — з неї робітники беруть платню.") },
-            new Topic { Id = PeopleJobs, Title = Lang.K("Робота мешканців"),
+            new Topic { Bookless = true, Id = PeopleJobs, Title = Lang.K("Робота мешканців"),
                 When = p => PeopleNear(p, 20f, a => NpcResident.Is(a) && NpcTalk.Hired(a)), // (your own workers: not a story person who lives by its fire)
                 Text = Lang.K("Кожному мешканцю можна дати роботу, ящик і ліжко. Більшості робіт потрібен ящик: звідти беруть і туди складають.\n\nДеяким роботам треба ще щось: лісорубу — сокира й ділянка, вартовому — пост, слузі — дім.") },
 #endif
@@ -125,10 +136,10 @@ namespace HuginWhispers
                 When = p => TopLevel(p) >= ArmPerch.MinTrust,
                 Text = Lang.K("Тепер ворон сідає на руку. У колі J біля його крила — кнопки: на руку й назад, погладити, нагодувати з руки, глянути в очі, підкинути.\n\nЗброю з тієї руки буде прибрано. Рушиш у бій — ворон сам стрибне на плече.") },
 #if RAVEN_NPC
-            new Topic { Id = PeopleUpkeep, Minor = true, Title = Lang.K("Ціна праці"),
+            new Topic { Bookless = true, Id = PeopleUpkeep, Minor = true, Title = Lang.K("Ціна праці"),
                 When = p => Done(p, PeopleJobs) && PeopleNear(p, 30f, a => a.Worker != null && a.Worker.Works),
                 Text = Lang.K("Мешканцям треба їсти, відпочивати й отримувати платню.\n\nЇдять вони готову їжу з комори — ящика кухаря чи ящика біля столу. Ситі, відпочилі й вчасно оплачені працюють краще, а довго невдоволені колись підуть.") },
-            new Topic { Id = PeopleAsk, Minor = true, Title = Lang.K("Прохання мешканців"),
+            new Topic { Bookless = true, Id = PeopleAsk, Minor = true, Title = Lang.K("Прохання мешканців"),
                 When = p => PeopleNear(p, 30f, a => NpcRequests.Of(a) != null && !NpcLevers.IsProtected(a)),
                 Text = Lang.K("Мешканець про щось просить. Спитай його сам або глянь на дошку серця.\n\nПринесеш — віддячить.") },
 #endif
@@ -354,20 +365,27 @@ namespace HuginWhispers
                 }
             }
             if (plugin.RavenBusy || p.InInterior() || p.IsSleeping() || Senses.Fight) return false;
-            if (Quiet(p)) return false;
+            bool quiet = Quiet(p);
+            bool book = true;
 #if RAVEN_STORY
             if (StoryScenes.Playing.Length > 0) return false; // (a scene of the story: never into it)
+            if (StoryQuests.WantsScene(p) || Locs.Holding(p.transform.position)) return false; // (nor when one is about to start, nor in a place of the story: a raven outside the Hall held the next scene up, 2026-11-05)
+            book = RavenBook.Given(p); // (no book yet: only what needs none — the rest is about its keys)
 #endif
             List<int> queue = Read(p, QueueKey);
             if (queue.Count == 0 || WorldTime.Left(p.m_customData, AtKey) > 0f) return false;
             List<int> told = Read(p, DoneKey);
             // "it only sleeps" is no news once the raven has woken
             if (!told.Contains(Bought) && (queue.Contains(Woke) || told.Contains(Woke))) { told.Add(Bought); Write(p, DoneKey, told); }
+            // "no book yet" is no news once the book is his
+            if (book && queue.Contains(NoBook) && !told.Contains(NoBook)) { told.Add(NoBook); Write(p, DoneKey, told); }
             Topic next = null;
             bool minorOk = MinorOk(p), waiting = false;
             foreach (Topic t in Topics)
             {
                 if (!queue.Contains(t.Id) || told.Contains(t.Id)) continue;
+                if (quiet && !t.Urgent) { waiting = true; continue; } // (a new character's first game day)
+                if (!book && !t.Bookless) { waiting = true; continue; } // (till the prologue gives the book)
                 if (t.Minor && !minorOk) { waiting = true; continue; } // (a game day after the last talk)
                 next = t; break;
             }

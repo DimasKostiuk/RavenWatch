@@ -798,7 +798,7 @@ namespace HuginWhispers
                 Vector3 flat = Vector3.ProjectOnPlane(dir, up);
                 if (flat.sqrMagnitude > 0.0001f)
                 {
-                    wantYaw = Mathf.Clamp(Vector3.SignedAngle(fwd, flat, up), -110f, 110f);
+                    wantYaw = Mathf.Clamp(Vector3.SignedAngle(fwd, flat, up), -RavenHead.YawMost, RavenHead.YawMost);
                     wantPitch = Mathf.Clamp(-Mathf.Atan2(dir.y, flat.magnitude) * Mathf.Rad2Deg, -40f, 50f);
                 }
             }
@@ -819,13 +819,13 @@ namespace HuginWhispers
             float peck = PeckNow();
             if (_neck != null)
             {
-                float yaw = _yaw * (1f - peck) + _turnHead;
+                float yaw = Mathf.Clamp(_yaw * (1f - peck) + _turnHead, -RavenHead.YawMost, RavenHead.YawMost);
                 Vector3 headSide = Quaternion.AngleAxis(yaw, up) * side;
-                _neck.T.rotation = Quaternion.AngleAxis(Mathf.Lerp(_pitch, PeckDip, peck), headSide) * Quaternion.AngleAxis(yaw, up) * _neck.T.rotation;
+                _neck.T.rotation = RavenHead.Limit(Quaternion.AngleAxis(Mathf.Lerp(_pitch, PeckDip, peck), headSide) * Quaternion.AngleAxis(yaw, up), up) * _neck.T.rotation;
             }
             if (_act == Act.Shake)
             {
-                if (_neck != null) _neck.T.rotation = Quaternion.AngleAxis(ShoulderLife.ShakeNeckDeg * ShakeWave(0f), fwd) * _neck.T.rotation;
+                if (_neck != null) _neck.T.rotation = RavenHead.Limit(Quaternion.AngleAxis(ShoulderLife.ShakeNeckDeg * ShakeWave(0f), fwd), up) * _neck.T.rotation;
                 if (_tail != null) _tail.T.rotation = Quaternion.AngleAxis(ShoulderLife.ShakeTailDeg * _shBody * ShakeWave(ShoulderLife.ShakeLag * 2f), up) * _tail.T.rotation;
             }
             if (_jaw != null && peck > 0.6f) _jaw.T.rotation = Quaternion.AngleAxis((peck - 0.6f) / 0.4f * PeckOpen, side) * _jaw.T.rotation; // the beak open at the bottom of a dip

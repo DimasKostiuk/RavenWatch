@@ -1,0 +1,9 @@
+# RavenWatch — сюжетний предмет (пролог). Без рецепта (cost: none): лише вигляд книги в руках у сцені echo (StoryProps), гравцеві не дається; сама книга для нього — RavenBook.Give.
+name: Книга воронів
+note: Книга Ейріка.
+use: item
+id: knyha_ruky
+cost: none
+stack: 1
+weight: 1
+part asset/Предмети/BookRavens pos 0 0 0 rot 0 0 0 scale 0.157 0.157 0.157  # та сама модель, що на столі (perches/hata_knyha_voroniv): ~30 × 8 × 22 см

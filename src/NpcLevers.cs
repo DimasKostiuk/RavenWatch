@@ -12,6 +12,7 @@ namespace HuginWhispers
     //     npcflag <name> · npcunflag <name>       a mark of its own (the story's «он уже бачив вогонь»)
     //     npcvar <name> <value|+N|-N>             a number or a word of its own
     //     knack <job|melee|bow> <×|+x|-x>       its knack (NpcKnack: ×0.5 … ×2) changed
+    //     trait nature <id>                       its nature (NpcNature) from now on
     //     trait <trait> <value|+x|-x>             its persona changed (bravery, chatty… — NpcPersona's words) over its
     //                                             template's and its own (kept until set again)
     //     become <template>                       another template from now on (the faded Torvald → the living one):
@@ -53,14 +54,14 @@ namespace HuginWhispers
             ZDO z = a != null ? a.Zdo : null;
             if (z == null) return null;
             string v;
-            return Parse(z.GetString(KVars, ""), ';').TryGetValue(name, out v) ? v : null;
+            return Parse(NpcLocker.Text(z, KVars), ';').TryGetValue(name, out v) ? v : null;
         }
 
         internal static bool Flag(NpcActor a, string name) { string v = Var(a, name); return v != null && v != "0" && v.Length > 0; }
         internal static float Num(NpcActor a, string name) { float f; return float.TryParse(Var(a, name) ?? "", NumberStyles.Float, Inv, out f) ? f : 0f; }
         internal static bool IsProtected(NpcActor a) { return Flag(a, Protected); }
         internal static string NoJob(NpcActor a, string job) { return !string.IsNullOrEmpty(job) && Flag(a, "nojob_" + job) ? Lang.T("Цієї роботи не візьме.") : null; }
-        internal static string Traits(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? z.GetString(KTraits, "") : ""; }
+        internal static string Traits(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Text(z, KTraits) : ""; }
 
         // ---------------------------------------------------------------- the deeds (where it is owned)
         internal static string Do(NpcActor a, string[] w)
@@ -86,15 +87,26 @@ namespace HuginWhispers
                 {
                     if (w.Length < 3) return Usage;
                     string name = w[1].ToLowerInvariant();
+                    if (name == "nature")
+                    {
+                        if (NpcNature.Find(w[2]) == null) return "нема такої вдачі: " + w[2];
+                        Dictionary<string, string> tn = Parse(NpcLocker.Text(z, KTraits), ' ');
+                        tn[name] = w[2];
+                        NpcLocker.Put(z, KTraits, Join(tn, ' '));
+                        a.Rebind();
+                        NpcNature.SyncFight(a); // (its way of fighting is its nature's)
+                        return "вдача: " + w[2];
+                    }
                     float now;
                     if (!TraitOf(NpcPersona.Of(a), name, out now)) return "нема такої риси: " + name + " (" + string.Join(", ", TraitNames) + ")";
                     float v;
                     if (!float.TryParse(w[2], NumberStyles.Float, Inv, out v)) return Usage;
                     if (w[2][0] == '+' || w[2][0] == '-') v = now + v;
-                    Dictionary<string, string> t = Parse(z.GetString(KTraits, ""), ' ');
+                    Dictionary<string, string> t = Parse(NpcLocker.Text(z, KTraits), ' ');
                     t[name] = v.ToString("0.###", Inv);
-                    z.Set(KTraits, Join(t, ' '));
+                    NpcLocker.Put(z, KTraits, Join(t, ' '));
                     a.Rebind(); // (its pace and the rest read anew)
+                    NpcNature.SyncFight(a); // (a plain one fights by its bravery)
                     return name + " " + now.ToString("0.##", Inv) + " → " + NpcPersona.Of(a).Get(name).ToString("0.##", Inv);
                 }
                 case "become":
@@ -113,20 +125,32 @@ namespace HuginWhispers
                     SetVar(z, "nojob_" + w[1], "1");
                     if (a.Worker != null && a.Worker.JobId == w[1]) NpcWorker.SetJob(a, ""); // (it drops it now)
                     return "не візьме роботу " + w[1];
-                case "okjob": if (w.Length < 2) return Usage; SetVar(z, "nojob_" + w[1], null); return "знову візьме роботу " + w[1];
+                case "okjob": if (w.Length < 2) return Usage; SetVar(z, "nojob_" + w[1], null); return NpcNature.WontTake(a, w[1]) == null ? "знову візьме роботу " + w[1] : "сюжет не забороняє, але вдача не дає: " + w[1];
             }
             return Usage;
         }
 
         internal const string Usage = "npcflag|npcunflag <назва> · npcvar <назва> <значення|+N|-N> · trait <риса> <значення|+x|-x> · knack <робота|melee|bow> <×|+x|-x> · become <шаблон> · protect · unprotect · nojob|okjob <робота>";
         internal static readonly string[] Deeds = { "npcflag", "npcunflag", "npcvar", "trait", "knack", "become", "protect", "unprotect", "nojob", "okjob" };
-        internal static readonly string[] TraitNames = { "walk", "tempo", "stoop", "height", "diligence", "laziness", "curiosity", "chrono", "chatty", "bravery" };
+        // a template's persona words without its nature (a word, not a number), which is checked here
+        internal static string[] NoNature(NpcDef d, string from, string v)
+        {
+            List<string> rest = new List<string>();
+            foreach (string pair in v.Split(new[] { ' ', ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!pair.StartsWith("nature=", System.StringComparison.Ordinal)) { rest.Add(pair); continue; }
+                if (NpcNature.Find(pair.Substring(7)) == null) NpcDefs.Problem(d, from, "persona: вдачі «" + pair.Substring(7) + "» нема");
+            }
+            return rest.ToArray();
+        }
+
+        internal static readonly string[] TraitNames = { "walk", "stoop", "height", "build", "diligence", "laziness", "curiosity", "chrono", "chatty", "bravery" };
 
         private static void SetVar(ZDO z, string name, string value)
         {
-            Dictionary<string, string> d = Parse(z.GetString(KVars, ""), ';');
+            Dictionary<string, string> d = Parse(NpcLocker.Text(z, KVars), ';');
             if (value == null) d.Remove(name); else d[name] = value.Replace(";", ",").Replace("=", "-");
-            z.Set(KVars, Join(d, ';'));
+            NpcLocker.Put(z, KVars, Join(d, ';'));
         }
 
         private static bool TraitOf(NpcPersona p, string name, out float v)
@@ -176,7 +200,7 @@ namespace HuginWhispers
         // for the console and the card: all it has
         internal static string Describe(NpcActor a)
         {
-            string v = a.Zdo != null ? a.Zdo.GetString(KVars, "") : "", t = Traits(a);
+            string v = a.Zdo != null ? NpcLocker.Text(a.Zdo, KVars) : "", t = Traits(a);
             return "шаблон " + a.Id + (v.Length > 0 ? "; змінні: " + v : "; змінних нема") + (t.Length > 0 ? "; риси від сюжету: " + t : "");
         }
     }

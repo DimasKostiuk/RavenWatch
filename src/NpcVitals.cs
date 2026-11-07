@@ -113,10 +113,12 @@ namespace HuginWhispers
         internal static bool IsDown(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null && z.GetBool(KDown, false); }
         internal static bool IsDown(Character c) { return IsDown(NpcActor.Of(c)); }
 
-        // nobody's foe now: on its way (NpcTravel) or senseless — one look into its ZDO for both
+        // nobody's foe now: its template's «unseen: yes» (kept by a power: no monster sees it), on its way (NpcTravel) or
+        // senseless — one look into its ZDO for the last two
         internal static bool Unseen(Character c)
         {
             NpcActor a = NpcActor.Of(c);
+            if (a != null && a.Def != null && a.Def.Unseen) return true;
             ZDO z = a != null ? a.Zdo : null;
             return z != null && (z.GetBool(NpcTravel.KTravel, false) || z.GetBool(KDown, false));
         }

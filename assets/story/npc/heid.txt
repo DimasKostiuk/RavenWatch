@@ -8,11 +8,20 @@ skin: 0.93 0.82 0.72
 haircolor: 0.22 0.17 0.13
 hair: Hair18_2
 beard: none
-gear: ArmorDress7 CapeDeerHide HelmetAshlandsMediumHood writhan_explode_aoe PT_BeltSwamp
-fight: flee
+gear: ArmorDress3 CapeDeerHide HelmetAshlandsMediumHood PT_BeltSwamp
+# під захистом Хель: не б'ється й не тікає, жоден звір її не бачить (і не поранить: вона не mortal)
+fight: off
+unseen: yes
 walk: 0.95
-persona: chatty=0.35 curiosity=0.4 bravery=0.4 diligence=0.9
-greet: …
+run: 0.65                                 # біжить помірно: тіло гравця бігає спринтом
+# своя хода (assets/gaits.txt): жіноча, м'яка в стегнах, і втомлена
+gait: heid
+persona: chatty=0.35 curiosity=0.4 bravery=0.4 diligence=0.9 height=0.89
+greet: …Кажи.
+greet: Слухаю.
+greet: Що тобі?
+talk: heid
+menu: no                                  # лише розмова (E), жодних наказів на Q
 on near 5: look player
 # Її ворон (NpcRaven): німий «Хугін» від Хель — чорний з холодним відливом, бліді очі. У Залі здебільшого на жердині.
 raven: hugin

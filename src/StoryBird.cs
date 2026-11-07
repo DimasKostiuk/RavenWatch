@@ -8,16 +8,19 @@ namespace HuginWhispers
     // grave (GraveBird), on the same engine: the motor flies it, the shoulder's life moves its wings, the perch's look
     // seats it. Eirik's raven first (story-lore.md «Пролог»): the memory of the first Watch, a Munin with ash-grey wings.
     // The scene's owner drives it; the players near get the same orders (StoryScenes' RPC) and fly a picture of their own.
-    //   Come(from, seat, yaw)   appears far off and flies in, lands on the seat (or hangs in the air there: hover)
+    //   Come(from, seat, yaw)   appears far off and flies in, lands on the seat (or hangs in the air there: hover);
+    //                           own: not Eirik's but your own raven's picture (its kind, plain black, its size asleep) —
+    //                           the one that becomes yours on your shoulder (StoryOwn: «own … here»)
     //   Land(seat, yaw)         off from where it is, to another seat
+    //   FollowSeat(bone, body)  its seat goes with that bone (a shoulder), from now till the next seat
     //   Face(point)             turns where it sits
     //   Say(text)               a line over it
     //   Circle(around, r, up)   round over someone (until told otherwise)
     //   Leave(toward)           off that way and gone in the sky
-    // A white-blue streak follows it in the air, so it is seen against trees and sky (Trail).
+    // A white-blue streak follows Eirik's raven in the air, so it is seen against trees and sky (Trail); your own has none.
     // A person's raven (NpcRaven) is one too: made sitting (Sit), its own kind, size and colours (Repaint), no streak,
     // circling its person (Circle takes any body), its flights in the log only when traced.
-    //   Gone()                  a puff of feathers
+    //   Gone()                  a puff of feathers · Vanish(): no puff (your own raven, the item on your shoulder now)
     internal class StoryBird : MonoBehaviour, IRavenUser
     {
         private const string Name = "у сюжеті";
@@ -29,6 +32,7 @@ namespace HuginWhispers
         private static void Log(string s) { Story.Log("bird: " + s); }
         private void Note(string s) { if (!_npc || NpcRaven.Trace) Log((_npc ? "(" + name + ") " : "") + s); } // (a person's raven: in the log only when traced)
         internal static float GiveUp = 25f, LeaveGone = 50f, LeaveSeconds = 14f;
+        internal static float RingNear = 10f, RingFar = 25f; // (circling: the ring's slow glide within RingNear m of it, full cruise from RingFar)
         private const int Sits = 0, Flies = 2, Final = 3, Landing = 4, Away = 5, Hover = 6, Circles = 7;
         // the streak (the user 2026-11-02): thin, 30% fainter than it was, from its tail (not from under its feet), and
         // faint right at the bird — it grows out of nothing a little behind it, then fades away
@@ -38,16 +42,13 @@ namespace HuginWhispers
         private Character _around;
         private float _ringR = 4.5f, _ringUp = 3.5f, _ringPhase;
 
-        // its colours (RavenLooks: one picture for both sides — both wings ash-grey, the rest black)
-        internal static string LookText =
-            "id: story_eirik\nname: Ворон Ейріка\nfor: any\n" +
-            "zone body 08080A 26262C 100 80\nzone head 08080A 2A2A30 100 80\nzone tail 08080A 26262C 100 80\n" +
-            "zone wings 34322F B4B0A9 100 85\nzone tips 5E5A55 D6D2CB 100 85\neyes BFD2DC 2.5\n";
         private static readonly Dictionary<string, Look> _looks = new Dictionary<string, Look>();
+        internal static void ForgetLooks() { _looks.Clear(); } // (the files read again: their colours too)
         // a person's raven (NpcRaven): its kind, size and colours; no streak, not among the scene's birds
         private bool _npc, _munin = true;
+        internal bool Munin { get { return _munin; } }
         private float _size = -1f;
-        private string _lookText = LookText, _lookId = "story_eirik";
+        private string _lookText, _lookId = ""; // (its colours: the look it was told, StoryLooks; none — the game's)
 
         internal Transform Seat;
         internal int State = Sits;
@@ -90,18 +91,22 @@ namespace HuginWhispers
         private float MySize { get { return _size > 0f ? _size : Size; } }
 
         // a bird far off (from), flying in to a seat (yaw: where it faces sitting)
-        internal static StoryBird Come(Vector3 from, Vector3 seat, float yaw, bool hover)
+        internal static StoryBird Come(Vector3 from, Vector3 seat, float yaw, bool hover, int own = -1, string look = "") // (own: -1 a bird of the story's — its look, else StoryLooks.Default; 0 Hugin, 1 Munin)
         {
             Transform start = NewSeat(from, yaw);
-            GameObject r = Perches.Sitter(start, true, Size, -1, null, null);
+            float size = own >= 0 ? Shoulder.Scale * Shoulder.SizeFor(0) : Size; // (your own: as it will sit on you)
+            GameObject r = Perches.Sitter(start, own != 0, size, -1, null, null);
             if (r == null) { Destroy(start.gameObject); Log("no picture made (Perches.Sitter)"); return null; }
             Log("comes from " + Where(from) + " to " + Where(seat) + (hover ? " (in the air)" : " (to sit)"));
             StoryBird b = r.AddComponent<StoryBird>();
             b.Seat = start;
             b._hover = hover;
+            StoryLooks.Look told = own >= 0 ? null : StoryLooks.Get(look) ?? StoryLooks.Default;
+            if (own >= 0) { b._munin = own == 1; b._size = size; } // (the game's colours: your own is a plain black one)
+            if (told != null) { b._lookText = told.Text; b._lookId = told.Id; }
             b.Paint();
             b.Land(seat, yaw);
-            b.Streak();
+            if (told != null && told.Streak) b.Streak(); // (the white-blue streak: its look says — your own comes as a raven)
             b._ringPhase = Random.Range(0f, 10f);
             Live.Add(b);
             return b;
@@ -149,8 +154,12 @@ namespace HuginWhispers
 
         // ---- the orders
 
+        private Transform _seatOn, _seatBody;
+        internal void FollowSeat(Transform bone, Transform body) { _seatOn = bone; _seatBody = body; }
+
         internal void Land(Vector3 seat, float yaw)
         {
+            _seatOn = null;
             Transform old = Seat, now = NewSeat(seat, yaw);
             if (State == Landing) SitDown(); // (touching down this moment: on the old seat first, then off it)
             if (State == Hover) { _hover = false; State = Flies; } // (from the air to a seat: it lands now)
@@ -174,7 +183,7 @@ namespace HuginWhispers
         internal void Say(string text)
         {
             if (Chat.instance == null || string.IsNullOrEmpty(text)) return;
-            Chat.instance.SetNpcText(gameObject, Vector3.up * 0.55f, 40f, Mathf.Clamp(2.5f + text.Length * 0.07f, 4f, 10f), "", text, false);
+            Chat.instance.SetNpcText(gameObject, Vector3.up * 0.55f, 40f, RavenSpeech.Seconds(text, RavenSpeech.Pace.Bird), "", text, false);
             ScreamFx.CawAt(transform, transform.position, 0.55f, 0.8f, false);
         }
 
@@ -192,6 +201,7 @@ namespace HuginWhispers
         }
 
         internal void Gone() { Perches.Puff(gameObject, _munin, "a story bird gone"); }
+        internal void Vanish() { Destroy(gameObject); }
 
         internal void Circle(Character around, float r, float up)
         {
@@ -280,10 +290,23 @@ namespace HuginWhispers
             State = Flies; _since = Time.time;
         }
 
+        // what keeps it off its seat, as numbers for the log: a roof over the seat, something between it and the seat
+        private string Blocked()
+        {
+            if (Seat == null) return "";
+            Vector3 s = Seat.position;
+            RaycastHit hit;
+            string roof = Physics.Raycast(s + Vector3.up * 0.3f, Vector3.up, out hit, 6f, RavenMotor.Mask) ? "a roof " + (hit.distance + 0.3f).ToString("0.0") + " m over the seat (" + hit.collider.name + ")" : "open sky over the seat";
+            Vector3 d = s - transform.position;
+            string way = Physics.Raycast(transform.position, d.normalized, out hit, d.magnitude - 0.3f, RavenMotor.Mask) ? hit.collider.name + " between, " + hit.distance.ToString("0.0") + " m from the bird" : "a clear line to it";
+            return " — " + roof + ", " + way + ", " + d.magnitude.ToString("0.0") + " m off";
+        }
+
         private static Vector3 Flat(Vector3 v) { v.y = 0f; return v.sqrMagnitude > 0.0001f ? v.normalized : Vector3.forward; }
 
         private void LateUpdate()
         {
+            if (_seatOn != null && Seat != null) { Seat.position = _seatOn.position; if (_seatBody != null) Seat.rotation = Quaternion.Euler(0f, _seatBody.eulerAngles.y, 0f); }
             if (Seat == null) { Destroy(gameObject); return; }
             Unowned();
             if (State != _wasState) { _wasState = State; Note(StateName(State) + " at " + Where(transform.position) + ", seat " + Where(Seat.position) + (Player.m_localPlayer != null ? ", " + Mathf.RoundToInt(Vector3.Distance(transform.position, Player.m_localPlayer.transform.position)) + " m from you" : "")); }
@@ -306,7 +329,10 @@ namespace HuginWhispers
                 float t = Time.time + _ringPhase;
                 Vector3 mid = _around.GetHeadPoint() + Vector3.up * (_ringUp + Mathf.Sin(t * 0.5f) * 0.5f);
                 Vector3 aim = CirclePlan.Ring(transform.position, mid, Mathf.Lerp(_ringR * 0.85f, _ringR * 1.15f, Mathf.PerlinNoise(t * 0.12f, _ringPhase)), 34f, 1f);
-                _motor.Steer(aim, _motor.Body.Style.Cruise * 0.65f, false, 0f, dt, Vector3.zero, 1f);
+                // far from its ring (come from 60 m behind you): its full cruise, easing to the ring's slow glide as it nears (the user
+                // 2026-11-06: Eirik's raven took ages to come in over you at the glide)
+                float off = Vector3.Distance(transform.position, mid);
+                _motor.Steer(aim, _motor.Body.Style.Cruise * Mathf.Lerp(0.65f, 1f, Mathf.InverseLerp(RingNear, RingFar, off)), false, 0f, dt, Vector3.zero, 1f);
                 _motor.Finish(dt, 0f);
             }
             else if (State == Hover || (_hover && (State == Flies || State == Final)))
@@ -329,7 +355,7 @@ namespace HuginWhispers
                     // its seat out of reach (under a roof, behind a wall from where it came): a scene's bird hangs in the air
                     // where it got to — the scene goes on with it there; a person's raven goes (NpcRaven brings it again)
                     if (_npc) { Perches.Puff(gameObject, _munin, "a person's raven never got to its seat"); return; }
-                    Note("its seat out of reach: it hangs in the air where it got to");
+                    Note("its seat out of reach: it hangs in the air where it got to" + Blocked());
                     Seat.position = transform.position; _hover = true; State = Hover; _since = Time.time;
                     return;
                 }

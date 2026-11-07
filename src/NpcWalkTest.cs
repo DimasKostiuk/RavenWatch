@@ -14,6 +14,7 @@ namespace HuginWhispers
     internal static class NpcWalkTest
     {
         private static float _until;
+        private const float HomeReach = 60f; // (a place this near a person's home is one of its base's)
         private static readonly Dictionary<NpcActor, int> Turn = new Dictionary<NpcActor, int>();
         private static readonly Dictionary<NpcActor, float> There = new Dictionary<NpcActor, float>();
         private static List<Vector3> _spots = new List<Vector3>();
@@ -26,6 +27,9 @@ namespace HuginWhispers
             float m;
             if (!float.TryParse(minutes, NumberStyles.Float, CultureInfo.InvariantCulture, out m) || m <= 0f) m = 10f;
             if (p == null) return "Ні.";
+            bool base0 = false; // (its places are the ones round you: away from every base it sent people a world away, 2026-11-06)
+            foreach (NpcActor x in NpcActor.Live) if (x != null && NpcResident.Is(x) && Utils.DistanceXZ(NpcRules.Home(x), p.transform.position) < HomeReach) { base0 = true; break; }
+            if (!base0) return "Ти не на базі: тест бере місця довкола тебе, а тут нема нічийого дому ближче " + HomeReach + " м.";
             _spots.Clear(); _kinds.Clear(); Turn.Clear(); There.Clear();
             Vector3 at = p.transform.position;
             foreach (Collider c in Physics.OverlapSphere(at, 45f, LayerMask.GetMask("piece", "piece_nonsolid"), QueryTriggerInteraction.Collide))
@@ -68,6 +72,7 @@ namespace HuginWhispers
             Turn.TryGetValue(a, out i);
             Turn[a] = i + 1;
             int k = (i + (a.GetInstanceID() & 0xff)) % _spots.Count; // (each its own order through the places)
+            if (Utils.DistanceXZ(_spots[k], NpcRules.Home(a)) > HomeReach) return; // (a place far from its own home: not for it — the next turn takes another)
             NpcMind.Plan plan = _kinds[k] == NpcMind.Task.Sit
                 ? new NpcMind.Plan { Kind = NpcMind.Task.Sit, To = _spots[k] }
                 : new NpcMind.Plan { Kind = NpcMind.Task.Go, To = _spots[k], Near = 1.2f };

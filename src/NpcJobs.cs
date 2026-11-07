@@ -18,6 +18,7 @@ namespace HuginWhispers
         internal virtual string Can(NpcActor a) { return null; } // why this one cannot take it (null: it can)
         internal bool StoreAfterEach = true; // (gatherer/cleaner: only when its hands are full or nothing is left)
         internal bool NeedsChest = true;     // takes from a chest or brings to one (a guard does neither)
+        internal string Move = "reach_in";   // its body's move at each errand (a clip: NpcWorker, Stage.Use); an errand's own Move wins; "" none (its tool's swing is its own)
         internal abstract NpcWorker.Errand Find(NpcWorker w);
         // the fuel its chest should hold (the game's names of the things: «$item_wood»…) — a servant keeps it topped up
         internal virtual void Fuels(NpcWorker w, HashSet<string> into) { }
@@ -32,13 +33,14 @@ namespace HuginWhispers
 
         internal static Job Find(string id) { foreach (Job j in All) if (j.Id == id) return j; return null; }
 
-        internal static string Word(string id) { Job j = Find(id); return j != null ? j.Word : "без роботи"; }
+        // its word for a player, in the reader's language (the phrases' own language: Lang.W(Find(id).Word))
+        internal static string Word(string id) { Job j = Find(id); return Lang.T(j != null ? j.Word : Lang.K("без роботи")); }
     }
 
     // fires and torches: fuel from the chest when they burn low
     internal sealed class Stoker : Job
     {
-        internal Stoker() { Id = "stoker"; Word = "палій"; Icon = "n-stoker"; Desc = "Вогнища й факели в базі: підкладає пальне з ящика, коли догорають."; }
+        internal Stoker() { Move = "feed_fire"; Id = "stoker"; Word = Lang.K("палій"); Icon = "n-stoker"; Desc = Lang.K("Вогнища й факели в базі: підкладає пальне з ящика, коли догорають."); }
 
         internal override NpcWorker.Errand Find(NpcWorker w) { return Fuel(w, w.InBase<Fireplace>()); }
 
@@ -62,7 +64,7 @@ namespace HuginWhispers
                 if (w.Carrying(fuelName) + w.InChest(fuelName) <= 0) continue;
                 return new NpcWorker.Errand
                 {
-                    Target = id, At = f.transform.position, Near = 1.8f, Take = fuelName, Count = need, Word = "підкладає дрова", Urgent = fuel <= 1f, // (about to go out: it hurries)
+                    Target = id, At = f.transform.position, Near = 1.8f, Take = fuelName, Count = need, Word = Lang.K("підкладає дрова"), Move = "feed_fire", Urgent = fuel <= 1f, // (about to go out: it hurries)
                     Use = (wk, e) =>
                     {
                         // all it brings in one go: one message to the fire, not one a log (the game's own «add this much»)
@@ -81,7 +83,7 @@ namespace HuginWhispers
     // smelters, kilns, furnaces: what is done out (and to the chest), fuel and ore in from the chest
     internal sealed class SmelterWork : Job
     {
-        internal SmelterWork() { Id = "smelter"; Word = "плавильник"; Icon = "n-smelter"; Desc = "Плавильні й печі: виймає готове в ящик, підсипає вугілля й руду з ящика."; }
+        internal SmelterWork() { Move = "feed_fire"; Id = "smelter"; Word = Lang.K("плавильник"); Icon = "n-smelter"; Desc = Lang.K("Плавильні й печі: виймає готове в ящик, підсипає вугілля й руду з ящика."); }
 
         internal override void Fuels(NpcWorker w, HashSet<string> into) { foreach (Smelter s in w.InBase<Smelter>()) Add(into, s.m_fuelItem); }
 
@@ -105,7 +107,7 @@ namespace HuginWhispers
                     bool asked = false;
                     return new NpcWorker.Errand
                     {
-                        Target = id, At = outAt, Near = 1.8f, Collect = made, Word = "виймає готове",
+                        Target = id, At = outAt, Near = 1.8f, Collect = made, Word = Lang.K("виймає готове"), Move = "reach_in",
                         Use = (wk, e) => { if (!asked && z.GetInt(ZDOVars.s_spawnAmount) > 0) { asked = true; nv.InvokeRPC("RPC_EmptyProcessed"); } return true; }
                     };
                 }
@@ -116,7 +118,7 @@ namespace HuginWhispers
                     if (w.Carrying(fuelName) + w.InChest(fuelName) > 0)
                         return new NpcWorker.Errand
                         {
-                            Target = id, At = s.transform.position, Near = 2.2f, Take = fuelName, Count = s.m_maxFuel - Mathf.CeilToInt(z.GetFloat(ZDOVars.s_fuel)), Word = "підкладає вугілля",
+                            Target = id, At = s.transform.position, Near = 2.2f, Take = fuelName, Count = s.m_maxFuel - Mathf.CeilToInt(z.GetFloat(ZDOVars.s_fuel)), Word = Lang.K("підкладає вугілля"),
                             Use = (wk, e) =>
                             {
                                 if (!nv.IsValid() || z.GetFloat(ZDOVars.s_fuel) > s.m_maxFuel - 1) return true;
@@ -136,7 +138,7 @@ namespace HuginWhispers
                         if (w.Carrying(ore) + w.InChest(ore) <= 0) continue;
                         return new NpcWorker.Errand
                         {
-                            Target = id, At = s.transform.position, Near = 2.2f, Take = ore, Count = s.m_maxOre - z.GetInt(ZDOVars.s_queued), Word = "засипає руду",
+                            Target = id, At = s.transform.position, Near = 2.2f, Take = ore, Count = s.m_maxOre - z.GetInt(ZDOVars.s_queued), Word = Lang.K("засипає руду"),
                             Use = (wk, e) =>
                             {
                                 if (!nv.IsValid() || z.GetInt(ZDOVars.s_queued) >= s.m_maxOre) return true;
@@ -155,7 +157,7 @@ namespace HuginWhispers
     // bushes and plants that grow back: picked, all of it to the chest
     internal sealed class Gatherer : Job
     {
-        internal Gatherer() { Id = "gatherer"; Word = "збирач"; Icon = "n-gatherer"; Desc = "Кущі й рослини, що відростають (ягоди, гриби): збирає в ящик."; StoreAfterEach = false; }
+        internal Gatherer() { Move = "pick_low"; Id = "gatherer"; Word = Lang.K("збирач"); Icon = "n-gatherer"; Desc = Lang.K("Кущі й рослини, що відростають (ягоди, гриби): збирає в ящик."); StoreAfterEach = false; }
 
         internal override NpcWorker.Errand Find(NpcWorker w)
         {
@@ -171,7 +173,7 @@ namespace HuginWhispers
                 bool done = false;
                 return new NpcWorker.Errand
                 {
-                    Target = id, At = p.transform.position, Near = 1.4f, Collect = what, Word = "збирає",
+                    Target = id, At = p.transform.position, Near = 1.4f, Collect = what, Word = Lang.K("збирає"),
                     Use = (wk, e) => { if (!done && p != null && p.CanBePicked()) nv.InvokeRPC("RPC_Pick", 0); done = true; return true; }
                 };
             }
@@ -182,7 +184,7 @@ namespace HuginWhispers
     // things lying about in the base: picked up, to the chest
     internal sealed class Cleaner : Job
     {
-        internal Cleaner() { Id = "cleaner"; Word = "прибиральник"; Icon = "n-cleaner"; Desc = "Речі, що валяються в базі: підбирає й несе в ящик (які саме — «Що прибирати»). Готове біля плавилень, бочок і вуликів лишає тим, хто там працює."; StoreAfterEach = false; }
+        internal Cleaner() { Move = "pick_low"; Id = "cleaner"; Word = Lang.K("прибиральник"); Icon = "n-cleaner"; Desc = Lang.K("Речі, що валяються в базі: підбирає й несе в ящик (які саме — «Що прибирати»). Готове біля плавилень, бочок і вуликів лишає тим, хто там працює."); StoreAfterEach = false; }
 
         internal override NpcWorker.Errand Find(NpcWorker w)
         {
@@ -201,7 +203,7 @@ namespace HuginWhispers
                 ZDOID id = NpcKit.IdOf(d);
                 if (id.IsNone() || !Reserve.IsFree(id, w.Me)) continue;
                 HashSet<string> what = new HashSet<string> { d.gameObject.name.Replace("(Clone)", "").Trim() };
-                return new NpcWorker.Errand { Target = id, At = d.transform.position, Near = 1.2f, Collect = what, Word = "прибирає", Use = (wk, e) => true };
+                return new NpcWorker.Errand { Target = id, At = d.transform.position, Near = 1.2f, Collect = what, Word = Lang.K("прибирає"), Use = (wk, e) => true };
             }
             return null;
         }
@@ -215,8 +217,8 @@ namespace HuginWhispers
     // lights burn then). With nothing to do it lives its own day like any resident (a walk about the base, a rest, a whim).
     internal sealed class Servant : Job
     {
-        internal Servant() { Id = "servant"; Word = "слуга"; Icon = "n-servant"; Evening = true; Place = "на дім, який доглядатиме"; StoreAfterEach = false; NeedsChest = false;
-            Desc = "Доглядає один дім: лагодить побите, зачиняє двері; з ящиком запасів — ще й підкладає пальне вогнищам і світильникам, прибирає підлогу, бере пальне зі складу у свою скриню, коли воно закінчується, а те, що ти кладеш у його скриню чи скриню для розбору, розкладає на складі (нема місця — по скринях бази, де лежить те саме, не в доми інших гравців). Сюжетні й особливі речі не чіпає."; }
+        internal Servant() { Id = "servant"; Word = Lang.K("слуга"); Icon = "n-servant"; Evening = true; Place = Lang.K("на дім, який доглядатиме"); StoreAfterEach = false; NeedsChest = false;
+            Desc = Lang.K("Доглядає один дім: лагодить побите, зачиняє двері; з ящиком запасів — ще й підкладає пальне вогнищам і світильникам, прибирає підлогу, бере пальне зі складу у свою скриню, коли воно закінчується, а те, що ти кладеш у його скриню чи скриню для розбору, розкладає на складі (нема місця — по скринях бази, де лежить те саме, не в доми інших гравців). Сюжетні й особливі речі не чіпає."); }
 
         private const int Low = 10, Fill = 30; // (its chest with less of its house's fuel than this: brought up to that)
 
@@ -255,11 +257,12 @@ namespace HuginWhispers
             ZDOID ownId = NpcKit.IdOf(own);
             if (ownId.IsNone() || !Reserve.IsFree(ownId, w.Me)) return null;
             List<Container> chests = w.InBase<Container>(), store = Store(w, chests);
+            HashSet<ZDOID> work = NpcWorker.WorkChests();
             foreach (string name in fuels)
             {
                 int have = own.GetInventory().CountItems(name) + w.Carrying(name); // (what it carries already counts: not fetched again)
                 if (have >= Low) continue;
-                Container from = Nearest(store, own, name, w) ?? Nearest(chests, own, name, w);
+                Container from = Nearest(store, own, name, w, work) ?? Nearest(chests, own, name, w, work);
                 if (from == null) continue;
                 string what = name; int want = Fill - have; Container src = from;
                 return new NpcWorker.Errand { Target = ownId, At = src.transform.position, Near = 2f, Word = store.Contains(src) ? "бере пальне зі складу" : "шукає пальне по базі",
@@ -269,12 +272,12 @@ namespace HuginWhispers
         }
 
         // the nearest chest of these with some of it (not its own, not a worker's, not private, not open)
-        private static Container Nearest(List<Container> chests, Container own, string name, NpcWorker w)
+        private static Container Nearest(List<Container> chests, Container own, string name, NpcWorker w, HashSet<ZDOID> work)
         {
             Container best = null; float bd = float.MaxValue;
             foreach (Container c in chests)
             {
-                if (c == own || !Open(c, w.Actor) || NpcWorker.IsWorkChest(NpcKit.IdOf(c)) || c.GetInventory().CountItems(name) == 0) continue;
+                if (c == own || !Open(c, w.Actor) || work.Contains(NpcKit.IdOf(c)) || c.GetInventory().CountItems(name) == 0) continue;
                 float d = (c.transform.position - w.Pos).sqrMagnitude;
                 if (d < bd) { bd = d; best = c; }
             }
@@ -289,11 +292,12 @@ namespace HuginWhispers
             Container own = w.Chest, inbox = w.Inbox;
             List<Container> chests = w.InBase<Container>(), store = Store(w, chests);
             HashSet<string> nowhere = new HashSet<string>();
+            List<Container> inStore = null, inBase = null; // (the chests a thing may go to: looked over once, when there is a thing)
             foreach (ItemDrop.ItemData it in w.Carried())
             {
                 string name = it.m_shared.m_name;
                 if (fuels.Contains(name) || NpcWorker.Untouchable(it)) continue; // (its fuel: to its own chest as ever)
-                Container dst = Spot(w, it, store, chests, own, inbox);
+                Container dst = Spot(w, it, store, chests, own, inbox, ref inStore, ref inBase);
                 if (dst == null) { nowhere.Add(name); dst = inbox != null && inbox.GetInventory().CanAddItem(it, 1) ? inbox : own != null && own.GetInventory().CanAddItem(it, 1) ? own : null; } // (no place now: back where it came from — if it fits there; else it keeps it, named)
                 if (dst == null) continue;
                 return PutErrand(w, dst, name, null, 0, store.Contains(dst) ? "розкладає на складі" : dst == inbox ? "повертає речі на розбір" : "несе речі на місце");
@@ -303,19 +307,20 @@ namespace HuginWhispers
                 {
                     if (NpcWorker.Untouchable(it)) continue;
                     string name = it.m_shared.m_name;
-                    if (Spot(w, it, store, chests, own, inbox) == null) { nowhere.Add(name); continue; }
+                    if (nowhere.Contains(name)) continue;
+                    if (Spot(w, it, store, chests, own, inbox, ref inStore, ref inBase) == null) { nowhere.Add(name); continue; }
                     ZDOID inId = NpcKit.IdOf(inbox);
                     if (inId.IsNone() || !Reserve.IsFree(inId, w.Me)) break;
                     string what = name; Container src = inbox; int n = inbox.GetInventory().CountItems(name);
-                    return new NpcWorker.Errand { Target = inId, At = src.transform.position, Near = 2f, Word = "забирає речі на розбір",
+                    return new NpcWorker.Errand { Target = inId, At = src.transform.position, Near = 2f, Word = Lang.K("забирає речі на розбір"),
                         Use = (wk, e) => { wk.TakeFrom(src, what, n); return true; } }; // (carried: put away next)
                 }
             if (own != null)
                 foreach (ItemDrop.ItemData it in own.GetInventory().GetAllItems())
                 {
                     string name = it.m_shared.m_name;
-                    if (fuels.Contains(name) || NpcWorker.Untouchable(it)) continue;
-                    Container dst = Spot(w, it, store, chests, own, inbox);
+                    if (fuels.Contains(name) || nowhere.Contains(name) || NpcWorker.Untouchable(it)) continue;
+                    Container dst = Spot(w, it, store, chests, own, inbox, ref inStore, ref inBase);
                     if (dst == null) { nowhere.Add(name); continue; }
                     NpcWorker.Errand e = PutErrand(w, dst, name, name, own.GetInventory().CountItems(name), store.Contains(dst) ? "розкладає на складі" : "несе речі на місце");
                     if (e != null) return e;
@@ -337,19 +342,32 @@ namespace HuginWhispers
         // where a thing goes: the storeroom where the same lies › anywhere in the storeroom with room › a chest of the base
         // where the same lies, not in a house of another player (NpcPrivate); never its own chest, its inbox, a worker's
         // chest, a private or open one
-        private static Container Spot(NpcWorker w, ItemDrop.ItemData it, List<Container> store, List<Container> chests, Container own, Container inbox)
+        private static Container Spot(NpcWorker w, ItemDrop.ItemData it, List<Container> store, List<Container> chests, Container own, Container inbox, ref List<Container> inStore, ref List<Container> inBase)
         {
-            return Room(w, store, it, true, own, inbox, false) ?? Room(w, store, it, false, own, inbox, false) ?? Room(w, chests, it, true, own, inbox, true); // (the storeroom is yours to point at, wherever; the base's chests — not in another player's house)
+            if (inStore == null) { inStore = Free(w, store, own, inbox, false); inBase = Free(w, chests, own, inbox, true); } // (the storeroom is yours to point at, wherever; the base's chests — not in another player's house)
+            Vector3 from = own != null ? own.transform.position : w.Pos;
+            return Room(inStore, it, true, from) ?? Room(inStore, it, false, from) ?? Room(inBase, it, true, from);
         }
 
-        private static Container Room(NpcWorker w, List<Container> chests, ItemDrop.ItemData it, bool same, Container own, Container inbox, bool notStrangers)
+        // of these, the chests a thing may be put into: asked once for all its things, not again for each
+        private static List<Container> Free(NpcWorker w, List<Container> chests, Container own, Container inbox, bool notStrangers)
         {
-            Container best = null; float bd = float.MaxValue;
-            Vector3 from = own != null ? own.transform.position : w.Pos;
+            HashSet<ZDOID> work = NpcWorker.WorkChests();
+            List<Container> l = new List<Container>();
             foreach (Container c in chests)
             {
-                if (c == own || c == inbox || !Open(c, w.Actor) || NpcWorker.IsWorkChest(NpcKit.IdOf(c))) continue;
+                if (c == own || c == inbox || !Open(c, w.Actor) || work.Contains(NpcKit.IdOf(c))) continue;
                 if (notStrangers && NpcPrivate.Off(w.Actor, w.Base, c.transform.position)) continue; // (a house of another player: not ours to fill)
+                l.Add(c);
+            }
+            return l;
+        }
+
+        private static Container Room(List<Container> chests, ItemDrop.ItemData it, bool same, Vector3 from)
+        {
+            Container best = null; float bd = float.MaxValue;
+            foreach (Container c in chests)
+            {
                 Inventory inv = c.GetInventory();
                 if ((same && inv.CountItems(it.m_shared.m_name) == 0) || !inv.CanAddItem(it, 1)) continue;
                 float d = (c.transform.position - from).sqrMagnitude;
@@ -406,7 +424,7 @@ namespace HuginWhispers
                 NpcActor a = w.Actor;
                 return new NpcWorker.Errand
                 {
-                    Target = id, At = pc.transform.position, Near = 2.2f, Word = "лагодить дім",
+                    Target = id, At = pc.transform.position, Near = 2.2f, Word = Lang.K("лагодить дім"), Move = "",
                     Use = (wk, er) =>
                     {
                         if (wnt == null) { NpcChores.Hammer(a, false); return true; }
@@ -434,7 +452,7 @@ namespace HuginWhispers
                 if (Player.GetClosestPlayer(d.transform.position, 6f) != null) continue; // (someone by it: left as it is)
                 ZDOID id = NpcKit.IdOf(d);
                 if (id.IsNone() || !Reserve.IsFree(id, w.Me)) continue;
-                return new NpcWorker.Errand { Target = id, At = d.transform.position, Near = 1.8f, Word = "зачиняє двері", Use = (wk, er) => { if (d != null) NpcDoors.Shut(d); return true; } };
+                return new NpcWorker.Errand { Target = id, At = d.transform.position, Near = 1.8f, Word = Lang.K("зачиняє двері"), Move = "", Use = (wk, er) => { if (d != null) NpcDoors.Shut(d); return true; } };
             }
             return null;
         }
@@ -444,7 +462,7 @@ namespace HuginWhispers
     // the raw from the chest onto the free places — only over a burning fire
     internal sealed class Cook : Job
     {
-        internal Cook() { Id = "cook"; Word = "кухар"; Icon = "n-cook"; Desc = "Решітки, казани й печі: знімає готове (поки не пригоріло) у ящик, кладе сире з ящика на вільні місця над вогнем."; }
+        internal Cook() { Id = "cook"; Word = Lang.K("кухар"); Icon = "n-cook"; Desc = Lang.K("Решітки, казани й печі: знімає готове (поки не пригоріло) у ящик, кладе сире з ящика на вільні місця над вогнем."); }
 
         internal override void Fuels(NpcWorker w, HashSet<string> into) { foreach (CookingStation s in w.InBase<CookingStation>()) if (s.m_useFuel) Add(into, s.m_fuelItem); }
 
@@ -483,7 +501,7 @@ namespace HuginWhispers
                     int left = done;
                     return new NpcWorker.Errand
                     {
-                        Target = id, At = at, Near = 1.6f, Collect = made, Word = "знімає готове", Urgent = true,
+                        Target = id, At = at, Near = 1.6f, Collect = made, Word = Lang.K("знімає готове"), Urgent = true,
                         Use = (wk, e) => { if (left-- <= 0 || !nv.IsValid()) return true; nv.InvokeRPC("RPC_RemoveDoneItem", wk.Pos, 1); return false; }
                     };
                 }
@@ -494,7 +512,7 @@ namespace HuginWhispers
                     if (w.Carrying(fuel) + w.InChest(fuel) > 0)
                         return new NpcWorker.Errand
                         {
-                            Target = id, At = at, Near = 1.8f, Take = fuel, Count = s.m_maxFuel - Mathf.CeilToInt(z.GetFloat(ZDOVars.s_fuel)), Word = "підкладає дрова в піч",
+                            Target = id, At = at, Near = 1.8f, Move = "feed_fire", Take = fuel, Count = s.m_maxFuel - Mathf.CeilToInt(z.GetFloat(ZDOVars.s_fuel)), Word = Lang.K("підкладає дрова в піч"),
                             Use = (wk, e) => { if (!nv.IsValid() || z.GetFloat(ZDOVars.s_fuel) > s.m_maxFuel - 1 || !wk.Spend(fuel)) return true; nv.InvokeRPC("RPC_AddFuel"); return false; }
                         };
                 }
@@ -508,7 +526,7 @@ namespace HuginWhispers
                         if (w.Carrying(raw) + w.InChest(raw) <= 0) continue;
                         return new NpcWorker.Errand
                         {
-                            Target = id, At = at, Near = 1.6f, Take = raw, Count = free, Word = "кладе м'ясо",
+                            Target = id, At = at, Near = 1.6f, Take = raw, Count = free, Word = Lang.K("кладе м'ясо"), Move = "feed_fire",
                             Use = (wk, e) =>
                             {
                                 bool room = false;
@@ -528,7 +546,7 @@ namespace HuginWhispers
     // beehives (honey to the chest) and fermenting barrels (the ready mead tapped, an empty one filled from the chest)
     internal sealed class Keeper : Job
     {
-        internal Keeper() { Id = "keeper"; Word = "пасічник-винар"; Icon = "n-keeper"; Desc = "Вулики: мед у ящик. Бочки: зливає готову медовуху в ящик, порожні заливає основою з ящика."; }
+        internal Keeper() { Id = "keeper"; Word = Lang.K("пасічник-винар"); Icon = "n-keeper"; Desc = Lang.K("Вулики: мед у ящик. Бочки: зливає готову медовуху в ящик, порожні заливає основою з ящика."); }
 
         internal override NpcWorker.Errand Find(NpcWorker w)
         {
@@ -541,7 +559,7 @@ namespace HuginWhispers
                 bool asked = false;
                 return new NpcWorker.Errand
                 {
-                    Target = id, At = b.m_spawnPoint != null ? b.m_spawnPoint.position : b.transform.position, Near = 1.6f, Collect = new HashSet<string> { b.m_honeyItem.name }, Word = "збирає мед",
+                    Target = id, At = b.m_spawnPoint != null ? b.m_spawnPoint.position : b.transform.position, Near = 1.6f, Collect = new HashSet<string> { b.m_honeyItem.name }, Word = Lang.K("збирає мед"),
                     Use = (wk, e) => { if (!asked) { asked = true; nv.InvokeRPC("RPC_Extract"); } return true; }
                 };
             }
@@ -563,7 +581,7 @@ namespace HuginWhispers
                     bool asked = false; int wait = 4; // (the game pours it a moment after the tap)
                     return new NpcWorker.Errand
                     {
-                        Target = id, At = outAt, Near = 1.6f, Collect = made, Word = "зливає медовуху",
+                        Target = id, At = outAt, Near = 1.6f, Collect = made, Word = Lang.K("зливає медовуху"),
                         Use = (wk, e) => { if (!asked) { asked = true; nv.InvokeRPC("RPC_Tap"); } return --wait <= 0; }
                     };
                 }
@@ -574,7 +592,7 @@ namespace HuginWhispers
                     if (w.Carrying(bas) + w.InChest(bas) <= 0) continue;
                     return new NpcWorker.Errand
                     {
-                        Target = id, At = f.transform.position, Near = 1.8f, Take = bas, Count = 1, Word = "заливає бочку",
+                        Target = id, At = f.transform.position, Near = 1.8f, Take = bas, Count = 1, Word = Lang.K("заливає бочку"),
                         Use = (wk, e) => { if (nv.IsValid() && z.GetInt(ZDOVars.s_content) == 0 && wk.Spend(bas)) nv.InvokeRPC("RPC_AddItem", hash, false); return true; }
                     };
                 }
@@ -587,6 +605,11 @@ namespace HuginWhispers
     internal sealed class Guard : Job
     {
         // one who stands guard: a guard by its job, or a fighter by its template (its map mark, its armour and health on hover)
+        // hired to keep watch (the user 2026-11-04: Knud went off mending, «he should guard»): it never mends. With a post (OnWatch) it does not
+        // leave it for its ease either, only for what it must (a meal, its pay, a rest worn out), an order, a fight, a scene. With no post it
+        // walks the base's edge, and now and then does what anyone does («if he patrols he could»). A fighter with no such job (Is below): as anyone
+        internal static bool Hired(NpcActor a) { return a != null && a.Worker != null && a.Worker.JobId == "guard"; }
+        internal static bool OnWatch(NpcActor a) { Vector3 post; return Hired(a) && a.Worker.Post(out post); }
         internal static bool Is(NpcActor a) { return a != null && ((a.Worker != null && a.Worker.JobId == "guard") || (a.Def != null && (a.Def.Fight == "defend" || a.Def.Fight == "hunt"))); }
 
         // a guard's health and armour under its name, small and coloured by how hurt it is
@@ -619,9 +642,9 @@ namespace HuginWhispers
         private const int RoundAsks = 3;        // ways asked for one round's spot at most (none fits: it stands at its post)
         private const float RoundDetour = 1.8f; // a spot is near when its way on foot is at most this × the straight line (+3 m)
 
-        internal Guard() { Id = "guard"; Word = "вартовий"; Icon = "n-guard"; Desc = "Стоїть на посту (кнопка «Пост») і обходить довкола, без посту — межу бази; б’є лише ворогів біля посту чи в базі, мирних звірів не чіпає (лише для бійців). Вартує вдень і вночі."; AllDay = true; NeedsChest = false; }
+        internal Guard() { Move = ""; Id = "guard"; Word = Lang.K("вартовий"); Icon = "n-guard"; Desc = Lang.K("Стоїть на посту (кнопка «Пост») і обходить довкола, без посту — межу бази; б’є лише ворогів біля посту чи в базі, мирних звірів не чіпає (лише для бійців). Вартує вдень і вночі."); AllDay = true; NeedsChest = false; }
 
-        internal override string Can(NpcActor a) { return (a.Mind != null && (a.Mind.Style == NpcMind.Fight.Defend || a.Mind.Style == NpcMind.Fight.Hunt)) || (a.Def != null && a.Def.Generated) ? null : "Він не боєць — вартувати не візьметься."; } // (a settler can do anything)
+        internal override string Can(NpcActor a) { return (a.Mind != null && (a.Mind.Style == NpcMind.Fight.Defend || a.Mind.Style == NpcMind.Fight.Hunt)) || (a.Def != null && a.Def.Generated) ? null : "Він не боєць — вартувати не візьметься."; } // (a settler: its nature's word, NpcNature.WontTake)
 
         // with a post: stands on it, now and then a round near it (inside its base); without one: the base's edge
         internal override NpcWorker.Errand Find(NpcWorker w)
@@ -629,7 +652,7 @@ namespace HuginWhispers
             Vector3 post;
             if (w.Post(out post))
             {
-                if (UnityEngine.Random.value < 0.5f) { int wait = UnityEngine.Random.Range(12, 25); return new NpcWorker.Errand { At = post, Near = 1f, Word = "стоїть на посту", Use = (wk, e) => --wait <= 0 }; }
+                if (UnityEngine.Random.value < 0.5f) { int wait = UnityEngine.Random.Range(12, 25); return new NpcWorker.Errand { At = post, Near = 1f, Word = Lang.K("стоїть на посту"), Use = (wk, e) => --wait <= 0 }; }
                 // a spot round it near on foot, not only as the crow flies: one behind a low wall was 5 m off and 50 m round
                 // (2026-11-03: a guard went round and round its post); on the floor there, not the land under a paved yard
                 Vector3 round = post;
@@ -645,7 +668,7 @@ namespace HuginWhispers
                     round = p; break;
                 }
                 int stop = UnityEngine.Random.Range(4, 9);
-                return new NpcWorker.Errand { At = round, Near = 1.2f, Word = "обходить пост", Use = (wk, e) => --stop <= 0 };
+                return new NpcWorker.Errand { At = round, Near = 1.2f, Word = Lang.K("обходить пост"), Use = (wk, e) => --stop <= 0 };
             }
             bool all = NpcWorker.Patrols(w.Actor);
             Vector3 at = all ? w.Base.Spot() : w.Base.EdgeSpot(); // (the whole base, or its edge)
@@ -667,7 +690,7 @@ namespace HuginWhispers
             if (id.IsNone()) return;
             foreach (NpcActor a in NpcActor.Live)
             {
-                if (a == null || a.Worker == null || a.Worker.JobId != "servant" || NpcKit.GetRef(a.Zdo, NpcWorker.KInbox) != id) continue;
+                if (a == null || a.Worker == null || a.Worker.JobId != "servant" || NpcLocker.Ref(a.Zdo, NpcWorker.KInbox) != id) continue;
                 string n = NpcWorker.Nowhere(a);
                 __result += "\n<color=#e0b860>" + Lang.F("Розбір: {0}", a.Name) + "</color>" + (n.Length > 0 ? "\n<size=80%><color=#e8705a>" + Lang.F("Не знайшов місця: {0}", n) + "</color></size>" : "");
                 return;

@@ -33,6 +33,21 @@ namespace HuginWhispers
         private static readonly HashSet<NpcActor> Given = new HashSet<NpcActor>();
         private void OnDestroy() { if (_a != null) Given.Remove(_a); }
 
+        // what else was going on in that frame: its turn (BodyTurn), our clip, and each layer of the game's animator (its state, a change under way):
+        // a jump of the hand with no clip and no walk (Heid, 2026-11-04: «the hand jerks as she looks at me and turns») says here whose it is
+        private string Why()
+        {
+            NpcPose pose = GetComponent<NpcPose>();
+            BodyAnimator clips = BodyAnimator.Of(GetComponent<Character>());
+            Animator anim = GetComponentInChildren<Animator>();
+            System.Text.StringBuilder t = new System.Text.StringBuilder(pose != null ? pose.TurnTrace() : "turn -");
+            t.Append(" · clip ").Append(clips != null ? clips.ClipIn(NpcBody.ClipSlot) ?? "-" : "-");
+            if (anim != null)
+                for (int l = 0; l < anim.layerCount; l++)
+                    t.Append(" · layer ").Append(l).Append(" w").Append(anim.GetLayerWeight(l).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)).Append(" state ").Append(anim.GetCurrentAnimatorStateInfo(l).shortNameHash).Append(anim.IsInTransition(l) ? " changing" : "");
+            return t.ToString();
+        }
+
         private void LateUpdate()
         {
             Player me = Player.m_localPlayer;
@@ -63,7 +78,7 @@ namespace HuginWhispers
                     string doing = _a.StatusNow;
                     int cut = doing.IndexOfAny(new[] { ' ', '(', ',' });
                     NpcWalk.Popped(_a.Name, Names[i] + " · " + (cut > 0 ? doing.Substring(0, cut) : doing));
-                    if (Time.time - _logAt > 1f) { _logAt = Time.time; NpcWalk.Write("halts.txt", System.DateTime.Now.ToString("HH:mm:ss") + "\t" + _a.Name + "\tPOSE " + Names[i] + " " + (local - _was[i]).magnitude.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " m in a frame\t" + doing + "\t" + (_gait != null || (_gait = GetComponent<NpcGait>()) != null ? _gait.Trace() : "-")); }
+                    if (Time.time - _logAt > 1f) { _logAt = Time.time; NpcWalk.Write("halts.txt", System.DateTime.Now.ToString("HH:mm:ss") + "\t" + _a.Name + "\tPOSE " + Names[i] + " " + (local - _was[i]).magnitude.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " m in a frame\t" + doing + "\t" + (_gait != null || (_gait = GetComponent<NpcGait>()) != null ? _gait.Trace() : "-") + "\t" + Why()); }
                 }
                 _was[i] = local;
             }

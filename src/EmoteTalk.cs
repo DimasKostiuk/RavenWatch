@@ -129,7 +129,7 @@ namespace HuginWhispers
         }
 
         // a raven of yours that is here, awake, and yours (another's raven keeps its venom for other things)
-        private static bool Free(Player p, bool munin)
+        internal static bool Free(Player p, bool munin) // (on your shoulder, awake, yours, not away: NpcTalkRaven asks too)
         {
             ItemDrop.ItemData r = RavenSeat.On(p, munin);
             return r != null && Trust.Active(r) && !Trust.Stranger(r, p) && !Trust.Away(r);

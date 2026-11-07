@@ -44,7 +44,6 @@ namespace HuginWhispers
         internal static float CacheRing = 30f;              // m: the ring on the map (the cache somewhere in it)
         internal static float CacheNear = 60f;              // m: from here it says warmer / colder
         internal static float CawFrom = 100f;               // m: from here it caws (the whole ring and a bit round it)
-        internal static float BaseClear = 70f;              // m from anything built, a bed, a mark of yours
         internal static int DigHits = 3;                    // blows of a pickaxe on the spot
         internal static float PeakY = 160f;                 // m: «a mountain top»
         internal static float TrustPerSpark = 12f;          // trust for a wish done, per sparklet it gives
@@ -276,7 +275,7 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             if (p == null || EnvMan.instance == null || ZNet.instance == null) return;
             Pins(p);
-            if (p.IsDead()) return;
+            if (p.IsDead() || !RavenBook.Given(p)) return; // (no book yet: the raven only sits, it asks for nothing — RavenBook.Given)
             if (_spawn != null) SpawnCache(p);
             bool slow = Time.time >= _slow;
             if (slow) _slow = Time.time + 2f;
@@ -861,9 +860,11 @@ namespace HuginWhispers
             ItemDrop.ItemData item = Mine(p, true);
             Req r = Of(item);
             if (!Waiting(r)) return;
-            if (r.Type == "fight") // (your own blow — not a pet's, a fire's or his; him watching from the shoulder; a boss is not «a beast with stars»)
+            if (r.Type == "fight") // (your own blow — not a pet's or his; him watching from the shoulder or out in that fight with his own blows; a boss is not «a beast with stars»)
             {
-                if (!boss && own && !raven && stars >= r.Need && Shoulder.Present(p, true)) { r.Have = r.Need; Complete(p, true, item, r); }
+                bool watched = Shoulder.Present(p, true) || Strike.Busy(p, true); // (the user 2026-11-05: Munin off striking at it saw the fight too)
+                if (!boss && own && !raven && stars >= r.Need && watched) { r.Have = r.Need; Complete(p, true, item, r); }
+                else if (!boss && Plugin.Instance != null) Plugin.Instance.Log("Request fight: not counted — " + (!own ? "not your own blow" : raven ? "a raven's blow" : stars < r.Need ? stars + " star(s) of " + r.Need : "Munin neither on your shoulder nor in the fight"));
                 return;
             }
             if (r.Arg != token) return;
@@ -1069,90 +1070,11 @@ namespace HuginWhispers
             r.Verified = false; r.Shown = false; r.Dug = 0;
         }
 
-        // a spot from..to m away: dry land, not steep, not a land you never were in (the far north, the ash lands),
-        // away from your bed and your map marks, from the world's places (villages, altars, dungeons) when the game
-        // knows them, and from anything built in sight; loaded: true checks the ground itself (rocks, pieces)
-        private static bool PickCache(Player p, Vector3 from, float min, float max, bool loaded, out Vector3 at)
-        {
-            at = Vector3.zero;
-            if (WorldGenerator.instance == null) return false;
-            float water = ZoneSystem.instance != null ? ZoneSystem.instance.m_waterLevel : 30f;
-            string lands;
-            p.m_customData.TryGetValue(Diary.LandsKey, out lands);
-            for (int i = 0; i < 40; i++)
-            {
-                Vector2 dir = UnityEngine.Random.insideUnitCircle.normalized;
-                Vector3 q = from + new Vector3(dir.x, 0f, dir.y) * UnityEngine.Random.Range(min, max);
-                Heightmap.Biome b = WorldGenerator.instance.GetBiome(q);
-                if (b == Heightmap.Biome.Ocean || b == Heightmap.Biome.None) continue;
-                if ((b == Heightmap.Biome.AshLands || b == Heightmap.Biome.DeepNorth) && (lands == null || !lands.Contains("|" + b + "|"))) continue;
-                float h = WorldGenerator.instance.GetHeight(q.x, q.z);
-                if (h < water + 1.5f) continue;
-                float steep = 0f;
-                foreach (Vector2 o in new Vector2[] { new Vector2(2f, 0f), new Vector2(-2f, 0f), new Vector2(0f, 2f), new Vector2(0f, -2f) })
-                    steep = Mathf.Max(steep, Mathf.Abs(WorldGenerator.instance.GetHeight(q.x + o.x, q.z + o.y) - h));
-                if (steep > 1.2f) continue;
-                q.y = h;
-                if (NearBase(p, q) || NearPlace(q)) continue;
-                if (loaded && !GroundClear(q, out q)) continue;
-                at = q;
-                return true;
-            }
-            return false;
-        }
-
-        // your bed, your own marks on the map, anything built that is loaded near it
-        private static bool NearBase(Player p, Vector3 q)
-        {
-            try
-            {
-                PlayerProfile prof = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
-                if (prof != null && prof.HaveCustomSpawnPoint() && Flat(prof.GetCustomSpawnPoint(), q) < BaseClear * 1.5f) return true;
-                if (Minimap.instance != null)
-                    foreach (Minimap.PinData pin in Traverse.Create(Minimap.instance).Field("m_pins").GetValue<List<Minimap.PinData>>())
-                        if (pin != null && pin.m_save && Flat(pin.m_pos, q) < BaseClear) return true;
-            }
-            catch { }
-            if (EffectArea.GetBaseValue(q, BaseClear) > 0) return true;
-            _pieces.Clear();
-            Piece.GetAllPiecesInRadius(q, BaseClear, _pieces);
-            foreach (Piece pc in _pieces) if (pc != null && pc.IsPlacedByPlayer() && Utils.GetPrefabName(pc.gameObject) != CachePrefab) return true;
-            return false;
-        }
-        private static readonly List<Piece> _pieces = new List<Piece>();
-
-        private static bool NearPlace(Vector3 q)
-        {
-            if (Location.IsInsideLocation(q, 40f) || Location.IsInsideNoBuildLocation(q)) return true;
-            try
-            {
-                if (ZoneSystem.instance != null)
-                    foreach (ZoneSystem.LocationInstance li in ZoneSystem.instance.GetLocationList())
-                        if (Flat(li.m_position, q) < 60f) return true;
-            }
-            catch { }
-            return false;
-        }
-
-        // the ground itself, once its zone is loaded: no rock or piece over it, not under another's ward; the spot on
-        // the ground's height
-        private static bool GroundClear(Vector3 q, out Vector3 spot)
-        {
-            spot = q;
-            if (ZoneSystem.instance == null) return false;
-            float ground = ZoneSystem.instance.GetGroundHeight(q);
-            spot.y = ground;
-            RaycastHit hit;
-            if (Physics.Raycast(new Vector3(q.x, ground + 40f, q.z), Vector3.down, out hit, 45f, GroundMask) && hit.point.y > ground + 0.4f) return false; // a rock, a roof (a tree's crown may stand over it)
-            if (!PrivateArea.CheckAccess(spot, 0f, false, false)) return false;
-            if (Location.IsInsideLocation(spot, 30f)) return false;
-            return true;
-        }
-
-        private static int _groundMask;
-        private static int GroundMask { get { if (_groundMask == 0) _groundMask = LayerMask.GetMask("static_solid", "piece", "terrain"); return _groundMask; } }
-
-        private static float Flat(Vector3 a, Vector3 b) { a.y = 0f; b.y = 0f; return Vector3.Distance(a, b); }
+        // where its cache goes: the one finder of quiet spots in the wild (WorldSpot), its own chest not counted as built
+        private static bool PickCache(Player p, Vector3 from, float min, float max, bool loaded, out Vector3 at) { return WorldSpot.Pick(p, from, min, max, loaded, CachePrefab, out at); }
+        private static bool NearBase(Player p, Vector3 q) { return WorldSpot.NearBase(p, q, CachePrefab); }
+        private static bool GroundClear(Vector3 q, out Vector3 spot) { return WorldSpot.GroundClear(q, out spot); }
+        private static float Flat(Vector3 a, Vector3 b) { return WorldSpot.Flat(a, b); }
 
         private static float _cawAt, _wordAt, _wordDist = -1f;
         private static bool _quietTold, _cawTold; // (once a game each, in the log)

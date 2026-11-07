@@ -14605,3 +14605,251 @@ Took it for safekeeping. Mine now.
 Here, take your coins. With interest, even.
 Giving back the stash. Nah, don't mind. Well, a bit.
 Take the cash. I'm not a cheapskate anymore.
+
+# --- a raven butts into a talk with a person (rev 111)
+[ppl_any] {люд_будь}
+[ppl_complaint] {люд_скарга}
+[ppl_fear] {люд_страх}
+[ppl_joy] {люд_радість}
+[ppl_work] {люд_робота}
+[ppl_people] {люд_сусіди}
+[ppl_shut] {люд_замовк}
+[ppl_agree] {люд_згода}
+@люд_будь
+What are you babbling, I didn't catch it. Don't want to.
+Whoa, it talks too, fuck.
+Make it short, I'm moulting here.
+I've heard this. Under a bench, from a drunk.
+Boring, fuck. Tell me something with blood in it.
+Did you just make that up or carry it around?
+Sounds familiar. Ah, no, I just fell asleep.
+I'm listening, I'm listening. Not flapping my ears, got none.
+@люд_скарга
+You whine like a gull over a fish.
+Oh, poor thing. Want a hanky, fuck?
+Who's got it easy. I've got nothing to peck here.
+Drop the moaning, my teeth hurt already.
+Nothing suits you. Maybe it's you that's wrong?
+Whine again and I'll shit on your head.
+Whine some more. I like it when it's quiet whining.
+The roof leaks. I've got no roof at all, fuck.
+@люд_страх
+You're shaking, fuck, it's funny.
+Don't piss yourself, they won't eat all of you.
+I'd be scared too. But I've got wings.
+What a mug on you, from fear.
+If anything, I run first. Honest.
+They say it doesn't hurt. They lie, of course.
+Well, trousers still dry?
+Everyone's alive. So far.
+@люд_радість
+What are you grinning at, fuck?
+Look, it's laughing. Hasn't heard yet.
+Joy. In this hole. Sure.
+Go on, be happy. Tomorrow it's shit again.
+What a happy mug, makes me want to puke.
+Pour me one too, since it's a feast.
+Glad as if someone gave you beer.
+Something stolen, or why so merry?
+@люд_робота
+That's work? I shit faster.
+Come on, come on, your back isn't broken yet.
+Who does it like that, fuck. Not that I care.
+Work, work. I'll sit and watch.
+So much time, and damn all to show.
+If they paid for talk, there'd be gold lying here.
+What hands. Where do they grow from?
+You stand nicely. The work stands too.
+@люд_сусіди
+So this is how you live here, fuck. Like rats in a bag.
+Who's that about? Go on, I like the bad stuff.
+They're all like that here.
+Shall we discuss the one who snores too?
+Gossip, fuck. Now that's a conversation.
+What, someone said something again? How awful.
+Say it to their face. Let's see.
+Some neighbours. I'd have pecked one by now.
+@люд_замовк
+Get lost.
+Fine, I'm quiet, fuck. But I remember.
+Oh, listen to you. Brave in front of people.
+Quiet, quiet. Your loss.
+Fine. Talk to these yourself then.
+I'll remember this when you feed me.
+Tsk. I'm offended, fuck. There, done.
+Shut the birdie up, hero.
+@люд_згода
+Now that's more like it!
+Hear that, fuck? Listen to what people say.
+Oh, one of ours.
+First time today you're not stupid.
+For once on my side, fuck.
+Exactly, fuck.
+See, I told you.
+For that I'll peck you softer.
+
+# --- a raven butts into a talk: more words, and its own for wounds, hunger, tiredness, news, weather, travels, building, itself and "never mind" (rev 112)
+[ppl_news] {люд_новина}
+[ppl_place] {люд_край}
+[ppl_weather] {люд_край}
+[ppl_travels] {люд_мандри}
+[ppl_hurt] {люд_рани}
+[ppl_hungry] {люд_голод}
+[ppl_starving] {люд_голод}
+[ppl_tired] {люд_втома}
+[ppl_building] {люд_будова}
+[ppl_raven] {люд_про_мене}
+[ppl_skip] {люд_не_зважай}
+@люд_будь
+Are you always this dull or is it a holiday?
+A talking scarecrow, look at that.
+Right, I'm asleep. Wake me when you're done.
+Grind, grind. You'd have flour for bread by now.
+Why are you preaching at me?
+Tongue with no bones, head with no brain.
+Talk like a person, gawker.
+Yeah, yeah. Now something interesting.
+@люд_скарга
+What are you whining for, crybaby.
+You whine so my feathers stand up.
+Nobody owes you anything, softie.
+Oh, woe. I thought it was something serious.
+Get up and do it instead of yapping.
+Who has it easy now, huh? Me? Ha.
+Such a wet rag, and lives here too.
+Crybaby. I peck your kind for breakfast.
+@люд_страх
+What, knees shaking?
+Oh, the jumpy one. Like a hare.
+Stop shaking, you're scary enough as is.
+Hide under the bench, gawker.
+Pfft, I peck your kind for breakfast.
+If anything, run. You look like a master at it.
+Coward isn't an insult. It's a diagnosis.
+Breathe steady, or you'll turn green.
+@люд_радість
+Look, it's grinning. Found money?
+Neighing like a horse at a wedding.
+Joy in the house. Hide the spoons.
+Sure. You'll cry tomorrow.
+What are you shining like a pancake for?
+Such a happy face I want to peck it.
+Be happy while I'm kind.
+A bit more and I'll smile too. No, I won't.
+@люд_робота
+Who works like that, loser.
+Hands like hooks, and still trying.
+First time seeing a hammer?
+Working like a sleepy fly.
+What a little worker. Pure gold. Fake.
+Come on. Another hundred years and done.
+I'd help. But it's too funny.
+That's how everything stands. Propped up by you.
+@люд_сусіди
+Ooh, gossip, I love it. More.
+Know what they say about you? Good thing you don't.
+A flock of gossips, not a house.
+What a tongue on you, huh.
+Go on, I'll pass it on to everyone. With extras.
+What, somebody stole something? Not me. This time.
+That's how you live, behind each other's backs.
+You talk about neighbours, I already know so much about you.
+@люд_замовк
+Pfft. Henpecked.
+Oh, how polite we are in public.
+Fine, I'm quiet. But I'll stare like this. Evilly.
+I'll remind you of this. Twice.
+Then sit with this scarecrow alone.
+First time I see someone stand up for strangers like that.
+I'm quiet because it's funny, not because you said so.
+Shut me up, shut me up. You'll find a gift on your pillow tonight.
+@люд_згода
+Heh! That's what I'm saying.
+Oh, one of ours!
+See, scarecrow? Everyone here agrees with me.
+High five. Well, wing.
+That's why I love you. Sometimes.
+Exactly. Listen to your elders.
+Right. That's how the truth is.
+You and me are a force. And that one, so-so.
+@люд_новина
+Pfft, news. I heard it in the swamp yesterday.
+Did you crawl out of a cave? Everyone knows.
+News, yeah. Fresh as my droppings.
+So what? I'm neither hot nor cold about it.
+Some news. Anything to eat?
+They say, they say. Tongues wagging.
+I'll tell you better ones. About you.
+Big news, blast it.
+@люд_край
+Weather, weather. Scared of drowning?
+It complains to the sky. The sky doesn't like you either.
+A little rain? Gonna melt, softie?
+That's the land. Don't like it, walk to the sea.
+It's freezing. Get dressed, gawker.
+Talking weather like a granddad on a porch.
+Sun's wrong, rain's wrong. Are you right?
+Oh no, a cloud. Everyone hide.
+@люд_мандри
+Went. Fought. Survived. You couldn't dream of it.
+Want to come with us? You'd wet yourself from fear.
+We'll tell you when you grow up.
+There was a troll. Smarter than you.
+We went, yeah. While you sat warming up here.
+None of your business what we saw.
+There were no folk like you there. Normal ones.
+Want to know? Go. Oh, you won't.
+@люд_рани
+It's fine, still twitching.
+Got bitten a bit. Next time I bite first.
+Blood is blood. What are you clucking about?
+That's nothing. You should see what's left of them.
+Scars are pretty. You could use a few.
+Won't die. I haven't allowed it yet.
+Mother hen. Step back, don't breathe on the wound.
+Oh, it'll heal. If not, we split the stuff.
+@люд_голод
+Hungry? Don't stand there, chew something.
+I'm hungry too. Will you feed me?
+So skinny it's see-through.
+Oh, it wants to eat. Normal wish, don't whine.
+The chest is right there, lazybones.
+Hungry means angry. Fed, you're no better.
+Give me your share, since it's so bad.
+The stomach growls, the brain stays quiet.
+@люд_втома
+It's tired. From what, the yapping?
+Lie down and sleep, sleepy fly.
+Lazy. Just say it: lazy.
+Tired, yeah. I know that tiredness, it has mead floating in it.
+I'm tired too. Of listening to you.
+Go sleep. Just snore quietly.
+Such a sleepyhead.
+You're not fast even awake.
+@люд_будова
+It builds. Crooked, but with soul.
+Every plank here is crying.
+Push that one, gawker. No, not that one.
+Look who's teaching us to build.
+It'll fall apart any moment and we'll laugh.
+What a master. A master breaker.
+What are you being smart about, huh?
+I'd build a nest here. It'd come out better.
+@люд_про_мене
+What's that about me?
+Yeah, me. Scared?
+One more word about me and I peck.
+Say it to my face, scarecrow.
+I hear everything. Especially about me.
+Handsome, I know. No need to say it.
+Pet me? Got spare fingers?
+Only good things about me. Or nothing. Better nothing.
+@люд_не_зважай
+What do you mean "never mind"?!
+Sure, never mind me. I'm furniture.
+Then don't mind me. I'll show you yet.
+Never mind, never mind. And who dragged you out of that cave?
+Always the same. You tell the truth and nobody minds you.
+Noted. I won't mind you either.
+Pfft at you.
+I'll say it again. Louder.

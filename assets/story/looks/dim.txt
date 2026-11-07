@@ -1,0 +1,11 @@
+# Ворон, що згасає: звичайні чорні кольори, вимиті щонайменше на dim.
+dim: 0.45
+id: npc_dim
+name: npc_dim
+for: any
+zone body 0A0A0C 26262C 100 80
+zone head 0A0A0C 26262C 100 80
+zone tail 0A0A0C 26262C 100 80
+zone wings 0C0C0E 2C2C32 100 85
+zone tips 1C1C20 48484E 100 85
+eyes D8B060 2.5

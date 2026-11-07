@@ -13,7 +13,8 @@ namespace HuginWhispers
     {
         internal static readonly List<NpcActor> Live = new List<NpcActor>();
         private static readonly Dictionary<Character, NpcActor> ByBody = new Dictionary<Character, NpcActor>();
-        private const string RpcSay = "RavenWatch_NpcSay", RpcOrder = "RavenWatch_NpcOrder", RpcTalk = "RavenWatch_NpcTalk", RpcAct = "RavenWatch_NpcAct";
+        private const string RpcSay = "RavenWatch_NpcSay", RpcOrder = "RavenWatch_NpcOrder", RpcTalk = "RavenWatch_NpcTalk", RpcAppear = "RavenWatch_NpcAppear";
+        internal const string RpcAct = "RavenWatch_NpcAct";
 
         public EffectList m_vanish = new EffectList(); // (Odin's: his puff of smoke)
 
@@ -24,11 +25,29 @@ namespace HuginWhispers
         private bool _dressed, _minded, _wasOwned;
         private float _nextSay, _nextRules, _nextHitRule, _nextBind, _nextStatus;
         internal System.Collections.Generic.HashSet<string> StoryFacts; internal string StoryFactsOf; // (what its story says of it: NpcBackstory.Fact)
+        internal bool EyesOn; internal float EyesLook, EyesFar; // (a player near enough to see it: NpcClock.Seen)
         internal float NextRemark, NextLook; internal string LastRemark = ""; internal int Stared; // (a player standing by it saying nothing: looks in a row) // (its own words unasked: NpcVoice)
         internal static readonly int KStatus = "RavenWatch_npcStatus".GetStableHashCode(); // string: what it does now (its owner's words)
 
         // what it does now, on any game: its own mind where it is run, else as its owner last said
         internal string StatusNow { get { if (Owned && _mind != null) return _mind.Describe(); ZDO z = Zdo; return z != null ? z.GetString(KStatus, "") : ""; } }
+
+        // ...as a player reads it: its words stay Ukrainian where they are kept (the ZDO, the log, what modules look for in
+        // them), each part turned into the reader's language here — «шар: що робить (поза)» — then into its own form
+        // («прийшов|прийшла»). The words are marked Lang.K where they are set (NpcMind, its modules' errands).
+        internal string StatusText
+        {
+            get
+            {
+                string s = StatusNow;
+                if (string.IsNullOrEmpty(s)) return s;
+                s = NpcMind.WithoutLayer(s); // («сцена: стоїть»: the layer's word is for the log and the window)
+                int colon = s.IndexOf(": ", StringComparison.Ordinal);
+                string head = colon > 0 ? Lang.T(s.Substring(0, colon)) + ": " : "", rest = colon > 0 ? s.Substring(colon + 2) : s;
+                int paren = rest.IndexOf(" (", StringComparison.Ordinal); // («стоїть (поза)»: the pose's own name stays)
+                return Form(head + (paren > 0 ? Lang.T(rest.Substring(0, paren)) + rest.Substring(paren) : Lang.T(rest)));
+            }
+        }
         private int _daySeen = -1; // 0 day · 1 night (the habit for it given)
         private readonly List<ZDOID> _near = new List<ZDOID>();
 
@@ -55,6 +74,8 @@ namespace HuginWhispers
         internal NpcSettlers.Look LookKept; internal string LookRaw = ""; // (a settler's look as read: NpcSettlers.Of)
 
         // its name as shown: a settler's own, else its template's (in the player's language)
+        // who it is in the log: its template, and its own name when that tells more (many settlers share «settler»)
+        internal string Who { get { string n = Name; return n == Id ? Id : Id + " «" + n + "»"; } }
         internal string Name { get { string own = NpcSettlers.NameOf(this); return own.Length > 0 ? own : _def != null ? Lang.T(_def.Name) : Id; } }
 
         // a woman or a man (a settler's own, else its template's model) — and words in its form: «старанний|старанна»
@@ -72,8 +93,8 @@ namespace HuginWhispers
             return he + (he.Length > 0 && char.IsLetterOrDigit(he[he.Length - 1]) ? she.Substring(tail) : "");
         }
 
-        internal NpcGait.Style GaitKept; internal NpcPersona GaitFor; // (its gait, made once per its ways: NpcGait.Of)
-        internal NpcPersona PersonaKept; internal NpcDef PersonaFor; internal string PersonaStory = ""; // (its ways, made once: NpcPersona.Of)
+        internal BodyGait.Style GaitKept; internal NpcPersona GaitFor; internal int GaitVer; internal string GaitForced = ""; // (its gait, made once per its ways: NpcGait.Of)
+        internal NpcPersona PersonaKept; internal NpcDef PersonaFor; internal string PersonaStory = ""; internal uint PersonaSeed; internal string PersonaWritten; internal string PersonaLookRaw, PersonaTraitsRaw; // (its ways, made once: NpcPersona.Of)
 
         // the person a body belongs to (null: not one of ours)
         internal static NpcActor Of(Character c) { NpcActor a; return c != null && ByBody.TryGetValue(c, out a) ? a : null; }
@@ -82,7 +103,6 @@ namespace HuginWhispers
         internal static readonly Dictionary<string, Action<NpcActor, string[]>> Acts = new Dictionary<string, Action<NpcActor, string[]>>();
         internal static readonly List<Func<NpcActor, bool>> Unhurt = new List<Func<NpcActor, bool>>();
         internal static readonly List<Func<NpcActor, bool>> Hurtable = new List<Func<NpcActor, bool>>();
-        internal static readonly List<Action<NpcActor, Character>> HitBy = new List<Action<NpcActor, Character>>(); // (a module's word on a blow, where it is owned)
 
         internal static bool Immortal(Character c)
         {
@@ -93,6 +113,19 @@ namespace HuginWhispers
             if (a._def.Mortal) return false; // (a story person meant to be hurt: as the game has it)
             for (int i = 0; i < Hurtable.Count; i++) if (Hurtable[i](a)) return false; // (hired, living at a base: it falls senseless, it does not die — NpcVitals)
             return true;
+        }
+
+        // The player's body gets up off the ground at its first moments, and only the game's Player ever tells it to stop («wakeup»):
+        // a person has no Player (Npcs.BuildHuman), so it came into the world sitting (the ghost, 2026-11-04, seen through its fade). Before
+        // its first frame: told, and its animator taken past the change, so nobody sees it. Once a body comes into the world or is loaded
+        internal static float WakeSkip = 2f; // s
+        private void Start()
+        {
+            if (_def != null && _def.Odin) return; // (not the player's body)
+            Animator anim = GetComponentInChildren<Animator>();
+            if (anim == null) return;
+            anim.SetBool("wakeup", false);
+            anim.Update(WakeSkip);
         }
 
         private void Awake()
@@ -106,11 +139,13 @@ namespace HuginWhispers
             string id = z.GetString(Npcs.KId, "");
             if (id.Length == 0 && Npcs.NextId.Length > 0) { id = Npcs.NextId; z.Set(Npcs.KId, id); }
             _def = NpcDefs.Find(id);
+            NpcKit.Born(z, _def); // (its lasting number and its seed from its first moment, where it is owned — born here, or an old save loaded here: what it is made of is seeded by it, NpcKit.Seed)
             if (_def == null) Npcs.Log("an npc «" + id + "» with no template here (another version?): it stands still");
             _nv.Register<string>(RpcSay, RPC_Say);
             _nv.Register<string>(RpcOrder, RPC_Order);
             _nv.Register<ZDOID>(RpcTalk, RPC_Talk);
             _nv.Register<string>(RpcAct, RPC_Act);
+            _nv.Register<Vector3>(RpcAppear, RPC_Appear);
             if (_body != null)
             {
                 ByBody[_body] = this;
@@ -132,7 +167,7 @@ namespace HuginWhispers
             _body.m_name = Name;
             _body.m_health = _def.Health;
             float own = NpcPersona.Of(this).Walk * _pace;
-            _body.m_walkSpeed = _walk0 * _def.Speed * _def.Walk * own; _body.m_speed = _speed0 * _def.Speed * (0.5f + own * 0.5f); _body.m_runSpeed = _run0 * _def.Speed;
+            _body.m_walkSpeed = _walk0 * _def.Speed * _def.Walk * own; _body.m_speed = _speed0 * _def.Speed * (0.5f + own * 0.5f); _body.m_runSpeed = _run0 * _def.Speed * _def.Run;
         }
 
         // its gait's pace now (NpcGait: its kind, tired, glad): × its walk, where it is run
@@ -158,7 +193,7 @@ namespace HuginWhispers
             bool other = d != _def;
             _def = d;
             ApplyDef();
-            if (other && Owned) { _dressed = false; if (_mind != null) _mind.Do("fight " + d.Fight, NpcMind.Layer.Routine); Npcs.Log(Id + ": became " + id); }
+            if (other && Owned) { _dressed = false; if (_mind != null) _mind.Do("fight " + NpcNature.FightNow(this), NpcMind.Layer.Routine); Npcs.Log(Id + ": became " + id); }
         }
 
         private void OnDestroy()
@@ -225,6 +260,7 @@ namespace HuginWhispers
 
         private void Update0()
         {
+            if (_waitText != null && Owned) SayWaiting();
             if (Time.time >= _nextBind)
             {
                 _nextBind = Time.time + 0.5f; ZDO zb = Zdo;
@@ -238,7 +274,7 @@ namespace HuginWhispers
                 if (!_prepared && Owned) _prepared = Prepare(); // (the modules' steps before it is dressed: NpcModules)
                 if (Owned != _wasOwned) { _wasOwned = Owned; OwnerChanged(Owned); }
                 if (!_dressed && Owned && _prepared) Dress(); // (dressed from its locker's cells, once they are there)
-                if (!_minded && Owned && _mind != null) { _minded = true; _mind.Default(_def.Fight); }
+                if (!_minded && Owned && _mind != null) { _minded = _mind.Default(NpcNature.Manner(this)); if (_minded) NpcNature.SyncFight(this); } // (false: its kept plans not here yet — again next frame)
                 if (Owned && Time.time >= _nextRules && NpcClock.Take()) { _nextRules = Time.time + 0.5f * NpcClock.Slow(this); long ph = NpcPerf.Now(); try { Habits(); } catch (Exception e) { _nextRules = Time.time + HookPause; Npcs.Log(Id + ": its habits failed, left alone " + HookPause + " s: " + e); } NpcPerf.Add(PerfHabits, ph); } // (its turn on the clock: fewer far from everyone)
                 if (Owned && _mind != null) Run(Ticks); // (the modules' own, where it is run: its words…)
                 if (Owned && _mind != null && Time.time >= _nextStatus) { _nextStatus = Time.time + 3f * NpcClock.Slow(this); ZDO zs = Zdo; string d = _mind.Describe(); if (zs != null && zs.GetString(KStatus, "") != d) zs.Set(KStatus, d); } // (what it does, for the other games: only when it changed, at most every 3 s)
@@ -251,7 +287,8 @@ namespace HuginWhispers
         // nothing of the old owner's memory is taken for true (a body that was on a seat there, plans made there)
         private void OwnerChanged(bool here)
         {
-            if (here) _dressed = false; // (dressed afresh — its job may have changed meanwhile)
+            Npcs.Log(Id + " «" + Name + "»: run " + (here ? "here now" : "by another game now") + (Body != null && Body.Attached ? " (seated)" : "") + (_mind != null && _mind.Current != null ? ", doing " + _mind.Describe() : "")); // (seldom: a handover — the two-player test reads it)
+            if (here) { _dressed = false; NpcKit.Born(Zdo, _def); } // (dressed afresh — its job may have changed meanwhile; its seed, if no owner gave it yet)
             if (_mind != null) _mind.OwnerChanged(here);
             if (Body != null) Body.OwnerChanged(here);
         }
@@ -289,6 +326,7 @@ namespace HuginWhispers
                     GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(g) : null;
                     ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
                     if (drop == null) { Npcs.Log(_def.Id + ": no item «" + g + "»"); continue; }
+                    if (!NpcGear.Wearable(drop)) { Npcs.Log(_def.Id + ": «" + g + "» is not a thing to wear (a creature's own, no icon): left off"); continue; }
                     ItemDrop.ItemData t = drop.m_itemData.Clone(); t.m_dropPrefab = prefab;
                     template.Add(t);
                 }
@@ -348,11 +386,18 @@ namespace HuginWhispers
             if (a._mind != null && a.Owned) a._mind.HurtBy(attacker);
             if (a.Owned && Time.time >= a._nextHitRule) { a._nextHitRule = Time.time + 3f; NpcRules.Fire(a, "hit", attacker as Player); }
             if (a.Owned) StoryBus.Raise("npc_hit", a.Id, attacker != null && attacker.IsPlayer() ? 1 : 0, a.transform.position);
-            if (a.Owned) foreach (Action<NpcActor, Character> h in HitBy) h(a, attacker);
         }
 
         // ---------------------------------------------------------------- coming and going
-        internal void Appear() { if (m_vanish != null && m_vanish.HasEffects()) m_vanish.Create(transform.position, transform.rotation); }
+        // its puff of smoke where it stands now, on every game near (it was this game's alone: a second player saw a person jump with no smoke);
+        // the spot goes with it, for the body is put elsewhere a moment later (NpcBody.Put: a puff at both ends)
+        internal void Appear()
+        {
+            if (_nv != null && _nv.IsValid()) _nv.InvokeRPC(ZNetView.Everybody, RpcAppear, transform.position);
+            else Puff(transform.position);
+        }
+        private void RPC_Appear(long sender, Vector3 at) { Puff(at); }
+        private void Puff(Vector3 at) { if (m_vanish != null && m_vanish.HasEffects()) m_vanish.Create(at, transform.rotation); }
 
         // the look edited (the window «Вигляд») or its cells changed (NpcGear): dressed again, here (an edit takes the NPC over)
         internal void Redress()
@@ -375,23 +420,80 @@ namespace HuginWhispers
         // over its head, for everyone near (the game's own bubble); {name} is the one it says it to (here: you)
         internal void Say(string text) { Say(text, null); }
 
+        // ---------------------------------------------------------------- one voice at a time (the user 2026-11-06: many people near, their
+        // words over each other). A line over a head holds the floor in a small ring (FloorRadius) while its bubble is up, on every game (RPC_Say
+        // marks it, so people run by different games hear each other). How a line takes it:
+        //   Over     says it now (the default): a talk's answer, a scene, two people talking to each other, a call for help
+        //   Event    something happened (a raid over, a meal missed, it is leaving): waits its turn up to WaitMost, then says it; a newer one replaces it
+        //   Unasked  its own word in passing (a remark, a mutter, a place, the weather): said only while the ring is quiet, else not at all
+        // Who speaks unasked asks FloorFree before it makes its line (NpcVoice, NpcChatter): nothing is made to be thrown away.
+        internal enum Voice { Over, Event, Unasked }
+        internal static float FloorRadius = 8f, FloorGap = 0.8f, WaitMost = 15f;
+        private sealed class Floor { public NpcActor Who; public Vector3 At; public float Until; }
+        private static readonly List<Floor> Floors = new List<Floor>(); // session: bubbles on screen now
+        private string _waitText; private Player _waitTo; private float _waitUntil;
+
+        // nobody but these two speaking in the ring round this point now
+        internal static bool FloorFree(Vector3 at, NpcActor me, NpcActor with = null)
+        {
+            float now = Time.time, r2 = FloorRadius * FloorRadius;
+            for (int i = Floors.Count - 1; i >= 0; i--)
+            {
+                Floor f = Floors[i];
+                if (f.Until < now || f.Who == null) { Floors.RemoveAt(i); continue; }
+                if (f.Who != me && f.Who != with && (f.At - at).sqrMagnitude < r2) return false;
+            }
+            return true;
+        }
+
+        private void Hold(string text)
+        {
+            Floor f = Floors.Find(x => x.Who == this);
+            if (f == null) { if (Floors.Count > 64) Floors.RemoveAt(0); f = new Floor { Who = this }; Floors.Add(f); }
+            f.At = transform.position; f.Until = Time.time + RavenSpeech.Seconds(text, RavenSpeech.Pace.Bubble) + FloorGap;
+        }
+
+        // an event's line waiting for the ring to be quiet (from Update, where it is run)
+        private void SayWaiting()
+        {
+            if (_waitText == null) return;
+            if (Time.time > _waitUntil) { _waitText = null; return; } // (too late: the moment is gone)
+            if (!FloorFree(transform.position, this)) return;
+            string t = _waitText; _waitText = null;
+            Say(t, _waitTo, Voice.Over);
+        }
+
+        internal void Say(string text, Player to, Voice how)
+        {
+            if (how != Voice.Over && !FloorFree(transform.position, this))
+            {
+                if (how == Voice.Event && !string.IsNullOrEmpty(text)) { _waitText = text; _waitTo = to; _waitUntil = Time.time + WaitMost; }
+                return;
+            }
+            Say(text, to);
+        }
+
         // its line to someone: {name} and «ходив|ходила» of that one — the one it speaks to, else the player nearest it (not
         // the player of the game that runs it: a host's or a server's game — a friend was called by the host's name, 2026-11-01)
         internal void Say(string text, Player to)
         {
             if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text)) return;
+            text = NpcBody.Spoken(this, text); // (a gesture in its words: played, the mark taken out)
+            if (text.Length == 0) return;
             Player p = to ?? Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer;
             text = Lang.T(text).Replace("{name}", p != null ? p.GetPlayerName() : "");
             if (p != null) text = Grammar.Fix(text, p);
+            Hold(text); // (at once here: the next one asking this frame already hears it)
             _nv.InvokeRPC(ZNetView.Everybody, RpcSay, text);
         }
 
         private void RPC_Say(long sender, string text)
         {
+            Hold(text); // (every game knows who holds the floor)
             if (Chat.instance == null) return;
             float seen = 25f;
             for (int i = 0; i < HeardFrom.Count; i++) seen = Mathf.Max(seen, HeardFrom[i](this)); // (one lost and calling out: from far — a module's word)
-            Chat.instance.SetNpcText(gameObject, Vector3.up * (_body != null ? 2.1f : 2.6f), seen, Mathf.Clamp(2f + text.Length * 0.06f, 4f, 12f), "", text, false);
+            Chat.instance.SetNpcText(gameObject, Vector3.up * (_body != null ? 2.1f : 2.6f), seen, RavenSpeech.Seconds(text, RavenSpeech.Pace.Bubble), "", text, false);
         }
 
         // ---------------------------------------------------------------- orders (the mind's words: NpcMind.Do)
@@ -404,13 +506,26 @@ namespace HuginWhispers
         internal void Order(string order, NpcMind.Layer layer, string whose)
         {
             if (_nv == null || !_nv.IsValid() || _mind == null) return;
-            if (_nv.IsOwner()) _mind.Do(order, layer, whose);
-            else _nv.InvokeRPC(_nv.GetZDO().GetOwner(), RpcOrder, ((int)layer) + " " + (string.IsNullOrEmpty(whose) ? "-" : whose) + " " + order);
+            if (_nv.IsOwner()) { _mind.Do(order, layer, whose); return; }
+            long owner = _nv.GetZDO().GetOwner();
+            if (owner == 0L) { Npcs.Log(Id + ": nobody runs it this moment (its owner changes) — order dropped: " + order); return; } // (a send to 0 goes to every game: each would run it)
+            _nv.InvokeRPC(owner, RpcOrder, ((int)layer) + " " + (string.IsNullOrEmpty(whose) ? "-" : whose) + " " + order);
         }
+        private const string SentOn = "^"; // (an order already sent on once: never again — no ring of games that each think another runs it)
 
+        // an order that comes here as its owner changes (sent to the old one): on to the new one, once — not lost without a word
         private void RPC_Order(long sender, string sent)
         {
-            if (_nv == null || !_nv.IsOwner() || _mind == null) return;
+            if (_nv == null || !_nv.IsValid() || _mind == null) return;
+            bool on = sent.StartsWith(SentOn, StringComparison.Ordinal);
+            if (on) sent = sent.Substring(SentOn.Length);
+            if (!_nv.IsOwner())
+            {
+                long now = _nv.GetZDO().GetOwner();
+                if (!on && now != 0L && now != sender && now != ZDOMan.GetSessionID()) _nv.InvokeRPC(now, RpcOrder, SentOn + sent);
+                else Npcs.Log(Id + ": an order came as its owner changed, nowhere to send it on — dropped: " + sent);
+                return;
+            }
             string[] w = sent.Split(new[] { ' ' }, 3);
             int l;
             if (w.Length == 3 && int.TryParse(w[0], out l) && l >= 0 && l <= (int)NpcMind.Layer.Scene) _mind.Do(w[2], (NpcMind.Layer)l, w[1] == "-" ? null : w[1]);
@@ -421,7 +536,7 @@ namespace HuginWhispers
 
         public string GetHoverText()
         {
-            if (_def == null) return "";
+            if (_def == null || NpcMenu.IsOpen) return ""; // (its menu open: these words would show through the plate)
             string q = _mind != null && NpcMenu.MayOrder(this) ? RavenKeys.LabelOf(RavenKeys.GiftsId) : "—"; // (orders only for the hired ones; an admin: all) // (Q: its round menu, NpcMenu — the hint names the key, so the gifts circle gives way)
             for (int i = 0; i < HoverInstead.Count; i++) { string own = HoverInstead[i](this); if (own != null) return Localization.instance != null ? Localization.instance.Localize(own) : own; } // (dead, senseless…: a module's own)
             StringBuilder hover = new StringBuilder(Name);
@@ -446,7 +561,7 @@ namespace HuginWhispers
             Player me = user as Player;
             for (int i = 0; i < UseInstead.Count; i++) { bool? done = UseInstead[i](this, me); if (done.HasValue) return done.Value; } // (dead, senseless…: a module's own use)
             // its talk opens here, on the game of the one who talks (NpcTalk); it turns to you there where it is run
-            if (user == Player.m_localPlayer && NpcTalk.Open(this, Player.m_localPlayer)) { if (_mind != null) Order("look " + NpcKit.Ref(user.GetZDOID())); StoryBus.Raise("npc_talk", _def.Id, 0, transform.position); return true; }
+            if (user == Player.m_localPlayer && NpcTalk.Open(this, Player.m_localPlayer)) return true; // (its look and «npc_talk» there: only when a talk really opens, not over another player's)
             if (Owned) Talk(user.GetZDOID());
             else _nv.InvokeRPC(_nv.GetZDO().GetOwner(), RpcTalk, user.GetZDOID());
             return true;
@@ -464,13 +579,31 @@ namespace HuginWhispers
             else _nv.InvokeRPC(_nv.GetZDO().GetOwner(), RpcAct, act);
         }
 
-        private void RPC_Act(long sender, string act) { if (Owned) DoAct(act); }
+        private void RPC_Act(long sender, string act)
+        {
+            if (!Owned) { Npcs.Log(Id + ": an act came as its owner changed — dropped (not sent on: who sent it counts, SentBy): " + act); return; }
+            _actFrom = sender;
+            try { DoAct(act); }
+            finally { _actFrom = 0L; }
+        }
+
+        // an act done in a player's name (hired by it, its patience, its promise): sent by that player's own game? Asked by those acts where it is run. A plain word
+        // kept out of a game with no mod to change it; a player not here to tell by: let through (a changed client can write a ZDO anyway: this is no wall, only no open door)
+        private static long _actFrom; // (the game the act now running came from; 0: this one)
+        internal static bool SentBy(long player)
+        {
+            if (_actFrom == 0L) return true;
+            foreach (Player p in Player.GetAllPlayers())
+                if (p != null && p.GetPlayerID() == player && p.GetOwner() != _actFrom) { Npcs.Log("an act in the name of " + player + " came from another game (" + _actFrom + "): not done"); return false; }
+            return true;
+        }
 
         private void DoAct(string act)
         {
             ZDO z = Zdo;
             if (z == null) return;
             string[] w = act.Split(' ');
+            if (w[0] == "unhold") { if (w.Length > 1 && _mind != null) _mind.Unhold(NpcKit.Parse(w[1])); return; }
             if (w[0] == "hold") { if (w.Length > 1 && _mind != null) _mind.Hold(NpcKit.Parse(w[1])); return; } // (the core's own: it stands for whoever gives it orders)
             Action<NpcActor, string[]> run;
             if (Acts.TryGetValue(w[0], out run)) { try { run(this, w); } catch (Exception e) { Npcs.Log(Id + ": act «" + act + "» failed: " + e); } } // (a module's: NpcModules)

@@ -11,16 +11,23 @@ namespace HuginWhispers
     {
         // camera <from> [look <what>] [blend N | cut] [fov N] · camera off [blend N | cut]
         //   behind — over the player's shoulder towards what it looks at (both in the picture; the angle with nothing in
-        //            between picked from a few, picked again as they move); over — high above; <place> — from there
+        //            between picked from a few, picked again as they move); over — high above; <place> — from there;
+        //            face — close before his face, a little to the side, where his body faces when it begins (it stays
+        //            there: his head turning is seen), looking at his head (default fov FaceFov)
         //   look   — player (default), sky, bird, npc.<who>, or a place; whatever moves is followed every frame
         // The author's shots (StoryShots, the window «Режисер»), each «<place>.<name>»:
         //   camera shot <a> [look <what>]                         stands there, as it was taken (or looking at something)
         //   camera move <a> <b> <s> [ease none|in|out|both] [look <what>]   from one to the other in s seconds
         //   camera orbit <what> <radius> <height> <degrees> <s> [ease …]   round it, from where the camera is now
+        //   camera follow [side] [up] [back]                      goes with him: behind his shoulder (m from his head), lagging a
+        //                                                         little, looking the way he faces (his nape in the picture)
+        //   camera face [degrees] [m]                             round his face: at that angle from where he faces, that far
+        //   live N — a living camera on any of these (StoryCamera.Live): sways in step with him, breathes when he stands
         //   cut — at once (= blend 0); blend N — eased in from wherever the camera was, a moving one too (default 1.5)
         //   wait — the scene waits till the move or the orbit is over (else it goes on while the camera moves)
         private static void CameraStep(Player p, string[] w)
         {
+            if (Watching) return; // (the author looks from outside: the camera is his)
             float blend = 1.5f, fov = 0f;
             int bi = Array.IndexOf(w, "blend"), fi = Array.IndexOf(w, "fov"), li = Array.IndexOf(w, "look"), ei = Array.IndexOf(w, "ease");
             if (bi >= 0 && w.Length > bi + 1) blend = F(w[bi + 1], blend);
@@ -29,6 +36,13 @@ namespace HuginWhispers
             string ease = ei >= 0 && w.Length > ei + 1 ? w[ei + 1] : "both";
             bool hold = Array.IndexOf(w, "wait") > 0;
             if (w[1] == "off") { StoryCamera.Off(blend); return; }
+            int vi = Array.IndexOf(w, "live");
+            StoryCamera.Live = vi >= 0 && w.Length > vi + 1 ? F(w[vi + 1], 1f) : 0f;
+            if (w[1] == "follow")
+            {
+                StoryCamera.Shot(Follow(Num(w, 2, FollowSide), Num(w, 3, FollowUp), Num(w, 4, FollowBack), fov), blend);
+                return;
+            }
             Vector3 fwd = Flat(GameCamera.instance != null ? GameCamera.instance.transform.forward : p.transform.forward);
             string what = li >= 0 && w.Length > li + 1 ? w[li + 1] : "player";
             Func<Vector3> look = Looker(p, what, fwd);
@@ -38,11 +52,12 @@ namespace HuginWhispers
                 if (w.Length < 3 || !StoryShots.Find(w[2], out a)) { Note("camera " + w[1] + ": нема кадру «" + (w.Length > 2 ? w[2] : "") + "» — крок пропущено"); return; }
                 if (fov > 1f) a.Fov = fov;
                 Func<Vector3> aim = li >= 0 ? look : null; // (no «look»: the shot's own turn)
-                if (w[1] == "shot") { StoryCamera.Shot(StoryShots.Still(a, aim), blend); return; }
+                bool round = w[2].StartsWith(StoryShots.PlayerFrame + "."); // (a shot round the player: the land there is not known)
+                if (w[1] == "shot") { StoryCamera.Shot(round ? Clearing(StoryShots.Still(a, aim)) : StoryShots.Still(a, aim), blend); return; }
                 if (w.Length < 5 || !StoryShots.Find(w[3], out b)) { Note("camera move: нема кадру «" + (w.Length > 3 ? w[3] : "") + "» — крок пропущено"); return; }
                 float secs = F(w[4], 3f);
                 if (fov > 1f) b.Fov = fov;
-                StoryCamera.Shot(StoryShots.Move(a, b, secs, ease, aim), blend);
+                StoryCamera.Shot(round ? Clearing(StoryShots.Move(a, b, secs, ease, aim)) : StoryShots.Move(a, b, secs, ease, aim), blend);
                 if (hold) { Hold(secs); _limit = Time.time + secs + 2f; }
                 return;
             }
@@ -51,13 +66,18 @@ namespace HuginWhispers
                 if (w.Length < 7) { Note("camera orbit <що> <радіус> <висота> <градусів> <секунд> — мало слів"); return; }
                 Func<Vector3> centre = Looker(p, w[2], fwd);
                 float secs = F(w[6], 6f);
-                StoryCamera.Shot(StoryShots.Orbit(centre, F(w[3], 4f), F(w[4], 2f), F(w[5], 90f), secs, ease, fov), blend);
+                StoryCamera.Shot(Clearing(StoryShots.Orbit(centre, F(w[3], 4f), F(w[4], 2f), F(w[5], 90f), secs, ease, fov)), blend); // (it goes round: never through a rock)
                 if (hold) { Hold(secs); _limit = Time.time + secs + 2f; }
                 return;
             }
             Func<Vector3> from;
             if (w[1] == "behind") from = what == "player" ? Fixed(p.transform.position - fwd * 6f + Vector3.up * 3f) : OverShoulder(look);
             else if (w[1] == "over") from = Fixed(p.transform.position - fwd * 3f + Vector3.up * 14f);
+            else if (w[1] == "face")
+            {
+                from = Fixed(FaceSpot(p, Num(w, 2, float.NaN), Num(w, 3, FaceDist)));
+                if (fov < 1f) fov = FaceFov;
+            }
             else
             {
                 Vector3 start;
@@ -80,6 +100,61 @@ namespace HuginWhispers
 
         private static Func<Vector3> Fixed(Vector3 v) { return () => v; }
 
+        // a camera that keeps nothing between it and his head, each frame (nearer when something stands there)
+        private static Func<StoryCamera.Pose> Clearing(Func<StoryCamera.Pose> pose)
+        {
+            return () => { StoryCamera.Pose q = pose(); q.At = StoryShots.ClearOf(q.At); return q; }; // heavy: one ray a frame, only while this shot is on
+        }
+
+        // a shot's own number: the i-th word of the line, only if every word from the shot's name up to it is a number (so
+        // «live 1» further on is never read as one); else the default
+        private static float Num(string[] w, int i, float def)
+        {
+            float v = def;
+            for (int k = 2; k <= i; k++) if (k >= w.Length || !float.TryParse(w[k], NumberStyles.Float, CultureInfo.InvariantCulture, out v)) return def;
+            return v;
+        }
+
+        // going with him, behind his shoulder: lags a little (it has weight), looks the way he faces; nearer than whatever
+        // stands between it and his head
+        internal static float FollowSide = 0.32f, FollowUp = 0.08f, FollowBack = 0.95f, FollowEase = 5f, FollowAhead = 6f;
+        private static Func<StoryCamera.Pose> Follow(float side, float up, float back, float fov)
+        {
+            Vector3 at = Vector3.zero; bool first = true;
+            return () =>
+            {
+                Player p = Player.m_localPlayer;
+                if (p == null) return new StoryCamera.Pose { At = at, Rot = Quaternion.identity, Fov = fov };
+                Quaternion turn = Quaternion.Euler(0f, p.transform.eulerAngles.y, 0f);
+                Vector3 head = p.GetHeadPoint(), want = head + turn * new Vector3(side, up, -back);
+                at = first ? want : Vector3.Lerp(at, want, 1f - Mathf.Exp(-FollowEase * Time.deltaTime));
+                first = false;
+                Vector3 c = StoryShots.ClearOf(at), look = head + turn * Vector3.forward * FollowAhead - c; // heavy: one ray a frame, only while this shot is on
+                return new StoryCamera.Pose { At = c, Rot = Quaternion.LookRotation(look.normalized, Vector3.up), Fov = fov };
+            };
+        }
+        internal static float FaceDist = 1.15f, FaceUp = 0.05f, FaceFov = 38f; // (camera face: m before the head, m up)
+        private static readonly float[] FaceAngles = { 28f, -28f, 60f, -60f, 95f, -95f, 130f, -130f, 180f };
+
+        // close before his face, a little to the side: the first angle round him (from the front, wider and wider, at last
+        // from behind) that is in no rock or wall and has nothing between it and his head; a nearer ring if none
+        private static Vector3 FaceSpot(Player p, float want, float far)
+        {
+            Vector3 head = p.GetHeadPoint(), body = Flat(p.transform.forward);
+            int mask = GameCamera.instance != null ? (int)GameCamera.instance.m_blockCameraMask : (int)RavenMotor.Mask;
+            foreach (float dist in new[] { far, far * 0.7f })
+                for (int i = float.IsNaN(want) ? 0 : -1; i < FaceAngles.Length; i++)
+                {
+                    float ang = i < 0 ? want : FaceAngles[i]; // (the angle asked for first)
+                    Vector3 c = head + Quaternion.Euler(0f, ang, 0f) * body * dist + Vector3.up * FaceUp;
+                    if (Physics.CheckSphere(c, 0.25f, mask, QueryTriggerInteraction.Ignore)) continue; // (inside a rock, a wall)
+                    if (Physics.Linecast(c, head, mask, QueryTriggerInteraction.Ignore)) continue;     // (his head hidden)
+                    return c;
+                }
+            Note("camera face: довкола голови тісно — кадр згори");
+            return head + Vector3.up * 1.2f;
+        }
+
         // what the camera looks at, followed each frame: the player, the sky before you, the bird, a person, a place
         private static Func<Vector3> Looker(Player p, string what, Vector3 fwd)
         {
@@ -89,6 +164,7 @@ namespace HuginWhispers
             Vector3 first;
             if (!StoryWhere.Find(what, out first)) Note("camera look: нема місця «" + what + "» — дивлюсь на гравця");
             else last = first + Vector3.up * 1.2f;
+            if (!StoryWhere.Moves(what)) return () => last; // (a place stands still: found once, not each frame)
             return () => { Vector3 at; if (StoryWhere.Find(what, out at)) last = at + Vector3.up * 1.2f; return last; }; // (it moves: where it is now)
         }
 

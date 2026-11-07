@@ -55,6 +55,9 @@ namespace HuginWhispers
 
         private sealed class Pair { public GameObject Hugin, Munin; public int HuginLv = -1, MuninLv = -1; }
         private static readonly Dictionary<Player, Pair> Drawn = new Dictionary<Player, Pair>();
+
+        // the raven this game draws for that player, wherever it is now (on the shoulder, flying off, hovering), else null
+        internal static GameObject DrawnOf(Player pl, bool munin) { Pair pr; return pl != null && Drawn.TryGetValue(pl, out pr) ? (munin ? pr.Munin : pr.Hugin) : null; }
         private static readonly List<Animator> Landing = new List<Animator>();
         private static readonly HashSet<Animator> FlyingIn = new HashSet<Animator>(); // landing with the fly-in, not the puff
         private static float _next;
@@ -423,10 +426,11 @@ namespace HuginWhispers
             // it follows the shoulder but keeps upright against the body, whatever pose the character had when it appeared.
             ShoulderPin pin = go.AddComponent<ShoulderPin>();
             pin.Player = pl; pin.Bone = bone; pin.Munin = munin;
-            if (!fromPerch) { pin.Arrive(); PuffNote(pl, munin, "appears with the game's fly-in (no perch to come from: " + Perches.NoPerchWhy(pl, munin) + ")"); }
+            bool seated = !fromPerch && ReferenceEquals(pl, Player.m_localPlayer) && TakeSeated(munin);
+            if (!fromPerch && !seated) { pin.Arrive(); PuffNote(pl, munin, "appears with the game's fly-in (no perch to come from: " + Perches.NoPerchWhy(pl, munin) + ")"); }
             pin.LateUpdate();
 
-            if (!fromPerch) Perch(go.GetComponentInChildren<Animator>(), true); // it flies in and lands on the shoulder, as the game's ravens fly in to you
+            if (!fromPerch) Perch(go.GetComponentInChildren<Animator>(), !seated); // it flies in and lands on the shoulder, as the game's ravens fly in to you
             ShoulderLife life = go.GetComponent<ShoulderLife>();
             if (life == null) life = go.AddComponent<ShoulderLife>();
             life.Init(pl, munin, level);
@@ -443,6 +447,18 @@ namespace HuginWhispers
         }
 
         // a copied raven model starts "away" (hidden): wake its animator and land it in place
+        // the next raven of that kind drawn on you is there already, sitting, no fly-in (a scene's picture was on your shoulder: StoryOwn)
+        private static readonly float[] _seatedUntil = new float[2];
+        internal static float SeatedWithin = 5f;
+        internal static void SeatedNext(bool munin) { _seatedUntil[munin ? 1 : 0] = Time.time + SeatedWithin; }
+        private static bool TakeSeated(bool munin)
+        {
+            int i = munin ? 1 : 0;
+            if (Time.time >= _seatedUntil[i]) return false;
+            _seatedUntil[i] = 0f;
+            return true;
+        }
+
         internal static void Perch(Animator anim) { Perch(anim, false); }
 
         internal static void Perch(Animator anim, bool flyIn)

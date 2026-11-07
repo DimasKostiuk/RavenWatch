@@ -1,0 +1,50 @@
+clip drink
+length 4.7
+loop 0
+pivot 1.1
+curve ease
+vary 0.25
+fade 0.5 0.6
+mode Spine1 body
+mode Spine2 body
+mark 2.129 sip
+prop Tankard r
+say надпити з кухля стоячи: права рука до рота, голова трохи назад, рука вниз
+
+# права рука, ніби з кухлем, підноситься до рота, голова закидається, ковток, тоді рука вниз
+
+0 @RightHand 0.24 0.95 0.06
+0.3 @RightHand 0.24 0.95 0.06
+0.7 @RightHand 0.22 1.15 0.26
+1.1 @RightHand 0.12 1.44 0.2
+1.8 @RightHand 0.11 1.5 0.19
+3 @RightHand 0.11 1.52 0.18
+3.5 @RightHand 0.12 1.44 0.19
+4 @RightHand 0.22 1.15 0.26
+4.7 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+0.9 @RightHand.w 1 0 0
+3.9 @RightHand.w 1 0 0
+4.5 @RightHand.w 0 0 0
+4.7 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.8 -0.6 0
+
+0 @RightHand.f -0.3 0 0.95
+1.8 @RightHand.f -0.3 0.5 0.81
+3 @RightHand.f -0.3 0.55 0.78
+
+0 @RightHand.n -0.95 0 -0.3
+
+0 @Look 0 1.6 2
+1.443 @Look 0 2.3 1.5
+3.5 @Look 0 2.3 1.5
+4.1 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+0.9 @Look.w 0.5 0 0
+3.6 @Look.w 0.5 0 0
+4.1 @Look.w 0 0 0
+4.7 @Look.w 0 0 0

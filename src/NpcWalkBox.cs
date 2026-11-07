@@ -23,7 +23,7 @@ namespace HuginWhispers
             float now = Time.time;
             if (now - _goLast > 0.3f) { _goSince = now; _wasFast = false; _dipAt = -1f; } // (a fresh start: its speeding up is no dip)
             _goLast = now;
-            _trip.Going += Time.deltaTime;
+            _trip.Going += _m.Dt; // (the mind's own step: a frame's time here is the physics step's, 2.5 times too short — every walk report before 2026-11-07 read so)
             if (_body == null) _body = _m.GetComponent<Character>();
             if (_body == null) return;
             Vector3 v = _body.GetVelocity(); v.y = 0f;
@@ -73,6 +73,7 @@ namespace HuginWhispers
             sb.AppendFormat(CultureInfo.InvariantCulture, "\n  швидкість у русі {0:0.00} м/с · мікрозупинок {1} ({2:0.0} на 10 м) · зупинок > 0.5 с {3}, стояли {4:0} с · протискань {5}",
                 Totals.Going > 0f ? Totals.Metres / Totals.Going : 0f, Totals.Micro, Totals.Metres > 0f ? Totals.Micro * 10f / Totals.Metres : 0f, Totals.Halts, Totals.Stood, Totals.Slides);
             int jumps = 0; foreach (int v in Totals.Jumps.Values) jumps += v;
+            sb.Append("\n  ").Append(Links());
             sb.Append("\n  ривки (перенесення тіла): ").Append(jumps);
             foreach (KeyValuePair<string, int> kv in Totals.Jumps) sb.Append(" · ").Append(kv.Key).Append(' ').Append(kv.Value);
             sb.Append("\n  стрибки пози: ").Append(Totals.Pops);
@@ -109,8 +110,8 @@ namespace HuginWhispers
             if (_trip == null) return;
             float now = Time.time;
             if (_trip.HaltSince < 0f || _trip.HaltWhy != why) { Flush(); _trip.HaltSince = now; _trip.HaltWhy = why; _trip.HaltAt = me; }
-            _trip.Stood += Time.deltaTime;
-            if (now - _trip.HaltSince > 3f && now - _filmAt > 60f && _films < 20 && Watch) // (a long one: a top view of it, once a minute at most)
+            _trip.Stood += _m.Dt;
+            if (now - _trip.HaltSince > 3f && now - _filmAt > 60f && _films < 20 && NpcWalkTest.On) // (a long one: a top view of it, once a minute at most. Only in a walk test: the black box is on in the author's every game, and these films ran in the middle of play, 2026-11-05)
             {
                 _filmAt = now; _films++;
                 Film("walk" + _films);
@@ -156,7 +157,7 @@ namespace HuginWhispers
         internal void Stuck(string how) { if (_trip != null) End(how); Forget(); }
 
         // put somewhere else (a jump, through a door): its old way and its count of gain forgotten — the next step begins afresh
-        internal void Forget() { _goal = new Vector3(float.MaxValue, 0f, 0f); _hasPath = false; _path.Clear(); _slideUntil = 0f; _stepUntil = 0f; }
+        internal void Forget() { _goal = new Vector3(float.MaxValue, 0f, 0f); _hasPath = false; _path.Clear(); _stepUntil = 0f; }
 
         // what stands by it, in front (the pieces' names: a door, stairs, a table, a fence)
         private static readonly int Pieces = LayerMask.GetMask("piece", "piece_nonsolid", "Default", "static_solid");

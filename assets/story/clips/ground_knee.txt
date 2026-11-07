@@ -1,0 +1,151 @@
+clip ground_knee
+length 6
+loop 0
+pivot 1.1
+curve ease
+vary 0.3
+fade 0.6 0.8
+mode Spine1 body
+mode Spine2 body
+part in 0 1.2 hold
+part loop 1.2 4.8 loop
+part out 4.8 6 end
+
+say сидить на землі, обидві руки на піднятому лівому коліні, нахилився до нього; ноги ігрові
+want 1.2-4.8 hand left near -0.24 0.5 0.16 0.12
+want 1.2-4.8 hand right near -0.12 0.52 0.22 0.12
+want 1.2-4.8 still 40
+
+0 @RightHand 0.27 0.17 0.26
+0.2 @RightHand 0.27 0.17 0.26
+0.7 @RightHand 0.1 0.35 0.3
+1.2 @RightHand -0.12 0.52 0.22
+3 @RightHand -0.12 0.52 0.22
+4.8 @RightHand -0.12 0.52 0.22
+5.3 @RightHand 0.1 0.35 0.3
+5.8 @RightHand 0.27 0.17 0.26
+6 @RightHand 0.27 0.17 0.26
+
+0 @RightHand.w 0 0 0
+0.2 @RightHand.w 0 0 0
+1.2 @RightHand.w 1 0 0
+4.8 @RightHand.w 1 0 0
+5.8 @RightHand.w 0 0 0
+6 @RightHand.w 0 0 0
+
+0 @RightHand.p 1 -0.3 0.2
+
+0 @RightHand.f -1 0 0.3
+
+0 @RightHand.n 0 -1 0
+0 @LeftHand -0.14 0.38 0.35
+0.2 @LeftHand -0.14 0.38 0.35
+0.7 @LeftHand -0.2 0.45 0.25
+1.2 @LeftHand -0.24 0.5 0.16
+3 @LeftHand -0.24 0.5 0.16
+4.8 @LeftHand -0.24 0.5 0.16
+5.3 @LeftHand -0.2 0.45 0.25
+5.8 @LeftHand -0.14 0.38 0.35
+6 @LeftHand -0.14 0.38 0.35
+
+0 @LeftHand.w 0 0 0
+0.2 @LeftHand.w 0 0 0
+1.2 @LeftHand.w 1 0 0
+4.8 @LeftHand.w 1 0 0
+5.8 @LeftHand.w 0 0 0
+6 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -1 -0.3 0.2
+
+0 @LeftHand.f 0.4 0 0.9
+
+0 @LeftHand.n 0 -1 0
+0 Spine1 0 0 0
+1.2 Spine1 5 0 0
+3 Spine1 5 1 0
+4.8 Spine1 5 0 0
+6 Spine1 0 0 0
+
+0 Spine2 0 0 0
+1.2 Spine2 7 0 0
+3 Spine2 8 0 0
+4.8 Spine2 7 0 0
+6 Spine2 0 0 0
+0 RightHandIndex1 0 0 0
+1.2 RightHandIndex1 -25 0 0
+4.8 RightHandIndex1 -25 0 0
+6 RightHandIndex1 0 0 0
+
+0 RightHandIndex2 0 0 0
+1.2 RightHandIndex2 -25 0 0
+4.8 RightHandIndex2 -25 0 0
+6 RightHandIndex2 0 0 0
+
+0 RightHandMiddle1 0 0 0
+1.2 RightHandMiddle1 -25 0 0
+4.8 RightHandMiddle1 -25 0 0
+6 RightHandMiddle1 0 0 0
+
+0 RightHandMiddle2 0 0 0
+1.2 RightHandMiddle2 -25 0 0
+4.8 RightHandMiddle2 -25 0 0
+6 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+1.2 RightHandRing1 -25 0 0
+4.8 RightHandRing1 -25 0 0
+6 RightHandRing1 0 0 0
+
+0 RightHandRing2 0 0 0
+1.2 RightHandRing2 -25 0 0
+4.8 RightHandRing2 -25 0 0
+6 RightHandRing2 0 0 0
+
+0 RightHandPinky1 0 0 0
+1.2 RightHandPinky1 -25 0 0
+4.8 RightHandPinky1 -25 0 0
+6 RightHandPinky1 0 0 0
+
+0 RightHandPinky2 0 0 0
+1.2 RightHandPinky2 -25 0 0
+4.8 RightHandPinky2 -25 0 0
+6 RightHandPinky2 0 0 0
+0 LeftHandIndex1 0 0 0
+1.2 LeftHandIndex1 -25 0 0
+4.8 LeftHandIndex1 -25 0 0
+6 LeftHandIndex1 0 0 0
+
+0 LeftHandIndex2 0 0 0
+1.2 LeftHandIndex2 -25 0 0
+4.8 LeftHandIndex2 -25 0 0
+6 LeftHandIndex2 0 0 0
+
+0 LeftHandMiddle1 0 0 0
+1.2 LeftHandMiddle1 -25 0 0
+4.8 LeftHandMiddle1 -25 0 0
+6 LeftHandMiddle1 0 0 0
+
+0 LeftHandMiddle2 0 0 0
+1.2 LeftHandMiddle2 -25 0 0
+4.8 LeftHandMiddle2 -25 0 0
+6 LeftHandMiddle2 0 0 0
+
+0 LeftHandRing1 0 0 0
+1.2 LeftHandRing1 -25 0 0
+4.8 LeftHandRing1 -25 0 0
+6 LeftHandRing1 0 0 0
+
+0 LeftHandRing2 0 0 0
+1.2 LeftHandRing2 -25 0 0
+4.8 LeftHandRing2 -25 0 0
+6 LeftHandRing2 0 0 0
+
+0 LeftHandPinky1 0 0 0
+1.2 LeftHandPinky1 -25 0 0
+4.8 LeftHandPinky1 -25 0 0
+6 LeftHandPinky1 0 0 0
+
+0 LeftHandPinky2 0 0 0
+1.2 LeftHandPinky2 -25 0 0
+4.8 LeftHandPinky2 -25 0 0
+6 LeftHandPinky2 0 0 0

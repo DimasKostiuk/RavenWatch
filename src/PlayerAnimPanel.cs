@@ -11,7 +11,7 @@ namespace HuginWhispers
     //           it on you (or holding one moment) and its keys; a picture of you from the front, side, back or above.
     //           Right: the bones by part, the chosen bone's three turns at the chosen key, mirrored if you like.
     //   Стани — the rules that pick the clips by themselves from your motion, with your motion values live.
-    // Every change shows at once; «Зберегти» writes config/RavenWatch/player_anims. For the author only: nothing of it
+    // Every change shows at once; «Зберегти» writes BodyClips.Dir (on the author's machine assets/story/clips). For the author only: nothing of it
     // is in the README or the changelog.
     internal sealed class PlayerAnimPanel
     {
@@ -91,7 +91,7 @@ namespace HuginWhispers
                 if (++col % 3 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Label("<color=#9a9a9a>· — вбудований, ще не у файлі · ⇣ — прийшов від іншого гравця</color>");
+            GUILayout.Label("<color=#9a9a9a>· — з моду, ще не у файлі · ⇣ — прийшов від іншого гравця</color>");
             GUILayout.BeginHorizontal();
             _newName = GUILayout.TextField(_newName, GUILayout.Width(170f));
             GUI.enabled = Valid(_newName) && BodyClips.Find(_newName) == null;
@@ -144,7 +144,7 @@ namespace HuginWhispers
             GUILayout.Space(6);
             GUILayout.Label("<b>" + c.Name + "</b>" + (_dirty ? "  <color=#FFB04A>є незбережені зміни</color>" : ""));
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Зберегти", GUILayout.Width(90f))) { _note = "Збережено: " + BodyClips.Save(c); _dirty = false; }
+            if (GUILayout.Button("Зберегти", GUILayout.Width(90f))) { string saved = BodyClips.Save(c); bool ok = System.IO.File.Exists(saved); _note = ok ? "Збережено: " + saved : saved; if (ok) _dirty = false; }
             if (GUILayout.Button("Скопіювати для мода", GUILayout.Width(160f))) { GUIUtility.systemCopyBuffer = BodyClips.AsCode(c); _note = "Кліп скопійовано рядком C# (для вбудованих)."; }
             if (GUILayout.Button(_askDelete ? "Точно видалити?" : "Видалити", GUILayout.Width(120f)))
             {
@@ -170,9 +170,9 @@ namespace HuginWhispers
                 BodyClips.Delete(c);
                 c.Name = _rename;
                 BodyClips.Clips[c.Name] = c;
-                BodyClips.Save(c);
+                string saved = BodyClips.Save(c);
                 _sel = c.Name;
-                _note = "Перейменовано й збережено. Правила з цим кліпом поправ у «Станах».";
+                _note = System.IO.File.Exists(saved) ? "Перейменовано й збережено. Правила з цим кліпом поправ у «Станах»." : "Перейменовано, не збережено: " + saved;
             }
             GUI.enabled = true;
             GUILayout.EndHorizontal();

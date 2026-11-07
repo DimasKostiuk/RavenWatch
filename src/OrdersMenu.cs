@@ -2378,6 +2378,7 @@ namespace HuginWhispers
             bool shield = OrdersMenu.Shields;
 #if RAVEN_NPC
             shield |= NpcMenu.Shields;
+            if (!shield && __instance == Player.m_localPlayer && NpcMenu.HoldsBlock) block = blockHold = false; // (the right click that drops a place being awaited: no block, all else goes on)
 #endif
             if (!shield || __instance != Player.m_localPlayer) return;
             attack = attackHold = secondaryAttack = secondaryAttackHold = block = blockHold = false;

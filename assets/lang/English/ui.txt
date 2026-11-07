@@ -728,25 +728,31 @@
 Примха: Боязкий	Quirk: Timid
 Оленеїд	Deer-eater
 Оленеїде	Deer-eater
-Тричі бачив, як падає Ейктюр	Saw Eikthyr fall three times
+{0}: довіра до тебе росте	{0} trusts you more
+{0}: довіра до тебе падає	{0} trusts you less
+{0} образився: дні на найвищій довірі почнуться заново	{0} is offended: the days at the highest trust start over
+{0}: ставлення до тебе теплішає	{0} warms to you
+{0}: ставлення до тебе гіршає	{0} likes you less
+{0}: ставлення до тебе різко гіршає	{0} is badly offended
+Тричі ви разом здолали Ейктюра	Beat Eikthyr together three times
 Лісоруб	Lumberjack
 Лісорубе	Lumberjack
-Тричі бачив, як падає Прадавній	Saw the Elder fall three times
+Тричі ви разом здолали Прадавнього	Beat the Elder together three times
 Смердюк	Stinker
 Смердюче	Stinker
-Тричі бачив, як падає Кістянка	Saw Bonemass fall three times
+Тричі ви разом здолали Кістянку	Beat Bonemass together three times
 Ящірколов	Lizardcatcher
 Ящірколове	Lizardcatcher
-Тричі бачив, як падає Модер	Saw Moder fall three times
+Тричі ви разом здолали Модера	Beat Moder together three times
 Кістогриз	Bonegnawer
 Кістогризе	Bonegnawer
-Тричі бачив, як падає Яглут	Saw Yagluth fall three times
+Тричі ви разом здолали Яглута	Beat Yagluth together three times
 Тарганобій	Roachkiller
 Тарганобою	Roachkiller
-Тричі бачив, як падає Королева	Saw the Queen fall three times
+Тричі ви разом здолали Королеву	Beat the Queen together three times
 Вогнегасник	Firefighter
 Вогнегаснику	Firefighter
-Тричі бачив, як падає Фейдер	Saw Fader fall three times
+Тричі ви разом здолали Фейдера	Beat Fader together three times
 Підлиза	Suck-up
 Підлизо	Suck-up
 Довіра 5-го рівня	Trust level 5
@@ -2555,6 +2561,7 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Доручення «{0}» з іншої версії мода: його можна лише відкласти.	Errand “{0}” is from another version of the mod: it can only be set aside.
 Одін не знайшов там гідного ворога.	Odin found no worthy foe there.
 Ватажок упав без тебе — Одін зараховує, лише коли ти жив{ий|а} поруч. Повернись у позначене коло: там з'явиться інший, але вже без золота.	The champion fell without you — Odin counts it only when you are alive and near. Go back into the marked circle: another one will appear there, but without gold.
+Ватажка вбили без твого удару — Одін зараховує, лише коли ти сам{|а} б'єшся з ним. У позначеному колі з'явиться інший, але вже без золота.	The champion was killed without a blow of yours — Odin counts it only when you fight it yourself. Another one will appear in the marked circle, but without gold.
 Світ ще не готовий.	The world is not ready yet.
 Одін не знайшов поблизу місця, куди тебе послати.	Odin found no place nearby to send you.
 Убий: {0} — {1}/{2}	Kill: {0} — {1}/{2}
@@ -3186,7 +3193,7 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Відкриється, коли ворон дійде {0}-го рівня довіри.	Opens when the raven reaches trust level {0}.
 Посилку — з {0}-го рівня довіри.	Parcels — from trust level {0}.
 Лист — з {0}-го рівня довіри.	Letters — from trust level {0}.
-Книги воронів у тебе ще нема. Її дає Одін — разом із вороном чи з випробуванням у Воронячому гнізді.	You don't have the Book of Ravens yet. Odin gives it — with a raven, or with the trial at the Raven's Nest.
+Книги воронів у тебе ще нема. Вона приходить разом із вороном.	You don't have the Book of Ravens yet. It comes with a raven.
 Годування	Feeding
 Ім'я	Name
 з {0}-го рівня довіри	from trust level {0}
@@ -5717,166 +5724,165 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 {0} потягнув {1} у свою схованку (там уже {2}).	{0} pinched {1} into its stash ({2} there now).
 У схованці: {0}.	In its stash: {0}.
 Звички ворон набуває від того, як ви граєте останніми днями: медовуха, мандри чи дім, бої, годування, пестощі, ніч чи день, море, підземелля, вогонь, негода, кайло, риба, портали, монети, варта… Кожна дає і плюс, і мінус. Звичка з'являється за кілька днів такої поведінки, тримається щонайменше п'ять днів і минає, якщо поведінка зміниться. Не більше двох разом.	A raven picks up habits from how you have played these last days: mead, journeys or home, fights, feeding, petting, night or day, the sea, dungeons, fire, foul weather, the pickaxe, fish, portals, coins, guard duty… Each gives a plus and a minus. A habit appears after a few days of such play, stays at least five days and goes once the play changes. No more than two at once.
-(без тями)	
-Дати медовуху зцілення	
-Потрібна медовуха зцілення	
-Дії	
-Серце оселі	
-Живе: {0}/{1}	
-Дошка	
-Назва	
-Назва оселі	
-Мешканці	
-Ще ніхто тут не живе. Найми когось і вибери цю оселю — або оселі тут того, хто вже з тобою.	
-Мешканці {0}/{1}	
-Чутки	
-Записки	
-Поки тихо: усе гаразд.	
-Без назви сюди не пошлеш нікого з найманих. Shift+E — дати назву.	
-без роботи	
-без ліжка	
-Чутка: людина в біді (подробиці — на дошці)	
-{0} голодує — без їжі кине роботу, а згодом піде	
-{0} голодний|голодна	
-{0} не має ліжка	
-{0}: ящик повний	
-{0} без роботи	
-Місця більше нема	
-Задалеко від його бази (до {0} м).	
-Тут його ділянка ({0} м довкола).	
-сокира	
-кайло	
-чекає, де працювати (кнопка «Ділянка»)	
-{0} зламана — полагодь або дай іншу	
-потрібна {0} у спорядженні	
-підбирає	
-на ділянці нема що рубати	
-на ділянці нема що копати	
-рубає дерево	
-розрубує колоду	
-копає	
-дуже голодний|голодна	
-голодний|голодна	
-не голодний|голодна	
-ситий|сита	
-Його тут уже нема.	
-Його зараз веде інша гра — спробуй ще раз.	
-Цієї роботи не візьме.	
-Людина в біді	
-Річ, яку загубив|загубила {0}	
-Комора кухаря {0}	
-Готове звідси їдять мешканці бази	
-Їдальня	
-Відпусти	
-За мною	
-Іде за тобою, доки не відпустиш.	
-повертається до своїх справ	
-іде за тобою	
-Стій	
-Стоїть, де стоїть, доки не відпустиш.	
-Іде туди, куди покажеш, і чекає там.	
-іде туди	
-Встань	
-Сядь	
-Сідає на найближчу лаву чи стілець, а як нема — на землю поруч.	
-Наказ знято: повертається до своїх справ	
- і на свою базу.	
-Меню закриється: наведи {0} і натисни {1}.	
-Відкриває свій вибір.	
-Наведи {0} і натисни {1}	
-здоров'я 	
- · без тями	
-Наведи {0} і натисни {1}. Ще {2} с.	
-Яка це людина: хода, вдача, ритм дня, з людьми, у бою — і чим живе.	
-Історія	
-встає о {0}, лягає о {1}	
-жайворонок: 	
-сова: 	
-мирний|мирна — тікає	
-обережний|обережна — тікає, а загнаний|загнана відбивається	
-боєць|бійчиня — захищає себе й тих, кого супроводжує	
-боєць|бійчиня — сам|сама шукає ворогів	
-тримається осторонь бою	
-робота: 	
-живе на базі	
-найнятий|найнята, ще без дому	
-ніде не живе	
-має ліжко	
-тримає комору	
-має ящик запасів	
-Мені б {0} — {1}.	
-одна чутка	
-{0} просить: {1} (віддячить: {2})	
-Ой… а де ж воно? Нема.	
-…ні, забув|забула. Згадаю — скажу.	
-Тримай: {0}.	
-Ой, дякую! Саме те, що треба.	
-у кільці ворогів	
-у полоні в таборі	
-без сил від голоду	
-поранена, довкола звірі	
-загубила свою річ	
-мерзне в горах	
-тікає від погоні	
-її стереже велетень	
-заблукала — шукай за голосом	
-поранена, кличе на допомогу	
-Людина в біді: {0}. {1}, {2}. Лишилось: {3}. Позначено на мапі.	
-Безіменне серце чуток не чує — дай йому назву.	
-Чуток поки нема. Наступні — десь за {0}.	
-Чуток поки нема.	
-{0} д. {1} год.	
-{0} год.	
-{0} км	
-Вони мертві! Розв'яжи мене, прошу.	
-Пастка! Вибач… вони змусили мене кликати.	
-Виселити	
-Оселити тут	
-Більше ніде не живе: ні дому, ні ліжка, ні розпорядку, ні роботи.	
-Показує на 30 с, що він вважає своєю базою: золоті вогники по межі на землі й позначки на мапі.	
-Спершу оселі його.	
-Межі ще рахуються — спробуй за мить.	
-Межі бази: 	
-Його ліжко: тут спить уночі.	
-лук	
- (майстер)	
-на все руки — без особливого хисту	
-вдається: 	
-не його: 	
-Зараз пригадаю, які оселі знаю…	
-До «{0}»	
-Ні, ходімо зі мною.	
-Я не знаю жодної оселі. Постав «Серце оселі» й дай йому назву — тоді й скажеш, куди йти.	
-Чого тобі?	
-Більше й казати нічого.	
-Живу, ходжу, дивлюсь. Дай мені роботу — не відмовлюсь.	
-Та нічого. Йду, куди веде дорога.	
-прибирає	
-не чіпає	
-Прибирає все. Відкрий, щоб вибрати, чого не чіпати.	
-Не чіпає {0} з {1} видів речей.	
-Прибирає. Натисни — не чіпатиме.	
-Не чіпає. Натисни — прибиратиме.	
-Ось я й тут. Тут і житиму.	
-Тут нема для мене місця. Піду до Дому воронів.	
-Ох… дякую. Думав|Думала, вже не встану.	
-Піду додому… потихеньку.	
-Зараз: 	
-Спершу оселі його: працюють на своїй базі.	
-Комора	
-Ящик	
-Комора кухаря: звідти бере сире, туди складає готове — а мешканці бази звідти їдять.	
-Його ящик запасів: звідти бере, туди складає.	
-Де він вартує: стоїть там і обходить довкола (до {0} м). Б'є лише ворогів, що підходять до посту (до {1} м) — далі за ними не женеться; мирних звірів не чіпає.	
-Дім, який він доглядає: вогнища й світильники, підлога, двері, побиті стіни.	
-Де він працює: {0} м довкола місця, на яке наведеш (до {1} м від бази). Поза базою він без її захисту.	
-Зараз обходить усю базу. Натисни — знову межею (або дай йому пост).	
-Ходить усією базою, куди схоче, і валить кожного ворога, що з'явиться в її межах. Пост тоді знімається.	
-Не працює: удень походжає базою.	
-<color=#FFD54F><b>{0}</b></color>	
-{0}\nСерце поселення: дай йому назву (Shift+E) — і найманих людей можна буде послати сюди, вони прийдуть самі й оселяться тут (до {1} людей). На дошці (E) — хто тут живе і чого бракує. Ударом не зламати, лише молотом розібрати.	
-Серце оселі.	
-Різьблений стовп із вороном, дошка записок під дашком, ліхтар і полиця з хлібом: тут збираються ті, хто живе з тобою	
+(без тями)	(unconscious)
+Дати медовуху зцілення	Give healing mead
+Потрібна медовуха зцілення	Needs healing mead
+Дії	Actions
+Серце оселі	Hearth of the Settlement
+Живе: {0}/{1}	Living here: {0}/{1}
+Дошка	Board
+Назва	Name
+Назва оселі	Settlement name
+Мешканці	Residents
+Ще ніхто тут не живе. Найми когось і вибери цю оселю — або оселі тут того, хто вже з тобою.	Nobody lives here yet. Hire someone and choose this settlement, or settle someone who is already with you here.
+Мешканці {0}/{1}	Residents {0}/{1}
+Чутки	Rumours
+Записки	Notes
+Поки тихо: усе гаразд.	All quiet for now: everything is fine.
+Без назви сюди не пошлеш нікого з найманих. Shift+E — дати назву.	Without a name you cannot send anyone you hire here. Shift+E to name it.
+без роботи	no job
+без ліжка	no bed
+Чутка: людина в біді (подробиці — на дошці)	Rumour: someone in trouble (details on the board)
+{0} голодує — без їжі кине роботу, а згодом піде	{0} is starving: without food they will drop their work and later leave
+{0} голодний|голодна	{0} is hungry
+{0} не має ліжка	{0} has no bed
+{0}: ящик повний	{0}: chest full
+{0} без роботи	{0} has no job
+Місця більше нема	No room left
+Задалеко від його бази (до {0} м).	Too far from their base (up to {0} m).
+Тут його ділянка ({0} м довкола).	Their plot is here ({0} m around).
+сокира	axe
+кайло	pickaxe
+чекає, де працювати (кнопка «Ділянка»)	waits to be shown where to work (the «Plot» button)
+{0} зламана — полагодь або дай іншу	{0} is broken: repair it or give another
+потрібна {0} у спорядженні	needs a {0} in their gear
+підбирає	picks up
+на ділянці нема що рубати	nothing left to cut on the plot
+на ділянці нема що копати	nothing left to dig on the plot
+рубає дерево	chops a tree
+розрубує колоду	splits a log
+копає	digs
+дуже голодний|голодна	very hungry
+голодний|голодна	hungry
+не голодний|голодна	not hungry
+ситий|сита	well fed
+Його тут уже нема.	They're no longer here.
+Його зараз веде інша гра — спробуй ще раз.	Another player's game runs them right now. Try again.
+Цієї роботи не візьме.	They won't take this job.
+Людина в біді	Person in trouble
+Річ, яку загубив|загубила {0}	The thing {0} lost
+Комора кухаря {0}	Cook's pantry {0}
+Готове звідси їдять мешканці бази	The base's residents eat the cooked food from here
+Їдальня	Dining hall
+Відпусти	Release
+За мною	Follow me
+Іде за тобою, доки не відпустиш.	Follows you until you release them.
+повертається до своїх справ	goes back to their business
+іде за тобою	follows you
+Стій	Stay
+Стоїть, де стоїть, доки не відпустиш.	Stays where they stand until you release them.
+Іде туди, куди покажеш, і чекає там.	Goes where you point and waits there.
+іде туди	is on the way
+Сядь	Sit
+Сідає на найближчу лаву чи стілець, а як нема — на землю поруч.	Sits on the nearest bench or chair, or on the ground if there is none.
+Наказ знято: повертається до своїх справ	Order lifted: goes back to their business
+ і на свою базу.	 and to their base.
+Меню закриється: наведи {0} і натисни {1}.	The menu closes: aim {0} and press {1}.
+Відкриває свій вибір.	Opens its own choices.
+Наведи {0} і натисни {1}	Aim {0} and press {1}
+здоров'я 	health
+Наведи {0} і натисни {1}. Ще {2} с.	Aim {0} and press {1}. {2} s left.
+Правий клік — скасувати.	Right click: cancel.
+Яка це людина: хода, вдача, ритм дня, з людьми, у бою — і чим живе.	What kind of person this is: gait, temper, daily rhythm, with people, in a fight, and what they live by.
+Історія	Story
+встає о {0}, лягає о {1}	gets up at {0}, goes to bed at {1}
+жайворонок: 	early bird:
+сова: 	night owl:
+мирний|мирна — тікає	peaceful: runs away
+обережний|обережна — тікає, а загнаний|загнана відбивається	cautious: runs away, fights back when cornered
+боєць|бійчиня — захищає себе й тих, кого супроводжує	fighter: defends themselves and those they escort
+боєць|бійчиня — сам|сама шукає ворогів	fighter: seeks out enemies
+тримається осторонь бою	keeps out of fights
+робота: 	job:
+живе на базі	lives at a base
+найнятий|найнята, ще без дому	hired, no home yet
+ніде не живе	lives nowhere
+має ліжко	has a bed
+тримає комору	keeps the pantry
+має ящик запасів	has a supply chest
+Мені б {0} — {1}.	I could use {0}. {1}.
+одна чутка	one rumor
+{0} просить: {1} (віддячить: {2})	{0} asks for: {1} (will repay with: {2})
+Ой… а де ж воно? Нема.	Oh… where did it go? It's gone.
+…ні, забув|забула. Згадаю — скажу.	…no, I've forgotten. I'll tell you when it comes back.
+Тримай: {0}.	Here: {0}.
+Ой, дякую! Саме те, що треба.	Oh, thank you! Just what I needed.
+у кільці ворогів	surrounded by enemies
+у полоні в таборі	held captive in a camp
+без сил від голоду	weak with hunger
+поранена, довкола звірі	wounded, beasts all around
+загубила свою річ	lost their belongings
+мерзне в горах	freezing in the mountains
+тікає від погоні	running from pursuers
+її стереже велетень	guarded by a giant
+заблукала — шукай за голосом	lost: follow the voice
+поранена, кличе на допомогу	wounded, calling for help
+Людина в біді: {0}. {1}, {2}. Лишилось: {3}. Позначено на мапі.	Person in trouble: {0}. {1}, {2}. Left: {3}. Marked on the map.
+Безіменне серце чуток не чує — дай йому назву.	A nameless hearth hears no rumors. Give it a name.
+Чуток поки нема. Наступні — десь за {0}.	No rumors yet. Next in about {0}.
+Чуток поки нема.	No rumors yet.
+{0} д. {1} год.	{0} d {1} h
+{0} год.	{0} h
+{0} км	{0} km
+Вони мертві! Розв'яжи мене, прошу.	They're dead! Untie me, please.
+Пастка! Вибач… вони змусили мене кликати.	It's a trap! Forgive me… they made me call out.
+Виселити	Evict
+Оселити тут	Settle here
+Більше ніде не живе: ні дому, ні ліжка, ні розпорядку, ні роботи.	No longer lives anywhere: no home, no bed, no routine, no job.
+Показує на 30 с, що він вважає своєю базою: золоті вогники по межі на землі й позначки на мапі.	Shows for 30 s what they count as their base: golden lights along the edge on the ground and marks on the map.
+Спершу оселі його.	Settle them first.
+Межі ще рахуються — спробуй за мить.	The edges are still being worked out: try again in a moment.
+Межі бази: 	Base edges:
+Його ліжко: тут спить уночі.	Their bed: they sleep here at night.
+лук	bow
+ (майстер)	 (master)
+на всі руки, але без особливого хисту	a jack of all trades, no special gift
+вдається: 	good at: 
+не його: 	not for them: 
+Зараз пригадаю, які оселі знаю…	Let me remember which settlements I know…
+До «{0}»	To «{0}»
+Ні, ходімо зі мною.	No, come with me.
+Я не знаю жодної оселі. Постав «Серце оселі» й дай йому назву — тоді й скажеш, куди йти.	I don't know any settlement. Build a «Hearth of the Settlement» and name it, then you can tell me where to go.
+Чого тобі?	What do you want?
+Більше й казати нічого.	There's nothing more to tell.
+Живу, ходжу, дивлюсь. Дай мені роботу — не відмовлюсь.	I live, I walk, I look around. Give me work and I won't say no.
+Та нічого. Йду, куди веде дорога.	Nothing much. I go where the road leads.
+прибирає	tidies up
+не чіпає	leaves alone
+Прибирає все. Відкрий, щоб вибрати, чого не чіпати.	Picks up everything. Open to choose what to leave alone.
+Не чіпає {0} з {1} видів речей.	Leaves {0} of {1} kinds of things alone.
+Прибирає. Натисни — не чіпатиме.	Picks these up. Press to leave them alone.
+Не чіпає. Натисни — прибиратиме.	Leaves these alone. Press to pick them up.
+Ось я й тут. Тут і житиму.	Here I am. This is where I'll live.
+Тут нема для мене місця. Піду до Дому воронів.	There's no room for me here. I'll go to the Ravens' House.
+Ох… дякую. Думав|Думала, вже не встану.	Oh… thank you. I thought I'd never get up.
+Піду додому… потихеньку.	I'll head home… slowly.
+Зараз: 	Now:
+Спершу оселі його: працюють на своїй базі.	Settle them first: people work at their own base.
+Комора	Pantry
+Ящик	Chest
+Комора кухаря: звідти бере сире, туди складає готове — а мешканці бази звідти їдять.	The cook's pantry: takes raw food from it, puts cooked food in it, and the base's residents eat from it.
+Його ящик запасів: звідти бере, туди складає.	Their supply chest: takes from it, puts into it.
+Де він вартує: стоїть там і обходить довкола (до {0} м). Б'є лише ворогів, що підходять до посту (до {1} м) — далі за ними не женеться; мирних звірів не чіпає.	Where they keep watch: stands there and walks around it (up to {0} m). Strikes only enemies that come near the post (up to {1} m) and does not chase them further; leaves peaceful animals alone.
+Дім, який він доглядає: вогнища й світильники, підлога, двері, побиті стіни.	The house they look after: fires and lights, the floor, doors, damaged walls.
+Де він працює: {0} м довкола місця, на яке наведеш (до {1} м від бази). Поза базою він без її захисту.	Where they work: {0} m around the spot you aim at (up to {1} m from the base). Outside the base they have no protection.
+Зараз обходить усю базу. Натисни — знову межею (або дай йому пост).	Now patrols the whole base. Press to walk the edge again (or give them a post).
+Ходить усією базою, куди схоче, і валить кожного ворога, що з'явиться в її межах. Пост тоді знімається.	Walks the whole base wherever they like and takes down every enemy that shows up inside it. The post is then removed.
+Не працює: удень походжає базою.	Doesn't work: walks around the base by day.
+<color=#FFD54F><b>{0}</b></color>	<color=#FFD54F><b>{0}</b></color>
+{0}\nСерце поселення: дай йому назву (Shift+E) — і найманих людей можна буде послати сюди, вони прийдуть самі й оселяться тут (до {1} людей). На дошці (E) — хто тут живе і чого бракує. Ударом не зламати, лише молотом розібрати.	{0}\nThe heart of a settlement: give it a name (Shift+E), and people you hire can be sent here. They will come on their own and settle (up to {1} people). The board (E) shows who lives here and what is missing. No blow can break it, only a hammer takes it down.
+Серце оселі.	Hearth of the Settlement.
+Різьблений стовп із вороном, дошка записок під дашком, ліхтар і полиця з хлібом: тут збираються ті, хто живе з тобою	A carved post with a raven, a notice board under a little roof, a lantern and a shelf of bread: where those who live with you gather
 Це ліжко не для тебе: тут спав хтось інший.	This bed is not for you: someone else slept here.
 Цього не розібрати: воно належить цьому місцю.	This cannot be taken apart: it belongs to this place.
 Цього так не полагодиш: воно належить цьому місцю.	This is not mended like this: it belongs to this place.
@@ -5891,157 +5897,184 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ось він. Вогонь Варти. Довго ж ми чекали.	There it is. The fire of the Watch. We waited long enough.
 Попіл не займається. Зала ще замкнена — її відмикає не твій ключ.	The ash will not catch. The Hall is still locked — and not by a key of yours.
 Уламок чиєїсь пам'яті: ворони тих, хто продав себе Хель, блукають без господаря, а Хальдор їх ловить.	A shard of someone's memory: the ravens of those who sold themselves to Hel wander without a master, and Haldor catches them.
-у сюжеті	
+у сюжеті	in the story
 Остання різьба Ейріка	Eirik's last carving
-Без тями	
-Мешканця побили, і він лежить без тями. Не помре.\n\nМедовуха зцілення одразу поставить його на ноги. Без неї він згодом підведеться сам і поплентається додому відлежуватись.	
-Люди в біді	
-На дошці Серця оселі з'явилась чутка про людину в біді, а на мапі — позначка.\n\nНе барись: допоможи їй і поговори з нею. Врятованих можна покликати жити у свою оселю.	
-Серце оселі — домівка для людей, яких ти врятуєш.\n\nДай йому назву, інакше сюди нікого не покличеш. На дошці серця видно, хто тут живе, чого бракує і які ходять чутки.\n\nУ скарбничку внизу клади монети — з неї робітники беруть платню.	
-Робота мешканців	
-Кожному мешканцю можна дати роботу, ящик і ліжко. Більшості робіт потрібен ящик: звідти беруть і туди складають.\n\nДеяким роботам треба ще щось: лісорубу — сокира й ділянка, вартовому — пост, слузі — дім.	
-Ціна праці	
-Мешканцям треба їсти, відпочивати й отримувати платню.\n\nЇдять вони готову їжу з комори — ящика кухаря чи ящика біля столу. Ситі, відпочилі й вчасно оплачені працюють краще, а довго невдоволені колись підуть.	
-Прохання мешканців	
-Мешканець про щось просить. Спитай його сам або глянь на дошку серця.\n\nПринесеш — віддячить.	
+Без тями	Unconscious
+Мешканця побили, і він лежить без тями. Не помре.\n\nМедовуха зцілення одразу поставить його на ноги. Без неї він згодом підведеться сам і поплентається додому відлежуватись.	A resident was beaten and lies unconscious. They won't die.\n\nHealing mead puts them on their feet at once. Without it they get up in time and limp home to recover.
+Люди в біді	People in trouble
+На дошці Серця оселі з'явилась чутка про людину в біді, а на мапі — позначка.\n\nНе барись: допоможи їй і поговори з нею. Врятованих можна покликати жити у свою оселю.	A rumor of someone in trouble has appeared on the Hearth's board, and a mark on your map.\n\nDon't wait: help them and talk to them. Those you save can be invited to live in your settlement.
+Серце оселі — домівка для людей, яких ти врятуєш.\n\nДай йому назву, інакше сюди нікого не покличеш. На дошці серця видно, хто тут живе, чого бракує і які ходять чутки.\n\nУ скарбничку внизу клади монети — з неї робітники беруть платню.	The Hearth of the Settlement is a home for the people you save.\n\nGive it a name, or you can call no one here. Its board shows who lives here, what is missing and what rumors are going around.\n\nPut coins in the treasury below: your workers take their pay from it.
+Робота мешканців	Residents' work
+Кожному мешканцю можна дати роботу, ящик і ліжко. Більшості робіт потрібен ящик: звідти беруть і туди складають.\n\nДеяким роботам треба ще щось: лісорубу — сокира й ділянка, вартовому — пост, слузі — дім.	Each resident can be given a job, a chest and a bed. Most jobs need a chest: that's where they take from and store to.\n\nSome jobs need more: a lumberjack an axe and a plot, a guard a post, a servant a house.
+Ціна праці	The price of work
+Мешканцям треба їсти, відпочивати й отримувати платню.\n\nЇдять вони готову їжу з комори — ящика кухаря чи ящика біля столу. Ситі, відпочилі й вчасно оплачені працюють краще, а довго невдоволені колись підуть.	Residents need food, rest and pay.\n\nThey eat cooked food from the pantry: the cook's chest or a chest by the table. Fed, rested and paid on time, they work better. Unhappy for long, they will leave one day.
+Прохання мешканців	Residents' requests
+Мешканець про щось просить. Спитай його сам або глянь на дошку серця.\n\nПринесеш — віддячить.	A resident is asking for something. Ask them yourself or look at the Hearth's board.\n\nBring it, and they will repay you.
 Ворона в тебе нема — свій знайде тебе сам, а чужого продає Хальдор	You have no raven — your own will find you, a stray one Haldor sells
-до тебе: ворожо	
-до тебе: холодно	
-до тебе: тепло	
-до тебе: як до рідних	
-до тебе: рівно	
-Шафка ще не тут.	
-до всіх рівно.	
-ходить по-старечому, руки за спиною	
-ступає, як вояк	
-ходить пружно	
-ходить перевальцем	
-накульгує	
-ходить тихо, похнюпившись	
-{0} не битиметься — зброя ні до чого.	
-Відкриває десять комірок поруч із твоєю торбою: броня, одяг, сокира чи кайло для роботи. Не боєць — зброї не візьме.	
-Відкриває його десять комірок поруч із твоєю торбою: поклади зброю, щит, броню, стріли чи болти — він вдягне найкраще. Лук чи арбалет бере лише зі стрілами чи болтами. Лісорубу — сокиру, рудокопу — кайло; вони зношуються — забери й полагодь на верстаті або дай нові.	
-Дай оселі назву — і на дошці з'явиться перша чутка про людину в біді.	
-Тут нема столу для їжі в межах цієї оселі.	
-Їдальня тут: мешканці їстимуть за цим столом і вечорами збиратимуться біля нього.	
-Їдальню знято: їстимуть за найближчим столом.	
-Скарбничка	
-Скринька внизу: {0} монет. Робітники самі беруть платню раз на 5 днів — разом {1}. Платять вчасно — працюють охочіше й вправнішають.	
-Стіл їдальні зламано — їдальню знято. Обери новий стіл.	
-Не обрано: їдять за столом біля комори, вечорами сидять біля вогню.	
-Обрано стіл: тут їдять і вечорами здебільшого сидять. Інколи хтось вибере вогонь надворі.	
-Стіл їдальні зник: поки що їдять де знайдуть. Обери інший.	
-Інший стіл їдальні	
-Обрати їдальню	
-Перенести їдальню: покажи інший стіл. Їжу братимуть зі скринь довкола нього, а сідатимуть на лави й стільці поруч.	
-Покажи стіл — тут мешканці обідатимуть і збиратимуться вечорами. Їжу братимуть зі скринь довкола, сідатимуть на лави й стільці поруч.	
-Зняти їдальню	
-Без їдальні мешканці їдять де випаде: за столом біля комори чи біля скрині з готовим, а вечорами сидять біля вогню.	
-настрій {0}%	
-втомлений|втомлена	
-Нема столу їдальні — обери інший на дошці	
-Нема що їсти	
-{0} без платні — поклади монети в скарбничку (бере {1} раз на 5 днів)	
-{0} невдоволений|невдоволена	
-Тут дому нема: потрібна підлога під дахом — обери інший.	
-Дім не замкнений — він доглядає лише те, що під дахом.	
-Здоров'я	
-Броня	
-Розбір: {0}	
-Не знайшов місця: {0}	
-база ще оглядається	
-на базі нема столу (їжа — у ящику біля столу або в коморі кухаря)	
-ящик біля столу особистий — потрібен звичайний	
-біля столу (до {0} м) нема ящика	
-у ящику біля столу лише не готове: {0} — їдять тільки страви з вогнища, печі чи казана	
-у ящику біля столу нема страв (з вогнища, печі чи казана)	
-кілька днів тому	
-давно	
-нічого не пам'ятає.	
-просить: {0}	
-Без тями — спершу постав його на ноги (медовуха зцілення, E).	
-настрій {0}% · втома {1}%	
-ситість {0}%	
-(мертвий|мертва)	
-Мені б {0}.	
-Віддячу: {0}. Чекатиму ще {1}.	
-Їх нема… дякую. Меду б мені…	
-Моя річ лишилась {0} звідси, кроків за {1}. Там вони…	
-{0} не дочекався|дочекалася тебе й пішов|пішла…	
-{0} не дочекався|дочекалася допомоги…	
-{0} врятовано! Поговори з ним|нею.	
-Я… більше не можу…	
-Ще трохи — і я впаду! Швидше!	
-Що ж… бувай. Дякую, що не кину{в|ла} мене там.	
-Що ж… бувай. Дякую тобі.	
-Витримає ще {0}	
-удари	
-ударів	
-Оселився|Оселилася тут.	
-Оселився|Оселилася біля Серця оселі.	
-Оселився|Оселилася в оселі «{0}».	
-Поруч нема Серця оселі — оселити можна лише біля нього.	
-Тут уже живе {0} — більше на одну оселю не можна.	
-Житиме біля Серця оселі: база довкола, розпорядок дня.	
-Житиме біля Серця оселі поруч: база довкола, розпорядок дня.	
-Житиме в оселі «{0}»: база довкола, розпорядок дня.	
-Його тримає сюжет — зараз не виселити.	
-Куди саме? Скажи — дійду сам|сама.	
-Та вже нічого.	
-Я — {0}. Роблю своє.	
-Задалеко — покажи ближче.	
-Добре. Дійду сам|сама.	
-іде ховатися	
-нема свого ліжка	
-ліжко не під дахом	
-голодно	
-дуже голодно	
-все та сама їжа	
-втома	
-мокне під дощем	
-не платять	
-на базі не горить вогонь	
-Ух… втомився|втомилась. Посиджу трохи.	
-Досить з мене. Піду до Дому воронів.	
-Платня — {0}. Дякую.	
-Руки вже звикають до роботи.	
-Скарбничка порожня… Знову без платні.	
-Ремесло: {0}%. Платня: {1} раз на 5 днів.	
-Скрині довкола місця, яке покажеш (до {0} м): звідси він бере пальне для дому у свою скриню, сюди розкладає те, що ти приніс у його скриню. Нема місця на складі — шукає по скринях бази.	
-Скриня, куди кладеш речі для нього: час від часу він її перевіряє і розносить усе на склад — туди, де лежить те саме, в будь-яку вільну скриню складу, а нема місця — по скринях бази (не в доми інших гравців). Сюжетні й особливі речі не чіпає.	
-Не бачу скрині там, куди ти дивишся.	
-Ця скриня ще не готова.	
-Це його робоча скриня — для розбору потрібна інша.	
-Скриня для розбору: що покладеш сюди, він рознесе на склад.	
-Це поза його базою — склад має бути в ній.	
-Тут склад: скринь довкола — {0}.	
-Тут склад — але скринь довкола поки нема.	
-Сюжетна будівля Зали Варти: лише для автора, гравці її не будують.	
-\n\n<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>	
+до тебе: ворожо	toward you: hostile
+до тебе: холодно	toward you: cold
+до тебе: тепло	toward you: warm
+до тебе: як до рідних	toward you: like family
+до тебе: рівно	toward you: even
+Шафка ще не тут.	Locker not here yet.
+до всіх рівно.	even with everyone.
+ходить по-старечому, руки за спиною	walks like an old man, hands behind the back
+ступає, як вояк	steps like a soldier
+ходить пружно	walks with a spring
+ходить перевальцем	waddles
+накульгує	limps
+ходить тихо, похнюпившись	walks quietly, head down
+{0} не битиметься — зброя ні до чого.	{0} won't fight: weapons are no use.
+Відкриває десять комірок поруч із твоєю торбою: броня, одяг, сокира чи кайло для роботи. Не боєць — зброї не візьме.	Opens ten slots next to your bag: armour, clothes, an axe or a pickaxe for work. Not a fighter: won't take weapons.
+Відкриває його десять комірок поруч із твоєю торбою: поклади зброю, щит, броню, стріли чи болти — він вдягне найкраще. Лук чи арбалет бере лише зі стрілами чи болтами. Лісорубу — сокиру, рудокопу — кайло; вони зношуються — забери й полагодь на верстаті або дай нові.	Opens their ten slots next to your bag: put in weapons, a shield, armour, arrows or bolts, and they wear the best. A bow or crossbow only with arrows or bolts. A lumberjack needs an axe, a miner a pickaxe; they wear out: take them back and repair them at a workbench, or give new ones.
+На дошці оселі з'явилась перша чутка про людину в біді.	The first rumour of someone in need is on the settlement's board.
+Оселя {0}	{0}'s Settlement
+Змінити назву	Rename
+Під цією назвою оселю бачать у списку, куди послати найманих.	This is the name hired people see in the list of where to go.
+Тут нема столу для їжі в межах цієї оселі.	There is no dining table within this settlement.
+Їдальня тут: мешканці їстимуть за цим столом і вечорами збиратимуться біля нього.	The dining hall is here: residents will eat at this table and gather by it in the evenings.
+Їдальню знято: їстимуть за найближчим столом.	Dining hall removed: they will eat at the nearest table.
+Скарбничка	Treasury
+Скринька внизу: {0} монет. Робітники самі беруть платню раз на 5 днів — разом {1}. Платять вчасно — працюють охочіше й вправнішають.	The box below: {0} coins. Workers take their pay themselves every 5 days, {1} in total. Paid on time, they work more willingly and grow more skilled.
+Стіл їдальні зламано — їдальню знято. Обери новий стіл.	The dining table was broken and the dining hall removed. Choose a new table.
+Не обрано: їдять за столом біля комори, вечорами сидять біля вогню.	Not chosen: they eat at a table by the pantry and sit by the fire in the evenings.
+Обрано стіл: тут їдять і вечорами здебільшого сидять. Інколи хтось вибере вогонь надворі.	Table chosen: they eat here and mostly sit here in the evenings. Sometimes someone picks a fire outside.
+Стіл їдальні зник: поки що їдять де знайдуть. Обери інший.	The dining table is gone: for now they eat wherever they can. Choose another.
+Інший стіл їдальні	Another dining table
+Обрати їдальню	Choose a dining hall
+Перенести їдальню: покажи інший стіл. Їжу братимуть зі скринь довкола нього, а сідатимуть на лави й стільці поруч.	Move the dining hall: show another table. They will take food from the chests around it and sit on the benches and chairs nearby.
+Покажи стіл — тут мешканці обідатимуть і збиратимуться вечорами. Їжу братимуть зі скринь довкола, сідатимуть на лави й стільці поруч.	Show a table: residents will dine here and gather in the evenings. They will take food from the chests around it and sit on the benches and chairs nearby.
+Зняти їдальню	Remove the dining hall
+Без їдальні мешканці їдять де випаде: за столом біля комори чи біля скрині з готовим, а вечорами сидять біля вогню.	Without a dining hall residents eat wherever they can: at a table by the pantry or by a chest with cooked food, and sit by the fire in the evenings.
+настрій {0}%	mood {0}%
+втомлений|втомлена	tired
+Нема столу їдальні — обери інший на дошці	No dining table: choose another on the board
+Нема що їсти	Nothing to eat
+{0} без платні — поклади монети в скарбничку (бере {1} раз на 5 днів)	{0} is unpaid: put coins in the treasury (takes {1} every 5 days)
+{0} невдоволений|невдоволена	{0} is unhappy
+Тут дому нема: потрібна підлога під дахом — обери інший.	No house here: it needs a floor under a roof. Pick another.
+Дім не замкнений — він доглядає лише те, що під дахом.	The house is not closed in: they only look after what is under the roof.
+Здоров'я	Health
+Броня	Armour
+Розбір: {0}	Sorting: {0}
+Не знайшов місця: {0}	Found no place for: {0}
+база ще оглядається	the base is still being looked over
+на базі нема столу (їжа — у ящику біля столу або в коморі кухаря)	no table at the base (food goes in a chest by a table or in the cook's pantry)
+ящик біля столу особистий — потрібен звичайний	the chest by the table is personal: a regular one is needed
+біля столу (до {0} м) нема ящика	no chest by the table (within {0} m)
+у ящику біля столу лише не готове: {0} — їдять тільки страви з вогнища, печі чи казана	the chest by the table holds only uncooked food: {0}; they eat only dishes from a fire, oven or cauldron
+у ящику біля столу нема страв (з вогнища, печі чи казана)	no dishes in the chest by the table (from a fire, oven or cauldron)
+кілька днів тому	a few days ago
+давно	long ago
+нічого не пам'ятає.	remembers nothing.
+просить: {0}	asks for: {0}
+Без тями — спершу постав його на ноги (медовуха зцілення, E).	Unconscious: get them back on their feet first (a healing mead, E).
+(мертвий|мертва)	(dead)
+Мені б {0}.	I could use {0}.
+Віддячу: {0}. Чекатиму ще {1}.	I'll repay you with: {0}. I'll wait {1} more.
+Їх нема… дякую. Меду б мені…	They're gone… thank you. Mead, if you have it…
+Моя річ лишилась {0} звідси, кроків за {1}. Там вони…	My things are {0} from here, about {1} paces. They're there…
+{0} не дочекався|дочекалася тебе й пішов|пішла…	{0} didn't wait for you and left…
+{0} не дочекався|дочекалася допомоги…	{0} got no help in time…
+{0} врятовано! Поговори з ним|нею.	{0} is saved! Talk to them.
+Я… більше не можу…	I… can't go on…
+Ще трохи — і я впаду! Швидше!	A little more and I'll fall! Hurry!
+Що ж… бувай. Дякую, що не кину{в|ла} мене там.	Well… goodbye. Thank you for not leaving me there.
+Що ж… бувай. Дякую тобі.	Well… goodbye. Thank you.
+Витримає ще {0}	Can take {0} more
+удари	hits
+ударів	hits
+Оселився|Оселилася тут.	Settled here.
+Оселився|Оселилася біля Серця оселі.	Settled by the Hearth of the Settlement.
+Оселився|Оселилася в оселі «{0}».	Settled in «{0}».
+Поруч нема Серця оселі — оселити можна лише біля нього.	No Hearth of the Settlement nearby: people can only be settled by one.
+Тут уже живе {0} — більше на одну оселю не можна.	{0} already live here: no more for one settlement.
+Житиме біля Серця оселі: база довкола, розпорядок дня.	Will live by the Hearth of the Settlement: a base around it, a daily routine.
+Житиме біля Серця оселі поруч: база довкола, розпорядок дня.	Will live by the Hearth of the Settlement nearby: a base around it, a daily routine.
+Житиме в оселі «{0}»: база довкола, розпорядок дня.	Will live in «{0}»: a base around it, a daily routine.
+Його тримає сюжет — зараз не виселити.	The story holds them: they cannot be evicted now.
+Куди саме? Скажи — дійду сам|сама.	Where exactly? Tell me and I'll get there myself.
+Та вже нічого.	Nothing anymore.
+Я — {0}. Роблю своє.	I'm a {0}. I do my work.
+Задалеко — покажи ближче.	Too far: show somewhere closer.
+Добре. Дійду сам|сама.	All right. I'll get there myself.
+іде ховатися	goes to hide
+нема свого ліжка	no bed of their own
+ліжко не під дахом	bed not under a roof
+голодно	hungry
+дуже голодно	very hungry
+все та сама їжа	always the same food
+втома	tired
+мокне під дощем	getting wet in the rain
+не платять	not being paid
+на базі не горить вогонь	no fire burning at the base
+Ух… втомився|втомилась. Посиджу трохи.	Phew… I'm worn out. I'll sit a while.
+Досить з мене. Піду до Дому воронів.	I've had enough. I'm going to the Ravens' Home.
+Платня — {0}. Дякую.	Pay: {0}. Thank you.
+Руки вже звикають до роботи.	My hands are getting used to the work.
+Скарбничка порожня… Знову без платні.	The treasury is empty… No pay again.
+Ремесло: {0}%. Платня: {1} раз на 5 днів.	Skill: {0}%. Pay: {1} every 5 days.
+Скрині довкола місця, яке покажеш (до {0} м): звідси він бере пальне для дому у свою скриню, сюди розкладає те, що ти приніс у його скриню. Нема місця на складі — шукає по скринях бази.	The chests around the spot you show (up to {0} m): from here they take fuel for the house into their chest, and here they put away what you brought into their chest. No room in the storeroom: they look through the base's chests.
+Скриня, куди кладеш речі для нього: час від часу він її перевіряє і розносить усе на склад — туди, де лежить те саме, в будь-яку вільну скриню складу, а нема місця — по скринях бази (не в доми інших гравців). Сюжетні й особливі речі не чіпає.	The chest where you put things for them: now and then they check it and carry everything to the storeroom, to where the same things lie, or any free storeroom chest, or if there is no room, to the base's chests (not into other players' houses). Story and special items are left alone.
+Не бачу скрині там, куди ти дивишся.	I don't see a chest where you are looking.
+Ця скриня ще не готова.	This chest isn't ready yet.
+Це його робоча скриня — для розбору потрібна інша.	This is their work chest: sorting needs another one.
+Скриня для розбору: що покладеш сюди, він рознесе на склад.	Sorting chest: whatever you put here, they will carry to the storeroom.
+Це поза його базою — склад має бути в ній.	That is outside their base: the storeroom must be inside it.
+Тут склад: скринь довкола — {0}.	Storeroom here: {0} chests around.
+Тут склад — але скринь довкола поки нема.	Storeroom here, but there are no chests around yet.
+Сюжетна будівля Зали Варти: лише для автора, гравці її не будують.	A story building of the Hall of the Watch: for the author only, players do not build it.
+\n\n<color=#7CFC7C>Благо: {0}</color>\n<color=#FF6B6B>Тягар: {1}</color>	\n\n<color=#7CFC7C>Boon: {0}</color>\n<color=#FF6B6B>Burden: {1}</color>
 Старий лист	Old letter
 Прочитати	Read
 Стовп із вороном на верхівці, дошка під дашком, ліхтар. Такі ставили там, де жили люди: біля них збирались.\nПід кресленням дряпнуто: «дерево, пір'я, ріг того, хто перший упав».	A post with a raven on top, a board under a little roof, a lantern. They were raised where people lived: folk gathered by them.\nScratched under the drawing: «wood, feathers, the antler of the one who fell first».
-\nСила: <color=orange>{0}/{1}</color>	
-{0} сів біля тебе — у торбі нема місця.	
-Мунін знайшов тебе.	
-Хугін знайшов тебе.	
-Щось шукало тебе — і не знайшло Муніна на плечі.\nКоли він сяде, згадає.	
-Щось шукало тебе — і не знайшло Хугіна на плечі.\nКоли він сяде, згадає.	
-Мунін здригнувся — і ніби щось пригадав.\nТепер він знає, чий він.	
-Хугін здригнувся — і ніби щось пригадав.\nТепер він знає, чий він.	
+\nСила: <color=orange>{0}/{1}</color>	\nStrength: <color=orange>{0}/{1}</color>
+{0} сів біля тебе — у торбі нема місця.	{0} sat down by you. No room in the bag.
 Освойся у Вальхеймі	Find your feet in Valheim
+Сага	Saga
+<b><color={0}>●</color> Нове в сазі</b> · з'явився запис, якого ти ще не чита{{в|ла}}.	<b><color={0}>●</color> New in the saga</b> · an entry you have not read yet.
+Ліворуч — що сталося у світі · праворуч — твій шлях · ● новий запис	Left: what happened in the world · right: your own way · ● a new entry
+{0}<b>Ліва сторінка — світ.</b> Те, що сталося тут для всіх, з іменами тих, хто це бачив. Чого ти сам{{|а}} не бачи{{в|ла}}, те лишається чуткою, поки тобі не розкажуть люди.\n\n<b>Права сторінка — твій шлях.</b> Угорі — що робити зараз, нижче — що ти вже пройш{{ов|ла}}, по черзі.	{0}<b>The left page is the world.</b> What happened here for everyone, with the names of those who saw it. What you did not see yourself stays a rumour until people tell you.\n\n<b>The right page is your own way.</b> At the top, what to do now; below, what you have already been through, in order.
+У світі ще нічого не сталося.	Nothing has happened in the world yet.
+Свідки: {0}	Witnesses: {0}
+Чутка	Rumour
+Ти цього не бачи{в|ла}. Поговори з людьми: хтось, може, бачив сам і розповість.	You did not see this. Talk to people: someone may have seen it and will tell you.
+розділ закінчено	chapter over
+ти	you
+Зараз	Now
+Закриє книгу й відкриє мапу там, де золота мітка.	Closes the book and opens the map at the golden mark.
+Зараз сюжет нічого від тебе не чекає.	The story is not waiting for anything from you right now.
+Мій шлях	My way
+Ще нічого не записано.	Nothing written yet.
+Десь угорі каркнув ворон.	Somewhere above, a raven cawed.
+Чужий ворон покликав тебе за собою.	A stranger's raven called you to follow.
+Ворон кружляв над тобою й показав два сліди.	The raven circled over you and showed you two trails.
+Ти піш{ов|ла} слідом пам'яті, до старого щита.	You followed the trail of memory, to the old shield.
+Ти піш{ов|ла} слідом думки, до старого вказівника.	You followed the trail of thought, to the old signpost.
+У покинутій хаті було Відлуння. Воно лишило тобі цю книгу.	There was an Echo in the abandoned house. It left you this book.
+Ти зна{йшов|йшла} Залу Варти. Брама була зачинена.	You found the Hall of the Watch. Its gate was shut.
+Біля каменів табору тебе зустріла Гейд.	Heid met you by the stones of the camp.
+Гейд відчинила браму Зали своїм ключем.	Heid opened the Hall's gate with her key.
+Вогнище в Залі горіло синім і не гріло.	The hearth in the Hall burned blue and gave no warmth.
+На другому поверсі Зали лежав старий лист.	An old letter lay on the Hall's upper floor.
+Із листа ти дізна{вся|лася}, як збудувати серце оселі.	From the letter you learned how to build a Hearth of the Settlement.
+Ти збудува{в|ла} перше серце оселі у світі.	You built the first Hearth of the Settlement in the world.
+Браму Зали Варти відчинено.	The gate of the Hall of the Watch has been opened.
+Кажуть, Зала Варти вже не зачинена.	They say the Hall of the Watch is no longer shut.
+Вогнище в Залі Варти спалахнуло синім. Воно не гріє.	The hearth in the Hall of the Watch flared up blue. It gives no warmth.
+Кажуть, у Залі Варти хтось розпалив вогонь.	They say someone lit a fire in the Hall of the Watch.
+Перше серце оселі у світі збудовано. Його ліхтар спалахнув і згас.	The first Hearth of the Settlement in the world has been built. Its lantern flared and went out.
+Кажуть, десь уже стоїть перше серце оселі.	They say the first Hearth of the Settlement already stands somewhere.
 Хтось кличе тебе	Someone is calling you
 Два сліди	Two trails
-Лети за вороном Ейріка	Follow Eirik's raven
-Ворон Ейріка	Eirik's raven
 Зазирни в покинуту хату	Look into the abandoned hut
 Покинута хата	Abandoned hut
 Роздивись щит	Look at the shield
 Щит	Shield
-Ворон Ейріка чекає	Eirik's raven is waiting
+Тут доля не прийде: це місце під захистом.	Fate will not come here: this place is guarded.
 У хаті хтось є	Someone is in the hut
-Візьми оберіг	Take the charm
-Хтось шукає тебе	Someone is looking for you
+Хтось каркає знадвору	Something is cawing outside
+Ворон Ейріка	Eirik's raven
 Знайди Залу Варти	Find the Hall of the Watch
 Зала Варти	Hall of the Watch
 Брама Зали зачинена	The Hall's gate is shut
@@ -6061,28 +6094,17 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Перше серце вже горить у світі. Про те, що сталось, розкаже книга.	The first heart already burns in this world. The book will tell you what happened.
 Це не наш.	Not one of ours.
 Чужий. І старий.	A stranger. And old.
-…ти ж обіцяв.	…you promised.
-…за мною.	…follow me.
-…тут. Ти тут стояв.	…here. You stood here.
-…Знайоме місце. Знайомий запах. Ти — ні.	…A familiar place. A familiar smell. You — no.
+…ти ж обіця{в|ла}.	…you promised.
 …Зала.	…The Hall.
-…Ти. З каменя.	…You. From the stone.
-Я вирізав твоє ім'я.	I carved your name.
-Своє не вирізав. Хтось мав пам'ятати.	Not mine. Someone had to remember.
-Я послав ворона. Думав, дочекаюсь.	I sent the raven. Thought I would live to see you.
-Ти колись дав мені це. Сказав: тримай, поки не повернусь.	You gave me this once. You said: keep it till I come back.
-Я тримав. Довго.	I kept it. For a long time.
-Я тебе… шукав? Не пам'ятаю чого. Але шукав.	I was… looking for you? I don't remember why. But I was.
-Туман. Століття туману. Не питай.	Fog. Centuries of fog. Don't ask.
-Той чужий ворон кружляв над старою залою. Глянемо?	That strange raven was circling over the old hall. Shall we look?
 …зачинено. У неї ключ.	…shut. She has the key.
 …Ти?	…You?
-Вибач. Руки вже не ті. Я Гейд — доглядаю ці камені.	Forgive me. My hands aren't what they were. I am Heid — I tend these stones.
-У тебе ворон. Свій. Значить, ти з Варти. Як і я.	You have a raven. Your own. So you are of the Watch. Like me.
+Вибач. Задумалась. Я Гейд — доглядаю ці камені.	Forgive me. I was lost in thought. I am Heid — I tend these stones.
+У тебе ворон. Свій. Отже, ти з Варти. Як і я.	You have a raven. Your own. So you are of the Watch. Like me.
 …Знайоме місце. А вона — ні.	…A familiar place. But not her.
 Дивиться так, ніби я їй щось винен.	She looks at me like I owe her something.
 Я встала кілька зим тому. Лікую, кого є.	I rose a few winters ago. I heal whoever there is.
-Ночі тут недобрі. Ходімо до Зали — переночуєш під дахом.	The nights here are bad. Come to the Hall — you'll sleep under a roof.
+Ти від брами? Вона зачинена вже давно.	From the gate, are you? It has been shut a long time.
+Вартовому не місце під небом. Ходімо: ключ у мене. Побачиш, що лишилось від Зали.	A watchman has no place under the open sky. Come: I have the key. You will see what is left of the Hall.
 Ходімо.	Come.
 Ключ? Знайшла. Тут усе чиєсь і нічиє.	The key? I found it. Everything here is someone's and no one's.
 Сама сплю на каменях. У Залі… голоси. Дивні.	I sleep by the stones myself. In the Hall… voices. Strange ones.
@@ -6093,12 +6115,10 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Воно не мало загорітись. Я пробувала. Роками.	It shouldn't have caught. I tried. For years.
 Синє. Вогонь не буває синім.	Blue. Fire isn't blue.
 Синій вогонь. І ти віриш, що це добрий знак?	Blue fire. And you think that's a good sign?
-Колись він був золотий. …Хоча звідки мені знати.	It used to be golden. …Though how would I know.
+За Варти він горів золотим. Я пам'ятаю.	Under the Watch it burned golden. I remember.
 Не гріє. Нічого. Оглянься тут, а я приберу трохи.	No warmth. Never mind. Look around, I'll tidy up a little.
 Стовп із вороном. Я такий бачив. Біля нього не було тихо — і не було страшно.	A pillar with a raven. I've seen one. It was never quiet by it — and never frightening.
 Креслення. Дерево, пір'я, ріг. Навіть ти впораєшся.	A plan. Wood, feathers, an antler. Even you can manage.
-Збудуй. Там, де житимуть люди.	Build it. Where people will live.
-Тільки не тут. Тут холодно навіть мені.	Just not here. Even I am cold here.
 Пролог	Prologue
 Старий щит	Old shield
 Щит, що лежить на землі в місці Муніна. Світиться, коли гравець на етапі «Роздивись щит»; E — починається сцена, прилітає ворон Ейріка, потім свій Мунін.	A shield lying on the ground at Munin's place. It glows while the player is on the stage «Look at the shield»; E starts the scene: Eirik's raven comes, then your own Munin.
@@ -6121,7 +6141,619 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Кована жердина на стіні Зали Варти, з ланцюгом і пером. Така є лише в Залі	A wrought perch on the wall of the Hall of the Watch, with a chain and a feather. There is only one, in the Hall
 Знак Варти над входом	Sign of the Watch over the entrance
 Знак Варти над входом до Зали: перо з руною Геймдалля	The sign of the Watch over the Hall's entrance: a feather with Heimdall's rune
-Оберіг	Charm
-Кістяний ворончик на шнурку. Хтось беріг його дуже довго. Тримаєш — і ніби хтось шукає тебе.	A little bone raven on a cord. Someone kept it for a very long time. Hold it — and it feels like someone is looking for you.
 Перо Варти	Watch Feather
 Чорне перо з руною Геймдалля. Звідки воно в тебе, ти не пам'ятаєш. Не поспішай його викидати… поки що.	A black feather with Heimdall's rune. You don't remember where you got it. Don't throw it away… not yet.
+огрядний|огрядна	heavyset
+, високий|висока	, tall
+високий|висока і худорлявий|худорлява	tall and lean
+низький|низька і кремезний|кремезна	short and stocky
+невисокий|невисока	shortish
+високий|висока	tall
+середнього зросту	of average height
+худорлявий|худорлява	lean
+щільний|щільна	solid
+Ворон сидить на плечі й дивиться на тебе. Ти ще не знаєш, як із ним говорити.	The raven sits on your shoulder and looks at you. You do not know yet how to talk to it.
+Книги воронів у тебе ще нема.	You do not have the Book of ravens yet.
+Книга воронів тепер у тебе.	The Book of ravens is yours now.
+Двобічний рунний камінь	Two-sided rune stone
+Високий камінь з рунами з обох боків, зарослий мохом	A tall stone with runes on both sides, overgrown with moss
+Надгробки: пара низьких	Gravestones: a low pair
+Два низькі рунні камені поруч, сірі від часу	Two low rune stones side by side, gray with age
+Надгробки: три камені	Gravestones: three stones
+Три камені, поставлені тісно один біля одного	Three stones set close together
+Надгробки: високий і низький	Gravestones: tall and low
+Високий рунний камінь, а біля нього низький	A tall rune stone with a low one beside it
+Слід пам'яті	Trace of Memory
+Слід думки	Trace of Thought
+Тут тебе шукали	They looked for you here
+…хата. Він чекав.	…the house. He was waiting.
+…ще не все. Туди.	…not done yet. That way.
+…ти.	…you.
+…з каменя… ім'я… не моє…	…from the stone… a name… not mine…
+…тримай. Вони… слухатимуть.	…take it. They… will listen.
+…далі — сам.	…from here, on your own.
+Не тримається. Чужий вогонь у ньому не живе.	It won't hold. A foreign fire doesn't live in it.
+Блимнуло й згасло. Йому бракує справжньої іскри.	It flickered and died. It lacks a true spark.
+Книга Ейріка на столі в його хаті. Стоїть у шарі «lived»: є, поки хата для гравця обжита; Відлуння віддає її гравцеві (сцена echo, do book), і разом з обжитими речами вона зникає.	Eirik's book on the table in his house. On the layer "lived": there while the house is lived in for the player; the Echo hands it over (scene echo, do book), and it goes with the lived-in things.
+Ховаймося! Швидше в дім!	Hide! Quick, get indoors!
+Ух… обійшлося.	Phew… that passed.
+Старий вказівник	Old signpost
+Дерев'яний стовп зі стрілкою на розвилці стежок, Місце Хугіна. Ворон сідає на верхівку стовпа (StoryWhere.Top: верх коробки стовпа, 2.18 м); стрілка без коробки, щоб не зсувала цю точку.	A wooden post with an arrow at a fork in the paths, Hugin's Place. The raven lands on top of the post (StoryWhere.Top: top of the post's box, 2.18 m); the arrow has no box, so it does not move that point.
+Знову ллє…	Pouring again…
+Ну що, з чого почнемо день?	Well, what do we start the day with?
+Йди на поклик	Follow the call
+Поклик	The call
+Ворон кружляє над тобою	A raven circles above you
+Роздивись старий вказівник	Look at the old signpost
+Вказівник	Signpost
+Ворон повернувся	The raven came back
+…та сама хода.	…the same walk.
+…один твій слід іржавіє в траві.	…one of your trails is rusting in the grass.
+…другий стоїть на роздоріжжі. Досі показує не туди.	…the other stands at the crossroads. Still pointing the wrong way.
+…той, що на плечі, теж не пам'ятає.	…the one on your shoulder doesn't remember either.
+…котрий згадаєш першим?	…which will you remember first?
+Мунін знайшов тебе. Він ще спить: розбуди його біля Жертовних каменів.	Munin found you. He is still asleep: wake him at the Sacrificial stones.
+Хугін знайшов тебе. Він ще спить: розбуди його біля Жертовних каменів.	Hugin found you. He is still asleep: wake him at the Sacrificial stones.
+Що, впізна{в|ла}? Я тебе — ні. Щит той самий. А ти — гірш{ий|а}.	What, you know it? I don't know you. Same shield. Worse you.
+Я цей щит пам'ятаю. І тебе з ним. Тоді ти б{ув|ула} вищ{ий|а}.	I remember this shield. And you with it. You were taller then.
+Старе залізо, старі думки. Поклади, поки не згада{в|ла} щось зайве.	Old iron, old thoughts. Put it down before you remember something you shouldn't.
+Я тут сиджу від самого початку. Ти просто диви{вся|лась} не туди. Як завжди.	I've been sitting here all along. You were just looking the wrong way. As always.
+Отак і ходиш: торкнешся — і геть. А думати хто буде? Я?	That's you all over: touch it and walk off. And who does the thinking? Me?
+Я пам'ятаю цей знак. Він і тоді показував не туди. А ти й тоді піш{ов|ла}.	I remember this sign. It pointed the wrong way then too. And you walked off then too.
+Не зараз: поруч ворог.	Not now: an enemy is near.
+іде лагодити	goes to repair
+лагодить	repairs
+бере їжу	takes food
+несе їжу звірові	brings food to an animal
+несе їжу воронам	brings food to the ravens
+на стіл їдальні	at a dining table
+лісоруб	lumberjack
+на ділянку лісу	at a forest plot
+Рубає дерева на своїй ділянці (25 м довкола, до 150 м від бази): спершу колоди, тоді пні, тоді дерева. Потрібна сокира в його спорядженні — вона зношується, як у тебе. Дерево, шишки, смолу несе в ящик.	Cuts trees on their plot (25 m around, up to 150 m from the base): logs first, then stumps, then trees. Needs an axe in their gear; it wears out like yours. Brings wood, cones and resin to the chest.
+рудокоп	miner
+на ділянку з рудою чи камінням	at a plot with ore or stone
+Копає на своїй ділянці (25 м довкола, до 150 м від бази) руду й каміння, яке бере його кайло. Потрібне кайло в його спорядженні — воно зношується, як у тебе. Руду, камінь несе в ящик.	Digs ore and stone their pickaxe can take on their plot (25 m around, up to 150 m from the base). Needs a pickaxe in their gear; it wears out like yours. Brings ore and stone to the chest.
+палій	stoker
+Вогнища й факели в базі: підкладає пальне з ящика, коли догорають.	Fires and torches in the base: adds fuel from the chest when they burn low.
+підкладає дрова	adds firewood
+плавильник	smelter
+Плавильні й печі: виймає готове в ящик, підсипає вугілля й руду з ящика.	Smelters and kilns: takes out what is done into the chest, adds coal and ore from the chest.
+виймає готове	takes out what is done
+підкладає вугілля	adds coal
+засипає руду	loads ore
+збирач	gatherer
+Кущі й рослини, що відростають (ягоди, гриби): збирає в ящик.	Bushes and plants that grow back (berries, mushrooms): gathers them into the chest.
+збирає	gathers
+прибиральник	cleaner
+Речі, що валяються в базі: підбирає й несе в ящик (які саме — «Що прибирати»). Готове біля плавилень, бочок і вуликів лишає тим, хто там працює.	Things lying around the base: picks them up and brings them to the chest (which ones: «What to tidy»). Leaves finished goods by smelters, barrels and hives to whoever works there.
+слуга	servant
+на дім, який доглядатиме	at the house they will look after
+Доглядає один дім: лагодить побите, зачиняє двері; з ящиком запасів — ще й підкладає пальне вогнищам і світильникам, прибирає підлогу, бере пальне зі складу у свою скриню, коли воно закінчується, а те, що ти кладеш у його скриню чи скриню для розбору, розкладає на складі (нема місця — по скринях бази, де лежить те саме, не в доми інших гравців). Сюжетні й особливі речі не чіпає.	Looks after one house: repairs damage, shuts doors; with a supply chest also fuels fires and lights, tidies the floor, takes fuel from the storeroom into their chest when it runs out, and puts away what you place in their chest or the sorting chest in the storeroom (no room: in the base's chests where the same things lie, not in other players' houses). Story and special items are left alone.
+забирає речі на розбір	collects things to sort
+лагодить дім	repairs the house
+зачиняє двері	shuts the doors
+кухар	cook
+Решітки, казани й печі: знімає готове (поки не пригоріло) у ящик, кладе сире з ящика на вільні місця над вогнем.	Grills, cauldrons and ovens: takes off what is done (before it burns) into the chest, puts raw food from the chest on free spots over the fire.
+знімає готове	takes off what is done
+підкладає дрова в піч	adds firewood to the oven
+кладе м'ясо	puts meat on
+пасічник-винар	beekeeper
+Вулики: мед у ящик. Бочки: зливає готову медовуху в ящик, порожні заливає основою з ящика.	Beehives: honey into the chest. Barrels: draws finished mead into the chest, refills empty ones with a base from the chest.
+збирає мед	collects honey
+зливає медовуху	draws mead
+заливає бочку	fills a barrel
+вартовий	guard
+Стоїть на посту (кнопка «Пост») і обходить довкола, без посту — межу бази; б’є лише ворогів біля посту чи в базі, мирних звірів не чіпає (лише для бійців). Вартує вдень і вночі.	Stands at a post (the «Post» button) and walks around it, or the base's edge without one; strikes only enemies near the post or in the base, leaves peaceful animals alone (fighters only). Keeps watch day and night.
+стоїть на посту	stands at the post
+обходить пост	walks around the post
+думає, де поїсти	thinks where to eat
+іде їсти	goes to eat
+чекає біля комори	waits by the pantry
+їсть	eats
+Іде за тобою.	Follows you.
+Стоїть.	Stays.
+на місце	at a spot
+Сидить.	Sits.
+Розмова з ним — те саме, що E.	Talk to them, same as E.
+Натисни ще раз або в центр кола — відпустиш.	Press again or the middle of the circle to release them.
+Точно?	Sure?
+без тями	unconscious
+слухає	listens
+показує спорядження	shows their gear
+біжить	runs
+поспішає	hurries
+іде	walks
+загубив|загубила, кого вів|вела	lost the one they were leading
+іде слідом	follows
+походжає	strolls
+іде сісти	goes to sit
+сидить на землі	sits on the ground
+не знайшов|знайшла ліжка	found no bed
+іде спати	goes to bed
+працює	works
+тікає	flees
+б'ється	fights
+стріляє	shoots
+озирається	looks around
+відбивається	fights back
+біжить до захисту	runs for cover
+прийшов|прийшла	arrived
+сцена	scene
+примха	whim
+розпорядок	routine
+дозвілля	leisure
+Вдача	Character
+Оселя	Home
+Де він живе: ліжко, виселення.	Where they live: bed, eviction.
+Ліжко	Bed
+на ліжко	at a bed
+Межі бази	Base edges
+Він втратить дім, ліжко, розпорядок і роботу. Натисни ще раз, щоб виселити.	They will lose their home, bed, routine and job. Press again to evict.
+Сховок	Hideout
+на місце, де сховатись	at a place to hide
+Деревина	Wood
+Дерево, тонке дерево, колоди, кора, чорне й іггдрасилеве дерево.	Wood, fine wood, logs, bark, blackwood and Yggdrasil wood.
+Камінь	Stone
+Камінь, кремінь, обсидіан, кришталь, мармур, граустен.	Stone, flint, obsidian, crystal, marble, grausten.
+Руда й метал	Ore and metal
+Руда, брухт, злитки, цвяхи.	Ore, scrap, bars, nails.
+Паливо й смола	Fuel and resin
+Смола, вугілля, дьоготь, сік.	Resin, coal, tar, sap.
+Шкури й тканини	Hides and cloth
+Шкіра, шкури, льон, джут, тканини.	Leather, hides, flax, jute, cloth.
+Здобич зі звірів	Creature drops
+Пір'я, кістки, ікла, хітин, слиз, нутрощі й таке інше з тварин і потвор.	Feathers, bones, tusks, chitin, ooze, entrails and the like from animals and monsters.
+Рослини й насіння	Plants and seeds
+Насіння, будяк, кульбаба, льон, ячмінь, коренеплоди.	Seeds, thistle, dandelion, flax, barley, root vegetables.
+Страви, медовухи, ягоди, гриби, сире м'ясо й риба.	Dishes, meads, berries, mushrooms, raw meat and fish.
+Трофеї	Trophies
+Трофеї звірів і потвор.	Trophies of animals and monsters.
+Зброя, обладунки, щити, інструменти, стріли.	Weapons, armour, shields, tools, arrows.
+Цінності	Valuables
+Монети, бурштин, перли, рубіни, намиста.	Coins, amber, pearls, rubies, necklaces.
+Усе, що не підпадає під інші: ключові речі, ядра сурлінгів тощо.	Everything that fits nowhere else: key items, surtling cores and so on.
+Що прибирати	What to tidy
+іде до Дому воронів	walks to the Ravens' House
+шкутильгає додому	limps home
+вертається додому	heads back home
+іде до оселі	walks to the settlement
+Робота	Job
+Змінити роботу	Change job
+Інша робота або без роботи.	Another job, or no job.
+на ящик	at a chest
+Пост	Post
+на місце посту	at the post's spot
+Склад	Storeroom
+на місце складу	at the storeroom's spot
+Розбір	Sorting
+на скриню для розбору	at a sorting chest
+Дім	House
+Ділянка	Plot
+на ділянку	at a plot
+Обхід бази	Patrol the base
+Без роботи	No job
+чекає свої речі	waits for their things
+іде до ящика	goes to the chest
+ящик відкритий — чекає	the chest is open: waits
+несе до ящика	carries to the chest
+у ящику нема потрібного	the chest lacks what is needed
+іде до вогню	heads to the fire
+перепочиває	is resting
+іде до Серця оселі	heads to the Heart
+стоїть біля Серця оселі	stands by the Heart
+іде глянути запаси	goes to check the stores
+перевіряє запаси	checks the stores
+іде глянути, що там	goes to see how things are
+оглядає господарство	looks over the workshop
+іде глянути на трофей	goes to see the trophy
+розглядає трофей	studies the trophy
+іде до краю бази	heads to the edge of the base
+дивиться за межі бази	looks out past the base
+іде до сусіда	goes over to a neighbour
+стоїть із сусідом	stands with a neighbour
+іде глянути на місце бою	goes to see where the fight was
+оглядає місце бою	looks over where the fight was
+повільно йде	walks slowly
+задумався|задумалась	lost in thought
+іде до справ	goes about its chores
+порається	is pottering about
+Глянемо, що там лишилось.	Let's see what's left.
+Оце так звір був…	What a beast that was…
+Гаряче тут було.	It got hot here.
+Тихо поки що.	Quiet for now.
+бродильний чан	fermenter
+місце, де готувати	place to cook
+трофей на стіні	trophy on the wall
+ще одна лава	one more bench
+мріє про своє ліжко	dreams of a bed of their own
+хоче стати майстром: {0}	wants to master the work: {0}
+хоче на базі: {0}	wants at the base: {0}
+хоче потоваришувати: {0}	wants to make friends: {0}
+сусід	neighbor
+шукає річ із минулого: {0}	looks for a thing from the past: {0}
+Збулося! Я й не вірив|вірила.	It came true! I didn't believe it would.
+Та ні про що особливо.	Nothing much, really.
+іде до столу	going to the table
+сидить за столом	sitting at the table
+іде глянути на воронів	going to look at the ravens
+дивиться на воронів	watching the ravens
+іде глянути, що будують	going to see what is being built
+дивиться, що будують	watching what is being built
+Люблю тут бувати.	I like it here.
+Розумні птахи. Дивляться, ніби все знають.	Clever birds. They look at you as if they knew everything.
+Що це ви тут будуєте?	What are you building here?
+<b>{0}</b>\nУ світі сталося {1} з {2} подій цього розділу.	<b>{0}</b>\nIn this world {1} of the {2} events of this chapter have happened.
+Та нічого особливого.	Nothing much, really.
+Спитай Гейд про лист	Ask Heid about the letter
+Гейд	Heid
+Спитай ту жінку. Вона тут довше.	Ask that woman. She has been here longer.
+Сам{|а} ти це не прочитаєш. Іди до тієї, що «просто прибирає».	You won't read this yourself. Go to the one who is "just tidying up".
+Каже правду. Але не всю.	She tells the truth. But not all of it.
+Щось вона дуже хоче, щоб ти піш{ов|ла}. Я б теж хотів, але в мене причини кращі.	She really wants you gone. So would I, but my reasons are better.
+Браму Зали відчинили. Я стояв|стояла поруч — вона скрипіла так, ніби не хотіла пускати. Усередині холодно, як у могилі.	They opened the gate of the Hall. I was standing right there. It creaked as if it didn't want to let anyone in. Inside it's cold as a grave.
+Кажуть, браму Зали відчинили. Хто — не знаю. Я б туди не ходив|ходила.	They say the gate of the Hall was opened. Who did it, I don't know. I wouldn't go there.
+Вогнище в Залі спалахнуло. Синім. Я бачив|бачила це сам|сама — воно не гріє, лише світить.	The hearth in the Hall flared up. Blue. I saw it myself. It doesn't warm, it only shines.
+Кажуть, у Залі загорівся вогонь. Синій. Дурниці, мабуть.	They say a fire was lit in the Hall. A blue one. Nonsense, probably.
+Хтось поставив перше серце оселі. Ліхтар спалахнув і згас — я бачив|бачила. Наче вогонь у ньому чужий.	Someone set up the first hearth of a settlement. The lantern flared and died, I saw it. As if the fire in it were a stranger's.
+Кажуть, десь уже стоїть серце оселі. Перше. Отже, хтось лишається тут жити.	They say a hearth of a settlement stands somewhere now. The first one. So someone is staying here to live.
+Що тут сталося, поки мене не було?	What happened here while I was gone?
+Зрозум{ів|іла}.	I see.
+Я знайш{ов|ла} старий лист. Що це?	I found an old letter. What is it?
+Той лист. Договорімо.	That letter. Let's finish.
+Чому ти не ночуєш у Залі?	Why don't you sleep in the Hall?
+Що це за місце?	What is this place?
+Чому тут так холодно?	Why is it so cold here?
+Чому вогонь синій?	Why is the fire blue?
+Звідки в тебе ключ від брами?	Where did you get the key to the gate?
+Що ти шукаєш?	What are you looking for?
+Чиї це камені?	Whose stones are these?
+Ти тут сама?	Are you here alone?
+Бувай.	Goodbye.
+Де ти це взя{в|ла}? …Старий лист. Їх тут багато лишилось, майже всі ні про що. Цей — про серце оселі.	Where did you get this? …An old letter. Plenty of them left here, nearly all about nothing. This one is about a hearth of a settlement.
+Розкажи більше.	Tell me more.
+Питай. Тільки недовго.	Ask. Just not for long.
+Що таке серце оселі?	What is a hearth of a settlement?
+Чому б не збудувати його тут?	Why not build it here?
+Що за ріг на кресленні?	What is the horn on the drawing?
+Знову «не тут». Чим їй так муляє ця Зала?	Not here, again. What is it with her and this Hall?
+Я вже вби{в|ла} того оленя. Ріг у мене.	I already killed that deer. I have the horn.
+Ти? …Ну, тоді й ріг твій. Кажуть, за тим, хто його вбив, люди підуть. Тільки будуй не тут. Подалі, де ліс і вода.	You? …Well, then the horn is yours. They say people follow the one who killed it. Just don't build here. Further off, where there's forest and water.
+Гаразд, збудую.	All right, I'll build it.
+Вогонь, біля якого живуть люди. Варта колись ставила такі там, де хтось лишався жити.	A fire that people live by. The Watch used to set them where someone stayed to live.
+Ясно.	I see.
+Тут воно ні до чого. Сюди ніхто не прийде. Будуй подалі, де ліс і вода.	It's no use here. No one will come here. Build further off, where there's forest and water.
+Той олень біля каменів, сам{|а} знаєш. За тим, хто його вбив, люди підуть. Дурне правило, зате старе.	That deer by the stones, you know the one. People will follow whoever killed it. A stupid rule, but an old one.
+Вартовий без людей — просто ще один камінь. Іди.	A watchman without people is just one more stone. Go.
+Іду.	I'm going.
+Я ж казала: голоси. Ночами там говорять ті, кого вже нема. Чи мені так здається. На каменях тихіше.	I told you: voices. At night the ones who are gone talk in there. Or so it seems to me. It's quieter on the stones.
+Що вони кажуть?	What do they say?
+Не знаю. Не дослуховуюсь. І тобі не раджу.	I don't know. I don't listen. I wouldn't advise you to either.
+Зала Варти. Тут колись горів вогонь, і поки горів, було кому сторожити. Тепер пил і холод.	The Hall of the Watch. A fire burned here once, and while it burned, there was someone to keep watch. Now it's dust and cold.
+Тут завжди так. Дрова є? Спробуй, якщо не віриш.	It's always like this. Got firewood? Try it, if you don't believe me.
+Спробую.	I'll try.
+Не знаю. Він не мав горіти взагалі. Не гріє — то й не чіпай.	I don't know. It wasn't supposed to burn at all. It doesn't warm, so leave it be.
+Я ж сказала: знайшла. Мерці за ключами не приходять.	I told you: I found it. The dead don't come back for keys.
+Те, що сама сюди поклала. Забуваю куди. Буває, коли довго живеш сама.	What I put here myself. I forget where. It happens when you live alone for long.
+Вартові. Ті, кого вже нема. Хтось же має чистити мох із їхніх імен.	The watchmen. The ones who are gone. Someone has to clean the moss off their names.
+Ти їх знала?	Did you know them?
+Декого. Не питай кого.	Some. Don't ask which.
+Добре.	All right.
+Сама. Так легше. Є ще ворон, але він мовчить.	Alone. It's easier. There's also a raven, but it keeps silent.
+Чому твій ворон мовчить?	Why does your raven keep silent?
+Такий уже є. Не все, що мовчить, нічого не знає.	It's just like that. Not everything silent knows nothing.
+Подейкують, ніби десь далеко відчинили якусь стару браму. А за нею чи то могила, чи то скарб. Хто його знає.	Word is, somewhere far off they opened some old gate. And behind it either a grave or a treasure. Who knows.
+Чув|Чула від когось, що десь горить синій вогонь, який не гріє. Мабуть, вигадки. А може, й ні.	I heard from someone that a blue fire burns somewhere and gives no warmth. Made up, probably. Or maybe not.
+Ходять чутки, що десь хтось осів по-справжньому, навіть серце поставив. Чи правда, не знаю.	Rumor has it someone somewhere has settled for real, even set up a hearth. Whether it's true, I don't know.
+Тут уже б'ється серце оселі «{0}». Нове серце став далі, ніж за {1} кроків від нього.	The heart of «{0}» already beats here. Build a new heart more than {1} paces from it.
+на полюванні	out hunting
+ловить рибу	fishing
+оглядає місцину	looking around
+літає довкола	flying about
+сидить неподалік	sitting nearby
+Яка це людина: як почувається, що думає про тебе, чим живе.	What this person is like: how they feel, what they think of you, what they live for.
+ЧОМУ · ДО ТЕБЕ	WHY · TOWARD YOU
+ДУМКИ	THOUGHTS
+ВДАЧА	NATURE
+СВОЇ	PEOPLE
+ПОБУТ	DAILY
+ІСТОРІЯ	STORY
+наляканий|налякана	frightened
+радіє	glad
+сумує	grieving
+вражений|вражена	in awe
+голод	hunger
+настрій	mood
+ЧОМУ · НАСТРІЙ	WHY · MOOD
+трохи поранений|поранена	lightly wounded
+тяжко поранений|поранена	badly wounded
+Близькій людині можна довірити прохання й таємниці.	Someone close can be trusted with requests and secrets.
+Довіряє тобі: говорить і про своє.	Trusts you: speaks of personal things too.
+Не довіряє: про своє не говоритиме.	Does not trust you: will keep personal things to themselves.
+Ворогує: на добре слово не чекай.	Hostile: do not expect a kind word.
+Поки просто знає тебе. Що зробиш для нього|неї, те й запам'ятає.	Only knows you so far. What you do for him|her will be remembered.
+Одне з п'яти: ворожо · холодно · рівно · тепло · близько.	One of five: hostile · cold · even · warm · close.
+на думці	on their mind
+мрія	wish
+пам'ятає про тебе	remembers of you
+Поки нічого не каже й нічого не пам'ятає про тебе.	Says nothing yet and remembers nothing of you.
+мовчазний|мовчазна	quiet
+балакучий|балакуча	talkative
+боязкий|боязка	timid
+сміливий|смілива	brave
+неквапливий|некваплива	unhurried
+старанний|старанна	diligent
+невтомний|невтомна	tireless
+лінькуватий|лінькувата	a bit lazy
+сам|сама у собі	keeps to self
+усе помічає	notices everything
+жайворонок	early bird
+сова	night owl
+звичайний день	ordinary hours
+Встає о {0}, лягає о {1}.	Gets up at {0}, goes to bed at {1}.
+своє місце	own place
+Місце, де любить бувати {0}	The place {0} likes to be
+у бою тікає	runs from a fight
+у бою відбивається, загнаний|загнана	fights back when cornered
+у бою захищає своїх	defends their own in a fight
+сам|сама шукає ворогів	seeks out foes
+осторонь бою	stays out of fights
+є	yes
+Збудуй ліжко й дай його: Q → Оселя → Ліжко.	Build a bed and give it: Q → Home → Bed.
+Ліжко: {0}	Bed: {0}
+комора	pantry
+ящик	chest
+тримає	keeps it
+ще не отримував|отримувала	not paid yet
+платять вчасно	paid on time
+не заплатили	not paid
+{0} раз на {1}.	{0} every {1}.
+цілий|ціла	unhurt
+Розкажи більше	Tell me more
+зима|зими|зим	winter|winters
+Не вдалося це прочитати.	This could not be read.
+ЗАРАЗ	NOW
+до тебе	toward you
+має своє ліжко	has a bed of their own
+ліжко під дахом	bed under a roof
+тепло біля вогню	warm by a fire
+ситно	well fed
+їжа різна	varied food
+збулося те, про що мріяв|мріяла	a wish came true
+довго чекає на те, про що мріє	has long waited for a wish
+на межі	at breaking point
+пригнічений|пригнічена	dejected
+похмурий|похмура	gloomy
+спокійний|спокійна	calm
+веселий|весела	cheerful
+знесилений|знесилена	exhausted
+бадьорий|бадьора	rested
+майстер|майстриня	master
+вправний|вправна	skilled
+ще вчиться	still learning
+ти врятува{в|ла} його|її	you saved him|her
+ти постави{в|ла} його|її на ноги	you got him|her back on their feet
+ти взя{в|ла} його|її до себе	you took him|her in
+ти прогна{в|ла} його|її	you sent him|her away
+ти прин{іс|есла} те, що просив|просила	you brought what was asked for
+ти дотрима{в|ла} слова	you kept your word
+ти не дотрима{в|ла} слова	you did not keep your word
+чув|чула, що ти тримаєш слово	heard that you keep your word
+чув|чула, що ти не тримаєш слова	heard that you do not keep your word
+ти допом{іг|огла} здійснити мрію	you helped a wish come true
+розповів|розповіла тобі те, чого не казав|казала нікому	told you what they never told anyone
+тебе довго не було	you were away a long time
+ти відмахну{вся|лась} від його|її турботи	you brushed off his|her worry
+ти нагруби{в|ла} йому|їй	you were rude to him|her
+ти забра{в|ла} одяг, який да{в|ла}	you took back the clothes you gave
+ти стоя{в|ла} перед ним|нею й мовча{в|ла}	you stood before him|her in silence
+твій ворон щось сказав йому|їй просто в очі	your raven said something to his|her face
+ворожо	hostile
+холодно	cold
+тепло	warm
+близько	close
+рівно	even
+близькі	close
+дружать	friends
+через останню миску	over the last bowl
+через своє місце	over their own place
+через те, хто скільки працює	over who works how much
+слово за слово за столом	words at the table
+через набіг: один сховався	over a raid: one hid
+через платню	over pay
+уже {0}	for {0} now
+Голодують: {0}	Starving: {0}
+без їжі кинуть роботу, а згодом підуть	without food they drop their work and later leave
+Без тями: {0}	Senseless: {0}
+постав на ноги медовухою зцілення	bring them round with a healing mead
+На межі: {0}	At breaking point: {0}
+якщо нічого не зміниться, підуть	if nothing changes, they leave
+Обіцянка: {0}, {1}	Promise: {0}, {1}
+Нема столу їдальні: обери інший	The dining table is gone: choose another
+Їжі менше ніж на день	Food for less than a day
+Бракує кухаря	No cook
+Голодні: {0}	Hungry: {0}
+Без платні: {0}	Unpaid: {0}
+Поклади монети в скарбничку.	Put coins in the coin box.
+Невдоволені: {0}	Unhappy: {0}
+Нема чим працювати: {0}	Nothing to work with: {0}
+Без ліжка: {0}	No bed: {0}
+Збудуй ліжко й дай його: Q на людині → Оселя → Ліжко.	Build a bed and give it: Q on the person → Home → Bed.
+Ящик повний: {0}	Chest full: {0}
+Ящик: {0}	Chest: {0}
+Без роботи: {0}	No work: {0}
+Дай роботу: Q на людині → Робота.	Give work: Q on the person → Work.
+Згасли всі вогнища	All the fires are out
+Вогнище	Fire
+щойно збудована	just built
+нарікають	grumbling
+живуть добре	living well
+живуть рівно	getting by
+Ще ніхто тут не живе.	Nobody lives here yet.
+усі ситі й мають ліжко	everyone is fed and has a bed
+вогнища горять	the fires are burning
+на платню вистачає	enough coins for the pay
+менше ніж на день	less than a day
+на {0}	for {0}
+{0} із {1} мешканців	{0} of {1} residents
+МЕШКАНЦІ	RESIDENTS
+ТВОЇ СПРАВИ	YOUR TASKS
+ЖИТТЯ ОСЕЛІ	LIFE HERE
+МІСЦЯ	PLACES
+ТРЕБА ЗРОБИТИ	TO DO
+Ще ніхто тут не живе. Найми когось і вибери цю оселю або оселі тут того, хто вже з тобою.	Nobody lives here yet. Hire someone and choose this home, or settle here someone already with you.
+згодом	later
+важливо	important
+горить	urgent
+і ще {0}	and {0} more
+КОМОРА І СКАРБНИЧКА	PANTRY AND COIN BOX
+їжа	food
+нема готових страв	no cooked food
+ЗАПАС ПРОТИ ТОГО, СКІЛЬКИ З'ЇДАЮТЬ	STOCK AGAINST WHAT THEY EAT
+Лише готові страви у звичайних скринях оселі: сирого не їдять, особисті скрині не чіпають.	Only cooked food in the ordinary chests here: they eat nothing raw and leave personal chests alone.
+кухня	kitchen
+бракує кухаря	no cook
+Без кухаря їдять лише те готове, що покладеш сам{|а}.	Without a cook they eat only the cooked food you put there.
+монети	coins
+СКАРБНИЧКА	COIN BOX
+За {0} усім разом: {1}. У скарбничці: {2}.	For {0}, everyone together: {1}. In the coin box: {2}.
+платня	pay
+за {0}: {1}	in {0}: {1}
+не вистачить	will go short
+Бракує {0}. Перша така платня за {1}.	Short by {0}. The first such pay is in {1}.
+монети|монет|монет	coin|coins
+клік: відкрити вдачу	click: open their card
+ЧОМУ · {0}	WHY · {0}
+Зараз далеко від оселі: як почувається, стане видно, коли повернеться.	Far from home now: how they are will show when they return.
+нема	none
+Без кухаря їдять лише те готове, що покладеш сам{|а}. Без вартового оселю ніхто не стереже.	Without a cook they eat only the cooked food you put there. Without a guard nobody watches this home.
+Сюжет	Story
+сюжет	story
+обіцянки	promises
+мрії	wishes
+лишилось {0}	{0} left
+віддячить: {0}	will repay: {0}
+можна віддати	can hand over
+чутки	rumours
+Поки нічого не чекає на тебе.	Nothing is waiting for you yet.
+сваряться	quarrelling
+сталося	what happened
+Поки нічого такого: живуть собі.	Nothing much so far: they just live.
+вогнища	fires
+горить {0} із {1}	{0} of {1} burning
+ліжка	beds
+{0}, своє мають {1}	{0}, {1} have their own
+скарбничка	coin box
+улюблені місця	favourite places
+Межі оселі: золоті вогники на землі й позначки на мапі.	The edges of this home: gold lights on the ground and marks on the map.
+Пішли з оселі: {0}	Left this home: {0}
+Нова людина в оселі: {0}	New here: {0}
+Напад на оселю відбито	An attack was beaten off
+Напад на оселю не вдалося відбити	An attack was not beaten off
+Голодували: {0}	Went hungry: {0}
+Лишились без платні: {0}	Went unpaid: {0}
+Збулась мрія: {0} ({1})	A wish came true: {0} ({1})
+Збулась мрія: {0}	A wish came true: {0}
+Прийшла звістка: повалено володаря цих земель	News came: a lord of these lands has fallen
+принести: {0}	bring: {0}
+принести те, що просив|просила	bring what was asked for
+допомогти з мрією	help with a wish
+зробити щось, щоб полегшало	do something to ease things
+сказати за нього|неї слово	put in a word for him|her
+Де він|вона живе: дошка оселі, ліжко, своє місце, переселення.	Where he|she lives: the home board, bed, own place, moving.
+Дошка оселі	Home board
+Як живе ця оселя: що треба зробити, хто з ким, твої справи.	How this home lives: what to do, who gets on with whom, your tasks.
+Серце оселі далеко: дошку видно лише поруч із ним.	The heart of the home is far: its board can be read only near it.
+Його|Її ліжко: тут спить уночі.	His|Her bed: sleeps here at night.
+Своє місце	Own place
+Де любить бувати у вільний час. Покаже на екрані й на мапі.	Where they like to be in free time. Shown on the screen and the map.
+Переселити	Move
+До іншої оселі: сам дійде. Там ліжко й робота будуть нові.	To another home: they walk there alone. Bed and work will be new there.
+Він|Вона втратить дім, ліжко, розпорядок і роботу. Натисни ще раз, щоб виселити.	He|She loses home, bed, routine and work. Press again to move out.
+Куди переселити?	Move where?
+Там уже живе десятеро: місця нема.	Ten live there already: no room.
+Іншої оселі з назвою нема. Постав ще одне Серце оселі.	There is no other named home. Build another Heart of the home.
+Його|Її тримає сюжет: зараз не переселити.	The story holds him|her: cannot be moved now.
+{0} іде до оселі «{1}».	{0} is walking to «{1}».
+Його|Її тримає сюжет: зараз не виселити.	The story holds him|her: cannot be moved out now.
+Більше ніде не живе.	Lives nowhere now.
+Спершу оселі його|її: людина має десь жити.	Settle him|her first: a person must live somewhere.
+Не бачу ліжка там, куди ти дивишся.	No bed where you are looking.
+Це ліжко ще не готове.	This bed is not ready yet.
+Це чиєсь ліжко (точка появи гравця): дай вільне.	This is someone's bed (a player's spawn point): give a free one.
+Це ліжко вже має {0}.	{0} already has this bed.
+Це ліжко поза базою людини.	This bed is outside the person's base.
+Тепер це його|її ліжко.	This is his|her bed now.
+ЇДАЛЬНЯ:	DINING:
+обрано	chosen
+стіл зник, обери інший	the table is gone, choose another
+не обрано	not chosen
+Інший стіл	Another table
+ІНШИЙ СТІЛ	ANOTHER TABLE
+Перенести їдальню: покажи інший стіл.	Move the dining room: show another table.
+ЗНЯТИ	REMOVE
+Без їдальні мешканці їдять де випаде, а вечорами сидять біля вогню.	Without a dining room residents eat where they can and sit by a fire in the evening.
+Обрати стіл	Choose a table
+ОБРАТИ СТІЛ	CHOOSE A TABLE
+Покажи стіл: тут мешканці обідатимуть і збиратимуться вечорами. Їжу братимуть зі скринь довкола, сідатимуть на лави й стільці поруч.	Show a table: residents will eat here and gather in the evening, taking food from the chests round it and sitting on the benches and chairs nearby.
+Показати межі	Show the borders
+ПОКАЗАТИ МЕЖІ	SHOW THE BORDERS
+На 30 секунд: золоті вогники по межі оселі й позначки на мапі. Усе всередині мешканці вважають своїм.	For 30 seconds: gold lights along the edge and marks on the map. Residents count all inside as their own.
+ЗМІНИТИ НАЗВУ	CHANGE THE NAME
+СЕРЦЕ ОСЕЛІ	HEART OF THE HOME
+ЧОМУ	WHY
+В усіх осель, які знаю, уже повно людей. Хіба що зі мною.	Every home I know of is full. Unless I go with you.
+задира	bully
+Лізе в бій першим|першою і чіпляється до слабших.	First into a fight, and picks on the weak.
+турботливий|турботлива	caring
+Захищає своїх і дбає про кожного в оселі.	Stands by its own and looks after everyone at home.
+боягуз|боягузка	coward
+Тікає першим|першою, а потім соромиться цього.	First to run, and ashamed of it afterwards.
+ледар|ледарка	idler
+За будь-якої нагоди кидає роботу й лягає відпочити.	Drops work at every chance and lies down for a rest.
+самітник|самітниця	loner
+Тримається осторонь, говорить мало.	Keeps apart and says little.
+пронира	snoop
+Усюди заглядає і все про всіх знає.	Looks into everything and knows all about everyone.
+трудяга	hard worker
+Працює довше за інших і не терпить ледарів.	Works longer than anyone and cannot stand idlers.
+гуляка	reveller
+Шукає компанію, вечори проводить біля вогню.	Seeks company and spends its evenings by the fire.
+буркун|буркотуха	grumbler
+Завжди чимось невдоволений|невдоволена, але робить, що треба.	Always displeased with something, but does what is needed.
+через кпини при всіх	over being mocked before everyone
+Знайди для цього когось іншого. Я до такого не нахилюся.	Find someone else for that. I will not stoop to it.
+Я не для того тут вижив|вижила, щоб таким займатися.	I did not survive here to do that.
+Сміятимуться ж усі. Ні.	Everyone would laugh. No.
+Дай мені справжню роботу, а це хай роблять інші.	Give me real work and let others do this.
+Не моє це діло, і не проси.	That is not my business, so do not ask.
+Таке нехай роблять ті, хто нічого кращого не вміє.	Leave that to those who can do nothing better.
+У чужому домі порядкувати не стану, хоч ми й ладнаємо.	I will not keep another's house, even though we get on.
+Я не прислуга. Навіть у тебе.	I am no servant. Not even yours.
+Працювати на оселю — так. Бігати по чужих кімнатах — ні.	Work for the home, yes. Run about someone's rooms, no.
+Добре, що ми ладнаємо, але слугою я не буду.	It is good we get on, but I will not be a servant.
+Хай твій дім доглядає той, кому це до душі.	Let your house be kept by someone who likes that.
+Я сюди прийшов|прийшла жити, а не прислуговувати.	I came here to live, not to serve.
+Туди? Ні. Я ще хочу побачити завтрашній день.	There? No. I still want to see tomorrow.
+Від самої думки ноги підкошуються. Не можу.	The very thought makes my knees give. I cannot.
+Я тебе підведу, щойно щось трапиться. Краще не треба.	I would fail you the moment something happens. Better not.
+Страшно мені. Соромно казати, але страшно.	I am afraid. Shameful to say, but I am.
+Хай це робить хтось сміливіший.	Let someone braver do it.
+Ні, ні й ні. Шукай іншого.	No, no and no. Look for someone else.
+Це ж цілий день спину гнути. Ні, дякую.	That is a whole day bent double. No, thanks.
+Надто багато роботи. Дай щось простіше.	Too much work. Give me something simpler.
+А коли ж відпочивати? Ні, це не для мене.	And when would I rest? No, that is not for me.
+Від самої думки втомлююся.	The very thought tires me.
+Я за таке не візьмуся: ні сьогодні, ні завтра.	I will not take that on, today or tomorrow.
+Хай старається той, кому більше за всіх треба.	Let whoever needs it most make the effort.
+Не ті в мене сили для такого.	I no longer have the strength for that.
+Спина й ноги цього вже не витримають.	My back and legs would not bear it now.
+Хотів|Хотіла б, та тіло не дозволить.	I would like to, but my body will not let me.
+Я б і радий|рада, та це вже не для мого тіла.	I would gladly, but it is past what my body can do.
+Дай роботу, яку я справді подужаю.	Give me work I can really manage.
+Упаду на першому ж дні. Ні.	I would drop on the very first day. No.
+Не лежить душа до цього.	My heart is not in it.
+Що завгодно, тільки не це.	Anything but that.
+Пробував|Пробувала колись. Більше не хочу.	I tried it once. Never again.
+Ні, це не моє.	No, that is not for me.
+Візьмуся за щось інше, а це — ні.	I will take on something else, but not this.
+Нудьга смертна. Пошукай когось іншого.	Deadly dull. Look for someone else.

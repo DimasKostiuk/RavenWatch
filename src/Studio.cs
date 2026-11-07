@@ -14,6 +14,8 @@ namespace HuginWhispers
     // (studio/request.txt, one command a line; taken and deleted), and what it asks is shot into studio/out/:
     //   shot <name>                                  — the game's screen as it is
     //   burst <name> <seconds> <fps>                 — the screen, frame after frame, as one sheet
+    //   scene <name> <scene id> [fps] [from]          — a story scene played and checked at its place (taken there, touches done): every body measured each frame
+    //                                                  by BodyCheck, the picture's own rules, the screen and each body close — StudioScene.cs
     //   pose <name> <template> <h|m> [moments] [views] — your raven holds the template's moments one by one; each from
     //                                                  the views (side,front,top,back) as one sheet (rows: moments)
     //   play <name> <template> <h|m> [fps] [views]   — the template played in time, shot as it goes (rows: frames)
@@ -83,8 +85,15 @@ namespace HuginWhispers
             {
                 string[] lines;
                 try { lines = File.ReadAllLines(Request, Encoding.UTF8); File.Delete(Request); }
-                catch { return; } // (still being written: next time)
-                foreach (string l in lines) if (l.Trim().Length > 0 && !l.TrimStart().StartsWith("#")) Todo.Enqueue(l.Trim());
+                catch { return; } // quiet: still being written, the next look in half a second
+                foreach (string l in lines)
+                {
+                    string q = l.Trim();
+                    if (q.Length == 0 || q.StartsWith("#")) continue;
+                    if (q.StartsWith("raven ")) { Log(q, (Commands.Run(Rest(q)) ?? "").Replace('\n', ' ')); continue; } // (at once: no shooting in them)
+                    if (q.StartsWith("con ")) { Log(q, Console(Rest(q))); continue; }
+                    Todo.Enqueue(q);
+                }
             }
             if (_busy && Time.unscaledTime - _busySince > StuckSeconds) { _busy = false; Log("?", "a job hung: the studio is free again"); }
             if (_busy || Todo.Count == 0 || Plugin.Instance == null) return;
@@ -122,6 +131,9 @@ namespace HuginWhispers
                 {
                     case "shot": job = Shot(Arg(a, 1, "shot")); break;
                     case "burst": job = Burst(Arg(a, 1, "burst"), Num(a, 2, 2f), Num(a, 3, 8f)); break;
+#if RAVEN_STORY
+                    case "scene": job = SceneCheck(Arg(a, 1, "scene"), Arg(a, 2, ""), Num(a, 3, 2f), (int)Num(a, 4, 0f)); break;
+#endif
                     case "pose": job = Pose(Arg(a, 1, "pose"), Arg(a, 2, ""), Arg(a, 3, "h"), (int)Num(a, 4, 6f), Arg(a, 5, "side,front,top"), false, 0f); break;
                     case "play": job = Pose(Arg(a, 1, "play"), Arg(a, 2, ""), Arg(a, 3, "h"), 0, Arg(a, 5, "side,front"), true, Num(a, 4, 8f)); break;
                     case "look": job = Look(Arg(a, 1, "look"), Arg(a, 2, "h"), Arg(a, 3, "side,front,top")); break;
@@ -153,6 +165,7 @@ namespace HuginWhispers
 #if RAVEN_NPC
                     case "nlook": job = NpcLook(Arg(a, 1, "nlook"), Arg(a, 2, "near"), Arg(a, 3, "front,side,back")); break;
                     case "nprobe": job = NpcProbe(Arg(a, 1, "nprobe"), Arg(a, 2, "near"), Num(a, 3, 2f)); break;
+                    case "nskin": job = NpcSkin(Arg(a, 1, "nskin"), Arg(a, 2, "near")); break;
                     case "nattach": Log(line, NpcAttach(Arg(a, 1, ""))); break;
                     case "hover": Log(line, Hover()); break;
                     case "nfilm": job = NpcFilm(Arg(a, 1, "nfilm"), Arg(a, 2, "near"), Num(a, 3, 4f), Num(a, 4, 2f), Arg(a, 5, "front,side")); break;
@@ -188,7 +201,7 @@ namespace HuginWhispers
         private static string Arg(string[] a, int i, string def) { return a.Length > i ? a[i] : def; }
 
         // a static number (or switch) of the mod's, read or set by «Class.Field» (the author's live tuning; nothing saved)
-        private static string Field(string path, string value)
+        internal static string Field(string path, string value)
         {
             int dot = path.LastIndexOf('.');
             if (dot <= 0) return "write Class.Field";
@@ -260,11 +273,12 @@ namespace HuginWhispers
             internal Light Lamp;
             internal GameObject Root;
             internal Vector3 Mid;
+            internal int Size = Cell; // (px a frame: Cell, bigger for the stage's key frames)
         }
 
-        private static Rig Make(string views)
+        private static Rig Make(string views, int size = Cell)
         {
-            Rig r = new Rig();
+            Rig r = new Rig { Size = size };
             r.Root = new GameObject("RavenWatch_Studio");
             Camera main = Camera.main;
             foreach (string v in views.Split(','))
@@ -279,7 +293,7 @@ namespace HuginWhispers
                 if (main != null) { c.cullingMask = main.cullingMask; c.clearFlags = main.clearFlags; c.backgroundColor = main.backgroundColor; }
                 r.Cams.Add(c); r.Views.Add(view);
             }
-            r.Rt = new RenderTexture(Cell, Cell, 24, RenderTextureFormat.ARGB32);
+            r.Rt = new RenderTexture(r.Size, r.Size, 24, RenderTextureFormat.ARGB32);
             r.Lamp = new GameObject("Lamp").AddComponent<Light>();
             r.Lamp.transform.SetParent(r.Root.transform, false);
             r.Lamp.type = LightType.Point; r.Lamp.range = 4f; r.Lamp.intensity = 2.4f; r.Lamp.color = new Color(1f, 0.97f, 0.92f); r.Lamp.shadows = LightShadows.None; r.Lamp.enabled = false;
@@ -373,7 +387,8 @@ namespace HuginWhispers
         // the camera that shoots (the bird lit from where it is seen, whatever the night).
         private static void Shoot(Rig r, Texture2D[] sheets, int cell, int cols, int rows)
         {
-            Texture2D read = new Texture2D(Cell, Cell, TextureFormat.RGB24, false);
+            int px = r.Size;
+            Texture2D read = new Texture2D(px, px, TextureFormat.RGB24, false);
             RenderTexture was = RenderTexture.active;
             r.Lamp.enabled = true;
             List<Renderer> weather = HideWeather();
@@ -389,10 +404,10 @@ namespace HuginWhispers
                     r.Cams[i].targetTexture = r.Rt;
                     r.Cams[i].Render();
                     RenderTexture.active = r.Rt;
-                    read.ReadPixels(new Rect(0, 0, Cell, Cell), 0, 0);
+                    read.ReadPixels(new Rect(0, 0, px, px), 0, 0);
                     read.Apply(false);
-                    if (sheets.Length < r.Cams.Count) Blit(read, sheets[0], i * Cell, (rows - 1 - cell) * Cell); // one strip of all the views (look)
-                    else Blit(read, sheets[i], (cell % cols) * Cell, (rows - 1 - cell / cols) * Cell);
+                    if (sheets.Length < r.Cams.Count) Blit(read, sheets[0], i * px, (rows - 1 - cell) * px); // one strip of all the views (look)
+                    else Blit(read, sheets[i], (cell % cols) * px, (rows - 1 - cell / cols) * px);
                     r.Cams[i].targetTexture = null;
                 }
             }
@@ -966,6 +981,13 @@ namespace HuginWhispers
         private static void Note(string name, string text)
         {
             try { File.WriteAllText(Path.Combine(Out, Clean(name) + ".txt"), text + "\n", new UTF8Encoding(false)); } catch { }
+        }
+
+        // a line after a report already written (the scene check's «given back»: Note would put it in the report's place)
+        private static void NoteMore(string name, string text)
+        {
+            try { File.AppendAllText(Path.Combine(Out, Clean(name) + ".txt"), text + "\n", new UTF8Encoding(false)); }
+            catch (Exception e) { Debug.LogWarning("[RavenWatch] studio: " + name + " not written: " + e.Message); }
         }
 
         private static string Clean(string name)

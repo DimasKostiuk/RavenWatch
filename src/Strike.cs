@@ -7,7 +7,7 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // «Удар в очі» and «Кігті»: the raven leaves the shoulder, flies where you look, strikes and comes back.
-    // The blow is the raven's own, never the weapon's: a base by the bosses it saw fall, raised by its training
+    // The blow is the raven's own, never the weapon's: a base by the bosses you beat with it, raised by its training
     // (вишкіл, 30 levels earned by flights; techniques from 10 on, Mastery), by trust and by a full belly. Whatever other mods add to a player's hit
     // is cut back to that, and a boss loses at most a small share of its health to one flight.
     internal static class Strike
@@ -824,8 +824,9 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- bosses that fell with the raven on the shoulder
 
         // A boss fight: the ravens on you when it began, known by the raven's own id (the same raven taken back from your
-        // grave is a new copy of the item with the same id). They count if they are on you again when it falls: a
-        // death, a raven taken off or flown off in between changes nothing.
+        // grave is a new copy of the item with the same id). They count if you or your raven struck that boss at least
+        // once (Struck) and they are on you again when it falls: a death, a raven taken off or flown off in between
+        // changes nothing. Only standing beside it counts for nothing: friends beat it, the ravens merely watched.
         private sealed class Fight
         {
             public string Prefab;
@@ -838,6 +839,11 @@ namespace HuginWhispers
         // run back — the same fight goes on (a boss hit meanwhile would no longer be fresh)
         private static readonly Dictionary<ZDOID, Fight> Fights = new Dictionary<ZDOID, Fight>();
         internal static float WatchRange = 50f, FightKeepSeconds = 1200f;
+
+        // the bosses you or your raven struck: told by your own hit (Diary's OutgoingHitPatch), so a change of who simulates
+        // the boss loses nothing; only your hits on a boss come here, one entry a boss
+        private static readonly HashSet<ZDOID> Struck = new HashSet<ZDOID>(); // session: a fight does not outlive the world's load (ResetFights)
+        internal static void YouStruck(Character c) { if (Champions.TrueBoss(c) && Array.IndexOf(Bosses, Utils.GetPrefabName(c.gameObject)) >= 0) Struck.Add(c.GetZDOID()); } // (only the bosses a fight is kept for: another mod's boss would stay here for good)
 
         // the same raven: the same item, or one with its id (taken back from your grave)
         internal static bool Same(ItemDrop.ItemData a, ItemDrop.ItemData b)
@@ -903,11 +909,11 @@ namespace HuginWhispers
             {
                 List<ZDOID> gone = null;
                 foreach (KeyValuePair<ZDOID, Fight> kv in Fights) if (Time.time - kv.Value.Seen > FightKeepSeconds) { if (gone == null) gone = new List<ZDOID>(); gone.Add(kv.Key); } // (left it long ago, or its fall never reached you)
-                if (gone != null) foreach (ZDOID g in gone) Fights.Remove(g);
+                if (gone != null) foreach (ZDOID g in gone) { Fights.Remove(g); Struck.Remove(g); }
             }
         }
 
-        internal static void ResetFights() { Fights.Clear(); Later.Clear(); Owing.Clear(); }
+        internal static void ResetFights() { Fights.Clear(); Struck.Clear(); Later.Clear(); Owing.Clear(); }
 
         // in the game where the boss dies: tell everyone which and where
         internal static void BossDied(Character c)
@@ -924,6 +930,7 @@ namespace HuginWhispers
             Player by = last != null && last.m_skillRaiseAmount <= Marker ? last.GetAttacker() as Player : null;
             pkg.Write(by != null ? by.GetPlayerID() : 0L);
             pkg.Write(by != null && last.m_damage.m_slash > 0f);
+            pkg.Write(c.GetZDOID()); // which of them (two of a kind may stand side by side)
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcBoss, pkg);
         }
 
@@ -936,17 +943,21 @@ namespace HuginWhispers
                 long felledBy = 0L;
                 bool felledMunin = false;
                 if (pkg.GetPos() < pkg.Size()) { felledBy = pkg.ReadLong(); felledMunin = pkg.ReadBool(); } // (an older game sends no more)
+                ZDOID which = pkg.GetPos() < pkg.Size() ? pkg.ReadZDOID() : ZDOID.None;
                 Player p = Player.m_localPlayer;
                 if (p == null) return;
                 ZDOID key = ZDOID.None;
                 Fight fight = null;
-                foreach (KeyValuePair<ZDOID, Fight> kv in Fights)
+                if (!which.IsNone()) { key = which; Fights.TryGetValue(which, out fight); }
+                else foreach (KeyValuePair<ZDOID, Fight> kv in Fights)
                     if (kv.Value.Prefab == prefab && Vector3.Distance(kv.Value.Last, at) < 40f) { key = kv.Key; fight = kv.Value; break; }
+                bool fought = Struck.Remove(key);
                 if (fight == null) return;
                 Fights.Remove(key);
                 if (Vector3.Distance(p.transform.position, at) > WatchRange * 1.5f) return; // you were not there at the end
                 Memory.OnBoss(p, prefab);
                 PlayerReact.BossDown(p); // a fist to the sky, the ravens up circling
+                if (!fought) { Log("Boss down " + prefab + ": you never struck it, it does not count"); return; }
                 ItemDrop.ItemData h, m;
                 RavenItem.Worn(p, out h, out m);
                 if (Same(fight.Hugin, h)) Nicks.OnBoss(p, h, prefab); // each fall counts for the nicknames
@@ -1492,13 +1503,25 @@ namespace HuginWhispers
     internal static class StrikeCutPatch
     {
         [HarmonyPriority(Priority.Last)]
-        private static void Prefix(HitData hit) { try { Strike.Cut(hit); } catch { } }
+        private static void Prefix(HitData hit) {
+            try
+            {
+                Strike.Cut(hit);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("StrikeCutPatch", pgx); }
+        }
     }
 
     [HarmonyPatch(typeof(Character), "OnDeath")]
     internal static class StrikeBossDeathPatch
     {
-        private static void Prefix(Character __instance) { try { Strike.BossDied(__instance); } catch { } }
+        private static void Prefix(Character __instance) {
+            try
+            {
+                Strike.BossDied(__instance);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("StrikeBossDeathPatch", pgx); }
+        }
     }
 }
 #endif

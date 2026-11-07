@@ -360,13 +360,18 @@ namespace HuginWhispers
                     // a question is always answered, and one who joined in is answered and the talk closed (no talk cut off mid-air)
                     bool must = !join && ((said.Count > 0 && RavenTalk.Asks(said[said.Count - 1])) || (joined >= 0 && (answer || st.Tag.EndsWith("_close"))));
                     if (!must && UnityEngine.Random.value > st.Chance) { if (join || answer) continue; break; }
-                    int to = answer ? joined : st.To;
-                    if (st.Who >= whos.Count || to < 0 || to >= whos.Count || to == st.Who) continue;
+                    int who = st.Who, to = answer ? joined : st.To;
+                    if (who >= whos.Count || to < 0 || to >= whos.Count || to == who) continue;
+                    // two ravens of one player never talk to each other here, and never top each other's tale of «my person»: it is one
+                    // person (the user 2026-11-05: Ньютон «моя людина замкнулась у хаті», his own Відморозок «а мій на даху застряг»)
+                    if (answer && SameOwner(whos[who], whos[to])) { who = 1 - who; if (who == to || SameOwner(whos[who], whos[to])) continue; }
+                    if (join && SameOwner(whos[who], whos[to])) { to = Other(whos, who, to); if (to < 0) continue; }
+                    if (join && lines.Count > 0 && SameOwner(whos[who], whos[lines[lines.Count - 1].Who])) continue;
                     Patterns.ThreadWant = thread;
                     string line = null;
                     for (int tries = 0; tries < 4; tries++)
                     {
-                        line = Compose(dir, whos[st.Who], whos[to], st.Tag, boss);
+                        line = Compose(dir, whos[who], whos[to], st.Tag, boss);
                         if (string.IsNullOrEmpty(line) || !Echoes(line, said)) break;
                     }
                     if (!string.IsNullOrEmpty(line))
@@ -379,13 +384,28 @@ namespace HuginWhispers
                         if (st.Chance >= 1f) return null; // the opening or its answer cannot be said: no talk
                         continue;
                     }
-                    lines.Add(new Line { Who = st.Who, To = to, Text = line });
+                    lines.Add(new Line { Who = who, To = to, Text = line });
                     said.Add(line);
-                    if (join) joined = st.Who;
+                    if (join) joined = who;
                 }
             }
             finally { Patterns.ThreadWant = null; _gossip = false; }
             return lines.Count >= 2 ? lines : null;
+        }
+
+        // one player's two ravens (a perch seat without a player: by its owner's name)
+        private static bool SameOwner(Who a, Who b)
+        {
+            if (a.P != null && b.P != null) return a.P == b.P;
+            string x = a.OwnerName, y = b.OwnerName; // (a perch seat's raven: its owner's name, the player maybe away)
+            return x.Length > 0 && x == y;
+        }
+
+        // one who spoke before the joiner and is another player's (the first two first): -1 none
+        private static int Other(List<Who> whos, int who, int was)
+        {
+            for (int i = 0; i < who; i++) if (i != was && !SameOwner(whos[who], whos[i])) return i;
+            return -1;
         }
 
         // one line: {name} is the speaker's owner (their forms {він|вона}), {friend} the owner of the raven it speaks to

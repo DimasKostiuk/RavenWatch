@@ -8,6 +8,9 @@ namespace HuginWhispers
     // The story window (StoryPanel), «Сюжет»: the quests' track (StoryQuests) — where this character stands, jumps, the world's keys, events.
     internal partial class StoryPanel
     {
+        private readonly Dictionary<StoryQuests.StageDef, string> _waits = new Dictionary<StoryQuests.StageDef, string>();
+        private float _waitsAt;
+
         // ---------------------------------------------------------------- «Сюжет»
         private string _trackPick = "", _worldNew = "", _raise = "";
         private Vector2 _trackList, _trackStages, _trackLog;
@@ -27,11 +30,11 @@ namespace HuginWhispers
             if (StoryQuests.Quests.Count == 0) GUILayout.Label("Жодного. Файли: assets/story/quests (вбудовані) або " + StoryQuests.Folder, _hint);
             foreach (StoryQuests.QuestDef d in StoryQuests.Quests)
             {
-                string st = Story.Quest(p, d.Id);
+                string st = StoryQuests.State(p, d);
                 if (GUILayout.Button(d.Id + (d.Name.Length > 0 ? " — " + d.Name : "") + "  [" + (st.Length > 0 ? st : "не почато") + "]", d.Id == _trackPick ? _sel : GUI.skin.button)) _trackPick = d.Id;
             }
             GUILayout.EndScrollView();
-            if (GUILayout.Button("Перечитати файли")) { StoryFiles.Again(); StoryPeople.Reload(); StoryQuests.Reload(); Note = "Квестів: " + StoryQuests.Quests.Count + ", проблем: " + StoryQuests.Errors.Count; }
+            if (GUILayout.Button("Перечитати файли")) { StoryFiles.ReloadAll(); Note = "Квестів: " + StoryQuests.Quests.Count + ", проблем: " + StoryQuests.Errors.Count; }
             foreach (string e in StoryQuests.Errors) GUILayout.Label("! " + e, _warn);
 
             GUILayout.Space(8);
@@ -41,7 +44,7 @@ namespace HuginWhispers
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(k);
                 int sp = k.IndexOf(' ');
-                if (GUILayout.Button("прибрати", GUILayout.Width(80f))) { if (sp < 0) StoryWorld.SetFlag(k, false); else StoryWorld.SetVar(k.Substring(0, sp), 0); }
+                if (GUILayout.Button("прибрати", GUILayout.Width(80f))) { if (sp < 0) StoryWorld.SetFlag(k, false); else StoryWorld.SetText(k.Substring(0, sp), ""); }
                 GUILayout.EndHorizontal();
             }
             GUILayout.BeginHorizontal();
@@ -67,8 +70,8 @@ namespace HuginWhispers
             // right: the picked quest
             GUILayout.BeginVertical();
             if (q == null) { GUILayout.Label("Обери квест зліва.", _hint); GUILayout.EndVertical(); GUILayout.EndHorizontal(); return; }
-            string state = Story.Quest(p, q.Id), at = Story.StageOf(p, q.Id);
-            GUILayout.Label(q.Id + (q.Name.Length > 0 ? " — " + q.Name : "") + " · " + q.From, _head);
+            string state = StoryQuests.State(p, q), at = StoryQuests.At(p, q);
+            GUILayout.Label(q.Id + (q.Name.Length > 0 ? " — " + q.Name : "") + " · " + q.From + (q.Server ? " · сервера" + (StoryQuests.Leads(p, q) ? "" : " · тебе ще не веде") : ""), _head);
             GUILayout.Label("Стан: " + (state.Length > 0 ? state : "не почато") + (at.Length > 0 ? " · етап: " + at : "")
                 + (q.StartsText.Length > 0 ? " · почнеться сам, коли: " + q.StartsText + (q.Starts != null && StoryCond.All(p, q.Starts) ? " ✓" : " ✗") : " · сам не почнеться"));
             GUILayout.BeginHorizontal();
@@ -91,8 +94,15 @@ namespace HuginWhispers
                 if (GUILayout.Button("→", GUILayout.Width(30f))) StoryQuests.Jump(p, q, s.Id);
                 GUILayout.Label((here ? "▶ " : "") + s.Id + " — " + s.Goal, here ? _head : GUI.skin.label);
                 GUILayout.EndHorizontal();
-                string more = "   чекає: " + StoryQuests.Waits(p, s) + " · далі: " + s.Next;
-                foreach (StoryQuests.Fork f in s.Forks) more += "\n   розвилка: " + f.Text + (StoryCond.All(p, f.When) ? "  ✓" : "");
+                // (conditions may cost rays: asked twice a second for the stages shown, not each pass of the window)
+                if (Time.time >= _waitsAt) { _waits.Clear(); _waitsAt = Time.time + 0.5f; }
+                string more;
+                if (!_waits.TryGetValue(s, out more))
+                {
+                    more = "   чекає: " + StoryQuests.Waits(p, s) + " · далі: " + s.Next;
+                    foreach (StoryQuests.Fork f in s.Forks) more += "\n   розвилка: " + f.Text + (StoryCond.All(p, f.When) ? "  ✓" : "");
+                    _waits[s] = more;
+                }
                 if (s.MarkAt.Length > 0) more += "\n   на мапі: " + s.MarkAt;
                 string chose = s.Ways.Count > 0 ? StoryQuests.Chosen(p, StoryQuests.ChoiceOf(q, s)) : "";
                 if (s.Ways.Count > 0) more += "\n   вибір «" + StoryQuests.ChoiceOf(q, s) + "»: " + (chose.Length > 0 ? chose : "ще ні");
@@ -122,7 +132,7 @@ namespace HuginWhispers
             foreach (string e in StoryQuests.Errors) sb.Append("\n! ").Append(e);
             foreach (StoryQuests.QuestDef d in StoryQuests.Quests)
             {
-                string st = Story.Quest(p, d.Id), at = Story.StageOf(p, d.Id);
+                string st = StoryQuests.State(p, d), at = StoryQuests.At(p, d);
                 sb.Append("\n  ").Append(d.Id).Append(": ").Append(st.Length > 0 ? st : "не почато");
                 StoryQuests.StageDef s = d.Stage(at);
                 if (s != null) sb.Append(" · ").Append(s.Id).Append(" — ").Append(s.Goal).Append(" · чекає ").Append(StoryQuests.Waits(p, s));

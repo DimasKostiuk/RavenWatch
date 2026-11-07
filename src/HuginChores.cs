@@ -230,14 +230,5 @@ namespace HuginWhispers
         private static void Postfix(PlayerStatType stat, float amount, bool cheated) { HuginChores.OnStat(stat, amount, cheated); Nicks.OnStat(stat, amount, cheated); }
     }
 
-    [HarmonyPatch(typeof(Player), "PlacePiece")]
-    internal static class ChorePlantPatch
-    {
-        private static void Postfix(Player __instance, Piece piece, bool cheated)
-        {
-            if (cheated || piece == null || __instance != Player.m_localPlayer) return;
-            if (piece.GetComponent<Plant>() != null) HuginChores.OnPlanted(); // a seed in the ground; other building does not count
-        }
-    }
 }
 #endif

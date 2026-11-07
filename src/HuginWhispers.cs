@@ -130,8 +130,8 @@ namespace HuginWhispers
             _reactiveDelay = Hide("3. Reactive Hugin", "Delay seconds", 45f, "He comes only after the event is this old, so not in the middle of a fight.");
             RavenSpeech.Enabled = Config.Bind("3. Reactive Hugin", "Speech cards", true, "The ravens speak in cards of their own (blue frame Hugin, red Munin) over the raven, or under the hotbar with an arrow when your raven is out of view. Off: the game's small speech bubble.").Value;
             ConfigEntry<float> quipSecs = Hide("3. Reactive Hugin", "Talk seconds", 15f, "How long a quick raven's words stay over it before it flies off.");
-            QuipSeconds = Mathf.Max(3f, quipSecs.Value);
-            quipSecs.SettingChanged += (o, e) => QuipSeconds = Mathf.Max(3f, quipSecs.Value);
+            QuipSeconds = RavenSpeech.Hold(Mathf.Max(3f, quipSecs.Value));
+            quipSecs.SettingChanged += (o, e) => QuipSeconds = RavenSpeech.Hold(Mathf.Max(3f, quipSecs.Value));
             _reactiveMuninChance = Config.Bind("3. Reactive Hugin", "Munin chance percent", 40, new ConfigDescription("Chance that Munin comes instead of Hugin to comment on an event. Either way the raven says one line straight away and flies off.", new AcceptableValueRange<int>(0, 100)));
             if (_reactiveMuninChance.Value == 30) _reactiveMuninChance.Value = 40; // 1.3: Hugin 60 / Munin 40 (the old default moves along)
             UpdateKeep();
@@ -207,6 +207,12 @@ namespace HuginWhispers
             RavenKeys.Bind(Config);
             BindTrust();
             RavenSkills.Animations = Config.Bind(sec, "Ability gestures", true, "The hero makes a gesture on some abilities (fury: the boss power gesture, light: a toast, scream: a roar, scouting: pointing, wings: a challenge, healing: drinking). Everyone sees it.").Value;
+#if RAVEN_NPC && RAVEN_STORY
+            Use(Config.Bind("8. People", "Talk camera", true, "When you talk to a person the camera comes in over your shoulder: you on the left, the person on the right."), v => TalkCamera.On = v);
+#if RAVEN_NPC
+            Use(Config.Bind("8. People", "Instant talks", false, "A talk with a person shows at once: no fading in, no lines one by one."), v => RavenBook.TalkInstant = v);
+#endif
+#endif
             RavenRadial.Enabled = Config.Bind(sec, "Radial menu group", true, "A Ravens group in the game's radial menu (G) with the worn ravens' abilities.").Value;
             Use(Hide(sec, "Munin kill strength: strong creatures", Power.KillSpecial, "Strength Munin gets for killing these creatures (PrefabName:strength, comma-separated; ×1.5 for each star). Any other creature gives 1 (+1 a star)."), v => Power.KillSpecial = v);
             Use(Hide(sec, "Munin kill strength: bosses", Power.KillBosses, "Strength Munin gets for each boss (PrefabName:strength). A boss not on the list (another mod's) gives the next setting."), v => Power.KillBosses = v);
@@ -491,7 +497,7 @@ namespace HuginWhispers
             PerchTurn.Load(); // the raven's turn on a perch tuned in the test window (tab «Розворот»), if any
             FlightTemplates.Load(); // the flight templates (built in + config/RavenWatch/templates)
             SitTemplates.Load();    // the sitting templates (built in + config/RavenWatch/sit_templates)
-            BodyClips.Load();     // the player's own animations (built in + config/RavenWatch/player_anims)
+            BodyClips.Load();     // the player's own animations (built in + BodyClips.Dir)
             SitSystem.Load();       // the sitting body's tuning (tab «Сидіння», sit.txt), if any
             BlackBox.Key = Hide(sec, "Flight black box key", KeyCode.None, "For testing (admins): saves the last 15 s of your ravens' flight (a file in config/RavenWatch/rec and a replay in the test window, tab «Flight»). It only listens: the key still works for the game and other mods. None: off.").Value;
             Outing.On = Config.Bind(sec, "Raven outings", true, "«Adaptive ravens»: now and then a raven leaves the shoulder to stretch its wings (flies along behind you or circles above), then comes back. Never underground, under a roof or in a fight.").Value;
@@ -828,10 +834,13 @@ namespace HuginWhispers
             Home.RegisterRpcs();
 #endif
 #if RAVEN_ITEM && RAVEN_NPC
-            HallSpawn.RegisterRpcs(); // (the Hall of the Watch: its place, its one builder)
+            Locs.RegisterRpcs(); // (the story's places: their rebuild by the author)
 #if RAVEN_STORY
+            StoryQuests.RegisterRpcs(); // (a quest of the server: one answer for the whole world)
+            StoryWatch.RegisterRpcs();  // (a scene seen by everyone near: its pulse, its lines, its camera)
             StoryScenes.RegisterRpcs(); // (a scene's raven: its orders to the players near)
             StoryAir.RegisterRpcs();    // (a scene's storm, bolts, Thor: to every game)
+            StoryAudio.RegisterRpcs();  // (a scene's music for everyone; its sounds to those near)
             StoryHush.RegisterRpcs();   // (a scene's quiet ring: no monsters born or coming near)
 #endif
 #endif
@@ -940,20 +949,7 @@ namespace HuginWhispers
             bool raven = pkg.GetPos() < pkg.Size() && pkg.ReadBool();
             bool own = pkg.GetPos() < pkg.Size() ? pkg.ReadBool() : !raven; // (from an older mod: not told)
             ZDOID id = pkg.GetPos() < pkg.Size() ? pkg.ReadZDOID() : ZDOID.None;
-            Diary.Killed(null, token);
-            Diary.Add(Ev.Kill, token, boss);
-#if RAVEN_ITEM
-            if (raven && Whirl.Quiet()) return; // («Вихор» past its first blows: the kill gives nothing)
-            Power.OnKill(boss, stars, prefab, tamed, token);
-            if (!tamed) HuginChores.OnKilled(id, boss == 1); // (Hugin's gifts helped: remembered here)
-            PerkFx.OnKill(Player.m_localPlayer, boss == 1, tamed); // (held by another game: your blessings on a kill all the same)
-            if (!tamed) Errands.OnKill(prefab, token, stars, boss == 1, raven);
-            if (!tamed) Requests.OnKill(prefab, token, stars, boss == 1, raven, own);
-#if RAVEN_STORY
-            if (!tamed) StoryBus.Kill(prefab, stars, boss == 1);
-#endif
-            if (!tamed) BindRun.OnKill(Player.m_localPlayer); // (the creature was held by another game: a в'язь on a kill fires too)
-#endif
+            KillCredit.Mine(null, token, boss, stars, prefab, tamed, raven, own, id);
         }
 
         private static void OnReply(long sender, ZPackage pkg)
@@ -972,18 +968,15 @@ namespace HuginWhispers
 #endif
 #if RAVEN_ITEM && RAVEN_NPC
             NpcCensus.Tick(); // (the census of our things: a slice a frame, read by those below)
+            NpcHeart.ServerTick(); // (the server: how many live at each heart)
             NpcRescue.ServerTick(); // (the server: people in need heard of at the named hearts)
             NpcStray.ServerTick(); // (the server: one of yours left far off with nobody near — put back where it belongs)
-            HallSpawn.ServerTick(); // (the server: the Hall of the Watch's place, once a world)
-            HallSpawn.Tick(); // (the one who comes near builds it)
-            HallState.ServerTick(); // (the server: a change of the Hall waiting till nobody sees it)
-            HallState.Tick(); // (its state laid on the pieces loaded round you)
-            HallFog.Tick(); // (the abandoned Hall's bluish mist)
-            HallCold.Tick(); // (and its cold, inside)
+            LocModules.ServerTick(); // (the story's places: the server's part)
+            LocModules.Tick(); // (and everyone's)
             NpcMap.Tick(); // (the marks of people in need even with nobody loaded near: throttled inside)
 #endif
 #if RAVEN_ITEM && RAVEN_STORY
-            StoryPeople.ServerTick(); // (the server: the story's people kept once in the world, where they live — Heid)
+            StoryModules.ServerTick(); // (the server: the story's people, a world's first heart)
 #endif
             RavenMsg.Tick();
             // the «для авторів» build: the test window on its own key (no console needed)
@@ -1131,7 +1124,7 @@ namespace HuginWhispers
 #if RAVEN_ITEM
             Plugin me = Instance;
             Player p = Player.m_localPlayer;
-            if (me == null || p == null || p.IsDead() || Mute.SelfMuted || me._pendingKey != null || Group.Waiting) return false;
+            if (me == null || p == null || p.IsDead() || Mute.SelfMuted || me._pendingKey != null || Group.Waiting || RavenSkills.Silenced()) return false; // (Silenced: a story scene playing — a fall or a burn in it brings no raven)
             if (!me._visitsEnabled.Value || !me._reactiveEnabled.Value) return false; // switched off in the settings
             bool munin = UnityEngine.Random.Range(0, 100) < me._reactiveMuninChance.Value;
             if (!CanSpeak(p, munin))
@@ -1447,6 +1440,8 @@ namespace HuginWhispers
         internal static bool Exclamation = true;
         // the raven still has something to say to this player
         internal static bool Waiting { get { return Instance != null && Instance._pendingKey != null; } }
+        // a scene begins (StoryScenes: it never waits for a raven): the visit nobody heard runs out now, the way it runs out by itself
+        internal static void RunOutVisit() { if (Instance != null) Instance._pendingSince = Time.time - 1000000f; }
         // a raven still holding an older visit's text (same key) is not this visit's raven
         internal static bool IsPending(Raven.RavenText text)
         {
@@ -1794,7 +1789,7 @@ namespace HuginWhispers
             if (StoryPanel.Wants) __result = true; // the story window has the mouse (Shift+F8 toggles)
 #endif
 #if RAVEN_NPC
-            if (HallPanel.Wants) __result = true; // the Hall's window has the mouse (Shift+F9 toggles)
+            if (LocPanel.Wants) __result = true; // the Hall's window has the mouse (Shift+F9 toggles)
 #endif
 #endif
         }

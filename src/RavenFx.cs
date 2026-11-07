@@ -220,7 +220,7 @@ namespace HuginWhispers
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Effect " + name + " failed: " + e.Message); return false; }
         }
 
-        internal static void Forget() { Found.Clear(); _loaded = null; } // a new world: other objects loaded
+        internal static void Forget() { Found.Clear(); _loaded = null; AudioBank.Unload(); } // a new world: other objects loaded
 
         // when the character appears: the one long look through everything loaded happens now, not mid-game
         internal static void Warm()

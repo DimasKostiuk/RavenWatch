@@ -1,3 +1,5 @@
 vohnyshche fire_pit 1.14 0 2.37
 lava piece_logbench01 4.848 0.024 -2.635
 lizhko bed -1.48 0.02 -1.031
+stovp wood_pole_log 0.508 1 -1.399
+kamin RavenWatch_story_kamin_torvalda 2.668 0.005 -4.542

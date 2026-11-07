@@ -1,0 +1,181 @@
+clip take_book
+length 8
+loop 0
+pivot 1.1
+curve ease
+fade 0.6 0.8
+mode Spine1 body
+mode Spine2 body
+part takes 0 2.6 hold
+part turns 2.6 8 hold
+mark 7.6 turned
+want 1.1 lean forward 25
+want 2.6 hand right near 0.2 1.16 0.42 0.15
+touch table 0.79 0.38 0.5
+want 3-8 hand right holds
+want 3-8 hand left holds
+want 2.6 hand left near -0.18 1.12 0.33 0.1
+
+say у сцені в хаті фізично брати книгу в руки, трохи крутити по осі; одну руку нижче, не симетрично; брати однією рукою, другу дотягувати; руки ближче до країв; праву нижче, пальці дивно тримають; ліва рука в кулак перед книгою — фігня (користувач 2026-11-07)
+want 4 head down 10
+
+# Книга воронів (сцена echo), ~30 × 8 × 22 см. Лежить на столі (w 0), двома руками за бокові краї піднімає до грудей (w 1), нахиляє обкладинкою до себе й трохи крутить. Чернетка: числа звірити на кадрах.
+# хват у системі книги: зап'ясток зовні бокового краю (половина ширини 0,15), долоня до книги, пальці вздовж неї
+# нахиляється до столу й випрямляється
+# дивиться на книгу, за нею
+# пальці тримають
+
+0 @Prop 0 0.83 0.63
+2.4 @Prop 0 1.16 0.42
+
+0 @Prop.w 0 0 0
+1.1 @Prop.w 0 0 0
+2.2 @Prop.w 1 0 0
+8 @Prop.w 1 0 0
+
+0 @Prop.r -50 0 0
+2.6 @Prop.r -50 0 0
+3.8 @Prop.r -50 22 0
+5.2 @Prop.r -50 -22 0
+6.4 @Prop.r -50 0 0
+8 @Prop.r -50 0 0
+
+0 @RightHand 0.24 0.95 0.06
+0.2 @RightHand 0.24 0.95 0.06
+1.1 @RightHand 0.2 0.88 0.63
+2.4 @RightHand 0.2 1.16 0.42
+8 @RightHand 0.2 1.16 0.42
+
+0 @RightHand.w 0 0 0
+0.2 @RightHand.w 0 0 0
+1 @RightHand.w 1 0 0
+8 @RightHand.w 1 0 0
+
+0 @LeftHand -0.24 0.95 0.06
+0.2 @LeftHand -0.24 0.95 0.06
+1.1 @LeftHand -0.24 0.95 0.06
+1.7 @LeftHand -0.24 0.95 0.08
+2.2 @LeftHand -0.22 1.04 0.28
+2.4 @LeftHand -0.08 1.08 0.46
+8 @LeftHand -0.08 1.08 0.46
+
+0 @LeftHand.w 0 0 0
+0.2 @LeftHand.w 0 0 0
+1.6 @LeftHand.w 0 0 0
+2.4 @LeftHand.w 1 0 0
+8 @LeftHand.w 1 0 0
+
+0 @RightHand.on 0.18 0.04 -0.06
+
+0 @RightHand.on.f 0 -1 0.25
+
+0 @RightHand.on.n -1 0 0
+
+0 @RightHand.on.w 0 0 0
+0.5 @RightHand.on.w 0 0 0
+1.2 @RightHand.on.w 1 0 0
+8 @RightHand.on.w 1 0 0
+
+0 @LeftHand.on -0.18 0.04 -0.09
+
+0 @LeftHand.on.f 0 -1 0.25
+
+0 @LeftHand.on.n 1 0 0
+
+0 @LeftHand.on.w 0 0 0
+0.5 @LeftHand.on.w 0 0 0
+1.8 @LeftHand.on.w 0 0 0
+2.6 @LeftHand.on.w 1 0 0
+8 @LeftHand.on.w 1 0 0
+
+0 Spine2 0 0 0
+1.1 Spine2 30 0 0
+2.6 Spine2 5 0 0
+8 Spine2 5 0 0
+
+0 @Look 0 1.4 2
+1 @Look 0 0.85 0.6
+2.6 @Look 0 1.15 0.36
+3.8 @Look 0.05 1.15 0.36
+5.2 @Look -0.05 1.15 0.36
+6.4 @Look 0 1.15 0.36
+8 @Look 0 1.15 0.36
+
+0 @Look.w 0 0 0
+0.8 @Look.w 0.85 0 0
+8 @Look.w 0.85 0 0
+
+0 RightHandIndex1 0 0 0
+2.4 RightHandIndex1 40 0 0
+8 RightHandIndex1 40 0 0
+
+0 LeftHandIndex1 0 0 0
+2.4 LeftHandIndex1 40 0 0
+8 LeftHandIndex1 40 0 0
+
+0 RightHandMiddle1 0 0 0
+2.4 RightHandMiddle1 40 0 0
+8 RightHandMiddle1 40 0 0
+
+0 LeftHandMiddle1 0 0 0
+2.4 LeftHandMiddle1 40 0 0
+8 LeftHandMiddle1 40 0 0
+
+0 Spine1 0 0 0
+1.1 Spine1 30 0 0
+2.6 Spine1 3 0 0
+8 Spine1 3 0 0
+
+0 move 0 0 0
+0.3 move 0 0 0
+1.1 move 0 -0.18 0.2
+2.4 move 0 0 0
+8 move 0 0 0
+
+0 RightHandIndex2 0 0 0
+2.4 RightHandIndex2 35 0 0
+8 RightHandIndex2 35 0 0
+
+0 LeftHandIndex2 0 0 0
+2.4 LeftHandIndex2 35 0 0
+8 LeftHandIndex2 35 0 0
+
+0 RightHandMiddle2 0 0 0
+2.4 RightHandMiddle2 35 0 0
+8 RightHandMiddle2 35 0 0
+
+0 LeftHandMiddle2 0 0 0
+2.4 LeftHandMiddle2 35 0 0
+8 LeftHandMiddle2 35 0 0
+
+0 RightHandRing1 0 0 0
+2.4 RightHandRing1 40 0 0
+8 RightHandRing1 40 0 0
+
+0 LeftHandRing1 0 0 0
+2.4 LeftHandRing1 40 0 0
+8 LeftHandRing1 40 0 0
+
+0 RightHandPinky1 0 0 0
+2.4 RightHandPinky1 40 0 0
+8 RightHandPinky1 40 0 0
+
+0 LeftHandPinky1 0 0 0
+2.4 LeftHandPinky1 40 0 0
+8 LeftHandPinky1 40 0 0
+
+0 RightHandRing2 0 0 0
+2.4 RightHandRing2 35 0 0
+8 RightHandRing2 35 0 0
+
+0 RightHandPinky2 0 0 0
+2.4 RightHandPinky2 35 0 0
+8 RightHandPinky2 35 0 0
+
+0 LeftHandRing2 0 0 0
+2.4 LeftHandRing2 35 0 0
+8 LeftHandRing2 35 0 0
+
+0 LeftHandPinky2 0 0 0
+2.4 LeftHandPinky2 35 0 0
+8 LeftHandPinky2 35 0 0

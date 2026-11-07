@@ -126,7 +126,7 @@ namespace HuginWhispers
             {
                 GameObject pf = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(g) : null;
                 ItemDrop id = pf != null ? pf.GetComponent<ItemDrop>() : null;
-                if (id == null) continue;
+                if (!NpcGear.Wearable(id)) continue; // (what it would wear in the world: not a creature's attack)
                 int h = g.GetStableHashCode();
                 switch (id.m_itemData.m_shared.m_itemType)
                 {
@@ -147,6 +147,9 @@ namespace HuginWhispers
             _vis.SetChestItem(chest); _vis.SetLegItem(legs); _vis.SetHelmetItem(helmet);
             _vis.SetShoulderItem(shoulder, 0, 0); _vis.SetUtilityItem(utility);
             _vis.SetRightItem(right, 0); _vis.SetLeftItem(left, 0, 0);
+            NpcPersona w = NpcPersona.OfTemplate(d); // (its height and build as in the world: NpcBody)
+            if (Mathf.Abs(_body.transform.localScale.y - w.Height) > 0.001f) _body.transform.localScale = Vector3.one * w.Height;
+            BodyBuild.Set(_vis, w.Build); // (nothing unless it changed)
         }
 
         private static int Hash(string item) { return string.IsNullOrEmpty(item) || ObjectDB.instance == null || ObjectDB.instance.GetItemPrefab(item) == null ? 0 : item.GetStableHashCode(); }

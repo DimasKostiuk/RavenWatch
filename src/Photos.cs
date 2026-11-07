@@ -8,9 +8,9 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // The pictures of the Workshop's models (a perch and a raven table in the hammer, a thing for a raven in the book,
-    // an item in the inventory). Taken by hand in the test window's tab «Фото» (PhotoPanel) and kept as
-    // config/RavenWatch/photos/<id>.png (+ <id>.txt, the camera it was taken with); the mod's own ones are inside the
-    // DLL (assets/photos/<id>.png). A model without a picture is photographed by itself (Auto), the same way.
+    // an item in the inventory). Taken by hand in the test window's tab «Фото» (PhotoPanel) and kept as <id>.png (+ <id>.txt,
+    // the camera it was taken with) in IconPhotos.Dir: on the author's machine the mod's own assets/photos (one copy, built into the
+    // DLL), elsewhere config/RavenWatch/photos. A model without a picture is photographed by itself (Auto), the same way.
     //
     // A shot is taken twice, on black and on white: the difference gives clean transparent edges whatever the game's
     // shaders write into the alpha channel (some write 0 there, and such a model came out invisible).
@@ -214,7 +214,18 @@ namespace HuginWhispers
     internal static class IconPhotos
     {
         internal const int Out = 128; // the icon (mipmapped: the inventory draws it smaller, smoothly)
-        internal static string Dir { get { return Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "photos"); } }
+        // where photos are read and written: one copy (2026-11-06: a config copy won over the built-in, as clips did). The author's machine
+        // (StoryFiles.Source): the mod's own assets/photos, what the build ships; elsewhere config/RavenWatch/photos (a player's own)
+        internal static string Dir
+        {
+            get
+            {
+#if RAVEN_NPC
+                if (StoryFiles.Source != null) { DirectoryInfo up = Directory.GetParent(StoryFiles.Source); if (up != null) return Path.Combine(up.FullName, "photos"); } // (assets/story → assets)
+#endif
+                return Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "photos");
+            }
+        }
         private static readonly Dictionary<string, Sprite> Cache = new Dictionary<string, Sprite>();
 
         private static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Photos: " + s); }
@@ -298,9 +309,15 @@ namespace HuginWhispers
         {
             try
             {
-                if (File.Exists(FileOf(id))) File.Delete(FileOf(id));
+                string back = Path.Combine(Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "photos_backup"), DateTime.Now.ToString("MMdd_HHmmss")); // (on the author's machine the mod's own photo: kept aside first)
                 string t = Path.Combine(Dir, id + ".txt");
-                if (File.Exists(t)) File.Delete(t);
+                foreach (string f in new[] { FileOf(id), t })
+                {
+                    if (!File.Exists(f)) continue;
+                    Directory.CreateDirectory(back);
+                    File.Copy(f, Path.Combine(back, Path.GetFileName(f)), true);
+                    File.Delete(f);
+                }
             }
             catch (Exception e) { Log("remove " + id + ": " + e.Message); }
             Cache.Remove(id);

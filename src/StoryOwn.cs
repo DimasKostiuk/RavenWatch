@@ -7,21 +7,22 @@ namespace HuginWhispers
     // Your own raven (story-lore.md «Хто має воронів», the prologue): the one that waited by your name all the centuries
     // and found you again. Not Haldor's stray and not Odin's new one — yours, from your first life (the raven keeps the
     // mark OwnKey; its lines may ask). It lost the old memory in the fog as you did.
-    //   given back   you never had a raven of that kind: a new one, awake from the start (no ritual), first level, bound
-    //                to you; it flies in to your shoulder a few seconds later (Trust.SendAway → back: Back)
-    //   melted       you have one of that kind already (bought, Odin's, any): your own melts into it — the one on your
-    //                shoulder at once, else the next time one of yours of that kind sits there (MergePrefix); its bar of
-    //                this level fills (the ritual still asks its heads) and it is your own from then on
+    //   given back   you never had a raven at all: a new one of that kind, yours (Trust.Promise) but asleep, as one
+    //                bought (the user 2026-11-03): the ritual at the Sacrificial stones wakes it, as ever. «own <kind>»:
+    //                it flies in to your shoulder a few seconds later (Trust.SendAway → back: Back); «own <kind> here»:
+    //                the scene's bird that flew onto your shoulder (bird come … as <kind>, bird shoulder) is it at once
+    //   none         you have a raven already (any kind, bought or Odin's): the prologue gives no second one — the
+    //                scene plays the same, nothing flies in (the user 2026-11-03: everyone walks the same prologue)
+    // The book: «book» (an action) — Eirik's house gives it (RavenBook.Give: till then a raven only sits).
     // The story's parts (registered by StoryModules): the condition «ownraven hugin|munin|both|any|none» (a raven of that
-    // kind is yours: Trial.HadKind), the scene step «own hugin|munin», its landing (Trust.BackFrom).
+    // kind is yours: Trial.HadKind), the scene step «own hugin|munin», its landing (Trust.BackFrom), the action «book»
+    // and the condition «book» (he has it: the prologue hurries for one who bought a raven without it).
     internal static class StoryOwn
     {
         internal const string Why = "story_own";                    // its flight in to you (Trust.SendAway)
         internal const string OwnKey = "RavenWatch_own";            // on the raven: your own, from your first life
-        private const string MergePrefix = "RavenWatch_ownMerge_";  // on the character: your own waits to melt into the next of its kind you wear (m / h)
         internal static float FlySeconds = 4f;
         private static bool _conds, _steps;
-        private static float _next;
 
         // ---------------------------------------------------------------- the story's words for it
         internal static void Conds()
@@ -42,35 +43,75 @@ namespace HuginWhispers
                         default: return !h && !m;
                     }
                 } });
+            StoryCond.Register("book", new StoryCond.Kind { Usage = "book   (книга воронів уже в гравця: RavenBook.Given)", Test = (p, a) => RavenBook.Given(p) });
+            StoryActions.Register("book", new StoryActions.Kind { Min = 0, Usage = "book   (книга воронів — тепер у тебе: відкриває книгу, коло й накази)",
+                Do = (p, q, w, rest) => { if (!RavenBook.Given(p)) { RavenBook.Give(p); RavenMsg.Center(p, Lang.T("Книга воронів тепер у тебе.")); StoryBus.Raise("book", "", 0); } return null; } });
         }
 
         internal static void Steps()
         {
             if (_steps) return;
             _steps = true;
-            StoryScenes.Register("own", new StoryScenes.StepKind { Min = 1, Lasting = true, Usage = "own hugin|munin   (твій власний ворон прилітає; вже є такий — зливається з ним)",
+            StoryScenes.Register("own", new StoryScenes.StepKind(StoryScenes.StepSeen.Own) { Min = 1, Lasting = true, Usage = "own hugin|munin [here]   (here: птах сцени на плечі стає ним; твій власний ворон прилітає — лише якщо в тебе ще нема жодного)",
                 Check = st => st.W[1] != "hugin" && st.W[1] != "munin" ? "own hugin|munin" : null,
-                Begin = (p, st) => Return(p, st.W[1] == "munin") });
+                Begin = (p, st) => Return(p, st.W[1] == "munin", st.W.Length > 2 && st.W[2] == "here") });
             Trust.BackFrom[Why] = (p, munin, item) => Back(p, munin); // (landed on your shoulder)
+            StoryScenes.Register("raven", new StoryScenes.StepKind(StoryScenes.StepSeen.Own) { Min = 2, Usage = "raven hugin|munin sit <місце> [side <м>] · raven hugin|munin back   (твій ворон з плеча сідає там і повертається; без ціни)",
+                Check = st => (st.W[1] != "hugin" && st.W[1] != "munin") || (st.W[2] != "sit" && st.W[2] != "back") || (st.W[2] == "sit" && st.W.Length < 4) ? "raven hugin|munin sit <місце> | back" : null,
+                Begin = (p, st) => Perch(p, st.W[1] == "munin", st.W[2] == "sit" ? st.W[3] : null, st.W.Length > 5 && st.W[4] == "side" ? Errands.F(st.W[5], 0f) : 0f) });
+        }
+
+        // your raven off your shoulder onto a place of the story (the perches' own spot, as an order but free) — or back
+        // (null); one not on you: nothing (said)
+        internal static void Perch(Player p, bool munin, string place, float side = 0f)
+        {
+            ItemDrop.ItemData item = p != null ? RavenSeat.On(p, munin) : null;
+            if (item == null) { StoryScenes.Note("raven: " + (munin ? "Муніна" : "Хугіна") + " нема — крок пропущено"); return; }
+            if (place == null) { Perches.CallSilent(p, item, munin); if (munin) _munOut = false; else _hugOut = false; return; }
+            Vector3 at;
+            if (!StoryWhere.Top(place, p.transform.position, side, out at)) { StoryScenes.Note("raven sit: нема місця «" + place + "»"); return; }
+            Vector3 face = p.transform.position - at; face.y = 0f;
+            Perches.ForScene = true;
+            try
+            {
+                ItemDrop.ItemData on;
+                string why = Perches.WhyNot(p, munin, out on); // (its refusal goes to the screen only: said in the log too)
+                if (why == null) why = SitHere.Place(p, munin, at, Quaternion.LookRotation(face.sqrMagnitude > 0.01f ? face.normalized : Vector3.forward), null, false);
+                if (why != null) StoryScenes.Note("raven sit: " + why);
+                else if (munin) _munOut = true; else _hugOut = true;
+            }
+            finally { Perches.ForScene = false; }
+        }
+
+        // a scene that ended with your raven still on its seat (stopped between «raven sit» and «raven back»): it comes back, one with no book could not call it
+        private static bool _hugOut, _munOut;
+        internal static void SceneEnd(bool broken)
+        {
+            Player p = Player.m_localPlayer;
+            if (_hugOut) { _hugOut = false; Perch(p, false, null); }
+            if (_munOut) { _munOut = false; Perch(p, true, null); }
         }
 
         // ---------------------------------------------------------------- your own raven
-        internal static void Return(Player p, bool munin)
+        internal static void Return(Player p, bool munin, bool here = false)
         {
             if (p == null) return;
-            if (Trial.HadKind(p, munin)) { MeltOrWait(p, munin); return; }
+            if (Trial.HadKind(p, false) || Trial.HadKind(p, true)) { if (here) StoryScenes.BirdVanish(); StoryScenes.Note("own: у гравця вже є ворон — свій не прилітає"); return; } // (one raven a prologue, and only to one who has none)
             ItemDrop.ItemData item = RavenItem.NewRaven(munin);
             if (item == null) { StoryScenes.Note("own: нема предмета ворона"); return; }
             item.m_customData[OwnKey] = "1";
             item.m_customData[Breeds.Key] = Breeds.None; // (your own raven is a plain black one, no breed — the user 2026-11-02)
-            Trust.WakeOwn(item, p);
+            Trust.Promise(item, p); // (yours, asleep: the ritual wakes it)
             if (!p.GetInventory().AddItem(item))
             {
+                if (here) StoryScenes.BirdVanish(); // (the bird on your shoulder: the raven is at your feet now)
                 ItemDrop.DropItem(item, 1, p.transform.position + p.transform.forward + Vector3.up, Quaternion.identity); // (a full bag: at your feet)
                 RavenMsg.Center(p, Lang.F("{0} сів біля тебе — у торбі нема місця.", Plugin.RavenName(munin)));
                 return;
             }
+            if (here) Shoulder.SeatedNext(munin); // (no fly-in: the picture is on your shoulder already)
             RavenSeat.Sit(p, item, true);
+            if (here) { StoryScenes.BirdVanishWhen(() => Shoulder.Present(p, munin)); Back(p, munin); StoryScenes.Note("own: " + (munin ? "Мунін" : "Хугін") + " тепер твій (на плечі)"); return; } // (the bird on your shoulder is it: the same frame)
             Trust.SendAway(item, FlySeconds, Why); // (on your shoulder in a moment — it flies in)
             RavenFx.Play("sfx_raven_kaw", p.transform.position + p.transform.forward * 25f + Vector3.up * 12f, Quaternion.identity); // (from afar)
             StoryScenes.Note("own: " + (munin ? "Мунін" : "Хугін") + " летить до гравця");
@@ -81,33 +122,8 @@ namespace HuginWhispers
         {
             if (p == null) return;
             RavenAura.BackFromOdin(p, munin);
-            RavenMsg.Center(p, munin ? Lang.T("Мунін знайшов тебе.") : Lang.T("Хугін знайшов тебе."));
+            RavenMsg.Center(p, munin ? Lang.T("Мунін знайшов тебе. Він ще спить: розбуди його біля Жертовних каменів.") : Lang.T("Хугін знайшов тебе. Він ще спить: розбуди його біля Жертовних каменів."));
             StoryBus.Raise("own_back", munin ? "munin" : "hugin", 0);
-        }
-
-        private static void MeltOrWait(Player p, bool munin)
-        {
-            ItemDrop.ItemData h, m;
-            RavenItem.Worn(p, out h, out m);
-            ItemDrop.ItemData it = munin ? m : h;
-            if (it != null && Trust.IsOwner(it, p) && Trust.Active(it)) { Melt(p, it, munin); return; }
-            p.m_customData[MergePrefix + (munin ? "m" : "h")] = "1";
-            RavenFx.Play("sfx_raven_kaw", p.transform.position + p.transform.forward * 25f + Vector3.up * 12f, Quaternion.identity);
-            RavenMsg.Center(p, munin ? Lang.T("Щось шукало тебе — і не знайшло Муніна на плечі.\nКоли він сяде, згадає.") : Lang.T("Щось шукало тебе — і не знайшло Хугіна на плечі.\nКоли він сяде, згадає."));
-            StoryBus.Raise("own_wait", munin ? "munin" : "hugin", 0);
-        }
-
-        private static void Melt(Player p, ItemDrop.ItemData item, bool munin)
-        {
-            p.m_customData.Remove(MergePrefix + (munin ? "m" : "h"));
-            if (item.m_customData != null && item.m_customData.ContainsKey(OwnKey)) return; // (your own already)
-            item.m_customData[OwnKey] = "1";
-            Trust.FillBar(item);
-            LastChance.Flash(p, p.transform.position + Vector3.up * 1.2f, munin ? new Color(1f, 0.3f, 0.2f) : new Color(0.6f, 0.8f, 1f));
-            RavenFx.Play("sfx_raven_kaw", p.transform.position + Vector3.up * 2f, Quaternion.identity);
-            RavenMsg.Center(p, munin ? Lang.T("Мунін здригнувся — і ніби щось пригадав.\nТепер він знає, чий він.") : Lang.T("Хугін здригнувся — і ніби щось пригадав.\nТепер він знає, чий він."));
-            Backup.Save(p, item);
-            StoryBus.Raise("own_melt", munin ? "munin" : "hugin", 0);
         }
 
         // ---------------------------------------------------------------- the author's test (raven story own / unown)
@@ -133,25 +149,9 @@ namespace HuginWhispers
             }
             int copies = Backup.ForgetKind(p, munin);
             p.m_customData.Remove(munin ? Trial.HadMuninKey : Trial.HadHuginKey);
-            p.m_customData.Remove(MergePrefix + (munin ? "m" : "h"));
             return (munin ? "Мунін" : "Хугін") + ": забрано воронів " + gone + ", копій " + copies + ". Тепер цього виду в персонажа нема (ворони вдома на сідалах лишились у світі).";
         }
 
-        // every pass of the story (StoryQuests.Tick): your own that waits melts into the next one of its kind you wear
-        internal static void Tick(Player p)
-        {
-            if (p == null || Time.time < _next) return;
-            _next = Time.time + 2f;
-            for (int i = 0; i < 2; i++)
-            {
-                bool munin = i == 1;
-                if (!p.m_customData.ContainsKey(MergePrefix + (munin ? "m" : "h"))) continue;
-                ItemDrop.ItemData h, m;
-                RavenItem.Worn(p, out h, out m);
-                ItemDrop.ItemData it = munin ? m : h;
-                if (it != null && Trust.IsOwner(it, p) && Trust.Active(it) && !Trust.Away(it)) Melt(p, it, munin);
-            }
-        }
     }
 }
 #endif

@@ -17,9 +17,11 @@ namespace HuginWhispers
         private void Widen()
         {
             if (Margin <= 0f) return;
-            for (int i = Mathf.Max(1, _next); i < _path.Count - 1; i++)
+            float walked = 0f; // (ShapeFar m ahead: its way is asked afresh long before it gets past them, and a long way had every corner looked over each time)
+            for (int i = Mathf.Max(1, _next); i < _path.Count - 1 && walked < ShapeFar; i++)
             {
                 Vector3 a = _path[i - 1], c = _path[i], b = _path[i + 1];
+                walked += Utils.DistanceXZ(a, c);
                 Vector3 v1 = c - a, v2 = b - c; v1.y = 0f; v2.y = 0f;
                 if (v1.sqrMagnitude < 0.01f || v2.sqrMagnitude < 0.01f) continue;
                 v1.Normalize(); v2.Normalize();
@@ -31,7 +33,7 @@ namespace HuginWhispers
                     Vector3 p = NpcKit.Floor(c + outward * Margin * k);
                     if (Mathf.Abs(p.y - c.y) > 0.5f || Physics.CheckCapsule(p + Vector3.up * 0.5f, p + Vector3.up * 1.5f, 0.35f, Solids, QueryTriggerInteraction.Ignore) || TooSteep(p)) continue;
                     Vector3 v;
-                    if (!NpcKit.Valid(out v, p, 0.4f, _m.m_pathAgentType) || Utils.DistanceXZ(v, p) > 0.3f) continue; // (on the map: a body can stand there)
+                    if (!NpcKit.Valid(out v, p, 0.4f, NpcKit.Walker) || Utils.DistanceXZ(v, p) > 0.3f) continue; // (on the map: a body can stand there)
                     if (!Clear(a, p) || !Clear(p, b)) continue; // (the way to it and on free: no diagonal into a door frame)
                     _path[i] = p;
                     if (_trip != null) _trip.Widened++;
@@ -50,11 +52,12 @@ namespace HuginWhispers
         // at the same height, the way to it and on from it free. Asked with its way (every Repath s), not every frame.
         internal static float StepDrop = 0.6f;
         private static readonly int Walls = LayerMask.GetMask("piece", "Default", "static_solid");
+        private readonly List<Vector3> _dense = new List<Vector3>();
         private void Shape()
         {
             if (Berth <= 0f || _path.Count < 2) return;
             // denser: a point each Dense m along its way near ahead (its corners kept)
-            List<Vector3> d = new List<Vector3>();
+            List<Vector3> d = _dense; d.Clear();
             float walked = 0f;
             for (int i = 0; i < _path.Count; i++)
             {
@@ -85,7 +88,7 @@ namespace HuginWhispers
                     Vector3 q = NpcKit.Floor(p + right * shift * k);
                     if (Mathf.Abs(q.y - p.y) > 0.4f || TooSteep(q)) continue;
                     Vector3 v;
-                    if (!NpcKit.Valid(out v, q, 0.4f, _m.m_pathAgentType) || Utils.DistanceXZ(v, q) > 0.3f) continue;
+                    if (!NpcKit.Valid(out v, q, 0.4f, NpcKit.Walker) || Utils.DistanceXZ(v, q) > 0.3f) continue;
                     if (!Clear(_path[i - 1], q) || !Clear(q, _path[i + 1])) continue;
                     _path[i] = q;
                     if (_trip != null) _trip.Shaped++;
@@ -119,7 +122,7 @@ namespace HuginWhispers
             if (_next >= _path.Count) return aim;
             Vector3 corner = _path[_next];
             if (Utils.DistanceXZ(me, corner) >= ahead) return aim; // (the corner farther than its aim: on a straight bit)
-            if (now >= _carrotAt) { _carrotAt = now + 0.2f; _carrotClear = Body(me, aim); }
+            if (now >= _carrotAt) { _carrotAt = now + 0.2f * _slow; _carrotClear = Body(me, aim); }
             return _carrotClear ? aim : corner;
         }
 
@@ -139,23 +142,25 @@ namespace HuginWhispers
             return Physics.Raycast(p + Vector3.up * 0.8f, Vector3.down, out h, 1.6f, Ground, QueryTriggerInteraction.Ignore) && Vector3.Angle(h.normal, Vector3.up) > Steep;
         }
 
-        // its way ended short of its goal: the way back from its goal ends short of it too, on the far side of the gap; when
+        // its way ended short of its goal: the way back from its goal ends short of it too, on the far side of the gap; a body walks the line
+        // between them: a link of the map is made there (NpcWalkLinks) and it walks across; else, when
         // the two ends are near, nothing stands between and the step is one a body takes (down a little, up a step), the
         // far end and the way on from it are put after its own: it walks across (the map has a hole there — the body does not)
-        internal static float Gap = 4f, GapDown = 3f, GapUp = 0.6f;
+        internal static float Gap = 4f, GapDown = 0.6f, GapUp = 0.6f; // (a step a body takes, up or down: 2026-11-06 it was 3 m down, and people walked off raised floors and fell — measured, JoltWatch)
         private void Bridge(Pathfinding pf, Vector3 to)
         {
             Vector3 end = _path[_path.Count - 1];
             _ask.Clear();
+            _asksNow++;
             long perf = NpcPerf.Now();
-            bool ok = pf.GetPath(to, end, _ask, _m.m_pathAgentType, false, true, false);
+            bool ok = pf.GetPath(to, end, _ask, NpcKit.Walker, false, true, false);
             NpcPerf.Add(PerfPath, perf);
             if (!ok || _ask.Count == 0) return;
             Vector3 far = _ask[_ask.Count - 1]; // (the nearest it gets to us from its goal's side)
             float dy = far.y - end.y;
-            if (Utils.DistanceXZ(end, far) > Gap || dy > GapUp || dy < -GapDown || !Clear(end, far)) { if (_trip != null) _trip.NoBridge++; return; }
-            List<Vector3> on = new List<Vector3>(_ask); on.Reverse(); // (from the far end on to its goal)
-            _path.AddRange(on);
+            bool linked = LinkAcross(end, far); // (a body walks it: a link of the map from now on — NpcWalkLinks)
+            if (!linked && (Utils.DistanceXZ(end, far) > Gap || dy > GapUp || dy < -GapDown || !Clear(end, far))) { if (_trip != null) _trip.NoBridge++; return; }
+            for (int i = _ask.Count - 1; i >= 0; i--) _path.Add(_ask[i]); // (from the far end on to its goal)
             _partial = Utils.DistanceXZ(_path[_path.Count - 1], to) > _near + 0.5f;
             if (_trip != null) _trip.Bridges++;
         }
@@ -173,7 +178,7 @@ namespace HuginWhispers
         {
             float now = Time.time;
             if (now < _turnAt) return _turn == 0f ? want : Quaternion.Euler(0f, _turn, 0f) * want;
-            _turnAt = now + 0.1f;
+            _turnAt = now + 0.1f * _slow;
             if (!Blocked(me, want)) { if (now > _turnKeep) _turn = 0f; return _turn == 0f || Blocked(me, Quaternion.Euler(0f, _turn, 0f) * want) ? Clean(want) : Quaternion.Euler(0f, _turn, 0f) * want; }
             if (_turn != 0f && !Blocked(me, Quaternion.Euler(0f, _turn, 0f) * want)) { _turnKeep = now + 0.4f; return Quaternion.Euler(0f, _turn, 0f) * want; } // (the turn it took: kept while it still frees it)
             foreach (float t in Turns)
@@ -188,7 +193,7 @@ namespace HuginWhispers
         }
         private Vector3 Clean(Vector3 want) { _turn = 0f; return want; }
 
-        private static bool Blocked(Vector3 me, Vector3 dir)
+        private bool Blocked(Vector3 me, Vector3 dir)
         {
             RaycastHit h;
             if (!Physics.CapsuleCast(me + Vector3.up * 0.65f, me + Vector3.up * 1.4f, 0.3f, dir, out h, Look, Things2, QueryTriggerInteraction.Ignore)) return false;
@@ -196,7 +201,7 @@ namespace HuginWhispers
             Piece p = h.collider.GetComponentInParent<Piece>();
             if (p != null) { string n = p.gameObject.name; if (n.IndexOf("stair", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("ramp", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("ladder", StringComparison.OrdinalIgnoreCase) >= 0) return false; } // (walked on, not round)
             Door door = p != null ? p.GetComponentInChildren<Door>() : null;
-            if (door != null) return NpcDoors.Closed(door) && !NpcDoors.Usable(door, null); // (a door: through it, DoorOnWay opens it — but one shut to people, a story's gate, stands as a wall)
+            if (door != null) return NpcDoors.Closed(door) && !NpcDoors.Usable(door, _m); // (a door: through it, DoorOnWay opens it — but one shut to it, a story's gate, a player's house, stands as a wall)
             return true;
         }
     }

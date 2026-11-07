@@ -1,173 +1,427 @@
 # Сцени прологу (story-lore.md «Пролог», «Хто має воронів»). Режисер — StoryScenes.cs; формат — у його шапці.
 # Ворон Ейріка: Мунін без Гугіна, чорний з попелясто-сивими крилами — пам'ять першої Варти; говорить уламками.
-# Свій ворон гравця (крок own): чекав біля його імені століттями; старої пам'яті теж не має — туман.
-# Свій ворон — лише в особистому пролозі (сліди Муніна й Хугіна); Гейд ворона не дає.
+# Свій ворон гравця (крок own): чекав біля його імені століттями; старої пам'яті теж не має — туман. Прилітає лише
+# тому, у кого воронів ще нема (пролог однаковий для всіх; другого ворона не дає).
+# Книгу воронів лишає Ейрік у хаті (крок do book): до неї ворон лише сидить на плечі.
+# Сцени особистого прологу — «alone: yes»: поки грають, інших гравців у твоїй грі не видно.
 # РЕПЛІКИ — ЧЕРНЕТКА, автор править.
 
-[scene raven_call]
-needs: calm
-bird come 60 18 land 5                  # з-за спини, сідає перед гравцем
-bird look player
+# ---------------------------------------------------------------- поклик (особистий пролог)
+# ~10 хв живої гри, спокій, небо над головою: зблизька обличчя, десь угорі каркнуло — голова шукає звідки.
+[scene caw]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
+needs: calm, sky
+bars on
+camera face blend 1.2                   # зблизька, трохи збоку
+wait 0.8
+sound sfx_raven_kaw player              # (далеко не чути: з 20 м гравець не чув нічого)
+player clip look_caw nowait             # голова шукає; з 10-ї секунди стихло — «що це було?» (15 с)
 wait 1.5
+sound sfx_raven_kaw player
+wait 1.6
+sound sfx_raven_kaw player
+wait 1.5
+sound sfx_raven_kaw player
+wait 1.7
+sound sfx_raven_kaw player
+wait 1.5
+sound sfx_raven_kaw player
+wait 1.3
+sound sfx_raven_kaw player
+wait 3.9                                # тиша: голова набік
+camera off blend 1.5
+bars off
+wait 1.2
+
+# Ще ~10 хв: ворон Ейріка відчув тебе й прилетів; кличе за собою до твоєї точки (своя для кожного: me.call).
+[scene raven_call]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
+needs: calm, sky
+sound sfx_raven_kaw player              # каркання: ворон ще летить
+bird come 45 16 land 5 nowait           # з-за спини — і не сідає, а одразу кружляє
+bird circle 3 6 6                       # кружляє над тобою (~10 с разом із рядком); крок чекає 3 с
+sound sfx_raven_kaw player
+wait 2.5
+sound sfx_raven_kaw player              # кличе: явно, два разом
+sound sfx_raven_kaw player
+wait 1
 if raven hugin: say hugin Це не наш.
 if raven munin: say munin Чужий. І старий.
-bird say …ти ж обіцяв.
-wait 2
-bird circle 30                          # кружляє над гравцем
-bird say …за мною.
-wait 1.5
-bird leave prologue_munin
+bars on
+sub …ти ж обіця{в|ла}.                       # (ворон кружляє: над птахом у польоті не прочитати)
+bars off
+wait 0.4
+bird leave me.call                      # у бік точки; мовчки: у польоті рядка не прочитати, кличе каркання
+sound sfx_raven_kaw player
 wait 2
 
+# На точці (задум автора 2026-11-03, ~30 с): затемнення; за плечем, де сидить ворон, видно потилицю: гравець повільно йде до
+# середини точки, камера жива, хитається в такт крокам (~8 с); різко спереду збоку на 45°: спинився, озирається (~9 с); гучне
+# каркання, дивиться вгору; різко згори: він і ворон, що кружляє; два сліди (~13 с).
+[scene raven_circle]
+test: spot call 40 80                   # (перевірка студії: своя точка гравця, її ставить етап call)
+alone: yes                             # особистий пролог: інших гравців не видно (StoryAlone)
+place: player                           # кадри навколо самого гравця: точка в кожного своя (StoryShots)
+needs: calm, sky, near me.call 15       # (перервана чи після перезаходу: не з будь-якого місця)
+player go me.call 0.4 keep soft nowait  # одразу: він іде далі, як ішов (катсцена підхоплює його хід); останні 3 м плавно сповільнюється
+bars on
+fade out 0.6
+camera follow 0.32 0.08 1.4 cut live 1
+player pace walk                        # під чорним екраном уже поволі
+fade in 0.6
+player arrive me.call 3.5               # ще йде, а камера вже змінюється: зупиняється в другому кадрі
+camera face -55 9 cut fov 40            # різко: статично, за 9 м, зміщена ліворуч на 55°
+player clip look_search.around nowait   # спиняється, осідає, озирається
+wait 1.2
+bird come 35 18 land 4 nowait           # (ворон уже летить, поки гравець не бачить)
+bird circle 1.8 6 7                     # кружляє; крок чекає 1.8 с
+sound sfx_raven_kaw player              # гучно: два разом
+sound sfx_raven_kaw player
+player clip look_search.up nowait       # різко вгору
+wait 0.6
+camera shot player.raven_circle_1 cut
+wait 3.8                                # ворон кружляє над тобою
+sub …та сама хода.                      # (ворон кружляє: над птахом у польоті не прочитати)
+sub …один твій слід іржавіє в траві.
+sub …другий стоїть на роздоріжжі. Досі показує не туди.
+if raven any: sub …той, що на плечі, теж не пам'ятає.
+sub …котрий згадаєш першим?
+wait 0.6
+camera off cut
+bars off
+bird leave hall
+
 # ---------------------------------------------------------------- слід пам'яті (Мунін)
-# Місце Муніна (локація «prologue_munin»): гравець торкнувся щита на землі — стає на коліно, бере щит у дві руки й роздивляється, ворон Ейріка сідає поруч; кладе щит, підводиться; твій Мунін прилітає.
+# Місце Муніна (локація «prologue_munin»): гравець торкнувся щита — стає на коліно, бере щит у дві руки, роздивляється;
+# десь ледь дзенькає залізо (спогад). Кладе щит, підводиться, дивиться навкруги — і лише тоді прилітає ворон на камінь
+# на праву частину каменя (кадр munin_comes_3: крупно камінь) і дивиться на гравця; той ще ~5 с стоїть і дивиться туди. Ворон сидить до кінця катсцени; лише після неї на плече і фраза.
+#   Воронів ще нема: це твій Мунін — колка фраза, перелітає на плече і з цієї миті твій
+#   (спить, як куплений: розбудиш біля Жертовних каменів). Ворон уже є: у кадрі через плече він злітає з плеча, сідає на
+#   той самий камінь, каже своє, вертається.
+# Ворона Ейріка тут нема: він прийде за дві хвилини (house_call).
 [scene munin_comes]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
 place: prologue_munin
-needs: calm
+needs: calm, near prologue_munin 10
+guard: 60                               # тиша навколо місця: монстри тікають, нові не з'являються
+fade out 0.5                            # одразу після E: увесь підхід за кадром
 player go prologue_munin.shchyt 0.78   # кілька кроків до щита, з того боку, де стоїть
 bars on
 prop take ShieldBanded from prologue_munin.shchyt free   # копія лягає точно на місце щита, далі нею рухає кліп
-camera orbit player 2.4 0.3 50 7 blend 1.5   # повільно навколо, зблизька
+camera shot prologue_munin.munin_comes_1 cut
+fade in 0.8                             # уже стоїть біля щита
 player clip shield_kneel.kneels         # стає на коліно, нахиляється, рука на краю щита
 player clip shield_kneel.lifts          # піднімає, бере у дві руки
-player clip shield_kneel.looks nowait   # дивиться на нього, скільки триває сцена
-bird come 40 14 land 4                  # ворон Ейріка — поруч
-bird look player
-wait 1
-bird say …тут. Ти тут стояв.
-wait 0.8
-player clip shield_kneel.lays           # кладе щит на те саме місце
+player clip shield_kneel.looks nowait   # дивиться на нього
+camera shot prologue_munin.munin_comes_4 cut
+sound iron_far prologue_munin.ogorozha   # за кілька кроків дзенькнуло залізо — спогад (assets/story/sounds; за 20 м звуку вже не чути)
+wait 2.4
+wait 3
+player clip shield_kneel.lays nowait    # кладе щит на те саме місце
+player mark laid                        # щит лежить
+if ownraven any: camera shot prologue_munin.munin_comes_5 cut
 prop put
-player clip shield_kneel.rises          # повільно підводиться, дивиться вгору й навкруги
+player clip shield_kneel.rises          # підводиться, дивиться вгору й навкруги
+player face prologue_munin.ogorozha   # повертається до каменя, куди сяде ворон
+if ownraven any: wait 1.2
+if ownraven munin: raven munin sit prologue_munin.ogorozha side 0.5    # твій злітає з плеча на праву частину каменя
+if ownraven any, !ownraven munin: raven hugin sit prologue_munin.ogorozha side 0.5
+if ownraven any: wait 2.5
+camera shot prologue_munin.munin_comes_3 cut
+if ownraven none: bird come 30 10 at prologue_munin.ogorozha side 0.5 as munin   # твій Мунін прилітає одразу на праву частину каменя
+if ownraven none: bird look player
+if ownraven none: player look bird
+wait 5                                  # гравець стоїть і дивиться на нього
 camera off blend 1.5
 bars off
-own munin                               # твій Мунін прилітає (є вже Мунін — зливається з ним)
-until raven munin | 12                  # (поки сяде на плече)
-wait 0.8
-say munin …Знайоме місце. Знайомий запах. Ти — ні.
-wait 0.8
-if !world prologue_done: bird say …Зала.
-bird leave hall
+player look forward                     # катсцена скінчилась: голова знову його
+wait 1
+if ownraven munin: raven munin back     # лише тепер з каменя на плече
+if ownraven any, !ownraven munin: raven hugin back
+if ownraven none: bird shoulder         # на плече…
+wait 3
+if ownraven none: bird say Що, впізна{в|ла}? Я тебе — ні. Щит той самий. А ти — гірш{ий|а}.
+if ownraven munin: say munin Я цей щит пам'ятаю. І тебе з ним. Тоді ти б{ув|ула} вищ{ий|а}.
+if ownraven any, !ownraven munin: say hugin Старе залізо, старі думки. Поклади, поки не згада{в|ла} щось зайве.
+if ownraven none: own munin here        # …і з цієї миті він твій
 wait 2
 
 # ---------------------------------------------------------------- слід думки (Хугін)
-# Покинута хата біля стартових каменів (локація «prologue_house»): Відлуння — сам Ейрік (гравець цього ще не знає).
-# Угоди не укладав; свого імені на камінь не вписав, щоб хтось пам'ятав. Віддає оберіг, що кличе Хугіна, і згасає.
-[scene echo]
-needs: calm
-place: prologue_house
-npc echo spawn prologue_house.stilets      # біля стільця, обличчям до гравця (у вогнище не ставимо)
-npc echo face player
+# Місце Хугіна (локація «prologue_hugin»): старий вказівник на розвилці. Торкаєшся — нічого; знизуєш плечима, йдеш геть.
+# Щойно відвернувся — ворон уже сидить на знаку, ніби був там завжди; каркає, ти обертаєшся («досі показує не туди»).
+#   Воронів ще нема: це твій Хугін — фраза, на плече, з цієї миті твій (спить, як куплений).
+#   Ворон уже є: твій злітає з плеча на знак, поки ти йдеш геть, каже своє, вертається.
+[scene hugin_comes]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
+place: prologue_hugin
+needs: calm, near prologue_hugin 10
+guard: 60                               # тиша навколо місця: монстри тікають, нові не з'являються
+fade out 0.5                            # одразу після E: увесь підхід за кадром
+player go prologue_hugin.vkazivnyk 0.62 # упритул до вказівника, з того боку, де стоїть (ближче за край колайдера не стане); рука дістає стовп лише звідси (sign_touch)
 bars on
-camera behind look npc.echo blend 2
+camera orbit player 3 0.6 40 8 blend 0   # (камера — постав свою в режисері)
+fade in 0.8                             # уже стоїть біля знака
+player clip sign_touch                  # рука на стовп, тримає, опускає
+camera shot prologue_hugin.hugin_comes_1 cut
+sub …
+player clip shrug_small nowait          # стримує жест гри на третину
+player emote shrug                      # нічого. Знизує плечима
+wait 1.6
+player go prologue_hugin.vkazivnyk 4.5 soft nowait   # розвертається й іде геть
+wait 1
+if ownraven none: bird come 12 6 at prologue_hugin.vkazivnyk as hugin   # тут же — ворон на знаку
+if ownraven hugin: raven hugin sit prologue_hugin.vkazivnyk   # (ворон уже є: твій злітає з плеча на знак)
+if ownraven any, !ownraven hugin: raven munin sit prologue_hugin.vkazivnyk
+camera shot prologue_hugin.hugin_comes_2 cut
+if ownraven any: wait 2
+sound sfx_raven_kaw prologue_hugin.vkazivnyk
+player stop 0.8                         # каркання: плавно спиняється
+player face prologue_hugin.vkazivnyk slow   # помалу обертається до знака
+wait 2.6
+if ownraven none: bird look player
+if ownraven none: bird say Я тут сиджу від самого початку. Ти просто диви{вся|лась} не туди. Як завжди.
+if ownraven hugin: raven hugin back     # спершу на плече: каже лише звідти
+if ownraven any, !ownraven hugin: raven munin back
+if ownraven any: wait 3
+if ownraven hugin: say hugin Отак і ходиш: торкнешся — і геть. А думати хто буде? Я?
+if ownraven any, !ownraven hugin: say munin Я пам'ятаю цей знак. Він і тоді показував не туди. А ти й тоді піш{ов|ла}.
 wait 1.5
-npc echo say …Ти. З каменя.
-npc echo say Я вирізав твоє ім'я.
-wait 0.8
-npc echo say Своє не вирізав. Хтось мав пам'ятати.
-npc echo say Я послав ворона. Думав, дочекаюсь.
+camera off blend 1.5
+bars off
+if ownraven none: bird shoulder         # на плече…
+if ownraven none: own hugin here        # …і з цієї миті він твій
+wait 2
+
+# ---------------------------------------------------------------- гравець збився (рядок nudge квесту)
+# Етап із міткою стоїть довго: ворон Ейріка прилітає й летить у бік мітки. Нічого не пропускає: лише показує дорогу.
+[scene raven_nudge]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
+needs: calm, sky
+sound sfx_raven_kaw player
+bird come 60 18 land 5 nowait           # летить до тебе й не сідає
+bird circle 0 6 6                       # кружляє над тобою, де б ти не йшов
+bird over                               # чекає, поки він справді над тобою
+wait 1
+bars on
+sub …ще не все. Туди.                   # (ворон кружляє: над птахом у польоті не прочитати)
+bars off
+wait 1
+bird leave goal.mark                    # у бік мітки етапу
+sound sfx_raven_kaw player
+wait 2
+
+# ---------------------------------------------------------------- хата Ейріка (для всіх)
+# За дві хвилини після сліду (after_trail): ворон Ейріка повертається й веде до хати біля стартових каменів.
+[scene house_call]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
+needs: calm, sky
+bird come 60 18 land 5 nowait           # летить до тебе й не сідає
+bird circle 0 6 6                       # кружляє над тобою, де б ти не йшов
+bird over                               # чекає, поки він справді над тобою
+wait 1
+bars on
+sub …хата. Він чекав.                   # (ворон кружляє: над птахом у польоті не прочитати)
+bars off
+wait 3                                  # ще кружляє
+bird leave prologue_house               # тоді в бік хати
+wait 2
+
+# Покинута хата (локація «prologue_house»): для тебе обжита, поки Відлуння не згасне. Відлуння — сам Ейрік (гравець
+# цього ще не знає): дивиться, каже щось невиразне, лишає книгу воронів і згасає; хата стає руїною (для тебе: statewhile — стан «обжита» до книги, «закинута» після).
+# Далі ворон Ейріка на хаті: веде до Зали, якщо основний пролог у світі ще йде.
+[scene echo]
+test: unflag book_taken; unflag echo_gone; var scene.echo 0   # (перевірка студії: світ, де книгу вже взято — вона б не світилась)
+check: prologue_house.knyha 1.6 in       # (перевірка студії: у хаті біля книги — гравець торкається її зблизька, не за 5 м)
+alone: yes                             # особистий пролог: інших гравців не видно (StoryAlone)
+needs: calm, inside prologue_house, !near prologue_house.dveri 2   # у самій хаті (на її підлозі й під її дахом), крок за стулками: раніше, але не на порозі (користувач 2026-11-07; було 4)
+guard: 60                               # тиша навколо місця: монстри тікають, нові не з'являються
+place: prologue_house
+bars on
+camera shot prologue_house.echo_2 blend 1.5
+wait 1
+npc echo spawn prologue_house at 2.1 0 0.6   # завжди та сама точка біля ліжка (рамка хати, м): проявляється поволі
+npc echo face player
+player face npc.echo                    # повертається до привида тілом (поволі, на місці) і дивиться на нього
+player look npc.echo
+wait 3.5
+npc echo say …ти.
+wait 1.5
+npc echo say …з каменя… ім'я… не моє…
+wait 1
+npc echo face prologue_house.knyha      # повертається до столу (поволі)
+camera shot prologue_house.echo_3 cut
+wait 2.6                                # він повертається поволі, з ноги на ногу (turn: у шаблоні)
+npc echo clip point_at 5                # плавно показує рукою на книгу (наш кліп, не жест гри)
+player look prologue_house.knyha
+npc echo mark lowers                    # камера на ньому, поки рука піднята
+camera shot prologue_house.echo_1 cut
+wait 3.5
+npc echo face player
+camera off blend 1.5
+bars off
+player look forward
+until touched prologue_house.knyha | 600   # гравець сам підходить і торкається книги (вона світиться)
+do flag book_taken                      # іскри на книзі гаснуть: вона вже в руках (locations.list: touch)
+bars on                                 # без затемнення: смуги, і він бере книгу на очах
+player go prologue_house.knyha 0.6 soft # до столу кроками, з того боку, де стоїть (не ковзанням: користувач 2026-11-07 «ніби підтягує до столу»)
+player go prologue_house.knyha 0.35     # останні сантиметри точно, кроками: кліп знає, де лежить книга (на 0.45 права рука на піку не діставала 0.1 м: перевірка 2026-11-07)
+prop take RavenWatch_item_knyha_ruky from prologue_house.knyha free square   # копія лягає точно на місце книги, далі нею рухає кліп; піднімаючи, повертається рівно до тіла
+camera shot prologue_house.echo_5 cut
+player clip take_book.takes             # двома руками бере зі столу, підносить
+player clip take_book.turns nowait      # трохи крутить у руках
 wait 0.6
-npc echo say Ти колись дав мені це. Сказав: тримай, поки не повернусь.
-wait 0.6
-npc echo say Я тримав. Довго.
-do give RavenWatch_item_obereh          # оберіг — тобі в руки (не на підлогу: його міг би підняти хтось інший)
-npc echo fade 4 whisper                 # згасає повільно, з шепотом (assets/story/sounds)
-do flag echo_gone                       # привид пішов — вогонь у хаті гасне (locations.list: litwhile)
+npc echo say …тримай. Вони… слухатимуть.
+do book                                 # книга воронів тепер у тебе
+npc echo fade 2 whisper                 # згасає, з шепотом (assets/story/sounds)
+player mark turned                      # докрутив
+fade out 2.5                            # хата старіє за темрявою
+prop put
+player clip none
+do flag echo_gone                       # хата для тебе — руїна, вогонь гасне (locations.list: statewhile, litwhile)
+wait 2
+fade in 2.5
+wait 1
+sound sfx_raven_kaw prologue_house.dveri   # знадвору каркає ворон Ейріка: кличе вийти
 wait 1
 camera off blend 1.5
 bars off
 
-# Оберіг підібрано: твій Хугін знаходить тебе (або зливається з тим, що вже є). Туман.
-[scene hugin_comes]
+# Вийшов з хати: ворон Ейріка одразу на стіні збоку від входу — веде до Зали (або «далі — сам», коли перше серце вже горить у світі).
+[scene echo_door]
+alone: yes                              # особистий пролог: інших гравців не видно (StoryAlone)
 needs: calm
 place: prologue_house
-own hugin
-until raven hugin | 12                    # (поки сяде на плече: переліт + посадка)
-wait 0.8
-say hugin Я тебе… шукав? Не пам'ятаю чого. Але шукав.
-wait 0.5
-say hugin Туман. Століття туману. Не питай.
-wait 0.5
-if !world prologue_done: say hugin Той чужий ворон кружляв над старою залою. Глянемо?
+sound sfx_raven_kaw prologue_house.stina_voron   # одразу, поки гравець не побіг далі
+bird come 14 7 at prologue_house.stina_voron     # зблизька, на верх стіни праворуч від входу (у руїні над нею нема даху; на воротях заважав дах ґанку: висів у повітрі)
+bird look player
+sound sfx_raven_kaw prologue_house.stina_voron
+if !world heart_first: bird say …Зала.
+if world heart_first: bird say …далі — сам.
+wait 1
+if !world heart_first: bird leave hall
+if world heart_first: bird leave sky
+wait 2
 
 # ---------------------------------------------------------------- основний пролог: Зала зачинена
+# Біля самої брами (етап to_hall чекає за 7 м від неї): дивиться вгору на браму, підходить, штовхає — не піддається.
+# Тоді ворон Ейріка. Гейд від цієї миті є у світі (people/heid.txt «after: world heid_called») і чекає в таборі.
 [scene gate_shut]
-needs: calm
+check: hall.dveri_holovni 5                # (перевірка студії: зовні, за 5 м від брами — як гравець підійшов)
+needs: calm, before hall.dveri_holovni 9 3   # прямо перед брамою: збоку на шляху край сходинок
 place: zala
-bird come 50 16 at hall.dveri_holovni   # просто на браму
-bird look player
+bars on
+camera follow 0.32 0.08 1.6 blend 1 live 1   # перша камера: іде за ним, за плечем
+player look hall.dveri_holovni          # угору, на верх брами
+wait 1.5
+player look forward                     # подивився на браму — і далі перед собою (верх брами не тримає голову всю сцену)
+player go hall.dveri_holovni 0.55 before # навпроти середини стулок: їхня поверхня за 0.55 м, як «touch» у door_push
+camera shot zala.gate_shut_3 cut
+player clip door_push nowait            # долоні на дерево, налягає двічі — не піддається
+player mark push2                       # другий, сильніший поштовх
+sound gate_stuck hall.dveri_holovni     # стулки здригнулись і не піддались (на другому, сильнішому поштовху)
+player mark let_go                      # руки відпустили браму
+player back 1.2 nowait                  # помалу три кроки назад, лицем до брами
+player clip look_back nowait            # поки йде: голова вгору, ліворуч, праворуч, знову вгору
+player arrive                           # дійшов
+camera shot zala.gate_shut_1 cut
+player look hall.dveri_holovni          # лише тепер угору, на верх брами
+wait 1.5
+do world heid_called
+do npc heid hold torvald.lizhko by torvald.stovp then torvald.kamin by torvald.stovp clip heid_search.loop from heid_search.bends out heid_search.rises   # з'являється в таборі: біля ліжка, нахилена, щось шукає
+bird come 15 6 land 3 nowait            # ворон летить сюди і не сідає (сісти біля брами нема куди: висів, зникав)
+bird circle 3 3.5 3                     # кружляє над ним; крок чекає 3 с
+player look bird
 bird say …зачинено. У неї ключ.
 wait 1
 bird leave torvald                      # до могил вартових, де табір Гейд
+camera shot zala.gate_shut_2 cut
 wait 2
+player look forward
+camera off blend 1.5
+bars off
 
 # ---------------------------------------------------------------- основний пролог: Гейд біля могил вартових
 # Гейд упізнає гравця (вважала його мертвим), за вороном знає, що він вартовий. Видає себе за вартову-цілительку, що
 # прокинулась на пару років раніше. Кличе в Залу — переночувати; сподівається згодом умовити його віддати себе Хель.
 # Ворон у гравця вже є (особистий пролог або купив обох): Гейд лише бачить його.
 [scene heid_meet]
+test: world heid_called                    # (перевірка студії: її створює сервер за цим словом)
+check: torvald 12                          # (перевірка студії: за 12 м від табору, з боку гравця)
 needs: calm
 place: torvald
-npc heid take                           # кидає свої справи
+npc heid take                           # щось шукала біля ліжка чи каменя, або саме йшла між ними
 bars on
 camera behind look npc.heid blend 2
+wait 1
+if npcclip heid heid_search: npc heid clip heid_search.rises         # випрямляється (ішла між точками: уже стоїть)
+if npcclip heid heid_search: npc heid mark up                        # уже стоїть
 npc heid face player
 wait 1.2
 npc heid say …Ти?
-wait 1
-npc heid emote kneel                    # «впускає кошик» і збирає
-wait 2.5
-npc heid emote none
-npc heid say Вибач. Руки вже не ті. Я Гейд — доглядаю ці камені.
+wait 1.5
+npc heid say Вибач. Задумалась. Я Гейд — доглядаю ці камені.
 wait 0.8
-npc heid say У тебе ворон. Свій. Значить, ти з Варти. Як і я.
+npc heid say У тебе ворон. Свій. Отже, ти з Варти. Як і я.
 if raven munin: say munin …Знайоме місце. А вона — ні.
 if raven hugin: say hugin Дивиться так, ніби я їй щось винен.
 wait 1
 npc heid say Я встала кілька зим тому. Лікую, кого є.
 wait 1.2
-npc heid say Ночі тут недобрі. Ходімо до Зали — переночуєш під дахом.
+npc heid say Ти від брами? Вона зачинена вже давно.
+wait 0.8
+npc heid say Вартовому не місце під небом. Ходімо: ключ у мене. Побачиш, що лишилось від Зали.
 camera off blend 1.5
 bars off
 
+do npc heid free                        # (більше не чекає там; останнім кроком: «do» робить сцену зіграною, удар посеред неї не має з'їсти знайомство)
 # ---------------------------------------------------------------- основний пролог: Зала
 # Біля брами: ключ «знайшла» (насправді дав Ейрік), сама спить на каменях, бо в Залі «голоси».
 [scene heid_opens]
+test: gate hall shut; wvar scene.heid_opens 0; world heid_called; npc heid at hall.dveri_holovni   # (перевірка студії: гравець телепортується, а табір за межами того, що гра симулює: вона б завмерла там)
+check: hall.dveri_holovni 6
 needs: calm
 place: zala
 npc heid take
 npc heid go player near 2.5               # спершу до гравця (здалеку — біжить)
 npc heid face player
 npc heid say Ходімо.
-npc heid go hall.dveri_holovni near 0.8
+npc heid go hall.dveri_holovni before 0.55   # навпроти середини брами, із зовнішнього боку: руки дістають дерева
 npc heid face hall.dveri_holovni
-npc heid emote point                    # ключ у замку
-wait 1.2
-do hallgate open                        # відімкнено — для всього світу
+npc heid clip key_turn                  # ліва долоня на дерево, ключ у замку — два оберти, поштовх (наш кліп)
+npc heid mark unlocked
+do gate hall open                       # відімкнено — для всього світу
+npc heid go hall.dveri_holovni before 2.6   # відходить від стулок: відчиняючись, вони штовхали її (стрибок тіла, 2026-11-04)
+npc heid face player
+until gate hall open | 3                 # ключ світу йде через сервер: брама відімкнена не одразу (інакше відчинялась на мить і зачинялась, 2026-11-04)
 door hall.dveri_holovni open
 wait 1
-npc heid face player
 npc heid say Ключ? Знайшла. Тут усе чиєсь і нічиє.
 wait 0.8
 npc heid say Сама сплю на каменях. У Залі… голоси. Дивні.
 wait 0.8
 npc heid say Заходь. Подивись, що тут лишилось.
 wait 1
+do npc heid hold hall.vohnyshche stand  # далі вона в Залі, біля вогнища, поки сюжет її не відпустить
 
 # Біля холодного вогнища: у Залі дуже холодно (тут Хель). Гейд певна, що воно не займеться.
 [scene cold_hall]
+test: gate hall open; npc heid at hall.vohnyshche          # (перевірка студії: брама відчинена, Гейд уже біля вогнища)
+check: hall.vohnyshche 3
 place: zala
 npc heid take
-npc heid go player near 3
+npc heid go hall.vohnyshche near 1.2    # (зазвичай уже там; ближче, ніж команда hold рахує «на місці»; гравець міг обігнати її від брами: руки лишаються складені й після сцени)
 npc heid face player
+npc heid clip arms_cross.folds          # схрещує руки — холодно; лишаються складені (hold у етапах cold, fire_seen), поки не спитаєш про лист
+player clip rub_hands nowait            # тре руки (долоні разом)
 npc heid say Холодно, правда? Тут завжди так.
 wait 0.8
 npc heid say Дрова в торбі є? Спробуй. Хоча… не старайся. Не загориться.
 wait 1
-npc heid free
 
 # Вогнище спалахнуло синім: Гейд цього не чекала. Підозріла розмова: «я теж пробувала» — правда.
 [scene blue_fire]
+test: gate hall open; npc heid at hall.vohnyshche
+check: hall.vohnyshche 3
 place: zala
 npc heid take
 npc heid go hall.vohnyshche near 3
@@ -175,6 +429,8 @@ npc heid face hall.vohnyshche
 bars on
 camera behind look hall.vohnyshche blend 2
 wait 1.5
+npc heid clip step_back                 # здригається: пів кроку назад, рука до грудей
+wait 0.6
 npc heid say …Воно горить.
 wait 1
 npc heid face player
@@ -183,35 +439,54 @@ wait 0.8
 if raven munin: say munin Синє. Вогонь не буває синім.
 if raven hugin: say hugin Синій вогонь. І ти віриш, що це добрий знак?
 wait 0.8
-npc heid say Колись він був золотий. …Хоча звідки мені знати.
+npc heid say За Варти він горів золотим. Я пам'ятаю.
 wait 0.8
 npc heid say Не гріє. Нічого. Оглянься тут, а я приберу трохи.
 camera off blend 1.5
 bars off
-npc heid free
 
-# Лист знайдено (другий поверх Зали): ворон про нього; після сцени квест відкриває серце оселі (heartlearn).
+# Лист знайдено (другий поверх Зали): ворон про нього. Серце оселі відкривається пізніше, після розмови з Гейд (етап after_letter).
 [scene letter_read]
-wait 0.5
+test: gate hall open; unworld letter_read; unworld heart_found; unworld heart_first; wvar scene.letter_read 0   # (перевірка студії: світ, де лист уже прочитано — він схований)
+check: hall.lyst 1.2 in
+place: zala
+fade out 0.5
+player go hall.lyst 0.7                 # під чорним — одразу біля столу (з якого боку — побачу в перевірці сцени)
+camera shot zala.letter_read_1 cut
+player face hall.lyst
+bars on
+prop take RavenWatch_item_staryi_lyst from hall.lyst free square   # копія лягає точно на місце листа, далі нею рухає кліп
+fade in 0.8
+player clip read_letter.takes           # лівою бере зі столу, підносить, права долучається
+player clip read_letter.loop nowait     # читає рядками
 if raven munin: say munin Стовп із вороном. Я такий бачив. Біля нього не було тихо — і не було страшно.
 if raven hugin: say hugin Креслення. Дерево, пір'я, ріг. Навіть ти впораєшся.
 wait 0.8
-if raven munin: say munin Збудуй. Там, де житимуть люди.
-if raven hugin: say hugin Тільки не тут. Тут холодно навіть мені.
-
-# Кінець основного прологу: буря для всіх у світі (сенс — ВІДКРИТО).
-[scene storm]
-bars on
-if calm: camera behind look sky blend 3   # (лише надворі: під дахом камера не дивиться крізь стелю)
-weather ThunderStorm 90 all
-wait 3
-shake 0.4 all
-bolt ahead 2 all
-wait 2
-thor all
-wait 3
-bolt ahead 3 all
-shake 0.6 all
-wait 4
-camera off blend 2
+if raven munin: say munin Спитай ту жінку. Вона тут довше.
+if raven hugin: say hugin Сам{|а} ти це не прочитаєш. Іди до тієї, що «просто прибирає».
+wait 1
+fade out 0.6                            # тримає лист у руках, поки темніє: на стіл не кладе (користувач 2026-11-07)
+do world letter_read                    # листа на столі більше нема для всіх на сервері (locations.list: hidewhile) — ще до того, як руки його віддадуть
+prop put                                # під чорним: лист зникає з рук, як книга
+player clip none
+wait 1.5                                # (Зала дивиться на свої деталі раз на секунду)
+fade in 0.8
 bars off
+
+# Гейд пояснила лист і спровадила: ворон на її слова (розмова сама: assets/story/talk/heid.txt)
+[scene heid_letter]
+if raven munin: say munin Каже правду. Але не всю.
+if raven hugin: say hugin Щось вона дуже хоче, щоб ти піш{ов|ла}. Я б теж хотів, але в мене причини кращі.
+wait 0.5
+
+# Перше серце у світі збудоване: у ліхтарі спалахує вогонь і одразу гасне — справжній принесуть іскрою з Зали (акт 1).
+[scene heart_lantern]
+needs: near heart.near 40               # (грає той, хто біля серця: у сцени сервера нема свого гравця наперед)
+camera behind look heart.near blend 2
+wait 1.5
+heart flare 2.5
+wait 3
+if raven munin: say munin Не тримається. Чужий вогонь у ньому не живе.
+if raven hugin: say hugin Блимнуло й згасло. Йому бракує справжньої іскри.
+wait 1
+camera off blend 2

@@ -186,7 +186,7 @@ namespace HuginWhispers
             _shouting = true;
             try { RavenSkills.GiftSay(true, tag, fallback); }
             finally { _shouting = false; }
-            float said = 4f + fallback.Length / 25f; // (about how long it shows)
+            float said = RavenSkills.SaySeconds(fallback); // (how long it shows: as GiftSay shows it)
             _reactAt = Time.time + said * 0.6f + ReactGap;
             _nextRage = Time.time + UnityEngine.Random.Range(RageMin, RageMax);
         }
@@ -795,7 +795,13 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Character), "ApplyPushback", new Type[] { typeof(Vector3), typeof(float) })]
     internal static class BeastPushbackPatch
     {
-        private static bool Prefix(Character __instance) { return !(Beast.On() && __instance == Player.m_localPlayer); }
+        private static bool Prefix(Character __instance) {
+            try
+            {
+                return !(Beast.On() && __instance == Player.m_localPlayer);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("BeastPushbackPatch", pgx); return true; }
+        }
     }
 
     // the beast jumps as high for its body as a man for his: the height grows with the square of the push, so the push
@@ -805,15 +811,23 @@ namespace HuginWhispers
     {
         private static void Prefix(Character __instance, ref float __state)
         {
-            __state = -1f;
-            if (!Beast.On() || __instance != Player.m_localPlayer || Beast.JumpHeight <= 1f) return;
-            __state = __instance.m_jumpForce;
-            __instance.m_jumpForce *= Mathf.Sqrt(Beast.JumpHeight);
+            try
+            {
+                __state = -1f;
+                if (!Beast.On() || __instance != Player.m_localPlayer || Beast.JumpHeight <= 1f) return;
+                __state = __instance.m_jumpForce;
+                __instance.m_jumpForce *= Mathf.Sqrt(Beast.JumpHeight);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("BeastJumpPatch", pgx); }
         }
 
         private static void Postfix(Character __instance, float __state)
         {
-            if (__state >= 0f) __instance.m_jumpForce = __state;
+            try
+            {
+                if (__state >= 0f) __instance.m_jumpForce = __state;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("BeastJumpPatch", pgx); }
         }
     }
 
@@ -824,19 +838,27 @@ namespace HuginWhispers
         // (also the beast's kick: no weapon, the wheel button — it throws them KickPush times as far)
         private static void Prefix(Attack __instance, Humanoid ___m_character, ref Vector2 __state)
         {
-            __state = new Vector2(-1f, -1f);
-            if (___m_character == null || ___m_character != Player.m_localPlayer) return;
-            if (Beast.On() && Kick(___m_character)) { __state.y = __instance.m_forceMultiplier; __instance.m_forceMultiplier *= Beast.KickPush; }
-            float s = ___m_character.transform.localScale.x;
-            if (s <= 1.01f) return;
-            __state.x = __instance.m_attackRange;
-            __instance.m_attackRange *= s;
+            try
+            {
+                __state = new Vector2(-1f, -1f);
+                if (___m_character == null || ___m_character != Player.m_localPlayer) return;
+                if (Beast.On() && Kick(___m_character)) { __state.y = __instance.m_forceMultiplier; __instance.m_forceMultiplier *= Beast.KickPush; }
+                float s = ___m_character.transform.localScale.x;
+                if (s <= 1.01f) return;
+                __state.x = __instance.m_attackRange;
+                __instance.m_attackRange *= s;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("BeastReachPatch", pgx); }
         }
 
         private static void Postfix(Attack __instance, Vector2 __state)
         {
-            if (__state.x >= 0f) __instance.m_attackRange = __state.x;
-            if (__state.y >= 0f) __instance.m_forceMultiplier = __state.y;
+            try
+            {
+                if (__state.x >= 0f) __instance.m_attackRange = __state.x;
+                if (__state.y >= 0f) __instance.m_forceMultiplier = __state.y;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("BeastReachPatch", pgx); }
         }
 
         private static System.Reflection.FieldInfo _secondary;

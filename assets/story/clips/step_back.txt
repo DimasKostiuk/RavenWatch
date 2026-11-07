@@ -1,0 +1,71 @@
+clip step_back
+length 3.9
+loop 0
+pivot 1.1
+curve ease
+fade 0.3 0.8
+mode Spine1 body
+mode Spine2 body
+feet ground
+
+# Гейд, синій вогонь (blue_fire): здригається — корпус назад, права нога на пів кроку назад, ліва рука до грудей; оговтується:
+# нога вертається (по черзі: спершу стала права, тоді вага), рука вниз.
+
+0 move 0 0 0
+0.25 move 0 0 -0.05
+0.7 move 0 -0.02 -0.12
+1.9 move 0 -0.02 -0.12
+3.1 move 0 0 -0.02
+3.9 move 0 0 0
+
+0 @RightFoot 0.05 0.12 -0.3
+0.15 @RightFoot 0.05 0.12 -0.3
+0.4 @RightFoot 0.06 0.22 -0.42
+0.65 @RightFoot 0.07 0.12 -0.5
+2 @RightFoot 0.07 0.12 -0.5
+2.45 @RightFoot 0.06 0.22 -0.4
+2.9 @RightFoot 0.05 0.12 -0.3
+3.9 @RightFoot 0.05 0.12 -0.3
+
+0 @RightFoot.p 0.15 0 1
+
+0 @LeftFoot -0.09 0.12 0.28
+3.9 @LeftFoot -0.09 0.12 0.28
+
+0 @LeftFoot.p -0.15 0 1
+
+0 Spine1 0 0 0
+0.3 Spine1 -6 0 0
+0.8 Spine1 -5 -4 0
+1.9 Spine1 -4 -4 0
+3.1 Spine1 0 0 0
+3.9 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.3 Spine2 -5 0 0
+0.8 Spine2 -4 -3 0
+1.9 Spine2 -3 -3 0
+3.1 Spine2 0 0 0
+3.9 Spine2 0 0 0
+
+0 @LeftHand -0.24 0.95 0.06
+0.1 @LeftHand -0.24 0.95 0.06
+0.6 @LeftHand -0.02 1.28 0.16
+1.9 @LeftHand -0.03 1.27 0.15
+3.3 @LeftHand -0.24 0.95 0.06
+3.9 @LeftHand -0.24 0.95 0.06
+
+0 @LeftHand.w 0 0 0
+0.1 @LeftHand.w 0 0 0
+0.6 @LeftHand.w 1 0 0
+1.9 @LeftHand.w 1 0 0
+3.3 @LeftHand.w 0 0 0
+3.9 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.6 -0.7 0
+
+0 @Look 0 1.4 2
+3.9 @Look 0 1.4 2
+
+0 @Look.w 0 0 0
+3.9 @Look.w 0 0 0

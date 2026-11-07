@@ -9,7 +9,7 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // A person's feet (npc-plan.md, «хода без ривків»): its own way follower, the one way it walks. Its parts:
-    //   here              the walk: the way asked (again in a third of a second when it fails: the way finder's map is built
+    //   here              the walk: the way asked, by all together at most AsksAFrame a frame (again in a third of a second when it fails: the way finder's map is built
     //                     a piece at a time), a point a little ahead followed, others near pushing it gently aside, the
     //                     last steps straight at its goal, «there» within reach of it
     //   NpcWalkRoom       the way kept off corners, walls, things, drops and steep banks; no corner cut; gaps in the map bridged
@@ -19,6 +19,7 @@ namespace HuginWhispers
     //                     in a puff of smoke, and last
     //   NpcWalkBox        what it did, measured and written (raven npc walk report; the black box where the studio is)
     //   NpcMind.Steer     where it turns its body: an arc, never a halt on a bend
+    // Where nobody sees it (NpcClock.Slow) its way is asked and its eyes ahead look less often: a bump there costs nothing, and its ladder still holds.
     // Tuned while the game runs: raven npc walk set <key> <value> (Set below).
     internal sealed partial class NpcWalk
     {
@@ -35,7 +36,7 @@ namespace HuginWhispers
         internal static float Room = 0.9f, Push = 1f;    // others nearer than this push it aside, this hard
         internal static float NoGain = 1.5f;             // no gain this long: its way asked afresh; twice that: a step round
         internal static float Seen = 40f;                // a player nearer than this sees it: never put anywhere by a jump
-        internal static float Home = 60f, HomeSeen = 120f; // got nowhere (2 m) this long meaning to walk: home to its heart (unseen / seen)
+        internal static float Home = 30f, HomeSeen = 45f; // got nowhere (2 m) this long meaning to walk: home to its heart (unseen / seen)
 
         internal static string Set(string key, string value)
         {
@@ -109,6 +110,7 @@ namespace HuginWhispers
         // someone (a person, a player) right in front: what holds it is them — it waits for them, no slide past
         private static bool PeopleAhead(Vector3 me, Vector3 dir)
         {
+            dir.y = 0f; dir.Normalize(); // (a goal far off gave a long line: anyone in the half circle ahead counted, and it never stepped round)
             foreach (NpcActor o in NpcActor.Live) if (o != null && Near(me, dir, o.transform.position)) return true;
             foreach (Player p in Player.GetAllPlayers()) if (p != null && Near(me, dir, p.transform.position)) return true;
             return false;
@@ -119,14 +121,14 @@ namespace HuginWhispers
         // No way there: its way ends short of its goal ask after ask (a floor the way finder keeps apart, a seat behind a
         // table) for ShortGiveUp s — its caller lets the goal go (a whim ends, another seat is taken), and the spot is kept
         // AvoidFor s so that nobody picks it again meanwhile (the user 2026-11-02: Knud stood half a minute at a slope)
-        internal static float ShortGiveUp = 8f, AvoidFor = 300f;
+        internal static float ShortGiveUp = 8f, AvoidFor = 300f, ShortGain = 0.3f;
         internal bool Unreachable;
         // its way does not get there (no way after asks, or a way that ends short): a door may be what stands between —
         // the one thing that makes its mind look for one (NpcMind.ThroughDoor; it asked the whole way itself every second)
         internal bool NeedsDoor(Vector3 to) { return (to - _goal).sqrMagnitude < 9f && ((!_hasPath && _fails >= 3) || (_shortSince >= 0f && Time.time - _shortSince > 1f)); } // (it stands where its way ends short — not a way to a chest that ends by it, as every such way does)
         internal void Forgive() { Unreachable = false; _shortSince = -1f; } // (its caller has heard it: judged afresh after ShortGiveUp)
         internal bool CantReach(Vector3 to) { return Unreachable && (to - _goal).sqrMagnitude < 9f; } // (this goal: not one from before)
-        private float _shortSince = -1f;
+        private float _shortSince = -1f, _shortBest = float.MaxValue; // (_shortBest: how near it came since its way first ended short)
         private int _wayAsks;
         private static readonly List<KeyValuePair<Vector3, float>> _avoid = new List<KeyValuePair<Vector3, float>>();
         internal static void KeepOff(Vector3 at) { _avoid.RemoveAll(k => k.Value < Time.time); if (_avoid.Count < 200) _avoid.Add(new KeyValuePair<Vector3, float>(at, Time.time + AvoidFor)); }
@@ -134,27 +136,30 @@ namespace HuginWhispers
         internal string Doing = "";
 
         // a walk towards a goal (every frame while it means to go there); true when there
+        private float _slow = 1f; // (× its looks' intervals, this step)
         internal bool Step(float dt, Vector3 to, float near, bool run, string what)
         {
             Vector3 me = _m.transform.position;
+            _slow = NpcClock.Slow(_m.Actor);
             if (Stranded(me)) return false;
             float moved = (to - _goal).sqrMagnitude;
             if (moved > 9f || what != _what) Begin(to, near, what); // (a new goal: a new walk)
             else if (moved > 0.25f) // (the same goal moving — a foe, the one it follows, a spot ahead as it flees: its way kept, asked afresh twice a second at most; its gain counted afresh — a goal moving with it is no «getting nowhere»)
             {
-                _goal = to; _near = near; _bestLeft = float.MaxValue; _gainAt = Time.time;
+                _goal = to; _near = near; _bestLeft = float.MaxValue; _gainAt = Time.time; _thing = null; // (a moving goal is no thing to stand by)
                 if ((to - _askedFor).sqrMagnitude > 1f && _askAt > Time.time + 0.5f) _askAt = Time.time + 0.5f;
             }
-            float left = Utils.DistanceXZ(me, to);
+            float left = HowFar(me, to);
+            _left = left;
             if (left <= _near) { Arrive("ok"); return true; }
             if (Done && left > _near + Reach + 0.5f) Done = false; // (its goal moved off — the one it follows walked on: not there any more)
             float now = Time.time;
-            if (now >= _askAt) Ask(me, to);
+            if (_m.Body != null && _m.Body.Sliding) { _m.StopMoving(); _pushFrom = me; _pushAt = now; _gainAt = now; if (_askAt < now + 0.1f) _askAt = now + 0.1f; return false; } // (its body on its way by NpcBody.Slide — a step up, eased out of a nook, up off a seat: its feet wait, it is no being stuck, and its way is asked from where the slide ends, not from half way)
+            if (now >= _askAt && !Done && MayAsk()) Ask(me, to); // (there: no way wanted. None free this frame: the next one)
 
             // getting nowhere: its way afresh, then a step round
             float along = Left(me, to);
             if (along < _bestLeft - 0.3f) { _bestLeft = along; _gainAt = now; _reasked = false; _m.NewGoal(); } // (on along its way, round a house too: no «stuck» — that rule measured as the crow flies)
-            if (now < _slideUntil) { Slide(); return false; }
             if (now < _stepUntil) { Go(_stepDir, false, "steps round"); return false; }
             if (now - _gainAt > NoGain * 2f && _hasPath && _next < _path.Count && !PeopleAhead(me, to - me)) { _gainAt = now; _reasked = false; StepRound(me, to); return false; } // (on its way and held by a thing: round it — not while it waits for its way, nor behind someone)
             if (now - _gainAt > NoGain && !_reasked) { _reasked = true; _askAt = now; } // (its way asked again at once — once)
@@ -182,8 +187,9 @@ namespace HuginWhispers
             Vector3 way = aim - me; way.y = 0f;
             if (way.sqrMagnitude < 0.0001f) way = _path[_next] - me;
             way.y = 0f;
-            if (now >= _apartAt) { _apartAt = now + 0.1f; _apart = Apart(me, way.normalized); } // (others looked at ten times a second, not every frame)
+            if (now >= _apartAt) { _apartAt = now + 0.1f * _slow; _apart = Apart(me, way.normalized); } // (others looked at ten times a second, not every frame)
             Vector3 want = (way.normalized + _apart * Push).normalized;
+            if (Yield(me, way.normalized, ref want, now)) return false; // (a player in its way: it waits for him, then goes round him)
             if (DoorOnWay(me, want, now)) return false; // (a shut door right in its way: opened, then through)
             if (left > Final) want = RoundThings(me, want); // (by its goal it walks up to it: its seat, its chest stand there)
             Go(want, run, _turn != 0f ? "walks round a thing" : "walks");
@@ -193,7 +199,41 @@ namespace HuginWhispers
         // standing on the spot its way ended at, by its goal (for the callers' «there» rule: AtSnap)
         internal bool By(Vector3 to, float near)
         {
-            return (to - _goal).sqrMagnitude <= 0.25f && Done && Utils.DistanceXZ(_m.transform.position, to) <= near + Reach;
+            return (to - _goal).sqrMagnitude <= 0.25f && Done && HowFar(_m.transform.position, to) <= near + Reach;
+        }
+
+        // A goal inside a thing (2026-11-06, measured: a test, a job, a whim sent people to the middle of a bathtub, a workbench, a chest in a
+        // nook — no body stands there, the way ended 1.6–2.4 m short, and the stuck rule put them by it though they stood beside it): how far it
+        // is is how far to that thing's surface, and only when nothing else (a wall) stands between; a goal in the open: as the crow flies.
+        // The thing is found once a walk (Begin).
+        private Collider _thing;
+        private static readonly Collider[] _at = new Collider[6];
+        private static Collider ThingAt(Vector3 to)
+        {
+            int n = Physics.OverlapSphereNonAlloc(to + Vector3.up * 0.5f, 0.15f, _at, Things2, QueryTriggerInteraction.Ignore); // heavy: one small sphere a walk, at its start
+            for (int i = 0; i < n; i++)
+            {
+                Collider c = _at[i];
+                if (c == null) continue;
+                Piece p = c.GetComponentInParent<Piece>();
+                if (p == null) continue; // (a rock, the ground: no thing to stand by)
+                string name = p.gameObject.name;
+                if (name.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("stair", StringComparison.OrdinalIgnoreCase) >= 0) continue; // (walked on)
+                return c;
+            }
+            return null;
+        }
+
+        private float HowFar(Vector3 me, Vector3 to)
+        {
+            if (_thing == null || (to - _goal).sqrMagnitude > 0.25f) return Utils.DistanceXZ(me, to);
+            Vector3 at = _thing.ClosestPoint(me + Vector3.up * 0.9f);
+            float d = Utils.DistanceXZ(me, at);
+            if (d > _near + Reach) return Mathf.Max(d, Utils.DistanceXZ(me, to) - 3f); // (far yet: no look for walls)
+            RaycastHit h; // (beside it, not on the other side of a wall)
+            Vector3 from = me + Vector3.up * 0.9f, way = at - from; float l = way.magnitude;
+            if (l > 0.05f && Physics.Raycast(from, way / l, out h, l, Things2, QueryTriggerInteraction.Ignore) && h.collider != _thing && h.collider.GetComponentInParent<Piece>() != _thing.GetComponentInParent<Piece>()) return Utils.DistanceXZ(me, to);
+            return d;
         }
 
         // its caller says it is there (its own rule: a seat sat on, a goal within its «near»): the walk written now
@@ -202,9 +242,9 @@ namespace HuginWhispers
         private void Begin(Vector3 to, float near, string what)
         {
             if (_trip != null) End(Done ? "ok" : "left off");
-            _goal = to; _near = near; _what = what; Done = false;
-            _hasPath = false; _partial = false; _path.Clear(); _next = 0; _fails = 0; _shortSince = -1f; _wayAsks = 0; Unreachable = false;
-            _askAt = Time.time; _gainAt = Time.time; _bestLeft = float.MaxValue; _stepUntil = 0f; _slideUntil = 0f; _turn = 0f; _turnKeep = 0f; _clearAt = 0f; _apartAt = 0f; // (a new goal: looked at afresh)
+            _goal = to; _near = near; _what = what; Done = false; _thing = ThingAt(to);
+            _hasPath = false; _partial = false; _path.Clear(); _next = 0; _fails = 0; _shortSince = -1f; _shortBest = float.MaxValue; _wayAsks = 0; Unreachable = false;
+            _askAt = Time.time; _gainAt = Time.time; _bestLeft = float.MaxValue; _stepUntil = 0f; _turn = 0f; _turnKeep = 0f; _clearAt = 0f; _apartAt = 0f; _reasked = false; // (a new goal: looked at afresh)
             _trip = Watch ? new Trip { What = what, From = _m.transform.position, To = to, At = Time.time } : null;
         }
 
@@ -215,13 +255,24 @@ namespace HuginWhispers
         private Vector3 _askedFor;
         private static readonly int PerfPath = NpcPerf.Id("path (пошук шляху)"), PerfShape = NpcPerf.Id("path room (відступ від країв)");
 
+        // A way asked is the dearest thing feet do, and a whole base sets off in the same frame (a morning gathering): the asks
+        // of everyone together stay within AsksAFrame; the one left out asks next frame, as the ones served have their next ask ahead
+        private const int AsksAFrame = 2;
+        private static int _asksFrame, _asksNow;
+        private static bool MayAsk()
+        {
+            if (_asksFrame != Time.frameCount) { _asksFrame = Time.frameCount; _asksNow = 0; }
+            return _asksNow < AsksAFrame;
+        }
+
         private void Ask(Vector3 me, Vector3 to)
         {
             Pathfinding pf = Pathfinding.instance;
             if (pf == null) { _askAt = Time.time + 1f; return; }
             _ask.Clear();
+            _asksNow++;
             long perf = NpcPerf.Now();
-            bool ok = pf.GetPath(me, to, _ask, _m.m_pathAgentType, false, true, false);
+            bool ok = pf.GetPath(me, to, _ask, NpcKit.Walker, false, true, false);
             NpcPerf.Add(PerfPath, perf);
             if (_trip != null) _trip.Asks++;
             if (!ok || _ask.Count == 0)
@@ -237,10 +288,12 @@ namespace HuginWhispers
             while (_next < _path.Count - 1 && Utils.DistanceXZ(me, _path[_next]) < Corner) _next++;
             _partial = Utils.DistanceXZ(_path[_path.Count - 1], to) > _near + 0.5f;
             if (_partial) Bridge(pf, to); // (its way ends short: a gap in the map — a threshold, a raised floor, the foot of stairs — crossed on foot when short)
+            long ps = NpcPerf.Now();
             Widen();
-            if (Watched(me)) { long ps = NpcPerf.Now(); Shape(); NpcPerf.Add(PerfShape, ps); } // (room round its way: only where a player can see it bump — and measured)
+            if (NpcClock.Seen(_m.Actor)) Shape(); // (room round its way: only where a player can see it bump — the one rule of «seen»)
+            NpcPerf.Add(PerfShape, ps);
             if (_trip != null && _partial) _trip.Partial++;
-            _askAt = Time.time + Repath;
+            _askAt = Time.time + Repath * _slow;
         }
 
         // past that corner along its way — it went by wider than Corner (a widened corner, its aim cutting inside): on to the next
@@ -283,7 +336,7 @@ namespace HuginWhispers
         private bool ClearNow(Vector3 me, Vector3 to)
         {
             if (Time.time < _clearAt) return _clear;
-            _clearAt = Time.time + 0.2f;
+            _clearAt = Time.time + 0.2f * _slow;
             _clear = Clear(me, to);
             return _clear;
         }
@@ -292,14 +345,14 @@ namespace HuginWhispers
         {
             Vector3 push = Vector3.zero;
             Vector3 right = new Vector3(fwd.z, 0f, -fwd.x);
-            foreach (NpcActor o in NpcActor.Live) if (o != null && o.gameObject != _m.gameObject) push += Away(me, o.transform.position, fwd, right);
-            foreach (Player p in Player.GetAllPlayers()) if (p != null) push += Away(me, p.transform.position, fwd, right);
+            foreach (NpcActor o in NpcActor.Live) if (o != null && o.gameObject != _m.gameObject) push += Away(me, o.transform.position, fwd, right, Room);
+            foreach (Player p in Player.GetAllPlayers()) if (p != null) push += Away(me, p.transform.position, fwd, right, PlayerRoom) * 1.5f; // (a player is given more room, and gone round earlier, than a person)
             return push;
         }
 
         // someone close: a push away; someone in its way ahead (within See, nearer its line than Wide): round them early on
         // the side away from them — right, when they are straight ahead (both keep right: they pass)
-        private static Vector3 Away(Vector3 me, Vector3 at, Vector3 fwd, Vector3 right)
+        private static Vector3 Away(Vector3 me, Vector3 at, Vector3 fwd, Vector3 right, float room)
         {
             Vector3 d = at - me;
             if (Mathf.Abs(d.y) > 1.5f) return Vector3.zero;
@@ -307,7 +360,7 @@ namespace HuginWhispers
             float m = d.magnitude;
             if (m < 0.01f || m > See) return Vector3.zero;
             Vector3 v = Vector3.zero;
-            if (m < Room) v -= d / m * (Room - m) / Room;
+            if (m < room) v -= d / m * (room - m) / room;
             float ahead = Vector3.Dot(d, fwd), side = Vector3.Dot(d, right);
             if (ahead > 0f && Mathf.Abs(side) < Wide) v += right * (Mathf.Abs(side) < 0.25f ? 1f : -Mathf.Sign(side)) * Avoid * (1f - ahead / See) * (1f - Mathf.Abs(side) / Wide);
             return v;
@@ -325,16 +378,72 @@ namespace HuginWhispers
         }
         private static RaycastHit _hit;
 
+        // A player in its way (the user 2026-11-06: «they push into me because they see they must get past»): never a step into a player —
+        // the part of its step towards anyone nearer than NoPushAt is taken out, whatever it walks for (its way, its last steps, a step round);
+        // one standing right in its way within YieldAt: it stops and waits for him YieldFor s (the player mostly walks on), its stuck clocks
+        // held meanwhile, then goes round him on the side away from him (and Apart keeps PlayerRoom off him). People push each other as before
+        internal static float NoPushAt = 0.9f, YieldAt = 1.5f, YieldFor = 2.5f, PlayerRoom = 1.4f;
+        private float _yieldSince = -1f;
+        private static Vector3 NoPush(Vector3 me, Vector3 dir)
+        {
+            foreach (Player p in Player.GetAllPlayers())
+            {
+                if (p == null) continue;
+                Vector3 d = p.transform.position - me;
+                if (Mathf.Abs(d.y) > 1.5f) continue;
+                d.y = 0f;
+                float m = d.magnitude;
+                if (m < 0.01f || m >= NoPushAt) continue;
+                float into = Vector3.Dot(dir, d / m);
+                if (into > 0f) dir -= d / m * into;
+            }
+            return dir;
+        }
+
+        private bool Yield(Vector3 me, Vector3 way, ref Vector3 want, float now)
+        {
+            Player block = null; float best = YieldAt;
+            foreach (Player p in Player.GetAllPlayers())
+            {
+                if (p == null) continue;
+                Vector3 d = p.transform.position - me;
+                if (Mathf.Abs(d.y) > 1.5f) continue;
+                d.y = 0f;
+                float m = d.magnitude;
+                if (m < 0.01f || m >= best || Vector3.Dot(d / m, way) < 0.6f) continue;
+                if (Utils.DistanceXZ(p.transform.position, _goal) < 2.5f) continue; // (he is where it goes — «to me», «follow me»: no waiting for him nor going round him; NoPush still keeps it off him)
+                best = m; block = p;
+            }
+            if (block == null) { _yieldSince = -1f; return false; }
+            if (_yieldSince < 0f) _yieldSince = now;
+            if (now - _yieldSince < YieldFor) // (only while it waits for him: waiting is no being stuck — nor the last safety's «got nowhere», a player standing long in a doorway sent it home in a puff. Going round him after, its stuck rules hold again: a step up, a slide out, home)
+            {
+                _gainAt = now; _pushAt = now; _anchorAt = now; _m.NewGoal();
+                _m.StopMoving(); _m.Face(block.transform.position); Doing = "waits for a player in its way"; return true;
+            }
+            Vector3 to = block.transform.position - me; to.y = 0f;
+            Vector3 right = new Vector3(way.z, 0f, -way.x);
+            float side = Vector3.Dot(to, right) > 0f ? -1f : 1f; // (round him on the side away from him; right when he stands square ahead)
+            want = (want + right * side * 1.2f).normalized;
+            return false;
+        }
+
+        internal static float EaseFrom = 2f, EaseLeast = 0.4f; // m before its goal it starts to slow; the share of its speed at the end
+        private float _left = 99f;
+
         private void Go(Vector3 dir, bool run, string doing)
         {
+            dir = NoPush(_m.transform.position, dir);
+            if (dir.sqrMagnitude < 0.01f) { _m.StopMoving(); _anchorAt = Time.time; Doing = "waits: a player right in its way"; return; } // (all of its step was into a player: no being stranded either)
             Doing = doing;
-            _shortSince = -1f; // (on its way: not standing short of it)
-            _m.Steer(dir, run);
+            if (_left < _shortBest - ShortGain) { _shortSince = -1f; _shortBest = _left; } // (nearer by a step: not standing short of it. A shuffle at the same spot, a way asked again and walked a little, is no gain: else its clock began anew each time and it pushed till it was put home, 2026-11-05)
+            _m.Steer(dir, run, run ? 1f : Mathf.Lerp(EaseLeast, 1f, Mathf.SmoothStep(0f, 1f, (_left - _near) / EaseFrom))); // (a walk slows as it comes, no sudden stop; a run — to a foe, away from one — keeps its speed)
             if (_trip != null) { if (_trip.HaltSince >= 0f) Flush(); _trip.Moving(_m); Dips(); } // (a halt over: written now)
             Vector3 at = _m.transform.position; float now = Time.time;
             if (now - _lastGo > 0.3f) { _pushFrom = at; _pushAt = now; } // (it stood meanwhile of its own will — aimed, worked, waited: counted afresh, not «held fast»)
             _lastGo = now;
             if ((at - _pushFrom).sqrMagnitude > 0.04f) { _pushFrom = at; _pushAt = now; }
+            else if (now - _pushAt > StepAfter && now >= _stepUpNext) { bool up = StepUp(at, dir); _stepUpNext = now + (up ? 1f : 0.25f); if (up) return; } // (a step it does not climb by itself: up onto it now — not after the ladder's six seconds)
             else if (now - _pushAt > 6f && now >= _wedgeNext && !PeopleAhead(at, dir)) { _wedgeNext = now + (Inside(at) ? 2f : 6f); Unwedge(at, dir, now - _pushAt > 20f || (Inside(at) && now - _pushAt > 8f) ? 3f : 1f); } // (in a thing: tried again sooner — at eight seconds the safety, Free) // (held fast six seconds — a step's slide; twenty — further. Not while someone stands in its way: they move on, it waits)
             else if (now - _pushAt > 2f && _trip != null && !_trip.Pushed) // (it means to walk and does not move: what holds it — once a walk)
             {

@@ -1,0 +1,88 @@
+clip point_at
+length 5
+loop 0
+pivot 1.1
+curve ease
+fade 0.6 0.8
+mode Spine2 body
+mark 3.8 lowers
+say вище: рука трохи вище, коли він показує на книгу; ще вище руку разом з кистю і пальцем; тепер на 5% нижче, щоб показував прямо на стіл (2026-11-06 вечір)
+want 1.9-3.7 hand right near 0.24 1.4 0.53 0.08
+want 1.9-3.7 finger right index straight
+
+# показує рукою вперед і трохи вниз (на стіл перед собою): рука підіймається плавно, тримає, опускається; вказівний прямий, решта пальців зігнуті
+# 2026-11-06 (користувач: показував на підлогу, а не на стіл з книгою; книга за ~5 м на висоті ~0.75 м, тобто майже прямо):
+# рука вища й далі вперед, кисть напрямками (пальці вперед і ледь униз, долоня всередину й донизу) замість кута -22, вказівний прямий
+
+0 @RightHand 0.24 0.95 0.08
+0.42 @RightHand 0.24 0.95 0.08
+1.8 @RightHand 0.24 1.4 0.53
+3.8 @RightHand 0.24 1.4 0.53
+4.4 @RightHand 0.25 1.2 0.35
+5 @RightHand 0.24 0.95 0.08
+
+0 @RightHand.w 0 0 0
+0.42 @RightHand.w 0 0 0
+1.8 @RightHand.w 1 0 0
+3.8 @RightHand.w 1 0 0
+4.4 @RightHand.w 0.6 0 0
+5 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.5 -0.8 0
+
+0 @RightHand.f 0 -0.06 1
+
+0 @RightHand.n -0.5 -0.85 0.1
+
+0 Spine2 0 0 0
+1.8 Spine2 3 0 0
+3.8 Spine2 3 0 0
+5 Spine2 0 0 0
+
+0 @Look 0.25 0.8 4.5
+
+0 @Look.w 0 0 0
+0.83 @Look.w 0 0 0
+1.8 @Look.w 0.8 0 0
+3.8 @Look.w 0.8 0 0
+4.78 @Look.w 0 0 0
+
+0 RightHandIndex1 0 0 0
+1.11 RightHandIndex1 -11 0 0
+4.13 RightHandIndex1 -11 0 0
+5 RightHandIndex1 0 0 0
+
+0 RightHandIndex2 0 0 0
+1.11 RightHandIndex2 -30 0 0
+4.13 RightHandIndex2 -30 0 0
+5 RightHandIndex2 0 0 0
+
+0 RightHandIndex3 0 0 0
+1.11 RightHandIndex3 -30 0 0
+4.13 RightHandIndex3 -30 0 0
+5 RightHandIndex3 0 0 0
+
+0 RightHandMiddle1 0 0 0
+1.11 RightHandMiddle1 78 0 0
+4.13 RightHandMiddle1 78 0 0
+5 RightHandMiddle1 0 0 0
+
+0 RightHandMiddle2 0 0 0
+1.11 RightHandMiddle2 85 0 0
+4.13 RightHandMiddle2 85 0 0
+5 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+1.11 RightHandRing1 65 0 0
+4.13 RightHandRing1 65 0 0
+5 RightHandRing1 0 0 0
+
+0 RightHandRing2 0 0 0
+1.11 RightHandRing2 70 0 0
+4.13 RightHandRing2 70 0 0
+5 RightHandRing2 0 0 0
+
+0 RightHandPinky1 0 0 0
+1.11 RightHandPinky1 70 0 0
+4.13 RightHandPinky1 70 0 0
+5 RightHandPinky1 0 0 0

@@ -7,6 +7,29 @@ namespace HuginWhispers
     // way: Munin, the wild one, jumps (quick, a touch past and back, short holds); Hugin, the thoughtful one, turns
     // (only for a real change of look, unhurried, soft at both ends, long holds). One per head: the shoulder's raven
     // (ShoulderLife) and the perch's (PerchLife).
+    // How far a raven's head turns from its body, wherever it is (a seat, a shoulder, the air): one limit for the bird, the user
+    // 2026-11-04. Every turn put on its head goes through Limit. Under 90 on purpose: a look moves the shorter way (Saccade), and
+    // between two aims beyond 90 on either side that way goes round behind its back: +110 to -110 passes 145, 180, 215.
+    internal static class RavenHead
+    {
+        internal static float YawMost = 85f; // degrees
+
+        // the turn with its part round «up» kept within YawMost, the rest of it (a nod, a tilt) as it is
+        internal static Quaternion Limit(Quaternion turn, Vector3 up)
+        {
+            Vector3 along = Vector3.Project(new Vector3(turn.x, turn.y, turn.z), up);
+            Quaternion twist = new Quaternion(along.x, along.y, along.z, turn.w);
+            float size = Mathf.Sqrt(twist.x * twist.x + twist.y * twist.y + twist.z * twist.z + twist.w * twist.w);
+            if (size < 0.0001f) return turn; // (a half turn round another axis: no part round this one)
+            twist = new Quaternion(twist.x / size, twist.y / size, twist.z / size, twist.w / size);
+            float angle; Vector3 axis;
+            twist.ToAngleAxis(out angle, out axis);
+            if (angle > 180f) angle -= 360f;
+            if (Mathf.Abs(angle) <= YawMost) return turn;
+            return turn * Quaternion.Inverse(twist) * Quaternion.AngleAxis(Mathf.Sign(angle) * YawMost, axis);
+        }
+    }
+
     internal sealed class Saccade
     {
         internal sealed class Style
@@ -33,6 +56,7 @@ namespace HuginWhispers
         // pace: × on top (a take-off's look off: a touch quicker)
         internal Quaternion Step(Quaternion want, float dt, bool munin, float nerves, float pace = 1f)
         {
+            want = RavenHead.Limit(want, Vector3.up); // (its aims in the head's own frame, up as up)
             Style st = munin ? Munin : Hugin;
             float speed = Mathf.Max(0.2f, Mathf.Clamp(nerves, st.NervesMin, st.NervesMax) * (munin ? MuninPace : 1f) * pace);
             float d = Quaternion.Angle(want, _to);

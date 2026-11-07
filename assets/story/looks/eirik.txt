@@ -1,0 +1,12 @@
+# Ворон Ейріка: крила попелясті, решта чорне. Птах сцени за замовчуванням (default), білясто-блакитний слід у повітрі (streak).
+default: yes
+streak: yes
+id: story_eirik
+name: Ворон Ейріка
+for: any
+zone body 08080A 26262C 100 80
+zone head 08080A 2A2A30 100 80
+zone tail 08080A 26262C 100 80
+zone wings 34322F B4B0A9 100 85
+zone tips 5E5A55 D6D2CB 100 85
+eyes BFD2DC 2.5

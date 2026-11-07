@@ -10,11 +10,11 @@ namespace HuginWhispers
     // Shift+F9 gives the mouse to the game and back (walk, look, then come back to the window).
     // Tabs, a partial file each: «Сюжет» (StoryPanelTrack), «Креслення» (StoryPanelBuild), «Актори» (StoryPanelActors),
     // «Вигляд» (StoryPanelLook), «Камера» and «Атмосфера» (StoryPanelShots), «Сцени» (StoryPanelScenes), «Режисер»
-    // (StoryPanelDirector: the shots, the moves, into a scene); the one editor
+    // (StoryPanelDirector: the shots, the moves, into a scene), «Тест» (StoryPanelTest: the test's console lines as buttons); the one editor
     // of the story's text files (StoryPanelFiles). This file: the window, its tabs, its fields.
     internal partial class StoryPanel : MonoBehaviour
     {
-        private static readonly string[] Tabs = { "Сюжет", "Креслення", "Актори", "Вигляд", "Камера", "Сцени", "Атмосфера", "Режисер" };
+        private static readonly string[] Tabs = { "Сюжет", "Креслення", "Актори", "Вигляд", "Камера", "Сцени", "Атмосфера", "Режисер", "Тест" };
         private const int TrackTab = 0, BuildTab = 1, ActorsTab = 2, LookTab = 3, ScenesTab = 5;
 
         private static StoryPanel _inst;
@@ -151,6 +151,7 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the window
         private void OnGUI()
         {
+            GUI.depth = -2000; // (over a scene's bars and its fade to black, StoryScreen: the author never loses his window)
             if (_win == null || _bg == null)
             {
                 _bg = Plugin.Solid(new Color(0.07f, 0.07f, 0.09f, 0.95f));
@@ -169,8 +170,8 @@ namespace HuginWhispers
             }
             WorldMarks();
             GUI.color = Color.white; GUI.backgroundColor = Color.white;
-            _rect.width = Mathf.Min(1120f, Screen.width - 10f);
-            _rect.height = Mathf.Min(800f, Screen.height - 40f);
+            _rect.width = Mathf.Min(DirCompact ? 460f : _tab == DirectorTab && _dirMore ? 1260f : 1120f, Screen.width - 10f); // (the director's three columns; the free camera: out of the picture)
+            _rect.height = Mathf.Min(DirCompact ? 150f : 800f, Screen.height - 40f);
             _rect.x = Mathf.Clamp(_rect.x, 0f, Mathf.Max(0f, Screen.width - _rect.width));
             _rect.y = Mathf.Clamp(_rect.y, 0f, Mathf.Max(0f, Screen.height - 60f));
             _rect = GUI.Window(0x52575354, _rect, Draw, "Ворони: сюжет", _win);
@@ -178,6 +179,7 @@ namespace HuginWhispers
 
         private void Draw(int id)
         {
+            if (DirCompact) { DirFlying(); GUI.DragWindow(new Rect(0f, 0f, 10000f, 26f)); return; }
             GUILayout.Label(MouseHere ? "Мишка: ВІКНО. Shift+F9 — віддати мишку грі (ходити, дивитись). F9 — закрити вікно."
                                       : "Мишка: ГРА. Shift+F9 — повернути мишку на вікно.", _hint);
             GUILayout.BeginHorizontal();
@@ -197,6 +199,7 @@ namespace HuginWhispers
             else if (_tab == CameraTab) CameraTabDraw();
             else if (_tab == AirTab) AirTabDraw();
             else if (_tab == DirectorTab) DirectorTabDraw();
+            else if (_tab == TestTab) TestTabDraw();
 
             GUILayout.FlexibleSpace();
             if (Note.Length > 0) GUILayout.Label(Note, _hint);

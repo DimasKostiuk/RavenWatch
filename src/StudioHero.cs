@@ -20,7 +20,7 @@ namespace HuginWhispers
     //   fate <h|m>                                        — the Fate stone's show and your gesture, no stone spent, no fate changed
     //   ytakeoff <name> [seconds=2.6] [fps=10] [views]  — Odin's wings started and the take-off filmed from its first frame
     //   armor <ItemPrefab|none>, armors                  — put armour on you (none: what the studio put on, off and away); the list
-    //   yreload                                          — our clips and rules read again (config/RavenWatch/player_anims)
+    //   yreload                                          — our clips and rules read again (BodyClips.Dir)
     //   react <ear|steal|shake|sip|steady|palm|wave|quarrel|boss|story|warm|fire_<mood>|down|up> [h|m] — your answer to the raven
     //                                                       (PlayerReact, Fireside) played at once
     // air: you are tossed up first (16 m/s) and shot on the way up: the clip over the game's falling pose (the wings).
@@ -81,7 +81,7 @@ namespace HuginWhispers
                     default: from = at + fwd * cd + Vector3.up * cs * 0.15f; break; // front
                 }
                 r.Cams[i].farClipPlane = 80f;
-                if (close) r.Cams[i].nearClipPlane = 0.05f;
+                r.Cams[i].nearClipPlane = Mathf.Max(close ? 0.05f : 0.1f, Vector3.Distance(from, at) - cs); // (what stands between the camera and the body is left out: a gate's post filled a whole frame)
                 r.Cams[i].transform.position = from;
                 r.Cams[i].transform.rotation = Quaternion.LookRotation(at - from, view == "top" ? fwd : Vector3.up); // (from above: your way is up on the picture)
             }
@@ -112,7 +112,7 @@ namespace HuginWhispers
         {
             cols = Mathf.Min(4, frames); gridRows = (frames + cols - 1) / cols;
             Texture2D[] sheets = new Texture2D[r.Cams.Count];
-            for (int v = 0; v < sheets.Length; v++) { sheets[v] = new Texture2D(Cell * cols, Cell * gridRows, TextureFormat.RGB24, false); Fill(sheets[v], new Color32(20, 20, 20, 255)); }
+            for (int v = 0; v < sheets.Length; v++) { sheets[v] = new Texture2D(r.Size * cols, r.Size * gridRows, TextureFormat.RGB24, false); Fill(sheets[v], new Color32(20, 20, 20, 255)); }
             return sheets;
         }
 

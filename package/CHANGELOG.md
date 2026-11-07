@@ -4,6 +4,23 @@
 
 **English**
 
+New:
+
+- Story: the prologue, an early test version. More is coming.
+- Heart of home: a building to manage your people. Its board shows what to do first, food and coins ahead, who lives here, your tasks and who gets on with whom; a raven post and a box for wages. A heart has room for a limited number of people.
+- Settlers: rescue people in trouble out in the lands, and they move in by your heart.
+- Natures: settlers differ in how they fight, spend the day and get on, and not everyone will take every job.
+- Jobs: hire residents as guard, cook, gatherer, smelter, beekeeper and more; move a resident to another home.
+- Everyday life: people eat, rest, sleep, keep favourite places, gather in the morning, hide from rain and raids, make way for you and climb stairs.
+- Talks: your answers can be warm, plain or rude and change how a person feels about you. People remember what you did, have moods, quarrels and dreams, ask favours, hold you to your promises and tell what happened while you were away.
+- Your raven joins talks with people, and they hear it.
+- Saga: a new tab in the book with what has happened in your world and who saw it.
+
+Changes and fixes:
+
+- Munin's wish to watch a fight now counts a beast finished by your weapon's lightning, a burn or a bleed, and while Munin himself is out striking at it.
+- The raven dives for fish much less often: at most three a day, and none while you already carry fish.
+- All lines stay on screen a little longer.
 - If something keeps the raven from flying to Odin after the ritual (a roof overhead, a fight nearby), it says so.
 - When one raven has flown off, the other can be sent into the nest or a raven tree alone.
 - Goods that Haldor sells say so in gold at the top of their description and on a recipe's material hover.
@@ -20,12 +37,30 @@
 - A hood or cape put on while a raven sits on the shoulder no longer stretches after the raven when it flies off (with armour from Jotunn mods or AdventureBackpacks).
 - The raven awning no longer sinks into the wall, and wall perches can also hang on a post.
 - A raven's description is short now: who it is, trust, strength, blessing and burden; everything else is in the book.
-- Odin no longer gives a raven at the nest: your own raven finds you in the prologue.
-- During story scenes monsters keep away and none are born nearby.
-- The current story goal is shown under the map.
+- Standing by is no longer enough: a boss counts for nicknames and the raven's strike, an errand's champion for the errand and its gold, and a raid for Munin's strength only if you or your raven landed a blow.
+- A kill now counts the same when another player's game holds the creature: nicknames, habits, the fight's grade and the raven's wishes no longer miss it or mistake the raven's blow for yours.
+- Another player's raven nickname is shown in your language.
+- People speak Ukrainian for now in any language of the game; English comes in a later update.
 
 **Українською**
 
+Нове:
+
+- Сюжет: пролог, рання тестова версія. Далі буде більше.
+- Серце оселі: будівля, з якої ти керуєш своїми людьми. На її дошці — що робити насамперед, на скільки вистачить їжі й монет, хто тут живе, твої справи й хто з ким ладнає; жердина для ворона й скарбничка для платні. Серце вміщує обмежену кількість людей.
+- Поселенці: рятуй людей у біді по всіх землях, і вони оселяться біля твого серця.
+- Вдачі: поселенці по-різному б'ються, проводять день і ладнають між собою, і не кожен візьметься за будь-яку роботу.
+- Робота: наймай мешканців вартовими, кухарями, збирачами, плавильниками, пасічниками тощо; мешканця можна переселити до іншої оселі.
+- Повсякдення: люди їдять, відпочивають, сплять, мають улюблені місця, збираються зранку, ховаються від дощу й набігів, дають тобі дорогу й ходять сходами.
+- Розмови: твої відповіді бувають теплі, прості чи грубі й змінюють ставлення людини до тебе. Люди пам'ятають твої вчинки, мають настрій, сварки й мрії, просять про послуги, пам'ятають твої обіцянки й розповідають, що сталося, поки тебе не було.
+- Твій ворон встряє в розмови з людьми, і вони його чують.
+- Сага: нова вкладка в книзі з тим, що сталося у твоєму світі, і хто це бачив.
+
+Зміни й виправлення:
+
+- Прохання Муніна побачити бій тепер зараховує звіра, якого добила блискавка твоєї зброї, опік чи кровотеча, і коли Мунін сам у цьому бою б'є з повітря.
+- Ворон пірнає за рибою значно рідше: не більше трьох на день і жодної, поки в сумці вже є риба.
+- Усі репліки тримаються на екрані трохи довше.
 - Якщо після обряду щось не пускає ворона до Одіна (дах над головою, бій поруч), він про це каже.
 - Коли один ворон відлетів, другого можна посадити в гніздо чи на вороняче дерево самого.
 - Товари, які продає Хальдор, кажуть про це золотом угорі опису й у підказці матеріалу в рецепті.
@@ -42,9 +77,10 @@
 - Капюшон чи плащ, вдягнутий, коли ворон сидить на плечі, більше не тягнеться за вороном, коли той злітає (з бронею з модів на Jotunn чи AdventureBackpacks).
 - Воронячий піддашок більше не заходить у стіну, а настінні жердини можна вішати й на стовп.
 - Опис ворона тепер короткий: хто він, довіра, сила, благо й тягар; решта — у книзі.
-- Одін більше не дає ворона в гнізді: твій власний ворон знайде тебе в пролозі.
-- Під час сюжетних сцен монстри тримаються осторонь і поруч не з'являються.
-- Поточна мета сюжету видна під мапою.
+- Просто стояти поруч більше не досить: бос для прізвиськ і удару ворона, ватажок для доручення й золота, набіг для сили Муніна рахуються, лише якщо вдарив ти чи твій ворон.
+- Вбивство рахується однаково, коли істоту веде гра іншого гравця: прізвиська, звички, оцінка бою й бажання ворона більше не гублять його й не плутають удар ворона з твоїм.
+- Прізвисько чужого ворона показується твоєю мовою.
+- Люди поки говорять українською в будь-якій мові гри; англійська прийде в одному з наступних оновлень.
 
 ## 2.8.1
 

@@ -12,16 +12,22 @@ using UnityEngine.UI;
 namespace HuginWhispers
 {
     // The Book of ravens, after the design «Книга воронів» (Desktop\book-export, «Хід 9»): an open book over the dimmed game,
-    // Munin's page on the left and Hugin's on the right, four tabs over it — Ravens, Gifts, Growth (trust, ritual,
-    // training), Gear. The book with everything on its pages is drawn by its own camera, tilted back 8° in perspective as
+    // Munin's page on the left and Hugin's on the right, tabs over it — Ravens, Gifts, Growth (trust, ritual,
+    // training), Gear, Odin's way, and with the story the Saga (RavenBookSaga). The book with everything on its pages is drawn by its own camera, tilted back 8° in perspective as
     // in the design, into a picture shown over the game; clicks go to the tilted pieces themselves. The empty book, the
     // brush strokes and the portraits are pictures made from the design, the fonts its own (BookArt). Few words on the
     // page: numbers, bars, names, one seal to press; the rest is under the cursor (gold words) or behind "?".
     internal static partial class RavenBook
     {
         private static string[] TabNames { get { return Lang.Arr(TabNamesSrc); } } // (translated on every read)
+#if RAVEN_STORY
+        private static readonly string[] TabNamesSrc = Lang.Keys("Ворони", "Дари", "Розвиток", "Образ", "Шлях Одіна", "Сага", "Підгонка");
+        private const int SagaTab = 5, FitTab = 6; // SagaTab «Сага»: the story's progress (RavenBookSaga, StorySaga)
+#else
         private static readonly string[] TabNamesSrc = Lang.Keys("Ворони", "Дари", "Розвиток", "Образ", "Шлях Одіна", "Підгонка");
-        private const int RavensTab = 0, GiftsTab = 1, GrowTab = 2, OutfitTab = 3, RunesTab = 4, FitTab = 5; // RunesTab «Шлях Одіна»: the errand + every rune (RavenBookRunes) // FitTab: admins fitting pieces (Outfits.TuningAllowed); goes away later
+        private const int SagaTab = -1, FitTab = 5; // (no story: no saga)
+#endif
+        private const int RavensTab = 0, GiftsTab = 1, GrowTab = 2, OutfitTab = 3, RunesTab = 4; // RunesTab «Шлях Одіна»: the errand + every rune (RavenBookRunes) // FitTab: admins fitting pieces (Outfits.TuningAllowed); goes away later
         private static bool Dressing(int tab) { return tab == OutfitTab || tab == FitTab; }
 
         // ---------------------------------------------------------------- the design's measures (canvas units = its pixels)
@@ -81,34 +87,51 @@ namespace HuginWhispers
 
         // The book is Odin's: it comes with the first raven or with his trial (Trial), and stays for good after that
         // (a lost raven is brought back from it). Kept in the character.
+        // With the story (RAVEN_STORY) it is Eirik's: it lies in his house (the prologue's echo leaves it: Give). Who had a
+        // raven before the story first saw the character keeps it as before (SeenKey: that first look, once). Till one has
+        // it, a raven of his only sits on the shoulder: the book, the circles, the keys, hunger, a death's loss, its
+        // wishes all ask Given (the one gate) — «you do not know yet how to talk to it».
         internal const string GivenKey = "RavenWatch_bookGiven";
+#if RAVEN_STORY
+        private const string SeenKey = "RavenWatch_bookSeen";
+#endif
 
         internal static bool Given(Player p)
         {
             if (p == null) return false;
             if (p.m_customData.ContainsKey(GivenKey)) return true;
+#if RAVEN_STORY
+            if (p.m_customData.ContainsKey(SeenKey)) return false; // (the story saw him first: only from Eirik's house)
+            p.m_customData[SeenKey] = "1"; // (his first look: a raven of his from before keeps the book, below)
+#endif
             bool had = Trial.HasRaven(p) || Trial.Running(p) || Trial.Over(p);
             if (!had) foreach (string k in p.m_customData.Keys) if (k.StartsWith("RavenWatch_copy_")) { had = true; break; } // (a raven of yours, now lost)
             if (had) p.m_customData[GivenKey] = "1";
             return had;
         }
 
-        // Odin hands it over with the trial: opens on «Шлях Одіна» next time
-        internal static void GiveFromOdin(Player p)
+        // given by the story (Eirik's house): opens on the ravens' page
+        internal static void Give(Player p) { if (p != null) p.m_customData[GivenKey] = "1"; }
+
+        // what a key or a circle says while there is no book (Given): a raven on you that you cannot talk to yet, or none
+        internal static string NoBook(Player p)
         {
-            if (p == null) return;
-            p.m_customData[GivenKey] = "1";
-            _tab = RunesTab;
+            bool raven = p != null && (RavenSeat.On(p, false) != null || RavenSeat.On(p, true) != null);
+#if RAVEN_STORY
+            return raven ? Lang.T("Ворон сидить на плечі й дивиться на тебе. Ти ще не знаєш, як із ним говорити.") : Lang.T("Книги воронів у тебе ще нема.");
+#else
+            return Lang.T("Книги воронів у тебе ще нема. Вона приходить разом із вороном.");
+#endif
         }
 
-        // straight on «Шлях Одіна» (the nest's bowl during Odin's trial)
+        // straight on «Шлях Одіна» (the nest's bowl during a trial still running in an old save: Trial.Use)
         internal static void OpenPath() { _tab = RunesTab; if (IsOpen) Show(_tab); else Open(); }
 
         internal static void Open()
         {
             if (InventoryGui.instance == null || Player.m_localPlayer == null) return;
-            if (!Given(Player.m_localPlayer)) { RavenMsg.Center(Player.m_localPlayer, Lang.T("Книги воронів у тебе ще нема. Її дає Одін — разом із вороном чи з випробуванням у Воронячому гнізді.")); return; }
-            if (_root == null) Build();
+            if (!Given(Player.m_localPlayer)) { RavenMsg.Center(Player.m_localPlayer, NoBook(Player.m_localPlayer)); return; }
+            if (_root == null) { long b0 = System.Diagnostics.Stopwatch.GetTimestamp(); Build(); _buildMs = Ms(b0, System.Diagnostics.Stopwatch.GetTimestamp()); }
             if (_root == null) return;
             CloseNestWindow(); CloseTreeWindow(); // (one window at a time)
             _capturing = null;
@@ -179,6 +202,58 @@ namespace HuginWhispers
             StageOff();
             if (_stage != null) _stage.SetActive(false);
             if (_root != null) _root.SetActive(false);
+            DrawsTold();
+        }
+
+        // ---------------------------------------------------------------- how much the drawing costs (one line in the log a closing)
+        // each page drawn while the book was open: how often (opened on it / drawn again by a change); how long all of Show took,
+        // of it the page's own building and the forced layout; how many objects the page holds; and the next two frames (the
+        // game's canvas builds the new texts' meshes and destroys the old page at the frame's end: that cost is not in Show)
+        // against an ordinary frame with the book open. The once-a-second look for a change (Snapshot) as well. Cheap: stopwatch
+        // reads round what runs anyway, one walk over the page's objects a drawing.
+        private sealed class Draws { public int Opened, Again, Objects; public double Ms, Max, Page, Layout, Frame; }
+        private static readonly Dictionary<int, Draws> _draws = new Dictionary<int, Draws>();
+        private static double _snapMs, _idleMs, _buildMs; private static int _snaps, _idle;
+        private static int _drawnFrame = -10, _drawnTab;
+        private static double Ms(long from, long to) { return (to - from) * 1000.0 / System.Diagnostics.Stopwatch.Frequency; }
+
+        private static void Drawn(int tab, bool again, double ms, double page, double layout)
+        {
+            Draws d;
+            if (!_draws.TryGetValue(tab, out d)) _draws[tab] = d = new Draws();
+            if (again) d.Again++; else d.Opened++;
+            d.Ms += ms; if (ms > d.Max) d.Max = ms;
+            d.Page = Math.Max(d.Page, page); d.Layout = Math.Max(d.Layout, layout);
+            d.Objects = Objects(_pages);
+            _drawnFrame = Time.frameCount; _drawnTab = tab;
+        }
+
+        private static int Objects(Transform t) { int n = 1; for (int i = 0; i < t.childCount; i++) { Transform c = t.GetChild(i); if (c.gameObject.activeSelf) n += Objects(c); } return n; } // (the old page, still there till the frame ends, is switched off: not counted)
+
+        // each frame while open (Update): the two after a drawing, else an ordinary one
+        private static void FrameCost()
+        {
+            int after = Time.frameCount - _drawnFrame;
+            double ms = Time.unscaledDeltaTime * 1000.0;
+            Draws d;
+            if (after >= 1 && after <= 2) { if (_draws.TryGetValue(_drawnTab, out d)) d.Frame = Math.Max(d.Frame, ms); }
+            else if (after > 3) { _idleMs += ms; _idle++; }
+        }
+
+        private static void DrawsTold()
+        {
+            if (_draws.Count == 0 || Plugin.Instance == null) return;
+            List<string> l = new List<string>();
+            foreach (KeyValuePair<int, Draws> kv in _draws)
+            {
+                Draws d = kv.Value;
+                l.Add("«" + TabNamesSrc[kv.Key] + "» " + d.Opened + "+" + d.Again + "×: " + (d.Ms / (d.Opened + d.Again)).ToString("0.0") + "/" + d.Max.ToString("0.0") + " ms (page " + d.Page.ToString("0.0") + ", layout " + d.Layout.ToString("0.0")
+                    + "), next frame " + d.Frame.ToString("0") + " ms, " + d.Objects + " objects");
+            }
+            Plugin.Instance.Log("Book of ravens drawn (opened+again: avg/max of Show, the most of each part): " + string.Join(" · ", l.ToArray())
+                + (_buildMs > 0 ? " · the book built " + _buildMs.ToString("0") + " ms" : "") + BookArt.LateTold()
+                + " · ordinary frame " + (_idle > 0 ? (_idleMs / _idle).ToString("0.0") : "?") + " ms · change look " + _snaps + "× " + (_snaps > 0 ? (_snapMs / _snaps).ToString("0.00") : "0") + " ms");
+            _draws.Clear(); _snapMs = _idleMs = _buildMs = 0; _snaps = _idle = 0;
         }
 
         // from the plugin's Update
@@ -196,6 +271,7 @@ namespace HuginWhispers
             }
             if (!IsOpen) return;
             if (Player.m_localPlayer == null || InventoryGui.IsVisible() || Menu.IsVisible()) { Close(); return; }
+            FrameCost();
             StageTick();
             Animate();
             if (_capturing != null) { Capture(); MoveTip(); return; }
@@ -267,10 +343,8 @@ namespace HuginWhispers
         {
             try
             {
+                EnsureGameFont();
                 InventoryGui inv = InventoryGui.instance;
-                TMP_Text sample = inv.m_recipeName != null ? inv.m_recipeName : inv.m_playerName;
-                _gameFont = sample != null ? sample.font : null;
-                BookArt.Fonts(_gameFont);
 
                 // the overlay: over everything, the game's scale
                 _root = new GameObject("RavenWatch_Book", typeof(RectTransform));
@@ -569,6 +643,8 @@ namespace HuginWhispers
         private static void Show(int tab, bool refresh)
         {
             if (_pages == null) return;
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            bool again = refresh && tab == _tab;
             if (Dressing(_tab) && !Dressing(tab)) LeaveOutfits();
             if (tab == FitTab && !Outfits.TuningAllowed) tab = OutfitTab;
             _barsAtOnce = !refresh && tab != _tab; // another tab (not the book opening): its bars stand at once
@@ -593,23 +669,31 @@ namespace HuginWhispers
             for (int i = 0; i < _tabs.Length; i++) MarkTab(i, i == tab);
             ItemDrop.ItemData hugin, munin;
             RavenItem.Worn(Player.m_localPlayer, out hugin, out munin);
+            long p0 = System.Diagnostics.Stopwatch.GetTimestamp();
             try
             {
                 if (tab == RavensTab) PageRavens(hugin, munin);
                 else if (tab == GiftsTab) PageGifts(hugin, munin);
                 else if (tab == GrowTab) PageGrow(hugin, munin);
                 else if (tab == RunesTab) PageRunes();
+#if RAVEN_STORY
+                else if (tab == SagaTab) PageSaga();
+#endif
                 else PageOutfits(hugin, munin);
             }
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Book of ravens page failed: " + e); }
+            long p1 = System.Diagnostics.Stopwatch.GetTimestamp();
             try { Footer(tab); } catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Book of ravens footer failed: " + e); }
+            long l0 = System.Diagnostics.Stopwatch.GetTimestamp();
             Relayout(); // the columns laid out now, not at the frame's end: a grid of cards (the ritual's) stood empty until the next redraw
+            long l1 = System.Diagnostics.Stopwatch.GetTimestamp();
             if (tab == RavensTab) TooTall();
             if (scroll != null) RestoreScroll(scroll);
             _shown = Snapshot();
             TabDots();
             if (feeding.HasValue && tab == RavensTab && Trust.Worn(feeding.Value) != null) FeedPicker(null, feeding.Value, feedAt, feedScroll);
             WordsAgain(wordsOpen, wordsAt);
+            Drawn(tab, again, Ms(t0, System.Diagnostics.Stopwatch.GetTimestamp()), Ms(p0, p1), Ms(l0, l1));
         }
 
         private static void Clear(RectTransform r)
@@ -695,7 +779,10 @@ namespace HuginWhispers
         {
             foreach (Action a in Live.ToArray()) { try { a(); } catch { } }
             TabDots();
-            if (Snapshot() != _shown) Show(_tab, true);
+            long s0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            string now = Snapshot();
+            _snapMs += Ms(s0, System.Diagnostics.Stopwatch.GetTimestamp()); _snaps++;
+            if (now != _shown) Show(_tab, true);
         }
 
         // what the open page shows: when any of it changes, the page is drawn again (a meal, a ritual, a raven taken off)
@@ -705,6 +792,9 @@ namespace HuginWhispers
             if (p == null) return "";
             ItemDrop.ItemData hugin, munin;
             RavenItem.Worn(p, out hugin, out munin);
+#if RAVEN_STORY
+            if (_tab == SagaTab) return _tab + "|g" + StorySaga.Stamp(p); // (no raven on this page: what moves a raven never draws it again)
+#endif
             string s = _tab + "|" + _capturing + "|" + Outfits.Tuning + "|" + (_tab == GrowTab ? _growMunin.ToString() : Dressing(_tab) ? _dressMunin.ToString() : "") + "|";
             Dictionary<string, int> bag = null;
             foreach (ItemDrop.ItemData item in new ItemDrop.ItemData[] { hugin, munin })
@@ -781,6 +871,9 @@ namespace HuginWhispers
             Outfits.SeenStart(hugin); Outfits.SeenStart(munin); // once per raven: its old pieces are not "new"
             if (_tabDots.Length > RunesTab) _tabDots[RunesTab].gameObject.SetActive(RuneBook.Of(p).New.Count > 0);
             _tabDots[OutfitTab].gameObject.SetActive(OutfitNews(p, false) || OutfitNews(p, true));
+#if RAVEN_STORY
+            _tabDots[SagaTab].gameObject.SetActive(_tab != SagaTab && StorySaga.Fresh(p)); // (the open page is being read: seen there)
+#endif
         }
 
         // something new on «Образ» for this raven: a piece the page shows, or a nickname
@@ -857,6 +950,7 @@ namespace HuginWhispers
                 }
             }
             if (tab == RunesTab) l.Add(Lang.F("<b><color={0}>●</color> Нові руни</b> · загорілися руни, яких ти ще не бачи{{в|ла}}.", GoldHex));
+            if (tab == SagaTab) l.Add(Lang.F("<b><color={0}>●</color> Нове в сазі</b> · з'явився запис, якого ти ще не чита{{в|ла}}.", GoldHex));
             if (tab == OutfitTab && l.Count > 0) l.Add(Lang.T("<i>Золота крапка позначає нове: на вороні, на речі, на прізвиську.</i>"));
             return l.Count > 0 ? string.Join("\n", l.ToArray()) : null;
         }
@@ -2539,6 +2633,7 @@ namespace HuginWhispers
                 case RavensTab: return Lang.T("Наведи на золотий текст — пояснення · ● на вкладці — є що зробити");
                 case GrowTab: return Lang.T("Стрічки «Мунін / Хугін» перемикають ворона · ● — ритуал можна провести");
                 case RunesTab: return Lang.T("Наведи на руну — що дає · клік — на якого ворона · ● нова руна");
+                case SagaTab: return Lang.T("Ліворуч — що сталося у світі · праворуч — твій шлях · ● новий запис");
                 default: return Lang.T("Клік по речі — вдягнути · клік по слоту — зняти · у кутках — руни · тягни ворона мишею · ● нова річ");
             }
         }
@@ -3775,6 +3870,8 @@ namespace HuginWhispers
                     return Lang.F("{0}Дари викликаються з кола дарів (<color={1}>{2}</color>), з G → Ворони або своїми клавішами. Кожен коштує сили й має перезарядку; наведи на дар — побачиш усе про нього.\n\n<b>Клавіші</b> — за бажанням. Клікни поле на картці дару й натисни клавішу (можна з Shift, Ctrl чи Alt); Esc — скасувати, Backspace — прибрати. Або ПКМ по дару в колі. Клавіші воронів <b>нічого не забирають</b> у гри й інших модів: якщо клавіша вже зайнята, спрацює і те, і дар. <color=#FF6B6B>!</color> показує, хто ще на ній.\n\nТочка на картці: <color=#5a9a4a>●</color> готовий · <color=#d8a83a>●</color> чекає · <color=#b8322a>●</color> бракує сили. <b>Пасивні</b> дари діють самі. Закриті відкриваються з довірою.", h, GoldHex, RavenKeys.Label(RavenKeys.Get(RavenKeys.GiftsId)));
                 case RunesTab:
                     return NestHelp(h) + "\n\n" + RunesHelp("");
+                case SagaTab:
+                    return Lang.F("{0}<b>Ліва сторінка — світ.</b> Те, що сталося тут для всіх, з іменами тих, хто це бачив. Чого ти сам{{|а}} не бачи{{в|ла}}, те лишається чуткою, поки тобі не розкажуть люди.\n\n<b>Права сторінка — твій шлях.</b> Угорі — що робити зараз, нижче — що ти вже пройш{{ов|ла}}, по черзі.", h);
                 case GrowTab:
                     return Lang.F("{0}<b>Довіра.</b> Ворон звикає до того, з ким мандрує. Довіра росте, коли годуєш його, голодного (улюблена їжа — удвічі), і коли ви разом живете — і в мирі, і в бою. Коли шкала повна, вона замерзає й чекає ритуалу: принеси трофеї наступного боса до Жертовних каменів, де висить трофей цього боса. Ворон з'їсть їх, полетить до Одіна й повернеться на новому рівні: більше сили, сильніші дари, нове вбрання.\nДовіра тане, коли ти гинеш, знімаєш ворона з плеча чи він голодує (ситість 0). На 1–2 рівнях ворон ще дичиться й іноді відлітає на кілька хвилин.\n\n<b>Вишкіл</b> — сила удару ворона («Удар в очі», «Кігті»). Кожен виліт, що когось вразив, додає досвіду. Сила не залежить від твоєї зброї: вона росте з вишколом, довірою та за кожного боса, якого ти переміг із ним на плечі.\n\n<b>Повернення.</b> Загиблого чи зниклого ворона можна повернути обрядом біля каменів (на сторінці ворона), не частіше ніж раз на {1} днів.", h, Backup.RestoreDays);
                 default:
@@ -4323,7 +4420,7 @@ namespace HuginWhispers
         {
             if (RavenBook.IsOpen || RavenBook.NestWindowOpen || RavenBook.TreeWindowOpen || RavenBook.LetterOpen || RavenBook.BindResultOpen || RavenBook.InviteOpen || RavenBook.PickOpen || RavenBook.OmenOpen) __result = true;
 #if RAVEN_NPC
-            if (RavenBook.TalkOpen || RavenBook.CardOpen) __result = true; // (a person's talk, its card)
+            if (RavenBook.TalkOpen || RavenBook.SheetOpen) __result = true; // (a person's talk, its card, a heart's board)
 #endif
         }
     }

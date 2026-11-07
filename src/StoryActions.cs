@@ -11,9 +11,11 @@ namespace HuginWhispers
     //   msg <текст>                                 a line in the middle of the screen
     //   raise <подія> [arg]                         an event on the bus
     //   scene <id>                                  play a scene (StoryScenes)
+    //   npc <who> hold <place> …                    a word that stands till «free» or the next word, whatever comes between: StoryHold
     //   npc <who> follow|stay|free                  a person of the story between scenes (its mind's Scene layer: over its
-    //                                               day till «free»; a scene that takes it lets it go at its end)
-    //   hallgate open|shut                          the Hall's great door unlocked for everyone (HallState: its world key)
+    //                                               day till «free»; a scene that takes it lets it go at its end); whom it follows is
+    //                                               the world's word (lead_<who>, as hold), so it may be given with the person far off
+    //   gate <place> open|shut                      a place's great door unlocked for everyone, or locked again (LocState: its world key)
     // The kinds are a registry (as StoryCond's and StoryScenes' steps): a new action is one entry, nothing else changes.
     // QuestOnly ones (goto, end) move a quest: a scene's «do» refuses them.
     internal static class StoryActions
@@ -24,6 +26,7 @@ namespace HuginWhispers
             public string Usage;                  // how it is written (the errors)
             public bool QuestOnly;                // only in a quest's start:/done: (it moves the quest)
             public System.Func<string[], string> Check;                                   // null: fine; else what is wrong (load time)
+            public Dictionary<string, Kind> Verbs; public int VerbAt;  // (an action with verbs: the word at VerbAt picks its own entry, with all of the above)
             public System.Func<Player, StoryQuests.QuestDef, string[], string, string> Do; // (player, quest — null in a scene, words, the text after the word) → a stage to go to, else null
         }
 
@@ -57,39 +60,65 @@ namespace HuginWhispers
             { "msg", new Kind { Min = 1, Usage = "msg <текст>", Do = (p, q, w, rest) => { if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, Lang.T(rest)); return null; } } },
             { "raise", new Kind { Min = 1, Usage = "raise <подія> [arg]", Do = (p, q, w, rest) => { StoryBus.Raise(w[1], w.Length > 2 ? w[2] : "", 0); return null; } } },
             { "scene", new Kind { Min = 1, Usage = "scene <id>", Do = (p, q, w, rest) => { StoryScenes.TryPlay(w[1]); return null; } } },
-            { "npc", new Kind { Min = 2, Usage = "npc <хто> follow|stay|free",
-                Check = w => w[2] != "follow" && w[2] != "stay" && w[2] != "free" ? "npc <хто> follow|stay|free" : null,
-                Do = (p, q, w, rest) =>
+            { "npc", new Kind { Min = 2, VerbAt = 2, Usage = "npc <хто> follow|stay|free|hold <місце> …|live <набір>", Verbs = new Dictionary<string, Kind>
                 {
-                    NpcActor who = StoryScenes.Actor(w[1], p.transform.position);
-                    if (who == null) { StoryQuests.Note("npc: нема «" + w[1] + "» поруч"); return null; }
-                    if (StoryScenes.HeldByOther(who)) { StoryQuests.Note("npc: «" + w[1] + "» зараз у сцені іншого гравця — не чіпаю"); return null; } // (one scene a person)
-                    Player lead = Leader(who);
-                    if (lead != null && lead != p) { StoryQuests.Note("npc: «" + w[1] + "» уже йде за " + lead.GetPlayerName() + " — не перебиваю"); return null; } // (two players on one stage: the first one leads)
-                    if (w[2] == "follow") { who.Order("follow " + NpcKit.Ref(p.GetZDOID()) + " 3", NpcMind.Layer.Scene); Lead(who, p.GetPlayerID()); }
-                    else if (w[2] == "stay") { who.Order("stay", NpcMind.Layer.Scene); Lead(who, 0L); }
-                    else { who.Order("look none", NpcMind.Layer.Scene); who.Order("free", NpcMind.Layer.Scene); Lead(who, 0L); }
-                    return null;
+                    { "hold", new Kind { Min = 1, Usage = StoryHold.Usage,
+                        Check = w => StoryHold.Why(string.Join(" ", w, 3, w.Length - 3)),
+                        Do = (p, q, w, rest) => { string bad = StoryHold.Set(w[1], string.Join(" ", w, 3, w.Length - 3)); if (bad != null) StoryQuests.Note(bad); return null; } } }, // (the world keeps it: the person need not be near)
+                    { "live", new Kind { Min = 1, Usage = StoryLife.Usage,
+                        Check = w => w.Length != 4 ? StoryLife.Usage : StoryLife.Why(w[1], w[3]),
+                        Do = (p, q, w, rest) => { StoryLife.Set(w[1], w[3]); return null; } } }, // (the world keeps it, as «hold»)
+                    { "follow", new Kind { Do = (p, q, w, rest) =>
+                        {
+                            long had = LeadOf(w[1]);
+                            if (had != 0L && had != p.GetPlayerID() && LeaderHere(had)) { StoryQuests.Note("npc: «" + w[1] + "» уже йде за іншим гравцем — не перебиваю"); return null; } // (two players on one stage: the first one leads)
+                            Lead(w[1], p.GetPlayerID()); // (the world keeps it: the person need not be near — a stage's actions handed to a game far off, LeadWatch takes it up when he comes)
+                            NpcActor who = StoryScenes.Actor(w[1], p.transform.position);
+                            if (who != null && !StoryScenes.HeldByOther(who)) who.Order("follow " + NpcKit.Ref(p.GetZDOID()) + " 3", NpcMind.Layer.Scene);
+                            else StoryQuests.Note("npc: «" + w[1] + "» " + (who == null ? "не поруч" : "у сцені іншого гравця") + " — піде за тобою, коли будеш ближче " + LeadNear + " м");
+                            return null;
+                        } } },
+                    { "stay", new Kind { Do = (p, q, w, rest) => { LeadMineOff(p, w[1]); return PersonWord((pl, who) => who.Order("stay", NpcMind.Layer.Scene))(p, q, w, rest); } } },
+                    { "free", new Kind { Do = (p, q, w, rest) =>
+                        {
+                            StoryHold.Clear(w[1]); // («вільно», wherever it is)
+                            LeadMineOff(p, w[1]);
+                            NpcActor who = StoryScenes.Actor(w[1], p.transform.position);
+                            if (who == null || StoryScenes.InCast(who)) return null; // (a scene's «do» on one it holds: the standing word is gone, the scene keeps it till its end)
+                            return PersonWord((pl, a) => { a.Order("look none", NpcMind.Layer.Scene); a.Order("free", NpcMind.Layer.Scene); })(p, q, w, rest);
+                        } } },
                 } } },
-            { "hallgate", new Kind { Min = 1, Usage = "hallgate open|shut",
-                Check = w => w[1] != "open" && w[1] != "shut" ? "hallgate open|shut" : null,
-                Do = (p, q, w, rest) =>
-                {
-                    if (ZoneSystem.instance == null || Locs.Hall == null) return null;
-                    if (w[1] == "open") ZoneSystem.instance.SetGlobalKey(Locs.Hall.KeyGate); else ZoneSystem.instance.RemoveGlobalKey(Locs.Hall.KeyGate);
-                    return null;
-                } } },
+            { "gate", new Kind { Min = 2, Usage = "gate <місце> open|shut   (головна брама місця: відімкнути для всього світу чи знову замкнути)",
+                Check = w => Locs.Get(w[1]) == null ? "нема місця «" + w[1] + "»" : w[2] != "open" && w[2] != "shut" ? "gate <місце> open|shut" : null,
+                Do = (p, q, w, rest) => { LocState.SetGate(Locs.Get(w[1]), w[2] == "open"); return null; } } },
         };
 
-        // whom a person of the story follows by a quest's word (its ZDO, written where it is run): that player while he
-        // is in the world within LeadNear m of it, else nobody — no renewing, a player gone or far frees it by itself. Kept in
-        // the ZDO, so the word outlives the mind's Scene layer (not kept): LeadWatch takes it up again after a reload, a new owner
-        private static readonly int KLead = "RavenWatch_npcLead".GetStableHashCode();
-        private const float LeadNear = 50f;
-        // (every game that runs the story: the person's owner writes it — StoryScenes.Wire)
-        internal static void Wire() { NpcActor.Acts["storylead"] = (n, w) => { ZDO z = n.Zdo; long v; if (z != null) z.Set(KLead, w.Length > 1 && long.TryParse(w[1], out v) ? v : 0L); }; }
+        // a word to a person near: not one another player's scene holds, nor one that already goes after another player
+        private static System.Func<Player, StoryQuests.QuestDef, string[], string, string> PersonWord(System.Action<Player, NpcActor> say)
+        {
+            return (p, q, w, rest) =>
+            {
+                NpcActor who = StoryScenes.Actor(w[1], p.transform.position);
+                if (who == null) { StoryQuests.Note("npc: нема «" + w[1] + "» поруч"); return null; }
+                if (StoryScenes.HeldByOther(who)) { StoryQuests.Note("npc: «" + w[1] + "» зараз у сцені іншого гравця — не чіпаю"); return null; } // (one scene a person)
+                Player lead = Leader(who);
+                if (lead != null && lead != p) { StoryQuests.Note("npc: «" + w[1] + "» уже йде за " + lead.GetPlayerName() + " — не перебиваю"); return null; } // (two players on one stage: the first one leads)
+                say(p, who);
+                return null;
+            };
+        }
 
-        private static void Lead(NpcActor a, long player) { a.Act("storylead " + player); }
+        // whom a person of the story follows by a quest's word: the world's text «lead_<who>» = that player's number (as «hold», by the template's
+        // id: any game writes it, the person need not be near nor even loaded). It follows him while he is in the world within LeadNear m of it,
+        // else nobody — no renewing, a player gone or far frees it by itself. The word outlives the mind's Scene layer (not kept): LeadWatch,
+        // where the person is run, takes it up again after a reload, a new owner, or when he comes near
+        private const float LeadNear = 50f;
+        private static string LeadKey(string who) { return "lead_" + who; }
+        private static long LeadOf(string who) { long v; return long.TryParse(StoryWorld.Text(LeadKey(who)), out v) ? v : 0L; }
+        private static void Lead(string who, long player) { StoryWorld.SetText(LeadKey(who), player != 0L ? player.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""); }
+
+        // «stay», «free»: the lead is let go, unless another player here leads it (two players on one stage: the first one leads)
+        private static void LeadMineOff(Player p, string who) { long had = LeadOf(who); if (had != 0L && (had == p.GetPlayerID() || !LeaderHere(had))) Lead(who, 0L); }
 
         // the quest's «follow» still stands, its player here, and it follows no more (where it is run, now and then: NpcMind.SceneWatch)
         internal static void LeadWatch(NpcActor a)
@@ -99,17 +128,24 @@ namespace HuginWhispers
             if (lead != null) a.Order("follow " + NpcKit.Ref(lead.GetZDOID()) + " 3", NpcMind.Layer.Scene);
         }
 
-        // a scene took it and let it go: that word is over too («a scene that takes it lets it go at its end»)
-        internal static void LeadOff(NpcActor a) { ZDO z = a.Zdo; if (z != null && z.GetLong(KLead, 0L) != 0L) Lead(a, 0L); }
+        // whom it follows by the story's word now (0: nobody) — a scene notes it as it takes the person
+        internal static long LeadNow(NpcActor a) { return a != null ? LeadOf(a.Id) : 0L; }
+        // a scene took it and let it go: the word it cut across is over too («a scene that takes it lets it go at its end»); one given meanwhile stands
+        internal static void LeadOff(NpcActor a, long led) { long had = LeadOf(a.Id); if (had != 0L && had == led) Lead(a.Id, 0L); }
+
+        // the player of that number in this game, alive (a lead of one gone from the world stands for nobody)
+        private static Player PlayerHere(long id)
+        {
+            foreach (Player o in Player.GetAllPlayers()) if (o != null && o.GetPlayerID() == id && !o.IsDead()) return o;
+            return null;
+        }
+        private static bool LeaderHere(long id) { return PlayerHere(id) != null; }
 
         private static Player Leader(NpcActor a)
         {
-            ZDO z = a.Zdo;
-            long id = z != null ? z.GetLong(KLead, 0L) : 0L;
-            if (id == 0L) return null;
-            foreach (Player o in Player.GetAllPlayers())
-                if (o != null && o.GetPlayerID() == id && !o.IsDead() && Vector3.Distance(o.transform.position, a.transform.position) < LeadNear) return o;
-            return null;
+            long id = LeadOf(a.Id);
+            Player o = id != 0L ? PlayerHere(id) : null;
+            return o != null && Vector3.Distance(o.transform.position, a.transform.position) < LeadNear ? o : null;
         }
 
         // a module's own action (the same way as the ones above)
@@ -140,6 +176,13 @@ namespace HuginWhispers
             if (!Kinds.TryGetValue(w[0].ToLowerInvariant(), out k)) return "невідома дія «" + w[0] + "» (є: " + string.Join(", ", new List<string>(Kinds.Keys).ToArray()) + ")";
             if (inScene && k.QuestOnly) return w[0] + " — лише в квесті, не в сцені";
             if (w.Length - 1 < k.Min) return "дія «" + a + "»: мало слів (" + k.Usage + ")";
+            if (k.Verbs != null)
+            {
+                Kind v;
+                if (!k.Verbs.TryGetValue(w[k.VerbAt], out v)) return w[0] + ": невідоме «" + w[k.VerbAt] + "» (" + k.Usage + ")";
+                if (w.Length - 1 - k.VerbAt < v.Min) return "дія «" + a + "»: мало слів (" + (v.Usage ?? k.Usage) + ")";
+                return v.Check != null ? v.Check(w) : null;
+            }
             return k.Check != null ? k.Check(w) : null;
         }
 
@@ -154,8 +197,10 @@ namespace HuginWhispers
         {
             string[] w = Words(a);
             Kind k;
-            if (w.Length == 0 || !Kinds.TryGetValue(w[0].ToLowerInvariant(), out k) || k.Do == null) return null;
+            if (w.Length == 0 || !Kinds.TryGetValue(w[0].ToLowerInvariant(), out k)) return null;
             if (k.QuestOnly && q == null) return null; // (a scene: never)
+            if (k.Verbs != null) { Kind v; if (w.Length <= k.VerbAt || !k.Verbs.TryGetValue(w[k.VerbAt], out v)) return null; k = v; } // (its verb's own)
+            if (k.Do == null) return null;
             string rest = w.Length > 1 ? a.Substring(a.IndexOf(w[1], w[0].Length)) : "";
             return k.Do(p, q, w, rest);
         }

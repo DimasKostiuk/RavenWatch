@@ -21,9 +21,10 @@ namespace HuginWhispers
         {
             bool v;
             try { v = Kind.Test(p, A); }
-            catch (Exception e) { Story.Log("condition «" + Text + "»: " + e.Message); v = false; }
+            catch (Exception e) { if (!_told) { _told = true; Story.Log("condition «" + Text + "»: " + e); } v = false; } // (once: it may be asked twice a second)
             return Not ? !v : v;
         }
+        private bool _told;
     }
 
     internal static class StoryCond
@@ -34,6 +35,8 @@ namespace HuginWhispers
             public int Min;                            // words it needs after the kind
             public Func<string[], string> Check;       // null: fine; else what is wrong (load time)
             public Func<Player, string[], bool> Test;  // holds now?
+            public Func<Player, string[], string> Why; // may be null: what keeps it from holding now (a scene's wait says it)
+            public bool World;                         // asks only the world, never a player: may be asked where no player is (the server's rules of a place)
         }
 
         private static readonly string[] BossNames = { "eikthyr", "elder", "bonemass", "moder", "yagluth", "queen", "fader" };
@@ -54,13 +57,6 @@ namespace HuginWhispers
             { "var", new Kind { Usage = "var <назва> [>=|<|…] N", Min = 2,
                 Check = a => !Story.GoodName(a[1]) ? "погана назва числа «" + a[1] + "»" : CmpCheck(a, 2),
                 Test = (p, a) => Compare(Story.Var(p, a[1]), a, 2) } },
-            { "quest", new Kind { Usage = "quest <id> [done|active|failed|started]   (без стану: done)", Min = 1,
-                Check = a => a.Length > 2 && Array.IndexOf(new[] { Story.Done, Story.Active, Story.Failed, "started" }, a[2]) < 0 ? "стан квесту: done | active | failed | started" : null,
-                Test = (p, a) =>
-                {
-                    string want = a.Length > 2 ? a[2] : Story.Done, has = Story.Quest(p, a[1]);
-                    return want == "started" ? has.Length > 0 : has == want;
-                } } },
             { "trust", new Kind { Usage = "trust [>=|<|…] N   (найвища довіра ворона, що з тобою)", Min = 1,
                 Check = a => CmpCheck(a, 1), Test = (p, a) => Compare(TrustNow(p), a, 1) } },
             { "raven", new Kind { Usage = "raven hugin|munin|both|any   (сидить на плечі)", Min = 1,
@@ -86,10 +82,44 @@ namespace HuginWhispers
             { "errand", new Kind { Usage = "errand   (є доручення з гнізда)", Test = (p, a) => Errands.Of(p) != null } },
         };
 
-        internal static bool Known(string kind) { return Kinds.ContainsKey(kind); }
-
         // another part adds its own kinds (NpcTalk: a person's hired / mine / resident / job)
         internal static void Register(string name, Kind k) { Kinds[name] = k; }
+
+        // A text of conditions kept in data and asked again and again (a place's rules: lockdoors, statewhile, becomes, cold, a touch …):
+        // read once, the same list for everyone who asks it; a wrong text is said once (log) and holds never (null). world: only kinds that ask
+        // the world (Kind.World) — the server asks these with no player. The story's own kinds are registered first, so a text read before
+        // the first quest pass (a place, the server) is read right.
+        private static readonly Dictionary<string, List<Cond>> _cached = new Dictionary<string, List<Cond>>();
+        internal static List<Cond> Cached(string text, Action<string> log, bool world = false)
+        {
+            text = text ?? "";
+            List<Cond> c;
+            if (_cached.TryGetValue(text, out c)) return c;
+#if RAVEN_STORY
+            StoryTrackConds.Register();
+#endif
+            List<string> errs = new List<string>();
+            c = Parse(text, errs);
+            if (world) foreach (Cond one in c) if (one.Kind != null && !one.Kind.World) errs.Add("«" + one.Text + "» питає гравця, а тут лише світ (world, wvar, gate, hearth, state, placed)");
+            if (errs.Count > 0) { if (log != null) foreach (string e in errs) log(e); c = null; }
+            _cached[text] = c;
+            return c;
+        }
+
+        // the wrong texts asked anew (the files read again: StoryFiles.ReloadAll), a place added since may have mended them
+        internal static void ForgetWrong()
+        {
+            List<string> wrong = new List<string>();
+            foreach (KeyValuePair<string, List<Cond>> c in _cached) if (c.Value == null) wrong.Add(c.Key);
+            foreach (string t in wrong) _cached.Remove(t);
+        }
+
+        // the same, asked: a wrong text never holds
+        internal static bool Holds(Player p, string text, Action<string> log, bool world = false)
+        {
+            List<Cond> c = Cached(text, log, world);
+            return c != null && All(p, c);
+        }
 
         // "eikthyr" → defeated_eikthyr; a whole key (defeated_…) as it is
         internal static string BossKey(string w)
@@ -180,13 +210,39 @@ namespace HuginWhispers
             return true;
         }
 
+        // the first one that does not hold (as written), else null; why: what keeps it (its kind's Why) or null — a scene says why it waits
+        internal static string Failing(Player p, List<Cond> l, out string why)
+        {
+            why = null;
+            if (l == null) return null;
+            foreach (Cond c in l)
+            {
+                if (c.Test(p)) continue;
+                why = WhyNot(p, c);
+                return c.Text;
+            }
+            return null;
+        }
+
+        private static string WhyNot(Player p, Cond c)
+        {
+            if (c.Not || c.Kind == null || c.Kind.Why == null) return null;
+            try { return c.Kind.Why(p, c.A); }
+            catch (Exception e) { Story.Log("condition «" + c.Text + "» why: " + e.Message); return null; }
+        }
+
         // the console and the panel: each condition with ✓ / ✗, and what could not be read
         internal static string Explain(Player p, string text)
         {
             List<string> errors = new List<string>();
             List<Cond> l = Parse(text, errors);
             StringBuilder sb = new StringBuilder();
-            foreach (Cond c in l) sb.Append(c.Test(p) ? "✓ " : "✗ ").Append(c.Text).Append('\n');
+            foreach (Cond c in l)
+            {
+                bool ok = c.Test(p);
+                string why = ok ? null : WhyNot(p, c);
+                sb.Append(ok ? "✓ " : "✗ ").Append(c.Text).Append(why != null ? " — " + why : "").Append('\n');
+            }
             foreach (string e in errors) sb.Append("! ").Append(e).Append('\n');
             sb.Append(All(p, l) ? "Разом: так." : "Разом: ні.");
             return sb.ToString();

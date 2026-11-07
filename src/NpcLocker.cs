@@ -149,7 +149,128 @@ namespace HuginWhispers
                 if (Set(a, key, s)) { z.Set(key, ""); Npcs.Log(a.Id + ": moved its " + (key == NpcWorker.KCarry ? "carry" : key == NpcRequests.KRequest ? "request" : "gear") + " into its locker"); }
                 else left = true;
             }
+            int moved = 0;
+            foreach (KeyValuePair<int, Kind> e in Lives) if (Move(a, z, e.Key, e.Value)) moved++; else if (Holds(z, e.Key, e.Value)) left = true;
+            if (moved > 0) Npcs.Log(a.Id + ": moved " + moved + " of its values off itself into its locker (a lighter person on the net)");
             return !left;
+        }
+
+        // ---------------------------------------------------------------- a person's own values, kept here and not on the person
+        // The two-player test 2026-11-05: a person's ZDO is sent whole each time anything in it changes, and a walking one's position
+        // changes every frame — so all it holds goes to every player near, up to twenty times a second, before the pieces round them
+        // (the game sends people first: ZDOMan.ServerSendCompare). With 25 people of 1–1.5 KB the base never reached the second player.
+        // So on the person stays only what other games need at once to show it (its look, pose, clip, seat, name, who talks to it, its
+        // heart); what changes seldom or is read only now and then lives here (Lives), sent only when it changes, after the pieces.
+        //   read     Text · Num · Int · Long · Vec · Flag · Ref · HasRef  — what the person still holds first (written while its locker was not
+        //            here, or an old save not moved yet: Put takes it off the person whenever the locker gets it), then the locker's, then the default
+        //   write    Put (where the person is run): into the locker and off the person; its locker not here: onto the person (moved later)
+        //   a new value of a person: here, unless every game must see it the very moment it changes — npcnetcheck stops a new key on
+        //   the person that is not in Lives nor in its list of the person's own (tools/npcnetcheck.js)
+        internal enum Kind { Text, Num, Int, Long, Vec }
+        private static Dictionary<int, Kind> _lives;
+        internal static Dictionary<int, Kind> Lives
+        {
+            get
+            {
+                return _lives ?? (_lives = new Dictionary<int, Kind>
+                {
+                    { NpcVoice.KSeen, Kind.Text }, { NpcMind.KPlans, Kind.Text }, { NpcMind.KStayUntil, Kind.Long },
+                    { NpcResident.KBed, Kind.Text }, { NpcResident.KSettledAt, Kind.Long }, { NpcResident.KMovedOut, Kind.Vec },
+                    { NpcWorker.KJob, Kind.Text }, { NpcWorker.KChest, Kind.Text }, { NpcWorker.KInbox, Kind.Text }, { NpcWorker.KTarget, Kind.Text },
+                    { NpcWorker.KNowhere, Kind.Text }, { NpcWorker.KHouse, Kind.Vec }, { NpcWorker.KStore, Kind.Vec }, { NpcWorker.KPost, Kind.Vec },
+                    { NpcWorker.KPatrol, Kind.Int }, { NpcHew.KArea, Kind.Vec }, { NpcTidy.KOff, Kind.Int },
+                    { NpcLevers.KVars, Kind.Text }, { NpcLevers.KTraits, Kind.Text }, { NpcKnack.KKnack, Kind.Text }, { NpcBackstory.KStory, Kind.Text },
+                    { NpcToil.KMood, Kind.Num }, { NpcToil.KTired, Kind.Num }, { NpcToil.KLow, Kind.Num }, { NpcToil.KWhy, Kind.Int }, { NpcToil.KMoodParts, Kind.Text },
+                    { NpcToil.KUnpaid, Kind.Int }, { NpcToil.KPayNext, Kind.Long }, { NpcHunger.KFull, Kind.Num }, { NpcHunger.KStarved, Kind.Num },
+                    { NpcNews.KKeys, Kind.Int }, { NpcRequests.KAskNext, Kind.Long },
+#if RAVEN_STORY
+                    { NpcRaven.KHeldUntil, Kind.Long }, // (the story's word to a person's raven)
+#endif
+                });
+            }
+        }
+
+        // its locker here (null: none, or not here yet). Its gait reads its mood and hunger each frame on every game: the link is
+        // resolved once and kept by the person's id, for as long as its link string is the same (a link not found yet: tried again)
+        private static readonly Dictionary<ZDOID, KeyValuePair<string, ZDOID>> _here = new Dictionary<ZDOID, KeyValuePair<string, ZDOID>>(); // session: ids of this world load
+        private static ZDO Here(ZDO person)
+        {
+            if (person == null || ZDOMan.instance == null) return null;
+            string link = person.GetString(KLocker, "");
+            if (link.Length == 0) return null;
+            KeyValuePair<string, ZDOID> c;
+            if (!_here.TryGetValue(person.m_uid, out c) || (!ReferenceEquals(c.Key, link) && c.Key != link))
+            {
+                ZDOID id = NpcKit.Resolve(link);
+                if (id.IsNone()) return null; // (not found yet: not kept, looked for again)
+                if (_here.Count > 512) _here.Clear();
+                _here[person.m_uid] = c = new KeyValuePair<string, ZDOID>(link, id);
+            }
+            return ZDOMan.instance.GetZDO(c.Value);
+        }
+
+        private static readonly Vector3 NoVec = new Vector3(float.NaN, float.NaN, float.NaN);
+        internal static string Text(ZDO z, int key, string def = "") { if (z == null) return def; string s = z.GetString(key, null); if (s != null) return s; ZDO l = Here(z); return l != null ? l.GetString(key, def) : def; }
+        internal static float Num(ZDO z, int key, float def) { if (z == null) return def; float v = z.GetFloat(key, float.NaN); if (!float.IsNaN(v)) return v; ZDO l = Here(z); return l != null ? l.GetFloat(key, def) : def; }
+        internal static int Int(ZDO z, int key, int def) { if (z == null) return def; int v = z.GetInt(key, int.MinValue); if (v != int.MinValue) return v; ZDO l = Here(z); return l != null ? l.GetInt(key, def) : def; }
+        internal static long Long(ZDO z, int key, long def) { if (z == null) return def; long v = z.GetLong(key, long.MinValue); if (v != long.MinValue) return v; ZDO l = Here(z); return l != null ? l.GetLong(key, def) : def; }
+        internal static Vector3 Vec(ZDO z, int key, Vector3 def) { if (z == null) return def; Vector3 v = z.GetVec3(key, NoVec); if (!float.IsNaN(v.x)) return v; ZDO l = Here(z); return l != null ? l.GetVec3(key, def) : def; }
+        internal static bool Flag(ZDO z, int key) { return Int(z, key, 0) != 0; }
+        internal static ZDOID Ref(ZDO z, int key) { return NpcKit.Resolve(Text(z, key)); }
+        internal static bool HasRef(ZDO z, int key) { return Text(z, key).Length > 0; }
+
+        // where to write: its locker (taken by this game), made when it has none and is run here; null: onto the person for now
+        private static ZDO Into(ZDO z)
+        {
+            ZDO l = Here(z);
+            if (l == null && z != null && !NpcKit.HasRef(z, KLocker))
+            {
+                NpcActor a = Of(z);
+                if (a != null) l = Of(a, true);
+            }
+            if (l != null && !l.IsOwner()) l.SetOwner(ZDOMan.GetSessionID());
+            return l;
+        }
+
+        private static NpcActor Of(ZDO z) { foreach (NpcActor a in NpcActor.Live) if (a != null && a.Zdo == z) return a; return null; }
+
+        internal static void Put(ZDO z, int key, string v) { if (z == null) return; v = v ?? ""; ZDO l = Into(z); if (l == null) { if (z.GetString(key, "") != v) z.Set(key, v); return; } if (l.GetString(key, null) != v) l.Set(key, v); z.RemoveString(key); }
+        internal static void Put(ZDO z, int key, float v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetFloat(key, float.NaN) != v) z.Set(key, v); return; } if (l.GetFloat(key, float.NaN) != v) l.Set(key, v); z.RemoveFloat(key); }
+        internal static void Put(ZDO z, int key, int v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetInt(key, int.MinValue) != v) z.Set(key, v); return; } if (l.GetInt(key, int.MinValue) != v) l.Set(key, v); z.RemoveInt(key); }
+        internal static void Put(ZDO z, int key, long v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetLong(key, long.MinValue) != v) z.Set(key, v); return; } if (l.GetLong(key, long.MinValue) != v) l.Set(key, v); z.RemoveLong(key); }
+        internal static void Put(ZDO z, int key, Vector3 v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetVec3(key, NoVec) != v) z.Set(key, v); return; } if (l.GetVec3(key, NoVec) != v) l.Set(key, v); z.RemoveVec3(key); }
+        internal static void Put(ZDO z, int key, bool v) { Put(z, key, v ? 1 : 0); }
+        internal static void PutRef(ZDO z, int key, ZDOID id) { Put(z, key, NpcKit.Save(id)); }
+
+        // the person still holds it (an old save, or written while its locker was away)
+        private static bool Holds(ZDO z, int key, Kind k)
+        {
+            switch (k)
+            {
+                case Kind.Text: return z.GetString(key, null) != null;
+                case Kind.Num: return !float.IsNaN(z.GetFloat(key, float.NaN));
+                case Kind.Int: return z.GetInt(key, int.MinValue) != int.MinValue;
+                case Kind.Long: return z.GetLong(key, long.MinValue) != long.MinValue;
+                default: return !float.IsNaN(z.GetVec3(key, NoVec).x);
+            }
+        }
+
+        // one value off the person into its locker — the person's wins: Put leaves a value on the person only when its locker was away, so it is the newer one
+        private static bool Move(NpcActor a, ZDO z, int key, Kind k)
+        {
+            if (!Holds(z, key, k)) return false;
+            ZDO l = Of(a, true);
+            if (l == null) return false;
+            if (!l.IsOwner()) l.SetOwner(ZDOMan.GetSessionID());
+            switch (k)
+            {
+                case Kind.Text: l.Set(key, z.GetString(key, "")); z.RemoveString(key); break;
+                case Kind.Num: l.Set(key, z.GetFloat(key, 0f)); z.RemoveFloat(key); break;
+                case Kind.Int: l.Set(key, z.GetInt(key, 0)); z.RemoveInt(key); break;
+                case Kind.Long: l.Set(key, z.GetLong(key, 0L)); z.RemoveLong(key); break;
+                default: l.Set(key, z.GetVec3(key, Vector3.zero)); z.RemoveVec3(key); break;
+            }
+            return true;
         }
 
         // the person taken away: its locker too

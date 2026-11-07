@@ -14,6 +14,7 @@ namespace HuginWhispers
     //     carries) · story_skill (what it can do) · story_scar · story_ravens (what it thinks of ravens) · story_wish —
     //     one for a quiet person, three for a talkative one
     //   story_trouble_<kind>   how it came to need you (its rescue's kind)
+    //   story_secret   not in its story: what it never told anyone, said only as a favour to one dear (Secret, NpcFavours)
     // Every part is marked for whom it fits (~мол ~дор ~стар its age, ~смілив ~боязк its bravery, ~бурч ~весел its ways), so
     // an old one is never «new here» and a timid one never went for trolls alone. Drawn steadily: seeded by the person and
     // the piece — the same story every time and on every game, nothing sent; only its trouble's kind is kept (KStory).
@@ -26,15 +27,15 @@ namespace HuginWhispers
         internal static void Ensure(NpcActor a)
         {
             ZDO z = a != null ? a.Zdo : null;
-            if (z == null || !a.Owned || a.Def == null || !a.Def.Generated || z.GetString(KStory, "").Length > 0 || NpcSettlers.Of(a) == null) return;
-            z.Set(KStory, "made;" + z.GetString(NpcRescue.KKind, ""));
+            if (z == null || !a.Owned || a.Def == null || !a.Def.Generated || NpcLocker.Text(z, KStory).Length > 0 || NpcSettlers.Of(a) == null) return;
+            NpcLocker.Put(z, KStory, "made;" + z.GetString(NpcRescue.KKind, ""));
         }
 
         // what its story says of it that may change what it does (^боїться_води: it washes in a tub, never at the shore)
         internal static bool Fact(NpcActor a, string fact)
         {
             if (a == null || a.Zdo == null) return false;
-            string kept = a.Zdo.GetString(KStory, "");
+            string kept = NpcLocker.Text(a.Zdo, KStory);
             if (kept.Length == 0) return false;
             if (a.StoryFacts == null || a.StoryFactsOf != kept) Text(a, true); // (told once to know it: kept on the person)
             return a.StoryFacts != null && a.StoryFacts.Contains(fact);
@@ -44,7 +45,7 @@ namespace HuginWhispers
         internal static float Knack(NpcActor a, string key)
         {
             if (a == null || a.Def == null || !a.Def.Generated || a.Zdo == null) return 0f;
-            string kept = a.Zdo.GetString(KStory, "");
+            string kept = NpcLocker.Text(a.Zdo, KStory);
             if (kept.Length == 0) return 0f;
             if (a.StoryFacts == null || a.StoryFactsOf != kept) Text(a, true);
             if (a.StoryFacts == null) return 0f;
@@ -54,7 +55,7 @@ namespace HuginWhispers
             return sum;
         }
 
-        internal static bool Has(NpcActor a) { return a != null && a.Def != null && (!string.IsNullOrEmpty(a.Def.Story) || (a.Zdo != null && a.Zdo.GetString(KStory, "").Length > 0)); }
+        internal static bool Has(NpcActor a) { return a != null && a.Def != null && (!string.IsNullOrEmpty(a.Def.Story) || (a.Zdo != null && NpcLocker.Text(a.Zdo, KStory).Length > 0)); }
 
         // short: how it came and a scrap of the life before; full: all of it
         internal static string Text(NpcActor a, bool full) { return Text(a, full, false); }
@@ -67,9 +68,9 @@ namespace HuginWhispers
             if (a == null || a.Def == null) return "";
             if (!string.IsNullOrEmpty(a.Def.Story)) return restOnly ? "" : a.Form(Lang.T(a.Def.Story)); // (a story person's own, written: told whole at once)
             ZDO z = a.Zdo;
-            string kept = z != null ? z.GetString(KStory, "") : "";
+            string kept = z != null ? NpcLocker.Text(z, KStory) : "";
             if (kept.Length == 0) return "";
-            int seed = (int)(z.m_uid.ID * 2246822519u) ^ (int)z.m_uid.UserID;
+            int seed = (int)(NpcKit.Seed(z) * 2246822519u); // (its lasting number: the same story after a restart)
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             NpcPhrases.StoryBegin(); // (one thing told once: ^marks — NpcPhrases)
             try {
@@ -96,6 +97,15 @@ namespace HuginWhispers
             }
             finally { System.Collections.Generic.HashSet<string> told = NpcPhrases.StoryEnd(); if (full) { a.StoryFacts = told; a.StoryFactsOf = kept; } }
             return sb.ToString().Trim();
+        }
+
+        // what it has never told anyone (a favour, only to one dear — NpcFavours «secret»): a piece of its own, not in its story above,
+        // drawn steadily like the rest (the same secret after a restart); a story person has none
+        internal static string Secret(NpcActor a)
+        {
+            if (a == null || a.Def == null || !a.Def.Generated || a.Zdo == null || NpcLocker.Text(a.Zdo, KStory).Length == 0) return "";
+            int seed = (int)(NpcKit.Seed(a.Zdo) * 2246822519u);
+            return NpcPhrases.ComposeSteady(a, "story_secret", seed ^ "story_secret".GetStableHashCode()) ?? "";
         }
 
         // the pieces not everyone tells (in the order they come in the story)

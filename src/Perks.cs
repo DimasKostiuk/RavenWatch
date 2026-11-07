@@ -415,6 +415,9 @@ namespace HuginWhispers
                     if (Golden(item)) PerkFx.GoldRolled(p, munin, item); // a golden blessing: said aloud
                     Trust.InitNew(item);
                     if (!Trust.Active(item)) Guide.Queue(p, Guide.Bought, 15f); // a new, sleeping raven: Hugin comes to explain
+#if RAVEN_STORY
+                    if (!Trust.Active(item) && !item.m_customData.ContainsKey(StoryOwn.OwnKey) && !RavenBook.Given(p)) Guide.Queue(p, Guide.NoBook, 15f); // (bought before the book: told that only the prologue gives it; the prologue's own raven comes in its story)
+#endif
                 }
                 if (Checked.Count > 32) Checked.Clear(); // (every copy of a raven — back from a grave, a chest — is a new item: never a growing pile)
                 if (Checked.Add(item) && !Trust.Stranger(item, p) && Mend(item, munin)) Backup.Save(p, item); // a blessing or burden no longer there: rolled again (once a session)

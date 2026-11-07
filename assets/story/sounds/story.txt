@@ -1,4 +1,10 @@
-# Звуки сюжету (StorySounds): «назва звук звук…» — грає перший, який є в грі. Звук: sfx_… або звук істоти «Істота/вид»
-# (Ghost/idle, Ghost/alert, Ghost/death, Wraith/idle…). Сцена: «sound whisper npc.echo», згасання людини: «npc echo fade 4 whisper».
-# Послухати звуки гри — raven sounds (вкладка «Звуки»).
+# Каталог звуків (AudioBank): «назва звук звук… [параметри]» — грає перший, який є. Звук:
+#   sfx_…            звук гри (послухати: raven sounds, вкладка «Звуки»)
+#   Істота/вид       звук істоти чи предмета, лише звук, без іскор: Ghost/idle, Wraith/alert, ShieldBanded/block
+#   game:<назва>     трек музики гри (для music і bed)
+#   file:<x.ogg>     наш файл, лежить у цій самій папці (.ogg .wav .mp3)
+# Параметри: vol=0.8  pitch=0.9  range=60  2d  wet. Приклад: hall_dark file:hall_dark.ogg vol=0.7
+# Сцени: «music hall_dark 4», «bed wind_cave», «sound whisper npc.echo», згасання людини: «npc echo fade 4 whisper» (шапка StoryAudio).
 whisper Ghost/idle Ghost/alert sfx_ghost_idle                 # шепіт: привид згасає (пролог) — і далі в інших сценах
+iron_far ShieldBanded/block ShieldIronSquare/block sfx_metalgate_close     # залізо десь далеко (пролог, щит Муніна) — спогад
+gate_stuck sfx_darkwood_door_close sfx_door_close pitch=0.7 vol=0.9 range=30   # стулки брами здригнулись і не піддались (пролог, Зала зачинена)

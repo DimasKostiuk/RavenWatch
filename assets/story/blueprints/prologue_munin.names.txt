@@ -1,1 +1,4 @@
 shchyt RavenWatch_story_shchyt_munina -0.775 0.11 1.465
+stovp stone_pillar -3.799 -0.182 -1.455
+ogorozha stone_fence -2.692 -0.25 3.737
+ogorozha_daleka stone_fence -0.434 -0.982 5.593

@@ -172,7 +172,13 @@ namespace HuginWhispers
         } catch (Exception e) { PatchGuard.Fail("FacetSwimPatch", e); } }
 
         private static void Postfix(Character __instance, float __state)
-        { try { if (__state >= 0f && __instance != null) __instance.m_swimSpeed = __state; } catch { } }
+        {
+            try
+            {
+                if (__state >= 0f && __instance != null) __instance.m_swimSpeed = __state;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("FacetSwimPatch", pgx); }
+        }
     }
 }
 #endif

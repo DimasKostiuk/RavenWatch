@@ -50,8 +50,11 @@ namespace HuginWhispers
         private static Dictionary<string, Transform> BodyBones(SkinnedMeshRenderer body)
         {
             Dictionary<string, Transform> d = new Dictionary<string, Transform>();
-            foreach (Transform b in body.bones)
+            foreach (Transform t in body.bones)
+            {
+                Transform b = BodyBuild.Real(t); // (its build child stands in its place in the list)
                 if (b != null && !d.ContainsKey(b.name)) d[b.name] = b;
+            }
             return d;
         }
     }
@@ -70,6 +73,6 @@ namespace HuginWhispers
         }
 
         [HarmonyPriority(Priority.Last)]
-        private static void Postfix(VisEquipment __instance, bool __result) { if (__result) SkinGuard.Fix(__instance); }
+        private static void Postfix(VisEquipment __instance, bool __result) { if (!__result) return; try { SkinGuard.Fix(__instance); BodyBuild.Bind(__instance); } catch (System.Exception e) { PatchGuard.Fail("SkinGuardPatch", e); } } // (a built body: the new piece onto its build children too)
     }
 }

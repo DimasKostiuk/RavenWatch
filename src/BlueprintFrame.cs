@@ -10,7 +10,7 @@ namespace HuginWhispers
 {
     // A blueprint's frame — its middle and its front — is fixed once in the author's world, and every later save uses
     // the same one, wherever the author stands then. So every piece keeps its place in the blueprint from save to save,
-    // and with it every name and layer (HallParts) and every piece of a Hall already standing in players' worlds.
+    // and with it every name and layer (LocParts) and every piece of a Hall already standing in players' worlds.
     //   config/RavenWatch/blueprints/<name>.frame: «world x y z yaw» (tabs: a world's name may have spaces)
     // A blueprint saved before frames gets its frame from the building itself (Find): the pieces that are the only one
     // of their kind, in the saved file and round the author, paired; each pair of pairs gives a turn and a middle, and

@@ -66,7 +66,8 @@ namespace HuginWhispers
             ItemDrop.ItemData item = Trust.Worn(munin);
             if (item == null || !Trust.Active(item) || Trust.Away(item) || Trust.Stranger(item, p)) return false;
             ShoulderLife life = Shoulder.LifeOf(p, munin);
-            if (life == null) return false; // (not out with you)
+            string off;
+            if (life == null || RavenSkills.OffShoulder(p, munin, out off)) return false; // (not out with you; or off hunting, fishing, on a visit: no sip from your horn)
             if (!force && Random.value >= (munin ? ChanceM : ChanceH) * Thirst(item)) return false;
             GapUntil[i] = Time.time + GapMinutes * 60f;
             Until[i] = Time.time + Seconds;

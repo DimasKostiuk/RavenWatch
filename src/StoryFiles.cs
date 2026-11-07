@@ -7,16 +7,18 @@ using System.Text;
 namespace HuginWhispers
 {
     // The story's text files, one place for all of them (the user 2026-11-02: one source, nothing to carry over before a
-    // release). Kinds: quests, scenes, npc — each a folder of *.txt in the mod's assets/story/<kind> (built in as
+    // release). Kinds: quests, scenes, npc, talk — each a folder of *.txt in the mod's assets/story/<kind> (built in as
     // RavenWatch.<kind>.<file>). Which text is used, in this order, the later winning:
     //   1. built in                                   — every player
     //   2. the mod's own assets/story/<kind>          — the author's machine: config/RavenWatch/story/source.txt holds the
     //                                                   path of that assets/story folder; read there, saved there
     //   3. else the old author folder (config/…)     — only with no source: as before (an admin's tuning copies)
     // The editors (F9 «Сюжет», «Сцени», «Вигляд») write where the text is read: the source when there is one.
+    // An npc file whose name starts with «_» is the author's own (the animation stage's mannequin, test people): read from the source on
+    // his machine, never built in (rw_build leaves it out of assets/story/npc), so players never get it; storycheck stops a quest or scene naming it.
     internal static class StoryFiles
     {
-        internal const string Quests = "quests", Scenes = "scenes", Npc = "npc";
+        internal const string Quests = "quests", Scenes = "scenes", Npc = "npc", Talk = "talk";
         private static string _source;
         private static bool _read;
 
@@ -33,7 +35,7 @@ namespace HuginWhispers
                 {
                     if (File.Exists(SourceFile))
                     {
-                        string d = File.ReadAllText(SourceFile, Encoding.UTF8).Trim();
+                        string d = File.ReadAllText(SourceFile, Encoding.UTF8).Trim().TrimEnd('/', '\\'); // (a trailing slash: its parent would be itself — gaits, photos)
                         if (d.Length > 0 && Directory.Exists(d)) _source = d;
                         else Story.Log("files: source.txt names «" + d + "» — no such folder: the built-in files are used");
                     }
@@ -43,7 +45,25 @@ namespace HuginWhispers
             }
         }
 
-        internal static void Again() { _read = false; } // (read source.txt anew: the windows' «Перечитати»)
+        internal static void Again() { _read = false; } // (read source.txt anew)
+
+#if RAVEN_STORY
+        // every file of the story read anew (the windows' «Перечитати», the console): one list, so none is forgotten
+        internal static void ReloadAll()
+        {
+            Again();
+            StoryLooks.Reload();
+            StoryPeople.Reload();
+            Locs.Load();
+            LocParts.Reread();
+            LocState.Again();
+            StoryCond.ForgetWrong();
+            StoryTrackConds.Register();
+            StoryScenes.Reload(); // (its shots, its sounds)
+            StoryQuests.Reload(); // (its saga; checked against the scenes just read)
+            StoryTales.Reload();
+        }
+#endif
 
         private static string Dir(string kind) { string s = Source; return s != null ? Path.Combine(s, kind) : null; }
 
@@ -71,15 +91,15 @@ namespace HuginWhispers
 
         // a story file's lines that say something: «# …» and « #…» after a line are notes, blank ones nothing; each with
         // its number in the file (the errors name it)
+        internal static string Bare(string raw) { int note = raw.IndexOf(" #"); return (note >= 0 ? raw.Substring(0, note) : raw).Trim(); }
+
         internal static IEnumerable<KeyValuePair<int, string>> Lines(string text)
         {
             int n = 0;
             foreach (string raw in (text ?? "").Replace("\r", "").Split('\n'))
             {
                 n++;
-                string line = raw;
-                int note = line.IndexOf(" #"); if (note >= 0) line = line.Substring(0, note);
-                line = line.Trim();
+                string line = Bare(raw);
                 if (line.Length == 0 || line.StartsWith("#")) continue;
                 yield return new KeyValuePair<int, string>(n, line);
             }

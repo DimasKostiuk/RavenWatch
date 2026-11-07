@@ -14277,3 +14277,251 @@ Don't count the coins. Trust me.
 Here's my stash. I'm no miser anymore — and with profit.
 I'm giving back all I saved. Even more than I took.
 Here are your coins. See, I'm an honest raven.
+
+# --- a raven butts into a talk with a person (rev 111)
+[ppl_any] {люд_будь}
+[ppl_complaint] {люд_скарга}
+[ppl_fear] {люд_страх}
+[ppl_joy] {люд_радість}
+[ppl_work] {люд_робота}
+[ppl_people] {люд_сусіди}
+[ppl_shut] {люд_замовк}
+[ppl_agree] {люд_згода}
+@люд_будь
+Do you always talk this much, or is today special?
+Interesting. Not very, though.
+I've heard this somewhere. From someone smarter.
+Go on. I'm almost interested.
+Right. Now the version for grown-ups.
+I'm listening. Sadly.
+Could you be brief? I'm a bird, my life is short.
+Look at that, it talks.
+@люд_скарга
+You're good at complaining. Anything else?
+So that's why this place has such a roof.
+Terrible. Call someone who cares.
+So many words. And the job still stands.
+A little more and I'll weep. From boredom.
+Tell it to the wall. At least it won't interrupt.
+Keep complaining. I'm counting.
+A fine complaint. Pity there's nobody to hear it.
+@люд_страх
+You're afraid. The first smart thing I've heard here.
+You shake so hard I feel it on the shoulder.
+Calm down. If anything happens, they'll start with you.
+Don't be afraid. They aren't very bright either.
+Scared? I know where they'll come from. I won't say.
+Breathe. While you can.
+It's over. Until next time.
+Your fear is louder than your words.
+@люд_радість
+You're happy. It's almost awkward.
+You grin so wide I could count your teeth.
+Good mood. Who died?
+Don't get used to it.
+I wonder how long this lasts. I'll bet on tonight.
+Be glad, be glad. I won't tell anyone about the crooked tooth.
+Such joy. I was nearly interested.
+Good for you. Pity it won't last.
+@люд_робота
+So that's what work looks like. I thought it was bigger.
+You're working. Almost visibly.
+Nice work. Slow, but long.
+If only the work went as fast as the talk.
+That's all for the day? No malice in the question. Almost.
+Don't get distracted. There are others to watch you.
+No hurry. Nobody's waiting. Except everyone.
+Work won't do itself. A pity, it would go better.
+@люд_сусіди
+You know more about the neighbours than about your work.
+Go on, go on. I'll pass it all along.
+Gossip. Finally something interesting.
+And what did they say to that?
+Next you'll tell me who wakes whom at night.
+And what do they say about you? I've heard.
+What a household. You could write a book. A thin one.
+Talk, talk. I'm noting who to tell later.
+@люд_замовк
+Fine. But you'll remember who showed you the way.
+I'm quiet. You can't forbid me to think.
+As you say. I was right, by the way.
+I'll shut up. This time.
+Thanks for doing that in front of people.
+I'll remember.
+Next time I'll say it quieter. And worse.
+Fine. Find the way yourself, then.
+@люд_згода
+At last, someone with sense.
+You see? We understand each other.
+Pleasant. Don't get used to it.
+I told you.
+Exactly.
+I won't forget this. In a good way. Probably.
+I seldom say this, but well done.
+Noted. For once in your life you agree with me.
+
+# --- a raven butts into a talk: more words, and its own for wounds, hunger, tiredness, news, weather, travels, building, itself and "never mind" (rev 112)
+[ppl_news] {люд_новина}
+[ppl_place] {люд_край}
+[ppl_weather] {люд_край}
+[ppl_travels] {люд_мандри}
+[ppl_hurt] {люд_рани}
+[ppl_hungry] {люд_голод}
+[ppl_starving] {люд_голод}
+[ppl_tired] {люд_втома}
+[ppl_building] {люд_будова}
+[ppl_raven] {люд_про_мене}
+[ppl_skip] {люд_не_зважай}
+@люд_будь
+Deep. Like a puddle.
+Go on. I was looking for something to fall asleep to.
+Same thing, but interesting this time?
+I'm writing it down. In sand.
+Wise. For this house.
+You talk as if words were paid.
+Silence was a fine option too.
+Every word a nail. Bent.
+@люд_скарга
+You complain better than you work.
+Let me guess: someone else is to blame.
+Complaint received. No answer coming.
+If only your hands worked like your tongue.
+Ever tried your own hands?
+Sad. Mostly for me: I'm listening.
+One more complaint and I start too.
+Misfortune. Rare as rain in a swamp.
+@люд_страх
+Don't be afraid. Be afraid quieter.
+Fear is normal. Yours is too much.
+At least you know where the door is. Useful.
+Monsters get scared too. Not of you.
+Hide behind my master. There's room.
+If anything, scream. I'll listen.
+Fear has big eyes. So do you.
+You shake, and I'm not even doing anything.
+@люд_радість
+Smile. It won't last, but it's nice.
+Happiness suits you. Odd, but true.
+Don't say it aloud, you'll jinx it.
+Nice. Suspiciously nice.
+A rare sight. I'll remember it.
+Hold that mood tight. It runs.
+Finally someone here who doesn't whine.
+Happy as if there's no tomorrow. Who knows.
+@люд_робота
+Working? I thought it was a break.
+A master. Well, almost.
+Three more days like this and something will show.
+Slow, but crooked.
+Good thing ravens don't work. Watching you, I don't want to.
+Looking busy is the main thing. It works.
+Hold the tool by the other end. Joking. Or not.
+You try so hard I'm almost ashamed. No, I'm not.
+@люд_сусіди
+Interesting. Now about yourself. No? Thought so.
+Neighbours. The eternal topic for those with none.
+You should be a seer. You know everything about everyone.
+Do you say that to their face?
+That's how people fall out. Go on.
+Soon nobody here will talk to anybody. Thanks to you.
+Better than any saga. Just as many lies.
+I'd ask how you know. But I know.
+@люд_замовк
+As you say. But I was right.
+Silent. Notice how nicely.
+Lucky for you I'm well brought up.
+Fine. Have it your diplomatic way.
+Noted: not in front of people.
+Quiet now. Offended, but quiet.
+Fine. Next time I'll tell you. In your ear.
+I'm silent so you can hear it.
+@люд_згода
+See. Nice to talk to clever people.
+There. And you wanted to shut me up.
+We rarely agree. Let's mark it.
+The truth stings. Not me.
+Now there are two of us. Not a chance for them.
+I knew there was something in you.
+A good team: I think, you talk.
+Told you. I should be listened to.
+@люд_новина
+News. Fresh as a week-old fish.
+Do you always hear last?
+Wow. I knew it yesterday.
+News travels fast. To you, slowly.
+Great. Now everyone knows. Again.
+I'd be surprised. But no.
+They say, they say. Who saw it?
+Useful news. Like a bucket with no bottom.
+@люд_край
+Weather is weather. You're not made of sugar.
+Fine land. You're the worst thing in it.
+You complain to the sky. The sky doesn't care.
+At least the rain is quiet when it falls.
+The clouds will pass. You, sadly, won't.
+People talk weather when there's nothing else. Here we are.
+A harsh land. An honest one, unlike some.
+Cold? Move faster.
+@люд_мандри
+We went. We survived. Not all the enemies did.
+It was better there. Nobody asked questions.
+We'll tell you. Some day. Maybe.
+You can't go there. You'd need to think.
+We walk. You sit.
+Curious? Come with us. No? Then don't ask.
+There are trolls. Like you, only more honest.
+We saw things you'd better not know.
+@люд_рани
+Don't worry. This one is hard to kill. Sadly for everyone.
+Wounds are nothing. The head is whole. Empty, but whole.
+Calm down, I'm counting every drop.
+I said not to go there. Nobody listens to me.
+I feel sorry for you. A little.
+Don't touch. It bites when it hurts.
+It'll heal. The next wound is already in line.
+Blood is normal. Brains are what's missing.
+@люд_голод
+Hunger. Finally something we agree on.
+Hungry? Get in line. I'm first.
+We're hungry too. We don't complain. Loudly.
+The chest is right there. You have legs.
+I'd share. But no.
+Your stomach grumbles smarter than you.
+So that's why work here is so quiet.
+A hungry worker is angry. At least awake.
+@люд_втома
+Tired. Of what, I wonder?
+Rest. From resting.
+You yawn so wide I see your breakfast.
+Everyone wants to sleep. Not everyone says so.
+Sleep is the best job. Your favourite, I see.
+Lie down. Nobody will notice the difference.
+Being tired is work too. Nobody pays for it.
+Eyes closing. Mine — from you.
+@люд_будова
+Building. Slowly, lovingly, crookedly.
+Don't get in the way. Thinking is needed here. Not yours.
+This wall will last longer than a talk with you.
+We build. You watch. A fair share.
+Want to help? Hold the plank. Silently.
+Like it? Neither do I.
+Some day a hall will stand here. For now, this.
+Any advice? No? Good.
+@люд_про_мене
+Yes, I hear everything. And remember it.
+Talking about me? Nice. Go on.
+A clever bird. Cleverer than some here.
+You can talk to me directly. I don't bite. Often.
+I'm right here. No need to talk as if I'm not.
+I have a name. Ask.
+Look me in the eye when you talk about me.
+I wonder what you think of me. No, I don't.
+@люд_не_зважай
+"Never mind". Fine. I won't mind you either.
+Then don't mind me. I'll be right quietly.
+I'm always underestimated.
+"Never mind". Sounds like my middle name.
+Fine. I'm just a bird. A clever bird.
+Never mind, never mind. You'll remember later.
+Did you just insult me, or did it seem so?
+I'm not here to be minded. I'm here for the truth.

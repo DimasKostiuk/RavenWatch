@@ -7,194 +7,836 @@ using UnityEngine.UI;
 
 namespace HuginWhispers
 {
-    // A person's talk (NpcTalk): a card in the book's style low on the screen — the dark wooden frame, its name on the
-    // plaque, what it says on the parchment, your answers under it (a click, or the keys 1–9). Esc, the ✕ or walking
-    // off closes it. While it is open the game is held as for the book (the cursor shows, the hero stands).
+    // A person's talk (NpcTalk): a scroll on the left of the screen, over every window (the user's mockup 2026-11-05,
+    // docs/plans/mockups/talk-scroll.html) — its name on the plaque under the rod, its words in the dark block, the answers to them,
+    // the story's sealed card, a request's pinned scrap, «ще на думці», «твоє» as chips, the grey ones' why under them, its patience a
+    // strip down the edge. The mouse only, no numbers: Esc, the ✕ or walking off closes it. While it is open the game is held as for
+    // the book (the cursor shows, the hero stands).
     internal static partial class RavenBook
     {
         private static GameObject _talkRoot;
         private static Action<int> _talkPick;
         private static Action _talkClose;
-        private static int _talkCount;
 
         internal static bool TalkOpen { get { return _talkRoot != null && _talkRoot.activeSelf; } }
 
+        // an answer's row: its words, its part of the scroll (0 under its words · 1 «ще на думці» · 2 «твоє» · 3 its request's scrap · 5 under its words too, an answer to your raven), grey (Off: nothing happens)
+        // with its few words under the pointer (Tip: why it is grey), the story's (Story: the sealed card), its request's (Scrap: on the
+        // pinned scrap), and how much of what it asks you carry (Have: «3 / 3»)
+        internal sealed class TalkRow { public string Text = "", Tip, Have; public int Ring; public bool Off, Story, Scrap; }
+
+        // a line said in the talk, in its order (NpcTalk builds them, the window shows them one by one): the person's, yours (the answer you picked, small, at the top), your raven's aloud
+        // (its own block: the person hears it), your raven's aside (a thought in the margin: only you)
+        internal sealed class TalkSay { public int Kind; public string Text = "", Name = ""; public bool Munin; }
+        internal const int SayPerson = 0, SayYou = 1, SayRaven = 2, SayAside = 3;
+        private static readonly Color TCutHugin = C("#a9c7e8"), TCutMunin = C("#e8b86a"), TAsideHugin = C("#2f4a68"), TAsideMunin = C("#6a4510");
+
+        internal static bool TalkInstant; // (config «Instant talks»: no fades, no waits)
+
+        // a settler's request on its pinned scrap (NpcTalk: NpcRequests) — the thing, the pay in coins, how long it waits, whether you promised
+        internal sealed class TalkScrap { public string Item = "", Words = "", Pay = "", Left = ""; public bool Promised; }
+
+        // what your last answer moved (NpcTalkTone, NpcTalkRaven): a line under its words on the next showing, green up, red down; the talk
+        // closed by that answer — said in the corner instead (FlushTalkNotes, from NpcTalk.Close)
+        private static readonly List<KeyValuePair<string, bool>> TalkNotes = new List<KeyValuePair<string, bool>>();
+        private static readonly Color TUp = C("#4f6a2a"), TDown = C("#9a2216");
+        internal static void TalkNote(string text, bool up) { if (!string.IsNullOrEmpty(text) && TalkNotes.Count < 4) TalkNotes.Add(new KeyValuePair<string, bool>(text, up)); }
+        internal static void FlushTalkNotes(Player p)
+        {
+            if (p != null) foreach (KeyValuePair<string, bool> n in TalkNotes) p.Message(MessageHud.MessageType.TopLeft, n.Key);
+            TalkNotes.Clear();
+        }
+
         internal static void ShowTalk(string who, string says, List<string> answers, Action<int> pick, Action close)
         {
+            List<TalkRow> rows = new List<TalkRow>();
+            foreach (string a in answers) rows.Add(new TalkRow { Text = a });
+            ShowTalk(who, Says(says), rows, pick, close, -1f, null, null, false, null);
+        }
+
+        internal static void ShowTalk(string who, string says, List<TalkRow> answers, Action<int> pick, Action close, float patience, string patienceTip, TalkScrap scrap)
+        {
+            ShowTalk(who, Says(says), answers, pick, close, patience, patienceTip, scrap, false, null);
+        }
+
+        // a person's words as its lines, one a line of its text (one line at a time, the user 2026-11-06)
+        internal static List<TalkSay> Says(string says)
+        {
+            List<TalkSay> l = new List<TalkSay>();
+            foreach (string part in (says ?? "").Split('\n')) if (part.Trim().Length > 0) l.Add(new TalkSay { Kind = SayPerson, Text = part.Trim() });
+            if (l.Count == 0) l.Add(new TalkSay { Kind = SayPerson, Text = "…" });
+            return l;
+        }
+
+        // ---------------------------------------------------------------- the scroll (the user 2026-11-06, docs/plans/mockups/talk-flow.html)
+        // One window a talk, kept while you talk to that person; a click does not draw it anew but moves it on (TalkFlow): what was there folds away (the line you picked lit a moment),
+        // then two parts come in, each at its own pace — on top the talk: your line, its lines one by one (before your raven butts in, a short while to read the line before it;
+        // the raven's portrait and dots, then its words), on the bottom your answers one by one, from the moment the turn begins; the answers to your raven only once it spoke, first.
+        // A click on the talk's part shows all of it at once; Esc and the ✕ close it as ever. «Instant talks» (TalkInstant): no fades, no waits.
+        // The first screen (menu): its worry with its answers on top, the rest (its request, its story, «на думці», «твоє») below.
+        // Its pictures: BookArt.TalkPaper (each person its own torn bottom), TalkRod, TalkBand, TalkRope.
+        private const float TalkW = 540f, TalkLeft = 40f, TalkTop = 84f, TalkLeast = 300f, TalkPaperW = TalkW - 52f;
+        private static readonly Color TBlock = C("#4b1c0d"), TBlockInk = C("#f6e9cc"), TPaper = C("#efe3c4"), TStoryInk = C("#7f4e04"), TStoryFill = C("#f6e1ad"),
+            TStoryEdge = C("#b8893e"), TSeal = C("#9a2216"), TScrap = C("#f4e8cb"), TTime = C("#8a3416"), THave = C("#4f6a2a"), TMind = C("#8a3416");
+        private static string _talkWho;
+        private static TalkFlow _talkFlow;
+        private static RectTransform _talkSaid, _talkLow, _talkScroll;
+        private static readonly Dictionary<int, Image> _talkFills = new Dictionary<int, Image>(); // (an answer's light: lit when picked)
+
+        private sealed class TalkTurn { public List<TalkSay> Lines; public List<TalkRow> Rows; public float Patience; public string Tip, You; public TalkScrap Scrap; public bool Menu; }
+
+        internal static void ShowTalk(string who, List<TalkSay> lines, List<TalkRow> answers, Action<int> pick, Action close, float patience, string patienceTip, TalkScrap scrap, bool menu, string you)
+        {
             EnsureGameFont();
+            bool fresh = _talkRoot == null || _talkFlow == null || _talkWho != who;
+            if (fresh) TalkShell(who);
+            _talkPick = pick; _talkClose = close;
+            _talkFlow.Next(new TalkTurn { Lines = lines ?? Says(""), Rows = answers, Patience = patience, Tip = patienceTip, Scrap = scrap, Menu = menu, You = you }, fresh);
+        }
+
+        // the scroll with nothing on it yet: the rod on two ropes, its plaque, the paper with its two parts
+        private static void TalkShell(string who)
+        {
             if (_talkRoot != null) UnityEngine.Object.Destroy(_talkRoot);
-            _talkRoot = OverlayCanvas("RavenWatch_Talk", 30004, true);
+            _talkWho = who;
+            _talkRoot = OverlayCanvas("RavenWatch_Talk", 31000, true); // (over the game's own windows and ours)
             _talkRoot.AddComponent<TalkKeys>();
-            _talkPick = pick; _talkClose = close; _talkCount = answers.Count;
-
-            RectTransform frame = Rect("Frame", _talkRoot.transform);
-            frame.anchorMin = frame.anchorMax = new Vector2(0.5f, 0f);
-            frame.pivot = new Vector2(0.5f, 0f);
-            frame.anchoredPosition = new Vector2(0f, 60f);
-            CardPiece(frame.gameObject.AddComponent<Image>(), "card_frame", 32f, 12f, C("#2a1b10"));
-            VBox(frame, 0f, TextAnchor.UpperCenter, 16, 16, 34, 16);
-            ContentSizeFitter fit = frame.gameObject.AddComponent<ContentSizeFitter>();
-            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            Fixed(frame.gameObject, 860f, -1f);
-            frame.sizeDelta = new Vector2(860f, frame.sizeDelta.y);
-
-            RectTransform paper = Rect("Paper", frame);
-            CardPiece(paper.gameObject.AddComponent<Image>(), "card_paper", 24f, 10f, Paper);
-            VBox(paper, 8f, TextAnchor.UpperLeft, 30, 30, 22, 20);
-
-            TMP_Text line = T(paper, says, 22f, PInk, F.Body, TextAlignmentOptions.TopLeft);
-            line.textWrappingMode = TextWrappingModes.Normal;
-
-            RectTransform rule = Rect("Rule", paper);
-            Fixed(rule.gameObject, -1f, 1.5f);
-            rule.gameObject.AddComponent<Image>().color = A(PRule, 0.8f);
-
-            for (int i = 0; i < answers.Count; i++)
-            {
-                int at = i;
-                RectTransform row = Rect("Answer", paper);
-                HBox(row, 10f, TextAnchor.MiddleLeft, 8, 8, 4, 4);
-                TMP_Text num = T(row, (i + 1) + ".", 18f, PLabel, F.Head, TextAlignmentOptions.MidlineLeft);
-                num.textWrappingMode = TextWrappingModes.NoWrap;
-                Fixed(num.gameObject, 26f, -1f);
-                TMP_Text a = T(row, answers[i], 19f, PInk, F.Body, TextAlignmentOptions.MidlineLeft);
-                a.textWrappingMode = TextWrappingModes.Normal;
-                a.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-                Image fill = row.gameObject.AddComponent<Image>();
-                fill.color = new Color(1f, 1f, 1f, 0f);
-                Clickable(row.gameObject, () => TalkChoose(at));
-                Hover(row.gameObject, new Graphic[] { a, num }, PInk, fill);
-            }
-
-            Plaque(frame, who, 38f, false);
-            RectTransform x = Rect("Close", frame);
-            x.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            x.anchorMin = x.anchorMax = new Vector2(1f, 1f);
-            x.pivot = new Vector2(0.5f, 0.5f);
-            x.anchoredPosition = new Vector2(-4f, -4f);
-            x.sizeDelta = new Vector2(36f, 36f);
-            Image ring = x.gameObject.AddComponent<Image>();
-            ring.sprite = BookArt.Picture("card_close");
-            if (ring.sprite == null) { ring.sprite = BookArt.Circle; ring.color = C("#2a1b10"); }
-            Image cross = Img(x, "Cross", BookArt.Cross, PlaqueInk);
-            Stretch(cross.rectTransform, Vector2.zero, Vector2.one, new Vector2(11f, 11f), new Vector2(-11f, -11f));
-            Clickable(x.gameObject, TalkClose);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            _talkFlow = _talkRoot.AddComponent<TalkFlow>();
+            RectTransform paper;
+            _talkScroll = ScrollShell(_talkRoot.transform, who, TalkClose, out paper);
+            _talkPaper = paper;
+            RectTransform said = Rect("Said", paper); VBox(said, 9f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            Image si = said.gameObject.AddComponent<Image>(); si.color = new Color(1f, 1f, 1f, 0f);
+            said.gameObject.AddComponent<TalkSkip>(); // (a click on what is said: all of it at once)
+            RectTransform low = Rect("Yours", paper); VBox(low, 10f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            _talkSaid = said; _talkLow = low;
         }
 
-        // ---------------------------------------------------------------- a person's card («Вдача», NpcProfile): its name on
-        // the plaque, rows on the parchment (a gold label, the words beside it), the ✕ or Esc closes it
-        private static GameObject _cardRoot;
-        internal static bool CardOpen { get { return _cardRoot != null && _cardRoot.activeSelf; } }
+        // ---------------------------------------------------------------- words in a row, in any language. A row's children share its width by what each would like: one wrapped text
+        // would like it all, and then the rest are squeezed down to nothing and written over each other (the user 2026-11-06, «до тебе» under «рівно»). So in a row:
+        //   Flex   takes what is left and no more, wraps in it
+        //   Keep   a short word that is never squeezed
+        //   Room   a word in a column of its own width: smaller down to least, then cut with «…»
+        //   FitTabs tabs that would not fit their row: all a little smaller, together
+        private static void Flex(GameObject g)
+        {
+            LayoutElement le = g.GetComponent<LayoutElement>();
+            if (le == null) le = g.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f; le.minWidth = 0f; le.preferredWidth = 0f;
+        }
 
-        internal static void ShowCard(string title, List<KeyValuePair<string, string>> rows) { ShowCard(title, rows, null); }
+        private static TMP_Text Keep(TMP_Text t)
+        {
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            Fixed(t.gameObject, Mathf.Ceil(t.GetPreferredValues(t.text, float.PositiveInfinity, float.PositiveInfinity).x) + 1f, -1f);
+            return t;
+        }
 
-        // ...and buttons under the parchment (a heart's «Їдальня»): pressed, the card closes and the button's own act runs
-        internal static void ShowCard(string title, List<KeyValuePair<string, string>> rows, List<KeyValuePair<string, Action>> buttons) { ShowCard(title, rows, buttons, null); }
+        private static TMP_Text Room(TMP_Text t, float width, float least)
+        {
+            t.textWrappingMode = TextWrappingModes.NoWrap; t.overflowMode = TextOverflowModes.Ellipsis;
+            float need = t.GetPreferredValues(t.text, float.PositiveInfinity, float.PositiveInfinity).x;
+            if (need > width && need > 0f) t.fontSize = Mathf.Max(least, Mathf.Floor(t.fontSize * width / need * 4f) / 4f);
+            Fixed(t.gameObject, width, -1f);
+            return t;
+        }
 
-        // ...each button with a few words of what it does (tips, by the same order): shown under the buttons while the
-        // pointer is on one
-        internal static void ShowCard(string title, List<KeyValuePair<string, string>> rows, List<KeyValuePair<string, Action>> buttons, List<string> tips)
+        private static void FitTabs(RectTransform row, float room)
+        {
+            float sum = 0f, gaps = 0f;
+            HorizontalLayoutGroup h = row.GetComponent<HorizontalLayoutGroup>();
+            if (h != null) gaps = h.spacing * Mathf.Max(0, row.childCount - 1);
+            for (int i = 0; i < row.childCount; i++) sum += row.GetChild(i).GetComponent<LayoutElement>().preferredWidth;
+            if (sum <= 0f || sum + gaps <= room) return;
+            float k = (room - gaps) / sum;
+            for (int i = 0; i < row.childCount; i++)
+            {
+                Transform tab = row.GetChild(i);
+                LayoutElement le = tab.GetComponent<LayoutElement>();
+                le.minWidth = le.preferredWidth = le.preferredWidth * k;
+                TMP_Text t = tab.GetComponentInChildren<TMP_Text>(); // heavy: one small tab, a window's draw
+                if (t != null) { t.fontSize *= k; t.characterSpacing *= k; }
+            }
+        }
+
+        // the ✕ of every window of ours about people (a talk, a card, a board): one look, its place the caller's
+        private const float CloseSize = 44f;
+        private static RectTransform CloseButton(Transform parent, Action close)
+        {
+            RectTransform x = Rect("Close", parent);
+            x.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            x.sizeDelta = new Vector2(CloseSize, CloseSize);
+            Image i = x.gameObject.AddComponent<Image>(); i.sprite = BookArt.IronClose;
+            TMP_Text t = T(x, "×", 28f, C("#e9cf8e"), F.Body, TextAlignmentOptions.Center); Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Clickable(x.gameObject, close);
+            Hover(x.gameObject, new Graphic[] { t }, t.color, null);
+            return x;
+        }
+
+        // the scroll itself: the rod on two ropes, its plaque, its ✕, the paper
+        private static RectTransform ScrollShell(Transform root, string who, Action close, out RectTransform paper)
+        {
+            RectTransform scroll = Rect("Scroll", root);
+            scroll.anchorMin = scroll.anchorMax = scroll.pivot = new Vector2(0f, 1f);
+            scroll.anchoredPosition = new Vector2(TalkLeft, -TalkTop);
+            VBox(scroll, 0f, TextAnchor.UpperCenter, 0, 0, 0, 0).childForceExpandWidth = false;
+            scroll.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Fixed(scroll.gameObject, TalkW, -1f);
+            scroll.sizeDelta = new Vector2(TalkW, scroll.sizeDelta.y);
+
+            // the rod (the user's frame 2026-11-06): two ropes up, wood with iron bands, a ring with a token at its left end, the iron ✕ at its right
+            RectTransform rod = Rect("Rod", scroll);
+            Fixed(rod.gameObject, TalkW, 32f);
+            foreach (float side in new[] { 0f, 1f })
+            {
+                RectTransform rope = Rect("Rope", rod); rope.anchorMin = rope.anchorMax = new Vector2(side, 1f); rope.pivot = new Vector2(0.5f, 0f);
+                rope.sizeDelta = new Vector2(7f, 90f); rope.anchoredPosition = new Vector2(side == 0f ? 112f : -112f, -14f);
+                Image ri = rope.gameObject.AddComponent<Image>(); ri.sprite = BookArt.TalkRope; ri.type = Image.Type.Tiled; ri.raycastTarget = false;
+            }
+            RectTransform wood = Rect("Wood", rod); Stretch(wood, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, 0f));
+            Image wi = wood.gameObject.AddComponent<Image>(); wi.sprite = BookArt.TalkRod; wi.type = Image.Type.Sliced; wi.raycastTarget = false;
+            UnityEngine.UI.Shadow ws = wood.gameObject.AddComponent<UnityEngine.UI.Shadow>(); ws.effectColor = new Color(0f, 0f, 0f, 0.55f); ws.effectDistance = new Vector2(0f, -5f);
+            foreach (float side in new[] { 0f, 1f })
+            {
+                RectTransform band = Rect("Band", rod); band.anchorMin = band.anchorMax = new Vector2(side, 0.5f); band.sizeDelta = new Vector2(12f, 36f); band.anchoredPosition = new Vector2(side == 0f ? 40f : -40f, 0f);
+                Image bi = band.gameObject.AddComponent<Image>(); bi.sprite = BookArt.TalkBand; bi.raycastTarget = false;
+            }
+            RectTransform end = Rect("End", rod); end.anchorMin = end.anchorMax = new Vector2(0f, 0.5f); end.sizeDelta = new Vector2(26f, 38f); end.anchoredPosition = new Vector2(5f, 0f);
+            Image ei = end.gameObject.AddComponent<Image>(); ei.sprite = BookArt.RoundFine(9f); ei.type = Image.Type.Sliced; ei.pixelsPerUnitMultiplier = BookArt.Fine; ei.color = C("#6a4426"); ei.raycastTarget = false;
+            RectTransform ring = Rect("Ring", rod); ring.anchorMin = ring.anchorMax = new Vector2(0f, 0.5f); ring.sizeDelta = new Vector2(24f, 24f); ring.anchoredPosition = new Vector2(5f, -27f);
+            Image rgi = ring.gameObject.AddComponent<Image>(); rgi.sprite = BookArt.Ring(0.12f); rgi.color = C("#6a6e70"); rgi.raycastTarget = false;
+            RectTransform token = Rect("Token", rod); token.anchorMin = token.anchorMax = new Vector2(0f, 0.5f); token.sizeDelta = new Vector2(15f, 19f); token.anchoredPosition = new Vector2(5f, -47f);
+            Image toi = token.gameObject.AddComponent<Image>(); toi.sprite = BookArt.Circle; toi.color = C("#c9a050"); toi.raycastTarget = false;
+            TMP_Text tt = T(token, "ᚱ", 10f, C("#3a2410"), F.Rune, TextAlignmentOptions.Center); Stretch(tt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            RectTransform x = CloseButton(rod, close); x.anchorMin = x.anchorMax = new Vector2(1f, 0.5f); x.anchoredPosition = new Vector2(-4f, 2f);
+
+            // the paper: its parts are the caller's
+            paper = Rect("Paper", scroll);
+            Image pi = paper.gameObject.AddComponent<Image>(); pi.sprite = BookArt.TalkPaper(who.GetStableHashCode()); pi.type = Image.Type.Sliced;
+            VBox(paper, 12f, TextAnchor.UpperLeft, 28, 60, 66, 76);
+            Fixed(paper.gameObject, TalkPaperW, -1f);
+            paper.GetComponent<LayoutElement>().minHeight = TalkLeast;
+
+            foreach (float dx in new[] { -38f, 38f })
+            {
+                RectTransform str = Rect("String", scroll); str.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                str.anchorMin = str.anchorMax = new Vector2(0.5f, 1f); str.sizeDelta = new Vector2(2f, 18f); str.anchoredPosition = new Vector2(dx, -32f);
+                Image sti = str.gameObject.AddComponent<Image>(); sti.color = C("#2a1c10"); sti.raycastTarget = false;
+            }
+            Plaque(scroll, who, 40f, false);
+            RectTransform pl = (RectTransform)scroll.Find("Plaque"); if (pl != null) { pl.anchoredPosition = new Vector2(0f, -58f); pl.SetAsLastSibling(); }
+            return scroll;
+        }
+
+        internal sealed class TalkSkip : MonoBehaviour, UnityEngine.EventSystems.IPointerClickHandler
+        {
+            public void OnPointerClick(UnityEngine.EventSystems.PointerEventData e) { if (_talkFlow != null) _talkFlow.Rush(); }
+        }
+
+        // ---------------------------------------------------------------- what is on the paper and when
+        private sealed class TalkFlow : MonoBehaviour
+        {
+            private sealed class Item { public RectTransform R; public LayoutElement Le; public CanvasGroup Cg; public RectMask2D Mask; public float At, Dur, From, To = -1f, SwapAt = -1f; public bool Out, Done, Grow; public Action Swap; }
+            private readonly List<Item> _items = new List<Item>();
+            private TalkTurn _next;
+            private float _buildAt;
+            private const float Lit = 0.14f, OutFor = 0.3f, InFor = 0.25f, AnsFor = 0.22f, AnsStart = 0.35f, AnsEvery = 0.09f, Dots = 0.7f,
+                GapMin = 0.6f, GapMax = 2f, PerChar = 0.022f, CutMin = 0.8f, CutMax = 1.4f, CutPerChar = 0.015f;
+
+            internal bool Folding { get { return _next != null; } }
+            private static float Now { get { return Time.unscaledTime; } }
+            private static float S(float v) { return TalkInstant ? 0f : v; }
+
+            internal void Next(TalkTurn t, bool fresh)
+            {
+                if (fresh || _items.Count == 0 || TalkInstant) { Clear(); Build(t); return; }
+                _next = t; _buildAt = Now + Lit + OutFor;
+                foreach (Item i in _items) { i.Cg.blocksRaycasts = false; i.Out = true; i.Grow = false; i.Mask.enabled = true; i.From = Height(i); i.To = 0f; i.At = Now + Lit; i.Dur = OutFor; i.Done = false; i.SwapAt = -1f; }
+            }
+
+            // a click on the talk: what is still to come, now
+            internal void Rush()
+            {
+                float now = Now;
+                foreach (Item i in _items)
+                {
+                    if (i.Out) continue;
+                    if (i.SwapAt > now) i.SwapAt = now;
+                    if (!i.Done && i.At > now) { i.At = now; i.Dur = 0f; }
+                }
+                NpcTalk.IdleStir();
+            }
+
+            private static float Height(Item i) { return i.Le.preferredHeight >= 0f ? i.Le.preferredHeight : i.R.rect.height; }
+
+            private void Clear()
+            {
+                foreach (Item i in _items) if (i.R != null) { i.R.SetParent(null, false); UnityEngine.Object.Destroy(i.R.gameObject); } // (out of its part now: Destroy waits for the frame's end, and what is built next counts and measures that part)
+                _items.Clear();
+                _talkFills.Clear();
+                if (_talkPaper != null) { Transform s = _talkPaper.Find("Patience"); if (s != null) UnityEngine.Object.Destroy(s.gameObject); }
+                if (_talkRoot != null) { Transform w = _talkRoot.transform.Find("Why"); if (w != null) UnityEngine.Object.Destroy(w.gameObject); }
+            }
+
+            private Item Add(RectTransform parent)
+            {
+                RectTransform r = Rect("Item", parent);
+                VBox(r, 0f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+                RectMask2D mask = r.gameObject.AddComponent<RectMask2D>(); // (it grows from nothing: what does not fit yet is not drawn — only while it moves: grown, a seal over its card's corner is whole)
+                LayoutElement le = r.gameObject.AddComponent<LayoutElement>(); le.preferredHeight = -1f; le.minHeight = 0f; le.flexibleHeight = 0f; // (its own min is none: it folds to nothing)
+                CanvasGroup cg = r.gameObject.AddComponent<CanvasGroup>();
+                Item i = new Item { R = r, Le = le, Cg = cg, Mask = mask, Grow = true };
+                _items.Add(i);
+                return i;
+            }
+
+            private static void When(Item i, float at, float dur) { i.At = Now + S(at); i.Dur = S(dur); }
+
+            private void Build(TalkTurn t)
+            {
+                List<TalkRow> rows = t.Rows ?? new List<TalkRow>();
+                TMP_Text hint = null; // (a grey answer's why: the line at the bottom, while the pointer is on it)
+                Func<TMP_Text> Hint = () => hint;
+                List<int> under = new List<int>(), story = new List<int>(), mind = new List<int>(), yours = new List<int>(), scrapRows = new List<int>(), raven = new List<int>();
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    TalkRow r = rows[i];
+                    if (r.Scrap) scrapRows.Add(i); else if (r.Story) story.Add(i); else if (r.Ring == 1) mind.Add(i); else if (r.Ring == 2) yours.Add(i); else if (r.Ring == 5) raven.Add(i); else under.Add(i);
+                }
+
+                // on top, one at a time
+                float at = 0f, ravenSaid = -1f;
+                if (!string.IsNullOrEmpty(t.You))
+                {
+                    Item y = Add(_talkSaid);
+                    T(y.R, "<size=80%><b>" + Lang.T("ТИ") + "</b></size>   «" + t.You + "»", 15f, PSoft, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal;
+                    When(y, 0f, InFor);
+                    at = InFor;
+                }
+                bool worry = false;
+                for (int k = 0; k < t.Lines.Count; k++)
+                {
+                    TalkSay l = t.Lines[k];
+                    if (k > 0)
+                    {
+                        int len = t.Lines[k - 1].Text.Length;
+                        at += l.Kind == SayRaven || l.Kind == SayAside ? Mathf.Clamp(len * CutPerChar, CutMin, CutMax) : Mathf.Clamp(len * PerChar, GapMin, GapMax);
+                    }
+                    Item it = Add(_talkSaid);
+                    if (l.Kind == SayRaven)
+                    {
+                        TMP_Text words = TalkRavenBlock(it.R, l);
+                        When(it, at, InFor);
+                        string w = l.Text;
+                        it.SwapAt = Now + S(at + Dots); it.Swap = () => words.text = "«" + w + "»";
+                        at += Dots; ravenSaid = at;
+                        continue;
+                    }
+                    if (l.Kind == SayAside) { TalkAside(it.R, l); When(it, at, InFor * 2f); continue; }
+                    if (l.Kind == SayYou) { T(it.R, "«" + l.Text + "»", 15f, PSoft, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal; When(it, at, InFor); continue; }
+                    TalkBlock(it.R, l.Text);
+                    if (t.Menu && !worry && under.Count > 0) // (the first screen: its worry's answers under its words)
+                    {
+                        worry = true;
+                        RectTransform list = Rect("Answers", it.R);
+                        VBox(list, 0f, TextAnchor.UpperLeft, 8, 8, 0, 4);
+                        for (int q = 0; q < under.Count; q++) TalkLine(list, rows[under[q]], under[q], q < under.Count - 1, 17f, PInk, false, Hint);
+                    }
+                    When(it, at, InFor);
+                }
+                if (TalkNotes.Count > 0) // (what your last answer moved)
+                {
+                    Item n = Add(_talkSaid);
+                    RectTransform notes = Rect("Notes", n.R); // (an item has its own box already: Add)
+                    VBox(notes, 2f, TextAnchor.UpperLeft, 8, 8, 2, 4);
+                    foreach (KeyValuePair<string, bool> note in TalkNotes) T(notes, note.Key, 15f, note.Value ? TUp : TDown, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal;
+                    TalkNotes.Clear();
+                    When(n, at + InFor, InFor);
+                }
+
+                // below, at their own pace from the start of the turn
+                float b = AnsStart;
+                if (!worry) for (int q = 0; q < under.Count; q++) { Item a = Add(_talkLow); TalkLine(a.R, rows[under[q]], under[q], q < under.Count - 1, 17f, PInk, false, Hint); When(a, b, AnsFor); b += AnsEvery; }
+                if (story.Count > 0) { Item a = Add(_talkLow); TalkStory(a.R, rows, story, Hint); When(a, b, AnsFor); b += AnsEvery; }
+                if (t.Scrap != null) { Item a = Add(_talkLow); TalkPinned(a.R, t.Scrap, rows, scrapRows, Hint); When(a, b, AnsFor); b += AnsEvery; }
+                if (mind.Count > 0) { Item a = Add(_talkLow); TalkMind(a.R, rows, mind, Hint); When(a, b, AnsFor); b += AnsEvery; }
+                if (yours.Count > 0)
+                {
+                    Item a = Add(_talkLow);
+                    if (worry || _talkLow.childCount > 1) Divider(a.R, Lang.T("твоє"));
+                    TalkChips(a.R, rows, yours, Hint);
+                    When(a, b, AnsFor); b += AnsEvery;
+                }
+                if (raven.Count > 0) // (your raven's: once it spoke, first of all)
+                {
+                    float r0 = Mathf.Max(b, ravenSaid + 0.1f);
+                    int place = 0;
+                    foreach (int i in raven) { Item a = Add(_talkLow); a.R.SetSiblingIndex(place++); TalkRavenAnswer(a.R, rows[i], i, Hint); When(a, r0, AnsFor); r0 += AnsEvery; }
+                }
+                if (rows.Exists(r => !string.IsNullOrEmpty(r.Tip)))
+                {
+                    Item h = Add(_talkLow);
+                    hint = T(h.R, "", 14f, PSoft, F.Italic, TextAlignmentOptions.TopLeft);
+                    hint.gameObject.AddComponent<LayoutElement>().minHeight = 20f; // (room kept: the scroll does not jump)
+                    When(h, 0f, 0f);
+                }
+
+                // every piece measured as it will be, then out of sight till its time; the scroll sized for all of it (a long one a little smaller, never off the screen)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_talkScroll);
+                foreach (Item i in _items) { i.To = LayoutUtility.GetPreferredHeight(i.R); i.From = 0f; i.Le.preferredHeight = 0f; i.Cg.alpha = 0f; i.Cg.blocksRaycasts = false; }
+                float sum = 0f; foreach (Item i in _items) sum += i.To;
+                float h0 = LayoutUtility.GetPreferredHeight(_talkScroll), room = 1080f - TalkTop - 20f, fit = h0 > room ? room / h0 : 1f;
+                _talkScroll.localScale = Vector3.one * fit;
+                if (t.Patience >= 0f) PatienceStrip(_talkPaper, t.Patience, t.Tip, TalkLeft + TalkW * fit + 8f);
+                Update();
+            }
+
+            private void Update()
+            {
+                float now = Now;
+                bool moving = false;
+                foreach (Item i in _items)
+                {
+                    if (i.R == null) continue;
+                    if (i.SwapAt >= 0f && now >= i.SwapAt && i.Done) // (its words in place of the dots: it grows to them)
+                    {
+                        i.SwapAt = -1f;
+                        float was = Height(i);
+                        if (i.Swap != null) i.Swap();
+                        i.Le.preferredHeight = -1f;
+                        LayoutRebuilder.ForceRebuildLayoutImmediate(i.R);
+                        i.From = was; i.To = LayoutUtility.GetPreferredHeight(i.R); i.Le.preferredHeight = was;
+                        i.At = now; i.Dur = S(0.2f); i.Done = false; i.Grow = false; i.Mask.enabled = true;
+                    }
+                    if (i.Done) continue;
+                    moving = true;
+                    if (now < i.At) continue;
+                    float k = i.Dur <= 0f ? 1f : Mathf.Clamp01((now - i.At) / i.Dur), e = k * k * (3f - 2f * k);
+                    i.Le.preferredHeight = Mathf.Lerp(i.From, i.To, e);
+                    i.Cg.alpha = i.Out ? 1f - e : i.Grow ? e : 1f;
+                    if (k < 1f) continue;
+                    i.Done = true;
+                    if (!i.Out) { i.Le.preferredHeight = -1f; i.Cg.alpha = 1f; i.Cg.blocksRaycasts = true; i.Mask.enabled = false; } // (grown: nothing of it clipped any more — the story card's seal sits half over its corner, 2026-11-07)
+                }
+                if (_next != null && now >= _buildAt) { TalkTurn t = _next; _next = null; Clear(); Build(t); return; }
+                if (moving && _talkScroll != null) LayoutRebuilder.MarkLayoutForRebuild(_talkScroll);
+            }
+        }
+
+        // the person's words: the dark block, its tail
+        private static void TalkBlock(RectTransform parent, string says)
+        {
+            RectTransform block = Rect("Says", parent);
+            Image bi = block.gameObject.AddComponent<Image>(); bi.sprite = BookArt.RoundFine(4f); bi.type = Image.Type.Sliced; bi.pixelsPerUnitMultiplier = BookArt.Fine; bi.color = TBlock; bi.raycastTarget = false;
+            VBox(block, 0f, TextAnchor.UpperLeft, 16, 16, 11, 12);
+            string q = string.IsNullOrEmpty(says) ? "…" : says.TrimStart().StartsWith("«") ? says : "«" + says.Trim() + "»";
+            T(block, q, 19f, TBlockInk, F.Body, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal;
+            RectTransform tail = Rect("Tail", parent); Fixed(tail.gameObject, -1f, 9f);
+            RectTransform tip = Rect("Tip", tail); tip.anchorMin = tip.anchorMax = new Vector2(0f, 1f); tip.sizeDelta = new Vector2(20f, 20f); tip.anchoredPosition = new Vector2(30f, 0f);
+            Image ti = tip.gameObject.AddComponent<Image>(); ti.sprite = BookArt.Diamond; ti.color = TBlock; ti.raycastTarget = false;
+        }
+
+        // your raven aloud: its own block a little to the right, its portrait on its corner; its dots, then its words (the TMP returned)
+        private static TMP_Text TalkRavenBlock(RectTransform parent, TalkSay l)
+        {
+            Color ink = l.Munin ? TCutMunin : TCutHugin;
+            RectTransform wrap = Rect("Raven", parent); VBox(wrap, 0f, TextAnchor.UpperLeft, 44, 22, 22, 2);
+            RectTransform box = Rect("Box", wrap);
+            Image b = box.gameObject.AddComponent<Image>(); b.sprite = BookArt.RoundFine(4f); b.type = Image.Type.Sliced; b.pixelsPerUnitMultiplier = BookArt.Fine; b.color = C("#1b212b"); b.raycastTarget = false;
+            Outline(box, BookArt.FrameFine(4f, 1f), A(ink, 0.85f));
+            VBox(box, 2f, TextAnchor.UpperLeft, 14, 50, 9, 11);
+            TMP_Text name = T(box, l.Name.ToUpperInvariant(), 12f, ink, F.Head, TextAlignmentOptions.TopLeft); name.characterSpacing = 14f;
+            TMP_Text words = T(box, "• • •", 17f, Color.Lerp(ink, Color.white, 0.45f), F.Italic, TextAlignmentOptions.TopLeft); words.textWrappingMode = TextWrappingModes.Normal;
+            RectTransform pic = Rect("Pic", box); pic.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            pic.anchorMin = pic.anchorMax = new Vector2(1f, 1f); pic.sizeDelta = new Vector2(46f, 46f); pic.anchoredPosition = new Vector2(-6f, -4f);
+            Image pc = pic.gameObject.AddComponent<Image>(); pc.sprite = BookArt.Circle; pc.color = C("#141922"); pc.raycastTarget = false;
+            Image rim = Img(pic, "Rim", BookArt.Ring(0.05f), ink);
+            Sprite face = BookArt.Portrait(l.Munin);
+            if (face != null) { Image f = Img(pic, "Face", face, Color.white); f.preserveAspect = true; Stretch(f.rectTransform, Vector2.zero, Vector2.one, new Vector2(7f, 7f), new Vector2(-7f, -7f)); }
+            return words;
+        }
+
+        // your raven aside: a thought in the margin, its small picture, «тихо»
+        private static void TalkAside(RectTransform parent, TalkSay l)
+        {
+            Color ink = l.Munin ? TAsideMunin : TAsideHugin, rimc = l.Munin ? C("#a8752c") : C("#5f83ad");
+            RectTransform row = Rect("Aside", parent); HBox(row, 9f, TextAnchor.UpperLeft, 36, 0, 2, 4);
+            RectTransform bar = Rect("Bar", row); Fixed(bar.gameObject, 2f, -1f); bar.GetComponent<LayoutElement>().flexibleHeight = 1f; bar.gameObject.AddComponent<Image>().color = A(rimc, 0.7f);
+            Sprite face = BookArt.Portrait(l.Munin);
+            if (face != null) { RectTransform fr = Rect("Face", row); Fixed(fr.gameObject, 24f, 24f); Image f = fr.gameObject.AddComponent<Image>(); f.sprite = face; f.preserveAspect = true; f.raycastTarget = false; }
+            RectTransform words = Rect("Words", row); VBox(words, 0f, TextAnchor.UpperLeft, 0, 0, 0, 0); Flex(words.gameObject);
+            T(words, Lang.F("{0}, тихо", l.Name), 12f, A(ink, 0.65f), F.Body, TextAlignmentOptions.TopLeft);
+            T(words, l.Text, 16.5f, ink, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal;
+        }
+
+        // «на думці»: its lesser worries, a line each
+        private static void TalkMind(RectTransform parent, List<TalkRow> rows, List<int> mind, Func<TMP_Text> hint)
+        {
+            RectTransform m = Rect("Mind", parent);
+            VBox(m, 3f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            T(m, Lang.T("на думці"), 13f, TMind, F.Italic, TextAlignmentOptions.TopLeft);
+            foreach (int i in mind)
+            {
+                RectTransform row = Rect("Row", m);
+                HBox(row, 8f, TextAnchor.UpperLeft, 0, 0, 2, 2);
+                RectTransform bar = Rect("Bar", row); Fixed(bar.gameObject, 2f, -1f); bar.gameObject.AddComponent<Image>().color = A(TMind, 0.35f);
+                bar.GetComponent<LayoutElement>().flexibleHeight = 1f;
+                TalkLine(row, rows[i], i, false, 15.5f, PInk, true, hint);
+            }
+        }
+
+        // an answer to your raven: its colour down the side
+        private static void TalkRavenAnswer(RectTransform parent, TalkRow r, int at, Func<TMP_Text> hint)
+        {
+            bool munin = r.Text.Contains(Lang.T("Муніне"));
+            RectTransform row = Rect("ToRaven", parent);
+            HBox(row, 8f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            RectTransform bar = Rect("Bar", row); Fixed(bar.gameObject, 2f, -1f); bar.GetComponent<LayoutElement>().flexibleHeight = 1f; bar.gameObject.AddComponent<Image>().color = munin ? C("#b8853c") : C("#6f93bb");
+            TalkLine(row, r, at, false, 17f, munin ? C("#4e3312") : C("#24384f"), false, hint);
+        }
+
+        // ---------------------------------------------------------------- its words over the window: you said nothing for too long (NpcTalkIdle)
+        // The user 2026-11-05: its words over the parchment, the parchment under them out of focus and its answers not to be clicked — for a few seconds and no more (so a click meant to
+        // wave it away does not pick «Бувай»). Esc and the ✕ work as ever: the ✕ is on the rod, not on the parchment.
+        //   the limit    _alertUntil, a plain time asked at the click itself (TalkChoose): whatever becomes of the words, the answers come back by themselves
+        //   its look     a canvas of its own with nothing in it to click (no raycaster), over the talk's, so the ✕ and the patience strip's tip still take the pointer. Its words: a block of the
+        //                talk's own kind, in the middle of the parchment and narrower than it; the parchment under them darkened (AlertDim), its corners rounded as the parchment's
+        //   the blur     the parchment's part of the screen, read once a silence (no click: it does not change; ReadPixels into an sRGB texture, so its colours stay as they are on the screen), shrunk and grown back
+        private const float AlertInset = 28f, AlertFade = 0.35f, AlertMost = 8f, AlertBlur = 6f, AlertDim = 0.72f, AlertCorner = 10f;
+        private static TalkAlertLook _alert;
+        private static RectTransform _talkPaper;
+        private static float _alertUntil;
+        private static string AlertQuote(string says) { return "«" + (says ?? "").Trim() + "»"; }
+
+        internal static void ShowTalkAlert(string who, string says)
         {
             EnsureGameFont();
-            HideCard();
-            _cardRoot = OverlayCanvas("RavenWatch_PersonCard", 30004, true);
-            _cardRoot.AddComponent<CardKeys>();
-            RectTransform frame = Rect("Frame", _cardRoot.transform);
-            frame.anchorMin = frame.anchorMax = new Vector2(0.5f, 0.5f);
-            frame.pivot = new Vector2(0.5f, 0.5f);
-            CardPiece(frame.gameObject.AddComponent<Image>(), "card_frame", 32f, 12f, C("#2a1b10"));
-            VBox(frame, 0f, TextAnchor.UpperCenter, 16, 16, 34, 16);
-            ContentSizeFitter fit = frame.gameObject.AddComponent<ContentSizeFitter>();
-            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            Fixed(frame.gameObject, 640f, -1f);
-            frame.sizeDelta = new Vector2(640f, frame.sizeDelta.y);
-            RectTransform paper = Rect("Paper", frame);
-            CardPiece(paper.gameObject.AddComponent<Image>(), "card_paper", 24f, 10f, Paper);
-            VBox(paper, 10f, TextAnchor.UpperLeft, 28, 28, 22, 22);
-            for (int i = 0; i < rows.Count; i++)
-            {
-                if (i > 0) { RectTransform rule = Rect("Rule", paper); Fixed(rule.gameObject, -1f, 1f); rule.gameObject.AddComponent<Image>().color = A(PRule, 0.6f); }
-                RectTransform row = Rect("Row", paper);
-                HBox(row, 14f, TextAnchor.UpperLeft, 0, 0, 0, 0);
-                TMP_Text l = T(row, rows[i].Key, 15f, PLabel, F.Head, TextAlignmentOptions.TopLeft);
-                l.textWrappingMode = TextWrappingModes.NoWrap;
-                Fixed(l.gameObject, 120f, -1f);
-                TMP_Text v = T(row, rows[i].Value, 18f, PInk, F.Body, TextAlignmentOptions.TopLeft);
-                v.textWrappingMode = TextWrappingModes.Normal;
-                v.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            }
-            if (buttons != null && buttons.Count > 0)
-            {
-                RectTransform foot = Rect("Foot", frame);
-                HBox(foot, 12f, TextAnchor.MiddleCenter, 8, 8, 10, 2);
-                TMP_Text hint = null;
-                if (tips != null && tips.Count > 0)
-                {
-                    hint = T(frame, "", 14f, PLabel, F.Body, TextAlignmentOptions.Top);
-                    hint.fontStyle = FontStyles.Italic;
-                    hint.textWrappingMode = TextWrappingModes.Normal;
-                    LayoutElement he = hint.gameObject.AddComponent<LayoutElement>(); he.minHeight = 40f; he.preferredWidth = 560f; // (room for two lines kept: the card does not jump)
-                }
-                for (int i = 0; i < buttons.Count; i++)
-                {
-                    Action act = buttons[i].Value;
-                    RectTransform btn = CardButton(foot, buttons[i].Key, false, () => { HideCard(); act(); });
-                    string tip = tips != null && i < tips.Count ? tips[i] : null;
-                    if (hint != null && btn != null && !string.IsNullOrEmpty(tip)) { CardTip h = btn.gameObject.AddComponent<CardTip>(); h.Line = hint; h.Text = Grammar.Fix(tip); }
-                }
-            }
-            Plaque(frame, title, 38f, false);
-            RectTransform x = Rect("Close", frame);
-            x.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            x.anchorMin = x.anchorMax = new Vector2(1f, 1f);
-            x.pivot = new Vector2(0.5f, 0.5f);
-            x.anchoredPosition = new Vector2(-4f, -4f);
-            x.sizeDelta = new Vector2(36f, 36f);
-            Image ring = x.gameObject.AddComponent<Image>();
-            ring.sprite = BookArt.Picture("card_close");
-            if (ring.sprite == null) { ring.sprite = BookArt.Circle; ring.color = C("#2a1b10"); }
-            Image cross = Img(x, "Cross", BookArt.Cross, PlaqueInk);
-            Stretch(cross.rectTransform, Vector2.zero, Vector2.one, new Vector2(11f, 11f), new Vector2(-11f, -11f));
-            Clickable(x.gameObject, HideCard);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            _alertUntil = Time.unscaledTime + Mathf.Min(AlertMost, RavenSpeech.Seconds(says, RavenSpeech.Pace.Bubble));
+            if (_alert != null && !_alert.Gone) { _alert.Next = says; return; }
+            if (_alert != null) UnityEngine.Object.Destroy(_alert.gameObject);
+            GameObject root = OverlayCanvas("RavenWatch_TalkAlert", 31001, false);
+            RectTransform frame = Rect("Soft", root.transform);
+            Image round = frame.gameObject.AddComponent<Image>(); round.sprite = BookArt.RoundFine(AlertCorner); round.type = Image.Type.Sliced; round.pixelsPerUnitMultiplier = BookArt.Fine; round.raycastTarget = false;
+            frame.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+            RawImage soft = Rect("Picture", frame).gameObject.AddComponent<RawImage>(); soft.raycastTarget = false; soft.color = new Color(AlertDim, AlertDim, AlertDim, 1f);
+            Stretch(soft.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            frame.gameObject.SetActive(false);
+            RectTransform box = Rect("Alert", root.transform);
+            box.anchorMin = box.anchorMax = Vector2.zero; box.pivot = new Vector2(0.5f, 0.5f);
+            box.sizeDelta = new Vector2(TalkW - 52f - AlertInset * 2f, 10f);
+            Image bg = box.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(5f); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine; bg.color = TBlock; bg.raycastTarget = false;
+            UnityEngine.UI.Shadow sh = box.gameObject.AddComponent<UnityEngine.UI.Shadow>(); sh.effectColor = new Color(0f, 0f, 0f, 0.45f); sh.effectDistance = new Vector2(0f, -5f);
+            VBox(box, 8f, TextAnchor.UpperCenter, 24, 24, 16, 20);
+            box.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Outline(box, BookArt.FrameFine(5f, 1.5f), A(TStoryEdge, 0.9f));
+            TMP_Text name = T(box, who, 15f, A(TStoryEdge, 1f), F.Head, TextAlignmentOptions.Center); name.characterSpacing = 14f; name.raycastTarget = false;
+            TMP_Text words = T(box, AlertQuote(says), 28f, TBlockInk, F.Body, TextAlignmentOptions.Center); words.textWrappingMode = TextWrappingModes.Normal; words.raycastTarget = false;
+            CanvasGroup group = root.AddComponent<CanvasGroup>(); group.alpha = 0f; group.blocksRaycasts = false; group.interactable = false;
+            _alert = root.AddComponent<TalkAlertLook>();
+            _alert.Group = group; _alert.Words = words; _alert.Box = box; _alert.Frame = frame; _alert.Soft = soft;
         }
 
-        internal static void HideCard() { if (_cardRoot != null) UnityEngine.Object.Destroy(_cardRoot); _cardRoot = null; }
+        internal static void HideTalkAlert() { _alertUntil = 0f; if (_alert != null) _alert.Gone = true; }
 
-        // a card button's few words, in the line under the buttons while the pointer is on it
-        internal sealed class CardTip : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler
+        internal sealed class TalkAlertLook : MonoBehaviour
         {
-            internal TMP_Text Line; internal string Text;
-            public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e) { if (Line != null) Line.text = Text; }
-            public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) { if (Line != null && Line.text == Text) Line.text = ""; }
+            internal CanvasGroup Group; internal TMP_Text Words; internal RectTransform Box, Frame; internal RawImage Soft; internal string Next; internal bool Gone;
+            private bool _ready;
+            private RenderTexture _pic;
+            private Texture2D _shot;
+
+            private void Start() { StartCoroutine(Take()); }
+
+            // the parchment, once the frame is drawn (its own words not on it yet: all of it still at nothing)
+            private System.Collections.IEnumerator Take()
+            {
+                yield return new WaitForEndOfFrame();
+                RenderTexture was = RenderTexture.active;
+                try { if (!Gone) Lay(); }
+                catch (Exception e) { Debug.LogWarning("[RavenWatch] the talk's blur: " + e.Message); } // (no blur: its words all the same)
+                RenderTexture.active = was;
+                _ready = true;
+            }
+
+            // its words in the middle of the parchment, narrower than it; under them the parchment out of focus
+            private void Lay()
+            {
+                RectTransform paper = _talkPaper;
+                if (paper == null) return;
+                Vector3[] c = new Vector3[4];
+                paper.GetWorldCorners(c); // (an overlay canvas: these are the screen's pixels)
+                float scale = Mathf.Max(0.0001f, Box.lossyScale.x), fit = paper.lossyScale.x / scale;
+                float x = Mathf.Max(0f, c[0].x), y = Mathf.Max(0f, c[0].y), w = Mathf.Min(c[2].x, Screen.width) - x, h = Mathf.Min(c[2].y, Screen.height) - y;
+                if (w < 8f || h < 8f) return;
+                Box.sizeDelta = new Vector2((w / scale) - AlertInset * 2f * fit, Box.sizeDelta.y);
+                Box.position = new Vector3(x + w * 0.5f, y + h * 0.5f, 0f);
+                Blur(x, y, w, h, scale);
+            }
+
+            private void Blur(float x, float y, float w, float h, float scale)
+            {
+                Texture2D shot = new Texture2D(Mathf.RoundToInt(w), Mathf.RoundToInt(h), TextureFormat.RGB24, false);
+                RenderTexture.active = null;
+                shot.ReadPixels(new Rect(x, y, shot.width, shot.height), 0, 0, false); // heavy: once a long silence in a talk (three minutes with no click at the least), the parchment's part only
+                shot.Apply(false);
+                shot.filterMode = FilterMode.Bilinear; shot.wrapMode = TextureWrapMode.Clamp;
+                _shot = shot; // (let go of even if what follows fails: OnDestroy)
+                int small = Mathf.Max(8, Mathf.RoundToInt(w / AlertBlur)), smallH = Mathf.Max(8, Mathf.RoundToInt(h / AlertBlur));
+                RenderTexture cur = Temp(shot.width / 2, shot.height / 2);
+                Graphics.Blit(shot, cur);
+                UnityEngine.Object.Destroy(shot); _shot = null;
+                while (cur.width > small) { RenderTexture n = Temp(Mathf.Max(small, cur.width / 2), Mathf.Max(smallH, cur.height / 2)); Graphics.Blit(cur, n); RenderTexture.ReleaseTemporary(cur); cur = n; }
+                while (cur.width * 2 < w) { RenderTexture n = Temp(cur.width * 2, cur.height * 2); Graphics.Blit(cur, n); RenderTexture.ReleaseTemporary(cur); cur = n; }
+                _pic = new RenderTexture(cur.width, cur.height, 0); _pic.filterMode = FilterMode.Bilinear;
+                Graphics.Blit(cur, _pic);
+                RenderTexture.ReleaseTemporary(cur);
+                Frame.anchorMin = Frame.anchorMax = Frame.pivot = Vector2.zero;
+                Frame.position = new Vector3(x, y, 0f);
+                Frame.sizeDelta = new Vector2(w / scale, h / scale);
+                Soft.texture = _pic;
+                Frame.gameObject.SetActive(true);
+                Frame.SetAsFirstSibling();
+            }
+
+            private static RenderTexture Temp(int w, int h) { RenderTexture t = RenderTexture.GetTemporary(Mathf.Max(8, w), Mathf.Max(8, h), 0); t.filterMode = FilterMode.Bilinear; return t; }
+
+            private void OnDestroy() { if (_pic != null) { _pic.Release(); UnityEngine.Object.Destroy(_pic); } if (_shot != null) UnityEngine.Object.Destroy(_shot); }
+
+            private void Update()
+            {
+                if (!_ready) return;
+                float step = Time.unscaledDeltaTime / AlertFade;
+                if (Gone || Next != null || Time.unscaledTime >= _alertUntil)
+                {
+                    Group.alpha = Mathf.MoveTowards(Group.alpha, 0f, step);
+                    if (Group.alpha > 0f) return;
+                    if (Gone) { if (_alert == this) _alert = null; UnityEngine.Object.Destroy(gameObject); return; }
+                    if (Next != null) { Words.text = AlertQuote(Next); Next = null; LayoutRebuilder.ForceRebuildLayoutImmediate(Box); }
+                    return;
+                }
+                Group.alpha = Mathf.MoveTowards(Group.alpha, 1f, step);
+            }
         }
 
-        internal sealed class CardKeys : MonoBehaviour
+        // one answer as a line (under its words, «ще на думці»): gold under the pointer, grey with its why
+        private static void TalkLine(Transform parent, TalkRow r, int at, bool rule, float size, Color ink, bool italic, Func<TMP_Text> hint)
         {
-            private void Update() { if (Input.GetKeyDown(KeyCode.Escape)) HideCard(); }
+            RectTransform row = Rect("Answer", parent);
+            HBox(row, 8f, TextAnchor.MiddleLeft, 4, 4, 6, 6);
+            Flex(row.gameObject);
+            Color c = r.Off ? A(ink, 0.4f) : ink;
+            TMP_Text t = T(row, r.Text, size, c, italic ? F.Italic : F.Body, TextAlignmentOptions.MidlineLeft);
+            Flex(t.gameObject);
+            if (!string.IsNullOrEmpty(r.Have)) Keep(T(row, r.Have, size * 0.75f, THave, F.Body, TextAlignmentOptions.MidlineRight));
+            Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 1f, 1f, 0f);
+            if (rule) { RectTransform line = Rect("Rule", parent); Fixed(line.gameObject, -1f, 1f); line.gameObject.AddComponent<Image>().color = A(PRule, 0.45f); }
+            TalkHook(row.gameObject, r, at, new Graphic[] { t }, c, fill, hint);
+        }
+
+        // what every answer does under the pointer and on a click (its why on the line under the chips; grey: no click, no light)
+        private static void TalkHook(GameObject g, TalkRow r, int at, Graphic[] targets, Color normal, Image fill, Func<TMP_Text> hint)
+        {
+            if (!string.IsNullOrEmpty(r.Tip)) { TalkTipLater t = g.AddComponent<TalkTipLater>(); t.Hint = hint; t.Text = Grammar.Fix(r.Tip); }
+            if (r.Off) return;
+            if (fill != null) _talkFills[at] = fill;
+            Clickable(g, () => TalkChoose(at));
+            Hover(g, targets, normal, fill);
+        }
+
+        // the line under the chips is made last: its why is looked for when the pointer comes
+        internal sealed class TalkTipLater : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler
+        {
+            internal Func<TMP_Text> Hint; internal string Text;
+            public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e) { TMP_Text l = Hint != null ? Hint() : null; if (l != null) l.text = Text; }
+            public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) { TMP_Text l = Hint != null ? Hint() : null; if (l != null && l.text == Text) l.text = ""; }
+        }
+
+        // the story's card: gold, its seal, a diamond by each answer, «веде далі історію»
+        private static void TalkStory(Transform paper, List<TalkRow> answers, List<int> rows, Func<TMP_Text> hint)
+        {
+            RectTransform card = Rect("Story", paper);
+            Image ci = card.gameObject.AddComponent<Image>(); ci.sprite = BookArt.RoundFine(4f); ci.type = Image.Type.Sliced; ci.pixelsPerUnitMultiplier = BookArt.Fine; ci.color = A(TStoryFill, 0.85f); ci.raycastTarget = false;
+            Outline(card, BookArt.FrameFine(4f, 1.5f), TStoryEdge);
+            VBox(card, 4f, TextAnchor.UpperLeft, 16, 30, 12, 12);
+            TMP_Text kind = T(card, Lang.T("ІСТОРІЯ"), 14f, TSeal, F.Head, TextAlignmentOptions.TopLeft); kind.characterSpacing = 18f;
+            foreach (int i in rows)
+            {
+                RectTransform row = Rect("Answer", card);
+                HBox(row, 10f, TextAnchor.MiddleLeft, 0, 0, 4, 4);
+                RectTransform dia = Rect("Diamond", row); Fixed(dia.gameObject, 18f, 18f);
+                Image di = Img(dia, "Edge", BookArt.FrameFine(1f, 1.5f), A(TStoryInk, 0.9f)); di.type = Image.Type.Sliced; di.pixelsPerUnitMultiplier = BookArt.Fine; di.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+                TMP_Text t = T(row, answers[i].Text, 21f, TStoryInk, F.Body, TextAlignmentOptions.MidlineLeft);
+                Flex(t.gameObject);
+                if (!string.IsNullOrEmpty(answers[i].Have)) Keep(T(row, answers[i].Have, 15f, THave, F.Body, TextAlignmentOptions.MidlineRight));
+                Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 1f, 1f, 0f);
+                TalkHook(row.gameObject, answers[i], i, new Graphic[] { t }, TStoryInk, fill, hint);
+            }
+            T(card, Lang.T("веде далі історію"), 14f, A(TStoryInk, 0.75f), F.Italic, TextAlignmentOptions.TopLeft);
+            Seal(card, "R");
+        }
+
+        // a thin frame over a box that lays out its children: drawn on it, not one of its rows
+        private static void Outline(RectTransform box, Sprite frame, Color c)
+        {
+            Image e = Img(box, "Edge", frame, c);
+            e.type = Image.Type.Sliced; e.pixelsPerUnitMultiplier = BookArt.Fine;
+            e.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        }
+
+        private static void Seal(RectTransform card, string letter)
+        {
+            RectTransform s = Rect("Seal", card);
+            s.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            s.anchorMin = s.anchorMax = new Vector2(1f, 1f); s.sizeDelta = new Vector2(46f, 46f); s.anchoredPosition = new Vector2(-4f, -2f);
+            Image si = s.gameObject.AddComponent<Image>(); si.sprite = BookArt.Circle; si.color = TSeal; si.raycastTarget = false;
+            TMP_Text l = T(s, letter, 22f, C("#f3d9c8"), F.Head, TextAlignmentOptions.Center);
+            Stretch(l.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        }
+
+        // a settler's request: a scrap pinned to the scroll, a little askew — the thing, its pay, how long it waits, «ОБІЦЯНО» once promised,
+        // its answers (bring it, promise it) as words to click under it
+        private static void TalkPinned(Transform paper, TalkScrap s, List<TalkRow> answers, List<int> rows, Func<TMP_Text> hint)
+        {
+            RectTransform wrap = Rect("Request", paper);
+            VBox(wrap, 0f, TextAnchor.UpperLeft, 8, 30, 6, 2);
+            RectTransform sc = Rect("Scrap", wrap);
+            sc.localRotation = Quaternion.Euler(0f, 0f, 1.4f);
+            Image si = sc.gameObject.AddComponent<Image>(); si.sprite = BookArt.TornFill(s.Item.GetStableHashCode()); si.type = Image.Type.Tiled; si.pixelsPerUnitMultiplier = BookArt.Fine; si.color = TScrap; si.raycastTarget = false;
+            UnityEngine.UI.Shadow sh = sc.gameObject.AddComponent<UnityEngine.UI.Shadow>(); sh.effectColor = new Color(0.24f, 0.14f, 0.04f, 0.35f); sh.effectDistance = new Vector2(3f, -5f);
+            VBox(sc, 4f, TextAnchor.UpperLeft, 20, 20, 18, 14);
+            RectTransform pin = Rect("Pin", sc); pin.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            pin.anchorMin = pin.anchorMax = new Vector2(0.5f, 1f); pin.sizeDelta = new Vector2(14f, 14f); pin.anchoredPosition = new Vector2(0f, -6f);
+            Image pi = pin.gameObject.AddComponent<Image>(); pi.sprite = BookArt.Circle; pi.color = C("#8c8578"); pi.raycastTarget = false;
+            TMP_Text kind = T(sc, Lang.T("ПРОХАННЯ"), 13f, PSoft, F.Head, TextAlignmentOptions.TopLeft); kind.characterSpacing = 16f;
+            RectTransform what = Rect("What", sc);
+            HBox(what, 12f, TextAnchor.MiddleLeft, 0, 0, 2, 2);
+            Sprite icon = ItemIcon(s.Item);
+            if (icon != null) { RectTransform ic = Rect("Icon", what); Fixed(ic.gameObject, 38f, 38f); Image ii = ic.gameObject.AddComponent<Image>(); ii.sprite = icon; ii.preserveAspect = true; ii.raycastTarget = false; }
+            T(what, s.Words, 22f, PInk, F.Body, TextAlignmentOptions.MidlineLeft).gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            RectTransform foot = Rect("Foot", sc);
+            HBox(foot, 10f, TextAnchor.MiddleLeft, 0, 0, 4, 0);
+            T(foot, Lang.F("віддячить: {0}", s.Pay), 16f, PSoft, F.Italic, TextAlignmentOptions.MidlineLeft).gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            Keep(T(foot, Lang.F("ще {0}", s.Left), 16f, TTime, F.Italic, TextAlignmentOptions.MidlineRight));
+            foreach (int i in rows) TalkLine(sc, answers[i], i, false, 19f, TStoryInk, false, hint);
+            if (!s.Promised) return;
+            RectTransform st = Rect("Stamp", sc); st.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            st.anchorMin = st.anchorMax = new Vector2(1f, 1f); st.sizeDelta = new Vector2(120f, 30f); st.anchoredPosition = new Vector2(-74f, -26f); st.localRotation = Quaternion.Euler(0f, 0f, -9f);
+            Image sf = Img(st, "Edge", BookArt.FrameFine(2f, 2f), A(TSeal, 0.8f)); sf.type = Image.Type.Sliced; sf.pixelsPerUnitMultiplier = BookArt.Fine;
+            TMP_Text stamp = T(st, Lang.T("ОБІЦЯНО"), 15f, A(TSeal, 0.85f), F.Head, TextAlignmentOptions.Center); stamp.characterSpacing = 14f;
+            Stretch(stamp.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        }
+
+        // «твоє»: chips that wrap into rows (no layout of Unity's wraps, so rows are laid by their widths here)
+        private static void TalkChips(Transform paper, List<TalkRow> answers, List<int> rows, Func<TMP_Text> hint)
+        {
+            RectTransform box = Rect("Chips", paper);
+            VBox(box, 8f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            float room = TalkPaperW - 28f - 60f, used = room + 1f; // (the paper less its sides)
+            RectTransform line = null;
+            foreach (int i in rows)
+            {
+                TalkRow r = answers[i];
+                Color ink = r.Off ? A(PInk, 0.4f) : PInk;
+                Image fill;
+                TMP_Text t = Chip(box, r.Text, 18f, ink, r.Off ? 0.35f : 0.8f, r.Off ? 0.05f : 0.3f, room, ref line, ref used, out fill);
+                TalkHook(fill.gameObject, r, i, new Graphic[] { t }, ink, fill, hint);
+            }
+        }
+
+        // a chip in rows that wrap (no layout of Unity's wraps: rows are laid by their widths here): the talk's «твоє», a sheet's words
+        private static TMP_Text Chip(RectTransform box, string text, float size, Color ink, float edge, float back, float room, ref RectTransform line, ref float used, out Image fill)
+        {
+            RectTransform chip = Rect("Chip", box);
+            fill = chip.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 0.98f, 0.92f, back);
+            Outline(chip, BookArt.FrameFine(3f, 1f), A(PRule, edge));
+            HBox(chip, 0f, TextAnchor.MiddleCenter, 11, 11, 6, 6);
+            TMP_Text t = T(chip, text, size, ink, F.Body, TextAlignmentOptions.Center);
+            t.textWrappingMode = TextWrappingModes.Normal;
+            float w = Mathf.Min(room, t.GetPreferredValues(t.text, room - 22f, 0f).x + 24f);
+            if (line == null || used + 8f + w > room) { line = Rect("Line", box); HBox(line, 8f, TextAnchor.UpperLeft, 0, 0, 0, 0); used = -8f; }
+            chip.SetParent(line, false);
+            Fixed(chip.gameObject, w, -1f);
+            used += 8f + w;
+            return t;
+        }
+
+        // a part's name between the parts: a thin rule, small words in it
+        private static void Divider(RectTransform paper, string words)
+        {
+            RectTransform d = Rect("Part", paper);
+            HBox(d, 8f, TextAnchor.MiddleCenter, 0, 0, 2, 0);
+            RectTransform l = Rect("Rule", d); Fixed(l.gameObject, -1f, 1f); l.gameObject.AddComponent<Image>().color = A(PRule, 0.5f); Flex(l.gameObject);
+            TMP_Text t = T(d, words, 15f, A(PLabel, 0.9f), F.Italic, TextAlignmentOptions.Midline);
+            Keep(t);
+            RectTransform r = Rect("Rule", d); Fixed(r.gameObject, -1f, 1f); r.gameObject.AddComponent<Image>().color = A(PRule, 0.5f); Flex(r.gameObject);
+        }
+
+        // its patience: a strip down the parchment's right edge, rust at the bottom to gold at the top, its number at the fill's top,
+        // «терпіння» along it; its reasons in a box beside the scroll while pointed at
+        private static void PatienceStrip(RectTransform paper, float v, string tip, float boxLeft)
+        {
+            float k = Mathf.Clamp01(v / 100f);
+            RectTransform bar = Rect("Patience", paper);
+            bar.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            bar.anchorMin = new Vector2(1f, 0f); bar.anchorMax = new Vector2(1f, 1f); bar.pivot = new Vector2(1f, 0.5f);
+            bar.offsetMin = new Vector2(-56f, 80f); bar.offsetMax = new Vector2(-14f, -70f); // (clear of the plaque and of the torn bottom)
+            bar.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f); // (its whole width takes the pointer)
+            RectTransform back = Rect("Back", bar); Stretch(back, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-8f, 0f), Vector2.zero);
+            Image bi = back.gameObject.AddComponent<Image>(); bi.sprite = BookArt.RoundFine(4f); bi.type = Image.Type.Sliced; bi.pixelsPerUnitMultiplier = BookArt.Fine; bi.color = A(C("#5a3c1e"), 0.18f);
+            RectTransform fill = Rect("Fill", back); Stretch(fill, Vector2.zero, new Vector2(1f, k), Vector2.zero, Vector2.zero);
+            Image fi = fill.gameObject.AddComponent<Image>(); fi.sprite = BookArt.RoundFine(4f); fi.type = Image.Type.Sliced; fi.pixelsPerUnitMultiplier = BookArt.Fine; fi.color = Color.Lerp(C("#8a2f16"), C("#e0a83e"), k);
+            RectTransform mark = Rect("Mark", bar); mark.anchorMin = mark.anchorMax = new Vector2(1f, k); mark.pivot = new Vector2(1f, 0.5f); mark.sizeDelta = new Vector2(40f, 20f); mark.anchoredPosition = new Vector2(-12f, 0f);
+            TMP_Text num = T(mark, Mathf.RoundToInt(v).ToString(), 16f, C("#6e2a14"), F.Head, TextAlignmentOptions.MidlineRight);
+            Stretch(num.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            bool wordUp = k < 0.5f; // (its word at the end of the strip its number is not at)
+            RectTransform word = Rect("Word", bar); word.anchorMin = word.anchorMax = new Vector2(1f, wordUp ? 1f : 0f); word.pivot = new Vector2(wordUp ? 1f : 0f, 0.5f);
+            word.sizeDelta = new Vector2(120f, 18f); word.anchoredPosition = new Vector2(-20f, wordUp ? -4f : 4f); word.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            TMP_Text wt = T(word, Lang.T("терпіння"), 14f, PSoft, F.Italic, wordUp ? TextAlignmentOptions.MidlineRight : TextAlignmentOptions.MidlineLeft); Stretch(wt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            if (string.IsNullOrEmpty(tip)) return;
+            RectTransform box = Rect("Why", _talkRoot.transform);
+            box.anchorMin = box.anchorMax = box.pivot = new Vector2(0f, 1f);
+            box.anchoredPosition = new Vector2(boxLeft, -TalkTop - 120f);
+            box.sizeDelta = new Vector2(320f, 10f);
+            CardPiece(box.gameObject.AddComponent<Image>(), "card_paper", 24f, 10f, Paper);
+            VBox(box, 2f, TextAnchor.UpperLeft, 16, 16, 12, 12);
+            box.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            TMP_Text t = T(box, tip, 15f, PInk, F.Body, TextAlignmentOptions.TopLeft);
+            t.textWrappingMode = TextWrappingModes.Normal;
+            box.gameObject.SetActive(false);
+            bar.gameObject.AddComponent<ShowWhilePointed>().Box = box.gameObject;
+        }
+
+        internal sealed class ShowWhilePointed : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler
+        {
+            internal GameObject Box;
+            public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e) { if (Box != null) { Box.SetActive(true); Box.transform.SetAsLastSibling(); LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)Box.transform); } }
+            public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) { if (Box != null) Box.SetActive(false); }
         }
 
         internal static void HideTalk()
         {
             if (_talkRoot != null) UnityEngine.Object.Destroy(_talkRoot);
-            _talkRoot = null; _talkPick = null; _talkClose = null;
+            _talkRoot = null; _talkPick = null; _talkClose = null; _talkFlow = null; _talkWho = null; _talkFills.Clear();
         }
 
-        private static void TalkChoose(int i) { Action<int> p = _talkPick; if (p != null) p(i); }
+        private static void TalkChoose(int i)
+        {
+            if (_talkFlow != null && _talkFlow.Folding) return; // (the last pick still folding away)
+            if (Time.unscaledTime < _alertUntil) { NpcTalk.IdleStir(); return; } // (its words are up: not to be clicked for this little while — you are here, though)
+            Image lit; if (_talkFills.TryGetValue(i, out lit) && lit != null) lit.color = new Color(1f, 0.75f, 0.31f, 0.5f); // (the one you picked, a moment before the rest goes)
+            Action<int> p = _talkPick;
+            if (p != null) p(i);
+        }
 
         private static void TalkClose() { Action c = _talkClose; if (c != null) c(); else HideTalk(); }
 
-        // the keys while it is open: 1–9 an answer, Esc closes; and it closes when you walk off (NpcTalk.Tick)
+        // while it is open: Esc closes (no keys for the answers: the mouse only — the user 2026-11-05); it closes when you walk off (NpcTalk.Tick)
         internal sealed class TalkKeys : MonoBehaviour
         {
             private void Update()
             {
                 NpcTalk.Tick();
-                if (_talkRoot == null) return;
-                if (Input.GetKeyDown(KeyCode.Escape)) { TalkClose(); return; }
-                for (int i = 0; i < Mathf.Min(9, _talkCount); i++)
-                    if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i)) { TalkChoose(i); return; }
+                if (_talkRoot != null && Input.GetKeyDown(KeyCode.Escape)) TalkClose();
             }
         }
     }

@@ -24,9 +24,14 @@ namespace HuginWhispers
             _sceneList = GUILayout.BeginScrollView(_sceneList, GUILayout.Height(260f));
             if (StoryScenes.Scenes.Count == 0) GUILayout.Label("Жодної. Файли: assets/story/scenes (вбудовані) або " + StoryScenes.Folder, _hint);
             foreach (StoryScenes.SceneDef d in StoryScenes.Scenes)
+            {
+                GUILayout.BeginHorizontal();
                 if (GUILayout.Button(d.Id + (StoryScenes.Playing == d.Id ? "  [іде]" : ""), d.Id == _scenePick ? _sel : GUI.skin.button)) _scenePick = d.Id;
+                if (GUILayout.Button("Режисер", GUILayout.Width(70f))) DirOpen(d); // (the scene in the director)
+                GUILayout.EndHorizontal();
+            }
             GUILayout.EndScrollView();
-            if (GUILayout.Button("Перечитати файли")) { StoryFiles.Again(); StoryScenes.Reload(); Note = "Сцен: " + StoryScenes.Scenes.Count + ", проблем: " + StoryScenes.Errors.Count; }
+            if (GUILayout.Button("Перечитати файли")) { StoryFiles.ReloadAll(); Note = "Сцен: " + StoryScenes.Scenes.Count + ", проблем: " + StoryScenes.Errors.Count; }
             foreach (string e in StoryScenes.Errors) GUILayout.Label("! " + e, _warn);
             GUILayout.Space(8);
             GUILayout.Label("Сцена перерветься: смерть, удар, ворог ближче 12 м, відійти далі " + Mathf.RoundToInt(StoryScenes.FarStop) + " м. Повтор — не раніше ніж за " + Mathf.RoundToInt(StoryScenes.Retry) + " с. Один крок — не довше " + Mathf.RoundToInt(StoryScenes.StepMax) + " с.", _hint);
@@ -36,7 +41,7 @@ namespace HuginWhispers
             if (s == null) { GUILayout.Label("Обери сцену зліва.", _hint); GUILayout.EndVertical(); GUILayout.EndHorizontal(); return; }
             GUILayout.Label(s.Id + " · " + s.From + (s.NeedsText.Length > 0 ? " · потребує: " + s.NeedsText + (s.Needs != null && StoryCond.All(p, s.Needs) ? " ✓" : " ✗") : ""), _head);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Грати (без умов)")) StoryScenes.Play(s);
+            if (GUILayout.Button("Грати (без умов)")) EdPlay(Player.m_localPlayer, s, 0);
             GUI.enabled = StoryScenes.Playing.Length > 0;
             if (GUILayout.Button("Стоп")) StoryScenes.Stop("автор");
             GUI.enabled = StoryScenes.Held;
@@ -53,7 +58,7 @@ namespace HuginWhispers
                 {
                     bool here = StoryScenes.Playing == s.Id && StoryScenes.At == i;
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button(">", GUILayout.Width(28f))) StoryScenes.Play(s, i); // (from this step)
+                    if (GUILayout.Button(">", GUILayout.Width(28f))) EdPlay(Player.m_localPlayer, s, i); // (from this step)
                     GUILayout.Label((here ? (StoryScenes.Held ? "|| " : "> ") : "   ") + (i + 1) + ". " + s.Steps[i].Line, here ? _head : GUI.skin.label);
                     GUILayout.EndHorizontal();
                 }

@@ -28,7 +28,12 @@ namespace HuginWhispers
     // Forms: its own «ходив|ходила» (NpcActor.Form), yours {ходив|ходила} (Grammar).
     // Anywhere words are written for people (a talk's node, an answer, a line of two people's chat) «{@theme}» is a
     // put-together line of that theme, said by whoever says the line: written and made lines take turns (the user).
-    // Built in below; the author's own files config/RavenWatch/talk/npc_patterns*.txt (while tuning) add to them.
+    // Built in below, then NpcTalkPatterns (its talk's own) and NpcSituationPatterns (by situation: [theme ?mood low] — its own state and
+    // the world's, NpcPhrases.Situations, heard by any player; and themes built of a beginning, a heart and an end); the author's own files
+    // config/RavenWatch/talk/npc_patterns*.txt (while tuning) add to them. Not the same twice soon: Compose remakes a line this person said
+    // lately or one you heard from anyone lately (SaidMost, HeardMost, HeardFor), and a part's list keeps back up to half of itself.
+    // Another language: its npc_patterns.txt (assets/lang/<Language>, Lang.PhraseText): a theme or a @list there takes the place of the Ukrainian
+    // one; what it does not have stays Ukrainian (so a language can be translated a theme at a time).
     // NpcVoice (below) is who speaks unasked and of what.
     internal static class NpcPhrases
     {
@@ -37,7 +42,7 @@ namespace HuginWhispers
         private static readonly System.Random Rng = new System.Random();
         private static readonly Dictionary<List<string>, List<string>> Recent = new Dictionary<List<string>, List<string>>();
 
-        internal static void Reload() { _book = null; Recent.Clear(); Conds.Clear(); }
+        internal static void Reload() { _book = null; Recent.Clear(); Conds.Clear(); OwnConds.Clear(); Said.Clear(); Heard.Clear(); }
 
         // every theme this person can speak, a few lines each as it would say them now (raven npc words <who> [n], for the
         // author): a theme that gives nothing, or a line with a {…} left in it, is told
@@ -53,7 +58,9 @@ namespace HuginWhispers
             }
             themes.Sort(StringComparer.Ordinal);
             StringBuilder sb = new StringBuilder("[npc words] " + a.Name + " (" + a.Id + "), themes " + themes.Count + "\n");
+            bool was = Trying; Trying = true; // (a look at its words: nothing of it counts as said)
             int none = 0, left = 0;
+            try {
             foreach (string th in themes)
             {
                 sb.Append(th).Append(':');
@@ -70,6 +77,7 @@ namespace HuginWhispers
                 if (!any) { none++; sb.Append(" (nothing now)"); }
                 sb.Append('\n');
             }
+            } finally { Trying = was; }
             Npcs.Log(sb.ToString());
             return a.Name + ": themes " + themes.Count + ", nothing now " + none + ", broken lines " + left + " (all of them: the log, «[npc words]»)";
         }
@@ -118,6 +126,11 @@ namespace HuginWhispers
                 if (_book != null) return _book;
                 _book = new Book();
                 Parse(_book, Builtin);
+                Parse(_book, NpcTalkPatterns.Text); // (its talk's own: repeats, worries, anger, quarrels, favours — NpcTalkPatterns)
+                Parse(_book, NpcSituationPatterns.Text);
+                foreach (string more in NpcMorePatterns.All) Parse(_book, more); // (more lines for the lists above, pass by pass — NpcMorePatterns) // (by situation, and themes built of a beginning, a heart and an end — NpcSituationPatterns)
+                string own = Lang.PhraseText("npc_patterns.txt");
+                if (own != null) Parse(_book, own, true);
                 if (RavenLooks.FromFiles && Directory.Exists(NpcTalk.Dir))
                     foreach (string f in Directory.GetFiles(NpcTalk.Dir, "npc_patterns*.txt"))
                     {
@@ -128,14 +141,16 @@ namespace HuginWhispers
             }
         }
 
-        private static void Parse(Book b, string text)
+        // over: the themes and lists it names take the place of those already there
+        private static void Parse(Book b, string text, bool over = false)
         {
             List<string> part = null;
+            HashSet<string> taken = over ? new HashSet<string>() : null;
             foreach (string raw in text.Split('\n'))
             {
                 string line = raw.Trim();
                 if (line.Length == 0 || line.StartsWith("#") || line.StartsWith("//")) continue; // (a note: «#» in a file, «//» in the built-in words — a «#» line would be read by the compiler)
-                if (line.StartsWith("@")) { string n = line.Substring(1).Trim(); if (!b.Parts.TryGetValue(n, out part)) b.Parts[n] = part = new List<string>(); continue; }
+                if (line.StartsWith("@")) { string n = line.Substring(1).Trim(); if (over && taken.Add("@" + n)) b.Parts.Remove(n); if (!b.Parts.TryGetValue(n, out part)) b.Parts[n] = part = new List<string>(); continue; }
                 if (line.StartsWith("["))
                 {
                     int close = line.IndexOf(']');
@@ -145,6 +160,7 @@ namespace HuginWhispers
                     string theme = q < 0 ? head : head.Substring(0, q).Trim(), body = line.Substring(close + 1).Trim();
                     if (q >= 0) body = Mark + head.Substring(q + 2).Trim() + Mark + body;
                     List<string> t;
+                    if (over && taken.Add(theme)) b.Templates.Remove(theme);
                     if (!b.Templates.TryGetValue(theme, out t)) b.Templates[theme] = t = new List<string>();
                     t.Add(body);
                     part = null;
@@ -155,15 +171,68 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- composing
-        internal static bool Has(NpcActor a, string theme) { return a != null && (B.Templates.ContainsKey(theme) || (a.Def != null && B.Templates.ContainsKey(a.Def.Id + ":" + theme))); }
+        internal static bool Has(NpcActor a, string theme) { return a != null && ((B.Templates.ContainsKey(theme) && !NpcVoice.OwnWordsOnly(a)) || HasOwn(a, theme)); }
+        internal static bool HasOwn(NpcActor a, string theme) { return a != null && a.Def != null && B.Templates.ContainsKey(a.Def.Id + ":" + theme); } // (a story person's own words of it)
 
         // a line of this theme by this person to that player (null: nothing fits now)
         internal static string Compose(NpcActor a, string theme, Player to) { return Compose(a, theme, to, null); }
 
-        // the same with values of the moment ({wage}, {item}, {why}…: a template wanting one not given is passed over)
+        // the same with values of the moment ({wage}, {item}, {why}…: a template wanting one not given is passed over). Not the same twice
+        // soon (the user 2026-11-05: as rarely as the ravens'): a line this person said lately (SaidMost of its own), or one you heard from
+        // anyone lately (HeardMost, HeardFor s: the player on this game) is made again, up to Tries times; the parts' own lists keep back
+        // up to half of what they hold, KeepBackMost at most (Fresh). Session only: a reload starts afresh.
+        internal static int SaidMost = 24, HeardMost = 60, Tries = 4, KeepBackMost = 40;
+        internal static float HeardFor = 900f;
+        internal static bool Trying; // (an author's look at its words — raven npc words / talk: nothing of it counts as said)
+        private static readonly int PerfWords = NpcPerf.Id("words (складена фраза)"); // (a line, all its tries: raven npc perf)
+        private static readonly Dictionary<uint, List<string>> Said = new Dictionary<uint, List<string>>();
+        private static readonly List<KeyValuePair<string, float>> Heard = new List<KeyValuePair<string, float>>();
+
         internal static string Compose(NpcActor a, string theme, Player to, Dictionary<string, string> extra)
         {
             if (a == null) return null;
+            if (NpcVoice.OwnWordsOnly(a) && !HasOwn(a, theme)) return null; // (a person of the story says nothing from the common book, whoever asks: Heid «does not yet know where things are here», 2026-11-05)
+            if (_steady != null) return ComposeOnce(a, theme, to, extra); // (a steady draw is the same every time: its story is not a line said lately, and a second try would make it another story)
+            long from = NpcPerf.Now();
+            string s = null;
+            for (int i = 0; i < Tries; i++)
+            {
+                s = ComposeOnce(a, theme, to, extra);
+                if (s == null || Trying || !SaidLately(a, to, s)) break;
+            }
+            if (s != null && !Trying) Remember(a, to, s);
+            NpcPerf.Add(PerfWords, from);
+            return s;
+        }
+
+        private static bool SaidLately(NpcActor a, Player to, string s)
+        {
+            List<string> mine;
+            if (a.Zdo != null && Said.TryGetValue(NpcKit.Seed(a.Zdo), out mine) && mine.Contains(s)) return true;
+            if (to == null || to != Player.m_localPlayer) return false;
+            foreach (KeyValuePair<string, float> h in Heard) if (h.Key == s && Time.time - h.Value < HeardFor) return true;
+            return false;
+        }
+
+        private static void Remember(NpcActor a, Player to, string s)
+        {
+            if (a.Zdo != null)
+            {
+                uint seed = NpcKit.Seed(a.Zdo);
+                List<string> mine;
+                if (!Said.TryGetValue(seed, out mine)) { if (Said.Count > 128) Said.Clear(); Said[seed] = mine = new List<string>(); }
+                mine.Add(s);
+                while (mine.Count > SaidMost) mine.RemoveAt(0);
+            }
+            if (to != null && to == Player.m_localPlayer)
+            {
+                Heard.Add(new KeyValuePair<string, float>(s, Time.time));
+                while (Heard.Count > HeardMost || (Heard.Count > 0 && Time.time - Heard[0].Value > HeardFor)) Heard.RemoveAt(0);
+            }
+        }
+
+        private static string ComposeOnce(NpcActor a, string theme, Player to, Dictionary<string, string> extra)
+        {
             foreach (Func<NpcActor, Player, string, string> v in Variants) // (another theme for this person and player now — its feeling to you: see_player_cold… — tried first)
             {
                 string alt = v(a, to, theme);
@@ -208,6 +277,9 @@ namespace HuginWhispers
         // speaking, the player the one spoken to, else you) and its tone is its
         private const char Mark = '\u0001'; // (a template's conditions, kept in front of it: Mark conditions Mark template)
         private static readonly Dictionary<string, List<Cond>> Conds = new Dictionary<string, List<Cond>>();
+        private static readonly Dictionary<string, bool> OwnConds = new Dictionary<string, bool>(); // (true: every condition is about the speaker or the world, none a player's story)
+        // the speaker's and the world's own conditions: a line's situation, heard by any player (not only by one whose story is on this game)
+        internal static readonly HashSet<string> Situations = new HashSet<string> { "daypart", "weather", "raid", "folk", "job", "hired", "resident", "mood", "hungry", "tired", "seated", "working", "feel", "friendnear", "npcflag", "npcvar", "npcremembers", "night", "day", "angry", "nature" };
 
         private static List<string> Fitting(List<string> templates, NpcActor a, HashSet<string> tones, Player to)
         {
@@ -234,7 +306,9 @@ namespace HuginWhispers
             }
             if (_steady != null) return false; // (a steady draw — a backstory — is the same on every game: no one's story state in it)
             Player p = to;
-            if (p == null || p != Player.m_localPlayer) return false; // (a player's story lives on its own game only: words for another player here never ask it)
+            bool own;
+            if (!OwnConds.TryGetValue(text, out own)) { own = true; foreach (Cond c in l) if (c.A.Length == 0 || !Situations.Contains(c.A[0]) || Array.IndexOf(c.A, "me") >= 0) own = false; OwnConds[text] = own; } // («npcremembers x me»: about the player, not a situation)
+            if (!own && (p == null || p != Player.m_localPlayer)) return false; // (a player's story lives on its own game only: words for another player here never ask it — its situation is its own and holds for anyone)
             NpcActor was = NpcTalk.Speaker;
             NpcTalk.Speaker = a;
             try { return StoryCond.All(p, l); }
@@ -242,11 +316,14 @@ namespace HuginWhispers
         }
 
         // a made line of this theme said now; none fits: the written one (already in its form)
-        internal static void SayOr(NpcActor a, string theme, string written, Dictionary<string, string> extra = null)
+        // how: an event waits its turn in the ring (NpcActor.Voice), a word in passing is said only while it is quiet
+        internal static void SayOr(NpcActor a, string theme, string written, Dictionary<string, string> extra = null, NpcActor.Voice how = NpcActor.Voice.Event)
         {
             if (a == null || !NpcVoice.Free(a)) return; // (a scene, the story's hush: quiet)
+            if (how == NpcActor.Voice.Unasked && !NpcActor.FloorFree(a.transform.position, a)) return; // (someone near is speaking: nothing made)
             string s = Compose(a, theme, Player.GetClosestPlayer(a.transform.position, 20f), extra);
-            a.Say(!string.IsNullOrEmpty(s) ? s : written);
+            if (string.IsNullOrEmpty(s) && NpcVoice.OwnWordsOnly(a)) return; // (the written line is the common people's: a person of the story keeps to its own words)
+            a.Say(!string.IsNullOrEmpty(s) ? s : written, null, how);
         }
 
         // «{@theme}» in written words: a made line in its place (none fits: the words without it)
@@ -268,13 +345,27 @@ namespace HuginWhispers
             return Tidy(sb.ToString());
         }
 
-        // its tones: its ways and its age (a line marked for another tone is not its)
-        private static HashSet<string> Tones(NpcActor a)
+        // its tones: its ways and its age (a line marked for another tone is not its). Read only — never change the set: it is kept
+        // with its ways (a new NpcPersona when they change, a new age when its look comes) and asked for every line and every theme weighed
+        private sealed class TonesOf { public int Age; public HashSet<string> Set; }
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<NpcPersona, TonesOf> TonesKept = new System.Runtime.CompilerServices.ConditionalWeakTable<NpcPersona, TonesOf>();
+
+        internal static HashSet<string> Tones(NpcActor a)
         {
-            HashSet<string> t = new HashSet<string>();
             NpcPersona p = NpcPersona.Of(a);
             NpcSettlers.Look l = NpcSettlers.Of(a);
             int age = l != null ? l.Age : (p.Stoop > 0.45f ? 2 : 1);
+            TonesOf kept;
+            if (TonesKept.TryGetValue(p, out kept) && kept.Age == age) return kept.Set;
+            HashSet<string> t = MakeTones(p, age);
+            TonesKept.Remove(p);
+            TonesKept.Add(p, new TonesOf { Age = age, Set = t });
+            return t;
+        }
+
+        private static HashSet<string> MakeTones(NpcPersona p, int age)
+        {
+            HashSet<string> t = new HashSet<string>();
             if (age == 2) t.Add("стар");
             if (age == 1) t.Add("дор");
             if (p.Bravery > 0.6f) t.Add("смілив");
@@ -282,6 +373,7 @@ namespace HuginWhispers
             if (age == 0) t.Add("мол");
             if ((p.Laziness + (1f - p.Chatty)) * 0.5f > 0.55f || (age == 2 && p.Chatty < 0.5f)) t.Add("бурч");
             if (p.Chatty > 0.6f && p.Laziness < 0.5f) t.Add("весел");
+            if (p.Nature != null && p.Nature.Tone.Length > 0) t.Add(p.Nature.Tone);
             return t;
         }
 
@@ -299,7 +391,7 @@ namespace HuginWhispers
             Dictionary<string, string> v = new Dictionary<string, string>();
             if (to != null) v["name"] = to.GetPlayerName();
             v["npc"] = a.Name;
-            if (a.Worker != null && a.Worker.Works) v["job"] = Jobs.Word(a.Worker.JobId);
+            if (a.Worker != null && a.Worker.Works) v["job"] = Lang.W(a.Worker.Job.Word); // (in the phrases' own language)
             ZDOID heart = NpcKit.GetRef(a.Zdo, NpcResident.KHeart);
             foreach (NpcHeart h in NpcHeart.Loaded) if (h != null && h.Id == heart && h.Name.Length > 0) v["base"] = h.Name;
             NpcActor other = null; float best = 10f * 10f;
@@ -337,7 +429,7 @@ namespace HuginWhispers
                     if (!(optional && Next() < 0.5))
                     {
                         List<string> fit = new List<string>();
-                        foreach (string p in part) { string x = p; if (Tone(ref x, tones) && Fill(x, values) != null) fit.Add(x); }
+                        foreach (string p in part) { string x = p; if (Tone(ref x, tones) && (x.IndexOf('{') < 0 || Fill(x, values) != null)) fit.Add(x); } // (most lines want no value: not built just to be asked)
                         if (fit.Count > 0) sb.Append(Unmark(Fresh(part, fit)));
                         else if (!optional) return null;
                     }
@@ -387,7 +479,7 @@ namespace HuginWhispers
             if (pool.Count == 0) pool = fit;
             string pick = pool[Rng.Next(pool.Count)];
             recent.Add(pick);
-            int keep = Mathf.Clamp(fit.Count - 1, 0, 6);
+            int keep = Mathf.Clamp(fit.Count - 1, 0, Mathf.Clamp(fit.Count / 2, 6, KeepBackMost)); // (a long list keeps back half of itself, at most KeepBackMost: each pick looks through what is kept)
             while (recent.Count > keep) recent.RemoveAt(0);
             return pick;
         }
@@ -1023,7 +1115,7 @@ namespace HuginWhispers
 ~смілив Я стою на березі, а з туману виходять кораблі. Я не тікаю.
 ~боязк За мною хтось іде. Я озираюсь — нікого.
 @сон_кінець
-Що воно значить — не знаю.
+Що воно означає — не знаю.
 Прокидаюсь — і серце калатає.
 Може, то пам'ять. А може, ні.
 ~весел Гарний сон. Шкода, що короткий.
@@ -1033,7 +1125,7 @@ namespace HuginWhispers
 @друг
 Мене тут навчив розпалювати вогонь один старий. Потім він згас. ^згаслі
 Була в мене товаришка — сміялася так, що й вовки замовкали. Одного ранку її ліжко стояло порожнє. ^згаслі
-Я довго ходив|ходила з одним мовчуном. Він ні разу не назвав свого імені.
+Я довго ходив|ходила з одним мовчуном. Він жодного разу не назвав свого імені.
 Колись я подружився|подружилася з Гальдором. Ну, як подружився|подружилася — він мене не обдурив.
 Мав|Мала я пса. Тутешнього, сірого. Він пішов за вовками й не повернувся.
 ~мол Моя перша подруга тут навчила мене ставити пастки на зайців.
@@ -1456,7 +1548,7 @@ namespace HuginWhispers
 ~весел У тебе сьогодні гарний настрій. Чи то в мене?
 @привіт_назад
 Нарешті! А то вже хотіли шукати.
-~смілив {Повернувся|Повернулася}! Значить, вороги не такі вже й страшні.
+~смілив {Повернувся|Повернулася}! Отже, вороги не такі вже й страшні.
 ~боязк Ох, {name}, я вже почав|почала хвилюватися.
 @питання
 Їсти будеш?
@@ -1485,7 +1577,7 @@ namespace HuginWhispers
 Руки як чужі.
 Спина болить так, що й не скажу.
 ~бурч Втомився|Втомилась. І нікому до того діла.
-~весел Втома — то добре. Значить, щось зроблено.
+~весел Втома — то добре. Отже, щось зроблено.
 ~стар Раніше я втомлювався|втомлювалась під вечір. Тепер — під обід.
 ~мол Я ще можу! Ну… майже.
 @втома_кінець
@@ -1546,7 +1638,7 @@ namespace HuginWhispers
 Свого ліжка в мене нема — сплю, де впаду.
 Ліжко б мені. Хоч яке, аби своє.
 Знову спав|спала на підлозі. Спина досі пам'ятає.
-Усі мають де спати, а я — де прийдеться.
+Усі мають де спати, а я — де доведеться.
 ~стар У мої роки на голій землі спати — то кара.
 [low_bedopen] {ліжко_надворі}
 @ліжко_надворі
@@ -1817,19 +1909,31 @@ namespace HuginWhispers
 ~весел Не жени мене звідси, гаразд?
 ~бурч Але скаржитись я не перестану. Звичка.
 
-[about_folk] {про_сусідів}
+// 2026-11-05: what it says of its people is true (NpcAttitude.Values): {friend} one it gets on with, {foe} one it does not, else a plain word
+[about_folk] {про_друга} {про_ворога?}
+[about_folk] {про_ворога}
+[about_folk] {про_сусіда}
 [about_folk] {alone}{самотньо}
-@про_сусідів
-{neighbour} — душа надійна. Спиною до спини стати можна.
-Є {neighbour}. Цікава людина — завжди щось вигадує.
-{neighbour} живе тут. Мовчазна душа, але добра.
-Найкраще мені балакається, коли поруч {neighbour}. Решта — то так, привіт-бувай.
-{neighbour}? Хороша людина. Хропе, щоправда.
-{neighbour} знає багато історій про море. Слухати можна до ранку.
-~бурч {neighbour}. Більше нічого не скажу. {Сам|Сама} побачиш.
-~весел {neighbour}! Ми вже як рідні.
-~стар {neighbour} ще вчиться жити. Хай вчиться, поки я поруч.
-~мол {neighbour} знає стільки всього! Хочу знати так само.
+@про_друга
+{friend} — от з ким мені добре. Спиною до спини стати можна.
+Найкраще мені балакається, коли поруч {friend}.
+{friend}? Своя людина. За таких тримаються.
+~бурч {friend} — єдина душа, що мене тут терпить. Ну, і я теж терплю.
+~весел {friend}! Ми вже як рідні.
+~стар {friend} мені як рідна кров.
+~мол {friend} знає стільки всього! Хочу знати так само.
+@про_ворога
+А от {foe}… Краще не питай.
+Є тут {foe}. Ми не ладнаємо. Та й годі про це.
+~бурч {foe}? Тьху. Більше нічого не скажу. {Сам|Сама} побачиш.
+~весел Усіх люблю. Ну, майже. {foe} — це «майже».
+~стар {foe} ще вчиться жити. Повільно вчиться.
+~боязк {foe} мене лякає. Трохи.
+@про_сусіда
+{neighbour} теж тут живе. Кожен своє робить.
+Є {neighbour}. Поки що придивляємось одне до одного.
+{neighbour}? Та нормально. Вітаємось.
+~весел Є {neighbour}! Ще не подружилися, але все попереду.
 @самотньо
 Поки що я тут сам|сама. Ну, ще ти й ворони.
 Нікого. Тиша. Інколи це добре.
@@ -1852,7 +1956,7 @@ namespace HuginWhispers
 Одного разу ми смажили кабана, а він виявився не зовсім смаженим. Довго потім бігали.
 Знаєш, чому драугри такі злі? Бо їх ніхто не поховав як слід. Я б теж злився|злилася.
 Кажуть, у горах живе дракониця, що збирає яйця. Не свої. Чужі. Навіщо — не питай.
-Я чув|чула, що Одін віддав око за мудрість. Мені б і пальця жаль. Значить, я не мудрий|мудра.
+Я чув|чула, що Одін віддав око за мудрість. Мені б і пальця жаль. Отже, я не мудрий|мудра.
 Колись ми з товаришем посперечались, хто довше простоїть під дощем. Обидва застудились. Нічия.
 Хочеш загадку? Що має зуби, а не кусає? Гребінь. Що? Ну, я ж казав|казала — загадка.
 Є така пісня, про корабель, що плив по небу. Слів не пам'ятаю, а мелодію — от послухай… ні, краще не буду.
@@ -1995,6 +2099,14 @@ namespace HuginWhispers
 // ---------------------------------------------------------------- пам'ять (NpcMemory): {m_x} що, {ago_x} коли («сьогодні», «учора», «кілька днів тому», «давно»)
 // Тема mem_<подія> кажеться, лише коли він це пам'ятає (і про тебе — лише тобі). you_remember — у «Що думаєш про мене?»:
 // кожен шаблон просить свою подію, тож підходить лише те, що було.
+[mem_fired] {пам_вигнав}
+@пам_вигнав
+Ти мене вже раз {вигнав|вигнала}, {name}. Я таке пам'ятаю.
+Я не забув|забула, як ти мене {прогнав|прогнала}.
+Працюю. Але щодня думаю, чи не виженеш ти мене знову.
+~бурч Виганяють, потім кличуть. Знайомо.
+~боязк Ти ж… не виженеш мене знову?
+~стар Мене вже раз вигнали на старість. Другого разу можу й не пережити.
 [mem_rescued] {пам_порятунок}
 @пам_порятунок
 {ago_rescued} ти мене з халепи {витягнув|витягнула}. Я пам'ятаю.
@@ -2036,7 +2148,7 @@ namespace HuginWhispers
 
 [mem_request_done] {пам_прохання}
 @пам_прохання
-Дякую ще раз за {m_request_done}. Знадобилось.
+Те, що ти {приніс|принесла}, знадобилось: {m_request_done}. Дякую ще раз.
 Ти мені {приніс|принесла} {m_request_done} — я це пам'ятаю.
 {ago_request_done} ти мене {виручив|виручила}. Тепер моя черга, якщо що.
 ~весел Ти мене тоді так {виручив|виручила}! Я аж танцювати хотів|хотіла.
@@ -2072,6 +2184,132 @@ namespace HuginWhispers
 ~боязк Я досі бачу їх уві сні. Вони ж повернуться, правда?
 ~бурч Хтось колись подумає про оборону? Після того, що було?
 
+[goal_bed] {мета_ліжко}
+@мета_ліжко
+Хоч би раз поспати у своєму ліжку. Не на землі, не де доведеться.
+Знаєш, чого мені бракує? Свого кута. Ліжка, яке ніхто не займе.
+Мені б своє ліжко. Тоді б я знав|знала, що я тут удома.
+~стар Кістки мої вже не для голої землі. Ліжко б…
+~бурч Сплю, як пес, де впаду. Ліжко тепер, видно, розкіш.
+~мол Уявляєш, своє ліжко! Я б його ще й шкурою застелив|застелила.
+~весел Мрію про ліжко. Не смійся, про м'яке ліжко!
+
+[goal_master] {мета_майстер}
+@мета_майстер
+Хочу, щоб про мою роботу казали: оце майстер! Я ж {goal_what}.
+Ще трохи, і руки самі знатимуть, що робити. Хочу стати справжнім майстром.
+Щодня вчуся. Колись моя робота буде найкраща в окрузі.
+~смілив Колись я буду найкращим|найкращою тут у своїй справі. Побачиш.
+~боязк Боюсь схибити… але дуже хочу навчитися як слід.
+~стар Скільки живу, а все вчуся. Хоч під старість стати б майстром.
+
+[goal_comfort] {мета_затишок}
+@мета_затишок
+Знаєш, чого тут бракує? {goal_what}. Одразу б по-людськи стало.
+Ходжу й думаю: {goal_what}. Нам би тут не завадило.
+Мені б одне: {goal_what}. І все, більше нічого не прошу.
+~весел {goal_what}! От тоді б ми зажили!
+~бурч Усе є, а того, що треба, нема. {goal_what}, кажу. Хто почує?
+~стар Мені багато не треба. Ну хіба {goal_what}.
+
+[goal_friend] {мета_друг}
+@мета_друг
+{goal_what}… Хороша людина. От з ким я б потоваришував|потоваришувала.
+Живемо поруч, а все чужі. {goal_what} — от з ким хочеться ближче.
+Знаєш {goal_what}? Я б із радістю дружив|дружила.
+~боязк {goal_what} мені подобається… але як заговорити, не знаю.
+~весел {goal_what} — душа-людина! Будемо друзями, побачиш.
+~бурч Усі тут чужі. Хіба {goal_what} ще нічого.
+
+[goal_thing] {мета_річ}
+@мета_річ
+Шукаю одну річ: {goal_what}. Пам'ять про те, чого вже не повернеш.
+Одна річ не дає мені спокою: {goal_what}. Таке в мене було колись, ще до цього світу.
+Якщо колись натрапиш… {goal_what}. Принеси, га? Це для мене багато важить.
+~стар Хотів|Хотіла б ще раз потримати в руках… {goal_what}. Як колись.
+~мол Знаєш, що мені сниться? {goal_what}! Сам|Сама не знаю чому.
+~бурч Ніхто не принесе, знаю. А мені б {goal_what}… хоч раз.
+
+[goal_done] {мета_збулась}
+@мета_збулась
+Збулося! Я й не вірив|вірила, що так буде.
+Оце так день. Те, про що я стільки думав|думала, є!
+Нарешті. Тепер можна й про щось інше мріяти.
+~весел Ха! Вийшло! Сьогодні я найщасливіший|найщасливіша на базі!
+~стар Дожив|Дожила і до цього. Дякую богам… і тобі.
+~бурч Ну… добре. Справді добре. Тільки нікому не кажи, що я радів|раділа.
+
+[feel_fright] {почуття_переляк}
+@почуття_переляк
+Ой! Що це було?!
+Боги… серце аж у п'ятах.
+Ох… аж руки трусяться.
+~смілив Тьху, аж здригнувся|здригнулася. Ну, підходь, якщо смілив!
+~боязк Я ж казав|казала, що тут небезпечно! Казав|казала!
+~стар Старий я вже для такого… ледь не впав|впала.
+~мол Ма-а-амо… Ой. Ніхто не чув.
+
+[feel_fright_greet] {почуття_переляк_вітання}
+@почуття_переляк_вітання
+Ох, це ти… Я аж здригнувся|здригнулася.
+Тихіше підходь, у мене ще коліна трусяться.
+~бурч Чого підкрадаєшся? І так ледь живий|жива.
+~весел Фух, свої! А я вже думав|думала, що знову оті.
+
+[feel_joy] {почуття_радість}
+@почуття_радість
+От це новина!
+Ха! Оце день!
+Отак би щодня!
+~бурч Ну… хоч щось добре сьогодні.
+~весел Ура! Сьогодні я пригощаю! Ну, словами.
+~стар Дожив|Дожила і до доброї звістки.
+
+[feel_joy_greet] {почуття_радість_вітання}
+@почуття_радість_вітання
+О, {name}! Чу{в|ла}? У нас сьогодні радість!
+Заходь, заходь! Сьогодні добрий день.
+~бурч Ну привіт. Сьогодні навіть я не бурчу.
+~мол Ти вже знаєш? Ну скажи, що знаєш!
+
+[feel_awe] {почуття_подив}
+@почуття_подив
+Боги… що це було?
+Ти це бачи{в|ла}?.. Скажи, що бачи{в|ла}.
+Я такого ще не бачив|бачила.
+~стар Скільки живу, а такого не бачив|бачила.
+~боязк Це… це ж недобрий знак, правда?
+~смілив Ото диво. Хотів|Хотіла б я знати, хто це зробив.
+
+[feel_awe_greet] {почуття_подив_вітання}
+@почуття_подив_вітання
+Ти бачи{в|ла}? Я досі не можу отямитись.
+Ох, {name}… Тут таке було. Я досі сам|сама не свій|своя.
+~весел Ти пропуст{ив|ила} таке! Таке!
+
+[feel_grief] {почуття_смуток}
+@почуття_смуток
+Порожньо стало…
+Сумно мені сьогодні.
+От і пішла людина. Хто тепер зі мною біля вогню сидітиме?
+~бурч Не чіпай мене зараз. Просто не чіпай.
+~стар Усі колись ідуть. Але від того не легше.
+
+[feel_grief_greet] {почуття_смуток_вітання}
+@почуття_смуток_вітання
+А, це ти… Вибач, я сьогодні не дуже балакучий|балакуча.
+Привіт. Не зважай, мені просто сумно.
+~весел Привіт… Навіть жартувати не хочеться, уявляєш?
+
+[place_fav] {місце_моє}
+@місце_моє
+Люблю тут бувати.
+Моє місце. Тут і думається краще.
+Знову я тут. Звичка.
+~стар Посиджу тут, як завжди.
+~бурч Хоч тут ніхто не чіпає.
+~весел О, моє улюблене місце!
+
 [mem_starved] {пам_голод}
 @пам_голод
 Голод, що був {ago_starved}, я досі пам'ятаю. Думав|Думала — не витримаю.
@@ -2103,9 +2341,111 @@ namespace HuginWhispers
 [you_remember] {ago_revived} ти мене медом на ноги {поставив|поставила}. Я це пам'ятаю.
 [you_remember] Ти мене {взяв|взяла} до себе, коли більше нікому не було до мене діла.{m_hired}
 [you_remember] Ти мені {приніс|принесла} {m_request_done}, коли я просив|просила. Не забуду.
+[you_remember] {m_fired}Ти мене вже раз {вигнав|вигнала}. Таке не забувається.
 [you_remember] Ти буваєш довго в дорозі, але завжди повертаєшся.{m_missed}
 [you_remember] {m_unpaid}Скажу чесно: ту порожню скарбничку я пам'ятаю.
 [you_remember] {m_starved}Пам'ятаю, як у нас не було що їсти. Хоч ти, мабуть, і не {винен|винна}.
+
+// ---------------------------------------------------------------- розмова у вікні (NpcTalk): великі миті своїми словами
+[talk_again] {ще_щось}
+@ще_щось
+Ще щось?
+Слухаю.
+Щось іще?
+То що ще?
+Кажи, я тут.
+~бурч Ну? Ще щось?
+~весел Питай далі, мені не шкода!
+~стар Кажи, кажи, я не поспішаю.
+~мол А ще що?
+~боязк Щось… іще?
+[talk_again_cold] {ще_щось_холодне}
+@ще_щось_холодне
+Це все?
+Кажи вже.
+Ну?
+[talk_again_hostile] {ще_щось_вороже}
+@ще_щось_вороже
+Ти ще тут?
+Чого ще?
+Закінчуй.
+[talk_again_need] {ще_щось_біда}
+@ще_щось_біда
+Прошу, не барись.
+Ти ж допоможеш, правда?
+Скажи, що не кинеш мене тут.
+Часу в мене небагато.
+
+[hire_yes ?!npcremembers fired me] {найм_згода}
+[hire_yes ?npcremembers fired me] {найм_знову}
+@найм_згода
+Жити під дахом і бути при ділі? Чом би й ні. Куди мені йти?
+Дах і робота — більшого й не прошу. Куди йти?
+Згода. Краще працювати в оселі, ніж блукати лісом. Куди мені?
+~бурч Робота… Ну, хоч дах буде. Куди йти?
+~весел Оце так новина! Згода! Показуй дорогу!
+~стар Старі кістки давно просять тепла. Куди йти?
+~мол Справді? Я згоден|згодна! Куди йти?
+~боязк З тобою мені буде спокійніше. Куди йти?
+@найм_знову
+Один раз ти мене вже {вигнав|вигнала}. Та куди мені діватись. Куди йти?
+Ти мене {прогнав|прогнала} {ago_fired}, а тепер кличеш назад. Гаразд. Куди йти?
+Знову я тобі потрібен|потрібна? Добре. Тільки більше так не роби. Куди йти?
+~бурч Ну, {передумав|передумала}. Куди йти?
+[hire_yes_cold] {найм_холодно}
+@найм_холодно
+Гаразд. Куди йти?
+Робота є робота. Куди?
+[hire_yes_hostile] {найм_вороже}
+@найм_вороже
+Не заради тебе. Мені просто нема куди йти. Куди?
+Згода. Але друзями ми не будемо. Куди?
+
+[fire_ask] {вигнання}
+@вигнання
+Що ж… Піду своєю дорогою. Ти {певен|певна}?
+Отак просто? Ти {певен|певна}?
+То я тобі більше не потрібен|потрібна? Ти {певен|певна}?
+~бурч Знав|Знала, що цим скінчиться. Ти {певен|певна}?
+~весел Жартуєш, правда? Ти {певен|певна}?
+~стар Куди ж я на старість піду… Ти {певен|певна}?
+~мол Я ж старався|старалася! Ти {певен|певна}?
+~боязк Там же самі звірі… Ти {певен|певна}?
+[fire_ask_cold] {вигнання_холодно}
+@вигнання_холодно
+Давно до цього йшло. Ти {певен|певна}?
+Нарешті {сказав|сказала}. Ти {певен|певна}?
+[fire_ask_hostile] {вигнання_вороже}
+@вигнання_вороже
+Та я й сам|сама радий|рада піти. Ти {певен|певна}?
+[fire_ask_close] {вигнання_рідне}
+@вигнання_рідне
+Невже ти це серйозно? Ти {певен|певна}?
+Я думав|думала, ми свої люди. Ти {певен|певна}?
+
+[request_thanks] {подяка_за_річ}
+@подяка_за_річ
+Ой, дякую! Саме те, що треба.
+Ти таки {приніс|принесла}! Дякую.
+Дякую. Тепер справа піде.
+Саме вчасно. Дякую!
+~бурч Нарешті. Ну, дякую.
+~весел Оце я розумію! Дякую від душі!
+~стар Дай боги тобі здоров'я, {name}.
+~мол Ого, скільки! Дякую!
+~боязк Дякую… я вже думав|думала, ти {забув|забула}.
+[request_thanks_cold] {подяка_холодно}
+@подяка_холодно
+Дякую. Хоч щось.
+Принесено — і добре.
+[request_thanks_hostile] {подяка_вороже}
+@подяка_вороже
+Давай сюди.
+Не чекав|чекала. Тримай, що обіцяно.
+[request_thanks_close] {подяка_рідна}
+@подяка_рідна
+Що б я без тебе робив|робила!
+Знову мене виручаєш, {name}. Дякую!
 
 // ---------------------------------------------------------------- ставлення до тебе (NpcAttitude): <тема>_hostile · _cold · _warm · _close
 // Пробується першою (не завжди), нічого не підійшло — звичайна тема.
@@ -2374,6 +2714,38 @@ namespace HuginWhispers
 ~боязк Ой, ні-ні-ні… вони вже тут!
 ~стар Знову… Я це вже бачив|бачила.
 ~бурч Отакої. І саме тоді, коли я сів|сіла їсти.
+
+[raid_hide] {ховаймося}
+@ховаймося
+Ховаймося! Швидше в дім!
+Усі під дах, хутко!
+Двері, двері зачиняйте!
+~боязк Ой… Я в дім, я в дім!
+~стар Ноги мої, ноги… Ховаймося.
+
+[raid_over] {обійшлося}
+@обійшлося
+Ух… обійшлося.
+Наче відбилися.
+Тихо стало. Можна виходити.
+~смілив Ну, і це все, на що вони здатні?
+~боязк Вже можна виходити? Справді?
+
+[rain] {дощ}
+@дощ
+Знову ллє…
+Ну й злива.
+Під дах, під дах.
+~бурч Промокну до нитки — і що з того?
+~стар Кістки ломить — так і знав|знала, що буде дощ.
+
+[morning] {ранок}
+@ранок
+Ну що, з чого почнемо день?
+Ранок добрий. Поки що.
+Хто сьогодні по дрова?
+~бурч Знову той самий день.
+~весел Гарний ранок, люди!
 ";
     }
 
@@ -2381,7 +2753,8 @@ namespace HuginWhispers
     // talkative one every two minutes or so, a quiet one rarely), when a player is near and it is free (not talking, not
     // fighting, not in a scene, awake): the most pressing thing it has to say — you are back after long, you are hurt, the
     // weather, the hour, its work, your raven, someone near — else a thought of its own; not the same thing twice in a row.
-    // Where it is owned; a line is a Say (one message).
+    // Where it is owned; a line is a Say (one message). What weighs on it is one ranking (Themes, leaned by its ways: Lean,
+    // Groups): its unasked word takes from it, and its talk opens with the top of it (Concerns — docs/plans/talk-plan.md).
     internal static class NpcVoice
     {
         internal static readonly int KSeen = "RavenWatch_npcSeen".GetStableHashCode(); // string "player=worldsec;…": when it last saw whom
@@ -2420,18 +2793,20 @@ namespace HuginWhispers
             return false;
         }
 
-        // may it speak unasked now (a remark, a mutter, a talk of two): not asleep, not talked to by you, not held quiet — by a
+        // may it speak unasked now (a remark, a mutter, a talk of two): not asleep, not talked to by anyone, not held quiet — by a
         // scene (a scene keeps it quiet unless its plan Speaks: a rescue's calls) or by the story's lever «npcflag hush»
         internal static bool Free(NpcActor a)
         {
-            if (a == null || a.Mind == null || a.Mind.Asleep || NpcTalk.With == a) return false;
+            if (a == null || a.Mind == null || a.Mind.Asleep || NpcTalk.With == a || a.Mind.InTalk || !NpcMind.HeldBy(a).IsNone() || Silent(a)) return false; // (With: this game's talk; InTalk, HeldBy: a player on another game — its talk runs there, these words here)
             NpcMind.Plan scene = a.Mind.Of(NpcMind.Layer.Scene);
             if (scene != null && !scene.Speaks) return false;
             return !(Has(a, "hush") && NpcLevers.Flag(a, "hush"));
         }
 
         // its story vars name this at all (a look into the string before it is taken apart: most people have none)
-        private static bool Has(NpcActor a, string part) { ZDO z = a.Zdo; return z != null && z.GetString(NpcLevers.KVars, "").IndexOf(part, StringComparison.Ordinal) >= 0; }
+        private static bool Has(NpcActor a, string part) { ZDO z = a.Zdo; return z != null && NpcLocker.Text(z, NpcLevers.KVars).IndexOf(part, StringComparison.Ordinal) >= 0; }
+
+        internal static readonly List<Action<NpcActor, Player>> OnBack = new List<Action<NpcActor, Player>>(); // you back after long, seen by it (its words are said below)
 
         internal static void Tick(NpcActor a)
         {
@@ -2439,19 +2814,80 @@ namespace HuginWhispers
             a.NextLook = Time.time + 10f; // (a look round every ten seconds: you back after long is said at once)
             Player p = Player.GetClosestPlayer(a.transform.position, 12f);
             if (p == null) return;
-            if (!NpcResident.Is(a) && !NpcTalk.Hired(a)) return; // (a stranger keeps to itself: its greeting is its own habit)
+            if (!Speaks(a)) return; // (a stranger keeps to itself: its greeting is its own habit — a story person only by its «voice:»)
             bool back = Saw(a, p);
             NpcAttitude.SawYou(a, p); // (a day it sees you: a little warmer — every look round, not only when it speaks)
             if (back) NpcMemory.Remember(a, "missed", p.GetPlayerID(), ""); // (you were away long)
+            if (back) foreach (Action<NpcActor, Player> f in OnBack) f(a, p); // (the modules' own answer to it: NpcModules — a wave, a nod)
             a.Stared = Utils.DistanceXZ(p.transform.position, a.transform.position) < 4f && p.GetVelocity().magnitude < 0.5f ? a.Stared + 1 : 0; // (you stand by it, still)
             bool stare = a.Stared >= 3; // (half a minute)
             if (stare) a.Stared = 0;
             if (!back && !stare && Time.time < a.NextRemark) return;
+            if (!NpcActor.FloorFree(a.transform.position, a)) return; // (someone near is speaking: its word waits for the next look round)
             a.NextRemark = Time.time + UnityEngine.Random.Range(120f, 300f) * (1.6f - NpcPersona.Of(a).Chatty); // (a chatty one sooner)
             if (a.Mind.NowLayer == NpcMind.Layer.Fight || !Free(a) || NpcChatter.IsTalking(a)) return;
+            List<KeyValuePair<string, float>> themes = Themes(a, p, back, stare);
+            themes.RemoveAll(t => t.Key == a.LastRemark);
+            foreach (KeyValuePair<string, float> t in themes)
+            {
+                if (t.Value < 50f && UnityEngine.Random.value > 0.55f) continue; // (the pressing ones first; the rest by a little chance, in order)
+                string line = NpcPhrases.Compose(a, t.Key, p);
+                if (string.IsNullOrEmpty(line)) continue;
+                a.LastRemark = t.Key;
+                a.Say(line, p, NpcActor.Voice.Unasked); // (to the one it noticed)
+                return;
+            }
+        }
+
+        // ---------------------------------------------------------------- what is on its mind (one ranking: its unasked word and its talk's first)
+        // Every theme it has words for now, with how much it weighs on it (≥ 50: pressing), leaned by its ways (Leans), heaviest
+        // first; muted ones and those it has no words for left out. Its unasked word (Tick) takes the top by a little chance below 50;
+        // its talk (NpcTalk, Concerns) opens with the top one. Asked: a talk wants it now — the sources' own «not again soon» do not
+        // hold it back (NpcMemory: its strongest memories, not one now and then).
+        internal static bool Asked; // (while a talk asks: Concerns)
+
+        // does it speak unasked: its template's «voice:» says (quiet · own · mixed <groups>); none: a resident or one hired does
+        internal static bool Speaks(NpcActor a)
+        {
+            string v = a != null && a.Def != null ? a.Def.Voice : "";
+            if (v.Length == 0) return !Silent(a) && (NpcResident.Is(a) || NpcTalk.Hired(a));
+            return !v.StartsWith("quiet", StringComparison.Ordinal);
+        }
+
+        // «voice: quiet», or written by hand with no «voice:» and no common talk (a story person may live somewhere, as Heid does: being a resident
+        // does not make it a settler): no unasked words at all
+        private static bool Silent(NpcActor a)
+        {
+            if (a == null || a.Def == null) return false;
+            string v = a.Def.Voice;
+            return v == "quiet" || (v.Length == 0 && a.Def.TalkId != "common");
+        }
+
+        // its words only from its own [id:theme]: nothing of the common book
+        internal static bool OwnWordsOnly(NpcActor a)
+        {
+            return a != null && a.Def != null && (Silent(a) || a.Def.Voice.StartsWith("own", StringComparison.Ordinal));
+        }
+
+        // what of the common themes its «voice:» lets it say (own: none of them — only its own [id:theme]; mixed: the groups named)
+        private static bool VoiceLets(NpcActor a, string theme)
+        {
+            string v = a.Def != null ? a.Def.Voice : "";
+            if (v.Length == 0 || v == "quiet") return true;
+            if (NpcPhrases.HasOwn(a, theme)) return true;
+            if (!v.StartsWith("mixed", StringComparison.Ordinal)) return false;
+            Group g = GroupOf(theme);
+            foreach (string w in v.Split(' ')) if (w.Length > 0 && w != "mixed" && (w == theme || (g != null && w == g.Id))) return true;
+            return false;
+        }
+
+        internal static List<KeyValuePair<string, float>> Themes(NpcActor a, Player p, bool back, bool stare)
+        {
             List<KeyValuePair<string, float>> themes = new List<KeyValuePair<string, float>>();
             if (back) themes.Add(new KeyValuePair<string, float>("back", 100f));
             if (stare) themes.Add(new KeyValuePair<string, float>("stare", 90f));
+            string feel; float strength;
+            if (NpcFeel.Of(a, out feel, out strength) && strength >= 0.3f) themes.Add(new KeyValuePair<string, float>("feel_" + feel, 65f * strength)); // (what a moment did to it: while it lasts)
             if (p.GetHealthPercentage() < 0.4f) themes.Add(new KeyValuePair<string, float>("hurt", 80f));
             if (Time.time - a.Mind.FoughtAt < 90f) themes.Add(new KeyValuePair<string, float>(a.Mind.FoughtRan ? "after_flight" : a.Mind.FoughtWon ? "after_fight" : "after_fight_lost", 70f));
             if (NpcHunger.IsHungry(a)) themes.Add(new KeyValuePair<string, float>("hungry", 45f));
@@ -2470,7 +2906,7 @@ namespace HuginWhispers
                 Vector3 plot;
                 if (lacks != null) themes.Add(new KeyValuePair<string, float>(NpcHew.Area(a, out plot) ? (a.Worker.JobId == "lumber" ? "no_axe" : "no_pick") : "no_area", 50f));
             }
-            long settled = a.Zdo != null ? a.Zdo.GetLong(NpcResident.KSettledAt, 0L) : 0L;
+            long settled = a.Zdo != null ? NpcLocker.Long(a.Zdo, NpcResident.KSettledAt, 0L) : 0L;
             if (settled > 0 && NpcRescue.Now - settled < (EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f)) themes.Add(new KeyValuePair<string, float>("new_home", 35f));
             if (p.InPlaceMode()) themes.Add(new KeyValuePair<string, float>("building", 40f));
             if (p.IsEncumbered()) themes.Add(new KeyValuePair<string, float>("heavy", 35f));
@@ -2488,24 +2924,91 @@ namespace HuginWhispers
             themes.Add(new KeyValuePair<string, float>("see_player", 15f));
             themes.Add(new KeyValuePair<string, float>("idle", 20f));
             foreach (Source s in Sources) { try { s(a, p, themes); } catch (Exception e) { Npcs.Log("npc remark source: " + e.Message); } } // (a module's or the story's own themes)
-            themes.RemoveAll(t => t.Key == a.LastRemark || Muted(a, t.Key) || !NpcPhrases.Has(a, t.Key));
+            themes.RemoveAll(t => Muted(a, t.Key) || !NpcPhrases.Has(a, t.Key) || !VoiceLets(a, t.Key));
+            for (int i = 0; i < themes.Count; i++) themes[i] = new KeyValuePair<string, float>(themes[i].Key, themes[i].Value * Lean(a, themes[i].Key)); // (its ways: a grumbler's complaints weigh more)
             themes.Sort((x, y) => y.Value.CompareTo(x.Value));
+            return themes;
+        }
+
+        // a theme's group (the first prefix that fits): what its ways lean on, and whether it is its own to tell only one it trusts
+        internal sealed class Group { public string Id; public bool Personal; public string[] Prefixes; }
+        internal static readonly List<Group> Groups = new List<Group>
+        {
+            new Group { Id = "complaint", Prefixes = new[] { "hungry", "low_", "mood_low", "tired", "unpaid", "no_axe", "no_pick", "no_area", "no_room", "mem_starved", "mem_unpaid", "irritated" } },
+            new Group { Id = "fear", Prefixes = new[] { "feel_fright", "raid_", "after_flight", "after_fight_lost", "mem_fight_lost", "hurt" } },
+            new Group { Id = "joy", Prefixes = new[] { "mood_good", "fed", "feel_joy", "after_fight", "mem_fight_won", "mem_goal_done", "mem_request_done", "paid", "arc_hidden_wins", "arc_hidden_respect", "arc_hidden_peace", "mem_promise_kept" } },
+            new Group { Id = "news", Prefixes = new[] { "mem_news_", "mem_tale_" } },
+            new Group { Id = "travels", Prefixes = new[] { "mem_you_land_" } },              // it asks of your way: an answer of yours, not «is that so?»
+            new Group { Id = "place", Prefixes = new[] { "land_", "weather" } },
+            new Group { Id = "past", Personal = true, Prefixes = new[] { "story_", "feel_grief", "mem_neighbour_left", "mem_rescued", "mem_revived" } },
+            new Group { Id = "others", Personal = true, Prefixes = new[] { "mem_quarrel_", "quarrel" } },
+            new Group { Id = "dream", Personal = true, Prefixes = new[] { "goal_" } },
+            new Group { Id = "line", Personal = true, Prefixes = new[] { "arc_" } },        // a small line of its life (NpcArcs): shame and blame are told to one it trusts
+            new Group { Id = "work", Prefixes = new[] { "work", "night_watch" } },
+            new Group { Id = "people", Prefixes = new[] { "neighbour", "other", "feud" } },
+            new Group { Id = "nature", Prefixes = new[] { "nature_" } },                   // what its nature says of itself (NpcNature)
+        };
+
+        internal static Group GroupOf(string theme)
+        {
+            foreach (Group g in Groups) foreach (string pre in g.Prefixes) if (theme.StartsWith(pre, StringComparison.Ordinal)) return g;
+            return null;
+        }
+
+        // how its ways lean on a group (×): one table, its tones (NpcPhrases.Tones) and its traits
+        internal static float Lean(NpcActor a, string theme)
+        {
+            Group g = GroupOf(theme);
+            if (g == null) return 1f;
+            HashSet<string> t = NpcPhrases.Tones(a);
+            NpcPersona p = NpcPersona.Of(a);
+            float k = 1f;
+            switch (g.Id)
+            {
+                case "complaint": if (t.Contains("бурч")) k *= 1.5f; if (t.Contains("весел")) k *= 0.7f; break;
+                case "joy": if (t.Contains("весел")) k *= 1.5f; if (t.Contains("бурч")) k *= 0.6f; break;
+                case "fear": if (t.Contains("боязк")) k *= 1.5f; if (t.Contains("смілив")) k *= 0.7f; break;
+                case "news": case "travels": case "place": if (p.Curiosity > 0.6f) k *= 1.4f; if (t.Contains("мол")) k *= 1.2f; break;
+                case "past": if (t.Contains("стар")) k *= 1.3f; break;
+                case "others": case "people": if (p.Chatty > 0.6f) k *= 1.2f; break;
+                case "work": if (p.Diligence > 0.65f) k *= 1.3f; break;
+            }
+            return k * NpcNature.Lean(p.Nature, g.Id); // (its nature: NpcNature)
+        }
+
+        internal sealed class Concern { public string Theme; public float Weight; public bool Personal; }
+
+        // what is on its mind for its talk with you, heaviest first: its own (personal) only to one it trusts (warm and up) and not while it
+        // is angry (NpcPatience.Angry: shut for everyone), and those
+        // more so to one dear; what it told you lately weighs less (NpcTalk.ToldLately: once the worry is still there, it comes back)
+        internal static float Trusted = 25f, DearAt = 60f, Dear = 1.3f, ToldWeighs = 0.4f;
+        internal static List<Concern> Concerns(NpcActor a, Player p)
+        {
+            List<Concern> l = new List<Concern>();
+            if (a == null || p == null) return l;
+            float att = NpcAttitude.Of(a, p.GetPlayerID());
+            bool open = att >= Trusted && !NpcPatience.Angry(a); // (its own: to one it trusts, and not while it is angry — with anyone)
+            List<KeyValuePair<string, float>> themes;
+            Asked = true;
+            try { themes = Themes(a, p, false, false); }
+            finally { Asked = false; }
             foreach (KeyValuePair<string, float> t in themes)
             {
-                if (t.Value < 50f && UnityEngine.Random.value > 0.55f) continue; // (the pressing ones first; the rest by a little chance, in order)
-                string line = NpcPhrases.Compose(a, t.Key, p);
-                if (string.IsNullOrEmpty(line)) continue;
-                a.LastRemark = t.Key;
-                a.Say(line, p); // (to the one it noticed)
-                return;
+                Group g = GroupOf(t.Key);
+                bool personal = g != null && g.Personal;
+                if (personal && !open) continue;
+                float w = t.Value * (personal && att >= DearAt ? Dear : 1f) * (NpcTalk.ToldLately(a, p, t.Key) ? ToldWeighs : 1f);
+                l.Add(new Concern { Theme = t.Key, Weight = w, Personal = personal });
             }
+            l.Sort((x, y) => y.Weight.CompareTo(x.Weight));
+            return l;
         }
 
         // what weighs on it most, as a theme (low_hungry, low_nobed…: NpcToil.Why)
         internal static string LowTheme(NpcActor a)
         {
             ZDO z = a != null ? a.Zdo : null;
-            switch ((NpcToil.Why)(z != null ? z.GetInt(NpcToil.KWhy, 0) : 0))
+            switch ((NpcToil.Why)(z != null ? NpcLocker.Int(z, NpcToil.KWhy, 0) : 0))
             {
                 case NpcToil.Why.NoBed: return "low_nobed";
                 case NpcToil.Why.BedOpen: return "low_bedopen";
@@ -2546,7 +3049,7 @@ namespace HuginWhispers
             long now = (long)NpcRescue.Now, day = (long)(EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f);
             string id = p.GetPlayerID().ToString(CultureInfo.InvariantCulture);
             Dictionary<string, long> seen = new Dictionary<string, long>();
-            foreach (string e in z.GetString(KSeen, "").Split(';')) { int eq = e.IndexOf('='); long t; if (eq > 0 && long.TryParse(e.Substring(eq + 1), out t)) seen[e.Substring(0, eq)] = t; }
+            foreach (string e in NpcLocker.Text(z, KSeen).Split(';')) { int eq = e.IndexOf('='); long t; if (eq > 0 && long.TryParse(e.Substring(eq + 1), out t)) seen[e.Substring(0, eq)] = t; }
             long last;
             bool had = seen.TryGetValue(id, out last);
             if (had && now - last < 600) return false; // (seen lately: nothing to write)
@@ -2554,8 +3057,8 @@ namespace HuginWhispers
             if (seen.Count > 6) { string oldest = null; long o = long.MaxValue; foreach (KeyValuePair<string, long> e in seen) if (e.Value < o) { o = e.Value; oldest = e.Key; } seen.Remove(oldest); }
             List<string> l = new List<string>();
             foreach (KeyValuePair<string, long> e in seen) l.Add(e.Key + "=" + e.Value);
-            z.Set(KSeen, string.Join(";", l.ToArray()));
-            return had && now - last > day * 3 / 4;
+            NpcLocker.Put(z, KSeen, string.Join(";", l.ToArray()));
+            return had && now - last - NpcClock.Skipped(last, now) > day * 3 / 4; // (a night slept is no absence)
         }
     }
 }

@@ -15,6 +15,8 @@ namespace HuginWhispers
         private static readonly Dictionary<string, int> Ids = new Dictionary<string, int>();
         private static readonly List<string> Names = new List<string>();
         private static long[] _calls = new long[32], _ticks = new long[32], _max = new long[32];
+        private static bool[] _maxGc = new bool[32]; // (the game's garbage collector ran while its longest was measured: that time is the collector's, not the part's)
+        private static int _gcSeen = -1;
         private static float _since = -1f;
         private static int _frame = -1;
         private static long _frameTicks, _worst;
@@ -26,7 +28,7 @@ namespace HuginWhispers
             if (Ids.TryGetValue(name, out id)) return id;
             id = Names.Count;
             Ids[name] = id; Names.Add(name);
-            if (id >= _calls.Length) { System.Array.Resize(ref _calls, id * 2); System.Array.Resize(ref _ticks, id * 2); System.Array.Resize(ref _max, id * 2); }
+            if (id >= _calls.Length) { System.Array.Resize(ref _calls, id * 2); System.Array.Resize(ref _ticks, id * 2); System.Array.Resize(ref _max, id * 2); System.Array.Resize(ref _maxGc, id * 2); }
             return id;
         }
 
@@ -36,14 +38,16 @@ namespace HuginWhispers
         {
             long d = Stopwatch.GetTimestamp() - from;
             if (_since < 0f) _since = Time.realtimeSinceStartup;
-            _calls[id]++; _ticks[id] += d; if (d > _max[id]) _max[id] = d;
+            int gc = System.GC.CollectionCount(0);
+            bool collected = _gcSeen >= 0 && gc != _gcSeen; _gcSeen = gc;
+            _calls[id]++; _ticks[id] += d; if (d > _max[id]) { _max[id] = d; _maxGc[id] = collected; }
             if (Time.frameCount != _frame) { if (_frameTicks > _worst) _worst = _frameTicks; _frame = Time.frameCount; _frameTicks = 0; }
             _frameTicks += d; // (parts inside parts count twice here: the worst frame is an upper bound)
         }
 
         internal static void Reset()
         {
-            for (int i = 0; i < _calls.Length; i++) { _calls[i] = 0; _ticks[i] = 0; _max[i] = 0; }
+            for (int i = 0; i < _calls.Length; i++) { _calls[i] = 0; _ticks[i] = 0; _max[i] = 0; _maxGc[i] = false; }
             _worst = 0; _frameTicks = 0; _since = Time.realtimeSinceStartup;
             NpcClock.Reset();
         }
@@ -54,13 +58,13 @@ namespace HuginWhispers
         {
             float secs = _since < 0f ? 0f : Mathf.Max(0.001f, Time.realtimeSinceStartup - _since);
             StringBuilder sb = new StringBuilder("Вартість NPC за " + secs.ToString("0") + " с (живих тут: " + NpcActor.Live.Count + "):\n");
-            sb.Append("  частина: разів/с · мс/с · найдовше мс\n");
+            sb.Append("  частина: разів/с · мс/с · найдовше мс («GC»: тоді прибирала пам'ять гра, ця мить не частини)\n");
             List<int> order = new List<int>();
             for (int i = 0; i < Names.Count; i++) if (_calls[i] > 0) order.Add(i);
             order.Sort((a, b) => _ticks[b].CompareTo(_ticks[a]));
             foreach (int i in order)
                 sb.Append("  ").Append(Names[i]).Append(": ").Append((_calls[i] / secs).ToString("0.#")).Append(" · ")
-                  .Append((Ms(_ticks[i]) / secs).ToString("0.00")).Append(" · ").Append(Ms(_max[i]).ToString("0.00")).Append('\n');
+                  .Append((Ms(_ticks[i]) / secs).ToString("0.00")).Append(" · ").Append(Ms(_max[i]).ToString("0.00")).Append(_maxGc[i] ? " (GC)" : "").Append('\n');
             if (order.Count == 0) sb.Append("  (нічого ще не рахувалось)\n");
             sb.Append("Найгірший кадр NPC: ").Append(Ms(System.Math.Max(_worst, _frameTicks)).ToString("0.00")).Append(" мс\n");
             sb.Append(NpcClock.Report());
@@ -80,11 +84,35 @@ namespace HuginWhispers
     // When the people think (the clock of all of them on this game): their checks spread over time, not all in one
     // frame — and fewer of them where nobody is near.
     //   Phase(a)   each person's own offset (0..1): its timers start out of step with everyone else's
-    //   Slow(a)    × its checks' intervals: 1 with a player near (Near m), Mid m — 2.5, farther — 5; asleep × 3
+    //   Seen(a)    a player is near enough to see it live: the one word for «full life only near a player» (the user 2026-11-05). In at Near m, out at
+    //              NearOut, so nothing flickers at the line; asked of every player here, looked at once a second a person (nothing sent)
+    //   Slow(a)    × its checks' intervals: 1 while Seen, Mid m — 2.5, farther — 5; asleep × 3
     //   Take()     a costly check may run this frame (at most PerFrame of them on a game): else it waits for the next
+    //   Skipped(from, to)  the world's seconds that jumped between two of its times (a night slept, skiptime: the world's clock ahead of the real
+    //              one by more than JumpAt s), seen this session: a «how long since» about a player takes them off, so a night in bed is no absence
+    //              (the user's test 2026-11-05: NPCs «missed» a player who never left)
     internal static class NpcClock
     {
-        internal static float Near = 40f, Mid = 100f;
+        internal static float Near = 40f, NearOut = 50f, Mid = 100f, JumpAt = 30f;
+        private static double _world = -1.0; private static float _real;
+        private static readonly List<KeyValuePair<double, double>> _jumps = new List<KeyValuePair<double, double>>(); // session: (world time just after a jump, its seconds)
+
+        // looked at whenever asked (Skipped): a jump between two looks is seen however far apart they are
+        private static void Watch()
+        {
+            if (ZNet.instance == null) return;
+            double w = ZNet.instance.GetTimeSeconds(); float r = Time.realtimeSinceStartup;
+            if (_world >= 0.0 && w - _world - (r - _real) > JumpAt) { _jumps.Add(new KeyValuePair<double, double>(w, w - _world - (r - _real))); if (_jumps.Count > 32) _jumps.RemoveAt(0); }
+            _world = w; _real = r;
+        }
+
+        internal static long Skipped(double from, double to)
+        {
+            Watch();
+            double s = 0.0;
+            foreach (KeyValuePair<double, double> j in _jumps) if (j.Key > from && j.Key <= to) s += j.Value;
+            return (long)s;
+        }
         internal static int PerFrame = 3;
         private static int _frame = -1, _used;
         private static long _waited, _taken;
@@ -92,17 +120,33 @@ namespace HuginWhispers
         internal static float Phase(NpcActor a)
         {
             ZDO z = a != null ? a.Zdo : null;
-            uint h = z != null ? z.m_uid.ID * 2654435761u : (uint)Random.Range(0, int.MaxValue);
+            uint h = z != null ? NpcKit.Seed(z) * 2654435761u : (uint)Random.Range(0, int.MaxValue);
             return (h % 1000u) / 1000f;
+        }
+
+        private static void Look(NpcActor a)
+        {
+            if (Time.time < a.EyesLook) return;
+            a.EyesLook = Time.time + 1f;
+            float near = float.MaxValue;
+            Vector3 at = a.transform.position;
+            foreach (Player p in Player.GetAllPlayers()) if (p != null) near = Mathf.Min(near, Utils.DistanceXZ(p.transform.position, at));
+            a.EyesFar = near;
+            a.EyesOn = near <= (a.EyesOn ? NearOut : Near);
+        }
+
+        internal static bool Seen(NpcActor a)
+        {
+            if (a == null) return false;
+            Look(a);
+            return a.EyesOn;
         }
 
         internal static float Slow(NpcActor a)
         {
             if (a == null) return 1f;
-            float near = float.MaxValue;
-            Vector3 at = a.transform.position;
-            foreach (Player p in Player.GetAllPlayers()) if (p != null) near = Mathf.Min(near, Utils.DistanceXZ(p.transform.position, at));
-            float k = near <= Near ? 1f : near <= Mid ? 2.5f : 5f;
+            Look(a);
+            float k = a.EyesOn ? 1f : a.EyesFar <= Mid ? 2.5f : 5f;
             if (a.Mind != null && a.Mind.Asleep) k *= 3f;
             return k;
         }
@@ -120,7 +164,8 @@ namespace HuginWhispers
         internal static string Report()
         {
             long all = _waited + _taken;
-            return "Черга важких перевірок: виконано " + _taken + ", чекали на наступний кадр " + _waited + (all > 0 ? " (" + (100.0 * _waited / all).ToString("0") + "%)" : "") + ", ліміт " + PerFrame + " на кадр.";
+            int seen = 0; foreach (NpcActor a in NpcActor.Live) if (Seen(a)) seen++;
+            return "Живуть повним життям (гравець ближче " + Near.ToString("0") + " м): " + seen + " із " + NpcActor.Live.Count + "\nЧерга важких перевірок: виконано " + _taken + ", чекали на наступний кадр " + _waited + (all > 0 ? " (" + (100.0 * _waited / all).ToString("0") + "%)" : "") + ", ліміт " + PerFrame + " на кадр.";
         }
     }
 }

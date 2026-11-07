@@ -31,6 +31,7 @@ namespace HuginWhispers
             Sprite s;
             if (Cache.TryGetValue(id, out s)) return s;
             s = null;
+            long late = System.Diagnostics.Stopwatch.GetTimestamp();
             try
             {
                 byte[] data = null;
@@ -53,6 +54,7 @@ namespace HuginWhispers
                 }
             }
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Gift icon " + id + " failed: " + e.Message); }
+            BookArt.Late("gift icon " + id, late);
             Cache[id] = s;
             return s;
         }

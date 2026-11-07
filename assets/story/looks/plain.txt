@@ -1,0 +1,10 @@
+# Чорний ворон, коли гра мала б свої кольори, а сюжет його вимиває (raven_dim, npcraven dim).
+id: npc_plain
+name: npc_plain
+for: any
+zone body 0A0A0C 26262C 100 80
+zone head 0A0A0C 26262C 100 80
+zone tail 0A0A0C 26262C 100 80
+zone wings 0C0C0E 2C2C32 100 85
+zone tips 1C1C20 48484E 100 85
+eyes D8B060 2.5

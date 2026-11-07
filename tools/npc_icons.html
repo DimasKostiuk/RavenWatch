@@ -6,23 +6,23 @@
 <script>
 // The person's round menu (NpcMenu) and its map mark (NpcMap), after the user's word (2026-10-30): like the gifts' medallions
 // but with a THIN rim of wood, the inside schematic — a plain sign you can read at a glance.
-//  n-frame-*  a button's medallion, 256 px, full colour: dark (nothing set), green (set / going on), grey (cannot now)
+//  n-frame-*  a button of the round menu, 256 px, full colour, after the user's mockup (2026-11-04): dark (nothing set), hot (under the
+//             pointer), green (set / going on), grey (cannot now). The main ring's nine signs are the mockup's too
 //  n-*        the signs: white strokes on nothing, 128 px (the game tints them gold)
 //  n-pin      the map's mark of a person: a small medallion with the sign in gold, 128 px, full colour
 // Run: node tools/npc_icons.js (headless Chrome dumps the PNGs as data URLs, the script writes assets/menu/).
 const SIGNS = {
-  'n-follow':   'M8 4.5a3 3 0 1 0 0 6a3 3 0 1 0 0-6M2.5 20c0-3.5 2.4-6 5.5-6s5.5 2.5 5.5 6M15 10h6M18.5 7.5l2.5 2.5-2.5 2.5',
-  'n-release':  'M9.5 14.5l-2.3 2.3a3.2 3.2 0 0 1-4.5-4.5l2.3-2.3M14.5 9.5l2.3-2.3a3.2 3.2 0 0 1 4.5 4.5l-2.3 2.3M7.5 7.5L5 5M16.5 16.5L19 19M10 4V2M14 22v-2',
-  'n-stay':     'M10 3v18M10 4h8l-2.2 3.2L18 10.5h-8M6 21h8',
-  'n-there':    'M12 3v4M12 17v4M3 12h4M17 12h4M7 12a5 5 0 1 0 10 0a5 5 0 1 0-10 0M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0',
-  'n-sit':      'M7 3v17M7 12.5h10V20M5 20h4M15 20h4M7 3h0',
-  'n-stand':    'M12 2.5l-3 3M12 2.5l3 3M12 2.5v8M8 21l4-7 4 7M7.5 14h9',
-  'n-settle':   'M3 12l9-7 9 7M5.5 10.5V20h13v-9.5M10 20v-5h4v5',
+  'n-follow':   'M5.8 5a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0 -4.4 0M8 8.5v6M8 14.5l-3 5.5M8 14.5l3 5.5M4.5 11L8 9.5l3.5 1.5M21 12h-6M17.5 9L14.5 12l3 3',
+  'n-talk':     'M12 4c4.7 0 8.5 3 8.5 6.8s-3.8 6.7-8.5 6.7c-1 0-2-.1-2.9-.4L5 19.5l1-3.6c-1.6-1.2-2.5-3-2.5-5C3.5 7 7.3 4 12 4zM8.5 11h.01M12 11h.01M15.5 11h.01',
+  'n-stay':    'M8 13V6.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 7-6 7-2.6 0-4-1.6-5.4-3.8l-1.8-2.8a1.5 1.5 0 0 1 2.4-1.7L8 14',
+  'n-there':    'M15.5 2.5a4.5 4.5 0 0 1 4.5 4.5c0 3.3-4.5 7.5-4.5 7.5S11 10.3 11 7a4.5 4.5 0 0 1 4.5-4.5zM14.1 7a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0M3.5 20.5L10 14M6 14h4v4',
+  'n-sit':      'M7 3v10h10M7 13v8M17 13v8M7 17.5h10M7 7h3',
+  'n-settle':   'M3 11.5L12 4l9 7.5M5.5 9.5V20h13V9.5M10 20v-5.5h4V20M9 2.5l3 1.5 3-1.5',
   'n-unsettle': 'M3 12l9-7 7 5.4M5.5 10.5V20h8M10 20v-5h3M15.5 16h6M19 13.5l2.5 2.5-2.5 2.5',
   'n-edges':    'M10 3.2a9 9 0 0 1 4 0M18.4 5.6a9 9 0 0 1 2.4 3.6M20.8 14.8a9 9 0 0 1-2.4 3.6M14 20.8a9 9 0 0 1-4 0M5.6 18.4a9 9 0 0 1-2.4-3.6M3.2 9.2a9 9 0 0 1 2.4-3.6M10.5 12a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0',
   'n-bed':      'M3 6v13M21 13v6M3 16h18M3 13h18M5 13v-1.5a2 2 0 0 1 2-2h2.5a2 2 0 0 1 2 2V13',
   'n-chest':    'M4 10.5h16v9H4zM4 10.5c0-3 1.5-5 4-5h8c2.5 0 4 2 4 5M4 13.5h16M11 12.5h2v3h-2z',
-  'n-job':      'M14.5 3.5l6 6-2.8 2.8-6-6zM12.2 7.8L3.5 16.5l3 3 8.7-8.7',
+  'n-job':      'M4 20.5L14 10.5M11.5 8L16 3.5c2.6.6 4.4 2.4 5 5L16.5 13c-.6-2.4-2.6-4.4-5-5z',
   'n-stoker':   'M12 2.5c1 3 5.5 5 5.5 10.5a5.5 5.5 0 0 1-11 0c0-2.3 1-3.8 2.2-4.8 0 2.2 1 3.3 2.2 3.3 0-3.3-1.2-5.5 1.1-9zM7 21.5h10',
   'n-smelter':  'M6 20.5V11a6 6 0 0 1 12 0v9.5M9.5 20.5V16a2.5 2.5 0 0 1 5 0v4.5M3.5 20.5h17M12 2.5v2',
   'n-cook':     'M4.5 10.5h15v4.5a5 5 0 0 1-5 5h-5a5 5 0 0 1-5-5zM2.5 10.5h19M9 7.5c0-1.2 1-1.2 1-2.5M14 7.5c0-1.2 1-1.2 1-2.5',
@@ -31,8 +31,8 @@ const SIGNS = {
   'n-cleaner':  'M17 2.5l-5 9.5M8 12h7.5l2.5 9.5H5.5zM9 15l-1 6.5M12 15v6.5M15 15l1 6.5',
   'n-guard':    'M12 2.5l7.5 3V11c0 5-3.2 8.3-7.5 10.5C7.7 19.3 4.5 16 4.5 11V5.5zM12 7v10M8 11h8',
   'n-none':     'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M5.6 5.6l12.8 12.8',
-  'n-persona':  'M12 3a5 5.5 0 1 0 0 11a5 5.5 0 1 0 0-11M9.5 8h.01M14.5 8h.01M9.8 10.8c1.3 1 3.1 1 4.4 0M4.5 21c.6-3.6 3.8-6 7.5-6s6.9 2.4 7.5 6',
-  'n-gear':     'M14.5 2.5l7 7M17 4.5L6.5 15M4.5 13l6.5 6.5M3 21l3.5-3.5M13 13.5c2.5 1 4.5 3 5 6.5',
+  'n-persona':  'M6.5 4.5C4.5 7.5 4.3 11 5.6 14a7 7 0 0 0 12.8 0c1.3-3 1.1-6.5-.9-9.5M9.5 5C8 7.5 8 10.5 9 12.8a3.3 3.3 0 0 0 6 0c1-2.3 1-5.3-.5-7.8M5 4.5h3M16 4.5h3',
+  'n-gear':     'M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0M9.7 12a2.3 2.3 0 1 0 4.6 0a2.3 2.3 0 1 0 -4.6 0M12 3.5v6.2M12 14.3v6.2M3.5 12h6.2M14.3 12h6.2',
   'n-pantry':   'M4 13h16v7.5H4zM4 16h16M11 15h2v2.5h-2zM7.5 8.5h9c0 2.3-2 3.5-4.5 3.5S7.5 10.8 7.5 8.5zM10.3 6.5c0-1 .8-1 .8-2.2M13.3 6.5c0-1 .8-1 .8-2.2',
   'n-post':     'M7 21.5V3M7 4h11l-3 3.5 3 3.5H7M4 21.5h6M17 16l2.5 2.5M19.5 16L17 18.5',
   'n-patrol':   'M12 4a8 8 0 1 1-7.4 5M4.6 4.5v4.6h4.6M10 12.5l2-2 2 2-2 2zM12 14.5v3',
@@ -74,12 +74,30 @@ function medallion(fillA, fillB) {
     + '<circle cx="50" cy="50" r="43.4" fill="url(#f)"/><circle cx="50" cy="50" r="43.4" fill="url(#sh)"/>'
     + '<circle cx="50" cy="50" r="43.4" fill="none" stroke="#c9a35e" stroke-opacity="0.75" stroke-width="0.7"/>';
 }
-const FILLS = { dark: ['#302a22', '#14110c'], green: ['#3f6230', '#1b2b14'], grey: ['#3d3f43', '#1c1d20'] };
+// the menu's middle: a person's state, small (13 px on screen) — thicker strokes, 64 px (the user's mockup, 2026-11-04)
+const STATS = {
+  'n-s-health': 'M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z',
+  'n-s-food':   'M8.5 9.5a6 6 0 1 0 12 0a6 6 0 1 0-12 0M10.2 13.8L6.8 17.2M3.5 16.6a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0M5.7 18.8a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0',
+  'n-s-mood':   'M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M8 14c1.1 1.6 2.4 2.3 4 2.3s2.9-.7 4-2.3M9 8.8v1.6M15 8.8v1.6',
+  'n-s-energy': 'M13.5 2L5 13.5h6.5L10 22l9-12h-6.5z'
+};
+// a button as the mockup draws it at 68 px: its rim to the edge, its face 4 px in, a black hair and a soft shadow inside
+function frame(rimA, rimB, faceA, faceB) {
+  const down = (id, a, b) => '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + a + '"/><stop offset="1" stop-color="' + b + '"/></linearGradient>';
+  return '<defs>' + down('r', rimA, rimB) + down('f', faceA, faceB)
+    + '<radialGradient id="sh" cx="0.5" cy="0.56" r="0.52"><stop offset="0.82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.5"/></radialGradient></defs>'
+    + '<circle cx="50" cy="50" r="50" fill="url(#r)"/>'
+    + '<circle cx="50" cy="50" r="44.1" fill="url(#f)"/><circle cx="50" cy="50" r="44.1" fill="url(#sh)"/>'
+    + '<circle cx="50" cy="50" r="43.4" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.47"/>';
+}
+const FRAMES = { dark: ['#9a6a3c', '#6e4a2a', '#302a22', '#14110c'], hot: ['#c48c52', '#8a5e34', '#3a3229', '#191510'], green: ['#9a6a3c', '#6e4a2a', '#3f6230', '#1b2b14'], grey: ['#6d6a66', '#47443f', '#3d3f43', '#1c1d20'] };
 const jobs = [];
 for (const [name, d] of Object.entries(SIGNS))
-  jobs.push([name, 128, '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>']);
-for (const [c, f] of Object.entries(FILLS))
-  jobs.push(['n-frame-' + c, 256, '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 100 100">' + medallion(f[0], f[1]) + '</svg>']);
+  jobs.push([name, 128, '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>']);
+for (const [name, d] of Object.entries(STATS))
+  jobs.push([name, 64, '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>']);
+for (const [c, f] of Object.entries(FRAMES))
+  jobs.push(['n-frame-' + c, 256, '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 100 100">' + frame(f[0], f[1], f[2], f[3]) + '</svg>']);
 // the map's mark: the dark medallion with a person in gold
 jobs.push(['n-pin', 128, '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 100 100">' + medallion('#302a22', '#14110c')
   + '<g transform="translate(22 22) scale(2.35)" fill="none" stroke="#e6c57d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a3.3 3.3 0 1 0 0 6.6a3.3 3.3 0 1 0 0-6.6M5 20.5c0-3.9 3.1-7 7-7s7 3.1 7 7"/></g></svg>']);

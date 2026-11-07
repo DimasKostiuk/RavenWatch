@@ -440,14 +440,18 @@ namespace HuginWhispers
 
         private static void Postfix(MonsterAI __instance)
         {
-            Vector3 nest;
-            if (Creature == null || Static == null || !SiegeNet.RaiderOf(__instance, out nest)) return;
-            Character c = Creature.GetValue(__instance) as Character;
-            if (c != null && Vector3.Distance(c.transform.position, __instance.transform.position) < 6f) return; // (someone at its throat: it fights back)
-            StaticTarget t = SiegeNet.TargetAt(nest);
-            if (t == null) return;
-            Creature.SetValue(__instance, null);
-            Static.SetValue(__instance, t);
+            try
+            {
+                Vector3 nest;
+                if (Creature == null || Static == null || !SiegeNet.RaiderOf(__instance, out nest)) return;
+                Character c = Creature.GetValue(__instance) as Character;
+                if (c != null && Vector3.Distance(c.transform.position, __instance.transform.position) < 6f) return; // (someone at its throat: it fights back)
+                StaticTarget t = SiegeNet.TargetAt(nest);
+                if (t == null) return;
+                Creature.SetValue(__instance, null);
+                Static.SetValue(__instance, t);
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("SiegeTargetPatch", pgx); }
         }
     }
 

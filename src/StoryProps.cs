@@ -7,7 +7,7 @@ namespace HuginWhispers
 {
     // The story's props (the user 2026-11-02): a thing taken up in a scene — the shield of Munin's place lifted off the
     // ground in two hands, later a charm, a feather, a key in Heid's hand. Never the thing itself: its look only (HandLook),
-    // and the piece it came from hidden meanwhile. The look comes exactly where the piece lies, the same moment the piece
+    // and the piece it came from hidden meanwhile — by its place (LocState.Held: one owner of a piece's look; let go, the place lays it again by its state). The look comes exactly where the piece lies, the same moment the piece
     // goes, and goes back there before the piece returns: nothing pops.
     //   state:  on the holder's own ZDO (a player's, or a person's of the story) — Key = «item|hand|piece|pose|until|size|rest|free»;
     //           written only by the owner (a person's through its act «prop»). Nothing else is sent: every game near
@@ -20,6 +20,7 @@ namespace HuginWhispers
     //   rest:   x,y,z,rx,ry,rz in the world: where it lay; «-» nowhere (it grows in the hand)
     //   free:   1 — the clip moves it (the channels @Prop, @LeftHand.on, @RightHand.on: BodyClips), both hands left empty;
     //           0 — on the hand's joint, as the game holds it
+    //   square: 1 — as «@Prop.w» lifts it, it turns from how it lay to square before the body (a book: the hands' points are on its edges)
     // The scene puts every prop back when it ends or stops (StoryScenes), whatever its file said.
     internal static class StoryProps
     {
@@ -32,12 +33,16 @@ namespace HuginWhispers
         {
             public string Item = "", From = "", Hand = "", Pose = "";
             public float Size;
+            public bool Square; // («square»: a thing that is not round turns square to the body as it is lifted, so the hands' points on it hold from any side it lay)
             public bool Free, Lasting, HasRest; // (Lasting, HasRest: the animation stage's own mannequin — no term; lies where it says)
             public Vector3 RestAt;
             public Quaternion RestTurn = Quaternion.identity;
         }
 
-        internal static string Usage = "prop take <предмет> [from <місце.частина>] [left|right] [pose <кліп>|still] [size <м>] [free] · prop put";
+        internal static string Usage = "prop take <предмет> [from <місце.частина>] [left|right] [pose <кліп>|still] [size <м>] [free] [square] · prop put";
+        // the words after the item: alone, and with a value after them (storycheck reads these two lists, so a typo stops the build)
+        internal const string TakeStep = "prop take";
+        internal static readonly string[] TakeFlags = { "left", "right", "still", "free", "square" }, TakeValued = { "from", "pose", "size" };
 
         internal static Ask Read(string[] w, int at, out string why)
         {
@@ -51,7 +56,8 @@ namespace HuginWhispers
                 if (x == "left" || x == "right") a.Hand = x == "left" ? "l" : "r";
                 else if (x == "still") a.Pose = "-";
                 else if (x == "free") a.Free = true;
-                else if ((x == "from" || x == "pose" || x == "size") && i + 1 < w.Length)
+                else if (x == "square") a.Square = true;
+                else if (System.Array.IndexOf(TakeValued, x) >= 0 && i + 1 < w.Length)
                 {
                     string v = w[++i];
                     if (x == "from") a.From = v;
@@ -82,7 +88,7 @@ namespace HuginWhispers
             string pose = person || a.Free ? "-" : a.Pose.Length > 0 ? a.Pose : "prop_look_" + hand;
             if (pose != "-" && BodyClips.Find(pose) == null) { why = "нема пози «" + pose + "» — тримає без неї"; pose = "-"; }
             double until = person && !a.Lasting && ZNet.instance != null ? ZNet.instance.GetTimeSeconds() + NpcFor : 0.0;
-            return a.Item + "|" + hand + "|" + piece + "|" + pose + "|" + until.ToString("0", CultureInfo.InvariantCulture) + "|" + a.Size.ToString("0.###", CultureInfo.InvariantCulture) + "|" + rest + "|" + (a.Free ? "1" : "0");
+            return a.Item + "|" + hand + "|" + piece + "|" + pose + "|" + until.ToString("0", CultureInfo.InvariantCulture) + "|" + a.Size.ToString("0.###", CultureInfo.InvariantCulture) + "|" + rest + "|" + (a.Free ? "1" : "0") + "|" + (a.Square ? "1" : "0");
         }
 
         // where a piece's look lies: its meshes' middle, its turn (HandLook's copy is made centred, so it lands on it)
@@ -161,7 +167,7 @@ namespace HuginWhispers
         internal sealed class Held
         {
             public string Item = "", Hand = "r", Piece = "-", Pose = "-"; public double Until; public float Size;
-            public bool HasRest, Free; public Vector3 RestAt; public Quaternion RestTurn = Quaternion.identity;
+            public bool HasRest, Free, Square; public Vector3 RestAt; public Quaternion RestTurn = Quaternion.identity;
             internal static Held Of(string code)
             {
                 Held h = new Held();
@@ -174,6 +180,7 @@ namespace HuginWhispers
                 if (f.Length > 5) float.TryParse(f[5], NumberStyles.Float, CultureInfo.InvariantCulture, out h.Size);
                 if (f.Length > 6) h.ReadRest(f[6]);
                 if (f.Length > 7) h.Free = f[7] == "1";
+                if (f.Length > 8) h.Square = f[8] == "1";
                 return h;
             }
             private void ReadRest(string s)
@@ -190,11 +197,10 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- every game: what it draws
-        private sealed class Hidden { public GameObject Piece; public readonly List<Renderer> Looks = new List<Renderer>(); public readonly List<Collider> Touch = new List<Collider>(); }
 
         private static float _next;
         private static ZNet _world;
-        private static readonly Dictionary<string, Hidden> _hidden = new Dictionary<string, Hidden>();
+        private static readonly Dictionary<string, ZNetView> _hidden = new Dictionary<string, ZNetView>(); // (the pieces held now, by name: hidden through the place, LocState.Held)
         private static readonly HashSet<string> _want = new HashSet<string>();
 
         // a few times a second (StoryQuests.Tick): the holders near, their hands, the pieces they took
@@ -205,7 +211,13 @@ namespace HuginWhispers
             if (_world != ZNet.instance) { _world = ZNet.instance; Forget(); } // (another world: nothing of the last one kept)
             _want.Clear();
             foreach (Player o in Player.GetAllPlayers()) See(o);
-            foreach (NpcActor a in NpcActor.Live) if (a != null) See(a.GetComponent<Character>());
+            foreach (NpcActor a in NpcActor.Live)
+            {
+                if (a == null) continue;
+                ZDO z = a.Zdo;
+                if ((z == null || z.GetString(Key, "").Length == 0) && !StoryPropView.On(a.gameObject)) continue; // (holds nothing and drew nothing: no look at its parts — 25 people, five times a second)
+                See(a.GetComponent<Character>());
+            }
             Pieces();
         }
 
@@ -227,35 +239,33 @@ namespace HuginWhispers
             }
             if (v == null) v = c.gameObject.AddComponent<StoryPropView>();
             v.Set(code);
-            if (h.Piece != "-") _want.Add(h.Piece);
+            if (h.Piece != "-" && v.Piece != null) _want.Add(h.Piece); // (its look not made: the piece stays where it lies, or it just vanishes with nothing in its place)
         }
 
         // the pieces held now: hidden (their look and their touch); the ones let go: back as they were
         private static void Pieces()
         {
             List<string> back = null;
-            foreach (KeyValuePair<string, Hidden> kv in _hidden)
-                if (!_want.Contains(kv.Key) || kv.Value.Piece == null) (back ?? (back = new List<string>())).Add(kv.Key); // (one unloaded meanwhile: found anew when it is back)
+            foreach (KeyValuePair<string, ZNetView> kv in _hidden)
+                if (!_want.Contains(kv.Key) || kv.Value == null) (back ?? (back = new List<string>())).Add(kv.Key); // (one unloaded meanwhile: found anew when it is back)
             if (back != null) foreach (string name in back) Show(name);
             foreach (string name in _want) if (!_hidden.ContainsKey(name)) Hide(name);
         }
 
+        // the place hides it and lays it back by its state (LocState.Held): never its looks put off and on here, beside the place's own
         private static void Hide(string name)
         {
             ZNetView nv = StoryWhere.Piece(name);
             if (nv == null) return; // (not loaded here: asked again next look)
-            Hidden h = new Hidden { Piece = nv.gameObject };
-            foreach (Renderer r in nv.GetComponentsInChildren<Renderer>()) if (r.enabled) { r.enabled = false; h.Looks.Add(r); } // heavy: once per prop taken from a piece
-            foreach (Collider c in nv.GetComponentsInChildren<Collider>()) if (c.enabled) { c.enabled = false; h.Touch.Add(c); } // heavy: once per prop taken from a piece
-            _hidden[name] = h;
+            LocState.Held(nv, true);
+            _hidden[name] = nv;
         }
 
         private static void Show(string name)
         {
-            Hidden h;
-            if (!_hidden.TryGetValue(name, out h)) return;
-            foreach (Renderer r in h.Looks) if (r != null) r.enabled = true;
-            foreach (Collider c in h.Touch) if (c != null) c.enabled = true;
+            ZNetView nv;
+            if (!_hidden.TryGetValue(name, out nv)) return;
+            if (nv != null) LocState.Held(nv, false);
             _hidden.Remove(name);
         }
 
@@ -304,10 +314,43 @@ namespace HuginWhispers
             return d.x > 0f || d.y > 0f || d.z > 0f ? Vector3.Max(d, Vector3.zero).magnitude : Mathf.Max(d.x, Mathf.Max(d.y, d.z));
         }
 
+        // the nearest point of its surface to a point, in the world (the same shape as Distance: a grip is turned to this, not to its middle — a palm
+        // on a wide book's face near its rim read «turned away», 2026-11-07)
+        internal Vector3 Closest(Vector3 world)
+        {
+            if (_look == null) return world;
+            Transform t = _look.transform;
+            Vector3 q = t.InverseTransformPoint(world) - _box.center, e = _box.extents;
+            int thin = e.x <= e.y && e.x <= e.z ? 0 : e.y <= e.z ? 1 : 2;
+            float a = thin == 0 ? e.y : e.x, b = thin == 2 ? e.y : e.z;
+            Vector3 c;
+            if (Mathf.Abs(a - b) < 0.1f * Mathf.Max(a, b))
+            {
+                Vector3 flat = q; flat[thin] = 0f;
+                float r = Mathf.Max(a, b), m = flat.magnitude;
+                if (m > r) flat *= r / m;
+                c = flat; c[thin] = Mathf.Clamp(q[thin], -e[thin], e[thin]);
+                if (m <= r && Mathf.Abs(q[thin]) <= e[thin]) { if (r - m < e[thin] - Mathf.Abs(q[thin])) c = flat.sqrMagnitude > 1e-8f ? flat.normalized * r + Vector3.Scale(q, AxisOnly(thin)) : c; else c[thin] = Mathf.Sign(q[thin]) * e[thin]; } // (inside: to the nearer face)
+            }
+            else
+            {
+                c = new Vector3(Mathf.Clamp(q.x, -e.x, e.x), Mathf.Clamp(q.y, -e.y, e.y), Mathf.Clamp(q.z, -e.z, e.z));
+                if (c == q) { Vector3 g = e - new Vector3(Mathf.Abs(q.x), Mathf.Abs(q.y), Mathf.Abs(q.z)); int i = g.x <= g.y && g.x <= g.z ? 0 : g.y <= g.z ? 1 : 2; c[i] = Mathf.Sign(q[i]) * e[i]; } // (inside: out by the nearest face)
+            }
+            return t.TransformPoint(c + _box.center);
+        }
+        private static Vector3 AxisOnly(int i) { Vector3 v = Vector3.zero; v[i] = 1f; return v; }
+
         internal void Set(string code)
         {
             if (code == _code) return;
-            if (code.Length == 0) { _code = ""; _leaving = _look != null; if (!_leaving) Clear(); return; }
+            if (code.Length == 0)
+            {
+                _code = ""; _leaving = _look != null;
+                if (!_leaving) { Clear(); return; }
+                if (_h != null && _h.Piece != "-" && !LocState.WantsShown(StoryWhere.Piece(_h.Piece))) _g = 0f; // (its piece gone for good — a letter read: it does not glide back to nothing, a second player has no black to hide it)
+                return;
+            }
             Clear();
             _code = code;
             _h = StoryProps.Held.Of(code);
@@ -320,6 +363,7 @@ namespace HuginWhispers
             _box = Measure();
             if (_h.Free)
             {
+                if (!_h.HasRest) { _h.RestAt = transform.TransformPoint(new Vector3(0f, 1f, 0.4f)); _h.RestTurn = transform.rotation; Story.Log("prop: " + _h.Item + " has no place it lay (its piece not here): it starts before the holder"); } // (never the world's zero: the hands reached 400 m for a letter hidden in its world, 2026-11-07)
                 _look.transform.SetPositionAndRotation(_h.RestAt, _h.RestTurn);
                 Humanoid body = GetComponent<Humanoid>();
                 _anim = body != null ? BodyAnimator.For(body) : null;
@@ -376,7 +420,7 @@ namespace HuginWhispers
             if (_h.Free)
             {
                 Vector3 at = _h.RestAt; Quaternion turn = _h.RestTurn;
-                if (_anim != null) { _anim.PropAt(out at, out turn); turn = turn * _asLay; }
+                if (_anim != null) { _anim.PropAt(out at, out turn); turn = turn * (_h.Square ? Quaternion.Slerp(_asLay, Quaternion.identity, _anim.PropHeld()) : _asLay); }
                 t.SetPositionAndRotation(Vector3.Lerp(_h.RestAt, at, k), Quaternion.Slerp(_h.RestTurn, turn, k));
             }
             else if (_h.HasRest) t.SetPositionAndRotation(Vector3.Lerp(_h.RestAt, _joint.TransformPoint(_inHand), k), Quaternion.Slerp(_h.RestTurn, _joint.rotation, k));
@@ -414,7 +458,13 @@ namespace HuginWhispers
             _h = null; _g = 0f; _leaving = false; _code = "";
         }
 
-        private void OnDestroy() { Clear(); }
+        private void OnDestroy() { Clear(); _bodies.Remove(_body); }
+
+        // the bodies that have a view (a person holding nothing and with none is passed over: StoryProps.Look)
+        private static readonly HashSet<int> _bodies = new HashSet<int>();
+        private int _body;
+        private void Awake() { _body = gameObject.GetInstanceID(); _bodies.Add(_body); }
+        internal static bool On(GameObject body) { return body != null && _bodies.Contains(body.GetInstanceID()); }
     }
 }
 #endif

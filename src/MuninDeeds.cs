@@ -34,7 +34,7 @@ namespace HuginWhispers
         }
 
         // not a deer or a hare (an unknown prefab counts as a monster)
-        private static bool Monster(string prefab)
+        internal static bool Monster(string prefab)
         {
             GameObject go = !string.IsNullOrEmpty(prefab) && ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(prefab) : null;
             Character c = go != null ? go.GetComponent<Character>() : null;
@@ -54,11 +54,13 @@ namespace HuginWhispers
             return n.IndexOf("storm", System.StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("thunder", System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        // a raid you stood through: inside its area when it ends, after at least a minute of it
+        // a raid you stood through: inside its area when it ends, after at least a minute of it, and you or your raven
+        // struck a monster in it (waiting it out beside the fight is not holding it)
         private static readonly FieldInfo ActiveEvent = AccessTools.Field(typeof(RandEventSystem), "m_activeEvent");
         private static readonly MethodInfo InsideArea = AccessTools.Method(typeof(RandEventSystem), "IsInsideRandomEventArea");
         private static object _raid;
         private static float _raidSince;
+        private static bool _insideFailed;
 
         internal static void Tick(Player p)
         {
@@ -72,7 +74,7 @@ namespace HuginWhispers
             }
             if (ev == null && _raid != null)
             {
-                if (!p.IsDead() && Time.time - _raidSince >= 60f) { Power.OnRaid(); Nicks.OnRaid(p); }
+                if (!p.IsDead() && Time.time - _raidSince >= 60f && Senses.HitMonsterAt >= _raidSince) { Power.OnRaid(); Nicks.OnRaid(p); }
                 _raid = null;
             }
             else if (ev != null && !inside) _raid = null; // walked away from it: it is not yours to win
@@ -88,7 +90,7 @@ namespace HuginWhispers
                     if (ps.Length == 2) return (bool)InsideArea.Invoke(InsideArea.IsStatic ? null : RandEventSystem.instance, new object[] { ev, at });
                 }
             }
-            catch { }
+            catch (System.Exception e) { if (!_insideFailed && Plugin.Instance != null) Plugin.Instance.Log("Raid area check failed, going by distance: " + e.Message); _insideFailed = true; }
             return Vector3.Distance(at, ev.m_pos) < 96f;
         }
     }

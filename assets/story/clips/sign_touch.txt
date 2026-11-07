@@ -1,0 +1,149 @@
+clip sign_touch
+length 4.6
+loop 0
+pivot 1.1
+curve ease
+fade 0.6 0.7
+mode Spine1 body
+mode Spine2 body
+touch piece RavenWatch_story_vkazivnyk 0.5
+say дивиться вгору на дошку, долоня пласко на стовп, тримає, погляд угору вздовж стовпа, долоня ковзає трохи вниз, відпускає; ноги стоять
+want 1.7-3.3 palm right forward
+want 2.2-2.7 head up 20
+want 0.6-1.0 head up 15
+want 1.8-3.3 hand right on
+want 0-4.6 foot left down
+want 0-4.6 foot right down
+
+# вказівник (пролог, Хугін, hugin_comes): ближчий бік стовпа за 0.5 м перед тобою (у сцені гравець стає за 0.62 від його середини; зап'ясток на 0.03 ближче — долоня на дереві). Щось зачепило: спершу погляд на дошку,
+# тоді права долоня неквапом лягає пласко на дерево, погляд іде вгору вздовж стовпа (вдих), долоня ковзає ~15 см униз,
+# ніби пальці шукають стерту різьбу, — нічого; рука відпускає й опускається. Далі в сцені знизує плечима.
+
+0 @RightHand 0.22 0.95 0.1
+0.5 @RightHand 0.22 0.95 0.1
+1.05 @RightHand 0.17 1.14 0.32
+1.5 @RightHand 0.07 1.29 0.44
+1.75 @RightHand 0.06 1.28 0.47
+2.6 @RightHand 0.06 1.28 0.47
+3.3 @RightHand 0.06 1.13 0.47
+3.85 @RightHand 0.14 1.05 0.33
+4.4 @RightHand 0.22 0.95 0.1
+
+0 @RightHand.w 0 0 0
+0.5 @RightHand.w 0 0 0
+1.05 @RightHand.w 0.6 0 0
+1.5 @RightHand.w 1 0 0
+3.35 @RightHand.w 1 0 0
+3.85 @RightHand.w 0.6 0 0
+4.5 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.6 -0.8 0
+
+0 @RightHand.f 0 1 0.15
+
+0 @RightHand.n 0 0 1
+
+0 @Look 0 1.6 1.5
+0.8 @Look 0 2.1 0.8
+1.4 @Look 0.05 1.3 0.52
+1.9 @Look 0.05 1.28 0.52
+2.3 @Look 0 2.1 0.6
+2.4 @Look 0 2.1 0.6
+2.7 @Look 0 2.1 0.6
+3.2 @Look 0.05 1.13 0.52
+4 @Look 0 1.55 2
+
+0 @Look.w 0 0 0
+0.6 @Look.w 1 0 0
+3.9 @Look.w 1 0 0
+4.6 @Look.w 0 0 0
+
+0 Spine1 0 0 0
+0.5 Spine1 0 0 0
+1.6 Spine1 6 0 0
+2.6 Spine1 4 0 0
+3.3 Spine1 8 0 0
+4.4 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.5 Spine2 0 0 0
+1.6 Spine2 3 0 0
+2.5 Spine2 -1 0 0
+3.1 Spine2 3 0 0
+4.4 Spine2 0 0 0
+
+0 RightHandIndex1 0 0 0
+1.1 RightHandIndex1 0 0 0
+1.6 RightHandIndex1 -38 5 0
+3.4 RightHandIndex1 -38 5 0
+4.1 RightHandIndex1 0 0 0
+
+0 RightHandIndex2 0 0 0
+1.1 RightHandIndex2 0 0 0
+1.6 RightHandIndex2 -32 0 0
+2.7 RightHandIndex2 -32 0 0
+3.2 RightHandIndex2 -15 0 0
+3.4 RightHandIndex2 -32 0 0
+4.1 RightHandIndex2 0 0 0
+
+0 RightHandMiddle1 0 0 0
+1.1 RightHandMiddle1 0 0 0
+1.6 RightHandMiddle1 -38 0 0
+3.4 RightHandMiddle1 -38 0 0
+4.1 RightHandMiddle1 0 0 0
+
+0 RightHandMiddle2 0 0 0
+1.1 RightHandMiddle2 0 0 0
+1.6 RightHandMiddle2 -32 0 0
+2.7 RightHandMiddle2 -32 0 0
+3.2 RightHandMiddle2 -15 0 0
+3.4 RightHandMiddle2 -32 0 0
+4.1 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+1.1 RightHandRing1 0 0 0
+1.6 RightHandRing1 -35 -3 0
+3.4 RightHandRing1 -35 -3 0
+4.1 RightHandRing1 0 0 0
+
+0 RightHandPinky1 0 0 0
+1.1 RightHandPinky1 0 0 0
+1.6 RightHandPinky1 -32 -7 0
+3.4 RightHandPinky1 -32 -7 0
+4.1 RightHandPinky1 0 0 0
+
+0 RightHandRing2 0 0 0
+1.1 RightHandRing2 0 0 0
+1.6 RightHandRing2 -30 0 0
+3.4 RightHandRing2 -30 0 0
+4.1 RightHandRing2 0 0 0
+
+0 RightHandPinky2 0 0 0
+1.1 RightHandPinky2 0 0 0
+1.6 RightHandPinky2 -30 0 0
+3.4 RightHandPinky2 -30 0 0
+4.1 RightHandPinky2 0 0 0
+
+0 RightHandIndex3 0 0 0
+1.1 RightHandIndex3 0 0 0
+1.6 RightHandIndex3 -30 0 0
+3.4 RightHandIndex3 -30 0 0
+4.1 RightHandIndex3 0 0 0
+
+0 RightHandMiddle3 0 0 0
+1.1 RightHandMiddle3 0 0 0
+1.6 RightHandMiddle3 -30 0 0
+3.4 RightHandMiddle3 -30 0 0
+4.1 RightHandMiddle3 0 0 0
+
+0 RightHandRing3 0 0 0
+1.1 RightHandRing3 0 0 0
+1.6 RightHandRing3 -30 0 0
+3.4 RightHandRing3 -30 0 0
+4.1 RightHandRing3 0 0 0
+
+0 RightHandPinky3 0 0 0
+1.1 RightHandPinky3 0 0 0
+1.6 RightHandPinky3 -30 0 0
+3.4 RightHandPinky3 -30 0 0
+4.1 RightHandPinky3 0 0 0

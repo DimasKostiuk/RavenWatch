@@ -1,6 +1,9 @@
 vohnyshche fire_pit 0.187 -0.109 -3.48
 lizhko bed 3.161 -0.028 0.585
-stilets piece_chair -2.687 -0.118 -1.225
+stilets piece_chair03 -2.956 -0.055 -1.086
 dveri wood_gate 1.171 0.855 5.56
 dveri wood_gate -0.829 0.855 5.538
-skrynia piece_chest_wood 10.942 -1.746 7.512
+skrynia piece_chest_blackmetal 10.594 -2.59 7.083
+knyha RavenWatch_story_knyha_voroniv -2.633 0.746 0.516
+dveri_nedobud wood_door -11.217 1.126 9.339
+stina_voron woodwall 3.171 2.855 5.583

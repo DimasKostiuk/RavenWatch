@@ -510,6 +510,9 @@ namespace HuginWhispers
             src.clip = clip;
             if (m.Calling && m.Life != null && !ReferenceEquals(m.Life.gameObject, talker)) { go.transform.SetParent(m.Life.transform, false); go.transform.localPosition = Vector3.zero; } // (calling from afar: from the raven itself, not your head)
             src.volume *= m.Volume; src.pitch = m.Pitch;
+#if RAVEN_ITEM
+            src.volume *= Audio.MixNow(AudioMix.Voice); // (a scene's «mix voice»: the lines that start from now on)
+#endif
             if (m.Calling) src.maxDistance = Fade * CallReach; // (the same fall-off, stretched: heard farther)
             float hp = Mathf.Max(m.HighPass, m.Timbre == 3 ? ThinCut : 0f);
             if (hp > 0f) go.AddComponent<AudioHighPassFilter>().cutoffFrequency = hp;

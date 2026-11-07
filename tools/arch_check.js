@@ -17,6 +17,9 @@ const code = line => line.replace(/\/\/.*$/, ''); // (comments may name anything
 const RULES = [
   { id: 'game-move', files: npc, bad: /(^|[^.\w])(MoveTo|MoveTowards)\(|\.MoveTo\(/,
     why: 'the game\'s walk halts on a bend over 10°; walk through NpcMind.Move → NpcWalk.Step → NpcMind.Steer' },
+  { id: 'path-ask', files: npc, bad: /\.(GetPath|HavePath)\(/,
+    why: 'a person\'s way asked of the game\'s way finder: NpcWalk.Have / NpcWalk.Way (kept answers, the frame\'s limit, measured); a walk\'s own way: NpcWalk.Ask',
+    allow: ['NpcWalk.cs', 'NpcWalkAsk.cs', 'NpcWalkRoom.cs', 'NpcNav.cs'] },
   { id: 'door-rpc', files: any, bad: /"UseDoor"/,
     why: 'the door command is a switch; use NpcDoors.Open / Shut', allow: ['NpcDoors.cs'] },
   // BodyClips owns the search; FateRite looks inside the raven itself; RavenFx is the game's own effect-child lookup
@@ -26,14 +29,45 @@ const RULES = [
   { id: 'bone-layer', files: npc, bad: /void LateUpdate\s*\(/,
     why: 'bones of a person: a layer in NpcPose, in its order, not a LateUpdate of its own',
     allow: ['NpcFade.cs', 'NpcPose.cs', 'NpcPoseWatch.cs', 'NpcPreview.cs', 'NpcRaven.cs'] },
-  { id: 'body-put', files: npc, bad: /(^|[\s(_])(?!dot\b)(\w+\.)?transform\.position\s*=[^=]/,
-    why: 'a person\'s body is walked (NpcWalk) or seated (NpcBody); a put is a last safety, through NpcWalk.Jumped',
-    allow: ['NpcBody.cs', 'NpcEat.cs', 'NpcMind.cs', 'NpcPreview.cs', 'NpcTravel.cs', 'NpcWalkStuck.cs', 'NpcHouse.cs', 'NpcBase.cs'] },
+  // one way a body is moved by us (2026-11-07: five places wrote it themselves, only the seat's glide was drawn every frame and the rest ran
+  // at the mind's twenty steps a second): NpcBody.Put / Slide. The files allowed own no body: a food in a hand, a preview, map dots
+  { id: 'body-put', files: npc, bad: /(^|[\s(_])(?!dot\b)(\w+\.)?transform\.position\s*=[^=]|\b(rb|_rb|m_body)\.position\s*=[^=]|\.MovePosition\(/,
+    why: 'a person\'s body is walked (NpcWalk) or seated (NpcBody); put or slid somewhere by us only through NpcBody.Put / NpcBody.Slide (held, drawn every frame, counted as a jump)',
+    allow: ['NpcBody.cs', 'NpcEat.cs', 'NpcPreview.cs', 'NpcHouse.cs', 'NpcBase.cs'] },
+  // the mind's clock (2026-11-07): the game runs a creature's mind twenty times a second from its physics step and hands it 0.05 s; a frame's
+  // time there is the physics step's 0.02 s, and the turn on a bend, a slide, the walk report all ran 2.5 times slow
+  { id: 'mind-time', files: f => /^(NpcMind|NpcWalk)\w*\.cs$/.test(f), bad: /Time\.(deltaTime|fixedDeltaTime)\b/,
+    why: 'inside a person\'s mind and feet time is the mind\'s step: NpcMind.Dt (or the dt handed to a task); a timer of its own reads Time.time' },
+  { id: 'npc-seed', files: npc, bad: /m_uid\.(ID|UserID)\s*\*|m_uid\.GetHashCode\(\)|\(u?int\)\s*\w+\.m_uid\.(ID|UserID)\b/,
+    why: 'a ZDOID is new at every world load: seeded by it a person is another after a restart; seed by NpcKit.Seed(zdo)', allow: ['NpcKit.cs'] },
   { id: 'one-animator', files: any, bad: /new\s+PAnimClip\s*\(/,
     why: 'one player of clips: BodyAnimator; clips live in BodyClips', allow: ['BodyClips.cs', 'PlayerAnimPanel.cs'] },
+  { id: 'one-music', files: any, bad: /MusicMan\.instance|\.TriggerMusic\(/,
+    why: 'music has one owner: ask Audio.Music / MusicOff (layers, owner, lease), or the game and a scene fight over it', allow: ['Audio.cs'] },
+  // the sources that were there before the core: voice lines, wings, backwards sounds, a pair's fx (the user 2026-11-04)
+  { id: 'audio-source', files: any, bad: /AddComponent<AudioSource>\(/,
+    why: 'a sound of your own: Audio.Sound / Bed / Music: a source of your own has no owner and nobody lets it go',
+    allow: ['Audio.cs', 'OdinWings.cs', 'PairFx.cs', 'RavenFx.cs', 'RavenVoice.cs', 'SoundBack.cs'] },
+  // a step with verbs («player go») is found by its verb's entry: asked by its first word it has no Begin, and the step does nothing, without a word (2026-11-06)
+  { id: 'step-kind', files: f => f.startsWith('StoryScenes'), bad: /Kinds\.TryGetValue\(\w+\.W\[/,
+    why: 'a step\'s kind is st.Kind (its verb\'s own entry, found once): looked up by its first word, a step with verbs does nothing' },
+  // one limit for a raven's head (it went round behind its back: the user 2026-11-04): every turn put on it through RavenHead.Limit
+  { id: 'raven-head', files: f => f === 'ShoulderLife.cs' || f === 'PerchLife.cs', bad: /(_head|_neck\.T)\.rotation\s*=(?!.*RavenHead\.Limit)/,
+    why: 'a raven\'s head turns only through RavenHead.Limit (one limit for the bird, under 90°: past it the shorter way goes round its back)' },
   // the key is the second argument of Bind or of our Hide (tuning.cfg); a literal section is checked as well
   { id: 'config-key', files: any, bad: /(\.Bind|\bHide)(<[^>]*>)?\(\s*("[^"]*[='\[\]\\][^"]*"|[^,"]+|"[^"]*")\s*,\s*"[^"]*[='\[\]\\][^"]*"|(\.Bind|\bHide)(<[^>]*>)?\(\s*"[^"]*[='\[\]\\][^"]*"\s*,/,
     why: 'no = \' [ ] \\ " in a config section or key: one bad key kills the whole mod at its start' },
+  // who reads config (2026-11-06: a config copy of a clip won over the mod's own, and the ghost's arm stayed as it was after a fix).
+  // Config holds what is the machine's own; what the mod ships has ONE copy, in assets, read there on the author's machine
+  // (StoryFiles.Source: Blueprint.Data, BodyClips.Dir, BodyGait). A new reader of config is a decision: here, with the user, and why.
+  //   the machine's own:  the author's tools and their output (AnimStage, BlackBox, FlightRec, JoltWatch, LookDiag, NpcSelf, NpcWalkBox,
+  //                       PlayerAnimLog, SoundPanel, Studio, TakeoffKeys, WingPanel, Mute, Motor flight.txt, PerchTurn, DevKit),
+  //                       a player's own (HuginWhispers/Lang phrase files, RavenJournal, RavenLooks, Outfits, RavenItem icons,
+  //                       Errands, FlightTemplates, FxLib, FxMix, SitSystem/SitTemplates, Workshop/WsAssets models)
+  //   one copy, by Source: Blueprint, BodyClips, BodyGait, Photos, StoryFiles, StoryQuests, NpcDefs, NpcTalk, AudioBank
+  { id: 'config-read', files: any, bad: /Paths.ConfigPath/,
+    why: 'a new reader of config: is it the machine\x27s own, or a copy of what the mod ships? The mod\x27s data has one copy in assets (StoryFiles.Source); say which in tools/arch_check.js (config-read), with the user',
+    allow: ['AnimStage.cs', 'AudioBank.cs', 'BlackBox.cs', 'Blueprint.cs', 'BodyClips.cs', 'BodyGait.cs', 'DevKit.cs', 'Errands.cs', 'FlightRec.cs', 'FlightTemplates.cs', 'FxLib.cs', 'FxMix.cs', 'HuginWhispers.cs', 'JoltWatch.cs', 'Lang.cs', 'LookDiag.cs', 'Motor.cs', 'Mute.cs', 'NpcDefs.cs', 'NpcSelf.cs', 'NpcTalk.cs', 'NpcWalkBox.cs', 'Outfits.cs', 'PerchTurn.cs', 'Photos.cs', 'PlayerAnimLog.cs', 'RavenItem.cs', 'RavenJournal.cs', 'RavenLooks.cs', 'SitSystem.cs', 'SitTemplates.cs', 'SoundPanel.cs', 'StoryFiles.cs', 'StoryQuests.cs', 'Studio.cs', 'TakeoffKeys.cs', 'WingPanel.cs', 'Workshop.cs', 'WsAssets.cs'] },
 ];
 
 // the { … } that opens at or after `from`; null if none closes (braces in strings are rare enough to ignore here)
@@ -76,9 +110,11 @@ function bareCount(text) {
   const re = new RegExp(GUARDED_KINDS.source, 'g'); let m, n = 0;
   while ((m = re.exec(text))) {
     if (inComment(text, m.index)) continue;
-    const owner = block(text, m.index);
+    let end = text.lastIndexOf('[', m.index), depth = 0; // (past the attribute: a «new Type[] { … }» in it is no body)
+    for (; end < text.length; end++) { if (text[end] === '[') depth++; else if (text[end] === ']' && --depth === 0) break; }
+    const owner = block(text, end);
     if (!owner) continue;
-    const isClass = /\bclass\b/.test(text.slice(m.index, owner.start));
+    const isClass = /\bclass\b/.test(text.slice(end, owner.start));
     if (!isClass) { if (!owner.body.includes('PatchGuard')) n++; continue; } // (the attribute stands on the method itself)
     const methods = /\b(Prefix|Postfix|Finalizer)\s*\(/g; let f;
     while ((f = methods.exec(owner.body))) {

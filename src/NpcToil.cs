@@ -11,10 +11,11 @@ namespace HuginWhispers
     //   tiredness   0–100: it grows while it works (heavy work quicker); at the top it puts its work down and sits — on a
     //               bench or by a fire it is rested soonest, on the ground slowly, asleep in its bed well
     //   mood        0–100: its bed under a roof, a fire burning in its base, fed, not always the same food, not worn out,
-    //               not wet in the rain, paid — its work ×0.7 at the worst to ×1.2 at the best; at the very bottom three
+    //               not wet in the rain, paid, a module's share (MoodFrom: its wish come true, or wanted long — NpcGoals) — its work ×0.7 at the worst to ×1.2 at the best; at the very bottom three
     //               game days on end it leaves (to the ravens' home, as a starved one does)
     //   pay         every five game days it walks up to its heart and takes its pay from the heart's coin box («Скарбничка»)
-    //               itself — a few coins by its work and how far the world has gone; none there: unpaid, its mood down
+    //               itself — a few coins by its work and how far the world has gone; none there: unpaid, its mood down (and one
+    //               of its base who was paid may be envied: NpcAttitude.Quarrel «pay»)
     //   its craft   a newcomer works at ×0.6 of a hand who knows it; every pay it takes up +0.1, to ×1 (kept per job, in its
     //               locker); a story person knows its work already
     // Where it is owned; tiredness, mood and its pay's state in its ZDO (written now and then, when changed), its craft
@@ -28,7 +29,9 @@ namespace HuginWhispers
         internal static readonly int KPayNext = "RavenWatch_npcPayNext".GetStableHashCode(); // long: world seconds of its next pay
         internal static readonly int KUnpaid = "RavenWatch_npcUnpaid".GetStableHashCode(); // int: pays missed in a row (−1 never paid yet)
         internal static readonly int KCraft = "RavenWatch_npcCraft".GetStableHashCode();   // string «job=0.6;…» — in its locker
-        private const float Tick = 5f, KeepEvery = 120f, PayDays = 5f, Newcomer = 0.6f, Learn = 0.1f, LeaveDays = 3f, MoodLow = 15f;
+        internal static readonly int KMoodParts = "RavenWatch_npcMoodParts".GetStableHashCode(); // string «why=points;…»: what its mood is made of now, as Weigh last counted it (its card's tip) — in its locker, only when changed
+        internal const float PayDays = 5f, MoodLow = 15f, MoodPoor = 30f;
+        private const float Tick = 5f, KeepEvery = 120f, Newcomer = 0.6f, Learn = 0.1f, LeaveDays = 3f;
 
         private NpcActor _a;
         private bool _read;
@@ -60,6 +63,9 @@ namespace HuginWhispers
         // × its hunger's pace (NpcHunger)
         internal static float HungerLoad(NpcActor a) { return Working(a) ? Load(a.Worker.JobId) : 1f; }
 
+        // its work's load whether or not it is at it now (NpcHunger.NeedPerDay): its job alone, so any game reads the same
+        internal static float WorkLoad(NpcActor a) { return a != null && a.Worker != null && a.Worker.Works ? Load(a.Worker.JobId) : 1f; }
+
         // × its work's pace (NpcWorker, NpcHew): its mood and its craft
         internal static float Pace(NpcActor a)
         {
@@ -70,9 +76,9 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- read on every game (its ZDO)
-        internal static float Tired(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? z.GetFloat(KTired, 0f) : 0f; }
-        internal static float Mood(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? z.GetFloat(KMood, 60f) : 60f; }
-        internal static int Unpaid(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? z.GetInt(KUnpaid, -1) : -1; }
+        internal static float Tired(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Num(z, KTired, 0f) : 0f; }
+        internal static float Mood(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Num(z, KMood, 60f) : 60f; }
+        internal static int Unpaid(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Int(z, KUnpaid, -1) : -1; }
 
         // its craft at a job (a newcomer ×0.6 … ×1)
         internal static float Craft(NpcActor a, string job)
@@ -100,11 +106,17 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- what weighs on it (its mood's worst)
-        internal enum Why { None, NoBed, BedOpen, Hungry, Starving, SameFood, Tired, Wet, Unpaid, NoFire }
+        // (kept as a number in its locker: new ones only at the end; those from Bed on lift it, Pining weighs a little)
+        internal enum Why { None, NoBed, BedOpen, Hungry, Starving, SameFood, Tired, Wet, Unpaid, NoFire, Bed, BedRoof, Fire, Fed, Varied, Paid, Wish, Pining }
         internal static string WhyWord(NpcActor a)
         {
             ZDO z = a != null ? a.Zdo : null;
-            switch ((Why)(z != null ? z.GetInt(KWhy, 0) : 0))
+            return WhyWord((Why)(z != null ? NpcLocker.Int(z, KWhy, 0) : 0));
+        }
+
+        private static string WhyWord(Why w)
+        {
+            switch (w)
             {
                 case Why.NoBed: return Lang.T("нема свого ліжка");
                 case Why.BedOpen: return Lang.T("ліжко не під дахом");
@@ -115,8 +127,80 @@ namespace HuginWhispers
                 case Why.Wet: return Lang.T("мокне під дощем");
                 case Why.Unpaid: return Lang.T("не платять");
                 case Why.NoFire: return Lang.T("на базі не горить вогонь");
+                case Why.Bed: return Lang.T("має своє ліжко");
+                case Why.BedRoof: return Lang.T("ліжко під дахом");
+                case Why.Fire: return Lang.T("тепло біля вогню");
+                case Why.Fed: return Lang.T("ситно");
+                case Why.Varied: return Lang.T("їжа різна");
+                case Why.Paid: return Lang.T("платять вчасно");
+                case Why.Wish: return Lang.T("збулося те, про що мріяв|мріяла");
+                case Why.Pining: return Lang.T("довго чекає на те, про що мріє");
                 default: return "";
             }
+        }
+
+        // its mood in a word, no number (its card under «настрій», the board)
+        internal static string MoodWord(NpcActor a)
+        {
+            float m = Mood(a);
+            return a.Form(m < MoodLow ? Lang.T("на межі") : m < MoodPoor ? Lang.T("пригнічений|пригнічена") : m < 45f ? Lang.T("похмурий|похмура") : m < 70f ? Lang.T("спокійний|спокійна") : Lang.T("веселий|весела"));
+        }
+
+        // what it is made of (the tip under the pointer): «+ …» what lifts it, «− …» what weighs on it, a line each, the heavy first; as its owner last counted it
+        internal static string MoodTip(NpcActor a)
+        {
+            List<KeyValuePair<float, Why>> parts = new List<KeyValuePair<float, Why>>();
+            foreach (string e in (NpcLocker.Get(a, KMoodParts) ?? "").Split(';'))
+            {
+                int eq = e.IndexOf('='), w; float v;
+                if (eq > 0 && int.TryParse(e.Substring(0, eq), NumberStyles.Integer, CultureInfo.InvariantCulture, out w) && float.TryParse(e.Substring(eq + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out v)) parts.Add(new KeyValuePair<float, Why>(v, (Why)w));
+            }
+            parts.Sort((x, y) => Mathf.Abs(y.Key).CompareTo(Mathf.Abs(x.Key)));
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<float, Why> p in parts) { string word = WhyWord(p.Value); if (word.Length > 0) sb.Append(sb.Length > 0 ? "\n" : "").Append(p.Key > 0f ? "+ " : "− ").Append(word); }
+            return a.Form(sb.ToString());
+        }
+
+        // how rested, in words (its card): tone 0 fine · 2 tired · 3 worn out
+        internal static string RestWord(NpcActor a, out int tone)
+        {
+            float t = Tired(a);
+            tone = t >= 90f ? 3 : t >= 60f ? 2 : 0;
+            return a.Form(t >= 90f ? Lang.T("знесилений|знесилена") : t >= 60f ? Lang.T("втомлений|втомлена") : Lang.T("бадьорий|бадьора"));
+        }
+
+        // its craft in a word (its card): a newcomer ×0.6 … ×1
+        internal static string CraftWord(NpcActor a)
+        {
+            float c = Craft(a, a.Worker != null ? a.Worker.JobId : "");
+            return c >= 0.99f ? Lang.T("майстер|майстриня") : c >= 0.8f ? Lang.T("вправний|вправна") : Lang.T("ще вчиться");
+        }
+
+        // the coin box against the pays to come (the board): one round of pays (each worker's own day), who is first, who would go without. Read off each one's locker when asked
+        internal sealed class PayLook { public int Sum, Short, Workers; public long NextIn = -1L; public string Next = "", FirstShort = ""; public long ShortIn = -1L; }
+        internal static PayLook PayAhead(List<NpcActor> who, int coins)
+        {
+            PayLook l = new PayLook();
+            long now = (long)NpcRescue.Now;
+            List<KeyValuePair<long, NpcActor>> line = new List<KeyValuePair<long, NpcActor>>();
+            foreach (NpcActor a in who)
+            {
+                if (a == null || a.Zdo == null || a.Worker == null || !a.Worker.Works) continue;
+                long next = NpcLocker.Long(a.Zdo, KPayNext, 0L);
+                line.Add(new KeyValuePair<long, NpcActor>(next > 0L ? next : now + (long)(Day * PayDays), a));
+                l.Sum += Wage(a); l.Workers++;
+            }
+            line.Sort((x, y) => x.Key.CompareTo(y.Key));
+            int left = coins;
+            foreach (KeyValuePair<long, NpcActor> e in line)
+            {
+                if (l.NextIn < 0L) { l.NextIn = System.Math.Max(0L, e.Key - now); l.Next = e.Value.Name; }
+                int wage = Wage(e.Value);
+                if (left >= wage) { left -= wage; continue; }
+                l.Short += wage - left; left = 0;
+                if (l.ShortIn < 0L) { l.ShortIn = System.Math.Max(0L, e.Key - now); l.FirstShort = e.Value.Name; }
+            }
+            return l;
         }
 
         // a meal (NpcHunger.Eat): the last few, for its mood
@@ -138,8 +222,8 @@ namespace HuginWhispers
             if (z == null || Time.time < _next) return;
             float dt = _read ? Time.time - _lastTick : 0f; _lastTick = Time.time; // (its own last step: the step is shorter while it goes for its pay)
             _next = Time.time + (_pay != null ? PayStep : Tick); // (on its way for its pay: looked at often — its hand into the box must not wait a whole step)
-            if (!_read) { _read = true; _tired = _keptTired = z.GetFloat(KTired, 0f); _mood = _keptMood = z.GetFloat(KMood, 60f); _low = _keptLow = z.GetFloat(KLow, 0f); _target = _mood; return; }
-            if (!NpcResident.Is(_a) || (_a.Vitals != null && _a.Vitals.Down)) return;
+            if (!_read) { if (!NpcLocker.Ready(_a)) return; _read = true; _tired = _keptTired = NpcLocker.Num(z, KTired, 0f); _mood = _keptMood = NpcLocker.Num(z, KMood, 60f); _low = _keptLow = NpcLocker.Num(z, KLow, 0f); _target = _mood; return; }
+            if (!NpcResident.Is(_a) || !_a.Def.Settler || (_a.Vitals != null && _a.Vitals.Down)) return; // (a person of the story: no pay, no mood of the home)
             dt = Mathf.Clamp(dt, 0f, 30f);
             Tiredness(dt);
             Moods(dt);
@@ -151,7 +235,7 @@ namespace HuginWhispers
         {
             ZDO z = _a.Zdo;
             _nextKeep = Time.time + KeepEvery; _keptTired = _tired; _keptMood = _mood; _keptLow = _low;
-            z.Set(KTired, _tired); z.Set(KMood, _mood); z.Set(KLow, _low);
+            NpcLocker.Put(z, KTired, _tired); NpcLocker.Put(z, KMood, _mood); NpcLocker.Put(z, KLow, _low);
         }
 
         // ---- tiredness
@@ -169,11 +253,10 @@ namespace HuginWhispers
             if (_rest != null && _tired < 15f) { m.EndWhim("rest"); _rest = null; return; } // (rested: back to work)
             if (_rest == null && _tired >= 100f && m.WhimFree("rest") && (m.NowLayer == NpcMind.Layer.Job || (m.NowLayer == NpcMind.Layer.Whim && m.Of(NpcMind.Layer.Job) != null)) && !m.Asleep) // (worn out at its work — not up from its bed to sit)
             {
-                NpcBase b = NpcBase.For(NpcRules.Home(_a));
-                Vector3 spot = FireSpot(b, transform.position, _a) ?? (b.Ready ? NpcPrivate.Spot(_a, b) : transform.position);
-                _rest = new NpcMind.Plan { Kind = NpcMind.Task.Sit, To = spot };
+                _rest = NpcPlaces.Best(_a, "fire") ?? NpcPlaces.Best(_a, "seat") ?? NpcPlaces.RestHere(_a);
+                _rest.Kind = NpcMind.Task.Sit; // (worn out: it sits, by the fire too)
                 m.TakeWhim(_rest, 1200f, "rest");
-                NpcPhrases.SayOr(_a, "rest", _a.Form(Lang.T("Ух… втомився|втомилась. Посиджу трохи.")));
+                NpcPhrases.SayOr(_a, "rest", _a.Form(Lang.T("Ух… втомився|втомилась. Посиджу трохи.")), null, NpcActor.Voice.Unasked);
                 Npcs.Log(_a.Id + ": worn out — sits down to rest");
             }
         }
@@ -182,22 +265,7 @@ namespace HuginWhispers
         private bool Comfy()
         {
             Vector3 p = transform.position;
-            return NpcMind.SeatNear(p, 1.3f) || NpcKit.Nearest<Fireplace>(p, 4f, f => f.IsBurning()) != null;
-        }
-
-        // two steps from the nearest burning fire of its base (its fires as its workers see them: looked over now and then)
-        internal static Vector3? FireSpot(NpcBase b, Vector3 me, NpcActor who)
-        {
-            if (b == null || !b.Ready) return null;
-            List<Fireplace> fires = new List<Fireplace>();
-            foreach (Fireplace f in NpcWorker.InBaseOf<Fireplace>(b, me)) if (f != null && f.IsBurning() && !NpcPrivate.Off(who, b, f.transform.position)) fires.Add(f); // (not a fire in a player's house)
-            fires.Sort((x, y) => (x.transform.position - me).sqrMagnitude.CompareTo((y.transform.position - me).sqrMagnitude));
-            for (int i = 0; i < fires.Count && i < 4; i++) // (the nearest few: one up a tower out of reach gives way to the next)
-            {
-                Vector3? s = NpcKit.FireSide(fires[i], me);
-                if (s != null) return s;
-            }
-            return null;
+            return NpcMind.SeatNear(p, 1.3f) || NpcKit.Nearest<Fireplace>(p, 4f, f => f.IsBurning() && NpcKit.Warms(f)) != null;
         }
 
         // ---- mood
@@ -210,39 +278,44 @@ namespace HuginWhispers
             if (_low > LeaveDays * DayLength && !NpcLevers.IsProtected(_a)) Leave();
         }
 
+        // a module's share of its mood (NpcModules: NpcGoals), points ± on the 0–100 scale, asked once a game minute
+        internal static readonly List<System.Func<NpcActor, float>> MoodFrom = new List<System.Func<NpcActor, float>>();
+
         private void Weigh()
         {
             float t = 50f; Why worst = Why.None; float worstV = 0f;
-            System.Action<float, Why> add = (v, w) => { t += v; if (v < worstV) { worstV = v; worst = w; } };
-            ZDOID bedId = NpcKit.GetRef(_a.Zdo, NpcResident.KBed);
+            StringBuilder parts = new StringBuilder();
+            System.Action<float, Why> add = (v, w) => { if (v == 0f) return; t += v; if (v < worstV) { worstV = v; worst = w; } parts.Append((int)w).Append('=').Append(v.ToString("0", CultureInfo.InvariantCulture)).Append(';'); };
+            ZDOID bedId = NpcLocker.Ref(_a.Zdo, NpcResident.KBed);
             if (bedId.IsNone()) add(-15f, Why.NoBed);
             else
             {
-                add(10f, Why.None);
+                add(10f, Why.Bed);
                 GameObject bed = NpcKit.Find(bedId);
-                if (bed != null) add(Roof(bed.transform.position + Vector3.up * 0.5f) ? 5f : -10f, Why.BedOpen);
+                if (bed != null) { if (Roof(bed.transform.position + Vector3.up * 0.5f)) add(5f, Why.BedRoof); else add(-10f, Why.BedOpen); }
             }
-            NpcBase b = NpcBase.For(NpcRules.Home(_a));
-            add(FireSpot(b, transform.position, _a) != null ? 5f : -5f, Why.NoFire);
+            if (NpcPlaces.AnyFire(_a)) add(5f, Why.Fire); else add(-5f, Why.NoFire);
             float full = NpcHunger.Full(_a);
-            add(NpcHunger.IsStarving(_a) ? -25f : NpcHunger.IsHungry(_a) ? -10f : full >= 60f ? 10f : 0f, NpcHunger.IsStarving(_a) ? Why.Starving : Why.Hungry);
+            if (NpcHunger.IsStarving(_a)) add(-25f, Why.Starving); else if (NpcHunger.IsHungry(_a)) add(-10f, Why.Hungry); else if (full >= 60f) add(10f, Why.Fed);
             if (_ate.Count >= 3)
             {
                 HashSet<string> kinds = new HashSet<string>(_ate);
-                add(kinds.Count <= 1 ? -8f : kinds.Count == 2 ? 0f : kinds.Count == 3 ? 5f : 10f, Why.SameFood);
+                if (kinds.Count <= 1) add(-8f, Why.SameFood); else if (kinds.Count >= 3) add(kinds.Count == 3 ? 5f : 10f, Why.Varied);
             }
             if (_tired >= 90f) add(-10f, Why.Tired);
             if (EnvMan.instance != null && EnvMan.IsWet() && !Roof(transform.position + Vector3.up * 1.6f)) add(-10f, Why.Wet);
             if (_a.Worker != null && _a.Worker.Works)
             {
-                int unpaid = _a.Zdo.GetInt(KUnpaid, -1);
-                if (unpaid == 0) add(15f, Why.Unpaid); else if (unpaid == 1) add(-15f, Why.Unpaid); else if (unpaid >= 2) add(-25f, Why.Unpaid);
+                int unpaid = NpcLocker.Int(_a.Zdo, KUnpaid, -1);
+                if (unpaid == 0) add(15f, Why.Paid); else if (unpaid == 1) add(-15f, Why.Unpaid); else if (unpaid >= 2) add(-25f, Why.Unpaid);
             }
+            foreach (System.Func<NpcActor, float> m in MoodFrom) { float by = m(_a); add(by, by > 0f ? Why.Wish : Why.Pining); } // (a module's own share: NpcGoals — proud, or long wanting)
             _target = Mathf.Clamp(t, 0f, 100f);
-            if (_a.Zdo.GetInt(KWhy, 0) != (int)worst) _a.Zdo.Set(KWhy, (int)worst);
+            if (NpcLocker.Int(_a.Zdo, KWhy, 0) != (int)worst) NpcLocker.Put(_a.Zdo, KWhy, (int)worst);
+            NpcLocker.Put(_a.Zdo, KMoodParts, parts.ToString()); // (written only when it changed: NpcLocker.Put; a game minute at the most often)
         }
 
-        private static bool Roof(Vector3 p) { float cover; bool under; Cover.GetCoverForPoint(p, out cover, out under); return under; }
+        internal static bool Roof(Vector3 p) { float cover; bool under; Cover.GetCoverForPoint(p, out cover, out under); return under; }
 
         // at the bottom three days on end: it goes (as a starved one: to the ravens' home)
         private void Leave()
@@ -252,7 +325,7 @@ namespace HuginWhispers
             StoryBus.Raise("npc_left_unhappy", _a.Id, 0, transform.position);
             _mood = _target = 50f; _low = 0f; Keep();
             _a.Act("unhire");
-            _a.Order("travel " + Npcs.V(NpcTravel.Hall) + " " + NpcTravel.ToHall);
+            _a.Order("travel " + Npcs.V(NpcTravel.Refuge) + " " + NpcTravel.ToRefuge);
         }
 
         // ---- pay
@@ -277,12 +350,14 @@ namespace HuginWhispers
             NpcMind m = _a.Mind;
             if (_a.Worker == null || !_a.Worker.Works || m == null) { _payWait = "не працює"; return; }
             long now = (long)NpcRescue.Now;
-            long next = z.GetLong(KPayNext, 0L);
-            if (next == 0L) { z.Set(KPayNext, now + (long)(Day * PayDays * Random.Range(0.6f, 1f))); return; } // (the first one a little sooner)
+            long next = NpcLocker.Long(z, KPayNext, 0L);
+            if (next == 0L) { NpcLocker.Put(z, KPayNext, now + (long)(Day * PayDays * Random.Range(0.6f, 1f))); return; } // (the first one a little sooner)
             if (_pay != null)
             {
                 NpcHeart h = Heart();
-                if (h != null && (_pay.Kind == NpcMind.Task.Idle || Utils.DistanceXZ(transform.position, h.transform.position) <= PayReach)) // (there: its walk to the spot before the board ended — NpcMind.Arrived — or it stands by the heart; one distance of its own no longer: a bigger heart left it standing «not there», 2026-11-03)
+                if (m.Of(NpcMind.Layer.Whim) != _pay || h == null || Time.time - _paySince > 180f) { _pay = null; NpcLocker.Put(z, KPayNext, now + (long)(Hour * 3f)); return; } // (did not get there, or stands by a box someone keeps open: later today)
+                if (m.NowLayer != NpcMind.Layer.Whim) return; // (a fight, an order came over it: no hand into a box meanwhile)
+                if (_pay.Kind == NpcMind.Task.Idle || Utils.DistanceXZ(transform.position, h.transform.position) <= PayReach) // (there: its walk to the spot before the board ended — NpcMind.Arrived — or it stands by the heart; one distance of its own no longer: a bigger heart left it standing «not there», 2026-11-03)
                 {
                     if (h.Box != null && !m.Reach(h.Box, ref _payHand)) return; // (its hand into the coin box first, as into any chest: NpcMind.Reach)
                     m.EndWhim("pay");
@@ -291,7 +366,6 @@ namespace HuginWhispers
                     if (h.Box != null) NpcLid.Close(h.Box);
                     return;
                 }
-                if (m.Of(NpcMind.Layer.Whim) != _pay || h == null || Time.time - _paySince > 180f) { _pay = null; z.Set(KPayNext, now + (long)(Hour * 3f)); } // (did not get there: later today)
                 return;
             }
             if (now < next) { _payWait = "ще не час"; return; }
@@ -299,7 +373,7 @@ namespace HuginWhispers
             float hour = EnvMan.instance != null ? EnvMan.instance.GetDayFraction() * 24f : 12f;
             if (!_payNow && (hour < 7f || hour > 19f)) { _payWait = "не день (" + hour.ToString("0.0", CultureInfo.InvariantCulture) + " год)"; return; } // (in the day)
             NpcHeart heart = Heart();
-            if (heart == null) { _payWait = "серця нема поруч"; z.Set(KPayNext, now + (long)(Hour * 3f)); return; } // (its heart not here: later)
+            if (heart == null) { _payWait = "серця нема поруч"; NpcLocker.Put(z, KPayNext, now + (long)(Hour * 3f)); return; } // (its heart not here: later)
             _payWait = "іде"; _payNow = false;
             Vector3 to = heart.Box != null ? heart.Box.transform.position : heart.transform.position + heart.transform.forward * -3f; // (up to its coin box; none: before its board)
             _pay = new NpcMind.Plan { Kind = NpcMind.Task.Go, To = to, Near = 1f }; _payHand = 0f;
@@ -320,11 +394,11 @@ namespace HuginWhispers
             int wage = Wage(_a);
             long now = (long)NpcRescue.Now;
             int got = h.TakeCoins(wage); // (−1: someone has the box open; 0: not enough there — it takes none)
-            if (got < 0) { z.Set(KPayNext, now + (long)(Hour)); return; } // (a little later)
-            z.Set(KPayNext, now + (long)(Day * PayDays));
+            if (got < 0) { NpcLocker.Put(z, KPayNext, now + (long)(Hour)); return; } // (a little later)
+            NpcLocker.Put(z, KPayNext, now + (long)(Day * PayDays));
             if (got >= wage)
             {
-                z.Set(KUnpaid, 0);
+                NpcLocker.Put(z, KUnpaid, 0);
                 string job = _a.Worker.JobId;
                 bool learned = Craft(_a, job) < 1f;
                 if (learned) Learned(_a, job);
@@ -338,10 +412,12 @@ namespace HuginWhispers
             }
             else
             {
-                z.Set(KUnpaid, Mathf.Max(0, z.GetInt(KUnpaid, -1)) + 1);
+                NpcLocker.Put(z, KUnpaid, Mathf.Max(0, NpcLocker.Int(z, KUnpaid, -1)) + 1);
                 NpcMemory.Remember(_a, "unpaid", 0L, "");
                 NpcPhrases.SayOr(_a, "unpaid", _a.Form(Lang.T("Скарбничка порожня… Знову без платні.")));
                 Npcs.Log(_a.Id + ": no pay in the box");
+                foreach (NpcActor o in NpcHeart.Residents(NpcKit.GetRef(z, NpcResident.KHeart))) // (one of its base paid last time while it goes without: envy — NpcAttitude.Quarrel «pay»)
+                    if (o != null && o != _a && o.Worker != null && o.Worker.Works && Unpaid(o) == 0 && Random.value < 0.5f) { NpcAttitude.Quarrel(_a, o, "pay"); break; }
             }
             _nextMood = 0f; // (weighed again at once)
         }
@@ -350,7 +426,7 @@ namespace HuginWhispers
         internal string ForcePay()
         {
             if (!_a.Owned) return "Його веде інша гра.";
-            _a.Zdo.Set(KPayNext, 1L); _pay = null; _payNow = true; _payWait = "";
+            NpcLocker.Put(_a.Zdo, KPayNext, 1L); _pay = null; _payNow = true; _payWait = "";
             return "Іде по платню (" + Wage(_a) + ").";
         }
 

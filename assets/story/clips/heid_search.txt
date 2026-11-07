@@ -1,0 +1,320 @@
+clip heid_search
+length 10
+loop 0
+pivot 1.1
+curve ease
+vary 0.3
+feet ground
+fade 0.7 1
+mode Spine1 body
+mode Spine2 body
+part bends 0 2 hold
+part loop 2 8 loop
+part rises 8 10 end
+mark 9.4 up
+say долоні трохи одна до одної, менш згорблена; робить це біля ліжка й біля каменя
+want 3-7 head down 20
+want 9.9 head down 0
+want 2.5-7.5 hand right near 0.14 0.86 0.36 0.1
+want 2.5-7.5 hand left near -0.14 0.86 0.36 0.1
+want 2.5-7.5 lean forward 10
+
+# bends: плавно нахиляється до ліжка, руки опускаються; loop: руки перебирають щось низько перед собою, то права, то ліва, голова за руками,
+# раз переступає з ноги на ногу (ноги по черзі, на те саме місце); rises: випрямляється, руки вздовж тіла. Цикл: 2 с == 8 с.
+
+0 @LeftFoot -0.09 0.12 0.28
+4.4 @LeftFoot -0.09 0.12 0.28
+5.6 @LeftFoot -0.09 0.12 0.28
+5.9 @LeftFoot -0.09 0.19 0.28
+6.2 @LeftFoot -0.09 0.12 0.28
+10 @LeftFoot -0.09 0.12 0.28
+
+0 @RightFoot 0.05 0.12 -0.3
+4.4 @RightFoot 0.05 0.12 -0.3
+4.7 @RightFoot 0.05 0.19 -0.3
+5 @RightFoot 0.05 0.12 -0.3
+10 @RightFoot 0.05 0.12 -0.3
+
+0 move 0 0 0
+0.3 move 0 0 0
+2 move 0 -0.05 -0.02
+4.2 move -0.03 -0.05 -0.02
+5.1 move -0.03 -0.05 -0.02
+5.4 move 0.03 -0.05 -0.02
+6.3 move 0.03 -0.05 -0.02
+7 move 0 -0.05 -0.02
+8 move 0 -0.05 -0.02
+10 move 0 0 0
+
+0 Spine1 0 0 0
+0.3 Spine1 0 0 0
+2 Spine1 22 0 0
+3.5 Spine1 23 3 0
+5 Spine1 21 -3 0
+6.5 Spine1 23 2 0
+8 Spine1 22 0 0
+10 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.3 Spine2 0 0 0
+2 Spine2 17 0 0
+3.5 Spine2 18 2 0
+5 Spine2 16 -2 0
+6.5 Spine2 18 2 0
+8 Spine2 17 0 0
+10 Spine2 0 0 0
+
+0 @Look 0 1.5 2
+1.6 @Look 0.03 0.55 0.6
+3.2 @Look 0.12 0.55 0.6
+4.6 @Look -0.06 0.55 0.6
+5.8 @Look -0.1 0.56 0.6
+7 @Look 0.08 0.55 0.6
+8 @Look 0.03 0.55 0.6
+9.6 @Look 0 1.5 2
+10 @Look 0 1.5 2
+
+0 @Look.w 0 0 0
+0.4 @Look.w 0 0 0
+1.6 @Look.w 0.8 0 0
+8 @Look.w 0.8 0 0
+9.6 @Look.w 0 0 0
+10 @Look.w 0 0 0
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot.p 0.15 0 1
+
+0 @RightHand 0.24 0.95 0.06
+0.4 @RightHand 0.24 0.95 0.06
+2 @RightHand 0.14 0.88 0.34
+2.7 @RightHand 0.18 0.84 0.35
+3.4 @RightHand 0.1 0.87 0.32
+4.1 @RightHand 0.16 0.82 0.37
+4.9 @RightHand 0.12 0.88 0.33
+5.6 @RightHand 0.2 0.85 0.34
+6.4 @RightHand 0.1 0.83 0.36
+7.2 @RightHand 0.15 0.87 0.33
+8 @RightHand 0.14 0.88 0.34
+9.6 @RightHand 0.24 0.95 0.06
+10 @RightHand 0.24 0.95 0.06
+
+0 @LeftHand -0.24 0.95 0.06
+0.5 @LeftHand -0.24 0.95 0.06
+2 @LeftHand -0.14 0.88 0.34
+2.4 @LeftHand -0.1 0.86 0.36
+3.1 @LeftHand -0.17 0.83 0.33
+3.9 @LeftHand -0.11 0.87 0.37
+4.6 @LeftHand -0.16 0.82 0.35
+5.3 @LeftHand -0.09 0.86 0.36
+6.1 @LeftHand -0.17 0.87 0.32
+6.9 @LeftHand -0.12 0.83 0.35
+7.6 @LeftHand -0.15 0.86 0.35
+8 @LeftHand -0.14 0.88 0.34
+9.6 @LeftHand -0.24 0.95 0.06
+10 @LeftHand -0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.4 @RightHand.w 0 0 0
+2 @RightHand.w 1 0 0
+8 @RightHand.w 1 0 0
+9.6 @RightHand.w 0 0 0
+10 @RightHand.w 0 0 0
+
+0 @LeftHand.w 0 0 0
+0.5 @LeftHand.w 0 0 0
+2 @LeftHand.w 1 0 0
+8 @LeftHand.w 1 0 0
+9.6 @LeftHand.w 0 0 0
+10 @LeftHand.w 0 0 0
+
+0 @RightHand.p 0.7 -0.5 -0.2
+
+0 @LeftHand.p -0.7 -0.5 -0.2
+
+0 @RightHand.n 0 -1 0.2
+2 @RightHand.n -0.35 -1 0.2
+3 @RightHand.n 0.15 -0.85 0.1
+3.6 @RightHand.n -0.35 -1 0.2
+5.2 @RightHand.n -0.75 -0.9 0.2
+5.9 @RightHand.n -0.35 -1 0.2
+7 @RightHand.n 0.05 -0.9 0.1
+8 @RightHand.n -0.35 -1 0.2
+10 @RightHand.n 0 -1 0.2
+
+0 @LeftHand.n 0 -1 0.2
+2 @LeftHand.n 0.35 -1 0.2
+2.6 @LeftHand.n -0.15 -0.85 0.1
+3.3 @LeftHand.n 0.35 -1 0.2
+4.4 @LeftHand.n 0.75 -0.9 0.2
+5 @LeftHand.n 0.35 -1 0.2
+6.5 @LeftHand.n -0.05 -0.9 0.1
+7.3 @LeftHand.n 0.35 -1 0.2
+8 @LeftHand.n 0.35 -1 0.2
+10 @LeftHand.n 0 -1 0.2
+
+0 @RightHand.f 0 -0.5 1
+
+0 @LeftHand.f 0 -0.5 1
+
+0 RightHandIndex1 0 0 0
+2 RightHandIndex1 5.5 0 0
+2.7 RightHandIndex1 22 0 0
+3.2 RightHandIndex1 5.5 0 0
+4.1 RightHandIndex1 24.8 0 0
+4.7 RightHandIndex1 6.6 0 0
+5.6 RightHandIndex1 20.9 0 0
+6.2 RightHandIndex1 5.5 0 0
+7.2 RightHandIndex1 23.1 0 0
+8 RightHandIndex1 5.5 0 0
+9.6 RightHandIndex1 0 0 0
+10 RightHandIndex1 0 0 0
+
+0 RightHandIndex2 0 0 0
+2 RightHandIndex2 4.4 0 0
+2.7 RightHandIndex2 17.6 0 0
+3.2 RightHandIndex2 4.4 0 0
+4.1 RightHandIndex2 19.8 0 0
+4.7 RightHandIndex2 5.3 0 0
+5.6 RightHandIndex2 16.7 0 0
+6.2 RightHandIndex2 4.4 0 0
+7.2 RightHandIndex2 18.5 0 0
+8 RightHandIndex2 4.4 0 0
+9.6 RightHandIndex2 0 0 0
+10 RightHandIndex2 0 0 0
+
+0 RightHandMiddle1 0 0 0
+2 RightHandMiddle1 5.5 0 0
+2.7 RightHandMiddle1 22 0 0
+3.2 RightHandMiddle1 5.5 0 0
+4.1 RightHandMiddle1 24.8 0 0
+4.7 RightHandMiddle1 6.6 0 0
+5.6 RightHandMiddle1 20.9 0 0
+6.2 RightHandMiddle1 5.5 0 0
+7.2 RightHandMiddle1 23.1 0 0
+8 RightHandMiddle1 5.5 0 0
+9.6 RightHandMiddle1 0 0 0
+10 RightHandMiddle1 0 0 0
+
+0 RightHandMiddle2 0 0 0
+2 RightHandMiddle2 4.4 0 0
+2.7 RightHandMiddle2 17.6 0 0
+3.2 RightHandMiddle2 4.4 0 0
+4.1 RightHandMiddle2 19.8 0 0
+4.7 RightHandMiddle2 5.3 0 0
+5.6 RightHandMiddle2 16.7 0 0
+6.2 RightHandMiddle2 4.4 0 0
+7.2 RightHandMiddle2 18.5 0 0
+8 RightHandMiddle2 4.4 0 0
+9.6 RightHandMiddle2 0 0 0
+10 RightHandMiddle2 0 0 0
+
+0 RightHandRing1 0 0 0
+2 RightHandRing1 5.5 0 0
+2.7 RightHandRing1 22 0 0
+3.2 RightHandRing1 5.5 0 0
+4.1 RightHandRing1 24.8 0 0
+4.7 RightHandRing1 6.6 0 0
+5.6 RightHandRing1 20.9 0 0
+6.2 RightHandRing1 5.5 0 0
+7.2 RightHandRing1 23.1 0 0
+8 RightHandRing1 5.5 0 0
+9.6 RightHandRing1 0 0 0
+10 RightHandRing1 0 0 0
+
+0 RightHandRing2 0 0 0
+2 RightHandRing2 4.4 0 0
+2.7 RightHandRing2 17.6 0 0
+3.2 RightHandRing2 4.4 0 0
+4.1 RightHandRing2 19.8 0 0
+4.7 RightHandRing2 5.3 0 0
+5.6 RightHandRing2 16.7 0 0
+6.2 RightHandRing2 4.4 0 0
+7.2 RightHandRing2 18.5 0 0
+8 RightHandRing2 4.4 0 0
+9.6 RightHandRing2 0 0 0
+10 RightHandRing2 0 0 0
+
+0 LeftHandIndex1 0 0 0
+2 LeftHandIndex1 5.5 0 0
+2.4 LeftHandIndex1 19.3 0 0
+3 LeftHandIndex1 5.5 0 0
+3.9 LeftHandIndex1 23.1 0 0
+4.5 LeftHandIndex1 6.6 0 0
+5.3 LeftHandIndex1 22 0 0
+5.9 LeftHandIndex1 5.5 0 0
+6.9 LeftHandIndex1 19.8 0 0
+7.6 LeftHandIndex1 6.6 0 0
+8 LeftHandIndex1 5.5 0 0
+9.6 LeftHandIndex1 0 0 0
+10 LeftHandIndex1 0 0 0
+
+0 LeftHandIndex2 0 0 0
+2 LeftHandIndex2 4.4 0 0
+2.4 LeftHandIndex2 15.4 0 0
+3 LeftHandIndex2 4.4 0 0
+3.9 LeftHandIndex2 18.5 0 0
+4.5 LeftHandIndex2 5.3 0 0
+5.3 LeftHandIndex2 17.6 0 0
+5.9 LeftHandIndex2 4.4 0 0
+6.9 LeftHandIndex2 15.8 0 0
+7.6 LeftHandIndex2 5.3 0 0
+8 LeftHandIndex2 4.4 0 0
+9.6 LeftHandIndex2 0 0 0
+10 LeftHandIndex2 0 0 0
+
+0 LeftHandMiddle1 0 0 0
+2 LeftHandMiddle1 5.5 0 0
+2.4 LeftHandMiddle1 19.3 0 0
+3 LeftHandMiddle1 5.5 0 0
+3.9 LeftHandMiddle1 23.1 0 0
+4.5 LeftHandMiddle1 6.6 0 0
+5.3 LeftHandMiddle1 22 0 0
+5.9 LeftHandMiddle1 5.5 0 0
+6.9 LeftHandMiddle1 19.8 0 0
+7.6 LeftHandMiddle1 6.6 0 0
+8 LeftHandMiddle1 5.5 0 0
+9.6 LeftHandMiddle1 0 0 0
+10 LeftHandMiddle1 0 0 0
+
+0 LeftHandMiddle2 0 0 0
+2 LeftHandMiddle2 4.4 0 0
+2.4 LeftHandMiddle2 15.4 0 0
+3 LeftHandMiddle2 4.4 0 0
+3.9 LeftHandMiddle2 18.5 0 0
+4.5 LeftHandMiddle2 5.3 0 0
+5.3 LeftHandMiddle2 17.6 0 0
+5.9 LeftHandMiddle2 4.4 0 0
+6.9 LeftHandMiddle2 15.8 0 0
+7.6 LeftHandMiddle2 5.3 0 0
+8 LeftHandMiddle2 4.4 0 0
+9.6 LeftHandMiddle2 0 0 0
+10 LeftHandMiddle2 0 0 0
+
+0 LeftHandRing1 0 0 0
+2 LeftHandRing1 5.5 0 0
+2.4 LeftHandRing1 19.3 0 0
+3 LeftHandRing1 5.5 0 0
+3.9 LeftHandRing1 23.1 0 0
+4.5 LeftHandRing1 6.6 0 0
+5.3 LeftHandRing1 22 0 0
+5.9 LeftHandRing1 5.5 0 0
+6.9 LeftHandRing1 19.8 0 0
+7.6 LeftHandRing1 6.6 0 0
+8 LeftHandRing1 5.5 0 0
+9.6 LeftHandRing1 0 0 0
+10 LeftHandRing1 0 0 0
+
+0 LeftHandRing2 0 0 0
+2 LeftHandRing2 4.4 0 0
+2.4 LeftHandRing2 15.4 0 0
+3 LeftHandRing2 4.4 0 0
+3.9 LeftHandRing2 18.5 0 0
+4.5 LeftHandRing2 5.3 0 0
+5.3 LeftHandRing2 17.6 0 0
+5.9 LeftHandRing2 4.4 0 0
+6.9 LeftHandRing2 15.8 0 0
+7.6 LeftHandRing2 5.3 0 0
+8 LeftHandRing2 4.4 0 0
+9.6 LeftHandRing2 0 0 0
+10 LeftHandRing2 0 0 0

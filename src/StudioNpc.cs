@@ -6,10 +6,15 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // «Студія» on an NPC (story tests: its body, its gait, its sitting):
+    // «Студія» on an NPC (story tests: its body, its gait, its sitting); its cameras (PlaceBody) are every body's, the player's in a scene check too:
     //   nlook <name> <who> [views]                 — the NPC as it stands now (who: id, tag or near)
     //   nfilm <name> <who> [sec=4] [fps=2] [views] — frames in time, one sheet per view; the report says what it was doing
-    // Views: front (its face), back, side, left, top, three. Framed on its body (the collider), not on where you are.
+    //   nskin <name> <who>                          — its worn pieces' skins: the bones each is bound to, any outside its body or
+    //                                                far from it (a strap stretched to the ground: what it is tied to)
+    // Views: front (its face), back, side, left, top, three; close: hands (over the shoulder), handl, handr, chest and chestside
+    // (its chest, head and both hands, all in the picture, from the front and from its right: folded arms, a letter held), contact (close on
+    // both hands from its right and a little ahead: a palm on a door, what it touches), head, headside, headtop (the head close and what comes to it), fingerr, fingerl (the fingers close), holdr, holdl (a hand from before and below: what it holds a thing with). Framed on its
+    // body (the collider, or the bone it is about), not on where you are.
     internal static partial class Studio
     {
         private static NpcActor NpcFor(string who)
@@ -19,7 +24,8 @@ namespace HuginWhispers
             return who == "near" ? Npcs.Nearest(p.transform.position, 60f) : Npcs.Find(who);
         }
 
-        private static void PlaceNpc(Rig r, NpcActor a)
+        // cameras round any body (a person, the player, the mannequin): one placing for every view, so a scene films the player as the stage films a person
+        private static void PlaceBody(Rig r, Component a)
         {
             Transform v = a.transform;
             CapsuleCollider cap = a.GetComponent<CapsuleCollider>();
@@ -36,6 +42,32 @@ namespace HuginWhispers
                 Vector3 from;
                 string view = r.Views[i];
                 mid = whole; size = sizeWhole; d = size * 2.1f;
+                if (view == "chest" || view == "chestside") // (close, the chest and both arms: what the hands do before the body)
+                {
+                    Humanoid body = a.GetComponent<Humanoid>();
+                    Animator an = body != null ? body.GetComponentInChildren<Animator>() : null;
+                    Transform chest = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, "Spine2") : null;
+                    if (chest != null)
+                    {
+                        Bounds fit = new Bounds(chest.position, Vector3.zero); // (all of it in the picture: a hand reached forward was cut off at the edge of a frame set on the chest)
+                        foreach (string bone in new[] { "Head", "LeftHand", "RightHand", "LeftHandMiddle3", "RightHandMiddle3" }) { Transform t = BodyClips.SkeletonBone(body, an.transform, bone); if (t != null) fit.Encapsulate(t.position); }
+                        mid = fit.center; size = Mathf.Max(0.95f, Mathf.Max(fit.size.y, Vector3.ProjectOnPlane(fit.size, Vector3.up).magnitude) + 0.3f); d = size * 2.1f;
+                    }
+                }
+                if (view == "head" || view == "headside" || view == "headtop") // (close on the head and whatever comes to it: a hand on the brow, an arm over it)
+                {
+                    Humanoid body = a.GetComponent<Humanoid>();
+                    Animator an = body != null ? body.GetComponentInChildren<Animator>() : null;
+                    Transform head = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, "Head") : null;
+                    if (head != null) { mid = head.position + Vector3.up * 0.08f; size = 0.6f; d = size * 2.1f; }
+                }
+                if (view == "contact")
+                {
+                    Humanoid body = a.GetComponent<Humanoid>();
+                    Animator an = body != null ? body.GetComponentInChildren<Animator>() : null;
+                    Transform lh = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, "LeftHand") : null, rh = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, "RightHand") : null;
+                    if (lh != null && rh != null) { mid = (lh.position + rh.position) * 0.5f; size = Mathf.Max(0.6f, Vector3.Distance(lh.position, rh.position) + 0.35f); d = size * 2.1f; }
+                }
                 if (view == "hands" || view == "handl" || view == "handr") // (close, on what the hands hold)
                 {
                     Humanoid body = a.GetComponent<Humanoid>();
@@ -47,8 +79,20 @@ namespace HuginWhispers
                         size = view == "hands" ? 1.1f : 0.5f; d = size * 2.1f;
                     }
                 }
+                if (view == "fingerr" || view == "fingerl" || view == "holdr" || view == "holdl") // (close on the fingers themselves, from before and aside: a hook or a lifted finger shows · hold: the same hand from before and below, its palm's side — what it holds the thing with)
+                {
+                    Humanoid body = a.GetComponent<Humanoid>();
+                    Animator an = body != null ? body.GetComponentInChildren<Animator>() : null;
+                    string side = view == "fingerl" || view == "holdl" ? "Left" : "Right";
+                    Transform i2 = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, side + "HandIndex2") : null, m1 = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, side + "HandMiddle1") : null;
+                    if (i2 != null && m1 != null) { mid = (i2.position + m1.position) * 0.5f; size = 0.22f; d = size * 2.1f; }
+                }
                 switch (view)
                 {
+                    case "fingerr": from = mid + right * d * 0.85f + fwd * d * 0.2f + Vector3.up * d * 0.35f; break; // (from the side, a little ahead: what the hand touches, a post or a door, stands in front of it)
+                    case "fingerl": from = mid - right * d * 0.85f + fwd * d * 0.2f + Vector3.up * d * 0.35f; break;
+                    case "holdr": from = mid + fwd * d * 0.85f + right * d * 0.35f - Vector3.up * d * 0.35f; break; // (before it and below: the palm and the fingers on the thing)
+                    case "holdl": from = mid + fwd * d * 0.85f - right * d * 0.35f - Vector3.up * d * 0.35f; break;
                     case "hands": from = mid - fwd * d * 0.5f + Vector3.up * d * 0.85f; break; // (over the shoulder: as he sees them)
                     case "handl": from = mid - right * d * 0.8f - fwd * d * 0.25f + Vector3.up * d * 0.45f; break;
                     case "handr": from = mid + right * d * 0.8f - fwd * d * 0.25f + Vector3.up * d * 0.45f; break;
@@ -57,6 +101,11 @@ namespace HuginWhispers
                     case "top": from = mid + Vector3.up * d * 1.05f + fwd * size * 0.05f; break;
                     case "three": from = mid + (fwd + right).normalized * d + Vector3.up * size * 0.35f; break;
                     case "side": from = mid + right * d + Vector3.up * size * 0.1f; break;
+                    case "chestside": from = mid + right * d + fwd * d * 0.15f; break;
+                    case "head": from = mid + fwd * d + Vector3.up * size * 0.1f; break;
+                    case "headside": from = mid + right * d + Vector3.up * size * 0.1f; break;
+                    case "headtop": from = mid + Vector3.up * d + fwd * size * 0.2f; break;
+                    case "contact": from = mid + right * d * 0.95f + fwd * d * 0.3f + Vector3.up * size * 0.1f; break;
                     default: from = mid + fwd * d + Vector3.up * size * 0.15f; break; // front
                 }
                 r.Cams[i].farClipPlane = 80f;
@@ -64,10 +113,111 @@ namespace HuginWhispers
                 if (instanced >= 0) r.Cams[i].cullingMask &= ~(1 << instanced);
                 r.Cams[i].nearClipPlane = Mathf.Max(0.1f, Vector3.Distance(from, mid) - size); // (what stands between the camera and the body is not in the picture: a rock, a chest)
                 r.Cams[i].transform.position = from;
-                r.Cams[i].transform.rotation = Quaternion.LookRotation(mid - from, view == "top" ? fwd : Vector3.up);
+                r.Cams[i].transform.rotation = Quaternion.LookRotation(mid - from, view == "top" || view == "headtop" ? fwd : Vector3.up);
             }
             r.Mid = whole;
             r.Lamp.range = sizeWhole * 3.5f;
+        }
+
+        // the stage's check filmed in the same run as it is measured (AnimStage): from each view, one frame at each of the clip's
+        // key moments (its parts' ends, the moments its hands and feet take hold), StageFrame px a frame, one sheet a view;
+        // what each frame is: said, in the check's report
+        internal const int StageFrame = 480;
+        internal static IEnumerator StageFilm(NpcActor a, string name, string views, List<float> times, System.Func<float> clock, System.Func<bool> on, List<string> said, System.Func<string> pose)
+        {
+            int n = Mathf.Min(times.Count, 16);
+            if (n == 0 || a == null) yield break;
+            Rig r = Make(views, StageFrame);
+            int cols, rows;
+            Texture2D[] sheets = HeroSheets(r, n, out cols, out rows);
+            try
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    while (on() && clock() < times[i]) yield return null;
+                    if (!on() || a == null) break;
+                    yield return new WaitForEndOfFrame();
+                    PlaceBody(r, a);
+                    Shoot(r, sheets, i, cols, rows);
+                    said.Add((i + 1) + ": " + clock().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s — " + pose());
+                }
+                HeroSave(name, r, sheets);
+            }
+            finally { HeroFree(sheets, r); }
+        }
+
+        // the moments of a take's mistakes, each held and filmed close (the stage's check, after its run): hold(t) holds the clip there
+        internal static float ProofFirst = 1.2f, ProofNext = 0.35f; // s a held moment settles: the first the clip's way in too
+        internal static IEnumerator StageProof(NpcActor a, string name, string views, List<float> times, System.Action<float> hold, System.Func<string> pose, List<string> said, System.Action done)
+        {
+            int n = times.Count;
+            if (n == 0 || a == null) { done(); yield break; }
+            Rig r = Make(views, StageFrame);
+            int cols, rows;
+            Texture2D[] sheets = HeroSheets(r, n, out cols, out rows);
+            try
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    hold(times[i]);
+                    float until = Time.time + (i == 0 ? ProofFirst : ProofNext);
+                    while (Time.time < until) yield return null;
+                    if (a == null) break;
+                    yield return new WaitForEndOfFrame();
+                    PlaceBody(r, a);
+                    Shoot(r, sheets, i, cols, rows);
+                    said.Add((i + 1) + ": " + times[i].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s — " + pose());
+                }
+                HeroSave(name, r, sheets);
+            }
+            finally { HeroFree(sheets, r); done(); } // (whatever went wrong here, the stage is let go and the report written)
+        }
+
+        // each skin on its body (its own, each worn piece): what is drawn, how big, and the bones it is bound to — any missing,
+        // outside the body, or farther than SkinFar from its hips (a strap tied to something away from it is drawn out to it)
+        internal static float SkinFar = 1.2f;
+        private static IEnumerator NpcSkin(string name, string who)
+        {
+            NpcActor a = NpcFor(who);
+            if (a == null) { Note(name, "no NPC «" + who + "» (raven npc list)"); yield break; }
+            Humanoid h = a.GetComponent<Humanoid>();
+            Animator an = h != null ? h.GetComponentInChildren<Animator>() : null;
+            Transform hips = h != null && an != null ? BodyClips.SkeletonBone(h, an.transform, "Hips") : null;
+            Vector3 mid = hips != null ? hips.position : a.transform.position + Vector3.up;
+            StringBuilder sb = new StringBuilder();
+            System.Globalization.CultureInfo ci = System.Globalization.CultureInfo.InvariantCulture;
+            foreach (SkinnedMeshRenderer smr in a.GetComponentsInChildren<SkinnedMeshRenderer>(true)) // heavy: once, asked by the author
+            {
+                Transform[] bones = smr.bones;
+                int missing = 0, outside = 0, far = 0, built = 0;
+                StringBuilder odd = new StringBuilder();
+                if (bones != null)
+                    foreach (Transform b in bones)
+                    {
+                        if (b == null) { missing++; continue; }
+                        if (b.name == BodyBuild.ProxyName) built++;
+                        bool inBody = b.IsChildOf(a.transform);
+                        float d = Vector3.Distance(b.position, mid);
+                        if (!inBody) outside++;
+                        if (d > SkinFar) far++;
+                        if ((!inBody || d > SkinFar) && odd.Length < 600) odd.Append("\n      ").Append(BonePath(b)).Append(" — ").Append(d.ToString("0.00", ci)).Append(" m from the hips").Append(inBody ? "" : ", OUTSIDE the body");
+                    }
+                Bounds bb = smr.bounds;
+                sb.Append('\n').Append(smr.name).Append(" [").Append(smr.sharedMesh != null ? smr.sharedMesh.name : "no mesh").Append("] ")
+                  .Append(smr.enabled && smr.gameObject.activeInHierarchy ? "drawn" : "hidden")
+                  .Append(", size ").Append(bb.size.x.ToString("0.00", ci)).Append('×').Append(bb.size.y.ToString("0.00", ci)).Append('×').Append(bb.size.z.ToString("0.00", ci)).Append(" m")
+                  .Append(", root ").Append(smr.rootBone != null ? smr.rootBone.name : "none")
+                  .Append(", bones ").Append(bones != null ? bones.Length : 0).Append(" (build children ").Append(built).Append(", missing ").Append(missing).Append(", outside ").Append(outside).Append(", far ").Append(far).Append(')')
+                  .Append(odd);
+            }
+            Note(name, sb.Length > 0 ? sb.ToString() : "no skins");
+        }
+
+        private static string BonePath(Transform t)
+        {
+            string s = t.name;
+            for (Transform p = t.parent; p != null && s.Length < 160; p = p.parent) s = p.name + "/" + s;
+            return s;
         }
 
         private static IEnumerator NpcLook(string name, string who, string views)
@@ -79,7 +229,7 @@ namespace HuginWhispers
             try
             {
                 yield return new WaitForEndOfFrame();
-                PlaceNpc(r, a);
+                PlaceBody(r, a);
                 Shoot(r, new[] { sheet }, 0, r.Cams.Count, 1);
                 Save(name, sheet);
             }
@@ -102,7 +252,7 @@ namespace HuginWhispers
                 {
                     yield return new WaitForEndOfFrame();
                     if (a == null) { rep.Append("\n").Append(i).Append(": gone"); break; }
-                    PlaceNpc(r, a);
+                    PlaceBody(r, a);
                     Shoot(r, sheets, i, cols, rows);
                     rep.Append("\n").Append(i).Append(": ").Append(a.Describe(Player.m_localPlayer));
                     yield return new WaitForSeconds(1f / Mathf.Max(0.2f, fps));
@@ -127,7 +277,7 @@ namespace HuginWhispers
             CapsuleCollider cap = a.GetComponent<CapsuleCollider>();
             Player me = Player.m_localPlayer;
             CapsuleCollider mine = me != null ? me.GetComponent<CapsuleCollider>() : null;
-            sb.Append("body: scale ").Append(a.transform.lossyScale.y.ToString("0.###", ci));
+            sb.Append("body: scale ").Append(a.transform.lossyScale.y.ToString("0.###", ci)).Append(" · ").Append(BodyBuild.Report(a));
             if (cap != null) sb.Append(", capsule h ").Append(cap.height.ToString("0.###", ci)).Append(" r ").Append(cap.radius.ToString("0.###", ci)).Append(" centre y ").Append(cap.center.y.ToString("0.###", ci));
             if (mine != null) sb.Append(" | yours: scale ").Append(me.transform.lossyScale.y.ToString("0.###", ci)).Append(", capsule h ").Append(mine.height.ToString("0.###", ci)).Append(" r ").Append(mine.radius.ToString("0.###", ci)).Append(" centre y ").Append(mine.center.y.ToString("0.###", ci));
             // who made it bigger: its own scale, a parent, the scale kept in its net data, its parts

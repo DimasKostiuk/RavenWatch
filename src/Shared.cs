@@ -197,7 +197,7 @@ namespace HuginWhispers
             if (me != null && Vector3.Distance(me.transform.position, g.Pos) <= ShowRange) ToChat(g, topic, text);
             if (g.Go == null) return;
             string body = string.IsNullOrEmpty(topic) ? text : string.IsNullOrEmpty(text) ? topic : "<color=orange>" + topic + "</color>\n" + text;
-            Chat.instance.SetNpcText(g.Go, Vector3.up * TextOffset(g), 20f, 20f, Label(g), body, true);
+            Chat.instance.SetNpcText(g.Go, Vector3.up * TextOffset(g), 20f, RavenSpeech.Hold(20f), Label(g), body, true);
             if (g.Anim != null) g.Anim.SetTrigger("talk");
         }
 
@@ -242,7 +242,7 @@ namespace HuginWhispers
                 if (g.DieAt < 0f && !g.Talked && Time.time >= g.NextChatter && Chat.instance != null && !string.IsNullOrEmpty(g.Title))
                 {
                     g.NextChatter = Time.time + ChatterSeconds;
-                    Chat.instance.SetNpcText(g.Go, Vector3.up * TextOffset(g), 20f, 6f, Label(g), g.Title, false);
+                    Chat.instance.SetNpcText(g.Go, Vector3.up * TextOffset(g), 20f, RavenSpeech.Hold(6f), Label(g), g.Title, false);
                 }
             }
         }

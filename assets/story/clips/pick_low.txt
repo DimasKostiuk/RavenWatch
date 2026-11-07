@@ -1,0 +1,118 @@
+clip pick_low
+length 3.5
+loop 0
+pivot 1.1
+curve ease
+vary 0.2
+fade 0.7 0.7
+mode Spine1 body
+mode Spine2 body
+mark 1.6 got
+touch point 0.26 0.74 0.41
+say нахилитись і підняти: людина нахиляється до землі, бере ягоду, гриб чи річ, що лежить, підносить, глянути, і випрямляється
+want 1.4-1.7 lean forward 25
+want 1.4-1.7 hand right near 0.26 0.74 0.41 0.1
+
+# нахиляється й присідає, права рука до землі, бере, підносить до грудей і на мить дивиться, тоді рука вниз і випрямляється
+
+0 @LeftFoot -0.1 0.11 0.28
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot 0.04 0.08 -0.28
+
+0 @RightFoot.p 0.15 0 1
+
+0 move 0 0 0
+0.3 move 0 0 0
+0.8 move 0.02 -0.06 0
+1.4 move 0.04 -0.18 0
+1.7 move 0.04 -0.18 0
+2.4 move 0 -0.02 0
+3.3 move 0 0 0
+3.5 move 0 0 0
+
+0 Spine1 0 0 0
+0.3 Spine1 0 0 0
+1.4 Spine1 32 5 0
+1.7 Spine1 31 4 0
+2.4 Spine1 8 0 0
+3.3 Spine1 0 0 0
+3.5 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.3 Spine2 0 0 0
+1.4 Spine2 8 4 0
+1.7 Spine2 8 3 0
+2.4 Spine2 6 0 0
+3.3 Spine2 0 0 0
+3.5 Spine2 0 0 0
+
+0 @RightHand 0.24 0.95 0.06
+0.3 @RightHand 0.24 0.95 0.06
+0.789 @RightHand 0.32 0.85 0.2
+1.4 @RightHand 0.26 0.74 0.41
+1.7 @RightHand 0.26 0.76 0.4
+2.4 @RightHand 0.14 1.08 0.3
+2.7 @RightHand 0.14 1.1 0.3
+3.3 @RightHand 0.24 0.95 0.06
+3.5 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+1.156 @RightHand.w 1 0 0
+2.7 @RightHand.w 1 0 0
+3.4 @RightHand.w 0 0 0
+3.5 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.7 -0.7 0
+
+0 @RightHand.f 0 -0.6 0.8
+2.4 @RightHand.f -0.6 0.3 0.74
+
+0 @RightHand.n 0 -0.8 -0.6
+2.4 @RightHand.n -0.2 -0.95 0.22
+
+0 @LeftHand -0.24 0.95 0.06
+0.3 @LeftHand -0.24 0.95 0.06
+1.4 @LeftHand -0.2 0.64 0.24
+1.7 @LeftHand -0.2 0.64 0.24
+2.6 @LeftHand -0.24 0.95 0.06
+3.5 @LeftHand -0.24 0.95 0.06
+
+0 @LeftHand.w 0 0 0
+0.3 @LeftHand.w 0 0 0
+1.278 @LeftHand.w 0.8 0 0
+1.3 @LeftHand.w 0.85 0 0
+1.8 @LeftHand.w 0.85 0 0
+2.6 @LeftHand.w 0 0 0
+3.5 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -1 -0.2 -0.2
+
+0 @Look 0 1.4 2
+0.6 @Look 0.27 0.62 0.7
+0.667 @Look 0.25 0.35 0.45
+1.6 @Look 0.27 0.62 0.7
+1.8 @Look 0.25 0.35 0.45
+2.4 @Look 0.14 1.08 0.3
+2.7 @Look 0.14 1.08 0.3
+
+0 @Look.w 0 0 0
+0.9 @Look.w 0.6 0 0
+1.033 @Look.w 0.45 0 0
+2.7 @Look.w 0.45 0 0
+3.3 @Look.w 0 0 0
+3.5 @Look.w 0 0 0
+
+0 body 0 0 0
+0.3 body 0 0 0
+1.4 body 16 0 0
+1.7 body 16 0 0
+2.4 body 3 0 0
+3.3 body 0 0 0
+3.5 body 0 0 0
+
+0 @LeftHand.f 0.15 -0.4 0.9
+
+0 @LeftHand.n 0 -0.91 -0.4

@@ -88,7 +88,7 @@ namespace HuginWhispers
             h.m_randomSets = new Humanoid.ItemSet[0];
             h.m_randomItems = new Humanoid.RandomItem[0];
             NpcMind mind = go.AddComponent<NpcMind>();
-            mind.m_pathAgentType = NpcKit.Walker;
+            mind.m_pathAgentType = Pathfinding.AgentType.HumanoidNoSwim; // (the game's own BaseAI asks with this; our feet ask as their own kind: NpcKit.Walker, made when a world loads)
             mind.m_viewRange = 30f;
             mind.m_viewAngle = 140f;
             mind.m_hearRange = 15f;
@@ -121,7 +121,14 @@ namespace HuginWhispers
             go.AddComponent<NpcToil>(); // (tiredness, mood, pay, its craft)
             go.AddComponent<NpcRescueSite>(); // (a person in need: its scene where it is owned)
             ZNetView nv = go.GetComponent<ZNetView>();
-            if (nv != null) nv.m_persistent = true; // (the world's people stay; a scene's own are taken away by their scene)
+            if (nv != null)
+            {
+                nv.m_persistent = true; // (the world's people stay; a scene's own are taken away by their scene)
+                nv.m_type = ZDO.ObjectType.Default; // (the Player prefab's is Prioritized, measured: ZDOMan.ServerSendCompare sends such a ZDO of another owner before everything else, however long the rest has waited, so walking people kept a base from a second player)
+            }
+            // the player's animator runs in the physics step, and about one frame in six has no step at 58 frames a second: its bones are not put back, and our layers (clips, gait) lay themselves over their own last result: the head 9-17 cm off for a frame and back, measured (JoltWatch). A person always has layers on it: its animator every frame
+            Animator bones = go.GetComponentInChildren<Animator>(true);
+            if (bones != null) bones.updateMode = AnimatorUpdateMode.Normal;
             int character = LayerMask.NameToLayer("character");
             if (go.layer != character && go.layer != LayerMask.NameToLayer("character_net")) go.layer = character;
             StringBuilder sb = new StringBuilder();
@@ -215,7 +222,7 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             foreach (NpcActor a in NpcActor.Live)
             {
-                if (a == null || (a.Id != idOrTag && a.Tag != idOrTag)) continue;
+                if (a == null || (a.Id != idOrTag && a.Tag != idOrTag && !string.Equals(a.Name, idOrTag, System.StringComparison.OrdinalIgnoreCase))) continue; // (its template, its tag in a scene, or its own name: «Кнуд»)
                 float d = p != null ? Vector3.Distance(a.transform.position, p.transform.position) : 0f;
                 if (d < bd) { bd = d; best = a; }
             }
@@ -260,6 +267,7 @@ namespace HuginWhispers
                 case "rescue": return NpcRescue.Test(p.transform.position, a.Length > 2 ? a[2] : "");
                 case "net":
                 {
+                    if (who != null) { string d = NetSize.Dump(who.Zdo, who.Id) + "\n" + NetSize.Dump(NpcLocker.Of(who, false), "шафка"); Log("[npc net]\n" + d); return d; } // (one person, every key: what to move off it)
                     System.Text.StringBuilder sb = new System.Text.StringBuilder("Вага NPC у мережі (одне надсилання; поки рухається — до 20 разів на секунду кожному гравцю поруч):\n");
                     int sum = 0;
                     foreach (NpcActor n in NpcActor.Live)
@@ -267,15 +275,18 @@ namespace HuginWhispers
                         if (n == null || n.Zdo == null) continue;
                         string big; int b = NetSize.Weigh(n.Zdo, out big);
                         sum += b;
-                        sb.Append("  ").Append(n.Id).Append(": ").Append(b).Append(" Б (").Append(NetSize.PerSecond(b).ToString("0.0")).Append(" КБ/с у русі)").Append(big.Length > 0 ? "  — " + big : "").Append("\n");
+                        sb.Append("  ").Append(n.Id).Append(" [").Append(n.Zdo.Type).Append("]: ").Append(b).Append(" Б (").Append(NetSize.PerSecond(b).ToString("0.0")).Append(" КБ/с у русі)").Append(big.Length > 0 ? "  — " + big : "").Append("\n");
                     }
                     sb.Append("Разом: ").Append(sum).Append(" Б, до ").Append(NetSize.PerSecond(sum).ToString("0.0")).Append(" КБ/с, якщо всі рухаються.");
                     Log("[npc net]\n" + sb);
                     return sb.ToString();
                 }
+                case "self": return NpcSelf.Check(); // (who each one is, against the last run: the same after a restart?)
                 case "reload": NpcDefs.Reload(); NpcTalk.Reload(); NpcChatter.Reload(); NpcPhrases.Reload(); return "Перечитано: " + NpcDefs.All().Count + ".";
                 case "walk": return NpcWalk.Command(p, a); // (its feet, for everyone: NpcWalk)
+                case "stress": return NpcStress.Cmd(p, a); // (the author's load test: NpcStress)
                 case "perf": return NpcPerf.Command(a); // (what the people cost: NpcPerf)
+                case "tune": return a.Length > 2 ? Studio.Field(a[2], a.Length > 3 ? a[3] : null) : "raven npc tune Клас.Поле [значення] — число на цій грі до перезапуску (тест без нової збірки)"; // (the author's live numbers: Studio.Field)
                 case "removeall": int gone = 0; foreach (NpcActor x in NpcActor.Live.ToArray()) if (x != null) { x.Remove(); gone++; } return "Прибрано: " + gone + ".";
             }
             if (what.Length > 0 && who == null) return "Нема такого NPC поруч (raven npc list).";
@@ -285,10 +296,10 @@ namespace HuginWhispers
             {
                 case "go": who.Order("go " + V(aim) + (a.Length > 3 && a[3] == "run" ? " run" : "")); return "Іде туди, куди ти дивишся.";
                 case "come": who.Order("go " + V(p.transform.position) + " run"); return "Іде до тебе.";
-                case "follow": who.Order("follow " + p.GetZDOID().UserID + ":" + p.GetZDOID().ID + " 3"); return "Іде за тобою.";
+                case "follow": who.Order("follow " + NpcKit.Ref(p.GetZDOID()) + " 3"); return "Іде за тобою.";
                 case "stay": who.Order("stay"); return "Стоїть.";
                 case "free": who.Order("free"); return "Відпущено: повертається до своїх справ.";
-                case "look": who.Order("look " + p.GetZDOID().UserID + ":" + p.GetZDOID().ID); return "Дивиться на тебе.";
+                case "look": who.Order("look " + NpcKit.Ref(p.GetZDOID())); return "Дивиться на тебе.";
                 case "tp": who.Order("tp " + V(aim)); return "Переставлено.";
                 case "say": who.Say(a.Length > 3 ? string.Join(" ", a, 3, a.Length - 3) : "…"); return "Сказав.";
                 case "clip": if (a.Length < 4) return "raven npc clip <хто> <кліп>|none [секунд]"; who.Order("clip " + a[3] + (a.Length > 4 ? " " + a[4] : "")); return "Кліп: " + a[3];

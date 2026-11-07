@@ -33,11 +33,17 @@ namespace HuginWhispers
             NpcHunger h = a != null ? a.Hunger : null;
             if (h != null && h._read && a.Owned) return h._full;
             ZDO z = a != null ? a.Zdo : null;
-            return z != null ? z.GetFloat(KFull, 100f) : 100f;
+            return z != null ? NpcLocker.Num(z, KFull, 100f) : 100f;
         }
-        internal static bool IsHungry(NpcActor a) { return NpcResident.Is(a) && Full(a) < Hungry; }
-        internal static bool IsStarving(NpcActor a) { return NpcResident.Is(a) && Full(a) < Starving; }
+        internal static bool IsHungry(NpcActor a) { return NpcResident.Is(a) && a.Def.Settler && Full(a) < Hungry; }
+        internal static bool IsStarving(NpcActor a) { return NpcResident.Is(a) && a.Def.Settler && Full(a) < Starving; }
         internal static float Slow(NpcActor a) { return IsHungry(a) ? 1.4f : 1f; } // × its work step
+
+        // how much of its fullness a game day takes, as its day usually goes (the board's forecast, NpcMeals.Supply): twelve hours at its work's load, four about, eight asleep
+        internal static float NeedPerDay(NpcActor a) { return PerDay * (12f * NpcToil.WorkLoad(a) + 4f + 8f * AsleepSlower) / 24f; }
+
+        // its hunger in a word and how bad (its card, the board): tone 0 fine · 2 hungry · 3 starving
+        internal static int Tone(NpcActor a) { float f = Full(a); return f < Starving ? 3 : f < Hungry ? 2 : 0; }
         internal static string Word(NpcActor a)
         {
             float f = Full(a);
@@ -50,10 +56,10 @@ namespace HuginWhispers
             if (_a == null || !_a.Owned) { _read = false; return; }
             ZDO z = _a.Zdo;
             if (z == null) return;
-            if (!_read) { _read = true; _full = _kept = z.GetFloat(KFull, 100f); _starved = _keptStarved = z.GetFloat(KStarved, 0f); _last = Time.time; return; } // (taken over: from what was kept)
+            if (!_read) { if (!NpcLocker.Ready(_a)) return; _read = true; _full = _kept = NpcLocker.Num(z, KFull, 100f); _starved = _keptStarved = NpcLocker.Num(z, KStarved, 0f); _last = Time.time; return; } // (taken over: from what was kept)
             if (Time.time - _last < 1f) return;
             float dt = Time.time - _last; _last = Time.time;
-            if (!NpcResident.Is(_a)) return;
+            if (!NpcResident.Is(_a) || !_a.Def.Settler) return; // (a person of the story has no pantry to go to: it does not hunger)
             bool asleep = _a.Mind != null && _a.Mind.Asleep;
             bool fed = _full >= Starving;
             _full = Mathf.Max(0f, _full - PerDay / DayLength * dt * (asleep ? AsleepSlower : 1f) * NpcToil.HungerLoad(_a)); // (work makes it hungry: NpcToil)
@@ -73,8 +79,8 @@ namespace HuginWhispers
             ZDO z = _a.Zdo;
             if (z == null) return;
             _nextKeep = Time.time + KeepEvery; _kept = _full; _keptStarved = _starved;
-            z.Set(KFull, _full);
-            z.Set(KStarved, _starved);
+            NpcLocker.Put(z, KFull, _full);
+            NpcLocker.Put(z, KStarved, _starved);
         }
 
         // a meal: filled by what it ate (NpcMeals)
@@ -96,13 +102,13 @@ namespace HuginWhispers
         // starved too long: it goes (it was not fed — the user: no deaths but the story's)
         private void Leave()
         {
-            NpcChatter.Mutter(_a, "leave");
+            NpcChatter.Mutter(_a, "leave", NpcActor.Voice.Event);
             Npcs.Log(_a.Id + ": starved too long — leaves the base");
             StoryBus.Raise("npc_left_hungry", _a.Id, 0, transform.position);
             _full = 60f; _starved = 0f; Keep(); // (taken in again some day: not at once at its end)
             _a.Act("unhire"); // (unsettled too)
-            Vector3 hall = NpcTravel.Hall;
-            _a.Order("travel " + Npcs.V(hall) + " " + NpcTravel.ToHall); // (to the ravens' home: hired again from there)
+            Vector3 hall = NpcTravel.Refuge;
+            _a.Order("travel " + Npcs.V(hall) + " " + NpcTravel.ToRefuge); // (to the ravens' home: hired again from there)
         }
     }
 }

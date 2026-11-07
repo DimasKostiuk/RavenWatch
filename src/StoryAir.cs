@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // The scene's air (StoryScenes): weather, bolts, Thor, a shake, music. Each is local to a game (EnvMan, the camera,
-    // the music are each player's own); «all» sends it to every game (RPC), and each plays it round its own player —
+    // The scene's air (StoryScenes): weather, bolts, Thor, a shake (what is heard: StoryAudio). Each is local to a game (EnvMan,
+    // the camera are each player's own); «all» sends it to every game (RPC), and each plays it round its own player —
     // the prologue's storm is seen by the whole world (story-lore.md «Пролог»).
     //   weather <env> [s] · weather off        a forced weather (the game's: ThunderStorm, Rain, Misty, Clear …) for s seconds
     //   bolt <x y z> [n] [spread]              bolts from the sky there (our jagged bolt + the obliterator's crack)
@@ -15,7 +15,6 @@ namespace HuginWhispers
     //   bolt ahead [n]                         n bolts before the player's eyes (where the camera looks), 30–60 m off
     //   thor                                   Thor flies over the sky (the game's own ThorFly)
     //   shake <strength> <s>                   the camera shakes
-    //   music <name> · music off               the game's music by name
     internal static class StoryAir
     {
         private const string Rpc = "RavenWatch_StoryAir";
@@ -70,10 +69,6 @@ namespace HuginWhispers
                 case "thor": if (Time.time - _thorAt < 3f) return; _thorAt = Time.time; Thor(p); break; // (one at a time across the sky)
                 case "shake":
                     if (GameCamera.instance != null && p != null) GameCamera.instance.AddShake(p.transform.position, 50f, w.Length > 1 ? F(w[1], 0.5f) : 0.5f, false);
-                    break;
-                case "music":
-                    if (MusicMan.instance == null || w.Length < 2) return;
-                    MusicMan.instance.TriggerMusic(w[1] == "off" ? "" : w[1]);
                     break;
             }
         }
@@ -131,10 +126,11 @@ namespace HuginWhispers
         // Thor across the sky: the game's own flier (found once among the loaded things), high over the player, side to side
         private static ThorFly _thor;
         private static float _thorAt = -100f;
+        private static bool _thorSought;
         private static void Thor(Player p)
         {
             if (p == null) return;
-            if (_thor == null) foreach (ThorFly t in Resources.FindObjectsOfTypeAll<ThorFly>()) { _thor = t; break; }
+            if (_thor == null && !_thorSought) { _thorSought = true; foreach (ThorFly t in Resources.FindObjectsOfTypeAll<ThorFly>()) { _thor = t; break; } } // heavy: once a session, at the first «thor»
             if (_thor == null) { Story.Log("air: no Thor among the game's things"); return; }
             // across the sky before the eyes: from one side to the other, far ahead and high
             Vector3 look = Look(), side = Vector3.Cross(Vector3.up, look) * (Random.value < 0.5f ? 1f : -1f);

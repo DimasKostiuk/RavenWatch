@@ -639,9 +639,13 @@ namespace HuginWhispers
     {
         private static bool Prefix(Character __instance)
         {
-            if (!OdinWings.Flying() || __instance != Player.m_localPlayer) return true;
-            if (OdinWings.OnGround()) return !OdinWings.Leap((Player)__instance); // on your feet: up again instead of the game's jump
-            return false; // in the air Space is "up"
+            try
+            {
+                if (!OdinWings.Flying() || __instance != Player.m_localPlayer) return true;
+                if (OdinWings.OnGround()) return !OdinWings.Leap((Player)__instance); // on your feet: up again instead of the game's jump
+                return false; // in the air Space is "up"
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("WingsJumpPatch", pgx); return true; }
         }
     }
 
@@ -667,10 +671,14 @@ namespace HuginWhispers
     {
         private static bool Prefix(Humanoid __instance, ref bool __result)
         {
-            if (!OdinWings.InAir() || __instance != Player.m_localPlayer) return true;
-            if (Twists.Two("hflight") && Shoots(__instance.GetCurrentWeapon())) return true;
-            __result = false;
-            return false;
+            try
+            {
+                if (!OdinWings.InAir() || __instance != Player.m_localPlayer) return true;
+                if (Twists.Two("hflight") && Shoots(__instance.GetCurrentWeapon())) return true;
+                __result = false;
+                return false;
+            }
+            catch (System.Exception pgx) { PatchGuard.Fail("WingsAttackPatch", pgx); return true; }
         }
 
         internal static bool Shoots(ItemDrop.ItemData w)

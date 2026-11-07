@@ -25,7 +25,7 @@ namespace HuginWhispers
             GUILayout.EndScrollView();
             if (GUILayout.Button("+ Нове креслення")) { _saveName = ""; _confirmSave = ""; Note = "Нове креслення: впиши назву в кроці 1 (латиницею), стань у центр будівлі, подивись на вхід і натисни «Зберегти»."; }
             if (GUILayout.Button("Оновити список")) Refresh();
-            if (GUILayout.Button("Локації сюжету: стани, шари, нова локація… (F10)")) Note = HallPanel.Toggle();
+            if (GUILayout.Button("Локації сюжету: стани, шари, нова локація… (F10)")) Note = LocPanel.Toggle();
             GUILayout.Space(10);
             GUILayout.Label("Як це працює", _head);
             GUILayout.Label("1. Будуєш у грі (devcommands, nocost).\n2. Зберігаєш: усе в колі стає кресленням — лише форма, без вмісту скринь.\n3. Обираєш креслення зліва → привид → зсуваєш → ставиш.\n4. Місця (мітки) в колі зберігаються разом із будівлею й переїжджають з нею.", _hint);

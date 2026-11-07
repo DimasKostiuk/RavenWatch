@@ -27,6 +27,15 @@ namespace HuginWhispers
     //             the hand or foot keeps the turn the clip gave it), «@Look» a point the head looks at. Each may have
     //             «<name>.w» (x: weight 0..1, keyed, to take hold and let go softly) and, for a limb, «<name>.p» (where
     //             its elbow or knee points). So a foot stays planted however the body sinks («move»).
+    //             The weight moves the point, not the joints: the limb is always solved in full, to a point on the straight
+    //             way from where its end is in the pose under it to the target, its elbow or knee turning from where it
+    //             points there to the pole. Blended joint angles carry the end off in an arc: a foot slid and a knee swung
+    //             at every way in and out. A foot also stands where it stood when the clip took it: what its first key is off
+    //             by (the game's stance is never quite the key's: a slope, a body, the last step of a walk) is carried until
+    //             the clip itself moves that foot, and is lost over the first BodyClips.PlantAway m of that step, in the air.
+    //             Its knee starts from the way it pointed when the clip took it, in the body's frame (so the body's own shifting does
+    //             not carry it across), and goes over to the clip's «.p» softly: over BodyClips.PoleFor s, sooner if the foot steps
+    //             (PoleAway m of the step). Measured: held till the step, it swung 25 cm in half a second as the step began.
     //   Prop    — a thing the clip itself moves (StoryProps, «free»): «@Prop» where it is (body frame, as the targets),
     //             «@Prop.r» how it is turned (degrees in the body's frame), «@Prop.w» (x, 0..1) how far from where it lay
     //             (0: it lies where it was found, wherever that is; 1: where the clip says). «@LeftHand.on», «@RightHand.on»
@@ -34,6 +43,9 @@ namespace HuginWhispers
     //             to that point: the hand stays on the rim however the thing moves. «….on.f» where its fingers go and
     //             «….on.n» where its palm faces (directions in the thing's frame), by the same weight: a real grip, the
     //             same on both hands whatever pose the game had them in.
+    //             With no thing: «@LeftHand.f», «@RightHand.f» where its fingers go and «….n» where its palm faces, directions
+    //             in the body's frame (x right, y up, z ahead), by the hand target's own weight: a palm flat on a door, a hand
+    //             turned up for a key — not the wrist's angles, which lie on the game's pose (and differ left and right).
     //   Parts   — «part <name> <from> <to> hold|loop|end» in a clip: a stretch of it that is a clip by itself, «<clip>.<name>»,
     //             for anything that plays a clip: played to its end and held there till the next one (hold), round and
     //             round (loop), or to its end and off (end). Two parts of a clip meet in a crossfade like any two clips;
@@ -42,18 +54,31 @@ namespace HuginWhispers
     //             feet, and the body sinks by what the lower foot needs (a slope, a mound). A few looks a second, eased.
     //   Marks   — «mark <time> <name>»: a named moment of a clip for the one who plays it to wait for (a scene's
     //             «player mark»), so a sound or a raven comes when the hand touches, however the clip is timed.
+    //   Strength— «strength 0.3»: its bones only that share of the way (with «base frozen» and no turns: the game's own gesture
+    //             played smaller — held back that much toward the pose it had when the clip came in). Targets are not scaled.
     //   Entry   — how a clip comes in and goes off belongs to the clip, not to who plays it: «fade <in> <out>» (a clip with
     //             «curve ease» with no such line: BodyClips.EasedFade each way). Whoever asks for less gets this much, so
     //             no caller can make feet jump from the game's stance to the clip's. Between parts of one clip the
     //             caller's own fade stands (their poses meet). Every clip's weight runs on an S-curve: no sudden start or stop.
+    //   Asked   — «say <the user's words>», «want <t|t0-t1> …» (those words as measures, judged by the stage's check: BodyCheck, its list),
+    //             «touch wall 0.55», «touch piece stave_gate 0.55» … what it touches, as the stage's fixture words: the stage sets it up
+    //             by itself, a scene's check measures the world's real surface there. «cloth off»: a pose the game's cloth cannot follow
+    //             (on the knees): a person's cloth is let go while it plays (NpcCloth). Nothing of these moves anything.
+    //   Vary    — «vary 0..1»: every play of the clip a little its own: each hand's target off by up to HandVary m, the look by LookVary,
+    //             the back bent and turned by up to BendVary/TurnVary degrees, the pace by SpeedVary — all × its vary (a talk 1, a sip 0.25).
+    //             Drawn from the clip's name and the moment it was started (its ZDO's start): every game draws the same, nothing is sent.
+    //             None: exactly as keyed (a key in a lock, a palm on a door). BodyAnimator.Vary
+    //   Thing   — «prop <item> [r|l] [scale]»: the clip's own thing in that hand (scale: × its size, 0.5 half as big) (a tankard as it drinks) while it plays, its look only (HandLook,
+    //             the game's grip), on any body and every game, whoever plays it: BodyAnimator.PropStep. A scene's thing that the clip
+    //             moves is another tool: StoryProps.
     //   Layers  — up to four per player (slot 0 the base, the higher on top), each fading in and out by its weight.
     //   Values  — each game measures every player's motion itself (speed, forward, side, vertical, turn, on the
     //             ground, in water, seconds in the air, height over the ground) plus tags set by code (ZDO).
     //   Rules   — "in slot N play clip C while <condition>": each game picks every player's clips from those values
     //             itself, so a rule-driven animation costs nothing on the net. Code may also play a clip outright
     //             (BodyClips.Play): that one is written to the player's ZDO for the others.
-    // Clips and rules: built in (below), the mod's own files (assets/story/clips, in the dll) and config/RavenWatch/player_anims
-    // (<clip>.txt, rules.txt; a later one wins).
+    // Clips and rules: built in (below), the mod's own files (assets/story/clips, in the dll) and Dir (a later one wins): on the author's
+    // machine that is assets/story/clips itself, one copy; elsewhere config/RavenWatch/player_anims. rules.txt: config/RavenWatch/player_anims.
     // A clip another player plays that this game lacks (made in his test window) is asked from him and kept.
     // Tuned in the test window, tab «Персонаж» (console raven panim): for the author only, not in the README.
     internal sealed class PAnimKey
@@ -86,7 +111,13 @@ namespace HuginWhispers
         public bool Stays;                          // «end hold»: played once, it stands at its last moment till it is taken off
         public bool IsPart;                         // a part of another clip (the head of this file): made from it, never saved or edited
         public bool GroundFeet;                     // «feet ground» (the head of this file)
+        public float Strength = 1f;                 // «strength x» (the head of this file)
         public float In = -1f, Out = -1f;           // «fade <in> <out>», seconds (the head of this file); below zero: not said
+        public string Say = "", Touch = "";         // «say», «touch» (the head of this file)
+        public float Vary;                          // «vary 0..1»: how far each play of it differs (BodyAnimator.Vary); 0 — always the same (a key in a lock)
+        public string Prop = "", PropHand = "r"; public float PropScale = 1f;      // «prop <item> [r|l]»: its thing in that hand while it plays (BodyAnimator.PropStep: its look only, on any body, every game)
+        public bool ClothOff;                       // «cloth off»: a pose the game's cloth cannot follow (on the knees, lying) — its cloth is let go while it plays (NpcCloth)
+        public readonly List<string> Wants = new List<string>(); // «want» lines
         internal float FadeIn { get { return In >= 0f ? In : Eased ? BodyClips.EasedFade : 0f; } }
         internal float FadeOut { get { return Out >= 0f ? Out : Eased ? BodyClips.EasedFade : 0f; } }
         public readonly List<PAnimEvent> Marks = new List<PAnimEvent>(); // named moments: T, and the name in Sound
@@ -94,6 +125,11 @@ namespace HuginWhispers
         public string Drive;                        // null: by the clock; else a motion value gives the moment
         public float DriveMin, DriveMax = 1f;       // that value from .. to = the clip's start .. end
         public readonly List<string> Bones = new List<string>();
+        // a clip a walk lets go of before the feet move — the one rule for the player's walk (StoryWalk) and a person's (NpcBody.ClipFirst): it
+        // holds the legs, a foot's target, the whole body, keeps the game's pose frozen, or touches something (key_turn: the hands on the gate, no
+        // legs — walked away with, the key turned in the air, 2026-11-07). One that turns only the head or the arms (look_back, a nod) plays on
+        internal bool HoldsWalk { get { return Frozen || Touch.Length > 0 || MovesLegs; } }
+        internal bool MovesLegs { get { foreach (string b in Bones) if (b == BodyClips.Move || b == BodyClips.Body || b == "Hips" || b.StartsWith("@LeftFoot", StringComparison.Ordinal) || b.StartsWith("@RightFoot", StringComparison.Ordinal) || b.EndsWith("Leg", StringComparison.Ordinal) || b.EndsWith("Foot", StringComparison.Ordinal) || b.EndsWith("ToeBase", StringComparison.Ordinal)) return true; return false; } }
         // how a bone's three numbers are meant (BodyClips.Turn, Frame, Aim); a bone not here: its own axes
         public readonly Dictionary<string, int> Modes = new Dictionary<string, int>();
         private List<string> _ordered;
@@ -146,7 +182,7 @@ namespace HuginWhispers
         internal PAnimClip Slice(PAnimPart p)
         {
             float from = Mathf.Clamp(p.From, 0f, Length), to = Mathf.Clamp(p.To, from + 0.05f, Length);
-            PAnimClip s = new PAnimClip { Name = Name + "." + p.Name, Length = to - from, Loop = p.How == "loop", Stays = p.How == "hold", IsPart = true,             Pivot = Pivot, Frozen = Frozen, Eased = Eased, GroundFeet = GroundFeet, In = In, Out = Out };
+            PAnimClip s = new PAnimClip { Name = Name + "." + p.Name, Length = to - from, Loop = p.How == "loop", Stays = p.How == "hold", IsPart = true,             Pivot = Pivot, Frozen = Frozen, Eased = Eased, GroundFeet = GroundFeet, Strength = Strength, In = In, Out = Out, Touch = Touch, ClothOff = ClothOff, Prop = Prop, PropHand = PropHand, PropScale = PropScale, Vary = Vary };
             s.Bones.AddRange(Bones);
             foreach (KeyValuePair<string, int> m in Modes) s.Modes[m.Key] = m.Value;
             Cut(s, from, from);
@@ -154,8 +190,23 @@ namespace HuginWhispers
             Cut(s, to, from);
             foreach (PAnimEvent e in Events) if (e.T >= from && e.T < to) s.Events.Add(new PAnimEvent { T = e.T - from, Sound = e.Sound, Volume = e.Volume });
             foreach (PAnimEvent e in Marks) if (e.T >= from && e.T <= to) s.Marks.Add(new PAnimEvent { T = e.T - from, Sound = e.Sound });
+            foreach (string w in Wants) { string moved = WantIn(w, from, to); if (moved != null) s.Wants.Add(moved); } // (the user's words as measures go with the stretch they fall in: scenes play parts, and a part had none — review 2026-11-07)
             return s;
         }
+        // a «want» line moved into a part [from, to]: its time (or stretch) counted from the part's start; null — it falls outside it
+        private static string WantIn(string want, float from, float to)
+        {
+            string[] w = want.Trim().Split(new[] { ' ' }, 2);
+            string[] span = w[0].Split('-');
+            float a, b;
+            if (!float.TryParse(span[0], NumberStyles.Float, CultureInfo.InvariantCulture, out a)) return null;
+            b = a;
+            if (span.Length > 1 && !float.TryParse(span[1], NumberStyles.Float, CultureInfo.InvariantCulture, out b)) return null;
+            if (a < from - 0.001f || b > to + 0.001f) return null;
+            string t = (a - from).ToString("0.###", CultureInfo.InvariantCulture) + (span.Length > 1 ? "-" + (b - from).ToString("0.###", CultureInfo.InvariantCulture) : "");
+            return t + (w.Length > 1 ? " " + w[1] : "");
+        }
+
         private void Cut(PAnimClip s, float t, float from)
         {
             PAnimKey k = new PAnimKey { T = t - from };
@@ -385,6 +436,8 @@ namespace HuginWhispers
             return (da > 0 ? a.Substring(0, da) : a) == (db > 0 ? b.Substring(0, db) : b);
         }
         internal static float MissFrom = 0.95f; // (a target's weight from which the stage counts how far it is from it)
+        internal static float PoleFor = 1f, PoleAway = 0.35f; // seconds a foot's knee takes to go over to the clip's way · m of its step, if that comes first
+        internal static float PlantAway = 0.1f, PlantMost = 0.25f, BentEnough = 0.02f; // m: a foot's offset is gone over this much of its first step · farther off than this, it is another stance: not carried · a limb straighter than this says nothing of where its joint points
 
         // A bone's three numbers mean (per bone of a clip):
         //   Turn  — degrees round the bone's own axes, on top of the game's pose (they differ bone to bone)
@@ -469,8 +522,26 @@ namespace HuginWhispers
         {
             VisEquipment ve = p != null ? p.GetComponent<VisEquipment>() : null;
             if (ve != null && ve.m_bodyModel != null && ve.m_bodyModel.bones != null)
-                foreach (Transform t in ve.m_bodyModel.bones) if (t != null && t.name == name) return t;
+                foreach (Transform b in ve.m_bodyModel.bones) { Transform t = BodyBuild.Real(b); if (t != null && t.name == name) return t; } // (a built body: the bone, not its build child)
             return visual != null ? Utils.FindChild(visual, name, Utils.IterativeSearchType.BreadthFirst) : null;
+        }
+
+        // where a bone's face points (the body's forward at its skin's bind pose: the model stands facing ahead there), in that bone's own frame —
+        // never the pose of some first frame, which may have the head already turned (the check said «up 60» for a straight look; the animator
+        // aimed that turned axis). No skin to read: as it points now
+        internal static Vector3 RestFace(Humanoid h, Transform bone)
+        {
+            VisEquipment ve = h != null ? h.GetComponent<VisEquipment>() : null;
+            SkinnedMeshRenderer smr = ve != null ? ve.m_bodyModel : null;
+            if (bone == null) return Vector3.forward;
+            if (smr != null && smr.bones != null && smr.sharedMesh != null)
+            {
+                Matrix4x4[] bind = smr.sharedMesh.bindposes;
+                for (int i = 0; i < smr.bones.Length && i < bind.Length; i++)
+                    if (smr.bones[i] != null && (smr.bones[i] == bone || BodyBuild.Real(smr.bones[i]) == bone))
+                        return bind[i].MultiplyVector(smr.transform.InverseTransformDirection(h.transform.forward)).normalized;
+            }
+            return bone.InverseTransformDirection(h.transform.forward);
         }
 
         internal static string Mirror(string bone)
@@ -482,8 +553,24 @@ namespace HuginWhispers
 
         internal static readonly Dictionary<string, PAnimClip> Clips = new Dictionary<string, PAnimClip>();
         internal static readonly List<PAnimRule> Rules = new List<PAnimRule>();
-        internal static string Dir { get { return Path.Combine(Path.Combine(Paths.ConfigPath, "RavenWatch"), "player_anims"); } }
-        private static string RulesFile { get { return Path.Combine(Dir, "rules.txt"); } }
+        // where clip files are read and written: one copy (the user 2026-11-06: a config copy won over the mod's own, and a clip
+        // tuned in the mod played old). The author's machine (StoryFiles.Source): the mod's own assets/story/clips, what the build
+        // ships; elsewhere config/RavenWatch/player_anims (an admin's own clips)
+        internal static string Dir
+        {
+            get
+            {
+#if RAVEN_NPC
+                if (StoryFiles.Source != null) return Path.Combine(StoryFiles.Source, "clips");
+#endif
+                return Path.Combine(ConfigRoot, "player_anims");
+            }
+        }
+        // Dir is the mod's own folder (the author's machine): its files are the only copy, and what the dll holds is only as new as the last build
+        private static bool OwnFolder { get { return Dir != Path.Combine(ConfigRoot, "player_anims") && Directory.Exists(Dir); } }
+        // the author's own things that never ship: rules, backups, the stage's takes
+        internal static string ConfigRoot { get { return Path.Combine(Paths.ConfigPath, "RavenWatch"); } }
+        private static string RulesFile { get { return Path.Combine(Path.Combine(ConfigRoot, "player_anims"), "rules.txt"); } }
 
         // ---------------------------------------------------------------- built in
 
@@ -656,19 +743,26 @@ namespace HuginWhispers
             foreach (string text in Builtin) { PAnimClip c = Parse(text, null); if (c != null) Add(c); }
             Rules.Clear();
             Rules.AddRange(ParseRules(BuiltinRules));
-            ReadOwnFiles();
+            if (!OwnFolder) ReadOwnFiles(); // (the mod's own folder read below instead: a clip deleted or renamed there must not come back from the dll till the next build)
             try
             {
+                string old = Path.Combine(ConfigRoot, "player_anims"); // (one copy: a clip left in config on the author's machine is read by nobody — said, so a tuning there is not lost unseen)
+                if (Dir != old && Directory.Exists(old))
+                {
+                    int left = 0;
+                    foreach (string p in Directory.GetFiles(old, "*.txt")) if (Path.GetFileName(p) != "rules.txt") left++;
+                    if (left > 0 && Plugin.Instance != null) Plugin.Instance.Log("Player animations: " + left + " clip file(s) in config/RavenWatch/player_anims are NOT read here: the clips are read from " + Dir + " (one copy) — move what you need there, then delete them");
+                }
+                if (File.Exists(RulesFile)) { Rules.Clear(); Rules.AddRange(ParseRules(File.ReadAllText(RulesFile, Encoding.UTF8))); }
                 if (!Directory.Exists(Dir)) return;
                 foreach (string path in Directory.GetFiles(Dir, "*.txt"))
                 {
                     if (Path.GetFileName(path) == "rules.txt") continue;
-                    PAnimClip c = Parse(File.ReadAllText(path, Encoding.UTF8), Path.GetFileNameWithoutExtension(path));
+                    PAnimClip c = Parse(File.ReadAllText(path, Encoding.UTF8), Path.GetFileNameWithoutExtension(path)); // (the author's: the newest of what is built in)
                     if (c == null) continue;
                     c.FromFile = true;
                     Add(c);
                 }
-                if (File.Exists(RulesFile)) { Rules.Clear(); Rules.AddRange(ParseRules(File.ReadAllText(RulesFile, Encoding.UTF8))); }
             }
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Player animations: reading failed: " + e.Message); }
         }
@@ -741,6 +835,13 @@ namespace HuginWhispers
                     case "loop": if (w.Length > 1) c.Loop = w[1] != "0"; continue;
                     case "pivot": if (w.Length > 1 && Num(w[1], out f)) c.Pivot = Mathf.Clamp(f, -1f, 3f); continue;
                     case "base": if (w.Length > 1) c.Frozen = w[1] == "frozen"; continue;
+                    case "strength": if (w.Length > 1 && Num(w[1], out f)) c.Strength = Mathf.Clamp01(f); continue;
+                    case "say": c.Say = l.Substring(3).Trim(); continue;
+                    case "want": c.Wants.Add(l.Substring(4).Trim()); continue;
+                    case "touch": c.Touch = l.Substring(5).Trim(); continue;
+                    case "cloth": if (w.Length > 1) c.ClothOff = w[1] == "off"; continue;
+                    case "vary": if (w.Length > 1 && Num(w[1], out f)) c.Vary = Mathf.Clamp01(f); continue;
+                    case "prop": if (w.Length > 1) { c.Prop = w[1]; c.PropHand = w.Length > 2 && w[2] == "l" ? "l" : "r"; c.PropScale = w.Length > 3 && Num(w[3], out f) ? Mathf.Clamp(f, 0.05f, 5f) : 1f; } continue;
                     case "curve": if (w.Length > 1) c.Eased = w[1] == "ease"; continue;
                     case "end": if (w.Length > 1) c.Stays = w[1] == "hold"; continue;
                     case "feet": if (w.Length > 1) c.GroundFeet = w[1] == "ground"; continue;
@@ -788,6 +889,13 @@ namespace HuginWhispers
             if (c.Eased) sb.Append("curve ease\n");
             if (c.Stays) sb.Append("end hold\n");
             if (c.GroundFeet) sb.Append("feet ground\n");
+            if (c.Strength < 1f) sb.Append("strength ").Append(N(c.Strength)).Append('\n');
+            if (c.Say.Length > 0) sb.Append("say ").Append(c.Say).Append('\n');
+            foreach (string want in c.Wants) sb.Append("want ").Append(want).Append('\n');
+            if (c.Touch.Length > 0) sb.Append("touch ").Append(c.Touch).Append('\n');
+            if (c.ClothOff) sb.Append("cloth off\n");
+            if (c.Vary > 0f) sb.Append("vary ").Append(N(c.Vary)).Append('\n');
+            if (c.Prop.Length > 0) sb.Append("prop ").Append(c.Prop).Append(' ').Append(c.PropHand).Append(c.PropScale != 1f ? " " + N(c.PropScale) : "").Append('\n');
             if (c.In >= 0f || c.Out >= 0f) sb.Append("fade ").Append(N(c.FadeIn)).Append(' ').Append(N(c.FadeOut)).Append('\n');
             foreach (PAnimEvent e in c.Marks) sb.Append("mark ").Append(N(e.T)).Append(' ').Append(e.Sound).Append('\n');
             foreach (PAnimPart p in c.Parts) sb.Append("part ").Append(p.Name).Append(' ').Append(N(p.From)).Append(' ').Append(N(p.To)).Append(' ').Append(p.How).Append('\n');
@@ -859,17 +967,24 @@ namespace HuginWhispers
 
         internal static string SaveRules()
         {
-            try { Directory.CreateDirectory(Dir); File.WriteAllText(RulesFile, WriteRules(), new UTF8Encoding(false)); return RulesFile; }
+            try { Directory.CreateDirectory(Path.GetDirectoryName(RulesFile)); File.WriteAllText(RulesFile, WriteRules(), new UTF8Encoding(false)); return RulesFile; }
             catch (Exception e) { return Lang.F("не вдалося: {0}", e.Message); }
         }
 
         internal static string Save(PAnimClip c)
         {
+            if (c.FromNet && OwnFolder) return Lang.T("це кліп іншого гравця: у файли моду його не записано"); // (what the build ships)
             try
             {
                 Directory.CreateDirectory(Dir);
                 string path = Path.Combine(Dir, c.Name + ".txt");
-                File.WriteAllText(path, Write(c), new UTF8Encoding(false));
+                string notes = "";
+                if (OwnFolder && File.Exists(path))
+                {
+                    KeepAside(path, c.Name); // (the only copy, and Write gives every channel at every key time: as it was can be had back)
+                    foreach (string l in File.ReadAllLines(path, Encoding.UTF8)) if (l.TrimStart().StartsWith("#") && !l.StartsWith("# RavenWatch:")) notes += l + "\n"; // (the author's notes: Parse does not keep them)
+                }
+                File.WriteAllText(path, Write(c) + notes, new UTF8Encoding(false));
                 c.FromFile = true;
                 c.FromNet = false;
                 return path;
@@ -877,9 +992,22 @@ namespace HuginWhispers
             catch (Exception e) { return Lang.F("не вдалося: {0}", e.Message); }
         }
 
+        // a copy of a clip's file in config/RavenWatch/player_anims_backup, with the time
+        private static void KeepAside(string path, string name)
+        {
+            string backup = Path.Combine(ConfigRoot, "player_anims_backup");
+            Directory.CreateDirectory(backup);
+            File.Copy(path, Path.Combine(backup, name + "_" + DateTime.Now.ToString("MMdd_HHmmss") + ".txt"), true);
+        }
+
         internal static void Delete(PAnimClip c)
         {
-            try { string path = Path.Combine(Dir, c.Name + ".txt"); if (File.Exists(path)) File.Delete(path); } catch { }
+            try
+            {
+                string path = Path.Combine(Dir, c.Name + ".txt");
+                if (File.Exists(path) && !(c.FromNet && OwnFolder)) { KeepAside(path, c.Name); File.Delete(path); }
+            }
+            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Player animations: delete " + c.Name + ": " + e.Message); }
             Clips.Remove(c.Name);
         }
 
@@ -905,7 +1033,7 @@ namespace HuginWhispers
                 string path = Path.Combine(Dir, name + ".txt");
                 if (File.Exists(path))
                 {
-                    string backup = Path.Combine(Path.GetDirectoryName(Dir), "player_anims_backup");
+                    string backup = Path.Combine(ConfigRoot, "player_anims_backup");
                     Directory.CreateDirectory(backup);
                     string to = Path.Combine(backup, name + "_" + DateTime.Now.ToString("MMdd_HHmmss") + ".txt");
                     File.Copy(path, to, true);
@@ -1095,13 +1223,7 @@ namespace HuginWhispers
         // a clip's sound: the game's effect, louder or quieter than its own
         internal static void Sound(string name, Vector3 at, float volume)
         {
-            GameObject made = RavenFx.PlayStretched(name, at, 1f, Mathf.Max(1f, volume));
-            if (made == null || volume >= 0.999f) return;
-            foreach (AudioSource a in made.GetComponentsInChildren<AudioSource>(true))
-            {
-                ZSFX z = a.GetComponent<ZSFX>();
-                if (z != null) z.SetVolumeModifier(volume); else a.volume *= volume;
-            }
+            Audio.Sound(name, at, new SoundAsk { Volume = volume, Wet = true }); // (the game's own group: a clip's sound is part of the world)
         }
     }
 
@@ -1127,14 +1249,17 @@ namespace HuginWhispers
             public Dictionary<string, Quaternion> FrozenPose = new Dictionary<string, Quaternion>();
             public bool NeedFreeze;
             public float Moment; // this frame's moment in the clip
+            public float VSpeed = 1f, VBend, VTurn; public Vector3 VLeft, VRight, VLook; // (this play's own: Vary)
+            public Vector3 Off(string target) { return target == "@RightHand" ? VRight : target == "@LeftHand" ? VLeft : target == "@Look" ? VLook : Vector3.zero; }
             public float Shown { get { return Weight * Weight * (3f - 2f * Weight); } } // (on an S-curve; two fading across each other still make one)
 
             public Dictionary<string, Quaternion> Aims = new Dictionary<string, Quaternion>(); // an aimed bone as it stood last frame, in the body's frame
-            public void Clear() { Clip = null; C = null; Weight = 0f; LastMoment = -1f; FrozenPose.Clear(); Aims.Clear(); NeedFreeze = false; }
+            public void Clear() { VSpeed = 1f; VBend = VTurn = 0f; VLeft = VRight = VLook = Vector3.zero; Clip = null; C = null; Weight = 0f; LastMoment = -1f; FrozenPose.Clear(); Aims.Clear(); NeedFreeze = false; }
 
             // the other one's state into this one (the dictionaries swapped, nothing copied)
             public void From(Run o)
             {
+                VSpeed = o.VSpeed; VBend = o.VBend; VTurn = o.VTurn; VLeft = o.VLeft; VRight = o.VRight; VLook = o.VLook;
                 Clip = o.Clip; C = o.C; Start = o.Start; Speed = o.Speed; Weight = o.Weight; LastMoment = o.LastMoment; NeedFreeze = o.NeedFreeze;
                 Dictionary<string, Quaternion> d = FrozenPose; FrozenPose = o.FrozenPose; o.FrozenPose = d;
                 d = Aims; Aims = o.Aims; o.Aims = d;
@@ -1229,8 +1354,51 @@ namespace HuginWhispers
 
         private void Awake() { for (int i = 0; i < _layers.Length; i++) _layers[i] = new Layer(); }
 
+        // A player's animator runs in the physics step (a person's every frame: Npcs.BuildHuman). A frame with no step leaves the bones as we left them, and a layer laid over that
+        // jumps for a frame and back (measured, JoltWatch). So while something of ours lies on his bones, his animator runs every frame, and back when nothing does: his attacks and the rest keep the game's own timing.
+        internal const int WantClips = 1, WantGait = 2;
+        private int _everyFrame;
+        private AnimatorUpdateMode _modeWas;
+        internal void EveryFrame(int who, bool on)
+        {
+            if (_p == null) return;
+            int now = on ? _everyFrame | who : _everyFrame & ~who;
+            if (now == _everyFrame) return;
+            if (_anim == null) _anim = _body.GetComponentInChildren<Animator>(); // heavy: once a body (asked again only when a wish changes)
+            if (_anim == null) return; // (no animator yet: the wish is not kept, it is asked again on its next change)
+            bool was = _everyFrame != 0;
+            _everyFrame = now;
+            if (!was) _modeWas = _anim.updateMode;
+            if (was != (now != 0)) _anim.updateMode = now != 0 ? AnimatorUpdateMode.Normal : _modeWas;
+        }
+
+        // the thing a clip carries («prop»): the strongest clip of ours with one, shown while that clip is well in (PropFrom), gone as it fades;
+        // made once as it comes (HandLook), nothing each frame but a look at the layers
+        internal static float PropFrom = 0.3f;
+        private GameObject _propLook; private PAnimClip _propShown;
+        private void PropStep()
+        {
+            PAnimClip want = null; float best = PropFrom;
+            for (int i = 0; i < _layers.Length; i++) { Run r = _layers[i].Now; if (r.C != null && r.C.Prop.Length > 0 && r.Weight >= best) { best = r.Weight; want = r.C; } }
+            if (ReferenceEquals(want, _propShown)) return; // (the same clip's thing: nothing to do — every frame, every body)
+            if (_propLook != null && want != null && _propShown != null && want.Prop == _propShown.Prop && want.PropHand == _propShown.PropHand && want.PropScale == _propShown.PropScale) { _propShown = want; return; } // (a part of the same clip: the same thing stays)
+            _propShown = want;
+            if (_propLook != null) { Destroy(_propLook); _propLook = null; }
+            if (want == null) return;
+            VisEquipment ve = _body != null ? _body.GetComponent<VisEquipment>() : null;
+            Transform hand = ve != null ? (want.PropHand == "l" ? ve.m_leftHand : ve.m_rightHand) : null;
+            if (hand == null) return;
+            _propLook = HandLook.Make(want.Prop, 0f); // heavy: once as the thing comes
+            if (_propLook == null) { Plugin.Instance.Log("clip thing: no look for " + want.Prop); return; }
+            _propLook.transform.SetParent(hand, false);
+            _propLook.transform.localPosition = Vector3.zero; _propLook.transform.localRotation = Quaternion.identity;
+            if (want.PropScale != 1f) _propLook.transform.localScale = Vector3.one * want.PropScale;
+        }
+
         private void OnDestroy()
         {
+            if (_propLook != null) Destroy(_propLook);
+            if (_everyFrame != 0 && _anim != null) _anim.updateMode = _modeWas; // (the game's own timing back: nothing of ours left on his bones)
             Rest();
             if (_body != null) All.Remove(_body);
         }
@@ -1261,9 +1429,28 @@ namespace HuginWhispers
             }
             else if (now.Weight < 0.05f) { now.NeedFreeze = true; now.FrozenPose.Clear(); now.LastMoment = -1f; } // back after it faded: the pose of now
             now.Clip = clip; now.Start = start; now.Speed = speed;
+            Vary(now);
             l.Target = 1f; l.FadeSeconds = Mathf.Max(0.01f, fade); l.Hold = -1f; l.From = from;
             if (from == Source.Code) l.Rule = null;
         }
+
+        // this play's own variant (PAnimClip.Vary, the head of this file): from the clip's name and its start, so every game draws the same
+        internal static float HandVary = 0.07f, LookVary = 0.5f, BendVary = 5f, TurnVary = 7f, SpeedVary = 0.15f;
+        private static void Vary(Run r)
+        {
+            r.VSpeed = 1f; r.VBend = r.VTurn = 0f; r.VLeft = r.VRight = r.VLook = Vector3.zero;
+            PAnimClip c = r.Clip != null ? BodyClips.Find(r.Clip) : null;
+            float k = c != null ? c.Vary : 0f;
+            if (k <= 0f) return;
+            uint s = (uint)r.Clip.GetStableHashCode() ^ (uint)(long)(r.Start * 1000.0) * 2654435761u;
+            if (s == 0u) s = 1u;
+            r.VRight = new Vector3(Rand(ref s), Rand(ref s) * 0.7f, Rand(ref s)) * HandVary * k;
+            r.VLeft = new Vector3(Rand(ref s), Rand(ref s) * 0.7f, Rand(ref s)) * HandVary * k;
+            r.VLook = new Vector3(Rand(ref s), Rand(ref s) * 0.5f, 0f) * LookVary * k;
+            r.VBend = Rand(ref s) * BendVary * k; r.VTurn = Rand(ref s) * TurnVary * k;
+            r.VSpeed = 1f + Rand(ref s) * SpeedVary * k;
+        }
+        private static float Rand(ref uint s) { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s % 20001u) / 10000f - 1f; } // (−1 … 1)
 
         internal void Stop(int slot, float fade, Source from)
         {
@@ -1289,10 +1476,11 @@ namespace HuginWhispers
             PAnimClip c = r.C ?? BodyClips.Find(r.Clip);
             if (c == null) return 0f;
             if (hold >= 0f) return hold;
-            return c.MomentFor((float)(BodyClips.Now - r.Start) * r.Speed, c.Drive != null ? ValueOf(c.Drive) : 0f, c.Drive != null);
+            return c.MomentFor((float)(BodyClips.Now - r.Start) * r.Speed * r.VSpeed, c.Drive != null ? ValueOf(c.Drive) : 0f, c.Drive != null);
         }
 
         internal bool Playing(int slot) { return slot >= 0 && slot < _layers.Length && _layers[slot].Busy; }
+        internal bool Holding(int slot, string clip) { return slot >= 0 && slot < _layers.Length && _layers[slot].Clip == clip && _layers[slot].Target > 0f; } // (on it and not on its way out)
         internal string ClipIn(int slot) { return slot >= 0 && slot < _layers.Length ? _layers[slot].Clip : null; }
         internal float WeightIn(int slot) { return slot >= 0 && slot < _layers.Length ? _layers[slot].Now.Weight : 0f; }
         internal string RuleIn(int slot) { return slot >= 0 && slot < _layers.Length && _layers[slot].Rule != null && _layers[slot].Clip != null ? _layers[slot].Rule.Name : null; }
@@ -1519,11 +1707,49 @@ namespace HuginWhispers
         {
             long t0 = Perf.On ? Perf.Now : 0;
             Lay();
+            PropStep();
             if (Perf.On) Perf.Add(t0, Perf.Anim);
         }
 
         // something played by code on it now (a person's gait gives way to it)
         internal bool CodeBusy { get { return AnyCode(); } }
+        // a clip played by code still holds it (one fading out at its end no longer does: BodyTurn)
+        // a clip played by code moves the legs or the whole body (a look round over a walk does not: BodyTurn may step the feet under it)
+        // a clip played by code says the cloth cannot follow it («cloth off»)
+        internal bool ClothOff { get { foreach (Layer l in _layers) if (l.From == Source.Code && l.Target > 0f && l.Now.C != null && l.Now.C.ClothOff) return true; return false; } }
+        internal bool HoldsLegs { get { foreach (Layer l in _layers) if (l.From == Source.Code && l.Now.C != null && l.Target > 0f && l.Now.C.MovesLegs) return true; return false; } }
+
+        // the topmost clip played by code, and its moment now (BodyCheck: what it says it touches, what to change)
+        internal PAnimClip CodeClip(out float moment)
+        {
+            moment = 0f;
+            for (int i = _layers.Length - 1; i >= 0; i--)
+            {
+                Layer l = _layers[i];
+                if (l.From == Source.Code && l.Target > 0f && l.Now.C != null) { moment = l.Now.Moment; return l.Now.C; }
+            }
+            return null;
+        }
+        // every clip of ours a walk must not carry let go, whichever slot it is on, and how long till none is left: one playing, one already on its way
+        // out, one fading under the next in a crossfade (door_push, then a head clip, then a step back). Asked once as the player's walk starts
+        internal float LetGoForWalk()
+        {
+            float most = 0f;
+            for (int i = 0; i < _layers.Length; i++)
+            {
+                Layer l = _layers[i];
+                if (l.From != Source.Code) continue;
+                PAnimClip now = l.Now.Clip != null ? l.Now.C ?? BodyClips.Find(l.Now.Clip) : null, was = l.Was.Clip != null ? l.Was.C ?? BodyClips.Find(l.Was.Clip) : null;
+                bool nowHolds = now != null && now.HoldsWalk;
+                if (nowHolds && l.Target > 0f) Stop(i, now.FadeOut, Source.Code);
+                if (nowHolds) most = Mathf.Max(most, l.Now.Weight * l.FadeSeconds);
+                if (was != null && was.HoldsWalk && l.Was.Weight > 0.001f) most = Mathf.Max(most, l.Was.Weight * l.FadeSeconds);
+            }
+            return most;
+        }
+        // the clip of ours a walk must let go of first (PAnimClip.HoldsWalk), null: none — a person's walk asks this (NpcBody.ClipFirst: its one clip slot)
+        internal PAnimClip HoldsWalk() { foreach (Layer l in _layers) { if (l.From != Source.Code || l.Target <= 0f || l.Now.Clip == null) continue; PAnimClip c = l.Now.C ?? BodyClips.Find(l.Now.Clip); if (c != null && c.HoldsWalk) return c; } return null; }
+        internal bool ClipHolds { get { foreach (Layer l in _layers) if (l.From == Source.Code && l.Now.Clip != null && l.Target > 0f) return true; return false; } }
 
         private void Lay()
         {
@@ -1537,7 +1763,9 @@ namespace HuginWhispers
                 if (cam != null && (cam.transform.position - transform.position).sqrMagnitude > FarFromCamera * FarFromCamera) rules = false;
             }
             if (rules && BodyClips.AllNeedTag) { ReadTags(); if (_tags.Count == 0 && !AnyBusy()) rules = false; } // no tag, no rule can hold
-            if (!rules && !AnyBusy()) { if (!_resting) Rest(); return; } // nothing to play: no measuring, no work
+            bool busy = AnyBusy();
+            EveryFrame(WantClips, busy);
+            if (!rules && !busy) { if (!_resting) Rest(); return; } // nothing to play: no measuring, no work
             _resting = false;
             float dt = Time.deltaTime;
             if (_visual == null)
@@ -1565,7 +1793,7 @@ namespace HuginWhispers
                 now.Weight = Mathf.MoveTowards(now.Weight, l.Target, dt / l.FadeSeconds);
                 // a clip played once (by the clock) ends by itself: it fades out after its last moment
                 PAnimClip c = now.C;
-                if (c != null && !c.Loop && !c.Stays && c.Drive == null && l.Hold < 0f && l.Target > 0f && (BodyClips.Now - now.Start) * now.Speed >= c.Length) { l.Target = 0f; l.FadeSeconds = Mathf.Max(Mathf.Max(l.FadeSeconds, BodyClips.EndFade), c.FadeOut); }
+                if (c != null && !c.Loop && !c.Stays && c.Drive == null && l.Hold < 0f && l.Target > 0f && (BodyClips.Now - now.Start) * now.Speed * now.VSpeed >= c.Length) { l.Target = 0f; l.FadeSeconds = Mathf.Max(Mathf.Max(l.FadeSeconds, BodyClips.EndFade), c.FadeOut); }
                 if (now.Weight <= 0.001f && l.Target <= 0f) { now.Clear(); l.Rule = null; continue; }
                 if (c != null) any = true; // (a clip still on its way from its owner: nothing to draw yet)
             }
@@ -1576,7 +1804,7 @@ namespace HuginWhispers
             foreach (Layer l in _layers) { Mark(l.Was); Mark(l.Now); }
             foreach (KeyValuePair<string, Bone> kv in _bones) if (!Touched.Contains(kv.Key)) kv.Value.Release();
             foreach (string name in Touched) { Bone b = BoneOf(name); if (b != null) b.Begin(); }
-            if (_lookAxis == Vector3.zero && Touched.Contains("Head")) { Bone hb = BoneOf("Head"); if (hb != null) _lookAxis = hb.T.InverseTransformDirection(_body.transform.forward); } // (where its face points, in the head bone: from the game's pose)
+            if (_lookAxis == Vector3.zero && Touched.Contains("Head")) { Bone hb = BoneOf("Head"); if (hb != null) _lookAxis = BodyClips.RestFace(_body, hb.T); } // (where its face points, in the head bone: from the skeleton, not from a pose the game had turned)
 
             // first the whole body: turned round the pivot (pitch forward, yaw, roll to the side), then moved; the
             // bones after it are reckoned in its frame
@@ -1697,6 +1925,26 @@ namespace HuginWhispers
 
         // how far a limb's end is from its target now, m (the stage's report; none — not aimed)
         internal bool Missed(string limb, out float metres) { return _missed.TryGetValue(limb, out metres); }
+        internal bool ChannelNow(string name, out Vector3 v, out float w) { return Channel(name, out v, out w); } // (what the clips say for it now, over the layers: BodyCheck)
+        // the layers now in words (the studio's report, a shot at a time): slot: clip (its rule) shown weight at its moment, from the one fading out; the head's pull
+        internal string LayersSaid()
+        {
+            StringBuilder s = new StringBuilder();
+            for (int i = 0; i < _layers.Length; i++)
+            {
+                Layer l = _layers[i];
+                bool was = l.Was.Clip != null && l.Was.Weight > 0.001f;
+                if (!l.Busy && !was) continue;
+                if (s.Length > 0) s.Append(" · ");
+                s.Append(i).Append(": ").Append(l.Now.Clip ?? "-");
+                if (l.From == Source.Rule && l.Rule != null) s.Append(" (rule ").Append(l.Rule.Name).Append(')');
+                s.Append(" w ").Append(l.Now.Shown.ToString("0.00", CultureInfo.InvariantCulture)).Append(" at ").Append(l.Now.Moment.ToString("0.00", CultureInfo.InvariantCulture)).Append(" s");
+                if (l.Target <= 0f) s.Append(" going");
+                if (was) s.Append(", from ").Append(l.Was.Clip).Append(" w ").Append(l.Was.Shown.ToString("0.00", CultureInfo.InvariantCulture));
+            }
+            return (s.Length > 0 ? s.ToString() : "none of ours") + "; head ours " + HeadFree.ToString("0.00", CultureInfo.InvariantCulture);
+        }
+        internal bool LookNow(out Vector3 world, out float w) { Vector3 v; bool on = Channel(BodyClips.LookAt, out v, out w); world = on ? _body.transform.TransformPoint(v) : Vector3.zero; return on; } // (the point the head is sent to, in the world, as LookTo is given it)
 
         private void Targets()
         {
@@ -1711,24 +1959,58 @@ namespace HuginWhispers
                 {
                     Vector3 pp; Quaternion pr;
                     PropAt(out pp, out pr);
-                    Vector3 point = root.InverseTransformPoint(pp + pr * on);
-                    at = aimed ? Vector3.Lerp(at, point, ow) : point;
+                    Vector3 onIt = root.InverseTransformPoint(pp + pr * on);
+                    at = aimed ? Vector3.Lerp(at, onIt, ow) : onIt;
                     if (!aimed) { w = ow; aimed = true; }
                 }
-                if (!aimed) continue;
+                int foot = m.Name == "@LeftFoot" ? 0 : m.Name == "@RightFoot" ? 1 : -1;
+                if (!aimed) { if (foot >= 0) _planted[foot] = false; continue; }
                 Bone up = BoneOf(m.Upper), low = BoneOf(m.Lower), end = BoneOf(m.End);
                 if (up == null || low == null || end == null) continue;
+                Vector3 under = end.T.position; // (where the pose under it has its end)
+                if (foot >= 0) at = Planted(foot, at, root.InverseTransformPoint(under), root.InverseTransformDirection(low.T.position - up.T.position - (under - up.T.position).normalized * Vector3.Dot(low.T.position - up.T.position, (under - up.T.position).normalized)));
                 float pw;
                 Vector3 poleLocal = Channel(m.Name + ".p", out pole, out pw) && pole.sqrMagnitude > 0.0001f ? Vector3.Lerp(m.Pole, pole, pw) : m.Pole;
                 Vector3 world = root.TransformPoint(at);
-                if (m.Name == "@LeftFoot") world.y += GroundUnder(0, world);
-                else if (m.Name == "@RightFoot") world.y += GroundUnder(1, world);
-                Solve(up.T, low.T, end.T, world, root.TransformDirection(poleLocal), w);
-                if (w >= BodyClips.MissFrom) _missed[m.Name] = Vector3.Distance(end.T.position, world); // (one still on its way is not a miss)
+                if (foot >= 0) world.y += GroundUnder(foot, world);
+                Vector3 poleTo = root.TransformDirection(poleLocal).normalized;
+                if (foot >= 0 && _poleK[foot] > 0f && _poleFrom[foot].sqrMagnitude > 0f) poleTo = Vector3.Slerp(poleTo, root.TransformDirection(_poleFrom[foot]), _poleK[foot]); // (from the way it pointed)
+                Vector3 chord = (under - up.T.position).normalized, bent = low.T.position - up.T.position;
+                bent -= chord * Vector3.Dot(bent, chord);
+                if (bent.magnitude > BodyClips.BentEnough) poleTo = Vector3.Slerp(bent.normalized, poleTo, w);
+                Vector3 point = Vector3.Lerp(under, world, w);
+                Solve(up.T, low.T, end.T, point, poleTo);
+                if (w >= BodyClips.MissFrom) _missed[m.Name] = Vector3.Distance(end.T.position, point); // (one still on its way is not a miss)
                 if (ow > 0.001f) Grip(m, end.T, ow);
+                else Facing(m, end.T, w, root);
             }
             Vector3 look; float lw;
             if (Channel(BodyClips.LookAt, out look, out lw)) LookTo(root.TransformPoint(look), lw);
+        }
+
+        // a foot's target with what its first key was off by, while the clip has not moved that foot (the head of this file)
+        private readonly bool[] _planted = new bool[2];
+        private readonly float[] _plantK = new float[2], _poleK = new float[2];
+        private readonly Vector3[] _plant = new Vector3[2], _plantFrom = new Vector3[2], _poleFrom = new Vector3[2];
+        private readonly float[] _plantAt = new float[2];
+
+        private Vector3 Planted(int foot, Vector3 at, Vector3 under, Vector3 bent)
+        {
+            if (!_planted[foot])
+            {
+                _planted[foot] = true;
+                _plantFrom[foot] = at;
+                _plantK[foot] = 1f; _poleK[foot] = 1f; _plantAt[foot] = Time.time;
+                _poleFrom[foot] = bent.magnitude > BodyClips.BentEnough ? bent.normalized : Vector3.zero;
+                Vector3 off = under - at;
+                off.y = 0f; // (its height: the clip's, on the ground under it)
+                _plant[foot] = off.magnitude <= BodyClips.PlantMost ? off : Vector3.zero;
+                if (off.magnitude > BodyClips.PlantMost && Plugin.Instance != null && (_p == Player.m_localPlayer || _p == null)) Plugin.Instance.Log("Player animations: " + _body.m_name + " " + (foot == 0 ? "left" : "right") + " foot " + off.magnitude.ToString("0.00") + " m off its clip's first key (more than PlantMost " + BodyClips.PlantMost.ToString("0.00") + "): not carried, it goes to the key over the clip's way in");
+            }
+            float gone = Vector3.Distance(at, _plantFrom[foot]);
+            _plantK[foot] = Mathf.Min(_plantK[foot], 1f - Mathf.SmoothStep(0f, 1f, gone / BodyClips.PlantAway));
+            _poleK[foot] = Mathf.Min(_poleK[foot], 1f - Mathf.SmoothStep(0f, 1f, Mathf.Max(gone / BodyClips.PoleAway, (Time.time - _plantAt[foot]) / BodyClips.PoleFor)));
+            return at + _plant[foot] * _plantK[foot];
         }
 
         // «feet ground»: how far the ground under each foot is from the body's level, looked at a few times a second, eased
@@ -1780,6 +2062,20 @@ namespace HuginWhispers
             hand.rotation = Quaternion.Slerp(Quaternion.identity, turn, w) * hand.rotation;
         }
 
+        // a hand turned as the clip says in the body's frame (no thing in it): «….f» its fingers, «….n» its palm, by the target's weight
+        private void Facing(BodyClips.Limb m, Transform hand, float w, Transform root)
+        {
+            if (w <= 0.001f || (m.Name != "@LeftHand" && m.Name != "@RightHand")) return;
+            Vector3 f, n; float fw, nw;
+            if (!Channel(m.Name + ".f", out f, out fw) || !Channel(m.Name + ".n", out n, out nw)) return;
+            if (f.sqrMagnitude < 1e-6f || n.sqrMagnitude < 1e-6f) return;
+            Vector3 along, palm;
+            if (!HandFacing(m.Name == "@LeftHand", hand, out along, out palm)) return;
+            if (along.sqrMagnitude < 1e-6f || palm.sqrMagnitude < 1e-8f) return;
+            Quaternion turn = Quaternion.LookRotation(root.rotation * f, root.rotation * n) * Quaternion.Inverse(Quaternion.LookRotation(along, palm));
+            hand.rotation = Quaternion.Slerp(Quaternion.identity, turn, w) * hand.rotation;
+        }
+
         // where a hand's fingers go and where its palm faces, in the world, as the model has it now (the stage reads it too)
         internal bool HandFacing(bool left, Transform hand, out Vector3 along, out Vector3 palm)
         {
@@ -1823,6 +2119,9 @@ namespace HuginWhispers
             if (Channel(BodyClips.PropTurn, out r, out rw)) turn = Quaternion.Slerp(turn, root.rotation * Quaternion.Euler(r), w);
         }
 
+        // how far the clip has the thing in hand now (its «@Prop» with its «.w»): 0 where it lay … 1 taken
+        internal float PropHeld() { Vector3 v; float w; return Channel(BodyClips.PropAt, out v, out w) ? w : 0f; }
+
         // a channel over the layers, higher ones over lower; its «.w» keyed if it has one. False: nobody says it now
         private bool Channel(string name, out Vector3 v, out float w)
         {
@@ -1840,7 +2139,7 @@ namespace HuginWhispers
                     PAnimClip c = r.C;
                     if (c == null || r.Weight <= 0.001f || !c.Bones.Contains(name)) continue;
                     float rw = r.Shown * (c.Bones.Contains(weight) ? Mathf.Clamp01(c.Value(weight, r.Moment).x) : 1f);
-                    sum += c.Value(name, r.Moment) * rw;
+                    sum += (c.Value(name, r.Moment) + r.Off(name)) * rw; // (this play's own: Vary)
                     share += rw;
                 }
                 if (share <= 0.0001f) continue;
@@ -1854,7 +2153,7 @@ namespace HuginWhispers
         }
 
         // two bones to a point: the elbow or knee on the side the pole says; the end keeps its turn in the world
-        private static void Solve(Transform upper, Transform lower, Transform end, Vector3 target, Vector3 pole, float w)
+        internal static void Solve(Transform upper, Transform lower, Transform end, Vector3 target, Vector3 pole)
         {
             Quaternion endWas = end.rotation;
             Vector3 u = upper.position, to = target - u;
@@ -1866,9 +2165,9 @@ namespace HuginWhispers
             Vector3 side = pole - dir * Vector3.Dot(pole, dir);
             if (side.sqrMagnitude < 0.0001f) side = Vector3.Cross(dir, upper.right);
             Vector3 joint = u + dir * a * cos + side.normalized * a * sin;
-            upper.rotation = Quaternion.Slerp(upper.rotation, Quaternion.FromToRotation(lower.position - u, joint - u) * upper.rotation, w);
-            lower.rotation = Quaternion.Slerp(lower.rotation, Quaternion.FromToRotation(end.position - lower.position, u + dir * d - lower.position) * lower.rotation, w);
-            end.rotation = Quaternion.Slerp(end.rotation, endWas, w);
+            upper.rotation = Quaternion.FromToRotation(lower.position - u, joint - u) * upper.rotation;
+            lower.rotation = Quaternion.FromToRotation(end.position - lower.position, u + dir * d - lower.position) * lower.rotation;
+            end.rotation = endWas;
         }
 
         // the head (and a share in the neck) turned to a point, no farther than it can
@@ -1893,7 +2192,7 @@ namespace HuginWhispers
         {
             PAnimClip c = r.C;
             if (c == null || r.Weight <= 0.001f) return;
-            float t = r.Moment, w = r.Shown;
+            float t = r.Moment, w = r.Shown * c.Strength;
             if (c.Frozen && r.NeedFreeze)
             {
                 r.NeedFreeze = false;
@@ -1906,6 +2205,7 @@ namespace HuginWhispers
                 if (!_bones.TryGetValue(bone, out b) || b.T == null) continue;
                 Transform tr = b.T;
                 Vector3 v = c.Value(bone, t);
+                if (r.VBend != 0f && (bone == "Spine1" || bone == "Spine2")) v += new Vector3(r.VBend, r.VTurn, 0f) * 0.5f; // (this play's own: Vary)
                 Quaternion frozen;
                 if (c.Frozen && r.FrozenPose.TryGetValue(bone, out frozen)) tr.localRotation = Quaternion.Slerp(tr.localRotation, frozen, w);
                 int mode = c.ModeOf(bone);
@@ -1960,6 +2260,7 @@ namespace HuginWhispers
         {
             foreach (Bone b in _bones.Values) b.Release();
             RestoreVisual();
+            _planted[0] = _planted[1] = false;
         }
 
         // all of it back to the game, and the measuring starts anew next time

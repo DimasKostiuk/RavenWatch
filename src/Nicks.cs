@@ -12,7 +12,7 @@ namespace HuginWhispers
     //     (a surprise); once open, the hover says what it was given for.
     // Everything lives in the raven itself (customData: the chosen one, the open ones, the deed counters), so it goes
     // with the raven and comes back with it (Backup). The chosen name and its call form are published on the player
-    // for the others (ZDO RavenWatch_NickH / _NickM = "name|call|kind"): their speech cards, the chat, the talks.
+    // for the others (ZDO RavenWatch_NickH / _NickM = "name|call|kind", the source words: each game shows them in its own language): their speech cards, the chat, the talks.
     // On your own screen your ravens stay «Хугін» / «Мунін» with the nickname quietly beside them.
     internal static class Nicks
     {
@@ -164,16 +164,16 @@ namespace HuginWhispers
         };
 
         // The deeds (gold): long work together. The counters are the raven's own (Count); a boss counts each time it
-        // falls with the raven on you (Bosses: the old ravens' "seen once" counts as one).
+        // falls with the raven on you and a blow of yours in the fight (Strike; Bosses: the old ravens' "seen once" counts as one).
         private static readonly Nick[] Deeds =
         {
-            D("d_eikthyr", Lang.K("Оленеїд"), Lang.K("Оленеїде"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Ейктюр"), (i, m) => Bosses(i, "Eikthyr") >= BossTimes),
-            D("d_elder", Lang.K("Лісоруб"), Lang.K("Лісорубе"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Прадавній"), (i, m) => Bosses(i, "gd_king") >= BossTimes),
-            D("d_bonemass", Lang.K("Смердюк"), Lang.K("Смердюче"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Кістянка"), (i, m) => Bosses(i, "Bonemass") >= BossTimes),
-            D("d_moder", Lang.K("Ящірколов"), Lang.K("Ящірколове"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Модер"), (i, m) => Bosses(i, "Dragon") >= BossTimes),
-            D("d_yagluth", Lang.K("Кістогриз"), Lang.K("Кістогризе"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Яглут"), (i, m) => Bosses(i, "GoblinKing") >= BossTimes),
-            D("d_queen", Lang.K("Тарганобій"), Lang.K("Тарганобою"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Королева"), (i, m) => Bosses(i, "SeekerQueen") >= BossTimes),
-            D("d_fader", Lang.K("Вогнегасник"), Lang.K("Вогнегаснику"), Kind.Deed, 0, Lang.K("Тричі бачив, як падає Фейдер"), (i, m) => Bosses(i, "Fader") >= BossTimes),
+            D("d_eikthyr", Lang.K("Оленеїд"), Lang.K("Оленеїде"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Ейктюра"), (i, m) => Bosses(i, "Eikthyr") >= BossTimes),
+            D("d_elder", Lang.K("Лісоруб"), Lang.K("Лісорубе"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Прадавнього"), (i, m) => Bosses(i, "gd_king") >= BossTimes),
+            D("d_bonemass", Lang.K("Смердюк"), Lang.K("Смердюче"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Кістянку"), (i, m) => Bosses(i, "Bonemass") >= BossTimes),
+            D("d_moder", Lang.K("Ящірколов"), Lang.K("Ящірколове"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Модера"), (i, m) => Bosses(i, "Dragon") >= BossTimes),
+            D("d_yagluth", Lang.K("Кістогриз"), Lang.K("Кістогризе"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Яглута"), (i, m) => Bosses(i, "GoblinKing") >= BossTimes),
+            D("d_queen", Lang.K("Тарганобій"), Lang.K("Тарганобою"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Королеву"), (i, m) => Bosses(i, "SeekerQueen") >= BossTimes),
+            D("d_fader", Lang.K("Вогнегасник"), Lang.K("Вогнегаснику"), Kind.Deed, 0, Lang.K("Тричі ви разом здолали Фейдера"), (i, m) => Bosses(i, "Fader") >= BossTimes),
             D("d_trust4", Lang.K("Підлиза"), Lang.K("Підлизо"), Kind.Deed, 0, Lang.K("Довіра 5-го рівня"), (i, m) => Trust.Level(i) >= 5),
             D("d_strikes_m", Lang.K("Мордоклюй"), Lang.K("Мордоклюю"), Kind.Deed, 2, Lang.K("Двісті влучних ударів"), (i, m) => Strike.Flights(i) >= 200),
             D("d_strikes_h", Lang.K("Снайпер"), Lang.K("Снайпере"), Kind.Deed, 1, Lang.K("Двісті влучних ударів"), (i, m) => Strike.Flights(i) >= 200),
@@ -547,13 +547,13 @@ namespace HuginWhispers
 
         internal const int BossTimes = 3;
 
-        // how many times this boss fell with the raven on you (before the count began: once, if it saw it)
+        // how many times you beat this boss with the raven on you (before the count began: once, if it saw it)
         private static int Bosses(ItemDrop.ItemData item, string prefab)
         {
             return Mathf.Max(Count(item, "boss_" + prefab), Strike.BossesSeen(item).Contains(prefab) ? 1 : 0);
         }
 
-        // a boss fell with this raven on you (Strike sees the end of the fight)
+        // a boss you fought fell with this raven on you (Strike sees the end of the fight)
         internal static void OnBoss(Player p, ItemDrop.ItemData item, string prefab)
         {
             if (item == null || string.IsNullOrEmpty(prefab) || Trust.Stranger(item, p)) return;
@@ -598,7 +598,7 @@ namespace HuginWhispers
             else if (attacker != null && attacker != p && !(attacker is Player))
             {
                 string prefab = Utils.GetPrefabName(attacker.gameObject);
-                if (attacker.IsBoss()) how = "bossdeath";
+                if (Champions.TrueBoss(attacker)) how = "bossdeath";
                 else if (prefab == "Deathsquito") how = "squito";
                 else if (Array.IndexOf(Weaklings, prefab) >= 0) how = "shame";
             }
@@ -963,6 +963,8 @@ namespace HuginWhispers
             foreach (Nick n in earned) Tell(p, Line(munin, n)); // already earned before (an old raven): each in its turn
         }
 
+        private static readonly HashSet<string> BrokenDeeds = new HashSet<string>(); // (each said once in the log: this runs every few seconds)
+
         // what it has earned and does not have yet
         private static List<Nick> Due(ItemDrop.ItemData r, bool munin)
         {
@@ -980,7 +982,8 @@ namespace HuginWhispers
             {
                 if (open.Contains(n.Id) || !n.Fits(munin)) continue;
                 bool got = false;
-                try { got = n.Earned(r, munin); } catch { }
+                try { got = n.Earned(r, munin); }
+                catch (Exception e) { if (BrokenDeeds.Add(n.Id) && Plugin.Instance != null) Plugin.Instance.Log("Nickname " + n.Id + ": its condition failed: " + e.Message); }
                 if (got) due.Add(n);
             }
             return due;
@@ -1141,7 +1144,7 @@ namespace HuginWhispers
         private static string Code(ItemDrop.ItemData r)
         {
             Nick n = r != null ? Current(r) : null;
-            return n != null ? n.Name + "|" + n.Call + "|" + (int)n.K : "";
+            return n != null ? n.NameSrc + "|" + n.CallSrc + "|" + (int)n.K : "";
         }
 
         // this player's raven's nickname, its call form and kind (yours from the raven, others' as published); false: none
@@ -1162,8 +1165,8 @@ namespace HuginWhispers
             if (string.IsNullOrEmpty(raw)) return false;
             string[] f = raw.Split('|');
             if (f.Length < 3 || f[0].Length == 0 || f[0].Length > 24 || f[1].Length > 24) return false;
-            name = f[0].Replace("<", "").Replace(">", "");
-            call = f[1].Length > 0 ? f[1].Replace("<", "").Replace(">", "") : name;
+            name = Lang.T(f[0].Replace("<", "").Replace(">", ""));
+            call = f[1].Length > 0 ? Lang.T(f[1].Replace("<", "").Replace(">", "")) : name;
             int k;
             kind = int.TryParse(f[2], out k) && k >= 0 && k <= 3 ? (Kind)k : Kind.Simple;
             return true;

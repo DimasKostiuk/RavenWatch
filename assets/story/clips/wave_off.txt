@@ -1,0 +1,99 @@
+clip wave_off
+loop 0
+pivot 1.1
+curve ease
+vary 0.7
+fade 0.4 0.6
+mode Spine1 body
+mode Spine2 body
+say махнути рукою: буркун відмахується, мовляв, та ну його
+length 2.8
+
+0 @RightHand 0.24 0.95 0.06
+0.3 @RightHand 0.24 0.95 0.06
+0.8 @RightHand 0.15 1.28 0.28
+1.12 @RightHand 0.45 1 0.18
+1.6 @RightHand 0.43 0.98 0.14
+2.3 @RightHand 0.24 0.95 0.06
+2.8 @RightHand 0.24 0.95 0.06
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+0.75 @RightHand.w 1 0 0
+1.7 @RightHand.w 1 0 0
+2.5 @RightHand.w 0 0 0
+2.8 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.8 -0.6 0
+
+0 @RightHand.f 0 -1 0.1
+0.8 @RightHand.f -0.3 0.6 0.7
+1.12 @RightHand.f 0.6 -0.2 0.77
+1.6 @RightHand.f 0.6 -0.2 0.77
+2.3 @RightHand.f 0 -1 0.1
+
+0 @RightHand.n -1 0 0
+0.8 @RightHand.n -0.8 -0.5 0.1
+1.12 @RightHand.n 0 -0.97 -0.25
+1.6 @RightHand.n 0 -0.97 -0.25
+2.3 @RightHand.n -1 0 0
+
+0 Spine1 0 0 0
+0.4 Spine1 0 0 0
+0.8 Spine1 0 4 0
+1.05 Spine1 2 -8 0
+1.6 Spine1 1 -5 0
+2.4 Spine1 0 0 0
+2.8 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.4 Spine2 0 0 0
+0.8 Spine2 -3 2 -4
+1.05 Spine2 3 -5 0
+1.12 Spine2 3 -5 5
+1.6 Spine2 2 -3 2
+2.4 Spine2 0 0 0
+2.8 Spine2 0 0 0
+
+0 @Look 0 1.6 2
+0.9 @Look -1 1.55 1.4
+1.8 @Look -1 1.55 1.4
+2.4 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+0.7 @Look.w 0 0 0
+1 @Look.w 0.55 0 0
+1.8 @Look.w 0.55 0 0
+2.5 @Look.w 0 0 0
+2.8 @Look.w 0 0 0
+
+0 @LeftFoot -0.1 0.11 0.28
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot 0.04 0.08 -0.28
+
+0 @RightFoot.p 0.15 0 1
+
+0 move 0 0 0
+0.4 move 0 0 0
+0.8 move 0.025 0.01 0
+1.12 move -0.025 -0.03 0.01
+1.4 move -0.02 -0.015 0
+2.4 move 0 0 0
+2.8 move 0 0 0
+
+0 @LeftHand -0.24 0.95 0.06
+0.5 @LeftHand -0.24 0.95 0.06
+0.8 @LeftHand -0.26 0.97 0.1
+1.15 @LeftHand -0.32 0.98 0
+1.6 @LeftHand -0.28 0.96 0.04
+2.4 @LeftHand -0.24 0.95 0.06
+
+0 @LeftHand.w 0 0 0
+0.5 @LeftHand.w 0 0 0
+0.9 @LeftHand.w 0.45 0 0
+1.8 @LeftHand.w 0.45 0 0
+2.5 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.8 -0.6 0

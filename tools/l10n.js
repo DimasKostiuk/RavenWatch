@@ -122,7 +122,7 @@ function asked() {
         if (kind === "quests") {
           const c = line.indexOf(":"); if (c <= 0) return;
           const key = line.slice(0, c).trim().toLowerCase(), val = line.slice(c + 1).trim();
-          if (key === "goal" || key === "name") put(val, where);
+          if (key === "goal" || key === "name" || key === "saga") put(val, where);
           else if (key === "mark") { const m = val.split(/ +/); const r = parseInt(m[1], 10); put(r > 0 ? m.slice(2).join(" ") : m.slice(1).join(" "), where); }
           else if (key === "start" || key === "done") val.split(";").forEach(x => { x = x.trim(); if (x.startsWith("msg ")) put(rest(x, 1), where); });
           return;
@@ -136,6 +136,49 @@ function asked() {
         else if (w[0] === "do" && w[1] === "msg") put(rest(line, 2), where);
       });
     }
+  }
+  // the story's places (assets/story/blueprints/locations.list.txt): their names (the map) and what a touched piece reads (LocTouch: «read:»,
+  // its words after «::» when it has conditions; «\n» kept as written, as the keys are)
+  {
+    const lf = path.join(root, "assets", "story", "blueprints", "locations.list.txt");
+    if (fs.existsSync(lf)) fs.readFileSync(lf, "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note);
+      line = line.trim();
+      const where = "assets/story/blueprints/locations.list.txt:" + (i + 1);
+      let m;
+      if ((m = /^(?:name|hearthshut):\s*(.+)$/.exec(line))) put(m[1], where);
+      else if ((m = /^read:\s*\S+\s+(.+)$/.exec(line))) { const v = m[1], sep = v.indexOf("::"); put((sep >= 0 ? v.slice(sep + 2) : v).replace(/\\n/g, "\n"), where); } // (a written «\n» is a new line, as in the code's keys)
+    });
+  }
+  // the story's tales (assets/story/tales): what a witness and a hearer say
+  const talesDir = path.join(root, "assets", "story", "tales");
+  if (fs.existsSync(talesDir)) for (const f of fs.readdirSync(talesDir).filter(n => n.endsWith(".txt")))
+    fs.readFileSync(path.join(talesDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note); line = line.trim();
+      const m = /^(saw|heard|hearsay|saga|rumor|as \w+):\s*(.+)$/.exec(line); if (m) put(m[2], "assets/story/tales/" + f + ":" + (i + 1));
+    });
+  // the saga's chapters (assets/story/saga): their names
+  const sagaDir = path.join(root, "assets", "story", "saga");
+  if (fs.existsSync(sagaDir)) for (const f of fs.readdirSync(sagaDir).filter(n => n.endsWith(".txt")))
+    fs.readFileSync(path.join(sagaDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note); line = line.trim();
+      const m = /^name:\s*(.+)$/.exec(line); if (m) put(m[1], "assets/story/saga/" + f + ":" + (i + 1));
+    });
+  // the story's talks (assets/story/talk): what a place says (its lines joined, as NpcTalk does) and each answer's words
+  const talkDir = path.join(root, "assets", "story", "talk");
+  if (fs.existsSync(talkDir)) for (const f of fs.readdirSync(talkDir).filter(n => n.endsWith(".txt"))) {
+    let says = [], at = "";
+    const end = () => { if (says.length) put(says.join("\n"), at); says = []; };
+    fs.readFileSync(path.join(talkDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      const line = raw.trim(), where = "assets/story/talk/" + f + ":" + (i + 1);
+      if (!line || line.startsWith("#") || line.startsWith("??")) return;
+      if (line.startsWith("[") || line.startsWith("@")) { end(); return; }
+      if (line.startsWith("~")) { const c = line.indexOf(":"); if (c > 0) put(line.slice(c + 1).trim(), where); return; } // (a raven's word in a talk: its own text, never part of what the person says)
+      if (line.startsWith(">")) { end(); const a = line.indexOf("=>"), from = line.startsWith(">|") ? 2 : 1; put((a < 0 ? line.slice(from) : line.slice(from, a)).trim(), where); return; }
+      if (!says.length) at = where;
+      says.push(line);
+    });
+    end();
   }
   return { out, bad };
 }

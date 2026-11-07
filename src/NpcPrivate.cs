@@ -61,7 +61,7 @@ namespace HuginWhispers
         private static bool LetIn(NpcActor a, NpcHouse h)
         {
             if (a == null) return false;
-            GameObject bed = NpcKit.Find(NpcKit.GetRef(a.Zdo, NpcResident.KBed));
+            GameObject bed = NpcKit.Find(NpcLocker.Ref(a.Zdo, NpcResident.KBed));
             if (bed != null && h.Inside(bed.transform.position)) return true;
             NpcWorker w = a.Worker;
             if (w == null) return false;
@@ -126,7 +126,7 @@ namespace HuginWhispers
             if (houses.Count == 0) return false;
             foreach (Fireplace f in NpcWorker.InBaseOf<Fireplace>(b, r.transform.position))
             {
-                if (f == null || !f.IsBurning()) continue;
+                if (f == null || !f.IsBurning() || !NpcKit.Warms(f)) continue;
                 NpcHouse h = At(b, f.transform.position);
                 if (h == null || Home(h)) continue;
                 Vector3? s = NpcKit.FireSide(f, r.transform.position);

@@ -10,13 +10,15 @@ namespace HuginWhispers
     // does (a plan for the mind's Whim layer) and for how long. The Whim layer is over Job and Routine (it may leave
     // its work for a while) and under Order and Fight (never over them); when the time is up its work goes on.
     // Tried now and then in the day (NpcResident), one at a time. New whims: add an entry (later: wash in a tub or the
-    // sea, chat with another resident, feed the animals…).
+    // sea, chat with another resident, feed the animals…). A guard with a post (Guard.OnWatch): only what it does where it stands (AtPost);
+    // any guard: no mending.
     internal static class NpcWhims
     {
         internal sealed class Whim
         {
             public string Id, Word;            // its name; what the window and the log say
             public float Weight = 1f;          // how likely among those that can be now
+            public bool AtPost;                // done where it stands: one on watch may too
             public float Min = 30f, Max = 60f; // for how long (s)
             public Func<NpcResident, bool> Can = r => true;
             public Func<NpcResident, NpcMind.Plan> Make;
@@ -25,27 +27,31 @@ namespace HuginWhispers
 
         internal static readonly List<Whim> All = new List<Whim>
         {
-            // a rest: sits down somewhere in its base (a free bench near it, else on the ground) for a minute or two
+            // a rest: the seat of its base it likes best now (NpcPlaces); no seat: on the ground where it is
             new Whim { Id = "rest", Word = "перепочиває", Weight = 4f, Min = 60f, Max = 150f,
-                Make = r => new NpcMind.Plan { Kind = NpcMind.Task.Sit, To = r.Base.Inside(r.transform.position) && !NpcPrivate.Off(r.Actor, r.Base, r.transform.position) ? r.transform.position : NpcPrivate.Spot(r.Actor, r.Base) } },
+                Make = r => NpcPlaces.Best(r.Actor, "seat") ?? NpcPlaces.RestHere(r.Actor) },
             // by the fire: a burning fire in its base, a bench near it when there is one (found by «sit»)
             new Whim { Id = "fire", Word = "гріється біля вогню", Weight = 3f, Min = 90f, Max = 180f,
-                Can = r => NpcToil.FireSpot(r.Base, r.transform.position, r.Actor) != null,
-                Make = r => new NpcMind.Plan { Kind = NpcMind.Task.Sit, To = NpcToil.FireSpot(r.Base, r.transform.position, r.Actor) ?? r.transform.position } },
+                Can = r => NpcPlaces.AnyFire(r.Actor),
+                Make = r => NpcPlaces.Best(r.Actor, "fire") },
+            // a break from its work: over to a station of its base, a look at how it goes
+            new Whim { Id = "break", Word = "перепочиває біля роботи", Weight = 2f, Min = 25f, Max = 50f, Can = r => r.Actor.Worker != null && r.Actor.Worker.Works && !Guard.Hired(r.Actor), Make = r => NpcPlaces.Best(r.Actor, "craft") },
             // a guest: once in a few game days it drops in to warm itself by the fire of a player's house — never while
             // anyone is home (NpcPrivate; at other times it keeps out)
-            new Whim { Id = "guest", Word = "гріється в гостях", Weight = 1f, Min = 60f, Max = 120f, Can = r => NpcPrivate.CanVisit(r), Make = r => NpcPrivate.Visit(r) },
+            new Whim { Id = "guest", Word = "гріється в гостях", Weight = 1f, Min = 60f, Max = 120f, Can = r => r.Actor.Def.Settler && NpcPrivate.CanVisit(r), Make = r => NpcPrivate.Visit(r) },
             // a stretch: the arms up (the game's flex), then it stands a little
-            new Whim { Id = "stretch", Word = "потягується", Weight = 1f, Min = 6f, Max = 10f,
-                Make = r => { if (r.Actor.Body != null) r.Actor.Body.Gesture("flex", false); return new NpcMind.Plan { Kind = NpcMind.Task.Idle, To = r.transform.position }; } },
+            new Whim { Id = "stretch", Word = "потягується", Weight = 1f, Min = 6f, Max = 10f, AtPost = true,
+                Make = r => { if (r.Actor.Body != null && !(NpcClock.Seen(r.Actor) && r.Actor.Body.Clip("stretch_up"))) r.Actor.Body.Gesture("flex", false); return new NpcMind.Plan { Kind = NpcMind.Task.Idle, To = r.transform.position }; } }, // (our stretch where a player sees it, the game's flex elsewhere)
             // a look round: stands and looks out somewhere for a few breaths
-            new Whim { Id = "gaze", Word = "задивився", Weight = 2f, Min = 8f, Max = 16f,
-                Make = r => { Vector2 d = UnityEngine.Random.insideUnitCircle.normalized * 20f; return new NpcMind.Plan { Kind = NpcMind.Task.Idle, To = r.transform.position, Looks = true, Look = r.transform.position + new Vector3(d.x, 2f, d.y) }; } },
+            new Whim { Id = "gaze", Word = "задивився", Weight = 2f, Min = 8f, Max = 16f, AtPost = true,
+                Make = r => { Vector2 d = UnityEngine.Random.insideUnitCircle.normalized * 20f; if (r.Actor.Body != null && NpcClock.Seen(r.Actor) && UnityEngine.Random.value < 0.5f) r.Actor.Body.Clip("shade_eyes"); return new NpcMind.Plan { Kind = NpcMind.Task.Idle, To = r.transform.position, Looks = true, Look = r.transform.position + new Vector3(d.x, 2f, d.y) }; } },
             // a wash: to a tub in its base (sits in its water) or to the water at its shore (kneels at it)
             new Whim { Id = "wash", Word = "миється", Weight = 1.5f, Min = 50f, Max = 80f, Can = r => Wash(r) != null, Make = r => Wash(r) },
             // chores (NpcChores): mend what is damaged in its base; feed a hungry tamed beast, top up the ravens' feeder
-            new Whim { Id = "mend", Word = "лагодить", Weight = 2.5f, Min = 120f, Max = 180f, Can = r => NpcChores.CanMend(r), Make = r => NpcChores.Plan(NpcChores.Mend) },
-            new Whim { Id = "tend", Word = "годує звірів", Weight = 2.5f, Min = 90f, Max = 150f, Can = r => NpcChores.CanTend(r), Make = r => NpcChores.Plan(NpcChores.Tend) },
+            new Whim { Id = "mend", Word = "лагодить", Weight = 2.5f, Min = 120f, Max = 180f, Can = r => r.Actor.Def.Settler && !Guard.Hired(r.Actor) && NpcChores.CanMend(r), Make = r => NpcChores.Plan(NpcChores.Mend) },
+            new Whim { Id = "tend", Word = "годує звірів", Weight = 2.5f, Min = 90f, Max = 150f, Can = r => r.Actor.Def.Settler && NpcChores.CanTend(r), Make = r => NpcChores.Plan(NpcChores.Tend) },
+            // a nap in the day: lies down where it may rest (only one whose nature asks for it: NpcNature, «nap=» on its row)
+            new Whim { Id = "nap", Word = "дрімає", Weight = 1f, Min = 60f, Max = 180f, Can = r => NpcNature.Whim(NpcNature.Of(r.Actor), "nap") > 1f && !NpcHunger.IsHungry(r.Actor), Make = r => { NpcMind.Plan at = NpcPlaces.RestHere(r.Actor); return new NpcMind.Plan { Kind = NpcMind.Task.Go, To = at.To, Near = 1.2f, Pose = "rest" }; } },
             // a meal (never by chance: hunger takes it there, NpcResident; here for the console)
             new Whim { Id = "eat", Word = "іде їсти", Weight = 0f, Min = 240f, Max = 300f, Can = r => false, Make = r => NpcMeals.Plan() },
         };
@@ -122,13 +128,24 @@ namespace HuginWhispers
             return "Примхи: " + string.Join(", ", ids.ToArray());
         }
 
+        // whether it can be now, timed whim by whim (raven npc perf, the load test: «whim can: <id>»)
+        private static readonly Dictionary<string, int> PerfCan = new Dictionary<string, int>();
+        private static bool Can(Whim w, NpcResident r)
+        {
+            int id; if (!PerfCan.TryGetValue(w.Id, out id)) PerfCan[w.Id] = id = NpcPerf.Id("whim can: " + w.Id);
+            long perf = NpcPerf.Now();
+            try { return w.Can(r); } finally { NpcPerf.Add(id, perf); }
+        }
+
         private static Whim Pick(NpcResident r)
         {
+            bool watch = Guard.OnWatch(r.Actor);
+            NpcNature nature = NpcNature.Of(r.Actor);
             float sum = 0f;
-            foreach (Whim w in All) if (w.Can(r)) sum += w.Weight;
+            foreach (Whim w in All) if ((!watch || w.AtPost) && Can(w, r)) sum += w.Weight * NpcNature.Whim(nature, w.Id);
             if (sum <= 0f) return null;
             float roll = UnityEngine.Random.value * sum;
-            foreach (Whim w in All) { if (!w.Can(r)) continue; roll -= w.Weight; if (roll <= 0f) return w; }
+            foreach (Whim w in All) { if ((watch && !w.AtPost) || !Can(w, r)) continue; roll -= w.Weight * NpcNature.Whim(nature, w.Id); if (roll <= 0f) return w; }
             return null;
         }
     }

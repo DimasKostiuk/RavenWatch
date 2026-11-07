@@ -24,7 +24,8 @@ namespace HuginWhispers
     //   ambush      (seldom) looks like a plain call for help — come close and foes jump out round you; slain, both safe
     // Saved, it thanks you and may be hired (as any person: «Іди сам до оселі»…). Not saved in time, it is gone (and its
     // foes and its lost thing with it), and a new one is heard of after a while. At most Cap settlers on the server.
-    // The server keeps the times and makes the person (a ZDO where it waits); the game where it is loaded sets the scene
+    // The server keeps the times and makes the person (a ZDO where it waits); what it changes on a person another game runs it
+    // asks of that game (Tell: a write from here over a ZDO that game owns is lost at that game's next write); the game where it is loaded sets the scene
     // when someone comes near (NpcRescueSite) — its foes, its pose, its lost thing.
     internal static class NpcRescue
     {
@@ -131,11 +132,11 @@ namespace HuginWhispers
                             if (st >= NpcRescueHits.Dead && now > until) { End(h, n, true, now); continue; } // (died, or its time ran out while you were there — told: gone)
                             if (st == 1 && !n.GetBool(KLonger, false)) // (someone reached it: at least half a day left from now — not lost to a clock you never saw)
                             {
-                                n.Set(KLonger, true);
                                 long need = now + (long)(Day * 0.5f);
-                                if (until < need) { until = need; n.Set(KUntil, need); string[] info = h.GetString(KInfo, "").Split('|'); if (info.Length >= 4) { info[3] = need.ToString(); Own(h); h.Set(KInfo, string.Join("|", info)); } }
+                                Tell(n, 1, System.Math.Max(until, need));
+                                if (until < need) { until = need; string[] info = h.GetString(KInfo, "").Split('|'); if (info.Length >= 4) { info[3] = need.ToString(); Own(h); h.Set(KInfo, string.Join("|", info)); } }
                             }
-                            if (now > until && st == 1) { n.Set(KStage, NpcRescueHits.Expired); n.Set(KUntil, now + 20L); continue; } // (time ran out with someone there: told on their games, gone a moment later)
+                            if (now > until && st == 1) { Tell(n, NpcRescueHits.Expired, now + 20L); continue; } // (time ran out with someone there: told on their games, gone a moment later)
                             if (now > until && st < 2) { End(h, n, true, now); continue; } // (nobody came in time: gone)
                             if (now > n.GetLong(KUntil, 0L) + (long)Day) { End(h, n, true, now); continue; } // (saved but never hired: it goes its way a day after)
                             continue;
@@ -148,6 +149,22 @@ namespace HuginWhispers
                 }
             }
             catch (Exception e) { Npcs.Log("rescue: " + e.Message); }
+        }
+
+        // its stage and its time, on the game that owns it (none owns it, or this one: written here)
+        private static void Tell(ZDO n, int stage, long until)
+        {
+            long owner = n.GetOwner();
+            if (owner == 0L || owner == ZDOMan.GetSessionID()) { Keep(n, stage, until); return; }
+            ZRoutedRpc.instance.InvokeRoutedRPC(owner, n.m_uid, NpcActor.RpcAct, "rescuetime " + stage + " " + until); // (not there yet: asked again at the next pass)
+        }
+
+        internal static void Keep(ZDO n, int stage, long until)
+        {
+            if (n == null) return;
+            n.Set(KLonger, true);
+            n.Set(KStage, stage);
+            n.Set(KUntil, until);
         }
 
         // the settlers of the whole server (the template marked generated)
@@ -177,7 +194,7 @@ namespace HuginWhispers
             n.Set(KKind, kind);
             long until = now + (long)(Day * LastsDays);
             n.Set(KUntil, until);
-            n.Set(NpcLevers.KVars, "inneed=1;" + kind + "=1");
+            NpcLocker.Put(n, NpcLevers.KVars, "inneed=1;" + kind + "=1");
             Own(heart);
             NpcKit.Mark(n); // (its own number: a person moves — its heart finds it again after a restart)
             NpcCensus.Added(n); // (counted at once: no second one past the cap before the next pass)
@@ -263,6 +280,19 @@ namespace HuginWhispers
             long next = heart.GetLong(KNext, 0L) - (long)Now;
             if (heart.GetString(NpcHeart.KName, "").Length == 0) return Lang.T("Безіменне серце чуток не чує — дай йому назву.");
             return next > 0 ? Lang.F("Чуток поки нема. Наступні — десь за {0}.", Left(next)) : Lang.T("Чуток поки нема.");
+        }
+
+        // one going on, in short (a heart's board, «Треба зробити»); null: none. Marks nothing: that is BoardLine, when the board is opened
+        internal sealed class Short { public string Text = "", Left = ""; public Vector3 At; }
+        internal static Short BoardShort(ZDO heart, Vector3 at)
+        {
+            string info = heart != null ? heart.GetString(KInfo, "") : "";
+            if (info.Length == 0) return null;
+            string[] f = info.Split('|');
+            long until; float x, z;
+            if (f.Length < 4 || !long.TryParse(f[3], out until) || !float.TryParse(f[1], NumberStyles.Float, CultureInfo.InvariantCulture, out x) || !float.TryParse(f[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z)) return null;
+            Vector3 where = new Vector3(x, WorldGenerator.instance != null ? WorldGenerator.instance.GetHeight(x, z) : at.y, z); // (kept without its height: its ring on the land, not under it)
+            return new Short { Text = Lang.F("Людина в біді: {0}, {1}, {2}", KindWord(f[0]), Direction(at, where), Distance(at, where)), Left = Left(until - (long)Now), At = where };
         }
 
         internal static string Left(long seconds)
@@ -454,7 +484,7 @@ namespace HuginWhispers
         private float _nextFrost, _nextCall;
         private void Freezing()
         {
-            if (NpcKit.Nearest<Fireplace>(transform.position, 4f, f => f.IsBurning()) != null) { NpcLevers.Do(_a, new[] { "npcunflag", "freezing" }); NpcLevers.Do(_a, new[] { "npcflag", "rescued" }); return; }
+            if (NpcKit.Nearest<Fireplace>(transform.position, 4f, f => f.IsBurning() && NpcKit.Warms(f)) != null) { NpcLevers.Do(_a, new[] { "npcunflag", "freezing" }); NpcLevers.Do(_a, new[] { "npcflag", "rescued" }); return; }
             if (Time.time < _nextFrost) return;
             _nextFrost = Time.time + 4f;
             Character c = _a.GetComponent<Character>();

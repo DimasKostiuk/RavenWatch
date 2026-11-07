@@ -38,13 +38,29 @@ namespace HuginWhispers
         private readonly int _w;
         private bool[] _in = new bool[0];
         private readonly List<int> _cells = new List<int>();
+        private readonly List<int> _edge = new List<int>(); // its cells on its OUTER edge (MakeEdge)
+        private float _edgeFar, _edgeNear; // (m from the centre: the average and the nearest of them, for its description)
         private float _madeAt = -1000f, _checkAt, _startedAt, _askedAt;
 
         // ---------------------------------------------------------------- what stands in it, by kind
         // Made with its map and again (alone, cheaper) when its buildings change in between: one look over its pieces for
         // everyone who lives there — NpcWork's fires, smelters, chests…, NpcMeals' tables, NpcChores' wear, NpcWhims' tub —
         // instead of each of them looking over all of them every few seconds. A thing gone since is a null in a list.
-        internal static readonly System.Type[] Kinds = { typeof(Fireplace), typeof(Smelter), typeof(CookingStation), typeof(Beehive), typeof(Fermenter), typeof(Container), typeof(Bed), typeof(Chair) };
+        internal static readonly System.Type[] Kinds = { typeof(Fireplace), typeof(Smelter), typeof(CookingStation), typeof(Beehive), typeof(Fermenter), typeof(Container), typeof(Bed), typeof(Chair), typeof(CraftingStation), typeof(ItemStand), typeof(Door) };
+        // …and these all round it (within Reach, in it or not: a fire in the yard by the heart, a seat on the porch, a door in its wall — a
+        // door stands on the edge, never inside): the people's seat, fire and door searches read them instead of going over every piece of
+        // the world near (each took 6–7 ms on a big base, 2026-11-05: the load test). A chair: every seat of its piece (a bench has two)
+        internal static readonly System.Type[] RoundKinds = { typeof(Fireplace), typeof(Chair), typeof(Door) };
+        private Dictionary<System.Type, List<Component>> _round;
+        internal List<Component> Round(System.Type t) { List<Component> l; return _round != null && _round.TryGetValue(t, out l) ? l : null; }
+
+        // the base whose look round it covers this spot (its round lists hold what is near it), null: none ready here
+        internal static NpcBase Covering(Vector3 at)
+        {
+            if (!ReferenceEquals(_world, ZNet.instance)) return null;
+            foreach (NpcBase b in All.Values) if (b._round != null && Utils.DistanceXZ(at, b.Centre) <= Reach) return b;
+            return null;
+        }
         private Dictionary<System.Type, List<Component>> _things;
         private List<Transform> _tables;
         private List<WearNTear> _wears;
@@ -100,7 +116,7 @@ namespace HuginWhispers
             if (!stale)
             {
                 List<Piece> now = new List<Piece>(); Piece.GetAllPiecesInRadius(Centre, Reach, now);
-                bool changed = now.Count != _thingsCount;
+                bool changed = now.Count != _thingsCount || _lookVersion != LocState.LookVersion; // (a place's state changed: what it has now is another list)
                 if (changed && Ready && !_thingsMaking && Plugin.Instance != null) { _thingsMaking = true; Plugin.Instance.StartCoroutine(MakeThings(now, _in)); } // (a chest put down: seen within Recheck s, its map later)
                 if (young) return;
                 stale = now.Count != Pieces;
@@ -128,19 +144,39 @@ namespace HuginWhispers
             return Ground(CellCentre(_cells[Random.Range(0, _cells.Count)]));
         }
 
-        // a spot on its edge, on the land (the guard's round); the centre while it has no map
+        // a spot on its outer edge, on the land (the guard's round); the centre while it has no map
         internal Vector3 EdgeSpot()
         {
-            if (!Ready || _cells.Count == 0) return Spot();
-            for (int tries = 0; tries < 40; tries++)
-            {
-                int c = _cells[Random.Range(0, _cells.Count)];
-                int x = c % _w, y = c / _w;
-                if (Own(x + 1, y) && Own(x - 1, y) && Own(x, y + 1) && Own(x, y - 1)) continue;
-                return Ground(CellCentre(c));
-            }
-            return Spot();
+            if (!Ready || _edge.Count == 0) return Spot();
+            return Ground(CellCentre(_edge[Random.Range(0, _edge.Count)]));
         }
+
+        // Its OUTER edge: its cells next to what lies outside it, reached from the map's rim through cells not its own. Any cell by a cell not
+        // its own counted before: by a wall, a fence, a slope in the middle of the village, so a guard «on the edge» walked about its centre
+        // (the user 2026-11-04). Once a map, over its cells (about ten thousand), with the map.
+        private void MakeEdge(bool[] inside)
+        {
+            bool[] outside = new bool[inside.Length];
+            Queue<int> q = new Queue<int>();
+            for (int i = 0; i < _w; i++)
+            {
+                Step(i, 0, inside, outside, q); Step(i, _w - 1, inside, outside, q);
+                Step(0, i, inside, outside, q); Step(_w - 1, i, inside, outside, q);
+            }
+            Flood(q, inside, outside);
+            _edge.Clear();
+            float sum = 0f; _edgeNear = float.MaxValue;
+            foreach (int c in _cells)
+            {
+                int x = c % _w, y = c / _w;
+                if (!Out(x + 1, y, outside) && !Out(x - 1, y, outside) && !Out(x, y + 1, outside) && !Out(x, y - 1, outside)) continue;
+                _edge.Add(c);
+                float d = Utils.DistanceXZ(CellCentre(c), Centre);
+                sum += d; if (d < _edgeNear) _edgeNear = d;
+            }
+            _edgeFar = _edge.Count > 0 ? sum / _edge.Count : 0f;
+        }
+        private bool Out(int x, int y, bool[] outside) { return x < 0 || y < 0 || x >= _w || y >= _w || outside[x + y * _w]; }
 
         // a spot of its own land by the water (to wash at): a cell with water a couple of steps off; false: none
         internal bool ShoreSpot(out Vector3 at, out Vector3 water)
@@ -159,7 +195,7 @@ namespace HuginWhispers
         internal string Describe()
         {
             if (!Ready) return Making ? "база рахується…" : "база ще не порахована";
-            return (Fenced ? "огороджена" : "відкрита (коло " + Mathf.RoundToInt(Open) + " м + смуга біля будівель)") + ", " + _cells.Count + " м², будівель " + Pieces + ", з них стін і дверей " + Blockers + ", схилів і води " + Banks;
+            return (Fenced ? "огороджена" : "відкрита (коло " + Mathf.RoundToInt(Open) + " м + смуга біля будівель)") + ", " + _cells.Count + " м², межа " + _edge.Count + " м (від центру в середньому " + Mathf.RoundToInt(_edgeFar) + " м, найближче " + Mathf.RoundToInt(_edgeNear) + " м), будівель " + Pieces + ", з них стін і дверей " + Blockers + ", схилів і води " + Banks;
         }
 
         // ---------------------------------------------------------------- making the map
@@ -228,15 +264,19 @@ namespace HuginWhispers
             _thingsMaking = true;
             yield return MakeThings(pieces, inside);
             _in = inside; _h = h; Fenced = fenced; Pieces = pieces.Count; Blockers = blockers; Banks = banks;
+            MakeEdge(inside);
             Ready = true; Making = false; _madeAt = Time.time;
             Npcs.Log("base at " + Mathf.RoundToInt(Centre.x) + "," + Mathf.RoundToInt(Centre.z) + ": " + Describe());
         }
 
-        private int _thingsCount = -1;
+        private int _thingsCount = -1, _lookVersion = -1;
         private IEnumerator MakeThings(List<Piece> pieces, bool[] inside)
         {
+            int lookVersion = LocState.LookVersion;
             Dictionary<System.Type, List<Component>> things = new Dictionary<System.Type, List<Component>>();
             foreach (System.Type t in Kinds) things[t] = new List<Component>();
+            Dictionary<System.Type, List<Component>> round = new Dictionary<System.Type, List<Component>>();
+            foreach (System.Type t in RoundKinds) round[t] = new List<Component>();
             List<Transform> tables = new List<Transform>();
             List<WearNTear> wears = new List<WearNTear>();
             List<Piece> tubs = new List<Piece>();
@@ -245,12 +285,23 @@ namespace HuginWhispers
             foreach (Piece pc in pieces)
             {
                 if (pc == null) continue;
+                // A place of the story (its pieces carry its stamp) is not a home's things: it belongs to the base that stands in it (its own people's, a
+                // story person's: a settler's heart may stand just outside its no-build ring, and it is no one's bench, chest or thing to mend). What its
+                // state has not is nobody's. The story's own spots go past this (people: StoryLife)
+                ZNetView pnv = pc.GetComponent<ZNetView>();
+                Loc place = Blueprint.Copy(pnv) ? Locs.Get(pnv.GetZDO().GetString(LocParts.KOf, "")) : null;
+                if (place != null && (!place.Holds(Centre) || LocState.Absent(pnv))) { if (++done % 25 == 0) { NpcPerf.Add(PerfThings, perf); yield return null; perf = NpcPerf.Now(); } continue; }
                 WearNTear w = pc.GetComponent<WearNTear>();
-                if (w != null) wears.Add(w);
+                if (w != null && place == null) wears.Add(w); // (mended whole by the story, never by a hammer: LocRepairPatch)
                 foreach (System.Type t in Kinds)
                 {
+                    if (place != null && place.Keeps(t)) continue;
                     Component c = pc.GetComponentInChildren(t);
-                    if (c != null && In(inside, c.transform.position)) things[t].Add(c);
+                    if (c == null) continue;
+                    bool rounds = System.Array.IndexOf(RoundKinds, t) >= 0;
+                    if (t == typeof(Chair)) { foreach (Chair ch in pc.GetComponentsInChildren<Chair>()) { if (ch.m_inShip) continue; round[t].Add(ch); if (In(inside, ch.transform.position)) things[t].Add(ch); } continue; } // heavy: once a snapshot, a piece with a seat only
+                    if (rounds) round[t].Add(c);
+                    if (In(inside, c.transform.position)) things[t].Add(c);
                 }
                 if (In(inside, pc.transform.position))
                 {
@@ -262,7 +313,7 @@ namespace HuginWhispers
                 if (++done % 25 == 0) { NpcPerf.Add(PerfThings, perf); yield return null; perf = NpcPerf.Now(); } // (a few pieces a frame)
             }
             NpcPerf.Add(PerfThings, perf);
-            _things = things; _tables = tables; _wears = wears; _tubs = tubs; _thingsCount = pieces.Count; _thingsMaking = false;
+            _things = things; _round = round; _tables = tables; _wears = wears; _tubs = tubs; _thingsCount = pieces.Count; _thingsMaking = false; _lookVersion = lookVersion;
         }
 
         // inside by a map being made (the cells), or — none yet — round the centre
@@ -333,11 +384,10 @@ namespace HuginWhispers
             if (_spark == null) { Shader sh = Shader.Find("Sprites/Default"); if (sh != null) { _spark = new Material(sh); _spark.color = new Color(1f, 0.8f, 0.3f, 0.9f); } }
             Material mat = _spark;
             int dots = 0, pins = 0;
-            for (int c = 0; c < _in.Length && dots < 900; c++)
+            foreach (int c in _edge)
             {
-                if (!_in[c]) continue;
+                if (dots >= 900) break;
                 int x = c % _w, y = c / _w;
-                if (Own(x + 1, y) && Own(x - 1, y) && Own(x, y + 1) && Own(x, y - 1)) continue; // (not on its edge)
                 if ((x + y) % 2 != 0) continue; // (every other one is enough to see the line)
                 Vector3 at = CellCentre(c); at.y = (c < _h.Length ? _h[c] : at.y) + 0.35f;
                 GameObject dot = GameObject.CreatePrimitive(PrimitiveType.Sphere);

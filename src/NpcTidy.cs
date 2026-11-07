@@ -20,18 +20,18 @@ namespace HuginWhispers
         internal sealed class Kind { public string Id, Title, Icon, Desc; }
         internal static readonly Kind[] Kinds =
         {
-            new Kind { Id = "wood", Title = "Деревина", Icon = "n-t-wood", Desc = "Дерево, тонке дерево, колоди, кора, чорне й іггдрасилеве дерево." },
-            new Kind { Id = "stone", Title = "Камінь", Icon = "n-t-stone", Desc = "Камінь, кремінь, обсидіан, кришталь, мармур, граустен." },
-            new Kind { Id = "ore", Title = "Руда й метал", Icon = "n-t-ore", Desc = "Руда, брухт, злитки, цвяхи." },
-            new Kind { Id = "fuel", Title = "Паливо й смола", Icon = "n-t-fuel", Desc = "Смола, вугілля, дьоготь, сік." },
-            new Kind { Id = "hide", Title = "Шкури й тканини", Icon = "n-t-hide", Desc = "Шкіра, шкури, льон, джут, тканини." },
-            new Kind { Id = "beast", Title = "Здобич зі звірів", Icon = "n-t-beast", Desc = "Пір'я, кістки, ікла, хітин, слиз, нутрощі й таке інше з тварин і потвор." },
-            new Kind { Id = "plant", Title = "Рослини й насіння", Icon = "n-t-plant", Desc = "Насіння, будяк, кульбаба, льон, ячмінь, коренеплоди." },
-            new Kind { Id = "food", Title = "Їжа", Icon = "n-t-food", Desc = "Страви, медовухи, ягоди, гриби, сире м'ясо й риба." },
-            new Kind { Id = "trophy", Title = "Трофеї", Icon = "n-t-trophy", Desc = "Трофеї звірів і потвор." },
-            new Kind { Id = "gear", Title = "Спорядження", Icon = "n-t-gear", Desc = "Зброя, обладунки, щити, інструменти, стріли." },
-            new Kind { Id = "value", Title = "Цінності", Icon = "n-t-value", Desc = "Монети, бурштин, перли, рубіни, намиста." },
-            new Kind { Id = "other", Title = "Інше", Icon = "n-t-other", Desc = "Усе, що не підпадає під інші: ключові речі, ядра сурлінгів тощо." },
+            new Kind { Id = "wood", Title = Lang.K("Деревина"), Icon = "n-t-wood", Desc = Lang.K("Дерево, тонке дерево, колоди, кора, чорне й іггдрасилеве дерево.") },
+            new Kind { Id = "stone", Title = Lang.K("Камінь"), Icon = "n-t-stone", Desc = Lang.K("Камінь, кремінь, обсидіан, кришталь, мармур, граустен.") },
+            new Kind { Id = "ore", Title = Lang.K("Руда й метал"), Icon = "n-t-ore", Desc = Lang.K("Руда, брухт, злитки, цвяхи.") },
+            new Kind { Id = "fuel", Title = Lang.K("Паливо й смола"), Icon = "n-t-fuel", Desc = Lang.K("Смола, вугілля, дьоготь, сік.") },
+            new Kind { Id = "hide", Title = Lang.K("Шкури й тканини"), Icon = "n-t-hide", Desc = Lang.K("Шкіра, шкури, льон, джут, тканини.") },
+            new Kind { Id = "beast", Title = Lang.K("Здобич зі звірів"), Icon = "n-t-beast", Desc = Lang.K("Пір'я, кістки, ікла, хітин, слиз, нутрощі й таке інше з тварин і потвор.") },
+            new Kind { Id = "plant", Title = Lang.K("Рослини й насіння"), Icon = "n-t-plant", Desc = Lang.K("Насіння, будяк, кульбаба, льон, ячмінь, коренеплоди.") },
+            new Kind { Id = "food", Title = Lang.K("Їжа"), Icon = "n-t-food", Desc = Lang.K("Страви, медовухи, ягоди, гриби, сире м'ясо й риба.") },
+            new Kind { Id = "trophy", Title = Lang.K("Трофеї"), Icon = "n-t-trophy", Desc = Lang.K("Трофеї звірів і потвор.") },
+            new Kind { Id = "gear", Title = Lang.K("Спорядження"), Icon = "n-t-gear", Desc = Lang.K("Зброя, обладунки, щити, інструменти, стріли.") },
+            new Kind { Id = "value", Title = Lang.K("Цінності"), Icon = "n-t-value", Desc = Lang.K("Монети, бурштин, перли, рубіни, намиста.") },
+            new Kind { Id = "other", Title = Lang.K("Інше"), Icon = "n-t-other", Desc = Lang.K("Усе, що не підпадає під інші: ключові речі, ядра сурлінгів тощо.") },
         };
 
         // the game's own things by name (a mod's thing falls through to its type and the words in its name)
@@ -102,14 +102,14 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- its choice
-        internal static int Off(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? z.GetInt(KOff, 0) : 0; }
+        internal static int Off(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Int(z, KOff, 0) : 0; }
         internal static bool Takes(NpcActor a, int kind) { return (Off(a) & (1 << kind)) == 0; }
 
         private static string Toggle(NpcActor a, int kind)
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
             int off = Off(a) ^ (1 << kind);
-            a.Zdo.Set(KOff, off);
+            NpcLocker.Put(a.Zdo, KOff, off);
             if (a.Worker != null) a.Worker.Reset();
             return Lang.T(Kinds[kind].Title) + ": " + ((off & (1 << kind)) == 0 ? Lang.T("прибирає") : Lang.T("не чіпає"));
         }
@@ -117,7 +117,7 @@ namespace HuginWhispers
         // its button on the round menu and the ring of kinds under it (each pressed: on or off — the ring stays)
         internal static NpcMenu.Button Button()
         {
-            return new NpcMenu.Button { Order = 95, Title = "Що прибирати", Icon = "n-tidy", Shown = a => a.Worker != null && (a.Worker.JobId == "cleaner" || a.Worker.JobId == "servant"),
+            return new NpcMenu.Button { Order = 95, Title = Lang.K("Що прибирати"), Icon = "n-tidy", Shown = a => a.Worker != null && (a.Worker.JobId == "cleaner" || a.Worker.JobId == "servant"),
                 Desc = a => { int off = 0; for (int i = 0; i < Kinds.Length; i++) if (!Takes(a, i)) off++; return off == 0 ? Lang.T("Прибирає все. Відкрий, щоб вибрати, чого не чіпати.") : Lang.F("Не чіпає {0} з {1} видів речей.", off, Kinds.Length); },
                 Now = a => Off(a) != 0, Sub = a => Ring() };
         }

@@ -55,11 +55,12 @@ namespace HuginWhispers
         internal static float HungerMul(ItemDrop.ItemData item) { return Norov.SatietyMul(item) * RuneStars.HungerMul(item) * GearFx.HungerMul(item) * Habits.HungerMul(item); } // (Колосковий оберіг: slower)
 
         // only an awake raven on its owner melts: a sleeping one, one on a stranger, or one flown off (to Odin after a
-        // ritual, or a shy one) keeps what it has; one resting on a perch gets hungry as usual (it is not a way to stop it)
+        // ritual, or a shy one) keeps what it has; one resting on a perch gets hungry as usual (it is not a way to stop it);
+        // nor one of a player with no book yet (RavenBook.Given: he cannot feed it from the circle yet)
         private static bool Draining(ItemDrop.ItemData item)
         {
             if (item != null && Home.Is(item)) return Trust.Active(item); // left at home: hungry as ever, in whichever game holds its perch
-            return item != null && Trust.Active(item) && !Trust.Stranger(item, Player.m_localPlayer) && (!Trust.Away(item) || Perches.On(item));
+            return item != null && Trust.Active(item) && !Trust.Stranger(item, Player.m_localPlayer) && (!Trust.Away(item) || Perches.On(item)) && RavenBook.Given(Player.m_localPlayer);
         }
 
         // counted and written down now; the seconds it spent starving since the last count (a raven at home: Home)

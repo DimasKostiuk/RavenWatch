@@ -305,7 +305,8 @@ namespace HuginWhispers
         {
             ItemDrop.ItemData h, m;
             RavenItem.Worn(p, out h, out m);
-            return h != null && Trust.Active(h) && !Trust.Away(h) && !Strike.Busy(p, false) && !Perches.On(h);
+            string off;
+            return h != null && Trust.Active(h) && !Trust.Away(h) && !RavenSkills.OffShoulder(p, false, out off) && !Perches.On(h); // (off on a strike, an outing, a visit: not there to take the blow)
         }
 
         // ---------------------------------------------------------------- parry: «Відплата»
