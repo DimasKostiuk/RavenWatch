@@ -1,5 +1,165 @@
 # Changelog
 
+## 2.9.4
+
+**English**
+
+New:
+
+- Heid carries her herb basket on her arm; she sets it down when she needs her hands and comes back for it later.
+- After meeting Heid at the stones you can ask her about the Watch before she leads you to the Hall.
+
+Changes and fixes:
+
+- The meeting with Heid at the stones has new lines.
+
+**Українською**
+
+Нове:
+
+- Гейд носить на руці кошик для трав; ставить його, коли потрібні руки, і повертається по нього згодом.
+- Після зустрічі з Гейд біля каменів можна розпитати її про Варту, перш ніж вона поведе до Зали.
+
+Зміни й виправлення:
+
+- У зустрічі з Гейд біля каменів нові репліки.
+
+## 2.9.3
+
+**English**
+
+Changes and fixes:
+
+- A bed given to a resident now shows whose it is and that it belongs to a resident, and a player can no longer claim it.
+- A resident's bed can now be taken away with its own button.
+- The ravens' voices now follow the game's volume settings.
+- A resident who cannot reach its work is no longer put on the roof above it.
+- A long talk no longer makes a resident vanish and reappear at its work.
+- Residents now walk up to chests that stand on a raised spot.
+- A raven is now taken off the shoulder by clicking its portrait in the book, with a small confirmation.
+- The Munin and Hugin bookmarks in the book are back to their proper size and place.
+- Beds and chests standing against a wall of the settlement now count as part of it: residents can be given them and use them.
+- With a dining table picked, residents now take cooked food from a chest within 15 metres of it, unless a wall stands between.
+
+**Українською**
+
+Зміни й виправлення:
+
+- Ліжко, дане жителю, тепер показує, чиє воно і що це ліжко жителя, а гравець не може зайняти його собі.
+- Ліжко жителя тепер можна зняти окремою кнопкою.
+- Голоси воронів тепер слухаються налаштувань гучності гри.
+- Жителя, який не може дійти до роботи, більше не переносить на дах над нею.
+- Після довгої розмови житель більше не зникає, щоб з'явитися біля роботи.
+- Жителі тепер підходять і до скринь, що стоять на підвищенні.
+- Ворона тепер знімають із плеча кліком по його портрету в книзі, з невеликим підтвердженням.
+- Закладки Мунін і Хугін у книзі знову свого розміру й на своєму місці.
+- Ліжка й скрині під стіною поселення тепер належать йому: жителям можна їх дати, і вони ними користуються.
+- Коли вибрано стіл їдальні, жителі беруть готову їжу зі скрині до 15 метрів від нього, якщо між ними нема стіни.
+
+## 2.9.2
+
+**English**
+
+New:
+
+- People speak and listen with their bodies: they turn their heads to whom they talk to, nod, think before they answer, now and then rest their chin in a hand while listening; in a talk your hero looks at the person.
+- Hands in every animation move with a little weight and are never frozen in the air.
+
+Changes and fixes:
+
+- A raven on your shoulder no longer lies in your bag; take it off with the new button on its page in the Book of ravens.
+- In the prologue the raven that comes to show you the way no longer gives up when you keep walking.
+- No more bushes inside the Hall of the Watch and the other places of the story (also with mods that make bushes plantable); places already built are cleared once.
+- During your own prologue scenes other players are hidden only while the camera holds a shot: a friend no longer vanishes when a raven comes to show you the way.
+- A person's menu (Q) no longer opens while another player is talking to them or has their menu open.
+- Things on the item stands of the Hall can no longer be taken, also with mods that change item stands or chests; hidden stands can no longer be pointed at.
+- A bed, a storeroom or a post inside the base is no longer refused as «outside the base»; a refusal now says why.
+- The bounds of a settlement are worked out again only when something is built or taken down there: much lighter on big bases.
+- In multiplayer you can now give beds, jobs, chests and posts to people another player's game is running.
+- Settlers no longer get stars or modifiers from Path of Valheiman.
+- People no longer keep a red «!» over their heads when nothing is wrong.
+- A person who gets stuck by a hearth is no longer put into the fire, and walks out of one by itself.
+
+**Українською**
+
+Нове:
+
+- Люди говорять і слухають усім тілом: повертають голову до співрозмовника, кивають, думають перед відповіддю, часом слухають, підперши підборіддя рукою; у розмові твій герой дивиться на людину.
+- Руки в усіх анімаціях рухаються з вагою й ніколи не застигають у повітрі.
+
+Зміни й виправлення:
+
+- Ворон на плечі більше не лежить у сумці; зняти його можна новою кнопкою на його сторінці в Книзі воронів.
+- У пролозі ворон, що прилітає показати дорогу, більше не зникає, якщо ти йдеш далі.
+- У Залі Варти та інших місцях сюжету більше не стоять кущі (і з модами, що дозволяють саджати кущі); уже збудовані місця очищаються один раз.
+- У твоїх сценах прологу інших гравців не видно лише поки камера тримає кадр: друг більше не зникає, коли ворон прилітає показати тобі дорогу.
+- Меню людини (Q) більше не відкривається, поки з нею говорить інший гравець або тримає її меню.
+- Речі з підставок Зали більше не можна забрати, і з модами, що змінюють підставки чи скрині; на сховані підставки більше не наводиться приціл.
+- Ліжко, склад чи пост у межах бази більше не відкидаються як «поза базою»; відмова тепер каже чому.
+- Межі оселі перераховуються лише тоді, коли там щось збудували чи розібрали: значно легше для великих баз.
+- Удвох тепер можна давати ліжко, роботу, скриню й пост людям, яких веде гра іншого гравця.
+- Поселенці більше не отримують зірок і модифікаторів від Path of Valheiman.
+- Над людьми більше не висить червоний «!», коли нічого не сталося.
+- Людину, що застрягла біля каміна, більше не переставляє у вогонь, а з вогню вона виходить сама.
+
+## 2.9.1
+
+**English**
+
+Changes and fixes:
+
+- What you bring a settler for its work now really goes to its chest, and it only asks for what it truly lacks.
+- A settler's reward now depends on what it asked for.
+- Building or hanging the very thing a settler wished for, or giving it a bed, now counts as your doing.
+- A worker's dream of mastering its craft no longer fades before it can come true.
+- Promising food or pay now means something: they remember it and are glad when it comes.
+- In the prologue the raven that shows the way no longer keeps calling: it comes back less often and stops after a few times.
+- Settlers now ask small things of you when something really happened, like carrying a word after a quarrel.
+- Settlers have new dreams: a room of their own, learning other work, seeing a far place once more with you.
+- What you do for people now ties lasting threads shown on their card, and those who trust you stand up for you.
+- When a raven refuses, it always says why, and its mood from its quirk shows beside its name; a willful raven no longer ignores orders at random.
+- Talks with settlers are livelier: they notice how you look, neighbours chime in, you can ask about others and pass words on, recall what you went through, give gifts to their taste and talk them round their own way.
+- Telling a tired settler to rest now works when it is off work too.
+- Settlers are no longer at your service: by their nature they may refuse to talk, want their worry heard first, and remember when you ignored it; the talk tells you why.
+- A settler standing next to you no longer fills the character preview of Path of Valheiman.
+- Settlers walk to their work instead of running.
+- A settler's orders are now gathered under one button in the Q menu.
+- A settler's card shows which work it will not take and why.
+- The talk window and the heart's board no longer jump as they change.
+- Guards keep their weapon in hand on duty but stand and walk calmly, carry heavy weapons and the atgeir on the shoulder, take a fighting stance only when danger comes and ease out of it after; going to eat or sleep they put it on their back.
+- A guard away from its post now defends its home like anyone else.
+- When your raven butts into a talk, its words, the reply to it and your answer stand together, and you answer the raven before going on.
+- A settler's card explains every trait and word under the pointer, and its tabs go by what matters most.
+- The heart's board shows all its tabs right after you arrive in the world.
+
+**Українською**
+
+Зміни й виправлення:
+
+- Те, що ти приносиш поселенцю для роботи, тепер справді йде в його ящик, а просить він лише те, чого бракує.
+- Нагорода поселенця тепер залежить від того, що він просив.
+- Збудована чи повішена річ, про яку мріяв поселенець, і дане йому ліжко тепер зараховуються тобі.
+- Мрія працівника стати майстром більше не згасає раніше, ніж може здійснитися.
+- Обіцянка їжі чи платні тепер щось означає: людина пам'ятає про неї й радіє, коли все є.
+- У пролозі ворон, що показує дорогу, більше не кличе без кінця: прилітає рідше й після кількох разів замовкає.
+- Поселенці тепер просять про дрібниці, коли справді щось сталося: наприклад, передати слово після сварки.
+- У поселенців нові мрії: власна кімната, навчитись іншої роботи, побачити далеке місце разом із тобою.
+- Те, що ти робиш для людей, тепер зав'язує нитки на їхній картці, а ті, хто тобі довіряє, заступаються за тебе.
+- Коли ворон відмовляється, він завжди каже чому, а його настрій через примху видно біля імені; свавільний ворон більше не ігнорує накази навмання.
+- Розмови з поселенцями живіші: вони помічають, який ти зараз, сусіди встрявають, можна спитати про інших і передати почуте, згадати пережите разом, подарувати щось до смаку й переконати кожного по-своєму.
+- «Іди відпочинь» утомленому поселенцю тепер працює й тоді, коли він не на роботі.
+- Поселенці більше не до твоїх послуг: за вдачею можуть не захотіти говорити, вимагати спершу вислухати їхнє й пам'ятати, що ти їх не вислухав; розмова пояснює чому.
+- Поселенець, що стоїть поруч, більше не затуляє прев'ю персонажа в Path of Valheiman.
+- Поселенці ходять до роботи кроком, а не бігом.
+- Накази поселенцю зібрано під однією кнопкою в меню Q.
+- На картці поселенця видно, за яку роботу він не візьметься й чому.
+- Вікно розмови й дошка Серця більше не стрибають під час змін.
+- Вартові на службі тримають зброю в руках, але стоять і ходять спокійно, важку зброю й атгейр носять на плечі, бойову стійку беруть лише при небезпеці й плавно виходять із неї; ідучи їсти чи спати, ховають зброю за спину.
+- Вартовий не на посту тепер захищає свою оселю, як і всі.
+- Коли твій ворон встряє в розмову, його слова, відповідь людини і твоя відповідь йому стоять разом, і ворону треба відповісти, перш ніж говорити далі.
+- Картка поселенця пояснює кожну рису й слово під вказівником, а закладки йдуть за важливістю.
+- Дошка Серця показує всі закладки одразу після входу у світ.
+
 ## 2.9.0
 
 **English**
@@ -181,7 +341,7 @@ Changes and fixes:
 - A raven asked for a gift while dozing wakes up for it.
 - Odin's fishing errands come only once you have a rod, «The Old Crypt» no longer sends you to a sunken crypt before the Elder, and a few errands got truer texts and lists.
 - A raven's wishes depend more on its character and habits, and it rarely asks for the same thing twice in a row; a devoted raven asks more often, a fidget less often but for longer adventures.
-- The ravens' strength under their effect icons reads again without SeneaL UI.
+- The ravens' strength under their effect icons reads again without UI mods.
 - The Raven's Nest looks sharper: its textures and glowing runes are in full quality.
 - The gift cards in the book are full size again with many gifts.
 - The words page shows its arrow and cross instead of empty squares.
@@ -289,7 +449,7 @@ Changes and fixes:
 - Ворон, що дрімав, прокидається, коли просиш у нього дар.
 - Рибальські доручення Одіна приходять лише тоді, коли маєш вудку, «Старий склеп» більше не шле в затоплений склеп до Старійшини, а кілька доручень отримали точніші тексти й списки.
 - Прохання ворона більше залежать від його характеру й звичок, і те саме він рідко просить двічі поспіль; відданий ворон просить частіше, непосида рідше, але про довші пригоди.
-- Сила воронів під іконками їхніх ефектів знову читається без SeneaL UI.
+- Сила воронів під іконками їхніх ефектів знову читається без інтерфейсних модів.
 - Вороняче гніздо чіткіше: його текстури й світні руни в повній якості.
 - Картки дарів у книзі знову повного розміру, навіть коли дарів багато.
 - Сторінка слів показує стрілку й хрестик замість порожніх квадратів.
@@ -564,7 +724,7 @@ Changes and fixes:
 - New places the ravens visit by themselves, and food they bring you from their outings.
 - New errand modifiers, two of them Odin's golden ones.
 - The ravens come alive: they step, shake, preen, sit hunched in the rain and lift their wings while you swim.
-- Fixes for strikes, kills by modded weapons, the Fate stone, the book and SeneaL UI.
+- Fixes for strikes, kills by modded weapons, the Fate stone, the book and UI mods.
 
 **Українською**
 
@@ -578,7 +738,7 @@ Changes and fixes:
 - Нові місця, куди ворони летять самі, і їжа, яку вони приносять зі своїх прогулянок.
 - Нові модифікатори доручень, два з них — золоті від самого Одіна.
 - Ворони ожили: переступають, обтрушуються, чистять пір'я, сидять нахохлені під дощем і тримають крила, коли пливеш.
-- Виправлення ударів, вбивств модовою зброєю, Каменя долі, книги й SeneaL UI.
+- Виправлення ударів, вбивств модовою зброєю, Каменя долі, книги й інтерфейсних модів.
 
 ## 2.4.0
 
@@ -666,7 +826,7 @@ Changes and fixes:
 - Ворон стереже свою могилу, а ворони з плечей ідуть у могилу з рештою речей.
 - Мод отримав англійську.
 - Баланс задає сервер.
-- Сумісність із SeneaL UI, Path of Valheiman і слабкими відеокартами.
+- Сумісність з інтерфейсними модами, Path of Valheiman і слабкими відеокартами.
 
 ## 2.0.1
 
@@ -737,7 +897,7 @@ Changes and fixes:
 - Довіра з рівнями й обрядами.
 - Дари в круговому меню G → «Ворони» й книга воронів.
 - Багряний Провідник замість планових візитів.
-- Вбрання для воронів, сумісність із Path of Valheiman і SeneaL UI.
+- Вбрання для воронів, сумісність із Path of Valheiman та інтерфейсними модами.
 
 ## 1.1.8
 - Виправлено: копія чужого ворона могла лишитися стояти в усіх, хоча в самого гравця ворона вже не було. Тепер власник кожні кілька секунд повідомляє, що його ворон ще сидить, і без цього копія зникає за 15 с (гравці зі старими версіями — як раніше, до 15 хв).

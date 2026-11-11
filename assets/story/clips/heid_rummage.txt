@@ -12,6 +12,7 @@ part loop 4.9 10.9 loop
 part rises 10.9 16.1 end
 mark 15.4 up
 cloth off
+want 5-10.9 palm both down
 
 # Гейд біля свого ліжка в таборі (пролог, people/heid.txt «wait:»): опускається на коліно (ноги — як у shield_kneel, перевірені),
 # порпається в речах перед собою (цикл: руки по черзі перебирають низько, корпус трохи хитається), встає (heid_meet: «.rises»).

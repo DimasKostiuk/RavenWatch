@@ -105,6 +105,9 @@ namespace HuginWhispers
         internal static int Off(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Int(z, KOff, 0) : 0; }
         internal static bool Takes(NpcActor a, int kind) { return (Off(a) & (1 << kind)) == 0; }
 
+        // its menu's deed, done where it is run (NpcMenu.OnOwner)
+        internal static void Deeds() { NpcMenu.Deeds["tidy"] = (a, at, arg) => { int k; return int.TryParse(arg, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out k) && k >= 0 && k < Kinds.Length ? Toggle(a, k) : null; }; }
+
         private static string Toggle(NpcActor a, int kind)
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
@@ -130,7 +133,7 @@ namespace HuginWhispers
                 int k = i;
                 l.Add(new NpcMenu.Button { Order = i, Title = Kinds[k].Title, Icon = Kinds[k].Icon, Stay = true,
                     Desc = a => Lang.T(Kinds[k].Desc) + "\n" + (Takes(a, k) ? Lang.T("Прибирає. Натисни — не чіпатиме.") : Lang.T("Не чіпає. Натисни — прибиратиме.")),
-                    Now = a => Takes(a, k), Do = (a, p) => Toggle(a, k) });
+                    Now = a => Takes(a, k), Do = (a, p) => NpcMenu.OnOwner(a, "tidy", p.transform.position, k.ToString(System.Globalization.CultureInfo.InvariantCulture)) });
             }
             return l;
         }

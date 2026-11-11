@@ -21,16 +21,22 @@ namespace HuginWhispers
     //               quarrel_teased); a caring one soothing one frightened or grieving near it (Comfort, from NpcFeel.React); a nature's own move as
     //               a feeling comes (Reacts: the coward shivers instead of a start back)
     //   its words   themes nature_<id> (and _fought _fled _work _evening _build when they fit: Themes, a source of NpcVoice), «?nature <id>» in any theme
+    //   its talk    the gifts it likes (Likes: NpcTalkGift), how a way of talking it round works on it (Sway, SwayBy: NpcTalkSway; the best one a chip on its card),
+    //               how it keeps its talk — its door, its own first, its grudge (Talk, TalkBy: NpcTalkDoor; a chip on its card)
     // Tune: the rows. Test: raven npc lever <who> trait nature <id>; raven npc self shows it; its card says it.
     internal sealed class NpcNature
     {
         internal string Id = "", Word = "", Tip = "", Fight = "", Traits = "", Whims = "", Places = "", Poses = "", Leans = "", Tone = "", Gait = "", Wont = "";
-        internal string Moves = "";
-        internal string Reacts = ""; // its own move the moment a feeling comes («fright:shiver»), over NpcFeel.Moves // its own short moves standing at a place («a|b»: clips that end by themselves), now and then over the place's own (NpcPlaces.Now)
+        internal string Moves = ""; // its own short moves standing at a place («a|b»: clips that end by themselves), now and then over the place's own (NpcPlaces.Now)
+        internal string Tasks = ""; // × how like it to ask a small task of this kind (NpcTasks): «word=0.3», none: as anyone
+        internal string Reacts = ""; // its own move the moment a feeling comes («fright:shiver»), over NpcFeel.Moves
+        internal string Likes = ""; // × how much it likes a kind of gift (NpcTalkGift: drink meat fish bread sweet mushroom flower shiny trophy), none: as anyone
+        internal string Sway = "";  // × how a way of talking it round works on it (NpcTalkSway: pride gain fear friend duty), none: by its traits (SwayBy)
+        internal string Talk = "";  // × how it keeps its talk (NpcTalkDoor): door — how soon it shuts it to you, insist — how soon its own comes first, grudge — how long it holds an unheard worry; none: by its ways (TalkBy)
         internal float Share;
         internal bool Late; // (works its evening too)
 
-        private Dictionary<string, float> _whims, _places, _poses, _leans;
+        private Dictionary<string, float> _whims, _places, _poses, _leans, _tasks, _likes, _sway, _talk;
         private Dictionary<string, string> _wont, _reacts;
         private string[] _themes; private int _index = -1; // (its words' theme names, made once · its place in All, for the pairs table)
         internal bool Plain { get { return Id == "plain"; } }
@@ -38,39 +44,39 @@ namespace HuginWhispers
         internal static readonly List<NpcNature> All = new List<NpcNature>
         {
             new NpcNature { Id = "plain", Share = 0.35f },
-            new NpcNature { Id = "bully", Moves = "fire_proud_l|fire_proud_r", Share = 0.07f, Word = Lang.K("задира"), Tip = Lang.K("Лізе в бій першим|першою і чіпляється до слабших."), Fight = "defend", Gait = "soldier",
+            new NpcNature { Id = "bully", Talk = "door=1.2 insist=1.3 grudge=1.3", Likes = "trophy=3 meat=2 drink=1.5 sweet=0.5 flower=0.2", Sway = "pride=1.8 gain=1 friend=0.7 duty=0.6 fear=0.4", Tasks = "word=0.2 sit=0.2 calm=0.1 look=0.1 beast=0.2 feed=0.4 greet=0.4 mend=0.6 listen=0.5 fire=0.5 light=0.4 hearth=0.7 raven=1.2 trophy=2", Moves = "fire_proud_l|fire_proud_r", Share = 0.07f, Word = Lang.K("задира"), Tip = Lang.K("Лізе в бій першим|першою і чіпляється до слабших."), Fight = "defend", Gait = "soldier",
                 Traits = "bravery=0.75-0.95 chatty=0.5-0.85 laziness=0.3-0.6",
                 Whims = "stretch=3 gaze=1.5 tend=0.4 mend=0.5", Places = "edge=0.45 person=0.3 scar=0.4 trophy=0.35 stores=-0.2", Poses = "hands_belt=3 hand_belt=2 arms_cross=1.5", Leans = "fear=0.4 others=1.5",
                 Wont = "cook:pride gatherer:pride cleaner:pride servant:house keeper:pride" },
-            new NpcNature { Id = "caring", Moves = "fire_nod_l|fire_nod_r", Share = 0.08f, Word = Lang.K("турботливий|турботлива"), Tip = Lang.K("Захищає своїх і дбає про кожного в оселі."), Fight = "defend",
+            new NpcNature { Id = "caring", Talk = "door=0.6 insist=0.7 grudge=0.6", Likes = "flower=2.5 sweet=2 bread=1.5 trophy=0.3", Sway = "friend=1.8 duty=1.5 pride=0.6 gain=0.5 fear=0.2", Tasks = "word=1.6 feed=2.5 greet=2 sit=1.3 calm=0.8", Moves = "fire_nod_l|fire_nod_r", Share = 0.08f, Word = Lang.K("турботливий|турботлива"), Tip = Lang.K("Захищає своїх і дбає про кожного в оселі."), Fight = "defend",
                 Traits = "bravery=0.5-0.8 chatty=0.6-0.9 diligence=0.5-0.8",
                 Whims = "tend=3 mend=1.6 guest=0.5", Places = "person=0.6 table=0.25 heart=0.25 edge=-0.2", Poses = "hands_back=1.5 sit_hands=1.5", Leans = "people=1.5 complaint=0.7",
                 Wont = "miner:dislike" },
-            new NpcNature { Id = "coward", Reacts = "fright:shiver", Moves = "look_search|fire_sheepish_l|fire_sheepish_r", Share = 0.08f, Word = Lang.K("боягуз|боягузка"), Tip = Lang.K("Тікає першим|першою, а потім соромиться цього."), Fight = "flee", Gait = "meek",
+            new NpcNature { Id = "coward", Talk = "door=0.8 insist=0.6 grudge=0.8", Likes = "sweet=2 bread=1.5 trophy=0.2", Sway = "fear=1.7 friend=1.3 gain=1 duty=0.8 pride=0.3", Tasks = "word=1.6 calm=2.5 look=2.5 beast=2.5 sit=1.3 light=1.5 hearth=1.5 greet=0.6 fire=0.8", Reacts = "fright:shiver", Moves = "look_search|fire_sheepish_l|fire_sheepish_r", Share = 0.08f, Word = Lang.K("боягуз|боягузка"), Tip = Lang.K("Тікає першим|першою, а потім соромиться цього."), Fight = "flee", Gait = "meek",
                 Traits = "bravery=0.05-0.2 curiosity=0.4-0.8",
                 Whims = "gaze=0.5 guest=0.3 wash=0.6", Places = "edge=-0.6 scar=-0.6 heart=0.35 table=0.2 person=0.2", Poses = "hug_self=2 hands_belt=0.2 hand_belt=0.2 ground_knee=1.5", Leans = "fear=1.8",
                 Wont = "guard:fear lumber:fear miner:fear keeper:fear" },
-            new NpcNature { Id = "lazy", Moves = "yawn|scratch_head|stretch_up", Share = 0.08f, Word = Lang.K("ледар|ледарка"), Tip = Lang.K("За будь-якої нагоди кидає роботу й лягає відпочити."), Fight = "flee", Gait = "waddle",
+            new NpcNature { Id = "lazy", Talk = "door=1.1 insist=0.8 grudge=0.7", Likes = "sweet=2.5 drink=2 bread=1.3 shiny=0.6", Sway = "gain=1.8 friend=1 fear=0.8 pride=0.7 duty=0.3", Tasks = "fire=2 hearth=1.6 light=1.2 fireside=1.5 beast=1.3 look=0.5 feed=0.3 greet=0.3", Moves = "yawn|scratch_head|stretch_up", Share = 0.08f, Word = Lang.K("ледар|ледарка"), Tip = Lang.K("За будь-якої нагоди кидає роботу й лягає відпочити."), Fight = "flee", Gait = "waddle",
                 Traits = "laziness=0.75-0.95 diligence=0.1-0.3 bravery=0.25-0.5",
                 Whims = "rest=2.5 nap=3 fire=1.5 mend=0.15 tend=0.3 break=2", Places = "seat=0.6 fire=0.35 table=0.25 stores=-0.4 craft=-0.4 roam=-0.2", Poses = "ground_back=2.5 sit_elbows=1.5 hands_back=0.4", Leans = "complaint=1.4 work=0.5",
                 Wont = "guard:lazy smelter:lazy lumber:lazy miner:lazy cleaner:lazy servant:lazy cook:lazy" },
-            new NpcNature { Id = "loner", Moves = "turn_away|turn_away|shrug_small", Share = 0.07f, Word = Lang.K("самітник|самітниця"), Tip = Lang.K("Тримається осторонь, говорить мало."), Fight = "flee", Gait = "meek",
+            new NpcNature { Id = "loner", Talk = "door=1.5 insist=0.7 grudge=1", Likes = "fish=2.5 mushroom=2 shiny=0.6 drink=0.5", Sway = "duty=1.4 gain=1.2 pride=0.9 fear=0.5 friend=0.4", Tasks = "word=0.3 fireside=0.1 greet=0.1 news=0.2 feed=0.3 listen=0.3 sit=0.4 look=0.6 stars=1.5", Moves = "turn_away|turn_away|shrug_small", Share = 0.07f, Word = Lang.K("самітник|самітниця"), Tip = Lang.K("Тримається осторонь, говорить мало."), Fight = "flee", Gait = "meek",
                 Traits = "chatty=0.05-0.2 curiosity=0.2-0.5 bravery=0.3-0.6",
                 Whims = "gaze=2.5 guest=0.1 wash=1.5", Places = "edge=0.6 roam=0.35 table=-0.7 person=-0.7 heart=-0.3 fire=-0.25", Poses = "arms_cross=2.5 hands_back=1.5", Leans = "people=0.3 others=0.5 news=0.5",
                 Wont = "servant:house cook:dislike" },
-            new NpcNature { Id = "nosy", Moves = "listen_in|listen_in|point_at|scratch_head|shade_eyes", Share = 0.07f, Word = Lang.K("пронира"), Tip = Lang.K("Усюди заглядає і все про всіх знає."), Fight = "flee",
+            new NpcNature { Id = "nosy", Talk = "door=0.6 insist=0.9 grudge=0.8", Likes = "shiny=3 trophy=1.5 mushroom=1.2", Sway = "gain=1.6 friend=1.3 pride=0.8 duty=0.7 fear=0.6", Tasks = "news=2.5 raven=2.5 look=1.5 trophy=1.5 greet=1.5", Moves = "listen_in|listen_in|point_at|scratch_head|shade_eyes", Share = 0.07f, Word = Lang.K("пронира"), Tip = Lang.K("Усюди заглядає і все про всіх знає."), Fight = "flee",
                 Traits = "curiosity=0.85-1 chatty=0.6-0.9 bravery=0.25-0.5",
                 Whims = "gaze=1.5 guest=1.8", Places = "watch=0.7 trophy=0.5 stores=0.45 ravens=0.45 craft=0.3 person=0.35", Poses = "hand_belt=1.5", Leans = "news=1.8 others=1.5",
                 Wont = "miner:dislike lumber:dislike smelter:dislike" },
-            new NpcNature { Id = "worker", Moves = "wipe_brow|back_ache", Share = 0.08f, Word = Lang.K("трудяга"), Tip = Lang.K("Працює довше за інших і не терпить ледарів."), Fight = "wary", Late = true,
+            new NpcNature { Id = "worker", Talk = "door=1 insist=1.1 grudge=1", Likes = "meat=2 bread=2 fish=1.3 flower=0.4 shiny=0.4", Sway = "duty=1.8 pride=1.2 friend=0.9 gain=0.8 fear=0.4", Tasks = "fireside=0.3 listen=0.4 sit=0.5 fire=0.5 news=0.5 light=0.8 trophy=0.8", Moves = "wipe_brow|back_ache", Share = 0.08f, Word = Lang.K("трудяга"), Tip = Lang.K("Працює довше за інших і не терпить ледарів."), Fight = "wary", Late = true,
                 Traits = "diligence=0.85-1 laziness=0.02-0.1 bravery=0.4-0.7 chrono=-1.5--0.5",
                 Whims = "rest=0.3 fire=0.5 guest=0.2 gaze=0.5 mend=2.5 tend=2", Places = "craft=0.5 stores=0.45 heart=0.15 seat=-0.3 table=-0.1 roam=-0.3", Poses = "hands_belt=1.5 ground_back=0.3", Leans = "work=1.8 complaint=0.7",
                 Wont = "servant:house" },
-            new NpcNature { Id = "reveller", Moves = "toast|toast|drink|talk_hands|fire_laugh_l|fire_laugh_r", Share = 0.07f, Word = Lang.K("гуляка"), Tip = Lang.K("Шукає компанію, вечори проводить біля вогню."), Fight = "wary", Gait = "spry",
+            new NpcNature { Id = "reveller", Talk = "door=0.7 insist=1 grudge=0.6", Likes = "drink=3 meat=1.5 sweet=1.3 mushroom=0.5", Sway = "friend=1.8 gain=1.2 pride=1 fear=0.5 duty=0.4", Tasks = "word=1.3 fireside=2.5 trophy=1.8 greet=1.6 listen=1.5 news=1.5 sit=1.2", Moves = "toast|toast|drink|talk_hands|fire_laugh_l|fire_laugh_r", Share = 0.07f, Word = Lang.K("гуляка"), Tip = Lang.K("Шукає компанію, вечори проводить біля вогню."), Fight = "wary", Gait = "spry",
                 Traits = "chatty=0.85-1 laziness=0.45-0.7 diligence=0.25-0.5 bravery=0.45-0.7 chrono=0.5-1.5",
                 Whims = "fire=2.5 guest=1.6 mend=0.4", Places = "table=0.6 fire=0.55 person=0.55 edge=-0.4 stores=-0.3", Poses = "ground_back=1.5 hand_belt=1.5", Leans = "joy=1.6 people=1.4 others=1.3",
                 Wont = "guard:dislike miner:dislike smelter:dislike servant:house cleaner:lazy" },
-            new NpcNature { Id = "grumbler", Moves = "wave_off|shrug_small|arms_open", Share = 0.05f, Word = Lang.K("буркун|буркотуха"), Tip = Lang.K("Завжди чимось невдоволений|невдоволена, але робить, що треба."), Fight = "wary", Tone = "бурч",
+            new NpcNature { Id = "grumbler", Talk = "door=1.3 insist=1.6 grudge=1.5", Likes = "bread=2 meat=1.5 shiny=0.3 flower=0.3", Sway = "duty=1.4 gain=1.3 pride=0.9 friend=0.6 fear=0.5", Tasks = "word=0.6 sit=0.6 fireside=0.7 fire=1.3 light=1.3 hearth=1.4", Moves = "wave_off|shrug_small|arms_open", Share = 0.05f, Word = Lang.K("буркун|буркотуха"), Tip = Lang.K("Завжди чимось невдоволений|невдоволена, але робить, що треба."), Fight = "wary", Tone = "бурч",
                 Traits = "chatty=0.45-0.7 diligence=0.5-0.75 bravery=0.4-0.7 laziness=0.2-0.45",
                 Whims = "mend=1.3 gaze=0.7", Places = "stores=0.25 person=0.1", Poses = "arms_cross=2 sit_elbows=1.5", Leans = "complaint=2 joy=0.5",
                 Wont = "servant:house cleaner:pride" },
@@ -89,7 +95,7 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- who it is
         internal static NpcNature Find(string id) { foreach (NpcNature n in All) if (n.Id == id) return n; return null; }
 
-        private static float H(uint own, string what)
+        internal static float H(uint own, string what) // (a steady roll from a person's number: NpcTalkGift's taste too)
         {
             uint h = own ^ (uint)what.GetStableHashCode(); h ^= h >> 15; h *= 0x2c1b3c6du; h ^= h >> 12; h *= 0x297a2d39u; h ^= h >> 15;
             return (h & 0xFFFFFu) / 1048575f;
@@ -242,6 +248,56 @@ namespace HuginWhispers
         internal static float Place(NpcNature n, string kind) { return n == null ? 0f : Read(Table(ref n._places, n.Places), kind, 0f); }
         internal static float Pose(NpcNature n, string pose) { return n == null ? 1f : Read(Table(ref n._poses, n.Poses), pose, 1f); }
         internal static float Lean(NpcNature n, string group) { return n == null ? 1f : Read(Table(ref n._leans, n.Leans), group, 1f); }
+        internal static float Task(NpcNature n, string kind) { return n == null ? 1f : Read(Table(ref n._tasks, n.Tasks), kind, 1f); }
+        internal static float Like(NpcNature n, string kind) { return n == null ? 1f : Read(Table(ref n._likes, n.Likes), kind, 1f); }
+
+        // how a way of talking it round works on it (×, 1 as anyone): its nature's row; a plain one, or one written by hand, by its traits
+        internal static readonly string[] Ways = { "pride", "gain", "fear", "friend", "duty" };
+        internal static float SwayBy(NpcActor a, string way)
+        {
+            NpcPersona p = NpcPersona.Of(a);
+            NpcNature n = p.Nature;
+            if (n != null && !n.Plain && n.Sway.Length > 0) return Read(Table(ref n._sway, n.Sway), way, 1f);
+            switch (way)
+            {
+                case "pride": return Mathf.Lerp(0.5f, 1.6f, p.Bravery);
+                case "fear": return Mathf.Lerp(1.5f, 0.4f, p.Bravery);
+                case "duty": return Mathf.Lerp(0.5f, 1.6f, p.Diligence);
+                case "gain": return Mathf.Lerp(0.6f, 1.5f, p.Laziness);
+                case "friend": return Mathf.Lerp(0.6f, 1.5f, p.Chatty);
+            }
+            return 1f;
+        }
+
+        // how it keeps its talk (×, 1 as anyone): its nature's row; a plain one by its ways (a chatty one keeps its door open, a grumpy one insists, a timid one hardly)
+        internal static float TalkBy(NpcActor a, string key)
+        {
+            NpcPersona p = NpcPersona.Of(a);
+            NpcNature n = p.Nature;
+            if (n != null && !n.Plain && n.Talk.Length > 0) return Read(Table(ref n._talk, n.Talk), key, 1f);
+            HashSet<string> t = NpcPhrases.Tones(a);
+            switch (key)
+            {
+                case "door": return Mathf.Lerp(1.3f, 0.7f, p.Chatty) * (t.Contains("бурч") ? 1.2f : 1f);
+                case "insist": return t.Contains("бурч") ? 1.4f : t.Contains("боязк") ? 0.7f : 1f;
+                case "grudge": return t.Contains("бурч") ? 1.3f : t.Contains("весел") ? 0.7f : 1f;
+            }
+            return 1f;
+        }
+
+        // the way that works best on it, and its word for the card («Вдача»: a hint, not the table)
+        internal static string BestWay(NpcActor a) { string best = Ways[0]; float most = -1f; foreach (string w in Ways) { float v = SwayBy(a, w); if (v > most) { most = v; best = w; } } return best; }
+        internal static string WayWord(string way)
+        {
+            switch (way)
+            {
+                case "pride": return Lang.T("гордістю");
+                case "gain": return Lang.T("вигодою");
+                case "fear": return Lang.T("страхом");
+                case "friend": return Lang.T("дружбою");
+                default: return Lang.T("обов'язком");
+            }
+        }
         // its own move as a feeling comes (null: the common one)
         internal static string Reaction(NpcActor a, string kind)
         {
@@ -290,8 +346,9 @@ namespace HuginWhispers
             if (n == null || n.Plain || a.Mind == null) return;
             if (n._themes == null) { string me = "nature_" + n.Id; n._themes = new[] { me, me + "_fled", me + "_fought", me + "_work", me + "_evening", me + "_build" }; } // (made once a nature)
             themes.Add(new KeyValuePair<string, float>(n._themes[0], 28f));
-            if (Time.time - a.Mind.FoughtAt < 90f) themes.Add(new KeyValuePair<string, float>(a.Mind.FoughtRan ? n._themes[1] : n._themes[2], 75f));
-            if (a.Worker != null && a.Worker.Works && a.Mind.NowLayer == NpcMind.Layer.Job) themes.Add(new KeyValuePair<string, float>(n._themes[3], 32f));
+            bool ran, won;
+            if (NpcMind.FoughtOf(a, out ran, out won) < 90f) themes.Add(new KeyValuePair<string, float>(ran ? n._themes[1] : n._themes[2], 75f)); // (on any game: a talk asks this on yours)
+            if (a.Worker != null && a.Worker.Works && NpcMind.LayerNow(a) == NpcMind.Layer.Job) themes.Add(new KeyValuePair<string, float>(n._themes[3], 32f));
             if (NpcVoice.DayPart() == "evening") themes.Add(new KeyValuePair<string, float>(n._themes[4], 30f));
             if (p != null && p.InPlaceMode()) themes.Add(new KeyValuePair<string, float>(n._themes[5], 42f));
         }

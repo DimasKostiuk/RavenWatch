@@ -207,6 +207,8 @@ namespace HuginWhispers
         // is is how far to that thing's surface, and only when nothing else (a wall) stands between; a goal in the open: as the crow flies.
         // The thing is found once a walk (Begin).
         private Collider _thing;
+        private Vector3 _aim; // (the floor by that thing: what the way is asked to)
+        private bool _hasAim;
         private static readonly Collider[] _at = new Collider[6];
         private static Collider ThingAt(Vector3 to)
         {
@@ -242,7 +244,7 @@ namespace HuginWhispers
         private void Begin(Vector3 to, float near, string what)
         {
             if (_trip != null) End(Done ? "ok" : "left off");
-            _goal = to; _near = near; _what = what; Done = false; _thing = ThingAt(to);
+            _goal = to; _near = near; _what = what; Done = false; _thing = ThingAt(to); _hasAim = false;
             _hasPath = false; _partial = false; _path.Clear(); _next = 0; _fails = 0; _shortSince = -1f; _shortBest = float.MaxValue; _wayAsks = 0; Unreachable = false;
             _askAt = Time.time; _gainAt = Time.time; _bestLeft = float.MaxValue; _stepUntil = 0f; _turn = 0f; _turnKeep = 0f; _clearAt = 0f; _apartAt = 0f; _reasked = false; // (a new goal: looked at afresh)
             _trip = Watch ? new Trip { What = what, From = _m.transform.position, To = to, At = Time.time } : null;
@@ -272,7 +274,9 @@ namespace HuginWhispers
             _ask.Clear();
             _asksNow++;
             long perf = NpcPerf.Now();
-            bool ok = pf.GetPath(me, to, _ask, NpcKit.Walker, false, true, false);
+            if (_thing != null && !_hasAim && (to - _goal).sqrMagnitude <= 0.25f) _hasAim = NpcKit.FloorBy(out _aim, to, NpcKit.Walker); // (a few looks at the map, until it has an answer; the map near it may be still being built)
+            Vector3 aim = _hasAim && (to - _goal).sqrMagnitude <= 0.25f ? _aim : to;
+            bool ok = pf.GetPath(me, aim, _ask, NpcKit.Walker, false, true, false);
             NpcPerf.Add(PerfPath, perf);
             if (_trip != null) _trip.Asks++;
             if (!ok || _ask.Count == 0)
@@ -286,8 +290,8 @@ namespace HuginWhispers
             _hasPath = true; _askedFor = to; _wayAsks++;
             _next = 0;
             while (_next < _path.Count - 1 && Utils.DistanceXZ(me, _path[_next]) < Corner) _next++;
-            _partial = Utils.DistanceXZ(_path[_path.Count - 1], to) > _near + 0.5f;
-            if (_partial) Bridge(pf, to); // (its way ends short: a gap in the map — a threshold, a raised floor, the foot of stairs — crossed on foot when short)
+            _partial = Utils.DistanceXZ(_path[_path.Count - 1], aim) > _near + 0.5f;
+            if (_partial) Bridge(pf, aim); // (its way ends short: a gap in the map — a threshold, a raised floor, the foot of stairs — crossed on foot when short)
             long ps = NpcPerf.Now();
             Widen();
             if (NpcClock.Seen(_m.Actor)) Shape(); // (room round its way: only where a player can see it bump — the one rule of «seen»)

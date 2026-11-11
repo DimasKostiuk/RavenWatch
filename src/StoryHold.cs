@@ -149,7 +149,7 @@ namespace HuginWhispers
             if (word.Kind == "stand") { if (held == null || posing) a.Order(Go(at, close), NpcMind.Layer.Order, Whose); return; } // (there: idle on its layer; out of the gesture of the word before)
             if (word.Kind == "emote")
             {
-                if (held == null || held.Kind != NpcMind.Task.Pose) { a.Order("lookat " + V(look), NpcMind.Layer.Order, Whose); a.Order("emote " + word.Pose + " loop", NpcMind.Layer.Order, Whose); }
+                if (held == null || held.Kind != NpcMind.Task.Pose) { StoryProps.SetDown(a, false, true); a.Order("lookat " + V(look), NpcMind.Layer.Order, Whose); a.Order("emote " + word.Pose + " loop", NpcMind.Layer.Order, Whose); } // (a thing of its own off its arm first, here where it stands)
                 return;
             }
             // our clip over an idle there (a body thing, not a plan): once, and again only a minute before its term
@@ -158,6 +158,7 @@ namespace HuginWhispers
             string on = ClipOn(a);
             if (!st.Clip && on == word.Pose) { st.Clip = st.Looping = true; st.Asked = Time.time - ClipFor; } // (already in it, before this game's first look: its term renewed below, the loop goes on)
             else if (!st.Clip && word.From.Length > 0 && on == word.From) { st.Clip = true; st.Looping = false; st.Asked = Time.time; } // (already on its way in)
+            if (!st.Clip) StoryProps.SetDown(a, false, true); // (a word for its arms, here where it stands: a thing of its own off its arm first — it glides to the ground as the clip begins)
             if (!st.Clip && word.From.Length > 0)
             {
                 if (!word.Here) a.Order("lookat " + V(look), NpcMind.Layer.Order, Whose);

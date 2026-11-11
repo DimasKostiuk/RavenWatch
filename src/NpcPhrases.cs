@@ -2198,7 +2198,7 @@ namespace HuginWhispers
 @мета_майстер
 Хочу, щоб про мою роботу казали: оце майстер! Я ж {goal_what}.
 Ще трохи, і руки самі знатимуть, що робити. Хочу стати справжнім майстром.
-Щодня вчуся. Колись моя робота буде найкраща в окрузі.
+Щодня вчуся. Колись моя робота буде найкращою в окрузі.
 ~смілив Колись я буду найкращим|найкращою тут у своїй справі. Побачиш.
 ~боязк Боюсь схибити… але дуже хочу навчитися як слід.
 ~стар Скільки живу, а все вчуся. Хоч під старість стати б майстром.
@@ -2268,7 +2268,7 @@ namespace HuginWhispers
 [feel_joy_greet] {почуття_радість_вітання}
 @почуття_радість_вітання
 О, {name}! Чу{в|ла}? У нас сьогодні радість!
-Заходь, заходь! Сьогодні добрий день.
+Заходь, заходь! Сьогодні гарний день.
 ~бурч Ну привіт. Сьогодні навіть я не бурчу.
 ~мол Ти вже знаєш? Ну скажи, що знаєш!
 
@@ -2285,7 +2285,7 @@ namespace HuginWhispers
 @почуття_подив_вітання
 Ти бачи{в|ла}? Я досі не можу отямитись.
 Ох, {name}… Тут таке було. Я досі сам|сама не свій|своя.
-~весел Ти пропуст{ив|ила} таке! Таке!
+~весел Ти не повіриш, що пропуст{ив|ила}!
 
 [feel_grief] {почуття_смуток}
 @почуття_смуток
@@ -2797,10 +2797,78 @@ namespace HuginWhispers
         // scene (a scene keeps it quiet unless its plan Speaks: a rescue's calls) or by the story's lever «npcflag hush»
         internal static bool Free(NpcActor a)
         {
-            if (a == null || a.Mind == null || a.Mind.Asleep || NpcTalk.With == a || a.Mind.InTalk || !NpcMind.HeldBy(a).IsNone() || Silent(a)) return false; // (With: this game's talk; InTalk, HeldBy: a player on another game — its talk runs there, these words here)
+            if (a == null || a.Mind == null || a.Mind.Asleep || NpcVitals.IsDown(a) || NpcTalk.With == a || a.Mind.InTalk || !NpcMind.HeldBy(a).IsNone() || Silent(a)) return false; // (With: this game's talk; InTalk, HeldBy: a player on another game — its talk runs there, these words here)
             NpcMind.Plan scene = a.Mind.Of(NpcMind.Layer.Scene);
             if (scene != null && !scene.Speaks) return false;
             return !(Has(a, "hush") && NpcLevers.Flag(a, "hush"));
+        }
+
+        // may it speak now, asked on any game (another player's talk: NpcTalkThird) — what its owner wrote: no talk holds it, not down, not in a fight or a scene, not in its bed
+        internal static bool FreeAnywhere(NpcActor a)
+        {
+            if (a == null || a.Def == null || NpcVitals.IsDown(a) || NpcTalk.With == a || !NpcMind.HeldBy(a).IsNone() || Silent(a)) return false;
+            if (NpcMind.LayerNow(a) >= NpcMind.Layer.Fight) return false;
+            return a.Body == null || a.Body.AttachedSeen != "attach_bed";
+        }
+
+        // ---------------------------------------------------------------- what it sees of you (the user 2026-11-07: its first words by how you are)
+        // Only of the player on this game: another player's bag and effects are not here, a word about them would be a guess. Read once a frame
+        // (themes and every line's values ask it): your bag once, at most some forty things
+        internal static float YouFoughtFor = 60f;
+        private static readonly int WetHash = "Wet".GetStableHashCode();
+        private static readonly HashSet<string> BossTrophies = new HashSet<string> { "TrophyEikthyr", "TrophyTheElder", "TrophyBonemass", "TrophyDragonQueen", "TrophyGoblinKing", "TrophySeekerQueen", "TrophyFader" };
+        private static int _youFrame = -1, _youOf; // (the frame and the player's instance looked at: no reference to a player kept past it)
+        private static string _trophy;
+        private static bool _boss;
+        private static readonly Dictionary<string, string> _made = new Dictionary<string, string>(); // (who made a thing you carry → its name: cleared each look)
+
+        private static void Carried(Player p)
+        {
+            if (_youFrame == Time.frameCount && _youOf == p.GetInstanceID()) return;
+            _youFrame = Time.frameCount; _youOf = p.GetInstanceID(); _trophy = null; _boss = false; _made.Clear();
+            foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems())
+            {
+                if (it == null || it.m_shared == null) continue;
+                if (!string.IsNullOrEmpty(it.m_crafterName) && !_made.ContainsKey(it.m_crafterName)) _made[it.m_crafterName] = NpcTalk.ItemWord(it);
+                if (it.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Trophy) continue;
+                bool boss = it.m_dropPrefab != null && BossTrophies.Contains(it.m_dropPrefab.name);
+                if (_trophy == null || (boss && !_boss)) { _trophy = NpcTalk.ItemWord(it); _boss = boss; }
+            }
+        }
+
+        // a thing it made (its name on it: a keepsake, NpcFavours) you carry or wear
+        private static string ItsMake(NpcActor a, Player p)
+        {
+            if (a == null || string.IsNullOrEmpty(a.Name)) return null;
+            Carried(p);
+            string made;
+            return _made.TryGetValue(a.Name, out made) ? made : null;
+        }
+
+        private static void You(Player p, List<KeyValuePair<string, float>> themes)
+        {
+            if (p == null || p != Player.m_localPlayer) return;
+            if (p.GetSEMan().HaveStatusEffect(WetHash)) themes.Add(new KeyValuePair<string, float>("you_wet", 40f));
+            if (Time.time - Senses.HitMonsterAt < YouFoughtFor) themes.Add(new KeyValuePair<string, float>("you_fought", 55f));
+            if (EnvMan.IsNight()) themes.Add(new KeyValuePair<string, float>("you_night", 22f));
+            Carried(p);
+            if (_trophy != null) themes.Add(new KeyValuePair<string, float>("you_trophy", _boss ? 60f : 32f));
+        }
+
+        // {trophy} the best trophy you carry (a lord's first), {its_make} a thing it made on you: a line's values (NpcModules)
+        internal static void YouValues(NpcActor a, Player to, Dictionary<string, string> v)
+        {
+            if (to == null || to != Player.m_localPlayer) return;
+            Carried(to);
+            if (_trophy != null) v["trophy"] = _trophy;
+            string made = ItsMake(a, to);
+            if (made != null) v["its_make"] = made;
+        }
+
+        // its own make on you weighs on its mind (the speaker known: a source of NpcVoice, NpcModules)
+        internal static void YouMade(NpcActor a, Player p, List<KeyValuePair<string, float>> themes)
+        {
+            if (p != null && p == Player.m_localPlayer && ItsMake(a, p) != null) themes.Add(new KeyValuePair<string, float>("you_its_make", 50f));
         }
 
         // its story vars name this at all (a look into the string before it is taken apart: most people have none)
@@ -2889,7 +2957,8 @@ namespace HuginWhispers
             string feel; float strength;
             if (NpcFeel.Of(a, out feel, out strength) && strength >= 0.3f) themes.Add(new KeyValuePair<string, float>("feel_" + feel, 65f * strength)); // (what a moment did to it: while it lasts)
             if (p.GetHealthPercentage() < 0.4f) themes.Add(new KeyValuePair<string, float>("hurt", 80f));
-            if (Time.time - a.Mind.FoughtAt < 90f) themes.Add(new KeyValuePair<string, float>(a.Mind.FoughtRan ? "after_flight" : a.Mind.FoughtWon ? "after_fight" : "after_fight_lost", 70f));
+            bool ran, won;
+            if (NpcMind.FoughtOf(a, out ran, out won) < 90f) themes.Add(new KeyValuePair<string, float>(ran ? "after_flight" : won ? "after_fight" : "after_fight_lost", 70f)); // (on any game: a talk asks this on yours)
             if (NpcHunger.IsHungry(a)) themes.Add(new KeyValuePair<string, float>("hungry", 45f));
             else if (a.Hunger != null && Time.time - a.Hunger.LastMeal < 300f) themes.Add(new KeyValuePair<string, float>("fed", 30f));
             if (NpcResident.Is(a))
@@ -2898,6 +2967,7 @@ namespace HuginWhispers
                 if (mood < 30f) { themes.Add(new KeyValuePair<string, float>(LowTheme(a), 60f)); themes.Add(new KeyValuePair<string, float>("mood_low", 35f)); } // (what weighs on it, said before it goes — NpcToil; the plain complaint only now and then)
                 else if (mood > 75f) themes.Add(new KeyValuePair<string, float>("mood_good", 18f));
                 if (NpcToil.Tired(a) >= 70f) themes.Add(new KeyValuePair<string, float>("tired", 40f));
+                if (NpcToil.Leaving(a)) themes.Add(new KeyValuePair<string, float>("leaving", 90f)); // (it means to go: a word may stay it — NpcTalkSway)
                 themes.Add(new KeyValuePair<string, float>("neighbour", 10f));
             }
             if (a.Worker != null && (a.Worker.JobId == "lumber" || a.Worker.JobId == "miner"))
@@ -2910,6 +2980,7 @@ namespace HuginWhispers
             if (settled > 0 && NpcRescue.Now - settled < (EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f)) themes.Add(new KeyValuePair<string, float>("new_home", 35f));
             if (p.InPlaceMode()) themes.Add(new KeyValuePair<string, float>("building", 40f));
             if (p.IsEncumbered()) themes.Add(new KeyValuePair<string, float>("heavy", 35f));
+            You(p, themes); // (what it sees of you now: wet, a trophy, a fight just now, up at night, a thing of its own making on you)
             ItemDrop.ItemData held = p.GetCurrentWeapon();
             if (held != null && held.m_dropPrefab != null && held.m_dropPrefab.name.StartsWith("FishingRod", StringComparison.Ordinal)) themes.Add(new KeyValuePair<string, float>("fishing", 30f));
             if (a.Worker != null && a.Worker.JobId == "guard" && EnvMan.IsNight()) themes.Add(new KeyValuePair<string, float>("night_watch", 25f));
@@ -2918,7 +2989,7 @@ namespace HuginWhispers
             if (Weather().Length > 0) themes.Add(new KeyValuePair<string, float>("weather", 30f));
             string part = DayPart();
             if (part != "day") themes.Add(new KeyValuePair<string, float>(part, 15f));
-            if (a.Worker != null && a.Worker.Works && a.Mind.NowLayer == NpcMind.Layer.Job) { themes.Add(new KeyValuePair<string, float>("work_" + a.Worker.JobId, 25f)); themes.Add(new KeyValuePair<string, float>("work", 10f)); }
+            if (a.Worker != null && a.Worker.Works && NpcMind.LayerNow(a) == NpcMind.Layer.Job) { themes.Add(new KeyValuePair<string, float>("work_" + a.Worker.JobId, 25f)); themes.Add(new KeyValuePair<string, float>("work", 10f)); }
             if (p == Player.m_localPlayer && Trial.HasRaven(p)) themes.Add(new KeyValuePair<string, float>("raven", 12f));
             themes.Add(new KeyValuePair<string, float>("other", 12f));
             themes.Add(new KeyValuePair<string, float>("see_player", 15f));
@@ -2936,7 +3007,7 @@ namespace HuginWhispers
         {
             new Group { Id = "complaint", Prefixes = new[] { "hungry", "low_", "mood_low", "tired", "unpaid", "no_axe", "no_pick", "no_area", "no_room", "mem_starved", "mem_unpaid", "irritated" } },
             new Group { Id = "fear", Prefixes = new[] { "feel_fright", "raid_", "after_flight", "after_fight_lost", "mem_fight_lost", "hurt" } },
-            new Group { Id = "joy", Prefixes = new[] { "mood_good", "fed", "feel_joy", "after_fight", "mem_fight_won", "mem_goal_done", "mem_request_done", "paid", "arc_hidden_wins", "arc_hidden_respect", "arc_hidden_peace", "mem_promise_kept" } },
+            new Group { Id = "joy", Prefixes = new[] { "mood_good", "fed", "feel_joy", "after_fight", "mem_fight_won", "mem_goal_done", "mem_request_done", "paid", "arc_hidden_wins", "arc_hidden_respect", "arc_hidden_peace", "mem_promise_kept", "mem_praised_by" } },
             new Group { Id = "news", Prefixes = new[] { "mem_news_", "mem_tale_" } },
             new Group { Id = "travels", Prefixes = new[] { "mem_you_land_" } },              // it asks of your way: an answer of yours, not «is that so?»
             new Group { Id = "place", Prefixes = new[] { "land_", "weather" } },
@@ -2944,9 +3015,12 @@ namespace HuginWhispers
             new Group { Id = "others", Personal = true, Prefixes = new[] { "mem_quarrel_", "quarrel" } },
             new Group { Id = "dream", Personal = true, Prefixes = new[] { "goal_" } },
             new Group { Id = "line", Personal = true, Prefixes = new[] { "arc_" } },        // a small line of its life (NpcArcs): shame and blame are told to one it trusts
+            new Group { Id = "task", Prefixes = new[] { "task_" } },                        // its small task (NpcTasks): among «ще на думці» once it weighs less for being said lately
             new Group { Id = "work", Prefixes = new[] { "work", "night_watch" } },
             new Group { Id = "people", Prefixes = new[] { "neighbour", "other", "feud" } },
             new Group { Id = "nature", Prefixes = new[] { "nature_" } },                   // what its nature says of itself (NpcNature)
+            new Group { Id = "you", Prefixes = new[] { "you_" } },                         // what it sees of you now (You)
+            new Group { Id = "leave", Prefixes = new[] { "leaving" } },                    // it means to leave the base (NpcToil.Leaving): it can be talked round (NpcTalkSway)
         };
 
         internal static Group GroupOf(string theme)
@@ -2972,6 +3046,7 @@ namespace HuginWhispers
                 case "past": if (t.Contains("стар")) k *= 1.3f; break;
                 case "others": case "people": if (p.Chatty > 0.6f) k *= 1.2f; break;
                 case "work": if (p.Diligence > 0.65f) k *= 1.3f; break;
+                case "you": if (p.Curiosity > 0.6f) k *= 1.3f; if (p.Chatty < 0.3f) k *= 0.6f; break;
             }
             return k * NpcNature.Lean(p.Nature, g.Id); // (its nature: NpcNature)
         }
@@ -2997,7 +3072,7 @@ namespace HuginWhispers
                 Group g = GroupOf(t.Key);
                 bool personal = g != null && g.Personal;
                 if (personal && !open) continue;
-                float w = t.Value * (personal && att >= DearAt ? Dear : 1f) * (NpcTalk.ToldLately(a, p, t.Key) ? ToldWeighs : 1f);
+                float w = t.Value * (personal && att >= DearAt ? Dear : 1f) * (NpcTalk.IgnoredLately(a, p, t.Key) ? NpcTalk.IgnoredWeighs(a) : NpcTalk.ToldLately(a, p, t.Key) ? ToldWeighs : 1f); // (left unanswered: it weighs more, not less — NpcTalkDoor)
                 l.Add(new Concern { Theme = t.Key, Weight = w, Personal = personal });
             }
             l.Sort((x, y) => y.Weight.CompareTo(x.Weight));

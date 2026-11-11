@@ -19,7 +19,7 @@ namespace HuginWhispers
         {
             "help", "quick", "visit", "diary",
 #if RAVEN_ITEM
-            "book", "wipe", "train", "mastery", "give", "power", "reroll", "perk", "perks", "wing", "studio", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "audio", "eyes", "gift", "perf", "netsize", "cells", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour", "victim", "breed", "bond", "joint", "loot", "play", "share", "gather", "people", "request",
+            "book", "wipe", "train", "mastery", "give", "power", "reroll", "perk", "perks", "wing", "studio", "ready", "info", "shoulder", "tilt", "icons", "trust", "guide", "wings", "stroke", "pose", "audio", "eyes", "gift", "perf", "netsize", "talk", "cross", "emote", "world", "pass", "voice", "voices", "gossip", "dummy", "nick", "director", "starve", "sat", "legs", "fit", "perch", "sit", "situi", "land", "anim", "flight", "templates", "wingui", "panim", "forget", "workshop", "photo", "roost", "test", "sounds", "norov", "looks", "wear", "runes", "bind", "errand", "nest", "trial", "tree", "back", "home", "favour", "victim", "breed", "bond", "joint", "loot", "play", "share", "gather", "people", "request",
 #if RAVEN_NPC
             "blueprint", "jolt",
 #endif
@@ -160,7 +160,6 @@ namespace HuginWhispers
                     case "tilt": return TiltCmd(a);
                     case "wings": return WingsCmd(a);
                     case "stroke": return StrokeCmd(p, a);
-                    case "cells": return CellsCmd(a);
                     case "director": return Director.Describe();
                     case "talk": return RavenTalk.Force(p, a.Length > 1 ? a[1].ToLowerInvariant() : "idle");
                     case "dummy": return Dummy.Cmd(p, a);
@@ -389,19 +388,12 @@ namespace HuginWhispers
                 bool isMunin;
                 if (RavenItem.IsRaven(item, out isMunin) && isMunin == munin) return item;
             }
+            foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p))
+            {
+                bool isMunin;
+                if (RavenItem.IsRaven(item, out isMunin) && isMunin == munin) return item;
+            }
             return null;
-        }
-
-        // SeneaL UI's shoulder cells, tried live (not saved: the config keeps the numbers)
-        private static string CellsCmd(string[] a)
-        {
-            float v;
-            System.Globalization.CultureInfo c = CultureInfo.InvariantCulture;
-            if (a.Length > 1 && float.TryParse(a[1], NumberStyles.Float, c, out v)) SeneaLShoulders.Size = Mathf.Clamp(v, 16f, 40f);
-            if (a.Length > 2 && float.TryParse(a[2], NumberStyles.Float, c, out v)) SeneaLShoulders.OutX = Mathf.Clamp(v, -30f, 30f);
-            if (a.Length > 3 && float.TryParse(a[3], NumberStyles.Float, c, out v)) SeneaLShoulders.DownY = Mathf.Clamp(v, -30f, 30f);
-            return "Плечі SeneaL UI: розмір " + SeneaLShoulders.Size.ToString("0.#", c) + ", назовні " + SeneaLShoulders.OutX.ToString("0.#", c) + ", вниз " + SeneaLShoulders.DownY.ToString("0.#", c)
-                + " (raven cells <розмір> <назовні> <вниз>; не зберігається — впиши числа в налаштування)";
         }
 
         private static string PowerCmd(Player p, string[] a)

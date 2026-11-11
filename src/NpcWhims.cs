@@ -58,7 +58,6 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- where to wash (asked of a base once a minute)
         private static readonly Dictionary<string, KeyValuePair<float, Vector3[]>> WashAt = new Dictionary<string, KeyValuePair<float, Vector3[]>>(); // base → {where, looking at, 1 = a tub}
-        private static readonly Dictionary<string, bool> Wet = new Dictionary<string, bool>(); // a kind of piece → has water of its own (a tub)
 
         private static NpcMind.Plan Wash(NpcResident r)
         {
@@ -85,18 +84,8 @@ namespace HuginWhispers
         // a tub in the base: a built piece with water of its own (the game's hot tub, a mod's pool)
         private static Vector3[] Tub(NpcBase b)
         {
-            if (b.Tubs != null) { foreach (Piece pc in b.Tubs) if (pc != null) { Vector3 c0 = pc.transform.position; return new[] { c0, c0 + pc.transform.forward * 2f, Vector3.right }; } return null; } // (the base's own look: NpcBase)
-            List<Piece> pieces = new List<Piece>();
-            Piece.GetAllPiecesInRadius(b.Centre, NpcBase.Reach, pieces);
-            foreach (Piece pc in pieces)
-            {
-                if (pc == null) continue;
-                bool wet;
-                if (!Wet.TryGetValue(pc.m_name ?? "", out wet)) { wet = pc.GetComponentInChildren<WaterVolume>() != null; Wet[pc.m_name ?? ""] = wet; } // (asked once a kind: a big base has thousands)
-                if (!wet || !b.Inside(pc.transform.position)) continue;
-                Vector3 c = pc.transform.position;
-                return new[] { c, c + pc.transform.forward * 2f, Vector3.right };
-            }
+            if (b.Tubs == null) return null; // (the base's own look: NpcBase; not made yet — none till it is)
+            foreach (Piece pc in b.Tubs) if (pc != null) { Vector3 c0 = pc.transform.position; return new[] { c0, c0 + pc.transform.forward * 2f, Vector3.right }; }
             return null;
         }
 

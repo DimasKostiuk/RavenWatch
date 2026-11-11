@@ -38,11 +38,16 @@ namespace HuginWhispers
             NpcMind.Tasks[NpcMind.Task.Chore] = new NpcMind.TaskOf { Step = NpcChores.Step, Left = NpcChores.Left }; // (its hammer away, what it carried put down)
 
             // ---- acts
+            NpcMenu.Wire(); NpcResident.Deeds(); NpcWorker.Deeds(); NpcTidy.Deeds(); // (a menu's deed done where the person is run: NpcMenu.Deeds)
             NpcActor.Acts["hire"] = NpcTalk.Hire;
             NpcActor.Acts["unhire"] = (a, w) => NpcTalk.Unhire(a);
             NpcActor.Acts["eat"] = (a, w) => { float fill; if (a.Hunger != null && w.Length > 1 && float.TryParse(w[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out fill)) a.Hunger.Eat(Mathf.Clamp(fill, 0f, 90f), w.Length > 2 ? string.Join(" ", w, 2, w.Length - 2) : ""); }; // (food from your hands in a talk: NpcTalk givefood)
             NpcActor.Acts["lever"] = (a, w) => { string[] rest = new string[w.Length - 1]; System.Array.Copy(w, 1, rest, 0, rest.Length); Npcs.Log(a.Id + ": " + NpcLevers.Do(a, rest)); };
             NpcActor.Acts["revive"] = (a, w) => { long by = 0L; if (w.Length > 1) long.TryParse(w[1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out by); if (a.Vitals != null) a.Vitals.Revive(by); }; // (a healing mead given)
+            NpcActor.Acts["dosed"] = (a, w) => { if (a.Vitals != null) a.Vitals.Dosed(); }; // (a healing mead from your hands in a talk, awake: NpcTalk healmead)
+            NpcActor.Acts["letrest"] = (a, w) => NpcToil.LetRest(a);
+            NpcActor.Acts["stay"] = (a, w) => NpcToil.Stay(a); // (it meant to leave, a talk talked it round: NpcTalkSway)
+            NpcActor.Acts["walkwith"] = NpcTalk.WalkWith; // (walks with you a few minutes: a talk's «Ходімо, покажу…») // (let off its work in a talk: «Іди відпочинь, я прикрию»)
             NpcActor.Acts["requestdone"] = (a, w) => { if (w.Length > 1) NpcRequests.Done(a, w[1]); }; // (its request brought)
             NpcActor.Acts["rescuemode"] = (a, w) => NpcRescueSite.Mode(a, w.Length > 1 ? string.Join(" ", w, 1, w.Length - 1) : ""); // (wait / hide there / with you)
             NpcActor.Acts["rescuetime"] = (a, w) => { int st; long until; if (w.Length > 2 && int.TryParse(w[1], out st) && long.TryParse(w[2], out until)) NpcRescue.Keep(a.Zdo, st, until); }; // (the server's word on its time)
@@ -56,6 +61,8 @@ namespace HuginWhispers
             NpcVoice.Sources.Add(NpcMemory.Themes);                                                   // now and then a word of it (mem_<kind>)
             NpcPhrases.Variants.Add(NpcAttitude.Variant);                                             // how it feels about you: see_player_cold, about_you_close…
             NpcVoice.Sources.Add(NpcNews.Themes);                                                     // a raid round its base now (raid_now)
+            NpcPhrases.ValueSources.Add(NpcVoice.YouValues);                                          // {trophy} {its_make}: what it sees on you (NpcVoice: you_*)
+            NpcVoice.Sources.Add(NpcVoice.YouMade);                                                   // a thing of its own making on you (you_its_make)
 
             NpcMind.FightOver.Add(NpcMemory.FightEnded);                                              // a fight at home remembered
             NpcMind.PoseReached = a => NpcChatter.Mutter(a, a.Mind != null && a.Mind.Current != null && a.Mind.Current.Pose == "rest" ? "nap" : "wash"); // a word as it washes, or lies down for a nap
@@ -78,27 +85,33 @@ namespace HuginWhispers
             Npcs.Commands["fail"] = (p, who, a, aim) => { return NpcFailTest.Cmd(who, a); };
             Npcs.Commands["talk"] = (p, who, a, aim) => { return NpcTalk.Walk(who, p); };             // its talk walked through, no window (the log)
             Npcs.Commands["words"] = (p, who, a, aim) => { return NpcPhrases.Sample(who, p, a.Length > 3 ? Mathf.Clamp(Errands.I(a[3], 3), 1, 10) : 3); }; // every theme it speaks, a few lines each (the log)
-            NpcActor.Ticks.Add(NpcNews.Tick);                                                         // a boss fallen: news to every resident
+            NpcActor.Ticks.Add(NpcNews.Tick);
+            NpcActor.Ticks.Add(NpcGear.Carry);                                                         // a weapon carried its own way at its ease, standing and walking (NpcGear)                                                         // a boss fallen: news to every resident
             NpcActor.Ticks.Add(a => { if (a.NextRemark <= 0f) a.NextRemark = Time.time + Random.Range(30f, 90f); NpcVoice.Tick(a); }); // a word of its own now and then
             NpcActor.Everywhere.Add(a => NpcMap.Tick());                                              // its mark on the map (twice a second for all of them)
             NpcActor.Everywhere.Add(a => NpcNews.Lands());                                            // your first steps in a land: told to your people (your game, now and then)
             NpcActor.Everywhere.Add(a => NpcLid.Tick());                                              // a chest a person opened: shut when its moment is over (cut short too)
             NpcActor.Everywhere.Add(a => NpcNav.Tick());                                               // the way finder kept mapping each base with people in it (it lets an unasked tile go)
+            NpcActor.Everywhere.Add(NpcGear.Stance);                                                   // a weapon at its ease: the game's calm stance, its own on its guard (NpcGear, NpcAlert)
             NpcActor.Everywhere.Add(NpcPoseWatch.Ensure);                                              // the black box's eye on its pose (the author's game only: NpcWalk.Watch)
             NpcActor.Everywhere.Add(NpcFade.Keep);                                                    // one only half there (template «echo:») or fading away: its see-through picture, on every game
             NpcActor.Acts["fade"] = NpcFade.Act;                                                      // …its fading away (a scene's «npc <who> fade», smooth by default: Fades), where it is run
             NpcActor.UseInstead.Add((a, p) => a.Def != null && a.Def.Echo > 0f ? true : (bool?)null);              // an echo is not talked to (E does nothing)
             NpcActor.HoverInstead.Add(a => a.Def != null && a.Def.Echo > 0f ? a.Name : null);                      // …nor offers anything: its name only
+            NpcForeignCamera.Wire();                                                                  // another mod's camera right by a person (PoV's picture behind its doll): the person not drawn in it
             NpcNature.Wire();                                                                         // a settler's kind of person: its words, its condition, how far a bully looks
             NpcPlaces.Wire();                                                                          // where it goes of its own accord, and why (NpcPlaces; raven npc why)
             NpcFeel.Wire();                                                                           // what it feels now: its body, its eyes, its words
             NpcStance.Wire();                                                                         // how it stands and sits at its ease: poses of its own (NpcStance)
+            NpcActor.Unloaded.Add(NpcRequests.Forget);                                                // its request's next look: of this game only
             NpcGoals.Wire();                                                                          // its long wish: its words, its day, its mood (NpcGoals; raven npc goal)
             NpcActor.Ticks.Add(NpcLife.Tick);                                                         // its day answers what happens round it: rain, a raid, the morning (NpcLife)
             NpcPatience.Wire();                                                                       // its patience to each player: the talk's bar, anger, what you spent (NpcPatience; raven npc patience)
             NpcFavours.Wire();                                                                        // what you may ask of it when its patience is high (NpcFavours)
             NpcPromises.Wire();                                                                       // what you promised it: kept, or not
             NpcArcs.Wire();                                                                           // small lines of a settler's life
+            NpcTasks.Wire();                                                                          // its small task for the one standing near (NpcTasks; raven npc task)
+            NpcThreads.Wire();                                                                        // the threads between it and a player, and what they open (NpcThreads; raven npc thread)
             NpcAway.Wire();                                                                           // what happened while you were away: its absence kept, its answer (NpcAway)
             NpcActor.Acts["quarrel"] = NpcAttitude.QuarrelAct;                                        // one of its people did it wrong: colder to that one (NpcAttitude.Quarrel)
             NpcActor.Ticks.Add(NpcAttitude.Tick);                                                     // …a lazy neighbour idling near it at its work
@@ -112,6 +125,7 @@ namespace HuginWhispers
             NpcActor.Unloaded.Add(NpcMap.Forget);                                                      // …and off it when it goes
             NpcActor.Removed.Add(a => { if (a.Worker != null) a.Worker.DropCarry(); });               // what it carried stays in the world
             NpcActor.Removed.Add(a => { if (a.Gear != null) a.Gear.DropAll(); });                     // what it wore at its feet
+            NpcActor.Removed.Add(a => NpcResident.SetBed(a.Zdo, ZDOID.None));                         // its bed nobody's again (before its locker goes: the link is there)
             NpcActor.Removed.Add(NpcLocker.Remove);                                                   // its locker with it
 #if RAVEN_STORY
             StoryModules.People();                                                                     // a word of the story to a person (StoryHold)
@@ -149,6 +163,7 @@ namespace HuginWhispers
             Npcs.Commands["news"] = (p, who, a, aim) => { if (a.Length < 4) return "raven npc news <хто> <подія> [що] — йому й усім з його оселі (напр. boss_moder)"; NpcNews.Tell(who, a[3], a.Length > 4 ? string.Join(" ", a, 4, a.Length - 4) : ""); return "Новину сказано."; };
             Npcs.Commands["attitude"] = (p, who, a, aim) => { float by; if (a.Length > 3 && float.TryParse(a[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out by)) { NpcAttitude.Tell(who, p.GetPlayerID(), by); return "Сказано: " + a[3] + " до тебе."; } return NpcAttitude.Describe(who); };
             Npcs.Commands["remember"] = (p, who, a, aim) => { if (a.Length < 4) return "raven npc remember <хто> <подія> [що] — про тебе"; NpcMemory.Tell(who, a[3], p.GetPlayerID(), a.Length > 4 ? string.Join(" ", a, 4, a.Length - 4) : ""); return "Сказано (у журналі — що запам'ятав)."; };
+            Npcs.Commands["quarrel"] = (p, who, a, aim) => { if (a.Length < 4) return "raven npc quarrel <хто> <на кого> [food|place|work|table|raid|pay] — справжня сварка (тест)"; foreach (NpcActor o in NpcHeart.Residents(NpcKit.GetRef(who.Zdo, NpcResident.KHeart))) if (o != null && o != who && o.Name == a[3]) { NpcAttitude.Quarrel(who, o, a.Length > 4 ? a[4] : "work"); return "Сказано (раз на день на пару; у журналі)."; } return "У цій оселі нема: " + a[3]; };
             Npcs.Commands["forget"] = (p, who, a, aim) => { if (a.Length < 4) return "raven npc forget <хто> <подія> — забуває її про всіх (тест)"; who.Act("forget " + a[3]); return "Сказано (у журналі — що забув)."; };
             Npcs.Commands["request"] = (p, who, a, aim) => { return NpcRequests.Force(who); };
             Npcs.Commands["chat"] = (p, who, a, aim) => { NpcResident r = who.GetComponent<NpcResident>(); return r != null && NpcResident.Is(who) ? NpcChatter.Force(r) : "Розмовляють лише мешканці."; };

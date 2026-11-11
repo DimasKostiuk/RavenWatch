@@ -279,7 +279,7 @@ namespace HuginWhispers
             hugin = null; munin = null;
             if (p == null) return;
             if (_wornFrame == Time.frameCount && ReferenceEquals(_wornBy, p)) { hugin = _wornHugin; munin = _wornMunin; return; }
-            RavenSeat.SeatedOf(p, out hugin, out munin); // in the bag with the mark, or off the bag on SeneaL UI's shoulder cells
+            RavenSeat.SeatedOf(p, out hugin, out munin); // in the bag with the mark, or off the bag on the shoulders
             _wornFrame = Time.frameCount; _wornBy = p; _wornHugin = hugin; _wornMunin = munin;
         }
 

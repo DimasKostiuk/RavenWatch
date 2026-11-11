@@ -128,7 +128,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- the author's test (raven story own / unown)
         // unown: the character as if it never had a raven of this kind — its ravens of that kind taken away (worn, bag,
-        // shoulder cells), their copies, the marks; so the prologue's ways can be walked again
+        // shoulders), their copies, the marks; so the prologue's ways can be walked again
         internal static string Unown(Player p, bool munin)
         {
             if (p == null) return "Нема гравця.";

@@ -11,7 +11,7 @@ namespace HuginWhispers
     //   nfilm <name> <who> [sec=4] [fps=2] [views] — frames in time, one sheet per view; the report says what it was doing
     //   nskin <name> <who>                          — its worn pieces' skins: the bones each is bound to, any outside its body or
     //                                                far from it (a strap stretched to the ground: what it is tied to)
-    // Views: front (its face), back, side, left, top, three; close: hands (over the shoulder), handl, handr, chest and chestside
+    // Views: front (its face), back, side, left, top, three; close: hands (over the shoulder), handl, handr, chest, chestside, chestleft and chesttop
     // (its chest, head and both hands, all in the picture, from the front and from its right: folded arms, a letter held), contact (close on
     // both hands from its right and a little ahead: a palm on a door, what it touches), head, headside, headtop (the head close and what comes to it), fingerr, fingerl (the fingers close), holdr, holdl (a hand from before and below: what it holds a thing with). Framed on its
     // body (the collider, or the bone it is about), not on where you are.
@@ -42,7 +42,7 @@ namespace HuginWhispers
                 Vector3 from;
                 string view = r.Views[i];
                 mid = whole; size = sizeWhole; d = size * 2.1f;
-                if (view == "chest" || view == "chestside") // (close, the chest and both arms: what the hands do before the body)
+                if (view == "chest" || view == "chestside" || view == "chestleft" || view == "chesttop") // (close, the chest and both arms: what the hands do before the body)
                 {
                     Humanoid body = a.GetComponent<Humanoid>();
                     Animator an = body != null ? body.GetComponentInChildren<Animator>() : null;
@@ -79,6 +79,13 @@ namespace HuginWhispers
                         size = view == "hands" ? 1.1f : 0.5f; d = size * 2.1f;
                     }
                 }
+                if (view == "feet") // (both feet close, from the side and a little ahead: a slide, a sole up, a foot off the game's stance)
+                {
+                    Humanoid body = a.GetComponent<Humanoid>();
+                    Animator an = body != null ? body.GetComponentInChildren<Animator>() : null;
+                    Transform lf = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, "LeftFoot") : null, rf = body != null && an != null ? BodyClips.SkeletonBone(body, an.transform, "RightFoot") : null;
+                    if (lf != null && rf != null) { mid = (lf.position + rf.position) * 0.5f + Vector3.up * 0.12f; size = Mathf.Max(0.8f, Vector3.Distance(lf.position, rf.position) + 0.5f); d = size * 2.1f; }
+                }
                 if (view == "fingerr" || view == "fingerl" || view == "holdr" || view == "holdl") // (close on the fingers themselves, from before and aside: a hook or a lifted finger shows · hold: the same hand from before and below, its palm's side — what it holds the thing with)
                 {
                     Humanoid body = a.GetComponent<Humanoid>();
@@ -102,10 +109,13 @@ namespace HuginWhispers
                     case "three": from = mid + (fwd + right).normalized * d + Vector3.up * size * 0.35f; break;
                     case "side": from = mid + right * d + Vector3.up * size * 0.1f; break;
                     case "chestside": from = mid + right * d + fwd * d * 0.15f; break;
+                    case "chestleft": from = mid - right * d + fwd * d * 0.15f; break; // (the other side: a hand on the far side of the body, its depth)
+                    case "chesttop": from = mid + Vector3.up * d * 0.9f + fwd * d * 0.35f; break; // (from above and a little ahead, close: how far a hand is before the belly or the chest — 2026-11-09)
                     case "head": from = mid + fwd * d + Vector3.up * size * 0.1f; break;
                     case "headside": from = mid + right * d + Vector3.up * size * 0.1f; break;
                     case "headtop": from = mid + Vector3.up * d + fwd * size * 0.2f; break;
                     case "contact": from = mid + right * d * 0.95f + fwd * d * 0.3f + Vector3.up * size * 0.1f; break;
+                    case "feet": from = mid + (right + fwd * 0.45f).normalized * d + Vector3.up * size * 0.3f; break;
                     default: from = mid + fwd * d + Vector3.up * size * 0.15f; break; // front
                 }
                 r.Cams[i].farClipPlane = 80f;
@@ -113,7 +123,7 @@ namespace HuginWhispers
                 if (instanced >= 0) r.Cams[i].cullingMask &= ~(1 << instanced);
                 r.Cams[i].nearClipPlane = Mathf.Max(0.1f, Vector3.Distance(from, mid) - size); // (what stands between the camera and the body is not in the picture: a rock, a chest)
                 r.Cams[i].transform.position = from;
-                r.Cams[i].transform.rotation = Quaternion.LookRotation(mid - from, view == "top" || view == "headtop" ? fwd : Vector3.up);
+                r.Cams[i].transform.rotation = Quaternion.LookRotation(mid - from, view == "top" || view == "headtop" || view == "chesttop" ? fwd : Vector3.up);
             }
             r.Mid = whole;
             r.Lamp.range = sizeWhole * 3.5f;
@@ -123,13 +133,15 @@ namespace HuginWhispers
         // key moments (its parts' ends, the moments its hands and feet take hold), StageFrame px a frame, one sheet a view;
         // what each frame is: said, in the check's report
         internal const int StageFrame = 480;
-        internal static IEnumerator StageFilm(NpcActor a, string name, string views, List<float> times, System.Func<float> clock, System.Func<bool> on, List<string> said, System.Func<string> pose)
+        // (views «»: the words only — the sheets of the run are made on request, the key sheet after it says the main thing: StageKey)
+        internal static IEnumerator StageFilm(NpcActor a, string name, string views, List<float> times, System.Func<float> clock, System.Func<bool> on, List<string> said, System.Func<string> pose, System.Func<List<Mark>> marks)
         {
             int n = Mathf.Min(times.Count, 16);
             if (n == 0 || a == null) yield break;
-            Rig r = Make(views, StageFrame);
-            int cols, rows;
-            Texture2D[] sheets = HeroSheets(r, n, out cols, out rows);
+            Rig r = views.Length > 0 ? Make(views, StageFrame) : null;
+            if (r != null) r.Marks = marks; // (the hands' ways and the targets drawn over the close views: BodyCheck.Marks)
+            int cols = 0, rows = 0;
+            Texture2D[] sheets = r != null ? HeroSheets(r, n, out cols, out rows) : null;
             try
             {
                 for (int i = 0; i < n; i++)
@@ -137,40 +149,69 @@ namespace HuginWhispers
                     while (on() && clock() < times[i]) yield return null;
                     if (!on() || a == null) break;
                     yield return new WaitForEndOfFrame();
-                    PlaceBody(r, a);
-                    Shoot(r, sheets, i, cols, rows);
+                    if (r != null)
+                    {
+                        PlaceBody(r, a);
+                        Shoot(r, sheets, i, cols, rows);
+                        foreach (Texture2D sh in sheets) Label(sh, i, cols, rows, StageFrame, clock().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s");
+                    }
                     said.Add((i + 1) + ": " + clock().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s — " + pose());
                 }
-                HeroSave(name, r, sheets);
+                if (r != null) HeroSave(name, r, sheets);
             }
-            finally { HeroFree(sheets, r); }
+            finally { if (r != null) HeroFree(sheets, r); }
         }
 
-        // the moments of a take's mistakes, each held and filmed close (the stage's check, after its run): hold(t) holds the clip there
+        // the key sheet of a take (review 2 2026-11-10: ten sheets of 480 px and the main thing unseen in them): a row a moment — the VERDICT's
+        // mistakes, the «want» moments, the marks (AnimStage.KeyMoments) — and in it the two views that show that kind of mistake, each cell
+        // labelled in the picture (its time and view; the rule's line). hold(t) holds the clip at that moment (and the other body's, when there is
+        // one). With another body playing another take beside it (the stage's «ab», or the take before this one): a second sheet, this take's
+        // two views and then the other's, at the same moments — take N | take N−1
         internal static float ProofFirst = 1.2f, ProofNext = 0.35f; // s a held moment settles: the first the clip's way in too
-        internal static IEnumerator StageProof(NpcActor a, string name, string views, List<float> times, System.Action<float> hold, System.Func<string> pose, List<string> said, System.Action done)
+        internal sealed class KeyMoment { public float T; public string Label = "", Views = "side,three"; }
+        internal static IEnumerator StageKey(NpcActor a, NpcActor other, string otherSaid, string name, List<KeyMoment> moments, System.Action<float> hold, System.Func<string> pose, List<string> said, System.Action done, System.Func<List<Mark>> marks)
         {
-            int n = times.Count;
+            int n = moments.Count, px = StageFrame;
             if (n == 0 || a == null) { done(); yield break; }
-            Rig r = Make(views, StageFrame);
-            int cols, rows;
-            Texture2D[] sheets = HeroSheets(r, n, out cols, out rows);
+            Texture2D key = new Texture2D(px * 2, px * n, TextureFormat.RGB24, false), diff = other != null ? new Texture2D(px * 4, px * n, TextureFormat.RGB24, false) : null;
+            Fill(key, new Color32(20, 20, 20, 255)); if (diff != null) Fill(diff, new Color32(20, 20, 20, 255));
             try
             {
                 for (int i = 0; i < n; i++)
                 {
-                    hold(times[i]);
+                    KeyMoment m = moments[i];
+                    hold(m.T);
                     float until = Time.time + (i == 0 ? ProofFirst : ProofNext);
                     while (Time.time < until) yield return null;
                     if (a == null) break;
                     yield return new WaitForEndOfFrame();
-                    PlaceBody(r, a);
-                    Shoot(r, sheets, i, cols, rows);
-                    said.Add((i + 1) + ": " + times[i].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s — " + pose());
+                    Rig r = Make(m.Views, px);
+                    try
+                    {
+                        r.Marks = marks;
+                        PlaceBody(r, a);
+                        NpcForeignCamera.Away(other, r.Cams); // (the other body 1.4 m aside is not in this one's pictures: it stood before the side camera, 2026-11-10)
+                        ShootRow(r, key, 0, i, n);
+                        string t = m.T.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s";
+                        for (int v = 0; v < r.Views.Count && v < 2; v++) Label(key, i * 2 + v, 2, n, px, t + "  " + r.Views[v], m.Label);
+                        if (diff != null && other != null)
+                        {
+                            ShootRow(r, diff, 0, i, n);
+                            for (int v = 0; v < r.Views.Count && v < 2; v++) Label(diff, i * 4 + v, 4, n, px, t + "  " + r.Views[v] + "  this take", m.Label);
+                            r.Marks = null; // (the marks are this body's)
+                            PlaceBody(r, other);
+                            NpcForeignCamera.Away(a, r.Cams);
+                            ShootRow(r, diff, 2, i, n);
+                            for (int v = 0; v < r.Views.Count && v < 2; v++) Label(diff, i * 4 + 2 + v, 4, n, px, t + "  " + r.Views[v] + "  " + otherSaid, m.Label);
+                        }
+                    }
+                    finally { NpcForeignCamera.Away(null, null); Drop(r); }
+                    said.Add((i + 1) + ": " + m.T.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " s — " + m.Label + " (" + m.Views + ") — " + pose());
                 }
-                HeroSave(name, r, sheets);
+                Save(name + "_key", key);
+                if (diff != null) Save(name + "_diff", diff);
             }
-            finally { HeroFree(sheets, r); done(); } // (whatever went wrong here, the stage is let go and the report written)
+            finally { UnityEngine.Object.Destroy(key); if (diff != null) UnityEngine.Object.Destroy(diff); done(); } // (whatever went wrong here, the stage is let go and the report written)
         }
 
         // each skin on its body (its own, each worn piece): what is drawn, how big, and the bones it is bound to — any missing,

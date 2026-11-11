@@ -3,10 +3,10 @@
 
 [goal_bed] {мета_ліжко}
 @мета_ліжко
-Just once I'd like to sleep in a bed of my own. Not on the ground, not wherever I drop.
+Just once I'd like to sleep in a bed of my own. Not on the ground, not wherever I collapse.
 You know what I'm missing? A corner of my own. A bed nobody else takes.
 A bed of my own. Then I'd know I'm home here.
-~стар My bones are past the bare ground. A bed, now…
+~стар My old bones can't take another night on the ground. A bed, please…
 ~бурч I sleep like a dog, where I fall. A bed's a luxury these days, it seems.
 ~мол Imagine, my own bed! I'd even put a hide on it.
 ~весел I dream of a bed. Don't laugh, a soft bed!
@@ -14,11 +14,11 @@ A bed of my own. Then I'd know I'm home here.
 [goal_master] {мета_майстер}
 @мета_майстер
 I want people to look at my work and say: now that's a master. My trade: {goal_what}.
-A little more and my hands will know what to do by themselves. I want to be a real master.
+A bit more practice, and my hands will know the work by heart. I want to be a true master.
 I learn every day. One day my work will be the best around.
 ~смілив One day I'll be the best at this here. You'll see.
 ~боязк I'm afraid of botching it… but I do want to learn it properly.
-~стар All these years and still learning. A master before I'm done, that's the wish.
+~стар All these years, and I'm still learning. I'd like to be a master before I'm done.
 
 [goal_comfort] {мета_затишок}
 @мета_затишок
@@ -72,6 +72,8 @@ Oh, it's you… You made me jump.
 Come up more quietly, my knees are still shaking.
 ~бурч Why are you sneaking up? I'm barely alive as it is.
 ~весел Phew, a friend! I thought those things were back.
+Easy... I'm still trying to calm my nerves.
+Next time, give me a little warning before you sneak up.
 
 [feel_joy] {почуття_радість}
 @почуття_радість
@@ -80,14 +82,16 @@ Ha! What a day!
 If only every day were like this!
 ~бурч Well… at least something good today.
 ~весел Hooray! Today I'm treating! In words, anyway.
-~стар I've lived to hear good news.
+~стар Well, I've lived to hear good news after all.
 
 [feel_joy_greet] {почуття_радість_вітання}
 @почуття_радість_вітання
 Oh, {name}! Did you hear? We've got good news today!
-Come in, come in! It's a good day.
+Come on in, {name}! I have something good to tell you.
 ~бурч Well, hello. Today even I'm not grumbling.
 ~мол You know already? Say you know!
+Hard to keep it to myself — today's been a good one!
+There you are, {name}! I was hoping you'd hear the good news.
 
 [feel_awe] {почуття_подив}
 @почуття_подив
@@ -101,22 +105,29 @@ I've never seen anything like it.
 [feel_awe_greet] {почуття_подив_вітання}
 @почуття_подив_вітання
 Did you see? I still can't get over it.
-Oh, {name}… Such a thing happened here. I'm still not myself.
-~весел You missed it! You missed such a thing!
+Oh, {name}… Something happened here. I'm still trying to take it in.
+~весел You won't believe what you missed!
+I'm still trying to make sense of what I saw.
+~стар I've seen plenty in my time, but nothing like that.
+That was something else, wasn't it? I can hardly believe it.
 
 [feel_grief] {почуття_смуток}
 @почуття_смуток
-It's gone empty here…
+It feels so empty here now…
 I feel sad today.
-And so a person's gone. Who'll sit with me by the fire now?
+Another one gone. Who'll sit with me by the fire now?
 ~бурч Leave me be right now. Just leave me be.
-~стар Everyone goes sometime. It's no easier for that.
+~стар Everyone goes in the end. Doesn't make it any easier.
+One less voice by the fire. The quiet is hard to bear.
 
 [feel_grief_greet] {почуття_смуток_вітання}
 @почуття_смуток_вітання
 Ah, it's you… Forgive me, I'm not much for talk today.
 Hello. Don't mind me, I'm just sad.
 ~весел Hello… I don't even feel like joking, imagine that.
+Ah, {name}... forgive me if I'm quieter than usual.
+Hello. I could use a little company today.
+~стар Sit with me a while, if you can. The silence weighs on me.
 
 [place_fav] {місце_моє}
 @місце_моє
@@ -126,3 +137,4008 @@ Here I am again. Habit.
 ~стар I'll sit here, as always.
 ~бурч At least nobody bothers me here.
 ~весел Oh, my favorite spot!
+
+[idle] {вигук?} {думка}
+[idle] {думка} {думка_кінець?}
+[idle] {вигук} {думка} {думка_кінець?}
+@вигук
+Well.
+Hm.
+Right, then.
+Huh.
+Is that so.
+Aye.
+~стар Oh, my years.
+~стар Ohh, these old bones.
+~бурч Pfft.
+~бурч Bah.
+~весел Ha!
+~весел Hey now!
+~мол Wow.
+@думка
+there used to be a forest here, and now it's just us.
+I wonder what's behind that hill.
+the ravens are in a chatty mood today.
+we'll need firewood for the winter.
+it's not bad here, when you think about it.
+if only every day were this quiet.
+the roof doesn't leak, and for that I'm grateful.
+has anyone seen my other glove?
+a fire in the hearth is half of happiness.
+they say even trolls were little once. Hard to believe.
+I dreamed I was flying with the ravens.
+I should learn to fish. Someday.
+so many stones here, enough for ten houses.
+even the air is different at «{base}».
+they say Odin sees everything. Even when I'm slacking.
+somewhere across the sea, someone is chopping wood too. Probably.
+if only someone would invent an axe that chops by itself.
+~стар in my day we built far greater things than this.
+~стар my knees ache, so the weather will turn.
+~стар the grass used to be greener, and the trolls smaller.
+~стар so many winters I've seen, and I still freeze.
+~мол I want to sail out to sea.
+~мол one day I'll go after the trolls too.
+~мол what if there's another world beyond the fog?
+~мол I want a horned helmet. I know, I know, it's not practical.
+~бурч somebody left an axe lying around again.
+~бурч everything rests on me, as always.
+~бурч why did I even come here.
+~бурч once again, nothing's the way it should be.
+~весел a fine day to do nothing. Pity I have to work.
+~весел I feel like singing. Don't worry, I won't.
+~весел life is a tasty thing, if you salt it well.
+{other} is mumbling to themselves again.
+@думка_кінець
+Yep.
+So it goes.
+That's that.
+Well, fine.
+~бурч And nobody cares.
+~бурч As usual.
+~весел Splendid!
+~весел Heh-heh.
+~стар Ohh-ho-ho.
+
+[see_player] {привіт} {про_тебе?}
+[see_player] {привіт}
+@привіт
+{name}!
+Oh, {name}.
+Hail, {name}.
+Ah, it's you.
+Hello, {name}.
+{name}, good of you to drop by.
+~весел {name}! Glad to see you!
+~весел Oh, {name}! Just in time!
+~бурч You again.
+~бурч {name}. Well, hello.
+~стар Ah, {name}… come here a moment.
+~стар {name}, child, how are you?
+~мол {name}! Will you take me along someday?
+@про_тебе
+How is it out there in the world?
+You look worn out.
+Do your legs still carry you?
+Tell me if you want to eat.
+Do you ever sleep?
+What's the news?
+Off somewhere again?
+~бурч Don't ask me for anything.
+~бурч I'm busy, just so you know.
+~весел Tell me something, it's dull around here.
+~весел You're positively glowing today.
+~стар Take care of yourself. At least a little.
+
+[back] {привіт_назад} {питання?}
+@привіт_назад
+Welcome back, {name}!
+{name}! We'd almost given up on you.
+Finally! It's dull here without you.
+Oh, look who's here!
+{name} is home. We can breathe again.
+~бурч Back, then. Well, well.
+~бурч Oh, you're back. We've been working here, you know.
+~весел {name} is home! Hooray!
+~весел At last! I'd started to miss you.
+~стар Thank the gods, you're alive.
+~стар Oh, {name}… I've been praying for you.
+~мол {name}! Will you tell me where you've been?
+@питання
+What's it like out there?
+What did you bring back?
+In one piece? Good.
+You were gone a long while.
+Did you see any trolls?
+Hungry?
+~весел Sit down and tell me everything!
+
+[stare] {дивиться}
+@дивиться
+Did you want something?
+What, is something wrong with my face?
+I'm right here, if you need me. Just standing.
+You're quiet, I'm quiet. We're good at quiet.
+You're quiet, and so am I. That's fine by me.
+Just standing here. Don't mind me.
+~бурч You look at me like I owe you money.
+~бурч Go on, don't just stand there.
+~весел Want me to tell you something? No? Fine then.
+~стар You stare like my late grandfather. He'd stay silent too, and then, bam, wisdom.
+~мол You're standing like you're about to give me a task. Are you?
+
+[hurt] {рани} {рани_кінець?}
+@рани
+{name}, you're covered in blood!
+Who did this to you?
+Oh, you can barely stand.
+There's not a whole inch of you left!
+You look like you've met a troll.
+You look like you went ten rounds with a troll.
+~стар Sit down, I'll bandage you. Well, I'll try.
+~бурч Got yourself into trouble again?
+~мол Wow! Will you show me who did that?
+@рани_кінець
+To the fire, quickly.
+Eat and rest.
+You need some mead.
+Some mead would do you good.
+~весел Don't worry, it'll heal before the wedding.
+~бурч And who's going to patch you up? Me again?
+
+[weather] {погода} {погода_кінець?}
+@погода
+{weather} again.
+What a {weather} today.
+{weather}. I like it. Every other time.
+{weather}, naturally. As always.
+{weather}, again. Of course.
+~бурч {weather}, of course. As always.
+~стар {weather}… my bones told me this morning.
+~весел {weather}! At least it isn't boring.
+~мол Weather like this is made for stories by the fire.
+@погода_кінець
+Better not step outside.
+I'd like to be under a roof.
+Somebody shut the door!
+Stay indoors if you can.
+~бурч Work stands still and I'm out here freezing.
+~весел At least it'll give us something to remember.
+
+[night] {ніч}
+@ніч
+It's dark already. Time for bed.
+Hear that? That's not the wind.
+Everything is different at night.
+So many stars… like sparks from a bonfire.
+Did anyone hear wolves? Or was it just me?
+The fire burns, and my heart is warmer for it.
+~стар I used to stay awake at night. Now I only sleep at night.
+~мол So many stars, like sparks!
+~мол They say draugr walk at night. They're lying, right?
+~бурч Dark, cold, and somebody's snoring again.
+~весел Night is the time for tales!
+
+[morning] {ранок}
+@ранок
+Morning. Well, at least it isn't raining.
+A new day, a new chore.
+Dew on the grass. Lovely.
+We could use a rooster… but we have none.
+~весел Good morning, {name}!
+~весел The sun is up, and so am I!
+~бурч Whose idea was it to get up at all?
+~бурч Just one more hour…
+~стар Another morning. Thank you, gods.
+
+[evening] {вечір}
+@вечір
+Evening falls. Time for the fire.
+A little longer, and then rest.
+The day is done, and that's good.
+The sun sets like a weary warrior.
+~весел Supper soon!
+~бурч At last this day will end.
+~стар Evening is the best time. Nobody wants anything.
+
+[work] {робота} {робота_кінець?}
+@робота
+I'm a {job} here. And that's no joke.
+Working, working, and no end in sight.
+The work won't do itself.
+A little more, and then I'll rest.
+~весел I love my work. Almost.
+~бурч Will anyone ever thank me? No.
+~стар At my age, and still working…
+~мол One day I'll be the best at this!
+@робота_кінець
+Well, back to it.
+Don't distract me.
+Sorry, my hands are full.
+~весел Just a bit more!
+~бурч Ugh.
+
+[work_cook] {кухня}
+@кухня
+The meat won't fry itself.
+Who ate everything that was ready again?
+It'll taste good today. Probably.
+Stay back, the fire bites.
+More salt… there's never enough salt.
+I could use more salt. There's never enough.
+~бурч I boil, I fry, and the ravens get the thanks.
+~весел Hungry? Come over! Well, soon.
+~стар My grandmother fried it like this. You'd lick your fingers.
+[work_stoker] {вогонь}
+@вогонь
+Fire is like a child: feed it and watch it.
+The wood runs out faster than the forest grows.
+Warmth is my job.
+Without a fire everyone here would've frozen by now. Just saying.
+Keep the hearth fed and the hall stays warm. That's the whole trick.
+~бурч Somebody left a torch without resin again.
+~весел I love the way it crackles!
+[work_smelter] {піч}
+@піч
+Ore, coal, ore, coal…
+The furnace is humming, so all is well.
+Hot work. In the literal sense.
+The furnace never rests, and neither do I.
+Ore in, bars out. That's the whole song.
+~бурч This furnace has singed off my eyebrows.
+~весел Metal is nearly magic!
+[work_gatherer] {збір}
+@збір
+The berries won't pick themselves.
+A mushroom here, a mushroom there, and the basket is full.
+The trick is not to eat it all on the way.
+Every basket is a small victory.
+A good eye finds more than a long walk.
+~весел The forest is generous today!
+~бурч Thorns. Thorns everywhere.
+[work_cleaner] {прибирання}
+@прибирання
+Who throws things on the floor? Who?!
+I tidy up, and they make a mess again.
+Order is like fire: turn away and it dies.
+A broom and patience, that's all it takes.
+Sweep today, sweep tomorrow. It never ends.
+~бурч I'm not a servant. Well, almost.
+~весел Clean floors, bright heart!
+[work_keeper] {бджоли}
+@бджоли
+The bees are angry today.
+It'll be good honey. If nobody eats it.
+Mead is a slow business.
+The hives are humming. A good sign.
+Honey today, mead tomorrow.
+~весел The mead is ripening, and life is good!
+~бурч They stung me again. Three times.
+[work_guard] {варта}
+@варта
+Quiet. Too quiet.
+I'm watching. Don't worry.
+Nobody gets past. Well, not without my knowing.
+Eyes open, spear ready.
+Nothing moves here that I don't see.
+~бурч Stand here, look there. For a whole lifetime.
+~мол Just let someone try!
+~стар My eyes aren't what they were, but my ears, oh my.
+
+[night_watch] {нічна_варта}
+@нічна_варта
+The night watch is the hardest.
+I'm not asleep. Just blinking for a long time.
+Every rustle is an enemy. Or a hedgehog.
+Cold feet and a long night. That's the watch.
+The dark plays tricks. I keep my eyes open anyway.
+~бурч Everyone sleeps, and I'm to keep watching.
+~мол They come at night. I'm ready.
+
+[raven] {ворон}
+@ворон
+Your raven is looking at me again like I'm cheese.
+Clever bird. Cleverer than some.
+Your raven is muttering something again. Or am I imagining it?
+They say ravens remember faces. Let it forget mine.
+That bird sees more than it lets on.
+~бурч Tell your raven to stop stealing my spoons.
+~весел Birdie! Hello, birdie!
+~стар Odin's ravens… in my grandfather's day they were only in tales.
+~мол Can I pet it? No? Does it bite?
+
+[other] {плітка}
+@плітка
+{other} is quieter than usual today.
+Did you see {other} carrying firewood? It's a riot.
+{other} is mumbling in their sleep again.
+{other} had that look again today. You know the one.
+I wonder what {other} is up to. Always so busy.
+~весел {other} is a good soul, even when they grumble.
+~бурч And my portion's gone again. Does anyone know where?
+
+[chat_open] {розмова}
+@розмова
+Do you think it will rain today?
+Did you hear? A troll was seen beyond the hill.
+What's for supper?
+How did you sleep?
+How much more of this wood must we chop?
+Do you believe in Valhalla?
+Do you know why the ravens circle over us?
+If you had a ship, where would you sail?
+~бурч Do you also feel like everything here rests on me?
+~весел Want me to tell you a riddle?
+~стар Do you remember what last winter was like?
+~мол Have you ever seen a dragon?
+@відповідь
+Who knows.
+The gods know.
+Don't ask.
+Maybe so.
+Good question. No answer.
+If you say so.
+You ask the strangest things.
+~бурч What's it to me?
+~бурч Leave me be, will you?
+~весел Ha! Well said.
+~весел Now that's a thought!
+~стар I used to wonder about that too.
+~стар Oh, child… that's a long story.
+~мол No way! Really?
+[chat_reply] {відповідь}
+
+[hungry] {голод}
+@голод
+My stomach growls like a troll in a cave.
+Something to eat would be nice…
+When is that supper coming?
+Even a crust would do.
+I'd trade a lot for a warm bowl right now.
+~бурч Does anybody here ever feed people?
+~стар A spoon is heavy on an empty stomach.
+~мол I could eat a whole boar right now.
+[fed] {ситий}
+@ситий
+Oh, I'm full. Now for a nap.
+{food}: that's what makes a person a person.
+That was tasty. Whoever cooked, well done.
+My belly's full and the world looks kinder.
+Nothing like a full stomach to warm a person.
+~весел Full means happy!
+~бурч Could have used more salt.
+~стар A good meal, a good night's sleep.
+[meal] {їжа}
+@їжа
+Oh, now that's more like it.
+Enjoy the meal, everyone.
+Finally.
+Smells good!
+Pass the bread, will you?
+~весел Hail to whoever cooked!
+~бурч Well, it's edible.
+[mend] {лагодити}
+@лагодити
+We'll patch it up, and it'll be like new.
+Who hits a wall like that…
+One more nail and it's done.
+Boards and nails, nails and boards.
+A hammer solves most things.
+~бурч And me again.
+~весел Knock-knock, and the wall is good as new!
+
+[after_fight] {переміг}
+@переміг
+Take that!
+If they come again, they'll get more of the same.
+Phew. Still alive.
+That's how it's done!
+They won't forget that in a hurry.
+~весел Did you see how I swung that one?
+~бурч Covered in blood again. Who's going to wash this?
+~мол That was my first! Well, my second.
+~стар The old horse doesn't spoil the furrow.
+[after_fight_lost] {відступив}
+@відступив
+That was hard.
+We barely held them off.
+Too many of them.
+We were lucky to get out.
+Let's not talk about it.
+~бурч Next time, without me.
+~стар Oh, I'm too old for this.
+[after_flight] {втік}
+@втік
+I didn't run. I… withdrew strategically.
+Phew… my heart is still pounding.
+A bit longer and they would have eaten me.
+That was too close.
+I'm not going back there. Not today.
+~бурч Will somebody ever build a proper fence here?
+~весел I run faster than I thought!
+~мол Next time I'll fight! Probably.
+
+[new_home] {новенький}
+@новенький
+It's nice here. Thank you for taking me in.
+I'm still getting used to the new place.
+«{base}» is a lovely name.
+Where's your well? Oh, there isn't one…
+Everything feels unfamiliar, but I'll settle in.
+Everyone's been kind so far.
+~весел A new home! A new beginning!
+~бурч The bed is hard, but I've had worse.
+~стар A new home in old age. Who'd have thought.
+
+[building] {будуєш}
+@будуєш
+What are you building?
+Oh, a new wall! Or is it a floor?
+Just don't get in my way.
+It's coming out nicely. Probably.
+Watch the corners, will you?
+That's a lot of timber for one day.
+~бурч Building again, and I'm to clean up.
+~весел Build, build! I want a tower!
+~стар Crooked. But never mind, it'll stand.
+~мол Will you teach me to build like that someday?
+
+[heavy] {тяжко}
+@тяжко
+You can barely carry it! What is that?
+Gathering stones, are you?
+Careful, you'll break your back.
+That looks heavy. Need a hand?
+Put it down before you drop it.
+Is that all for one trip?
+~бурч I hope that's not for me to unpack.
+~весел Wow, what a haul!
+
+[fishing] {риба}
+@риба
+There's fish here. So they say.
+Any bites?
+Just don't catch my favorite.
+Patience, that's the whole art.
+The water's calm today. Good luck.
+The fish are smarter than they look.
+~весел Bring a big one and we'll fry it!
+~бурч All a fisherman gets is scales and a cold.
+
+[land_meadows] {луки}
+@луки
+The meadows are a lovely place. Quiet.
+Even the boars are friendly here. Almost.
+The grass whispers: someone's coming.
+Soft ground, open sky. Can't complain.
+You can see for miles from here.
+You can hear the wind in the grass.
+[land_forest] {ліс}
+@ліс
+This forest is almost breathing.
+Greydwarves are prowling somewhere nearby again.
+It's easy to get lost here. I've done it twice.
+The trees are thick and the light is thin.
+Every branch looks like it's watching.
+The path is gone again. Which way is home?
+[land_swamp] {болото}
+@болото
+The swamp… everything here smells damp.
+Leeches are my favorite company. Not.
+Don't step there. It's deeper than it looks.
+It smells of rot and old wood.
+Every step sinks a little.
+~бурч Who builds on a swamp?
+[land_mountain] {гори}
+@гори
+It's cold. But what a view!
+Even the wind is angry here.
+My ears are frozen solid.
+The air is thin and the stones are cold.
+Don't look down. Look at the peaks.
+~бурч Wolves howling again. Or is that my stomach.
+[land_plains] {рівнини}
+@рівнини
+The plains: plenty of room, little shade.
+Fulings are rumbling somewhere in a camp again.
+Nowhere to hide on open ground.
+The grass is tall and the sky is huge.
+Wind carries everything out here, smells and sounds.
+~весел You can see to the edge of the world!
+[land_mist] {туман}
+@туман
+The fog is so thick I can't see my own hands.
+Something whispers in the fog. I'm scared. Well, a little.
+Sounds come from nowhere in this mist.
+Everything is grey and damp.
+I keep hearing steps that aren't mine.
+Stay close, or I'll lose you.
+[land_ash] {попіл}
+@попіл
+Everything burns here. Even the air.
+Ash on my teeth. Again.
+The ground is warm underfoot. Too warm.
+Everything is grey and it smells of smoke.
+The sky glows red even in the day.
+Don't touch the stones, they bite.
+[land_sea] {море}
+@море
+The sea is loud. Good for sleeping.
+Everything is salty, even the bread.
+Salt in the air and salt in my beard.
+The tide keeps its own time.
+Gulls cry louder than any raven.
+Hear the waves? They never stop.
+
+[story_came] {валькірія} {давно} {перше?}
+[story_came] {давно} {валькірія} {перше?}
+@валькірія
+A valkyrie carried me here.
+A valkyrie dropped me on a stone in the middle of the meadows.
+I woke up on a cold stone, with wings above me.
+I remember wings, and the fall.
+I didn't come here. I was brought.
+Someone laid me on the stones like a sack of grain.
+~бурч The valkyrie dropped me like trash. At least not into the swamp, thanks for that.
+~весел The valkyrie brought me like a gift. Though I don't know for whom.
+@давно
+~мол I've been here a short while, maybe a year.
+~мол It wasn't many winters ago.
+~мол The grass hasn't even grown over my first footprints.
+~дор It was a few winters ago.
+~дор I count the days with notches on a stick, a few hundred by now.
+~дор I've been here some years, as far as years are counted here.
+~стар It was so long ago that there wasn't a single house in the Meadows then.
+~стар So many winters have passed that I stopped counting.
+~стар Back then, those who are gone now still lived here. ^згаслі
+@перше
+The sky was strange, but my hands were mine.
+The first thing I saw was a raven on a branch.
+The first night was the longest.
+I sat for a long time not knowing where to go.
+On the first day the greydwarves nearly ate me. ^карлики
+~весел On the first day I found raspberries and decided that this place was livable.
+~бурч The first thing I did was get my feet wet.
+
+[story_memory] {нічого} {уламок} {уламок_кінець?}
+@нічого
+I don't remember my former life.
+Who I was before, I don't know.
+My memory is like fog over a swamp.
+My past was taken from me. Almost all of it.
+Little is left of what came before.
+@уламок
+Only a smell is left, smoke and pitch.
+Only the smell of the sea is left, salty and cold.
+Sometimes I dream of a woman singing over a cradle.
+I know one song, and I don't know where from.
+My hands reach for an axe on their own.
+My hands remember how to knot a net.
+I remember snow on my lashes and someone's voice: «Don't be afraid».
+I remember a red sail over grey water.
+I remember a hammer in a forge, steady as a heart.
+I remember the taste of honey from someone's hands.
+~мол I remember laughter, bright, a child's. Maybe mine.
+~мол I remember running barefoot through the dew.
+~дор I dream of a battle where I fell. I wake up and my shoulders ache.
+~дор I remember a bonfire and people around it. Not their faces, only the warmth.
+~стар I had children. I'm sure of it. But I don't remember their faces, and that hurts most.
+~стар I used to remember names. Now only colors.
+~смілив I remember the last battle. I did not retreat.
+~боязк I remember running. From what, I don't know.
+@уламок_кінець
+I don't know where it comes from.
+Sometimes I think it was just a dream.
+I hold on to it like a rope.
+Maybe one day I'll remember more.
+~стар I'm afraid I'll forget even this.
+~смілив Maybe that's why I'm here.
+~боязк Maybe that's why I still flinch at every rustle.
+
+[story_life] {як_жив} {втрата?}
+[story_life] {як_жив} {як_жив_ще?}
+@як_жив
+I built a hut three times. Three times the greydwarves came. ^карлики
+I walked from hut to hut where nobody lived, warming myself at other people's dead fires.
+I caught fish with my bare hands until I made a rod. ^вода
+I slept in trees, where it's safer.
+I gathered mushrooms and berries and got by that way.
+~мол For the first months I hid in abandoned huts and was afraid of the night.
+~мол I learned everything alone: lighting a fire, roasting meat, not crying.
+~дор I went with a band. Then the band… died out. One by one.
+~дор I lived alone at the edge of the swamp. The loneliness there is worse than draugr.
+~дор I traded with Haldor for as long as I had anything to sell.
+~дор For a few winters I looked after someone else's forge, until its master died out.
+~стар Once I was invited to every feast. Now there's nobody left to invite me.
+~стар I watched houses grow up here and then go empty. ^згаслі
+~стар I taught the young where to dig copper and how not to anger a troll.
+~смілив I went after trolls alone. Twice. ^knack_melee_10
+~смілив I stood watch in a strange camp until the camp scattered.
+~боязк I hid while the others fought. I'm not ashamed. Well, a little.
+~боязк I went around the forest by the tenth road.
+@як_жив_ще
+And then it all started over again.
+That's how I lived, day after day.
+~весел And you know, it wasn't so bad.
+~бурч Nobody helped. Nobody.
+@втрата
+~мол I haven't lost anyone here yet. They say it doesn't last.
+~дор I've seen more empty beds than I'd like.
+~дор A friend of mine simply didn't wake up one morning. The bed was still warm. ^згаслі
+~стар I outlived three companions. They didn't die, they were just gone one morning. ^згаслі
+~стар Everyone I knew first is gone now. ^згаслі
+
+[story_mark] {прикмета} {прикмета_кінець?}
+@прикмета
+I'm afraid of deep water. I don't know why. ^вода ^боїться_води
+At night I count the stars. I lose count at two hundred. ^зорі
+I carve ravens out of wood. I haven't given one away yet.
+I'm looking for someone. I don't remember who. But I'll know them. ^шукає
+I can't fall asleep without a fire nearby. ^без_вогню
+I collect pretty pebbles. Don't ask why.
+I talk to trees. They don't answer, but they listen.
+~дор Sometimes at night I hear a voice that promises peace if I just forget everything.
+~стар Sometimes at night someone whispers to me that it's enough, that I can rest.
+~мол I know every berry spot within three days' walk.
+~боязк I sleep with a knife under my pillow.
+~смілив I don't like it when someone fights for me.
+~бурч I can't stand it when people sing in the morning.
+~весел I laugh in my sleep, they say.
+@прикмета_кінець
+That's just how I am.
+Don't laugh.
+~стар I haven't agreed yet.
+~весел Well, everyone has their quirks.
+
+[story_trouble_surrounded] And then they surrounded me, and if it weren't for you…
+[story_trouble_surrounded] They came out from behind the trees and I knew I couldn't run.
+[story_trouble_captive] And then they caught me and dragged me to their camp. You know the rest.
+[story_trouble_captive] They kept me bound, and I'd already begun to forget how the sun shines.
+[story_trouble_hungry] And then the food ran out. Three days I ate bark.
+[story_trouble_hungry] The food ran out before the road did.
+[story_trouble_wounded] And then beasts mauled me. I lay there thinking: this is it.
+[story_trouble_wounded] A beast crept up on me while I slept.
+[story_trouble_lost] And then I lost my thing, and my hope with it.
+[story_trouble_lost] Without my thing I felt like I'd lost a hand, and they sat right next to it.
+[story_trouble_freezing] And then I lost my way in the mountains and nearly froze.
+[story_trouble_freezing] The fire went out and there was nothing to light a new one with.
+[story_trouble_chased] And then they chased me, and I ran until I saw you.
+[story_trouble_chased] I ran without looking back, because I knew what I'd see.
+[story_trouble_giant] And then a giant cornered me. I sat there and didn't breathe.
+[story_trouble_giant] It sat right beside me, as if guarding its dinner.
+[story_trouble_astray] And then I wandered off and shouted until I was hoarse.
+[story_trouble_astray] I walked in circles, and every tree was the same tree.
+[story_trouble_ambush] And then they made me call for help. Forgive me.
+[story_trouble_ambush] They told me: call, or it's the end of you. And I called.
+
+[story_dream] {сон_вступ} {сон} {сон_кінець?}
+@сон_вступ
+I often have the same dream.
+Sometimes I dream things that make me wake up soaked.
+The dreams here are strange.
+I had a dream once, and it won't let go.
+~стар My dreams are longer than my days now.
+~мол I have dreams that are bright like fire.
+@сон
+A great tree, and I'm on it like a leaf.
+Someone calls me by name, but I can't hear which.
+A long hall full of tables, every seat taken but one.
+Water that rises, and I can't move.
+Black birds carrying little lights in their beaks.
+A bridge made of rainbow, and I don't dare step on it.
+A door in the earth, and silence behind it.
+~смілив I stand on the shore, and ships come out of the fog. I don't run.
+~боязк Someone is following me. I look back and there's nobody.
+@сон_кінець
+What it means, I don't know.
+I wake up and my heart is pounding.
+Maybe it's memory. Maybe not.
+It stays with me all day.
+~весел A lovely dream. Pity it was short.
+~бурч I'd rather dream about supper.
+
+[story_friend] {друг} {друг_кінець?}
+@друг
+An old man taught me to light a fire here. Then he died out. ^згаслі
+I had a friend who laughed so loudly even the wolves went quiet. One morning her bed stood empty. ^згаслі
+For a long time I walked with a man who never spoke. He never once said his name.
+I once made friends with Haldor. Well, friends, he didn't cheat me.
+I had a dog. A local one, grey. He followed the wolves and never came back.
+~мол My first friend here taught me to set snares for hares.
+~стар I outlived my friends. Now I'm friends with the fire. ^згаслі
+~смілив My companion and I stood back to back against the greydwarves. That was the first time I heard him laugh. ^карлики
+~боязк Someone once pulled me out of the swamp by the collar. I never found out who.
+@друг_кінець
+I think of them often.
+That was long ago. Or yesterday. It's hard to tell here.
+~весел Good times.
+~бурч Now there's nobody left to quarrel with.
+
+[story_thing] I carry {річ} with me. {річ_чому}
+@річ
+a wooden spoon with a raven carved on it
+a pebble with a hole in the middle
+a leather pouch with a lock of someone's hair in it
+a knife without a handle
+a copper button that fits no clothes
+a rope with nine knots
+a feather as black as night
+~стар an old key, though I don't remember which door it fits
+~мол a whistle I made myself
+@річ_чому
+I don't know where I got it.
+I can't fall asleep without it.
+I think someone gave it to me once.
+I hold it when I'm afraid.
+~бурч And I'll never give it up.
+~весел For luck. Well, it works so far.
+
+[story_skill] {вміння_вступ} {вміння}.
+@вміння_вступ
+I can
+I know how to
+~бурч Without me nobody here would know how to
+~весел I don't like to brag, but I can
+@вміння
+mend nets so well that a new one would be jealous ^knack_servant_15 ^knack_cleaner_10
+light a fire even in the rain ^knack_stoker_25 ^knack_servant_15
+find water where there is none ^knack_gatherer_20
+sing so that the wolves go quiet ^оповідач
+walk so softly that even a deer doesn't hear ^knack_guard_15
+guess the weather from the clouds
+cook with whatever grows underfoot ^knack_cook_25
+weave baskets from any vine ^knack_gatherer_15 ^knack_keeper_10
+~стар tell stories until everyone falls asleep ^оповідач
+~смілив stare a troll in the eye without blinking ^knack_melee_15
+~боязк hide so well that nobody finds me ^ховається
+
+[story_scar] {шрам}
+@шрам
+I have a scar on my hand from a greydwarf's tooth. It feared me for a long time afterward. ^карлики
+The scar on my cheek is from a branch, but I tell everyone it's from a troll.
+I can't bend two fingers on my left hand. Frostbite in the mountains.
+My back is a map of old wounds. Each with its own story.
+~дор My right leg never healed since that winter. I limp, but I keep up. ^кульгає
+~стар My knee isn't what it was: I limp, but I get where I'm going. ^кульгає
+~смілив An arrow in the thigh, a keepsake from one fight. I've limped a little ever since. ^кульгає
+~мол I don't have any scars yet. Though my knee is a different story.
+~стар I have so many scars I no longer remember which is from what.
+
+[story_ravens] {ворони}
+@ворони
+I used to be afraid of ravens. Now when I see them I think: someone is watching over us.
+They say ravens remember everything. I wish I could.
+Ravens are Odin's eyes. And I don't know whether I want him to see me.
+Ravens always seem to know more than I do.
+~стар A raven used to follow me once too. Or did I dream it.
+~мол I dream of having a raven of my own someday.
+
+[story_wish] {мрія}
+@мрія
+I want to see Valhalla once. Even with one eye.
+I want a home where someone waits for me.
+I want to remember my real name.
+I want to find the ones I forgot. If they're still out there. ^шукає
+I want to be buried under a tree. When the time comes.
+~весел I want a feast for a hundred people. And everyone singing.
+~бурч I want to be left alone. Even for a day.
+~мол I want to learn to fight so the trolls fear me.
+~мол I dream of building a ship and sailing past the fog.
+~стар I want to live to see spring. Every year I want it.
+~стар I only want to be remembered. By someone.
+
+[work_lumber] {лісоруб} {робота_кінець?}
+[work_lumber] {лісоруб}
+@лісоруб
+Timber! Watch out!
+Chop, chop… and it just stands there, mocking me.
+Birch is easy to cut. Not like oak.
+The axe dulls faster than I tire. Almost.
+Log after log, and the day is gone.
+The forest is big and I'm only one. That's all right, bit by bit.
+The trick is for the tree to fall where I want, not on me.
+The chips are flying, so the work is going well.
+There are more stumps than trees here now.
+Every tree is somebody's future wall.
+~бурч Chop, carry, stack. And chop again.
+~бурч Whose idea was it to build with wood? Let them build with stone.
+~весел Hear how nicely it thumps? That's my song.
+~весел One more and I'm the hero of the forest!
+~стар I once felled a tree like this in three blows. Once.
+~мол One day I'll fell the biggest tree in the forest. You'll see!
+~смілив Just let a greydwarf try me, my axe is sharp.
+~боязк Something rustles in the forest… No, it's the wind. Probably.
+[work_miner] {рудокоп} {робота_кінець?}
+[work_miner] {рудокоп}
+@рудокоп
+The rock is hard, but I'm harder.
+Clink, clink, and another piece.
+The vein is good here. I'll dig a little more.
+A pickaxe is the best conversation: it never argues.
+Dust in my nose, dust in my ears, dust in my porridge.
+The earth gives up its ore reluctantly. Like a stingy merchant.
+Every stone is somebody's future furnace.
+A few more blows and I'll carry it out.
+~бурч My back won't bend and the pick isn't getting lighter.
+~бурч Who talked me into digging? Oh right, you did.
+~весел Look how it shines! Almost like gold. Almost.
+~стар My hands aren't what they were, but the rock doesn't know that.
+~мол Maybe I'll find something amazing here? Treasure?
+~смілив They say something old lives in the deep. Let it. I'm not afraid.
+~боязк Just don't let it collapse… just don't let it collapse…
+[work_servant] {слуга} {робота_кінець?}
+[work_servant] {слуга}
+@слуга
+Shut the door, feed the fire, sweep the floor.
+Everything has its place. Even if it doesn't know it.
+A house is alive: neglect it and it falls sick.
+Somebody left the door wide open again. There's a draft!
+Keeping the house warm is my business.
+A patch here, a log there, and all is well.
+Order in the house, order in the head.
+I sorted the chest. Now everything is in its place.
+~бурч I'm not a nursemaid. Though… yes, I am.
+~бурч Nobody notices when things are fine. Only when they aren't.
+~весел A clean house, a warm fire, what more is there?
+~стар How many houses I've looked after in my life…
+~мол One day I'll have a house of my own. Until then, yours.
+
+@робота
+Sitting idle is worse than any work.
+A little more, and I'll have something to boast about.
+There's work here for a hundred people, and we're a handful.
+~бурч No matter how much you do, it's never enough.
+~весел The hands work while the head rests.
+~стар Work doesn't fear the old. The old fear the work, a bit.
+@робота_кінець
+We'll talk later.
+Yep.
+~стар Ohh.
+@кухня
+Whoever eats, washes up.
+The pot is boiling and the soul is singing.
+Onions would be nice. Without onions nothing tastes right.
+Today it's soup. Tomorrow, soup again.
+~бурч I burned my fingers again.
+~мол One day I'll cook something so good that Odin himself will come to supper.
+@вогонь
+Wet wood isn't wood, it's smoke.
+As long as the fire burns, the house is alive.
+A spark here, a spark there, as long as it's not on the roof.
+~стар Fire remembers more than people do.
+~мол Look how nicely the flame plays!
+@піч
+The coal is running low again.
+A furnace is like a dragon: eats a lot and gives little.
+Metal doesn't like to be rushed.
+~стар I used to live in the forge like that, by the fire.
+~мол One day I'll forge myself a sword. A real one!
+@збір
+Berry by berry, and there's supper.
+A boar grazed here. Trampled everything.
+Mushrooms like shade. Like me in the heat.
+~стар I know every bush here. Every one!
+~мол Oh, a beetle! A big one!
+@прибирання
+Dust, dust, dust. Where does it all come from?
+Somebody scattered feathers again. The ravens, of course.
+Everything in its place, and the heart is lighter.
+~стар A broom and patience, that's all the science there is.
+~мол I found a coin under the bench! Well, my own.
+@бджоли
+Bees don't like shouting. Neither do I.
+Quiet, little ones, quiet, I'm a friend.
+The hive hums like a whole village.
+~стар A bee is the most honest worker. Unlike some.
+~мол Do bees sleep in winter? I wonder.
+@варта
+Something moved in the bushes. No, a hare.
+While I'm here, folk sleep sound.
+One eye on the forest, one ear on the road.
+Who goes there? Ah, friends.
+~смілив Let them come. I'm waiting.
+~боязк Let there be nobody. Please let there be nobody.
+@нічна_варта
+The night is long and the torch is short.
+The stars are my only company.
+An owl hoots, so all is calm. Probably.
+~стар Old eyes see better at night. So they say.
+~смілив At night I see everything. Well, almost everything.
+~боязк A shadow moved… No. Just a shadow.
+@луки
+The boars were rooting by the fence again.
+Even the rain is warm here.
+The best place to start over.
+~стар I'd live out my days in the Meadows.
+~мол It's boring here. Pleasant, but boring.
+@ліс
+Under these trees it's twilight by day.
+The greydwarves were throwing stones again.
+The forest whispers, don't listen, or it will lead you astray.
+~боязк Trolls, they say, walk these paths. Big paths.
+~смілив The forest is for those who aren't afraid.
+@болото
+Draugr never sleep. Ever.
+Boots never dry here.
+The mosquitoes here are so big you could bargain with them.
+~боязк Something is bubbling in the mud. I don't want to know what.
+~стар The swamp remembers everyone who stayed in it.
+@гори
+Snow gets even into the porridge.
+It's hard to breathe here and easy to think.
+Dragons, they say, nest higher up. I haven't checked.
+~стар The cold in my bones is a permanent guest now.
+~мол From here you can probably see the whole world!
+@рівнини
+The midges here are vicious, they bite as if for revenge.
+The sun burns and there's no shade to be had.
+Barley grows well here. If the fulings don't trample it.
+~боязк Those fulings… they're watching us, aren't they?
+~смілив Keep your axe ready out here. I do.
+@туман
+Even sounds get lost here.
+Don't leave the fire, you'll get lost in three steps.
+Something big walks here. I heard it.
+The fog clings to the skin like a cobweb.
+~смілив Whatever is hiding in there, let it keep hiding.
+~стар I used to think fog was the edge of the world. Turned out it wasn't.
+@попіл
+The ground cracks underfoot here.
+Why did we come here? Well, I know why. But still.
+It burns even through my boots.
+Nothing grows here. Not even hope.
+~бурч Who in their right mind builds a house here?
+~смілив Hot, but livable. If you're careful.
+@море
+The waves are restless today.
+The gulls stole the fish again.
+They say a serpent lives in the deep. A big one.
+Wood dries out and turns salty here.
+~мол One day I'll sail that ship, far, far away.
+~стар The sea doesn't forgive fools. The wise, sometimes.
+@плітка
+{other} is dozing by the fire again. Well, not me.
+{other} says a troll walks in the forest. The troll probably tells stories about us too.
+{other} is peering into my bowl again. I see everything.
+{other} is humming the same song again. Third day running.
+{other} is hiding hardtack somewhere. I know where.
+~весел {other} is a funny soul. Just don't tell them I said so.
+~бурч {other} is snoring so the walls shake again.
+~стар {other} is still learning. Never mind, they will.
+@ворон
+Your raven sat on the roof again, counting us.
+The raven looks at me as if it knew my secrets.
+Yesterday the raven brought me a pebble. Is it a gift or a threat?
+~бурч The raven dirtied my bench again.
+~весел Clever bird! Almost like me.
+~боязк When the raven stares for long, I get goosebumps.
+@риба
+Quieter, or you'll scare off all the fish.
+Fish like the patient.
+~стар I used to catch fish with my bare hands. Honest!
+~мол Can I have a rod too?
+~весел Catch one and I'll fry it!
+@тяжко
+Did you bring the whole mountain with you?
+Put it down, your back isn't iron.
+~стар At my age I'd already be lying under a load like that.
+~мол Let me help! Well, I'll carry something small.
+~весел Well, well! Are you Thor?
+@їжа
+Smells so good my mouth waters.
+Finally, something hot.
+Eat while it's hot.
+~стар Bread on the table is already a feast.
+~мол Can I have more? Please?
+@лагодити
+I see a crack, I patch a crack.
+We'll need another plank here.
+~стар How many walls I've patched…
+~весел There! Whole again. Like new. Well, almost.
+@відступив
+I barely got out on my own two feet.
+Next time we'll be ready.
+~смілив I'll be back. And then we'll see.
+~боязк I told you we shouldn't have gone there.
+~весел Well, at least we're alive. That's something.
+@втік
+I… just left quickly. Very quickly.
+My feet carried me off. It wasn't me.
+~стар I didn't used to run. But I used to be younger.
+@переміг
+Well, who's next?
+That's how we live.
+~смілив A little more and I'll start to feel sorry for them.
+~стар Old, but still biting.
+@ситий
+Now I can go back to work. Well, in a bit.
+My belly is content and so am I.
+~весел This is the life!
+
+@ситий
+I'd eat more. But there's no room.
+@голод
+Someone's fighting in my belly.
+I'd gnaw bark right now.
+Who's in the kitchen? Hello?
+~бурч I work and work, and what do I get to eat? Nothing.
+~весел Hungry as a wolf. But I don't bite. Yet.
+@новенький
+I don't know where anything is yet, but I already like it.
+Thank you for the roof. Truly, thank you.
+It smells like home here. Or am I imagining it.
+~боязк It's safe here, isn't it? Isn't it?
+~смілив Who's in charge of the watch? Nobody? Then it'll be me.
+@будуєш
+Set the wall straighter or it'll fall on your head.
+If you're building, build. Just don't forget the door.
+~бурч Building, building… and where am I supposed to sleep?
+~весел Oh, if that's for me, I don't mind!
+~мол Can I hand you the nails?
+@погода
+What {weather}… even the ravens have hidden.
+{weather} is a sign. Of what, I don't know, but a sign.
+~мол {weather}! Can I run around?
+~весел {weather}? So what! We're used to it.
+~боязк {weather}… what if the roof doesn't hold?
+@погода_кінець
+Good thing we have a roof.
+To the fire, folks, to the fire.
+~стар My bones ache. They never lie.
+~мол Tomorrow there'll probably be sun.
+@вечір
+Evening is the time for chatting.
+A little more work and then to the fire.
+The sun is down. Now we're in charge. Until the night guests arrive.
+~мол Will you tell me something when we sit by the fire?
+~бурч And once again I got nothing done.
+@ранок
+The dew is cold, but the day will be warm.
+The ravens woke before anyone else.
+Morning is wiser than evening. Though sleepier.
+~стар Woke up again. That's already good.
+~мол Morning! A new day! What shall we do?
+@ніч
+Quiet… even the fire whispers.
+At night everything is scarier than it is. Almost everything.
+~стар The nights are longer now. Or I'm older.
+~смілив Let it be dark. The axe sees in the dark too.
+@дивиться
+Did I say something wrong?
+Do you want me to stare at you like that too?
+~бурч If you're waiting for me to sing, you'll wait forever.
+~стар Look, look. There aren't many like me left.
+@рани
+Sit down, or you'll fall.
+Oh, what scratches…
+~весел Never mind, scars are decorative. On some people.
+@рани_кінець
+Eat and rest, do you hear?
+Don't go out alone again. I mean… don't go.
+~стар Take care of yourself, child.
+@думка
+today the wind smells of snow.
+I wonder if ravens dream.
+I should patch my boots. Again.
+if I piled up all the pebbles I collect, it'd make a mountain. A small one.
+who invented mead anyway? A good soul, whoever it was.
+they say there's a land across the sea where it's always summer. Probably lies.
+that song is in my head again. Where is it from?
+has anyone seen my knife? The carved one?
+strange: I wake up and can't remember my dream. They say that's lucky.
+at least there's someone to talk to at «{base}».
+it's a good day not to break anything.
+I bet the ravens are laughing at us. Quietly.
+~стар how many times have I started over…
+~стар the young aren't what they used to be. Though neither were we.
+~мол one day I'll beat a troll. Well, a small one.
+~мол what if I ask a raven to teach me to fly?
+~бурч why am I doing everything alone again?
+~бурч somebody stole my spoon. Again.
+~весел it's good to live when there's food and someone to laugh with.
+~весел what if we threw a feast? Just because!
+~смілив a little longer and I'll go up that hill alone. To see what's there.
+~боязк what if they come at night? Who will keep watch then?
+{neighbour} is cooking something up again. I wonder what.
+@привіт
+Well, hello, {name}.
+{name}! I was just thinking of you.
+Oh, look who's here.
+~смілив {name}! How are the enemies, any left?
+~боязк {name}… are you alone? Is everything all right?
+@про_тебе
+What good did the road bring?
+Do you at least eat on time?
+~стар You're walking about without a helmet again? Ah.
+~мол Will you tell me where you've been?
+~весел You're in a good mood today. Or is it me?
+@привіт_назад
+At last! We were about to come looking.
+~смілив Back! So the enemies aren't that terrible after all.
+~боязк Oh, {name}, I was starting to worry.
+@питання
+Will you eat?
+~мол Will you bring me something next time?
+~стар Rest a day, will you?
+
+[rest] {відпочинок}
+@відпочинок
+Ugh… I'm tired. I'll sit a while.
+My legs are humming. A moment's rest.
+My arms won't listen anymore. I'll sit.
+Who'd have thought, even I can get tired.
+I'll sit a little, and then back to it.
+One more swing and I'd fall. Better to sit.
+~бурч That's it. You can manage without me for now.
+~весел Break time! The best part of work.
+~стар My old bones ask for peace. I'll listen to them.
+~мол I'm not tired! I'm just… going to sit a bit.
+
+[tired] {втома} {втома_кінець?}
+@втома
+My eyes are sticking shut.
+I worked for two today.
+A little more and I'll fall asleep standing.
+My hands feel like someone else's.
+My back aches more than I can say.
+~бурч Tired. And nobody cares.
+~весел Being tired is good. It means something got done.
+~стар I used to tire by evening. Now by noon.
+~мол I can still go! Well… almost.
+@втома_кінець
+I wish I could sit by the fire.
+Bed, where are you?
+~бурч Would anyone say «thanks»?
+Just a bit of rest.
+A warm bed would be heaven.
+
+[paid] {платня}
+@платня
+My pay is {wage}. Thank you.
+{wage}. Honestly earned.
+Thank you. {wage} is no joke.
+Oh, {wage}! Now I can live.
+{wage}, and my heart is warmer.
+Good to see words are kept here. {wage}, as agreed.
+~бурч {wage}. Could have been more. But thanks.
+~весел {wage}! Now that's what I call work!
+~стар {wage}… In my day they paid less for this.
+~мол My first {wage}! Well, not the first. But still!
+
+[learned] {навчився}
+@навчився
+My hands are getting used to the work.
+I'm getting better at this. I can feel it.
+A little more and I'll be a master.
+The work isn't so strange anymore.
+Practice makes it easier every day.
+~стар Teaching an old dog is like warming a stone. But look, it's getting warm.
+~мол I'm learning! Soon I'll be the best!
+
+[unpaid] {без_платні}
+@без_платні
+The coin box is empty… no pay again.
+I came for my pay and the wind whistles instead.
+Empty. Well, never mind. I'll wait. A little.
+Working for nothing? Well, for a roof. But still.
+Not a coin in sight, and the day is long.
+~бурч No pay once more and I'll think about whether to stay.
+~весел Empty? Well, at least the chest is pretty.
+~стар Opening an empty chest is like opening an empty palm.
+~мол Will there be pay? Someday?
+
+[mood_low] {сумно}
+@сумно
+I don't feel well here.
+I don't know how much longer I can take this.
+It's hard for me, {name}. Truly hard.
+Lately everything slips through my hands.
+I try. But something is wrong.
+I'm thinking about leaving.
+~бурч This isn't living.
+~весел Even I'm not in a laughing mood. And that means something.
+~стар I didn't live to gray hairs for this.
+~мол I thought it would be better here.
+~боязк Don't be angry, but I feel bad here.
+~смілив I'm not complaining. But I'll say it plainly: this isn't right.
+
+[low_nobed] {без_ліжка}
+@без_ліжка
+I have no bed. I sleep where I fall.
+I need a bed. Any bed, as long as it's mine.
+Slept on the floor again. My back still remembers.
+Everyone has somewhere to sleep, and I sleep wherever.
+A bed of my own would change everything.
+~стар At my age, sleeping on bare ground is punishment.
+[low_bedopen] {ліжко_надворі}
+@ліжко_надворі
+My bed is under the open sky. The rain is my blanket.
+I sleep with the stars watching. And the rain dripping.
+I need a roof over my bed. Even a small one.
+A bed with no roof is just a pile of cold.
+~бурч Who puts a bed under the sky? You do, of course.
+[low_hungry] {голодно}
+@голодно
+It's hungry here with us.
+Little food and a lot of work.
+Working on an empty stomach goes badly.
+I'd like to eat my fill, just once.
+There's never enough on the table.
+[low_starving] {дуже_голодно}
+@дуже_голодно
+I don't remember when I last ate.
+A little longer without food and I'll fall.
+I'm so hungry I can't think.
+I won't last long without food. I'm telling you honestly.
+My head spins. I need to eat.
+[low_samefood] {та_сама_їжа}
+@та_сама_їжа
+The same thing every day. Soon I'll dream of it.
+The same for supper again. And yesterday. And the day before.
+I wish I could taste something different.
+Every meal tastes like the last one.
+~бурч One more of that, and I'll go eat grass.
+~весел If only I had something new, even a berry.
+[low_tired] {заморився}
+@заморився
+I'm so tired that sleep won't even take me.
+There's too much work. I need to rest.
+No strength and no time for rest.
+Every day the same, and I'm worn to a thread.
+My bones are done for the day. And the week.
+[low_wet] {мокро}
+@мокро
+Soaked like a dog in the rain.
+I need a roof. Even for a minute.
+There's not a dry thread on me.
+The damp gets into everything.
+~стар The rain has crept into my bones and won't leave.
+[low_unpaid] {не_платять}
+@не_платять
+I work, and I never see any pay.
+The coin box has been empty again and again.
+You promised to pay, so where is it?
+No pay, no promise kept. Not good.
+~бурч Only the ravens work for thanks.
+[low_nofire] {без_вогню}
+@без_вогню
+We have no fire. It's cold and dark.
+Without a fire a house isn't a house.
+If only someone would light the hearth.
+Cold hands, cold hearth. Not a good house.
+~стар Old bones can't do without a fire.
+
+[mood_good] {радісно}
+@радісно
+It's good here with us. Truly good.
+It's been a long time since I felt so calm.
+A roof, food, work. What more could I want?
+I'm glad I agreed to come back then.
+Sometimes I think: this is it, happiness. Small, but mine.
+Thank you, {name}. For all of this.
+~весел I feel like singing! Well, a little.
+~бурч Well… it's not so bad. Just don't tell anyone.
+~стар Such peace in old age. I didn't expect it.
+~мол This is the best place in the world! Of those I've seen.
+~боязк This is the first place I've slept without a knife under my pillow.
+
+[leave_unhappy] {іду}
+@іду
+I've had enough. I'm going to the Ravens' House.
+I can't go on like this. Farewell.
+I said this wasn't right. You didn't listen. Goodbye.
+I'll look for a better fate. There's none here.
+Don't look for me. I won't be back.
+~бурч Farewell. And don't say I didn't warn you.
+~стар I'll go. Let me at least die peacefully under another roof.
+~весел Even I got sad here. I'll go while I can still smile.
+
+[revived] {піднявся}
+@піднявся
+Oh… thank you. I thought I wouldn't get up.
+Alive… still alive.
+You lifted me? Now I owe you.
+My head hums like a hive. But thank you.
+Not yet. I feel it, not yet.
+I saw the dark. Then I saw you.
+~смілив We'll fight yet. Thank you.
+~боязк I saw darkness… and then you.
+~стар The gods don't want me yet. Good.
+~весел Whew! What a nap. Thanks!
+
+[limp_home] {додому}
+@додому
+I'll go home… slowly.
+I'll crawl there somehow. Don't wait supper for me.
+Home. If only I make it.
+One step, then another. That's all.
+~бурч Quite a walk this turned out to be.
+~стар Old legs, but they remember the road.
+
+[arrived] {прийшов}
+@прийшов
+Here I am. This is where I'll live.
+I made it! Well, show me where everything is.
+So this is «{base}». Nice.
+The road was long. But I'm here.
+Hello, new home. Let's be friends.
+~весел I'm here! Put the pot on, the newcomer has arrived!
+~бурч My feet are sore from the walk. I hope it's worth it.
+~стар One more house in my life. Maybe the last. I hope so.
+~боязк They don't bite here, do they?
+
+[no_room] {нема_місця}
+@нема_місця
+There's no room for me here. I'll go to the Ravens' House.
+I came and it's full here. Never mind, I'll go back.
+I wasn't expected here. I'm returning to the ravens.
+There's no bed for me. I'll find another place.
+Full up, they say. I'll look elsewhere.
+
+[no_area] {нема_ділянки}
+@нема_ділянки
+Where should I work? Show me the plot.
+I'm ready, just tell me where.
+I'm standing around like a stump. There's no plot.
+Hired, and nobody told me where to work.
+~бурч Hired me, and never said where to work.
+~мол Will you show me where to dig or chop? I'm quick!
+[no_axe] {нема_сокири}
+@нема_сокири
+Without an axe I'm helpless here.
+I need an axe. Even an old one.
+My axe broke. Mend it or give me another.
+Hard to fell a tree with my fists.
+~бурч What am I supposed to chop with? My teeth?
+~стар Oh, you can't fell a tree with bare hands. Not even me.
+[no_pick] {нема_кайла}
+@нема_кайла
+Without a pick you can't take the rock.
+Give me a pick and I'll get to work.
+My pick broke. I can't do it without one.
+Stone doesn't care for bare hands.
+~бурч What am I supposed to dig with? My nails?
+~весел Give me a pick and see what I can do!
+
+[neighbour] {сусід}
+@сусід
+{neighbour} is quiet today. Do you know why?
+{neighbour} shares honey with me. A good soul.
+{neighbour} is carving something out of wood again. It's coming out nicely.
+{neighbour} is arguing with their own shadow again.
+{neighbour} is somewhere by the fire, in case you need them.
+{neighbour} snores. But kindly.
+{neighbour} says there are lights in the forest at night.
+It's good to be quiet when {neighbour} is near. Not with everyone.
+{neighbour} is singing at work again. Quietly, but I hear it.
+{neighbour} asks when you'll go on your next trip. Waiting for news.
+~весел {neighbour} is a golden soul! Not a neighbor but a feast.
+~бурч {neighbour} is taking my bowl again. I remember everything.
+~стар {neighbour} reminds me of someone. I don't remember who.
+~мол {neighbour} promises to teach me to shoot a bow!
+
+[request_nag] {нагадую} {item} — {why}.
+[request_nag] {нагадую} {item}.
+[request_new] {прошу} {item} — {why}.
+[request_new] {прошу} {item}.
+@нагадую
+don't forget, I could use
+I'm still waiting for
+remember? I'd like
+listen, what about my request? I'd like
+~бурч well? I do need
+~весел I won't push, but I'd really like
+~стар I won't rush you, but I could use
+~мол will you bring it? I'd like
+@прошу
+listen… I could use
+may I ask something? I'd like
+I have a request. I'd like
+if you get the chance, I'd like
+~бурч well, here we go, I need something again. I'd like
+~весел I have a little request! I'd like
+~стар don't refuse an old one. I'd like
+~мол can I… I'd like
+
+[how_low] {справи_погано}
+@справи_погано
+Honestly? Badly.
+Not great, to tell the truth.
+I've had better. Much better.
+Holding on. Barely.
+~бурч What do you think?
+~стар Oh, don't ask.
+~весел Even I can't say «good». There you go.
+[how_hungry] {справи_голод}
+@справи_голод
+I'm hungry. Otherwise fine.
+How am I? Empty stomach, empty head.
+It'd be better if someone fed me.
+~мол I'd eat. Badly.
+~бурч Hungry, tired, and nobody asks.
+~весел Hungry, but hopeful!
+[how_tired] {справи_втома}
+@справи_втома
+Tired. But alive.
+A little more and I'll fall. Otherwise good.
+The work has drained me. I wish I could sit.
+~стар Old bones ask for rest.
+~бурч Tired, and the day isn't over.
+~весел Tired, but happy!
+[how_good] {справи_добре}
+@справи_добре
+Good! Really good.
+It can't get better. Well, almost.
+I live, I work, I rejoice. What more could I want?
+~весел Wonderful! I feel like hugging someone. Don't worry, not you.
+~бурч Well… fine. Even good. Don't get used to it.
+~стар I haven't felt this good in a long time. Thank you.
+~мол The best! It's the best here!
+[how_work] {справи_робота}
+@справи_робота
+I'm a {job}. I do my part.
+Working. Being a {job} is no joke.
+As always: work, food, sleep. And work again.
+I hold my own. You know a {job} never sits idle.
+Everything's going as it should. Probably.
+~бурч Working. Like an ox.
+~весел I do what I love. Well, what I can.
+~стар I work as long as my hands allow.
+~мол I'm learning the trade: being a {job} is no small thing!
+[how_idle] {справи_без_діла}
+@справи_без_діла
+I live, I walk, I look. Give me work and I won't refuse.
+It's dull without work. Find me something to do.
+Loafing without work. My hands itch.
+Nothing to do, and the day crawls.
+~бурч Sitting idle. Not that I like it.
+~стар Resting. Though I'd rather be busy.
+~мол Give me work! Any work!
+[how_free] {справи_вільний}
+@справи_вільний
+Oh, nothing. I go where the road takes me.
+I live as I can. No home, but free.
+I'm looking for my place under this sky.
+No roof of my own, no master. It suits me.
+It's a free life. A hungry one sometimes.
+
+[talk_invite] {запрошення}
+@запрошення
+Let's talk. About what?
+Go ahead. I'm listening.
+Oh, I love a talk. Ask away.
+For you, always. What interests you?
+Sit down. What shall we talk about?
+~бурч Well, but not for long. What?
+~весел Finally someone wants to talk! Ask me anything!
+~стар Sit, child. Ask the old one.
+~мол Hooray! What shall we talk about?
+~боязк Talk? All right… just not about anything scary.
+
+[about_home] {про_дім} {про_дім_кінець?}
+@про_дім
+«{base}» is a good place. For the first time in a long while I sleep peacefully here.
+It's good here. Warm, there's food, there's someone to talk to.
+I like how it smells here in the evenings, smoke and bread.
+The fence could be sturdier. Otherwise, it's fine.
+It's cozy here. Only the drafts.
+I like the hearth here. It's a good place to think.
+If we had a bathhouse too, it'd be like a fairy tale.
+The house stands firm. And people are well here.
+~бурч It's livable. Though I'd change a few things.
+~весел The best place I've seen! Well, of those I remember.
+~стар It's good to grow old here. Quiet.
+~мол It's great here! If only we had a tall tower too.
+~боязк It's safe here. Mostly. I like «mostly».
+~смілив A good place, but the defense needs strengthening. I'll think about it.
+@про_дім_кінець
+Thank you for asking.
+The main thing is that we're together.
+~весел Don't chase me out of here, all right?
+~бурч But I won't stop complaining. It's a habit.
+
+[about_folk] {про_друга} {про_ворога?}
+[about_folk] {про_ворога}
+[about_folk] {про_сусіда}
+[about_folk] {alone}{самотньо}
+@про_друга
+{friend} is who I'm well with. We could stand back to back.
+I talk best when {friend} is near.
+{friend}? One of mine. You hold on to people like that.
+~бурч {friend} is the only soul here who puts up with me. Well, and I put up with them.
+~весел {friend}! We're like family already.
+~стар {friend} is like my own blood.
+~мол {friend} knows so much! I want to know as much.
+@про_ворога
+But {foe}… better not ask.
+There's {foe} here. We don't get along. And that's enough about that.
+~бурч {foe}? Pfft. I'll say nothing more. See for yourself.
+~весел I love everyone. Well, almost. {foe} is the «almost».
+~стар {foe} is still learning how to live. Slowly learning.
+~боязк {foe} frightens me. A little.
+@про_сусіда
+{neighbour} lives here too. Each does their own thing.
+There's {neighbour}. For now we're sizing each other up.
+{neighbour}? Fine. We say hello.
+~весел There's {neighbour}! We're not friends yet, but it's all ahead of us.
+@самотньо
+For now I'm alone here. Well, you and the ravens.
+Nobody. Quiet. Sometimes that's good.
+Nobody but me. Find me some company, will you?
+~весел Only me! That's why it's so merry here.
+~бурч Alone. And nobody takes my spoon.
+
+[tale] {казка}
+@казка
+They say a man once caught a fish so big it ate him. The moral? Don't catch big fish.
+Do you know why trolls are so grumpy? Because nobody ever says «good morning» to them.
+A greydwarf once stole my boot. Now there's a greydwarf walking the forest in my boot. I hope it pinches.
+They say if you stare into a fire long enough at night, you'll see those who died out. I stared. I saw only smoke.
+There was a woman in a village who talked to a raven. The raven answered. Nobody knows what, she never told anyone.
+Once I got lost in the fog and came out at the same fire I'd left. Three times.
+They say Haldor was an ordinary merchant once. Then he sold someone something and was paid in eternity.
+There's a sign: if a raven lands on your shoulder, good luck. On your head, laundry day.
+There once lived a warrior who never lost. Because he never fought. Wise man.
+An old woman once told me: the world stands on a tree, and the tree on patience. I don't know what she meant. Maybe nothing.
+Once we roasted a boar, and it turned out not quite roasted. We ran for a long time afterward.
+Do you know why draugr are so angry? Because nobody buried them properly. I'd be angry too.
+They say a dragoness lives in the mountains and collects eggs. Not her own. Others'. Don't ask why.
+I heard Odin gave an eye for wisdom. I'd mourn even a finger. So I'm not wise.
+My companion and I once argued over who could stand longer in the rain. We both caught a cold. A draw.
+Want a riddle? What has teeth but doesn't bite? A comb. What? Well, I told you it was a riddle.
+There's a song about a ship that sailed across the sky. I forget the words, but the tune, listen… no, better not.
+They say every valkyrie was once human. That thought keeps me awake.
+~стар When I was young, trolls were smaller. Or I was bigger. Now it's hard to tell.
+~стар Do you know what I've learned in all these years? That porridge tastes better when someone else cooks it.
+~мол I saw a deer yesterday with antlers like a tree! Well, almost like a tree.
+~весел Listen to a joke. A troll walks up to a greydwarf… no, I forgot the ending. But it was funny!
+~бурч I have no tales. I have the truth: work, food, sleep. The end.
+~смілив I once stood alone against three greydwarves. There were two, but it sounds better with three.
+~боязк I don't like scary stories. I'll tell a funny one: I once ran away from a hare. Well, I thought it was a wolf.
+
+[about_ravens] {про_воронів}
+@про_воронів
+Clever birds. Sometimes I think they're cleverer than us.
+They see everything. It calms me and frightens me.
+Huginn and Muninn, thought and memory. I'd like to have at least one of the two for sure.
+A raven sat at my window yesterday and watched me eat. For a long time.
+They say ravens carry news to Odin. I hope only good news about me.
+Your raven is a strange bird. But I like it.
+~бурч They steal everything that shines. My spoon too.
+~весел I'd like a raven of my own! I'd teach it to sing.
+~стар Ravens were here long before us. And will be after.
+~мол Can they talk? Really? Would they teach me?
+~боязк They look as if they know when I'll die.
+~смілив Good birds. In a fight, they say, they don't hang back either.
+
+[about_wish] {хочу}
+@хочу
+A warm bed and quiet. Nothing else.
+I'd like to bathe in hot water once.
+I want to learn something new. Maybe forging?
+A corner of my own by the fire. One nobody else takes.
+Some good mead. One cup. Well, two.
+I want more people to live here. It'd be livelier.
+For there to be something on the table besides the same old thing.
+I want to see the sea. Not from the shore, from a ship.
+~бурч To be left alone. Even for a day.
+~весел A feast! A big one, with songs and dancing!
+~стар I want to live to see spring. And one more after.
+~мол I want my own axe! A real one! And a helmet!
+~боязк I want the fence to be higher. Much higher.
+~смілив I want to go with you on a raid. Just once.
+
+[about_you] {про_тебе_думка}
+@про_тебе_думка
+You're a good person, {name}. There are few here.
+You took me in when nobody cared. I remember.
+You go where nobody dares. I respect that.
+You're strange, {name}. But strange in a good way.
+You're always in a hurry. Stop sometime, take a breath.
+You're like a raven: fly in, take a look, and off again.
+~бурч You're… all right. Don't get a big head.
+~весел You're the best! Well, after me.
+~стар You remind me of someone from my youth. Someone good.
+~мол I want to be like you, {name}! Not afraid of anything!
+~боязк I feel safer with you. Honestly.
+~смілив You fight well. But I fight better. I'll show you someday.
+
+[q_sleep] {п_сон}
+@п_сон
+How did you sleep?
+Did you hear anything in the night?
+Why are you yawning?
+Did the wolves keep you up too?
+[a_sleep] {в_сон}
+@в_сон
+Badly. Someone snored like a troll.
+Like a log. I dreamed nothing.
+I dreamed I was flying. Woke up on the floor.
+Wolves howled all night. Or was it the wind.
+~бурч I'd sleep better if certain people didn't snore.
+~стар The old don't sleep, they lie there and think.
+[q_food] {п_їжа}
+@п_їжа
+What shall we eat today?
+Have you eaten already?
+Who's cooking today?
+Is there any bread left?
+[a_food] {в_їжа}
+@в_їжа
+What we had yesterday. And the day before.
+Haven't eaten yet. Waiting for a miracle.
+I don't know, but it smells decent.
+Better not ask, you'll be disappointed.
+~весел Something tasty! I'm sure of it!
+~бурч Something under-salted again.
+[q_work] {п_робота}
+@п_робота
+How's the work?
+Is there much left for today?
+Is it hard today?
+Need a hand with that?
+[a_work] {в_робота}
+@в_робота
+Getting done. Slowly.
+So much left I won't finish before night.
+My hands hurt, but otherwise fine.
+It went well today. Surprisingly.
+~бурч Work is work. No end in sight.
+~весел Wonderful! Well, it could be worse.
+[q_weather] {п_погода}
+@п_погода
+Do you think it will rain?
+It's cold today, isn't it?
+See those clouds over the hill?
+Will the weather hold?
+[a_weather] {в_погода}
+@в_погода
+It will. My knee aches.
+Who knows. The sky is moody here.
+Let it be what it will, we have a roof.
+As long as it isn't a storm.
+~стар My bones say it will.
+~мол I love rain!
+[q_ravens] {п_ворони}
+@п_ворони
+Did you see the ravens today?
+Do you think ravens understand what we say?
+Why are the ravens cawing so much?
+Have you noticed how they watch us?
+[a_ravens] {в_ворони}
+@в_ворони
+I did. They sat on the roof and watched me.
+They understand, for sure. That's why I keep quiet around them.
+Probably carrying news to Odin.
+Maybe they're hungry. Like us.
+~боязк Don't remind me. They give me the creeps.
+~весел They're just chatty. Like me!
+[q_home] {п_дім}
+@п_дім
+Do you like it here?
+Do you think we'll live here long?
+Do you miss anything?
+Do you feel safe here?
+[a_home] {в_дім}
+@в_дім
+I do. Better than anywhere before.
+I hope so. I'm tired of roads.
+I miss something. I just don't remember what.
+It's good here. As long as nothing happens.
+~стар I have nowhere else to go. So yes, I like it.
+~мол It's great here! But I want to see the world someday.
+
+[mem_fired] {пам_вигнав}
+@пам_вигнав
+You've already thrown me out once, {name}. I remember such things.
+I haven't forgotten how you drove me away.
+I work. But every day I wonder if you'll throw me out again.
+~бурч They throw you out, then call you back. Familiar.
+~боязк You won't… throw me out again, will you?
+~стар I was thrown out once in my old age. I may not survive a second time.
+[mem_rescued] {пам_порятунок}
+@пам_порятунок
+{ago_rescued} you pulled me out of trouble. I remember.
+If not for you then, I wouldn't be here.
+I still sometimes dream of the day you came for me.
+You saved me, {name}. You don't forget that.
+I'd stopped expecting anyone. And then you came.
+~весел I thank the gods for that day every day. And you. You, more often.
+~бурч I'm not good at thanks. But I remember that day.
+~стар The old forget a lot. But not the one who saved them.
+~боязк It still frightens me to remember how it was. Good thing you came.
+~смілив I could have fought them off myself. Probably. But thank you for coming.
+
+[mem_revived] {пам_підняв}
+@пам_підняв
+{ago_revived} I lay senseless and you lifted me up. Thank you.
+I remember how you gave me mead. It was bitter, and sweeter than anything.
+You pulled me back from the other world. Honestly.
+Everything went dark. Then it was your face.
+~бурч I haven't forgotten that mead. Vile. But thank you.
+~стар Valhalla was already calling, and you wouldn't let go.
+~мол I thought it was over! And then you came with mead.
+
+[mem_hired] {пам_найняв}
+@пам_найняв
+I remember the day you took me in. It was a good day.
+You gave me a roof. I value that.
+Since you took me in, everything has somehow fallen into place.
+Not many offered me a place. You did.
+~бурч You hired me, so put up with me now.
+~весел The best thing I did was say yes when you called!
+~стар Needed by someone in my old age. Thank you.
+
+[mem_settled] {пам_оселився}
+@пам_оселився
+I'm getting used to this place.
+I remember when I first came here. Everything was strange.
+{ago_settled} I settled in here. And it feels as if I'd always lived here.
+It took a while, but now I feel at home.
+~мол The first day here was so strange! Now it feels like home.
+~стар A new house for old bones is like new boots: it pinches at first, then you get used to it.
+
+[mem_request_done] {пам_прохання}
+@пам_прохання
+What you brought was needed: {m_request_done}. Thank you again.
+You brought me {m_request_done}. I remember that.
+{ago_request_done} you helped me out. Now it's my turn, if need be.
+You came through for me. I won't forget it.
+~весел You helped me out so much then! I wanted to dance.
+~бурч You helped me out then. Don't think I forgot.
+~стар Remember who helped you in need. I do.
+
+[mem_neighbour_left] {пам_пішов}
+@пам_пішов
+{m_neighbour_left} was a good person. A pity they left.
+I remember sometimes: {m_neighbour_left}. Where are they now?
+{ago_neighbour_left} we became fewer. Sad.
+There are fewer people here. {m_neighbour_left}, do you remember?
+~бурч Someone leaves and nobody cares. {m_neighbour_left}, I'm saying, left! Ugh.
+~стар People come and go. {m_neighbour_left} was another soul gone.
+~весел Maybe {m_neighbour_left} will come back? The door isn't locked.
+~мол Where did {m_neighbour_left} go? Do you know?
+
+[mem_fight_won] {пам_відбились}
+@пам_відбились
+The attack {ago_fight_won}, we beat it back. Remember?
+Since that fight I sleep easier. We drove them off.
+We showed them who's boss here. They'll think twice.
+~смілив Let them come again. We showed them who owns this place.
+~боязк After that attack I still flinch at every rustle.
+~весел Remember how we chased them off? Now that was a feast!
+~стар We held out, and thank the gods. I don't need any more of that in my age.
+
+[mem_fight_lost] {пам_напад}
+@пам_напад
+Remember the attack {ago_fight_lost}? We took a beating.
+That attack… I barely got away.
+We need a higher fence. Since that attack it's all I think about.
+It still haunts me. We lost too much.
+~смілив Next time I won't retreat. You have my word.
+~боязк I still see them in my dreams. They'll come back, won't they?
+~бурч Will someone finally think about defense? After what happened?
+
+[mem_starved] {пам_голод}
+@пам_голод
+The hunger {ago_starved}, I still remember. I thought I wouldn't make it.
+I remember those days without food. I don't want that again.
+When the storeroom is empty, I'm a little scared now.
+Nobody should have to count crusts like that.
+~бурч They've starved me here already. I remember.
+~стар Hunger has no mercy on the old. I remember that well.
+~весел Now I cherish every slice. Hunger is a good teacher.
+[mem_unpaid] {пам_платня}
+@пам_платня
+The empty coin box {ago_unpaid}, I haven't forgotten.
+I never got my pay then.
+I work, but I think about pay with dread now.
+I'm not saying anything. But I remember.
+~бурч Whoever didn't pay once can fail to pay twice.
+~весел Never mind, money isn't the main thing. But it isn't the last, either!
+~стар At my age, no pay is like no bread.
+[mem_missed] {пам_чекав}
+@пам_чекав
+You were gone so long. I was getting worried.
+{ago_missed} you finally came back. We missed you here.
+Don't vanish for so long, all right?
+It was too quiet without you.
+~бурч You vanish, and we sit here wondering whether you're alive.
+~весел It was quiet without you. Boring, even!
+~стар The old wait long. But not forever, you hear?
+
+[you_remember] {ago_rescued} you saved me. You don't forget that.
+[you_remember] {ago_revived} you put me back on my feet with mead. I remember that.
+[you_remember] You took me in when nobody else cared about me.{m_hired}
+[you_remember] You brought me {m_request_done} when I asked. I won't forget.
+[you_remember] {m_fired}You threw me out once. A thing like that isn't forgotten.
+[you_remember] You're often away on long roads, but you always come back.{m_missed}
+[you_remember] {m_unpaid}To be honest, I remember that empty coin box.
+[you_remember] {m_starved}I remember when we had nothing to eat. Though it probably wasn't your fault.
+
+[talk_again] {ще_щось}
+@ще_щось
+Anything else?
+I'm listening.
+Something else?
+What else, then?
+Speak, I'm here.
+Go on.
+~бурч Well? Anything else?
+~весел Ask away, I don't mind!
+~стар Speak, speak, I'm in no hurry.
+~мол And what else?
+~боязк Something… else?
+[talk_again_cold] {ще_щось_холодне}
+@ще_щось_холодне
+Is that all?
+Say it, then.
+Well?
+Anything more?
+Get on with it.
+Hurry up.
+[talk_again_hostile] {ще_щось_вороже}
+@ще_щось_вороже
+Still here?
+What else?
+Finish up.
+Are you done?
+Out with it.
+Say it and go.
+[talk_again_need] {ще_щось_біда}
+@ще_щось_біда
+Please, don't dawdle.
+You will help, won't you?
+Tell me you won't leave me here.
+I don't have much time.
+Please, I need your answer.
+Hurry, please.
+
+[hire_yes ?!npcremembers fired me] {найм_згода}
+[hire_yes ?npcremembers fired me] {найм_знову}
+@найм_згода
+Live under a roof and have a purpose? Why not. Where would I go otherwise? Where to?
+A roof and work, I ask for nothing more. Where do I go?
+Agreed. Better to work at the settlement than wander the forest. Where to?
+A steady place at last. I'll take it. Where to?
+I'd be glad of it. Where do I go?
+~бурч Work… Well, at least there'll be a roof. Where to?
+~весел What news! Agreed! Lead the way!
+~стар My old bones have been asking for warmth for ages. Where to?
+~мол Really? I agree! Where to?
+~боязк I'll feel safer with you. Where to?
+@найм_знову
+You threw me out once. But where else can I go? Where to?
+You drove me away {ago_fired}, and now you call me back. Fine. Where to?
+You need me again? All right. Just don't do that again. Where to?
+I haven't forgotten, but I'll come. Where to?
+Once was enough. But I'll come back. Where to?
+Don't throw me out again. Where do I go?
+~бурч Well, you've changed your mind. Where to?
+[hire_yes_cold] {найм_холодно}
+@найм_холодно
+Fine. Where to?
+Work is work. Where?
+If you say so. Where to?
+All right. Where do I go?
+Very well. Where?
+Agreed. Show me.
+[hire_yes_hostile] {найм_вороже}
+@найм_вороже
+Not for your sake. I just have nowhere else to go. Where?
+Agreed. But we won't be friends. Where?
+I'll come. Don't expect thanks. Where?
+I need the roof, not you. Where to?
+It's a job. Nothing more. Where?
+Show me the way. And keep quiet.
+
+[fire_ask] {вигнання}
+@вигнання
+Well then… I'll go my own way. Are you sure?
+Just like that? Are you sure?
+So you don't need me anymore? Are you sure?
+Is that your final word? Are you sure?
+I see. Are you sure?
+Think it over once more. Are you sure?
+~бурч I knew it'd end like this. Are you sure?
+~весел You're joking, right? Are you sure?
+~стар Where will I go in my old age… Are you sure?
+~мол But I tried so hard! Are you sure?
+~боязк There's nothing out there but beasts… Are you sure?
+[fire_ask_cold] {вигнання_холодно}
+@вигнання_холодно
+It's been coming for a while. Are you sure?
+Finally said it. Are you sure?
+I won't beg. Are you sure?
+If that's what you want. Are you sure?
+So be it. Are you sure?
+Don't say it twice. Are you sure?
+[fire_ask_hostile] {вигнання_вороже}
+@вигнання_вороже
+I'm glad to leave myself. Are you sure?
+Good riddance, then. Are you sure?
+Fine with me. Are you sure?
+I won't miss it here. Are you sure?
+You won't see me again. Are you sure?
+Send me away, then. Are you sure?
+[fire_ask_close] {вигнання_рідне}
+@вигнання_рідне
+You can't be serious. Are you sure?
+I thought we were close. Are you sure?
+Please, not me. Are you sure?
+After everything? Are you sure?
+This hurts. Are you sure?
+Tell me why. Are you sure?
+
+[request_thanks] {подяка_за_річ}
+@подяка_за_річ
+Oh, thank you! Just what I needed.
+You did bring it! Thank you.
+Thank you. Now the work will go well.
+Just in time. Thank you!
+You remembered. Thank you.
+This is exactly right. Thanks.
+~бурч Finally. Well, thanks.
+~весел Now that's what I call service! Thank you from the heart!
+~стар May the gods give you health, {name}.
+~мол Wow, so much! Thank you!
+~боязк Thank you… I thought you'd forgotten.
+[request_thanks_cold] {подяка_холодно}
+@подяка_холодно
+Thanks. It's something.
+Brought, and good.
+That'll do.
+Fine. Thanks.
+Noted. Thanks.
+Well, thank you.
+[request_thanks_hostile] {подяка_вороже}
+@подяка_вороже
+Give it here.
+I didn't expect it. Take what was promised.
+Don't expect more thanks than that.
+About time.
+Put it there and go.
+Hm. It'll do.
+[request_thanks_close] {подяка_рідна}
+@подяка_рідна
+What would I do without you!
+You're bailing me out again, {name}. Thank you!
+You always remember. Thank you, truly.
+I don't know how to thank you enough.
+You never let me down. Thank you.
+Come here, you. Thank you.
+
+[see_player_hostile] {вітання_вороже}
+@вітання_вороже
+What do you want.
+Oh, it's you. Pity.
+Go your own way, {name}.
+Don't come near.
+You again.
+Keep your distance.
+~бурч You again. How tired I am of you.
+~стар I see you, {name}. And I remember everything.
+~боязк Oh… it's you. I'm not doing anything, honest.
+~смілив Watch yourself, {name}.
+[see_player_cold] {вітання_холодне}
+@вітання_холодне
+{name}.
+Oh, you.
+Hello. If you need something.
+Well, hello.
+Ah, {name}.
+Yes?
+~бурч What did you come for?
+~весел Oh, {name}. Well… hello.
+~стар Wandering about here…
+~мол Oh… hi.
+[see_player_warm] {вітання_тепле}
+@вітання_тепле
+{name}! Good to have you here.
+Oh, {name}! How are you?
+Hello, {name}. Sit down, if you have time.
+Good to see you, {name}.
+{name}, hello! Come in.
+You look well, {name}.
+~бурч Ah, {name}. Well, I'm glad to see you.
+~весел {name}! I was just thinking of you!
+~стар {name}, child, come here.
+~мол {name}! Hi-hi!
+[see_player_close] {вітання_рідне}
+@вітання_рідне
+{name}! At last!
+Here you are, {name}. Now all is well.
+{name}! It isn't the same here without you.
+{name}, my friend. Come here.
+Look who's here. {name}!
+{name}! I'm so glad you came.
+~бурч {name}… Well, come here. I missed you, what of it.
+~весел {name}! Come, let me hug you!
+~стар {name}, dear soul. How glad I am.
+~мол {name}! I was waiting for you!
+~боязк I feel calmer with you, {name}.
+
+[back_hostile] {назад_вороже}
+@назад_вороже
+Back again. Pity.
+I thought you wouldn't come back.
+Here again.
+So you're back. Did you have to be?
+You could have stayed away.
+Hm. Back.
+~бурч Couldn't you have stayed there?
+[back_cold] {назад_холодне}
+@назад_холодне
+Back. Well.
+Oh, you're here again.
+You've been gone a while. I won't say I missed you.
+Hm. Back, then.
+Welcome, I suppose.
+So you're back.
+~стар Someone arrived… oh, it's you.
+[back_warm] {назад_тепле}
+@назад_тепле
+Welcome back, {name}! We waited.
+{name}! At last you're home.
+Good that you're in one piece. Tell me everything!
+You're back. We're glad.
+{name}, come in, come in!
+It's good to see you home.
+~весел Hooray, {name} is back!
+~стар Thank the gods, {name}, you're home.
+[back_close] {назад_рідне}
+@назад_рідне
+{name}! I was beside myself!
+You're home! Now I can relax.
+Thank the gods you're home!
+Come here. Let me look at you.
+You're back. I couldn't sleep.
+My heart is light again.
+~стар Thank the gods, {name}, you're alive. Come here.
+~бурч Where have you been?! …Good that you're back.
+~весел {name}! Sit down, I'll tell you everything! No, you tell me!
+
+[about_you_hostile] {думка_вороже}
+@думка_вороже
+What do I think? Better you don't know.
+I don't trust you, {name}.
+I've seen nothing good from you.
+Nothing you want to hear.
+I wouldn't say it to your face.
+Don't ask me that.
+~смілив I'll say it straight: I don't like you.
+~боязк I… I'm afraid of you, to be honest.
+~бурч Nothing good. You can go.
+[about_you_cold] {думка_холодна}
+@думка_холодна
+You're… all right. Probably.
+I don't know you yet, {name}.
+You're in charge here. That's enough.
+You're someone I haven't made up my mind about.
+Ask me again later.
+No complaints. No praise.
+~бурч I don't think anything. I work.
+~стар Time will show what kind of person you are.
+[about_you_warm] {думка_тепла}
+@думка_тепла
+You're a good person, {name}. I can see that.
+It's good with you. Calm.
+I'm glad you're the one in charge here.
+You've been good to us. I notice.
+You're someone I can count on.
+I'm glad you came.
+~весел I like you! As a person, I mean.
+~бурч You're… fine. Even good.
+~мол You're a true hero! Well, to me.
+[about_you_close] {думка_рідна}
+@думка_рідна
+You're dear to me, {name}.
+I'd follow you anywhere.
+You're the best thing that's happened to me here.
+You're family to me, {name}.
+I don't say it often, but I trust you with my life.
+If you were gone, I'd feel it every day.
+~бурч Don't make me say it aloud. You're dear to me. There.
+~стар I've lived a long time, but I've seen few like you.
+~мол I want to be like you! Honestly!
+~боязк As long as you're near, I'm not afraid.
+
+[talk_invite_hostile] {розмова_ворожа}
+@розмова_ворожа
+We have nothing to talk about.
+Speak faster.
+Well. What?
+Make it quick.
+I'm listening. Barely.
+Say your piece.
+~бурч If it's short, then speak.
+[talk_invite_cold] {розмова_холодна}
+@розмова_холодна
+Speak.
+I'm listening. Briefly.
+Well, ask.
+Go ahead.
+What is it?
+Go on.
+~весел All right, go ahead. Just not for long.
+[talk_invite_warm] {розмова_тепла}
+@розмова_тепла
+Gladly! About what?
+For you, always. Ask.
+Of course. What's on your mind?
+Sit, sit. Ask me anything.
+Good, I was hoping to chat.
+Please, go ahead.
+~бурч Well, I can talk with you.
+~стар Sit, sit. Let's talk.
+[talk_invite_close] {розмова_рідна}
+@розмова_рідна
+With you, until morning! Ask.
+Oh, how I love talking with you. What interests you?
+Come, sit by me. Ask anything.
+Any time, {name}. You know that.
+Ask me anything. You always could.
+There's nobody I'd rather talk to.
+~бурч For you I always have time. Just don't tell anyone.
+~мол Hooray, we're talking! About what?
+
+[how_hostile] {справи_вороже}
+@справи_вороже
+What's it to you?
+Living. Without your help.
+Better than you'd like.
+None of your business.
+Why do you care?
+Don't pretend you care.
+~бурч Not your concern.
+[how_cold] {справи_холодно}
+@справи_холодно
+Fine.
+Same as always.
+Oh, nothing. Working.
+Passable.
+No complaints.
+Can't say more.
+~бурч It's livable.
+~стар As old folk do, slowly.
+
+[mem_news_boss_eikthyr] {новина_ейктюр}
+@новина_ейктюр
+They say Eikthyr has been struck down! That stag with lightning in its antlers.
+Eikthyr is gone. Maybe the storms over the Meadows will be quieter now.
+Did you hear? Eikthyr has fallen!
+They say the stag is finished. I hope the thunder stays out of the Meadows now.
+~весел Eikthyr was brought down! We should celebrate!
+~стар I remember when everyone feared that stag. And now he's gone.
+~боязк Eikthyr fell… Who will come in his place?
+~смілив Eikthyr was brought down! A pity I wasn't there.
+[mem_news_boss_elder] {новина_прадавній}
+@новина_прадавній
+They say the Elder in the Black Forest was brought down. The forest will breathe easier now.
+The Elder has fallen! That walking tree, can you imagine?
+Did you hear? The Elder is no more.
+~стар The Elder stood there before I was even born. And now he's gone.
+~боязк Now maybe one can walk the Black Forest. Well, a little.
+~весел The Elder was felled! That would be enough firewood for a hundred winters!
+[mem_news_boss_bonemass] {новина_кістянка}
+@новина_кістянка
+Bonemass in the swamp was killed! They say it stank terribly.
+Bonemass is gone. Maybe the swamp will dry out a little now.
+~бурч Bonemass was brought down. Now maybe the wind will carry off that stench.
+~стар Bonemass… How many good people fell there. At last.
+~боязк No more Bonemass? Then where will the draugr go?
+~смілив Bonemass was struck down! I'd have loved to see it fall apart.
+[mem_news_boss_moder] {новина_мати}
+@новина_мати
+They say Moder was brought down in the mountains! The dragon, can you imagine?
+Moder has fallen. They say even the wind is quieter in the mountains now.
+~весел A dragon was felled! Now that's a story for the grandchildren!
+~стар In my lifetime nobody even came close to Moder. And now, look.
+~боязк Moder has fallen… And her children? They won't come for revenge?
+~смілив Moder was brought down! Ah, I wish I'd been on that mountain.
+[mem_news_boss_yagluth] {новина_яґлут}
+@новина_яґлут
+Yagluth on the Plains was brought down! The fulings are probably leaderless now.
+They say Yagluth is no more. The one made of bones and rage.
+~весел Yagluth fell! Let the fulings fend for themselves now!
+~бурч Yagluth was felled. Good. Now someone should fell the midges on the Plains.
+~боязк No more Yagluth… and his fire? It won't spread here?
+~стар Yagluth was older than all of us together. And he fell. So anything is possible.
+[mem_news_boss_queen] {новина_королева}
+@новина_королева
+They say the Queen was killed in the mists! The one under the ground.
+The Queen is no more. Perhaps the fog will clear now.
+~боязк The Queen was killed? And her seekers… are they still out there?
+~весел The Queen was felled! Now even I could use a crown!
+~стар The Queen… I heard of her from the old ones. I thought it was a story.
+~смілив The Queen was brought down! That's the kind of news we have now!
+[mem_news_boss_fader] {новина_батько}
+@новина_батько
+They say Fader was brought down in the ashes! The one who burns everything.
+Fader is no more. The ashes, they say, are cooling now.
+~стар Fader… That name is frightening to say. And now he's gone.
+~боязк Fader was felled? I… I don't believe it. Such ones aren't felled.
+~весел Fader was struck down! Who do we fear now? Only the cook.
+~смілив Fader was brought down! After that, even Valhalla holds no fear.
+
+[mem_you_land_blackforest] {новина_ліс}
+@новина_ліс
+Have you been to the Black Forest? So how is it?
+They say you've been in the Black Forest. Did you see any trolls?
+Was it dark in the Black Forest? What did you see?
+~боязк The Black Forest… You went there? That's brave.
+~стар In the Black Forest, stay alert. The trees watch.
+[mem_you_land_swamp] {новина_болото}
+@новина_болото
+You were in the Swamp? Well, what a smell on you!
+Did you see the Swamp? They say the dead don't lie quiet there.
+Was it wet in the Swamp? Did the leeches bite?
+~бурч Back from the Swamp? At least wipe your boots.
+~мол Tell me about the Swamp! Are there really draugr?
+[mem_you_land_mountain] {новина_гори}
+@новина_гори
+You were in the mountains? Is it cold there?
+They say you've been to the mountains. Did you see any wolves?
+How high did you climb? Did you see the sky from the top?
+~стар In the mountains, don't go without warm clothes. I nearly froze once.
+~весел The mountains! They say you can see the edge of the world from there!
+[mem_you_land_plains] {новина_рівнини}
+@новина_рівнини
+Have you been to the Plains? Did you see the fulings?
+The Plains are no joke. Good that you're in one piece.
+Was it hot in the Plains? Did you see any giants?
+~боязк The Plains… Aren't there midges that bite to death?
+~смілив The Plains! One day I'll go there too.
+[mem_you_land_mistlands] {новина_туман}
+@новина_туман
+You were in the fog? And what's there, what can you see?
+The Mistlands… Did you really go there?
+Was it hard to see in the Mistlands? Did you get lost?
+~боязк Something walks in the fog. You saw it, didn't you?
+~мол Tell me about the fog! Are there wizards there?
+[mem_you_land_ashlands] {новина_попіл}
+@новина_попіл
+You were in the Ashlands?! And you're alive?
+Ash on you… You're from where everything burns?
+You came back from the Ashlands? How is that possible?
+~стар The Ashlands… I thought nobody went there alive.
+~весел You were in the Ashlands! What a daredevil you are!
+[mem_you_land_deepnorth] {новина_північ}
+@новина_північ
+The Deep North! You've been there too?
+Was it cold in the Deep North? Did you see the lights?
+~стар There's nothing further north. And you've been there.
+~смілив The Deep North! You're braver than I am.
+[mem_you_land_ocean] {новина_море}
+@новина_море
+Have you been out on the sea? Did you see the serpent?
+They say you've sailed the sea. Was it scary?
+Was the sea rough? Did you almost sink?
+~мол Will you take me out to sea someday?
+~боязк I've never been on a ship. Not once.
+
+[mem_news_newcomer] {новина_новенький}
+@новина_новенький
+We have a new person: {m_news_newcomer}. I hope they settle in.
+{m_news_newcomer} lives with us now. One more spoon at the table.
+A new soul in the settlement: {m_news_newcomer}. We should get acquainted.
+Have you met {m_news_newcomer}? They just arrived.
+~бурч One more person, {m_news_newcomer}. Now the line for the fire is even longer.
+~весел {m_news_newcomer} is with us! It'll be livelier!
+~стар New folk are good. Let {m_news_newcomer} feel at home.
+~боязк A new person… {m_news_newcomer}. They're nice, aren't they?
+
+[raid_now] {набіг}
+@набіг
+Do you hear? They're coming!
+To arms! They're attacking!
+Stand together!
+Shut the doors, they're close!
+Here they come!
+Don't let them in!
+~смілив At last! Let them come!
+~боязк Oh, no no no… they're already here!
+~стар Again… I've seen this before.
+~бурч Typical. Just as I sat down to eat.
+
+[raid_hide] {ховаймося}
+@ховаймося
+Hide! Quickly, into the house!
+Everyone under a roof, hurry!
+Doors, shut the doors!
+Get inside, now!
+Move, move, move!
+Get down!
+~боязк Oh… I'm going in, I'm going in!
+~стар My legs, my legs… Let's hide.
+
+[raid_over] {обійшлося}
+@обійшлося
+Phew… we got through it.
+Looks like we held them off.
+It's quiet now. We can come out.
+Is everyone all right?
+They're gone.
+That was close.
+~смілив So that's all they can do?
+~боязк Can we go out now? Really?
+
+[rain] {вигук?} {дощ} {погода_кінець?}
+@дощ
+Pouring again…
+What a downpour.
+Under the roof, under the roof.
+It's coming down in sheets.
+Rain, rain, rain.
+Even the ravens are hiding.
+~бурч I'll be soaked to the skin, and so what?
+~стар My bones ache, I knew there'd be rain.
+
+@ранок
+Well, where do we begin the day?
+A good morning. For now.
+Who's fetching firewood today?
+~бурч The same day again.
+~весел Good morning, folks!
+
+# ---- NpcTalkPatterns: what happened while you were away, repeats, patience, answers to its worry
+[away_intro] {поки_нема}
+@поки_нема
+While you were away…
+Listen to what happened here.
+We have news.
+A lot happened while you were gone.
+~бурч Well, listen. We weren't bored without you.
+~весел Oh, you don't know anything yet! Listen!
+~стар Sit down, I'll tell you what went on here without you.
+[away_fight_won] {без_тебе_бій}
+@без_тебе_бій
+The grey ones came. We fought them off.
+We were attacked. Drove them off, though not without bruises.
+Some beasts came at us. We sent them running.
+~смілив Some came crawling in here. They won't again.
+~боязк We were attacked… I thought it was the end. But we held.
+[away_fight_lost] {без_тебе_біда}
+@без_тебе_біда
+We were attacked. We didn't hold, barely got out alive.
+There was a raid. It was bad, better not ask.
+They hit us hard. We're still patching up.
+[away_starved] {без_тебе_голод}
+@без_тебе_голод
+There was nothing to eat. We went hungry.
+The storeroom stood empty. We tightened our belts.
+~бурч We starved here while you were off somewhere.
+[away_unpaid] {без_тебе_платня}
+@без_тебе_платня
+There was no pay. The coin box is empty.
+~бурч I opened the coin box and found the wind. Some pay.
+[away_neighbour_left] {без_тебе_пішов}
+@без_тебе_пішов
+Someone left us: {m_neighbour_left}.
+{m_neighbour_left} doesn't live with us anymore.
+~стар There are fewer of us. {m_neighbour_left} is somewhere else now.
+[away_news_newcomer] {без_тебе_новенький}
+@без_тебе_новенький
+We have a newcomer: {m_news_newcomer}.
+One more soul joined us: {m_news_newcomer}.
+~весел We've grown! {m_news_newcomer}, you two should meet when you can.
+[away_goal_done] {без_тебе_мрія}
+@без_тебе_мрія
+And I have good news: what I dreamed of for so long has come true.
+~весел Guess what? My dream came true!
+
+[repeat_1] {ще_раз}
+@ще_раз
+I told you.
+I'll say it again.
+Well, I'll repeat it.
+I already said it, but all right.
+~бурч I already told you. But listen:
+~стар Didn't you hear? Well, listen once more.
+~весел Again? Well, for you, sure.
+~боязк I… think I already said it. Well, once more then.
+
+[repeat_old] {забув}
+@забув
+Have I already told you this? Well, listen again.
+Oh, my memory… Maybe I did. Listen.
+Did I already tell you? Never mind, a good thing can be told twice.
+
+[repeat_2] {знову}
+@знову
+Are you testing me? I already told you.
+How many times about the same thing?
+Ask the same, hear the same.
+~бурч Ask once more and I'll go quiet.
+~весел You're like a woodpecker: knock-knock, and the same thing again!
+~стар You must be getting old too, the way you keep asking.
+~боязк Did I… say something wrong?
+
+[repeat_2_close] {знову_свій}
+@знову_свій
+What, mead since morning?
+Oh, stop it. You already know.
+You're teasing me, aren't you? Well, well.
+
+[repeat_3] {годі}
+@годі
+Enough. I've said everything.
+Not another word about it.
+Enough. Ask about something else or go.
+~бурч Ask once more and I'll answer with an axe.
+~стар Enough. I'm old, not deaf.
+~весел Listen, you're starting to scare me.
+~боязк …I'd better keep quiet.
+
+[repeat_3_close] {годі_свій}
+@годі_свій
+Once more and I'll tell everyone how you ran from a boar.
+You're annoying me on purpose. And you know what? It's working.
+Stop it, or I'll hug you and not let go until you hush.
+
+[tale_none] {казки_все}
+@казки_все
+I've already told you everything.
+I can't remember anything else. Ask someone else.
+~стар Everything I remembered is yours now. The rest is forgotten.
+~весел Oh, my tales have run out! You tell me something.
+
+[brushoff] {потім}
+@потім
+Later about that.
+Wait with that.
+I'll tell you, but listen first.
+That can wait.
+~бурч Later. Me first.
+~весел Oh, later about that!
+
+[patience_out] {кінець}
+@кінець
+Enough. I have to go.
+That's it, enough talk.
+I need to go.
+~бурч Go on now. I'm tired of you.
+~весел Oh, I don't even know what to say anymore. Later.
+~боязк I… have to go. Sorry.
+
+[concern_rude] {к_образа}
+@к_образа
+So that's how you talk now.
+Thanks for the kind word.
+I'll remember that.
+And I was being decent to you.
+~бурч You're no gift yourself.
+~весел Well, well. Got up on the wrong side of the bed?
+~боязк But I didn't say anything like that.
+~смілив Say that again and you'll regret it.
+~стар I've been called worse. But not here.
+
+[concern_apology] {к_вибач}
+@к_вибач
+All right. Let's forget it.
+Good that you said so.
+Oh, never mind.
+A word was said, but so was an apology.
+~бурч Fine. But I'll remember.
+~весел Oh, that's all behind us!
+~стар Whoever can apologize isn't lost yet.
+
+[mem_insulted] {к_образив}
+@к_образив
+Last time you were rude to me. I haven't forgotten.
+After those words of yours I don't much feel like talking.
+What you said last time is still stuck in my head.
+I didn't expect to hear that from you.
+~бурч You again. Anything else nice to say?
+~весел I'm almost not offended anymore. Almost.
+~боязк Are you going to quarrel again?
+~стар I've heard a lot in my life. I remembered your words too.
+~смілив Say that again, and this will be a different conversation.
+
+[concern_fed] {к_fed}
+@к_fed
+Oh, thank you. My hands were shaking.
+You're saving me. Really.
+Delicious! You can't imagine how hungry I was.
+Thank you. I won't forget this.
+~бурч Well, thanks. At least someone thought of it.
+~весел Oh-ho! Now that's a kind soul!
+~стар May the gods give you health, child.
+~мол Thank you! I thought I wouldn't last till evening.
+~боязк For me? Really? Thank you…
+
+[concern_pantry] {к_pantry}
+@к_pantry
+It's empty there. I looked.
+I looked. A mouse hanged itself in there from hunger.
+I know. Only there's nothing left in there.
+All right, I'll look again.
+~бурч And when did you last look in there yourself?
+~весел Ha, I thought that was your private chest!
+~стар My memory isn't what it was. I'll go look.
+~боязк I didn't know we could take from there.
+
+[concern_rest] {к_rest}
+@к_rest
+Really? Then just for a moment.
+Thank you. My legs won't hold me anymore.
+Oh, good. I'll sit a little.
+All right. But only a little.
+~бурч Finally someone noticed.
+~весел You're the best!
+~стар My old bones thank you.
+~мол Just don't tell anyone I slept.
+~смілив Fine. But if anything starts, wake me.
+
+[concern_pay] {к_pay}
+@к_pay
+I'm holding you to your word.
+All right. I'll wait. A little longer.
+Fine. I believe you.
+Thank you. It's uneasy without a coin.
+~бурч We'll see.
+~весел Well, then I'm at ease!
+~стар A word is worth more than a coin. Remember that.
+~мол Can I have a little in advance?
+
+[concern_hurt_brave] {к_hurt_brave}
+@к_hurt_brave
+It'll heal, you say… Well, see that it does.
+Brave, I'll give you that.
+You always say that.
+Good, if so. But take care of yourself.
+~бурч Yeah, «it'll heal». Then you'll be limping around here.
+~весел Ha! What spirit!
+~стар The young always say that. And then you have to patch them up.
+~боязк You scare me when you talk like that.
+~смілив That's it! Scars are decoration.
+
+[concern_hurt_told] {к_hurt_told}
+@к_hurt_told
+Well, good that it got the worse of it.
+Then that's right. Let them know.
+So that's it. Just don't go where you shouldn't.
+And you're so calm about it?
+~бурч Off crawling about somewhere again.
+~весел Ha! What a story!
+~стар My father said that too. Up to a point.
+~смілив Take me with you next time.
+~боязк Oh. And it definitely won't come back?
+
+[concern_hurt_help] {к_hurt_help}
+@к_hurt_help
+Sit down. Let me look.
+Give me your arm. Don't twitch.
+There. Hold on, it'll sting.
+I'm no healer, but I can bandage.
+~бурч Sit down already. And don't make faces.
+~весел Don't worry, I haven't healed anyone yet. To death.
+~стар Sit, child. I've done this a hundred times.
+~боязк I'll… try. Just don't scream.
+~мол I've never done this before, but let's go.
+
+[concern_dosed] {к_dosed}
+@к_dosed
+Oh… better already.
+Thank you. Bitter, but it helps.
+There, my arm listens again.
+I didn't think anyone would notice.
+Now I can work some more.
+Good mead. Yours?
+~бурч Hm. You could have done it sooner.
+~весел What mead! I'm good as new again!
+~стар At my age wounds heal slower. Thank you for not walking past.
+~боязк I didn't even say it hurt… thank you.
+
+[concern_follow] {к_follow}
+@к_follow
+Lead on, I'm behind you.
+Coming, coming.
+All right. Just don't run.
+Fine, show me.
+Let's go. I'm curious.
+I'm right here.
+~бурч Well, let's go, since that's how it is.
+~весел Let's go! I've been wanting to get out somewhere!
+~стар Just not so fast. My legs aren't what they were.
+~боязк With you it's not scary. Let's go.
+~смілив Lead. If anything happens, I've got your back.
+
+[concern_build] {к_build}
+@к_build
+I can hand you something.
+Nice. Only over there it's crooked.
+It's coming along. Really.
+Let me help, since I'm standing here anyway.
+~бурч Well, nice. But I'd have done it differently.
+~весел Oh, I like it! A little window would be nice too!
+~стар In my day they built sturdier. But this is fine.
+~мол Will you teach me later?
+
+[concern_heavy_help] {к_heavy_help}
+@к_heavy_help
+Give me half.
+Oh, what are you carrying there? Stones?
+All right, I'll lend a shoulder.
+Fine, but only to the doorstep.
+~бурч You gathered it, you carry it. Oh, all right, give it here.
+~весел Wow! Are you moving a mountain?
+~стар My back isn't what it was. But I'll take a bit.
+~смілив Give it here. It's not heavy for me.
+
+[concern_fish] {к_fish}
+@к_fish
+Me? My hands aren't made for that.
+If they're biting, good. We'll make soup.
+Show me how you do it someday.
+I wish I had that much patience.
+~бурч As long as it doesn't rot like last time.
+~весел Bring a big one and I'll fry it!
+~стар My grandfather fished. He said fish love silence.
+~мол You'll really teach me? Promise?
+
+[concern_raven_talk] {к_raven_talk}
+@к_raven_talk
+Cleverer, you say? You can see it in its eyes.
+No, thanks. I like my fingers.
+It looks at me as if it knows something.
+A handsome bird. If a bit scary.
+~бурч If it's so clever, let it work.
+~весел Will it say something to me if I pet it?
+~стар Ravens see everything. I won't argue with them.
+~боязк Oh, no. It nearly pecked me once already.
+~мол Can I at least take a feather?
+
+[concern_welcome] {к_welcome}
+@к_welcome
+Thank you. I already like it here.
+I'll settle in. The main thing is there's a roof.
+Good to have somewhere to come to.
+I hope it's no worse here than where I came from.
+~бурч Let's see what kind of place this is.
+~весел It's better here than I thought!
+~стар A new place in old age is a new life.
+~боязк And here… is it calm here?
+~мол Is there anyone else my age here?
+
+[concern_chat] {к_балачка}
+@к_балачка
+Exactly.
+That's what I'm saying.
+Quite so.
+A good talk.
+~бурч Well, at least you don't argue.
+~весел Now that's a conversation!
+~стар That's how it is, trust an old one.
+
+[concern_news_told] {к_новина_так}
+@к_новина_так
+That's how it is. Everyone's talking about it.
+I didn't believe it right away myself.
+I'm telling you. News travels fast here.
+It's the truth. I heard it from people.
+~весел Yes! What news, right?
+~боязк Yes. And I don't know whether to be glad or afraid.
+~стар You don't hear that every day.
+
+[concern_news_known] {к_новина_знаєш}
+@к_новина_знаєш
+Oh, so you already know.
+Well, of course, news reaches you faster.
+So it's not for me to tell you.
+Well, good, no need to explain.
+~бурч So why am I even telling it.
+~весел Ah, I wanted to surprise you!
+~мол You always know everything before me.
+
+[concern_travels_told] {к_мандри}
+@к_мандри
+I wish I had that courage.
+Be careful out there, all right?
+Tell me someday what you saw there.
+Well, see that you come back in one piece.
+~мол Take me with you someday!
+~стар In my time I went everywhere too.
+~бурч You go everywhere, and there's plenty of work at home.
+
+[concern_work_praised] {к_похвала}
+@к_похвала
+Thank you. Not everyone notices.
+I try as best I can.
+Nice to hear.
+~бурч Oh, it's nothing. Work is work.
+~весел Ha! Say that again, louder!
+~стар My hands still remember what to do.
+~мол Really? I'm still learning.
+
+[concern_gossip] {к_плітка_далі}
+@к_плітка_далі
+That's how it is with us.
+Only I didn't say that.
+We live as we can.
+Well, you'll see for yourself in time.
+~бурч Everyone thinks they're the smartest here.
+~весел It's livelier here than at a fair!
+~стар People are the same everywhere.
+
+[concern_heard] {вислухав}
+@вислухав
+Thank you for listening.
+It's easier when there's someone to tell.
+Well, at least someone listens.
+~стар You talk a bit and your heart gets lighter.
+Good that you care.
+That's how we live.
+~бурч Well, at least you listened.
+~весел There, I feel better already!
+~боязк You're not angry that I'm complaining?
+
+[concern_calm] {спокій}
+@спокій
+You're right… It's not so scary now.
+Good that you're near.
+Oh. That's a weight off.
+~боязк You won't go anywhere, for sure? Well… all right.
+Then fine. I believe you.
+The main thing is that you're here.
+~смілив I wasn't afraid anyway. Almost.
+~стар It's scarier for the old. But thank you.
+
+[concern_glad] {радо}
+@радо
+Exactly!
+Thank you! That's nice to hear.
+~бурч Well… thanks.
+~весел Ha! Exactly!
+You know how to be glad for others.
+Exactly! Sometimes things go well.
+~стар That rarely happens, so at least I'll enjoy it.
+~мол Really? Are you really glad?
+
+[concern_sorry] {співчуття}
+@співчуття
+Thank you. Not everyone asks.
+It's passed. But it hurts.
+~стар Such things happen in life more often than one would like.
+I know you mean it.
+That's how it is. We go on.
+I didn't think anyone cared.
+~бурч Well. Thanks.
+~боязк I didn't mean to upset you.
+
+[concern_agree] {згода}
+@згода
+That's what I'm saying!
+At least someone understands me.
+~бурч Finally someone with sense.
+Exactly. And nobody believes me.
+Good that you're on my side.
+So I'm not going mad.
+~весел Ha! Two against one!
+~стар The truth is always visible. Not to everyone, though.
+
+[help_none] {нічим}
+@нічим
+Oh, nothing. I just wanted to say it.
+Nothing. It'll pass.
+~бурч Nothing can help here.
+
+[peace_yes] {мир}
+@мир
+Well… all right. I'll try to make peace.
+Maybe it really is time to stop quarreling.
+~бурч Only for your sake.
+~весел I wanted to anyway. Thanks for the nudge.
+[peace_no] {не_мир}
+@не_мир
+No. Let {other} say the first word.
+Not now. I haven't cooled down yet.
+~бурч Never.
+[peace_none] {не_сварка}
+@не_сварка
+But we didn't quarrel.
+With whom? I get along with everyone.
+
+[irritated] {злість}
+@злість
+Walking around here, asking…
+Leave me alone for at least a minute.
+Always like this: you just sit down, and it starts again.
+~бурч If one more person comes up, I'll bite.
+~весел Bah, why am I angry? It'll pass.
+~стар I'm too old to waste my nerves. And yet they get wasted.
+[irritated_greet] {злий_не_ти}
+@злий_не_ти
+Don't mind me. I'm angry today. {irked_by} knows why.
+Don't worry, it's not you I'm angry at.
+Not now… No, wait, it's not your fault. Go on.
+[irritated_greet_close] {злий_свій}
+@злий_свій
+Good that it's you and not {irked_by}.
+Ah, you. At least one normal person today.
+
+[mem_quarrel_food] {сварка_їжа}
+@сварка_їжа
+I'm hungry, and {m_quarrel_food} is finishing off the last of it. That's how it is here.
+The storeroom is empty again. {m_quarrel_food} knows what I mean.
+~бурч Someone eats for two. I won't say who. {m_quarrel_food}.
+[mem_quarrel_place] {сварка_місце}
+@сварка_місце
+I have a spot of my own. Had. Now {m_quarrel_place} settles there.
+I go to my spot, and there's {m_quarrel_place} again.
+~бурч My spot. Mine! And {m_quarrel_place} doesn't get it.
+[mem_quarrel_work] {сварка_робота}
+@сварка_робота
+I work, and {m_quarrel_work} loafs. Every single day.
+Some people work here, and then there's {m_quarrel_work}.
+~весел Well, I do everything and {m_quarrel_work} rests. I'm jealous, honestly.
+[mem_quarrel_table] {сварка_стіл}
+@сварка_стіл
+Word after word again. {m_quarrel_table} can't keep quiet.
+{m_quarrel_table}… Better not ask.
+~стар We quarreled like children. Shameful, but what can you do.
+[mem_quarrel_raid] {сварка_набіг}
+@сварка_набіг
+Those grey ones crept in again. I fought, and {m_quarrel_raid} was behind a barrel. Behind a barrel, you hear?
+We fought them off, and {m_quarrel_raid} sat in hiding. I won't stand back to back with just anyone now.
+~стар Being afraid is no shame. Hiding while others fight is. {m_quarrel_raid} knows who I mean.
+[mem_quarrel_pay] {сварка_платня}
+@сварка_платня
+The coin box is empty, and {m_quarrel_pay} got paid. How is that?
+Some get paid, and some get nothing.
+[mem_brushed_off] {відмахнувся}
+@відмахнувся
+Back when I wanted to talk, you had no time for it.
+I remember you waved me off. Well, it happens.
+
+[feud] {розбрат}
+@розбрат
+{feud_a} and {feud_b} don't get along again. I wish they'd make peace already.
+Did you hear? {feud_a} and {feud_b} quarreled again.
+~весел Oh, {feud_a} and {feud_b} are at each other's throats again. Like children.
+~бурч {feud_a} and {feud_b} are quarreling again. And I have to listen.
+
+[favour_ask] {проси}
+@проси
+What do you want?
+Well, say what you need.
+~весел For you, anything. Almost.
+~бурч Well? Make it quick.
+[favour_no] {ні}
+@ні
+No. Not now.
+I don't want to. Sorry.
+~бурч Not likely!
+~боязк I'd… rather not.
+[favour_no_dance] {не_танець}
+@не_танець
+Dance? Here? No.
+~бурч What am I to you, a jester?
+~боязк Oh, no… everyone will be looking at me.
+~стар My dancing days are long done.
+[favour_dance] {танець}
+@танець
+Well, look, you asked for it!
+Eh, here goes nothing!
+~весел Finally someone asked!
+~бурч Just once. And not a word to anyone.
+
+[favour_examine] {огляд}
+@огляд
+{item}? A good thing. Keep it clean.
+Let me see… {item}. Not bad, it'll serve.
+~стар They used to make these heavier. But this one will do.
+[favour_examine_worn] {огляд_старе}
+@огляд_старе
+{item}… This needs patching already. And a lot of it.
+Let me see. Oh, this is barely holding together. Mend it before it's too late.
+[favour_examine_good] {огляд_добре}
+@огляд_добре
+{item}! Now that's craftsmanship. Not everyone has one of these.
+A fine piece. Take care of it.
+[favour_show] {покажу}
+@покажу
+Come, I'll show you. Over there is my spot. I'll mark it for you.
+See? I like to be over there. Now you'll know too.
+[favour_sit] {посиджу}
+@посиджу
+I'll sit with you. Why not.
+Sure. A little quiet won't hurt.
+[favour_food] {поділюсь}
+@поділюсь
+Let me see what there is.
+Wait, I'll bring something.
+[favour_dress] {перевдягнусь}
+@перевдягнусь
+Well, go on. I wonder what you've come up with.
+Change my clothes? Nobody has amused me like that in a long time.
+All right. Just nothing embarrassing.
+Go on, I'm tired of this outfit myself.
+Fine. Just nothing strange.
+Why not. Show me.
+~бурч Well, if you really want to. Quickly.
+~весел Oh, now we're talking! Make me beautiful.
+~стар At my age it doesn't matter anymore. Go on.
+[favour_no_dress] {не_перевдягнусь}
+@не_перевдягнусь
+I'm fine as I am.
+No, I'm used to wearing this.
+Not now. I'm not in the mood for clothes.
+Thank you, but no.
+You look after yourself, I'll manage.
+Another time, maybe.
+~бурч What am I to you, a doll?
+~весел No, no, this is my best look!
+[dress_ask] {що_вдягти}
+@що_вдягти
+Well, what have you got?
+Show me what you brought.
+What are we changing?
+Go on, I'm listening.
+Where do we start?
+Standing still. What next?
+~весел Well, well, surprise me.
+~бурч Quickly, before I change my mind.
+[dress_thanks] {гарно_сидить}
+@гарно_сидить
+Not bad.
+Look, it fits.
+A little tight, but fine.
+I haven't worn anything like this in a long time.
+Well now. Thank you.
+How do I look?
+~весел Now I'm the best dressed in the settlement!
+~бурч Well, at least there's no draft.
+~стар I had something like this once. Thank you.
+[dress_took] {забрав}
+@забрав
+There. Given and taken.
+Well, keep your things.
+I'd just got used to it, and you're taking it already.
+Yours is yours. Though it's unpleasant.
+All right. I'll remember.
+Then why give it in the first place?
+~бурч I knew it.
+~весел Ah! Such beauty, gone.
+~боязк Did I do something wrong?
+[mem_clothes_taken] {згадка_одяг}
+@згадка_одяг
+You took that outfit from me back then. I still remember.
+Give and take back. A fine habit.
+Going to take something else today?
+Last time I'd only just got used to wearing that outfit.
+I won't put on anything you'll take back later.
+I'm not angry. Almost.
+~бурч Are my things in place? Because I know you.
+~весел Where's my finery, eh?
+
+[raven_said] {птах_сказав}
+@птах_сказав
+Is your bird always this polite?
+Tell your raven to shut its beak.
+Is it always going to talk to me like that?
+You're raising it well, I see.
+I can hear that, by the way.
+Did you teach it that?
+An interesting companion you have on your shoulder.
+Did I ask the raven for its opinion?
+~бурч One more word and I'll make soup out of it.
+~весел Ha! I like this one.
+~боязк Um… it doesn't bite, does it?
+~стар Ravens always say what they think. That's why nobody likes them.
+~смілив Let it say that again without your shoulder to sit on.
+~мол Did it really say that?
+[raven_shut] {птах_змовк}
+@птах_змовк
+Thank you. I was about to catch it.
+That's better.
+Thank the gods, at least someone keeps it in check.
+I see it listens. Sometimes.
+All right. Where were we?
+Good. Let's talk like people.
+~бурч About time.
+~весел Pity, it had talent.
+~боязк Oh, thank you. The way it looks at me.
+[raven_agree] {птах_правий}
+@птах_правий
+I see. So it's the two of you against me.
+Thanks. I'll remember that.
+Of course, the bird is smarter.
+Fine. Then talk to the bird.
+Nice to hear, I must say.
+So you think so too. Fine.
+~бурч Two beaks on one head.
+~весел Well, maybe it's true. But it stings!
+~боязк I… I knew it.
+[raven_skip] {птах_нічого}
+@птах_нічого
+I don't mind it.
+Well, I don't mind. For now.
+All right. Let it caw.
+Fine. So, what was I saying?
+I'm used to it.
+A raven is a raven.
+~бурч Easy for you to say.
+~весел Oh, let it. It's livelier.
+~стар I've heard worse.
+[mem_raven_mocked] {птах_згадка}
+@птах_згадка
+Is your bird chatty today too?
+I hope your raven keeps quiet today.
+Last time your raven gave me a piece of its mind.
+I still remember what your bird cawed about me.
+Tell that bird I remember its words.
+Feed your raven, maybe it'll be kinder.
+~бурч Keep your bird away from me.
+~весел Where's your wit? I came up with something for it.
+~боязк It's not angry today, is it?
+
+[idle_alert] {агов}
+@агов
+Are you even with me?
+Hey, I'm still here. Are you?
+Should I speak louder, or are you just not listening?
+You stand there silent. Should I do something?
+I can wait. But why?
+Hey, come back to us!
+You haven't frozen solid, have you?
+Did you run out of words or thoughts?
+Did I say something wrong?
+Why are you silent?
+Are you still breathing?
+Some conversation this is.
+Say something, I've already forgotten what we were talking about.
+Hello! Anybody home?
+Are you looking at me or through me?
+Hey, eyes open, but nobody's there.
+I'll wait. Not for long.
+It feels like I'm talking to myself.
+Lost in thought, or fell asleep?
+Go on, don't be shy. Or are your thoughts far away?
+You came to me yourself. So speak.
+Hey, did the wind blow you away?
+~бурч Silent. Standing. Staring. Wonderful.
+~бурч What am I, a post to be stared at?
+~бурч Time goes by, and it just stands there.
+~весел You stand there like a scarecrow. Good only for scaring ravens.
+~весел Stay quiet any longer and I'll draw something on your forehead.
+~весел Playing «who blinks first»? I'll win.
+~стар Young people nowadays sleep standing up.
+~стар You stare like my grandfather at the sea. He didn't say anything either.
+~дор Work is standing still, and so are you. Say what you came for.
+~дор Make it short, people are waiting for me.
+~мол You're alive, right?
+~мол Wow, how long can you stand like that?
+~мол Can I stand like that too? Nah, just kidding.
+~смілив If this is a challenge, say it straight.
+~смілив Silent? I can do that too. But I have things to do.
+~боязк Did I do something wrong?
+~боязк You stare so that it gives me chills.
+~боязк Should I call someone?
+Hey! Did you fall asleep?
+Can you hear me at all?
+Hey! I'm talking to you.
+What, sleeping on your feet?
+Hey, {name}! Still here?
+You're looking right through me. Are you all right?
+~бурч So, will you say something, or shall we just stand here?
+~весел Blink if you're alive!
+~стар At my age that happens, but why have you frozen?
+~боязк Um… are you all right? You look at me strangely.
+~смілив Say it already. I'm not a stump to be stared at.
+[idle_alert_close] {агов_рідне}
+@агов_рідне
+Why have you frozen, dear heart?
+Hey, it's me. Do you recognize me?
+Come back already, I'm no stranger.
+Is everything all right? You've gone pale.
+I'm here. Tell me what happened.
+Hey! Where are your thoughts?
+What, lost in thought like that? Hey!
+Don't scare me like that, you hear?
+Come on, say something. Even nonsense.
+Do you feel unwell? Sit down, I'll bring water.
+There you go, chasing clouds again.
+Maybe we've worn you out. Lie down, we'll talk later.
+Am I so boring that you fell asleep?
+Are you with me? At least nod.
+~весел Blink twice if elves have stolen you.
+~стар Sit, child. Your thoughts won't run away.
+~бурч Hey, don't play games. Tell me what's wrong.
+Hey, my dear, are you alive in there?
+Hey, what's wrong? I'm worried.
+Are you still with me or somewhere across the sea?
+Say even one word, I'm starting to get scared.
+Blink once so I know you're here.
+I tell stories well, I know. But not that well.
+[idle_alert_more] {годі_стояти}
+@годі_стояти
+I've told you almost everything. And you?
+The silence is dragging on.
+Enough now. Say something.
+I'm not a tree to be stared at.
+Much longer?
+Hey, I won't live forever.
+If you don't want anything, don't get in the way.
+Either speak or go.
+I'm starting to get angry, you hear?
+I don't like calling twice.
+Has your tongue been taken?
+Stand there if you want, but without me.
+This isn't funny anymore.
+How long is this going to take?
+What am I to you, a stump by the road?
+You know, I have things to do.
+One more moment and this conversation is over.
+Do you do this to everyone or just me?
+I'm asking for the last time: will you say something?
+Now that's just rude.
+~бурч Fed up. Simply fed up.
+~бурч Standing around here, and I'll have to catch up on my day later.
+~весел I've already decided what I'll draw on your forehead.
+~весел A bit more and I'll put a chicken on your head.
+~стар In my time I'd box ears for this.
+~стар The last one to stare at me like that was a goat. It didn't answer either.
+~дор That's it, I have to go. Plenty of work.
+~мол This isn't funny anymore, honestly!
+~смілив Stare at me silently like that once more and we'll talk differently.
+~боязк Please, say something already. I'm uneasy.
+No, this is just rude now.
+I'm not standing here to be stared at in silence.
+I have things to do. Speak or go.
+How much longer will you stand like this?
+A bit more and I'll leave.
+Are you mocking me?
+~бурч That's it. My patience is running out.
+~весел I wonder if you'd fall over if I pushed you.
+~стар I've outlasted tougher ones. But have some shame.
+[idle_alert_more_close] {годі_рідне}
+@годі_рідне
+You're scaring me now, honestly.
+Should I call someone?
+Hey, enough. Tell me you're all right.
+I'm not angry, just say something.
+Come on, enough, enough.
+If it's a joke, you've won. Speak.
+You know you can talk to me about anything.
+Please, say just one word.
+I feel so uneasy. Say it already.
+A bit more and I'll hug you by force.
+Don't do that again, all right?
+I'll splash water on you. I'm not joking.
+~весел Last warning: I'll tickle you.
+~бурч That's it. I'll be angry, even if you're dear to me.
+~стар I've seen enough silences like this. Don't.
+Enough now, you're scaring me.
+The joke has gone on too long.
+Hey, really. Say something.
+I'm starting to think you're dreaming.
+Don't make me shake you.
+I'm not angry. Not yet.
+[idle_gone] {пішла_розмова}
+@пішла_розмова
+All right. We'll talk when you wake up.
+I have to go. Stand here by yourself.
+That's it, enough. I'm leaving.
+I've had enough.
+Well then. Goodbye.
+Thanks for the chat. Lovely silence.
+When you remember what you wanted, you'll find me.
+I won't wait any longer.
+Never mind. I find myself interesting enough.
+Keep standing. May the wind help you.
+Well, that was a talk.
+I can keep quiet myself.
+Good luck with all that standing.
+I'll go to people who talk.
+And thanks for not snoring.
+Do what you like. I'm going.
+~бурч A whole day wasted because of you.
+~бурч Once more and I won't even come near.
+~весел I'll tell everyone you can sleep with your eyes open!
+~весел A lovely conversation. The best this week.
+~стар In my day people would at least nod.
+~смілив If you want to say something, say it. No need to hover.
+~боязк I'd better go. Sorry. You're scaring me.
+
+@пішла_розмова
+Well, stand there then.
+Some talk that was.
+Oh, forget you. I have things to do.
+Stand there, stare. I'm off.
+A stump would be more fun to talk to.
+When you wake up, you know where to find me.
+~бурч Pfft. Time thrown to the wind.
+[idle_back] {ожив}
+@ожив
+Look, it speaks.
+Are you back with us?
+I was about to call for help.
+Anything interesting where you were?
+Good. So what did you want?
+I thought you'd stay like that.
+Welcome back.
+Oh, it lives!
+At last, a word.
+Aha, so you can hear.
+Warn me next time.
+I've already forgotten what we were talking about.
+There. So where were we?
+Come to your senses?
+All right, let's go on.
+There, that's better.
+You really scared me.
+~бурч Finally. Speak, I still have work to do.
+~бурч You took your time.
+~весел Pity, I'd almost drawn a mustache on you.
+~весел Someone blinked first! I win!
+~стар And where do your thoughts wander at your age?
+~боязк Oh, thank the gods. I was getting scared.
+~смілив Good. I was about to shake you.
+Oh, it lives!
+At last. I thought that was it.
+Oh, you're back! So where were we?
+Where were your thoughts?
+Well, thank the gods, you spoke.
+Should have done that right away.
+~бурч Aha. Remembered I was here.
+~весел And I was about to put something on your nose.
+[mem_zoned_out] {стояв_дивився}
+@стояв_дивився
+What was that with you back then? As if you'd never come here at all.
+Last time I was quite lost. I'm talking, and nothing in return.
+Remember how you stood before me and said not a word?
+Your thoughts wandered off somewhere back then and never came back. Where to?
+You know, you scared me last time. Just standing and staring.
+Let's finally talk like people, not like last time.
+Will you talk today at least? Last time you just stood in silence.
+Hey, were you sick back then or something?
+I still don't understand what that was. Standing, silent, not a peep.
+I thought someone had cursed you.
+Did someone put the evil eye on you back then? You stood there like it wasn't you.
+Last time I talked and got silence back. Are you offended by something?
+Are you angry with me? Last time you didn't say a single word.
+A bit longer and I'd have poured water on you.
+Are you here today at least? Because last time you weren't, though you stood right next to me.
+Didn't sleep at night, or what? Last time you dozed standing up.
+Last time I said everything as if to a wall. Did you hear even a word?
+~бурч Last time I wasted a pile of time because of you.
+~бурч Stand there like a post once more and I won't even talk to you.
+~весел I told everyone how you can sleep with your eyes open!
+~стар My neighbor had this start before he went into the forest and never came back.
+~стар Legs still holding, but the head already in Hel? It happens. Don't joke about it.
+~боязк I spent the whole night wondering if I did something wrong last time.
+Last time you just stood and looked at me. Are you all right?
+Listen, what was that last time? You stood and stared in silence.
+What, were you frozen back then? Standing like a stone.
+I'm talking to you, and you're like a post. What was wrong with you back then?
+Last time I thought you'd fallen asleep standing up.
+Stand like that and keep quiet once more, I'll pour water on you.
+~бурч Don't stand in front of me like a post again. It's unpleasant.
+~боязк You scared me back then. Is everything all right?
+~весел So, how was it, in your standing dreams?
+~стар I've seen this in those the sea called away. Don't joke with it.
+[zoned_sorry] {пробачив}
+@пробачив
+Never mind. It happens to me too.
+It happens to everyone.
+Think all you like, just warn me.
+That's it, forgotten.
+All right, I won't mention it again.
+Good that you said so.
+Well, good. The main thing is that you're all right.
+Thoughts sometimes lead you far.
+Oh, nothing terrible.
+I wasn't born yesterday, I understand.
+All right, let's not talk about it.
+Then enough about that.
+~бурч Fine. But don't make a habit of it.
+~весел I forgive you! But you owe me a beer.
+~стар Think while you can. Later even that will be gone.
+~боязк Oh, good. And I was getting worried.
+~смілив You said it straight, that's good. Forgotten.
+It happens. Just don't scare me like that again.
+All right. Thoughts, they're like that.
+Well, lost in thought is lost in thought.
+Fine. I'm not even angry anymore.
+Oh, I was only asking.
+Just nod at least, next time.
+~бурч Do your thinking somewhere else, not at me.
+[zoned_odd] {турбота_тобі}
+@турбота_тобі
+You need more sleep. Don't argue.
+Drink water. And eat something hot.
+Don't go far alone until this passes.
+Let me see if you have a fever.
+Maybe it's hunger. When did you last eat?
+Things like that can't just be left alone.
+Make sure it doesn't come over you on the road.
+Stay among people today.
+Tell me if it happens again.
+Sit a while. Your work won't go anywhere.
+The head needs rest too.
+Nothing good comes of that. Take care.
+~весел Less mead at night, more sleep. Or the other way around.
+~боязк I'm scared for you. Be careful.
+~стар Sit by the fire. Old folk know: fire gathers the thoughts.
+~смілив It came over you, it'll pass. But don't go into a fight alone for now.
+Maybe sit by the fire. It's from tiredness.
+Eat something and sleep. Seriously.
+That doesn't happen for nothing. Take care of yourself.
+If it happens again, tell someone.
+Maybe the ravens whispered something. Listen to yourself.
+Sit, rest. The work won't run away.
+~стар I've seen this before. It passes when a person gets enough sleep.
+[zoned_joke] {жарт_на_жарт}
+@жарт_на_жарт
+I know I'm good-looking. But then you pay.
+Admire away, just don't forget to blink.
+That's a new one.
+Next time at least say something nice out loud.
+Careful you don't jinx me.
+Hm. First time in a long while anyone has told me that.
+Well, well. Tell that to someone else.
+So that's what admiring looks like now? That's news.
+I've gone red. From anger.
+All right, this time I'll pretend I believe you.
+What am I to you, a sunset?
+You know I don't believe you, right?
+~бурч Take your jokes somewhere else.
+~бурч I wish I had your time.
+~весел All right! Then come admire again tomorrow. I'll charge cheap.
+~стар Once people really did look at me like that. Long ago.
+~мол Oh, the things you say!
+~боязк Um… thank you? I suppose.
+~смілив You may admire. Staying silent while doing it isn't required.
+Admiring, yes. And I nearly got scared.
+Careful your eyes don't pop out.
+Then say something next time. Something nice.
+Well, there is something to admire, I won't argue.
+Nobody has ever told me that. You're a strange one.
+Next time I'll charge for each look.
+~бурч Nonsense. Go on now.
+~весел Ha! I knew it was my good looks!
+[zoned_rude] {образився}
+@образився
+All right. I'll remember.
+Then don't.
+I asked because I was worried. I won't again.
+Well, keep it to yourself.
+As you like. Not much to talk about anyway.
+So that's how you talk now.
+I won't say anything more.
+Fine. I have things not to say too.
+So that's it. Turns out you can talk.
+I see. Now I'll know.
+Fine thanks for caring.
+Agreed. Your business, your head.
+~бурч Pfft. You might have thought first.
+~бурч I'll remember this.
+~весел Wow, it bites!
+~стар I said worse things to people like you once. Don't take offense later.
+~боязк Sorry I asked.
+~смілив Say that again, and look me in the eyes.
+Not my business, then not my business. I'll remember.
+I see. All right.
+I asked you decently.
+I won't ask again.
+As you say. Keep standing.
+Fine. That's the end of the talk.
+~бурч I thought so. Boor.
+[favour_cant] {не_вийде}
+@не_вийде
+It won't work right now. Sorry.
+I'd say «yes», but I see there's no way. Not now.
+I'd like to, but right now I can't.
+Later, all right? Right now there's no way.
+Don't be angry, people are waiting for me.
+I won't forget you asked. But not now.
+~бурч I agreed too quickly. Work won't wait.
+~весел Oh, I completely forgot I still have to run! Later!
+~стар Easy to promise, but my legs are already calling elsewhere. Later.
+[favour_food_given] {на_їж}
+@на_їж
+Here. Just don't tell anyone.
+Here. Eat while it's warm.
+[favour_food_none] {нема_їжі}
+@нема_їжі
+The storeroom is empty. Sorry.
+Nothing to give. We're living on crusts ourselves.
+[favour_gift] {подарунок}
+@подарунок
+Here. This is mine. Let it be yours.
+Take it to remember me by. I'll be glad to know you have it.
+[favour_secret] {таємно}
+@таємно
+Just don't tell anyone, all right?
+I've never told this to anyone.
+[favour_night] {ніч_разом}
+@ніч_разом
+Let's go. It's less scary together.
+~смілив Let's go. Night is no reason to sit at home.
+~боязк Oh… all right. Only you go first.
+
+[story_secret] {таємниця}
+@таємниця
+Sometimes at night I hear a woman's voice. It promises peace if I forget everything. I almost agreed. Almost.
+I remember one name. I don't know whose. I repeat it every evening so as not to lose it.
+I once left a person in trouble. Here, in this world. I still see how they looked after me.
+I'm not afraid of death. I'm afraid that one morning I'll wake up and won't remember even what I have now.
+I have a pebble from the sea. I don't know where it's from. But I can't fall asleep without it.
+I once saw a valkyrie. She looked at me as if she had made a mistake. Since then I wonder: maybe I was brought to the wrong place?
+~стар I've been here longer than I say. Much longer. I just stopped counting.
+~мол I dream of a home I've never seen. And someone is waiting for me there.
+~боязк Every night I check the door. Three times. Even when I know it's shut.
+~смілив I'm not afraid of trolls. I'm afraid of the silence after a fight, when you realize you're alone.
+~бурч I grumble so nobody hears how lonely I really am.
+~весел I laugh, because when I go quiet the thoughts come. And I don't like thoughts.
+
+# ---- NpcSituationPatterns: the same themes by situation, and themes built of a beginning, a heart and an end
+[see_player] {вигук?} {привіт} {про_тебе?}
+[see_player ?daypart morning] {с_привіт_ранок} {про_тебе?}
+[see_player ?daypart evening] {с_привіт_вечір} {про_тебе?}
+[see_player ?daypart night] {с_привіт_ніч}
+[see_player ?weather rain] {привіт} {с_привіт_дощ}
+[see_player ?mood low] {с_привіт_похмуро}
+[see_player ?mood high] {с_привіт_весело} {про_тебе?}
+[see_player ?hungry] {привіт} {с_натяк_голод}
+[see_player ?tired] {привіт} {с_натяк_втома}
+[see_player ?working] {привіт} {робота_кінець}
+@с_привіт_ранок
+Good morning.
+Oh, morning, and you're already up.
+Morning! Up early, I see.
+~бурч Morning. I'm not properly awake yet.
+~весел A good morning! For now, at least.
+@с_привіт_вечір
+Good evening.
+Evening already. Where are you coming from so late?
+Evening. Come sit by the fire.
+~стар The sun is setting. Sit down too, if you have time.
+@с_привіт_ніч
+It's night out, and you're walking about.
+Quieter, people are sleeping.
+Can't sleep either?
+~боязк Oh, it's you… I got scared.
+@с_привіт_дощ
+Soaked through, just like me.
+Come under the roof or you'll get wet.
+Shake off the rain before you come in.
+~бурч Don't drip on me.
+@с_привіт_похмуро
+Oh, it's you.
+Hello. If you can call it that.
+Hm. Hello.
+~бурч What do you want?
+@с_привіт_весело
+Oh, there you are!
+Glad to see you!
+What a good day to see you!
+~весел At last someone cheerful… I mean, you!
+@с_натяк_голод
+I could eat something, by the way.
+You wouldn't have a piece of bread on you?
+Is there any food about?
+~бурч My stomach grumbles louder than I do.
+@с_натяк_втома
+I can barely stand, don't mind me.
+My strength is at the bottom of the barrel.
+I'm worn out.
+~стар My bones are humming.
+
+[idle ?daypart evening] {вигук?} {с_думка_вечір} {думка_кінець?}
+[idle ?daypart night] {с_думка_ніч}
+[idle ?weather rain] {вигук?} {с_думка_дощ}
+[idle ?seated] {вигук?} {с_думка_сидячи} {думка_кінець?}
+[idle ?mood high] {вигук?} {с_думка_весело}
+[idle ?mood low] {с_думка_сумно} {думка_кінець?}
+[idle ?friendnear] {с_про_друга_поруч}
+@с_думка_вечір
+Another day gone by.
+Evening is the best time. The work is behind us.
+The light is going soft.
+~стар All sorts of things come to mind in the evenings.
+@с_думка_ніч
+I can't sleep somehow.
+So quiet. Eerie, even.
+The night is long tonight.
+~боязк What's that rustling over there?
+@с_думка_дощ
+It pours and pours.
+Good thing the roof doesn't leak. For now.
+The rain drums on the roof.
+~весел Rain is good, it'll water the garden.
+@с_думка_сидячи
+It's good to sit like this.
+My legs say thank you.
+A little rest never hurt.
+~бурч Sat down, and now I don't want to get up.
+@с_думка_весело
+A fine day today.
+Life is livable after all!
+Everything's going right today.
+~весел I feel like singing. I won't. Not yet.
+@с_думка_сумно
+My heart feels heavy somehow.
+Not my day today.
+Nothing goes right.
+~бурч And why did I even come here.
+@с_про_друга_поруч
+Good that {friend_near} is near.
+With {friend_near} around you can't stay sad. Well, almost.
+{friend_near} makes the day better.
+~весел {friend_near}, do you hear? I'm saying it's good you're here!
+
+[weather ?weather rain] {с_дощ} {погода_кінець?}
+[weather ?weather snow] {с_сніг} {погода_кінець?}
+[weather ?weather storm] {с_буря} {погода_кінець?}
+[weather ?weather fog] {с_туман}
+@с_дощ
+Rain again. Everything's wet.
+The clouds are low. It'll pour more.
+Puddles everywhere.
+@с_сніг
+Snow. Well, at least it isn't rain.
+White as far as the eye can see. My feet are freezing.
+Snow on the roof, snow in my boots.
+@с_буря
+The thunder is so loud the ground is shaking.
+What a storm. Let's sit quietly.
+Stay inside, the wind will knock you down.
+~боязк Oh, how it thunders…
+@с_туман
+Fog so thick you can't see your hand.
+In fog like this, better not go far.
+I can barely see the next house.
+
+[work ?tired] {робота} {с_робота_втома}
+[work ?mood high] {робота} {с_робота_весело}
+[work ?mood low] {робота} {с_робота_похмуро}
+[work_cook] {кухня} {робота_кінець?}
+[work_stoker] {вогонь} {робота_кінець?}
+[work_smelter] {піч} {робота_кінець?}
+[work_gatherer] {збір} {робота_кінець?}
+[work_cleaner] {прибирання} {робота_кінець?}
+[work_keeper] {бджоли} {робота_кінець?}
+[work_guard] {варта} {робота_кінець?}
+[work_guard ?daypart night] {варта} {с_варта_ніч}
+@с_робота_втома
+My hands won't listen anymore.
+A little more and I'll fall.
+I need a break.
+@с_робота_весело
+My hands are on fire with it!
+The work is going well today.
+I could do this all day.
+@с_робота_похмуро
+You work and work, and who needs it.
+It's going any old how today.
+Nothing comes out right.
+@с_варта_ніч
+The night is long. My eyes are sticking shut.
+At night every bush is an enemy.
+The dark is full of sounds.
+
+[hungry] {вигук?} {голод} {с_голод_кінець?}
+[tired] {вигук?} {втома} {втома_кінець?}
+[morning ?mood high] {ранок} {с_думка_весело}
+[evening ?seated] {вечір} {с_думка_сидячи}
+[night] {вигук?} {ніч}
+@с_голод_кінець
+If only someone would cook something.
+~бурч And the storeroom is empty, of course.
+~весел Well, never mind, there'll be supper. There will, won't there?
+
+[how_work ?tired] {справи_робота} {с_робота_втома}
+[how_work] {справи_робота} {робота_кінець?}
+[how_good ?friendnear] {справи_добре} {с_про_друга_поруч}
+[how_idle ?seated] {справи_без_діла} {с_думка_сидячи}
+
+[chat_open ?daypart evening] {с_розмова_вечір}
+[chat_open ?weather rain] {с_розмова_дощ}
+[chat_reply] {вигук?} {відповідь}
+[a_food] {вигук?} {в_їжа} {думка_кінець?}
+[a_sleep] {вигук?} {в_сон}
+[a_work] {вигук?} {в_робота} {думка_кінець?}
+[a_weather] {вигук?} {в_погода}
+[a_ravens] {вигук?} {в_ворони}
+[a_home] {вигук?} {в_дім} {думка_кінець?}
+@с_розмова_вечір
+So, how did the day go?
+Shall we sit a while?
+Long day, wasn't it?
+~стар Tell me something for the night.
+@с_розмова_дощ
+It's pouring, isn't it?
+Does your roof leak?
+Think it'll stop by evening?
+
+[who_intro] {хто_я}
+@хто_я
+My name is {npc}.
+I'm {npc}.
+{npc}. That's what they call me.
+~бурч {npc}. Why do you want to know?
+~весел {npc}! Nice of you to ask.
+~стар They call me {npc}. Have for a long time.
+[rescue_wait] {чекаю_бій}
+@чекаю_бій
+Drive them off first! I'm… I'm here, I'm not going anywhere.
+Hit them! I won't run, I promise.
+~боязк Quickly, I beg you… I'm here, I'm waiting.
+~смілив Go on, I'll cover your back as best I can!
+[rescue_guard] {що_мені}
+@що_мені
+And what am I to do while you're away? I won't hold out here long on my own.
+You're leaving? And me? I won't last long alone.
+~боязк Don't leave me here alone… What do I do?
+
+# ---- NpcBuiltPatterns: a beginning and an end by a theme's family
+@г_скарга_зачин
+Here's what I'll tell you.
+I didn't want to say it, but I will.
+You'll ask anyway, so I'll say it myself.
+Here we go again.
+I kept quiet as long as I could.
+You know what?
+Not that I'm complaining.
+I'm not whining, of course.
+That's our life here.
+Ah, if only someone listened.
+~бурч I'm not complaining. I'm just listing everything.
+~бурч Well, of course.
+~бурч Who am I even telling this to.
+~весел I'd make a joke, but no.
+~стар At my age one may complain.
+~мол Can I say something?
+~боязк Just don't be angry.
+~смілив I'll say it straight.
+~дор There's a problem.
+@г_скарга_кінець
+That's how we live.
+Write that down.
+And nobody does a thing.
+Who cares.
+If only someone noticed.
+That's how it is.
+It can't go on like this for long.
+Think about it.
+I've said all I have to say.
+Well, you heard me.
+~бурч And nobody cares.
+~бурч But who am I to say.
+~весел Well, never mind, it'll work out. Probably.
+~стар In my day… Bah.
+~мол It's not fair!
+~боязк I'll keep quiet now. Sorry.
+~смілив I'll endure it. But I'll remember.
+~дор This needs sorting out.
+
+@г_радість_зачин
+Look at that!
+Listen!
+There you go.
+Today it's allowed.
+Ha!
+Lovely!
+Well now.
+See how it goes sometimes.
+~бурч Don't tell anyone, but.
+~бурч Well, I admit it.
+~весел Oh, oh, oh!
+~весел I told you so!
+~стар I've lived to see this.
+~мол Hooray!
+~боязк I can hardly believe it.
+~смілив That's it!
+~дор Good.
+@г_радість_кінець
+If only it were always like this.
+Good.
+Every day like this, please.
+My heart is lighter for it.
+A fine day.
+I could sing.
+I'll remember this day.
+~бурч But don't get used to it.
+~бурч Tomorrow it's the same again, of course.
+~весел Ha-ha!
+~весел Who's happy with me?
+~стар Thank you, gods.
+~мол I'll tell everyone!
+~боязк Let's not jinx it.
+~смілив More of that!
+~дор Back to work, then.
+
+@г_страх_зачин
+Oh.
+Gods.
+Let me catch my breath.
+Still now.
+Wait.
+Barely.
+I don't know how to say it.
+That's how things are.
+~бурч I told you so.
+~весел I won't joke about this.
+~стар Even I have rarely seen such a thing.
+~мол My heart is in my boots.
+~боязк Oh, oh, oh.
+~смілив Steady.
+~дор Right.
+@г_страх_кінець
+My hands are still shaking.
+I don't want that again.
+My heart is still pounding.
+Better not to remember.
+I hope it doesn't happen again.
+We're alive, and thanks for that.
+~бурч And it's not over yet, believe me.
+~весел Well, at least there's a story to tell. Someday.
+~стар It'll pass. It always does.
+~мол Will it come back?
+~боязк I won't sleep now.
+~смілив Next time I'll be ready.
+~дор We need to prepare better.
+
+@г_новина_зачин
+I heard some news.
+Here's what they say.
+They say this.
+Do you already know?
+This is going around among people.
+I was just told.
+I wonder if it's true.
+Listen here.
+I don't know whether to believe it.
+~бурч Everyone's chattering about it.
+~весел Here's something interesting!
+~стар Such things still reach my ears.
+~мол Do you know? Do you know?
+~боязк I don't know if I should say it.
+~смілив Interesting news.
+~дор By the way.
+@г_новина_кінець
+That's what they say.
+Think about it yourself.
+Maybe they're lying.
+Who knows.
+We'll see what comes next.
+That's how it is.
+I'm only passing it on.
+~бурч I don't care, but I hear things.
+~весел Interesting, isn't it!
+~стар Everything has happened before.
+~мол I want to know more!
+~боязк I hope it doesn't touch us.
+~смілив Worth going to see.
+~дор We should keep that in mind.
+
+@г_спогад_зачин
+You know what I think?
+Sometimes I remember.
+This just came to mind.
+I thought about it again today.
+Sit, I'll tell you.
+I rarely talk about this.
+I don't know why I'm telling you this.
+I can tell you.
+You sit like this and think.
+~бурч I'm not sentimental, but.
+~весел Oh, and you know what?
+~стар My memory still holds.
+~мол Here's what I'm thinking.
+~боязк May I say something?
+~смілив I'll say it once.
+~дор In short.
+@г_спогад_кінець
+That isn't forgotten.
+That's how it is.
+I won't say more.
+That's what I think about.
+I keep it to myself. Well, and to you.
+Strange, isn't it?
+~бурч Forget I said that.
+~весел There, now something cheerful!
+~стар That's what stays when everything else passes.
+~мол Someday I'll understand it too. So they say.
+~боязк Don't tell anyone, all right?
+~смілив And I don't regret it.
+~дор All right, back to business.
+
+@г_робота_зачин
+Well, here we go.
+So.
+Where was I?
+Yes, yes, yes.
+Come on, come on.
+Let's get to it.
+Just a moment.
+~бурч Again.
+~весел Hup!
+~стар Slowly does it.
+~мол I can do it!
+~боязк Just don't ruin it.
+~смілив Come on!
+~дор To work.
+@г_робота_кінець
+That's how it's done.
+A little more.
+I'll get it done, don't worry.
+My hands know.
+We'll talk later.
+There.
+~бурч And nobody needs it.
+~весел And once more!
+~стар That's how I was taught.
+~мол I'm quick!
+~боязк I think it's good.
+~смілив More!
+~дор It'll be ready on time.
+
+@г_тобі_зачин
+Listen.
+Hey.
+Here's the thing.
+You, listen.
+Let me say something.
+Yes, yes.
+{name}, here's the thing.
+Look here.
+~бурч Well.
+~весел Hey-hey!
+~стар Listen to an old one.
+~мол Can I ask?
+~боязк Sorry for saying this.
+~смілив I'll say it straight.
+~дор So.
+@г_тобі_кінець
+See for yourself.
+That's it.
+Think about it.
+I'm only saying.
+Your business.
+Right?
+~бурч Don't say I didn't warn you.
+~весел Heh-heh!
+~стар I've seen it all.
+~мол What do you think?
+~боязк If I may say so.
+~смілив That's what I think.
+~дор That's all.
+
+@г_сварка_зачин
+No, I'll say it.
+I didn't want to talk about it.
+I've kept quiet long enough.
+Here's what's gnawing at me.
+You know who I mean.
+The same thing again.
+I can't keep quiet.
+~бурч Well, there.
+~весел Even I don't find it funny anymore.
+~стар I may be old, but my patience has limits.
+~мол It's not fair!
+~боязк I don't mean anything by it, but.
+~смілив I'll say it to their face if need be.
+~дор There's a problem with people.
+@г_сварка_кінець
+That's that.
+I'm not saying anything more.
+Let them know.
+I haven't decided what to do about it yet.
+It'll be forgotten. Not soon.
+Try not to think about it.
+~бурч We'll see who wins.
+~весел Well, at least it's fun.
+~стар It'll all come out in the wash. Probably.
+~мол I'll show them yet!
+~боязк Just don't say I said it.
+~смілив Next time I won't keep quiet.
+~дор It gets in the way of work.
+
+[about_ravens] {г_спогад_зачин?} {про_воронів} {г_спогад_кінець?}
+[about_wish] {г_спогад_зачин?} {хочу} {г_спогад_кінець?}
+[about_you] {г_тобі_зачин?} {про_тебе_думка} {г_тобі_кінець?}
+[about_you_close] {г_тобі_зачин?} {думка_рідна} {г_тобі_кінець?}
+[about_you_cold] {г_тобі_зачин?} {думка_холодна} {г_тобі_кінець?}
+[about_you_hostile] {г_тобі_зачин?} {думка_вороже} {г_тобі_кінець?}
+[about_you_warm] {г_тобі_зачин?} {думка_тепла} {г_тобі_кінець?}
+[after_fight] {г_радість_зачин?} {переміг} {г_радість_кінець?}
+[after_fight_lost] {г_страх_зачин?} {відступив} {г_страх_кінець?}
+[after_flight] {г_страх_зачин?} {втік} {г_страх_кінець?}
+[arrived] {г_радість_зачин?} {прийшов} {г_радість_кінець?}
+[back_close] {г_тобі_зачин?} {назад_рідне} {г_тобі_кінець?}
+[back_cold] {г_тобі_зачин?} {назад_холодне} {г_тобі_кінець?}
+[back_hostile] {г_тобі_зачин?} {назад_вороже} {г_тобі_кінець?}
+[back_warm] {г_тобі_зачин?} {назад_тепле} {г_тобі_кінець?}
+[building] {г_тобі_зачин?} {будуєш} {г_тобі_кінець?}
+[fed] {г_радість_зачин?} {ситий} {г_радість_кінець?}
+[feel_fright] {г_страх_зачин?} {почуття_переляк} {г_страх_кінець?}
+[feel_grief] {г_спогад_зачин?} {почуття_смуток} {г_спогад_кінець?}
+[feel_joy] {г_радість_зачин?} {почуття_радість} {г_радість_кінець?}
+[feud] {г_новина_зачин?} {розбрат} {г_новина_кінець?}
+[fishing] {г_тобі_зачин?} {риба} {г_тобі_кінець?}
+[goal_bed] {г_спогад_зачин?} {мета_ліжко} {г_спогад_кінець?}
+[goal_comfort] {г_спогад_зачин?} {мета_затишок} {г_спогад_кінець?}
+[goal_done] {г_радість_зачин?} {мета_збулась} {г_радість_кінець?}
+[goal_friend] {г_спогад_зачин?} {мета_друг} {г_спогад_кінець?}
+[goal_master] {г_спогад_зачин?} {мета_майстер} {г_спогад_кінець?}
+[goal_thing] {г_спогад_зачин?} {мета_річ} {г_спогад_кінець?}
+[heavy] {г_тобі_зачин?} {тяжко} {г_тобі_кінець?}
+[how_free] {г_робота_зачин?} {справи_вільний} {г_робота_кінець?}
+[how_good] {г_радість_зачин?} {справи_добре} {г_радість_кінець?}
+[how_hungry] {г_скарга_зачин?} {справи_голод} {г_скарга_кінець?}
+[how_idle] {г_робота_зачин?} {справи_без_діла} {г_робота_кінець?}
+[how_low] {г_скарга_зачин?} {справи_погано} {г_скарга_кінець?}
+[how_tired] {г_скарга_зачин?} {справи_втома} {г_скарга_кінець?}
+[irritated] {г_скарга_зачин?} {злість} {г_скарга_кінець?}
+[land_ash] {г_новина_зачин?} {попіл} {г_новина_кінець?}
+[land_forest] {г_новина_зачин?} {ліс} {г_новина_кінець?}
+[land_meadows] {г_новина_зачин?} {луки} {г_новина_кінець?}
+[land_mist] {г_новина_зачин?} {туман} {г_новина_кінець?}
+[land_mountain] {г_новина_зачин?} {гори} {г_новина_кінець?}
+[land_plains] {г_новина_зачин?} {рівнини} {г_новина_кінець?}
+[land_sea] {г_новина_зачин?} {море} {г_новина_кінець?}
+[land_swamp] {г_новина_зачин?} {болото} {г_новина_кінець?}
+[learned] {г_радість_зачин?} {навчився} {г_радість_кінець?}
+[low_bedopen] {г_скарга_зачин?} {ліжко_надворі} {г_скарга_кінець?}
+[low_hungry] {г_скарга_зачин?} {голодно} {г_скарга_кінець?}
+[low_nobed] {г_скарга_зачин?} {без_ліжка} {г_скарга_кінець?}
+[low_nofire] {г_скарга_зачин?} {без_вогню} {г_скарга_кінець?}
+[low_samefood] {г_скарга_зачин?} {та_сама_їжа} {г_скарга_кінець?}
+[low_starving] {г_скарга_зачин?} {дуже_голодно} {г_скарга_кінець?}
+[low_tired] {г_скарга_зачин?} {заморився} {г_скарга_кінець?}
+[low_unpaid] {г_скарга_зачин?} {не_платять} {г_скарга_кінець?}
+[low_wet] {г_скарга_зачин?} {мокро} {г_скарга_кінець?}
+[meal] {г_радість_зачин?} {їжа} {г_радість_кінець?}
+[mem_fight_lost] {г_страх_зачин?} {пам_напад} {г_страх_кінець?}
+[mem_fight_won] {г_радість_зачин?} {пам_відбились} {г_радість_кінець?}
+[mem_fired] {г_спогад_зачин?} {пам_вигнав} {г_спогад_кінець?}
+[mem_hired] {г_спогад_зачин?} {пам_найняв} {г_спогад_кінець?}
+[mem_missed] {г_спогад_зачин?} {пам_чекав} {г_спогад_кінець?}
+[mem_neighbour_left] {г_спогад_зачин?} {пам_пішов} {г_спогад_кінець?}
+[mem_news_boss_bonemass] {г_новина_зачин?} {новина_кістянка} {г_новина_кінець?}
+[mem_news_boss_eikthyr] {г_новина_зачин?} {новина_ейктюр} {г_новина_кінець?}
+[mem_news_boss_elder] {г_новина_зачин?} {новина_прадавній} {г_новина_кінець?}
+[mem_news_boss_fader] {г_новина_зачин?} {новина_батько} {г_новина_кінець?}
+[mem_news_boss_moder] {г_новина_зачин?} {новина_мати} {г_новина_кінець?}
+[mem_news_boss_queen] {г_новина_зачин?} {новина_королева} {г_новина_кінець?}
+[mem_news_boss_yagluth] {г_новина_зачин?} {новина_яґлут} {г_новина_кінець?}
+[mem_news_newcomer] {г_новина_зачин?} {новина_новенький} {г_новина_кінець?}
+[mem_quarrel_food] {г_сварка_зачин?} {сварка_їжа} {г_сварка_кінець?}
+[mem_quarrel_pay] {г_сварка_зачин?} {сварка_платня} {г_сварка_кінець?}
+[mem_quarrel_place] {г_сварка_зачин?} {сварка_місце} {г_сварка_кінець?}
+[mem_quarrel_raid] {г_сварка_зачин?} {сварка_набіг} {г_сварка_кінець?}
+[mem_quarrel_table] {г_сварка_зачин?} {сварка_стіл} {г_сварка_кінець?}
+[mem_quarrel_work] {г_сварка_зачин?} {сварка_робота} {г_сварка_кінець?}
+[mem_request_done] {г_радість_зачин?} {пам_прохання} {г_радість_кінець?}
+[mem_rescued] {г_спогад_зачин?} {пам_порятунок} {г_спогад_кінець?}
+[mem_revived] {г_спогад_зачин?} {пам_підняв} {г_спогад_кінець?}
+[mem_settled] {г_спогад_зачин?} {пам_оселився} {г_спогад_кінець?}
+[mem_starved] {г_скарга_зачин?} {пам_голод} {г_скарга_кінець?}
+[mem_unpaid] {г_скарга_зачин?} {пам_платня} {г_скарга_кінець?}
+[mem_you_land_ashlands] {г_новина_зачин?} {новина_попіл} {г_новина_кінець?}
+[mem_you_land_blackforest] {г_новина_зачин?} {новина_ліс} {г_новина_кінець?}
+[mem_you_land_deepnorth] {г_новина_зачин?} {новина_північ} {г_новина_кінець?}
+[mem_you_land_mistlands] {г_новина_зачин?} {новина_туман} {г_новина_кінець?}
+[mem_you_land_mountain] {г_новина_зачин?} {новина_гори} {г_новина_кінець?}
+[mem_you_land_ocean] {г_новина_зачин?} {новина_море} {г_новина_кінець?}
+[mem_you_land_plains] {г_новина_зачин?} {новина_рівнини} {г_новина_кінець?}
+[mem_you_land_swamp] {г_новина_зачин?} {новина_болото} {г_новина_кінець?}
+[mend] {г_робота_зачин?} {лагодити} {г_робота_кінець?}
+[mood_good] {г_радість_зачин?} {радісно} {г_радість_кінець?}
+[mood_low] {г_скарга_зачин?} {сумно} {г_скарга_кінець?}
+[neighbour] {г_новина_зачин?} {сусід} {г_новина_кінець?}
+[no_area] {г_скарга_зачин?} {нема_ділянки} {г_скарга_кінець?}
+[no_axe] {г_скарга_зачин?} {нема_сокири} {г_скарга_кінець?}
+[no_pick] {г_скарга_зачин?} {нема_кайла} {г_скарга_кінець?}
+[no_room] {г_скарга_зачин?} {нема_місця} {г_скарга_кінець?}
+[other] {г_новина_зачин?} {плітка} {г_новина_кінець?}
+[paid] {г_радість_зачин?} {платня} {г_радість_кінець?}
+[place_fav] {г_спогад_зачин?} {місце_моє} {г_спогад_кінець?}
+[raid_over] {г_страх_зачин?} {обійшлося} {г_страх_кінець?}
+[raven] {г_тобі_зачин?} {ворон} {г_тобі_кінець?}
+[rest] {г_робота_зачин?} {відпочинок} {г_робота_кінець?}
+[stare] {г_тобі_зачин?} {дивиться} {г_тобі_кінець?}
+[unpaid] {г_скарга_зачин?} {без_платні} {г_скарга_кінець?}

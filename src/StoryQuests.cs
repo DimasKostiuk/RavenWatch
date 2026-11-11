@@ -20,7 +20,8 @@ namespace HuginWhispers
     //   starts: hall                     conditions (StoryCond) — the quest starts by itself once they hold
     //   first: settle
     //   nudge: raven_nudge 12            a stage with a mark standing this many minutes of real play: this scene plays (nothing is
-    //                                    skipped, the scene only shows the way: place «goal.mark»), and again after as many
+    //                                    skipped, the scene only shows the way: place «goal.mark»), again after twice as long, then twice
+    //                                    that, at most NudgeMost times a stage (the user 2026-11-07: it called on and on), then quiet till the next stage
     //
     //   [stage settle]
     //   goal: Освойся                    the line shown (the panel now, the tracker later)
@@ -278,7 +279,7 @@ namespace HuginWhispers
             StageDef s = q.Stage(id);
             if (s == null) { Note(q.Id + ": нема етапу «" + id + "» — квест стоїть"); return; }
             Story.SetStage(p, q.Id, s.Id);
-            if (q.NudgeScene.Length > 0) Story.SetVar(p, NudgeVar(q), Mathf.Max(1, StoryTrackConds.Played(p)), true);
+            if (q.NudgeScene.Length > 0) { Story.SetVar(p, NudgeVar(q), Mathf.Max(1, StoryTrackConds.Played(p)), true); Story.SetVar(p, NudgeVar(q) + "_n", 0, true); } // (a new stage: its clock and its count anew)
             Note(q.Id + " → " + s.Id);
             StoryBus.Raise("stage", q.Id + "." + s.Id, 0);
             string jump = Run(p, q, s.Start);
@@ -320,16 +321,18 @@ namespace HuginWhispers
         private static void Nudge(Player p, QuestDef q, StageDef s)
         {
             if (q.NudgeScene.Length == 0) return;
-            int now = StoryTrackConds.Played(p), from = Story.Var(p, NudgeVar(q));
+            int now = StoryTrackConds.Played(p), from = Story.Var(p, NudgeVar(q)), shown = Story.Var(p, NudgeVar(q) + "_n");
             if (from <= 0) { Story.SetVar(p, NudgeVar(q), Mathf.Max(1, now), true); return; } // (stood on this stage since before this word)
-            if (now - from < q.NudgeMinutes * 60 || StoryScenes.Playing.Length > 0) return;
+            if (shown >= NudgeMost || now - from < (q.NudgeMinutes * 60) << Mathf.Min(shown, 4) || StoryScenes.Playing.Length > 0) return; // (each time twice as long; enough times: quiet)
             Vector3 mark;
             if (!MarkAt(q, s, out mark)) return;
             StoryScenes.TryPlay(q.NudgeScene);
             if (StoryScenes.Playing != q.NudgeScene) return;
             Story.SetVar(p, NudgeVar(q), Mathf.Max(1, now), true);
-            Note(q.Id + "." + s.Id + ": стоїть " + (now - from) / 60 + " хв — ворон показує дорогу");
+            Story.SetVar(p, NudgeVar(q) + "_n", shown + 1, true);
+            Note(q.Id + "." + s.Id + ": стоїть " + (now - from) / 60 + " хв — ворон показує дорогу (" + (shown + 1) + " з " + NudgeMost + ")");
         }
+        internal static int NudgeMost = 3;
 
         // the place «goal.mark»: the mark of the stage the player stands at now; of its ways, the nearest
         private const string GoalPrefix = "goal.";

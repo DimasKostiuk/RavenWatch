@@ -258,10 +258,10 @@ namespace HuginWhispers
         {
             RectTransform pr = Child(parent, "pic");
             pr.sizeDelta = new Vector2(size, size);
-            Image outer = pr.gameObject.AddComponent<Image>(); outer.sprite = SeneaLShoulders.Disc(); outer.color = owner; outer.raycastTarget = false;
+            Image outer = pr.gameObject.AddComponent<Image>(); outer.sprite = BookArt.Circle; outer.color = owner; outer.raycastTarget = false;
             RectTransform cut = Child(pr, "cut");
             Stretch(cut, 2f, 2f, -2f, -2f);
-            Image ci = cut.gameObject.AddComponent<Image>(); ci.sprite = SeneaLShoulders.Disc(); ci.color = new Color(0.03f, 0.035f, 0.045f, 1f); ci.raycastTarget = false;
+            Image ci = cut.gameObject.AddComponent<Image>(); ci.sprite = BookArt.Circle; ci.color = new Color(0.03f, 0.035f, 0.045f, 1f); ci.raycastTarget = false;
             cut.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             RectTransform face = Child(cut, "face");
             Stretch(face, 1.5f, 1.5f, -1.5f, -1.5f);
@@ -310,7 +310,7 @@ namespace HuginWhispers
             Row r = Band(l.Who, "row", Pic);
             RectTransform tr = Child(r.Bubble, "text");
             Stretch(tr, PadX, PadY, -PadX, -PadY);
-            r.Body = SpeechCard.NewText(tr.gameObject, RavenSpeech.Font(false));
+            r.Body = SpeechCard.NewText(tr.gameObject, RavenSpeech.Font());
             r.Body.fontSize = 17f; r.Body.richText = true; r.Body.textWrappingMode = TextWrappingModes.Normal; r.Body.raycastTarget = false;
             r.Body.color = Now;
             r.Body.alignment = _owners[_ownerOf[l.Who]].Right ? TextAlignmentOptions.MidlineRight : TextAlignmentOptions.MidlineLeft;
@@ -331,7 +331,7 @@ namespace HuginWhispers
             Row r = Band(who, "typing", PicSmall);
             RectTransform tr = Child(r.Bubble, "name");
             tr.anchorMin = tr.anchorMax = tr.pivot = new Vector2(0f, 0.5f);
-            TextMeshProUGUI name = SpeechCard.NewText(tr.gameObject, RavenSpeech.Font(false));
+            TextMeshProUGUI name = SpeechCard.NewText(tr.gameObject, RavenSpeech.Font());
             name.fontSize = 14f; name.richText = false; name.textWrappingMode = TextWrappingModes.NoWrap; name.raycastTarget = false;
             name.color = new Color(0.62f, 0.66f, 0.72f, 1f); name.alignment = TextAlignmentOptions.MidlineLeft;
             name.text = Esc(Nicks.Name(_whos[who].P, _whos[who].Munin));
@@ -346,7 +346,7 @@ namespace HuginWhispers
                 RectTransform d = Child(holder, "dot" + i);
                 d.anchorMin = d.anchorMax = new Vector2(0f, 0.5f); d.pivot = new Vector2(0.5f, 0.5f);
                 d.anchoredPosition = new Vector2(3f + i * 10f, 0f); d.sizeDelta = new Vector2(5f, 5f);
-                dots[i] = d.gameObject.AddComponent<Image>(); dots[i].sprite = SeneaLShoulders.Disc(); dots[i].color = new Color(0.7f, 0.74f, 0.8f, 1f); dots[i].raycastTarget = false;
+                dots[i] = d.gameObject.AddComponent<Image>(); dots[i].sprite = BookArt.Circle; dots[i].color = new Color(0.7f, 0.74f, 0.8f, 1f); dots[i].raycastTarget = false;
             }
             r.Dot0 = dots[0]; r.Dot1 = dots[1]; r.Dot2 = dots[2];
             Fit(r, PadX + nw + 7f + 26f + PadX, PicSmall + 2f, PicSmall);

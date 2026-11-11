@@ -111,6 +111,8 @@ namespace HuginWhispers
 #if RAVEN_NPC
             if (made != null) StoryBus.Raise("piece_placed", Utils.GetPrefabName(made.gameObject), 0, made.transform.position);
             NpcPromises.Built(p, made); // (what you built may be what you promised someone)
+            NpcGoals.Built(p, made, false); // (…or what someone wished for)
+            NpcTasks.Built(p, made); // (…or a small task of someone's)
 #endif
 #endif
         }
@@ -135,6 +137,9 @@ namespace HuginWhispers
             Errands.OnEvent(type, e.Arg, value);   // and Odin's errand, if it waits for this
             Requests.OnEvent(type, e.Arg, value);  // and who hurt you (Munin's wish of revenge)
             Words.OnEvent(type);                   // and a taught word for the moment (you ate, sat by a fire)
+#if RAVEN_NPC
+            NpcTasks.OnEvent(type, e.Arg);         // and a person's small task, if it waits for this
+#endif
 #if RAVEN_STORY
             StoryBus.FromDiary(type, e.Arg, value); // and the story
 #endif
@@ -1090,6 +1095,9 @@ namespace HuginWhispers
             // Odin's errand counts each stand once while it lasts, also one that held a trophy before (your old trophy
             // wall); the ravens' word below only for a stand never hung on before
             try { Errands.OnEvent(Ev.TrophyHang, StandId(__instance) + "|" + _hung, 0); } catch (System.Exception e) { PatchGuard.Fail("TrophyHangPatch errand", e); }
+#endif
+#if RAVEN_NPC
+            try { NpcGoals.Built(user as Player, __instance.GetComponent<Piece>(), true); NpcTasks.Hung(user as Player); } catch (System.Exception e) { PatchGuard.Fail("TrophyHangPatch wish", e); } // (a trophy on the wall: what someone wished for, from you)
 #endif
             try { if (!FirstOnStand(user as Player, __instance)) return; } catch (System.Exception e) { PatchGuard.Fail("TrophyHangPatch", e); }
             Diary.Add(Ev.TrophyHang, "", 0); // (no stand: the errand above has counted it already)

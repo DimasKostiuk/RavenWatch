@@ -191,6 +191,7 @@ namespace HuginWhispers
         {
             if (_nv == null || !_nv.IsValid()) return null;
             NpcBase b = NpcBase.For(transform.position);
+            string outside = b.Refuse(at); if (outside != null) return outside; // (its base's own answer: not made yet, just built there — «wait», its update now; out of it — why; the user 2026-11-08 could pick no table for an hour)
             Transform t = NpcMeals.TableAt(b, at, 3f);
             if (t == null) return Lang.T("Тут нема столу для їжі в межах цієї оселі.");
             ZNetView tv = t.GetComponent<ZNetView>();

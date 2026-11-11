@@ -1,0 +1,189 @@
+clip fall_back
+length 3.4
+loop 0
+pivot 1.1
+curve ease
+fade 0.1 0.6
+mode Spine1 body
+mode Spine2 body
+say Людина стоїть і різко падає на спину, щоб це було природно
+part fall 0 1.4 hold
+part lie 1.4 3.4 loop
+mark 0.7 hits
+mark 0.9 back
+want 0.95 lean back 75
+want 1.2 hips low 0.6
+mode LeftArm aim
+mode RightArm aim
+mode LeftForeArm aim
+mode RightForeArm aim
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 3.4 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/ANIM-QUICK.md), then the keys between.
+
+0 @LeftFoot -0.09 0.12 0.28
+0.55 @LeftFoot -0.09 0.12 0.28
+0.7 @LeftFoot -0.1 0.12 0.35
+0.85 @LeftFoot -0.12 0.13 0.45
+1 @LeftFoot -0.14 0.12 0.5
+1.4 @LeftFoot -0.15 0.1 0.5
+3.4 @LeftFoot -0.15 0.1 0.5
+
+0 @RightFoot 0.05 0.12 -0.3
+0.55 @RightFoot 0.06 0.12 -0.1
+0.7 @RightFoot 0.1 0.12 0.15
+0.85 @RightFoot 0.12 0.13 0.2
+1 @RightFoot 0.15 0.12 0.35
+1.4 @RightFoot 0.16 0.1 0.38
+3.4 @RightFoot 0.16 0.1 0.38
+
+0 @Look 0 1.6 2
+0.12 @Look 0 1.5 2
+0.55 @Look 0 0.5 1.5
+0.95 @Look 0 3 -0.5
+3.4 @Look 0 3 -0.5
+
+0 @Look.w 0 0 0
+0.12 @Look.w 0.6 0 0
+0.55 @Look.w 1 0 0
+3.4 @Look.w 1 0 0
+
+0 body 0 0 0
+0.12 body -4 0 0
+0.35 body -26 0 0
+0.55 body -45 0 0
+0.7 body -62 0 0
+0.85 body -86 0 0
+0.95 body -90 0 0
+1.05 body -87 0 0
+1.2 body -90 0 0
+1.4 body -90 0 0
+3.4 body -90 0 0
+
+0 move 0 0 0
+0.12 move 0 -0.05 0
+0.35 move 0 -0.12 -0.06
+0.55 move 0 -0.45 -0.28
+0.7 move 0 -0.8 -0.45
+0.85 move 0 -0.93 -0.55
+0.95 move 0 -0.97 -0.58
+1.05 move 0 -0.94 -0.58
+1.2 move 0 -0.97 -0.58
+1.4 move 0 -0.97 -0.58
+3.4 move 0 -0.97 -0.58
+
+0 @LeftHand.w 0 0 0
+0.45 @LeftHand.w 0 0 0
+0.75 @LeftHand.w 1 0 0
+3.4 @LeftHand.w 1 0 0
+
+0 @RightHand.w 0 0 0
+0.45 @RightHand.w 0 0 0
+0.75 @RightHand.w 1 0 0
+3.4 @RightHand.w 1 0 0
+
+0.45 @LeftHand -0.5 0.6 -0.7
+0.55 @LeftHand -0.5 0.5 -0.75
+0.7 @LeftHand -0.35 0.06 -1.15
+0.95 @LeftHand -0.72 0.05 -0.95
+3.4 @LeftHand -0.72 0.05 -0.95
+
+0.45 @RightHand 0.5 0.6 -0.7
+0.55 @RightHand 0.5 0.5 -0.75
+0.7 @RightHand 0.35 0.06 -1.15
+0.95 @RightHand 0.72 0.05 -0.95
+3.4 @RightHand 0.72 0.05 -0.95
+
+0.45 @LeftHand.f -0.5 -0.3 -0.8
+0.7 @LeftHand.f -0.3 0 -1
+0.95 @LeftHand.f -1 0 0
+3.4 @LeftHand.f -1 0 0
+
+0.45 @LeftHand.n -0.2 -0.9 0.3
+0.7 @LeftHand.n 0 -1 0
+0.95 @LeftHand.n 0 1 0
+3.4 @LeftHand.n 0 1 0
+
+0.45 @RightHand.f 0.5 -0.3 -0.8
+0.7 @RightHand.f 0.3 0 -1
+0.95 @RightHand.f 1 0 0
+3.4 @RightHand.f 1 0 0
+
+0.45 @RightHand.n 0.2 -0.9 0.3
+0.7 @RightHand.n 0 -1 0
+0.95 @RightHand.n 0 1 0
+3.4 @RightHand.n 0 1 0
+
+0 @LeftFoot.p 0 0 1
+0.55 @LeftFoot.p 0 0.3 1
+1 @LeftFoot.p 0.2 1 0.3
+3.4 @LeftFoot.p 0.2 1 0.3
+
+0 @RightFoot.p 0 0 1
+0.55 @RightFoot.p 0 0.3 1
+1 @RightFoot.p -0.2 1 0.3
+3.4 @RightFoot.p -0.2 1 0.3
+
+0.96 LeftHandIndex1 -25 0 0
+
+0.96 LeftHandIndex2 -25 0 0
+
+0.96 LeftHandMiddle1 -25 0 0
+
+0.96 LeftHandMiddle2 -25 0 0
+
+0.96 LeftHandRing1 -25 0 0
+
+0.96 LeftHandRing2 -25 0 0
+
+0.96 LeftHandPinky1 -25 0 0
+
+0.96 LeftHandPinky2 -25 0 0
+
+0.96 RightHandIndex1 -25 0 0
+
+0.96 RightHandIndex2 -25 0 0
+
+0.96 RightHandMiddle1 -25 0 0
+
+0.96 RightHandMiddle2 -25 0 0
+
+0.96 RightHandRing1 -25 0 0
+
+0.96 RightHandRing2 -25 0 0
+
+0.96 RightHandPinky1 -25 0 0
+
+0.96 RightHandPinky2 -25 0 0
+
+0.45 @LeftHand.p -0.7 -0.7 0
+0.7 @LeftHand.p -0.7 -0.7 0
+3.4 @LeftHand.p -0.7 -0.7 0
+
+0.45 @RightHand.p 0.7 -0.7 0
+0.7 @RightHand.p 0.7 -0.7 0
+3.4 @RightHand.p 0.7 -0.7 0
+
+0 LeftArm -75 -12 0
+0.12 LeftArm 5 -70 0
+0.35 LeftArm 10 -60 0
+0.55 LeftArm -30 -110 0
+0.7 LeftArm -35 -125 0
+
+0 RightArm -75 12 0
+0.12 RightArm 5 70 0
+0.35 RightArm 10 60 0
+0.55 RightArm -30 110 0
+0.7 RightArm -35 125 0
+
+0 LeftForeArm -65 -5 0
+0.12 LeftForeArm 45 -40 0
+0.35 LeftForeArm 40 -35 0
+0.55 LeftForeArm -45 -130 0
+0.7 LeftForeArm -55 -150 0
+
+0 RightForeArm -65 5 0
+0.12 RightForeArm 45 40 0
+0.35 RightForeArm 40 35 0
+0.55 RightForeArm -45 130 0
+0.7 RightForeArm -55 150 0

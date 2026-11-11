@@ -311,7 +311,7 @@ namespace HuginWhispers
             return true;
         }
 
-        // the whole stack went in: a drag still on the cursor would show a stack that is gone (seen with SeneaL UI)
+        // the whole stack went in: a drag still on the cursor would show a stack that is gone (seen with a UI mod)
         private static void Postfix(Inventory __instance, ItemDrop.ItemData item, bool __result)
         {
             if (__result && Boxes.Is(__instance) && !Boxes.Loading(__instance) && item != null && item.m_stack <= 0) PouchDrag.EndIfGoneSoon();
@@ -327,7 +327,7 @@ namespace HuginWhispers
         private static readonly MethodInfo Setup = AccessTools.Method(typeof(InventoryGui), "SetupDragItem");
         private static bool _told, _waiting;
 
-        // not at once: right after the move the game (and SeneaL UI) still read the dragged item and end the drag
+        // not at once: right after the move the game (and a UI mod) still read the dragged item and end the drag
         // themselves; only one left over a frame later is ended here
         internal static void EndIfGoneSoon()
         {

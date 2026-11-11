@@ -8,6 +8,7 @@ namespace HuginWhispers
     //   clips  our own clips (BodyAnimator, Driven: the player's own player of clips — gestures, a laugh, a toast;
     //          NpcBody.Clip plays them where it is owned, its ZDO brings them to the other games, read here)
     //   gait   its own carriage and step (NpcGait) — eased in and out, never snapped; it gives way while a clip plays
+    //   speech its head, neck and chest as it speaks a line and as it listens (NpcSpeech) — small turns over the gait; a clip that holds the head wins
     //   turn   turning where it stands: foot to foot (BodyTurn)
     //   fall   lying senseless, the fall, the getting up (NpcFall) — over the gait
     //   meal   the bite raised to its mouth (NpcEat) — the last, its hand and head where the rest left them
@@ -18,6 +19,7 @@ namespace HuginWhispers
     internal sealed class NpcPose : MonoBehaviour
     {
         private NpcGait _gait;
+        private NpcSpeech _speech;
         private NpcFall _fall;
         private NpcEat _eat;
         private Humanoid _body;
@@ -32,24 +34,26 @@ namespace HuginWhispers
         private NpcActor _actor;
 
         private bool _looked;
-        internal static bool MuteClips, MuteGait, MuteTurn; // (a layer off, to compare: raven jolt mute; the author's, till a restart)
+        internal static bool MuteClips, MuteGait, MuteTurn, MuteSpeech; // (a layer off, to compare: raven jolt mute; the author's, till a restart)
 
         private void LateUpdate()
         {
-            if (!_looked) { _looked = true; _gait = GetComponent<NpcGait>(); _fall = GetComponent<NpcFall>(); _eat = GetComponent<NpcEat>(); _body = GetComponent<Humanoid>(); _nv = GetComponent<ZNetView>(); _bodyOf = GetComponent<NpcBody>(); } // (on the body made: all its parts there by now)
+            if (!_looked) { _looked = true; _gait = GetComponent<NpcGait>(); _speech = GetComponent<NpcSpeech>(); _fall = GetComponent<NpcFall>(); _eat = GetComponent<NpcEat>(); _body = GetComponent<Humanoid>(); _nv = GetComponent<ZNetView>(); _bodyOf = GetComponent<NpcBody>(); } // (on the body made: all its parts there by now)
             if (_bodyOf != null) _bodyOf.Glide(); // (its body where its glide onto a seat is this frame, before any layer stands on it)
             long t0 = NpcPerf.Now();
             if (!MuteClips) Clips();
             long t1 = NpcPerf.Now(); NpcPerf.Add(PerfClips, t0);
             if (_gait != null && !MuteGait) _gait.Pose();
             long t2 = NpcPerf.Now(); NpcPerf.Add(PerfGait, t1);
+            if (_speech != null && !MuteSpeech) _speech.Pose();
+            long t3 = NpcPerf.Now(); NpcPerf.Add(PerfSpeech, t2);
             if (!MuteTurn) Turn();
-            NpcPerf.Add(PerfTurn, t2);
+            NpcPerf.Add(PerfTurn, t3);
             if (_fall != null) _fall.Pose();
             if (_eat != null) _eat.Pose();
         }
         // what its bones cost a frame (raven npc perf, the load test): our clips, its gait, its turn
-        private static readonly int PerfClips = NpcPerf.Id("pose: clips (кліпи на кістках)"), PerfGait = NpcPerf.Id("pose: gait (хода на кістках)"), PerfTurn = NpcPerf.Id("pose: turn (поворот ніг)");
+        private static readonly int PerfClips = NpcPerf.Id("pose: clips (кліпи на кістках)"), PerfGait = NpcPerf.Id("pose: gait (хода на кістках)"), PerfSpeech = NpcPerf.Id("pose: speech (мовлення на кістках)"), PerfTurn = NpcPerf.Id("pose: turn (поворот ніг)");
 
         private void Turn()
         {

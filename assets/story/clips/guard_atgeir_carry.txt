@@ -1,0 +1,23 @@
+clip guard_atgeir_carry
+length 4
+loop 1
+pivot 1.1
+curve ease
+vary 0.2
+fade 0.6 0.6
+carry yes
+follow @RightHand RightShoulder
+
+say атгейр на правому плечі, стоячи і в ході: кулак перед плечем, древко через плече назад (вісь заміряна: raven stage held), кисть їде за плечем
+want 0-4 hand right near 0.2 1.29 0.13 0.08
+
+0 @RightHand 0.2 1.29 0.13
+4 @RightHand 0.2 1.29 0.13
+
+0 @RightHand.w 1 0 0
+
+0 @RightHand.p 1 -1 -0.3
+
+0 @RightHand.f 0.01 0.93 0.37
+
+0 @RightHand.n -0.96 0.11 -0.25

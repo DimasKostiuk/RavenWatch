@@ -44,6 +44,33 @@ namespace HuginWhispers
             Add(scene, _locker, NpcLocker.Prefab);
             Add(scene, _human, HumanPrefab);
             Add(scene, _odin, OdinPrefab);
+            LeftToUs();
+        }
+
+        // Path of Valheiman (when there) rolls stars, rarity and modifiers on every creature: our people are left to us by its own word
+        // (Valheiman.Api.Creatures.LeaveAlone — no stars, no rarity, no modifiers; the user 2026-11-08 saw settlers with two, three, five
+        // stars). Asked once a session, by name: absent, nothing happens. A level it gave before: NpcActor.OwnerChanged puts it back to one
+        private static bool _leftToUs;
+        private static void LeftToUs()
+        {
+            if (_leftToUs) return;
+            _leftToUs = true;
+            try
+            {
+                foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Type api;
+                    try { api = a.GetType("Valheiman.Api.Creatures"); } catch { continue; } // quiet: an assembly that cannot tell its types is not it
+                    if (api == null) continue;
+                    MethodInfo leave = AccessTools.Method(api, "LeaveAlone", new[] { typeof(string), typeof(string) });
+                    if (leave == null) { Log("Path of Valheiman: its creatures' API has no LeaveAlone — our people may get stars"); return; }
+                    leave.Invoke(null, new object[] { HumanPrefab, "RavenWatch" });
+                    leave.Invoke(null, new object[] { OdinPrefab, "RavenWatch" });
+                    Log("Path of Valheiman: our people left to us (no stars, no rarity, no modifiers)");
+                    return;
+                }
+            }
+            catch (Exception e) { Log("Path of Valheiman's creatures API: " + e.Message); }
         }
 
         private static void Add(ZNetScene scene, GameObject go, string name)
@@ -100,6 +127,7 @@ namespace HuginWhispers
             mind.m_afraidOfFire = false;
             go.AddComponent<NpcBody>();
             go.AddComponent<NpcGait>(); // (its own way of carrying itself: after the game's animation)
+            go.AddComponent<NpcSpeech>(); // (its head and chest as it speaks and listens: a layer of NpcPose, after the gait)
             go.AddComponent<NpcEat>(); // (its bite in its hand at the table, raised to its mouth: after the game's animation too)
             go.AddComponent<NpcPose>(); // (the one pass that puts the layers of its pose in order: gait, fall, meal)
             go.AddComponent<NpcFall>(); // (its own fall when it drops senseless, its lying, its getting up: after the game's animation too)

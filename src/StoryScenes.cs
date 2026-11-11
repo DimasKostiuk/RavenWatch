@@ -21,6 +21,9 @@ namespace HuginWhispers
     //   [scene raven_call]
     //   needs: calm                         conditions to begin (StoryCond)
     //   place: prologue_house               where it is filmed (the author's shots of that place: StoryShots)
+    //   roams: yes                          it goes with the player wherever he walks (a raven over him): not stopped when he is
+    //                                       FarStop m from where it began — a foe, a blow, death still stop it (2026-11-08: the prologue's
+    //                                       nudge died three times as the player walked on while Munin flew 60 m to him)
     //   alone: yes                          a scene of one's own: the other players are not drawn in this game while
     //                                       it plays (StoryAlone — nobody walks into the shot)
     //   guard: 30 | off                     the quiet round the event (StoryHush): its full size in m; none — by the
@@ -114,6 +117,7 @@ namespace HuginWhispers
         {
             public string Id = "", From = "", NeedsText = "", Place = "", Check = "", Test = "";
             public bool Alone; // («alone: yes»: the other players not drawn here while it plays — StoryAlone)
+            public bool Roams; // («roams: yes»: it goes with the player — no stop for walking off from where it began)
             public List<Cond> Needs;
             public float Guard = -1f; // (the quiet round's full size: «guard:»; none (-1) — by the place's size, StoryHush.MaxFor; 0 — off)
             public readonly List<Step> Steps = new List<Step>();
@@ -265,6 +269,7 @@ namespace HuginWhispers
             if (_now != null) Stop("інша сцена");
             _toldOnce = null;
             _now = s; _at = Mathf.Clamp(from, 0, s.Steps.Count) - 1; _anchor = p.transform.position; _hurtAt = Senses.HurtByFoeAt;
+            Outcomes.Clear(); _endedAt = -1;
             _ownOff = _handing; _handing = false; _server = StoryQuests.OwnerOf(s.Id) != null;
             StoryWatch.Begin(s);
             if (s.Alone) StoryAlone.Begin(); else StoryAlone.End();
@@ -312,6 +317,7 @@ namespace HuginWhispers
             if (_now == null) return;
             string id = _now.Id;
             Watching = false;
+            EndStep("the scene stopped: " + why);
             _stopped[id] = Time.time;
             int reached = _at;
             _now = null; _at = -1;
@@ -394,7 +400,7 @@ namespace HuginWhispers
                 if (foe != null) hit = "ворог поруч: " + Localization.instance.Localize(foe.m_name);
                 if (hit != null) { if (_server) OwnOff(p, hit); else { Stop(hit); return; } }
             }
-            if (Utils.DistanceXZ(_anchor, p.transform.position) > FarStop) { Stop("гравець відійшов від місця сцени"); return; } // (from where it began: the bird comes from afar)
+            if (!_now.Roams && Utils.DistanceXZ(_anchor, p.transform.position) > FarStop) { Stop("гравець відійшов від місця сцени"); return; } // (from where it began: the bird comes from afar; a scene that roams goes with him)
             if (!_ownOff) StoryLook.Tick(p);
             HandOver(false);
             StoryQuests.Renew(_now.Id);
@@ -406,6 +412,7 @@ namespace HuginWhispers
             {
                 if (cur.Kind != null && cur.Kind.Late != null) cur.Kind.Late(cur);
                 Note("крок «" + cur.Line + "» задовгий — далі"); Count(LatesOf, _now.Id); LastLateOf[_now.Id] = cur.Line;
+                EndStep("CUT OFF at its time limit");
                 Next();
                 return;
             }
@@ -442,6 +449,43 @@ namespace HuginWhispers
         internal static readonly Dictionary<string, int> StopsOf = new Dictionary<string, int>(), LatesOf = new Dictionary<string, int>();
         internal static readonly Dictionary<string, string> LastStopOf = new Dictionary<string, string>(), LastLateOf = new Dictionary<string, string>();
         internal static int CountOf(Dictionary<string, int> d, string id) { int c; return d.TryGetValue(id, out c) ? c : 0; }
+        // what each step of the scene played last came to (its index → «4.1 s: ran 14 m, stopped 0.3 m off»), said as the step ends: its kind's Done,
+        // how long it took, cut off or not (EndStep). Read by the studio's scene check (a row a step, the VERDICT's lines under their step) and written to
+        // the log — review 2 2026-11-10: «walk HELD» was known, but whether she ran, how far, how near she stopped had to be read off the frames
+        internal static readonly Dictionary<int, string> Outcomes = new Dictionary<int, string>();
+        private static int _endedAt = -1;
+        private static void EndStep(string how)
+        {
+            if (_now == null || _at < 0 || _at >= _now.Steps.Count || _endedAt == _at) return;
+            _endedAt = _at;
+            Step st = _now.Steps[_at];
+            string said = null;
+            if (st.Kind != null && st.Kind.Done != null && !(_ownOff && st.Kind.Seen == StepSeen.Own))
+            {
+                try { said = st.Kind.Done(Player.m_localPlayer, st); }
+                catch (Exception e) { said = "(what came of it could not be read: " + e.Message + ")"; Story.Log("scene step outcome: " + e); }
+            }
+            string text = F(Time.time - _stepAt) + " s" + (!string.IsNullOrEmpty(said) ? ": " + said : "") + (how != null ? " — " + how : "");
+            Outcomes[_at] = text;
+            Note("     → " + text);
+        }
+
+        // what a clip step came to: the clip of ours on that body now and how far it is in (one read)
+        private static string ClipOn(Character c, string clip)
+        {
+            BodyAnimator a = c != null ? BodyAnimator.Of(c) : null;
+            float m = 0f; PAnimClip on = a != null ? a.CodeClip(out m) : null;
+            if (on == null) return "NO clip of ours on the body now (" + clip + " asked)";
+            return (on.Name == clip ? "" : "another clip on it, " + on.Name + " (" + clip + " asked): ") + "played " + F(m) + " of " + F(on.Length) + " s" + (on.Loop ? ", loops" : "");
+        }
+
+        // what a mark step came to
+        private static string MarkSaid(Character c, string mark)
+        {
+            if (c == null) return "nobody to read the mark on";
+            float t = MarkTime(c, mark);
+            return t < 0f ? "no «mark " + mark + "» on the clip on it" : MarkAhead(c, mark) ? "cut off before the mark (" + F(t) + " s into the clip)" : "the mark passed";
+        }
         private static void Count(Dictionary<string, int> d, string id) { d[id] = CountOf(d, id) + 1; }
 
         // the author's look from outside (the window «Режисер»): the scene plays on his own body as ever, but its shots, bars and
@@ -463,7 +507,10 @@ namespace HuginWhispers
         private static void WalkerShort()
         {
             float far = Utils.DistanceXZ(_walker.transform.position, _walkTo);
+            _walkSaid = (_walkRanAny ? "ran " : "walked ") + F(Utils.DistanceXZ(_walkFrom, _walker.transform.position)) + " m in " + F(Time.time - _walkBegan) + " s, stopped " + F(far) + " m off its spot (asked within " + F(_walkNear) + ")"
+                + (_walkRanAny && _walkWalkFrom > 0.3f ? "; walked the last " + F(_walkWalkFrom) + " m" : "") + (_walker.Owned ? "" : " (its body run by another game)"); // (the step's outcome: Done)
             if (far <= _walkNear + 0.3f) return;
+            _walkSaid += " — HELD short";
             StoryWalk.Helds++;
             Story.Log("npc go: HELD, " + _walker.Id + " stopped " + far.ToString("0.00") + " m from its spot (it was to come within " + _walkNear.ToString("0.00") + "): the scene goes on");
         }
@@ -471,6 +518,7 @@ namespace HuginWhispers
         private static bool Walking()
         {
             if (_walker == null) return false;
+            { Character c = _walker.GetComponent<Character>(); bool running = c != null && c.IsRunning(); if (running) _walkRanAny = true; else if (_walkRanAny && _walkWalkFrom < 0f) _walkWalkFrom = Utils.DistanceXZ(_walker.transform.position, _walkTo); } // (a run that falls to a walk near the end: how far out — the outcome says)
             bool walking;
             if (_walker.Owned) { NpcMind.Plan walk = _walker.Mind != null ? _walker.Mind.Of(NpcMind.Layer.Scene) : null; walking = walk != null && walk.Kind == NpcMind.Task.Go; }
             else walking = Utils.DistanceXZ(_walker.transform.position, _walkTo) > _walkNear + 1f;
@@ -486,11 +534,12 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             while (_now != null)
             {
+                EndStep(null);
                 _at++;
                 if (_at >= _now.Steps.Count) { Done(); return; }
                 Step st = _now.Steps[_at];
                 _stepAt = Time.time; _limit = 0f; _waitFor = 0f; _until = 0f; // (the step's own clock, clean: a step that knows how long it may take sets its own)
-                if (st.If != null && !StoryCond.All(p, st.If)) { Note("  " + (_at + 1) + ". пропущено (умова): " + st.Line); continue; }
+                if (st.If != null && !StoryCond.All(p, st.If)) { Note("  " + (_at + 1) + ". пропущено (умова): " + st.Line); _endedAt = _at; continue; } // (never begun: nothing came of it)
                 Note("  " + (_at + 1) + ". " + st.Line);
                 Begin(p, st);
                 if (_now != null && st.Kind != null && st.Kind.Lasting) StoryQuests.Commit(p, _now.Id, _at + 1); // (begun for good: the steps from the next one on are what a stop leaves)

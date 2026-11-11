@@ -102,6 +102,14 @@ namespace HuginWhispers
             _a.Order("travel " + Npcs.V(home) + " " + NpcTravel.ToHome);
         }
 
+        // a healing mead given it on its feet (its talk): half better at once, as one given while senseless (Revive)
+        internal void Dosed()
+        {
+            if (Down || _c == null || _c.GetHealth() >= _c.GetMaxHealth()) return;
+            _c.Heal(_c.GetMaxHealth() * Revived, false);
+            Npcs.Log(_a.Id + ": drank a healing mead from a player");
+        }
+
         // a meal: a quarter better
         internal void Fed()
         {

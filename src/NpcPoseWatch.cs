@@ -42,6 +42,8 @@ namespace HuginWhispers
             Animator anim = GetComponentInChildren<Animator>();
             System.Text.StringBuilder t = new System.Text.StringBuilder(pose != null ? pose.TurnTrace() : "turn -");
             t.Append(" · clip ").Append(clips != null ? clips.ClipIn(NpcBody.ClipSlot) ?? "-" : "-");
+            NpcSpeech speech = GetComponent<NpcSpeech>();
+            if (speech != null) t.Append(" · ").Append(speech.Now()); // (speaking, listening, where its head turns: NpcSpeech)
             if (anim != null)
                 for (int l = 0; l < anim.layerCount; l++)
                     t.Append(" · layer ").Append(l).Append(" w").Append(anim.GetLayerWeight(l).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)).Append(" state ").Append(anim.GetCurrentAnimatorStateInfo(l).shortNameHash).Append(anim.IsInTransition(l) ? " changing" : "");

@@ -93,16 +93,16 @@ namespace HuginWhispers
                     if (!On) return "Не міряю.";
                     string last = Report();
                     UnityEngine.Object.Destroy(_host); _host = null; Bodies.Clear(); Known.Clear();
-                    NpcPose.MuteClips = NpcPose.MuteGait = NpcPose.MuteTurn = false; // (a layer muted for the test comes back with the tool off)
+                    NpcPose.MuteClips = NpcPose.MuteGait = NpcPose.MuteTurn = NpcPose.MuteSpeech = false; // (a layer muted for the test comes back with the tool off)
                     return last;
                 case "report": return On ? Report() : "Не міряю: raven jolt on.";
                 case "clear": Clear(); return "З нуля.";
                 case "mark": _asked = true; return On ? "Зберігаю останні секунди." : "Не міряю: raven jolt on.";
                 case "mute":
                     string m = a.Length > 2 ? a[2] : "";
-                    NpcPose.MuteClips = m == "clips"; NpcPose.MuteGait = m == "gait"; NpcPose.MuteTurn = m == "turn";
-                    return "Вимкнено в людей: " + (m == "clips" || m == "gait" || m == "turn" ? m : "нічого") + ".";
-                default: return "raven jolt on|off|report|mark|clear|mute clips|gait|turn|none";
+                    NpcPose.MuteClips = m == "clips"; NpcPose.MuteGait = m == "gait"; NpcPose.MuteTurn = m == "turn"; NpcPose.MuteSpeech = m == "speech";
+                    return "Вимкнено в людей: " + (m == "clips" || m == "gait" || m == "turn" || m == "speech" ? m : "нічого") + ".";
+                default: return "raven jolt on|off|report|mark|clear|mute clips|gait|turn|speech|none";
             }
         }
 

@@ -1,0 +1,7 @@
+# Звуки парних дарів (PairFx): що саме звучить і наскільки гучно. Перша назва, яка є в грі, грає.
+pair_flap sfx_dragon_flap sfx_raven_flap                        # важкі змахи під ношею
+pair_creak sfx_door_open sfx_door_close                         # рип мотузки
+pair_cry sfx_raven_kaw                                          # надсадний крик на ривку
+pair_gust sfx_frozenking_charge_whoosh sfx_weapons_nature_impact   # порив вітру, виття вихору
+pair_thunder sfx_thunder sfx_lightning_hit sfx_frozenking_charge_whoosh   # далекий грім
+pair_whoosh sfx_seeker_attack_start sfx_seeker_attack_claws      # свист на пікіруванні

@@ -492,7 +492,7 @@ namespace HuginWhispers
                     RectTransform t = Rect("Tab", _tabsBar);
                     t.sizeDelta = new Vector2(150f, 36f);
                     Image bg = t.gameObject.AddComponent<Image>();
-                    bg.sprite = BookArt.RoundFine(10f, true); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine;
+                    bg.sprite = BookArt.RoundFine(10f, true); bg.type = Image.Type.Sliced;
                     TMP_Text name = T(t, TabNames[i], 18f, C("#d8c497"), F.Head, TextAlignmentOptions.Top);
                     Shrink(name, 12f); // a longer word (another language) gets smaller, never out of the tab
                     Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, -7f));
@@ -1045,6 +1045,35 @@ namespace HuginWhispers
             }
         }
 
+        // the one way a raven leaves the shoulder by your hand (RavenSeat): its portrait on its page, «Зняти з плеча» under the cursor, a small card to say yes. The game's
+        // own move, the offence as ever. What would refuse anyway is told at the press, before the card
+        private static void TakeOffPortrait(Image portrait, bool m, ItemDrop.ItemData item)
+        {
+            if (Player.m_localPlayer == null || !RavenSeat.IsSeated(item)) return;
+            RectTransform seal = (RectTransform)portrait.transform.parent;
+            GameObject band = seal.Find("Band").gameObject;
+            Clickable(band, () => TakeOffAsk(seal, m, item));
+            Tip(band, () => Lang.T("Зняти з плеча"));
+        }
+
+        private static void TakeOffAsk(RectTransform by, bool m, ItemDrop.ItemData item)
+        {
+            Player p = Player.m_localPlayer;
+            if (p == null || _root == null) return;
+            string sulk = Quirks.Sulk(p, m);
+            if (sulk != null) { Tell(Lang.F("{0}: і з плеча не злізе.", sulk)); return; }
+            if (!p.GetInventory().HaveEmptySlot()) { Tell(Lang.F("У сумці нема місця для {0}.\nЗвільни клітинку.", Plugin.RavenNameGen(m))); return; }
+            ClosePopup();
+            HideTip();
+            Card card = OpenCard("TakeOffAsk", Lang.T("Зняти з плеча"), 380f, true); // a click beside the card: «Ні»
+            TMP_Text title = T(card.Paper, Lang.F("Зняти {0} з плеча?", m ? Lang.T("Муніна") : Lang.T("Хугіна")), 21f, PInk, F.Head);
+            title.textWrappingMode = TextWrappingModes.Normal;
+            T(card.Paper, Lang.T("Ворон перейде в сумку й образиться: довіра трохи розтане, а на плече він сяде не одразу."), 15f, PInk, F.Body);
+            AskButton(card.Foot, Lang.T("Ні"), false, ClosePopup);
+            AskButton(card.Foot, Lang.T("Зняти"), true, () => { ClosePopup(); RavenSeat.Toggle(p, item); });
+            PlaceCard(card, by);
+        }
+
         private static void RavenPage(RectTransform col, bool m, ItemDrop.ItemData item)
         {
             Player p = Player.m_localPlayer;
@@ -1059,6 +1088,7 @@ namespace HuginWhispers
             Image portrait = Portrait(top, m, 92f);
             if (level == 0) portrait.color = new Color(0.62f, 0.58f, 0.52f, 1f);  // asleep: grey, as a stranger to you
             else if (away) portrait.color = new Color(1f, 1f, 1f, 0.5f);           // flown off: half there
+            TakeOffPortrait(portrait, m, item);
             RectTransform info = Rect("Info", top);
             VBox(info, 2f, TextAnchor.MiddleLeft);
             info.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
@@ -1372,7 +1402,7 @@ namespace HuginWhispers
                     RectTransform n = Rect("Notch", notches);
                     Fixed(n.gameObject, 3f, 14f);
                     Image ni = n.gameObject.AddComponent<Image>();
-                    ni.sprite = BookArt.RoundFine(1f); ni.type = Image.Type.Sliced; ni.pixelsPerUnitMultiplier = BookArt.Fine;
+                    ni.sprite = BookArt.RoundFine(1f); ni.type = Image.Type.Sliced;
                     ni.color = i < filled ? ink : A(Brown, 0.2f); ni.raycastTarget = false;
                     n.localRotation = Quaternion.Euler(0f, 0f, -12f); // a cut slanted like a tally mark
                 }
@@ -1739,7 +1769,7 @@ namespace HuginWhispers
                 if (Quirks.Sulk(p, m) != null)
                 {
                     sub = Lang.F("{0} — навіть їсти не хоче", Quirks.Sulk(p, m)); enabled = false;
-                    why = Lang.F("{0}: поки ображений, з твоїх рук не їсть{1}. Із торби на спині поїсть сам.", Quirks.Sulk(p, m), (Quirks.SulkLeft(item) > 0f ? Lang.F(" — мине за ~{0}", RavenAbilities.Span(Quirks.SulkLeft(item))) : ""));
+                    why = Lang.F("{0}: поки ревнує, з твоїх рук не їсть{1}. Із торби на спині поїсть сам.", Quirks.Sulk(p, m), (Quirks.SulkLeft(item) > 0f ? Lang.F(" — мине за ~{0}", RavenAbilities.Span(Quirks.SulkLeft(item))) : ""));
                 }
                 else if (RavenSkills.OffShoulder(p, m, out off))
                 {
@@ -1823,7 +1853,7 @@ namespace HuginWhispers
             n.textWrappingMode = TextWrappingModes.NoWrap;
             T(col, Lang.F("{0} нема на плечі", (m ? Lang.T("Муніна") : Lang.T("Хугіна"))), 15f, Ink, F.Italic, TextAlignmentOptions.Center);
             TMP_Text how = T(col, Lang.T("<b>Як посадити</b>"), 15f, GoldInk, F.Body, TextAlignmentOptions.Center);
-            Tip(how.gameObject, () => Lang.F("<b><color={0}>Як посадити ворона</color></b>\n\nХугіна й Муніна продає Хальдор. Правий клік на вороні в сумці садить його на плече: Хугіна — на праве, Муніна — на ліве. Ще раз — знімає (довіра від цього трохи тане).", GoldHex));
+            Tip(how.gameObject, () => Lang.F("<b><color={0}>Як посадити ворона</color></b>\n\nХугіна й Муніна продає Хальдор. Правий клік на вороні в сумці садить його на плече: Хугіна — на праве, Муніна — на ліве. Зняти можна кнопкою на його сторінці в книзі (довіра від цього трохи тане).", GoldHex));
             FootZone(col, m, returns); // left at home on a perch, or lost: one line, its card on a click (RavenBookHome)
         }
 
@@ -2711,12 +2741,12 @@ namespace HuginWhispers
                 HBox(b, 8f, TextAnchor.MiddleCenter, 10, 16, 5, 5);
                 Color raven = w ? BookArt.Munin : BookArt.Hugin, deep = w ? BookArt.MuninDark : BookArt.HuginDark;
                 Image bg = b.gameObject.AddComponent<Image>();
-                bg.sprite = BookArt.RoundFine(7f, true); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine;
+                bg.sprite = BookArt.RoundFine(7f, true); bg.type = Image.Type.Sliced;
                 bg.color = on ? raven : A(raven, 0.1f);
                 Image edge = Rect("Edge", b).gameObject.AddComponent<Image>();
                 edge.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 Stretch(edge.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                edge.sprite = BookArt.FrameFine(7f, on ? 2.5f : 2f, true); edge.type = Image.Type.Sliced; edge.pixelsPerUnitMultiplier = BookArt.Fine;
+                edge.sprite = BookArt.FrameFine(7f, on ? 2.5f : 2f, true); edge.type = Image.Type.Sliced;
                 edge.color = on ? A(deep, 0.85f) : A(raven, 0.55f); edge.raycastTarget = false;
                 RectTransform face = Rect("Face", b);
                 Fixed(face.gameObject, 24f, 24f);
@@ -3369,8 +3399,8 @@ namespace HuginWhispers
             HBox(foot, 14f, TextAnchor.MiddleLeft, (int)(arrow + 10f), 0, 0, 0);
             RectTransform track = Rect("Track", foot);
             Fixed(track.gameObject, -1f, 4f); track.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
-            Image tr = Img(track, "Line", BookArt.RoundFine(2f), A(Brown, 0.2f)); tr.type = Image.Type.Sliced; tr.pixelsPerUnitMultiplier = BookArt.Fine;
-            Image fill = Img(track, "Fill", BookArt.RoundFine(2f), A(Brown, 0.7f)); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine;
+            Image tr = Img(track, "Line", BookArt.RoundFine(2f), A(Brown, 0.2f)); tr.type = Image.Type.Sliced;
+            Image fill = Img(track, "Fill", BookArt.RoundFine(2f), A(Brown, 0.7f)); fill.type = Image.Type.Sliced;
             fill.rectTransform.anchorMax = new Vector2((page + 1f) / pages, 1f);
             TMP_Text cap = T(foot, NickCaption[kind], 13f, Brown, F.Italic, TextAlignmentOptions.MidlineRight);
             cap.textWrappingMode = TextWrappingModes.NoWrap;
@@ -3402,10 +3432,10 @@ namespace HuginWhispers
             g.anchorMin = g.anchorMax = new Vector2(0.5f, 0.5f);
             g.sizeDelta = new Vector2(15f, 15f); g.anchoredPosition = new Vector2(0f, 5f);
             g.localRotation = Quaternion.Euler(0f, 0f, 45f);
-            Image edge = Img(g, "Edge", BookArt.RoundFine(2f), Color.Lerp(gem, Color.black, 0.45f)); edge.type = Image.Type.Sliced; edge.pixelsPerUnitMultiplier = BookArt.Fine;
-            Image face = Img(g, "Face", BookArt.RoundFine(2f), gem); face.type = Image.Type.Sliced; face.pixelsPerUnitMultiplier = BookArt.Fine;
+            Image edge = Img(g, "Edge", BookArt.RoundFine(2f), Color.Lerp(gem, Color.black, 0.45f)); edge.type = Image.Type.Sliced;
+            Image face = Img(g, "Face", BookArt.RoundFine(2f), gem); face.type = Image.Type.Sliced;
             Stretch(face.rectTransform, Vector2.zero, Vector2.one, new Vector2(1.5f, 1.5f), new Vector2(-1.5f, -1.5f));
-            Image shine = Img(g, "Shine", BookArt.RoundFine(1f), new Color(1f, 1f, 1f, 0.35f)); shine.type = Image.Type.Sliced; shine.pixelsPerUnitMultiplier = BookArt.Fine;
+            Image shine = Img(g, "Shine", BookArt.RoundFine(1f), new Color(1f, 1f, 1f, 0.35f)); shine.type = Image.Type.Sliced;
             Stretch(shine.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.5f, 1f), new Vector2(2.5f, 0f), new Vector2(0f, -2.5f));
             for (int i = 0; i <= k; i++)
             {
@@ -3865,7 +3895,7 @@ namespace HuginWhispers
             switch (tab)
             {
                 case RavensTab:
-                    return Lang.F("{0}Ліва сторінка — Мунін, ворон пам'яті, бойовий: сидить на лівому плечі. Права — Хугін, ворон думки, мандрівний: на правому. Обох продає Хальдор; правий клік на вороні в сумці садить його на плече чи знімає.\n\n<b>Довіра, Сила, Ситість.</b> Сила витрачається на дари: Хугін заряджається в мирі, Мунін — у бою. Ситість нижче {1} — ворон не слухає наказів. Наведи на золоті слова, щоб побачити все.\n\n<b>Благо й тягар</b> кожен ворон отримує випадково при покупці; Камінь долі в Хальдора перекидає їх. <b>Норов</b> — його характер, хист і примха.\n\n<b>Що далі</b> — найважливіша справа для ворона саме зараз: годування, ритуал чи наступна ціль. Печатка праворуч її робить.", h, RavenAbilities.R(Satiety.HungryAt));
+                    return Lang.F("{0}Ліва сторінка — Мунін, ворон пам'яті, бойовий: сидить на лівому плечі. Права — Хугін, ворон думки, мандрівний: на правому. Обох продає Хальдор; правий клік на вороні в сумці садить його на плече, а знімає кнопка на його сторінці.\n\n<b>Довіра, Сила, Ситість.</b> Сила витрачається на дари: Хугін заряджається в мирі, Мунін — у бою. Ситість нижче {1} — ворон не слухає наказів. Наведи на золоті слова, щоб побачити все.\n\n<b>Благо й тягар</b> кожен ворон отримує випадково при покупці; Камінь долі в Хальдора перекидає їх. <b>Норов</b> — його характер, хист і примха.\n\n<b>Що далі</b> — найважливіша справа для ворона саме зараз: годування, ритуал чи наступна ціль. Печатка праворуч її робить.", h, RavenAbilities.R(Satiety.HungryAt));
                 case GiftsTab:
                     return Lang.F("{0}Дари викликаються з кола дарів (<color={1}>{2}</color>), з G → Ворони або своїми клавішами. Кожен коштує сили й має перезарядку; наведи на дар — побачиш усе про нього.\n\n<b>Клавіші</b> — за бажанням. Клікни поле на картці дару й натисни клавішу (можна з Shift, Ctrl чи Alt); Esc — скасувати, Backspace — прибрати. Або ПКМ по дару в колі. Клавіші воронів <b>нічого не забирають</b> у гри й інших модів: якщо клавіша вже зайнята, спрацює і те, і дар. <color=#FF6B6B>!</color> показує, хто ще на ній.\n\nТочка на картці: <color=#5a9a4a>●</color> готовий · <color=#d8a83a>●</color> чекає · <color=#b8322a>●</color> бракує сили. <b>Пасивні</b> дари діють самі. Закриті відкриваються з довірою.", h, GoldHex, RavenKeys.Label(RavenKeys.Get(RavenKeys.GiftsId)));
                 case RunesTab:
@@ -4065,11 +4095,11 @@ namespace HuginWhispers
         {
             Image f = r.gameObject.GetComponent<Image>();
             if (f == null) f = r.gameObject.AddComponent<Image>();
-            f.sprite = BookArt.RoundFine(radius); f.type = Image.Type.Sliced; f.pixelsPerUnitMultiplier = BookArt.Fine; f.color = fill;
+            f.sprite = BookArt.RoundFine(radius); f.type = Image.Type.Sliced; f.color = fill;
             if (width <= 0f || line.a <= 0f) return;
             Image l = Rect("Line", r).gameObject.AddComponent<Image>();
             Stretch(l.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            l.sprite = BookArt.FrameFine(radius, width); l.type = Image.Type.Sliced; l.pixelsPerUnitMultiplier = BookArt.Fine; l.color = line; l.raycastTarget = false;
+            l.sprite = BookArt.FrameFine(radius, width); l.type = Image.Type.Sliced; l.color = line; l.raycastTarget = false;
             l.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
@@ -4083,12 +4113,12 @@ namespace HuginWhispers
             int v = r.GetSiblingIndex();
             foreach (char ch in r.name) v = v * 31 + ch;
             v &= 0x7fffffff;
-            f.sprite = BookArt.TornFill(v); f.type = Image.Type.Tiled; f.pixelsPerUnitMultiplier = BookArt.Fine; f.color = fill;
+            f.sprite = BookArt.TornFill(v); f.type = Image.Type.Tiled; f.color = fill;
             if (width <= 0f || line.a <= 0f) return;
             Image l = Rect("Line", r).gameObject.AddComponent<Image>();
             Stretch(l.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             if (line == BookArt.CardLine) line = A(line, 0.32f); // the plain card: its torn edge only a shade darker, no inked frame (states keep their colour)
-            l.sprite = BookArt.TornLine(width, v); l.type = Image.Type.Tiled; l.pixelsPerUnitMultiplier = BookArt.Fine; l.color = line; l.raycastTarget = false;
+            l.sprite = BookArt.TornLine(width, v); l.type = Image.Type.Tiled; l.color = line; l.raycastTarget = false;
             l.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
@@ -4100,7 +4130,7 @@ namespace HuginWhispers
             foreach (char ch in seed ?? "") h = h * 31 + ch;
             r.localRotation = Quaternion.Euler(0f, 0f, ((h & 0x7fffffff) % 5 - 2) * 0.6f); // −1.2…1.2°: the layout keeps its place, only turns it
             Image sheet = Img(r, "Sheet", BookArt.SheetFill, fill);
-            sheet.type = Image.Type.Tiled; sheet.pixelsPerUnitMultiplier = BookArt.Fine;
+            sheet.type = Image.Type.Tiled;
             sheet.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             Vector2[] at = { new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(1f, 0f), new Vector2(0f, 0f) };
             for (int c = 0; c < 4; c++)

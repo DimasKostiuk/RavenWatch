@@ -12,6 +12,8 @@ namespace HuginWhispers
         // (played from a later step: the bird on its seat at once)
         private static Action<Player, Step> OnSeat(Action<Player, Step> begin) { return (p, st) => { _setup = true; try { begin(p, st); } finally { _setup = false; } }; }
         private static bool BirdSettling(Player p, Step st) { return _bird != null && !_bird.Settled; }
+        // what a bird step came to: where it is, how far from him, settled or not
+        private static string BirdSaid(Player p, Step st) { return _bird == null ? "no bird" : StoryBird.StateName(_bird.State) + ", " + F(Utils.DistanceXZ(_bird.transform.position, p.transform.position)) + " m from him" + (_bird.Settled ? "" : " — NOT settled"); }
 
         private static StepKind BirdKind()
         {
@@ -19,9 +21,9 @@ namespace HuginWhispers
             return new StepKind(StepSeen.Shared) { Min = 1, VerbAt = 1, Usage = "bird come|land|look|say|circle|over|leave|gone|shoulder …", Verbs = new Dictionary<string, StepVerb>
             {
                 { "come", new StepVerb(StepSeen.Shared) { PlaceAfter = "at", Begin = come, Setup = OnSeat(come), // (it is on its way with «nowait»: the next step may set it circling — gate_shut, the user 2026-11-04)
-                    Busy = (p, st) => Array.IndexOf(st.W, "nowait") <= 0 && BirdSettling(p, st) } },
-                { "land", new StepVerb(StepSeen.Shared) { Min = 1, PlaceAt = 2, Begin = land, Setup = OnSeat(land), Busy = BirdSettling } },
-                { "shoulder", new StepVerb(StepSeen.Shared) { Begin = BirdShoulder, Busy = BirdSettling } },
+                    Busy = (p, st) => Array.IndexOf(st.W, "nowait") <= 0 && BirdSettling(p, st), Done = BirdSaid } },
+                { "land", new StepVerb(StepSeen.Shared) { Min = 1, PlaceAt = 2, Begin = land, Setup = OnSeat(land), Busy = BirdSettling, Done = BirdSaid } },
+                { "shoulder", new StepVerb(StepSeen.Shared) { Begin = BirdShoulder, Busy = BirdSettling, Done = BirdSaid } },
                 { "look", new StepVerb(StepSeen.Shared) { Min = 1, PlaceAt = 2, Begin = look, Setup = OnSeat(look) } },
                 { "say", new StepVerb(StepSeen.Shared) { Min = 1,
                     Begin = (p, st) =>
@@ -40,7 +42,7 @@ namespace HuginWhispers
                         Act("circle", F(r) + " " + F(up));
                     } } },
                 { "over", new StepVerb(StepSeen.Shared) { // (till it is really over you, the step's own limit if it never comes)
-                    Busy = (p, st) => _bird != null && Utils.DistanceXZ(_bird.transform.position, p.transform.position) > (st.W.Length > 2 ? F(st.W[2], 10f) : 10f) } },
+                    Busy = (p, st) => _bird != null && Utils.DistanceXZ(_bird.transform.position, p.transform.position) > (st.W.Length > 2 ? F(st.W[2], 10f) : 10f), Done = BirdSaid } },
                 { "leave", new StepVerb(StepSeen.Shared) { Min = 1, PlaceAt = 2, PlaceNot = new[] { "up" }, Begin = leave, Setup = OnSeat(leave) } },
                 { "gone", new StepVerb(StepSeen.Shared) { Begin = gone, Setup = OnSeat(gone) } },
             } };

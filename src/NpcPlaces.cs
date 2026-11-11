@@ -79,6 +79,7 @@ namespace HuginWhispers
             K(new Kind { Id = "watch", Now = "point_at|scratch_head|fire_nod_r", Going = Lang.K("іде глянути, що будують"), There = Lang.K("дивиться, що будують"), Min = 10f, Max = 25f, Reach = 3f, Cap = 3, NoFav = true, Wants = n => 0.15f + n.Curious * 1.1f }); // (a thing a player has just built)
             K(new Kind { Id = "think", Now = "scratch_head|shrug_small", NowMin = 12f, NowMax = 25f, Going = Lang.K("повільно йде"), There = Lang.K("задумався|задумалась"), Min = 30f, Max = 70f, Reach = 1.5f, Cap = 1, Wants = n => 0.4f }); // (the author's: a spot a person stands at in thought)
             K(new Kind { Id = "tend", Clip = "heid_search.loop", From = "heid_search.bends", Out = "heid_search.rises", Going = Lang.K("іде до справ"), There = Lang.K("порається"), Min = 30f, Max = 80f, Reach = 1.5f, Cap = 1, Wants = n => 0.3f + n.Diligent * 0.5f }); // (the author's: its own small work at a spot)
+            K(new Kind { Id = "fetch", Going = Lang.K("іде по своє"), There = Lang.K("бере своє"), Min = 3f, Max = 4f, Reach = 1f, Cap = 1, NoFav = true, Wants = n => 0f }); // (the author's: a thing of its own set down somewhere — back to it (StoryLife, its Extra says how much)
         }
 
         internal sealed class Place
@@ -92,8 +93,13 @@ namespace HuginWhispers
             public string Clip = "", From = "", Out = ""; // the author's: its clip there, its way in and out
             public bool Exact;          // it stands on the very spot (a clip whose hands work on the thing)
             public Func<Vector3> Stand; // the author's: where it stands exactly, reckoned only if this place is the one (Ready)
+            public Action<NpcActor> There; // the author's: done once as it arrives (a thing of its own taken up: StoryLife)
             public string Parts = "";   // (raven npc why)
         }
+
+        // a visit with a clip of its own is about to begin it (the author's: what is in the person's hands goes down first — StoryProps);
+        // returns the seconds to wait before the visit's own clip, 0 none
+        internal static Func<NpcActor, float> ClipBegins;
 
         // the author's places of a person (StoryLife): null — none: its base's own
         internal static Func<NpcActor, List<Place>> Authored;
@@ -103,6 +109,7 @@ namespace HuginWhispers
             public float Look, Next, Stay, ClipAsked, NextNow;
             public NpcMind.Plan Plan; public Place Visit; public bool There; public int Stage;
             public string ClipOn = "", Last = "", Last2 = ""; // (Last2: the place last refused and why)
+            public bool Hooked; public float Wait;                                            // (the visit's clip: ClipBegins asked once, and the wait it said)
             public Dictionary<int, int> Fav;                                                // its locker's count of its visits, read once
             public readonly Dictionary<int, float> Seen = new Dictionary<int, float>();    // session: a place → when it chose it
             public readonly Dictionary<string, float> KindSeen = new Dictionary<string, float>(); // session: a kind → when
@@ -161,7 +168,7 @@ namespace HuginWhispers
             {
                 if (!s.There && p == null) s.Bad[s.Visit.Key] = Time.time + BadFor; // (it never got there: no way, NpcWalk: not that place again for a while)
                 ClipOff(a, s);
-                s.Plan = null; s.Visit = null; s.There = false; s.Stage = 0;
+                s.Plan = null; s.Visit = null; s.There = false; s.Stage = 0; s.Hooked = false;
                 s.Next = Time.time + UnityEngine.Random.Range(GapMin, GapMax) * NpcClock.Slow(a);
                 return;
             }
@@ -175,6 +182,7 @@ namespace HuginWhispers
                 p.Until = Time.time + s.Stay; // (its stay counts from here, however long the way was)
                 s.NextNow = Time.time + UnityEngine.Random.Range(2f, s.Visit.K.NowMin);
                 Arrive(a, m, s);
+                if (s.Visit.There != null) s.Visit.There(a);
             }
             Clips(a, p, s);
             Now(a, m, p, s);
@@ -243,6 +251,8 @@ namespace HuginWhispers
             if (s.Stage < 3 && way != null && Time.time >= p.Until - outFor - LookEvery) { Ask(a, s, v.Out, 0f, 3); return; }
             if (s.Stage == 0)
             {
+                if (!s.Hooked) { s.Hooked = true; s.Wait = Time.time + (ClipBegins != null ? ClipBegins(a) : 0f); } // (once a visit: what its hands hold goes down first)
+                if (Time.time < s.Wait) return;
                 PAnimClip from = v.From.Length > 0 ? BodyClips.Find(v.From) : null;
                 if (from != null) { Ask(a, s, v.From, 0f, 1); return; }
                 Ask(a, s, v.Clip, s.Stay + 5f, 2);
@@ -328,7 +338,7 @@ namespace HuginWhispers
             Fireplace f = p.Thing as Fireplace;
             if (f != null)
             {
-                if (b != null && b.Ready && !b.Inside(thing) && !NpcKit.UnderSky(thing)) { _refused = "поза базою й під чужим дахом"; return false; } // (past its base and under another's roof: not its fire)
+                if (b != null && b.Ready && !b.Holds(thing) && !NpcKit.UnderSky(thing)) { _refused = "поза базою й під чужим дахом"; return false; } // (past its base and under another's roof: not its fire)
                 Vector3? side = NpcKit.FireSide(f, a.transform.position);
                 if (side == null) { _refused = "нема де стати поруч"; return false; }
                 p.At = side.Value;
@@ -380,7 +390,7 @@ namespace HuginWhispers
         // (the list's places are used again at the next choice: what it goes to is its own copy)
         private static Place Copy(Place p)
         {
-            return new Place { K = p.K, At = p.At, Look = p.Look, Thing = p.Thing, Sit = p.Sit, NoLook = p.NoLook, Guest = p.Guest, Key = p.Key, ThingKey = p.ThingKey, Worth = p.Worth, Clip = p.Clip, From = p.From, Out = p.Out, Exact = p.Exact };
+            return new Place { K = p.K, At = p.At, Look = p.Look, Thing = p.Thing, Sit = p.Sit, NoLook = p.NoLook, Guest = p.Guest, Key = p.Key, ThingKey = p.ThingKey, Worth = p.Worth, Clip = p.Clip, From = p.From, Out = p.Out, Exact = p.Exact, There = p.There };
         }
 
         private static Need NeedOf(NpcActor a)
@@ -486,7 +496,7 @@ namespace HuginWhispers
         {
             if (_used >= Pool.Count) Pool.Add(new Place());
             Place p = Pool[_used++];
-            p.K = Kinds[kind]; p.At = at; p.Look = look; p.Thing = thing; p.Sit = false; p.NoLook = false; p.Guest = false; p.Worth = 0f; p.Extra = 0f; p.Min = 0f; p.Max = 0f; p.Clip = p.K.Clip; p.From = p.K.From; p.Out = p.K.Out; p.Exact = false; p.Stand = null; p.Parts = "";
+            p.K = Kinds[kind]; p.At = at; p.Look = look; p.Thing = thing; p.There = null; p.Sit = false; p.NoLook = false; p.Guest = false; p.Worth = 0f; p.Extra = 0f; p.Min = 0f; p.Max = 0f; p.Clip = p.K.Clip; p.From = p.K.From; p.Out = p.K.Out; p.Exact = false; p.Stand = null; p.Parts = "";
             Vector3 stands = thing != null ? thing.transform.position : keyAt ?? at;
             p.Key = p.K.Hash ^ PosKey(stands); p.ThingKey = thing != null ? PosKey(thing.transform.position) : 0;
             Out.Add(p);

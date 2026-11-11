@@ -31,6 +31,7 @@ namespace HuginWhispers
     //   ?? npcat hall                     the context: all answers below it in this place hold this too, till the next «??» («??» alone:
     //                                     none). A talk's topics by where it is and what the story is at; asked each time it is shown,
     //                                     so when it walks off they are gone and others come.
+    //   @c_low_tired = c_tired            a place that is another place of the same talk (the same answers, written once)
     //   [talk common +]                   more for a talk already there (a story's file for the built-in common): its places «@x +»
     //                                     add their answers first, new places are added
     //   {word} · !deed                    a module's own words and deeds (Words, Deeds: StoryTales «{tale}», «!taletold»)
@@ -57,11 +58,14 @@ namespace HuginWhispers
     // what you do (hire, let go, its request, its rescue, a deed, the story and the way to it: LeadsToStory) is never counted nor shut. Kept in your character (NpcTalkMemo).
     // A kind answer to a worry warms it once a game day a worry (WarmedToday: said again, it costs what a repeat costs and gives nothing back).
     // What an answer needs is asked again when it is picked (Pick: the window may have stood open a while). The window closes for a scene (Tick; none opens during one). You stand there saying nothing: NpcTalkIdle.
+    // More of it, each in its own file (the user 2026-11-07): what it sees of you — its worries you_* (NpcVoice), one of its people near butts in (NpcTalkThird),
+    // «Що скажеш про когось із наших?» and carrying it to that one (NpcTalkAbout), «Пам'ятаєш, як ми…?» (NpcTalkRecall), a gift (NpcTalkGift), talking it round after
+    // its no (NpcTalkSway). A place made by code (the homes, your clothes, its neighbours, your gifts): Places.
     internal static partial class NpcTalk
     {
         internal sealed class Answer { public string Text = "", To = "end"; public bool Once, Dim; public Answer Else; public List<Cond> When = new List<Cond>(); public List<string> Acts = new List<string>(); } // (Else: the answer a «>|» is a way of)
         internal sealed class Node { public string Id = "", Says = ""; public bool Adds; public readonly List<Answer> Answers = new List<Answer>(); public readonly List<RavenLine> Ravens = new List<RavenLine>(); }
-        internal sealed class Talk { public string Id = "", Base = ""; public readonly Dictionary<string, Node> Nodes = new Dictionary<string, Node>(); public readonly Dictionary<string, bool> Leads = new Dictionary<string, bool>(); }
+        internal sealed class Talk { public string Id = "", Base = ""; public readonly Dictionary<string, Node> Nodes = new Dictionary<string, Node>(); public readonly Dictionary<string, bool> Leads = new Dictionary<string, bool>(); public readonly Dictionary<string, string> Alias = new Dictionary<string, string>(); }
 
         // a module's own words in a talk's text and its own deeds after «!» (the core names no module)
         internal static readonly Dictionary<string, Func<NpcActor, Player, string>> Words = new Dictionary<string, Func<NpcActor, Player, string>>();
@@ -82,6 +86,18 @@ namespace HuginWhispers
             Npcs.Log(a.Id + ": hired by " + w[1]);
         }
 
+        // «walkwith <player> <s>» where it is run: it walks with you a while (a talk's «Ходімо, покажу…»), a whim with its term — not an order kept till you let it go
+        internal static float WalkWithFor = 180f;
+        internal static void WalkWith(NpcActor a, string[] w)
+        {
+            float s;
+            if (a.Mind == null || w.Length < 3 || !float.TryParse(w[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out s)) return;
+            GameObject go = NpcKit.Find(NpcKit.Parse(w[1]));
+            Player p = go != null ? go.GetComponent<Player>() : null;
+            if (p == null) return;
+            if (!a.Mind.WalkWith(p, Mathf.Clamp(s, 10f, 600f), "walkwith")) Npcs.Log(a.Id + ": would walk with " + p.GetPlayerName() + ", but something it must do comes first");
+        }
+
         internal static void Unhire(NpcActor a)
         {
             if (a.Zdo == null) return;
@@ -89,6 +105,9 @@ namespace HuginWhispers
             if (a.Gear != null) a.Gear.DropAll(); // (its gear at its feet)
             a.Zdo.Set(KHired, 0L);
             NpcLocker.Set(a, NpcRequests.KRequest, "");
+            NpcLocker.Set(a, NpcGoals.KGoal, ""); // (its wish and your words were of its life here: gone with it, nobody to blame)
+            NpcLocker.Set(a, NpcPromises.KPromise, "");
+            NpcLocker.Set(a, NpcTasks.KTask, "");
             NpcMemory.TellHome(a, "neighbour_left", 0L, a.Name); // (those who stay remember it — before it leaves its heart)
             foreach (NpcActor o in NpcHeart.Residents(NpcKit.GetRef(a.Zdo, NpcResident.KHeart))) if (o != a && NpcAttitude.OfPerson(o, a) >= 25f) NpcFeel.Tell(o, NpcFeel.Grief, 600f); // (one who liked it: sad a while)
             NpcResident.Unsettle(a);
@@ -121,19 +140,22 @@ namespace HuginWhispers
             "> Тобі щось потрібно? => need ?hasneed\n" +
             "> Ось те, що ти просив|просила. => thanks ?hasrequest !giverequest\n" +
             "> Ось те, про що ти мріяв|мріяла. => goaldone ?goalitem !goalgive\n" +
+            "> Знаєш, що про тебе каже {carried}? => passon ?carried !passon\n" + // (what one of its home said of it: NpcTalkAbout)
+            "> Маю дещо для тебе. => gift ?resident ?giftable\n" + // (a gift, once a game day: NpcTalkGift)
             "> Як справи? => how ?hired\n" +
             "> Поговорімо. => talk ?hired\n" +
             "> Ти вільний|вільна, іди своєю дорогою. => fire ?mine ?!npcflag protected\n" +
             "> Іди своєю дорогою, у мене нема для тебе місця. => end ?npcflag rescued ?!hired !goaway\n" +
-            "> Попросити про щось… => ask dim ?resident ?patience >= 75 ?!angry\n" +
+            "> Попросити про щось… => ask dim ?resident ?mayask ?!angry\n" + // (from NpcPatience.AskFrom: sooner with the thread «рука»)
             "> Бувай. => end\n" +
             "@who\n{@who_intro} {story_short}\n> Розкажи більше. => more dim ?hasstory ?patience >= 45 ?!angry\n> Зрозум{ів|іла}. => start\n" +
             "@more\n{story_more}\n> Дякую, що розповів|розповіла. => start\n" +
             "@hire\n{~nod} {@hire_yes}\n" +
             "> Ходімо зі мною. => end !hire !follow\n> Іди сам|сама до оселі. => homes\n> Іншим разом. => end\n" +
-            "@how\n{doing}\n> Добре. => start\n" +
+            "@how\n{doing}\n> Тобі щось потрібно? => need ?hasneed\n> Ти поранений|поранена. Ось, випий меду. => c_dosed ?hurt ?hasmead !healmead !tone warm 1.5\n> Іди відпочинь, я прикрию. || Перепочинь трохи. => c_rest ?tired ?working !letrest !tone warm\n> Поговорімо. => talk\n> Добре. => start\n" +
             // small talk with one of yours: its words made each time (NpcPhrases: talk_*, about_*)
-            "@talk\n{@talk_invite}\n> Як тобі тут? => home ?resident\n> Хто ще в оселі живе? => folk ?resident\n> Розкажи щось. => tale\n" +
+            "@talk\n{@talk_invite}\n> Як тобі тут? => home ?resident\n> Хто ще в оселі живе? => folk ?resident\n> Що скажеш про когось із наших? => folkabout ?resident ?hasfolk\n> Розкажи щось. => tale\n" +
+            "> Пам'ятаєш, як ми…? => recall ?shared !recall\n" +
             "> Що думаєш про воронів? => ravens\n> Про що мрієш? => goal ?hasgoal\n> Чого б тобі хотілося? => wish ?!hasgoal\n> Що думаєш про мене? => me\n> Годі балачок. => start\n" +
             "@home\n{@about_home}\n> Поговорімо ще. => talk\n> Добре. => start\n" +
             "@folk\n{@about_folk}\n> Поговорімо ще. => talk\n> Добре. => start\n" +
@@ -142,9 +164,11 @@ namespace HuginWhispers
             "@wish\n{~shrug} {@about_wish}\n> Подумаю, що можна зробити. => talk\n> Добре. => start\n" +
             "@me\n{@you_remember} {@about_you}\n> Поговорімо ще. => talk\n> Добре. => start\n" +
             "@need\n{request}\n> Принесу. => end !promise request\n> Подумаю. => start\n" +
-            "@goal\n{goal}\n> Я подумаю, як допомогти. => talk !promise goal\n> Добре. => start\n" +
+            "@goal\n{goal}\n> Я подумаю, як допомогти. => talk !promise goal !goalshow\n> Добре. => start\n" +
             "@goaldone\n{~laugh} {goal_thanks}\n> Нема за що. => end\n" +
             "@thanks\n{~nod} {reward}\n> Нема за що. => end\n" +
+            "@recall\n{recall}\n> Таке не забувається. || Добре було. || Еге ж, було діло. => talk\n> Годі спогадів. => start\n" + // (NpcTalkRecall)
+            "@passon\n{passon}\n> Добре. => start\n> Бувай. => end\n" + // (NpcTalkAbout)
             "@wait\n{@rescue_wait}\n> Добре. => end\n" +
             "@saved\n{thanks}\n> Живи на моїй базі й працюй зі мною. => hire ?!hired\n> Хто ти? => who\n> Іди своєю дорогою, у мене нема для тебе місця. => end !goaway\n> Бувай. => end\n" +
             "@guard\n{@rescue_guard}\n> Чекай тут, я швидко. => end !rescuewait\n> Сховайся — я покажу, де. => end !rescuehide\n> Ходімо зі мною, я тебе охоронятиму. => end !rescuefollow\n" +
@@ -153,63 +177,50 @@ namespace HuginWhispers
             // what is on its mind (NpcVoice.Concerns): the answers to its worry — its theme's own place first (c_hurt: it worries for you), then its group's, c_any last.
             // An answer «a || b || c»: one of its words picked each showing (AddRow), so your words are not the same every time
             "@c_any\n{concern}\n> Еге ж. || Отож. || Твоя правда. => c_chat !tone warm\n> Угу. || Ага. => start\n> Нащо ти мені це кажеш? || І що з того? || Цікаво. Але ні. => c_rude !tone rude\n" +
-            "@c_news\n{concern}\n> Та ну? || Серйозно? || От це новина. => c_news_told !tone warm\n> Знаю, чу{в|ла} уже. || Та я ж там бу{в|ла}. => c_news_known\n> Мені якось байдуже. || А мені що з того? => c_rude !tone rude\n" +
+            "@c_news\n{concern}\n> Та ну? || Серйозно? || От це новина. => c_news_told !tone warm\n> Знаю, чу{в|ла} уже. || Та я ж там бу{в|ла}. => c_news_known\n> А що ще сталося, поки мене не було? => away ?awaynews\n> Мені якось байдуже. || А мені що з того? => c_rude !tone rude\n" +
             "@c_place\n{concern}\n> Твоя правда. || Отож. Такий край. => c_chat !tone warm\n> Ага. => start\n> Не подобається — шукай інше місце. || Годі нити, скрізь однаково. => c_rude !tone rude\n" +
             "@c_weather\n{concern}\n> Нічого, перебудемо. || Посидимо під дахом, минеться. || Колись та й розвидниться. => c_chat !tone warm\n> Ну, дощ. А що поробиш. => c_chat ?weather rain\n> Ну, сніг. А що поробиш. => c_chat ?weather snow\n> Ну, буря. А що поробиш. => c_chat ?weather storm\n> Ну, туман. А що поробиш. => c_chat ?weather fog\n> Я люблю дощ. Не скаржся, дурний|дурна. || Дощ як дощ. Ти що, з цукру? => c_rude ?weather rain !tone rude\n> Я люблю сніг. Не скаржся, дурний|дурна. => c_rude ?weather snow !tone rude\n> Я люблю бурю. Не скаржся, дурний|дурна. => c_rude ?weather storm !tone rude\n> Я люблю туман. Не скаржся, дурний|дурна. => c_rude ?weather fog !tone rude\n> Ага. => start ?weather clear\n" +
-            "@c_travels\n{concern}\n> Бу{в|ла}. І ще піду. || Ходи{в|ла}, ага. Цікаво там. || Ще й не таке бачи{в|ла}. => c_travels_told !tone warm\n> Потім розповім. || Довга історія. => start\n> Не твоє діло. || Тобі туди все одно не треба. => c_rude !tone rude\n" +
-            "@c_work\n{concern}\n> Добре в тебе виходить. || Оце я розумію, робота. || Без тебе тут усе б стало. => c_work_praised !tone warm\n> Не заважатиму. || Працюй, працюй. => start\n> Менше балакай, більше роби. || Я тобі не за балачки плачу. => c_rude !tone rude\n" +
-            "@c_people\n{concern}\n> Он воно як. || Та ну? А далі? || Цікаво. Розкажи ще. => c_gossip !tone warm\n> Це не моє діло. => start\n> Ви всі тут одне одного варті. || Пліткуєш, як на ярмарку. => c_rude !tone rude\n" +
-            "@c_complaint\n{concern}\n> Розумію. Подумаю, що можна зробити. || Гаразд, розберусь. || Чую тебе. Спробую виправити. => c_heard !tone warm !promise mood\n> Чим тобі допомогти? || Що тобі треба? => need ?hasneed\n> Чим тобі допомогти? || Що тобі треба? => goal ?hasgoal ?!hasneed\n> Чим тобі допомогти? || Що тобі треба? => nohelp ?!hasneed ?!hasgoal\n> Мені зараз не до того. || Потім, добре? => end !tone cold\n> Перестань скиглити. || Всім важко, не тільки тобі. || Поскаржся комусь іншому. => c_rude !tone rude\n" +
-            "@c_hungry\n{concern}\n> Тримай, поїж. || На, з'їж ось це. || Ось, бери. Не дякуй. => c_fed ?hasfood !givefood !tone warm 2\n> Зараз щось принесу. || Буде їжа, обіцяю. => c_heard ?!hasfood !tone warm !promise mood\n> У коморі ж є їжа. || Сходи до скрині, там є що поїсти. => c_pantry\n> Менше їж, більше роби. || Потерпиш, не помреш. => c_rude !tone rude\n" +
-            "@c_low_hungry\n{concern}\n> Тримай, поїж. || На, з'їж ось це. || Ось, бери. Не дякуй. => c_fed ?hasfood !givefood !tone warm 2\n> Зараз щось принесу. || Буде їжа, обіцяю. => c_heard ?!hasfood !tone warm !promise mood\n> У коморі ж є їжа. || Сходи до скрині, там є що поїсти. => c_pantry\n> Менше їж, більше роби. || Потерпиш, не помреш. => c_rude !tone rude\n" +
-            "@c_low_starving\n{concern}\n> Тримай, поїж. || На, з'їж ось це. || Ось, бери. Не дякуй. => c_fed ?hasfood !givefood !tone warm 2\n> Зараз щось принесу. || Буде їжа, обіцяю. => c_heard ?!hasfood !tone warm !promise mood\n> У коморі ж є їжа. || Сходи до скрині, там є що поїсти. => c_pantry\n> Менше їж, більше роби. || Потерпиш, не помреш. => c_rude !tone rude\n" +
-            "@c_tired\n{concern}\n> Іди відпочинь, я прикрию. || Сядь, перепочинь трохи. || Годі на сьогодні, йди спати. => c_rest !tone warm\n> Ще трохи, і відпочинеш. => start\n> Втомився|втомилася? А я, по-твоєму, гуляю? || Відпочинеш, коли зробиш. => c_rude !tone rude\n" +
-            "@c_low_tired\n{concern}\n> Іди відпочинь, я прикрию. || Сядь, перепочинь трохи. || Годі на сьогодні, йди спати. => c_rest !tone warm\n> Ще трохи, і відпочинеш. => start\n> Втомився|втомилася? А я, по-твоєму, гуляю? || Відпочинеш, коли зробиш. => c_rude !tone rude\n" +
-            "@c_unpaid\n{concern}\n> Заплачу, слово даю. || Скарбничку поповню, не хвилюйся. => c_pay !tone warm !promise mood\n> Розберусь. => start\n> Скажи спасибі, що годую. || Платня буде, коли буде робота. => c_rude !tone rude\n" +
-            "@c_low_unpaid\n{concern}\n> Заплачу, слово даю. || Скарбничку поповню, не хвилюйся. => c_pay !tone warm !promise mood\n> Розберусь. => start\n> Скажи спасибі, що годую. || Платня буде, коли буде робота. => c_rude !tone rude\n" +
-            "@c_hurt\n{concern}\n> Подряпина. Заживе. || Жити буду. || Бувало й гірше. => c_hurt_brave !tone warm\n> Троль. Йому гірше. || Вовки. Тепер їх менше. || Сам{|а} перечепи{вся|лася}. Не питай. => c_hurt_told !tone warm 0.5\n> Допоможеш перев'язати? || Є чим рану промити? => c_hurt_help !tone warm\n> Не квокчи наді мною. || Своїм ділом займайся. => c_rude !tone rude\n" +
+            "@c_travels\n{concern}\n> Бу{в|ла}. І ще піду. || Ходи{в|ла}, ага. Цікаво там. || Ще й не таке бачи{в|ла}. => c_travels_told !tone warm\n> Ходімо зі мною, сам|сама побачиш. => c_follow ?hired !walkwith !tone warm\n> Потім розповім. || Довга історія. => start\n> Не твоє діло. || Тобі туди все одно не треба. => c_rude !tone rude\n" +
+            "@c_work\n{concern}\n> Добре в тебе виходить. || Оце я розумію, робота. || Без тебе тут усе б стало. => c_work_praised !tone warm\n> Не заважатиму. || Працюй, працюй. => start\n> Щось заважає роботі? || Чого бракує для роботи? => how ?working\n> Менше балакай, більше роби. || Я тобі не за балачки плачу. => c_rude !tone rude\n" +
+            "@c_people\n{concern}\n> Он воно як. || Та ну? А далі? || Цікаво. Розкажи ще. => c_gossip !tone warm\n> А хто ще тут живе? => folk ?resident\n> Це не моє діло. => start\n> Ви всі тут одне одного варті. || Пліткуєш, як на ярмарку. => c_rude !tone rude\n" +
+            "@c_complaint\n{concern}\n> Розумію. Подумаю, що можна зробити. || Гаразд, розберусь. || Чую тебе. Спробую виправити. => c_heard !tone warm !promise mood\n> Чим тобі допомогти? || Що тобі треба? => need ?hasneed\n>| Чим тобі допомогти? || Що тобі треба? => goal ?hasgoal\n>| Чим тобі допомогти? || Що тобі треба? => nohelp\n> Мені зараз не до того. || Потім, добре? => end !tone cold\n> Перестань скиглити. || Всім важко, не тільки тобі. || Поскаржся комусь іншому. => c_rude !tone rude\n" +
+            "@c_hungry\n{concern}\n> Тримай, поїж. || На, з'їж ось це. || Ось, бери. Не дякуй. => c_fed ?hasfood !givefood !taskdo feed !tone warm 2\n> Зараз щось принесу. || Буде їжа, обіцяю. => c_heard ?!hasfood !tone warm !promise food\n> У коморі ж є їжа. || Сходи до скрині, там є що поїсти. => c_pantry\n> Менше їж, більше роби. || Потерпиш, не помреш. => c_rude !tone rude\n" +
+            "@c_low_hungry = c_hungry\n@c_low_starving = c_hungry\n" + // (its mood low for that: the same answers — a place that is another's, Alias)
+            "@c_tired\n{concern}\n> Іди відпочинь, я прикрию. || Сядь, перепочинь трохи. || Годі на сьогодні, йди спати. => c_rest !letrest !tone warm\n> Ще трохи, і відпочинеш. => start\n> Втомився|втомилася? А я, по-твоєму, гуляю? || Відпочинеш, коли зробиш. => c_rude !tone rude\n" +
+            "@c_low_tired = c_tired\n" +
+            "@c_unpaid\n{concern}\n> Заплачу, слово даю. || Скарбничку поповню, не хвилюйся. => c_pay !tone warm !promise pay\n> Розберусь. => start\n> Скажи спасибі, що годую. || Платня буде, коли буде робота. => c_rude !tone rude\n" +
+            "@c_low_unpaid = c_unpaid\n" +
+            "@c_hurt\n{concern}\n> Подряпина. Заживе. || Жити буду. || Бувало й гірше. => c_hurt_brave !tone warm\n> Троль. Йому гірше. || Вовки. Тепер їх менше. || Сам{|а} перечепи{вся|лася}. Не питай. => c_hurt_told !tone warm 0.5\n> Допоможеш перев'язати? || Є чим рану промити? => favour ?favour bandage !favour bandage !tone warm\n> Не квокчи наді мною. || Своїм ділом займайся. => c_rude !tone rude\n" +
             "@c_building\n{concern}\n> Хочеш допомогти? || Як думаєш, гарно виходить? => c_build !tone warm\n> Та так, дрібниця. => start\n> Не стій над душею. || Без порад обійдусь. => c_rude !tone rude\n" +
             "@c_heavy\n{concern}\n> Допоможеш донести? || Не підставиш плече? => c_heavy_help !tone warm\n> Своя ноша не тягне. || Нічого, донесу. => start\n> Я тебе не пита{в|ла}. => c_rude !tone rude\n" +
             "@c_fishing\n{concern}\n> Хочеш, і тебе навчу? || Ловиться, як бачиш. => c_fish !tone warm\n> Ага, рибалю. => start\n> Не лякай мені рибу. => c_rude !tone rude\n" +
             "@c_raven\n{concern}\n> Він розумніший, ніж здається. || Хочеш погладити? Не раджу. => c_raven_talk !tone warm\n> Ворон як ворон. => start\n> Він розумніший за тебе. || Він хоч не балакає стільки. => c_rude !tone rude\n" +
-            "@c_new_home\n{concern}\n> Ласкаво просимо. Освоюйся. || Тут добре, ось побачиш. || Ніхто тут не кусається. Крім мого ворона. => c_welcome !tone warm\n> Звикнеш. => start\n> Не подобається — двері там. => c_rude !tone rude\n" +
-            "@c_fear\n{concern}\n> Усе вже минуло. Ти в безпеці. || Я тут. Нікого не підпущу. || Видихни. Вони пішли. => c_calm !tone warm\n> Наступного разу станемо разом. || Тримайся біля мене, як почнеться. => c_calm !tone warm 1.5\n> Мені зараз не до того. || Потім, добре? => end !tone cold\n> Годі тремтіти. Соромно дивитись. || Боягузам тут не місце. => c_rude !tone rude 1.5\n" +
+            "@c_new_home\n{concern}\n> Ласкаво просимо. Освоюйся. || Тут добре, ось побачиш. || Ніхто тут не кусається. Крім мого ворона. => c_welcome !taskdo greet !tone warm\n> Ходімо, покажу тобі оселю. || Ходи за мною, все покажу. => c_follow ?hired !walkwith !taskdo greet !tone warm\n> Звикнеш. => start\n> Не подобається — двері там. => c_rude !tone rude\n" +
+            // what it sees of you now (NpcVoice: you_*)
+            "@c_you_wet\n{concern}\n> Злива застала. || Та в річку вскочи{в|ла}. || Бр{ів|ела} там, де мілко. Виявилось — глибоко. => c_you_told !tone warm 0.5\n> Обсохну біля вогню. => c_you_told !tone warm 0.5\n> Тобі яке діло? => c_rude !tone rude\n" +
+            "@c_you_trophy\n{concern}\n> Сам{|а} вполюва{в|ла}. || Важко було, але впора{вся|лася}. => c_you_proud !tone warm 1.5\n> Та так, дрібниця. => c_you_told !tone warm 0.5\n> Не чіпай, моє. => c_rude !tone rude\n" +
+            "@c_you_fought\n{concern}\n> Відби{вся|лася}. Усе гаразд. || Та так, дрібна сутичка. => c_you_told !tone warm 0.5\n> Поруч ще бродять. Будь обережний|обережна. => c_you_warned !tone warm\n> Не твоє діло. => c_rude !tone rude\n" +
+            "@c_you_night\n{concern}\n> Не спиться. || Справи не чекають. => c_you_told !tone warm 0.5\n> А ти чого не спиш? => c_you_back\n> Ти мені не батько|мати. => c_rude !tone rude\n" +
+            "@c_you_its_make\n{concern}\n> Твоя робота. Ношу з собою й дякую. || Добра річ вийшла. => c_you_praised !tone warm 1.5\n> Ага. => start\n> Знай{шов|шла} б кращу — носи{в|ла} б кращу. => c_rude !tone rude\n" +
+            Replies("c_you_told", "c_you_proud~proud", "c_you_warned~nod", "c_you_praised~shy", "c_you_back~laugh") +
+            "@c_fear\n{concern}\n> Усе вже минуло. Ти в безпеці. || Я тут. Нікого не підпущу. || Видихни. Вони пішли. => c_calm !tone warm\n> Наступного разу станемо разом. || Тримайся біля мене, як почнеться. => c_calm !tone warm 1.5\n> Ходімо, побудеш біля мене. || Не бійся, тримайся поруч. => c_follow ?hired !walkwith !tone warm 1.5\n> Мені зараз не до того. || Потім, добре? => end !tone cold\n> Годі тремтіти. Соромно дивитись. || Боягузам тут не місце. => c_rude !tone rude 1.5\n" +
             "@c_joy\n{concern}\n> Рад{ий|а} за тебе! || Оце діло! || Заслужив|заслужила. => c_glad !tone warm\n> Ага. => start\n> Нема чого радіти. || Рано радієш. => c_rude !tone rude\n" +
             "@c_past\n{concern}\n> Співчуваю. || Мені шкода. Правда. || Таке не забувається, знаю. => c_sorry !tone warm 2\n> Розкажи більше. || А що було далі? => more ?hasstory\n> Мені зараз не до того. || Потім, добре? => end !tone cold 1.5\n> Усім буває важко. Не ний. || Минуле минуло, годі. => c_rude !tone rude 2\n" +
             "@c_others\n{concern}\n> Ти маєш рацію. || Я б теж розізли{вся|лася}. => c_agree !tone warm\n> Помиріться вже. || Поговоріть, як люди. => c_peace !makepeace\n> Мені зараз не до того. || Потім, добре? => end !tone cold\n> Обоє ви дурні. || Мені ваші сварки ні до чого. => c_rude !tone rude\n" +
-            "@c_dream\n{concern}\n> Я подумаю, як допомогти. || Може, й допоможу. Розкажи. => goal ?hasgoal !tone warm !promise goal\n> Гарна мрія. => start\n> Мрій менше. || Мрії хліба не дадуть. => c_rude !tone rude 1.5\n" +
+            "@c_dream\n{concern}\n> Я подумаю, як допомогти. || Може, й допоможу. Розкажи. => goal ?hasgoal !tone warm !promise goal !goalshow\n> Гарна мрія. => start\n> Мрій менше. || Мрії хліба не дадуть. => c_rude !tone rude 1.5\n" +
             "@c_mem_insulted\n{concern}\n> Вибач, дарма я так. || Перегну{в|ла} я тоді. Вибач. => c_apology !forget insulted !tone warm 2\n> Забудь. || Проїхали. => start !forget insulted\n> Сказа{в|ла} те, що дума{в|ла}. || І що? => c_rude !tone rude\n" +
             // you stood before it saying nothing, last time (NpcTalkIdle): any answer lets it go
             "@c_mem_zoned_out\n{concern}\n> Вибач, задума{вся|лася}. => c_zoned_sorry !forget zoned_out !patience 3\n" +
             "> Та щось на мене найшло. Сам{|а} не знаю що. => c_zoned_odd !forget zoned_out !patience 2 !attitude 1\n" +
             "> Просто милу{вався|валася} тобою. => c_zoned_joke !forget zoned_out\n> Не твоє діло. => c_zoned_rude !forget zoned_out !irritate 5 !attitude -2\n" +
             "@c_zoned_sorry\n{@zoned_sorry}\n> Добре. => start\n@c_zoned_odd\n{@zoned_odd}\n> Добре. => start\n@c_zoned_joke\n{@zoned_joke}\n> Добре. => start\n@c_zoned_rude\n{@zoned_rude}\n> Добре. => start\n" +
-            "@c_heard\n{@concern_heard}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_chat\n{@concern_chat}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
+            // its answer to yours: its words (concern_<place>) and the same three ways on (Replies)
+            Replies("c_heard", "c_chat", "c_apology~nod", "c_news_told", "c_news_known", "c_travels_told", "c_work_praised", "c_gossip", "c_calm", "c_glad~laugh", "c_sorry", "c_agree",
+                "c_fed~nod", "c_pantry~shrug", "c_rest", "c_pay", "c_hurt_brave", "c_hurt_told", "c_build", "c_heavy_help", "c_fish", "c_raven_talk~laugh", "c_welcome~nod") +
             "@c_rude\n{~shrug} {@concern_rude}\n> Ага. || Ну й добре. => start\n> Бувай. => end\n" +
-            "@c_apology\n{~nod} {@concern_apology}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_news_told\n{@concern_news_told}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_news_known\n{@concern_news_known}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_travels_told\n{@concern_travels_told}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_work_praised\n{@concern_work_praised}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_gossip\n{@concern_gossip}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_calm\n{@concern_calm}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_glad\n{~laugh} {@concern_glad}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_sorry\n{@concern_sorry}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_agree\n{@concern_agree}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_fed\n{~nod} {@concern_fed}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_pantry\n{~shrug} {@concern_pantry}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_rest\n{@concern_rest}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_pay\n{@concern_pay}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_hurt_brave\n{@concern_hurt_brave}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_hurt_told\n{@concern_hurt_told}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_hurt_help\n{@concern_hurt_help}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_build\n{@concern_build}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_heavy_help\n{@concern_heavy_help}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_fish\n{@concern_fish}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_raven_talk\n{~laugh} {@concern_raven_talk}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
-            "@c_welcome\n{~nod} {@concern_welcome}\n> Добре. || Гаразд. || Ага, ясно. => start\n" +
             "@c_peace\n{peace}\n> Добре. => start\n" +
+            "@c_follow\n{~nod} {@concern_follow}\n> Ходімо. => end\n" +
+            "@c_dosed\n{@concern_dosed}\n> Добре. || Одужуй. => start\n> Бувай. => end\n" +
             "@nohelp\n{@help_none}\n> Добре. => start\n" +
             // what happened while you were away (NpcAway: the story's tales first, then its own memories)
             "@away\n{away}\n> Зрозум{ів|іла}. => start !awaytold\n> Дякую, що розповів|розповіла. => start !awaytold\n" +
@@ -223,6 +234,24 @@ namespace HuginWhispers
             "> Нічого, іншим разом. => start\n" +
             "@favour\n{favour}\n> То що ж тобі вдягти? => dress ?dressok\n> Добре. => start\n> Бувай. => end\n",
         };
+
+        // «c_x~nod»: a place where it answers what you said to its worry — its words concern_x (a gesture before them), then the same three ways on
+        private static string Replies(params string[] ids)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (string e in ids)
+            {
+                int t = e.IndexOf('~');
+                string id = t < 0 ? e : e.Substring(0, t);
+                sb.Append('@').Append(id).Append('\n').Append(t < 0 ? "" : "{" + e.Substring(t) + "} ").Append("{@concern_").Append(id.Substring(2)).Append("}\n")
+                  .Append("> Добре. || Гаразд. || Ага, ясно. => start\n> Поговорімо ще. => talk ?hired\n> Бувай. => end\n");
+            }
+            return sb.ToString();
+        }
+
+        // a place made each time by code, not written (the list of homes, of your clothes, of its neighbours, of what you carry for it): its id → what shows it.
+        // A module's own goes here too; a made place is never «asked again» (Counts) and is there for the dry walk (Walk)
+        internal static readonly Dictionary<string, Action<Player>> Places = new Dictionary<string, Action<Player>>();
 
         internal static string Dir { get { return Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "talk"); } }
         private static Dictionary<string, Talk> _all;
@@ -247,9 +276,21 @@ namespace HuginWhispers
                 try { Parse(raw, f.Value, f.Key); }
                 catch (Exception e) { Npcs.Log("talk file " + f.Key + ": " + e.Message); }
             }
+            foreach (Talk t in raw.Values) Aliases(t);
             Dictionary<string, Talk> all = new Dictionary<string, Talk>();
             foreach (string id in raw.Keys) Built(id, raw, all, new HashSet<string>());
             _all = all;
+        }
+
+        // «@c_low_tired = c_tired»: a place that is another one of the same talk (the same answers, kept once)
+        private static void Aliases(Talk t)
+        {
+            foreach (KeyValuePair<string, string> e in t.Alias)
+            {
+                Node n;
+                if (t.Nodes.TryGetValue(e.Value, out n)) t.Nodes[e.Key] = n;
+                else Npcs.Log("talk «" + t.Id + "»: @" + e.Key + " = " + e.Value + ": no such place");
+            }
         }
 
         // a talk with what it is built on put under it («[talk torvald : common]»; the base itself first, a loop cut)
@@ -305,6 +346,8 @@ namespace HuginWhispers
                 if (line.StartsWith("@"))
                 {
                     string id = line.Substring(1).Trim();
+                    int eq = id.IndexOf('=');
+                    if (eq > 0) { t.Alias[id.Substring(0, eq).Trim()] = id.Substring(eq + 1).Trim(); n = null; last = null; continue; } // («@c_low_tired = c_tired»: Aliases, once all is read)
                     bool adds = id.EndsWith("+"); last = null;
                     n = new Node { Id = adds ? id.Substring(0, id.Length - 1).Trim() : id, Adds = adds };
                     Node had;
@@ -371,6 +414,9 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- a person's own conditions (into the story's registry)
         internal static NpcActor With; // the person being talked to (for its conditions)
+
+        // a line of the person's comes in on the scroll (RavenBookTalk): its head and chest speak it to you, seen by every game near (NpcSpeech)
+        internal static void LineShown(string text) { if (With != null) NpcSpeech.Window(With, text, Player.m_localPlayer); }
         internal static NpcActor Speaker; // a person whose made words are being picked (NpcPhrases: a line's conditions are about it)
         internal static NpcActor Him { get { return Speaker ?? With; } } // «he» of a person's conditions: the one speaking, else the one talked to
         private static bool _registered;
@@ -387,7 +433,12 @@ namespace HuginWhispers
             NpcAway.Register();     // (?awaynews)
             NpcPromises.Register(); // (?promised)
             NpcArcs.Register();     // (?arc, ?arcabout)
+            NpcTasks.Register();    // (?taskabout)
+            NpcThreads.Register();  // (?thread)
             Deeds["ravenreply"] = RavenReply; // (your answer to your raven's word: NpcTalkRaven)
+            Places[Homes] = ShowHomes;
+            Places[DressPlace] = p => ShowDress(p, null);
+            WireAbout(); WireRecall(); WireGift(); WireSway(); WireDoor(); // (its neighbours, what you went through, your gifts, talking it round: NpcTalkAbout, NpcTalkRecall, NpcTalkGift, NpcTalkSway)
             StoryCond.Register("hired", new StoryCond.Kind { Usage = "hired   (його хтось найняв)", Test = (p, a) => Him != null && Hirer(Him) != 0L });
             StoryCond.Register("mine", new StoryCond.Kind { Usage = "mine   (його найняв ти)", Test = (p, a) => Him != null && p != null && Hirer(Him) == p.GetPlayerID() });
             StoryCond.Register("resident", new StoryCond.Kind { Usage = "resident   (живе на базі)", Test = (p, a) => Him != null && NpcResident.Is(Him) });
@@ -411,8 +462,9 @@ namespace HuginWhispers
                 Test = (p, a) => { if (Him == null || !NpcResident.Is(Him)) return false; float m = NpcToil.Mood(Him); return a[1] == "low" ? m < 35f : a[1] == "high" ? m > 70f : m >= 35f && m <= 70f; } });
             StoryCond.Register("hungry", new StoryCond.Kind { Usage = "hungry   (він голодний)", Test = (p, a) => NpcHunger.IsHungry(Him) });
             StoryCond.Register("tired", new StoryCond.Kind { Usage = "tired   (він утомлений: від 60)", Test = (p, a) => Him != null && NpcToil.Tired(Him) >= 60f });
-            StoryCond.Register("seated", new StoryCond.Kind { Usage = "seated   (він сидить)", Test = (p, a) => Him != null && Him.Mind != null && Him.Mind.SeatedNow });
-            StoryCond.Register("working", new StoryCond.Kind { Usage = "working   (він зараз при роботі)", Test = (p, a) => Him != null && Him.Mind != null && Him.Mind.NowLayer == NpcMind.Layer.Job });
+            StoryCond.Register("hurt", new StoryCond.Kind { Usage = "hurt   (він поранений: менше 60% здоров'я, при тямі)", Test = (p, a) => { Character c = Him != null ? Him.GetComponent<Character>() : null; return c != null && !NpcVitals.IsDown(Him) && c.GetHealthPercentage() < 0.6f; } });
+            StoryCond.Register("seated", new StoryCond.Kind { Usage = "seated   (він сидить)", Test = (p, a) => NpcMind.SeatedOf(Him) });
+            StoryCond.Register("working", new StoryCond.Kind { Usage = "working   (він зараз при роботі)", Test = (p, a) => Him != null && NpcMind.LayerNow(Him) == NpcMind.Layer.Job }); // (on any game: the talk runs on yours, its mind on its owner's)
             StoryCond.Register("feel", new StoryCond.Kind { Usage = "feel fright|joy|awe|grief   (що він відчуває зараз)", Min = 1, Test = (p, a) => { string k; float f; return Him != null && NpcFeel.Of(Him, out k, out f) && k == a[1]; } });
             StoryCond.Register("friendnear", new StoryCond.Kind { Usage = "friendnear   (поруч, до 10 м, той, кого він любить)", Test = (p, a) => FriendNear(Him) != null });
         }
@@ -466,6 +518,7 @@ namespace HuginWhispers
             else { if (Minded) Mind(p); Show("start", p); }
 #if RAVEN_STORY
             if (With == a) TalkCamera.Begin(a); // (the camera over your shoulder: you left, it right — TalkCamera; a talk that closed at once takes none, else no close would give it back)
+            if (With == a) StoryLook.Talk(a.GetComponent<Character>()); // (your head on its eyes, the game sends it to the others: StoryLook)
 #endif
             a.Order("look " + NpcKit.Ref(p.GetZDOID())); // (it turns to you: session, read at once where it is run)
             if (first == null) StoryBus.Raise("npc_talk", a.Def.Id, 0, a.transform.position);
@@ -482,6 +535,7 @@ namespace HuginWhispers
         private static string _youSaid; // (the answer you picked: your line over what it says next)
         private static Row _keepWords; // a topic asked the first time: its words kept once shown («я ж казав…» says them)
         private static float _pat = -1f; // its patience as reckoned for this showing (−1: a talk with none)
+        private static RavenBook.TalkRel _rel; // how it is with you as reckoned for this showing (the margins: a made place keeps them)
         private static bool Minded { get { return _talk != null && _talk.Nodes.ContainsKey("c_any"); } } // (a settler's talk: built on common)
 
         private static void Mind(Player p)
@@ -517,22 +571,31 @@ namespace HuginWhispers
         private static void Show(string node, Player p)
         {
             Node n = null;
-            if (node == Homes && _talk != null && With != null) { ShowHomes(p); return; }
             if (node == Out) { ShowOut(p); return; }
-            if (node == DressPlace && _talk != null && With != null) { ShowDress(p, null); return; }
+            Action<Player> made;
+            if (_talk != null && With != null && Places.TryGetValue(node, out made)) { _youSaid = null; made(p); return; } // (a place made by code: the homes, your clothes, a module's own list)
             string worry = node.StartsWith(Worry, StringComparison.Ordinal) ? node.Substring(Worry.Length) : null;
             if (_talk != null && worry != null) n = WorryNode(worry);
             if (node == "end" || _talk == null || With == null || (n == null && !_talk.Nodes.TryGetValue(node, out n))) { Close(); return; }
-            bool start = node == "start", opening = start && !_greeted && _top != null;
+            bool start = node == "start";
+            float patience = -1f, toYou = -1f, now = -1f;
+            string tip = Minded ? NpcPatience.Tip(With, p, out patience, out toYou, out now) : null; // (reckoned once a showing: the door, the bar, its box, the grey rows' why)
+            _pat = patience;
+            string shut = start ? Shut(With, p, toYou) : null; // (only how it is with you: NpcPatience.ToYou)
+            RavenBook.TalkRel rel = _rel = Minded ? Relation(p, tip, now, toYou) : null;
+            if (shut != null) { ShowDoor(p, shut, rel); return; } // (it will not talk now: NpcTalkDoor)
+            bool opening = start && !_greeted && _top != null;
             if (worry != null)
             {
                 string again = NpcPhrases.Compose(With, worry, p); // (its own words of it now: not the label you picked)
                 _concern = !string.IsNullOrEmpty(again) && again != Line(worry, p) ? again : Line(worry, p) ?? "…";
                 Told(p, With, worry);
             }
-            else if (opening) { _concern = Line(_top.Theme, p); Told(p, With, _top.Theme); }
+            else if (opening) { _concern = Line(_top.Theme, p); Told(p, With, _top.Theme); if (IgnoredLately(With, p, _top.Theme)) _prefix = NpcPhrases.Compose(With, "concern_ignored", p); } // (you left it unanswered last time: NpcTalkDoor)
             bool repeated = _instead != null; // (its words again, or an answer to the raven: no new word from it now)
-            string says = _instead ?? (opening ? _concern : node == Tales && Minded ? Untold(n, p) : Fill(Lang.T(n.Says), p));
+            if (repeated && _afterRaven && start && Minded && _top != null && !_topDone && NpcRescueTalk.State(With) == null) { _prefix = _prefix != null ? _prefix + " " + _instead : _instead; _instead = null; } // (its worry still open after your word to your raven, a must: its word to that, then «так от, про що я…» and its worry — the worry's answers under the worry, not under its word to the raven)
+            _afterRaven = false;
+            string says = _instead ?? (opening ? _concern : node == Tales && Minded ? Untold(n, p) : start && Minded && _top != null && !_topDone && NpcRescueTalk.State(With) == null ? StillOnMind(p) : Fill(Lang.T(n.Says), p));
             if (opening && n.Says.Contains("{greet}")) _greeted = true;
             if (_keepWords != null) { _keepWords.Words = says != null && says.Length <= MostWords ? Clean(says, MostWords) : ""; SaveRows(p); _keepWords = null; } // (its own words only: not a brush-off before them; too long to keep whole — its story: not kept cut in two, «я ж казав» then says them anew)
             List<RavenBook.TalkSay> lines = new List<RavenBook.TalkSay>(); // (said one by one: what comes first, its own words, your raven among them)
@@ -540,9 +603,6 @@ namespace HuginWhispers
             lines.AddRange(RavenBook.Says(NpcBody.Spoken(With, says)));
             _instead = null; _prefix = null;
 
-            float patience = -1f;
-            string tip = Minded ? NpcPatience.Tip(With, p, out patience) : null; // (reckoned once a showing: the bar, its box, the grey rows' why)
-            _pat = patience;
             List<RavenBook.TalkRow> rows = new List<RavenBook.TalkRow>();
             List<Answer> ans = new List<Answer>();
             bool rescue = NpcRescueTalk.State(With) != null;
@@ -551,7 +611,7 @@ namespace HuginWhispers
                 Node w = WorryNode(_top.Theme);
                 if (w != null) foreach (Answer a in w.Answers) AddRow(rows, ans, a, p, 0);
             }
-            if (start && Minded && !rescue && patience >= NpcPatience.Dry) // (what else is on its mind: a chatty one tells more)
+            if (start && Minded && !rescue && (patience >= NpcPatience.Dry || Bond(p, "dream") > 0)) // (what else is on its mind: a chatty one tells more; a dream it owes you, even on a dry day)
             {
                 float chatty = NpcPersona.Of(With).Chatty;
                 int most = chatty > 0.65f ? 3 : chatty < 0.35f ? 1 : 2, shown = 0;
@@ -568,8 +628,16 @@ namespace HuginWhispers
                 }
             }
             RavenBook.TalkScrap scrap = start && !rescue ? Scrap(p, rows, ans) : null; // (its request: the pinned scrap — its own answers there, the way to it off «твоє»)
-            foreach (Answer a in n.Answers) { if (scrap != null && (a.To == "need" || a.Acts.Exists(x => x.StartsWith("giverequest", StringComparison.Ordinal)))) continue; AddRow(rows, ans, a, p, start && !rescue ? 2 : 0); }
+            bool insist = start && !rescue && Minded && Insists(p) && rows.Exists(r => r.Ring == 0); // (only while there is an answer to its worry to give)
+            foreach (Answer a in n.Answers)
+            {
+                if (scrap != null && (a.To == "need" || a.Acts.Exists(x => x.StartsWith("giverequest", StringComparison.Ordinal)))) continue;
+                int had = rows.Count;
+                AddRow(rows, ans, a, p, start && !rescue ? 2 : 0);
+                if (insist && rows.Count > had && !Essential(a) && !rows[had].Off) { rows[had].Off = true; rows[had].Tip = With.Form(Lang.F("Спершу вислухай: {0} хоче поговорити про своє.", With.Name)); } // (its own first: NpcTalkDoor)
+            }
             List<RavenBook.TalkSay> cut = _cutNext != null ? new List<RavenBook.TalkSay> { _cutNext } : repeated ? null : Cut(n, node, worry, opening, rows, ans, p);
+            if (cut == null && !repeated) cut = Third(node, worry, opening, p); // (no raven: perhaps one of its people near — NpcTalkThird)
             _cutNext = null;
             if (cut != null) lines.InsertRange(Mathf.Min(1, lines.Count), cut); // (after its first line: your raven does not wait for it to finish)
             string you = start ? null : _youSaid; // (back at the first screen: nothing of yours over it)
@@ -577,7 +645,7 @@ namespace HuginWhispers
             if (ans.Count == 0) { ans.Add(new Answer { Text = "…", To = "end" }); rows.Add(new RavenBook.TalkRow { Text = "…" }); }
             List<Answer> keep = ans;
             List<RavenBook.TalkRow> keepRows = rows;
-            RavenBook.ShowTalk(With.Name, lines, rows, i => Pick(keep, keepRows, i, node), Close, patience, tip, scrap, start, you);
+            RavenBook.ShowTalk(With.Name, lines, rows, i => Pick(keep, keepRows, i, node), Close, rel, scrap, start, you);
             if (n.Says.Contains("{greet}")) _greeted = true;
         }
 
@@ -640,6 +708,7 @@ namespace HuginWhispers
                 off = true; tip = DimTip(p);
             }
             else if (RepeatOff(a, p)) { off = true; tip = RepeatTip(a, p); }
+            else if (Promises(a) && Bond(p, "word") < 0) { off = true; tip = With.Form(Lang.T("Не вірить твоїм обіцянкам: ти вже не дотрима{в|ла} слова.")); } // (NpcThreads: the thread «слово» cut)
             string text = Fill(Lang.T(OneOf(a.Text)), p);
             if (rows.Exists(r => r.Text == text)) return; // (the same words once a window: its worry's answer above, the start's own of it not again — the user's test 2026-11-05)
             ans.Add(a);
@@ -658,7 +727,7 @@ namespace HuginWhispers
         private static bool DimOnly(Answer a, Player p)
         {
             NpcActor was = Speaker; Speaker = null;
-            try { foreach (Cond c in a.When) if (!c.Test(p) && c.A.Length > 0 && c.A[0] != "patience" && c.A[0] != "angry") return false; }
+            try { foreach (Cond c in a.When) if (!c.Test(p) && c.A.Length > 0 && c.A[0] != "patience" && c.A[0] != "mayask" && c.A[0] != "angry") return false; }
             finally { Speaker = was; }
             return true;
         }
@@ -666,7 +735,7 @@ namespace HuginWhispers
         private static string DimTip(Player p)
         {
             if (NpcPatience.Angry(With)) return With.Form(Lang.T("Він|Вона надто злий|зла, щоб про це говорити."));
-            return With.Form(Lang.F("Для цього потрібне більше терпіння (зараз {0}).", Mathf.RoundToInt(_pat)));
+            return With.Form(Lang.F("Для цього потрібно більше терпіння разом: від {0} (зараз {1}).", Mathf.RoundToInt(NpcPatience.AskFrom(With, Player.m_localPlayer)), Mathf.RoundToInt(_pat)));
         }
 
         // its patience at the bottom: it ends the talk itself
@@ -674,9 +743,10 @@ namespace HuginWhispers
         private static void ShowOut(Player p)
         {
             string s = NpcPhrases.Compose(With, "patience_out", p) ?? With.Form(Lang.T("Годі. Мені час."));
-            float v;
-            string tip = NpcPatience.Tip(With, p, out v);
-            RavenBook.ShowTalk(With.Name, NpcBody.Spoken(With, s), new List<RavenBook.TalkRow> { new RavenBook.TalkRow { Text = Lang.T("Бувай.") } }, i => Close(), Close, v, tip, null);
+            float v, toYou, now;
+            string tip = NpcPatience.Tip(With, p, out v, out toYou, out now);
+            WalkedOff(p); // (its door shut to you a while, and why: NpcTalkDoor)
+            RavenBook.ShowTalk(With.Name, NpcBody.Spoken(With, s), new List<RavenBook.TalkRow> { new RavenBook.TalkRow { Text = Lang.T("Бувай.") } }, i => Close(), Close, Relation(p, tip, now, toYou), null);
         }
 
         // «homes»: a place of its own in every talk — the named «Серце оселі» of the world (the server's list, NpcHeart),
@@ -722,17 +792,17 @@ namespace HuginWhispers
             string back = IdleBack(p);
             Answer a = ans[i];
             _youSaid = rows != null && i < rows.Count && rows[i].Ring != 1 ? rows[i].Text : null; // (your line on top of what follows: not a worry of its own you picked from «на думці»)
-            if (!Offered(a, p)) { Npcs.Log(With.Id + ": «" + a.Text + "» no longer holds (the window stood open a while)"); _prefix = back; Show(from.Length > 0 ? from : "start", p); return; } // (hired by another meanwhile, the thing gone: the place shown as it is now)
+            if (!Offered(a, p)) { Npcs.Log(With.Id + ": «" + a.Text + "» no longer holds (the window stood open a while)"); _prefix = back; Show(from.Length > 0 && from != DoorPlace ? from : "start", p); return; } // (hired by another meanwhile, the thing gone: the place shown as it is now)
             int ring = rows != null && i < rows.Count ? rows[i].Ring : 0;
-            if (from == "start" && ring == 0 && _top != null) _topDone = true; // (its worry answered: not offered again this talk)
+            if (from == "start" && ring == 0 && _top != null) { _topDone = true; Answered(p); } // (its worry answered: not offered again this talk, not held against you)
             if (from == "start" && ring == 2 && Brushes(a)) { _brushed = true; _prefix = BrushWords(p); } // (its own first)
-            Unanswered(ans, a, p); // (your raven spoke and you went on as if it had not: NpcTalkRaven)
             if (a.Once && _talk != null) Story.SetFlag(p, ReadKey(_talk.Id, a.To), true);
             bool counted = Counts(a);
             if (counted) Repeat(a, p);
+            if (!a.Acts.Exists(x => x.StartsWith("sway ", StringComparison.Ordinal))) _sway = null; // (talking it round is the answer right after its no: NpcTalkSway)
             bool warmed = WarmedToday(a, ring, from, p);
             foreach (string act in a.Acts) if (!warmed || !Warms(act)) Do(act, p);
-            if (Minded && (counted || ring == 1) && a.To != "end" && NpcPatience.Of(With, p) < NpcPatience.Out && UnityEngine.Random.value < WalksOff) { _instead = null; _prefix = null; Show(Out, p); return; } // (its patience at the bottom: it may end it)
+            if (Minded && (counted || ring == 1) && a.To != "end" && Bond(p, "life") <= 0 && NpcPatience.ToYou(With, p) < NpcPatience.Out && UnityEngine.Random.value < WalksOff) { _instead = null; _prefix = null; Show(Out, p); return; } // (its patience to you at the bottom — not its bad day: it may end it; never to one who saved its life)
             if (back != null) _prefix = _prefix != null ? back + " " + _prefix : back;
             Show(a.To, p);
         }
@@ -750,13 +820,23 @@ namespace HuginWhispers
         {
             string theme = from.StartsWith(Worry, StringComparison.Ordinal) ? from.Substring(Worry.Length) : from == "start" && ring == 0 && _top != null ? _top.Theme : null;
             if (theme == null || !a.Acts.Exists(Warms)) return false;
-            int today = (int)(NpcRescue.Now / (GameHour * 24f));
+            int today = Today;
             Row r = FindRow(p, "g", With, theme);
             if (r != null && !Elsewhere(r) && r.Count == today) return true;
             r = PutRow(p, "g", With, theme);
             r.Count = today; r.At = NowSec;
             SaveRows(p);
             return false;
+        }
+
+        // back at the first screen with its worry still unanswered (you went to your own topic): it brings it up again, in other words, so its answers under them are about something said
+        // (2026-11-08: «Ну що, ще щось?» stood over «Тримай, поїж» — answers to words no longer on the screen)
+        private static string StillOnMind(Player p)
+        {
+            string lead = NpcPhrases.Compose(With, "concern_back", p) ?? With.Form(Lang.T("Так от, про що я…"));
+            string again = NpcPhrases.Compose(With, _top.Theme, p);
+            _concern = !string.IsNullOrEmpty(again) ? again : _lines[_top.Theme];
+            return lead + " " + _concern;
         }
 
         // a brush-off's words: a lead, then its worry again in other words than it opened with (the same words twice: the lead alone)
@@ -772,7 +852,7 @@ namespace HuginWhispers
         // a pressing worry comes before your topic (once a talk): a grumbler always, a timid one never, the rest one time in two
         private static bool Brushes(Answer a)
         {
-            if (_top == null || _topDone || _brushed || _top.Weight < BrushAt || !_lines.ContainsKey(_top.Theme) || _lines[_top.Theme] == null || NotCounted.Contains(a.To)) return false;
+            if (_top == null || _topDone || _brushed || _top.Weight < MindAt || !_lines.ContainsKey(_top.Theme) || _lines[_top.Theme] == null || NotCounted.Contains(a.To)) return false;
             HashSet<string> t = NpcPhrases.Tones(With);
             if (t.Contains("боязк")) return false;
             return t.Contains("бурч") || UnityEngine.Random.value < 0.5f;
@@ -780,8 +860,9 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- asked again (the user 2026-11-05: a check for every talk)
         // what is never a topic asked again: moving about the window, and what you do (hire, its request, its rescue…: those carry deeds)
-        private static readonly HashSet<string> NotCounted = new HashSet<string> { "start", "talk", "end", Homes, DressPlace, "tale", "away", "ask", "favour", "need", "thanks", "goaldone", "saved", "what", "wait", "guard", "hire", "fire", "nohelp" };
-        private static bool Counts(Answer a) { return a.Acts.Count == 0 && !a.Once && !NotCounted.Contains(a.To) && !a.To.StartsWith("c_", StringComparison.Ordinal) && !IsStory(a) && !LeadsToStory(a.To); }
+        private static readonly HashSet<string> Duties = new HashSet<string> { "hire", "fire", "need", "thanks", "goaldone", "saved", "what", "wait", "guard" }; // (what it must do with you whatever its mood: NpcTalkDoor.Essential)
+        private static readonly HashSet<string> NotCounted = new HashSet<string>(Duties) { "start", "talk", "end", "tale", "away", "ask", "favour", "nohelp", "recall", "passon", "swayed" };
+        private static bool Counts(Answer a) { return a.Acts.Count == 0 && !a.Once && !NotCounted.Contains(a.To) && !Places.ContainsKey(a.To) && !a.To.StartsWith("c_", StringComparison.Ordinal) && !IsStory(a) && !LeadsToStory(a.To); }
 
         // the way to what moves the story on (its answer «Гаразд, збудую» has no deed of its own, the next one raises the event): never shut. Back at «start» is no way on: every place leads there
         private static bool LeadsToStory(string to)
@@ -806,7 +887,7 @@ namespace HuginWhispers
             if (to.StartsWith(Worry, StringComparison.Ordinal)) return to;
             string feel; float f;
             NpcFeel.Of(a, out feel, out f);
-            return to + "." + Mathf.FloorToInt(NpcToil.Mood(a) / 25f) + (NpcHunger.IsHungry(a) ? "h" : "") + (NpcToil.Tired(a) >= 70f ? "t" : "") + (a.Mind != null && a.Mind.NowLayer == NpcMind.Layer.Job ? "w" : "") + feel;
+            return to + "." + Mathf.FloorToInt(NpcToil.Mood(a) / 25f) + (NpcHunger.IsHungry(a) ? "h" : "") + (NpcToil.Tired(a) >= 70f ? "t" : "") + (NpcMind.LayerNow(a) == NpcMind.Layer.Job ? "w" : "") + feel;
         }
 
         private static string RepeatKey(Answer an) { return _talk.Id + "." + Sig(With, an.To); }
@@ -853,7 +934,7 @@ namespace HuginWhispers
             if (step >= 4)
             {
                 Row day = PutRow(p, "a", With, "");
-                int today = (int)(NpcRescue.Now / (GameHour * 24f));
+                int today = Today;
                 if (day.Count != today) { day.Count = today; NpcAttitude.Tell(With, p.GetPlayerID(), -3f); }
                 day.At = NowSec;
             }
@@ -893,8 +974,9 @@ namespace HuginWhispers
             }
         }
 
-        // another player holds it in a talk now (NpcMind.HeldBy): not opened, a word on the screen instead
-        private static bool Busy(NpcActor a, Player p)
+        // another player holds it now — in a talk or its menu (NpcMind.HeldBy): not opened, a word on the screen instead (the one
+        // check for both: NpcTalk.Open, NpcMenu.Key)
+        internal static bool Busy(NpcActor a, Player p)
         {
             ZDOID by = NpcMind.HeldBy(a);
             if (by.IsNone() || by == p.GetZDOID()) return false;
@@ -908,16 +990,18 @@ namespace HuginWhispers
         internal static void Close()
         {
             Player me = Player.m_localPlayer;
+            MarkIgnored(me); // (its opening worry left unanswered: before the notes go to the corner)
             RavenBook.FlushTalkNotes(me); // (an answer that closed the talk: what it moved, in the corner)
             if (With != null && me != null) With.Act("unhold " + NpcKit.Ref(me.GetZDOID())); // (free for another at once)
 #if RAVEN_STORY
             TalkCamera.End();
+            StoryLook.TalkEnd();
 #endif
             IdleOff();
             NpcFavours.DressFor = null;
             With = null; _talk = null; RavenBook.HideTalk();
             _mind = new List<NpcVoice.Concern>(); _lines.Clear(); _top = null; _topDone = false; _brushed = false;
-            _prefix = null; _instead = null; _concern = null; _keepWords = null; _pat = -1f; _cutRolled = false; _cutNext = null; _youSaid = null;
+            _prefix = null; _instead = null; _concern = null; _keepWords = null; _pat = -1f; _cutRolled = false; _cutNext = null; _afterRaven = false; _youSaid = null; _thirdRolled = false; _sway = null; _doorOpened = false; _sorryTried = false; _doorNoted = false; _doorWhy = null; _rel = null;
         }
 
         // walked off, it gone or senseless, you hit by a foe (your hero stands while the window is open), a scene began: the talk ends. Too long with no click: IdleTick.
@@ -929,6 +1013,9 @@ namespace HuginWhispers
             if (With == null || p == null || p.IsDead() || Vector3.Distance(p.transform.position, With.transform.position) > 8f
                 || NpcVitals.IsDown(With) || NpcRescueHits.Died(With) || Senses.HurtByFoeAt > _openedAt || ScenePlaying || InScene(With)) { Close(); return; }
             if (IdleTick(p)) return;
+#if RAVEN_STORY
+            StoryLook.Tick(p); // (your head on its eyes: StoryLook.Talk)
+#endif
             if (Time.time >= _nextHold) { _nextHold = Time.time + 2f; With.Act("hold " + NpcKit.Ref(p.GetZDOID())); } // (it stands while you talk)
         }
 
@@ -1029,14 +1116,14 @@ namespace HuginWhispers
                     foreach (Answer an in n.Answers)
                     {
                         bool on = Offered(an, p) && !(an.Else != null && AboveHolds(an.Else, p));
-                        bool there = an.To == "end" || an.To == Homes || an.To == DressPlace || t.Nodes.ContainsKey(an.To);
+                        bool there = an.To == "end" || Places.ContainsKey(an.To) || t.Nodes.ContainsKey(an.To);
                         if (!there) bad++;
                         string text;
                         try { text = Fill(Lang.T(an.Text), p); } catch (Exception e) { text = "FILL FAILED: " + e.Message; bad++; } // quiet: written into the walk, which goes to the log
                         sb.Append("   ").Append(on ? "> " : "x ").Append(text).Append(" => ").Append(an.To).Append(there ? "" : " (NO SUCH PLACE)");
                         if (an.Acts.Count > 0) sb.Append("  [").Append(string.Join(", ", an.Acts.ToArray())).Append(']');
                         sb.Append('\n');
-                        if (there && an.To != "end" && an.To != Homes && an.To != DressPlace && seen.Add(an.To)) next.Enqueue(an.To);
+                        if (there && an.To != "end" && !Places.ContainsKey(an.To) && seen.Add(an.To)) next.Enqueue(an.To);
                     }
                 }
                 List<string> lone = new List<string>();
@@ -1054,6 +1141,7 @@ namespace HuginWhispers
         //   the story's levers on the person (NpcLevers): npcflag · npcunflag · npcvar · trait · become · protect · unprotect · nojob · okjob
         //   its memory and feeling of you: remember <kind> [what] · forget <kind> · attitude <±N> · news <kind> [what] (it and its heart's people)
         //   a person in need (NpcRescue): giverequest · givefood · givemead · givebackitem · goaway · rescuewait · rescuehide · rescuefollow
+        //   one of yours: healmead (a healing mead, hurt on its feet) · letrest (put its work down and rest, when tired) · walkwith (with you a few minutes)
         private static void Do(string act, Player p)
         {
             string[] w = act.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1065,8 +1153,11 @@ namespace HuginWhispers
                 {
                     case "hire": a.Act("hire " + p.GetPlayerID()); if (a.Zdo != null) NpcRescue.Forget(a.Zdo.m_uid); break;
                     case "giverequest": NpcRequests.Give(p, a); break;
-                    case "givefood": { ItemDrop.ItemData f = NpcMeals.Plainest(p.GetInventory()); if (f == null) break; a.Act("eat " + NpcMeals.Fill(f).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " " + (Localization.instance != null ? Localization.instance.Localize(f.m_shared.m_name).ToLowerInvariant() : "")); p.GetInventory().RemoveItem(f, 1); break; } // (it eats it: its hunger, where it is run)
+                    case "givefood": { ItemDrop.ItemData f = NpcMeals.Plainest(p.GetInventory()); if (f != null) Feed(a, p, f); break; }
                     case "givemead": { ItemDrop.ItemData m = NpcVitals.Mead(p); if (m != null) p.GetInventory().RemoveItem(m, 1); break; }
+                    case "healmead": { ItemDrop.ItemData m = NpcVitals.Mead(p); if (m == null) break; a.Act("dosed"); p.GetInventory().RemoveItem(m, 1); break; } // (one hurt on its feet drinks it: half better, where it is run)
+                    case "walkwith": a.Act("walkwith " + NpcKit.Ref(p.GetZDOID()) + " " + WalkWithFor.ToString("0", System.Globalization.CultureInfo.InvariantCulture)); break; // (it walks with you a few minutes: WalkWith)
+                    case "letrest": a.Act("letrest"); break; // (let off its work to rest now: NpcToil.LetRest — only if it is truly tired)
                     case "givebackitem": { ItemDrop.ItemData it = NpcRescueSite.LostThing(p, a); if (it != null) p.GetInventory().RemoveItem(it); break; }
                     case "unhire": NpcMemory.Tell(a, "fired", p.GetPlayerID(), ""); a.Act("unhire"); break; // (you sent it off: it leaves by itself through the same act, and that is not yours)
                     case "goaway": a.Act("goaway"); break;
@@ -1098,6 +1189,13 @@ namespace HuginWhispers
                 }
             }
             catch (Exception e) { Npcs.Log("talk deed «" + act + "»: " + e.Message); }
+        }
+
+        // a bite from your hands (its worry, one in need, a gift of food): it eats it where it is run, one out of your bag
+        private static void Feed(NpcActor a, Player p, ItemDrop.ItemData f)
+        {
+            a.Act("eat " + NpcMeals.Fill(f).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " " + ItemWord(f).ToLowerInvariant());
+            p.GetInventory().RemoveItem(f, 1);
         }
 
         // one in need told to hide where you showed it (NpcRescue): not further than this from where it is

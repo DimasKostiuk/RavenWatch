@@ -50,7 +50,7 @@ namespace HuginWhispers
             if (Pathfinding.instance == null) return "Нема шукача шляхів.";
             Vector3 me = a.transform.position;
             StringBuilder sb = new StringBuilder();
-            sb.Append(a.Id).Append(" at ").Append(Npcs.V(me)).Append("");
+            sb.Append(a.Id).Append(" at ").Append(Npcs.V(me)).Append(a.Owned ? " (run here)" : " (run by another game: the map here is not kept for it)");
             foreach (Pathfinding.AgentType t in new[] { NpcKit.Walker })
             {
                 sb.Append(" · ").Append(t).Append(":");

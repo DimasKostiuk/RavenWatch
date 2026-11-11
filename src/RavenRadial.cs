@@ -9,7 +9,7 @@ using Valheim.UI;
 namespace HuginWhispers
 {
     // A "Ravens" group in the game's radial menu (G): the worn ravens' abilities with their cost and cooldown.
-    // Other mods (SeneaL UI too) add their groups the same way, by appending to the main circle's list,
+    // Other mods add their groups the same way, by appending to the main circle's list,
     // so they all fit together; when the circle is full the game moves the rest to another layer.
     internal class RavenRadial : ScriptableObject, IRadialConfig
     {

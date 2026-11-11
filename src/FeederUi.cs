@@ -12,7 +12,7 @@ namespace HuginWhispers
     // The feeder's own window (the user's design «Годівниця», v2 light; art in assets/book/feeder_*.png cut from it by
     // Chrome): it stands in for the game's chest panel when a feeder is opened, the bag beside it as ever. The food and
     // the finds are the game's own item grids (cloned from the chest's, bound to the feeder's two stores), so moving
-    // things works as with any chest (SeneaL UI too); the finds shelf only gives (Feeder.Finds). Right: a card for each
+    // things works as with any chest; the finds shelf only gives (Feeder.Finds). Right: a card for each
     // raven at home that eats here (up to four), its satiety, guard store and strength; under them the word of the
     // moment. Laid out in the design's own units (2200×1400) scaled to the window.
     internal static class FeederUi
@@ -35,40 +35,20 @@ namespace HuginWhispers
         private static InventoryGrid _food, _finds;
         private static TMP_Text _title, _badge, _hint, _ribbon, _button, _empty;
         private static CanvasGroup _hidden; // the game's chest panel, hidden while ours shows
-        private static float _hiddenAlpha = 1f; private static bool _hiddenRays = true; // how it was (SeneaL UI keeps it hidden itself)
-        private static GameObject _senealChest; // SeneaL UI's own chest window, put away while ours shows
+        private static float _hiddenAlpha = 1f; private static bool _hiddenRays = true; // how it was (a UI mod may keep it hidden itself)
+        private static GameObject _otherChest; // the chest window a UI mod draws instead of the game's, put away while ours shows
         private static float _textAt;
         private static Canvas _canvas;
 
-        // SeneaL UI (1.2.5+) draws its own bag and chest windows (InventoryGuiPatches.View / .Chest, each with a Panel)
-        private static FieldInfo _senealView, _senealChestF;
-        private static bool _senealLooked;
-        private static object SeneaL(bool chest)
+        // The window that holds one of the game's two grids, whoever draws it: climbed from the grid for as long as the
+        // other grid stays outside. A UI mod that draws its own bag or chest carries the game's grid inside it, so no mod
+        // has to be known by name; on the plain game this is the game's own panel. A few steps up, cheap every frame
+        private static RectTransform WindowOf(InventoryGrid grid, InventoryGrid other)
         {
-            if (!_senealLooked)
-            {
-                _senealLooked = true;
-                foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    Type t = a.GetType("SeneaLUI.Patches.InventoryGuiPatches", false);
-                    if (t == null) continue;
-                    _senealView = t.GetField("View", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                    _senealChestF = t.GetField("Chest", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                    break;
-                }
-            }
-            FieldInfo f = chest ? _senealChestF : _senealView;
-            return f != null ? f.GetValue(null) : null;
-        }
-        private static readonly Dictionary<string, PropertyInfo> _senealProps = new Dictionary<string, PropertyInfo>(); // (asked every frame: looked up once)
-        private static T SeneaLGet<T>(object view, string prop) where T : class
-        {
-            if (view == null) return null;
-            Type t = view.GetType();
-            string key = t.FullName + "." + prop;
-            PropertyInfo p;
-            if (!_senealProps.TryGetValue(key, out p)) _senealProps[key] = p = t.GetProperty(prop, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            return p != null ? p.GetValue(view, null) as T : null;
+            if (grid == null || other == null) return null;
+            Transform t = grid.transform;
+            while (t.parent != null && !other.transform.IsChildOf(t.parent)) t = t.parent;
+            return t as RectTransform;
         }
 
         // this feeder's window is up here (its finds are yours to change)
@@ -104,10 +84,10 @@ namespace HuginWhispers
                 _told.Clear();
                 f.Sync();
                 _root.SetActive(true);
-                _root.transform.SetAsLastSibling(); // (over SeneaL UI's bag, a sibling in the same root)
-                HideSeneaLChest();
+                _root.transform.SetAsLastSibling(); // (over a UI mod's bag, a sibling in the same root)
+                HideOtherChest(gui);
                 Place(gui);
-                // unseen until the bag beside it stands still (SeneaL UI lays it out and slides it in over the first
+                // unseen until the bag beside it stands still (a UI mod may lay it out and slide it in over the first
                 // frames: following it showed as jerks), then in at once
                 _group.alpha = 0f; _group.blocksRaycasts = false;
                 _still = 0; _openAt = Time.unscaledTime;
@@ -127,12 +107,11 @@ namespace HuginWhispers
             _feeder = null;
             if (_root != null) _root.SetActive(false);
             if (_hidden != null) { _hidden.alpha = _hiddenAlpha; _hidden.blocksRaycasts = _hiddenRays; _hidden.interactable = _hiddenRays; _hidden = null; }
-            if (_senealChest != null)
+            if (_otherChest != null)
             {
-                object chest = SeneaL(true);
-                PropertyInfo shown = chest != null ? chest.GetType().GetProperty("Shown") : null;
-                if (shown != null && (bool)shown.GetValue(chest, null)) _senealChest.SetActive(true); // (another chest opened meanwhile: its window back)
-                _senealChest = null;
+                Container cur = InventoryGui.instance != null && CurrentF != null ? CurrentF.GetValue(InventoryGui.instance) as Container : null;
+                if (cur != null) _otherChest.SetActive(true); // (another chest opened meanwhile: its window back)
+                _otherChest = null;
             }
         }
 
@@ -143,10 +122,12 @@ namespace HuginWhispers
         private const int StillFrames = 3;
         private const float StillWait = 0.5f, FadeIn = 0.1f;
 
-        private static void HideSeneaLChest()
+        // a UI mod shows the feeder as a chest too (it is one, for the game): ours instead. The game's own panel is hidden by
+        // its CanvasGroup (Opened), so only a window that does not hold it is put away here
+        private static void HideOtherChest(InventoryGui gui)
         {
-            RectTransform sc = SeneaLGet<RectTransform>(SeneaL(true), "Panel");
-            if (sc != null && sc.gameObject.activeSelf) { sc.gameObject.SetActive(false); _senealChest = sc.gameObject; } // (SeneaL UI shows the feeder as a chest too: ours instead)
+            RectTransform w = WindowOf(ContainerGridF != null ? ContainerGridF.GetValue(gui) as InventoryGrid : null, gui.m_playerGrid);
+            if (w != null && !gui.m_container.IsChildOf(w) && w.gameObject.activeSelf) { w.gameObject.SetActive(false); _otherChest = w.gameObject; }
         }
 
         // every frame while the inventory is up (InventoryGui.Update)
@@ -156,9 +137,9 @@ namespace HuginWhispers
             if (_feeder == null) { Close(); return; } // (broken while open)
             Container cur = CurrentF != null ? CurrentF.GetValue(gui) as Container : null;
             if (!InventoryGui.IsVisible() || cur != _feeder.Box) { Close(); return; }
-            HideSeneaLChest();
+            HideOtherChest(gui);
             Vector3 was = _placed;
-            Place(gui); // (SeneaL UI lays its bag out over the first frames and slides it: ours follows)
+            Place(gui); // (a UI mod may lay its bag out over the first frames and slide it: ours follows)
             if (_group.alpha < 1f)
             {
                 _still = (_placed - was).sqrMagnitude < 0.25f ? _still + 1 : 0;
@@ -343,7 +324,7 @@ namespace HuginWhispers
             return Mathf.Min(Width, Mathf.Max(600f, room)) / DW;
         }
 
-        // the whole screen in the parent's units (SeneaL UI sizes the inventory root to its own windows, not the screen)
+        // the whole screen in the parent's units (a UI mod may size the inventory root to its own windows, not the screen)
         private static Rect ScreenIn(RectTransform parent)
         {
             Canvas cv = parent.GetComponentInParent<Canvas>();
@@ -355,10 +336,11 @@ namespace HuginWhispers
             return Rect.MinMaxRect(a.x, a.y, b.x, b.y);
         }
 
-        private static RectTransform SeneaLBag()
+        // where your bag is on the screen: the window around the game's bag grid, or the game's panel
+        private static RectTransform BagWindow(InventoryGui gui)
         {
-            RectTransform bag = SeneaLGet<RectTransform>(SeneaL(false), "Panel");
-            return bag != null && bag.gameObject.activeInHierarchy ? bag : null;
+            RectTransform bag = WindowOf(gui.m_playerGrid, ContainerGridF != null ? ContainerGridF.GetValue(gui) as InventoryGrid : null);
+            return bag != null && bag.gameObject.activeInHierarchy ? bag : gui.m_player;
         }
 
         // right of your bag, never over it: smaller if the screen's right side is narrow, beside the bag on the left only
@@ -372,7 +354,7 @@ namespace HuginWhispers
             Rect pr = parent.rect, sr = ScreenIn(parent);
             float w = DW * _k, h = DH * _k, fit = 1f;
             float x = sr.xMin + 40f, top = sr.yMax - 60f;
-            RectTransform bag = SeneaLBag() ?? gui.m_player; // (SeneaL UI: its own bag; the game's is hidden)
+            RectTransform bag = BagWindow(gui);
             if (bag != null)
             {
                 Vector3[] c = _corners;

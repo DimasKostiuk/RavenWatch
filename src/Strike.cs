@@ -657,7 +657,7 @@ namespace HuginWhispers
         }
 
         // «Удар в очі: Сіролюдик −112 (2 удари, крит)» — one line, through the game's own corner messages: the game
-        // shows it at the top left, SeneaL UI turns it into its own card with the gift's picture
+        // shows it at the top left, a UI mod turns it into its own card with the gift's picture
         private static void Report(Player p, bool munin, Tally t, float range, float flown, float back)
         {
             if (p == null || p.IsDead()) return;

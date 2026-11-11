@@ -14,7 +14,7 @@ namespace HuginWhispers
     //   Майстерня — the raven model builder (Workshop); the window widens for it
     //   Фото      — the icons of the Workshop's models, taken by hand (PhotoPanel)
     //   Фарби     — raven looks: colours by zone, eyes, glow, sheen, sparks (LooksPanel; console raven looks)
-    //   Звуки     — the game's sound library (SoundPanel)
+    //   Звуки     — the game's sounds, our files and the catalogue: listen, tune, save (SoundPanel)
     //   Пасивки   — every passive gift fired by a click, without its conditions, strength or wait
     //   Персонаж  — our own animations for the player: clips, keys, bones (PlayerAnimPanel; console raven panim)
     //   Руни      — every rune effect by layer with a code to name it by, worn on a stage raven, and the mix (RunePanel; raven wear ui)

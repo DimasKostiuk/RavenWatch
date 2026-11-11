@@ -108,7 +108,7 @@ namespace HuginWhispers
         internal static List<NpcPlaces.Place> Places(NpcActor a)
         {
             StoryPeople.Person x = Of(a.Id);
-            if (x == null || x.Spots.Count == 0) return null;
+            if (x == null || (x.Spots.Count == 0 && x.Carry == null)) return null;
             string set = SetOf(a.Id);
             float hour = EnvMan.instance != null ? Mathf.Repeat(EnvMan.instance.GetDayFraction() * 24f - NpcPersona.Of(a).Chrono, 24f) : 12f;
             Vector3 home = NpcRules.Home(a), me = a.transform.position;
@@ -122,6 +122,20 @@ namespace HuginWhispers
                 NpcPlaces.Place p = NpcPlaces.Spot(s.Kind, NpcPlaces.Side(at, me, 1.5f), at + Vector3.up * 0.5f, at);
                 p.Stand = () => Stand(spot, thing, a.transform.position, clip);
                 p.Sit = s.Sit; p.Extra = s.Want; p.Min = s.Min; p.Max = s.Max; p.Clip = s.Clip; p.From = s.From; p.Out = s.Out; p.Exact = clip;
+            }
+            // its own thing (StoryProps «carry:») set down somewhere near its home by its own doing — it goes back for it first of all (set down by a
+            // word of the story: it lies till «npc <who> prop fetch»). Nothing of its own anywhere: StoryProps.Keep puts it in her hand
+            if (x.Carry != null)
+            {
+                Vector3 lie; Quaternion turn; bool left;
+                if (StoryProps.Lying(a, out lie, out turn, out left) && (!left || StoryProps.MayFetch(a)) && Utils.DistanceXZ(lie, home) <= Reach)
+                {
+                    NpcPlaces.Place p = NpcPlaces.Spot("fetch", NpcPlaces.Side(lie, me, 0.6f), lie + Vector3.up * 0.3f, lie);
+                    StoryProps.Ask carry = x.Carry;
+                    p.Stand = () => NpcPlaces.Side(lie, a.transform.position, 0.6f);
+                    p.Exact = true; p.Extra = StoryProps.FetchWant;
+                    p.There = who => StoryProps.PickUp(who, carry, true);
+                }
             }
             return all;
         }

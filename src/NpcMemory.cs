@@ -51,13 +51,24 @@ namespace HuginWhispers
             { "quarrel_raid",  new Kind { Weight = 6f, FadeDays = 5f } },
             { "quarrel_pay",   new Kind { Weight = 5f, FadeDays = 4f } },
             { "quarrel_teased", new Kind { Weight = 4f, FadeDays = 3f } }, // a bully picked on it before everyone (NpcAttitude.Tease)
+            { "quarrel_butted", new Kind { Weight = 3f, FadeDays = 3f } }, // one butted into its talk with you (NpcTalkThird)
+            { "quarrel_gossip", new Kind { Weight = 5f, FadeDays = 5f } }, // it heard what one said of it behind its back (NpcTalkAbout)
+            { "praised_by",    new Kind { Weight = 3f, FadeDays = 6f } },  // it heard one speak well of it (NpcTalkAbout; what: that one's name)
+            { "gift_liked",    new Kind { Weight = 4f, FadeDays = 20f, Yours = true, Toward = 6f } },  // you gave it what it likes (NpcTalkGift; what: the thing)
+            { "gift_insult",   new Kind { Weight = 3f, FadeDays = 5f, Yours = true, Toward = -3f } },  // you gave it what it cannot stand, and it took it ill (NpcTalkGift)
+            { "stayed",        new Kind { Weight = 5f, FadeDays = 20f, Yours = true, Toward = 4f } },  // it meant to leave and you talked it round (NpcTalkSway)
             { "brushed_off",   new Kind { Weight = 2f, FadeDays = 2f, Yours = true, Toward = -3f } }, // you had no time for what weighs on it (NpcTalk: «Мені зараз не до того»)
             { "insulted",      new Kind { Weight = 6f, FadeDays = 4f, Yours = true, Toward = -5f } }, // you were rude on purpose (NpcTalkTone): its next talk opens with it
             { "clothes_taken", new Kind { Weight = 3f, FadeDays = 5f, Yours = true, Toward = -4f } }, // you took back what you dressed it in (NpcTalkDress)
             { "raven_mocked",  new Kind { Weight = 2f, FadeDays = 5f, Yours = true } }, // your raven said something to its face (NpcTalkRaven): now and then a word about it, not enough to open a talk
             { "zoned_out",     new Kind { Weight = 6f, FadeDays = 3f, Yours = true } }, // you stood before it saying nothing, its talk open (NpcTalkIdle): it asks about it next time
             { "secret_told",   new Kind { Weight = 4f, Yours = true, Toward = 5f } },                 // it told you what it never told anyone (NpcFavours)
+            { "vouched",       new Kind { Weight = 3f, FadeDays = 8f, Yours = true, Toward = 8f } },  // one who trusts you stood up for you to it (NpcThreads; what: that one's name)
+            { "request_lapsed", new Kind { Weight = 2f, FadeDays = 6f } },                            // what it asked for never came (NpcRequests; what: the thing)
         };
+
+        // it took a thing about a player in: (it, the kind, the player, how many times now). Modules that follow what it remembers (NpcThreads)
+        internal static readonly List<Action<NpcActor, string, long, int>> Taken = new List<Action<NpcActor, string, long, int>>();
         private static readonly Kind News = new Kind { Weight = 4f, FadeDays = 5f }, Land = new Kind { Weight = 3f, FadeDays = 5f, Yours = true };
 
         // a kind's rules: the table's, else by its name (news_* fades in five days; you_land_* too, about you only — NpcNews);
@@ -101,6 +112,7 @@ namespace HuginWhispers
             StoryBus.Raise("npc_remember_" + kind, a.Id, e != null ? e.Count : 1, a.transform.position);
             Kind k = KindOf(kind);
             if (fresh && player != 0 && k != null && k.Toward != 0f) NpcAttitude.Add(a, player, k.Toward); // (what you did: how it feels about you)
+            if (player != 0) foreach (Action<NpcActor, string, long, int> t in Taken) t(a, kind, player, e != null ? e.Count : 1);
         }
 
         internal static void Forget(NpcActor a, string kind, long player)
@@ -174,7 +186,21 @@ namespace HuginWhispers
             { "clothes_taken", new Shown(Lang.K("ти забра{в|ла} одяг, який да{в|ла}"), true) },
             { "zoned_out", new Shown(Lang.K("ти стоя{в|ла} перед ним|нею й мовча{в|ла}"), true) },
             { "raven_mocked", new Shown(Lang.K("твій ворон щось сказав йому|їй просто в очі"), true) },
+            { "vouched", new Shown(Lang.K("за тебе перед ним|нею заступились")) },
+            { "gift_liked", new Shown(Lang.K("ти подарува{в|ла} те, що він|вона любить")) },
+            { "gift_insult", new Shown(Lang.K("ти подарува{в|ла} те, чого він|вона терпіти не може"), true) },
+            { "stayed", new Shown(Lang.K("ти вмови{в|ла} його|її лишитися")) },
         };
+
+        // a module's own kind of memory, from its own table (NpcTasks), with its words on your card
+        internal static void AddKind(string id, Kind k, string line) { Kinds[id] = k; Lines[id] = new Shown(line); }
+
+        // a kind of memory about you in words (its card; null: none written)
+        internal static string LineOf(NpcActor a, Player p, string kind)
+        {
+            Shown s;
+            return Lines.TryGetValue(kind, out s) ? a.Form(Grammar.Fix(Lang.T(s.Text), p)) : null;
+        }
 
         internal sealed class Line { public string Text = ""; public bool Against; public long At; }
 

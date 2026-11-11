@@ -94,7 +94,7 @@ Build a Heart of home and it hears of people in trouble out in the lands. Save t
 | **Q** | Gifts circle (right-click a gift to give it its own key) |
 | **J** | Orders circle (right-click an order to give it its own key) |
 | **G → «Ravens»** | The same gifts and the book from the radial menu |
-| **Right-click** a raven in the bag | Put it on your shoulder / take it off |
+| **Right-click** a raven in the bag | Put it on your shoulder (take it off with the button on its page in the book) |
 | **E** / **Shift+E** at a perch | Seat Hugin / Munin, again — call it back |
 | **R** / **Shift+R** at a perch | Leave Hugin / Munin there at home (taken back only with **E** at that perch) |
 | **E** on a raven that flew in | Hear what it has to say |
@@ -104,7 +104,6 @@ Build a Heart of home and it hears of people in trouble out in the lands. Save t
 - Install with a mod manager **on the server and for every player**. The server passes the ravens between players. **Everyone needs the same version.**
 - Works fully on the **vanilla** game.
 - **Path of Valheiman** — the ravens add up with its mechanics (sneak attack, attack speed, tree experience).
-- **SeneaL UI** — the ravens get their own round shoulder cells on the helmet slot and correct names in tooltips.
 - **Language:** the mod speaks the game's language — Ukrainian in a Ukrainian game, English in any other; or pick it in the config (`0. Language`).
 
 ### Voice (optional)
@@ -123,7 +122,7 @@ RavenWatch is complete without it — every line shows as text on a speech card.
 <details>
 <summary><b>A raven on your shoulder</b></summary>
 
-Haldor sells **Hugin the Raven** and **Munin the Raven** (1500 coins each). The ravens have **their own places — your shoulders**: Hugin always sits on the right, Munin on the left, as in the myths. Right-click a raven in your bag (or its hotbar key 1–8) to put it on your shoulder or take it off. Your belt stays free for Megingjord, and both ravens can sit on you at once, no other mods needed. With **SeneaL UI** the helmet cell gets two round «shoulders»: drag a raven there (or just onto the helmet) and it sits on its side and leaves your bag; click a shoulder to take it off.
+Haldor sells **Hugin the Raven** and **Munin the Raven** (1500 coins each). The ravens have **their own places — your shoulders**: Hugin always sits on the right, Munin on the left, as in the myths. Right-click a raven in your bag (or its hotbar key 1–8) to put it on your shoulder: it leaves your bag and sits there until you take it off with the button on its page in the Book of ravens. Your belt stays free for Megingjord, and both ravens can sit on you at once, no other mods needed.
 
 **Your own raven.** You don't have to buy a raven. A while after you arrive, a strange raven calls you: follow the story and one of your own ravens finds you. Bought ravens are strays that once belonged to someone else. No trader sells the Book of Ravens: till the story gives it, a raven only sits on your shoulder.
 
@@ -361,7 +360,7 @@ RavenWatch робить Хугіна й Муніна твоїми супутни
 | **Q** | Коло дарів (правий клік по дару — своя клавіша) |
 | **J** | Коло наказів (правий клік по наказу — своя клавіша) |
 | **G → «Ворони»** | Ті самі дари й книга з кругового меню |
-| **ПКМ** по ворону в сумці | Посадити на плече / зняти |
+| **ПКМ** по ворону в сумці | Посадити на плече (зняти кнопкою на його сторінці в книзі) |
 | **E** / **Shift+E** біля жердини | Посадити Хугіна / Муніна, ще раз — покликати назад |
 | **R** / **Shift+R** біля жердини | Лишити Хугіна / Муніна там удома (забрати — лише **E** на тій жердині) |
 | **E** на ворона, що прилетів | Вислухати, що він скаже |
@@ -371,7 +370,6 @@ RavenWatch робить Хугіна й Муніна твоїми супутни
 - Постав через менеджер модів **на сервер і всім гравцям**. Сервер пересилає воронів між гравцями. **Однакова версія потрібна всім.**
 - Повністю працює на **чистій грі**.
 - **Path of Valheiman** — ворони складаються з його механіками (скритна атака, швидкість атак, досвід дерева).
-- **SeneaL UI** — ворони мають свої круглі клітинки-плечі на шоломі й правильні назви в підказках.
 - **Мова:** мод говорить мовою гри — українською в українській грі, англійською в будь-якій іншій; або обери в налаштуваннях (`0. Language`).
 
 ### Голос (за бажанням)
@@ -388,7 +386,7 @@ RavenWatch повний і без нього — кожна фраза видн�
 <details>
 <summary><b>Ворон на плечі</b></summary>
 
-У Хальдора є **«Ворон Хугін»** і **«Ворон Мунін»** (по 1500 монет). Ворони мають **свої місця — плечі**: Хугін завжди сідає на праве, Мунін — на ліве, як у міфах. Правий клік по ворону в сумці (або його клавіша на панелі 1–8) садить його на плече чи знімає. Пояс лишається вільним для Мегінгйорда, а обидва ворони можуть сидіти на тобі одночасно, без жодних інших модів. Із **SeneaL UI** на клітинці шолома є два круглі «плечі»: перетягни ворона туди (або просто на шолом), і він сяде на свій бік, а із сумки зникне; клік по плечу — зняти.
+У Хальдора є **«Ворон Хугін»** і **«Ворон Мунін»** (по 1500 монет). Ворони мають **свої місця — плечі**: Хугін завжди сідає на праве, Мунін — на ліве, як у міфах. Правий клік по ворону в сумці (або його клавіша на панелі 1–8) садить його на плече: він зникає із сумки й сидить там, доки не знімеш кнопкою на його сторінці в Книзі воронів. Пояс лишається вільним для Мегінгйорда, а обидва ворони можуть сидіти на тобі одночасно, без жодних інших модів.
 
 **Свій ворон.** Ворона можна не купувати. Невдовзі після прибуття тебе покличе дивний ворон: іди за сюжетом — і один із твоїх власних воронів знайде тебе. Куплені ворони — безхатні, колись вони мали іншого господаря.
 

@@ -6,7 +6,8 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // Where the player's head looks in a scene (the user 2026-11-04). Left alone, the game turns it after his look: the turn
+    // Where the player's head looks in a scene (the user 2026-11-04) and in a talk with a person (the user 2026-11-09: its eyes, while the
+    // talk window is open: Talk/TalkEnd from NpcTalk, ticked by it each frame; a scene closes a talk, and its own word wins). Left alone, the game turns it after his look: the turn
     // of his body and the mouse's pitch as it was when the scene took him, so with the camera elsewhere it stared off to one side.
     // While a scene plays the head looks at what it said (scene step «player look <place|bird|npc.x>», «player face» too), or,
     // while a cutscene holds him (a shot, the bars, the black: StoryCamera.TakesPlayer) or the author watches from outside (StoryScenes.Watching: the mouse is his, not the player's),
@@ -15,12 +16,24 @@ namespace HuginWhispers
     // than OffSaid off the aim (looked at every LogEvery s), where the game turns it, how far that is from the aim, and the weights; «raven story look» says the same at once.
     // A clip that moves the head («@Look», Head, Neck) goes over all of this (HeadLookPatch).
     // Done with the game's own CharacterAnimEvent.m_lookAt, which nothing else in the game writes: the game turns the head after
-    // it softly and sends it to the other players itself. The point eases to a new aim, so no turn starts with a jerk.
+    // it softly and sends it to the other players itself. The point eases to a new aim, so no turn starts with a jerk, and stands still once
+    // there (Settle): the game sends it again each time it moves (its ZDO every 0.2 s), so a point that only crept on was sent for ever;
+    // a person's eyes are followed only when they moved more than FollowStep (its head bobs as it speaks: NpcSpeech).
     internal static class StoryLook
     {
         internal static float Ease = 0.35f, Far = 10f; // seconds to turn to a new aim · m off, the point the game is given
+        internal static float Settle = 0.4f, FollowStep = 0.15f; // degrees off the aim: there, it stands · m a person's eyes move before the head follows
 
-        private static Func<Vector3> _aim;
+        private static Func<Vector3> _aim, _talk; // (a scene's word · a talk's person)
+
+        // a talk opened with this person (NpcTalk.Open): the head on its eyes till TalkEnd
+        internal static void Talk(Character who)
+        {
+            if (who == null) { _talk = null; return; }
+            Vector3 last = who.GetEyePoint();
+            _talk = () => { if (who != null) { Vector3 now = who.GetEyePoint(); if ((now - last).sqrMagnitude > FollowStep * FollowStep) last = now; } return last; };
+        }
+        internal static void TalkEnd() { if (_talk == null) return; _talk = null; if (_aim == null) Free(); }
         private static CharacterAnimEvent _on;
         private static Transform _point;
         private static Vector3 _dir;
@@ -43,10 +56,11 @@ namespace HuginWhispers
             return null;
         }
 
-        // every frame of a scene (StoryScenes.Tick)
+        // every frame of a scene (StoryScenes.Tick) and of an open talk (NpcTalk.Tick: a scene closes a talk, so never both)
         internal static void Tick(Player p)
         {
-            if (_aim == null && !StoryCamera.TakesPlayer && !StoryScenes.Watching) { Free(); return; }
+            Func<Vector3> aim = _aim ?? _talk;
+            if (aim == null && !StoryCamera.TakesPlayer && !StoryScenes.Watching) { Free(); return; }
             if (_on == null)
             {
                 _on = p.GetComponentInChildren<CharacterAnimEvent>(); // heavy: once a scene, when it first takes the head
@@ -56,10 +70,12 @@ namespace HuginWhispers
                 _on.m_lookAt = _point;
             }
             Vector3 head = p.GetHeadPoint();
-            Vector3 want = _aim != null ? _aim() - head : p.transform.forward;
+            Vector3 want = aim != null ? aim() - head : p.transform.forward;
             if (want.sqrMagnitude < 0.01f) want = p.transform.forward;
-            _dir = Vector3.Slerp(_dir, want.normalized, 1f - Mathf.Exp(-Time.deltaTime / Ease));
-            _point.position = head + _dir * Far;
+            want.Normalize();
+            _dir = Vector3.Angle(_dir, want) < Settle ? want : Vector3.Slerp(_dir, want, 1f - Mathf.Exp(-Time.deltaTime / Ease)); // (there: it stands, not creeping on)
+            Vector3 at = head + _dir * Far;
+            if ((at - _point.position).sqrMagnitude > 1e-4f) _point.position = at; // (the head bobs a breath: the point stays where it is)
             if (Blueprint.On && Time.time >= _logAt) // (said when it goes wrong, not every LogEvery s: the log is read)
             {
                 _logAt = Time.time + LogEvery;
@@ -78,7 +94,7 @@ namespace HuginWhispers
         internal static string Describe(Player p)
         {
             if (p == null) return "head: no player";
-            string aim = _aim != null ? "aim" : StoryCamera.TakesPlayer || StoryScenes.Watching ? "forward" : "his own";
+            string aim = _aim != null ? "aim" : _talk != null ? "talk" : StoryCamera.TakesPlayer || StoryScenes.Watching ? "forward" : "his own";
             if (_on == null) return "head: " + aim + ", not taken (camera " + StoryCamera.Active + ", watching " + StoryScenes.Watching + ")";
             Vector3 game = FHeadDir != null ? (Vector3)FHeadDir.GetValue(_on) : Vector3.zero;
             BodyAnimator a = BodyAnimator.Of(p);
@@ -86,7 +102,7 @@ namespace HuginWhispers
         }
 
         // the scene is over, however: the head his own again
-        internal static void End() { _aim = null; _told = false; Free(); }
+        internal static void End() { _aim = null; _told = false; if (_talk == null) Free(); }
 
         private static void Free()
         {

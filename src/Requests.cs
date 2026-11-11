@@ -778,7 +778,7 @@ namespace HuginWhispers
             Save(item, r);
             int sparks = Sparks(item) + r.Reward;
             SetSparks(item, sparks);
-            float trust = Trust.Gift(item, munin, TrustPerSpark * r.Reward, Lang.T("прохання"));
+            float trust = Trust.Gift(item, munin, TrustPerSpark * r.Reward, Lang.T("виконане прохання")); // (its own words: «прохання» alone is a heading of the heart's board)
             Satiety.Change(item, SatietyGift);
             Nicks.Add(item, "reqs", 1);
             Nest.Deed(p, Nest.RequestMinutes, Lang.T("виконане прохання ворона"));

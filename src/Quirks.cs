@@ -8,6 +8,9 @@ namespace HuginWhispers
     // The owner's game runs them (Tick from Shoulder.Tick, twice a second, and hooks in the gifts, orders, feeding,
     // strikes and outings). A gloomy raven (sulking, freezing, afraid) droops on every game: a flag on the player.
     // A quirk never touches «Повернись», and the passive gifts keep working.
+    // What a quirk (or a habit) does to it this very moment — sulking, out of humour, asleep, freezing, afraid, homesick —
+    // is one answer: Mood (the word beside its name in the effects bar, Perks.ShoulderName). Every refusal names its
+    // quirk in «», so the player knows it is the raven's nature and not a fault.
     internal static class Quirks
     {
         internal const string SulkKey = "RavenWatch_sulk", DislikeKey = "RavenWatch_dislike", DislikeKnownKey = "RavenWatch_dislikeKnown";
@@ -21,7 +24,10 @@ namespace HuginWhispers
         internal static float LoudMin = 40f, LoudMax = 90f, LoudNoise = 30f; // s of sneaking between caws; m the enemies hear it
         internal static float ShowoffDelay = 8f;
         internal static float SulkSeconds = 300f;
-        internal static float WillfulChance = 0.1f;
+        // «Свавільний»: now and then out of humour for a while (no orders), shown beside its name before you ask:
+        // each WillfulEvery s of world time it is out of humour WillfulFor s with the chance WillfulChance, the moment
+        // set by its id and the window, so it is the same after a reload and nothing is saved or sent
+        internal static float WillfulEvery = 900f, WillfulChance = 0.35f, WillfulFor = 180f;
         internal static float MagpieChance = 0.3f;
         internal static readonly string[] Junk = { "Stone", "Wood", "Resin", "BoneFragments", "Flint", "Feathers" };
         internal static float TimidHealth = 0.75f; // a boss above this share of its health scares it
@@ -87,7 +93,7 @@ namespace HuginWhispers
         // for the book's refresh: what may change on the card
         internal static string Code(ItemDrop.ItemData item)
         {
-            return Mathf.CeilToInt(SulkLeft(item) / 60f) + ":" + (Read(item, DislikeKnownKey) ?? "");
+            return Mathf.CeilToInt(SulkLeft(item) / 60f) + ":" + Mathf.CeilToInt(WillfulLeft(item) / 60f) + ":" + (Read(item, DislikeKnownKey) ?? "");
         }
 
         private static List<string> ListOf(ItemDrop.ItemData item, string key)
@@ -110,7 +116,7 @@ namespace HuginWhispers
             return _dislikeSet;
         }
 
-        // more for the book's tooltip: the disliked food once known, the sulk's time left
+        // more for the book's tooltip: the disliked food once known, the sulk's and the bad humour's time left
         internal static string Note(ItemDrop.ItemData item, bool munin)
         {
             string s = "";
@@ -124,7 +130,9 @@ namespace HuginWhispers
                 s += Lang.F("\n\nНе їсть: {0}{1}.", (names.Length > 0 ? "<color=#FF6B6B>" + names + "</color>" : Lang.T("ще не знаєш, що саме")), (unknown > 0 ? Lang.F(" (і ще {0}, про які ти не знаєш)", Lang.N(unknown, "страву|страви|страв")) : ""));
             }
             float left = SulkLeft(item);
-            if (left > 0f) s += Lang.F("\n\n<color=#FF6B6B>Зараз ображений: ще {0}.</color>", RavenAbilities.Span(left));
+            if (left > 0f) s += Lang.F("\n\n<color=#FF6B6B>Зараз ревнує: ще {0}.</color>", RavenAbilities.Span(left));
+            float sour = WillfulLeft(item);
+            if (sour > 0f) s += Lang.F("\n\n<color=#FF6B6B>Зараз не в настрої: ще {0} не слухає наказів.</color>", RavenAbilities.Span(sour));
             return s;
         }
 
@@ -149,11 +157,12 @@ namespace HuginWhispers
             return _sulkLeft;
         }
 
-        // why this raven of yours does nothing now (null: it is not sulking)
+        // why this raven of yours does nothing now (null: it is not sulking). Callers add their own ending after a colon
+        // («…: і з плеча не злізе»), so the line has none inside
         internal static string Sulk(Player p, bool munin)
         {
             float left = SulkLeft(Item(p, munin));
-            return left > 0f ? Lang.F("{0} ображений — ще {1} нічого не робитиме", Name(munin), RavenAbilities.Span(left)) : null;
+            return left > 0f ? Lang.F("{0} ревнує до іншого ворона («Ревнивий») — ще {1} нічого не робитиме", Name(munin), RavenAbilities.Span(left)) : null;
         }
 
         // you fed this raven: the other one, if jealous, takes offence
@@ -195,7 +204,7 @@ namespace HuginWhispers
         {
             string s = Sulk(p, munin);
             if (s != null) return s;
-            if (ability == "scout" && With(p, munin, "sleepy") != null && NightNow()) return Lang.F("{0} спить: уночі на розвідку не полетить", Name(munin));
+            if (ability == "scout" && With(p, munin, "sleepy") != null && NightNow()) return Lang.F("{0} спить («Сонько»): уночі на розвідку не полетить", Name(munin));
             return null;
         }
 
@@ -206,8 +215,10 @@ namespace HuginWhispers
         internal static string OrderBlock(Player p, bool munin, int order)
         {
             float left = SulkLeft(Item(p, munin));
-            if (left > 0f) return Lang.F("ображений, ще {0}", RavenAbilities.Span(left));
-            if (order == Orders.Scout && With(p, munin, "sleepy") != null && NightNow()) return Lang.T("ніч — спить, на розвідку не полетить");
+            if (left > 0f) return Lang.F("ревнує («Ревнивий»), ще {0}", RavenAbilities.Span(left));
+            float sour = With(p, munin, "willful") != null ? WillfulLeft(Item(p, munin)) : 0f;
+            if (sour > 0f) return Lang.F("не в настрої («Свавільний»), ще {0}", RavenAbilities.Span(sour));
+            if (order == Orders.Scout && With(p, munin, "sleepy") != null && NightNow()) return Lang.T("ніч — спить («Сонько»)");
             return null;
         }
 
@@ -224,15 +235,22 @@ namespace HuginWhispers
         private static float _gateSaidAt = -100f;
         internal static void SaySleepy(Player p, bool munin) { if (Time.time - _gateSaidAt > 20f) { _gateSaidAt = Time.time; Say(p, munin, "quirk_sleepy"); } }
 
-        // ---------------------------------------------------------------- «Свавільний»: the order not done (strength spent)
+        // ---------------------------------------------------------------- «Свавільний»: out of humour for a while
 
-        internal static bool Willful(Player p, bool munin, int order)
+        // seconds it is still out of humour (0: it listens). Pure arithmetic on world time and its id: asked by the
+        // circle and the effects bar every frame, it costs a hash
+        internal static float WillfulLeft(ItemDrop.ItemData item)
         {
-            if (With(p, munin, "willful") == null || Random.value >= WillfulChance) return false;
-            Corner(p, munin, Lang.F("{0}: «{1}» — не захотів (сила витрачена)", Name(munin), Orders.Names[order]));
-            Say(p, munin, "quirk_willful");
-            return true;
+            if (!Norov.HasQuirk(item, "willful") || WillfulEvery <= WillfulFor) return 0f;
+            double now = WorldTime.Now;
+            long w = (long)System.Math.Floor(now / WillfulEvery);
+            uint h = Mix((uint)(Backup.Id(item) ?? "").GetHashCode() ^ (uint)w * 2654435761u);
+            if ((h & 0xFFFF) / 65536f >= WillfulChance) return 0f;
+            double from = w * (double)WillfulEvery + ((h >> 16) / 65536f) * (WillfulEvery - WillfulFor);
+            double left = from + WillfulFor - now;
+            return now >= from && left > 0 ? (float)left : 0f;
         }
+        private static uint Mix(uint x) { x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
 
         // ---------------------------------------------------------------- «Боязкий»: bosses
 
@@ -245,7 +263,7 @@ namespace HuginWhispers
         {
             if (With(p, munin, "timid") == null || targets == null || targets.Count == 0 || !Scary(targets[0])) return null;
             if (Time.time - _gateSaidAt > 6f) { _gateSaidAt = Time.time; Say(p, munin, "quirk_timid"); }
-            return Lang.F("{0} боїться: спершу підрань боса (ще {1}% здоров'я до відваги)", Name(munin), Mathf.RoundToInt((targets[0].GetHealthPercentage() - TimidHealth) * 100f));
+            return Lang.F("{0} боїться боса («Боязкий»): спершу підрань його (ще {1}% здоров'я до відваги)", Name(munin), Mathf.RoundToInt((targets[0].GetHealthPercentage() - TimidHealth) * 100f));
         }
 
         // its first blow at a wounded boss is a sure crit (marked once per boss)
@@ -320,11 +338,32 @@ namespace HuginWhispers
             return Raining() || Snowing() || Senses.Biome == Heightmap.Biome.Mountain || Senses.Biome == Heightmap.Biome.DeepNorth;
         }
 
+        // ---------------------------------------------------------------- what is with it now
+
+        // the word beside its name in the effects bar ("ревнує 4 хв", null: nothing), and why (its quirk or habit, what
+        // it keeps it from). The same checks the gates use: what shows here is what refuses.
+        internal static string Mood(Player p, bool munin, out string why)
+        {
+            why = null;
+            ItemDrop.ItemData item = Item(p, munin);
+            if (item == null || !Trust.Active(item) || Trust.Stranger(item, p) || Trust.Away(item)) return null;
+            float left = SulkLeft(item);
+            if (left > 0f) { why = Sulk(p, munin) + "."; return Lang.F("ревнує {0}", RavenAbilities.Span(left)); }
+            left = With(p, munin, "willful") != null ? WillfulLeft(item) : 0f;
+            if (left > 0f) { why = Lang.F("{0} не в настрої («Свавільний»): ще {1} не слухає наказів. «Повернись» слухає завжди.", Name(munin), RavenAbilities.Span(left)); return Lang.F("не в настрої {0}", RavenAbilities.Span(left)); }
+            if (With(p, munin, "sleepy") != null && NightNow()) { why = Lang.F("{0} уночі спить («Сонько»): на розвідку не літає й сам не гуляє.", Name(munin)); return Lang.T("спить"); }
+            if (With(p, munin, "chilly") != null && Cold(p)) { why = Lang.F("{0} мерзне («Мерзляк»): сам не гуляє, поки не стане тепло чи сухо.", Name(munin)); return Lang.T("мерзне"); }
+            if (With(p, munin, "timid") != null && Scary(Senses.Boss)) { why = Lang.F("{0} боїться боса («Боязкий»): не полетить на нього, поки бос не втратить чверть здоров'я.", Name(munin)); return Lang.T("боїться боса"); }
+            left = Habits.HomeLeft(p, munin);
+            if (left > 0f) { why = Lang.F("{0} хоче додому («Хатній»): ще {1} два його дари недоступні.", Name(munin), RavenAbilities.Span(left)); return Lang.F("хоче додому {0}", RavenAbilities.Span(left)); }
+            return null;
+        }
+
         // ---------------------------------------------------------------- the tick
 
         private static readonly float[] _thiefAt = { -1f, -1f }, _grumbleAt = { -1f, -1f }, _loudAt = { -1f, -1f };
         private static readonly float[] _wetRain = { 0f, 0f }, _wetShakeAt = { -1f, -1f }, _wetLast = { -1000f, -1000f };
-        private static readonly bool[] _swam = new bool[2], _sulking = new bool[2], _cold = new bool[2];
+        private static readonly bool[] _swam = new bool[2], _sulking = new bool[2], _cold = new bool[2], _sour = new bool[2];
         private static readonly float[] _chillySaid = { -1000f, -1000f };
 
         internal static void Tick()
@@ -383,6 +422,16 @@ namespace HuginWhispers
                     break;
                 case "timid":
                     if (Scary(Senses.Boss)) gloom = true;
+                    break;
+                case "willful": // out of humour: said once as it comes (it shows beside its name all the while), and it droops
+                    float sour = WillfulLeft(item);
+                    if (sour > 0f) gloom = true;
+                    if (sour > 0f && !_sour[i])
+                    {
+                        Corner(p, munin, Lang.F("{0} не в настрої («Свавільний»): {1} не слухатиме наказів", Name(munin), RavenAbilities.Span(sour)));
+                        if (!RavenSkills.Hushed(p)) Say(p, munin, "quirk_willful");
+                    }
+                    _sour[i] = sour > 0f;
                     break;
                 case "showoff":
                     if (_showoffSay[i] > 0f && now >= _showoffSay[i]) { _showoffSay[i] = -1f; if (!RavenSkills.Hushed(p)) Say(p, munin, "quirk_showoff"); Act(p, munin, Lang.T("Хизується")); }

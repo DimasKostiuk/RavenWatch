@@ -223,7 +223,7 @@ namespace HuginWhispers
     {
         internal Lumber() { Move = ""; Id = "lumber"; Word = Lang.K("лісоруб"); Icon = "n-lumber"; Place = Lang.K("на ділянку лісу"); StoreAfterEach = false;
             Desc = Lang.K("Рубає дерева на своїй ділянці (25 м довкола, до 150 м від бази): спершу колоди, тоді пні, тоді дерева. Потрібна сокира в його спорядженні — вона зношується, як у тебе. Дерево, шишки, смолу несе в ящик."); }
-        internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
+        internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id, NpcMenu.By); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
         internal override NpcWorker.Errand Find(NpcWorker w) { return NpcHew.Find(w, true); }
     }
 
@@ -231,7 +231,7 @@ namespace HuginWhispers
     {
         internal Miner() { Move = ""; Id = "miner"; Word = Lang.K("рудокоп"); Icon = "n-miner"; Place = Lang.K("на ділянку з рудою чи камінням"); StoreAfterEach = false;
             Desc = Lang.K("Копає на своїй ділянці (25 м довкола, до 150 м від бази) руду й каміння, яке бере його кайло. Потрібне кайло в його спорядженні — воно зношується, як у тебе. Руду, камінь несе в ящик."); }
-        internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
+        internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id, NpcMenu.By); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
         internal override NpcWorker.Errand Find(NpcWorker w) { return NpcHew.Find(w, false); }
     }
 

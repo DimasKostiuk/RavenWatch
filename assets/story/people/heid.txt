@@ -7,6 +7,10 @@ npc: heid
 live: hall.vohnyshche when state zala >= 1.2                   # з розпаленої Зали — у Залі, біля вогнища Варти
 live: torvald.vohnyshche spawn torvald.lava bed torvald.lizhko    # табір біля могил вартових
 after: world heid_called                                         # її нема у світі, поки хтось уперше не постояв біля брами (сцена gate_shut)
+# Своя річ, яку носить завжди (StoryProps «carry»): кошик на правому передпліччі, петля basket_carry на руці. Ставить його біля ніг частиною
+# basket_set.down: від слова сюжету (сцена «npc heid prop put», hold з кліпом) — і він лежить, доки сюжет не скаже «npc heid prop fetch» (етап lantern, після першого серця);
+# від своєї справи з кліпом (трави біля ліжка) — і сама йде по нього, щойно вільна (basket_set.up).
+carry: RavenWatch_item_koshyk_heid arm clip basket_carry set basket_set
 # (що вона робить від сюжету: команда «npc heid hold …», StoryHold)
 # Її власне життя між командами (StoryLife): spot: <набір> <місце> [by <місце>] <вид> [sit] [clip … from … out …] [hours а-б] [stay а-б] [want н]
 spot: home torvald.vohnyshche fire sit want 0.2

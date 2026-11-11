@@ -10,22 +10,24 @@ namespace HuginWhispers
     //   music <name> [fade] [once] [keep N] [vol V] [wait] [all]   ours or the game's; nothing else plays over it. keep: rings on N s after the scene
     //   music off [fade] [all]                                     real silence; the game puts nothing in
     //   music game [fade] [all]                                    the game's own music back, mid-scene
-    //   bed <name> [fade] [vol V] [all] · bed off [name] [fade] [all]   a long loop under the scene
+    //   bed <name> [place|player|npc.x|bird] [fade] [vol V] [range R] [pitch P] [2d] [wet] [follow] [all] · bed off [name] [fade] [all]
+    //                                                              a long loop under the scene; with a place it is heard there
     //   mix world|ambient|music|voice <0..1> [fade] [all] · mix reset [fade] [all]   how loud the rest of the world is
     //   mute <pattern> [all] · unmute <pattern>|all [all]          a game sound by name: sfx_footstep*, *fire*
     //   ear camera|player [fade]                                   where the sound is heard from: the shot or the player
     //   sound <name> [place|player|npc.x|bird] [vol V] [range R] [pitch P] [2d] [wet] [follow] [wait]   a one-shot, heard there
     //   sound stop <name>|all [fade]                               one still ringing
     // «all»: in every game of the world, round each player (let go when the scene ends; a game that never hears it: AirTerm).
-    // A «sound» with a place is heard by whoever is within StoryScenes.Seen, unless the scene is «alone: yes»; music, beds
-    // and the mix are this player's own.
+    // A «sound» with a place is heard by whoever is within StoryScenes.Seen, unless the scene is «alone: yes», «sound stop» there
+    // too, and a scene cut off stops them there as here; music, beds and the mix are this player's own.
     internal static class StoryAudio
     {
         private const string Rpc = "RavenWatch_Audio";
         internal static float AirTerm = 600f;
-        private static bool _sentAll;
+        private static bool _sentAll, _sentSound;
 
         private static readonly string[] SoundWords = { "vol", "range", "pitch", "2d", "wet", "follow", "wait" };
+        private static readonly string[] BedWords = { "vol", "range", "pitch", "2d", "wet", "follow", "all" };
 
         internal static void RegisterRpcs()
         {
@@ -52,7 +54,7 @@ namespace HuginWhispers
         {
             for (int i = from; i < w.Length; i++)
             {
-                if (w[i] == "keep" || w[i] == "vol") { i++; continue; }
+                if (w[i] == "keep" || w[i] == "vol" || w[i] == "range" || w[i] == "pitch") { i++; continue; }
                 float v;
                 if (float.TryParse(w[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v)) return Mathf.Clamp(v, 0f, 60f);
             }
@@ -78,7 +80,7 @@ namespace HuginWhispers
                     return;
                 case "bed":
                     if (w[1] == "off") { Audio.BedOff(owner, w.Length > 2 && !IsNum(w[2]) && w[2] != "all" ? w[2] : null, setup ? 0f : Fade(w, 2, fadeDef)); return; }
-                    if (!Audio.Bed(owner, w[1], Mathf.Clamp01(After(w, "vol", 1f)), setup ? 0f : Fade(w, 2, fadeDef))) Note("bed: нема такого звуку «" + w[1] + "»");
+                    if (!BedNow(owner, w, setup ? 0f : Fade(w, 2, fadeDef))) Note("bed: нема такого звуку «" + w[1] + "»");
                     return;
                 case "mix":
                     if (w[1] == "reset") { foreach (AudioMix m in new[] { AudioMix.World, AudioMix.Ambient, AudioMix.Music, AudioMix.Voice }) Audio.Mix(owner, m, 1f, setup ? 0f : Fade(w, 2, fadeDef)); return; }
@@ -90,21 +92,51 @@ namespace HuginWhispers
             }
         }
 
+        // a bed's words: where it is heard, how
+        private static bool BedNow(string owner, string[] w, float fade)
+        {
+            float vol = Mathf.Clamp01(After(w, "vol", 1f));
+            Player p = Player.m_localPlayer;
+            string place = BedPlaceOf(w);
+            Vector3 at = Vector3.zero;
+            if (place != null && p != null)
+            {
+                at = p.transform.position + Vector3.up * 1.4f;
+                if (place != "player" && !StoryWhere.Find(place, out at)) { Note("bed: нема місця «" + place + "» — грає без місця"); place = null; }
+            }
+            else place = null;
+            SoundAsk ask = new SoundAsk
+            {
+                Range = Mathf.Max(0f, After(w, "range", 0f)), Pitch = Mathf.Max(0f, After(w, "pitch", 0f)), Flat = place == null || Has(w, "2d"), Wet = Has(w, "wet"), Owner = owner,
+                Follow = place != null && Has(w, "follow") ? StoryScenes.FollowOf(place) : null
+            };
+            return Audio.Bed(owner, w[1], vol, fade, ask, at);
+        }
+
+        // the word of a «bed» that names a place (null: none — the storycheck reads it the same way)
+        internal static string BedPlaceOf(string[] w)
+        {
+            if (w.Length < 3 || w[1] == "off" || IsNum(w[2]) || Array.IndexOf(BedWords, w[2]) >= 0) return null;
+            return w[2];
+        }
+
         private static bool IsNum(string s) { float v; return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v); }
 
         // a line from another game
         private static void Heard(string line)
         {
+            if (ZNet.instance == null || ZNet.instance.IsDedicated() || AudioMan.instance == null) return; // (a server has nobody to hear it)
             string[] w = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (w.Length == 0) return;
-            if (w[0] == "end") { Audio.End(Audio.Air, Audio.EndFade, false); return; }
-            if (w[0] == "snd") // snd <name> x y z vol range pitch wet
+            if (w[0] == "end") { bool broken = w.Length > 1 && w[1] == "broken"; Audio.End(Audio.Air, broken ? Audio.BrokenFade : Audio.EndFade, broken); return; }
+            if (w[0] == "stop") { if (w.Length > 2) Audio.StopSounds(Audio.Air, w[1] != "all" ? w[1] : null, Mathf.Clamp(F(w[2], 0.5f), 0f, 60f)); return; } // stop <name>|all fade
+            if (w[0] == "snd") // snd <name> x y z vol range pitch wet [what it follows]
             {
                 Player me = Player.m_localPlayer;
                 if (me == null || w.Length < 9) return;
                 Vector3 at = new Vector3(F(w[2], 0f), F(w[3], 0f), F(w[4], 0f));
                 if (Vector3.Distance(me.transform.position, at) > StoryScenes.Seen) return;
-                Audio.Sound(w[1], at, new SoundAsk { Volume = Mathf.Clamp(F(w[5], 1f), 0f, 2f), Range = F(w[6], 0f), Pitch = F(w[7], 0f), Wet = w[8] == "1", Owner = Audio.Air });
+                Audio.Sound(w[1], at, new SoundAsk { Volume = Mathf.Clamp(F(w[5], 1f), 0f, 2f), Range = Mathf.Max(0f, F(w[6], 0f)), Pitch = Mathf.Clamp(F(w[7], 0f), 0f, 4f), Wet = w[8] == "1", Owner = Audio.Air, Follow = w.Length > 9 ? StoryScenes.FollowOf(w[9]) : null });
                 return;
             }
             if (w.Length > 1 && (w[0] == "music" || w[0] == "bed" || w[0] == "mix" || w[0] == "mute" || w[0] == "unmute")) { Audio.AirLease(AirTerm); Do(Audio.Air, w, false); }
@@ -150,9 +182,13 @@ namespace HuginWhispers
         private static void SoundStep(Player p, StoryScenes.Step st)
         {
             string[] w = st.W;
+            StoryScenes.SceneDef s = StoryScenes.Current;
             if (w[1] == "stop")
             {
-                Audio.StopSounds(Audio.Scene, w.Length > 2 && w[2] != "all" ? w[2] : null, w.Length > 3 ? Mathf.Clamp(F(w[3], 0.5f), 0f, 60f) : 0.5f);
+                string which = w.Length > 2 ? w[2] : "all";
+                float stopFade = w.Length > 3 ? Mathf.Clamp(F(w[3], 0.5f), 0f, 60f) : 0.5f;
+                Audio.StopSounds(Audio.Scene, which != "all" ? which : null, stopFade);
+                if (_sentSound) Send("stop " + which + " " + N(stopFade));
                 return;
             }
             Vector3 at = p.transform.position + Vector3.up * 1.4f;
@@ -165,9 +201,9 @@ namespace HuginWhispers
                 Follow = Has(w, "follow") ? StoryScenes.FollowOf(place) : null
             };
             if (!Audio.Sound(w[1], at, ask)) { Note("sound: «" + w[1] + "» — нема такого звуку в грі"); return; }
-            StoryScenes.SceneDef s = StoryScenes.Current;
-            if (ask.Flat || (s != null && s.Alone)) return; // (one's own, or nobody else here to hear it)
-            Send("snd " + w[1] + " " + N(at.x) + " " + N(at.y) + " " + N(at.z) + " " + N(ask.Volume) + " " + N(ask.Range) + " " + N(ask.Pitch) + " " + (ask.Wet ? "1" : "0"));
+            if (ask.Flat || AudioBank.Find(w[1]).Flat || (s != null && s.Alone)) return; // (one's own, or nobody else here to hear it)
+            _sentSound = true;
+            Send("snd " + w[1] + " " + N(at.x) + " " + N(at.y) + " " + N(at.z) + " " + N(ask.Volume) + " " + N(ask.Range) + " " + N(ask.Pitch) + " " + (ask.Wet ? "1" : "0") + (ask.Follow != null && place != null && place != "player" ? " " + place : "")); // (following the player: on another game that word is that game's own player)
         }
 
         private static string N(float v) { return v.ToString("0.##", CultureInfo.InvariantCulture); }
@@ -180,7 +216,12 @@ namespace HuginWhispers
                 Min = 1, Usage = "music <назва> [с] [once] [keep N] [vol V] [wait] [all] · music off|game [с] [all]",
                 Begin = Step, Setup = SetupStep, Busy = (p, st) => Has(st.W, "wait") && Audio.MusicWaiting
             });
-            reg("bed", 1, "bed <назва> [с] [vol V] [all] · bed off [назва] [с] [all]");
+            StoryScenes.Register("bed", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
+            {
+                PlaceOf = BedPlaceOf,
+                Min = 1, Usage = "bed <назва> [місце|player|npc.x|bird] [с] [vol V] [range R] [pitch P] [2d] [wet] [follow] [all] · bed off [назва] [с] [all]",
+                Begin = Step, Setup = SetupStep, Busy = (p, st) => false
+            });
             StoryScenes.Register("mix", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
             {
                 Min = 1, Usage = "mix world|ambient|music|voice <0..1> [с] [all] · mix reset [с] [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
@@ -219,7 +260,8 @@ namespace HuginWhispers
         internal static void SceneEnd(bool broken)
         {
             Audio.End(Audio.Scene, broken ? Audio.BrokenFade : Audio.EndFade, broken);
-            if (_sentAll) { _sentAll = false; Send("end"); }
+            if (_sentAll || (broken && _sentSound)) Send(broken ? "end broken" : "end");
+            _sentAll = false; _sentSound = false;
         }
 
         // the author's window: the same words, held by the window until «Скинути»
@@ -234,7 +276,7 @@ namespace HuginWhispers
         internal static void PanelEnd(bool all)
         {
             Audio.End(Audio.Panel, 1f, true);
-            if (all) Send("end");
+            if (all) Send("end broken");
         }
 
         internal static void PanelSound(string name)

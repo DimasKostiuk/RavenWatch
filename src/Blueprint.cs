@@ -713,23 +713,11 @@ namespace HuginWhispers
         }
     }
 
-    // what hangs on the Hall's item stands stays there: nobody but the author takes it down, turns it, or hangs another.
-    // One the story wants touched now (LocTouch: Munin's shield) answers E with the story's event — the author's own too
-    [HarmonyPatch(typeof(ItemStand), "Interact")]
-    internal static class BlueprintStandPatch
-    {
-        private static bool Prefix(ItemStand __instance, Humanoid user, bool hold, bool alt, ref bool __result)
-        {
-            LocTouch t = __instance.GetComponent<LocTouch>();
-            if (t != null && t.On) { __result = t.Interact(user, hold, alt); return false; }
-            if (!Blueprint.Copy(__instance.GetComponent<ZNetView>())) return true; // (a copy: nobody, the author too — his own Hall he dresses as he likes)
-            __result = false; // (quietly: it is simply not a thing to touch — the user 2026-11-01)
-            return false;
-        }
-    }
-
-    // nor says anything when looked at: no «[E] take», no name — the thing just hangs there (but a touch of the story's)
+    // what hangs on the Hall's item stands stays there: nobody but the author takes it down, turns it, or hangs another (E: LocInteractPatch).
+    // Nor says anything when looked at: no «[E] take», no name — the thing just hangs there (but a touch of the story's). Last of all
+    // postfixes: a mod's own hover text (ZenItemStands) is not written over ours
     [HarmonyPatch(typeof(ItemStand), "GetHoverText")]
+    [HarmonyPriority(Priority.Last)]
     internal static class BlueprintStandHoverPatch
     {
         private static void Postfix(ItemStand __instance, ref string __result)
@@ -741,6 +729,7 @@ namespace HuginWhispers
     }
 
     [HarmonyPatch(typeof(ItemStand), "GetHoverName")]
+    [HarmonyPriority(Priority.Last)]
     internal static class BlueprintStandNamePatch
     {
         private static void Postfix(ItemStand __instance, ref string __result)

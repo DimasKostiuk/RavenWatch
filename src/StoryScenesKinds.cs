@@ -19,6 +19,8 @@ namespace HuginWhispers
         //   Begin(p, st)  it starts; it may set its clock: Hold(s) — busy till then; _limit — its own time limit
         //   Busy(p, st)   still going? (none: its clock — Hold — says)
         //   Late(st)      it ran past its limit: what it began is put right (a walker stands where it is)
+        //   Done(p, st)   as it ends: what came of it, in words with numbers (the walk's distance and time, where the bird sits, the clip on the body);
+        //                 the director adds how long it took and whether it was cut off (EndStep → Outcomes, the log) — the scene's check puts it by the step
         //   Setup(p, st)  played from a later step: what it leaves behind, at once
         //   Lasting       it changes the world for good: once it ran the scene is never played again
         //   PlaceAt / PlaceAfter / PlaceNot / PlaceOf   the word that names a place (load check here and in storycheck, from this one source)
@@ -37,6 +39,7 @@ namespace HuginWhispers
             public Action<Player, Step> Begin;
             public Func<Player, Step, bool> Busy;
             public Action<Step> Late;
+            public Func<Player, Step, string> Done; // (what it came to, read as it ends — «ran 14 m in 4.1 s, stopped 0.3 m off»; null: nothing to say. Said by the director with how long it took: StoryScenes.EndStep)
             public bool Lasting; // (it changes the world or the bag for good: once it ran, the scene is never played again — a stop finishes it quietly)
             public Action<Player, Step> Setup; // (played from a later step: what this one leaves behind, put at once — where he stands, the bars, the shot, the thing in his hand, the bird on its seat; null: nothing)
             public int PlaceAt;        // the word naming a place (0: none)
@@ -104,7 +107,8 @@ namespace HuginWhispers
                         return errs.Count > 0 ? string.Join("; ", errs.ToArray()) : null;
                     },
                     Begin = (p, st) => { _until = Time.time + st.UntilSec; _limit = _until + 1f; },
-                    Busy = (p, st) => Time.time < _until && !StoryCond.All(p, st.Until) } },
+                    Busy = (p, st) => Time.time < _until && !StoryCond.All(p, st.Until),
+                    Done = (p, st) => StoryCond.All(p, st.Until) ? "its condition holds" : "its condition NEVER held in its " + F(st.UntilSec) + " s" } },
                 { "msg", new StepKind(StepSeen.Shared) { Min = 1, Usage = "msg <текст>",
                     Begin = (p, st) => { string line = Grammar.Fix(Lang.T(Rest(st.Text, 1)), p); if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, line); StoryWatch.Line(line); } } },
                 { "watchers", new StepKind(StepSeen.Shared) { Min = 1, Usage = "watchers take [camera] · watchers free   (забрати клавіші в тих, хто поруч, і дати їм камеру сцени; кінець сцени все повертає)",

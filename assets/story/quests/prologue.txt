@@ -151,7 +151,13 @@ wait: near torvald 14
 
 [stage meet_heid]
 goal: Біля каменів хтось є
-scene: heid_meet                          # Гейд бачить твого ворона — вартовий; кличе до Зали
+scene: heid_meet                          # Гейд бачить твого ворона — вартовий; ставить кошик; кличе до Зали
+next: ask_heid_camp
+
+[stage ask_heid_camp]
+goal: Розпитай Гейд
+call: heid                                # золота нитка над її головою; обов'язкове лише питання про Варту (assets/story/talk/heid.txt): його відповідь піднімає подію
+on: heid_watch_told                       # далі в її розмові є «Ходімо» (?? step prologue_main with_heid); решту тем питають і пізніше
 next: with_heid
 
 [stage with_heid]
@@ -230,6 +236,6 @@ next: lantern
 
 [stage lantern]
 goal: Серце оселі
-start: world heid_called; gate hall open; npc heid free   # сюжет її відпускає: далі свій день; серце стало раніше брами: Зала й Гейд усе одно є
+start: world heid_called; gate hall open; npc heid free; npc heid prop fetch   # сюжет її відпускає: далі свій день, і вона йде по кошик, поставлений у heid_meet; серце стало раніше брами: Зала й Гейд усе одно є
 scene: heart_lantern                      # у ліхтарі спалахує вогонь і гасне: гачок до іскри з Зали; грає той, хто біля серця
 next: end

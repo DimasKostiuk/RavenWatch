@@ -1,0 +1,110 @@
+clip guard_club2h_rest
+length 8
+loop 0
+pivot 1.1
+curve ease
+vary 0.3
+fade 0.6 0.8
+mode Spine1 body
+mode Spine2 body
+part in 0 1.6 hold
+part loop 1.6 6.4 loop
+part out 6.4 8 end
+
+say вартовий тримає важку дворучну зброю на правому плечі так, як тримає її стійка гри (права рука гри), ліва рука вздовж стегна, ноги рівно, корпус прямо
+want 1.6-6.4 hand left near -0.34 0.84 -0.02 0.1
+
+0 @LeftFoot -0.24 0.12 0.19
+0.2 @LeftFoot -0.24 0.12 0.19
+0.5 @LeftFoot -0.155 0.24 0.235
+0.8 @LeftFoot -0.07 0.13 0.28
+7.2 @LeftFoot -0.07 0.13 0.28
+7.5 @LeftFoot -0.155 0.24 0.235
+7.8 @LeftFoot -0.24 0.12 0.19
+8 @LeftFoot -0.24 0.12 0.19
+
+0 @LeftFoot.w 1 0 0
+
+0 @RightFoot 0.18 0.13 -0.41
+0.8 @RightFoot 0.18 0.13 -0.41
+1.1 @RightFoot 0.12 0.24 -0.355
+1.4 @RightFoot 0.06 0.11 -0.3
+6.6 @RightFoot 0.06 0.11 -0.3
+6.9 @RightFoot 0.12 0.24 -0.355
+7.2 @RightFoot 0.18 0.13 -0.41
+8 @RightFoot 0.18 0.13 -0.41
+
+0 @RightFoot.w 1 0 0
+
+0 move 0 0 0
+0.3 move 0 0 0
+1.4 move 0 0.05 0
+3 move 0.015 0.05 0
+4.8 move -0.015 0.05 0
+6.4 move 0 0.05 0
+7.6 move 0 0 0
+8 move 0 0 0
+
+0 Spine1 0 0 0
+0.3 Spine1 0 0 0
+1.4 Spine1 -5 -4 0
+6.4 Spine1 -5 -4 0
+7.6 Spine1 0 0 0
+8 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.3 Spine2 0 0 0
+1.4 Spine2 -5 -4 0
+4 Spine2 -3.5 -4 0
+6.4 Spine2 -5 -4 0
+7.6 Spine2 0 0 0
+8 Spine2 0 0 0
+
+0 @RightHand 0.48 1.48 0.11
+0.3 @RightHand 0.48 1.48 0.11
+1.4 @RightHand 0.2 1.29 0.13
+6.4 @RightHand 0.2 1.29 0.13
+8 @RightHand 0.48 1.48 0.11
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+1.4 @RightHand.w 0 0 0
+6.4 @RightHand.w 0 0 0
+7.2 @RightHand.w 0 0 0
+8 @RightHand.w 0 0 0
+
+0 @RightHand.p 1 -1 -0.3
+
+0 @RightHand.f 0 0.5 1
+
+0 @RightHand.n -1 0 0
+
+0 @LeftHand -0.37 0.89 0.3
+0.3 @LeftHand -0.37 0.89 0.3
+1.4 @LeftHand -0.34 0.84 -0.02
+6.4 @LeftHand -0.34 0.84 -0.02
+8 @LeftHand -0.37 0.89 0.3
+
+0 @LeftHand.w 0 0 0
+0.3 @LeftHand.w 0 0 0
+1.4 @LeftHand.w 1 0 0
+6.4 @LeftHand.w 1 0 0
+7.2 @LeftHand.w 0 0 0
+8 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -1 0 -0.3
+
+0 @LeftHand.f 0 -1 0.2
+
+0 @LeftHand.n 1 0 0
+
+0 @Look 0 1.6 3
+0.3 @Look 0 1.6 3
+8 @Look 0 1.6 3
+
+0 @Look.w 0 0 0
+0.3 @Look.w 0 0 0
+1.4 @Look.w 0.8 0 0
+6.4 @Look.w 0.8 0 0
+7.6 @Look.w 0 0 0
+8 @Look.w 0 0 0

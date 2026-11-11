@@ -2,7 +2,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -15,28 +17,67 @@ namespace HuginWhispers
     //                    they are loaded with their owner, a lone sfx_ name often is not)
     //   game:<name>      a track of the game's music (in «music» and «bed»; a bare name of a track works too)
     //   file:<x.ogg>     a file of our own (.ogg .wav .mp3): assets/story/sounds on the author's machine (StoryFiles.Source),
-    //                    plugins/sounds in the package, or config/RavenWatch/story/sounds
-    // Options: vol=0.8  pitch=0.9  range=60  2d  wet. A name not in the files stands for itself.
-    // A file is read when a scene that names it begins (Prepare), or when first asked: never twice, a failure not retried.
+    //                    plugins/sounds in the package
+    // Options: vol=0.8  pitch=0.9  range=60  2d  wet. A name not in the files stands for itself. pitch counts for music and
+    // beds too; range, 2d, wet for sounds and beds that have a place (Audio.Bed).
+    // A file is read when a scene that names it begins (Prepare), or when first asked: never twice, a failure not retried. A
+    // one-shot asked while its file is on the way waits for it (Audio.Later), as music and beds do.
     // Long ones (music, beds) stay compressed in memory; all are thrown away when a new world loads (RavenFx.Forget) and when
     // the author reads the files anew (Again: a file replaced on disk is heard at once).
+    // A game sound keeps what its ZSFX would do: variants, pitch, loudness, fade in and out, delay, random pan, and how much
+    // room it gets by distance (Shot, Audio.Room). What it may not keep on purpose: the game's limit on sounds at once.
+    // The «Звуки» tab (SoundPanel) writes the files through Save and Remove: only on the author's machine, a line at a time, and
+    // what stands round it (notes, other lines) stays as it was. A name the game has not loaded yet is looked for again later
+    // (RetryEvery), not remembered as missing for the whole world.
     internal static class AudioBank
     {
         internal const string Kind = "sounds";
 
-        internal sealed class Entry { public string[] Tokens = new string[0]; public float Vol = 1f, Pitch, Range; public bool Flat, Wet; }
+        internal sealed class Entry
+        {
+            public string[] Tokens = new string[0];
+            public float Vol = 1f, Pitch, Range;
+            public bool Flat, Wet;
 
-        // one sound of a game's effect: what its ZSFX would pick from, and the source to copy its 3D settings from
-        internal sealed class Shot { public AudioClip[] Clips; public AudioSource Like; public float MinVol, MaxVol, MinPitch, MaxPitch; }
+            // its line as the files write it, after the name
+            internal string Words()
+            {
+                StringBuilder b = new StringBuilder(string.Join(" ", Tokens));
+                if (Mathf.Abs(Vol - 1f) > 0.001f) b.Append(" vol=").Append(N(Vol));
+                if (Pitch > 0f) b.Append(" pitch=").Append(N(Pitch));
+                if (Range > 0f) b.Append(" range=").Append(N(Range));
+                if (Flat) b.Append(" 2d");
+                if (Wet) b.Append(" wet");
+                return b.ToString();
+            }
+        }
+
+        private static string N(float v) { return v.ToString("0.##", CultureInfo.InvariantCulture); }
+
+        internal const int RoomOwn = 0, RoomByDistance = 1, RoomNone = 2; // (a plain source: as it is set · ZSFX with distance reverb, a file · ZSFX without it)
+
+        // one sound of a game's effect: what its ZSFX would pick from and do, and the source to copy its 3D settings from
+        internal sealed class Shot
+        {
+            public AudioClip[] Clips; public AudioSource Like;
+            public float MinVol, MaxVol, MinPitch, MaxPitch;
+            public float FadeIn, FadeOut, FadeAfter = -1f, MinDelay, MaxDelay, MinPan, MaxPan, ReverbAt;
+            public bool RandomPan;
+            public int Room = RoomOwn;
+        }
 
         private sealed class FileClip { public AudioClip Clip; public bool Done; }
 
         private static Dictionary<string, Entry> _all;
         private static readonly Dictionary<string, List<Shot>> Shots = new Dictionary<string, List<Shot>>();
+        private static readonly Dictionary<string, float> Missing = new Dictionary<string, float>(); // (a sound not found: when to look again)
+        internal static float RetryEvery = 30f;
+        private const long LongFile = 1048576;
         private static readonly Dictionary<string, FileClip> Files = new Dictionary<string, FileClip>();
         private static readonly HashSet<string> Told = new HashSet<string>();
 
-        internal static void Again() { _all = null; Told.Clear(); Unload(); } // (the author's files read anew: a scene reload)
+        internal static void Again() { Reread(); Unload(); } // (the author's files read anew: a scene reload)
+        private static void Reread() { _all = null; Told.Clear(); }
 
         internal static void LogOnce(string key, string text) { if (Told.Add(key) && Plugin.Instance != null) Plugin.Instance.Log("Audio: " + text); }
 
@@ -60,9 +101,11 @@ namespace HuginWhispers
                         else if (t.StartsWith("vol=", StringComparison.Ordinal)) e.Vol = Errands.F(t.Substring(4), 1f);
                         else if (t.StartsWith("pitch=", StringComparison.Ordinal)) e.Pitch = Errands.F(t.Substring(6), 0f);
                         else if (t.StartsWith("range=", StringComparison.Ordinal)) e.Range = Errands.F(t.Substring(6), 0f);
+                        else if (t.IndexOf('=') >= 0) LogOnce("option " + w[0] + t, "«" + w[0] + "»: no option «" + t + "» (vol= pitch= range= 2d wet): left out");
                         else tokens.Add(t);
                     }
                     e.Tokens = tokens.ToArray();
+                    if (_all.ContainsKey(w[0])) LogOnce("twice " + w[0], "«" + w[0] + "» is written twice in the sound files: the last one counts");
                     _all[w[0]] = e;
                 }
 #endif
@@ -70,6 +113,7 @@ namespace HuginWhispers
         }
 
         internal static IEnumerable<string> Names() { return All().Keys; }
+        internal static bool Has(string name) { return !string.IsNullOrEmpty(name) && All().ContainsKey(name); } // (a line of the files: one who plays a sound only if it is written — NpcSpeech)
 
         internal static Entry Find(string name)
         {
@@ -80,25 +124,26 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- what can be played
 
-        internal static bool IsTrack(string name)
+        internal static bool IsTrack(string name) { return IsTrack(Find(name)); }
+
+        internal static bool IsTrack(Entry e)
         {
-            foreach (string t in Find(name).Tokens) if (t.StartsWith("file:", StringComparison.Ordinal) || Audio.GameTrack(GameName(t)) != null) return true;
+            foreach (string t in e.Tokens) if (t.StartsWith("file:", StringComparison.Ordinal) || Audio.GameTrack(GameName(t)) != null) return true;
             return false;
         }
 
-        internal static bool IsLoop(string name)
+        internal static bool IsLoop(Entry e)
         {
-            foreach (string t in Find(name).Tokens) if (t.StartsWith("file:", StringComparison.Ordinal) || Audio.GameTrack(GameName(t)) != null || TokenShots(t) != null) return true;
+            foreach (string t in e.Tokens) if (t.StartsWith("file:", StringComparison.Ordinal) || Audio.GameTrack(GameName(t)) != null || (!t.StartsWith("game:", StringComparison.Ordinal) && TokenShots(t) != null)) return true;
             return false;
         }
 
         private static string GameName(string token) { return token.StartsWith("game:", StringComparison.Ordinal) ? token.Substring(5) : token; }
 
         // a track or a bed's clip: 1 here it is, 0 still loading, -1 nothing
-        internal static int Clip(string name, out AudioClip clip, out float vol)
+        internal static int Clip(Entry e, out AudioClip clip, out float vol)
         {
-            clip = null; vol = 1f;
-            Entry e = Find(name);
+            clip = null;
             vol = e.Vol;
             foreach (string t in e.Tokens)
             {
@@ -112,21 +157,23 @@ namespace HuginWhispers
                 MusicMan.NamedMusic m = Audio.GameTrack(GameName(t));
                 if (m != null) { clip = m.m_clips[UnityEngine.Random.Range(0, m.m_clips.Length)]; vol *= m.m_volume; return 1; }
                 List<Shot> shots = t.StartsWith("game:", StringComparison.Ordinal) ? null : TokenShots(t);
-                if (shots != null) foreach (Shot s in shots) { AudioClip c = s.Clips != null && s.Clips.Length > 0 ? s.Clips[0] : s.Like != null ? s.Like.clip : null; if (c != null) { clip = c; return 1; } }
+                if (shots != null) foreach (Shot s in shots) { AudioClip c = s.Clips != null && s.Clips.Length > 0 ? s.Clips[0] : s.Like != null ? s.Like.clip : null; if (c != null) { clip = c; if (s.MaxVol > 0f) vol *= s.MaxVol; return 1; } }
             }
             return -1;
         }
 
-        // a one-shot: the first of its tokens there is. A file is one Shot with no source to copy from.
-        internal static List<Shot> ShotsOf(string name)
+        // a one-shot: the first of its tokens there is. A file is one Shot with no source to copy from. loading: its file is on the
+        // way (the sounds after it do not stand in: it will be there in a moment)
+        internal static List<Shot> ShotsOf(Entry e, out bool loading)
         {
-            foreach (string t in Find(name).Tokens)
+            loading = false;
+            foreach (string t in e.Tokens)
             {
                 if (t.StartsWith("file:", StringComparison.Ordinal))
                 {
                     FileClip f = Load(t.Substring(5), false);
-                    if (!f.Done) { LogOnce("late " + name, "sound «" + name + "»: its file was not ready when asked (read on; the scene's first look at it is Prepare)"); continue; }
-                    if (f.Clip != null) return new List<Shot> { new Shot { Clips = new[] { f.Clip } } };
+                    if (!f.Done) { loading = true; return null; }
+                    if (f.Clip != null) return new List<Shot> { new Shot { Clips = new[] { f.Clip }, Room = RoomByDistance } };
                     continue;
                 }
                 if (t.StartsWith("game:", StringComparison.Ordinal)) continue;
@@ -141,14 +188,29 @@ namespace HuginWhispers
             List<Shot> have;
             if (Shots.TryGetValue(token, out have))
             {
-                if (have == null) return null;
                 bool whole = true; // (a clip the game has let go since: looked for anew)
                 foreach (Shot s in have) if (s.Like == null) whole = false;
                 if (whole) return have;
+                Shots.Remove(token);
             }
+            float again;
+            if (Missing.TryGetValue(token, out again) && Time.unscaledTime < again) return null; // (not here a moment ago: not looked for on every ask)
             List<Shot> r = token.IndexOf('/') > 0 ? OfOwner(token) : OfPrefab(RavenFx.Prefab(token));
-            Shots[token] = r != null && r.Count > 0 ? r : null;
-            return Shots[token];
+            if (r == null || r.Count == 0) { Missing[token] = Time.unscaledTime + RetryEvery; return null; }
+            Missing.Remove(token);
+            Shots[token] = r;
+            return r;
+        }
+
+        private static Shot Of(ZSFX z)
+        {
+            return new Shot
+            {
+                Clips = z.m_audioClips, Like = z.GetComponent<AudioSource>(), MinVol = z.m_minVol, MaxVol = z.m_maxVol, MinPitch = z.m_minPitch, MaxPitch = z.m_maxPitch,
+                FadeIn = z.m_fadeInDuration, FadeOut = z.m_fadeOutDuration, FadeAfter = z.m_fadeOutOnAwake ? z.m_fadeOutDelay : -1f,
+                MinDelay = z.m_minDelay, MaxDelay = z.m_maxDelay, RandomPan = z.m_randomPan, MinPan = z.m_minPan, MaxPan = z.m_maxPan,
+                Room = z.m_distanceReverb ? RoomByDistance : RoomNone, ReverbAt = z.m_useCustomReverbDistance ? z.m_customReverbDistance : 0f
+            };
         }
 
         private static List<Shot> OfPrefab(GameObject prefab)
@@ -156,7 +218,7 @@ namespace HuginWhispers
             if (prefab == null || prefab.GetComponent<ZNetView>() != null) return null;
             List<Shot> r = new List<Shot>();
             foreach (ZSFX z in prefab.GetComponentsInChildren<ZSFX>(true)) // heavy: once per named sound, its result kept in Shots
-                r.Add(new Shot { Clips = z.m_audioClips, Like = z.GetComponent<AudioSource>(), MinVol = z.m_minVol, MaxVol = z.m_maxVol, MinPitch = z.m_minPitch, MaxPitch = z.m_maxPitch });
+                r.Add(Of(z));
             if (r.Count == 0)
                 foreach (AudioSource a in prefab.GetComponentsInChildren<AudioSource>(true)) // heavy: once per named sound, its result kept in Shots
                     if (a.clip != null) r.Add(new Shot { Like = a, MinVol = a.volume, MaxVol = a.volume, MinPitch = a.pitch, MaxPitch = a.pitch });
@@ -210,9 +272,9 @@ namespace HuginWhispers
             f = new FileClip();
             Files[file] = f;
             string path = Locate(file);
-            if (path == null) { f.Done = true; LogOnce("file " + file, "no file «" + file + "» (assets/story/sounds, plugins/sounds, config/RavenWatch/story/sounds)"); return f; }
+            if (path == null) { f.Done = true; LogOnce("file " + file, "no file «" + file + "» (assets/story/sounds, plugins/sounds)"); return f; }
             string uri;
-            try { uri = new Uri(path).AbsoluteUri; }
+            try { uri = new Uri(path).AbsoluteUri; longOne |= new FileInfo(path).Length > LongFile; } // (a big file stays compressed, whoever asked first)
             catch (Exception e) { f.Done = true; LogOnce("file " + file, "«" + path + "»: " + e.Message); return f; }
             Audio.Host(Read(f, path, uri, longOne));
             return f;
@@ -227,7 +289,6 @@ namespace HuginWhispers
 #endif
             string dll = Path.GetDirectoryName(typeof(AudioBank).Assembly.Location);
             if (!string.IsNullOrEmpty(dll)) where.Add(Path.Combine(dll, Kind));
-            where.Add(Path.Combine(Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "story"), Kind));
             foreach (string w in where) { string p = Path.Combine(w, file); if (File.Exists(p)) return p; }
             return null;
         }
@@ -262,6 +323,133 @@ namespace HuginWhispers
             foreach (FileClip f in Files.Values) if (f.Clip != null) UnityEngine.Object.Destroy(f.Clip);
             Files.Clear();
             Shots.Clear();
+            Missing.Clear();
+        }
+
+        // ---------------------------------------------------------------- the author's window
+
+        private static readonly string[] Reserved = { "off", "game", "stop", "all" };
+
+        private static string Folder()
+        {
+#if RAVEN_NPC
+            if (StoryFiles.Source != null) return Path.Combine(StoryFiles.Source, Kind);
+#endif
+            return null;
+        }
+
+        internal static bool CanWrite { get { return Folder() != null; } }
+        internal static string WhereFiles { get { return Folder(); } }
+
+        // the audio files there are, as «file:x.ogg». Asked when the list is made: it looks at the disk
+        internal static List<string> FilesThere()
+        {
+            List<string> r = new List<string>();
+            List<string> where = new List<string>();
+            if (Folder() != null) where.Add(Folder());
+            string dll = Path.GetDirectoryName(typeof(AudioBank).Assembly.Location);
+            if (!string.IsNullOrEmpty(dll)) where.Add(Path.Combine(dll, Kind));
+            foreach (string w in where)
+            {
+                if (!Directory.Exists(w)) continue;
+                foreach (string p in Directory.GetFiles(w))
+                {
+                    string x = Path.GetExtension(p).ToLowerInvariant(), t = "file:" + Path.GetFileName(p);
+                    if ((x == ".ogg" || x == ".wav" || x == ".mp3") && !r.Contains(t)) r.Add(t);
+                }
+            }
+            return r;
+        }
+
+        // null: written. Otherwise why not
+        internal static string Save(string name, Entry e)
+        {
+            string why = NameWhy(name);
+            if (why != null) return why;
+            if (e.Tokens.Length == 0) return "Нема що грати: напиши хоч один звук.";
+            foreach (string t in e.Tokens) if (t.IndexOf('=') >= 0 || t.IndexOf('#') >= 0) return "«" + t + "» не може бути звуком.";
+            return Rewrite(name, name + " " + e.Words());
+        }
+
+        internal static string Remove(string name) { return Rewrite(name, null); }
+
+        private static string NameWhy(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "Дай звуку назву.";
+            foreach (char c in name) if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) return "У назві лише латинські літери, цифри й «_».";
+            if (name.StartsWith("sfx_", StringComparison.OrdinalIgnoreCase)) return "Назва на «sfx_» затулила б звук гри: дай іншу.";
+            if (Array.IndexOf(Reserved, name) >= 0) return "«" + name + "» — слово сцени, дай іншу назву.";
+            return null;
+        }
+
+        // a line changed where it stands, its note kept; a new one at the end of story.txt; line null: taken out
+        private static string Rewrite(string name, string line)
+        {
+            string dir = Folder();
+            if (dir == null || !Directory.Exists(dir)) return "Писати можна лише там, де лежить тека assets/story/sounds.";
+            try
+            {
+                string[] files = Directory.GetFiles(dir, "*.txt");
+                Array.Sort(files, StringComparer.Ordinal);
+                foreach (string f in files)
+                {
+                    string text = File.ReadAllText(f, Encoding.UTF8);
+                    string nl = text.Contains("\r\n") ? "\r\n" : "\n";
+                    List<string> ls = new List<string>(text.Replace("\r", "").Split('\n'));
+                    for (int i = 0; i < ls.Count; i++)
+                    {
+                        string bare = StoryWords(ls[i]);
+                        if (bare.Length == 0 || bare[0] == '#' || bare.Split(new[] { ' ', '\t' }, 2)[0] != name) continue;
+                        if (line == null) ls.RemoveAt(i);
+                        else { int note = ls[i].IndexOf(" #", StringComparison.Ordinal); ls[i] = note >= 0 ? line + "  " + ls[i].Substring(note).TrimStart() : line; }
+                        File.WriteAllText(f, string.Join(nl, ls.ToArray()), new UTF8Encoding(false));
+                        Reread();
+                        return null;
+                    }
+                }
+                if (line == null) return "У файлах нема «" + name + "».";
+                string target = Path.Combine(dir, "story.txt");
+                string had = File.Exists(target) ? File.ReadAllText(target, Encoding.UTF8) : "";
+                string eol = had.Contains("\r\n") ? "\r\n" : "\n";
+                File.WriteAllText(target, had + (had.Length > 0 && !had.EndsWith("\n", StringComparison.Ordinal) ? eol : "") + line + eol, new UTF8Encoding(false));
+                Reread();
+                return null;
+            }
+            catch (Exception e) { LogOnce("write " + e.Message, "the sound files could not be written: " + e.Message); return "Не записав: " + e.Message; }
+        }
+
+        private static string StoryWords(string raw)
+        {
+#if RAVEN_NPC
+            return StoryFiles.Bare(raw);
+#else
+            return raw.Trim();
+#endif
+        }
+
+        private static string GameListFile()
+        {
+            string dir = Folder();
+            return dir != null ? Path.GetFullPath(Path.Combine(dir, "../../../tools/game_sounds.txt")) : null; // (assets/story/sounds → tools)
+        }
+
+        internal static bool GameListThere { get { string f = GameListFile(); return f == null || File.Exists(f); } }
+
+        // what the game has, for the build's check of the names (tools/game_sounds.txt, written on the author's machine: by the sound
+        // tab's list, or when the character first appears if there is none yet)
+        internal static void WriteGameList(IEnumerable<string> sounds, IEnumerable<string> tracks)
+        {
+            string file = GameListFile();
+            if (file == null || !Directory.Exists(Path.GetDirectoryName(file))) return;
+            try
+            {
+                List<string> ls = new List<string>();
+                foreach (string s in sounds) ls.Add("sfx " + s);
+                foreach (string s in tracks) ls.Add("track " + s);
+                ls.Sort(StringComparer.Ordinal);
+                File.WriteAllText(file, "# written by the game (the sound tab): what storycheck holds the sound names to\n" + string.Join("\n", ls.ToArray()) + "\n", new UTF8Encoding(false));
+            }
+            catch (Exception e) { LogOnce("list " + e.Message, "tools/game_sounds.txt could not be written: " + e.Message); }
         }
     }
 }

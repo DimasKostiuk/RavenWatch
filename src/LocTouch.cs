@@ -11,7 +11,7 @@ namespace HuginWhispers
     //   · the story's event «use <place>.<name>» — a quest's «on:» goes on from it (the shield of Munin's place starts its scene);
     //   · «elsedo: <name> <actions>» — when no stage of yours waits for this very touch (the letter read outside the prologue's moment:
     //     heartlearn at once — there is no scene to wait for).
-    // Out of those conditions it is just a piece again. An item stand keeps its own look and rules: BlueprintStandPatch asks this first.
+    // Out of those conditions it is just a piece again. An item stand keeps its own look and rules: LocInteractPatch (E) and the stand's hover patches ask this first.
     internal sealed class LocTouch : MonoBehaviour, Hoverable, Interactable
     {
         internal string Place = "", Name = "";

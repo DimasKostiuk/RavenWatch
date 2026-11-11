@@ -76,6 +76,11 @@ namespace HuginWhispers
         private static float _heldPutAt = -1f;
         internal static int Helds; // (walks given up, ever: the studio's scene check counts them)
         internal static Vector3 Target { get { return _to; } } // (where the walk on now ends; its way there — the scene's set-up puts him there at once)
+        // what the last walk came to, in words with numbers («walked 4.2 m in 3.1 s; stands 0.04 m from the spot, turned off by 1 deg», «HELD …»): the
+        // scene's step says it as it ends (StoryScenes.EndStep); null while it goes on
+        internal static string Outcome { get; private set; }
+        private static Vector3 _start; private static float _began;
+        private static string Went(Player p) { return (_run ? "ran " : _back ? "stepped back " : "walked ") + Utils.DistanceXZ(_start, p.transform.position).ToString("0.0") + " m in " + (Time.time - _began).ToString("0.0") + " s"; }
         internal static Vector3 Way { get { return _way; } }
 
         // a note when it cannot, else null. front: on the side the thing's face looks to, turned as it is turned, so what
@@ -106,7 +111,8 @@ namespace HuginWhispers
             }
             Vector3 left = _to - p.transform.position; left.y = 0f;
             _softTurn = false; _haltAt = -1f; _back = false; _contact = before; _heldPutAt = -1f;
-            if (!keep && StoryScreen.Dark && left.magnitude > Shuffle) { Put(p, _to, _way); Story.Log("player go: put on the spot under the black, " + left.magnitude.ToString("0.0") + " m off"); return null; } // (nobody sees a walk in the black)
+            Outcome = null; _start = p.transform.position; _began = Time.time;
+            if (!keep && StoryScreen.Dark && left.magnitude > Shuffle) { Put(p, _to, _way); Outcome = "put on the spot under the black, " + left.magnitude.ToString("0.0") + " m at once"; Story.Log("player go: " + Outcome); return null; } // (nobody sees a walk in the black)
             _shuffle = !keep && !soft && left.magnitude <= Shuffle; // (a few cm off: no step to take)
             float fade = keep || _shuffle ? 0f : LetFeetGo(p); // (a clip holding his feet goes first: walked at once, they slide)
             _gainAt = Time.time + fade + BlockedFor * 1.5f; _gainFar = left.magnitude;
@@ -161,6 +167,7 @@ namespace HuginWhispers
             m = Mathf.Clamp(m, 0.2f, 5f);
             float fade = LetFeetGo(p);
             _way = f; _from = p.transform.position; _to = _from - f * m;
+            Outcome = null; _start = p.transform.position; _began = Time.time;
             _softTurn = _shuffle = _keep = _soft = _run = false; _haltAt = -1f; _back = true; _slow = true; _contact = false; _heldPutAt = -1f; // (nothing left of a «before» walk: held behind him, he would be put back there under a black)
             _goAt = Time.time + fade;
             _gainAt = _goAt + BlockedFor * 1.5f; _gainFar = m;
@@ -202,6 +209,7 @@ namespace HuginWhispers
 
         private static void Done(Player p)
         {
+            if (Outcome == null && p != null && !_softTurn) Outcome = Went(p) + "; ends " + Left(p).ToString("0.00") + " m off the spot" + (Time.time >= _until ? " (its time ran out)" : ""); // (every other end says its own first)
             _settleAt = -1f; _heldPutAt = -1f;
             On = false; _shuffle = false; _back = false;
             if (p == null) return;
@@ -303,8 +311,9 @@ namespace HuginWhispers
             if ((k >= 1f && off <= Turned) || Time.time >= _until || p.IsDead())
             {
                 _shuffle = false;
-                Done(p);
                 Vector3 d = _to - p.transform.position; d.y = 0f;
+                if (!_softTurn) Outcome = "eased onto the spot (" + d.magnitude.ToString("0.00") + " m off, turned off by " + off.ToString("0") + " deg)";
+                Done(p);
                 Story.Log("player go: eased onto the spot (" + d.magnitude.ToString("0.00") + " m off, turned off by " + off.ToString("0") + " deg)");
             }
         }
@@ -321,6 +330,7 @@ namespace HuginWhispers
                 _heldPutAt = -1f;
                 Vector3 left = _to - p.transform.position; left.y = 0f;
                 Put(p, _to, _way);
+                Outcome += "; put on the spot under a moment of black, " + left.magnitude.ToString("0.0") + " m";
                 Story.Log("player go: put on the spot under the black, " + left.magnitude.ToString("0.0") + " m off");
                 StoryScreen.Fade(false, HeldBlack);
                 Done(p);
@@ -340,6 +350,7 @@ namespace HuginWhispers
                 if (_gainFar - far < BlockedGain)
                 {
                     Helds++;
+                    Outcome = Went(p) + "; HELD, no way gained, " + far.ToString("0.00") + " m short";
                     Story.Log("player go: HELD, no way gained in " + BlockedFor.ToString("0.00") + " s, " + far.ToString("0.00") + " m short: " + (_contact ? "put there under a moment of black" : "stops here, the scene goes on"));
                     if (_contact) { StoryScreen.Fade(true, HeldBlack); _heldPutAt = Time.time + HeldBlack; return; }
                     Done(p);
@@ -356,7 +367,7 @@ namespace HuginWhispers
             float off = Vector3.Angle(now, _way);
             if ((_soft ? far <= SoftNear : far <= Near && off <= Turned) || Time.time >= _until || p.IsDead())
             {
-                if (!p.IsDead()) { Settle(p, "player go: stands " + far.ToString("0.00") + " m from the spot, turned off by " + off.ToString("0") + " deg — his feet settle"); return; }
+                if (!p.IsDead()) { Outcome = Went(p) + "; stands " + far.ToString("0.00") + " m from the spot, turned off by " + off.ToString("0") + " deg" + (Time.time >= _until ? " (its time ran out)" : ""); Settle(p, "player go: stands " + far.ToString("0.00") + " m from the spot, turned off by " + off.ToString("0") + " deg — his feet settle"); return; }
                 Done(p);
                 Story.Log("player go: stands " + far.ToString("0.00") + " m from the spot, turned off by " + off.ToString("0") + " deg" + (!_soft && (far > 0.1f || off > 10f) ? " — A CLIP THAT FOLLOWS WILL MISS" : ""));
                 return;

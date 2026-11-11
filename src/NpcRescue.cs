@@ -9,7 +9,7 @@ namespace HuginWhispers
 {
     // People in need (npc-plan.md, «порятунок»): how settlers come — not the story's. Each named «Серце оселі» hears, once
     // in five to seven game days and only when its last one is over, of someone in trouble out in the lands already
-    // reached; its board tells what and where and how long is left (two days), and whoever reads it gets a mark of its
+    // reached; its board tells what and where and how long is left (LastsDays: three days), and whoever reads it gets a mark of its
     // own colour on the map. Out there a settler (NpcSettlers):
     //   surrounded  foes round it (a few of its land's); slain, it is safe
     //   captive     a camp of them round it, it sits bound; slain, and untied by a word (its talk)
@@ -31,7 +31,7 @@ namespace HuginWhispers
     {
         internal const string Whose = "rescue"; // (its plans on a person's Scene layer: the story's own take it over — NpcMind.May)
         internal const int Cap = 20;
-        private const float DaysMin = 5f, DaysMax = 7f, LastsDays = 3f, Tick = 20f, NearMin = 250f, NearMax = 900f;
+        private const float DaysMin = 5f, DaysMax = 7f, LastsDays = 3f, TickIdle = 1800f, TickBusy = 60f, NearMin = 250f, NearMax = 900f; // (a look: every half hour while none goes on — a new one waits days anyway; every minute while one does — its time, its end)
         internal static readonly int KNext = "RavenWatch_rescueNext".GetStableHashCode();   // on a heart: long, world seconds of the next one
         internal static readonly int KNpc = "RavenWatch_rescueNpc".GetStableHashCode();    // on a heart: string ref of its person in need
         internal static readonly int KInfo = "RavenWatch_rescueInfo".GetStableHashCode();  // on a heart: "kind|x|z|until" (its board)
@@ -106,12 +106,27 @@ namespace HuginWhispers
         internal static void Born(ZDO heart, bool first)
         {
             heart.Set(KNext, first ? 1L : (long)Now + (long)(Day * UnityEngine.Random.Range(DaysMin, DaysMax)));
+            if (!first) return;
+            if (ZNet.instance != null && ZNet.instance.IsServer()) _next = Mathf.Min(_next, Time.time + 5f); // (the first one comes as soon as it is named — its board says so at once — not half an hour later)
+            else if (ZRoutedRpc.instance != null) ZRoutedRpc.instance.InvokeRoutedRPC(Plugin.ServerPeerId(), RpcSoon);
+        }
+
+        // the server told by the game that built a world's first heart: its look now (registered by the server's own tick)
+        private const string RpcSoon = "RavenWatch_RescueSoon";
+        private static ZRoutedRpc _rpcOn;
+        private static void Rpcs()
+        {
+            if (ZRoutedRpc.instance == null || _rpcOn == ZRoutedRpc.instance) return;
+            _rpcOn = ZRoutedRpc.instance;
+            ZRoutedRpc.instance.Register(RpcSoon, sender => { _next = Mathf.Min(_next, Time.time + 5f); });
         }
 
         internal static void ServerTick()
         {
-            if (ZNet.instance == null || !ZNet.instance.IsServer() || ZDOMan.instance == null || Time.time < _next || Perches.Hearts.Count == 0) return;
-            _next = Time.time + Tick;
+            if (ZNet.instance == null || !ZNet.instance.IsServer() || ZDOMan.instance == null) return;
+            Rpcs();
+            if (Time.time < _next || Perches.Hearts.Count == 0) return;
+            _next = Time.time + TickIdle;
             try
             {
                 long now = (long)Now;
@@ -125,6 +140,7 @@ namespace HuginWhispers
                         ZDOID npc = NpcKit.GetRef(h, KNpc);
                         if (!npc.IsNone())
                         {
+                            _next = Mathf.Min(_next, Time.time + TickBusy); // (one goes on: looked at again soon)
                             ZDO n = ZDOMan.instance.GetZDO(npc);
                             if (n == null || n.GetLong(NpcTalk.KHired, 0L) != 0L) { End(h, n, false, now); continue; } // (gone, or hired: over)
                             if (n.GetBool(NpcRescueHits.KGone, false) && now > n.GetLong(KUntil, 0L)) { End(h, n, true, now); continue; } // (saved, sent its way: gone)
@@ -144,7 +160,7 @@ namespace HuginWhispers
                         if (now < h.GetLong(KNext, 0L)) continue;
                         if (settlers < 0) settlers = Settlers();
                         if (settlers >= Cap) continue;
-                        if (Start(h, now)) settlers++;
+                        if (Start(h, now)) { settlers++; _next = Mathf.Min(_next, Time.time + TickBusy); } // (one begun: looked at again soon)
                     }
                 }
             }
@@ -156,7 +172,7 @@ namespace HuginWhispers
         {
             long owner = n.GetOwner();
             if (owner == 0L || owner == ZDOMan.GetSessionID()) { Keep(n, stage, until); return; }
-            ZRoutedRpc.instance.InvokeRoutedRPC(owner, n.m_uid, NpcActor.RpcAct, "rescuetime " + stage + " " + until); // (not there yet: asked again at the next pass)
+            NpcActor.ActTo(n, "rescuetime " + stage + " " + until); // (its body need not be loaded here, the server's pass: not there yet — asked again at the next pass)
         }
 
         internal static void Keep(ZDO n, int stage, long until)

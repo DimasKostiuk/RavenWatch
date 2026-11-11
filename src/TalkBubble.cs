@@ -201,10 +201,10 @@ namespace HuginWhispers
             RectTransform pr = Child(parent, "pic");
             pr.anchorMin = pr.anchorMax = new Vector2(0f, 0.5f); pr.pivot = new Vector2(0f, 0.5f);
             pr.anchoredPosition = new Vector2(x, 0f); pr.sizeDelta = new Vector2(size, size);
-            Image ring = pr.gameObject.AddComponent<Image>(); ring.sprite = SeneaLShoulders.Disc(); ring.color = c; ring.raycastTarget = false;
+            Image ring = pr.gameObject.AddComponent<Image>(); ring.sprite = BookArt.Circle; ring.color = c; ring.raycastTarget = false;
             RectTransform cut = Child(pr, "cut");
             Stretch(cut, 1.5f, 1.5f, -1.5f, -1.5f);
-            Image ci = cut.gameObject.AddComponent<Image>(); ci.sprite = SeneaLShoulders.Disc(); ci.color = new Color(0.03f, 0.035f, 0.045f, 1f); ci.raycastTarget = false;
+            Image ci = cut.gameObject.AddComponent<Image>(); ci.sprite = BookArt.Circle; ci.color = new Color(0.03f, 0.035f, 0.045f, 1f); ci.raycastTarget = false;
             cut.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             RectTransform face = Child(cut, "face");
             Stretch(face, 2f, 2f, -2f, -2f);
@@ -245,7 +245,7 @@ namespace HuginWhispers
             Row r = Band(munin, "row", 0.34f);
             float tw = Width - PadL - Pic - Gap - PadR;
             RectTransform tr = Child(r.Content, "text");
-            TextMeshProUGUI body = SpeechCard.NewText(tr.gameObject, RavenSpeech.Font(false));
+            TextMeshProUGUI body = SpeechCard.NewText(tr.gameObject, RavenSpeech.Font());
             body.fontSize = 18f; body.richText = true; body.textWrappingMode = TextWrappingModes.Normal; body.raycastTarget = false;
             body.alignment = TextAlignmentOptions.MidlineLeft;
             body.color = new Color(0.90f, 0.91f, 0.93f, 1f);
@@ -278,7 +278,7 @@ namespace HuginWhispers
                 RectTransform d = Child(r.Content, "dot" + i);
                 d.anchorMin = d.anchorMax = new Vector2(0f, 0.5f); d.pivot = new Vector2(0.5f, 0.5f);
                 d.anchoredPosition = new Vector2(PadL + Pic + Gap + 4f + i * 11f, 0f); d.sizeDelta = new Vector2(6f, 6f);
-                dots[i] = d.gameObject.AddComponent<Image>(); dots[i].sprite = SeneaLShoulders.Disc(); dots[i].color = c; dots[i].raycastTarget = false;
+                dots[i] = d.gameObject.AddComponent<Image>(); dots[i].sprite = BookArt.Circle; dots[i].color = c; dots[i].raycastTarget = false;
             }
             r.Dot0 = dots[0]; r.Dot1 = dots[1]; r.Dot2 = dots[2];
             return r;

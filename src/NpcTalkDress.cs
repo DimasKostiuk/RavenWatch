@@ -22,7 +22,7 @@ namespace HuginWhispers
             new KeyValuePair<ItemDrop.ItemData.ItemType, string>(ItemDrop.ItemData.ItemType.Shoulder, Lang.K("Плащ")),
         };
 
-        private static string ItemWord(ItemDrop.ItemData it) { return Localization.instance != null ? Localization.instance.Localize(it.m_shared.m_name) : it.m_shared.m_name; }
+        internal static string ItemWord(ItemDrop.ItemData it) { return Localization.instance != null ? Localization.instance.Localize(it.m_shared.m_name) : it.m_shared.m_name; }
 
         private static ItemDrop.ItemData InCells(NpcGear g, System.Func<ItemDrop.ItemData, bool> which)
         {
@@ -63,18 +63,21 @@ namespace HuginWhispers
             return false;
         }
 
-        // a list of rows, each with what it does: its words, then the window
-        private static void Rows(Player p, string says, List<KeyValuePair<string, System.Action>> rows)
+        // a list of rows, each with what it does: its words, then the window (a made place's own: NpcTalk.Places — your clothes, its neighbours, your gifts)
+        private static void Rows(Player p, string says, List<KeyValuePair<string, System.Action>> rows) { Rows(p, RavenBook.Says(says), rows, null); }
+
+        // …with its lines one by one (another person's among them: NpcTalkAbout) and your words over them (you: the row you picked)
+        private static void Rows(Player p, List<RavenBook.TalkSay> lines, List<KeyValuePair<string, System.Action>> rows, string you)
         {
-            List<string> words = new List<string>();
-            foreach (KeyValuePair<string, System.Action> r in rows) words.Add(r.Key);
+            List<RavenBook.TalkRow> words = new List<RavenBook.TalkRow>();
+            foreach (KeyValuePair<string, System.Action> r in rows) words.Add(new RavenBook.TalkRow { Text = r.Key });
             NpcActor who = With;
-            RavenBook.ShowTalk(who.Name, says, words, i =>
+            RavenBook.ShowTalk(who.Name, lines, words, i =>
             {
                 if (With != who || i < 0 || i >= rows.Count) { Close(); return; }
                 IdleStir();
                 rows[i].Value();
-            }, Close);
+            }, Close, _rel, null, false, you); // (the margins of the talk it is in: NpcTalk.Show)
         }
 
         // ---------------------------------------------------------------- its clothes

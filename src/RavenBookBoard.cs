@@ -43,6 +43,8 @@ namespace HuginWhispers
 
         private static Board _board;
         private static RectTransform _boardTabs, _boardBody;
+        private static LayoutElement _boardH; private static RectMask2D _boardMask; private static CanvasGroup _boardFade; private static BoardEase _boardEase; // (the open page's window: its height eased from one tab to the next, the user 2026-11-08)
+        private const float BoardEaseFor = 0.24f;
         private static TMP_Text _boardCount;
 
         internal static void ShowBoard(Board b)
@@ -54,8 +56,10 @@ namespace HuginWhispers
             _sheetRoot.GetComponent<Canvas>().pixelPerfect = true; // (it stands still: its thin lines on whole pixels, all as thick as each other)
             SheetKeys keys = _sheetRoot.AddComponent<SheetKeys>();
             keys.Stay = b.Stay;
+            _boardEase = _sheetRoot.AddComponent<BoardEase>(); _boardEase.enabled = false;
             RectTransform all = Rect("Board", _sheetRoot.transform);
             _sheetScroll = all;
+            _sheetEdge = all;
             all.anchorMin = all.anchorMax = all.pivot = new Vector2(0.5f, 0.5f);
             all.anchoredPosition = new Vector2(0f, -BoardDown); // (a little under the middle: its chains above it)
             VBox(all, 0f, TextAnchor.UpperCenter, 0, 0, 0, 0).childForceExpandWidth = false;
@@ -74,7 +78,6 @@ namespace HuginWhispers
             BoardHead(all, b);
             BoardDraw();
             SheetBox();
-            SheetFit();
             if (!TalkInstant) { CanvasGroup g = all.gameObject.AddComponent<CanvasGroup>(); g.alpha = 0f; keys.Fade = g; }
         }
 
@@ -154,10 +157,17 @@ namespace HuginWhispers
             }
             RectTransform right = Rect("Right", grid); VBox(right, 22f, TextAnchor.UpperLeft, 0, 0, 0, 0); Fixed(right.gameObject, BoardRightW, -1f);
             RectTransform main = BoardPaper(right, 3, true);
-            _boardTabs = Rect("Tabs", main); HBox(_boardTabs, 4f, TextAnchor.LowerLeft, 0, 0, 4, 0);
-            RectTransform rule = Rect("Rule", main); Fixed(rule.gameObject, -1f, 3f);
+            RectTransform band = Rect("TabBand", main); VBox(band, 0f, TextAnchor.UpperLeft, 0, 0, 0, 0); // (the tabs stand on their rule: the page's own gap not between them — the user 2026-11-08, as the card's TabBand)
+            _boardTabs = Rect("Tabs", band); HBox(_boardTabs, 4f, TextAnchor.LowerLeft, 0, 0, 4, 0);
+            RectTransform rule = Rect("Rule", band); Fixed(rule.gameObject, -1f, 3f);
             Image rli = rule.gameObject.AddComponent<Image>(); rli.color = BRule; rli.raycastTarget = false;
-            _boardBody = Rect("Page", main); VBox(_boardBody, 4f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            RectTransform clip = Rect("PageWindow", main); // (the page hangs in it at its full height: only the window's height moves, no row is ever squeezed)
+            _boardH = clip.gameObject.AddComponent<LayoutElement>(); _boardH.minHeight = 0f; _boardH.preferredHeight = -1f; _boardH.flexibleHeight = 0f;
+            _boardMask = clip.gameObject.AddComponent<RectMask2D>(); _boardMask.enabled = false;
+            _boardFade = clip.gameObject.AddComponent<CanvasGroup>();
+            _boardBody = Rect("Page", clip); Stretch(_boardBody, new Vector2(0f, 1f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero); _boardBody.pivot = new Vector2(0.5f, 1f);
+            VBox(_boardBody, 4f, TextAnchor.UpperLeft, 0, 0, 0, 0);
+            _boardBody.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             BoardActs(right, b);
         }
 
@@ -165,14 +175,14 @@ namespace HuginWhispers
         {
             RectTransform line = Rect("Top", body); HBox(line, 0f, TextAnchor.UpperLeft, 0, 0, 0, 0);
             RectTransform plate = Rect("Count", line);
-            Image pi = plate.gameObject.AddComponent<Image>(); pi.sprite = BookArt.RoundFine(2f); pi.type = Image.Type.Sliced; pi.pixelsPerUnitMultiplier = BookArt.Fine; pi.color = C("#ecdfbc"); pi.raycastTarget = false;
+            Image pi = plate.gameObject.AddComponent<Image>(); pi.sprite = BookArt.RoundFine(2f); pi.type = Image.Type.Sliced; pi.color = C("#ecdfbc"); pi.raycastTarget = false;
             UnityEngine.UI.Shadow sh = plate.gameObject.AddComponent<UnityEngine.UI.Shadow>(); sh.effectColor = new Color(0f, 0f, 0f, 0.45f); sh.effectDistance = new Vector2(0f, -4f);
             HBox(plate, 16f, TextAnchor.MiddleLeft, 18, 18, 8, 9);
             _boardCount = T(plate, b.CountNow(), 19f, PInk, F.Body, TextAlignmentOptions.MidlineLeft); _boardCount.textWrappingMode = TextWrappingModes.NoWrap;
             RectTransform bar = Rect("Bar", plate); Fixed(bar.gameObject, 1f, 24f);
             Image bi = bar.gameObject.AddComponent<Image>(); bi.color = A(C("#5a3c1e"), 0.3f); bi.raycastTarget = false;
             RectTransform mood = Rect("Mood", plate); HBox(mood, 9f, TextAnchor.MiddleLeft, 0, 0, 0, 0);
-            Image fill = mood.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 1f, 1f, 0f);
+            Image fill = mood.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = new Color(1f, 1f, 1f, 0f);
             BoardDot(mood, b.MoodTone, 11f);
             TMP_Text m = T(mood, b.Mood.ToUpperInvariant(), 20f, PInk, F.Head, TextAlignmentOptions.MidlineLeft); m.characterSpacing = 10f; m.textWrappingMode = TextWrappingModes.NoWrap;
             SheetHook(mood.gameObject, Lang.T("ЧОМУ"), b.MoodTip, null, new Graphic[] { m }, PInk, null, fill, BRowLit);
@@ -182,7 +192,7 @@ namespace HuginWhispers
         private static RectTransform BoardPaper(RectTransform to, int look, bool twoPins)
         {
             RectTransform p = Rect("Note", to);
-            Image i = p.gameObject.AddComponent<Image>(); i.sprite = BookArt.TornFill(look); i.type = Image.Type.Tiled; i.pixelsPerUnitMultiplier = BookArt.Fine; i.color = BPaper; i.raycastTarget = false;
+            Image i = p.gameObject.AddComponent<Image>(); i.sprite = BookArt.TornFill(look); i.type = Image.Type.Tiled; i.color = BPaper; i.raycastTarget = false;
             UnityEngine.UI.Shadow sh = p.gameObject.AddComponent<UnityEngine.UI.Shadow>(); sh.effectColor = new Color(0f, 0f, 0f, 0.5f); sh.effectDistance = new Vector2(0f, -6f);
             VBox(p, 7f, TextAnchor.UpperLeft, 18, 18, 20, 14);
             foreach (float x in twoPins ? new[] { 0f, 1f } : new[] { 0.5f })
@@ -212,7 +222,7 @@ namespace HuginWhispers
         {
             RectTransform row = Rect("Row", to);
             HBox(row, 10f, TextAnchor.UpperLeft, 0, 0, 4, 4);
-            Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 1f, 1f, 0f);
+            Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = new Color(1f, 1f, 1f, 0f);
             if (r.Label.Length > 0) { Room(T(row, r.Label, 14f, BLabel, F.Italic, TextAlignmentOptions.TopLeft), 92f, 10f); }
             if (r.Dot != BoardNoDot) { RectTransform at = Rect("At", row); Fixed(at.gameObject, 13f, 22f); HBox(at, 0f, TextAnchor.MiddleCenter, 0, 0, 0, 0); BoardDot(at, r.Dot, 10f); }
             RectTransform words = Rect("Words", row); VBox(words, 1f, TextAnchor.UpperLeft, 0, 0, 0, 0); LayoutElement wl = words.gameObject.AddComponent<LayoutElement>(); wl.flexibleWidth = 1f; wl.minWidth = 0f; wl.preferredWidth = 0f;
@@ -237,7 +247,7 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- its tabs and the open page (a click on a tab: only this)
-        private static void BoardDraw()
+        private static void BoardDraw(bool fade = false)
         {
             Board b = _board;
             if (b == null || _boardTabs == null) return;
@@ -258,10 +268,45 @@ namespace HuginWhispers
                 if (page.People != null) BoardPeople(page.People);
                 foreach (BoardGroup g in page.Groups) BoardGroupRows(_boardBody, g);
             }
-            if (_sheetScroll != null && _sheetTip != null) SheetFit();
+            BoardSettle(fade);
         }
 
-        // new people known while it is open (the server's list came): how many, and this page anew
+        // the page drawn: the window goes to its height, the board to its scale, from where they are (a click in the middle of an easing goes on from there)
+        private static void BoardSettle(bool fade)
+        {
+            if (_sheetScroll == null || _boardH == null) return;
+            float was = _boardH.preferredHeight, scaleWas = _sheetScroll.localScale.x;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_sheetScroll); // (the page's width: its words wrap by it)
+            float to = LayoutUtility.GetPreferredHeight(_boardBody);
+            _boardH.preferredHeight = to;
+            SheetFit(); // (the scale it will end at)
+            float scaleTo = _sheetScroll.localScale.x;
+            if (was < 0f || TalkInstant || _boardEase == null || (!fade && !_boardEase.enabled && Mathf.Abs(to - was) < 0.5f)) return;
+            _boardEase.Go(was, to, scaleWas, scaleTo, fade);
+        }
+
+        internal sealed class BoardEase : MonoBehaviour
+        {
+            private float _from, _to, _s0, _s1, _at; private bool _fade;
+            internal void Go(float from, float to, float s0, float s1, bool fade) { _from = from; _to = to; _s0 = s0; _s1 = s1; _fade = fade; _at = Time.unscaledTime; _boardMask.enabled = true; enabled = true; Update(); }
+            private void Update()
+            {
+                if (_boardH == null || _sheetScroll == null) { enabled = false; return; }
+                float k = Mathf.Clamp01((Time.unscaledTime - _at) / BoardEaseFor), e = k * k * (3f - 2f * k);
+                _boardH.preferredHeight = Mathf.Lerp(_from, _to, e);
+                _sheetScroll.localScale = Vector3.one * Mathf.Lerp(_s0, _s1, e);
+                if (_fade && _boardFade != null) _boardFade.alpha = e;
+                LayoutRebuilder.MarkLayoutForRebuild(_sheetScroll);
+                if (k < 1f) return;
+                if (_boardMask != null) _boardMask.enabled = false;
+                if (_boardFade != null) _boardFade.alpha = 1f;
+                enabled = false;
+            }
+        }
+
+        internal static bool BoardOpen(Board b) { return b != null && _board == b && SheetOpen; }
+
+        // new people known while it is open (the server's list came): how many, and this page anew (people where it had none: NpcBoard builds it anew)
         internal static void BoardRefresh(Board b)
         {
             if (_board != b || !SheetOpen) return;
@@ -273,14 +318,14 @@ namespace HuginWhispers
         {
             bool on = i == b.Open;
             RectTransform tab = Rect("Tab", _boardTabs);
-            Image bg = tab.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(5f, true); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine; bg.color = on ? BTabOn : BTabOff;
+            Image bg = tab.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(5f, true); bg.type = Image.Type.Sliced; bg.color = on ? BTabOn : BTabOff;
             HBox(tab, 0f, TextAnchor.MiddleCenter, 0, 0, 0, 0);
             Color ink = on ? BTabOnInk : BTabOffInk;
             TMP_Text t = T(tab, b.Tabs[i].Title, 14f, ink, F.Head, TextAlignmentOptions.Center); t.characterSpacing = 14f; t.textWrappingMode = TextWrappingModes.NoWrap;
             Fixed(tab.gameObject, t.GetPreferredValues(t.text).x + 24f, on ? 33f : 29f);
             if (on) return;
             int at = i;
-            Clickable(tab.gameObject, () => { if (_board != null) { _board.Open = at; BoardDraw(); } });
+            Clickable(tab.gameObject, () => { if (_board != null) { _board.Open = at; BoardDraw(true); } });
             Hover(tab.gameObject, new Graphic[] { t }, ink, null);
         }
 
@@ -299,7 +344,7 @@ namespace HuginWhispers
             foreach (BoardPerson p in people)
             {
                 RectTransform row = Rect("Person", _boardBody); HBox(row, CGap, TextAnchor.MiddleLeft, 0, 0, 3, 3);
-                Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 1f, 1f, 0f);
+                Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = new Color(1f, 1f, 1f, 0f);
                 Color ink = p.Far ? BFar : PInk;
                 TMP_Text n = T(row, p.Name, 18f, ink, F.Body, TextAlignmentOptions.MidlineLeft); Room(n, CName, 13f);
                 TMP_Text j = T(row, p.Job, 15f, p.JobBad ? C("#9a2216") : p.Far ? C("#8a7f6c") : BLabel, F.Italic, TextAlignmentOptions.MidlineLeft); Room(j, CJob, 11f);
@@ -322,12 +367,12 @@ namespace HuginWhispers
         private static void BoardActs(RectTransform right, Board b)
         {
             RectTransform box = Rect("Acts", right);
-            Image bg = box.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(4f); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine; bg.color = new Color(0.04f, 0.02f, 0.01f, 0.32f); bg.raycastTarget = false;
+            Image bg = box.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(4f); bg.type = Image.Type.Sliced; bg.color = new Color(0.04f, 0.02f, 0.01f, 0.32f); bg.raycastTarget = false;
             VBox(box, 12f, TextAnchor.UpperCenter, 0, 0, 14, 16).childForceExpandWidth = true;
             RectTransform state = Rect("State", box); HBox(state, 10f, TextAnchor.MiddleCenter, 0, 0, 0, 0);
             TMP_Text word = T(state, Lang.T("ЇДАЛЬНЯ:"), 14f, BGold, F.Head, TextAlignmentOptions.Midline); word.characterSpacing = 22f; word.textWrappingMode = TextWrappingModes.NoWrap;
             RectTransform st = Rect("Now", state); HBox(st, 8f, TextAnchor.MiddleLeft, 0, 0, 0, 0);
-            Image stFill = st.gameObject.AddComponent<Image>(); stFill.sprite = BookArt.RoundFine(3f); stFill.type = Image.Type.Sliced; stFill.pixelsPerUnitMultiplier = BookArt.Fine; stFill.color = new Color(1f, 1f, 1f, 0f);
+            Image stFill = st.gameObject.AddComponent<Image>(); stFill.sprite = BookArt.RoundFine(3f); stFill.type = Image.Type.Sliced; stFill.color = new Color(1f, 1f, 1f, 0f);
             RectTransform dot = Rect("Dot", st); Fixed(dot.gameObject, 9f, 9f); Image di = dot.gameObject.AddComponent<Image>(); di.sprite = BookArt.Circle; di.raycastTarget = false; di.color = b.Dining == 1 ? BDotGood : b.Dining == 2 ? BDotBad : BDotGrey;
             Color stInk = b.Dining == 2 ? C("#f08a6a") : TPaper;
             TMP_Text now = T(st, b.Dining == 1 ? Lang.T("обрано") : b.Dining == 2 ? Lang.T("стіл зник, обери інший") : Lang.T("не обрано"), 18f, stInk, F.Body, TextAlignmentOptions.MidlineLeft); now.textWrappingMode = TextWrappingModes.NoWrap;

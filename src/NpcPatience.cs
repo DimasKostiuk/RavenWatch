@@ -30,7 +30,7 @@ namespace HuginWhispers
         internal static float IrkFade = 10f, SpentFade = 8f, Heard = -15f; // points a game hour · what listening may give back at most (spent below zero)
         private const int MostSpent = 8;
 
-        internal sealed class Part { public string Label; public float Value; }
+        internal sealed class Part { public string Label; public float Value; public bool Yours; } // (Yours: of how it is with you — «до тебе»; else its own state now — «зараз»)
 
         private static float Hour { get { return (EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f) / 24f; } }
 
@@ -49,6 +49,9 @@ namespace HuginWhispers
         }
 
         internal static bool Angry(NpcActor a) { long by; return Irk(a, out by) >= Gate; }
+
+        // from how much of it you may ask a favour (a hand given between you — the thread «рука»: sooner)
+        internal static float AskFrom(NpcActor a, Player p) { return Easy - (p != null && NpcThreads.State(a, p.GetPlayerID(), "hand") > 0 ? NpcThreads.HandEases : 0f); }
 
         private static float IrkRate(NpcActor a)
         {
@@ -85,11 +88,18 @@ namespace HuginWhispers
         internal static float Of(NpcActor a, Player p) { return Of(a, p, null); }
 
         // its patience to this player now; parts: its reasons, each with its share (the bar's tip)
-        internal static float Of(NpcActor a, Player p, List<Part> parts)
+        internal static float Of(NpcActor a, Player p, List<Part> parts) { float toYou, now; return Of(a, p, parts, out toYou, out now); }
+
+        // its patience to you as two (the user 2026-11-08: whether it talks to you is about you, not about its bad day): toYou — 50 and only what is yours
+        // (its feeling to you, its anger that you caused, what you spent of it), the door's measure (NpcTalkDoor); the whole — that and its own state now
+        // (mood, tiredness, a feeling, busy, its ways, an anger someone else caused): how much it says (NpcTalk: «ще на думці», its favours)
+        internal static float Of(NpcActor a, Player p, List<Part> parts, out float toYou, out float now)
         {
+            toYou = now = 50f;
             if (a == null || p == null) return 50f;
-            float v = 50f;
-            Action<string, float> add = (label, d) => { if (Mathf.Abs(d) < 0.5f) return; v += d; if (parts != null) parts.Add(new Part { Label = a.Form(label), Value = d }); };
+            float v = 50f, you = 50f;
+            bool mine = false;
+            Action<string, float> add = (label, d) => { if (Mathf.Abs(d) < 0.5f) return; v += d; if (mine) you += d; if (parts != null) parts.Add(new Part { Label = a.Form(label), Value = d, Yours = mine }); };
             if (NpcResident.Is(a))
             {
                 float mood = NpcToil.Mood(a);
@@ -107,22 +117,29 @@ namespace HuginWhispers
                 else if (feel == NpcFeel.Awe) add(Lang.T("Вражений|Вражена"), 4f * strength);
             }
             NpcPersona pe = NpcPersona.Of(a);
-            if (a.Mind != null && a.Mind.NowLayer == NpcMind.Layer.Job) add(Lang.T("Ти відриваєш від роботи"), -8f * (0.5f + pe.Diligence));
-            else if (a.Mind != null && a.Mind.Now == NpcMind.Task.Eat) add(Lang.T("Ти заважаєш їсти"), -6f);
+            if (NpcMind.LayerNow(a) == NpcMind.Layer.Job) add(Lang.T("Ти відриваєш від роботи"), -8f * (0.5f + pe.Diligence));
+            else if (NpcMind.EatingOf(a)) add(Lang.T("Ти заважаєш їсти"), -6f); // (on any game: its talk runs on yours)
             if (NpcNews.RaidNear(a)) add(Lang.T("Набіг поруч"), -10f);
             add(pe.Chatty >= 0.5f ? Lang.T("Балакучий|Балакуча") : Lang.T("Небалакучий|Небалакуча"), (pe.Chatty - 0.5f) * 20f);
             if (NpcPhrases.Tones(a).Contains("бурч")) add(Lang.T("Бурчун|Бурчунка"), -6f);
             long me = p.GetPlayerID();
-            float att = NpcAttitude.Of(a, me);
-            add(att >= 0f ? Lang.T("Ставлення до тебе") : Lang.T("Тобі не довіряє"), att * 0.35f);
             long by;
             float irk = Irk(a, out by);
-            if (irk >= 0.5f) add(by == me ? Lang.T("Злий|Зла загалом (через тебе)") : by != 0L ? Lang.F("Злий|Зла загалом (через {0})", Who(by)) : Lang.T("Злий|Зла загалом"), by == me || by == 0L ? -irk : -irk * 0.5f);
+            if (irk >= 0.5f && by != me) add(by != 0L ? Lang.F("Злий|Зла загалом (через {0})", Who(by)) : Lang.T("Злий|Зла загалом"), by == 0L ? -irk : -irk * 0.5f); // (an anger you did not cause: its day, not you)
+            mine = true; // ---- what is yours
+            float att = NpcAttitude.Of(a, me);
+            add(att >= 0f ? Lang.T("Ставлення до тебе") : Lang.T("Тобі не довіряє"), att * 0.35f);
+            if (irk >= 0.5f && by == me) add(Lang.T("Злий|Зла через тебе"), -irk);
             float spent = Spent(a, me);
             if (spent > 0f) add(Lang.T("Втомився|Втомилася від розмови з тобою"), -spent);
             else if (spent < 0f) add(Lang.T("Ти слухаєш його|її"), -spent);
+            toYou = Mathf.Clamp(you, 0f, 100f);
+            now = Mathf.Clamp(v - you + 50f, 0f, 100f); // (its own state alone: the whole less what is yours)
             return Mathf.Clamp(v, 0f, 100f);
         }
+
+        // only how it is with you (the door, a walk-off)
+        internal static float ToYou(NpcActor a, Player p) { float toYou, now; Of(a, p, null, out toYou, out now); return toYou; }
 
         // a player's name by its id (one on this game; else «інший гравець»)
         private static string Who(long id)
@@ -130,6 +147,9 @@ namespace HuginWhispers
             foreach (Player p in Player.GetAllPlayers()) if (p != null && p.GetPlayerID() == id) return p.GetPlayerName();
             return Lang.T("іншого гравця");
         }
+
+        // how it feels in itself, a word (the talk scroll's «зараз · …»: RavenBookTalkRel)
+        internal static string NowWord(float v) { return v < 20f ? Lang.T("кепсько") : v < 40f ? Lang.T("похмуро") : v < 60f ? Lang.T("звично") : v < 80f ? Lang.T("добре") : Lang.T("чудово"); }
 
         internal static string Level(float v)
         {
@@ -140,18 +160,25 @@ namespace HuginWhispers
         internal static string Tip(NpcActor a, Player p) { float v; return Tip(a, p, out v); }
 
         // …and its patience with it (one reckoning for the window: its bar and its box)
-        internal static string Tip(NpcActor a, Player p, out float v)
+        internal static string Tip(NpcActor a, Player p, out float v) { float toYou, now; return Tip(a, p, out v, out toYou, out now); }
+
+        // …both parts, each with its own reasons (the window's own box: the reasons said, the user 2026-11-08 — «незрозуміло, чому»); and what the threads between you change (NpcThreads.TalkLines)
+        internal static string Tip(NpcActor a, Player p, out float v, out float toYou, out float now)
         {
             List<Part> parts = new List<Part>();
-            v = Of(a, p, parts);
+            v = Of(a, p, parts, out toYou, out now);
             StringBuilder sb = new StringBuilder();
-            sb.Append("<b>").Append(Lang.F("Терпіння до тебе: {0} — «{1}»", Mathf.RoundToInt(v), Level(v))).Append("</b>\n");
-            sb.Append("<i>").Append(Lang.T("Скільки він|вона готовий|готова з тобою говорити.")).Append("</i>\n");
-            foreach (Part x in parts) sb.Append(x.Value > 0f ? "  + " : "  − ").Append(x.Label).Append("  ").Append(Mathf.RoundToInt(Mathf.Abs(x.Value))).Append('\n');
+            // (the talk scroll's own two words, the very same as its margins: the user 2026-11-08 — «Звично» on the line and «Сухо» here were two scales)
+            sb.Append("<b>").Append(Lang.F("Зараз: {0} — {1}", Mathf.RoundToInt(now), NowWord(now))).Append("</b>\n");
+            sb.Append("<i>").Append(Lang.T("Як почувається сам|сама.")).Append("</i>\n");
+            foreach (Part x in parts) if (!x.Yours) sb.Append(x.Value > 0f ? "  + " : "  − ").Append(x.Label).Append("  ").Append(Mathf.RoundToInt(Mathf.Abs(x.Value))).Append('\n');
+            sb.Append("<b>").Append(Lang.F("До тебе: {0} — {1}", Mathf.RoundToInt(toYou), NpcAttitude.Adjective(a, NpcAttitude.Level(a, p)))).Append("</b>\n");
+            sb.Append("<i>").Append(Lang.T("Лише від цього залежить, чи говоритиме з тобою.")).Append("</i>\n");
+            foreach (Part x in parts) if (x.Yours) sb.Append(x.Value > 0f ? "  + " : "  − ").Append(x.Label).Append("  ").Append(Mathf.RoundToInt(Mathf.Abs(x.Value))).Append('\n');
+            // the whole: not a word of its own, only what it opens (how much it says)
             if (Angry(a)) sb.Append(Lang.T("▲ Особисте й прохання закриті: він|вона надто злий|зла.")).Append('\n');
-            else if (!NpcResident.Is(a)) { } // (favours: only of one living at a base — its talk's «Попросити про щось…»)
-            else if (v < Easy) sb.Append(Lang.F("Від {0} охоче розповідає й може погодитись на прохання.", Mathf.RoundToInt(Easy))).Append('\n');
-            else sb.Append(Lang.T("★ Можна про щось попросити.")).Append('\n');
+            else if (NpcResident.Is(a)) sb.Append(Lang.F("Разом {0}: «ще на думці» — від {1}, прохання — від {2}.", Mathf.RoundToInt(v), Mathf.RoundToInt(Dry), Mathf.RoundToInt(AskFrom(a, p)))).Append('\n');
+            else sb.Append(Lang.F("Разом {0}: «ще на думці» — від {1}.", Mathf.RoundToInt(v), Mathf.RoundToInt(Dry))).Append('\n'); // (favours: only of one living at a base)
             return a.Form(sb.ToString().TrimEnd('\n'));
         }
 

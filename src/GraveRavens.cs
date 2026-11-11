@@ -245,7 +245,26 @@ namespace HuginWhispers
         {
             Player p = Player.m_localPlayer;
             if (p == null || !OwnGrave(from)) return;
-            foreach (ItemDrop.ItemData item in new List<ItemDrop.ItemData>(from.GetAllItems())) RavenSeat.FromGrave(p, from, item, false);
+            foreach (ItemDrop.ItemData item in new List<ItemDrop.ItemData>(from.GetAllItems())) RavenSeat.FromGrave(p, from, item);
+        }
+
+        // This raven still lies in someone else's grave: it goes into no other inventory, whoever asks. Any take-all of any
+        // mod adds a thing first and removes it after, so a refused add leaves the raven where it lies, nothing lost, nothing
+        // doubled. Asked only for a raven (the grave list is walked then)
+        internal static bool Keeps(Inventory to, ItemDrop.ItemData item)
+        {
+            bool munin;
+            if (!RavenItem.IsRaven(item, out munin)) return false;
+            foreach (TombStone t in Graves)
+            {
+                Container c = t != null ? t.GetComponent<Container>() : null;
+                Inventory inv = c != null ? c.GetInventory() : null;
+                if (inv == null || inv == to || !inv.ContainsItem(item)) continue;
+                if (!Foreign(t, Player.m_localPlayer)) return false;
+                NoTaking(munin);
+                return true;
+            }
+            return false;
         }
 
         internal static void NoTaking(bool munin)
@@ -665,14 +684,14 @@ namespace HuginWhispers
             return true;
         }
         // your own grave: a raven right-clicked sits straight on its shoulder when the bag is full (or it sat there at the
-        // death); a left click only picks it up, as ever (dropped on a shoulder cell: SeneaLShoulders.DropRaven)
+        // death); a left click only picks it up, as ever
         internal static bool ToShoulder(InventoryGui gui, InventoryGrid grid, ItemDrop.ItemData item)
         {
             bool munin;
             if (gui == null || grid == null || item == null || !RavenItem.IsRaven(item, out munin)) return false;
             if (Grid == null || !ReferenceEquals(Grid.GetValue(gui), grid)) return false;
             Inventory inv = grid.GetInventory();
-            return GraveRavens.OwnGrave(inv) && RavenSeat.FromGrave(Player.m_localPlayer, inv, item, false);
+            return GraveRavens.OwnGrave(inv) && RavenSeat.FromGrave(Player.m_localPlayer, inv, item);
         }
         private static bool Prefix(InventoryGui __instance, InventoryGrid grid, ItemDrop.ItemData item)
         {
@@ -686,6 +705,29 @@ namespace HuginWhispers
         private static bool Prefix(InventoryGui __instance, InventoryGrid grid, ItemDrop.ItemData item)
         {
             try { return !GraveRavensClickPatch.Blocked(__instance, grid, item) && !GraveRavensClickPatch.ToShoulder(__instance, grid, item); } catch { return true; }
+        }
+    }
+
+    // whatever moves things, the game or a mod: a raven in someone else's grave stays there (GraveRavens.Keeps). All three
+    // doors of the game's Inventory that take a thing already made, the private one being what MoveItemToThis goes through
+    [HarmonyPatch]
+    internal static class GraveRavensKeepPatch
+    {
+        private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(Inventory), "AddItem", new System.Type[] { typeof(ItemDrop.ItemData) });
+            yield return AccessTools.Method(typeof(Inventory), "AddItem", new System.Type[] { typeof(ItemDrop.ItemData), typeof(Vector2i) });
+            yield return AccessTools.Method(typeof(Inventory), "AddItem", new System.Type[] { typeof(ItemDrop.ItemData), typeof(int), typeof(int), typeof(int), typeof(bool) });
+        }
+        private static bool Prefix(Inventory __instance, ItemDrop.ItemData item, ref bool __result)
+        {
+            try
+            {
+                if (!GraveRavens.Keeps(__instance, item)) return true;
+                __result = false;
+                return false;
+            }
+            catch (System.Exception e) { PatchGuard.Fail("GraveRavensKeepPatch", e); return true; }
         }
     }
 

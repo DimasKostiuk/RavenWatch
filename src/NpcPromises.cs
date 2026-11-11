@@ -6,7 +6,9 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // What you promised a person in its talk (the user 2026-11-05: answers have consequences): «Принесу», «Я подумаю, як допомогти» are words it keeps.
+    // What you promised a person in its talk (the user 2026-11-05: answers have consequences): «Принесу», «Я подумаю, як допомогти», «Буде їжа», «Заплачу» are words it keeps.
+    // Food and pay (NoBlame, the user 2026-11-07): who filled a chest cannot be told, so these alone are kept by what passes (it ate, it was paid), may be promised only while there is truly nothing (May), and past the term are dropped without blame.
+    // Kept, they are only glad of it in words (promise_eased_<kind>): nothing remembered of you, no warmth, no thread — whose hand it was is not known, and food taken out and put back was a kept word every day.
     // A promise has a kind (Kinds: how to tell it is kept, whether there is anything to promise, when it no longer means anything) and a term (Days, or its own Due:
     // a request's end).
     // From half the term it reminds you: a worry of its own, themes promise_nag_<kind>, answers in Talk (you may take it back there: a small loss, no broken
@@ -33,13 +35,14 @@ namespace HuginWhispers
             public Func<NpcActor, string> ArgNow;       // what it was at when you promised
             public Func<NpcActor, Promise, double> Due; // its own end (world s), when the thing promised has one; else Since + Days
             public Func<NpcActor, Promise, Piece, bool> Deed; // this thing you just built is what you promised (Built): Did
+            public bool NoBlame;                        // past its term: dropped without a word, not a broken word
         }
 
         internal static readonly Dictionary<string, Kind> Kinds = new Dictionary<string, Kind>
         {
             { "request", new Kind { ArgNow = a => NpcRequests.UntilOf(a).ToString(CultureInfo.InvariantCulture), Due = (a, x) => { long u; return long.TryParse(x.Arg, NumberStyles.Integer, CultureInfo.InvariantCulture, out u) && u > x.Since ? u : x.Since + 3.0 * Day; }, Kept = (a, x) => Since(NpcMemory.Find(a, "request_done", x.Player), x), Void = (a, x) => { long u; return NpcRequests.UntilOf(a).ToString(CultureInfo.InvariantCulture) != x.Arg && long.TryParse(x.Arg, NumberStyles.Integer, CultureInfo.InvariantCulture, out u) && NpcRescue.Now < u; } } }, // what it asked for: brought by you before its request runs out; gone before its end (another brought it, it was let go): nothing to keep
-            { "goal",    new Kind { Days = 8f, May = a => { string g = GoalKind(a); return g == "thing" || g == "bed" || g == "comfort"; }, ArgNow = GoalKind, // its long wish (NpcGoals: long by nature), of the kinds a player can bring about: brought by you, or built by you and come true; come true otherwise, or let go: nothing to keep
-                Deed = (a, x, made) => x.Arg == "bed" ? made.GetComponent<Bed>() != null : x.Arg == "comfort" && made.m_comfort > 0,
+            { "goal",    new Kind { Days = 8f, May = NpcGoals.ForYou, ArgNow = GoalKind, // its long wish (NpcGoals: long by nature), of the kinds a player can bring about: come true from your hand (NpcGoals names the giver: given, built, hung), or a bed you built and it got; come true otherwise, or let go: nothing to keep
+                Deed = (a, x, made) => x.Arg == "bed" && made.GetComponent<Bed>() != null,
                 Kept = (a, x) => Since(NpcMemory.Find(a, "goal_done", x.Player), x) || (x.Did && Since(NpcMemory.Find(a, "goal_done", 0L), x)),
                 Void = (a, x) => GoalKind(a) != x.Arg || Since(NpcMemory.Find(a, "goal_done", 0L), x) } },
             { "mood",    new Kind { May = a => NpcToil.Mood(a) < MoodFine && Yours(a), ArgNow = a => WhyNow(a).ToString(CultureInfo.InvariantCulture), // what weighs on it, if it is what you can build (Yours): you built it, and that no longer weighs most; gone without you: nothing to keep
@@ -47,7 +50,16 @@ namespace HuginWhispers
                 Kept = (a, x) => x.Did && CauseGone(a, x),
                 Void = (a, x) => !x.Did && CauseGone(a, x) } },
             { "arc",     new Kind { ArgNow = NpcArcs.StageOf, Kept = (a, x) => x.Did, Void = (a, x) => NpcArcs.StageOf(a) != x.Arg } }, // a small line's word (NpcArcs): you spoke to the other one (Did); the line moved on without you, or is over: nothing to keep
+            { "food",    new Kind { Days = 1.5f, NoBlame = true, May = a => NpcHunger.IsHungry(a) && NpcMeals.NothingToEat(a), Kept = (a, x) => NpcResident.Is(a) && !NpcHunger.IsHungry(a), Void = (a, x) => !NpcResident.Is(a) } }, // hungry with nothing in the base to eat: it has eaten; it no longer lives there: nothing to keep
+            { "pay",     new Kind { Days = NpcToil.PayDays + 1f, NoBlame = true, May = a => NpcToil.Unpaid(a) >= 1 && BoxShort(a), Kept = (a, x) => NpcResident.Is(a) && NpcToil.Unpaid(a) == 0, Void = (a, x) => !NpcResident.Is(a) } }, // unpaid, the coin box short of its wage: paid at last; it no longer lives there: nothing to keep
         };
+
+        private static bool BoxShort(NpcActor a)
+        {
+            GameObject go = NpcKit.Find(NpcKit.GetRef(a.Zdo, NpcResident.KHeart));
+            NpcHeart h = go != null ? go.GetComponent<NpcHeart>() : null;
+            return h != null && h.Coins < NpcToil.Wage(a);
+        }
 
         private static int WhyNow(NpcActor a) { return a.Zdo != null ? NpcLocker.Int(a.Zdo, NpcToil.KWhy, 0) : 0; }
 
@@ -99,17 +111,24 @@ namespace HuginWhispers
         internal static void Built(Player p, Piece made)
         {
             if (p == null || made == null) return;
-            long me = p.GetPlayerID();
             foreach (NpcActor a in NpcActor.Live)
             {
                 if (a == null || Utils.DistanceXZ(NpcRules.Home(a), made.transform.position) > NpcBase.Reach) continue;
-                string s = NpcLocker.Get(a, KPromise);
-                if (string.IsNullOrEmpty(s)) continue;
-                foreach (Promise x in Parse(s))
-                {
-                    Kind k;
-                    if (x.Player == me && !x.Did && Kinds.TryGetValue(x.Sort, out k) && k.Deed != null && k.Deed(a, x, made)) Did(a, p, x.Sort);
-                }
+                Given(a, p, made);
+            }
+        }
+
+        // this very thing you gave it (NpcResident.GiveBed) or built by it: what you promised it, if it is
+        internal static void Given(NpcActor a, Player p, Piece made)
+        {
+            if (a == null || p == null || made == null) return;
+            string s = NpcLocker.Get(a, KPromise);
+            if (string.IsNullOrEmpty(s)) return;
+            long me = p.GetPlayerID();
+            foreach (Promise x in Parse(s))
+            {
+                Kind k;
+                if (x.Player == me && !x.Did && Kinds.TryGetValue(x.Sort, out k) && k.Deed != null && k.Deed(a, x, made)) Did(a, p, x.Sort);
             }
         }
 
@@ -131,7 +150,7 @@ namespace HuginWhispers
                 if (x.Player != p.GetPlayerID() || x.Did || !Kinds.TryGetValue(x.Sort, out k)) continue;
                 NpcRequests.Request r = x.Sort == "request" ? NpcRequests.Of(a) : null;
                 string what = x.Sort == "request" ? (r != null ? Lang.F("принести: {0}", NpcRequests.Words(r.Item, r.Count)) : Lang.T("принести те, що просив|просила"))
-                    : x.Sort == "goal" ? Lang.T("допомогти з мрією") : x.Sort == "mood" ? Lang.T("зробити щось, щоб полегшало") : Lang.T("сказати за нього|неї слово");
+                    : x.Sort == "goal" ? Lang.T("допомогти з мрією") : x.Sort == "mood" ? Lang.T("зробити щось, щоб полегшало") : x.Sort == "food" ? Lang.T("щоб у коморі була їжа") : x.Sort == "pay" ? Lang.T("поповнити скарбничку") : Lang.T("сказати за нього|неї слово");
                 l.Add(new KeyValuePair<string, long>(a.Form(what), (long)(End(k, a, x) - NpcRescue.Now)));
             }
             return l;
@@ -217,7 +236,14 @@ namespace HuginWhispers
                 if (!kept && k.Void != null && k.Void(a, x)) { l.Remove(x); changed = true; continue; } // (it passed without you: no one's word)
                 if (!kept && NpcRescue.Now <= End(k, a, x)) continue;
                 l.Remove(x); changed = true;
-                if (!kept && x.Did) continue; // (you did it, and it still weighs for another reason: not a broken word)
+                if (!kept && (x.Did || k.NoBlame)) continue; // (you did it, and it still weighs for another reason; or who filled a chest cannot be told: not a broken word)
+                if (k.NoBlame) // (kept, but by whom cannot be told: glad of it in words, nothing remembered of you — else food taken out and put back is a kept word, warmth and a thread, every day)
+                {
+                    Player by = Player.GetClosestPlayer(a.transform.position, 20f);
+                    if (by != null && by.GetPlayerID() == x.Player) NpcPhrases.SayOr(a, "promise_eased_" + x.Sort, Lang.T("Ну от, полегшало."));
+                    Npcs.Log(a.Id + ": your promise (" + x.Sort + ") came about (by whom: unknown — nothing remembered)");
+                    continue;
+                }
                 NpcMemory.Remember(a, kept ? "promise_kept" : "promise_broken", x.Player, "");
                 NpcMemory.TellHome(a, kept ? "heard_kept" : "heard_broken", x.Player, ""); // (its people hear what your word is worth)
                 Player near = kept ? Player.GetClosestPlayer(a.transform.position, 20f) : null;
@@ -251,17 +277,22 @@ namespace HuginWhispers
                 if (x.Player != p.GetPlayerID() || x.Did) continue;
                 if (x.Sort == "goal") l.Add(Grammar.Fix(Lang.T("ти обіця{в|ла}: допомогти з мрією"), p));
                 else if (x.Sort == "mood") l.Add(Grammar.Fix(Lang.T("ти обіця{в|ла}: щось зробити, щоб полегшало"), p));
+                else if (x.Sort == "food") l.Add(Grammar.Fix(Lang.T("ти обіця{в|ла}: щоб у коморі була їжа"), p));
+                else if (x.Sort == "pay") l.Add(Grammar.Fix(Lang.T("ти обіця{в|ла}: поповнити скарбничку"), p));
             }
         }
 
         // ---------------------------------------------------------------- its talk: what you answer to a reminder
         private const string Busy = "> Мені зараз не до того. => end !tone cold\n";
+        private static readonly string[] TalkWords = Lang.Keys("Пам'ятаю. Заплачу.", "Мені зараз не до того."); // (answers are plain text in Talk: marked here for tools/l10n.js)
         private const string Talk =
             "[talk common +]\n" +
             "@c_promise_nag_request\n{concern}\n> Пам'ятаю. Принесу. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise request !patience -2\n" + Busy +
             "@c_promise_nag_goal\n{concern}\n> Пам'ятаю. Ще думаю. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise goal !patience -2\n" + Busy +
             "@c_promise_nag_mood\n{concern}\n> Пам'ятаю. Зроблю. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise mood !patience -2\n" + Busy +
             "@c_promise_nag_arc\n{concern}\n> Пам'ятаю. Ще не було нагоди. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise arc !patience -2\n" + Busy +
+            "@c_promise_nag_food\n{concern}\n> Пам'ятаю. Принесу. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise food !patience -2\n" + Busy +
+            "@c_promise_nag_pay\n{concern}\n> Пам'ятаю. Заплачу. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise pay !patience -2\n" + Busy + // (an answer's words for the English table: TalkWords)
             "@c_released\n{@promise_released}\n> Добре. => start\n";
 
         // ---------------------------------------------------------------- wired once (NpcModules)
@@ -275,7 +306,7 @@ namespace HuginWhispers
             NpcVoice.Sources.Add(Themes);
             NpcTalk.More.Add(Talk);
             NpcMenu.Tasks.Add(Tasks);
-            NpcTalk.Deeds["promise"] = (a, p, w) => { if (w.Length > 1) a.Act("promise " + Id(p.GetPlayerID()) + " " + w[1]); };
+            NpcTalk.Deeds["promise"] = (a, p, w) => { if (w.Length < 2) return; a.Act("promise " + Id(p.GetPlayerID()) + " " + w[1]); if (NpcThreads.Has(a, p.GetPlayerID(), "word")) { NpcPatience.Spend(a, p, -NpcThreads.WordEases); RavenBook.TalkNote(a.Form(Lang.F("{0}: вірить тобі на слово", a.Name)), true); } }; // (the thread «слово»: NpcThreads)
             NpcTalk.Deeds["unpromise"] = (a, p, w) => { if (w.Length > 1) a.Act("unpromise " + Id(p.GetPlayerID()) + " " + w[1]); };
             Npcs.Commands["promise"] = (p, who, a, aim) =>
             {
@@ -287,7 +318,7 @@ namespace HuginWhispers
 
         internal static void Register()
         {
-            StoryCond.Register("promised", new StoryCond.Kind { Usage = "promised <вид>   (ти йому це пообіцяв: request, goal, mood, arc)", Min = 1, Test = (p, w) => NpcTalk.Him != null && p != null && Has(NpcTalk.Him, p.GetPlayerID(), w[1]) });
+            StoryCond.Register("promised", new StoryCond.Kind { Usage = "promised <вид>   (ти йому це пообіцяв: request, goal, mood, arc, food, pay)", Min = 1, Test = (p, w) => NpcTalk.Him != null && p != null && Has(NpcTalk.Him, p.GetPlayerID(), w[1]) });
         }
     }
 }

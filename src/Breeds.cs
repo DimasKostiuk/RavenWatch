@@ -122,7 +122,7 @@ namespace HuginWhispers
             _next = Time.time + 2f;
             Inventory inv = p.GetInventory();
             if (inv == null) return;
-            // the bag and the shoulders: with SeneaL UI's shoulder cells a seated raven is not in the bag at all
+            // the bag and the shoulders: with the shoulders a seated raven is not in the bag at all
             List<ItemDrop.ItemData> all = new List<ItemDrop.ItemData>(inv.GetAllItems());
             foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) if (!all.Contains(item)) all.Add(item);
             foreach (ItemDrop.ItemData item in all)

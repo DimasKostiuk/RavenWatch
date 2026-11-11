@@ -13,7 +13,7 @@ namespace HuginWhispers
     {
         internal static readonly List<NpcActor> Live = new List<NpcActor>();
         private static readonly Dictionary<Character, NpcActor> ByBody = new Dictionary<Character, NpcActor>();
-        private const string RpcSay = "RavenWatch_NpcSay", RpcOrder = "RavenWatch_NpcOrder", RpcTalk = "RavenWatch_NpcTalk", RpcAppear = "RavenWatch_NpcAppear";
+        private const string RpcSay = "RavenWatch_NpcSay", RpcSpeak = "RavenWatch_NpcSpeak", RpcOrder = "RavenWatch_NpcOrder", RpcTalk = "RavenWatch_NpcTalk", RpcAppear = "RavenWatch_NpcAppear";
         internal const string RpcAct = "RavenWatch_NpcAct";
 
         public EffectList m_vanish = new EffectList(); // (Odin's: his puff of smoke)
@@ -57,6 +57,8 @@ namespace HuginWhispers
         internal NpcDef Def { get { return _def; } }
         internal NpcMind Mind { get { return _mind; } }
         internal NpcBody Body { get { return _bodyL != null ? _bodyL : (_bodyL = GetComponent<NpcBody>()); } }
+        internal NpcSpeech Speech { get { return _speechL != null ? _speechL : (_speechL = GetComponent<NpcSpeech>()); } } // (its head and chest as it speaks: NpcSpeech)
+        private NpcSpeech _speechL;
         private NpcBody _bodyL;
         private NpcResident _resident;
         internal NpcVitals Vitals { get { return _vitalsL != null ? _vitalsL : (_vitalsL = GetComponent<NpcVitals>()); } }
@@ -142,6 +144,7 @@ namespace HuginWhispers
             NpcKit.Born(z, _def); // (its lasting number and its seed from its first moment, where it is owned — born here, or an old save loaded here: what it is made of is seeded by it, NpcKit.Seed)
             if (_def == null) Npcs.Log("an npc «" + id + "» with no template here (another version?): it stands still");
             _nv.Register<string>(RpcSay, RPC_Say);
+            _nv.Register<string, ZDOID>(RpcSpeak, RPC_Speak);
             _nv.Register<string>(RpcOrder, RPC_Order);
             _nv.Register<ZDOID>(RpcTalk, RPC_Talk);
             _nv.Register<string>(RpcAct, RPC_Act);
@@ -199,6 +202,7 @@ namespace HuginWhispers
         private void OnDestroy()
         {
             Live.Remove(this);
+            if (_waiting.Count > 0) Npcs.Log(Id + ": gone from this game with " + _waiting.Count + " words still waiting for its owner — dropped"); // (said, not lost without a word)
             Run(Unloaded); // (the modules' own: its map mark…)
             if (_body != null) ByBody.Remove(_body);
         }
@@ -261,6 +265,9 @@ namespace HuginWhispers
         private void Update0()
         {
             if (_waitText != null && Owned) SayWaiting();
+            if (_waiting.Count > 0) SendWaiting();
+            ZDO zo = Zdo; long owner = zo != null ? zo.GetOwner() : 0L; // (one field read: who ran it before, for an act sent on — FromOwner)
+            if (owner != _ownerNow) { if (_ownerNow != 0L) _ownerBefore = _ownerNow; _ownerNow = owner; _ownerAt = Time.time; }
             if (Time.time >= _nextBind)
             {
                 _nextBind = Time.time + 0.5f; ZDO zb = Zdo;
@@ -289,6 +296,7 @@ namespace HuginWhispers
         {
             Npcs.Log(Id + " «" + Name + "»: run " + (here ? "here now" : "by another game now") + (Body != null && Body.Attached ? " (seated)" : "") + (_mind != null && _mind.Current != null ? ", doing " + _mind.Describe() : "")); // (seldom: a handover — the two-player test reads it)
             if (here) { _dressed = false; NpcKit.Born(Zdo, _def); } // (dressed afresh — its job may have changed meanwhile; its seed, if no owner gave it yet)
+            if (here && _body != null && _body.GetLevel() != 1) { Npcs.Log(Id + " «" + Name + "»: had " + (_body.GetLevel() - 1) + " star(s) from another mod — a person has none"); _body.SetLevel(1); } // (Path of Valheiman's from before it left our people alone: Npcs.LeftToUs)
             if (_mind != null) _mind.OwnerChanged(here);
             if (Body != null) Body.OwnerChanged(here);
         }
@@ -475,21 +483,39 @@ namespace HuginWhispers
 
         // its line to someone: {name} and «ходив|ходила» of that one — the one it speaks to, else the player nearest it (not
         // the player of the game that runs it: a host's or a server's game — a friend was called by the host's name, 2026-11-01)
-        internal void Say(string text, Player to)
+        internal void Say(string text, Player to) { SayLine(text, to); }
+
+        // ...and the words as every game got them (null: nothing said) — the small talk times its next line by them (NpcSpeech.Seconds)
+        internal string SayLine(string text, Player to)
         {
-            if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text)) return;
+            if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text)) return null;
             text = NpcBody.Spoken(this, text); // (a gesture in its words: played, the mark taken out)
-            if (text.Length == 0) return;
+            if (text.Length == 0) return null;
             Player p = to ?? Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer;
             text = Lang.T(text).Replace("{name}", p != null ? p.GetPlayerName() : "");
             if (p != null) text = Grammar.Fix(text, p);
             Hold(text); // (at once here: the next one asking this frame already hears it)
             _nv.InvokeRPC(ZNetView.Everybody, RpcSay, text);
+            return text;
+        }
+
+        // its line in a player's talk window: no bubble (the window shows it), but every game near sees it speak to that player (NpcSpeech)
+        internal void Speak(string text, Player to)
+        {
+            if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text) || to == null) return;
+            _nv.InvokeRPC(ZNetView.Everybody, RpcSpeak, text, to.GetZDOID());
+        }
+
+        private void RPC_Speak(long sender, string text, ZDOID to)
+        {
+            GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(to) : null;
+            NpcSpeech.Said(this, text, g != null ? g.GetComponent<Character>() : null);
         }
 
         private void RPC_Say(long sender, string text)
         {
             Hold(text); // (every game knows who holds the floor)
+            NpcSpeech.Said(this, text); // (its head and chest speak it, those near turn to it: every game from the same words)
             if (Chat.instance == null) return;
             float seen = 25f;
             for (int i = 0; i < HeardFrom.Count; i++) seen = Mathf.Max(seen, HeardFrom[i](this)); // (one lost and calling out: from far — a module's word)
@@ -507,11 +533,57 @@ namespace HuginWhispers
         {
             if (_nv == null || !_nv.IsValid() || _mind == null) return;
             if (_nv.IsOwner()) { _mind.Do(order, layer, whose); return; }
-            long owner = _nv.GetZDO().GetOwner();
-            if (owner == 0L) { Npcs.Log(Id + ": nobody runs it this moment (its owner changes) — order dropped: " + order); return; } // (a send to 0 goes to every game: each would run it)
-            _nv.InvokeRPC(owner, RpcOrder, ((int)layer) + " " + (string.IsNullOrEmpty(whose) ? "-" : whose) + " " + order);
+            ToOwner(RpcOrder, ((int)layer) + " " + (string.IsNullOrEmpty(whose) ? "-" : whose) + " " + order);
         }
-        private const string SentOn = "^"; // (an order already sent on once: never again — no ring of games that each think another runs it)
+        private const string SentOn = "^"; // (an order or act already sent on once: never again — no ring of games that each think another runs it)
+
+        // ---------------------------------------------------------------- to the game that runs it (orders, acts): one way for both
+        // Its owner changes now and then (a player walks off, leaves): for a moment nobody runs it (owner 0: a send to 0 goes to every
+        // game, each would run it), or a word reaches the old owner. A word in a player's name may come after the player has already
+        // given something (food, a keepsake, coins): lost, it is paid for nothing. So: nobody runs it — the word waits here, asked
+        // again every WaitStep s up to WaitFor s (then dropped with a line); came to the old owner — sent on once to the new one,
+        // an act with the game it first came from (SentBy asks that one, not the one that passed it on).
+        internal static float WaitFor = 10f, WaitStep = 0.5f;
+        private const int WordsMost = 16;
+        private sealed class Waiting { public string Rpc, Payload; public float Until; }
+        private readonly List<Waiting> _waiting = new List<Waiting>(); // session: words for an owner that is not there this moment
+        private float _nextWaiting;
+
+        // an act sent on is taken only from the game that ran it a moment ago (else any game could write another player's name before it)
+        private long _ownerNow, _ownerBefore; private float _ownerAt;
+        private bool FromOwner(long sender) { return sender != 0L && (sender == _ownerNow || (sender == _ownerBefore && Time.time - _ownerAt <= WaitFor + 10f)); }
+
+        // an act for a person whose body may not be loaded here (the server's own passes over ZDOs: NpcRescue): straight to its owner; owned by nobody, or by this
+        // game — the caller writes it itself (there is no body here to wait on)
+        internal static void ActTo(ZDO z, string act)
+        {
+            long owner = z != null ? z.GetOwner() : 0L;
+            if (owner == 0L || owner == ZDOMan.GetSessionID() || ZRoutedRpc.instance == null) { Npcs.Log("an act for a person nobody else runs — the caller keeps it: " + act); return; }
+            ZRoutedRpc.instance.InvokeRoutedRPC(owner, z.m_uid, RpcAct, act);
+        }
+
+        private void ToOwner(string rpc, string payload)
+        {
+            long owner = _nv.GetZDO().GetOwner();
+            if (owner != 0L) { _nv.InvokeRPC(owner, rpc, payload); return; }
+            if (_waiting.Count >= WordsMost) { Npcs.Log(Id + ": nobody runs it and " + WordsMost + " words already wait — dropped: " + payload); return; }
+            _waiting.Add(new Waiting { Rpc = rpc, Payload = payload, Until = Time.time + WaitFor });
+            Npcs.Log(Id + ": nobody runs it this moment (its owner changes) — waits for one: " + payload);
+        }
+
+        // in its Update: only while something waits (none: one count looked at)
+        private void SendWaiting()
+        {
+            if (Time.time < _nextWaiting || _nv == null || !_nv.IsValid()) return;
+            _nextWaiting = Time.time + WaitStep;
+            long owner = _nv.GetZDO().GetOwner();
+            for (int i = _waiting.Count - 1; i >= 0; i--)
+            {
+                Waiting w = _waiting[i];
+                if (owner != 0L) { _waiting.RemoveAt(i); _nv.InvokeRPC(owner, w.Rpc, w.Payload); continue; } // (this game too, when it is the owner now: the same way in as from any other)
+                if (Time.time >= w.Until) { _waiting.RemoveAt(i); Npcs.Log(Id + ": nobody took it over in " + WaitFor + " s — dropped: " + w.Payload); }
+            }
+        }
 
         // an order that comes here as its owner changes (sent to the old one): on to the new one, once — not lost without a word
         private void RPC_Order(long sender, string sent)
@@ -521,9 +593,8 @@ namespace HuginWhispers
             if (on) sent = sent.Substring(SentOn.Length);
             if (!_nv.IsOwner())
             {
-                long now = _nv.GetZDO().GetOwner();
-                if (!on && now != 0L && now != sender && now != ZDOMan.GetSessionID()) _nv.InvokeRPC(now, RpcOrder, SentOn + sent);
-                else Npcs.Log(Id + ": an order came as its owner changed, nowhere to send it on — dropped: " + sent);
+                if (!on) ToOwner(RpcOrder, SentOn + sent);
+                else Npcs.Log(Id + ": an order sent on once came to a game that does not run it again — dropped: " + sent);
                 return;
             }
             string[] w = sent.Split(new[] { ' ' }, 3);
@@ -576,12 +647,27 @@ namespace HuginWhispers
         {
             if (_nv == null || !_nv.IsValid()) return;
             if (_nv.IsOwner()) DoAct(act);
-            else _nv.InvokeRPC(_nv.GetZDO().GetOwner(), RpcAct, act);
+            else ToOwner(RpcAct, act);
         }
 
+        // «^<game> <act>»: sent on by a game that no longer ran it; <game> is the one it first came from
         private void RPC_Act(long sender, string act)
         {
-            if (!Owned) { Npcs.Log(Id + ": an act came as its owner changed — dropped (not sent on: who sent it counts, SentBy): " + act); return; }
+            bool on = act.StartsWith(SentOn, StringComparison.Ordinal);
+            if (on)
+            {
+                int sp = act.IndexOf(' ');
+                long first;
+                if (sp < 0 || !long.TryParse(act.Substring(SentOn.Length, sp - SentOn.Length), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out first)) { Npcs.Log(Id + ": a sent-on act it cannot read — dropped: " + act); return; }
+                if (!FromOwner(sender)) { Npcs.Log(Id + ": an act «sent on» by a game that did not run it (" + sender + ") — dropped: " + act); return; }
+                sender = first; act = act.Substring(sp + 1);
+            }
+            if (!Owned)
+            {
+                if (!on) ToOwner(RpcAct, SentOn + sender.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + act); // (who sent it still counts there: SentBy)
+                else Npcs.Log(Id + ": an act sent on once came to a game that does not run it again — dropped: " + act);
+                return;
+            }
             _actFrom = sender;
             try { DoAct(act); }
             finally { _actFrom = 0L; }
@@ -590,6 +676,7 @@ namespace HuginWhispers
         // an act done in a player's name (hired by it, its patience, its promise): sent by that player's own game? Asked by those acts where it is run. A plain word
         // kept out of a game with no mod to change it; a player not here to tell by: let through (a changed client can write a ZDO anyway: this is no wall, only no open door)
         private static long _actFrom; // (the game the act now running came from; 0: this one)
+        internal static long ActFrom { get { return _actFrom; } } // (an act's answer goes back there: NpcMenu.Deeds)
         internal static bool SentBy(long player)
         {
             if (_actFrom == 0L) return true;

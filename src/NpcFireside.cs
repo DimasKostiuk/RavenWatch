@@ -3,24 +3,16 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // Two people talking as they sit by a fire (NpcChatter, a talk «fire»): the one who listens turns its head to the one
-    // who speaks (a clip with a term: a talk broken off in any way lets go of it by itself); when the talk has run its
-    // course each takes it in its own way — a laugh, a nod, rarer a proud chin or an awkward one. The same clips as a
-    // player's by the fire (BodyClips: story_listen_*, fire_*_sit_*), on its body's layer for clips (NpcBody.Clip).
-    // Orders go through the person (it may be run on another game).
+    // Two people talking as they sit by a fire (NpcChatter, a talk «fire»): when the talk has run its course each takes it in
+    // its own way — a laugh, a nod, rarer a proud chin or an awkward one (the same clips as a player's by the fire: BodyClips
+    // fire_*_sit_*), on its body's layer for clips (NpcBody.Clip). Who speaks and who listens turn their heads to each other
+    // in every talk alike (NpcSpeech: it took the place of the listening clip story_listen_*, which only turned the head
+    // a set way aside; the player's own by the fire keeps it, Fireside). Orders go through the person (it may be run on another game).
     internal static class NpcFireside
     {
-        internal static float ListenFor = 8f;   // s: a listening head lets go by itself this long after the last line
         internal static float EndChance = 0.75f; // that one takes the talk's end with a gesture at all
 
-        internal static void Line(NpcActor speaker, NpcActor listener)
-        {
-            if (speaker == null || listener == null) return;
-            speaker.Habit("clip none"); // (it was listening a moment ago: now it speaks, its head its own)
-            listener.Habit("clip story_listen_" + Side(listener, speaker) + " " + ListenFor.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture));
-        }
-
-        // the talk over: to its end (finished), or broken off (heads let go, nothing more)
+        // the talk over: to its end (finished), or broken off (nothing more)
         internal static void End(NpcActor a, NpcActor b, bool finished)
         {
             Close(a, b, finished);
@@ -30,7 +22,7 @@ namespace HuginWhispers
         private static void Close(NpcActor who, NpcActor other, bool finished)
         {
             if (who == null) return;
-            if (!finished || other == null || who.Mind == null || !who.Mind.SeatedNow || Random.value > EndChance) { who.Habit("clip none"); return; }
+            if (!finished || other == null || who.Mind == null || !who.Mind.SeatedNow || Random.value > EndChance) return;
             who.Habit("clip fire_" + Mood(who) + "_sit_" + Side(who, other));
         }
 

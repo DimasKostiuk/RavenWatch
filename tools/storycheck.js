@@ -89,15 +89,51 @@ const checkDotted = (file, words) => { for (const w of words) { const m = /^(\w+
 const npcs = new Set();
 for (const f of txt('npc')) { if (f.startsWith('_')) continue; for (const l of lines('npc', f)) { const m = /^\[npc\s+(\S+)\]/.exec(l); if (m) npcs.add(m[1]); } } // («_» files: the author's own, not in the mod — the story may not name them)
 
-// the sound catalogue: assets/story/sounds (AudioBank); a file it names must be there or in the package's folder
-const bank = new Set();
+// the sound catalogue: assets/story/sounds (AudioBank): every word of a line is a sound the game can look for or an option it reads, a name
+// is written once, a file it names is there. What the game itself has: tools/game_sounds.txt (the game writes it: the «Звуки» tab)
+const gameList = path.join(__dirname, 'game_sounds.txt'), gameSfx = new Set(), gameTracks = new Set();
+const haveList = fs.existsSync(gameList);
+if (haveList) for (const l of fs.readFileSync(gameList, 'utf8').split(/\r?\n/)) { const [k, n] = l.split(' '); if (k === 'sfx') gameSfx.add(n); else if (k === 'track') gameTracks.add(n); }
+const bank = new Map();
+const soundFile = /\.(ogg|wav|mp3)$/i, sceneWords = ['off', 'game', 'stop', 'all'];
 for (const f of txt('sounds')) for (const l of lines('sounds', f)) {
   if (!l) continue;
-  const w = l.split(/\s+/);
-  bank.add(w[0]);
-  for (const t of w.slice(1)) if (t.startsWith('file:') && !fs.existsSync(path.join(story, 'sounds', t.slice(5)))) say(f, 'no file ' + t.slice(5) + ' in assets/story/sounds');
+  const w = l.split(/\s+/), at = 'sounds/' + f + ' «' + w[0] + '»', e = { tokens: [], flags: [] };
+  if (!/^\w+$/.test(w[0])) say(at, 'a name: latin letters, digits, «_» only');
+  if (/^sfx_/i.test(w[0])) say(at, 'a name on «sfx_» hides the game\'s own sound');
+  if (sceneWords.includes(w[0])) say(at, 'a word of the scenes cannot be a name');
+  if (bank.has(w[0])) say(at, 'written twice: the last would win without a word');
+  for (const t of w.slice(1)) {
+    const opt = /^(\w+)=(.*)$/.exec(t);
+    if (opt) {
+      if (!['vol', 'pitch', 'range'].includes(opt[1])) say(at, 'no option «' + t + '» (vol= pitch= range= 2d wet)');
+      else if (!(+opt[2] >= 0)) say(at, t + ': not a number');
+      else e.flags.push(opt[1]);
+    } else if (t === '2d' || t === 'wet') e.flags.push(t);
+    else if (t.startsWith('file:')) { if (!soundFile.test(t)) say(at, t + ': .ogg, .wav or .mp3'); else if (!fs.existsSync(path.join(story, 'sounds', t.slice(5)))) say(at, 'no file ' + t.slice(5) + ' in assets/story/sounds'); e.tokens.push(t); }
+    else e.tokens.push(t);
+  }
+  if (!e.tokens.length) say(at, 'no sound in it');
+  // a game's sound under a wrong name is silence with no word: at least one of the line must be there (the others stand in on another version)
+  if (haveList && e.tokens.length && !e.tokens.some(t => !t.startsWith('sfx_') || gameSfx.has(t))) say(at, 'none of ' + e.tokens.join(', ') + ' is in the game (tools/game_sounds.txt)');
+  bank.set(w[0], e);
 }
-const soundWhy = name => name.startsWith('sfx_') || name.includes('/') || name === '-' || bank.has(name) ? null : 'no sound «' + name + '» in assets/story/sounds (sfx_… or Creature/kind for the game\'s own)';
+const fileWhy = name => fs.existsSync(path.join(story, 'sounds', name.slice(5))) ? null : 'no file ' + name.slice(5) + ' in assets/story/sounds';
+const sfxWhy = name => haveList && name.startsWith('sfx_') && !gameSfx.has(name) ? 'no sound «' + name + '» in the game (tools/game_sounds.txt; written by the game\'s «Звуки» tab)' : null;
+const soundWhy = name => name.startsWith('file:') ? fileWhy(name) : name === '-' || bank.has(name) || name.includes('/') ? null : name.startsWith('sfx_') ? sfxWhy(name) : 'no sound «' + name + '» in assets/story/sounds (sfx_… or Creature/kind for the game\'s own)';
+// a track: of the catalogue, or the game's (its list known, it is held to it)
+const trackWhy = name => {
+  if (bank.has(name)) {
+    const e = bank.get(name), bad = e.flags.filter(x => x === 'range' || x === '2d' || x === 'wet');
+    if (bad.length) return 'music «' + name + '»: ' + bad.join(', ') + ' mean nothing for music';
+    const track = t => t.startsWith('file:') || t.startsWith('game:') || (haveList ? gameTracks.has(t) : !t.startsWith('sfx_') && !t.includes('/'));
+    return e.tokens.some(track) ? null : 'music «' + name + '»: none of ' + e.tokens.join(', ') + ' is a track or a file (the game would stay silent)';
+  }
+  if (name.startsWith('file:')) return fileWhy(name);
+  const n = name.startsWith('game:') ? name.slice(5) : name;
+  return haveList ? (gameTracks.has(n) ? null : 'no music «' + name + '» in the game or assets/story/sounds') : (name.startsWith('sfx_') || name.includes('/') ? 'music «' + name + '»: not a track' : null);
+};
+const bedWhy = name => bank.has(name) || name.startsWith('game:') || gameTracks.has(name) ? null : soundWhy(name);
 
 // the words a scene's step may begin with, as the game knows them (else the game leaves the line out: said only in its log)
 const srcDir = path.join(__dirname, '..', 'src');
@@ -242,8 +278,25 @@ function optionsWhy(at, all) {
     }
   }
 }
+// the words after a sound's name and place (StoryAudio reads these and passes over any other without a word)
+const audioWords = {
+  sound: { flags: ['2d', 'wet', 'follow', 'wait'], valued: ['vol', 'range', 'pitch'] },
+  bed: { flags: ['2d', 'wet', 'follow', 'all'], valued: ['vol', 'range', 'pitch'], fade: true },
+  music: { flags: ['once', 'wait', 'all'], valued: ['keep', 'vol'], fade: true },
+};
+function audioWordsWhy(at, w) {
+  const o = audioWords[w[0]];
+  if (!o || !w[1] || w[1] === 'stop' || w[1] === 'off' || w[1] === 'game') return;
+  for (let i = w[0] !== 'music' && stepPlace(w) ? 3 : 2; i < w.length; i++) {
+    if (o.flags.includes(w[i])) continue;
+    if (o.valued.includes(w[i])) { if (isNaN(Number(w[i + 1]))) say(at, w[0] + ': ' + w[i] + ': a number after it'); i++; continue; }
+    if (o.fade && !isNaN(Number(w[i]))) continue;
+    say(at, w[0] + ': «' + w[i] + '» is none of ' + o.flags.concat(o.valued.map(x => x + ' <…>')).join(', ') + ': the game would pass over it');
+  }
+}
 function stepPlace(w) {
   if (w[0] === 'sound') return w[1] === 'stop' || ['vol', 'range', 'pitch', '2d', 'wet', 'follow', 'wait'].includes(w[2]) ? null : w[2]; // (a module's own: StoryAudio.PlaceOf)
+  if (w[0] === 'bed') return w.length < 3 || w[1] === 'off' || !isNaN(Number(w[2])) || ['vol', 'range', 'pitch', '2d', 'wet', 'follow', 'all'].includes(w[2]) ? null : w[2]; // (StoryAudio.BedPlaceOf)
   const v = verbsOf[w[0]];
   const e = v ? v.verbs[w[v.at]] : stepPlaces[w[0]];
   if (!e) return null;
@@ -279,6 +332,9 @@ for (const f of txt('scenes')) {
     if (place) { const why = placeWhy(place); if (why) say(at, why); }
     const heard = w[0] === 'sound' && w[1] !== 'stop' ? w[1] : w[0] === 'npc' && w[2] === 'fade' ? w.find((x, i) => i > 2 && isNaN(Number(x))) : null;
     if (heard) { const why = soundWhy(heard); if (why) say(at, why); }
+    if (w[0] === 'music' && w[1] && w[1] !== 'off' && w[1] !== 'game') { const why = trackWhy(w[1]); if (why) say(at, why); }
+    if (w[0] === 'bed' && w[1] && w[1] !== 'off') { const why = bedWhy(w[1]); if (why) say(at, why); }
+    audioWordsWhy(at, w);
     checkDotted(at, w);
     optionsWhy(at, w);
   }
@@ -406,6 +462,17 @@ for (const f of txt('people')) {
       const rest = sp[3].trim().split(/\s+/);
       { const kind = rest[0] === 'by' ? rest[2] : rest[0]; if (!placeKinds.has(kind)) say(at, 'spot: no kind «' + kind + '» (NpcPlaces.Kinds)'); }
       rest.forEach((x, i) => { if (rest[i - 1] === 'by') { const w2 = placeWhy(x); if (w2) say(at, 'spot by ' + w2); } });
+      continue;
+    }
+    const carry = /^carry:\s*(\S+)(.*)$/.exec(l); // «carry: <item> [arm|left|right] [clip <clip>] [set <clip>]» (StoryProps.CarryLine)
+    if (carry) {
+      const w = itemWhy(carry[1]); if (w) say(at, 'carry: ' + w); else if (!carry[1].startsWith('RavenWatch_item_')) say(at, 'carry: «' + carry[1] + '» is not the mod\'s own item (RavenWatch_item_<id>)');
+      const rest = carry[2].trim().split(/\s+/).filter(Boolean);
+      for (let i = 0; i < rest.length; i++) {
+        if (rest[i] === 'arm' || rest[i] === 'left' || rest[i] === 'right') continue;
+        if ((rest[i] === 'clip' || rest[i] === 'set') && i + 1 < rest.length) { i++; continue; }
+        say(at, 'carry: no such word «' + rest[i] + '» (' + 'carry: <item> [arm|left|right] [clip <clip>] [set <clip>]' + ')');
+      }
       continue;
     }
     const m = /^(npc|live|after):\s*(.*)$/.exec(l);

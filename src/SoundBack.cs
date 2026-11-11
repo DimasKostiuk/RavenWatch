@@ -9,7 +9,8 @@ namespace HuginWhispers
     // their samples nor play them with a negative pitch. So the clip is played once, silently, and caught as it comes
     // out of its player (OnAudioFilterRead hands over every buffer; it is copied and then wiped, so nothing is heard),
     // and the catch, turned round, is a clip of our own. Made once per clip, kept for the session. A clip the game
-    // keeps decompressed is read directly instead.
+    // keeps decompressed is read directly instead. The catch's own silent source is the only one here: what is heard goes through
+    // the audio core (Audio.PlayClip), as a sound of the world, its owner the gift's unless the caller says.
     internal static class SoundBack
     {
         private static readonly Dictionary<AudioClip, AudioClip> Ready = new Dictionary<AudioClip, AudioClip>();
@@ -31,15 +32,10 @@ namespace HuginWhispers
         // A backwards clip through a player like the given one (its mixer, so the game's sound volume counts), timed
         // so that it ENDS in endIn seconds: backwards a sound ends on its own onset (the click, the whoosh), and that is
         // what should meet the moment. Longer than that: only its last part, swelling in; shorter: it waits.
-        internal static GameObject PlayEndingAt(AudioClip clip, AudioSource like, Vector3 at, Transform follow, float endIn)
+        internal static bool PlayEndingAt(AudioClip clip, AudioSource like, Vector3 at, Transform follow, float endIn)
         {
-            if (clip == null) return null;
-            if (clip.length > endIn + 0.05f)
-            {
-                GameObject go = PlayClip(clip, like, at, follow, 1f, clip.length - endIn, 0f);
-                if (go != null) go.AddComponent<SoundEaseIn>().Begin(go.GetComponent<AudioSource>(), Mathf.Min(0.2f, endIn * 0.3f));
-                return go;
-            }
+            if (clip == null) return false;
+            if (clip.length > endIn + 0.05f) return PlayClip(clip, like, at, follow, 1f, clip.length - endIn, 0f, Mathf.Min(0.2f, endIn * 0.3f));
             return PlayClip(clip, like, at, follow, 1f, 0f, Mathf.Max(0f, endIn - clip.length));
         }
 
@@ -81,7 +77,7 @@ namespace HuginWhispers
             if (list == null || list.Count == 0) return false;
             AudioSource like;
             NamedLike.TryGetValue(name, out like);
-            return PlayClip(list[UnityEngine.Random.Range(0, list.Count)], like, at, follow, stretch, 0f) != null;
+            return PlayClip(list[UnityEngine.Random.Range(0, list.Count)], like, at, follow, stretch, 0f);
         }
 
         // fadeIn: seconds it takes to swell from silence to full (0: at once)
@@ -124,36 +120,16 @@ namespace HuginWhispers
                     AudioClip back = Get(Ready_[UnityEngine.Random.Range(0, Ready_.Count)]);
                     AudioSource like;
                     NamedLike.TryGetValue(a.Name, out like);
-                    GameObject go = PlayClip(back, like, a.Follow.position + Vector3.up * 1.6f, a.Follow, a.Stretch, 0f); // slower is longer (and lower)
-                    if (go != null && a.FadeIn > 0f) go.AddComponent<SoundEaseIn>().Begin(go.GetComponent<AudioSource>(), a.FadeIn); // from silence up to full, then on
+                    PlayClip(back, like, a.Follow.position + Vector3.up * 1.6f, a.Follow, a.Stretch, 0f, 0f, a.FadeIn); // slower is longer (and lower); from silence up to full, then on
                 }
             }
         }
 
         // A clip through a player like the given one (its mixer, so the game's sound volume counts), stretch 2 twice
         // as long and lower, skip seconds left out at its start
-        internal static GameObject PlayClip(AudioClip clip, AudioSource like, Vector3 at, Transform follow, float stretch, float skip, float delay = 0f)
+        internal static bool PlayClip(AudioClip clip, AudioSource like, Vector3 at, Transform follow, float stretch, float skip, float delay = 0f, float fadeIn = 0f, string owner = Audio.Gift)
         {
-            if (clip == null) return null;
-            GameObject go = new GameObject("RavenWatch_SoundPlay");
-            if (follow != null) go.transform.SetParent(follow, false);
-            go.transform.position = at;
-            AudioSource s = go.AddComponent<AudioSource>();
-            if (like != null)
-            {
-                s.outputAudioMixerGroup = like.outputAudioMixerGroup;
-                s.spatialBlend = like.spatialBlend; s.rolloffMode = like.rolloffMode;
-                s.minDistance = like.minDistance; s.maxDistance = like.maxDistance; s.volume = like.volume;
-                s.dopplerLevel = like.dopplerLevel; s.spread = like.spread; s.priority = like.priority;
-            }
-            s.clip = clip;
-            s.pitch = 1f / Mathf.Max(0.1f, stretch);
-            s.loop = false;
-            skip = Mathf.Clamp(skip, 0f, Mathf.Max(0f, clip.length - 0.05f));
-            s.time = skip;
-            if (delay > 0f) s.PlayDelayed(delay); else s.Play();
-            UnityEngine.Object.Destroy(go, delay + (clip.length - skip) * Mathf.Max(0.1f, stretch) + 0.5f);
-            return go;
+            return Audio.PlayClip(clip, like, at, new SoundAsk { World = true, Follow = follow, Stretch = stretch, Skip = skip, Delay = delay, FadeIn = fadeIn, Owner = owner });
         }
 
         private static readonly Dictionary<AudioClip, float> Quiet = new Dictionary<AudioClip, float>();
@@ -301,27 +277,6 @@ namespace HuginWhispers
                 _buf = null;
                 Destroy(gameObject);
             }
-        }
-    }
-
-    // a sound started mid-way swells in over a moment instead of starting with a click
-    internal class SoundEaseIn : MonoBehaviour
-    {
-        private AudioSource _a;
-        private float _to, _len, _t0;
-
-        internal void Begin(AudioSource a, float seconds)
-        {
-            _a = a; _to = a.volume; _len = Mathf.Max(0.01f, seconds); _t0 = Time.time;
-            a.volume = 0f;
-        }
-
-        private void Update()
-        {
-            if (_a == null) { Destroy(this); return; }
-            float u = Mathf.Clamp01((Time.time - _t0) / _len);
-            _a.volume = _to * u;
-            if (u >= 1f) Destroy(this);
         }
     }
 }

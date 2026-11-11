@@ -236,8 +236,12 @@ namespace HuginWhispers
 
         // one frame: its style, how it is now (legs: the pace of its walk, 0 — its legs left to the game, as a player's whose
         // speed is the game's own; now: its wishes over its style), off: it gives way now
+        // how far down it put the head this frame, in degrees (its stoop and its head, as the head ends up): one that talks to someone lifts it (NpcSpeech)
+        internal float HeadDown;
+
         internal void Pose(Style s, float legs, Mix now, bool off, bool upper = false, bool arms = false)
         {
+            HeadDown = 0f;
             if (now == null) now = Mix.None;
             float stoopNow = now.Stoop, headNow = now.Head, swingNow = now.Swing, bobNow = now.Bob, shrugNow = now.Shrug, outNow = now.Out;
             float dt = Time.deltaTime;
@@ -268,6 +272,7 @@ namespace HuginWhispers
             Turn(_spine2, body, stoop * 10f, 0f, 0f);
             Turn(_neck, body, -stoop * 9f, 0f, 0f); // (it looks ahead, not at its feet)
             Turn(_head, body, (s.Head + headNow + s.Nod * Mathf.Cos(phase * 4f * Mathf.PI) * _strolling) * _on, 0f, 0f); // (a nod: once a step)
+            HeadDown = stoop * 15f + (s.Head + headNow) * _on; // (14 + 10 − 9 of its back and neck, then its head)
             // its shoulders: forward and up (Y: forward for the left one, Z: up) — round them, draw them back, hunch
             // its quiet life standing: eased in as it stops (a person's, near only)
             _idle = Mathf.MoveTowards(_idle, s.Seed != 0u && _near ? 1f - _strolling : 0f, dt * 1.5f);
@@ -409,7 +414,7 @@ namespace HuginWhispers
         }
 
         // a bone turned round the body's axes (X forward/down, Y right, Z a roll), on top of the game's pose
-        private static void Turn(Transform bone, Quaternion body, float x, float y, float z)
+        internal static void Turn(Transform bone, Quaternion body, float x, float y, float z) // (NpcSpeech turns the same way)
         {
             if (bone == null || (Mathf.Abs(x) < 0.01f && Mathf.Abs(y) < 0.01f && Mathf.Abs(z) < 0.01f)) return;
             bone.rotation = body * Quaternion.Euler(x, y, z) * Quaternion.Inverse(body) * bone.rotation;

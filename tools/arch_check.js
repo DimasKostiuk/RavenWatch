@@ -1,5 +1,7 @@
-// The core's rules as a check (docs/ARCHITECTURE.md), run by rw_build before it compiles: what goes against them stops
-// the build, with the place to use instead. Run alone: node tools/arch_check.js
+// The core's rules as a check (docs/ARCHITECTURE.md, the map; its tables in docs/arch/*.md), run by rw_build before it compiles:
+// what goes against them stops the build, with the place to use instead. Run alone: node tools/arch_check.js
+// The documents are checked too (at the end): every code name they give in back-ticks is in the code (arch-doc: the map, its sections,
+// the job pages docs/jobs/*.md), and every file of src/ is named in the map or a section (arch-file), so its section is one search away.
 // Two kinds of rule:
 //   RULES    never: a line that does this stops the build. `allow` lists the files that own the thing.
 //   RATCHET  old code as it stands is written down per file (tools/arch_baseline.json), and those counts may only fall.
@@ -15,11 +17,18 @@ const any = () => true;
 const code = line => line.replace(/\/\/.*$/, ''); // (comments may name anything)
 
 const RULES = [
+  // Thunderstore's automatic check flagged how the mod reached into another UI mod (2.9.0, 2026-11-08). The mod knows no UI mod by name: what it
+  // needs it finds by the game's own objects (FeederUi.WindowOf) and guards at the game's own doors (GraveRavens.Keeps)
+  { id: 'no-ui-mod-names', files: any, bad: /seneal/i,
+    why: 'no other UI mod is named or reached into in the code: find it through the game\'s own objects (FeederUi.WindowOf), guard at the game\'s own doors (GraveRavens.Keeps)' },
   { id: 'game-move', files: npc, bad: /(^|[^.\w])(MoveTo|MoveTowards)\(|\.MoveTo\(/,
     why: 'the game\'s walk halts on a bend over 10°; walk through NpcMind.Move → NpcWalk.Step → NpcMind.Steer' },
   { id: 'path-ask', files: npc, bad: /\.(GetPath|HavePath)\(/,
     why: 'a person\'s way asked of the game\'s way finder: NpcWalk.Have / NpcWalk.Way (kept answers, the frame\'s limit, measured); a walk\'s own way: NpcWalk.Ask',
     allow: ['NpcWalk.cs', 'NpcWalkAsk.cs', 'NpcWalkRoom.cs', 'NpcNav.cs'] },
+  // a person's bed changed past the one door left the bed still signed with its old person (2026-11-09)
+  { id: 'bed-door', files: f => /^(Npc|Story)\w*\.cs$/.test(f) && f !== 'NpcResident.cs', bad: /NpcLocker\.Put(Ref)?\(\s*[\w.]+\s*,\s*(NpcResident\.)?KBed\b/,
+    why: 'a person\'s bed changes only through NpcResident.SetBed: the bed itself says whose it is, and the one it leaves must say nobody\'s' },
   { id: 'door-rpc', files: any, bad: /"UseDoor"/,
     why: 'the door command is a switch; use NpcDoors.Open / Shut', allow: ['NpcDoors.cs'] },
   // BodyClips owns the search; FateRite looks inside the raven itself; RavenFx is the game's own effect-child lookup
@@ -38,16 +47,20 @@ const RULES = [
   // time there is the physics step's 0.02 s, and the turn on a bend, a slide, the walk report all ran 2.5 times slow
   { id: 'mind-time', files: f => /^(NpcMind|NpcWalk)\w*\.cs$/.test(f), bad: /Time\.(deltaTime|fixedDeltaTime)\b/,
     why: 'inside a person\'s mind and feet time is the mind\'s step: NpcMind.Dt (or the dt handed to a task); a timer of its own reads Time.time' },
+  // the map has roofs and upper floors too: a settler who could not reach his work was put on the roof over it, past a height check that compared the spot with itself (2026-11-09)
+  { id: 'same-floor', files: f => /^(NpcBody|NpcMind\w*|NpcWalkStuck)\.cs$/.test(f), bad: /NpcKit\.Valid\(/,
+    why: 'what puts a body somewhere takes a spot on its own floor: NpcKit.SameFloor (the map has roofs and upper floors too)' },
   { id: 'npc-seed', files: npc, bad: /m_uid\.(ID|UserID)\s*\*|m_uid\.GetHashCode\(\)|\(u?int\)\s*\w+\.m_uid\.(ID|UserID)\b/,
     why: 'a ZDOID is new at every world load: seeded by it a person is another after a restart; seed by NpcKit.Seed(zdo)', allow: ['NpcKit.cs'] },
   { id: 'one-animator', files: any, bad: /new\s+PAnimClip\s*\(/,
     why: 'one player of clips: BodyAnimator; clips live in BodyClips', allow: ['BodyClips.cs', 'PlayerAnimPanel.cs'] },
   { id: 'one-music', files: any, bad: /MusicMan\.instance|\.TriggerMusic\(/,
     why: 'music has one owner: ask Audio.Music / MusicOff (layers, owner, lease), or the game and a scene fight over it', allow: ['Audio.cs'] },
-  // the sources that were there before the core: voice lines, wings, backwards sounds, a pair's fx (the user 2026-11-04)
+  // who may hold a source of its own: the core; a raven's voice (filters of its own on each line); the gifts' effects (RavenFx: left there on purpose, the user 2026-11-09);
+  // SoundBack's silent catch (nothing heard comes out of it). Wings, a pair's fx and backwards sounds moved into the core (2026-11-09)
   { id: 'audio-source', files: any, bad: /AddComponent<AudioSource>\(/,
     why: 'a sound of your own: Audio.Sound / Bed / Music: a source of your own has no owner and nobody lets it go',
-    allow: ['Audio.cs', 'OdinWings.cs', 'PairFx.cs', 'RavenFx.cs', 'RavenVoice.cs', 'SoundBack.cs'] },
+    allow: ['Audio.cs', 'RavenFx.cs', 'RavenVoice.cs', 'SoundBack.cs'] },
   // a step with verbs («player go») is found by its verb's entry: asked by its first word it has no Begin, and the step does nothing, without a word (2026-11-06)
   { id: 'step-kind', files: f => f.startsWith('StoryScenes'), bad: /Kinds\.TryGetValue\(\w+\.W\[/,
     why: 'a step\'s kind is st.Kind (its verb\'s own entry, found once): looked up by its first word, a step with verbs does nothing' },
@@ -64,10 +77,40 @@ const RULES = [
   //                       PlayerAnimLog, SoundPanel, Studio, TakeoffKeys, WingPanel, Mute, Motor flight.txt, PerchTurn, DevKit),
   //                       a player's own (HuginWhispers/Lang phrase files, RavenJournal, RavenLooks, Outfits, RavenItem icons,
   //                       Errands, FlightTemplates, FxLib, FxMix, SitSystem/SitTemplates, Workshop/WsAssets models)
-  //   one copy, by Source: Blueprint, BodyClips, BodyGait, Photos, StoryFiles, StoryQuests, NpcDefs, NpcTalk, AudioBank
+  //   one copy, by Source: Blueprint, BodyClips, BodyGait, Photos, StoryFiles, StoryQuests, NpcDefs, NpcTalk
   { id: 'config-read', files: any, bad: /Paths.ConfigPath/,
     why: 'a new reader of config: is it the machine\x27s own, or a copy of what the mod ships? The mod\x27s data has one copy in assets (StoryFiles.Source); say which in tools/arch_check.js (config-read), with the user',
-    allow: ['AnimStage.cs', 'AudioBank.cs', 'BlackBox.cs', 'Blueprint.cs', 'BodyClips.cs', 'BodyGait.cs', 'DevKit.cs', 'Errands.cs', 'FlightRec.cs', 'FlightTemplates.cs', 'FxLib.cs', 'FxMix.cs', 'HuginWhispers.cs', 'JoltWatch.cs', 'Lang.cs', 'LookDiag.cs', 'Motor.cs', 'Mute.cs', 'NpcDefs.cs', 'NpcSelf.cs', 'NpcTalk.cs', 'NpcWalkBox.cs', 'Outfits.cs', 'PerchTurn.cs', 'Photos.cs', 'PlayerAnimLog.cs', 'RavenItem.cs', 'RavenJournal.cs', 'RavenLooks.cs', 'SitSystem.cs', 'SitTemplates.cs', 'SoundPanel.cs', 'StoryFiles.cs', 'StoryQuests.cs', 'Studio.cs', 'TakeoffKeys.cs', 'WingPanel.cs', 'Workshop.cs', 'WsAssets.cs'] },
+    allow: ['AnimStage.cs', 'BlackBox.cs', 'Blueprint.cs', 'BodyClips.cs', 'BodyGait.cs', 'DevKit.cs', 'Errands.cs', 'FlightRec.cs', 'FlightTemplates.cs', 'FxLib.cs', 'FxMix.cs', 'HuginWhispers.cs', 'JoltWatch.cs', 'Lang.cs', 'LookDiag.cs', 'Motor.cs', 'Mute.cs', 'NpcDefs.cs', 'NpcSelf.cs', 'NpcTalk.cs', 'NpcWalkBox.cs', 'Outfits.cs', 'PerchTurn.cs', 'Photos.cs', 'PlayerAnimLog.cs', 'RavenItem.cs', 'RavenJournal.cs', 'RavenLooks.cs', 'SitSystem.cs', 'SitTemplates.cs', 'SoundPanel.cs', 'StoryFiles.cs', 'StoryQuests.cs', 'Studio.cs', 'TakeoffKeys.cs', 'WingPanel.cs', 'Workshop.cs', 'WsAssets.cs'] },
+  // a base's pieces looked over again beside its own look (2026-11-08: mending, tables, tubs and work each had a «not made yet» look over
+  // every piece in Reach — thousands on a big base): its look is NpcBase.Things / Wears / Tables / Tubs; not made yet: none till it is
+  { id: 'base-pieces', files: any, bad: /GetAllPiecesInRadius\([^;]*NpcBase\.Reach/,
+    why: 'a base\x27s things are its own look: NpcBase.Things(type), Wears, Tables, Tubs, Round (null: not made yet — wait, never look over its pieces)', allow: ['NpcBase.cs'] },
+  // a raven gift's refusals were checked in five places in five orders (2026-11-07): the circle showed one reason, the press said
+  // another, a dot was green and the gift would not go. One list, RavenSkills.Why; a gift's own refusal of the place is asked there
+  { id: 'gift-why', files: any, bad: /\b(Strike|Dome|Beast|Decoy|OdinWings)\.Refused\(|\bHabits\.Blocks\(/,
+    why: 'why a raven gift cannot go now is one list: RavenSkills.Why (Use, Status, UsableNow, Dot, FreeStrike read it); add a new refusal there', allow: ['RavenSkills.cs'] },
+  // a word to the game that runs a person (2026-11-07): an act sent to its old owner, or to owner 0, was lost after the player had already paid for it
+  { id: 'npc-owner-rpc', files: any, bad: /\bRpc(Act|Order)\b/,
+    why: 'orders and acts to a person go through NpcActor.Order / Act (waits for an owner, sends on once, keeps who sent it); a body not loaded here: NpcActor.ActTo', allow: ['NpcActor.cs'] },
+  // a talk, its patience and its repeats are reckoned on the game of the one who talks; a person's mind runs only on its owner's (2026-11-08: «at work» was
+  // always false on a second player's game)
+  // whether a person is on its guard is one answer (2026-11-08: a guard's pose and weapon by «a fight»): its pose, its hands, its gait ask NpcAlert
+  { id: 'alert-core', files: f => /^(NpcStance|NpcGear|NpcGait|BodyGait).cs$/.test(f), bad: /Layer.Fight|NpcFeel.Fright/,
+    why: 'on its guard or not: NpcAlert.On(person) — a fight, a fright, just fought, on every game' },
+  // the Fine pictures carry their own scale (BookArt.FinePpu): a multiplier at the Image makes them Fine times thinner — and with it Unity took their least size Fine
+  // times too large (a pill of radius 11 asked for 92 units of height, 2026-11-08)
+  { id: 'fine-multiplier', files: any, bad: /pixelsPerUnitMultiplier\s*=\s*BookArt\.Fine\b/,
+    why: 'RoundFine, FrameFine, TornFill, TornLine, SheetFill: set the sprite and type only — their scale is in the sprite (BookArt.FinePpu)' },
+  // what is wild was asked by the prefab in two places with two lists (2026-11-08): the ground under a place let every Piece pass, and
+  // PlantEverything makes the game's own bushes pieces — bushes stood inside the Hall; the game's plain bushes (only StaticPhysics) were missed too
+  { id: 'wild-core', files: any, bad: /GetComponent<(TreeLog|MineRock5?|Destructible|StaticPhysics)>\(\)/,
+    why: 'the world\'s own growth and stone, and nobody\'s: Wild.Is(zdo | view) (its kind by prefab: Wild.Kind)', allow: ['Wild.cs'] },
+  // (its card and its heart's board too: read on anyone's game — its card said «у бою тікає» of everyone on a second player's, 2026-11-08)
+  { id: 'mind-elsewhere', files: f => /^(NpcTalk\w*|NpcPatience|NpcFavours|NpcAway|NpcProfile|NpcBoard)\.cs$/.test(f), bad: /\.Mind\.(NowLayer|SeatedNow|Now|Style)\b|\.Vitals\.Down\b/,
+    why: 'what it does now, on any game: NpcMind.LayerNow(person) / NpcMind.SeatedOf(person) / NpcMind.EatingOf(person), down: NpcVitals.IsDown(person), how it fights: NpcNature.FightNow(person); its Mind and Vitals stand still where it is not run' },
+  // its last fight was read from the mind's own fields by the themes a talk asks on the talker's game (2026-11-08): there they stand still, «after a fight» never came
+  { id: 'fought-mind', files: any, bad: /\.Fought(At|Ran|Won)\b/,
+    why: 'its last fight on any game: NpcMind.FoughtOf(person, out ran, out won)', allow: ['NpcMind.cs'] },
 ];
 
 // the { … } that opens at or after `from`; null if none closes (braces in strings are rare enough to ignore here)
@@ -182,6 +225,79 @@ for (const f of Object.keys(sources)) {
       console.log('ARCH ' + r.id + ': src/' + f + ':' + (i + 1) + '\n  ' + line.trim().slice(0, 120) + '\n  → ' + r.why);
     }
   });
+}
+
+// arch-doc: the map (docs/ARCHITECTURE.md), its sections (docs/arch/*.md) and the job pages (docs/jobs/*.md) name code in back-ticks, and a reader goes where they point.
+// Every such name must be in the code; a top-level class that lives in a file of another name is written with that file once per
+// document: `NpcClock` (NpcPerf.cs); a file that is a part of another class is written with its extension: `NpcWalkLinks.cs`.
+// Checked: `X.cs` is a file of src/; `Our.Member` has that member in a file declaring Our; a CamelCase name is a class, a file or a
+// word of the code. A game's or Unity's name (no class of ours) is let be. Else the document rots and sends the reader to nothing.
+{
+  const docs = path.join(__dirname, '..', 'docs');
+  const pages = dir => fs.existsSync(path.join(docs, dir)) ? fs.readdirSync(path.join(docs, dir)).filter(f => f.endsWith('.md')).map(f => path.join(docs, dir, f)) : [];
+  const mapFiles = [path.join(docs, 'ARCHITECTURE.md'), ...pages('arch')], docFiles = [...mapFiles, ...pages('jobs')];
+  const all = Object.values(sources).join('\n');
+  const word = w => new RegExp('\\b' + w + '\\b');
+  const top = {}, declared = {};
+  for (const f of Object.keys(sources)) {
+    for (const m of sources[f].matchAll(/^ {0,4}(?:\w+\s+)*(?:class|struct)\s+([A-Z]\w*)/gm)) (top[m[1]] = top[m[1]] || new Set()).add(f);
+    for (const m of sources[f].matchAll(/\b(?:class|struct|enum)\s+([A-Z]\w*)/g)) (declared[m[1]] = declared[m[1]] || new Set()).add(f);
+  }
+  const fileOf = new Set(Object.keys(sources).map(f => f.slice(0, -3)));
+  const bad = (doc, what) => { found++; console.log('ARCH arch-doc: docs/' + path.relative(docs, doc).replace(/\\/g, '/') + ': ' + what); };
+  for (const doc of docFiles) {
+    if (!fs.existsSync(doc)) { bad(doc, 'is missing'); continue; }
+    const text = fs.readFileSync(doc, 'utf8'), seen = new Set();
+    for (const m of text.matchAll(/`([^`\n]+)`/g)) {
+      const t = m[1];
+      let x = /^(\w+)\.cs$/.exec(t);
+      if (x) { if (!sources[t]) bad(doc, '`' + t + '` is no file of src/'); continue; }
+      x = /^([A-Z][A-Za-z0-9_]*)(?:\.([A-Za-z0-9_]+))?$/.exec(t);
+      if (!x) continue;
+      const head = x[1], mem = x[2], key = head + (mem ? '.' + mem : '');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      // the third column of a table row («Не роби») names what must NOT be written, so a name missing from the code is right there
+      const lineStart = text.lastIndexOf('\n', m.index) + 1, before = text.slice(lineStart, m.index);
+      const dontColumn = before.startsWith('| ') && before.split(' | ').length >= 3;
+      const camel = /[a-z]/.test(head) && /^[A-Z].*[A-Z]/.test(head); // NpcClock, StudioScene: a name the reader will look for
+      if (!declared[head]) {
+        if (fileOf.has(head)) { bad(doc, '`' + t + '`: ' + head + ' is a file, not a class: write `' + head + '.cs`'); continue; }
+        if ((camel || mem) && !dontColumn && !word(head).test(all)) bad(doc, '`' + t + '`: no ' + head + ' in src/');
+        continue;
+      }
+      if (mem && !dontColumn && !word(head + '\\.' + mem).test(all) && ![...declared[head]].some(f => word(mem).test(sources[f]))) bad(doc, '`' + t + '`: no ' + mem + ' on ' + head);
+      if (top[head] && declared[head].size === 1 && !fileOf.has(head) && !new RegExp('`' + head + '(\\.\\w+)?` (\\(`?\\w+\\.cs`?\\)|у `\\w+\\.cs`)').test(text)) {
+        const home = [...top[head]][0];
+        bad(doc, '`' + t + '`: ' + head + ' lives in ' + home + ': write it once here as `' + head + '` (' + home + ')');
+      }
+    }
+  }
+
+  // arch-file: the other way round. Every file of src/ is named in the map or one of its sections, so «which section is my file's» is
+  // one search for its name (a file with no row of its own stands in docs/arch/files.md, on its section's line). Named: its name inside
+  // back-ticks (alone, with .cs, or as the class of a member), as the home of a class — `NpcClock` (NpcPerf.cs) — or by a back-ticked
+  // pattern with * that fits it (`RavenBook*`, `*Patterns.cs`; a pattern of data ids — `you_*` — starts small and is not one of these).
+  // A pattern that fits no file is a pointer to nothing.
+  const named = new Set(), patterns = [];
+  for (const doc of mapFiles) {
+    if (!fs.existsSync(doc)) continue;
+    const text = fs.readFileSync(doc, 'utf8');
+    for (const m of text.matchAll(/\((\w+)\.cs\)/g)) named.add(m[1]);
+    for (const m of text.matchAll(/`([^`\n]+)`/g)) {
+      const t = m[1];
+      if (/^\*?[A-Z][\w*]*(\.cs)?$/.test(t) && t.includes('*') && t.replace(/\.cs$/, '').replace(/\*/g, '').length >= 4) {
+        const p = new RegExp('^' + t.replace(/\.cs$/, '').replace(/\*/g, '\\w*') + '$');
+        if (![...fileOf].some(f => p.test(f))) bad(doc, '`' + t + '` fits no file of src/');
+        patterns.push(p);
+      }
+      for (const w of t.match(/[A-Za-z_]\w*/g) || []) named.add(w);
+    }
+  }
+  for (const f of fileOf) if (!named.has(f) && !patterns.some(p => p.test(f))) {
+    found++;
+    console.log('ARCH arch-file: src/' + f + '.cs is named in no section of docs/arch: give it a row in its section, or a place on its section\'s line in docs/arch/files.md');
+  }
 }
 
 let base = null;

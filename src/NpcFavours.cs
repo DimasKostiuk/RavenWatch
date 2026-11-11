@@ -23,6 +23,7 @@ namespace HuginWhispers
     //   secret   what it never told anyone (NpcBackstory.Secret): one dear, once, not angry
     //   night    it walks with you at night a while, afraid or not
     //   dress    it lets you change its clothes or take them back, for now (DressFor; NpcTalkDress): anyone not on guard duty
+    //   bandage  you are hurt: it binds your wound (asked from its worry for you, c_hurt, not from «Попросити»), a little health on your game
     // Not yet: a song (needs its voice). In a talk: ?favour <id> · !favour <id> · {favour} its answer.
     internal static class NpcFavours
     {
@@ -57,8 +58,11 @@ namespace HuginWhispers
             { "secret", new Favour { Id = "secret", Dear = true, Once = true, Can = (a, p) => !NpcPatience.Angry(a) && NpcBackstory.Secret(a).Length > 0, Yes = Secret } },
             { "dress", new Favour { Id = "dress", Can = (a, p) => NpcGear.RoleOf(a) != NpcGear.Role.Full && (NpcResident.Is(a) || NpcTalk.Hired(a)) && NpcPatience.Of(a, p) >= DressFrom, Fit = (a, t) => t.Contains("весел") ? 1.2f : t.Contains("бурч") ? 0.7f : 1f } },
             { "night", new Favour { Id = "night", Can = (a, p) => EnvMan.IsNight() && NpcResident.Is(a), Fit = (a, t) => t.Contains("смілив") ? 1.2f : t.Contains("боязк") ? 0.4f : 1f,
-                There = (a, p, w) => a.Mind != null && p != null && a.Mind.TakeWhim(new NpcMind.Plan { Kind = NpcMind.Task.Follow, Who = p.GetZDOID(), Leader = p.GetPlayerID(), Keep = 3f }, WalkFor, Whose) } }, // (not over a duty of its own: a meal, its rest)
+                There = (a, p, w) => a.Mind != null && a.Mind.WalkWith(p, WalkFor, Whose) } }, // (not over a duty of its own: a meal, its rest)
+            // you are hurt and ask it to bind your wound (its worry for you, c_hurt): healed on your own game, as a gift is given there
+            { "bandage", new Favour { Id = "bandage", Can = (a, p) => p.GetHealthPercentage() < BandageBelow, Fit = (a, t) => t.Contains("стар") ? 1.2f : t.Contains("боязк") ? 0.8f : 1f, Yes = Bandaged } },
         };
+        internal static float BandageHeals = 0.2f, BandageBelow = 0.6f; // (× your health · only while you are below this much of it)
 
         private const string Whose = "favour"; // (its whim's owner: what it does for you, with its term)
 
@@ -77,24 +81,26 @@ namespace HuginWhispers
             Said = "…";
             if (a == null || p == null || !All.TryGetValue(id, out f)) return;
             bool dear = NpcAttitude.Level(a, p) == "close";
-            float chance = Mathf.Clamp01((NpcPatience.Of(a, p) - From) / Over) * f.Fit(a, NpcPhrases.Tones(a)) * (dear ? DearMore : 1f);
+            float chance = Mathf.Clamp01((NpcPatience.Of(a, p) - (From - (NpcPatience.Easy - NpcPatience.AskFrom(a, p)))) / Over) * f.Fit(a, NpcPhrases.Tones(a)) * (dear ? DearMore : 1f);
             if (f.Dear && !dear) chance = 0f;
-            if (UnityEngine.Random.value < chance)
-            {
-                Said = (f.Yes != null ? f.Yes(a, p) : null) ?? NpcPhrases.Compose(a, "favour_" + id, p) ?? a.Form(Lang.T("Ну гаразд."));
-                NpcPatience.Spend(a, p, Cost);
-                NpcTalk.FavourAsked(a, p, id, f.Once);
-                if (id == "dress") DressFor = a;
-                if (f.There != null) a.Act("favour " + id + " " + NpcKit.Ref(p.GetZDOID()) + " " + p.GetPlayerID().ToString(CultureInfo.InvariantCulture)); // session: you, found at once on the game that runs it
-                Npcs.Log(a.Id + ": does a favour «" + id + "» (" + Mathf.RoundToInt(chance * 100f) + "%)");
-            }
-            else
-            {
-                Said = NpcPhrases.Compose(a, "favour_no_" + id, p) ?? NpcPhrases.Compose(a, "favour_no", p) ?? a.Form(Lang.T("Ні. Не зараз."));
-                NpcPatience.Spend(a, p, NoCost);
-                NpcTalk.FavourAsked(a, p, id, false);
-                Npcs.Log(a.Id + ": refuses a favour «" + id + "» (" + Mathf.RoundToInt(chance * 100f) + "%)");
-            }
+            if (UnityEngine.Random.value < chance) { Grant(a, p, id); Npcs.Log(a.Id + ": does a favour «" + id + "» (" + Mathf.RoundToInt(chance * 100f) + "%)"); return; }
+            Said = NpcPhrases.Compose(a, "favour_no_" + id, p) ?? NpcPhrases.Compose(a, "favour_no", p) ?? a.Form(Lang.T("Ні. Не зараз."));
+            NpcPatience.Spend(a, p, NoCost);
+            NpcTalk.FavourAsked(a, p, id, false);
+            if (!f.Dear || dear) NpcTalk.SwayOn("favour " + id); // (a no it may be talked out of: not one only for one dear — NpcTalkSway)
+            Npcs.Log(a.Id + ": refuses a favour «" + id + "» (" + Mathf.RoundToInt(chance * 100f) + "%)");
+        }
+
+        // it does it (its yes, or talked round: NpcTalkSway) — its words, its cost, kept, done on the game that runs it
+        internal static void Grant(NpcActor a, Player p, string id)
+        {
+            Favour f;
+            if (a == null || p == null || !All.TryGetValue(id, out f)) return;
+            Said = (f.Yes != null ? f.Yes(a, p) : null) ?? NpcPhrases.Compose(a, "favour_" + id, p) ?? a.Form(Lang.T("Ну гаразд."));
+            NpcPatience.Spend(a, p, Cost);
+            NpcTalk.FavourAsked(a, p, id, f.Once);
+            if (id == "dress") DressFor = a;
+            if (f.There != null) a.Act("favour " + id + " " + NpcKit.Ref(p.GetZDOID()) + " " + p.GetPlayerID().ToString(CultureInfo.InvariantCulture)); // session: you, found at once on the game that runs it
         }
 
         // «favour <id> <you> <your player id>» on the game that runs it
@@ -170,6 +176,12 @@ namespace HuginWhispers
             return true;
         }
 
+        private static string Bandaged(NpcActor a, Player p)
+        {
+            p.Heal(p.GetMaxHealth() * BandageHeals, true);
+            return NpcPhrases.Compose(a, "concern_hurt_help", p);
+        }
+
         private static GameObject GiftOf(NpcActor a) { return WorldGenerator.instance != null ? NpcKeepsake.Any(WorldGenerator.instance.GetBiome(NpcRules.Home(a))) : null; }
 
         // its keepsake at your feet: on your game, so that «once» is written only for one really given
@@ -201,7 +213,8 @@ namespace HuginWhispers
         {
             if (_registered) return;
             _registered = true;
-            StoryCond.Register("favour", new StoryCond.Kind { Usage = "favour <id>   (про це можна попросити зараз: dance, examine, show, sit, food, gift, secret, night)", Min = 1, Test = (p, w) => May(NpcTalk.Him, p, w[1]) });
+            StoryCond.Register("mayask", new StoryCond.Kind { Usage = "mayask   (терпіння досить, щоб про щось попросити: NpcPatience.AskFrom, з ниткою «рука» раніше)", Test = (p, w) => NpcTalk.Him != null && p != null && NpcPatience.Of(NpcTalk.Him, p) >= NpcPatience.AskFrom(NpcTalk.Him, p) });
+            StoryCond.Register("favour", new StoryCond.Kind { Usage = "favour <id>   (про це можна попросити зараз: dance, examine, show, sit, food, gift, secret, night, bandage)", Min = 1, Test = (p, w) => May(NpcTalk.Him, p, w[1]) });
             StoryCond.Register("dressok", new StoryCond.Kind { Usage = "dressok   (він щойно дозволив себе перевдягнути)", Test = (p, w) => DressFor != null && DressFor == NpcTalk.Him });
         }
     }

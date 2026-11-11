@@ -152,7 +152,6 @@ namespace HuginWhispers
             }
             if (!Power.Spend(p, munin, CostOf(munin, order))) return false;
             _play = false;
-            if (Quirks.Willful(p, munin, order)) return false; // «Свавільний»: not done, the strength spent
             if (order == Scout) Nicks.OnScout(p, munin); // a deed for its nickname
             Satiety.Flew(munin, HungerOf(order)); // the flying makes it hungry
             Trust.Ordered(munin);                 // and it is something done together
@@ -216,7 +215,7 @@ namespace HuginWhispers
             string why = WhyBoth(p, order);
             if (why != null) { Say(p, Why(p, false, order) == null, Names[order] + " — " + why); return false; } // (the picture of the one that will not)
             bool h = Give(p, false, order), m = h && Give(p, true, order);
-            if (h && !m) { Return(p, false, false); return false; } // Munin would not («Свавільний»): no chase alone
+            if (h && !m) { Return(p, false, false); return false; } // Munin could not pay its strength: no chase alone
             if (!h) return false;
             Voice(p, Random.value < 0.5f, order);
             return true;

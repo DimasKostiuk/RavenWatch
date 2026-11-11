@@ -13,6 +13,8 @@ namespace HuginWhispers
     //   ByFire / FireSide               a spot two steps from the nearest burning fire it can walk up to, on its floor
     //   Busy                            why an NPC cannot be changed from this game now (another game runs it), or null
     //   Floor                           the floor under a spot (a building's floor, the ground) — never the roof over it
+    //   SameFloor                       the walkable spot nearest a spot on that spot's own floor (where a body may be put)
+    //   FloorBy                         the walkable floor by a thing, even one standing higher than the floor (a chest on a dais)
     internal static class NpcKit
     {
         internal static readonly int Built = LayerMask.GetMask("piece", "piece_nonsolid", "Default", "Default_small");
@@ -301,6 +303,26 @@ namespace HuginWhispers
             if (!UnityEngine.AI.NavMesh.SamplePosition(p, out hit, r, f)) return false;
             v = hit.position;
             return true;
+        }
+
+        // the walkable spot nearest p within r on p's own floor. The map has roofs and upper floors too, and within a few metres of a goal indoors a roof may
+        // be all it has: whatever puts a body somewhere asks this (2026-11-09: a settler who could not reach his work was put on the roof over it. Rule same-floor)
+        internal const float FloorGap = 1.2f;
+        internal static bool SameFloor(out Vector3 v, Vector3 p, float r, Pathfinding.AgentType t)
+        {
+            return Valid(out v, p, r, t) && Mathf.Abs(v.y - p.y) <= FloorGap;
+        }
+
+        // the floor a person stands on to reach a thing: looked for from the thing's height downwards, each look too short to reach what is over it. The map may hold nothing
+        // nearer a chest on a dais than the roof right above it, and the game's own snapping takes that (2026-11-09: a chest 2 m above its storeroom's floor, the roof 2.5 m over it)
+        internal const float ReachDown = 3.2f;
+        private static readonly float[] Lows = { 0f, 1f, 2f, 3f };
+        internal static bool FloorBy(out Vector3 v, Vector3 thing, Pathfinding.AgentType t)
+        {
+            foreach (float low in Lows)
+                if (Valid(out v, thing + Vector3.down * low, 1.5f, t) && v.y <= thing.y + FloorGap && v.y >= thing.y - ReachDown) return true;
+            v = thing;
+            return false;
         }
 
         // the navmesh's own id and areas of a walker kind (read once for a way finder)

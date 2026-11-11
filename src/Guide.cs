@@ -220,6 +220,7 @@ namespace HuginWhispers
         {
             bool m;
             foreach (ItemDrop.ItemData item in p.GetInventory().GetAllItems()) if (RavenItem.IsRaven(item, out m) && Trust.Stranger(item, p)) return true;
+            foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) if (RavenItem.IsRaven(item, out m) && Trust.Stranger(item, p)) return true;
             return false;
         }
 

@@ -26,7 +26,7 @@ namespace HuginWhispers
             public List<NpcActor> Who = new List<NpcActor>();
             public List<Trouble> Troubles = new List<Trouble>();
             public int Asks, Coins, Beds, HasBed, Burning, Fires;
-            public bool Rumour, BaseReady;
+            public bool BaseReady;
             public float Days;
             public NpcToil.PayLook Pay;
             public float Mood; // (the average: its word)
@@ -135,7 +135,7 @@ namespace HuginWhispers
         internal static string StateWord(Look l)
         {
             if (l.Who.Count == 0) return Lang.T("щойно збудована");
-            switch (StateRank(l)) { case 3: return Lang.T("на межі"); case 2: return Lang.T("нарікають"); case 1: return Lang.T("живуть добре"); default: return Lang.T("живуть рівно"); }
+            switch (StateRank(l)) { case 3: return Lang.T("на межі"); case 2: return Lang.T("нарікають"); case 1: return Lang.T("живуть добре"); default: return Lang.T("живуть спокійно"); }
         }
 
         private static int StateTone(Look l)
@@ -178,7 +178,8 @@ namespace HuginWhispers
             NpcBase nb = NpcBase.For(h.transform.position);
             b.Edges = () => { RavenBook.HideSheet(); ShowEdges(nb); };
             b.Rename = () => { RavenBook.HideSheet(); h.AskName(); };
-            if (l.Who.Count > 0 || NpcHeart.FarOf(h.Id, l.Who).Count > 0)
+            bool people = l.Who.Count > 0 || NpcHeart.FarOf(h.Id, l.Who).Count > 0; // (its people's tabs only with people: none known yet — the server's list may still be on its way)
+            if (people)
             {
                 b.Tabs.Add(new RavenBook.BoardTab { Title = Lang.T("МЕШКАНЦІ"), Page = () => People(h, b) });
                 int deeds = DeedsCount(h, l);
@@ -188,7 +189,14 @@ namespace HuginWhispers
             b.Tabs.Add(new RavenBook.BoardTab { Title = Lang.T("МІСЦЯ"), Page = () => Places(h, l) });
             RavenBook.ShowBoard(b);
             int farWas = NpcHeart.FarOf(h.Id, l.Who).Count;
-            NpcHeart.Ask(list => { if (h != null && NpcHeart.FarOf(h.Id, NpcHeart.Residents(h.Id)).Count != farWas) RavenBook.BoardRefresh(b); }); // (who lives here but is far: the server's list, once a board opened)
+            NpcHeart.Ask(list => // (who lives here but is far: the server's list, once a board opened)
+            {
+                if (h == null) return;
+                List<NpcActor> now = NpcHeart.Residents(h.Id);
+                bool known = now.Count > 0 || NpcHeart.FarOf(h.Id, now).Count > 0;
+                if (known != people) { if (RavenBook.BoardOpen(b)) Show(h, 0); return; } // (opened before its people were known — just after a load: the board anew with their tabs, 2026-11-08 «не завантажились одразу»)
+                if (NpcHeart.FarOf(h.Id, now).Count != farWas) RavenBook.BoardRefresh(b);
+            });
         }
 
         private static RavenBook.BoardNote Todo(Look l)
@@ -293,7 +301,7 @@ namespace HuginWhispers
         private static int DeedsCount(NpcHeart h, Look l)
         {
             int n = 0; Player me = Player.m_localPlayer;
-            foreach (NpcActor a in l.Who) { n += NpcPromises.Yours(a, me).Count; NpcRequests.Request r = NpcRequests.Of(a); if (r != null && (me == null || !NpcPromises.Has(a, me.GetPlayerID(), "request"))) n++; if (NpcGoals.ForYou(a)) n++; }
+            foreach (NpcActor a in l.Who) { n += NpcPromises.Yours(a, me).Count; NpcRequests.Request r = NpcRequests.Of(a); if (r != null && (me == null || !NpcPromises.Has(a, me.GetPlayerID(), "request"))) n++; if (NpcGoals.ForYou(a)) n++; n += NpcTasks.Yours(a, me).Count; }
             if (StoryCard(h) != null) n++;
             return n;
         }
@@ -320,7 +328,7 @@ namespace HuginWhispers
             Player me = Player.m_localPlayer;
             RavenBook.BoardRow story = StoryCard(h);
             if (story != null) { RavenBook.BoardGroup g = new RavenBook.BoardGroup { Head = Lang.T("сюжет") }; g.Rows.Add(story); page.Groups.Add(g); }
-            RavenBook.BoardGroup words = new RavenBook.BoardGroup { Head = Lang.T("обіцянки") }, asks = new RavenBook.BoardGroup { Head = Lang.T("прохання") }, wishes = new RavenBook.BoardGroup { Head = Lang.T("мрії") };
+            RavenBook.BoardGroup words = new RavenBook.BoardGroup { Head = Lang.T("обіцянки") }, asks = new RavenBook.BoardGroup { Head = Lang.T("прохання") }, small = new RavenBook.BoardGroup { Head = Lang.T("дрібні справи") }, wishes = new RavenBook.BoardGroup { Head = Lang.T("мрії") };
             foreach (NpcActor a in NpcHeart.Residents(h.Id))
             {
                 NpcActor person = a;
@@ -334,9 +342,11 @@ namespace HuginWhispers
                     bool can = NpcRequests.CanGive(me, a);
                     asks.Rows.Add(new RavenBook.BoardRow { Label = a.Name, Text = NpcRequests.Words(r.Item, r.Count), Sub = Lang.F("віддячить: {0}", NpcRequests.PayWords(r)), Far = NpcRescue.Left(r.Until - (long)NpcRescue.Now), Link = can ? Lang.T("можна віддати") : have > 0 ? have + " / " + r.Count : "", Click = open, Arrow = true });
                 }
+                foreach (KeyValuePair<string, long> w in NpcTasks.Yours(a, me))
+                    small.Rows.Add(new RavenBook.BoardRow { Label = a.Name, Text = w.Key, Far = Lang.F("лишилось {0}", NpcRescue.Left(w.Value)), Click = open, Arrow = true });
                 if (NpcGoals.ForYou(a)) wishes.Rows.Add(new RavenBook.BoardRow { Label = a.Name, Text = a.Form(NpcGoals.Card(a)), Far = NpcGoals.CardSince(a), Click = () => { if (person != null) NpcProfile.Show(person, h.Title, () => Show(h, b.Open)); } });
             }
-            foreach (RavenBook.BoardGroup g in new[] { words, asks, wishes }) if (g.Rows.Count > 0) page.Groups.Add(g);
+            foreach (RavenBook.BoardGroup g in new[] { words, asks, small, wishes }) if (g.Rows.Count > 0) page.Groups.Add(g);
             string rumour = h.RumourLine();
             if (rumour != null && h.Zdo != null && h.Zdo.GetString(NpcRescue.KInfo, "").Length == 0) { RavenBook.BoardGroup g = new RavenBook.BoardGroup { Head = Lang.T("чутки") }; g.Rows.Add(Row("", rumour)); page.Groups.Add(g); } // (when the next one comes; one going on stands in «Треба зробити»)
             if (page.Groups.Count == 0) page.Groups.Add(new RavenBook.BoardGroup { Text = Lang.T("Поки нічого не чекає на тебе.") });
@@ -393,12 +403,38 @@ namespace HuginWhispers
             return page;
         }
 
+        // its map not made on this game yet (its people run by a friend's game: made when the board opened, some seconds on a big base): shown by
+        // itself the moment it is, not «try again» (the user 2026-11-08 pressed it and saw nothing). One waiting at a time, at most EdgesWait s
+        private const float EdgesWait = 60f;
+        private static NpcBase _edgesFor;
         private static void ShowEdges(NpcBase b)
         {
             Player p = Player.m_localPlayer;
-            if (b == null || !b.Ready) { if (p != null) p.Message(MessageHud.MessageType.Center, Lang.T("Межі ще рахуються — спробуй за мить.")); return; }
+            if (b == null) return;
+            if (!b.Ready)
+            {
+                if (p != null) p.Message(MessageHud.MessageType.Center, Lang.T("Межі рахуються — покажу, щойно будуть."));
+                if (_edgesFor == null && Plugin.Instance != null) Plugin.Instance.StartCoroutine(EdgesWhenReady(b));
+                _edgesFor = b;
+                return;
+            }
             b.Show(30f);
             if (p != null) p.Message(MessageHud.MessageType.Center, Lang.T("Межі оселі: золоті вогники на землі й позначки на мапі."));
+        }
+
+        private static System.Collections.IEnumerator EdgesWhenReady(NpcBase b)
+        {
+            float until = Time.time + EdgesWait;
+            while (_edgesFor != null && !_edgesFor.Ready && Time.time < until)
+            {
+                NpcBase.For(_edgesFor.Centre); // (asked: kept, and a making that broke off is begun again)
+                yield return new WaitForSeconds(0.5f);
+            }
+            NpcBase got = _edgesFor; _edgesFor = null;
+            Player p = Player.m_localPlayer;
+            if (got == null || p == null) yield break;
+            if (got.Ready) ShowEdges(got);
+            else p.Message(MessageHud.MessageType.Center, Lang.T("Межі оселі не вдалося порахувати."));
         }
     }
 }

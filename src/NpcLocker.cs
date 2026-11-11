@@ -13,7 +13,7 @@ namespace HuginWhispers
     internal static class NpcLocker
     {
         internal const string Prefab = "RavenWatch_npc_locker";
-        internal static readonly int KLocker = "RavenWatch_npcLocker".GetStableHashCode(); // string "user:id" on the person
+        internal static readonly int KLocker = "RavenWatch_npcLocker".GetStableHashCode(); // string: a lasting link (NpcKit.Save) on the person
         private const float Follow = 24f;
         private static readonly int Hash = Prefab.GetStableHashCode();
         internal static readonly int KOf = "RavenWatch_lockerOf".GetStableHashCode(); // long on the locker: its person's own number (NpcKit.KSid)
@@ -33,8 +33,7 @@ namespace HuginWhispers
         {
             ZDO z = a != null ? a.Zdo : null;
             if (z == null || ZDOMan.instance == null) return null;
-            ZDOID id = NpcKit.GetRef(z, KLocker);
-            if (!id.IsNone()) return ZDOMan.instance.GetZDO(id); // (null: not synced here yet — never made again over it)
+            if (NpcKit.HasRef(z, KLocker)) { ZDOID id = NpcKit.GetRef(z, KLocker); return id.IsNone() ? null : ZDOMan.instance.GetZDO(id); } // (null: not synced here yet — a lasting link not found reads as none: never made again over it)
             if (!create || !a.Owned) return null;
             ZDO l = ZDOMan.instance.CreateNewZDO(a.transform.position, Hash);
             l.Persistent = true;
@@ -49,7 +48,7 @@ namespace HuginWhispers
         // written — an empty bag written over a locker not yet synced would lose what is in it
         internal static bool Ready(NpcActor a) { return !Has(a) || (ZDOMan.instance != null && ZDOMan.instance.GetZDO(NpcKit.GetRef(a.Zdo, KLocker)) != null); }
 
-        internal static bool Has(NpcActor a) { return a != null && a.Zdo != null && !NpcKit.GetRef(a.Zdo, KLocker).IsNone(); }
+        internal static bool Has(NpcActor a) { return a != null && a.Zdo != null && NpcKit.HasRef(a.Zdo, KLocker); } // (it has a link: whether what it names is here yet is another question — Ready, Of)
 
         // a string from it: null when it cannot be read here now (not here yet); "" when it has none
         internal static string Get(NpcActor a, int key)
@@ -69,9 +68,9 @@ namespace HuginWhispers
             return true;
         }
 
-        // its locker named but not there: on a client maybe not synced yet — on the server (it holds every ZDO) it is gone
-        // for good; after half a minute of that the person is let go of it (a new one is made when there is something to
-        // keep; what was in the old one is lost) — else it would wait for its things for ever
+        // its locker named but not there: on a client maybe not synced yet (it waits: only the server can know a locker is gone, and a
+        // client that gave up too soon made a new one and orphaned the old) — on the server (it holds every ZDO) it is gone for good; after
+        // half a minute of that the person is let go of it (a new one is made when there is something to keep; what was in the old one is lost)
         private static readonly System.Collections.Generic.Dictionary<NpcActor, float> Missing = new System.Collections.Generic.Dictionary<NpcActor, float>();
         internal static void Check(NpcActor a)
         {
@@ -121,8 +120,14 @@ namespace HuginWhispers
             return true;
         }
 
-        // nothing in it at all: its gear, what it carries, its request (only such a one is given up for a full one)
-        private static bool Empty(ZDO l) { return l.GetString(ZDOVars.s_items, "").Length == 0 && l.GetString(NpcWorker.KCarry, "").Length == 0 && l.GetString(NpcRequests.KRequest, "").Length == 0 && l.GetString(NpcMemory.KMemory, "").Length == 0 && l.GetString(NpcAttitude.KAttitude, "").Length == 0; } // (what it remembers and feels is kept too)
+        // nothing in it at all: no text of any module kept here, no value a person keeps here (Lives) — only such a one is given up for a full one
+        private static readonly int[] Texts = { ZDOVars.s_items, NpcWorker.KCarry, NpcRequests.KRequest, NpcRequests.KBrought, NpcMemory.KMemory, NpcAttitude.KAttitude, NpcAttitude.KQuarrel, NpcThreads.KThreads, NpcThreads.KGiven, NpcGoals.KGoal, NpcGoals.KGoalNext, NpcGoals.KGoalDone, NpcPromises.KPromise, NpcTasks.KTask, NpcTasks.KTaskSeen, NpcArcs.KArc, NpcToil.KCraft };
+        private static bool Empty(ZDO l)
+        {
+            foreach (int k in Texts) if (l.GetString(k, "").Length > 0) return false;
+            foreach (KeyValuePair<int, Kind> e in Lives) if (Holds(l, e.Key, e.Value)) return false;
+            return true;
+        }
 
         private static bool Taken(ZDOID l) { foreach (NpcActor o in NpcActor.Live) if (o != null && Has(o) && NpcKit.GetRef(o.Zdo, KLocker) == l) return true; return false; }
 
@@ -182,7 +187,7 @@ namespace HuginWhispers
                     { NpcLevers.KVars, Kind.Text }, { NpcLevers.KTraits, Kind.Text }, { NpcKnack.KKnack, Kind.Text }, { NpcBackstory.KStory, Kind.Text },
                     { NpcToil.KMood, Kind.Num }, { NpcToil.KTired, Kind.Num }, { NpcToil.KLow, Kind.Num }, { NpcToil.KWhy, Kind.Int }, { NpcToil.KMoodParts, Kind.Text },
                     { NpcToil.KUnpaid, Kind.Int }, { NpcToil.KPayNext, Kind.Long }, { NpcHunger.KFull, Kind.Num }, { NpcHunger.KStarved, Kind.Num },
-                    { NpcNews.KKeys, Kind.Int }, { NpcRequests.KAskNext, Kind.Long },
+                    { NpcNews.KKeys, Kind.Int }, { NpcRequests.KAskNext, Kind.Long }, { NpcMind.KFought, Kind.Text },
 #if RAVEN_STORY
                     { NpcRaven.KHeldUntil, Kind.Long }, // (the story's word to a person's raven)
 #endif

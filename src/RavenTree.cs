@@ -227,7 +227,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- its mark on the map
         // Our own picture (a tree with a raven), in pale gold. A map mark of the game's player kinds (Icon0–4) gets the
-        // picture of its kind from the game or a UI mod (SeneaL UI draws them all its own way), and the game cannot save
+        // picture of its kind from the game or a UI mod (a UI mod draws them all its own way), and the game cannot save
         // a mark with a picture of its own: so it is a mark of kind None, not saved, drawn again from the found trees
         // whenever there is a new map (entering the world) or a new tree. The old saved marks (a plain dot) are taken off.
         internal static readonly Color PinColor = new Color(0.93f, 0.8f, 0.5f, 1f);
@@ -480,7 +480,7 @@ namespace HuginWhispers
         }
 
         // the game's own trees, logs, bushes, stones and pickables in its roots and crown: gone (never a player's building, a
-        // creature, an item)
+        // creature, an item: Wild)
         private void Clear()
         {
             int n = 0;
@@ -490,12 +490,7 @@ namespace HuginWhispers
                 ZNetView v = c != null ? c.GetComponentInParent<ZNetView>() : null;
                 if (v == null || v == _nv || !v.IsValid() || !done.Add(v.gameObject)) continue;
                 GameObject g = v.gameObject;
-                if (g.GetComponent<Character>() != null || g.GetComponent<ItemDrop>() != null || g.GetComponent<TreeView>() != null) continue;
-                Piece pc = g.GetComponent<Piece>();
-                if (pc != null && pc.GetCreator() != 0L) continue; // someone built it
-                bool growth = g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock>() != null
-                    || g.GetComponent<MineRock5>() != null || g.GetComponent<Destructible>() != null || g.GetComponent<Pickable>() != null || g.GetComponent<StaticPhysics>() != null;
-                if (!growth) continue;
+                if (g.GetComponent<TreeView>() != null || !Wild.Is(v)) continue; // (the world's own growth and nobody's: Wild)
                 v.ClaimOwnership();
                 ZNetScene.instance.Destroy(g);
                 n++;

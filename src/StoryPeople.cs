@@ -36,6 +36,7 @@ namespace HuginWhispers
             public readonly List<Home> Homes = new List<Home>(); // (in the file's order: the first whose «when» holds)
             public string After = ""; // (world conditions; «»: always)
             public readonly List<StoryLife.Spot> Spots = new List<StoryLife.Spot>(); // its own life's places (StoryLife)
+            public StoryProps.Ask Carry; // a thing of its own it always carries (StoryProps «carry:»); null: none
             public float BornWait = -1f;
             public string Why = "";
             internal Home Now
@@ -77,6 +78,7 @@ namespace HuginWhispers
                     case "live": cur.Homes.Add(HomeOf(v)); break;
                     case "after": cur.After = v; break;
                     case "spot": { string bad; StoryLife.Spot sp = StoryLife.Parse(v, out bad); if (sp != null) cur.Spots.Add(sp); else Story.Log("people: " + file + ":" + n + ": " + bad); break; }
+                    case "carry": { string bad; cur.Carry = StoryProps.ReadCarry(v, out bad); if (cur.Carry == null) Story.Log("people: " + file + ":" + n + ": " + bad); break; }
                     default: Story.Log("people: " + file + ":" + n + ": невідоме поле «" + k + "»"); break;
                 }
             }
@@ -187,7 +189,7 @@ namespace HuginWhispers
             z.Set(NpcResident.KResident, true);
             z.Set(NpcRules.KHome, home);
             NpcLocker.Put(z, NpcResident.KSettledAt, (long)NpcRescue.Now);
-            NpcLocker.PutRef(z, NpcResident.KBed, bed != null ? bed.m_uid : ZDOID.None);
+            NpcResident.SetBed(z, bed != null ? bed.m_uid : ZDOID.None);
             NpcKit.SetRef(z, NpcResident.KHeart, ZDOID.None);
         }
 

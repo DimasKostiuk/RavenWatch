@@ -50,7 +50,7 @@ namespace HuginWhispers
         // still burns puffs anew. Once per change (all the world's smoke looked through)
         internal static void ClearSmoke(Vector3 at, float r)
         {
-            foreach (Smoke s in UnityEngine.Object.FindObjectsOfType<Smoke>()) // heavy: once per change of a place's state
+            foreach (Smoke s in UnityEngine.Object.FindObjectsByType<Smoke>(FindObjectsSortMode.None)) // heavy: once per change of a place's state (unsorted: the sort was all its cost)
             {
                 if (s == null) continue;
                 Vector3 d = s.transform.position - at; d.y = 0f;
@@ -272,10 +272,18 @@ namespace HuginWhispers
             }
             if (hidden.TryGetValue(id, out off))
             {
-                // an item stand hidden: the thing on it is made later by the stand (when the world loads, or anew) — its
-                // looks put off as they come (LocStandItemPatch: the moment the stand makes it)
+                // an item stand hidden: the thing on it is made later by the stand (when the world loads, or anew) — put off as it
+                // comes, all of it as the stand itself (LocStandItemPatch: the moment the stand makes it). Its colliders too: with only
+                // its looks off, a hidden stand of another state was still pointed at, and E reached it (the user 2026-11-08)
                 if (nv.GetComponent<ItemStand>() == null) return;
-                foreach (Renderer r in nv.GetComponentsInChildren<Renderer>(true)) if (r.enabled) { r.enabled = false; off.Add(r); } // heavy: once when a piece's look changes (laid, hidden, shown); the author's preview: each second, his machine only
+                List<Component> come = new List<Component>();
+                foreach (Renderer r in nv.GetComponentsInChildren<Renderer>(true)) if (r.enabled) come.Add(r); // heavy: once when a hidden stand makes its thing
+                foreach (Collider c in nv.GetComponentsInChildren<Collider>(true)) if (c.enabled) come.Add(c); // heavy: once when a hidden stand makes its thing
+                foreach (Light l in nv.GetComponentsInChildren<Light>(true)) if (l.enabled) come.Add(l); // heavy: once when a hidden stand makes its thing
+                foreach (AudioSource a in nv.GetComponentsInChildren<AudioSource>(true)) if (a.enabled) come.Add(a); // heavy: once when a hidden stand makes its thing
+                foreach (Component c in come) Enable(c, false);
+                off.RemoveAll(c => c == null); // (the thing it made before, gone with the new one)
+                off.AddRange(come);
                 return;
             }
             off = new List<Component>();

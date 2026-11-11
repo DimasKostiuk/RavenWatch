@@ -7,11 +7,41 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // What the game does to a piece of a place, in one file: chests, stations, beds, comfort, stands, fires, doors, mending, the game's raven.
-    // a chest of a place that keeps them shut (Loc.LockChests): nobody opens it, the author neither (his own is open)
-    [HarmonyPatch(typeof(Container), "Interact")]
-    internal static class LocChestPatch
+    // E on a piece of a place, the one guard: the player's own E (Player.Interact), before the piece is asked. Harmony runs every prefix whatever
+    // another says, so a guard on the piece's own Interact was gone past by a mod's prefix there (ZenItemStands opens its own window on
+    // ItemStand.Interact: the user 2026-11-08 took things off the Hall's stands; MultiUserChest has its own on Container.Interact):
+    //   an item stand of a place: what hangs there stays — but one the story wants touched now (LocTouch: Munin's shield) answers with the story's event
+    //   a chest of a place that keeps them shut (Loc.LockChests): nobody opens it, the author neither (his own is open)
+    //   a bed given to a resident (NpcResident.GivenLine): no player takes it for a spawn point
+    // Quietly, with no «[E]» on it either (its hover: the patches below, last of all postfixes): just a thing standing there — the user 2026-11-01.
+    // Only E is guarded here; what a mod does round a player by itself (stacking into chests near) never asks it
+    [HarmonyPatch(typeof(Player), "Interact")]
+    [HarmonyPriority(Priority.First)]
+    internal static class LocInteractPatch
     {
-        // (quietly, and no «[E] open» on it either: just a chest standing there — the user 2026-11-01)
+        private static readonly MethodInfo Anim = AccessTools.Method(typeof(Humanoid), "DoInteractAnimation");
+
+        private static bool Prefix(Player __instance, GameObject go, bool hold, bool alt)
+        {
+            try
+            {
+                if (go == null || __instance.InAttack() || __instance.InDodge()) return true; // (the game's own first words: then it does nothing itself)
+                ItemStand st = go.GetComponentInParent<ItemStand>();
+                if (st != null)
+                {
+                    LocTouch t = st.GetComponent<LocTouch>();
+                    if (t != null && t.On) { if (t.Interact(__instance, hold, alt) && Anim != null) Anim.Invoke(__instance, new object[] { st.gameObject }); return false; } // (E held comes every frame: the touch answers a press only · the game's own reach-and-touch only where the place asks for it)
+                    return !Blueprint.Copy(st.GetComponent<ZNetView>()); // (the author's own Hall he dresses as he likes)
+                }
+                if (NpcResident.GivenLine(go.GetComponentInParent<Bed>()) != null) return false;
+                return !LocChestLock.Shut(go.GetComponentInParent<Container>());
+            }
+            catch (System.Exception e) { PatchGuard.Fail("LocInteractPatch", e); return true; }
+        }
+    }
+
+    internal static class LocChestLock
+    {
         internal static bool Shut(Container c)
         {
             ZNetView nv = c != null ? c.GetComponentInParent<ZNetView>() : null;
@@ -19,25 +49,20 @@ namespace HuginWhispers
             Loc l = Locs.Get(nv.GetZDO().GetString(LocParts.KOf, ""));
             return l != null && l.LockChests;
         }
-
-        private static bool Prefix(Container __instance, ref bool __result)
-        {
-            if (!Shut(__instance)) return true;
-            __result = false;
-            return false;
-        }
     }
 
     [HarmonyPatch(typeof(Container), "GetHoverText")]
+    [HarmonyPriority(Priority.Last)]
     internal static class LocChestHoverPatch
     {
-        private static void Postfix(Container __instance, ref string __result) { if (LocChestPatch.Shut(__instance)) __result = ""; }
+        private static void Postfix(Container __instance, ref string __result) { if (LocChestLock.Shut(__instance)) __result = ""; }
     }
 
     [HarmonyPatch(typeof(Container), "GetHoverName")]
+    [HarmonyPriority(Priority.Last)]
     internal static class LocChestNamePatch
     {
-        private static void Postfix(Container __instance, ref string __result) { if (LocChestPatch.Shut(__instance)) __result = ""; }
+        private static void Postfix(Container __instance, ref string __result) { if (LocChestLock.Shut(__instance)) __result = ""; }
     }
 
     // a guide point of a piece a blueprint put into the world — or of the author's own building it is saved from (the user 2026-11-04:

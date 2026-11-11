@@ -132,32 +132,19 @@ namespace HuginWhispers
             if (a.Id == "mtame" && Tame.Mine()) { Tame.Recall(p); return; } // Munin leaves the beast and comes home
             if (a.Id == "dome" && Dome.Mine()) { Dome.Lower(); Animate(p, "comehere"); DomeSay("dome_back", Lang.T("Склав крила. Тепер знову разом.")); return; } // you call him back: a beckoning wave
             if (a.Id == "leap" && Leap.On(p) && !Leap.Stopping(p)) { Leap.Stop(p); RavenMsg.Center(p, Leap.On(p) ? Lang.T("Злет Хугіна скінчиться, щойно приземлишся") : Lang.T("Злет Хугіна зупинено")); return; }
-            // in flight Hugin carries you, and nobody strikes from up there
-            string wingsNo = GiftBlock(a); // gifts out of place with the wings on or the beast awake (the strikes and the rest stay)
-            if (wingsNo != null) { RavenMsg.Center(p, wingsNo); return; }
+            // every refusal is one list (Why); here it is said, with the raven's own word where it has one
+            string mark; int dot, kind;
+            string no = Why(a, p, out mark, out dot, out kind);
+            if (no != null)
+            {
+                RavenMsg.Center(p, no);
+                if (kind == WhyQuirk && a.Id == "scout" && Quirks.Sulk(p, a.Munin) == null) Quirks.SaySleepy(p, a.Munin); // (asleep, not sulking: its sleepy word)
+                if (kind == WhyHabit) Habits.Whine(a.Munin);
+                return;
+            }
             ItemDrop.ItemData hugin, mun;
             RavenItem.Worn(p, out hugin, out mun);
-            if ((a.Munin ? mun : hugin) == null) { RavenMsg.Center(p, Lang.F("{0} зараз не на тобі", Plugin.RavenName(a.Munin))); return; }
-            if (!Shoulder.Arrived(p, a.Munin)) { RavenMsg.Center(p, Lang.F("{0} ще летить до тебе", Plugin.RavenName(a.Munin))); return; } // just in the world: not before it sits
-            // off on a strike: nothing of that raven's until it is back on the shoulder
-            if (!a.Munin && Decoy.Mine()) { RavenMsg.Center(p, Lang.T("Хугін дражнить ворога — зараз повернеться")); return; }
-            if (a.Munin && Tame.Mine()) { RavenMsg.Center(p, Lang.T("Мунін приборкує звіра.\nНатисни «Приборкання» ще раз — і він повернеться.")); return; }
-            if (Strike.Busy(p, a.Munin)) { RavenMsg.Center(p, Lang.F("{0} в атаці — зараз повернеться", Plugin.RavenName(a.Munin))); return; }
-            // carrying out an order: a gift that sends it flying takes it from there (a strike or the dome take the bird
-            // and end the order, AnimDirector → Orders.Interrupted; the scouting ends it itself)
-            // Hugin is off scouting: nothing of his until he is back
-            if (!a.Munin && Scouting()) { RavenMsg.Center(p, Lang.F("Хугін на розвідці.\nПовернеться за {0}.", RavenAbilities.Span(ScoutLeft()))); return; }
-            // Hugin is up holding the dome: the dome's own button calls him back (above), the rest wait
-            if (!a.Munin && Dome.Mine()) { RavenMsg.Center(p, Lang.T("Хугін тримає над тобою купол.\nНатисни «Під крилом» ще раз — і він повернеться.")); return; }
-            if (Trust.Away(a.Munin ? mun : hugin)) { RavenMsg.Center(p, Trust.AwayText(a.Munin, a.Munin ? mun : hugin)); return; }
-            if (!Trust.Active(a.Munin ? mun : hugin) && (a.Id == "thought" || a.Id == "mthought")) { AsleepThought(p, a.Munin); return; }
-            if (Trust.Hostile(a.Munin ? mun : hugin) && a.Id != "thought" && a.Id != "mthought") { RavenMsg.Center(p, Lang.F("{0} не твій — його дари не для тебе", Plugin.RavenName(a.Munin))); return; } // (a stranger's raven only talks, and rudely)
-            if (Trust.Active(a.Munin ? mun : hugin) && !RavenAbilities.Unlocked(a)) { RavenMsg.Center(p, Lang.F("{0}: відкриється на {1}-му рівні довіри", a.Name, RavenAbilities.UnlockLevel(a))); return; }
-            if (!Trust.Active(a.Munin ? mun : hugin)) { RavenMsg.Center(p, a.Munin ? Lang.F("Мунін спить і клав на тебе.\nНеси {0} до каменів.", Trust.WakeText()) : Lang.F("Хугін спить і тебе не чує.\nПринеси {0} до каменів.", Trust.WakeText())); return; }
-            string quirk = Quirks.Blocks(p, a.Munin, a.Id); // its quirk: sulking (nothing), asleep at night (no scouting)
-            if (quirk != null) { RavenMsg.Center(p, quirk + "."); if (a.Id == "scout" && Quirks.Sulk(p, a.Munin) == null) Quirks.SaySleepy(p, a.Munin); return; } // (asleep, not sulking: its sleepy word)
-            string habit = Habits.Blocks(p, a); // «Хатній»: just away from home, two gifts it will not give
-            if (habit != null) { RavenMsg.Center(p, habit); return; }
+            if (!Trust.Active(a.Munin ? mun : hugin)) { AsleepThought(p, a.Munin); return; } // (Why lets only the thought through asleep)
             // a gift that throws (an odd creature, another mod in the way) must not just do nothing: it says so, the log says why
             try
             {
@@ -193,6 +180,83 @@ namespace HuginWhispers
             }
         }
 
+        // Why a gift cannot be used now (null: it can) — the one list of a raven gift's refusals. Use says the long text in
+        // the middle of the screen, Status shows the short one (mark, red) under the gift, UsableNow and Dot read it, and the
+        // strike nobody pressed for (FreeStrike) asks it too: what the circle shows is what a press does. A new refusal goes
+        // here, in its place in the order, and nowhere else (arch_check: gift-why).
+        // Not in it: what goes on and a press ends (Ends, handled first by every caller), the wait and the strength (the
+        // price, shown by Status, said by Ready and Power.Spend), what a gift needs at the moment of flying (a strike's aim,
+        // «Боязкий» at a fresh boss, the decoy's target). The thought is let through asleep: it speaks as a stranger (AsleepThought).
+        // kind: WhyQuirk / WhyHabit — the raven's nature refused, so Use adds its own word to it. dot: the book's dot.
+        internal const int WhyPlain = 0, WhyQuirk = 1, WhyHabit = 2;
+        private static string Red(string s) { return "<color=#FF5A5A><b>" + s + "</b></color>"; }
+
+        // Why for the local player, once a frame per gift: Status, UsableNow and Dot ask the same gift in the same frame
+        // (the circle, the book), and a refusal builds its texts; a press (Use) asks Why itself, fresh
+        private sealed class WhyMemo { internal int Frame = -1; internal string Say, Mark; internal int Dot; }
+        private static readonly Dictionary<string, WhyMemo> WhyMemos = new Dictionary<string, WhyMemo>();
+        private static string WhyNow(RavenAbility a, out string mark, out int dot)
+        {
+            WhyMemo w;
+            if (!WhyMemos.TryGetValue(a.Id, out w)) { w = new WhyMemo(); WhyMemos[a.Id] = w; }
+            if (w.Frame != Time.frameCount)
+            {
+                int kind;
+                w.Say = Why(a, Player.m_localPlayer, out w.Mark, out w.Dot, out kind);
+                w.Frame = Time.frameCount;
+            }
+            mark = w.Mark; dot = w.Dot;
+            return w.Say;
+        }
+        internal static string Why(RavenAbility a, Player p, out string mark, out int dot, out int kind)
+        {
+            mark = null; dot = DotWait; kind = WhyPlain;
+            if (a == null) return null;
+            if (p == null) { mark = ""; dot = DotNone; return ""; } // (no player: nothing can go)
+            bool m = a.Munin;
+            string name = Plugin.RavenName(m);
+            string no = GiftBlock(a); // gifts out of place with the wings on, the beast awake, a pair's or a great gift going
+            if (no != null) { mark = Red(OdinWings.InAir() ? Lang.T("не в польоті") : OdinWings.Flying() ? Lang.T("не з крилами Одіна") : PairGifts.Blocks(a) != null ? Lang.LowerFirst(PairGifts.Blocks(a)) : GreatBlock(a) != null ? Lang.LowerFirst(GreatBlock(a)) : Lang.T("не зі звіром")); return no; }
+            ItemDrop.ItemData item = Trust.Worn(m);
+            if (item == null) { dot = DotNone; mark = Red(Lang.T("не на тобі")); return Lang.F("{0} зараз не на тобі", name); }
+            if (!Shoulder.Arrived(p, m)) { mark = Red(Lang.T("летить до тебе")); return Lang.F("{0} ще летить до тебе", name); } // just in the world: not before it sits
+            // off on a flight of its own: nothing of that raven's until it is back on the shoulder (the gift that sent it calls it back: Ends)
+            if (!m && Decoy.Mine()) { mark = Red(Lang.T("Хугін дражнить ворога")); return Lang.T("Хугін дражнить ворога — зараз повернеться"); }
+            if (m && Tame.Mine()) { mark = Red(Lang.T("Мунін приборкує звіра")); return Lang.T("Мунін приборкує звіра.\nНатисни «Приборкання» ще раз — і він повернеться."); }
+            if (Strike.Busy(p, m)) { mark = Red(Lang.T("в атаці · зараз повернеться")); return Lang.F("{0} в атаці — зараз повернеться", name); }
+            // (an order under way: a gift that sends it flying takes it from there — a strike or the dome take the bird and
+            // end the order, AnimDirector → Orders.Interrupted; the scouting ends it itself)
+            if (!m && Scouting()) { mark = Red(Lang.F("на розвідці · повернеться за {0}", RavenAbilities.Span(ScoutLeft()))); return Lang.F("Хугін на розвідці.\nПовернеться за {0}.", RavenAbilities.Span(ScoutLeft())); }
+            if (!m && Dome.Mine()) { mark = Red(Lang.T("Хугін тримає купол")); return Lang.T("Хугін тримає над тобою купол.\nНатисни «Під крилом» ще раз — і він повернеться."); }
+            if (Trust.Away(item)) { dot = DotNone; mark = Red(Perches.On(item) && Trust.AwayLeft(item) <= 0f ? Trust.BackIn(item) : Trust.AwayWhy(item) == Post.Why ? Trust.AwayWord(m, item) : Trust.AwayWord(m, item) + ", " + Trust.BackIn(item)); return Trust.AwayText(m, item); }
+            if (a.Passive) return null; // (a passive gift works whatever its mood: it only waits for the raven to be here)
+            bool thought = a.Id == "thought" || a.Id == "mthought";
+            if (!Trust.Active(item))
+            {
+                if (thought) return null; // (asleep it still talks, as a stranger: AsleepThought)
+                dot = DotNone;
+                mark = Red(m ? Lang.T("Мунін спить і клав на тебе — спершу обряд") : Lang.T("Хугін спить — дар відкриється після обряду"));
+                return m ? Lang.F("Мунін спить і клав на тебе.\nНеси {0} до каменів.", Trust.WakeText()) : Lang.F("Хугін спить і тебе не чує.\nПринеси {0} до каменів.", Trust.WakeText());
+            }
+            if (!thought && Trust.Hostile(item)) { dot = DotNone; mark = Red(Lang.T("чужий ворон · не слухає")); return Lang.F("{0} не твій — його дари не для тебе", name); } // (a stranger's raven only talks, and rudely)
+            if (!RavenAbilities.Unlocked(a)) { dot = DotNone; mark = RavenAbilities.LockedText(a); return Lang.F("{0}: відкриється на {1}-му рівні довіри", a.Name, RavenAbilities.UnlockLevel(a)); }
+            no = Quirks.Blocks(p, m, a.Id); // its quirk: sulking (nothing), asleep at night (no scouting)
+            if (no != null) { kind = WhyQuirk; mark = Red(no); return no + "."; }
+            no = Habits.Blocks(p, a); // «Хатній»: just away from home, two gifts it will not give
+            if (no != null) { kind = WhyHabit; mark = Red(Lang.F("хоче додому («Хатній») · ще {0}", RavenAbilities.Span(Habits.HomeLeft(p, m)))); return no; }
+            // the place you stand in (cheap: flags and Senses)
+            switch (a.Id)
+            {
+                case "hstrike": case "mstrike": no = Strike.Refused(p); break;
+                case "dome": no = Dome.Refused(p); break;
+                case "mberserk": no = Beast.Refused(p); break;
+                case "hdecoy": no = Decoy.Refused(p); break;
+                case "hflight": no = OdinWings.Refused(p); break;
+            }
+            if (no != null) { mark = Red(Lang.LowerFirst(no)); return no; }
+            return null;
+        }
+
         // "−10 сили (є 40) · готова" / "… · ще 2 хв 30 с": under an ability in the radial menu, in the book and tooltips
         internal static string Status(RavenAbility a)
         {
@@ -201,32 +265,20 @@ namespace HuginWhispers
             if (a.Id == "leap" && Leap.On(Player.m_localPlayer)) return Leap.Stopping(Player.m_localPlayer) ? Lang.T("<color=#FFD54F><b>скінчиться, щойно приземлишся</b></color>") : Lang.T("<color=#FFD54F><b>злет діє · натисни, щоб зупинити</b></color>");
             if (a.Id == "mberserk" && Beast.On()) return Lang.F("<color=#FFD54F><b>звір лютує · ще {0} · натисни, щоб вгамувати · потім втома</b></color>", RavenAbilities.Span(Beast.Left()));
             if (a.Id == "hflight" && OdinWings.Flying()) return "<color=#FFD54F><b>" + (OdinWings.Sinking() ? Lang.T("опускаєшся") : OdinWings.OnGround() ? Lang.F("на землі · пробіл — злетіти · ще {0} · натисни, щоб завершити", RavenAbilities.Span(OdinWings.Left())) : Lang.F("летиш · ще {0} · натисни, щоб сісти", RavenAbilities.Span(OdinWings.Left()))) + "</b></color>";
-            if (GiftBlock(a) != null) return "<color=#FF5A5A><b>" + (OdinWings.InAir() ? Lang.T("не в польоті") : OdinWings.Flying() ? Lang.T("не з крилами Одіна") : PairGifts.Blocks(a) != null ? Lang.LowerFirst(PairGifts.Blocks(a)) : GreatBlock(a) != null ? Lang.LowerFirst(GreatBlock(a)) : Lang.T("не зі звіром")) + "</b></color>";
-            if (!a.Passive)
-            {
-                string quirk = Quirks.Blocks(Player.m_localPlayer, a.Munin, a.Id);
-                if (quirk != null) return "<color=#FF5A5A><b>" + quirk + "</b></color>";
-            }
-            if (Trust.Worn(a.Munin) != null && !Shoulder.Arrived(Player.m_localPlayer, a.Munin)) return Lang.T("<color=#FF5A5A><b>летить до тебе</b></color>");
-            ItemDrop.ItemData raven = Trust.Worn(a.Munin);
-            if (a.Munin && Tame.Mine()) return a.Id == "mtame" ? Lang.F("<color=#FFD54F><b>приборкує звіра · ще {0} · натисни, щоб повернути</b></color>", RavenAbilities.Span(Tame.Left())) : Lang.T("<color=#FF5A5A><b>Мунін приборкує звіра</b></color>");
-            if (!a.Munin && Decoy.Mine()) return a.Id == "hdecoy" ? Lang.F("<color=#FFD54F><b>дражнить ворога · ще {0} · натисни, щоб повернути</b></color>", RavenAbilities.Span(Decoy.Left())) : Lang.T("<color=#FF5A5A><b>Хугін дражнить ворога</b></color>");
-            if (Strike.Busy(Player.m_localPlayer, a.Munin)) return Lang.T("<color=#FF5A5A><b>в атаці · зараз повернеться</b></color>");
-            if (!a.Munin && Scouting()) return Lang.F("<color=#FF5A5A><b>на розвідці · повернеться за {0}</b></color>", RavenAbilities.Span(ScoutLeft()));
+            // what goes on now and a press ends or calls back (Ends): yellow, before any refusal
+            if (a.Munin && a.Id == "mtame" && Tame.Mine()) return Lang.F("<color=#FFD54F><b>приборкує звіра · ще {0} · натисни, щоб повернути</b></color>", RavenAbilities.Span(Tame.Left()));
+            if (!a.Munin && a.Id == "hdecoy" && Decoy.Mine()) return Lang.F("<color=#FFD54F><b>дражнить ворога · ще {0} · натисни, щоб повернути</b></color>", RavenAbilities.Span(Decoy.Left()));
+            if (!a.Munin && a.Id == "dome" && Dome.Mine()) return Lang.T("<color=#FFD54F><b>купол стоїть · натисни, щоб повернути Хугіна</b></color>");
             if (a.Id == "ward" && Ward.Mine()) return Lang.F("<color=#FFD54F><b>заслона стоїть · ще {0}{1}</b></color>", RavenAbilities.Span(Ward.Left()), (Ward.MaxCharges() > 1 ? Lang.F(", витримає ще {0}", (Ward.Charges() == 4 ? Lang.T("чотири удари") : Ward.Charges() == 3 ? Lang.T("три удари") : Ward.Charges() == 2 ? Lang.T("два удари") : Lang.T("один удар"))) : ""));
-            if (!a.Munin && Dome.Mine()) return a.Id == "dome" ? Lang.T("<color=#FFD54F><b>купол стоїть · натисни, щоб повернути Хугіна</b></color>") : Lang.T("<color=#FF5A5A><b>Хугін тримає купол</b></color>");
             if (RavenAbilities.Stub(a)) return Lang.T("<color=#9a9a9a>ще в роботі</color>");
-            if (raven != null && Trust.Away(raven)) return "<color=#FF5A5A><b>" + (Perches.On(raven) && Trust.AwayLeft(raven) <= 0f ? Trust.BackIn(raven) : Trust.AwayWhy(raven) == Post.Why ? Trust.AwayWord(a.Munin, raven) : Trust.AwayWord(a.Munin, raven) + ", " + Trust.BackIn(raven)) + "</b></color>";
+            ItemDrop.ItemData raven = Trust.Worn(a.Munin);
+            // a refusal: its short word, the same list the press says in full (Why; a passive one: only where the raven is)
+            string mark; int dot;
+            if (WhyNow(a, out mark, out dot) != null) return mark;
             if (RavenAbilities.Free(a)) return RavenAbilities.Unlocked(a) ? Lang.F("без сили · {0}", RavenAbilities.PassiveReady(a)) : RavenAbilities.LockedText(a);
             if (a.Passive) return RavenAbilities.Unlocked(a) ? Lang.F("−{0} сили{1} (є {2}) · {3}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(a.Munin), Power.Current(a.Munin), RavenAbilities.PassiveReady(a)) : RavenAbilities.LockedText(a);
-            bool thought = a.Id == "thought" || a.Id == "mthought";
-            if (raven != null && !Trust.Active(raven) && thought)
+            if (raven != null && !Trust.Active(raven)) // (only the thought gets here asleep)
                 return Lang.F("без сили, ворон ще чужий · {0}", RavenAbilities.ReadyMark(Left(AsleepId(a.Munin)), Lang.T("готовий")));
-            // asleep: the gift is shut, in the raven's own voice
-            if (raven != null && !Trust.Active(raven))
-                return "<color=#FF5A5A><b>" + (a.Munin ? Lang.T("Мунін спить і клав на тебе — спершу обряд") : Lang.T("Хугін спить — дар відкриється після обряду")) + "</b></color>";
-            if (!RavenAbilities.Unlocked(a)) return RavenAbilities.LockedText(a);
-            if (!thought && Trust.Hostile(raven)) return Lang.T("<color=#FF5A5A><b>чужий ворон · не слухає</b></color>");
             float left = Left(a.Id);
             string cost = Lang.F("−{0} сили{1} (є {2}) · ", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(a.Munin), Power.Current(a.Munin));
             if (left <= 0f && Power.Current(a.Munin) < Mathf.RoundToInt(a.Cost()))
@@ -260,18 +312,11 @@ namespace HuginWhispers
             if (Ends(a)) return true; // pressing it ends it
             if (a.Pair) return PairGifts.Usable(a);
             if (a.Id == "hflight" && OdinWings.Flying()) return false; // (already coming down)
-            if (GiftBlock(a) != null) return false;
-            ItemDrop.ItemData raven = Trust.Worn(a.Munin);
-            if (raven == null || Trust.Away(raven) || RavenAbilities.Stub(a)) return false;
-            if (!Shoulder.Arrived(Player.m_localPlayer, a.Munin)) return false;
-            if (Strike.Busy(Player.m_localPlayer, a.Munin)) return false;
-            if (!a.Munin && Scouting()) return false;
-            if (!a.Munin && Dome.Mine()) return a.Id == "dome";
-            if (Quirks.Blocks(Player.m_localPlayer, a.Munin, a.Id) != null) return false;
-            bool thought = a.Id == "thought" || a.Id == "mthought";
-            if (!Trust.Active(raven)) return thought && Left(AsleepId(a.Munin)) <= 0f;
-            if (!thought && Trust.Hostile(raven)) return false;
-            return RavenAbilities.Unlocked(a) && Left(a.Id) <= 0f && Power.Current(a.Munin) >= Mathf.RoundToInt(a.Cost());
+            if (RavenAbilities.Stub(a)) return false;
+            string mark; int dot;
+            if (WhyNow(a, out mark, out dot) != null) return false;
+            if (!Trust.Active(Trust.Worn(a.Munin))) return Left(AsleepId(a.Munin)) <= 0f; // (only the thought gets here asleep)
+            return Left(a.Id) <= 0f && Power.Current(a.Munin) >= Mathf.RoundToInt(a.Cost());
         }
 
         // the book's coloured dot on a gift: 0 none (passive, asleep, away, not worn), 1 ready, 2 waiting, 3 short of strength
@@ -305,15 +350,9 @@ namespace HuginWhispers
             if (Ends(a)) return DotReady; // pressing it ends it
             if (a.Pair) return PairGifts.Dot(a);
             if (a.Id == "hflight" && OdinWings.Flying()) return DotWait; // (already coming down)
-            if (GiftBlock(a) != null) return DotWait;
-            if (Trust.Worn(a.Munin) != null && !Shoulder.Arrived(Player.m_localPlayer, a.Munin)) return DotWait;
-            ItemDrop.ItemData raven = Trust.Worn(a.Munin);
-            if (raven == null || Trust.Away(raven) || !Trust.Active(raven) || !RavenAbilities.Unlocked(a)) return DotNone;
-            if (Trust.Hostile(raven) && a.Id != "thought" && a.Id != "mthought") return DotNone;
-            if (Strike.Busy(Player.m_localPlayer, a.Munin)) return DotWait;
-            if (Quirks.Blocks(Player.m_localPlayer, a.Munin, a.Id) != null) return DotWait;
-            if (!a.Munin && Scouting()) return DotWait;
-            if (!a.Munin && Dome.Mine()) return a.Id == "dome" ? DotReady : DotWait;
+            string mark; int dot;
+            if (WhyNow(a, out mark, out dot) != null) return dot;
+            if (!Trust.Active(Trust.Worn(a.Munin))) return DotNone; // (the thought asleep: no dot, as before)
             if (Left(a.Id) > 0f) return DotWait;
             return Power.Current(a.Munin) < Mathf.RoundToInt(a.Cost()) ? DotWeak : DotReady;
         }
@@ -646,9 +685,6 @@ namespace HuginWhispers
         private static void StrikeAbility(Player p, bool munin, ItemDrop.ItemData item)
         {
             if (item == null) return;
-            if (Strike.Busy(p, munin)) { RavenMsg.Center(p, Lang.F("{0} ще в польоті", Plugin.RavenName(munin))); return; }
-            string no = Strike.Refused(p);
-            if (no != null) { RavenMsg.Center(p, no); return; }
             string id = munin ? "mstrike" : "hstrike";
             if (!Ready(p, id, munin ? Lang.T("Мунін ще чистить кігті") : Lang.T("Хугін ще переводить подих"))) return;
             // it always flies: at the one in your sights if it can, else the nearest (a word in the corner why not yours)
@@ -674,9 +710,8 @@ namespace HuginWhispers
             RavenItem.Worn(p, out hugin, out mun);
             ItemDrop.ItemData item = munin ? mun : hugin;
             RavenAbility a = RavenAbilities.Find(munin ? "mstrike" : "hstrike");
-            if (item == null || a == null || GiftBlock(a) != null || !Shoulder.Arrived(p, munin) || Strike.Busy(p, munin)) return false;
-            if (Trust.Away(item) || !Trust.Active(item) || Trust.Stranger(item, p) || !RavenAbilities.Unlocked(a) || Quirks.Blocks(p, munin, a.Id) != null || Strike.Refused(p) != null) return false;
-            if (!munin && (Decoy.Mine() || Scouting() || Dome.Mine())) return false;
+            string mark; int dot, kind;
+            if (item == null || a == null || Why(a, p, out mark, out dot, out kind) != null || Trust.Stranger(item, p)) return false; // (the same list as a press; quietly)
             string off;
             if (OffShoulder(p, munin, out off)) return false;
             if (Vector3.Distance(p.transform.position, target.transform.position) > Strike.RangeOf(item) || !Strike.Seen(p, target)) return false;
@@ -919,7 +954,7 @@ namespace HuginWhispers
                 + (string.IsNullOrEmpty(_dungeonSummary) ? "" : Lang.F("\nПідземелля: {0}.", _dungeonSummary)));
         }
 
-        // Scouting pins carry their own picture. Map mods restyle pins by type (SeneaL UI draws Icon3 as a dashed
+        // Scouting pins carry their own picture. Map mods restyle pins by type (a UI mod draws Icon3 as a dashed
         // ring, Icon1 as a house); the "shout" type is one they leave alone, so the trophy or the ore shows.
         private const Minimap.PinType ScoutPin = Minimap.PinType.Shout;
 
@@ -1263,8 +1298,6 @@ namespace HuginWhispers
 
         private static void DomeAbility(Player p, ItemDrop.ItemData hugin)
         {
-            string no = Dome.Refused(p);
-            if (no != null) { RavenMsg.Center(p, no); return; }
             if (!Ready(p, "dome", Lang.T("Хугін ще не відпочив після купола"))) return;
             if (!Power.Spend(p, false, Power.DomeCost * GiftUp.CostMul("dome"))) return;
             Cooldown("dome");
@@ -1348,8 +1381,6 @@ namespace HuginWhispers
 
         private static void BeastAbility(Player p)
         {
-            string no = Beast.Refused(p);
-            if (no != null) { RavenMsg.Center(p, no); return; }
             if (!Ready(p, "mberserk", Lang.T("Звір ще спить після минулого разу"))) return;
             if (!Power.Spend(p, true, Power.BeastCost * GiftUp.CostMul("mberserk"))) return;
             Cooldown("mberserk");
@@ -1367,8 +1398,6 @@ namespace HuginWhispers
 
         private static void DecoyAbility(Player p, ItemDrop.ItemData hugin)
         {
-            string no = Decoy.Refused(p);
-            if (no != null) { RavenMsg.Center(p, no); return; }
             if (!Ready(p, "hdecoy", Lang.T("Хугін ще не придумав нової витівки"))) return;
             string why;
             List<Character> who = Decoy.Targets(p, hugin != null ? Trust.Level(hugin) : 1, out why);
@@ -1382,8 +1411,6 @@ namespace HuginWhispers
 
         private static void FlightAbility(Player p)
         {
-            string no = OdinWings.Refused(p);
-            if (no != null) { RavenMsg.Center(p, no); return; }
             if (!Ready(p, "hflight", Lang.T("Хугін ще не відпочив після польоту"))) return;
             if (!Power.Spend(p, false, Power.FlightCost * GiftUp.CostMul("hflight"))) return;
             Cooldown("hflight");

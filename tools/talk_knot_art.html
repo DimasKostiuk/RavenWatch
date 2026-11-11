@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- The talk scroll's thread rope (the user's design 2026-11-08: Downloads\suviy-stosunky.html, variant 5a «Тонкі лінії на полях»), its pieces cut from
+     that page's own CSS and rendered at 2× by tools/talk_knot_art.ps1 into assets/book/talk_<part>.png:
+       knot1   30×26  a tied knot, its band turned one way (the knot itself 23×19 at 3,3: room for its shadow)
+       knot2   30×26  the same, its band turned the other way (knots alternate on the rope)
+       frayed  30×30  the rope's cut end: its binding band and five loose strands (the rope's 11 px at 9..20)
+       end     30×30  the rope's whole end, no thread cut: two whippings and a short neat tassel (the same place as frayed: the rope ends above the paper's torn edge)
+       cord    11×16  the rope itself, a tile repeated down the scroll's edge (its twist repeats every 8: seamless)
+     Sizes are UI units; the pictures are twice that. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html,body{margin:0;background:transparent;overflow:hidden}
+.k{position:absolute;left:3px;top:3px;width:23px;height:19px}
+.k .ball{position:absolute;inset:0;background:repeating-linear-gradient(-40deg,rgba(255,236,196,0.4) 0 1.5px,rgba(0,0,0,0) 1.5px 3.5px,rgba(50,28,10,0.45) 3.5px 4.5px,rgba(0,0,0,0) 4.5px 5.5px),radial-gradient(ellipse at 38% 32%,#dcc088,#9a7842 55%,#5a3e1c);box-shadow:1px 2px 3px rgba(50,30,10,0.55),inset -1px -2px 2px rgba(40,22,8,0.45)}
+.k .band{position:absolute;left:2px;right:2px;top:7px;height:5px;border-radius:3px;background:repeating-linear-gradient(60deg,rgba(255,236,196,0.4) 0 1.5px,rgba(0,0,0,0) 1.5px 3.5px,rgba(50,28,10,0.45) 3.5px 4.5px,rgba(0,0,0,0) 4.5px 5.5px),linear-gradient(180deg,#c9a96e,#7a5a30);box-shadow:0 1px 1px rgba(40,22,8,0.5)}
+.s{position:absolute;width:2px;border-radius:1px;transform-origin:top center}
+</style>
+</head>
+<body>
+<div id="out" style="position:relative;width:30px;height:30px"></div><!-- (a size of its own: the body hides what spills out of it) -->
+<script>
+const part = new URLSearchParams(location.search).get('part') || 'knot1';
+const strand = (x, h, deg, c) => `<div class="s" style="left:${x}px;top:3px;height:${h}px;transform:rotate(${deg}deg);background:linear-gradient(180deg,${c},rgba(184,150,92,0.15))"></div>`;
+const parts = {
+  knot1: () => `<div class="k"><div class="ball" style="border-radius:48% 52% 46% 54%"></div><div class="band" style="transform:rotate(-18deg)"></div></div>`,
+  knot2: () => `<div class="k"><div class="ball" style="border-radius:52% 48% 54% 46%"></div><div class="band" style="transform:rotate(16deg)"></div></div>`,
+  end: () => strand(10, 8, 6, '#b8965c') + strand(12.5, 9, 2, '#9a7842') + strand(14.5, 9.5, 0, '#d2b47a') + strand(16.5, 9, -2, '#8a6a3a') + strand(18.5, 8, -6, '#b8965c')
+    + `<div style="position:absolute;left:8px;top:0;width:13px;height:3px;border-radius:2px;background:linear-gradient(180deg,#6e5228,#3a2414);box-shadow:0 1px 1px rgba(40,22,8,0.4)"></div>`
+    + `<div style="position:absolute;left:8.5px;top:3.5px;width:12px;height:2px;border-radius:1px;background:linear-gradient(180deg,#5e4422,#3a2414);opacity:.85"></div>`,
+  frayed: () => strand(9, 12, 28, '#b8965c') + strand(12, 14, 10, '#9a7842') + strand(14.5, 15, -3, '#d2b47a') + strand(17, 13, -15, '#8a6a3a') + strand(19, 11, -32, '#b8965c')
+    + `<div style="position:absolute;left:8px;top:0;width:13px;height:3px;border-radius:2px;background:linear-gradient(180deg,#6e5228,#3a2414);box-shadow:0 1px 1px rgba(40,22,8,0.4)"></div>`,
+  cord: () => { let l = ''; for (let y = -16; y <= 32; y += 8) l += `<line x1="0" y1="${y + 5.1}" x2="11" y2="${y}" stroke="rgba(255,236,196,0.38)" stroke-width="2"/><line x1="0" y1="${y + 9.1}" x2="11" y2="${y + 4}" stroke="rgba(50,28,10,0.42)" stroke-width="1.5"/>`;
+    return `<svg width="11" height="16" style="display:block"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#5a3e1c"/><stop offset=".3" stop-color="#a8864c"/><stop offset=".5" stop-color="#d2b47a"/><stop offset=".72" stop-color="#9a7842"/><stop offset="1" stop-color="#4a3218"/></linearGradient></defs><rect width="11" height="16" fill="url(#g)"/>${l}</svg>`; },
+};
+document.getElementById('out').innerHTML = (parts[part] || parts.knot1)();
+</script>
+</body>
+</html>

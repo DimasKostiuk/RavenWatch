@@ -264,8 +264,9 @@ namespace HuginWhispers
             return false;
         }
 
-        // trees, logs, rocks, bushes, pickables on the footprint and its eased edge: away (as the game clears round its own places)
-        private static int Clear(Rect r, Vector3 at, Quaternion rot)
+        // trees, logs, rocks, bushes, pickables on the footprint and its eased edge: away (as the game clears round its own places);
+        // what is wild and nobody's: Wild.Is
+        internal static int Clear(Rect r, Vector3 at, Quaternion rot)
         {
             if (FindObjects == null || ZDOMan.instance == null) return 0;
             Vector3 mid = new Vector3((r.X0 + r.X1) * 0.5f, 0f, (r.Z0 + r.Z1) * 0.5f);
@@ -283,7 +284,7 @@ namespace HuginWhispers
                     FindObjects.Invoke(ZDOMan.instance, new object[] { new Vector2s((short)x, (short)y), all, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a zone, when a place is levelled
                     foreach (ZDO z in all)
                     {
-                        if (z == null || !Wild(z.GetPrefab())) continue;
+                        if (!Wild.Is(z) || z.GetInt(Blueprint.Mark) == 1) continue; // (a blueprint's own pieces have no creator either)
                         Vector3 d = inv * (z.GetPosition() - centre);
                         if (Mathf.Abs(d.x) > hx || Mathf.Abs(d.z) > hz) continue;
                         z.SetOwner(ZDOMan.GetSessionID());
@@ -294,20 +295,8 @@ namespace HuginWhispers
             return gone;
         }
 
-        // by the world's list, not by bodies: far from every player they have none (a big rock reaches past its middle: WildPad)
+        // by the world's list, not by bodies: far from every player they have none (what is wild: Wild.Is; a big rock reaches past its middle: WildPad)
         private const float WildPad = 2f;
-        private static readonly Dictionary<int, bool> _wild = new Dictionary<int, bool>();
-        private static bool Wild(int hash)
-        {
-            bool w;
-            if (_wild.TryGetValue(hash, out w)) return w;
-            GameObject g = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(hash) : null;
-            w = g != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null && g.GetComponent<ItemDrop>() == null
-                && (g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<Destructible>() != null
-                    || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<Pickable>() != null);
-            _wild[hash] = w;
-            return w;
-        }
 
         // the world's own building (LocBuild): its ground is kept, never undone by the author's «undo»
         internal static void Forget() { _undo.Clear(); }

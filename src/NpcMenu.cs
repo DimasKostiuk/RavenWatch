@@ -8,12 +8,12 @@ namespace HuginWhispers
     // A person's round menu (npc-plan.md): Q while pointing at an NPC (E: its talk). Drawn as the ravens' circles are
     // (OrdersMenu: its frames and icons, the book's tip plate under it — the user's mockup 2026-11-05): a dark disc in the middle with its name, what
     // it does now and its state (DrawMiddle), round buttons in a ring round it.
-    // Its buttons come from the parts of a person (Button below): the core's (За мною, Стій, Туди, Сядь, Говорити), the
+    // Its buttons come from the parts of a person (Button below): the core's (Накази: За мною, Стій, Сядь, Туди in a ring of their own; Говорити), the
     // profile's (Вдача), the resident's (Оселя), the worker's (Робота), the gear's (Спорядження).
     // The main ring keeps every button in its own place for every person (the user, 2026-11-04: held Q and a flick
     // without looking): one that is not for this person now leaves its place empty, the others do not move. What is
     // set once (a job's chest, post, house…; the bed, moving out) lives in the rings under Робота and Оселя.
-    // An order going on lights its button; that button again, or the middle, lets it go («Відпусти»). A button with a
+    // An order going on lights its button and «Накази»; that button again, or the middle of the main ring, lets it go («Відпусти»). A button with a
     // ring of its own turns the ring into its choices, the middle into «Назад» (rings in rings: «Назад» one step). A
     // button that undoes much (Виселити) asks a second press. Its way in a fight is not here: each person has its own
     // (its template, the story), never picked by a player. A button about a place: the menu closes, you point at the
@@ -47,6 +47,61 @@ namespace HuginWhispers
         {
             if (RavenKeys.Held(KeyCode.Mouse0) || RavenKeys.Held(KeyCode.Mouse1)) return true;
             try { return Input.GetMouseButton(0) || Input.GetMouseButton(1); } catch { return false; }
+        }
+
+        // ---------------------------------------------------------------- a deed done where the person is run
+        // What a button changes in a person (its home, bed, job, chest, post…) is done on the game that runs it: its ZDO, its mind and its worker are
+        // that game's. Pressed on another game, it goes there (NpcActor.Act «menu»), is done in the name of the one who pressed it (By), and its
+        // words come back to that one's screen (the user 2026-11-08: «його зараз веде інша гра» — a second player could give no bed at all). On
+        // the game that runs it: at once. A new deed: a line in Deeds (its module's Deeds(), wired in NpcModules) and OnOwner from its button.
+        // Its words are in the language of the game that ran it.
+        internal delegate string Deed(NpcActor a, Vector3 at, string arg);
+        internal static readonly Dictionary<string, Deed> Deeds = new Dictionary<string, Deed>();
+        private const string RpcSaid = "RavenWatch_NpcMenuSaid";
+        private static Player _by;
+        internal static Player By { get { return _by != null ? _by : Player.m_localPlayer; } } // (the one a deed is done for: who pressed it, on whatever game it runs)
+
+        // a button's deed: here when this game runs it (its words back), else sent there (null: its words come later)
+        internal static string OnOwner(NpcActor a, string deed, Vector3 at, string arg)
+        {
+            Player me = Player.m_localPlayer;
+            Deed d;
+            if (a == null || me == null || !Deeds.TryGetValue(deed, out d)) return null;
+            if (a.Owned) return d(a, at, arg ?? "");
+            Rpcs();
+            a.Act("menu " + deed + " " + me.GetPlayerID().ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + Npcs.V(at).Replace(' ', ';') + (string.IsNullOrEmpty(arg) ? "" : " " + arg));
+            return null;
+        }
+
+        // the act «menu <deed> <player> <x;y;z> [arg…]» where it is run: done for that player, its words sent back to the game it came from
+        internal static void Wire() { NpcActor.Acts["menu"] = RunDeed; }
+        private static void RunDeed(NpcActor a, string[] w)
+        {
+            Deed d; long pid;
+            if (w.Length < 4 || !Deeds.TryGetValue(w[1], out d) || !long.TryParse(w[2], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out pid)) { Npcs.Log(a.Id + ": a menu deed it cannot read: " + string.Join(" ", w)); return; }
+            if (!NpcActor.SentBy(pid)) return;
+            Player by = null;
+            foreach (Player p in Player.GetAllPlayers()) if (p != null && p.GetPlayerID() == pid) by = p;
+            if (by == null) { Npcs.Log(a.Id + ": a menu deed «" + w[1] + "» for a player not near — not done"); return; }
+            string[] v = w[3].Split(';');
+            float x, y, z;
+            Vector3 at = v.Length == 3 && float.TryParse(v[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out x) && float.TryParse(v[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y) && float.TryParse(v[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out z) ? new Vector3(x, y, z) : by.transform.position;
+            string said;
+            _by = by;
+            try { said = d(a, at, w.Length > 4 ? string.Join(" ", w, 4, w.Length - 4) : ""); }
+            finally { _by = null; }
+            long from = NpcActor.ActFrom;
+            if (string.IsNullOrEmpty(said)) return;
+            if (from == 0L || ZRoutedRpc.instance == null) Say(said);
+            else { Rpcs(); ZRoutedRpc.instance.InvokeRoutedRPC(from, RpcSaid, said); }
+        }
+
+        private static ZRoutedRpc _rpcOn; // (registered with this one: once a session)
+        private static void Rpcs()
+        {
+            if (ZRoutedRpc.instance == null || _rpcOn == ZRoutedRpc.instance) return;
+            _rpcOn = ZRoutedRpc.instance;
+            ZRoutedRpc.instance.Register<string>(RpcSaid, (sender, said) => Say(said));
         }
 
         // a button on the menu. Each part of a person gives its own (the core ones below, NpcResident.MenuButtons,
@@ -90,9 +145,23 @@ namespace HuginWhispers
             }
         }
 
-        // the core's own: moving it, its talk. The main ring's places, from the top clockwise: Вдача 5, За мною 10, Стій 20,
-        // Туди 30, Сядь 40, Робота 50, Оселя 60, Спорядження 70, Говорити 80.
+        // the core's own: moving it, its talk. The main ring's places, from the top clockwise: Вдача 5, Накази 10,
+        // Робота 50, Оселя 60, Спорядження 70, Говорити 80.
         private static IEnumerable<Button> Core()
+        {
+            // the orders, all under one button (the user 2026-11-08): lit while one goes on, the middle of the main ring lets it go
+            yield return new Button { Order = 10, Title = Lang.K("Накази"), Icon = "n-follow", Now = Releasable, Sub = a => OrderRing(),
+                Desc = a => Releasable(a) ? Lang.T("Виконує твій наказ. Центр кола — відпустити.") : Lang.T("За мною, стій, сядь, туди.") };
+            // its talk, as E: the same way in (NpcActor.Interact: senseless, an echo… — the modules' own use first)
+            yield return new Button { Order = 80, Title = Lang.K("Говорити"), Icon = "n-talk", Desc = a => Lang.T("Розмова з ним — те саме, що E."),
+                Do = (a, p) => { a.Interact(p, false, false); return null; } };
+        }
+
+        private static List<Button> _orderRing;
+        private static List<Button> OrderRing() { if (_orderRing == null) { _orderRing = new List<Button>(OrderButtons()); _orderRing.Sort((x, y) => x.Order.CompareTo(y.Order)); } return _orderRing; }
+
+        // the ring under «Накази», from the top clockwise
+        private static IEnumerable<Button> OrderButtons()
         {
             // an order's button lit while it goes on; pressed again, it lets it go (as the middle does)
             yield return new Button { Order = 10, Title = Lang.K("За мною"), Icon = "n-follow", Now = a => Ordered(a, NpcMind.Task.Follow),
@@ -106,14 +175,11 @@ namespace HuginWhispers
             yield return new Button { Order = 20, Title = Lang.K("Стій"), Icon = "n-stay", Now = a => Ordered(a, NpcMind.Task.Idle),
                 Desc = a => Ordered(a, NpcMind.Task.Idle) ? Lang.T("Стоїть.") + " " + AgainFrees() : Lang.T("Стоїть, де стоїть, доки не відпустиш."),
                 Do = (a, p) => { if (Ordered(a, NpcMind.Task.Idle)) return Free(a); a.Order("stay"); return null; } };
-            yield return new Button { Order = 30, Title = Lang.K("Туди"), Icon = "n-there", Place = Lang.K("на місце"), Now = a => Ordered(a, NpcMind.Task.Go), Desc = a => Lang.T("Іде туди, куди покажеш, і чекає там."),
+            yield return new Button { Order = 40, Title = Lang.K("Туди"), Icon = "n-there", Place = Lang.K("на місце"), Now = a => Ordered(a, NpcMind.Task.Go), Desc = a => Lang.T("Іде туди, куди покажеш, і чекає там."),
                 AtPlace = (a, at) => { a.Order("go " + Npcs.V(at)); return a.Name + ": " + Lang.T("іде туди"); } };
-            yield return new Button { Order = 40, Title = Lang.K("Сядь"), Icon = "n-sit", Now = a => Ordered(a, NpcMind.Task.Sit),
+            yield return new Button { Order = 30, Title = Lang.K("Сядь"), Icon = "n-sit", Now = a => Ordered(a, NpcMind.Task.Sit),
                 Desc = a => Ordered(a, NpcMind.Task.Sit) ? Lang.T("Сидить.") + " " + AgainFrees() : Lang.T("Сідає на найближчу лаву чи стілець, а як нема — на землю поруч."),
                 Do = (a, p) => { if (Ordered(a, NpcMind.Task.Sit)) return Free(a); a.Order("sit " + Npcs.V(a.transform.position)); return null; } };
-            // its talk, as E: the same way in (NpcActor.Interact: senseless, an echo… — the modules' own use first)
-            yield return new Button { Order = 80, Title = Lang.K("Говорити"), Icon = "n-talk", Desc = a => Lang.T("Розмова з ним — те саме, що E."),
-                Do = (a, p) => { a.Interact(p, false, false); return null; } };
         }
 
         // what an order of this kind is going on (the Order layer's plan; «go» that arrived waits as idle)
@@ -131,7 +197,7 @@ namespace HuginWhispers
         }
 
         private static string Free(NpcActor a) { a.Order("free"); return a.Name + ": " + Lang.T("повертається до своїх справ"); }
-        private static string AgainFrees() { return Lang.T("Натисни ще раз або в центр кола — відпустиш."); }
+        private static string AgainFrees() { return Lang.T("Натисни ще раз — відпустиш."); }
         private static string Freed(NpcActor a) { return Lang.T("Наказ знято: повертається до своїх справ") + (NpcResident.Is(a) ? Lang.T(" і на свою базу.") : "."); }
 
         // a place on the ring as it was when it was filled (Empty: the main ring's place of a button not for this person)
@@ -227,6 +293,7 @@ namespace HuginWhispers
             NpcActor a = Under(p);
             if (a == null || a.Mind == null) return false; // (Odin: no menu)
             if (!MayOrder(a)) return false; // (orders only for the hired ones — a stranger is talked to, E; an admin: all)
+            if (NpcTalk.Busy(a, p)) return true; // (another player talks to it or has its menu open: one at a time, as a talk — the user 2026-11-08)
             Open(a, key);
             return true;
         }
@@ -265,12 +332,15 @@ namespace HuginWhispers
                 _inst = go.AddComponent<NpcMenu>();
             }
             _inst._npc = a; _inst._key = key; _inst._held = 0f; _inst._hover = -1; _inst._subs.Clear(); _inst._asked = null;
+            _inst._nextHold = 0f; // (held from its first frame: another player is kept out at once, not after the last menu's 2 s)
             _inst._open = true; _inst.enabled = true;
             _inst.Fill();
         }
 
         private void Close()
         {
+            Player me = Player.m_localPlayer;
+            if (_npc != null && me != null) _npc.Act("unhold " + NpcKit.Ref(me.GetZDOID())); // (free for another at once, as a talk closed)
             _open = false; _npc = null; _hover = -1; _subs.Clear(); _asked = null;
             _closedFrame = Time.frameCount;
             _clickHeld = MouseHeld();

@@ -32,7 +32,7 @@ namespace HuginWhispers
         {
             Sprite s = BookArt.Sliced(pic, border);
             if (s != null) { im.sprite = s; im.type = Image.Type.Sliced; im.pixelsPerUnitMultiplier = 2f; im.color = Color.white; }
-            else { im.sprite = BookArt.RoundFine(fallbackRadius); im.type = Image.Type.Sliced; im.pixelsPerUnitMultiplier = BookArt.Fine; im.color = fallback; }
+            else { im.sprite = BookArt.RoundFine(fallbackRadius); im.type = Image.Type.Sliced; im.color = fallback; }
         }
 
         // A card over the book (the popup: a click beside it closes it). title null: no plaque; foot: the dark strip for

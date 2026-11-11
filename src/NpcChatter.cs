@@ -417,9 +417,10 @@ namespace HuginWhispers
                 if (a == null || b == null || a.Mind == null || b.Mind == null || (a.transform.position - b.transform.position).sqrMagnitude > 36f) { finished = false; break; }
                 if (seated ? (!a.Mind.SeatedNow || !b.Mind.SeatedNow) : (a.Mind.NowLayer != NpcMind.Layer.Whim || b.Mind.NowLayer != NpcMind.Layer.Whim)) { finished = false; break; } // (one stood up, went, was called away: the talk is over)
                 if (!NpcVoice.Free(a) || !NpcVoice.Free(b)) { finished = false; break; } // (a scene took one of them, you spoke to one, the story hushed them)
-                who.Say(who.Form(NpcPhrases.Inline(who, lines[i], Player.GetClosestPlayer(who.transform.position, 20f)))); // («{@theme}»: a made line in a written talk)
-                if (fire) NpcFireside.Line(who, who == a ? b : a);
-                yield return new WaitForSeconds(RavenSpeech.Seconds(lines[i], RavenSpeech.Pace.Chatter));
+                string said = who.Form(NpcPhrases.Inline(who, lines[i], Player.GetClosestPlayer(who.transform.position, 20f))); // («{@theme}»: a made line in a written talk)
+                string sent = who.SayLine(said, null) ?? said; // (the words as every game got them: the plan of its speech is made of these)
+                float pause = Mathf.Max(RavenSpeech.Seconds(lines[i], RavenSpeech.Pace.Chatter), NpcSpeech.Seconds(who, sent)); // (not over its own words: one speaks at a time)
+                yield return new WaitForSeconds(pause + (i + 1 < lines.Length ? NpcSpeech.Think(sent) : 0f)); // (the other thinks a moment before it answers: NpcSpeech, the same time on every game)
             }
             if (fire) NpcFireside.End(a, b, finished && a != null && b != null);
             if (a != null) { Talking.Remove(a); if (!seated && a.Mind != null) Free(a.Mind); }

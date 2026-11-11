@@ -51,7 +51,7 @@ namespace HuginWhispers
             RectTransform inner = Rect("Inner", r);
             Stretch(inner, Vector2.zero, Vector2.one, new Vector2(4f, 4f), new Vector2(-4f, -4f));
             Image l = inner.gameObject.AddComponent<Image>();
-            l.sprite = BookArt.FrameFine(Mathf.Max(2f, radius - 3f), 1f); l.type = Image.Type.Sliced; l.pixelsPerUnitMultiplier = BookArt.Fine;
+            l.sprite = BookArt.FrameFine(Mathf.Max(2f, radius - 3f), 1f); l.type = Image.Type.Sliced;
             l.color = A(Gold, 0.22f); l.raycastTarget = false;
             inner.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }

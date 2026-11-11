@@ -21,6 +21,13 @@ namespace HuginWhispers
     // It speaks of the past when nothing is happening, picking what fits the moment: the place, what you do, who is near.
     internal static class Memory
     {
+        private static List<ItemDrop.ItemData> BagAndShoulders(Player p)
+        {
+            List<ItemDrop.ItemData> all = new List<ItemDrop.ItemData>(p.GetInventory().GetAllItems());
+            all.AddRange(RavenSeat.Shelved(p));
+            return all;
+        }
+
         private const string Key = "RavenWatch_memory";
 
         internal sealed class Mem
@@ -499,7 +506,7 @@ namespace HuginWhispers
                 int minutes = Mathf.RoundToInt(_tombMinutes);
                 if (minutes >= 3)
                     // the raven lay in the grave, not on the shoulder: every own awake raven that came back with you
-                    foreach (ItemDrop.ItemData item in p.GetInventory().GetAllItems())
+                    foreach (ItemDrop.ItemData item in BagAndShoulders(p))
                     {
                         bool munin;
                         if (!RavenItem.IsRaven(item, out munin) || Loyal.TakeStayed(item) || !Trust.Active(item) || Trust.Stranger(item, p)) continue; // stayed on the shoulder: it was not in there

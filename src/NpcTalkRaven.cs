@@ -11,22 +11,23 @@ namespace HuginWhispers
     // hang on such a line: the raven may be away, and then there simply is none. A written line asks what a scene's «say» asks (Shoulder.Present: the prologue's raven is still asleep, the story speaks through it all the
     // same); a made one a raven awake and yours, the book yours too (RavenHere: one asleep has no mind to butt in with).
     //   two ways     aside  only you hear it: the person goes on as if nothing was said (a doubt, a memory: the story)
-    //                aloud  it hears: its reaction under the raven's words (raven_said), your answers to it above the others, and it keeps it in mind (NpcMemory «raven_mocked»)
+    //                aloud  it hears: its reaction to the raven (raven_said, TalkSay.ToRaven) and your answers to it, all in one frame of the raven's colour where the raven butts in; it keeps it in mind (NpcMemory «raven_mocked»)
     //   written      a line in a place of a talk, said once for each character, at most one a place:  ~hugin aside: Занадто легко вона про мерців.   (~hugin · ~munin · ~any; conditions:  ~munin aside ?step q s: …)
     //   made         only with a settler, aloud, by the ravens' own engine (their trust, their mouths; book NpcAsidePatterns, tags ppl_<group of what it speaks of>): one roll a talk (CutChance),
     //                not again soon from this person (CutEvery), never over its own (Personal: what it told you as one it trusts), one in trouble, a repeat, or another raven's words
     //   your answers by the tone core (NpcTalkTone): Замовкни — you stood up for it (warm; the raven has a word about it) · Він має рацію — you mock it with the
-    //                raven (rude, Munin's harder: AgreeHugin, AgreeMunin; the raven is pleased: Trust.Talked) · Не зважай — nothing · none of them, another answer
-    //                picked — it takes your silence for a yes, a little (Unanswered: angry, no feeling moved). Your raven minds it too: shut up, it loses
+    //                raven (rude, Munin's harder: AgreeHugin, AgreeMunin; the raven is pleased: Trust.Talked) · Не зважай — nothing. An answer to it is a must (the user 2026-11-08):
+    //                till you give one, every other answer is grey with why (Lock; Esc and the ✕ close as ever). Your raven minds it too: shut up, it loses
     //                trust (ShutTrust, even a full bar: Trust.Offend), brushed off a little (SkipTrust), agreed with, it gains (Trust.Talked); each said in the window
     // The window: its lines (RavenBook.TalkSay: SayRaven, SayAside), after the person's first one. Its voice: RavenVoice; the ravens' own chatter waits for it (Director.Spoke).
     internal static partial class NpcTalk
     {
         internal sealed class RavenLine { public string Who = "any", Text = ""; public bool Aloud; public List<Cond> When = new List<Cond>(); }
 
-        internal static float CutChance = 0.25f, CutEvery = 300f, CutHurt = 4f, AgreeHugin = 0.7f, AgreeMunin = 1f, ShutTrust = 20f, SkipTrust = 10f; // (the trust your raven loses when you shut it up, or brush it off)
+        internal static float CutChance = 0.25f, CutEvery = 300f, AgreeHugin = 0.7f, AgreeMunin = 1f, ShutTrust = 20f, SkipTrust = 10f; // (the trust your raven loses when you shut it up, or brush it off)
         private static bool _cutRolled;              // this talk has had its chance of a made line
         private static RavenBook.TalkSay _cutNext;   // the raven's word after your answer to it: on the next showing
+        private static bool _afterRaven;             // the next showing comes from your answer to your raven (NpcTalk.Show: its worry said again after its word to that)
         private static readonly Dictionary<uint, float> CutAfter = new Dictionary<uint, float>(); // session: a person's seed → when its next one may come
         private static readonly HashSet<string> CutPlaces = new HashSet<string> { "how", "home", "folk", "ravens", "wish", "talk" }; // (small talk: a person's worry and opening count too, what you do does not)
 
@@ -126,11 +127,20 @@ namespace HuginWhispers
             List<RavenBook.TalkSay> cut = new List<RavenBook.TalkSay> { new RavenBook.TalkSay { Kind = aloud ? RavenBook.SayRaven : RavenBook.SayAside, Name = Plugin.RavenName(munin), Text = line, Munin = munin } };
             string reaction = aloud ? NpcPhrases.Compose(With, "raven_said", p) : null;
             if (string.IsNullOrEmpty(reaction)) return cut; // (it says nothing to it, as the story's own people: nothing to answer either)
-            cut.Add(new RavenBook.TalkSay { Kind = RavenBook.SayPerson, Text = NpcBody.Spoken(With, reaction) });
+            cut.Add(new RavenBook.TalkSay { Kind = RavenBook.SayPerson, Text = NpcBody.Spoken(With, reaction), ToRaven = true });
             Reply(rows, ans, 0, Lang.T(munin ? "Замовкни, Муніне." : "Замовкни, Хугіне."), "shut", munin, node);
             Reply(rows, ans, 1, Lang.T("Він має рацію."), "agree", munin, node);
             Reply(rows, ans, 2, Lang.T("Не зважай на нього."), "skip", munin, node);
+            Lock(rows, Plugin.RavenName(munin));
             return cut;
+        }
+
+        // the raven spoke aloud and the person answered it: you answer the raven first (the user 2026-11-08, «відповідь ворону обов'язкова») — the rest grey till then, with why.
+        // Its answer leads back to this very place (Reply: To = node), and there they are all as they were. One grey for its own reason keeps that reason
+        private static void Lock(List<RavenBook.TalkRow> rows, string raven)
+        {
+            string why = Lang.F("Спершу відповідай ворону: {0} чекає.", raven);
+            foreach (RavenBook.TalkRow r in rows) if (r.Ring != 5 && !r.Off) { r.Off = true; r.Tip = why; }
         }
 
         // your answers to it: first of all, and back to where you were (its words about it in place of the place's own)
@@ -148,30 +158,23 @@ namespace HuginWhispers
             Director.Spoke(Director.Voice.Event, RavenSpeech.ReadSeconds(line)); // (the other chatter waits for it)
         }
 
-        // the raven's words had answers and you picked none of them: it takes your silence for a yes, a little
-        private static void Unanswered(List<Answer> ans, Answer picked, Player p)
-        {
-            if (With == null || picked.Acts.Exists(IsReply) || !ans.Exists(x => x.Acts.Exists(IsReply))) return;
-            NpcPatience.Irritate(With, p, CutHurt * Hurt(With, true));
-            Npcs.Log(With.Id + ": your raven's words went unanswered: taken as a yes");
-        }
-
         // your raven hurt by your word: its trust down, said in the window
         private static void RavenHurt(Player p, bool munin, float points)
         {
             bool top;
-            float lost = Trust.Offend(RavenSeat.On(p, munin), points, out top);
+            ItemDrop.ItemData item = RavenSeat.On(p, munin);
+            float lost = Trust.Offend(item, points, out top);
             if (lost > 0f) RavenBook.TalkNote(Lang.F("{0}: довіра до тебе падає", Plugin.RavenName(munin)), false);
             else if (top) RavenBook.TalkNote(Lang.F("{0} образився: дні на найвищій довірі почнуться заново", Plugin.RavenName(munin)), false);
+            else if (item != null && Trust.Active(item) && !Trust.Away(item) && !Trust.Stranger(item, p)) RavenBook.TalkNote(Lang.F("{0} образився, але довіра не змінилась", Plugin.RavenName(munin)), false); // (nothing to take: its bar at nothing, or the top level with no days on it yet. Said all the same: the window never keeps quiet about a word that hurt it. Not for the prologue's sleeping raven the story speaks through: it has no trust to be hurt)
         }
-
-        private static bool IsReply(string act) { return act.StartsWith("ravenreply ", StringComparison.Ordinal); }
 
         // «ravenreply <shut|agree|skip> <1 munin|0 hugin>»
         private static void RavenReply(NpcActor a, Player p, string[] w)
         {
             if (w.Length < 3) return;
             bool munin = w[2] == "1";
+            _afterRaven = true;
             string tag = null;
             switch (w[1])
             {

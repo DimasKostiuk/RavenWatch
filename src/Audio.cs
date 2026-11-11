@@ -17,11 +17,14 @@ namespace HuginWhispers
     //            sailing, morning: one prefix on UpdateCurrentMusic); its source fades out on our time, and comes back by itself
     //            when the last one lets go. Our own tracks and the game's play alike, through sources of our own: a crossfade
     //            on the time asked, the game's music mixer and the player's music slider.
-    //   Beds     long loops under a scene, any number, each with its owner.
+    //   Beds     long loops under a scene, any number, each with its owner. Flat, or at a place (a SoundAsk not Flat): heard there,
+    //            with a range, following something.
     //   Sounds   one-shots on sources of our own, not ZSFX: the volume asked stays (ZSFX rewrites it each frame), two at once
     //            are two (AudioMan drops the second within 0.2 s), they can be stopped, follow something, have a range. The
-    //            game's sound keeps its own variants, pitch and loudness. Dry by default, through the GUI group: the player's
-    //            sound slider counts, «mix world» does not; «wet» goes through the game's own group, as the sound would.
+    //            game's sound keeps what its ZSFX would do (AudioBank.Shot). Dry by default, through the GUI group: the player's
+    //            sound slider counts, «mix world» does not. «wet» goes through the world's group as the sound would, unless the
+    //            world is down right then: a scene's clip stays heard. «World»: a sound of the world whatever the scene wants
+    //            (a gift's): always that group, «mix world» takes it down too. One whose file is still being read waits (Later).
     //   Mix      world (every game sound: the SfxVol of the mixer, the player's own value back at the end), ambient (wind, sea,
     //            ambient loop, shield hum: their sources; no new random ambience while below a half), music (whatever music
     //            is on, the game's too), voice (the ravens' spoken lines from then on). Owners may overlap: the lowest wins.
@@ -36,28 +39,36 @@ namespace HuginWhispers
     internal sealed class SoundAsk
     {
         public float Volume = 1f, Pitch, Range; // (Pitch, Range 0: the sound's own)
-        public bool Flat, Wet;                  // (Flat: no place, in the ears. Wet: the game's own mixer group)
+        public bool Flat, Wet, World;           // (Flat: no place, in the ears. Wet, World: the world's mixer group; the header says the difference)
+        public float Stretch = 1f, Reach;       // (Stretch 2: twice as long and lower, on top of its pitch. Reach: heard at least this far, its own fall-off kept)
+        public float FadeIn, Skip, Delay;       // (seconds: up from silence, left out at its start, before it starts)
+        public bool AnyStart;                   // (a bed: starts somewhere in its clip)
+        public AudioClip Clip;                  // (a bed: this clip, not one looked up by name)
+        public AudioBank.Entry Try;             // (the author listening: these words, not the line in the files)
         public Transform Follow;
         public string Owner = "";
     }
 
     internal static class Audio
     {
-        internal const string Scene = "scene", Panel = "panel", Air = "air", Fight = "fight";
+        internal const string Scene = "scene", Panel = "panel", Air = "air", Fight = "fight", Gift = "gift", Library = "library";
         private const string Kept = "kept";
         private const int MaxLines = 32;
-        internal static float EndFade = 3f, BrokenFade = 1.5f, MuteFade = 0.5f, MusicFade = 3f, FightFade = 3f, MaxLoad = 15f;
+        internal static float EndFade = 3f, BrokenFade = 1.5f, MuteFade = 0.5f, MusicFade = 3f, FightFade = 3f, MaxLoad = 15f, SoundLate = 2f, LouderFade = 0.4f, BedRange = 40f;
 
-        private sealed class Want { public string Owner, Name; public float Fade, Until, Vol = 1f, Keep; public bool Once; }
+        private sealed class Want { public string Owner, Name; public float Fade, Until, Vol = 1f, Keep; public bool Once; public AudioBank.Entry Try; }
 
         private sealed class Line
         {
             public GameObject Go; public AudioSource Src;
             public string Owner = "", Name = "";
             public int Kind; // (KindSound, KindBed, KindMusic)
-            public float Asked, Base, K, Target, Rate, Started;
-            public bool Live, Waiting, Loop;
+            public float Asked, VolTo, Cat = 1f, K, Target, Rate, Started, FadeAt, FadeLen, Pitch = 1f; // (Asked moves softly to VolTo; Cat: what the catalogue and the game's track add)
+            public bool Live, Waiting, Loop, AnyStart;
             public Transform Follow;
+            public Vector3 Off; // (from what it follows)
+            public AudioClip Given;
+            public AudioBank.Entry Try;
         }
         private const int KindSound = 0, KindBed = 1, KindMusic = 2;
 
@@ -71,14 +82,21 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- music
 
         // name null: real silence. term: let go by itself that many seconds from now, unless asked again (0: only by End)
-        internal static bool Music(string owner, AudioLayer layer, string name, float fade, float term, float vol, bool once, float keep)
+        internal static bool Music(string owner, AudioLayer layer, string name, float fade, float term, float vol, bool once, float keep, AudioBank.Entry words = null)
         {
-            if (name != null && !AudioBank.IsTrack(name)) { AudioBank.LogOnce("music " + name, "no music «" + name + "» (" + owner + ")"); return false; }
+            if (name != null && !AudioBank.IsTrack(words ?? AudioBank.Find(name))) { AudioBank.LogOnce("music " + name, "no music «" + name + "» (" + owner + ")"); return false; }
             Want w = Wants[(int)layer];
-            if (owner == Air && w != null && (w.Owner == Scene || w.Owner == Panel)) { Log("music from another game left out: " + w.Owner + " holds it"); return true; } // (your own scene goes first)
+            if (owner == Air && w != null && (w.Owner == Scene || w.Owner == Panel || w.Owner == Library)) { Log("music from another game left out: " + w.Owner + " holds it"); return true; } // (your own scene goes first)
             float until = term > 0f ? Time.unscaledTime + term : 0f;
-            if (w != null && w.Owner == owner && w.Name == name) { w.Until = until; w.Vol = vol; w.Keep = keep; w.Once = once; if (_cur != null && _cur.Name == name) Louder(_cur, vol); return true; } // (asked again: the same track goes on)
-            Wants[(int)layer] = new Want { Owner = owner, Name = name, Fade = Mathf.Max(0f, fade), Until = until, Vol = vol, Once = once, Keep = keep };
+            if (w != null && w.Owner == owner && w.Name == name)
+            {
+                w.Until = until; w.Vol = vol; w.Keep = keep; w.Once = once; w.Try = words;
+                if (w != Top()) return true; // (a higher layer is heard: this one's words wait)
+                if (_trackDone && name != null) { _playing = null; Need(); MusicNow(); } // (it ended, once, or could not start: asked again, it is tried again)
+                else if (_cur != null) Takes(_cur, w);
+                return true; // (asked again: the same track goes on)
+            }
+            Wants[(int)layer] = new Want { Owner = owner, Name = name, Fade = Mathf.Max(0f, fade), Until = until, Vol = vol, Once = once, Keep = keep, Try = words };
             Log("music " + layer + ": " + (name ?? "silence") + " (" + owner + ", " + fade.ToString("0.#") + " s)");
             Need();
             MusicNow();
@@ -99,24 +117,39 @@ namespace HuginWhispers
         internal static bool MusicWaiting { get { return _cur != null && _cur.Waiting; } }
 
         private static float _nextFade = -1f;
+        private static Want _topWas;
 
         // what should be heard now against what is
         private static void MusicNow()
         {
-            Want top = null;
-            for (int i = Wants.Length - 1; i >= 0 && top == null; i--) top = Wants[i];
+            Want top = Top();
             float fade = _nextFade >= 0f ? _nextFade : top != null ? top.Fade : EndFade;
             _nextFade = -1f;
             if (top != null && !_held) { _held = true; GameOut(fade); }
             string want = top != null ? top.Name : null;
+            if (top != _topWas) { _topWas = top; if (_trackDone && want != null && _cur == null) _playing = null; } // (the same name, ended, wanted now by another: once per change, so a failure is not retried each frame)
             if (want != _playing)
             {
                 if (_cur != null) { FadeTo(_cur, 0f, fade); _cur = null; }
                 _playing = want;
                 _trackDone = false;
-                if (want != null) { _cur = Start(KindMusic, want, top.Owner, top.Vol, !top.Once, fade); if (_cur == null) _trackDone = true; } // (nothing to play: not tried again each frame; the layer stays a silence till it is let go)
+                if (want != null) { _cur = Start(KindMusic, want, top.Owner, top.Vol, !top.Once, fade, top.Try != null ? new SoundAsk { Try = top.Try } : null, Vector3.zero); if (_cur == null) _trackDone = true; } // (nothing to play: not tried again each frame; the layer stays a silence till it is let go)
             }
+            else if (_cur != null && top != null) Takes(_cur, top); // (another layer wants the same track: it goes on, by that layer's words)
             if (top == null && _held) { _held = false; GameIn(); }
+        }
+
+        private static Want Top()
+        {
+            for (int i = Wants.Length - 1; i >= 0; i--) if (Wants[i] != null) return Wants[i];
+            return null;
+        }
+
+        private static void Takes(Line l, Want w)
+        {
+            Louder(l, w.Vol);
+            l.Owner = w.Owner;
+            if (l.Loop != !w.Once) { l.Loop = !w.Once; if (!l.Waiting) l.Src.loop = l.Loop; }
         }
 
         private static readonly FieldInfo FFade = AccessTools.Field(typeof(MusicMan), "m_musicFadeTime"), FTriggered = AccessTools.Field(typeof(MusicMan), "m_triggeredMusic"), FTrigger = AccessTools.Field(typeof(MusicMan), "m_triggerMusic"), FSource = AccessTools.Field(typeof(MusicMan), "m_musicSource");
@@ -166,13 +199,22 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- beds
 
-        internal static bool Bed(string owner, string name, float vol, float fade)
+        // ask null: flat and dry. Not Flat: heard at «at» (its Follow goes with it). Asking again is cheap: it is how a bed is steered
+        internal static bool Bed(string owner, string name, float vol, float fade, SoundAsk ask = null, Vector3 at = default(Vector3))
         {
-            if (!AudioBank.IsLoop(name)) { AudioBank.LogOnce("bed " + name, "no bed «" + name + "» (" + owner + ")"); return false; }
-            foreach (Line l in Lines) if (l.Live && l.Kind == KindBed && l.Owner == owner && l.Name == name) { Louder(l, vol); FadeTo(l, 1f, fade); return true; } // (asked again: its new loudness, softly up if it was going)
+            foreach (Line l in Lines)
+            {
+                if (!l.Live || l.Kind != KindBed || l.Owner != owner || l.Name != name) continue;
+                if (ask != null && ask.Try != null && ask.Try != l.Try) { FadeTo(l, 0f, fade); l.Name = ""; continue; } // (the author's new words: a new bed, this one goes)
+                Louder(l, vol); FadeTo(l, 1f, fade); // (asked again: its new loudness, softly up if it was going)
+                if (ask != null && ask.Pitch > 0f) { l.Pitch = ask.Pitch; l.Src.pitch = ask.Pitch; }
+                if (ask != null && !ask.Flat && ask.Follow == null) l.Go.transform.position = at;
+                return true;
+            }
+            if ((ask == null || ask.Clip == null) && !AudioBank.IsLoop(ask != null && ask.Try != null ? ask.Try : AudioBank.Find(name))) { AudioBank.LogOnce("bed " + name, "no bed «" + name + "» (" + owner + ")"); return false; }
             Need();
             Log("bed: " + name + " (" + owner + ", " + fade.ToString("0.#") + " s)");
-            return Start(KindBed, name, owner, vol, true, fade) != null;
+            return Start(KindBed, name, owner, vol, true, fade, ask, at) != null;
         }
 
         // name null: all of this owner's
@@ -186,64 +228,161 @@ namespace HuginWhispers
         internal static bool Sound(string name, Vector3 at, SoundAsk ask)
         {
             if (string.IsNullOrEmpty(name) || name == "-" || AudioMan.instance == null) return false;
-            if (ask.Wet && MutedName(name)) return false; // (a sound of the world, a clip's: «mute» counts for it as for the game's own)
-            List<AudioBank.Shot> shots = AudioBank.ShotsOf(name);
+            AudioBank.Entry e = ask.Try ?? AudioBank.Find(name);
+            if ((ask.Wet || ask.World) && MutedAny(name, e)) return false; // (a sound of the world, a clip's: «mute» counts for it as for the game's own)
+            bool loading;
+            List<AudioBank.Shot> shots = AudioBank.ShotsOf(e, out loading);
+            if (loading)
+            {
+                if (Later.Count >= MaxLines) { TooMany(name); return false; }
+                Later.Add(new LateSound { Name = name, At = at, Off = ask.Follow != null ? at - ask.Follow.position : Vector3.zero, Ask = ask, Asked = Time.unscaledTime });
+                Need();
+                return true;
+            }
             if (shots == null) { AudioBank.LogOnce(name, "sound «" + name + "»: none of it in this game"); return false; }
-            AudioBank.Entry e = AudioBank.Find(name);
             bool played = false;
             foreach (AudioBank.Shot s in shots)
             {
                 AudioClip clip = s.Clips != null && s.Clips.Length > 0 ? s.Clips[UnityEngine.Random.Range(0, s.Clips.Length)] : s.Like != null ? s.Like.clip : null;
                 if (clip == null) continue;
                 float vol = (s.MaxVol > 0f ? UnityEngine.Random.Range(s.MinVol, s.MaxVol) : 1f) * e.Vol * ask.Volume;
-                float pitch = ask.Pitch > 0f ? ask.Pitch : e.Pitch > 0f ? e.Pitch : s.MaxPitch > 0f ? UnityEngine.Random.Range(s.MinPitch, s.MaxPitch) : 1f;
-                bool flat = ask.Flat || e.Flat, wet = (ask.Wet || e.Wet) && MixNow(AudioMix.World) >= 0.999f; // (the world down: it would go down with it)
+                float pitch = (ask.Pitch > 0f ? ask.Pitch : e.Pitch > 0f ? e.Pitch : s.MaxPitch > 0f ? UnityEngine.Random.Range(s.MinPitch, s.MaxPitch) : 1f) / Mathf.Max(0.1f, ask.Stretch);
+                bool flat = ask.Flat || e.Flat, wet = WetNow(ask, e);
                 float range = ask.Range > 0f ? ask.Range : e.Range;
+                float delay = UnityEngine.Random.Range(s.MinDelay, s.MaxDelay) + ask.Delay, pan = s.RandomPan ? UnityEngine.Random.Range(s.MinPan, s.MaxPan) : 0f;
                 // a player cannot go past full: what is left over plays as a twin, at the same moment and pitch
-                played |= OneShot(name, clip, s.Like, Mathf.Min(1f, vol), pitch, flat, wet, range, at, ask);
-                if (vol > 1f) OneShot(name, clip, s.Like, Mathf.Min(1f, vol - 1f), pitch, flat, wet, range, at, ask);
+                played |= OneShot(name, clip, s, Mathf.Min(1f, vol), pitch, flat, wet, range, at, ask, delay, pan);
+                if (vol > 1f) OneShot(name, clip, s, Mathf.Min(1f, vol - 1f), pitch, flat, wet, range, at, ask, delay, pan);
             }
             return played;
         }
 
-        private static bool OneShot(string name, AudioClip clip, AudioSource like, float vol, float pitch, bool flat, bool wet, float range, Vector3 at, SoundAsk ask)
+        // a clip made here (a sound turned round: SoundBack), like that source
+        internal static bool PlayClip(AudioClip clip, AudioSource like, Vector3 at, SoundAsk ask)
         {
-            Line l = Take();
+            if (clip == null || AudioMan.instance == null) return false;
+            float vol = (like != null ? like.volume : 1f) * ask.Volume;
+            AudioBank.Shot s = new AudioBank.Shot { Like = like };
+            return OneShot(clip.name, clip, s, Mathf.Min(1f, vol), 1f / Mathf.Max(0.1f, ask.Stretch), ask.Flat, WetNow(ask, NoWords), ask.Range, at, ask, ask.Delay, 0f);
+        }
+
+        private static readonly AudioBank.Entry NoWords = new AudioBank.Entry();
+
+        private static bool WetNow(SoundAsk ask, AudioBank.Entry e)
+        {
+            if (ask != null && ask.World) return true;
+            return ((ask != null && ask.Wet) || e.Wet) && MixNow(AudioMix.World) >= 0.999f; // (the world down: it would go down with it)
+        }
+
+        // the group the game's sounds go through (AudioMan names only those of the ambience and the interface)
+        private static UnityEngine.Audio.AudioMixerGroup _worldGroup;
+        private static UnityEngine.Audio.AudioMixerGroup WorldGroup()
+        {
+            if (_worldGroup != null) return _worldGroup;
+            GameObject g = RavenFx.Prefab("sfx_raven_flap");
+            AudioSource a = g != null ? g.GetComponentInChildren<AudioSource>(true) : null; // heavy: until it is found, once a world
+            if (a != null) _worldGroup = a.outputAudioMixerGroup;
+            return _worldGroup;
+        }
+
+        private static UnityEngine.Audio.AudioMixerGroup GroupOf(bool wet, AudioSource like)
+        {
+            UnityEngine.Audio.AudioMixerGroup g = wet ? (like != null && like.outputAudioMixerGroup != null ? like.outputAudioMixerGroup : WorldGroup()) : null;
+            return g != null ? g : AudioMan.instance.m_guiMixer;
+        }
+
+        private static bool OneShot(string name, AudioClip clip, AudioBank.Shot s, float vol, float pitch, bool flat, bool wet, float range, Vector3 at, SoundAsk ask, float delay, float pan)
+        {
+            Line l = Take(false);
             if (l == null) { TooMany(name); return false; }
-            l.Kind = KindSound; l.Name = name; l.Owner = ask.Owner; l.Loop = false; l.Waiting = false; l.Follow = ask.Follow;
-            l.Base = vol; l.K = 1f; l.Target = 1f; l.Rate = 0f; l.Started = Time.unscaledTime;
+            AudioSource like = s.Like;
+            float fadeIn = Mathf.Max(s.FadeIn, ask.FadeIn), now = Time.unscaledTime;
+            l.Kind = KindSound; l.Name = name; l.Owner = ask.Owner; l.Loop = false; l.Waiting = false; l.Follow = ask.Follow; l.Off = ask.Follow != null ? at - ask.Follow.position : Vector3.zero;
+            l.Asked = vol; l.VolTo = vol; l.Cat = 1f; l.K = fadeIn > 0f ? 0f : 1f; l.Target = 1f; l.Rate = fadeIn > 0f ? 1f / fadeIn : 0f; l.Started = now + delay; // (waiting out its delay is not «it stopped»)
+            l.FadeAt = s.FadeAfter >= 0f ? now + s.FadeAfter : 0f; l.FadeLen = s.FadeOut;
+            if (clip.loadState == AudioDataLoadState.Unloaded) clip.LoadAudioData();
             AudioSource a = l.Src;
-            a.clip = clip; a.loop = false; a.pitch = pitch; a.panStereo = 0f;
-            a.outputAudioMixerGroup = wet && like != null ? like.outputAudioMixerGroup : AudioMan.instance.m_guiMixer;
-            a.bypassReverbZones = !wet;
+            a.clip = clip; a.loop = false; a.panStereo = pan;
+            a.outputAudioMixerGroup = GroupOf(wet, like);
             a.priority = like != null ? like.priority : 64;
             a.dopplerLevel = 0f;
             a.spatialBlend = flat ? 0f : like != null ? like.spatialBlend : 1f;
-            a.spread = like != null ? like.spread : 0f;
             if (range > 0f) { a.rolloffMode = AudioRolloffMode.Linear; a.minDistance = range * 0.3f; a.maxDistance = range; } // (full up to a third, gone at the range)
             else if (like != null)
             {
-                a.rolloffMode = like.rolloffMode; a.minDistance = like.minDistance; a.maxDistance = like.maxDistance;
+                a.rolloffMode = like.rolloffMode; a.minDistance = like.minDistance; a.maxDistance = Mathf.Max(like.maxDistance, ask.Reach);
                 if (like.rolloffMode == AudioRolloffMode.Custom) a.SetCustomCurve(AudioSourceCurveType.CustomRolloff, like.GetCustomCurve(AudioSourceCurveType.CustomRolloff));
             }
-            else { a.rolloffMode = AudioRolloffMode.Logarithmic; a.minDistance = 5f; a.maxDistance = 100f; }
+            else { a.rolloffMode = AudioRolloffMode.Logarithmic; a.minDistance = 5f; a.maxDistance = Mathf.Max(100f, ask.Reach); }
+            Room(a, s, wet, flat, at, ref pitch);
+            a.pitch = pitch;
             l.Go.transform.position = at;
-            a.volume = vol;
-            a.Play();
+            a.volume = Loud(l);
+            if (ask.Skip > 0f) a.time = Mathf.Clamp(ask.Skip, 0f, Mathf.Max(0f, clip.length - 0.05f));
+            if (delay > 0f) a.PlayDelayed(delay); else a.Play();
             Need();
             return true;
+        }
+
+        // how much of the world's room it gets: what ZSFX.UpdateReverb works out when it starts (the same numbers)
+        private static void Room(AudioSource a, AudioBank.Shot s, bool wet, bool flat, Vector3 at, ref float pitch)
+        {
+            AudioSource like = s.Like;
+            a.spread = like != null ? like.spread : 0f;
+            a.reverbZoneMix = s.Room == AudioBank.RoomOwn && like != null ? like.reverbZoneMix : 1f;
+            a.bypassReverbZones = !wet || (s.Room == AudioBank.RoomOwn && like != null && like.bypassReverbZones) || s.Room == AudioBank.RoomNone;
+            if (!wet || s.Room != AudioBank.RoomByDistance) return;
+            Camera cam = Utils.GetMainCamera();
+            if (flat || a.spatialBlend == 0f || cam == null) { a.bypassReverbZones = true; return; }
+            float far = Vector3.Distance(cam.transform.position, at), reach = s.ReverbAt > 0f ? s.ReverbAt : 64f;
+            float byReach = Mathf.Clamp01(far / reach), mix = Mathf.Max(byReach, Mathf.Clamp01(a.maxDistance / reach) * Mathf.Clamp01(far / a.maxDistance));
+            if (Mister.InsideMister(at)) { mix = Mathf.Lerp(mix, 0f, byReach); pitch -= pitch * 0.5f * byReach; }
+            a.bypassReverbZones = false;
+            a.reverbZoneMix = mix;
+            if (a.spread < 120f) a.spread = Mathf.Lerp(Mathf.Max(a.spread, 45f), 120f, mix);
+        }
+
+        // one-shots whose file is on the way: played the moment it is there, unless too late for the moment they were asked for
+        private sealed class LateSound { public string Name; public Vector3 At, Off; public SoundAsk Ask; public float Asked; }
+        private static readonly List<LateSound> Later = new List<LateSound>();
+
+        private static bool LaterTick()
+        {
+            for (int i = Later.Count - 1; i >= 0; i--)
+            {
+                LateSound s = Later[i];
+                bool loading;
+                AudioBank.ShotsOf(s.Ask.Try ?? AudioBank.Find(s.Name), out loading);
+                if (loading && Time.unscaledTime - s.Asked <= MaxLoad) continue;
+                Later.RemoveAt(i);
+                if (loading) { Log("«" + s.Name + "»: its file did not come in " + MaxLoad + " s"); continue; }
+                if (Time.unscaledTime - s.Asked > SoundLate) { Log("«" + s.Name + "»: its file came too late for its moment (" + (Time.unscaledTime - s.Asked).ToString("0.0") + " s), left out"); continue; }
+                Sound(s.Name, s.Ask.Follow != null ? s.Ask.Follow.position + s.Off : s.At, s.Ask);
+            }
+            return Later.Count > 0;
         }
 
         // name null: all of this owner's
         internal static void StopSounds(string owner, string name, float fade)
         {
+            Later.RemoveAll(s => s.Ask.Owner == owner && (name == null || s.Name == name));
             foreach (Line l in Lines) if (l.Live && l.Kind == KindSound && l.Owner == owner && (name == null || l.Name == name)) FadeTo(l, 0f, fade);
         }
 
         internal static bool SoundOn(string owner, string name)
         {
+            foreach (LateSound s in Later) if (s.Ask.Owner == owner && s.Name == name) return true;
             foreach (Line l in Lines) if (l.Live && l.Kind == KindSound && l.Owner == owner && l.Name == name && l.Target > 0f) return true;
             return false;
+        }
+
+        // how many of this owner's are heard or on the way, any kind
+        internal static int Heard(string owner)
+        {
+            int n = 0;
+            foreach (LateSound s in Later) if (s.Ask.Owner == owner) n++;
+            foreach (Line l in Lines) if (l.Live && l.Owner == owner && l.Target > 0f) n++;
+            return n;
         }
 
         // ---------------------------------------------------------------- mix
@@ -400,6 +539,14 @@ namespace HuginWhispers
 
         private static bool Matches(ZSFX z) { return Rules.Count > 0 && MutedName(BareName(z)); }
 
+        private static bool MutedAny(string name, AudioBank.Entry e)
+        {
+            if (Rules.Count == 0) return false;
+            if (MutedName(name)) return true;
+            foreach (string t in e.Tokens) if (MutedName(t)) return true;
+            return false;
+        }
+
         private static bool MutedName(string name)
         {
             if (Rules.Count == 0) return false;
@@ -510,7 +657,8 @@ namespace HuginWhispers
             MusicNow();
             _nextFade = -1f;
             foreach (Line l in Lines) if (l.Live) Free(l);
-            _cur = null; _playing = null;
+            Later.Clear();
+            _cur = null; _playing = null; _trackDone = false; _airUntil = 0f; _topWas = null;
             Claims.Clear();
             for (int i = 0; i < MixK.Length; i++) { MixRate[i] = 0f; }
             MixTick(0f);
@@ -518,16 +666,27 @@ namespace HuginWhispers
             foreach (Muted m in MutedNow) if (m.Z != null) m.Z.SetVolumeModifier(m.Saved);
             MutedNow.Clear();
             _earOwner = null; _earK = 0f; _earTarget = 0f;
+            _worldGroup = null;
             AudioBank.Unload();
             Log("all let go (the world is gone)");
         }
 
         // ---------------------------------------------------------------- lines
 
-        private static Line Take()
+        // none free and all made: a one-shot is dropped, but music and beds take the oldest one-shot's place (they would be gone for good)
+        private static Line Take(bool needed)
         {
             foreach (Line l in Lines) if (!l.Live) { l.Live = true; return l; }
-            if (Lines.Count >= MaxLines) return null;
+            if (Lines.Count >= MaxLines)
+            {
+                if (!needed) return null;
+                Line old = null;
+                foreach (Line l in Lines) if (l.Kind == KindSound && (old == null || l.Started < old.Started)) old = l;
+                if (old == null) return null;
+                Free(old);
+                old.Live = true;
+                return old;
+            }
             Need();
             GameObject g = new GameObject("RavenWatch_Audio"); // heavy: a new one only when all the sources made so far are busy, MaxLines at most
             g.transform.SetParent(_run.transform, false);
@@ -537,17 +696,28 @@ namespace HuginWhispers
             return n;
         }
 
-        // music and beds: flat, on their own group; a clip still loading waits (the line's Waiting)
-        private static Line Start(int kind, string name, string owner, float vol, bool loop, float fade)
+        // music and beds; a clip still loading waits (the line's Waiting). Music and a bed with no place are flat
+        private static Line Start(int kind, string name, string owner, float vol, bool loop, float fade, SoundAsk ask, Vector3 at)
         {
-            Line l = Take();
+            Line l = Take(true);
             if (l == null) { TooMany(name); return null; }
-            l.Kind = kind; l.Name = name; l.Owner = owner; l.Loop = loop; l.Follow = null; l.Started = Time.unscaledTime;
-            l.Asked = vol; l.Base = vol; l.K = 0f; l.Target = 1f; l.Rate = fade > 0.01f ? 1f / fade : 0f; l.Waiting = true;
+            AudioBank.Entry e = ask != null && ask.Try != null ? ask.Try : AudioBank.Find(name);
+            bool place = kind == KindBed && ask != null && !ask.Flat && !e.Flat, wet = kind == KindBed && WetNow(ask, e);
+            l.Kind = kind; l.Name = name; l.Owner = owner; l.Loop = loop; l.Started = Time.unscaledTime;
+            l.Follow = place ? ask.Follow : null; l.Off = l.Follow != null ? at - l.Follow.position : Vector3.zero;
+            l.Given = ask != null ? ask.Clip : null; l.Try = ask != null ? ask.Try : null; l.AnyStart = ask != null && ask.AnyStart;
+            l.Pitch = ask != null && ask.Pitch > 0f ? ask.Pitch : e.Pitch > 0f ? e.Pitch : 1f;
+            l.Asked = vol; l.VolTo = vol; l.Cat = 1f; l.K = 0f; l.Target = 1f; l.Rate = fade > 0.01f ? 1f / fade : 0f; l.Waiting = true; l.FadeAt = 0f;
             if (l.Rate == 0f) l.K = 1f;
             AudioSource a = l.Src;
-            a.clip = null; a.spatialBlend = 0f; a.pitch = 1f; a.priority = 0; a.bypassReverbZones = true; a.dopplerLevel = 0f; a.panStereo = 0f;
-            a.outputAudioMixerGroup = kind == KindMusic && MusicMan.instance != null ? MusicMan.instance.m_musicMixer : AudioMan.instance != null ? AudioMan.instance.m_guiMixer : null;
+            a.clip = null; a.spatialBlend = place ? 1f : 0f; a.pitch = 1f; a.priority = 0; a.bypassReverbZones = !wet; a.reverbZoneMix = 1f; a.spread = 0f; a.dopplerLevel = 0f; a.panStereo = 0f;
+            if (place)
+            {
+                float range = ask.Range > 0f ? ask.Range : e.Range > 0f ? e.Range : BedRange;
+                a.rolloffMode = AudioRolloffMode.Linear; a.minDistance = range * 0.3f; a.maxDistance = range;
+                l.Go.transform.position = at;
+            }
+            a.outputAudioMixerGroup = kind == KindMusic && MusicMan.instance != null ? MusicMan.instance.m_musicMixer : AudioMan.instance != null ? GroupOf(wet, null) : null;
             a.volume = 0f;
             Begin(l);
             return l.Live ? l : null;
@@ -555,20 +725,21 @@ namespace HuginWhispers
 
         private static void Begin(Line l)
         {
-            AudioClip clip; float vol;
-            int got = AudioBank.Clip(l.Name, out clip, out vol);
+            AudioClip clip = l.Given; float vol = 1f;
+            int got = clip != null ? 1 : AudioBank.Clip(l.Try ?? AudioBank.Find(l.Name), out clip, out vol);
             if (got == 0) return;
             l.Waiting = false;
-            if (got < 0) { Log("«" + l.Name + "»: nothing to play (" + l.Owner + ")"); Free(l); return; }
-            l.Base *= vol;
+            if (got < 0) { AudioBank.LogOnce("nothing " + l.Name, "«" + l.Name + "»: nothing to play (" + l.Owner + ")"); Free(l); return; }
+            l.Cat = vol;
             l.Started = Time.unscaledTime;
-            l.Src.clip = clip; l.Src.loop = l.Loop; l.Src.time = 0f;
+            if (clip.loadState == AudioDataLoadState.Unloaded) clip.LoadAudioData();
+            l.Src.clip = clip; l.Src.loop = l.Loop; l.Src.pitch = l.Pitch; l.Src.time = l.AnyStart ? UnityEngine.Random.Range(0f, clip.length * 0.8f) : 0f;
             l.Src.volume = Loud(l);
             l.Src.Play();
         }
 
-        // its new asked loudness (what the catalogue adds stays)
-        private static void Louder(Line l, float vol) { l.Base = l.Base / Mathf.Max(0.001f, l.Asked) * vol; l.Asked = vol; }
+        // its new asked loudness, softly (what the catalogue adds is apart: Cat)
+        private static void Louder(Line l, float vol) { l.VolTo = vol; if (l.Waiting) l.Asked = vol; }
 
         private static float _toldMany = -100f;
         private static void TooMany(string name)
@@ -588,7 +759,7 @@ namespace HuginWhispers
         private static float Loud(Line l)
         {
             float k = l.K * l.K * (3f - 2f * l.K); // (an S-curve: no sudden start or stop)
-            float v = l.Base * k;
+            float v = l.Asked * l.Cat * k;
             if (l.Kind == KindMusic) v *= MusicMan.m_masterMusicVolume * MixK[(int)AudioMix.Music];
             return Mathf.Clamp01(v);
         }
@@ -596,7 +767,7 @@ namespace HuginWhispers
         private static void Free(Line l)
         {
             if (l == _cur) { _cur = null; _trackDone = true; }
-            l.Live = false; l.Waiting = false; l.Follow = null;
+            l.Live = false; l.Waiting = false; l.Follow = null; l.Given = null; l.Try = null; l.FadeAt = 0f; l.AnyStart = false;
             if (l.Src != null) { l.Src.Stop(); l.Src.clip = null; }
         }
 
@@ -613,15 +784,17 @@ namespace HuginWhispers
                     if (l.Live && l.Waiting && Time.unscaledTime - l.Started > MaxLoad) { Log("«" + l.Name + "»: its file did not come in " + MaxLoad + " s"); Free(l); }
                     if (!l.Live || l.Waiting) continue;
                 }
-                if (l.K != l.Target) l.K = l.Rate > 0f ? Mathf.MoveTowards(l.K, l.Target, l.Rate * dt) : l.Target;
+                if (l.FadeAt > 0f && Time.unscaledTime >= l.FadeAt) { l.FadeAt = 0f; FadeTo(l, 0f, l.FadeLen); } // (the game's sound fades out by itself)
+                if (l.Asked != l.VolTo) l.Asked = Mathf.MoveTowards(l.Asked, l.VolTo, dt / Mathf.Max(0.05f, LouderFade));
+                if (l.K != l.Target && (l.Target <= 0f || Time.unscaledTime >= l.Started)) l.K = l.Rate > 0f ? Mathf.MoveTowards(l.K, l.Target, l.Rate * dt) : l.Target;
                 if (l.Target <= 0f && l.K <= 0f) { Free(l); continue; }
-                if (!l.Src.isPlaying && !AudioListener.pause && Time.unscaledTime - l.Started > 0.2f)
+                if (!l.Src.isPlaying && !AudioListener.pause && Time.unscaledTime - l.Started > 0.2f && (l.Src.clip == null || l.Src.clip.loadState != AudioDataLoadState.Loading)) // (still being loaded: it has not stopped)
                 {
                     if (!l.Loop || l.Src.clip == null) { Free(l); continue; }
                     l.Started = Time.unscaledTime; l.Src.Play(); // (a loop never ends by itself: the sound device changed, Unity stopped it)
                 }
                 l.Src.volume = Loud(l);
-                if (l.Follow != null) l.Go.transform.position = l.Follow.position;
+                if (l.Follow != null) l.Go.transform.position = l.Follow.position + l.Off;
             }
             return any;
         }
@@ -642,7 +815,7 @@ namespace HuginWhispers
             }
             if (_held || held) MusicNow();
             bool busy = held || _held;
-            if (ZNet.instance == null && (busy || Claims.Count > 0 || Rules.Count > 0 || _earOwner != null)) { EndAll(); return; }
+            if (ZNet.instance == null && (busy || Claims.Count > 0 || Rules.Count > 0 || _earOwner != null || Later.Count > 0 || _airUntil > 0f || AnyLine())) { EndAll(); return; }
             if (_airUntil > 0f && Time.unscaledTime >= _airUntil) { _airUntil = 0f; End(Air, EndFade, false); }
             if (_earK != _earTarget) { _earK = _earRate > 0f ? Mathf.MoveTowards(_earK, _earTarget, _earRate * dt) : _earTarget; busy = true; }
             if (_earOwner != null) busy = true;
@@ -651,7 +824,14 @@ namespace HuginWhispers
             busy |= MuteTick(dt);
             busy |= Rules.Count > 0;
             busy |= LinesTick(dt);
+            busy |= LaterTick();
             if (!busy) _run.enabled = false;
+        }
+
+        private static bool AnyLine()
+        {
+            foreach (Line l in Lines) if (l.Live) return true;
+            return false;
         }
 
         private static int TopLayer()
@@ -696,6 +876,7 @@ namespace HuginWhispers
             foreach (MuteRule r in Rules) b.Append("  mute ").Append(r.Pattern).Append(" (").Append(r.Owner).Append(")\n");
             if (MutedNow.Count > 0) b.Append("  loops at zero: ").Append(MutedNow.Count).Append('\n');
             b.Append("  ear: ").Append(_earK > 0f ? "camera" : "player").Append('\n');
+            if (Later.Count > 0) b.Append("  waiting for a file: ").Append(Later.Count).Append('\n');
             foreach (Line l in Lines) if (l.Live) b.Append("  ").Append(l.Kind == KindMusic ? "track " : l.Kind == KindBed ? "bed " : "sound ").Append(l.Name).Append(" (").Append(l.Owner.Length > 0 ? l.Owner : "-").Append(") ").Append(l.Waiting ? "loading" : l.Src.time.ToString("0.0") + " s, vol " + l.Src.volume.ToString("0.00")).Append('\n');
             return b.ToString();
         }

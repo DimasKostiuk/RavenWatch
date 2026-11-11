@@ -50,6 +50,10 @@ namespace HuginWhispers
     //             for anything that plays a clip: played to its end and held there till the next one (hold), round and
     //             round (loop), or to its end and off (end). Two parts of a clip meet in a crossfade like any two clips;
     //             where one ends and the next starts the pose is the same, so nothing shows.
+    //   Follow  — «follow @RightHand Spine2»: that target rides on the bone (the user 2026-11-08: a pole on the shoulder stood still in the air while the body
+    //             shifted its weight under it). Its keys are written in the body's frame as ever; from the moment the hand is on its target (FollowFrom of its
+    //             weight) the bone's place and turn then are kept, and every move and turn of the bone since — breath, weight from foot to foot, a bend —
+    //             carries the target and the hand's .f/.n with it, eased in and out with the weight (no jump on the way in or out).
     //   Ground  — «feet ground» in a clip: its foot targets stand on the ground under them, not on the level of the body's
     //             feet, and the body sinks by what the lower foot needs (a slope, a mound). A few looks a second, eased.
     //   Marks   — «mark <time> <name>»: a named moment of a clip for the one who plays it to wait for (a scene's
@@ -66,6 +70,9 @@ namespace HuginWhispers
     //             (on the knees): a person's cloth is let go while it plays (NpcCloth). Nothing of these moves anything.
     //   Vary    — «vary 0..1»: every play of the clip a little its own: each hand's target off by up to HandVary m, the look by LookVary,
     //             the back bent and turned by up to BendVary/TurnVary degrees, the pace by SpeedVary — all × its vary (a talk 1, a sip 0.25).
+    //             Its feet too (the user 2026-11-08, «мотор для ніг для невеликого розбросу»): each foot target off on the ground by up to FootVary m — only
+    //             once the clip has moved that foot from where it began (by FootStep m: none there, all of it after a step), so a foot that starts and ends in the
+    //             game's stance stands in it exactly and never slides.
     //             Drawn from the clip's name and the moment it was started (its ZDO's start): every game draws the same, nothing is sent.
     //             None: exactly as keyed (a key in a lock, a palm on a door). BodyAnimator.Vary
     //   Thing   — «prop <item> [r|l] [scale]»: the clip's own thing in that hand (scale: × its size, 0.5 half as big) (a tankard as it drinks) while it plays, its look only (HandLook,
@@ -106,14 +113,18 @@ namespace HuginWhispers
         public float Length = 1f;
         public bool Loop = true;
         public float Pivot = 1.1f;                  // metres up from the feet: what the body turns round
-        public bool Frozen;                         // the base: false the game's live animation, true its pose when the clip came in
+        public bool Frozen;                         // the base: false the game's live animation, true its pose when the clip came in (its bones' turns, and where its hips are when it names «Hips»)
         public bool Eased;                          // «curve ease»: the curve by real time, no overshoot (see the head of this file)
         public bool Stays;                          // «end hold»: played once, it stands at its last moment till it is taken off
+        public bool Carried;                        // «carry yes»: arms only, meant to go on in a walk (a weapon on the shoulder: NpcGear.Carry) — a walk does not let it go (NpcBody.LoopOff)
         public bool IsPart;                         // a part of another clip (the head of this file): made from it, never saved or edited
         public bool GroundFeet;                     // «feet ground» (the head of this file)
+        public readonly Dictionary<string, string> Follow = new Dictionary<string, string>(); // «follow @RightHand Spine2»: a target riding on a bone (the head of this file)
         public float Strength = 1f;                 // «strength x» (the head of this file)
         public float In = -1f, Out = -1f;           // «fade <in> <out>», seconds (the head of this file); below zero: not said
         public string Say = "", Touch = "";         // «say», «touch» (the head of this file)
+        public float Inertia = 1f;                  // «inertia 0..1»: a hand's target followed by a spring (it overshoots a little and settles, the arm trails) and, held, never
+                                                    // quite still (BodyAnimator.Inertia; the user 2026-11-09: «a palm frozen in the air is ugly — every animation with inertia»); 0 — exact
         public float Vary;                          // «vary 0..1»: how far each play of it differs (BodyAnimator.Vary); 0 — always the same (a key in a lock)
         public string Prop = "", PropHand = "r"; public float PropScale = 1f;      // «prop <item> [r|l]»: its thing in that hand while it plays (BodyAnimator.PropStep: its look only, on any body, every game)
         public bool ClothOff;                       // «cloth off»: a pose the game's cloth cannot follow (on the knees, lying) — its cloth is let go while it plays (NpcCloth)
@@ -182,7 +193,7 @@ namespace HuginWhispers
         internal PAnimClip Slice(PAnimPart p)
         {
             float from = Mathf.Clamp(p.From, 0f, Length), to = Mathf.Clamp(p.To, from + 0.05f, Length);
-            PAnimClip s = new PAnimClip { Name = Name + "." + p.Name, Length = to - from, Loop = p.How == "loop", Stays = p.How == "hold", IsPart = true,             Pivot = Pivot, Frozen = Frozen, Eased = Eased, GroundFeet = GroundFeet, Strength = Strength, In = In, Out = Out, Touch = Touch, ClothOff = ClothOff, Prop = Prop, PropHand = PropHand, PropScale = PropScale, Vary = Vary };
+            PAnimClip s = new PAnimClip { Name = Name + "." + p.Name, Length = to - from, Loop = p.How == "loop", Stays = p.How == "hold", IsPart = true,             Pivot = Pivot, Frozen = Frozen, Eased = Eased, GroundFeet = GroundFeet, Strength = Strength, In = In, Out = Out, Touch = Touch, ClothOff = ClothOff, Prop = Prop, PropHand = PropHand, PropScale = PropScale, Vary = Vary, Inertia = Inertia };
             s.Bones.AddRange(Bones);
             foreach (KeyValuePair<string, int> m in Modes) s.Modes[m.Key] = m.Value;
             Cut(s, from, from);
@@ -489,7 +500,7 @@ namespace HuginWhispers
             int r;
             return _rank.TryGetValue(bone, out r) ? r : 1000;
         }
-        internal const int Slots = 6, PreviewSlot = 5;
+        internal const int Slots = 6, PreviewSlot = 5, SettleSlot = 4; // (SettleSlot: the body's pose held a moment and let go — a stance changed under it: NpcGear.Stance)
         internal static float MinHold = 0.6f; // a state that took over holds at least this long (seconds)
         internal static float EndFade = 0.35f; // a clip played once fades out at least this long after its end
         internal static float Smoothing = 0.12f; // seconds: our bone turns ease after what the clips want (0: none)
@@ -841,10 +852,13 @@ namespace HuginWhispers
                     case "touch": c.Touch = l.Substring(5).Trim(); continue;
                     case "cloth": if (w.Length > 1) c.ClothOff = w[1] == "off"; continue;
                     case "vary": if (w.Length > 1 && Num(w[1], out f)) c.Vary = Mathf.Clamp01(f); continue;
+                    case "inertia": if (w.Length > 1 && Num(w[1], out f)) c.Inertia = Mathf.Clamp01(f); continue;
                     case "prop": if (w.Length > 1) { c.Prop = w[1]; c.PropHand = w.Length > 2 && w[2] == "l" ? "l" : "r"; c.PropScale = w.Length > 3 && Num(w[3], out f) ? Mathf.Clamp(f, 0.05f, 5f) : 1f; } continue;
                     case "curve": if (w.Length > 1) c.Eased = w[1] == "ease"; continue;
                     case "end": if (w.Length > 1) c.Stays = w[1] == "hold"; continue;
+                    case "carry": if (w.Length > 1) c.Carried = w[1] == "yes"; continue;
                     case "feet": if (w.Length > 1) c.GroundFeet = w[1] == "ground"; continue;
+                    case "follow": if (w.Length > 2) c.Follow[w[1]] = w[2]; continue;
                     case "fade": if (w.Length > 2 && Num(w[1], out f) && Num(w[2], out g)) { c.In = Mathf.Max(0f, f); c.Out = Mathf.Max(0f, g); } continue;
                     case "mark": if (w.Length > 2 && Num(w[1], out f)) c.Marks.Add(new PAnimEvent { T = Mathf.Max(0f, f), Sound = w[2] }); continue;
                     case "part":
@@ -888,13 +902,16 @@ namespace HuginWhispers
             if (c.Frozen) sb.Append("base frozen\n");
             if (c.Eased) sb.Append("curve ease\n");
             if (c.Stays) sb.Append("end hold\n");
+            if (c.Carried) sb.Append("carry yes\n");
             if (c.GroundFeet) sb.Append("feet ground\n");
+            foreach (KeyValuePair<string, string> fo in c.Follow) sb.Append("follow ").Append(fo.Key).Append(' ').Append(fo.Value).Append('\n');
             if (c.Strength < 1f) sb.Append("strength ").Append(N(c.Strength)).Append('\n');
             if (c.Say.Length > 0) sb.Append("say ").Append(c.Say).Append('\n');
             foreach (string want in c.Wants) sb.Append("want ").Append(want).Append('\n');
             if (c.Touch.Length > 0) sb.Append("touch ").Append(c.Touch).Append('\n');
             if (c.ClothOff) sb.Append("cloth off\n");
             if (c.Vary > 0f) sb.Append("vary ").Append(N(c.Vary)).Append('\n');
+            if (c.Inertia < 1f) sb.Append("inertia ").Append(N(c.Inertia)).Append('\n');
             if (c.Prop.Length > 0) sb.Append("prop ").Append(c.Prop).Append(' ').Append(c.PropHand).Append(c.PropScale != 1f ? " " + N(c.PropScale) : "").Append('\n');
             if (c.In >= 0f || c.Out >= 0f) sb.Append("fade ").Append(N(c.FadeIn)).Append(' ').Append(N(c.FadeOut)).Append('\n');
             foreach (PAnimEvent e in c.Marks) sb.Append("mark ").Append(N(e.T)).Append(' ').Append(e.Sound).Append('\n');
@@ -1247,20 +1264,29 @@ namespace HuginWhispers
             public float Speed = 1f, Weight;
             public float LastMoment = -1f; // for the sounds: the moment of the frame before
             public Dictionary<string, Quaternion> FrozenPose = new Dictionary<string, Quaternion>();
-            public bool NeedFreeze;
+            public bool NeedFreeze, HipsFrozen; public Vector3 FrozenHips; // (a frozen base keeps where the hips were too: a stance a crouch lower — 2026-11-08)
             public float Moment; // this frame's moment in the clip
-            public float VSpeed = 1f, VBend, VTurn; public Vector3 VLeft, VRight, VLook; // (this play's own: Vary)
-            public Vector3 Off(string target) { return target == "@RightHand" ? VRight : target == "@LeftHand" ? VLeft : target == "@Look" ? VLook : Vector3.zero; }
+            public float VSpeed = 1f, VBend, VTurn; public Vector3 VLeft, VRight, VLook, VLeftFoot, VRightFoot; // (this play's own: Vary)
+            public Vector3 Off(string target, PAnimClip c, Vector3 at)
+            {
+                if (target == "@RightHand") return VRight;
+                if (target == "@LeftHand") return VLeft;
+                if (target == "@Look") return VLook;
+                Vector3 foot = target == "@LeftFoot" ? VLeftFoot : target == "@RightFoot" ? VRightFoot : Vector3.zero;
+                if (foot == Vector3.zero) return foot;
+                Vector3 first = c.Value(target, 0f); // (where the clip began it: the game's stance — no way off there, or it slides)
+                return foot * Mathf.Clamp01(new Vector2(at.x - first.x, at.z - first.z).magnitude / FootStep);
+            }
             public float Shown { get { return Weight * Weight * (3f - 2f * Weight); } } // (on an S-curve; two fading across each other still make one)
 
             public Dictionary<string, Quaternion> Aims = new Dictionary<string, Quaternion>(); // an aimed bone as it stood last frame, in the body's frame
-            public void Clear() { VSpeed = 1f; VBend = VTurn = 0f; VLeft = VRight = VLook = Vector3.zero; Clip = null; C = null; Weight = 0f; LastMoment = -1f; FrozenPose.Clear(); Aims.Clear(); NeedFreeze = false; }
+            public void Clear() { VSpeed = 1f; VBend = VTurn = 0f; VLeft = VRight = VLook = VLeftFoot = VRightFoot = Vector3.zero; Clip = null; C = null; Weight = 0f; LastMoment = -1f; FrozenPose.Clear(); HipsFrozen = false; Aims.Clear(); NeedFreeze = false; }
 
             // the other one's state into this one (the dictionaries swapped, nothing copied)
             public void From(Run o)
             {
-                VSpeed = o.VSpeed; VBend = o.VBend; VTurn = o.VTurn; VLeft = o.VLeft; VRight = o.VRight; VLook = o.VLook;
-                Clip = o.Clip; C = o.C; Start = o.Start; Speed = o.Speed; Weight = o.Weight; LastMoment = o.LastMoment; NeedFreeze = o.NeedFreeze;
+                VSpeed = o.VSpeed; VBend = o.VBend; VTurn = o.VTurn; VLeft = o.VLeft; VRight = o.VRight; VLook = o.VLook; VLeftFoot = o.VLeftFoot; VRightFoot = o.VRightFoot;
+                Clip = o.Clip; C = o.C; Start = o.Start; Speed = o.Speed; Weight = o.Weight; LastMoment = o.LastMoment; NeedFreeze = o.NeedFreeze; HipsFrozen = o.HipsFrozen; FrozenHips = o.FrozenHips;
                 Dictionary<string, Quaternion> d = FrozenPose; FrozenPose = o.FrozenPose; o.FrozenPose = d;
                 d = Aims; Aims = o.Aims; o.Aims = d;
             }
@@ -1435,10 +1461,10 @@ namespace HuginWhispers
         }
 
         // this play's own variant (PAnimClip.Vary, the head of this file): from the clip's name and its start, so every game draws the same
-        internal static float HandVary = 0.07f, LookVary = 0.5f, BendVary = 5f, TurnVary = 7f, SpeedVary = 0.15f;
+        internal static float HandVary = 0.07f, LookVary = 0.5f, BendVary = 5f, TurnVary = 7f, SpeedVary = 0.15f, FootVary = 0.05f, FootStep = 0.06f;
         private static void Vary(Run r)
         {
-            r.VSpeed = 1f; r.VBend = r.VTurn = 0f; r.VLeft = r.VRight = r.VLook = Vector3.zero;
+            r.VSpeed = 1f; r.VBend = r.VTurn = 0f; r.VLeft = r.VRight = r.VLook = r.VLeftFoot = r.VRightFoot = Vector3.zero;
             PAnimClip c = r.Clip != null ? BodyClips.Find(r.Clip) : null;
             float k = c != null ? c.Vary : 0f;
             if (k <= 0f) return;
@@ -1449,6 +1475,8 @@ namespace HuginWhispers
             r.VLook = new Vector3(Rand(ref s), Rand(ref s) * 0.5f, 0f) * LookVary * k;
             r.VBend = Rand(ref s) * BendVary * k; r.VTurn = Rand(ref s) * TurnVary * k;
             r.VSpeed = 1f + Rand(ref s) * SpeedVary * k;
+            r.VLeftFoot = new Vector3(Rand(ref s), 0f, Rand(ref s)) * FootVary * k; // (drawn after the others: their numbers stay as they were)
+            r.VRightFoot = new Vector3(Rand(ref s), 0f, Rand(ref s)) * FootVary * k;
         }
         private static float Rand(ref uint s) { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s % 20001u) / 10000f - 1f; } // (−1 … 1)
 
@@ -1949,6 +1977,7 @@ namespace HuginWhispers
         private void Targets()
         {
             Transform root = _body.transform;
+            float inertia = InertiaShare(); // (once a frame, for both hands)
             foreach (BodyClips.Limb m in BodyClips.Limbs)
             {
                 Vector3 at, pole; float w;
@@ -1969,6 +1998,8 @@ namespace HuginWhispers
                 if (up == null || low == null || end == null) continue;
                 Vector3 under = end.T.position; // (where the pose under it has its end)
                 if (foot >= 0) at = Planted(foot, at, root.InverseTransformPoint(under), root.InverseTransformDirection(low.T.position - up.T.position - (under - up.T.position).normalized * Vector3.Dot(low.T.position - up.T.position, (under - up.T.position).normalized)));
+                Quaternion rides = Ride(m.Name, root, w, ref at); // (a target on a bone: «follow»)
+                if (foot < 0) at = Inertia(m.Name, at, w, ow > 0.001f ? 0f : inertia); // (a hand: a spring, alive held — not one on the thing)
                 float pw;
                 Vector3 poleLocal = Channel(m.Name + ".p", out pole, out pw) && pole.sqrMagnitude > 0.0001f ? Vector3.Lerp(m.Pole, pole, pw) : m.Pole;
                 Vector3 world = root.TransformPoint(at);
@@ -1982,7 +2013,7 @@ namespace HuginWhispers
                 Solve(up.T, low.T, end.T, point, poleTo);
                 if (w >= BodyClips.MissFrom) _missed[m.Name] = Vector3.Distance(end.T.position, point); // (one still on its way is not a miss)
                 if (ow > 0.001f) Grip(m, end.T, ow);
-                else Facing(m, end.T, w, root);
+                else Facing(m, end.T, w, root, rides);
             }
             Vector3 look; float lw;
             if (Channel(BodyClips.LookAt, out look, out lw)) LookTo(root.TransformPoint(look), lw);
@@ -2017,6 +2048,35 @@ namespace HuginWhispers
         internal static float GroundLook = 0.2f, GroundEase = 0.8f, GroundMost = 0.4f;
         private readonly float[] _ground = new float[2], _groundWant = new float[2], _groundAt = new float[2];
         private float _sink;
+
+        // Inertia (the user 2026-11-09, for every clip): a hand's target in the body's frame (so a walk does not swing it) followed by a spring —
+        // it overshoots a little and settles, and the elbow and shoulder trail it through the solve — and while held it drifts by about
+        // DriftM over DriftS, never quite still. Not a hand on the thing (its grip), nor a clip that touches (a door, a wall: «touch»), nor
+        // one with «inertia 0»; the strongest clip on the body says how much. Feet never: they stand.
+        internal static float InertiaHz = 2f, InertiaDamp = 0.65f, DriftM = 0.0064f, DriftS = 4f; // (the user 2026-11-09: 20% less and smoother than the first numbers)
+        private readonly Dictionary<string, Vector3> _inX = new Dictionary<string, Vector3>(), _inV = new Dictionary<string, Vector3>();
+        private readonly Dictionary<string, float> _inAt = new Dictionary<string, float>(); // (when its spring last ran: a hand let go — no clip on it, none on the body — starts afresh, not from where the last clip left it)
+        private Vector3 Inertia(string limb, Vector3 at, float w, float k)
+        {
+            Vector3 x; float last;
+            bool went = _inAt.TryGetValue(limb, out last) && Time.time - last < 0.1f;
+            _inAt[limb] = Time.time;
+            if (k <= 0f || w < 0.01f || !went || !_inX.TryGetValue(limb, out x)) { _inX[limb] = at; _inV[limb] = Vector3.zero; return at; } // (it starts where it is asked: the weight eases it in)
+            Vector3 v = _inV[limb];
+            float dt = Mathf.Min(Time.deltaTime, 0.05f), om = 2f * Mathf.PI * InertiaHz;
+            int n = dt > 0.017f ? 3 : 1; float h = dt / n;
+            for (int i = 0; i < n; i++) { Vector3 a = om * om * (at - x) - 2f * InertiaDamp * om * v; v += a * h; x += v * h; }
+            _inX[limb] = x; _inV[limb] = v;
+            float ph = (_body.GetInstanceID() & 1023) * 0.37f + limb.Length * 1.3f, t = Time.time * 2f * Mathf.PI / DriftS;
+            Vector3 drift = new Vector3(Mathf.Sin(t + ph), Mathf.Sin(t * 0.83f + ph * 1.7f), Mathf.Sin(t * 1.21f + ph * 0.6f)) * DriftM;
+            return Vector3.Lerp(at, x, k) + drift * (k * w);
+        }
+        private float InertiaShare()
+        {
+            float best = -1f, k = 0f;
+            foreach (Layer l in _layers) { PAnimClip c = l.Now.C; if (c == null || l.Now.Weight <= best) continue; best = l.Now.Weight; k = c.Touch.Length > 0 ? 0f : c.Inertia; }
+            return k;
+        }
 
         private float GroundShare()
         {
@@ -2063,7 +2123,26 @@ namespace HuginWhispers
         }
 
         // a hand turned as the clip says in the body's frame (no thing in it): «….f» its fingers, «….n» its palm, by the target's weight
-        private void Facing(BodyClips.Limb m, Transform hand, float w, Transform root)
+        // «follow»: the bone a playing clip ties this target to; its place and turn when the hand got there (body frame) — kept while it stays
+        internal static float FollowFrom = 0.9f;
+        private readonly Dictionary<string, KeyValuePair<Vector3, Quaternion>> _rideFrom = new Dictionary<string, KeyValuePair<Vector3, Quaternion>>();
+        private Quaternion Ride(string limb, Transform root, float w, ref Vector3 at)
+        {
+            string bone = null;
+            foreach (Layer l in _layers) { Run r = l.Now; string b; if (r.C != null && r.Weight > 0.001f && r.C.Follow.TryGetValue(limb, out b)) { bone = b; break; } }
+            Bone on = bone != null ? BoneOf(bone) : null;
+            if (on == null || w < FollowFrom) { _rideFrom.Remove(limb); return Quaternion.identity; }
+            Vector3 now = root.InverseTransformPoint(on.T.position);
+            Quaternion turned = Quaternion.Inverse(root.rotation) * on.T.rotation;
+            KeyValuePair<Vector3, Quaternion> from;
+            if (!_rideFrom.TryGetValue(limb, out from)) { _rideFrom[limb] = new KeyValuePair<Vector3, Quaternion>(now, turned); return Quaternion.identity; }
+            float k = Mathf.Clamp01((w - FollowFrom) / (1f - FollowFrom)); // (eased in and out with the weight)
+            Quaternion moved = Quaternion.Slerp(Quaternion.identity, turned * Quaternion.Inverse(from.Value), k);
+            at = Vector3.Lerp(at, now + moved * (at - from.Key), k);
+            return moved;
+        }
+
+        private void Facing(BodyClips.Limb m, Transform hand, float w, Transform root, Quaternion rides)
         {
             if (w <= 0.001f || (m.Name != "@LeftHand" && m.Name != "@RightHand")) return;
             Vector3 f, n; float fw, nw;
@@ -2072,7 +2151,7 @@ namespace HuginWhispers
             Vector3 along, palm;
             if (!HandFacing(m.Name == "@LeftHand", hand, out along, out palm)) return;
             if (along.sqrMagnitude < 1e-6f || palm.sqrMagnitude < 1e-8f) return;
-            Quaternion turn = Quaternion.LookRotation(root.rotation * f, root.rotation * n) * Quaternion.Inverse(Quaternion.LookRotation(along, palm));
+            Quaternion turn = Quaternion.LookRotation(root.rotation * (rides * f), root.rotation * (rides * n)) * Quaternion.Inverse(Quaternion.LookRotation(along, palm)); // (a target on a bone: the hand turns with it)
             hand.rotation = Quaternion.Slerp(Quaternion.identity, turn, w) * hand.rotation;
         }
 
@@ -2139,7 +2218,8 @@ namespace HuginWhispers
                     PAnimClip c = r.C;
                     if (c == null || r.Weight <= 0.001f || !c.Bones.Contains(name)) continue;
                     float rw = r.Shown * (c.Bones.Contains(weight) ? Mathf.Clamp01(c.Value(weight, r.Moment).x) : 1f);
-                    sum += (c.Value(name, r.Moment) + r.Off(name)) * rw; // (this play's own: Vary)
+                    Vector3 at = c.Value(name, r.Moment);
+                    sum += (at + r.Off(name, c, at)) * rw; // (this play's own: Vary)
                     share += rw;
                 }
                 if (share <= 0.0001f) continue;
@@ -2196,7 +2276,14 @@ namespace HuginWhispers
             if (c.Frozen && r.NeedFreeze)
             {
                 r.NeedFreeze = false;
-                foreach (string name in c.Bones) { Bone fb; if (_bones.TryGetValue(name, out fb) && fb.T != null) r.FrozenPose[name] = fb.T.localRotation; }
+                r.HipsFrozen = false;
+                foreach (string name in c.Bones)
+                {
+                    Bone fb = BoneOf(name); // (found if not yet: a bone no clip had named was left unfrozen)
+                    if (fb == null || fb.T == null) continue;
+                    r.FrozenPose[name] = fb.T.localRotation;
+                    if (name == "Hips") { r.FrozenHips = fb.T.localPosition; r.HipsFrozen = true; }
+                }
             }
             foreach (string bone in c.Ordered())
             {
@@ -2208,6 +2295,7 @@ namespace HuginWhispers
                 if (r.VBend != 0f && (bone == "Spine1" || bone == "Spine2")) v += new Vector3(r.VBend, r.VTurn, 0f) * 0.5f; // (this play's own: Vary)
                 Quaternion frozen;
                 if (c.Frozen && r.FrozenPose.TryGetValue(bone, out frozen)) tr.localRotation = Quaternion.Slerp(tr.localRotation, frozen, w);
+                if (c.Frozen && r.HipsFrozen && bone == "Hips") tr.localPosition = Vector3.Lerp(tr.localPosition, r.FrozenHips, w);
                 int mode = c.ModeOf(bone);
                 Transform next = null;
                 if (mode == BodyClips.Aim)

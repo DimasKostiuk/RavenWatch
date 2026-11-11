@@ -216,7 +216,8 @@ namespace HuginWhispers
         {
             float from;
             if (!_raidFrom.TryGetValue(a, out from)) _raidFrom[a] = from = Time.time;
-            if (!i.Ran && a.Mind.FoughtRan && a.Mind.FoughtAt >= from) { i.Ran = true; Write(a, i); }
+            bool ran, won;
+            if (!i.Ran && NpcMind.FoughtOf(a, out ran, out won) <= Time.time - from && ran) { i.Ran = true; Write(a, i); }
             if (NpcNews.RaidNear(a)) { StandBy(a, o); return; }
             _raidFrom.Remove(a);
             Release(a);

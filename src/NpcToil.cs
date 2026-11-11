@@ -95,7 +95,7 @@ namespace HuginWhispers
             return Newcomer;
         }
 
-        private static void Learned(NpcActor a, string job)
+        internal static void Learned(NpcActor a, string job)
         {
             float now = Mathf.Min(1f, Craft(a, job) + Learn);
             string kept = NpcLocker.Get(a, KCraft) ?? "";
@@ -176,6 +176,14 @@ namespace HuginWhispers
             return c >= 0.99f ? Lang.T("майстер|майстриня") : c >= 0.8f ? Lang.T("вправний|вправна") : Lang.T("ще вчиться");
         }
 
+        // what that word means (its card's tip): the same steps as CraftWord
+        internal static string CraftTip(NpcActor a)
+        {
+            float c = Craft(a, a.Worker != null ? a.Worker.JobId : "");
+            string now = c >= 0.99f ? Lang.T("Знає цю роботу досконало й робить її на повну швидкість.") : c >= 0.8f ? Lang.T("Робить цю роботу майже як майстер, ще трохи навчиться.") : Lang.T("Поки робить цю роботу помітно повільніше за майстра.");
+            return Lang.T("Наскільки добре знає свою роботу. Новачок працює повільніше й вчиться з кожною отриманою платнею, аж доки стане майстром. Нова робота — вчитися знову.") + "\n" + now;
+        }
+
         // the coin box against the pays to come (the board): one round of pays (each worker's own day), who is first, who would go without. Read off each one's locker when asked
         internal sealed class PayLook { public int Sum, Short, Workers; public long NextIn = -1L; public string Next = "", FirstShort = ""; public long ShortIn = -1L; }
         internal static PayLook PayAhead(List<NpcActor> who, int coins)
@@ -209,6 +217,16 @@ namespace HuginWhispers
             if (string.IsNullOrEmpty(food)) return;
             _ate.Add(food);
             if (_ate.Count > 5) _ate.RemoveAt(0);
+        }
+
+        // how many of its last meals were this food (its name as shown) — where it is run only: elsewhere, and after a reload, 0 (NpcTalkGift: what it eats often it likes)
+        internal static int AteOf(NpcActor a, string food)
+        {
+            NpcToil t = a != null && a.Owned ? a.GetComponent<NpcToil>() : null;
+            if (t == null || string.IsNullOrEmpty(food)) return 0;
+            int n = 0;
+            foreach (string f in t._ate) if (string.Equals(f, food, System.StringComparison.OrdinalIgnoreCase)) n++;
+            return n;
         }
 
         // ---------------------------------------------------------------- where it is owned
@@ -251,14 +269,33 @@ namespace HuginWhispers
             if (m == null) return;
             if (_rest != null && m.Of(NpcMind.Layer.Whim) != _rest) _rest = null; // (something else came over it)
             if (_rest != null && _tired < 15f) { m.EndWhim("rest"); _rest = null; return; } // (rested: back to work)
-            if (_rest == null && _tired >= 100f && m.WhimFree("rest") && (m.NowLayer == NpcMind.Layer.Job || (m.NowLayer == NpcMind.Layer.Whim && m.Of(NpcMind.Layer.Job) != null)) && !m.Asleep) // (worn out at its work — not up from its bed to sit)
-            {
-                _rest = NpcPlaces.Best(_a, "fire") ?? NpcPlaces.Best(_a, "seat") ?? NpcPlaces.RestHere(_a);
-                _rest.Kind = NpcMind.Task.Sit; // (worn out: it sits, by the fire too)
-                m.TakeWhim(_rest, 1200f, "rest");
-                NpcPhrases.SayOr(_a, "rest", _a.Form(Lang.T("Ух… втомився|втомилась. Посиджу трохи.")), null, NpcActor.Voice.Unasked);
-                Npcs.Log(_a.Id + ": worn out — sits down to rest");
-            }
+            if (_tired >= 100f && SitToRest(true)) Npcs.Log(_a.Id + ": worn out — sits down to rest");
+        }
+
+        // it sits to rest till it is rested (worn out: its own; let off by a player in its talk: LetRest) — from its work, never up from its bed.
+        // At its ease too when a player told it to (asked: 2026-11-08, «Іди відпочинь» to a tired one off work thanked you and stood on), not on its way to bed
+        private bool SitToRest(bool says, bool asked = false)
+        {
+            NpcMind m = _a.Mind;
+            if (m == null || _rest != null || m.Asleep || !m.WhimFree("rest")) return false;
+            NpcMind.Plan day = m.Of(NpcMind.Layer.Routine);
+            bool atWork = m.NowLayer == NpcMind.Layer.Job || (m.NowLayer == NpcMind.Layer.Whim && m.Of(NpcMind.Layer.Job) != null);
+            if (!atWork && !(asked && m.AtLeisure && (day == null || day.Kind != NpcMind.Task.Sleep))) return false;
+            _rest = NpcPlaces.Best(_a, "fire") ?? NpcPlaces.Best(_a, "seat") ?? NpcPlaces.RestHere(_a);
+            _rest.Kind = NpcMind.Task.Sit; // (it sits, by the fire too)
+            m.TakeWhim(_rest, 1200f, "rest");
+            if (says) NpcPhrases.SayOr(_a, "rest", _a.Form(Lang.T("Ух… втомився|втомилась. Посиджу трохи.")), null, NpcActor.Voice.Unasked);
+            return true;
+        }
+
+        // «Іди відпочинь, я прикрию» in its talk (act «letrest», where it is run): it puts its work down now — or sits down at its ease — if it is tired enough for it to mean something
+        internal static float LetRestFrom = 40f;
+        internal static void LetRest(NpcActor a)
+        {
+            NpcToil t = a != null ? a.GetComponent<NpcToil>() : null;
+            if (t == null || !t._read || t._tired < LetRestFrom) return;
+            if (t.SitToRest(false, true)) Npcs.Log(a.Id + ": let off to rest (" + Mathf.RoundToInt(t._tired) + ")");
+            else Npcs.Log(a.Id + ": told to rest, but something it must do comes first");
         }
 
         // sitting on a seat or by a burning fire: rested soonest
@@ -316,6 +353,19 @@ namespace HuginWhispers
         }
 
         internal static bool Roof(Vector3 p) { float cover; bool under; Cover.GetCoverForPoint(p, out cover, out under); return under; }
+
+        // it means to go (at the bottom a day of the three already, its locker: any game): its words say so, and a word of yours may stay it (NpcTalkSway)
+        internal static float LeaveWarnDays = 1f;
+        internal static bool Leaving(NpcActor a) { return a != null && a.Zdo != null && NpcResident.Is(a) && NpcLocker.Num(a.Zdo, KLow, 0f) > LeaveWarnDays * DayLength; }
+
+        // «stay» (talked round, where it is run): its days at the bottom start again — it stays, and its mood is still what its life makes it
+        internal static void Stay(NpcActor a)
+        {
+            NpcToil t = a != null ? a.GetComponent<NpcToil>() : null;
+            if (t == null || !t._read) return;
+            t._low = 0f; t.Keep();
+            Npcs.Log(a.Id + ": talked round — stays");
+        }
 
         // at the bottom three days on end: it goes (as a starved one: to the ravens' home)
         private void Leave()

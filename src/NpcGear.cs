@@ -31,15 +31,164 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- weapons: who, and in hand or on the back (the user, 2026-11-01)
         // one who may fight can carry weapons (a fighter by its template, a settler by its nature: NpcNature.MayFight); one who only runs
-        // (the old elder: it runs) gets none — armour, clothes and its work's tools only. A guard walks with them in hand,
-        // ready; the others keep them on the back, draw them for a fight (NpcMind) and put them back after
+        // (the old elder: it runs) gets none — armour, clothes and its work's tools only. A guard on duty walks and stands with them in hand,
+        // ready, its pose its own calm one (NpcStance); off duty — a meal, its sleep, its pay, its ease — they go on its back (the user 2026-11-08, «вартовий це
+        // вартовий… але коли йде їсти або спати, ховає зброю за спину»): InHand, put right in Update. The others keep them on the back, draw them for a fight
+        // (NpcMind) and put them back after
         internal static bool CanFight(NpcActor a)
         {
             if (a == null || a.Def == null) return false;
             if (Guard.Is(a)) return true;
             return NpcNature.MayFight(a) && NpcLevers.NoJob(a, "guard") == null; // (read from what it is: its mind holds what this says, NpcNature.SyncFight)
         }
-        internal static bool InHand(NpcActor a) { return Guard.Is(a); }
+        // a guard on duty, or anyone of its kind on its guard (NpcAlert): its post, its rounds, an order, a fight, a scene, a short whim where it stands at its post
+        internal static bool InHand(NpcActor a)
+        {
+            if (!Guard.Is(a)) return false;
+            if (NpcAlert.On(a)) return true;
+            NpcMind.Layer l = NpcMind.LayerNow(a);
+            if (l == NpcMind.Layer.Job || l == NpcMind.Layer.Order || l == NpcMind.Layer.Scene) return true; // (a fight: NpcAlert above)
+            if (l != NpcMind.Layer.Whim || a.Mind == null || a.Mind.SeatedNow || a.Mind.Asleep) return false; // (a meal, a rest, its pay, its ease: off duty)
+            return Guard.Watch(a, a.transform.position) == true; // (a stretch at its post is still its watch)
+        }
+
+        // what its hands hold now, for a pose that suits them (NpcStance.Pose.Hands): the game's own stance for its weapon — the animator's state the game
+        // plays under any clip of ours (measured 2026-11-08: Knud's knives crouch it, hips at 0.75 m, feet wide, a hand up before it) — «free», else the
+        // weapon's animation state in small letters (onehanded, knives, greatsword, atgeir, bow…), «+shield» with a shield in its other hand
+        internal const string HandsFree = "free";
+        internal static string HandsOf(NpcActor a)
+        {
+            Humanoid h = a != null ? a.GetComponent<Character>() as Humanoid : null;
+            ItemDrop.ItemData w = h != null ? h.GetCurrentWeapon() : null;
+            if (h == null || w == null || (h.m_unarmedWeapon != null && w == h.m_unarmedWeapon.m_itemData)) return HandsFree;
+            string kind = w.m_shared.m_animationState.ToString().ToLowerInvariant();
+            foreach (ItemDrop.ItemData it in h.GetInventory().GetEquippedItems()) if (it != w && it.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield) return kind + "+shield";
+            return kind;
+        }
+
+        // a weapon (and shield) put in a body's hands by their prefab names, not from its cells: its hands emptied first ("" — nothing). The one way for
+        // a body not dressed from its cells — the stage's mannequin (raven stage wield), and a scene's when one asks it. Null: done; else why not
+        internal static string Arm(NpcActor a, string weapon, string shield)
+        {
+            Humanoid body = a != null ? a.GetComponent<Character>() as Humanoid : null;
+            if (body == null) return "Нема тіла людини.";
+            body.UnequipAllItems();
+            body.GetInventory().RemoveAll();
+            Back(body, null, null);
+            foreach (string name in new[] { weapon, shield })
+            {
+                if (string.IsNullOrEmpty(name)) continue;
+                GameObject pf = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(name) : null;
+                ItemDrop d = pf != null ? pf.GetComponent<ItemDrop>() : null;
+                if (d == null || !d.m_itemData.IsWeapon() && d.m_itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Shield) return "Нема зброї чи щита «" + name + "» (назва префаба гри: KnifeSkollAndHati, SwordIron, ShieldBanded…).";
+                ItemDrop.ItemData it = d.m_itemData.Clone();
+                it.m_dropPrefab = pf; it.m_stack = 1;
+                if (!body.GetInventory().AddItem(it)) return "«" + name + "» не лягло в торбу.";
+                body.EquipItem(it, false);
+            }
+            return null;
+        }
+
+        // where the weapon in its right hand points, measured (2026-11-08: a pole laid on the shoulder by a guessed wrist went nowhere near it): from its grip to its
+        // farthest point, in the body's frame (x right, y up, z ahead) and in the hand's own (along its fingers · out of its palm · to its side) — what a clip's
+        // @RightHand.f / .n must turn so it points where the pose wants it. Read when asked (the stage's wield, its words)
+        private static readonly System.Reflection.FieldInfo RightInstance = AccessTools.Field(typeof(VisEquipment), "m_rightItemInstance");
+        internal static string HeldAxis(NpcActor a)
+        {
+            Character c = a != null ? a.GetComponent<Character>() : null;
+            VisEquipment ve = c != null ? c.GetComponent<VisEquipment>() : null;
+            GameObject item = ve != null && RightInstance != null ? RightInstance.GetValue(ve) as GameObject : null;
+            Transform hand = BodyClips.SkeletonBone(c, null, "RightHand");
+            BodyAnimator an = BodyAnimator.Of(c);
+            Vector3 along, palm;
+            if (item == null || hand == null || an == null || !an.HandFacing(false, hand, out along, out palm)) return "у правій руці нічого не заміряти";
+            Vector3 tip = hand.position; float far = 0f;
+            foreach (MeshFilter mf in item.GetComponentsInChildren<MeshFilter>()) // heavy: once a command, one weapon's few meshes
+            {
+                if (mf.sharedMesh == null) continue;
+                Bounds b = mf.sharedMesh.bounds;
+                for (int k = 0; k < 8; k++)
+                {
+                    Vector3 p = mf.transform.TransformPoint(b.center + Vector3.Scale(b.extents, new Vector3((k & 1) == 0 ? -1 : 1, (k & 2) == 0 ? -1 : 1, (k & 4) == 0 ? -1 : 1)));
+                    float d = (p - hand.position).sqrMagnitude;
+                    if (d > far) { far = d; tip = p; }
+                }
+            }
+            Vector3 axis = (tip - hand.position).normalized, f = along.normalized, n = palm.normalized, side = Vector3.Cross(f, n).normalized;
+            Vector3 body = c.transform.InverseTransformDirection(axis), fb = c.transform.InverseTransformDirection(f), nb = c.transform.InverseTransformDirection(n);
+            System.Globalization.CultureInfo ci = System.Globalization.CultureInfo.InvariantCulture;
+            System.Func<Vector3, string> V = v => v.x.ToString("0.00", ci) + " " + v.y.ToString("0.00", ci) + " " + v.z.ToString("0.00", ci);
+            return "права: вістря від кисті " + Mathf.Sqrt(far).ToString("0.00", ci) + " м, у тілі " + V(body) + "; у кисті (пальці · долоня · бік) " + V(new Vector3(Vector3.Dot(axis, f), Vector3.Dot(axis, n), Vector3.Dot(axis, side))) + "; кисть зараз .f " + V(fb) + " .n " + V(nb);
+        }
+
+        // the game's stance for a weapon is the animator's «statei»/«statef», set by the game only as a weapon is taken up (measured 2026-11-08: a value set
+        // stays). For some the game stands ready to strike even at its ease — knives crouched, a crossbow raised: at its ease (not on its guard: NpcAlert) a person
+        // holding one stands as with a sword instead, and walks so; on its guard its own comes back and the game's animator blends into it. Every game draws
+        // its own people: run on each (NpcModules, Everywhere), a look each StanceEvery s, the animator written only as it changes. A weapon carried on the
+        // shoulder by its own stance (a greatsword, a sledge) and the atgeir keep theirs: their calm poses ride on it (NpcStance)
+        internal static readonly HashSet<ItemDrop.ItemData.AnimationState> CalmAsSword = new HashSet<ItemDrop.ItemData.AnimationState> {
+            ItemDrop.ItemData.AnimationState.Knives, ItemDrop.ItemData.AnimationState.DualAxes, ItemDrop.ItemData.AnimationState.Crossbow,
+            ItemDrop.ItemData.AnimationState.Staves, ItemDrop.ItemData.AnimationState.TwoHandedAxe, ItemDrop.ItemData.AnimationState.Atgeir };
+
+        // a weapon carried its own way at its ease, standing and walking alike (the user 2026-11-08: the atgeir on the shoulder in a walk too): a clip of the
+        // arms only, «carry yes», over the calm stance (Stance). Where it is run, a look each CarryEvery s: at its ease with such a weapon — played (its term
+        // renewed, never started over); on its guard, the weapon put away, another one in hand — let go. Another clip on its body (a gesture, a scene) is not cut
+        internal static readonly Dictionary<ItemDrop.ItemData.AnimationState, string> Carries = new Dictionary<ItemDrop.ItemData.AnimationState, string> {
+            { ItemDrop.ItemData.AnimationState.Atgeir, "guard_atgeir_carry" } };
+        internal static float CarryEvery = 0.25f, CarryTerm = 30f;
+        private float _carryNext, _carryRenew;
+        internal static void Carry(NpcActor a)
+        {
+            NpcGear g = a != null ? a.Gear : null;
+            if (g == null || a.Body == null || Time.time < g._carryNext) return;
+            g._carryNext = Time.time + CarryEvery;
+            Humanoid h = a.GetComponent<Character>() as Humanoid;
+            ItemDrop.ItemData w = h != null ? h.GetCurrentWeapon() : null;
+            string want = null;
+            if (w != null && (h.m_unarmedWeapon == null || w != h.m_unarmedWeapon.m_itemData) && !NpcAlert.On(a)) Carries.TryGetValue(w.m_shared.m_animationState, out want);
+            BodyAnimator an = BodyAnimator.Of(a.GetComponent<Character>());
+            string now = an != null ? an.ClipIn(NpcBody.ClipSlot) : null;
+            bool ours = now != null && Carries.ContainsValue(now);
+            if (want == null) { if (ours) a.Body.Clip(""); return; }
+            if (now != null && !ours && a.Body.ClipBusy) return; // (a gesture, a place's clip, a scene: theirs first — carried again after)
+            if (now == want && Time.time < g._carryRenew) return; // (its term renewed only near its end: each renewal is a word in its ZDO)
+            if (a.Body.Clip(want, CarryTerm)) g._carryRenew = Time.time + CarryTerm - 10f;
+        }
+        // the game blends nothing as the value changes (the user 2026-11-08: «анімація порвалась з бойової на звичайну»): the body's pose is held first
+        // (stance_settle: a frozen base of every bone, on its own layer of this game — no word sent: each game changes the stance itself) and the stance is
+        // changed once it holds in full, under it; the held pose lets go over its fade — from the old stance into the new one
+        internal static float StanceEvery = 0.5f;
+        internal const string Settle = "stance_settle";
+        private float _stanceNext;
+        private int _stanceWant = -1; private float _stanceSwap;
+        private Animator _anim;
+        internal static void Stance(NpcActor a)
+        {
+            NpcGear g = a != null ? a.Gear : null;
+            if (g == null) return;
+            if (g._stanceWant >= 0 && Time.time >= g._stanceSwap) // (its pose held in full now: the stance changed under it)
+            {
+                if (g._anim != null) { g._anim.SetInteger(StateI, g._stanceWant); g._anim.SetFloat(StateF, g._stanceWant); }
+                g._stanceWant = -1;
+                return;
+            }
+            if (g._stanceWant >= 0 || Time.time < g._stanceNext) return;
+            g._stanceNext = Time.time + StanceEvery;
+            Humanoid h = a.GetComponent<Character>() as Humanoid;
+            ItemDrop.ItemData w = h != null ? h.GetCurrentWeapon() : null;
+            if (w == null || (h.m_unarmedWeapon != null && w == h.m_unarmedWeapon.m_itemData)) return;
+            if (g._anim == null) g._anim = a.GetComponentInChildren<Animator>();
+            if (g._anim == null) return;
+            ItemDrop.ItemData.AnimationState real = w.m_shared.m_animationState;
+            int want = (int)(CalmAsSword.Contains(real) && !NpcAlert.On(a) ? ItemDrop.ItemData.AnimationState.OneHanded : real);
+            if (g._anim.GetInteger(StateI) == want) return;
+            if (BodyClips.Find(Settle) == null || !NpcClock.Seen(a)) { g._anim.SetInteger(StateI, want); g._anim.SetFloat(StateF, want); return; } // (nobody sees it: no easing to pay for)
+            BodyClips.Play(h, BodyClips.SettleSlot, Settle, 0.01f, 1f); // (its pose now held; the stance changes next frame)
+            g._stanceWant = want; g._stanceSwap = Time.time + 0.06f; // (the hold in full first: its fade in is 0.05 s)
+        }
+        private static readonly int StateI = Animator.StringToHash("statei"), StateF = Animator.StringToHash("statef");
+
+        private bool Holding(Humanoid me) { return (Near != null && me.IsItemEquiped(Near)) || (Far != null && me.IsItemEquiped(Far)); }
 
         internal enum Role { None, Hand, Tool, Full }
         internal static Role RoleOf(NpcActor a)
@@ -125,6 +274,7 @@ namespace HuginWhispers
                 ItemDrop.ItemData main = g.Near ?? g.Far; // (a bow only: the bow)
                 if (main != null && body.GetInventory().ContainsItem(main) && !body.IsItemEquiped(main)) body.EquipItem(main, false);
                 if (g.Shield != null && body.GetInventory().ContainsItem(g.Shield) && (g.Near == null || !g.Near.IsTwoHanded()) && !body.IsItemEquiped(g.Shield)) body.EquipItem(g.Shield, false);
+                Back(body, null, null); // (back on duty from its back: off its back as Draw does — else in hand and on its back at once)
                 return;
             }
             if (body.InAttack()) { g._sheathe = true; return; } // (the killing swing still going: put away once it is done)
@@ -207,7 +357,8 @@ namespace HuginWhispers
             _next = Time.time + 1f;
             NpcLocker.Check(_a); // (its locker gone for good: let go of — NpcLocker)
             Humanoid me = GetComponent<Humanoid>();
-            if (_sheathe && me != null && !me.InAttack() && (_a.Mind == null || _a.Mind.NowLayer != NpcMind.Layer.Fight)) { _sheathe = false; if (!InHand(_a)) Sheathe(me, true); }
+            if (_sheathe && me != null && !me.InAttack() && !NpcAlert.On(_a)) { _sheathe = false; if (!InHand(_a)) Sheathe(me, true); }
+            if (me != null && Guard.Is(_a) && !me.InAttack() && !NpcAlert.On(_a) && (Near != null || Far != null) && Holding(me) != InHand(_a)) AtEase(_a, me); // (a guard on duty or off it: its weapons out or on its back — the one place; on its guard its fight's own is Draw)
             if (CanFight(_a) != _fought || RoleOf(_a) != _role) { _fought = CanFight(_a); _role = RoleOf(_a); _a.Redress(); } // (a lever, its job: may fight now, or not; on guard no more: dressed again, what has no place now given back)
             NpcLocker.Keep(_a); // (its locker after it)
             if (_changed)
@@ -325,22 +476,6 @@ namespace HuginWhispers
                 Now = a => { NpcGear g = a.Gear; return g != null && g.Cells != null && g.Cells.NrOfItems() > 0; },
                 Do = (a, p) => { NpcGear g = a.Gear; if (g == null) return null; if (RoleOf(a) == Role.Full) g.Open(p); else NpcTalk.OpenHand(a, p); return null; } }; // (it stands still while its cells are open: NpcMind)
         }
-    }
-
-    // SeneaL UI shows a chest's cells under the hover text of anything with a Container in it — a person is no chest:
-    // its cells are opened from its menu (Спорядження). Without SeneaL UI this patch is skipped.
-    [HarmonyPatch]
-    internal static class NpcGearNoSenealPreview
-    {
-        private static System.Reflection.MethodBase _target;
-        private static bool Prepare()
-        {
-            System.Type t = AccessTools.TypeByName("SeneaLUI.Hud.HoverView");
-            _target = t != null ? AccessTools.Method(t, "Previewable", new System.Type[] { typeof(Container) }) : null;
-            return _target != null;
-        }
-        private static System.Reflection.MethodBase TargetMethod() { return _target; }
-        private static void Postfix(Container __0, ref bool __result) { if (__result && __0 != null && NpcGear.Boxes.ContainsKey(__0)) __result = false; }
     }
 
     // a person's cells kept in its locker, not in its own ZDO (the game's chest: Save on a change, Load once a second)

@@ -370,6 +370,10 @@ namespace HuginWhispers
                 string want = item != null && Trust.Away(item) ? (munin ? Lang.T("Мунін") : Lang.T("Хугін")) + " " + Trust.AwayWord(munin, item) : ShoulderLine(munin);
                 if (item != null && !Trust.Away(item) && Trust.Active(item) && !Trust.Stranger(item, p) && Satiety.Zone(item) != Satiety.Fed)
                     want += " <color=" + Satiety.ZoneHexOf(item) + ">(" + Satiety.ZoneWord(item) + ")</color>";
+                string why, mood = Quirks.Mood(p, munin, out why); // what its quirk or habit does to it now: why it may refuse
+                if (mood != null) want += " <color=#FF8A65>· " + mood + "</color>";
+                RavenPassive rp = se as RavenPassive;
+                if (rp != null) rp.MoodWhy = why;
                 if (se.m_name != want) se.m_name = want;
             }
         }
@@ -393,7 +397,7 @@ namespace HuginWhispers
 
         internal static void Sync(Player p)
         {
-            // the bag and the shoulders: with SeneaL UI's shoulder cells a seated raven is not in the bag at all
+            // the bag and the shoulders: with the shoulders a seated raven is not in the bag at all
             _all.Clear();
             _all.AddRange(p.GetInventory().GetAllItems());
             foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) if (!_all.Contains(item)) _all.Add(item);
@@ -532,7 +536,7 @@ namespace HuginWhispers
             {
                 if (!a.Passive || a.Munin != munin) continue;
                 if ((a.Id == "lastchance" && !LastChance.Enabled) || (a.Id == "bloodfury" && !BloodFury.Enabled) || ((a.Id == "anger" || a.Id == "lightstep") && !WeakPassive.Enabled) || (Loyal.Is(a) && !Loyal.Enabled) || (BloodRevenge.Is(a) && !BloodRevenge.Enabled) || (Omen.Is(a) && !Omen.Enabled)) continue;
-                // a line each, no "name: value": tooltip mods (SeneaL UI) split those into separate blocks
+                // a line each, no "name: value": tooltip mods split those into separate blocks
                 text += Lang.F("\n• <color=orange><b>{0}</b></color> — {1} <color=#9a9a9a>{2} · {3}</color>", a.Plain, a.Short.TrimEnd('.'),
                     (RavenAbilities.Free(a) ? Lang.T("без сили") : Lang.F("{0} сили{1}, раз на {2}", Mathf.RoundToInt(a.Cost()), Satiety.CostNote(munin), RavenAbilities.Span(a.Cooldown()))),
                     RavenAbilities.PassiveReady(a));
@@ -551,11 +555,13 @@ namespace HuginWhispers
         public string Text = "";
         public bool Munin;
         public float AwayUntil; // while the raven is away: when it comes back
+        public string MoodWhy;  // what its quirk or habit does to it now (Perks.ShoulderName, Quirks.Mood), null: nothing
         public override string GetTooltipString()
         {
-            return Lang.F("{0}\nСила: {1}/{2}{3}{4}", Text, Power.Current(Munin), Mathf.RoundToInt(Power.MaxWorn(Munin)), Perks.Fullness(Trust.Worn(Munin)), Perks.Passives(Munin, true));
+            return Lang.F("{0}\nСила: {1}/{2}{3}{4}", Text, Power.Current(Munin), Mathf.RoundToInt(Power.MaxWorn(Munin)), Perks.Fullness(Trust.Worn(Munin)), Perks.Passives(Munin, true))
+                + (string.IsNullOrEmpty(MoodWhy) ? "" : "\n\n<color=#FF8A65>" + MoodWhy + "</color>");
         }
-        // the number next to the icon (SeneaL UI shows it too): how much strength is left
+        // the number next to the icon (a UI mod shows it too): how much strength is left
         // in the raven's own colour, bold, to stand out among the other effects
         // the game asks for it every frame: the text is made again only when the number changed
         private int _shown = int.MinValue;
@@ -611,7 +617,7 @@ namespace HuginWhispers
 namespace HuginWhispers
 {
     // The game's own effect list writes the effect's name and the number under its icon with tags off: "(голодний)" and
-    // the strength showed their tags as text. They are turned on for both (SeneaL UI has its own list, where they work).
+    // the strength showed their tags as text. They are turned on for both (a UI mod has its own list, where they work).
     [HarmonyLib.HarmonyPatch(typeof(Hud), "UpdateStatusEffects")]
     internal static class RavenEffectNameColourPatch
     {

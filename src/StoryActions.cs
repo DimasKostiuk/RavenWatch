@@ -60,8 +60,11 @@ namespace HuginWhispers
             { "msg", new Kind { Min = 1, Usage = "msg <текст>", Do = (p, q, w, rest) => { if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, Lang.T(rest)); return null; } } },
             { "raise", new Kind { Min = 1, Usage = "raise <подія> [arg]", Do = (p, q, w, rest) => { StoryBus.Raise(w[1], w.Length > 2 ? w[2] : "", 0); return null; } } },
             { "scene", new Kind { Min = 1, Usage = "scene <id>", Do = (p, q, w, rest) => { StoryScenes.TryPlay(w[1]); return null; } } },
-            { "npc", new Kind { Min = 2, VerbAt = 2, Usage = "npc <хто> follow|stay|free|hold <місце> …|live <набір>", Verbs = new Dictionary<string, Kind>
+            { "npc", new Kind { Min = 2, VerbAt = 2, Usage = "npc <хто> follow|stay|free|hold <місце> …|live <набір>|prop fetch|carry", Verbs = new Dictionary<string, Kind>
                 {
+                    { "prop", new Kind { Min = 1, Usage = "npc <хто> prop fetch|carry   (своя річ: fetch — сюжет змусив поставити, може йти по неї, коли вільна; carry — одразу знову на руці, де б не лежала: «test:» сцени, що її ставить)",
+                        Check = w => w.Length < 4 || (w[3] != "fetch" && w[3] != "carry") ? "npc <хто> prop fetch|carry" : null,
+                        Do = (p, q, w, rest) => { if (w[3] == "carry") StoryProps.Carry(w[1]); else StoryProps.Fetch(w[1]); return null; } } }, // (the world keeps it, as «hold»: the person need not be near)
                     { "hold", new Kind { Min = 1, Usage = StoryHold.Usage,
                         Check = w => StoryHold.Why(string.Join(" ", w, 3, w.Length - 3)),
                         Do = (p, q, w, rest) => { string bad = StoryHold.Set(w[1], string.Join(" ", w, 3, w.Length - 3)); if (bad != null) StoryQuests.Note(bad); return null; } } }, // (the world keeps it: the person need not be near)

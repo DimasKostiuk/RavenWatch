@@ -127,7 +127,7 @@ namespace HuginWhispers
             _nextSeek = Time.time + 5f; // (a look every few seconds: one string asked of the world's keys)
             if (!ZoneSystem.instance.LocationsGenerated) return; // (a new world: its places first, then ours away from them)
             if (Shape()) Jobs();
-            if (Shape() && Built) { KeepHeight(); return; }
+            if (Shape() && Built) { KeepHeight(); WildOnce(); return; }
             if (!Shape()) return;
             Vector3 at; Quaternion rot;
             if (Where(out at, out rot)) // (picked: it waits till someone is heading its way)
@@ -464,6 +464,19 @@ namespace HuginWhispers
             Log("its origin " + origin.ToString("0.00") + " from its own pieces (built before its key held it): its shots and spots were read " + (was.y - origin).ToString("0.00") + " m off till now");
         }
 
+        // a place built before Wild: its clearing let pass the game's plain bushes and every bush another mod makes a piece (PlantEverything;
+        // the user 2026-11-08: bushes inside the Hall and the ghost's house). The same clearing once more, once a world, from the server's
+        // own list of the world's objects: no body loaded, no player near needed
+        private void WildOnce()
+        {
+            if (ZoneSystem.instance.GetGlobalKey(KeyWild)) return;
+            Vector3 at; Quaternion rot;
+            if (!Where(out at, out rot)) return;
+            int n = BlueprintGround.Clear(Room, at, rot); // heavy: once a world a place (the objects of its few zones)
+            ZoneSystem.instance.SetGlobalKey(KeyWild);
+            Log("its ground cleared of the wild by the new rule: " + n + " taken away");
+        }
+
         private IEnumerator BuildAhead(Vector3 at, Quaternion rot)
         {
             ZNet world = ZNet.instance;
@@ -501,6 +514,7 @@ namespace HuginWhispers
                 Log("its height " + (fit.Ground - Sink).ToString("0.00") + " (the land at its middle " + land.ToString("0.00") + ")");
                 string ground = BlueprintGround.Level(Room, at, rot, fit.Ground, !Grass, Floors(), BareRound); // (all its ground flat, its room too; earth only under its floors, or within BareRound m of its middle: grass round it)
                 BlueprintGround.Forget(); // (the world's own building: no undo of its ground)
+                ZoneSystem.instance.SetGlobalKey(KeyWild); // (cleared by Wild's answer: WildOnce has nothing to do)
                 Log("building at " + SpotId(at) + ": " + ground);
                 bool done = false;
                 Blueprint.Spawn(_parts, _marks, at, rot, Id, IsLandmark, (made, missing) =>

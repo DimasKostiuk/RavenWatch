@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace HuginWhispers
@@ -12,12 +13,16 @@ namespace HuginWhispers
     // plays a scene and, every frame, measures every body in it — the player and each person of its cast — against the mistakes the
     // eye catches, and goes on SceneTail s after its end (the body let go, the head its own again: where a seam shows). It keeps two
     // kinds of pictures:
+    //   <name>_step_<k>.png        the frame each step begins on, big (StepFrame px, four a sheet), the time and the step's words in the picture:
+    //                              the key frames of the scene (review 2 2026-11-10: 24 frames of 480 px and nobody could tell which step was which)
     //   <name>_<n>.png             the screen, the scene's own camera, as he sees it: every 1/fps s and as each step begins, 24 frames a
-    //                              sheet; a frame no different from the last one kept is left out (FrameSame)
+    //                              sheet, each labelled; a frame no different from the last one kept is left out (FrameSame)
     //   <name>_<who>_<view>.png    each body close (front, side), as each step begins and when it jolts (a limb flies, a bone jerks: the
     //                              moment to look at): its pose can be judged in them, in a wide shot it cannot
     // A clip of ours played on a body in the scene brings its «want» lines (the user's words as measures): judged there, on the living body.
-    // Out: studio/out/<name>.txt, a VERDICT on top, then what happened at which step, each body's pose in words as each step begins.
+    // Out: studio/out/<name>.txt, a VERDICT on top, then the steps: a row a step with when it began, how long it took and what came of it
+    // (StoryScenes.Outcomes: «ran 14 m in 4.1 s, stopped 0.3 m off»; the VERDICT's lines that fall in its time under it — review 2 2026-11-10, В9), then
+    // each body's numbers, each body's pose in words as each step begins.
     //   scene <name> <scene id> [fps=2] [from=0]
     // What it looks for (each a mistake already made):
     //   pose         BodyCheck: the one set of rules, the stage's own (palm, fist, hands, elbows, knees, shoulder, neck, feet sliding,
@@ -190,12 +195,13 @@ namespace HuginWhispers
             return kept;
         }
 
-        private static void ShootBody(Body b, Player p, StringBuilder rows)
+        private static void ShootBody(Body b, Player p, StringBuilder rows, string step, float t)
         {
             if (b.C == null || b.Cams == null) return;
             if (b.Shot >= BodyFrames) { b.Dropped++; return; }
             PlaceBody(b.Cams, b.C); // (one placing for the player and a person: the same views)
             Shoot(b.Cams, b.Sheets, b.Shot, b.Cols, b.Rows);
+            for (int v = 0; v < b.Sheets.Length; v++) Label(b.Sheets[v], b.Shot, b.Cols, b.Rows, BodyFrame, t.ToString("0.0", CultureInfo.InvariantCulture) + " s  " + b.Cams.Views[v], step); // (in the picture: when, which step — review 2 2026-11-10)
             b.Shot++;
             rows.Append("    ").Append(b.Who).Append(" close ").Append(b.Shot).Append(": ").Append(b.Pose != null ? b.Pose.Words() : "").Append('\n');
             BodyAnimator an = b.C.GetComponent<BodyAnimator>(); // (a shot's, not a frame's: at most BodyFrames a body)
@@ -347,9 +353,11 @@ namespace HuginWhispers
             Dictionary<Character, Body> bodies = new Dictionary<Character, Body>();
             StringBuilder rows = new StringBuilder();
             if (onStage != null) rows.Append("0.0 s  (on its stage: ").Append(onStage).Append(")\n");
-            List<Texture2D> frames = new List<Texture2D>();
+            List<Texture2D> frames = new List<Texture2D>(), stepFrames = new List<Texture2D>();
+            List<StepRow> steps = new List<StepRow>(); // (each step as it began: the table on top of the report)
             List<float> lastKept = null;
-            int sheet = 0;
+            int sheet = 0, stepSheet = 0;
+            bool stepShotDue = false;
             float t0 = Time.time, nextShot = 0f, nextClose = -1f, keptAt = -99f, tailUntil = -1f, every = 1f / Mathf.Clamp(fps, 0.5f, 8f), most = 300f;
             string lastStep = "";
             bool ended = false;
@@ -360,7 +368,7 @@ namespace HuginWhispers
                     yield return new WaitForEndOfFrame();
                     float t = Time.time - t0;
                     bool playing = StoryScenes.Playing == s.Id;
-                    if (!playing && tailUntil < 0f) { tailUntil = Time.time + SceneTail; rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  (its end: measured on for ").Append(SceneTail.ToString("0.#", CultureInfo.InvariantCulture)).Append(" s)\n"); nextClose = t + StepShotAfter; nextShot = t; }
+                    if (!playing && tailUntil < 0f) { if (steps.Count > 0) steps[steps.Count - 1].T1 = t; tailUntil = Time.time + SceneTail; rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  (its end: measured on for ").Append(SceneTail.ToString("0.#", CultureInfo.InvariantCulture)).Append(" s)\n"); nextClose = t + StepShotAfter; nextShot = t; }
                     else if (playing && Time.time - t0 > most) break;
                     string step = !playing ? "after its end" : StoryScenes.At >= 0 && StoryScenes.At < s.Steps.Count ? (StoryScenes.At + 1) + ". " + s.Steps[StoryScenes.At].Line : "-";
                     if (StoryScreen.Black >= 0.99f) { black += Time.unscaledDeltaTime; if (black > blackMost) { blackMost = black; blackStep = step; } } else black = 0f;
@@ -413,7 +421,7 @@ namespace HuginWhispers
                     bool stepBegun = step != lastStep;
                     if (stepBegun) stepAt = t;
                     else if (playing && StoryCamera.Active && !StoryScenes.Held && t - stepAt > stepLong) { stepLong = t - stepAt; longStep = step; }
-                    if (stepBegun && playing) { rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  ").Append(step).Append('\n'); nextShot = Mathf.Min(nextShot, t + StepShotAfter); nextClose = t + StepShotAfter; } // (a frame as each step begins, a moment in: what it does shows)
+                    if (stepBegun && playing) { if (steps.Count > 0) steps[steps.Count - 1].T1 = t; steps.Add(new StepRow { Index = StoryScenes.At, Line = step, T0 = t }); rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  ").Append(step).Append('\n'); nextShot = Mathf.Min(nextShot, t + StepShotAfter); nextClose = t + StepShotAfter; stepShotDue = true; } // (a frame as each step begins, a moment in: what it does shows)
                     lastStep = step;
                     if (!bodies.ContainsKey(p)) { Body me = BodyOf("player", p); if (me != null) bodies[p] = me; }
                     foreach (KeyValuePair<string, NpcActor> c in StoryScenes.CastNow)
@@ -438,13 +446,24 @@ namespace HuginWhispers
                             if (clip != null) foreach (float at in ClipMoments(clip)) if (at > moment) b.ShotAt.Add(t - moment + at); // (found mid-way: only the moments still ahead, never a burst of the past ones)
                         }
                         b.MomentWas = moment;
-                        for (int i = b.ShotAt.Count - 1; i >= 0; i--) if (t >= b.ShotAt[i]) { b.ShotAt.RemoveAt(i); rows.Append("    ").Append(b.Who).Append(" at a moment of its clip, ").Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s:\n"); ShootBody(b, p, rows); }
-                        if (b.Pose != null && b.Pose.Jolt && t - b.JoltShotAt > JoltShotGap && b.Shot < BodyFrames) { b.JoltShotAt = t; rows.Append("    ").Append(b.Who).Append(" jolted at ").Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s:\n"); ShootBody(b, p, rows); }
+                        for (int i = b.ShotAt.Count - 1; i >= 0; i--) if (t >= b.ShotAt[i]) { b.ShotAt.RemoveAt(i); rows.Append("    ").Append(b.Who).Append(" at a moment of its clip, ").Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s:\n"); ShootBody(b, p, rows, step, t); }
+                        if (b.Pose != null && b.Pose.Jolt && t - b.JoltShotAt > JoltShotGap && b.Shot < BodyFrames) { b.JoltShotAt = t; rows.Append("    ").Append(b.Who).Append(" jolted at ").Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s:\n"); ShootBody(b, p, rows, step, t); }
                     }
                     if (t >= nextShot)
                     {
                         nextShot = t + every;
                         Texture2D shot = ScreenCapture.CaptureScreenshotAsTexture();
+                        string when = t.ToString("0.0", CultureInfo.InvariantCulture) + " s  " + step;
+                        if (stepShotDue) // (the frame a step begins on, big: 960 px, four a sheet — the key frames of a scene, not 24 small ones; review 2 2026-11-10)
+                        {
+                            stepShotDue = false;
+                            Texture2D big = Shrink(shot, StepFrame);
+                            if (big == shot) { big = new Texture2D(shot.width, shot.height, TextureFormat.RGB24, false); big.SetPixels(shot.GetPixels()); }
+                            Text(big, 4, big.height - 8 * TextScale - 4, when.Length > StepFrame / (6 * TextScale) - 1 ? when.Substring(0, StepFrame / (6 * TextScale) - 1) : when, new Color32(255, 230, 120, 255));
+                            big.Apply(false);
+                            stepFrames.Add(big);
+                            if (stepFrames.Count == 4) { SaveSheet(name + "_step_" + stepSheet, stepFrames, 2); stepSheet++; }
+                        }
                         Texture2D small = Shrink(shot, 480);
                         if (small != shot) Object.Destroy(shot);
                         List<float> look = FrameLook(small);
@@ -454,6 +473,8 @@ namespace HuginWhispers
                         {
                             lastKept = look;
                             keptAt = t;
+                            Text(small, 4, small.height - 8 * TextScale - 4, when.Length > 39 ? when.Substring(0, 39) : when, new Color32(255, 230, 120, 255)); // (which step, in the picture)
+                            small.Apply(false);
                             frames.Add(small);
                             rows.Append("    frame ").Append(sheet).Append('.').Append(frames.Count).Append(" at ").Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s\n");
                             if (frames.Count == 24) { SaveSheet(name + "_" + sheet, frames); sheet++; }
@@ -467,7 +488,7 @@ namespace HuginWhispers
                             BodyAnimator ba = BodyAnimator.Of(b.C);
                             if ((ba == null || !ba.CodeBusy) && t - b.IdleShotAt < IdleShotGap) continue; // (a body none of ours holds: a frame now and then, the rest kept for the clips)
                             if (ba == null || !ba.CodeBusy) b.IdleShotAt = t;
-                            ShootBody(b, p, rows);
+                            ShootBody(b, p, rows, step, t);
                         }
                     }
                 }
@@ -479,13 +500,14 @@ namespace HuginWhispers
                 try
                 {
                     if (frames.Count > 0) { SaveSheet(name + "_" + sheet, frames); sheet++; }
+                    if (stepFrames.Count > 0) { SaveSheet(name + "_step_" + stepSheet, stepFrames, 2); stepSheet++; }
                     foreach (Body b in bodies.Values)
                     {
                         if (b.Shot > 0) HeroSave(name + "_" + b.Who, b.Cams, b.Sheets);
                         HeroFree(b.Sheets, b.Cams);
                     }
                 }
-                finally { SceneReport(name, id, s, from, far, t0, sheet, ended, lastStep, heldFor, blackMost, blackStep, helds, hudOn, camIn, most, bodies, rows, birdOn, birdOff, stepLong, longStep, keys, prepared, stopsWas, latesWas, touched); } // (last: who reads it finds the sheets it names)
+                finally { SceneReport(name, id, s, from, far, t0, sheet, stepSheet, ended, lastStep, heldFor, blackMost, blackStep, helds, hudOn, camIn, most, bodies, rows, birdOn, birdOff, stepLong, longStep, keys, prepared, stopsWas, latesWas, touched, steps); } // (last: who reads it finds the sheets it names)
             }
         }
 
@@ -526,10 +548,11 @@ namespace HuginWhispers
 
         internal static float IdleShotGap = 5f; // s between the step frames of a body none of our clips holds (24 frames went on a walk and arms at rest, 3 were left for the book: echo 2026-11-07)
         internal static float TouchReach = 0.9f, TouchStand = 1.0f; // (of the game's own reach for E: within it as a player stands; m from the piece the check walks him to)
-        private static void SceneReport(string name, string id, StoryScenes.SceneDef s, int from, float far, float t0, int sheets, bool ended, string lastStep, float heldFor, float blackMost, string blackStep, int helds, float hudOn, float camIn, float most, Dictionary<Character, Body> bodies, StringBuilder rows, float birdOn, float birdOff, float stepLong, string longStep, float keys, string prepared, int stopsWas, int latesWas, List<string> touched)
+        internal const int StepFrame = 960; // (px wide: the frame each step begins on, four a sheet, two a row)
+        private static void SceneReport(string name, string id, StoryScenes.SceneDef s, int from, float far, float t0, int sheets, int stepSheets, bool ended, string lastStep, float heldFor, float blackMost, string blackStep, int helds, float hudOn, float camIn, float most, Dictionary<Character, Body> bodies, StringBuilder rows, float birdOn, float birdOff, float stepLong, string longStep, float keys, string prepared, int stopsWas, int latesWas, List<string> touched, List<StepRow> steps)
         {
             StringBuilder o = new StringBuilder();
-            o.Append("scene ").Append(id).Append(" from step ").Append(from + 1).Append(far >= 0f ? ", begun " + far.ToString("0.0", CultureInfo.InvariantCulture) + " m from «" + s.Place + "»" : "").Append(", ").Append((Time.time - t0).ToString("0.0", CultureInfo.InvariantCulture)).Append(" s, ").Append(sheets).Append(" screen sheet(s) ").Append(name).Append("_0…, close: ").Append(name).Append("_<who>_front|side|holdr|holdl (files: below)\n");
+            o.Append("scene ").Append(id).Append(" from step ").Append(from + 1).Append(far >= 0f ? ", begun " + far.ToString("0.0", CultureInfo.InvariantCulture) + " m from «" + s.Place + "»" : "").Append(", ").Append((Time.time - t0).ToString("0.0", CultureInfo.InvariantCulture)).Append(" s, ").Append(stepSheets).Append(" step sheet(s) ").Append(name).Append("_step_0… (the frame each step begins on, big, labelled), ").Append(sheets).Append(" screen sheet(s) ").Append(name).Append("_0…, close: ").Append(name).Append("_<who>_front|side|holdr|holdl (files: below)\n");
             List<string> bad = new List<string>();
             if (!ended) bad.Add("THE CHECK ITSELF BROKE at «" + lastStep + "» (studio/out/log.txt): this report stops there");
             if (prepared != null) bad.Add("its world not set up as written: " + prepared);
@@ -562,12 +585,21 @@ namespace HuginWhispers
             }
             StringBuilder asked = new StringBuilder();
             foreach (Body b in bodies.Values) { string w = b.Pose != null ? b.Pose.WantsSaid(bad) : ""; if (w.Length > 0) asked.Append(b.Who).Append(", ").Append(w); }
-            List<string> wrote = new List<string>(); // (the files of this run, by name: take.js shows these, never an older one left with a like name)
+            List<string> wrote = new List<string>(); // (the files of this run, by name: anim.js shows these, never an older one left with a like name)
+            for (int i = 0; i < stepSheets; i++) wrote.Add(name + "_step_" + i + ".png");
             for (int i = 0; i < sheets; i++) wrote.Add(name + "_" + i + ".png");
             foreach (Body b in bodies.Values) if (b.Shot > 0 && b.Cams != null) foreach (string v in b.Cams.Views) wrote.Add(name + "_" + b.Who + "_" + v + ".png");
             o.Append("files: ").Append(string.Join(" ", wrote.ToArray())).Append('\n');
             o.Append("VERDICT:").Append(bad.Count == 0 ? " OK (no mistake made before; the frames still judge it)\n" : "\n");
             foreach (string l in bad) o.Append("  - ").Append(l).Append('\n');
+            // the steps: when each began, how long it took, what came of it (the director's own word as it ended), the VERDICT's lines that fall in its time
+            o.Append("steps (began → ended, what came of it; the VERDICT's lines of that time under each):\n");
+            foreach (StepRow r in steps)
+            {
+                string came; StoryScenes.Outcomes.TryGetValue(r.Index, out came);
+                o.Append("  ").Append(r.T0.ToString("0.0", CultureInfo.InvariantCulture)).Append(" → ").Append(r.T1 >= 0f ? r.T1.ToString("0.0", CultureInfo.InvariantCulture) : "end").Append(" s  ").Append(r.Line).Append(came != null ? "  — " + came : "  — (not ended in the run)").Append('\n');
+                foreach (string l in bad) { float when = AtOf(l); if (when >= r.T0 && (r.T1 < 0f || when < r.T1)) o.Append("      - ").Append(l).Append('\n'); }
+            }
             o.Append(asked);
             foreach (Body b in bodies.Values)
             {
@@ -579,9 +611,14 @@ namespace HuginWhispers
             File.WriteAllText(Path.Combine(Out, Clean(name) + ".txt"), o.ToString(), new UTF8Encoding(false));
         }
 
-        private static void SaveSheet(string name, List<Texture2D> frames)
+        private sealed class StepRow { public int Index; public string Line; public float T0, T1 = -1f; } // (a step of the run: its index in the scene, its words, when it began and ended)
+        private static readonly Regex AtRe = new Regex(@"\bat (\d+(?:\.\d+)?) s\b", RegexOptions.Compiled);
+        // the moment a VERDICT line names («… at 12.3 s …»), below zero none
+        private static float AtOf(string line) { Match m = AtRe.Match(line); float v; return m.Success && float.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? v : -1f; }
+
+        private static void SaveSheet(string name, List<Texture2D> frames, int cols = 4)
         {
-            int n = frames.Count, cols = 4, w = frames[0].width, h = frames[0].height, rows = (n + cols - 1) / cols;
+            int n = frames.Count, w = frames[0].width, h = frames[0].height, rows = (n + cols - 1) / cols;
             Texture2D sheet = new Texture2D(w * cols, h * rows, TextureFormat.RGB24, false);
             Fill(sheet, new Color32(20, 20, 20, 255));
             for (int i = 0; i < n; i++) { Blit(frames[i], sheet, (i % cols) * w, (rows - 1 - i / cols) * h); Object.Destroy(frames[i]); }

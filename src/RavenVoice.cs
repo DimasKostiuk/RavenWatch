@@ -503,6 +503,7 @@ namespace HuginWhispers
             // thirds at 10, a quarter at 20, gone by 40 (the line keeps playing: come back while it lasts and you hear the rest)
             src.rolloffMode = AudioRolloffMode.Custom; src.minDistance = 1f; src.maxDistance = Fade;
             src.SetCustomCurve(AudioSourceCurveType.CustomRolloff, Rolloff);
+            if (AudioMan.instance != null) src.outputAudioMixerGroup = AudioMan.instance.m_guiMixer; // (the game's master and sound sliders count only through a group: its GUI one is the dry one)
             // dry: the game's sfx group and the world's reverb zones put a strong echo on a voice
             src.reverbZoneMix = 0f; src.bypassReverbZones = true; src.bypassListenerEffects = true;
             Mood m = MoodOf(talker, munin);

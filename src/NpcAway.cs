@@ -13,7 +13,7 @@ namespace HuginWhispers
     //   then its own memories   NpcMemory entries made while you were away (Window: from the last time you were round its base to when
     //                           you came back — Tick, where it is run: a look every LookEvery s for players within Near m, written into its
     //                           locker at most once in Mark s a player, so a reload or a night off keeps it), not told you yet (your character keeps when you were told: NpcTalk.AwayToldAt), worth telling
-    //                           (Skip: what is about you, or its story's own), with words for it (away_<kind>, else its mem_<kind>), its
+    //                           (Skipped: what is about you — its kind says Yours —, or its story's own), with words for it (away_<kind>, else its mem_<kind>), its
     //                           own only to one it trusts (NpcVoice.Groups Personal, NpcVoice.Trusted), not what it told you lately (a
     //                           worry it opened with: NpcTalk.ToldLately) — the weightiest Most of them, its weight first, then the newest
     // The question is there only when it has something (?awaynews); the answer «Зрозумів» marks it told (!awaytold): the tale known, the
@@ -27,9 +27,13 @@ namespace HuginWhispers
         internal sealed class Source { public Func<NpcActor, Player, string> Line; public Action<NpcActor, Player> Told; }
         internal static readonly List<Source> Sources = new List<Source>();
 
-        // what is not news to tell (about you, its own story, its words kept elsewhere)
-        private static readonly HashSet<string> Skip = new HashSet<string> { "missed", "hired", "fired", "brushed_off", "insulted", "zoned_out", "raven_mocked", "clothes_taken", "secret_told", "request_done", "settled", "rescued", "revived", "promise_kept", "promise_broken", "heard_kept", "heard_broken" };
-        private static bool Skipped(string kind) { return Skip.Contains(kind) || kind.StartsWith("tale_", StringComparison.Ordinal) || kind.StartsWith("you_land_", StringComparison.Ordinal) || kind.StartsWith("arc_", StringComparison.Ordinal); }
+        // what is not news to tell: about you (its kind's own word, NpcMemory.Kind.Yours — a new kind is known by it, 2026-11-08: a list here missed the new ones), its own coming
+        // here, its story's own, its words kept elsewhere
+        private static bool Skipped(string kind)
+        {
+            NpcMemory.Kind k = NpcMemory.KindOf(kind);
+            return (k != null && k.Yours) || kind == "settled" || kind.StartsWith("tale_", StringComparison.Ordinal) || kind.StartsWith("arc_", StringComparison.Ordinal);
+        }
 
         // how long not round its base counts as away: a third of a game day, at least 15 min (a walk to the forest and back is no absence)
         internal static float AwayLeast = 900f; // (the test: raven npc tune NpcAway.AwayLeast 30)

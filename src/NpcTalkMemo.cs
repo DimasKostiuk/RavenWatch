@@ -17,7 +17,13 @@ namespace HuginWhispers
     //   a|seed||day|sec|             the game day its feeling to you last fell for your asking again and again
     //   w|seed||0|sec|               when it last told you what happened while you were away (NpcAway: what came before is told)
     //   k|seed||0|sec|marks          the tales it told you («Розкажи щось»: a short mark each — NpcTalk.Untold)
-    //   g|seed|theme|day|sec|        the game day your kind answer to this worry last warmed it (NpcTalk.WarmedToday)
+    //   g|seed|theme|day|sec|        the game day your kind answer to this worry last warmed it (NpcTalk.WarmedToday; ~gift: your gift today, NpcTalkGift)
+//   b|seed|other|0|sec|          you asked it about that neighbour (NpcTalkAbout: the same again soon)
+//   h|seed|speaker|±1|sec|name   what one of its home said of it, carried by you (NpcTalkAbout)
+//   m|seed|kind|moment|sec|      a memory you brought up, and which one it was (NpcTalkRecall: warmth once a memory)
+//   s|seed|leave|0|sec|          you tried to talk it out of leaving (NpcTalkSway: once an hour)
+//   i|seed|theme|n|sec|          its opening worry you left unanswered, n times running (NpcTalkDoor: it weighs more, a reproach)
+//   o|seed||0|sec|               it ended a talk with you itself (NpcTalkDoor: its door shut a while)
     // A character walks between worlds and a person written by hand is the same person in every one (NpcKit.Seed), so a row may come from a
     // world whose clock ran further: Elsewhere — it says nothing of now, whatever it counted (a later time would read as «asked ever more»).
     // At most MostRows, a person at most MostOfOne; what goes first when there is no room (Spare): a worry told long enough ago to weigh
@@ -90,7 +96,7 @@ namespace HuginWhispers
             Row best = null; int bestRank = int.MaxValue;
             foreach (Row r in among)
             {
-                int rank = r.Kind == "t" && (Elsewhere(r) || NowSec - r.At >= ToldFor * GameHour) ? 0 : r.Kind == "f" && r.Count == 1 ? 2 : 1;
+                int rank = r.Kind == "t" && (Elsewhere(r) || NowSec - r.At >= ToldFor * GameHour) ? 0 : (r.Kind == "f" && r.Count == 1) || r.Kind == "m" || (r.Kind == "g" && r.Key == "~gift") ? 2 : 1; // (a memory warmed once, today's gift: let go, they would warm again)
                 if (best == null || rank < bestRank || (rank == bestRank && r.At < best.At)) { best = r; bestRank = rank; }
             }
             return best;
@@ -106,6 +112,7 @@ namespace HuginWhispers
         }
 
         private static long NowSec { get { return (long)NpcRescue.Now; } }
+        private static int Today { get { return (int)(NpcRescue.Now / (GameHour * 24f)); } } // (the world's game day: what counts once a day counts by it)
         private static bool Elsewhere(Row r) { return r.At > NowSec; } // (written under another clock: another world, a world put back from a copy)
         private static float GameHour { get { return (EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f) / 24f; } }
 

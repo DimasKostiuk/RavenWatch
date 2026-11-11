@@ -64,6 +64,7 @@ namespace HuginWhispers
         internal string KeyBuilt { get { return KeyBase + "_built"; } }
         internal string KeyNo { get { return KeyBase + "_no"; } }
         internal string KeyAgain { get { return KeyBase + "_again"; } } // (built again where it stood: no player-building check, it stood there already)
+        internal string KeyWild { get { return KeyBase + "_wild"; } } // (its ground cleared by Wild's answer: a place built before it kept the bushes — LocBuild.WildOnce)
         internal string KeyTight { get { return KeyBase + "_tight"; } } // (no place with its room in this world: it stands by its walls alone — Loc.Room)
         internal string KeyState { get { return KeyBase + "_state"; } }
         internal string KeyNext { get { return KeyBase + "_next"; } }

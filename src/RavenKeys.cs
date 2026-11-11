@@ -247,7 +247,6 @@ namespace HuginWhispers
             if (h == null) return false;
             Tameable tame = h.GetComponentInParent<Tameable>();
             if (tame != null && tame.IsTamed()) return true; // a tame one can be renamed
-            if (SeneaLHolds(key, h)) return true; // SeneaL UI: its key held with E on a smelter, a fire, a torch opens its window
             Hoverable hv = h.GetComponentInParent<Hoverable>();
             string text = null;
             try { text = hv != null ? hv.GetHoverText() : null; } catch { }
@@ -259,37 +258,12 @@ namespace HuginWhispers
             if (text.IndexOf("<b>" + name + "</b>", StringComparison.OrdinalIgnoreCase) >= 0) return true; // its hint names this key
             // a keycap drawn as a picture: the key's name inside the tag (<sprite name="Q">)
             if (name.Length > 0 && System.Text.RegularExpressions.Regex.IsMatch(text, @"<[^>]*name\s*=\s*[""']?" + System.Text.RegularExpressions.Regex.Escape(name) + @"[""'\s>]", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return true;
-            // other mods draw their hints their own way (SeneaL UI's keycaps: no <b>): the key's name standing alone in the plain text
+            // other mods draw their hints their own way (a UI mod's keycaps: no <b>): the key's name standing alone in the plain text
             string plain = System.Text.RegularExpressions.Regex.Replace(text, "<[^>]*>", " ");
             if (name.Length > 0 && System.Text.RegularExpressions.Regex.IsMatch(plain, @"(?<![\p{L}\d])" + System.Text.RegularExpressions.Regex.Escape(name) + @"(?![\p{L}\d])")) return true;
             if (Plugin.Instance != null && Logged.Add(h.name)) Plugin.Instance.Log("Raven keys: " + name + " not found in the hint of " + h.name + ": " + plain.Replace("\n", " | "));
             string rename = Localization.instance != null ? Lang.Game("$hud_rename") : null;
             return !string.IsNullOrEmpty(rename) && !rename.StartsWith("[") && text.IndexOf(rename, StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
-        // SeneaL UI's [Keys] SmelterWindow (held with the use key on a furnace, a kiln, a fire, a torch, a cooking station):
-        // read from its live config, so a key changed in its settings counts at once
-        private static ConfigEntryBase _seneaLSmelter;
-        private static bool _seneaLLooked;
-        private static bool SeneaLHolds(KeyCode key, GameObject h)
-        {
-            if (!_seneaLLooked)
-            {
-                _seneaLLooked = true;
-                try
-                {
-                    PluginInfo pi;
-                    if (Chainloader.PluginInfos.TryGetValue("seneaL.valheim.ui", out pi) && pi.Instance != null)
-                        foreach (ConfigDefinition d in pi.Instance.Config.Keys)
-                            if (d.Section == "Keys" && d.Key == "SmelterWindow") { _seneaLSmelter = pi.Instance.Config[d]; break; }
-                }
-                catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Raven keys: SeneaL UI keys not read: " + e.Message); }
-            }
-            if (_seneaLSmelter == null || h == null) return false;
-            object v = _seneaLSmelter.BoxedValue;
-            KeyCode k = v is KeyboardShortcut ? ((KeyboardShortcut)v).MainKey : v is KeyCode ? (KeyCode)v : KeyCode.None;
-            if (k != key) return false;
-            return h.GetComponentInParent<Smelter>() != null || h.GetComponentInParent<Fireplace>() != null || h.GetComponentInParent<CookingStation>() != null;
         }
 
         private static bool Free()

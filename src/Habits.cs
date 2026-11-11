@@ -753,11 +753,22 @@ namespace HuginWhispers
         // «Хатній»: in the first minutes away from home two of its gifts are not for you (picked anew each trip)
         private static readonly List<string>[] Locked = { new List<string>(), new List<string>() };
         private static readonly float[] LockedFor = { -1f, -1f };
+        internal static float HomeSick = 600f; // s from the trip's start it whines
+
+        // how long it still whines for home (0: not): the effects bar's word (Quirks.Mood) and the gate below
+        internal static float HomeLeft(Player p, bool munin)
+        {
+            if (p == null || _tripFrom < 0f || Time.time - _tripFrom > HomeSick || !Has(Trust.Worn(munin), "home") || AtHome(p)) return 0f;
+            return HomeSick - (Time.time - _tripFrom);
+        }
+
+        // a gift it will not give now (null: it will). Asked every frame by the circle and the book (RavenSkills.Why):
+        // no sound here, its whine is Whine, said when you press
         internal static string Blocks(Player p, RavenAbility a)
         {
             if (a == null || a.Pair || p == null) return null;
-            ItemDrop.ItemData item = Trust.Worn(a.Munin);
-            if (_tripFrom < 0f || Time.time - _tripFrom > 600f || !Has(item, "home") || AtHome(p)) return null;
+            float left = HomeLeft(p, a.Munin);
+            if (left <= 0f) return null;
             int k = a.Munin ? 1 : 0;
             if (LockedFor[k] != _tripFrom)
             {
@@ -768,9 +779,9 @@ namespace HuginWhispers
                 for (int i = 0; i < 2 && pool.Count > 0; i++) { int r = UnityEngine.Random.Range(0, pool.Count); Locked[k].Add(pool[r]); pool.RemoveAt(r); }
             }
             if (!Locked[k].Contains(a.Id)) return null;
-            PerkFx.Say(a.Munin, "habit_home_whine", 0.7f, 1f);
-            return Lang.F("{0} ниє, що хоче додому: «{1}» буде ще {2}.", Plugin.RavenName(a.Munin), a.Name, RavenAbilities.Span(600f - (Time.time - _tripFrom)));
+            return Lang.F("{0} ниє, що хоче додому («Хатній»): «{1}» буде ще {2}.", Plugin.RavenName(a.Munin), a.Name, RavenAbilities.Span(left));
         }
+        internal static void Whine(bool munin) { PerkFx.Say(munin, "habit_home_whine", 0.7f, 1f); }
 
         // ---------------------------------------------------------------- the book: the line and the cards
 

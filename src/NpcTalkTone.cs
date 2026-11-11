@@ -21,14 +21,19 @@ namespace HuginWhispers
         // once a game day a person: true the first time today (its row in your character), so a line «it feels so» says what really moved
         private static bool FirstToday(NpcActor a, Player p, string row)
         {
-            int today = (int)(NpcRescue.Now / (GameHour * 24f));
-            Row r = FindRow(p, "g", a, row);
-            if (r != null && !Elsewhere(r) && r.Count == today) return false;
-            r = PutRow(p, "g", a, row);
-            r.Count = today; r.At = NowSec;
+            if (DoneToday(a, p, row)) return false;
+            Row r = PutRow(p, "g", a, row);
+            r.Count = Today; r.At = NowSec;
             SaveRows(p);
             return true;
         }
+
+        // …only asked (a condition: nothing written)
+        private static bool DoneToday(NpcActor a, Player p, string row) { Row r = FindRow(p, "g", a, row); return r != null && !Elsewhere(r) && r.Count == Today; }
+
+        // a line in the window: its feeling to you moved (the one wording for every system that moves it)
+        private static void Warmer(NpcActor a) { RavenBook.TalkNote(Lang.F("{0}: ставлення до тебе теплішає", a.Name), true); }
+        private static void Colder(NpcActor a, bool sharp) { RavenBook.TalkNote(sharp ? Lang.F("{0}: ставлення до тебе різко гіршає", a.Name) : Lang.F("{0}: ставлення до тебе гіршає", a.Name), false); }
 
         // how much a kind word means to it
         private static float Warmth(NpcActor a)
@@ -61,13 +66,13 @@ namespace HuginWhispers
                     NpcPatience.Spend(a, p, -TonePatience * k);
                     if (!FirstToday(a, p, ToneRow)) return; // (its feeling moves once a game day: kind words are not a way to farm it)
                     NpcAttitude.Tell(a, p.GetPlayerID(), ToneWarm * k);
-                    RavenBook.TalkNote(Lang.F("{0}: ставлення до тебе теплішає", a.Name), true);
+                    Warmer(a);
                     break;
                 }
                 case "cold":
                     NpcPatience.Spend(a, p, ToneCold * Hurt(a, false) * weight);
                     NpcMemory.Tell(a, "brushed_off", p.GetPlayerID(), ""); // (its feeling moves by it once a game day: NpcMemory)
-                    if (FirstToday(a, p, ColdRow)) RavenBook.TalkNote(Lang.F("{0}: ставлення до тебе гіршає", a.Name), false);
+                    if (FirstToday(a, p, ColdRow)) Colder(a, false);
                     break;
                 case "rude":
                 {
@@ -75,7 +80,7 @@ namespace HuginWhispers
                     NpcPatience.Irritate(a, p, ToneIrk * k);
                     NpcAttitude.Tell(a, p.GetPlayerID(), -ToneRude * k);
                     NpcMemory.Tell(a, "insulted", p.GetPlayerID(), "");
-                    RavenBook.TalkNote(Lang.F("{0}: ставлення до тебе різко гіршає", a.Name), false);
+                    Colder(a, true);
                     break;
                 }
                 default: Npcs.Log("talk: no tone «" + w[1] + "»"); break;

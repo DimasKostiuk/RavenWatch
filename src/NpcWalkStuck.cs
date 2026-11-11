@@ -105,13 +105,13 @@ namespace HuginWhispers
                     Vector3 p = NpcKit.Floor(me + Quaternion.Euler(0f, i * 45f, 0f) * Vector3.forward * r);
                     if (Mathf.Abs(p.y - me.y) > 1f || Physics.CheckCapsule(p + Vector3.up * 0.5f, p + Vector3.up * 1.5f, 0.35f, Solids, QueryTriggerInteraction.Ignore) || Physics.Linecast(me + Vector3.up * 0.9f, p + Vector3.up * 0.9f, Solids, QueryTriggerInteraction.Ignore)) continue; // (not through a wall)
                     Vector3 v;
-                    if (!NpcKit.Valid(out v, p, 0.4f, NpcKit.Walker) || Utils.DistanceXZ(v, p) > 0.3f) continue;
+                    if (!NpcKit.SameFloor(out v, p, 0.4f, NpcKit.Walker) || Utils.DistanceXZ(v, p) > 0.3f) continue;
                     float d = r * 2f + Utils.DistanceXZ(p, _goal); // (near first, then towards its goal)
                     if (d < bd) { bd = d; best = p; }
                     if (i == 7 && bd < float.MaxValue) goto found; // (the nearest ring with room: the farther ones not gone over)
                 }
             found:
-            if (bd == float.MaxValue && reach >= 3f) { Vector3 v0; if (NpcKit.Valid(out v0, me, 3f, NpcKit.Walker) && Utils.DistanceXZ(v0, me) > 0.2f && Mathf.Abs(v0.y - me.y) < 1f) { bd = 0f; best = v0; } } // (not the floor above or below) // (no room for a body anywhere near — wedged among chairs: the nearest spot on the map all the same)
+            if (bd == float.MaxValue && reach >= 3f) { Vector3 v0; if (NpcKit.SameFloor(out v0, me, 3f, NpcKit.Walker) && Utils.DistanceXZ(v0, me) > 0.2f) { bd = 0f; best = v0; } } // (not the floor above or below) // (no room for a body anywhere near — wedged among chairs: the nearest spot on the map all the same)
             if (bd == float.MaxValue && Inside(me)) { Free(me); return; } // (in a wall, in a thing, no room round it to slide to: the safety)
             if (bd == float.MaxValue) { if (_trip != null) Write("halts.txt", string.Format(CultureInfo.InvariantCulture, "{0:HH:mm:ss}\t{1}\t{2}\theld fast, no free spot within reach\tat {3}", DateTime.Now, _m.Name(), _trip.What, Npcs.V(me))); return; }
             float far = Utils.DistanceXZ(me, best), takes = 0.3f + far / 3f; // (a step's slide: a metre in a third of a second)
@@ -127,7 +127,7 @@ namespace HuginWhispers
         private static readonly float[] Steps = { 0.6f, 1f, 1.5f, 2f, 2.5f, 3f }; // (a crowded dining hall: the nearest free spot may be a few steps off)
 
         // a safe spot by a goal for the safety (NpcMind.Unstick): on the way finder's map within SafeReach m of it, room for a body (nothing built in
-        // it, nobody standing on it), the floor at its height (not the floor above or below) — the nearest such; none: false
+        // it, nobody standing on it), no fire (NpcBody.Burns), the floor at its height (not the floor above or below) — the nearest such; none: false
         internal static float SafeReach = 2.5f;
         internal static bool SafeBy(Vector3 to, out Vector3 safe)
         {
@@ -135,8 +135,9 @@ namespace HuginWhispers
             for (float r = 0.6f; r <= SafeReach; r += 0.6f)
             {
                 Vector3 v;
-                if (!NpcKit.Valid(out v, to, r, NpcKit.Walker) || Mathf.Abs(v.y - to.y) > 1.2f) continue;
+                if (!NpcKit.SameFloor(out v, to, r, NpcKit.Walker)) continue;
                 if (Physics.CheckCapsule(v + Vector3.up * 0.55f, v + Vector3.up * 1.45f, 0.3f, Solids, QueryTriggerInteraction.Ignore)) continue;
+                if (NpcBody.Burns(v)) continue; // (not into a hearth: room for a body and the map say nothing of fire)
                 bool taken = false;
                 foreach (NpcActor o in NpcActor.Live) if (o != null && Utils.DistanceXZ(o.transform.position, v) < 0.6f) { taken = true; break; }
                 foreach (Player pl in Player.GetAllPlayers()) if (pl != null && Utils.DistanceXZ(pl.transform.position, v) < 0.8f) { taken = true; break; } // (not put into a player either)
@@ -158,7 +159,7 @@ namespace HuginWhispers
             Vector3 v;
             bool found = false;
             for (float r = 1.5f; r <= FreeReach && !found; r += 1.5f)
-                if (NpcKit.Valid(out v, me, r, NpcKit.Walker) && Utils.DistanceXZ(v, me) > 0.3f && !Physics.CheckCapsule(v + Vector3.up * 0.55f, v + Vector3.up * 1.45f, 0.25f, Solids, QueryTriggerInteraction.Ignore)) { found = true; Put(me, v + Vector3.up * 0.05f); }
+                if (NpcKit.SameFloor(out v, me, r, NpcKit.Walker) && Utils.DistanceXZ(v, me) > 0.3f && !Physics.CheckCapsule(v + Vector3.up * 0.55f, v + Vector3.up * 1.45f, 0.25f, Solids, QueryTriggerInteraction.Ignore)) { found = true; Put(me, v + Vector3.up * 0.05f); }
             if (!found) _m.HomeFromStuck("held inside a thing, nowhere free near");
         }
 

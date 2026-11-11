@@ -37,7 +37,7 @@ namespace HuginWhispers
             if (p == null) return;
             foreach (ItemDrop.ItemData item in p.GetInventory().GetAllItems())
                 if (item.m_customData != null) item.m_customData.Remove(StayedKey);
-            foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) // on SeneaL UI's shoulders: not in the bag
+            foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p)) // on the shoulders: not in the bag
                 if (item.m_customData != null) item.m_customData.Remove(StayedKey);
         }
 

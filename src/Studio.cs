@@ -274,6 +274,91 @@ namespace HuginWhispers
             internal GameObject Root;
             internal Vector3 Mid;
             internal int Size = Cell; // (px a frame: Cell, bigger for the stage's key frames)
+            internal System.Func<List<Mark>> Marks; // (lines drawn over a close view's frame, asked at each shot: the stage's hands and targets — BodyCheck.Marks)
+        }
+
+        // a line in the world drawn over a frame (A to B), or a small cross at A: what 20 px of a hand cannot show — where its fingers go, its palm faces
+        internal sealed class Mark { public Vector3 A, B; public Color32 C; public bool Cross; }
+        private static readonly string[] WholeViews = { "front", "side", "back", "three", "top", "left" }; // (the whole body: too small for marks, they would hide it)
+
+        // the marks over one frame, as that camera sees them (the camera has just rendered to the rig's texture: its pixels are the frame's)
+        private static void Draw(Texture2D read, Camera cam, List<Mark> marks)
+        {
+            int px = read.width;
+            foreach (Mark m in marks)
+            {
+                Vector3 a = cam.WorldToScreenPoint(m.A);
+                if (a.z <= 0f) continue;
+                if (m.Cross) { Line(read, (int)a.x - 6, (int)a.y, (int)a.x + 6, (int)a.y, m.C); Line(read, (int)a.x, (int)a.y - 6, (int)a.x, (int)a.y + 6, m.C); continue; }
+                Vector3 b = cam.WorldToScreenPoint(m.B);
+                if (b.z <= 0f) continue;
+                Line(read, (int)a.x, (int)a.y, (int)b.x, (int)b.y, m.C);
+                Line(read, (int)b.x - 2, (int)b.y - 2, (int)b.x + 2, (int)b.y + 2, m.C); Line(read, (int)b.x - 2, (int)b.y + 2, (int)b.x + 2, (int)b.y - 2, m.C); // (its end marked: which way it points)
+            }
+        }
+
+        // words on a frame (a time, a rule, a step: what the frame is, read in the picture itself — review 2 2026-11-10): a 5×7 bitmap font, each
+        // glyph five columns, the low bit its top row, ASCII only (what is not ASCII is drawn as «?»; a few signs are mapped), scale px a dot,
+        // on a dark band so it reads on any background. Text(…) draws one line; Label(…) puts it in a cell of a sheet, at the top
+        private static readonly byte[] Font = {
+            0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x5F,0x00,0x00, 0x00,0x07,0x00,0x07,0x00, 0x14,0x7F,0x14,0x7F,0x14, 0x24,0x2A,0x7F,0x2A,0x12, 0x23,0x13,0x08,0x64,0x62, 0x36,0x49,0x55,0x22,0x50, 0x00,0x05,0x03,0x00,0x00,
+            0x00,0x1C,0x22,0x41,0x00, 0x00,0x41,0x22,0x1C,0x00, 0x08,0x2A,0x1C,0x2A,0x08, 0x08,0x08,0x3E,0x08,0x08, 0x00,0x50,0x30,0x00,0x00, 0x08,0x08,0x08,0x08,0x08, 0x00,0x60,0x60,0x00,0x00, 0x20,0x10,0x08,0x04,0x02,
+            0x3E,0x51,0x49,0x45,0x3E, 0x00,0x42,0x7F,0x40,0x00, 0x42,0x61,0x51,0x49,0x46, 0x21,0x41,0x45,0x4B,0x31, 0x18,0x14,0x12,0x7F,0x10, 0x27,0x45,0x45,0x45,0x39, 0x3C,0x4A,0x49,0x49,0x30, 0x01,0x71,0x09,0x05,0x03,
+            0x36,0x49,0x49,0x49,0x36, 0x06,0x49,0x49,0x29,0x1E, 0x00,0x36,0x36,0x00,0x00, 0x00,0x56,0x36,0x00,0x00, 0x00,0x08,0x14,0x22,0x41, 0x14,0x14,0x14,0x14,0x14, 0x41,0x22,0x14,0x08,0x00, 0x02,0x01,0x51,0x09,0x06,
+            0x32,0x49,0x79,0x41,0x3E, 0x7E,0x11,0x11,0x11,0x7E, 0x7F,0x49,0x49,0x49,0x36, 0x3E,0x41,0x41,0x41,0x22, 0x7F,0x41,0x41,0x22,0x1C, 0x7F,0x49,0x49,0x49,0x41, 0x7F,0x09,0x09,0x01,0x01, 0x3E,0x41,0x41,0x51,0x32,
+            0x7F,0x08,0x08,0x08,0x7F, 0x00,0x41,0x7F,0x41,0x00, 0x20,0x40,0x41,0x3F,0x01, 0x7F,0x08,0x14,0x22,0x41, 0x7F,0x40,0x40,0x40,0x40, 0x7F,0x02,0x04,0x02,0x7F, 0x7F,0x04,0x08,0x10,0x7F, 0x3E,0x41,0x41,0x41,0x3E,
+            0x7F,0x09,0x09,0x09,0x06, 0x3E,0x41,0x51,0x21,0x5E, 0x7F,0x09,0x19,0x29,0x46, 0x46,0x49,0x49,0x49,0x31, 0x01,0x01,0x7F,0x01,0x01, 0x3F,0x40,0x40,0x40,0x3F, 0x1F,0x20,0x40,0x20,0x1F, 0x7F,0x20,0x18,0x20,0x7F,
+            0x63,0x14,0x08,0x14,0x63, 0x03,0x04,0x78,0x04,0x03, 0x61,0x51,0x49,0x45,0x43, 0x00,0x00,0x7F,0x41,0x41, 0x02,0x04,0x08,0x10,0x20, 0x41,0x41,0x7F,0x00,0x00, 0x04,0x02,0x01,0x02,0x04, 0x40,0x40,0x40,0x40,0x40,
+            0x00,0x01,0x02,0x04,0x00, 0x20,0x54,0x54,0x54,0x78, 0x7F,0x48,0x44,0x44,0x38, 0x38,0x44,0x44,0x44,0x20, 0x38,0x44,0x44,0x48,0x7F, 0x38,0x54,0x54,0x54,0x18, 0x08,0x7E,0x09,0x01,0x02, 0x08,0x14,0x54,0x54,0x3C,
+            0x7F,0x08,0x04,0x04,0x78, 0x00,0x44,0x7D,0x40,0x00, 0x20,0x40,0x44,0x3D,0x00, 0x00,0x7F,0x10,0x28,0x44, 0x00,0x41,0x7F,0x40,0x00, 0x7C,0x04,0x18,0x04,0x78, 0x7C,0x08,0x04,0x04,0x78, 0x38,0x44,0x44,0x44,0x38,
+            0x7C,0x14,0x14,0x14,0x08, 0x08,0x14,0x14,0x18,0x7C, 0x7C,0x08,0x04,0x04,0x08, 0x48,0x54,0x54,0x54,0x20, 0x04,0x3F,0x44,0x40,0x20, 0x3C,0x40,0x40,0x20,0x7C, 0x1C,0x20,0x40,0x20,0x1C, 0x3C,0x40,0x30,0x40,0x3C,
+            0x44,0x28,0x10,0x28,0x44, 0x0C,0x50,0x50,0x50,0x3C, 0x44,0x64,0x54,0x4C,0x44, 0x00,0x08,0x36,0x41,0x00, 0x00,0x00,0x7F,0x00,0x00, 0x00,0x41,0x36,0x08,0x00, 0x10,0x08,0x08,0x10,0x08 };
+        internal const int TextScale = 2; // (a dot 2×2 px: 12 px a glyph, 40 glyphs across a 480 px frame)
+        private static int Glyph(char c)
+        {
+            if (c >= ' ' && c <= '~') return c - ' ';
+            switch (c) { case '×': return 'x' - ' '; case '✗': return 'X' - ' '; case '—': case '–': case '−': return '-' - ' '; case '«': case '»': return '"' - ' '; case '·': return '.' - ' '; case '°': return '^' - ' '; case '→': return '>' - ' '; }
+            return '?' - ' ';
+        }
+        internal static void Text(Texture2D t, int x, int y, string s, Color32 c, int scale = TextScale)
+        {
+            int w = s.Length * 6 * scale, h = 8 * scale;
+            Color32 band = new Color32(0, 0, 0, 255);
+            for (int py = y - scale; py < y + h; py++) for (int px = x - scale; px < x + w; px++) if (px >= 0 && py >= 0 && px < t.width && py < t.height) t.SetPixel(px, py, band);
+            for (int i = 0; i < s.Length; i++)
+            {
+                int g = Glyph(s[i]) * 5;
+                for (int col = 0; col < 5; col++)
+                {
+                    int bits = Font[g + col];
+                    for (int row = 0; row < 7; row++)
+                    {
+                        if ((bits & (1 << row)) == 0) continue;
+                        for (int dx = 0; dx < scale; dx++) for (int dy = 0; dy < scale; dy++) { int px = x + (i * 6 + col) * scale + dx, py = y + (6 - row) * scale + dy; if (px >= 0 && py >= 0 && px < t.width && py < t.height) t.SetPixel(px, py, c); }
+                    }
+                }
+            }
+        }
+        // one or two lines of words at the top of a cell of a sheet (cell: left to right, top to bottom, cols a row, rows in all, px a cell)
+        internal static void Label(Texture2D sheet, int cell, int cols, int rows, int px, string line1, string line2 = null)
+        {
+            int x = (cell % cols) * px + 4, top = (rows - 1 - cell / cols) * px + px - 4;
+            int most = px / (6 * TextScale) - 1;
+            if (line1 != null) Text(sheet, x, top - 8 * TextScale, line1.Length > most ? line1.Substring(0, most) : line1, new Color32(255, 230, 120, 255));
+            if (line2 != null) Text(sheet, x, top - 17 * TextScale, line2.Length > most ? line2.Substring(0, most) : line2, new Color32(235, 235, 235, 255));
+        }
+
+        private static void Line(Texture2D t, int x0, int y0, int x1, int y1, Color32 c)
+        {
+            int dx = Mathf.Abs(x1 - x0), dy = -Mathf.Abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy;
+            for (int n = 0; n < 4096; n++)
+            {
+                for (int ox = 0; ox < 2; ox++) for (int oy = 0; oy < 2; oy++) { int x = x0 + ox, y = y0 + oy; if (x >= 0 && y >= 0 && x < t.width && y < t.height) t.SetPixel(x, y, c); }
+                if (x0 == x1 && y0 == y1) break;
+                int e2 = 2 * err;
+                if (e2 >= dy) { err += dy; x0 += sx; }
+                if (e2 <= dx) { err += dx; y0 += sy; }
+            }
         }
 
         private static Rig Make(string views, int size = Cell)
@@ -395,20 +480,14 @@ namespace HuginWhispers
             GameObject grass = GrassRoot(); // (the grass between the camera and the feet: left out too)
             bool grassWas = grass != null && grass.activeSelf;
             if (grassWas) grass.SetActive(false);
+            List<Mark> marks = r.Marks != null ? r.Marks() : null;
             try
             {
                 for (int i = 0; i < r.Cams.Count; i++)
                 {
-                    Vector3 cam = r.Cams[i].transform.position;
-                    r.Lamp.transform.position = cam + (r.Mid - cam) * 0.3f + Vector3.up * 0.25f;
-                    r.Cams[i].targetTexture = r.Rt;
-                    r.Cams[i].Render();
-                    RenderTexture.active = r.Rt;
-                    read.ReadPixels(new Rect(0, 0, px, px), 0, 0);
-                    read.Apply(false);
+                    Frame(r, i, read, marks);
                     if (sheets.Length < r.Cams.Count) Blit(read, sheets[0], i * px, (rows - 1 - cell) * px); // one strip of all the views (look)
                     else Blit(read, sheets[i], (cell % cols) * px, (rows - 1 - cell / cols) * px);
-                    r.Cams[i].targetTexture = null;
                 }
             }
             finally
@@ -419,6 +498,45 @@ namespace HuginWhispers
                 RenderTexture.active = was;
                 UnityEngine.Object.Destroy(read);
             }
+        }
+
+        // every view of the rig into ONE sheet, side by side from column col0 of row 'row' (the stage's key sheet: a row a moment, its two views;
+        // beside them the same views of another body — the last take)
+        private static void ShootRow(Rig r, Texture2D sheet, int col0, int row, int rows)
+        {
+            int px = r.Size;
+            Texture2D read = new Texture2D(px, px, TextureFormat.RGB24, false);
+            RenderTexture was = RenderTexture.active;
+            r.Lamp.enabled = true;
+            List<Renderer> weather = HideWeather();
+            GameObject grass = GrassRoot();
+            bool grassWas = grass != null && grass.activeSelf;
+            if (grassWas) grass.SetActive(false);
+            List<Mark> marks = r.Marks != null ? r.Marks() : null;
+            try { for (int i = 0; i < r.Cams.Count; i++) { Frame(r, i, read, marks); Blit(read, sheet, (col0 + i) * px, (rows - 1 - row) * px); } }
+            finally
+            {
+                foreach (Renderer w in weather) if (w != null) w.enabled = true;
+                if (grassWas && grass != null) grass.SetActive(true);
+                r.Lamp.enabled = false;
+                RenderTexture.active = was;
+                UnityEngine.Object.Destroy(read);
+            }
+        }
+
+        // one view of the rig rendered into 'read' (the lamp by that camera; the marks over a close view)
+        private static void Frame(Rig r, int i, Texture2D read, List<Mark> marks)
+        {
+            int px = r.Size;
+            Vector3 cam = r.Cams[i].transform.position;
+            r.Lamp.transform.position = cam + (r.Mid - cam) * 0.3f + Vector3.up * 0.25f;
+            r.Cams[i].targetTexture = r.Rt;
+            r.Cams[i].Render();
+            RenderTexture.active = r.Rt;
+            read.ReadPixels(new Rect(0, 0, px, px), 0, 0);
+            if (marks != null && marks.Count > 0 && System.Array.IndexOf(WholeViews, r.Views[i]) < 0) Draw(read, r.Cams[i], marks); // (a close view: the hands' ways and the targets drawn over it)
+            read.Apply(false);
+            r.Cams[i].targetTexture = null;
         }
 
         // the weather's particles now (rain, snow, ash: EnvMan's current systems) hidden for the studio's shot; the

@@ -13,7 +13,7 @@ namespace HuginWhispers
     //               the dark block (ЗАРАЗ, what goes on now, its pills); three cards (a word and a dot; why under the pointer, the card lit); how it is with you on a line painted by the brush
     //   tabs        folders over a dark rule, one open at a time; each one's rows are made only when it is opened (Rows reads lockers and chests: never for what nobody looks at), anew each time
     //   rows        Label · Text · Plus/Minus · Mind · Pair · Chips · Fold: words, no numbers but what is really counted
-    //   the why     Tip (TipHead over it): one box beside the scroll, its arrow at the row, while the pointer is on it
+    //   the why     Tip (TipHead over it): one box beside the paper, its arrow at the row, while the pointer is on it
     //   it closes   Esc, the ✕, what it was about gone (Sheet.Stay), a blow from a foe (as a talk does: NpcTalk.Tick). While it is open the game is held as for the book
     // Only one at a time: a new one takes the old one's place («←» goes back: Sheet.Back).
     internal static partial class RavenBook
@@ -67,6 +67,7 @@ namespace HuginWhispers
         private static GameObject _sheetRoot;
         private static Sheet _sheet;
         private static RectTransform _sheetScroll, _sheetBody, _sheetTabs, _sheetTip;
+        private static RectTransform _sheetEdge; // (what the box for the why stands beside: the paper, not the scroll, whose roll sticks out past it on both sides)
         private static TMP_Text _sheetTipText, _sheetTipHead;
 
         internal static bool SheetOpen { get { return _sheetRoot != null && _sheetRoot.activeSelf; } }
@@ -124,6 +125,7 @@ namespace HuginWhispers
             Image ei = end.gameObject.AddComponent<Image>(); ei.sprite = BookArt.SheetRollEnd; ei.raycastTarget = false;
 
             RectTransform paper = Rect("Paper", scroll);
+            _sheetEdge = paper;
             Image pi = paper.gameObject.AddComponent<Image>(); pi.sprite = BookArt.TalkPaper(s.Title.GetStableHashCode()); pi.type = Image.Type.Sliced;
             VBox(paper, 9f, TextAnchor.UpperLeft, 28, 30, 18, 56);
             Fixed(paper.gameObject, TalkPaperW, -1f);
@@ -207,7 +209,7 @@ namespace HuginWhispers
         private static void SheetNowBlock(RectTransform paper, Sheet s)
         {
             RectTransform block = Rect("Now", paper);
-            Image bi = block.gameObject.AddComponent<Image>(); bi.sprite = BookArt.RoundFine(4f); bi.type = Image.Type.Sliced; bi.pixelsPerUnitMultiplier = BookArt.Fine; bi.color = TBlock; bi.raycastTarget = false;
+            Image bi = block.gameObject.AddComponent<Image>(); bi.sprite = BookArt.RoundFine(4f); bi.type = Image.Type.Sliced; bi.color = TBlock; bi.raycastTarget = false;
             VBox(block, 6f, TextAnchor.UpperLeft, 15, 15, 11, 11);
             if (s.Now.Length > 0)
             {
@@ -223,7 +225,7 @@ namespace HuginWhispers
             foreach (SheetMark m in s.Marks)
             {
                 RectTransform pill = Rect("Pill", box);
-                Image fill = pill.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(11f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = A(SPill, 0.75f);
+                Image fill = pill.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(11f); fill.type = Image.Type.Sliced; fill.color = A(SPill, 0.75f);
                 Outline(pill, BookArt.FrameFine(11f, 1f), A(SNowWord, 0.3f));
                 HBox(pill, 6f, TextAnchor.MiddleLeft, 10, 11, 3, 4);
                 RectTransform dot = Rect("Dot", pill); Fixed(dot.gameObject, 8f, 8f);
@@ -234,6 +236,7 @@ namespace HuginWhispers
                 pill.SetParent(line, false);
                 Fixed(pill.gameObject, w, -1f);
                 used += 6f + w;
+                NoWhy(m.Text, m.Tip);
                 SheetHook(pill.gameObject, m.TipHead, m.Tip, m.Click, new Graphic[] { t }, t.color, null);
             }
         }
@@ -246,7 +249,7 @@ namespace HuginWhispers
             {
                 RectTransform card = Rect("Card", row);
                 LayoutElement le = card.gameObject.AddComponent<LayoutElement>(); le.flexibleWidth = 1f; le.preferredWidth = 0f; le.minWidth = 0f; le.minHeight = 54f;
-                Image fill = card.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = SCard;
+                Image fill = card.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = SCard;
                 Outline(card, BookArt.FrameFine(3f, 1f), A(PRule, 0.8f));
                 VBox(card, 1f, TextAnchor.UpperLeft, 10, 6, 6, 7);
                 Shrink(T(card, m.Label, 13.5f, SLabel, F.Italic, TextAlignmentOptions.TopLeft), 10f);
@@ -255,6 +258,7 @@ namespace HuginWhispers
                 Image di = dot.gameObject.AddComponent<Image>(); di.sprite = BookArt.Circle; di.raycastTarget = false; di.color = m.Tone == ToneBad ? SPaperDotBad : m.Tone == ToneWarn ? SPaperDotWarn : SPaperDotGood;
                 TMP_Text t = T(state, m.Text, 18f, PInk, F.Body, TextAlignmentOptions.MidlineLeft);
                 Shrink(t, 12f);
+                NoWhy(m.Label, m.Tip);
                 SheetHook(card.gameObject, m.TipHead, m.Tip, m.Click, new Graphic[0], PInk, null, fill, SCardLit);
             }
         }
@@ -271,7 +275,7 @@ namespace HuginWhispers
             RectTransform bar = Rect("Bar", row); Fixed(bar.gameObject, -1f, 14f); Flex(bar.gameObject);
             Image bi = bar.gameObject.AddComponent<Image>(); bi.sprite = BookArt.SheetScale; bi.raycastTarget = false;
             RectTransform mark = Rect("At", bar); mark.anchorMin = mark.anchorMax = new Vector2(Mathf.Clamp01(r.Share), 0.5f); mark.sizeDelta = new Vector2(5f, 20f);
-            Image mi = mark.gameObject.AddComponent<Image>(); mi.sprite = BookArt.RoundFine(1.5f); mi.type = Image.Type.Sliced; mi.pixelsPerUnitMultiplier = BookArt.Fine; mi.color = PInk; mi.raycastTarget = false;
+            Image mi = mark.gameObject.AddComponent<Image>(); mi.sprite = BookArt.RoundFine(1.5f); mi.type = Image.Type.Sliced; mi.color = PInk; mi.raycastTarget = false;
             UnityEngine.UI.Outline ol = mark.gameObject.AddComponent<UnityEngine.UI.Outline>(); ol.effectColor = TPaper; ol.effectDistance = new Vector2(1f, 1f);
             SheetHook(row.gameObject, r.TipHead, r.Tip, null, new Graphic[0], SAttitudeWord[at], null);
         }
@@ -280,7 +284,7 @@ namespace HuginWhispers
         {
             bool on = i == s.Open;
             RectTransform tab = Rect("Tab", row);
-            Image bg = tab.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(4f, true); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine; bg.color = on ? STabOn : STabOff;
+            Image bg = tab.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(4f, true); bg.type = Image.Type.Sliced; bg.color = on ? STabOn : STabOff;
             HBox(tab, 0f, TextAnchor.MiddleCenter, 0, 0, 0, 0);
             Color ink = on ? STabOnInk : STabOffInk;
             string alert = s.Tabs[i].Tone == ToneBad ? " <color=#e0603e>•</color>" : s.Tabs[i].Tone == ToneWarn ? " <color=#e0b04a>•</color>" : "";
@@ -354,11 +358,20 @@ namespace HuginWhispers
                 Image fill;
                 TMP_Text t = Chip(box, m.Text, 16f, ink, m.Hot ? 0.95f : 0.8f, 0.3f, SheetRoom, ref line, ref used, out fill);
                 if (m.Hot) fill.color = new Color(1f, 0.84f, 0.55f, 0.5f);
+                NoWhy(m.Text, m.Tip);
                 SheetHook(fill.gameObject, m.TipHead, m.Tip, m.Click, new Graphic[] { t }, ink, m.Click != null ? fill : null);
             }
         }
 
         // a small slanted label, its value, what stands at the far right («мрія … уже 3 дні»), a thin rule under
+        // every word a card shows as a state (a pill, a card, a chip, a pair) says under the pointer what it means (the user 2026-11-08: «щоб було зрозуміло, що до чого відповідає»):
+        // one that does not is written to the log once, so a new row without its why is seen at once
+        private static readonly HashSet<string> _noWhy = new HashSet<string>(); // session: told once a run
+        private static void NoWhy(string what, string tip)
+        {
+            if (string.IsNullOrEmpty(tip) && !string.IsNullOrEmpty(what) && _noWhy.Add(what)) Npcs.Log("sheet: «" + what + "» has no why under the pointer: give it a tip where it is made");
+        }
+
         private static void SheetPair(Transform to, SheetRow r)
         {
             RectTransform row = Rect("Pair", to);
@@ -367,6 +380,7 @@ namespace HuginWhispers
             Color ink = ToneInk(r.Tone);
             TMP_Text v = T(row, r.Right, 17f, ink, F.Body, TextAlignmentOptions.TopLeft); v.textWrappingMode = TextWrappingModes.Normal; Flex(v.gameObject);
             if (r.Far.Length > 0) Keep(T(row, r.Far, 14f, SLabel, F.Italic, TextAlignmentOptions.TopRight));
+            NoWhy(r.Text, r.Tip);
             if (r.Tip != null || r.Click != null) row.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
             SheetHook(row.gameObject, r.TipHead, r.Tip, r.Click, new Graphic[] { v }, ink, null);
             SheetRule(to);
@@ -381,7 +395,7 @@ namespace HuginWhispers
             if (string.IsNullOrEmpty(r.More)) return;
             RectTransform line = Rect("Line", box); HBox(line, 0f, TextAnchor.UpperLeft, 0, 0, 0, 0);
             RectTransform open = Rect("Open", line);
-            Image fill = open.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = BookArt.Fine; fill.color = new Color(1f, 0.98f, 0.92f, 0.35f);
+            Image fill = open.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = new Color(1f, 0.98f, 0.92f, 0.35f);
             Outline(open, BookArt.FrameFine(3f, 1f), A(TStoryEdge, 0.8f));
             HBox(open, 8f, TextAnchor.MiddleLeft, 14, 14, 6, 7);
             TMP_Text word = T(open, r.Right, 17f, SSaid, F.Body, TextAlignmentOptions.MidlineLeft); word.textWrappingMode = TextWrappingModes.NoWrap;
@@ -418,7 +432,7 @@ namespace HuginWhispers
             _sheetTip = Rect("Why", _sheetRoot.transform);
             _sheetTip.anchorMin = _sheetTip.anchorMax = _sheetTip.pivot = new Vector2(0f, 1f);
             _sheetTip.sizeDelta = new Vector2(280f, 10f);
-            Image bg = _sheetTip.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(3f); bg.type = Image.Type.Sliced; bg.pixelsPerUnitMultiplier = BookArt.Fine; bg.color = STipFill; bg.raycastTarget = false;
+            Image bg = _sheetTip.gameObject.AddComponent<Image>(); bg.sprite = BookArt.RoundFine(3f); bg.type = Image.Type.Sliced; bg.color = STipFill; bg.raycastTarget = false;
             UnityEngine.UI.Shadow sh = _sheetTip.gameObject.AddComponent<UnityEngine.UI.Shadow>(); sh.effectColor = new Color(0f, 0f, 0f, 0.45f); sh.effectDistance = new Vector2(2f, -4f);
             Outline(_sheetTip, BookArt.FrameFine(3f, 1f), TStoryEdge);
             VBox(_sheetTip, 5f, TextAnchor.UpperLeft, 15, 14, 11, 12);
@@ -451,7 +465,7 @@ namespace HuginWhispers
 
             public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e)
             {
-                if (_sheetTip == null || _sheetScroll == null || Row == null) return;
+                if (_sheetTip == null || _sheetEdge == null || Row == null) return;
                 if (Lit != null) Lit.color = LitOn;
                 _sheetTipHead.text = Head ?? "";
                 _sheetTipHead.gameObject.SetActive(!string.IsNullOrEmpty(Head));
@@ -459,10 +473,10 @@ namespace HuginWhispers
                 _sheetTip.gameObject.SetActive(true);
                 _sheetTip.SetAsLastSibling();
                 LayoutRebuilder.ForceRebuildLayoutImmediate(_sheetTip);
-                Vector3[] rowAt = new Vector3[4], scrollAt = new Vector3[4], tipAt = new Vector3[4];
-                Row.GetWorldCorners(rowAt); _sheetScroll.GetWorldCorners(scrollAt);
+                Vector3[] rowAt = new Vector3[4], edgeAt = new Vector3[4], tipAt = new Vector3[4];
+                Row.GetWorldCorners(rowAt); _sheetEdge.GetWorldCorners(edgeAt);
                 float unit = _sheetTip.lossyScale.x;
-                _sheetTip.position = new Vector3(scrollAt[2].x + 14f * unit, rowAt[1].y + 12f * unit, 0f);
+                _sheetTip.position = new Vector3(edgeAt[2].x + 14f * unit, rowAt[1].y + 12f * unit, 0f);
                 _sheetTip.GetWorldCorners(tipAt);
                 if (tipAt[0].y < 8f) _sheetTip.position += new Vector3(0f, 8f - tipAt[0].y, 0f); // (never off the bottom of the screen)
                 if (tipAt[2].x > Screen.width - 8f) _sheetTip.position += new Vector3(Screen.width - 8f - tipAt[2].x, 0f, 0f); // (a narrow screen: over the window's edge rather than off the side)

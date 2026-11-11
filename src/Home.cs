@@ -338,8 +338,8 @@ namespace HuginWhispers
         // why it cannot come to you now, or null
         private static string NoRoom(Player p, bool munin)
         {
-            if (RavenSeat.On(p, munin) == null && SeneaLShoulders.Holds) return null; // its shoulder free on SeneaL UI's cells: it sits there, no bag needed
-            return p.GetInventory().HaveEmptySlot() ? null : Lang.F("У сумці нема місця для {0}.", Plugin.RavenNameGen(munin)); // (without the cells a raven on the shoulder is in the bag)
+            if (RavenSeat.On(p, munin) == null && !RavenSeat.Waiting(p, munin)) return null; // its shoulder is free and it may sit: no bag needed
+            return p.GetInventory().HaveEmptySlot() ? null : Lang.F("У сумці нема місця для {0}.", Plugin.RavenNameGen(munin)); // (its shoulder is taken, or it may not sit yet: it goes into the bag)
         }
 
         internal static void TakeBack(Player p, PerchView v, int seat)
@@ -405,10 +405,9 @@ namespace HuginWhispers
             item.m_customData = data;
             Habits.FromPerch(p, item, munin, guard, sat);
             bool shoulderFree = RavenSeat.On(p, munin) == null;
-            if (!shoulderFree || !RavenSeat.OntoShoulderCell(p, item)) // its shoulder free on SeneaL UI's cells: straight onto it, the bag never asked
+            if (!shoulderFree || !RavenSeat.OntoShoulder(p, item)) // its shoulder free: straight onto it, the bag never asked
             {
                 if (!p.GetInventory().AddItem(item)) { ItemDrop.DropItem(item, 1, p.transform.position + Vector3.up, Quaternion.identity); said += Lang.T("\nСумка повна — він сів поруч на землю."); }
-                else if (shoulderFree) RavenSeat.Sit(p, item, false);
             }
             Drop(p, token);
             Backup.Save(p, item);

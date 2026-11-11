@@ -8,11 +8,11 @@ namespace HuginWhispers
 {
     // The ravens' own place: the shoulders, not a slot of the game. Hugin always sits on the right shoulder and
     // Munin on the left, as in the myths; each has its own place, so both are worn at once and the belt stays free.
-    // A raven on the shoulder is a raven in the bag with the game's own "worn" mark (the frame in the bag and on the
-    // hotbar; kept when the game saves, and left alone by mods that sort or stack the bag), but in no slot of the game.
-    // Right click or a hotbar key puts it on and takes it off. Only the ravens this game sat down itself count (Seated):
-    // a copy brought in with the mark (from a chest, dropped and picked up) loses it. A raven that leaves the bag
-    // (dropped, put in a chest) is taken off. Dying takes them off quietly, as the game does with worn gear.
+    // A raven on the shoulder is off the bag (Shelf: kept in the character's own data when the game saves), marked worn, in
+    // no slot of the game: a body on you needs no cell, and no inventory mod has to know about it.
+    // Right click in the bag or a hotbar key puts it on; it comes off by the button on its page in the Book of ravens, on
+    // a perch or at the death. Only the ravens this game sat down itself count (Seated): a copy brought in with the mark
+    // (from a chest, dropped and picked up) loses it. Dying takes them off quietly, as the game does with worn gear.
     //
     // A raven taken off the shoulder takes offence: for a while no raven of that kind (that one or another)
     // sits on your shoulder again, and one cannot be swapped for another while it sits there.
@@ -31,12 +31,11 @@ namespace HuginWhispers
         // the ravens sitting on a shoulder now, and on whom (a character loaded again is a new player with new items)
         private static readonly Dictionary<ItemDrop.ItemData, Player> Seated = new Dictionary<ItemDrop.ItemData, Player>();
 
-        // With SeneaL UI's shoulder cells (SeneaLShoulders) a raven on the shoulder is not in the bag at all: it is
-        // kept here, and in the character's own data when the game saves (ShelfKey). Without them, or once SeneaL UI's
-        // inventory is gone or switched off, every raven kept here goes back into the bag, still on the shoulder (one
-        // out of the grave with the bag full waits here until a cell is free).
+        // The ravens on the shoulders, off the bag; saved in the character's own data (ShelfKey). One that is in the bag
+        // still sitting (an old save, the game putting the gear back on, the grave) comes here at the next Tick.
         private static readonly HashSet<ItemDrop.ItemData> Shelf = new HashSet<ItemDrop.ItemData>();
         private const string ShelfKey = "RavenWatch_shoulderItems";
+        private static bool _shelfUnread; // the saved ravens could not be read: the next save must not wipe them
         private static readonly List<ItemDrop.ItemData> Gone = new List<ItemDrop.ItemData>(4), Move = new List<ItemDrop.ItemData>(4); // Tick's own, reused
 
         internal static bool IsSeated(ItemDrop.ItemData item)
@@ -75,7 +74,7 @@ namespace HuginWhispers
             }
         }
 
-        // out of the bag onto the shoulder cell
+        // out of the bag onto the shoulder
         private static void ToShelf(Player p, ItemDrop.ItemData item)
         {
             if (Shelf.Contains(item)) return;
@@ -83,11 +82,12 @@ namespace HuginWhispers
             p.GetInventory().RemoveItem(item);
         }
 
-        // a raven that is in no bag (back from its home on a perch) straight onto its free shoulder cell of SeneaL UI,
-        // as the game puts it back when loading; false: no cells, or that shoulder is taken
-        internal static bool OntoShoulderCell(Player p, ItemDrop.ItemData item)
+        // a raven that is in no bag (back from its home on a perch) straight onto its free shoulder, as the game puts it
+        // back when loading, but the wait after an offence counts (says why); false: it may not sit
+        internal static bool OntoShoulder(Player p, ItemDrop.ItemData item)
         {
-            if (p == null || item == null || p != Player.m_localPlayer || !SeneaLShoulders.Holds) return false;
+            bool mayMunin;
+            if (p == null || item == null || p != Player.m_localPlayer || !RavenItem.IsRaven(item, out mayMunin) || !MaySit(p, item, mayMunin)) return false;
             Shelf.Add(item);
             if (Sit(p, item, true)) { RavenJournal.Note(p, item, "on the shoulder (back from home)"); RavenItem.ForgetWorn(); return true; }
             Shelf.Remove(item);
@@ -95,7 +95,7 @@ namespace HuginWhispers
             return false;
         }
 
-        // from the shoulder cell back into the bag, still worn; false when the bag is full
+        // from the shoulder back into the bag, still worn; false when the bag is full
         private static bool FromShelf(Player p, ItemDrop.ItemData item)
         {
             if (!Shelf.Contains(item)) return true;
@@ -104,7 +104,7 @@ namespace HuginWhispers
             return true;
         }
 
-        // taken off a shoulder kept off the bag, with no cell for it
+        // taken off the shoulder with no cell for it in the bag
         private static void NoRoom(Player p, bool munin)
         {
             if (Time.time - _roomToldAt < 60f) return;
@@ -117,9 +117,8 @@ namespace HuginWhispers
         internal static void Saving(Player p)
         {
             if (p == null) return;
-            if (p == Player.m_localPlayer) Remark(p); // saved worn: back on the shoulder after loading
             List<ItemDrop.ItemData> list = Shelved(p);
-            if (list.Count == 0) { p.m_customData.Remove(ShelfKey); return; }
+            if (list.Count == 0) { if (!_shelfUnread) p.m_customData.Remove(ShelfKey); return; }
             try
             {
                 Inventory tmp = new Inventory(ShelfKey, null, 4, 1);
@@ -131,15 +130,16 @@ namespace HuginWhispers
             catch (System.Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Shoulder ravens were not saved: " + e.Message); }
         }
 
-        // and back when it is loaded: on the shoulder again (into the bag at the next check if SeneaL UI is not there)
+        // and back when it is loaded: on the shoulder again
         private static void ReadShelf(Player p)
         {
             string raw;
+            _shelfUnread = false;
             if (!p.m_customData.TryGetValue(ShelfKey, out raw)) return;
-            p.m_customData.Remove(ShelfKey);
             Inventory tmp = new Inventory(ShelfKey, null, 4, 1);
             try { tmp.Load(new ZPackage(raw)); }
-            catch (System.Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Shoulder ravens could not be read: " + e.Message); return; }
+            catch (System.Exception e) { _shelfUnread = true; if (Plugin.Instance != null) Plugin.Instance.Log("Shoulder ravens could not be read (kept in the character): " + e.Message); return; }
+            p.m_customData.Remove(ShelfKey);
             foreach (ItemDrop.ItemData item in new List<ItemDrop.ItemData>(tmp.GetAllItems()))
             {
                 bool munin;
@@ -167,6 +167,9 @@ namespace HuginWhispers
             p.m_customData.Remove(Key(false));
             p.m_customData.Remove(Key(true));
         }
+
+        // still offended: no raven of that kind sits on your shoulder yet
+        internal static bool Waiting(Player p, bool munin) { return Enabled && Left(p, munin).Length > 0; }
 
         internal static string Left(Player p, bool munin)
         {
@@ -216,7 +219,7 @@ namespace HuginWhispers
             item.m_equipped = true;
             Seated[item] = p;
             if (!quiet) RavenJournal.Note(p, item, "on the shoulder"); // (restored on loading: not news)
-            if (!quiet && p == Player.m_localPlayer && SeneaLShoulders.Holds && p.GetInventory().ContainsItem(item)) ToShelf(p, item);
+            if (!quiet && p == Player.m_localPlayer && p.GetInventory().ContainsItem(item)) ToShelf(p, item);
             RavenItem.ForgetWorn();
             return true;
         }
@@ -232,8 +235,8 @@ namespace HuginWhispers
                 string sulk = Quirks.Sulk(p, mun);
                 if (sulk != null) { RavenMsg.Center(p, Lang.F("{0}: і з плеча не злізе.", sulk)); return false; }
             }
-            // asked before anything changes: the shoulder cell's way below clears the mark first (that hid every
-            // take-off from the shoulder cells of SeneaL UI: no offence, no wait, no line in the journal)
+            // asked before anything changes: the way below clears the mark first (that hid every take-off: no offence, no
+            // wait, no line in the journal)
             bool was = IsSeated(item);
             if (Shelf.Contains(item))
             {
@@ -253,6 +256,7 @@ namespace HuginWhispers
             RavenItem.ForgetWorn();
             if (was) RavenJournal.Note(p, item, offence ? "off the shoulder into the bag" : "off the shoulder into the bag (no offence)");
             if (was && offence) { TakenOff(p, item); Nicks.OnTakenOff(p, item); }
+            if (was && p == Player.m_localPlayer) RavenBook.Refresh(); // (its page in the book shows it gone, the move being over)
             return true;
         }
 
@@ -279,7 +283,7 @@ namespace HuginWhispers
             RavenItem.ForgetWorn();
         }
 
-        // right click in the bag, its hotbar key, a click on its SeneaL shoulder cell: as with any gear, the hero takes
+        // right click in the bag, its hotbar key, the button in the book: as with any gear, the hero takes
         // a moment for it — the game's own "equipping" move and bar (its action queue), then the game puts it on or
         // takes it off (EquipItem / UnequipItem, which bring it to its shoulder: the patches below). Pressed again
         // meanwhile: called off, as with gear. What would refuse anyway refuses at once, before the move.
@@ -321,20 +325,6 @@ namespace HuginWhispers
             return munin ? m : h;
         }
 
-        // the same with the move (the empty SeneaL shoulder cell clicked)
-        internal static void ToggleFromBag(Player p, bool munin)
-        {
-            if (p == null) return;
-            foreach (ItemDrop.ItemData item in p.GetInventory().GetAllItems())
-            {
-                bool m;
-                if (!RavenItem.IsRaven(item, out m) || m != munin || IsSeated(item)) continue;
-                Toggle(p, item);
-                return;
-            }
-            RavenMsg.Center(p, munin ? Lang.T("У сумці нема Муніна.") : Lang.T("У сумці нема Хугіна."));
-        }
-
         // twice a second: a raven that left the bag is off the shoulder; one that came in with the mark is not on it
         internal static void Tick(Player p)
         {
@@ -358,50 +348,24 @@ namespace HuginWhispers
                     OffPerch(p, item);
                     TakenOff(p, item);
                 }
-            Remark(p);
             foreach (ItemDrop.ItemData item in bag.GetAllItems())
             {
                 bool munin;
                 if (item.m_equipped && !Seated.ContainsKey(item) && RavenItem.IsRaven(item, out munin)) item.m_equipped = false;
             }
 
-            // the shoulder cells: the ravens on the shoulders leave the bag, or come back to it when the cells are gone
+            // a raven on the shoulder is off the bag, however it got there
             if (!p.IsDead())
             {
                 Reseat(p, bag);
-                bool holds = SeneaLShoulders.Holds;
-                bool back = !holds && SeneaLShoulders.Released; // not a moment of SeneaL UI starting up
                 Move.Clear();
                 foreach (KeyValuePair<ItemDrop.ItemData, Player> kv in Seated)
-                    if (kv.Value == p && kv.Key.m_equipped && (holds ? bag.ContainsItem(kv.Key) : back && Shelf.Contains(kv.Key))) Move.Add(kv.Key);
-                foreach (ItemDrop.ItemData item in Move)
-                {
-                    if (holds) ToShelf(p, item);
-                    else FromShelf(p, item); // (a full bag: it stays on the shoulder off the bag, and comes in once a cell is free)
-                }
+                    if (kv.Value == p && kv.Key.m_equipped && bag.ContainsItem(kv.Key)) Move.Add(kv.Key);
+                foreach (ItemDrop.ItemData item in Move) ToShelf(p, item);
                 if (Move.Count > 0) changed = true;
             }
             if (changed) RavenItem.ForgetWorn();
             TickDeathWatch(p);
-        }
-
-        // Another mod may clear the worn mark of a raven still on its shoulder: SeneaL UI drawing Path of Valheiman's
-        // equipment clears it after every click in the inventory from all that no slot of the game holds. Put back:
-        // moving a raven in the bag neither takes it off nor lets it off the shoulder without the offence.
-        internal static bool Remark(Player p)
-        {
-            if (p == null || p.IsDead()) return false;
-            Inventory bag = p.GetInventory();
-            bool any = false;
-            foreach (KeyValuePair<ItemDrop.ItemData, Player> kv in Seated)
-            {
-                if (kv.Value != p || kv.Key.m_equipped || (!Shelf.Contains(kv.Key) && !bag.ContainsItem(kv.Key))) continue;
-                kv.Key.m_equipped = true;
-                any = true;
-                RavenJournal.Note(p, kv.Key, "worn mark cleared by another mod: put back");
-            }
-            if (any) RavenItem.ForgetWorn();
-            return any;
         }
 
         // after the game put the saved gear back on: a raven the old second belt had lost while loading sits again
@@ -418,8 +382,7 @@ namespace HuginWhispers
         }
 
         // A raven the death took off the shoulder carries the owner's id; back in that player's bag (the grave looted,
-        // by hand, by SeneaL UI or picked up from the ground) it sits on its shoulder again by itself. SeneaL UI's own
-        // re-equip never sees the ravens: they leave the shoulders before it marks the worn gear, or sit off the bag.
+        // by hand, by any mod's take-all or picked up from the ground) it sits on its shoulder again by itself.
         private const string ReseatKey = "RavenWatch_reseat";
 
         // it sat on a shoulder when its owner died (a raven only carried in the bag has no such mark)
@@ -462,17 +425,15 @@ namespace HuginWhispers
 
         // Out of your own grave straight onto its shoulder, past the bag: a full bag never keeps your ravens in the grave.
         // One that sat on the shoulder at the death always goes so; one carried in the bag only when the bag has no room,
-        // or when dropped on its shoulder cell (wanted: and it may sit, no offence wait). It is kept off the bag (Shelf):
-        // with SeneaL UI on its shoulder cell; without it (the game's or Path of Valheiman's inventory) it goes into the
-        // bag by itself once a cell is free (Tick). True: taken out and seated.
-        internal static bool FromGrave(Player p, Inventory grave, ItemDrop.ItemData item, bool wanted)
+        // and it may sit (no offence wait). True: taken out and seated.
+        internal static bool FromGrave(Player p, Inventory grave, ItemDrop.ItemData item)
         {
             bool munin;
             if (p == null || p != Player.m_localPlayer || p.IsDead() || grave == null || item == null || !RavenItem.IsRaven(item, out munin)) return false;
             if (On(p, munin) != null || !grave.ContainsItem(item)) return false;
             string who = null;
             bool worn = item.m_customData != null && item.m_customData.TryGetValue(ReseatKey, out who) && who == p.GetPlayerID().ToString();
-            if (!worn && !wanted && p.GetInventory().HaveEmptySlot()) return false; // into the bag as ever
+            if (!worn && p.GetInventory().HaveEmptySlot()) return false; // into the bag as ever
             if (!worn && !MaySit(p, item, munin)) return false;         // (says why)
             if (worn) item.m_customData.Remove(ReseatKey);
             GraveRavens.HandOff(p, item); // the bird seen at the grave flies to the shoulder
@@ -529,7 +490,7 @@ namespace HuginWhispers
             Loyal.Forget(p);
             List<ItemDrop.ItemData> mine = new List<ItemDrop.ItemData>();
             foreach (KeyValuePair<ItemDrop.ItemData, Player> kv in Seated) if (kv.Value == p) mine.Add(kv.Key);
-            foreach (ItemDrop.ItemData item in mine) Loyal.TakeStayed(item); // the ones on the shoulder cells are not in the bag
+            foreach (ItemDrop.ItemData item in mine) Loyal.TakeStayed(item); // the ones on the shoulders are not in the bag
             WatchFrom(p);
             if (Loyal.WorldKeeps()) { foreach (ItemDrop.ItemData item in mine) { Loyal.Mark(item); Watch(item, true); } return; } // they stay, and they know they were not in the grave
             foreach (ItemDrop.ItemData item in mine)
@@ -539,7 +500,7 @@ namespace HuginWhispers
                 if (item.m_customData != null) item.m_customData[ReseatKey] = p.GetPlayerID().ToString(); // back on the shoulder once you pick it up
                 if (TakeOff(p, item, false)) { OffHotbar(p, item); Watch(item, false); continue; }
                 if (GraveRow(p, item)) { RavenJournal.Note(p, item, "death: the bag full, into the grave in a row of its own"); Watch(item, false); continue; }
-                // a full bag: the raven from the shoulder cell never goes on the ground, it stays where it sits
+                // a full bag: the raven from the shoulder never goes on the ground, it stays where it sits
                 // (still worn and on the shelf: saved with the character, back on the shoulder after the respawn)
                 if (item.m_customData != null) item.m_customData.Remove(ReseatKey);
                 item.m_equipped = true;
@@ -552,10 +513,10 @@ namespace HuginWhispers
         }
 
         // A full bag at the death: the bag gets one row more for the grave's sake only — the game makes the grave as big as
-        // the bag (Inventory.MoveInventoryToGrave) — so a raven from a shoulder cell lies in the grave with the rest
+        // the bag (Inventory.MoveInventoryToGrave) — so a raven from a shoulder lies in the grave with the rest
         // instead of staying on you (that would make the loyal gifts pointless). The bag is its own size again once the
         // grave is made (RavenSeatDeathPatch's finalizer). Inventory mods may look for free cells only in their own rows
-        // (SeneaL UI: its main rows): then the raven is laid straight into the new row, past the search for a cell.
+        // (their main rows): then the raven is laid straight into the new row, past the search for a cell.
         private static readonly System.Reflection.FieldInfo InvHeight = AccessTools.Field(typeof(Inventory), "m_height");
         private static readonly System.Reflection.FieldInfo InvList = AccessTools.Field(typeof(Inventory), "m_inventory");
         private static Inventory _grown;
@@ -632,7 +593,7 @@ namespace HuginWhispers
         // The death watch. Other inventory mods (extra slots, equipment slots, their own or a second grave, other
         // versions of them) do their own things with the gear when you die, and some may throw a raven on the ground
         // or put one that should stay into a grave. So from the death to the respawn, twice a second, each raven of
-        // the shoulders is looked for by its id: in the bag, on the shoulder cells, in a grave nearby, on the ground.
+        // the shoulders is looked for by its id: in the bag, on the shoulders, in a grave nearby, on the ground.
         // One on the ground (or one that should have stayed, found in a grave) goes back onto its shoulder: saved with
         // the character when the game respawns it, so it is on you again after the respawn. One in a grave is fine.
         private sealed class Watched { internal string Id; internal bool Munin, Stay; internal string Where = ""; internal Container Grave; } // Grave: where it was last seen
@@ -686,7 +647,7 @@ namespace HuginWhispers
             List<ItemDrop> drops = null;
             foreach (Watched w in DeathWatch)
             {
-                // on you: in the bag or on the shoulder cells
+                // on you: in the bag or on the shoulders
                 if (FindIn(p.GetInventory(), w.Id) != null) { Seen(w, "bag"); continue; }
                 bool onShelf = false;
                 foreach (ItemDrop.ItemData item in Shelf) if (HasId(item, w.Id)) { onShelf = true; break; }
@@ -813,12 +774,12 @@ namespace HuginWhispers
     }
 
     // The game or another mod taking a raven "off": only what you do (the bag's and the inventory's own actions, a
-    // drop, the death's taking of the gear, the SeneaL doll) takes it off. Anything else (some other code unequipping
+    // drop, the death's taking of the gear) takes it off. Anything else (some other code unequipping
     // everything it finds) is refused: the raven stays on its shoulder, and the journal says who tried.
     [HarmonyPatch(typeof(Humanoid), "UnequipItem")]
     internal static class RavenSeatUnequipPatch
     {
-        private static readonly string[] Allowed = { "InventoryGui", "InventoryGrid", "UpdateEquipQueue", "UpdateActionQueue", "QueueUnequipAction", "ToggleEquipped", "UseItem", "UnequipAllItems", "DropItem", "OnDeath", "CreateTombStone", "SeneaL" };
+        private static readonly string[] Allowed = { "InventoryGui", "InventoryGrid", "UpdateEquipQueue", "UpdateActionQueue", "QueueUnequipAction", "ToggleEquipped", "UseItem", "UnequipAllItems", "DropItem", "OnDeath", "CreateTombStone" };
 
         private static bool Prefix(Humanoid __instance, ItemDrop.ItemData item)
         { try {
@@ -835,16 +796,6 @@ namespace HuginWhispers
             RavenSeat.TakeOff(p, item, true); // (a sulking raven refuses there)
             return false;
         } catch (System.Exception e) { PatchGuard.Fail("RavenSeatUnequipPatch", e); return true; } }
-    }
-
-    // a click in the inventory: after the other mods' own handling of it (SeneaL UI clears worn marks there) the seated
-    // ravens keep theirs
-    [HarmonyPatch(typeof(InventoryGui), "OnSelectedItem")]
-    internal static class RavenSeatRemarkPatch
-    {
-        [HarmonyPriority(Priority.Last)]
-        [HarmonyAfter("seneaL.valheim.ui")]
-        private static void Postfix() { try { RavenSeat.Remark(Player.m_localPlayer); } catch (System.Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Raven worn mark: " + e.Message); } }
     }
 
     [HarmonyPatch(typeof(Player), "EquipInventoryItems")]

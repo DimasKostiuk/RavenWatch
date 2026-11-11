@@ -41,6 +41,7 @@ namespace HuginWhispers
                     continue;
                 }
                 if (s == null) { Errors.Add(at + "рядок поза сценою"); continue; }
+                if (line.StartsWith("roams:")) { string v = line.Substring(6).Trim(); s.Roams = v == "yes" || v == "так" || v == "1"; continue; }
                 if (line.StartsWith("alone:")) { string v = line.Substring(6).Trim(); s.Alone = v == "yes" || v == "так" || v == "1"; continue; }
                 if (line.StartsWith("needs:")) { s.NeedsText = line.Substring(6).Trim(); s.Needs = Conds(s.NeedsText, at); continue; }
                 if (line.StartsWith("check:")) { s.Check = line.Substring(6).Trim(); continue; } // (where the studio's check begins it: StudioScene)

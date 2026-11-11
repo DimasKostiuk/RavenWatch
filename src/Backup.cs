@@ -112,7 +112,7 @@ namespace HuginWhispers
             bool save = Time.time >= _nextSave;
             if (save) _nextSave = Time.time + Mathf.Max(1f, SaveMinutes) * 60f;
             List<ItemDrop.ItemData> mine = new List<ItemDrop.ItemData>(bag.GetAllItems());
-            mine.AddRange(RavenSeat.Shelved(p)); // on SeneaL UI's shoulder cells, off the bag
+            mine.AddRange(RavenSeat.Shelved(p)); // on the shoulders, off the bag
             foreach (ItemDrop.ItemData item in mine)
             {
                 bool munin;
@@ -127,7 +127,7 @@ namespace HuginWhispers
             List<ItemDrop.ItemData> gone = null;
             HashSet<string> ids = new HashSet<string>();
             List<ItemDrop.ItemData> all = new List<ItemDrop.ItemData>(inv.GetAllItems());
-            if (own) all.AddRange(RavenSeat.Shelved(p)); // the shoulder cells count as yours too
+            if (own) all.AddRange(RavenSeat.Shelved(p)); // the shoulders count as yours too
             foreach (ItemDrop.ItemData item in all)
             {
                 bool munin;
@@ -198,7 +198,7 @@ namespace HuginWhispers
             if (data.TryGetValue(GenKey, out gs) && int.TryParse(gs, out g) && ProfileGen(p, id) < g) p.m_customData[GenPrefix + id] = g.ToString();
         }
 
-        // this raven (by its id) in your bag or on a shoulder cell, or null
+        // this raven (by its id) in your bag or on a shoulder, or null
         internal static ItemDrop.ItemData With(Player p, string id)
         {
             if (p == null || string.IsNullOrEmpty(id)) return null;

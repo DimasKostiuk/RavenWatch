@@ -26,8 +26,15 @@ namespace HuginWhispers
     //   raven stage gait <kind> | all [s]                          its kind of gait (BodyGait), to compare; all: each in turn, its name shown
     //   raven stage hold <seconds> · go                            held at one moment · on again
     //   raven stage emote <gesture>|none                           the game's own gesture under the clip (kneel, sit …)
+    //   raven stage wield <weapon> [shield] · wield none            a real weapon (and shield) in its hands: the game's own stance for it under the clip, as a
+    //                                                              guard holds it (a pose for a weapon in hand: NpcStance.Pose.Hands, NpcGear.HandsOf)
+    //   raven stage held                                           where the weapon in its right hand points now, in the body's and the hand's frame (NpcGear.HeldAxis)
+    //   raven stage fright [s]                                     a fright for that long (NpcFeel): on its guard, then at its ease again — its weapon's stances
+    //   raven stage anim [name [value]]                            the animator's own values (statei/statef: the game's stance for a weapon), read or set: a measure
     //   raven stage prop <item> [x y z [rx ry rz]] · prop none       a thing lying before it for the clip's @Prop channels
     //                                                              (metres and degrees in its frame), as a scene's «free» prop
+    //   raven stage prop <item> arm                                on its right forearm, as a person carries its own (StoryProps «arm»):
+    //                                                              the arm's clips (basket_carry, basket_set) taken with the thing on
     //   raven stage edit <clip>                                    a built-in clip written out as a file, to edit
     //   raven stage rec · rec off                                  the player's own moves recorded, jerks marked (PAnimLog), for
     //                                                              a clip played on him in a scene
@@ -35,11 +42,16 @@ namespace HuginWhispers
     //   raven stage check [views]                                  one run of the clip measured every frame by BodyCheck (the same
     //                                                              rules as a scene's check), into studio/out/stage_<clip>.txt: on
     //                                                              top a VERDICT, each line a mistake already made once, with what
-    //                                                              to change; then what was asked (the clip's «want» lines), the
-    //                                                              tempo strips, each key frame's pose in words. Filmed in the same
-    //                                                              run at its key moments (StageFilm: 480 px, the whole body from every
-    //                                                              side and the close views it needs — AutoViews — or the ones asked), stage_<clip>_<view>.png; then
-    //                                                              each mistake's moment held and filmed close, stage_<clip>_worst_<view>.png.
+    //                                                              to change (and a «fix:» command where the core can reckon it); then what
+    //                                                              was asked (the clip's «want» lines), the tempo strips, each key frame's
+    //                                                              pose in words. After the run its KEY SHEET, stage_<clip>_key.png (StageKey):
+    //                                                              a row a moment — the mistakes, the wants, the marks (KeyMoments) — each
+    //                                                              held and filmed in the two views that show that kind of mistake (KeyViews),
+    //                                                              labelled in the picture; and, when a second mannequin plays another take
+    //                                                              («ab», or by itself the take before this one), stage_<clip>_diff.png: this
+    //                                                              take | the other at the same moments. Sheets of the whole run from given
+    //                                                              views (stage_<clip>_<view>.png) only when views are asked (review 2
+    //                                                              2026-11-10: ten sheets of 19 MB a take and the main thing unseen).
     //                                                              A clip's «touch» is set up as a fixture by «play». A mannequin still coming
     //                                                              into the world is measured when it has come. The clip is
     //                                                              taken off first and played from the game's own stance,
@@ -83,6 +95,7 @@ namespace HuginWhispers
             }
             if (_me == null)
             {
+                if (what == "status") return "stage down"; // (anim.js status: never made yet)
                 if (what != "up" && what != "play") return "raven stage up [шаблон] | down | here | turn <град> | play <кліп> [швидкість] | ab <кліп>|off | wall|table|seat|step|point|piece … · clear | stop | speed <x> | hold <с> | go | emote <жест>|none | prop <предмет>|none | edit <кліп> | check [види] | takes | back [n]";
                 GameObject g = new GameObject("RavenWatch_AnimStage");
                 DontDestroyOnLoad(g);
@@ -195,12 +208,58 @@ namespace HuginWhispers
                     _emote = arg == "none" ? "" : arg;
                     _dummy.Order(_emote.Length > 0 ? "emote " + _emote + " loop" : "emote none", NpcMind.Layer.Scene);
                     return _emote.Length > 0 ? "Жест гри під кліпом: " + _emote + "." : "Без жесту гри.";
+                case "wield":
+                    {
+                        if (!Bring(p)) return "Манекена нема.";
+                        if (arg.Length == 0) return "raven stage wield <зброя> [щит] · wield none";
+                        string shield = a.Length > 3 ? a[3] : "";
+                        string why = NpcGear.Arm(_dummy, arg == "none" ? "" : arg, shield); // (the core's one way to put a weapon in a body's hands)
+                        if (why != null) return why;
+                        return arg == "none" ? "Руки порожні." : "У руках: " + arg + (shield.Length > 0 ? " і " + shield : "") + " · стійка гри: " + NpcGear.HandsOf(_dummy) + ". «raven stage held» — куди вона лежить.";
+                    }
+                case "anim": // (a measure, 2026-11-08: which of the animator's own values picks the game's stance for a weapon, and whether one set stays)
+                    {
+                        if (_dummy == null) return "Манекена нема.";
+                        Animator an = _dummy.GetComponentInChildren<Animator>();
+                        if (an == null) return "Нема аніматора.";
+                        if (a.Length > 3)
+                        {
+                            float v = Num(a[3], 0f);
+                            foreach (AnimatorControllerParameter q in an.parameters)
+                                if (q.name == arg) { if (q.type == AnimatorControllerParameterType.Int) an.SetInteger(arg, Mathf.RoundToInt(v)); else if (q.type == AnimatorControllerParameterType.Float) an.SetFloat(arg, v); else if (q.type == AnimatorControllerParameterType.Bool) an.SetBool(arg, v != 0f); }
+                        }
+                        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                        foreach (AnimatorControllerParameter q in an.parameters)
+                        {
+                            if (arg.Length > 0 && a.Length <= 3 && q.name.IndexOf(arg, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                            if (arg.Length > 0 && a.Length > 3 && q.name != arg && q.name != "statei" && q.name != "statef") continue;
+                            sb.Append(q.name).Append('=').Append(q.type == AnimatorControllerParameterType.Int ? an.GetInteger(q.name).ToString() : q.type == AnimatorControllerParameterType.Float ? an.GetFloat(q.name).ToString("0.##", CultureInfo.InvariantCulture) : q.type == AnimatorControllerParameterType.Bool ? (an.GetBool(q.name) ? "1" : "0") : "t").Append(' ');
+                        }
+                        return sb.ToString();
+                    }
+                case "fright": // (on its guard by the core's own way — a fright, NpcFeel: its weapon's stance comes and goes as on anyone, NpcGear.Stance)
+                    {
+                        if (_dummy == null) return "Манекена нема.";
+                        float sec = arg.Length > 0 ? Num(arg, 6f) : 6f;
+                        NpcFeel.Feel(_dummy, NpcFeel.Fright, sec, _dummy.transform.position + _dummy.transform.forward * 3f, false);
+                        return "Наляканий на " + sec.ToString("0") + " с (насторожі: стійка зброї бойова), далі спокій.";
+                    }
+                case "held":
+                    {
+                        if (_dummy == null) return "Манекена нема.";
+                        return NpcGear.HeldAxis(_dummy); // (where the weapon in its hand points now, under the clip playing: the pose's wrist reckoned from it)
+                    }
                 case "prop":
                     {
                         if (!Bring(p)) return "Манекена нема.";
-                        if (arg.Length == 0) return "raven stage prop <предмет> [x y z [rx ry rz]] · prop none";
-                        StoryProps.Put(_dummy);
+                        if (arg.Length == 0) return "raven stage prop <предмет> [x y z [rx ry rz]] | <предмет> arm · prop none";
+                        _dummy.Act("prop -"); // (the stage's own, whatever it was: StoryProps.Put lets a thing on the arm be, as a person's own)
                         if (arg == "none") return "Реквізит прибрано.";
+                        if (a.Length > 3 && a[3] == "arm") // (on its right forearm, as a person carries its own — Heid's basket: StoryProps «carry … arm»; the clip moves the arm, the thing follows it)
+                        {
+                            string onArm = StoryProps.Take(_dummy, new StoryProps.Ask { Item = arg, Hand = "a", Lasting = true });
+                            return onArm ?? "«" + arg + "» на правому передпліччі манекена.";
+                        }
                         // where it lies: as asked; else where the clip itself says it lies before it is taken (its «@Prop» at the start: the clip was made
                         // for that spot — 2026-11-07 the stage put a book elsewhere and every take measured a reach the scene never had); else before its feet
                         PAnimClip c = _clip.Length > 0 ? BodyClips.Find(_clip) : null;
@@ -225,13 +284,15 @@ namespace HuginWhispers
                 case "check":
                     if (_clip.Length == 0) return "Нічого не грає.";
                     if (_hold >= 0f) return "Спершу go: зараз пауза.";
-                    _checkViews = arg.Length > 0 ? arg : ""; // (none: the views the clip needs — AutoViews)
+                    _checkViews = arg.Length > 0 ? arg : ""; // (none: no sheets of the run, the key sheet after it; AutoViews names what it would take)
                     {
                         float early = _born + Born - Time.time;
                         if (early > 0f) { _checkAt = Time.time + early; return "Манекен ще з'являється: заміряю за " + F(early) + " с."; }
                         StartCheck();
                         return "Заміряю один прохід.";
                     }
+                case "status": // (one line for anim.js status: up or down, on what, playing what)
+                    return _dummy == null ? "stage down" : "stage up (" + _template + ")" + (_clip.Length > 0 ? ", plays " + _clip + (_speed != 1f ? " at " + _speed.ToString("0.##", CultureInfo.InvariantCulture) : "") : ", plays nothing") + (_other != null ? ", ab " + _clipB : "") + (_hold >= 0f ? ", held at " + _hold.ToString("0.0", CultureInfo.InvariantCulture) + " s" : "");
                 case "takes":
                     {
                         if (_clip.Length == 0) return "Нічого не грає.";
@@ -391,6 +452,7 @@ namespace HuginWhispers
             if (_me == this) _me = null;
             if (_dummy != null) _dummy.Remove();
             if (_other != null) _other.Remove();
+            if (_prevClip != null) { BodyClips.Clips.Remove(_prevClip); _prevClip = null; }
             ClearFixtures();
         }
 
@@ -401,8 +463,9 @@ namespace HuginWhispers
         internal static float Born = 5f; // (its smoke and its first pose: not the clip's)
         private float _born = -99f, _checkAt, _checkPlay;
         internal static float Rest = 1f, StanceNear = 0.08f, FootUp = 0.14f;
-        internal const int MostProofs = 6;
+        internal const int KeyMost = 4, KeyRows = 6; // (the key sheet: mistakes at most, rows at most)
         private bool _proving;
+        private string _prevClip; // (the take before this one, registered as a clip for the second mannequin while the key sheet is made)
 
         private void StartCheck()
         {
@@ -429,13 +492,15 @@ namespace HuginWhispers
             // filmed in this same run, at its key moments, from the views it needs (one run, not one to measure and one to film)
             Check run = _check;
             BodyAnimator an = Animator();
-            _check.Views = _checkViews.Length > 0 ? _checkViews : AutoViews(c);
+            _check.Views = _checkViews; // (none: the words of the key frames only; the key sheet after the run shows the picture — AutoViews says what a whole run's sheets would be)
             _check.Keys = KeyTimes(c);
-            if (an != null) StartCoroutine(Studio.StageFilm(_dummy, "stage_" + _clip, _check.Views, _check.Keys, () => an.TimeIn(Slot), () => _check == run, _check.Shots, () => run.Body.Words() + "\n  layers: " + an.LayersSaid()));
+            if (an != null) StartCoroutine(Studio.StageFilm(_dummy, "stage_" + _clip, _check.Views, _check.Keys, () => an.TimeIn(Slot), () => _check == run, _check.Shots, () => run.Body.Words() + "\n  layers: " + an.LayersSaid(), () => MarksOf(run)));
         }
 
+        private static List<Studio.Mark> MarksOf(Check run) { List<Studio.Mark> l = new List<Studio.Mark>(); if (run != null && run.Body != null) run.Body.Marks(l); return l; }
+
         // the views a clip needs: always the whole body from every side (Around: a front view hid an elbow behind the head, a side
-        // view which way it faced — 2026-11-07), and over that hands before the body — the chest close, from the front and the side;
+        // view which way it faced — 2026-11-07), and over that hands before the body — the chest close, from the front, both sides and above;
         // feet — from the side; fingers, a hold, a touch — their own close views
         internal const string Around = "front,side,back,three,top";
         internal static float HeadFrom = 1.3f; // m: a hand target this high films the head close
@@ -453,8 +518,8 @@ namespace HuginWhispers
                 if (b == "@LeftFoot" || b == "@RightFoot" || b == BodyClips.Move) feet = true;
             }
             if (head) fingers += ",head,headside,headtop";
-            if (c.Touch.Length > 0) return Around + ",contact,chestside" + fingers; // (what it touches shows from the side; from the front it stands between the camera and the body)
-            return Around + (hands ? ",chest,chestside" : "") + fingers;
+            if (c.Touch.Length > 0) return Around + ",contact,chestside,chesttop" + fingers; // (what it touches shows from the side; from the front it stands between the camera and the body)
+            return Around + (hands ? ",chest,chestside,chestleft,chesttop" : "") + fingers; // (hands before the body: close from four sides — a front view shows no depth, the whole body from above is too small: a hand 40 cm off the belly passed, 2026-11-09)
         }
 
         // the moments to look at: its start, each part's end and middle, where a hand or a foot takes hold or lets go, where a foot
@@ -509,10 +574,11 @@ namespace HuginWhispers
             public float TurnedAt, TurnedNear = 99f, Moved, Turned, Near = 99f, Frames;
             public readonly StringBuilder Rows = new StringBuilder();
             public BodyCheck Body;
-            public string Views = "", Said = "", Text = "";
+            public string Views = "", Said = "", Text = "", Other; // (Other: what the second mannequin plays beside it on the diff sheet, null none)
             public List<float> Keys = new List<float>();
-            public readonly List<string> Shots = new List<string>(), Proofs = new List<string>();
-            public bool ProofsDone = true;
+            public readonly List<string> Shots = new List<string>(), KeyRows = new List<string>();
+            public readonly List<Studio.KeyMoment> Moments = new List<Studio.KeyMoment>();
+            public bool KeyDone = true;
             public Check(string clip, float seconds) { Clip = clip; Until = Time.time + seconds; }
         }
 
@@ -551,37 +617,148 @@ namespace HuginWhispers
             c.Near = Mathf.Min(c.Near, nearNow);
         }
 
-        // the run over: said at once, then each mistake's moment held and filmed, and said again with those frames
+        // the run over: said at once, then the key sheet — each moment held and filmed in the views for it — and said again with its rows
         private void Finish(Check c)
         {
             c.Said = Verdict(c);
-            List<float> times = new List<float>();
-            foreach (KeyValuePair<float, string> m in c.Body.Moments)
-            {
-                bool have = false;
-                foreach (float x in times) if (Mathf.Abs(x - m.Key) < 0.25f) have = true;
-                if (!have && times.Count < MostProofs) times.Add(m.Key);
-            }
-            c.ProofsDone = times.Count == 0;
+            KeyMoments(c);
+            c.KeyDone = false;
             Report(c);
-            if (times.Count == 0) return;
             _proving = true;
             _again = 0f;
             bool first = true;
-            StartCoroutine(Studio.StageProof(_dummy, "stage_" + c.Clip + "_worst", ProofViews, times, t =>
+            NpcActor other = OtherFor(c);
+            StartCoroutine(Studio.StageKey(_dummy, other, c.Other, "stage_" + c.Clip, c.Moments, t =>
             {
                 _hold = t;
                 if (first) { first = false; Begin(Fade); } else { BodyAnimator a = Animator(); if (a != null) a.Hold(Slot, t); }
-            }, () => { BodyAnimator a = Animator(); return c.Body.Words() + (a != null ? "\n  layers: " + a.LayersSaid() : ""); }, c.Proofs, () =>
+                Humanoid hb = other != null ? other.GetComponent<Humanoid>() : null; BodyAnimator ab = hb != null ? BodyAnimator.For(hb) : null;
+                if (ab != null) ab.Hold(Slot, t);
+            }, () => { BodyAnimator a = Animator(); return c.Body.Words() + (a != null ? "\n  layers: " + a.LayersSaid() : ""); }, c.KeyRows, () =>
             {
                 _proving = false;
                 _hold = -1f;
                 if (_clip.Length > 0) Begin(Fade);
-                c.ProofsDone = true;
+                if (_prevClip != null) // (the take before: its mannequin and its clip go with the sheet)
+                {
+                    if (_other != null) { _other.Remove(); _other = null; }
+                    BodyClips.Clips.Remove(_prevClip); _prevClip = null; _clipB = "";
+                }
+                else { Humanoid hb = _other != null ? _other.GetComponent<Humanoid>() : null; BodyAnimator ab = hb != null ? BodyAnimator.For(hb) : null; if (ab != null) ab.Hold(Slot, -1f); }
+                c.KeyDone = true;
                 Report(c);
-            }));
+            }, () => MarksOf(c)));
         }
-        private const string ProofViews = "contact,chestside,side";
+
+        // the moments of the key sheet: the mistakes the VERDICT names (KeyMost at most, a quarter second apart), then the moments the clip's «want»
+        // lines name and its marks (KeyRows in all); none of these — its start, its middle, its end. Each with the two views for its kind
+        private void KeyMoments(Check c)
+        {
+            PAnimClip clip = BodyClips.Find(c.Clip);
+            List<Studio.KeyMoment> m = c.Moments;
+            m.Clear();
+            int mistakes = 0;
+            foreach (KeyValuePair<float, string> x in c.Body.Moments)
+            {
+                if (x.Key < 0f || Near(m, x.Key) || mistakes >= KeyMost) continue;
+                int tag = x.Value.IndexOf('[');
+                string line = tag >= 0 ? x.Value.Substring(tag) : x.Value;
+                int nl = line.IndexOf('\n'); if (nl > 0) line = line.Substring(0, nl);
+                m.Add(new Studio.KeyMoment { T = x.Key, Label = line, Views = KeyViews(line) });
+                mistakes++;
+            }
+            if (clip != null)
+            {
+                foreach (string want in clip.Wants)
+                {
+                    if (m.Count >= KeyRows) break;
+                    string[] w = want.Split(' ');
+                    string first = w[0]; int dash = first.IndexOf('-');
+                    float at;
+                    if (!float.TryParse(dash > 0 ? first.Substring(0, dash) : first, NumberStyles.Float, CultureInfo.InvariantCulture, out at) || Near(m, at)) continue;
+                    m.Add(new Studio.KeyMoment { T = at, Label = "want " + want, Views = KeyViews("[want] " + want) });
+                }
+                foreach (PAnimEvent mk in clip.Marks) { if (m.Count >= KeyRows) break; if (!Near(m, mk.T)) m.Add(new Studio.KeyMoment { T = mk.T, Label = "mark " + mk.Sound, Views = KeyViews("") }); }
+                if (m.Count == 0) foreach (float t in new[] { 0.1f, clip.Length * 0.5f, clip.Length - 0.05f }) m.Add(new Studio.KeyMoment { T = t, Label = t < 0.2f ? "start" : t > clip.Length - 0.1f ? "end" : "middle", Views = clip.Bones.Contains("@LeftHand") || clip.Bones.Contains("@RightHand") ? "chestside,three" : "side,three" });
+            }
+            m.Sort((p, q) => p.T.CompareTo(q.T));
+        }
+        private static bool Near(List<Studio.KeyMoment> m, float t) { foreach (Studio.KeyMoment x in m) if (Mathf.Abs(x.T - t) < 0.25f) return true; return false; }
+
+        // the two views that show a kind of mistake (by the rule's tag and the hand it names): a wrist, a fist, a grip — the hand close from its
+        // side and from its palm's; a miss, a lean — the whole body from the side and the chest; a slide — the feet; a head — the head
+        internal static string KeyViews(string line)
+        {
+            string tag = BodyCheck.TagOf(line) ?? "";
+            bool left = line.IndexOf("left", StringComparison.Ordinal) >= 0 || line.IndexOf("@LeftHand", StringComparison.Ordinal) >= 0;
+            string hand = left ? "handl,holdl" : "handr,holdr", finger = left ? "fingerl,handl" : "fingerr,handr";
+            switch (tag)
+            {
+                case "bend": case "twist": case "palm": case "fist": case "grip": case "prop-fingers": return hand;
+                case "miss": return "side,chestside";
+                case "touch": return "contact,side";
+                case "slide": case "sole": case "stance": case "knee": case "knee-under": return "feet,side";
+                case "fast": case "jerk": return "side,three";
+                case "prop-head": case "prop-limb": case "head": case "look": case "neck": return "headside,head";
+                case "inside": case "past": case "elbow": case "fold": case "shoulder": case "free": return "chestside,chest";
+                case "seat": return "side,back";
+                case "want":
+                    {
+                        string[] w = line.Replace("[want] ", "").Split(' ');
+                        string kind = w.Length > 1 ? w[1] : "";
+                        if (kind == "lean" || kind == "hips") return "side,chestside";
+                        if (kind == "head") return "headside,head";
+                        if (kind == "hand") return "chestside,chesttop";
+                        if (kind == "palm") return hand;
+                        if (kind == "finger") return finger;
+                        if (kind == "foot" || kind == "knee" || kind == "weight") return "feet,side";
+                        return "side,three";
+                    }
+            }
+            return "side,three";
+        }
+
+        // the second mannequin for the diff sheet: the one «ab» has (its clip said), else one brought for the take before this one (its file
+        // among the takes, registered as a clip of its own while the sheet is made); null: no take before, or a part plays
+        private NpcActor OtherFor(Check c)
+        {
+            if (_other != null && _clipB.Length > 0) { c.Other = "ab: " + _clipB; return _other; }
+            List<string> t = Takes(c.Clip);
+            if (c.Clip.IndexOf('.') > 0 || t.Count < 2 || _dummy == null || Player.m_localPlayer == null) return null;
+            PAnimClip prev;
+            try { prev = BodyClips.Parse(File.ReadAllText(t[t.Count - 2], Encoding.UTF8), Whole(c.Clip) + "~prev"); }
+            catch (Exception e) { Story.Log("stage: the take before not read: " + e.Message); return null; }
+            if (prev == null) return null;
+            prev.Name = Whole(c.Clip) + "~prev";
+            BodyClips.Clips[prev.Name] = prev;
+            _prevClip = prev.Name;
+            Transform r0 = _dummy.transform;
+            _other = Npcs.Spawn(_template, r0.position + r0.right * AbAside, r0.rotation, Player.m_localPlayer.GetPlayerID(), Tag);
+            if (_other == null) { BodyClips.Clips.Remove(_prevClip); _prevClip = null; return null; }
+            if (_other.Zdo != null) _other.Zdo.Persistent = false;
+            _other.Order("stay", NpcMind.Layer.Scene);
+            Humanoid hb = _other.GetComponent<Humanoid>();
+            if (hb != null) BodyClips.Play(hb, Slot, prev.Name, 0.2f, _speed);
+            _clipB = prev.Name; _againB = float.MaxValue; // (held by the sheet, never started over by Update)
+            c.Other = "take " + (t.Count - 1);
+            return _other;
+        }
+
+        // how far the solid ground goes up and down round the mannequin's feet (its middle and four points GroundAround off it): take_book's
+        // mannequin stood on a stone, 2026-11-10, its feet «slid» 0.46 m and nothing said why. Five reads of the game's height, once a check
+        internal static float GroundEven = 0.06f, GroundAround = 0.35f; // m
+        private float GroundRough()
+        {
+            if (_dummy == null || ZoneSystem.instance == null) return 0f;
+            Transform r = _dummy.transform;
+            float lo = float.MaxValue, hi = float.MinValue;
+            foreach (Vector3 off in new[] { Vector3.zero, Vector3.right, Vector3.left, Vector3.forward, Vector3.back })
+            {
+                float y = ZoneSystem.instance.GetSolidHeight(r.TransformPoint(off * GroundAround));
+                lo = Mathf.Min(lo, y); hi = Mathf.Max(hi, y);
+            }
+            return hi - lo;
+        }
 
         // the mistakes already made once, each a line when it is made again; none: OK. Then what was asked
         private string Verdict(Check c)
@@ -589,28 +766,30 @@ namespace HuginWhispers
             List<string> bad = new List<string>();
             if (c.Moved > 0.05f || c.Turned > 5f) bad.Add("DO NOT TRUST THIS TAKE: the mannequin moved " + F(c.Moved) + " m, turned " + F(c.Turned) + " deg (most at " + F(c.TurnedAt) + " s, the player " + F(c.TurnedNear) + " m from it then)");
             if (c.Near < 2f) bad.Add("the player came within " + F(c.Near) + " m (stand 4-5 m off: he pushes it and blocks the view)");
+            float rough = GroundRough();
+            if (rough > GroundEven) bad.Add("DO NOT TRUST THIS TAKE: the ground under the mannequin is not flat (" + F(rough) + " m up and down within " + F(GroundAround) + " m of its feet: a stone, a slope) — the feet, the knees, a slide are measured on it; the player takes it to flat ground first (raven stage down, then up there)");
             c.Body.Verdict(bad, "");
             string asked = c.Body.WantsSaid(bad);
             PAnimClip played = BodyClips.Find(c.Clip);
             if (played != null && played.Bones.Contains("@LeftFoot") && played.Bones.Contains("@RightFoot") && !played.IsPart) // (a clip that starts from another stance: its feet slide over the ground on its way in)
             {
                 float off = Mathf.Max(Vector3.Distance(played.Value("@LeftFoot", 0f), c.GameL), Vector3.Distance(played.Value("@RightFoot", 0f), c.GameR));
-                if (off > StanceNear) bad.Add("the first pose's feet are " + F(off) + " m from the game's stance (L " + P(c.GameL) + ", R " + P(c.GameR) + "): they slide on the way in");
+                if (off > StanceNear) bad.Add("[stance] the first pose's feet are " + F(off) + " m from the game's stance (L " + P(c.GameL) + ", R " + P(c.GameR) + "): they slide on the way in" + BodyCheck.FixLine("batch " + Whole(c.Clip) + " \"set @LeftFoot " + F(BodyCheck.KeyNear(Whole(c.Clip), "@LeftFoot", 0f)) + " " + V(c.GameL) + "; set @RightFoot " + F(BodyCheck.KeyNear(Whole(c.Clip), "@RightFoot", 0f)) + " " + V(c.GameR) + "\""));
             }
             PAnimClip whole = BodyClips.Find(Whole(c.Clip));
             if (whole != null)
             {
-                if (whole.Bones.Count >= BodyClips.MaxBones) bad.Add("the clip is at " + BodyClips.MaxBones + " channels: what was over is left out (the log says which)");
+                if (whole.Bones.Count >= BodyClips.MaxBones) bad.Add("[channels] the clip is at " + BodyClips.MaxBones + " channels: what was over is left out (the log says which)");
                 for (int i = 0; i < whole.Parts.Count; i++)
                 {
                     PAnimPart pt = whole.Parts[i];
                     PAnimClip one = BodyClips.Find(whole.Name + "." + pt.Name);
                     PAnimClip next = pt.How == "loop" ? one : i + 1 < whole.Parts.Count ? BodyClips.Find(whole.Name + "." + whole.Parts[i + 1].Name) : null;
                     string ch;
-                    if (one != null && next != null && BodyClips.JoinGap(one, next, out ch) > BodyClips.JoinNear) bad.Add("part " + pt.Name + ": its join shows (" + ch + ")");
+                    if (one != null && next != null && BodyClips.JoinGap(one, next, out ch) > BodyClips.JoinNear) bad.Add("[join] part " + pt.Name + ": its join shows (" + ch + ")");
                 }
                 string baked = BakedDiffers(whole.Name);
-                if (baked != null) bad.Add(baked);
+                if (baked != null) bad.Add("[built] " + baked);
             }
             return (bad.Count == 0 ? "VERDICT: OK\n" : "VERDICT:\n  - " + string.Join("\n  - ", bad.ToArray()) + "\n") + asked;
         }
@@ -643,33 +822,63 @@ namespace HuginWhispers
         private static Vector3 Local(Humanoid h, Transform vis, Transform root, string bone) { Transform t = BodyClips.SkeletonBone(h, vis, bone); return t != null ? root.InverseTransformPoint(t.position) : Vector3.zero; }
 
         // first thing in the file what it was asked to be; then the verdict; the rest for looking things up. «frames of the mistakes:
-        // coming» while they are being filmed (a reader waits for it to go: tools/take.js)
+        // coming» while they are being filmed (a reader waits for it to go: tools/anim.js).
+        // Two files (review 2 2026-11-10: 12 KB a take, half of it never read): stage_<clip>.txt is the short one — the head with the clip
+        // file's hash and time (tools/anim.js holds it against the file: a report of another version is not read), said, VERDICT, asked, the
+        // numbers, the tempo, each key frame's pose in words; stage_<clip>.full.txt has all that and the «layers:» of each frame, the
+        // fastest bones, the rows every quarter second
         private void Report(Check c)
         {
-            StringBuilder s = new StringBuilder();
-            s.Append(c.Clip).Append(", take ").Append(_take).Append(", ×").Append(F(_speed)).Append(", ").Append(c.Frames.ToString("0")).Append(" frames\n");
+            StringBuilder s = new StringBuilder(), full = new StringBuilder();
+            string file = FileOf(c.Clip);
+            s.Append(c.Clip).Append(", take ").Append(_take).Append(", ×").Append(F(_speed)).Append(", ").Append(c.Frames.ToString("0")).Append(" frames, file ").Append(File.Exists(file) ? Hash(File.ReadAllText(file, Encoding.UTF8)) + " saved " + File.GetLastWriteTime(file).ToString("yyyy-MM-dd HH:mm:ss") : "not a file (built in)").Append('\n');
             PAnimClip shown = BodyClips.Find(c.Clip), whole = BodyClips.Find(Whole(c.Clip));
             if (whole != null && whole.Say.Length > 0) s.Append("said: ").Append(whole.Say).Append('\n');
             s.Append(c.Said);
             s.Append("pose: ").Append(c.Body.Numbers()).Append('\n');
             s.Append(c.Body.TempoSaid());
-            s.Append("key frames: studio/out/stage_").Append(c.Clip).Append("_<view>.png, views ").Append(c.Views).Append(", 4 a row\n");
-            foreach (string shot in c.Shots) s.Append("  ").Append(shot).Append('\n');
-            if (!c.ProofsDone) s.Append("frames of the mistakes: coming\n");
-            else if (c.Proofs.Count > 0)
+            string keyHead = c.Views.Length > 0 ? "key frames: studio/out/stage_" + c.Clip + "_<view>.png, views " + c.Views + ", 4 a row\n" : "key frames (words only; sheets of the whole run on request: raven stage check <views>, node tools/anim.js clip " + c.Clip + " <views>; views the clip would take: " + ((shown ?? whole) != null ? AutoViews(shown ?? whole) : "-") + "):\n";
+            s.Append(keyHead);
+            foreach (string shot in c.Shots) { full.Append("  ").Append(shot).Append('\n'); s.Append("  ").Append(Short(shot)).Append('\n'); }
+            if (!c.KeyDone) { s.Append("key sheet: coming\n"); full.Append("key sheet: coming\n"); }
+            else
             {
-                s.Append("frames of the mistakes: studio/out/stage_").Append(c.Clip).Append("_worst_<view>.png, views ").Append(ProofViews).Append(", 4 a row\n");
-                foreach (string shot in c.Proofs) s.Append("  ").Append(shot).Append('\n');
+                string head = "key sheet: studio/out/stage_" + c.Clip + "_key.png — a row a moment, its two views, labelled" + (c.Other != null ? "; stage_" + c.Clip + "_diff.png — the same, this take | " + c.Other : "") + "\n";
+                s.Append(head); full.Append(head);
+                foreach (string row in c.KeyRows) { full.Append("  ").Append(row).Append('\n'); s.Append("  ").Append(Short(row)).Append('\n'); }
             }
             StoryPropView view = _dummy != null ? _dummy.GetComponent<StoryPropView>() : null;
             if (view != null && _sizeOf) s.Append("prop size ").Append(P(view.Size)).Append(" m\n");
             if (shown != null && shown.Parts.Count > 0) { s.Append("parts:"); foreach (PAnimPart pt in shown.Parts) s.Append(' ').Append(pt.Name).Append(' ').Append(F(pt.From)).Append('-').Append(F(pt.To)); s.Append('\n'); }
-            s.Append("fastest:\n").Append(c.Body.Fastest());
-            s.Append("\nevery 0.25 s (m, body frame: x right, y up, z ahead; lean forward,right and head up,right in degrees):\n").Append(c.Rows);
+            s.Append("the rest (layers of each frame, the fastest bones, rows every 0.25 s): stage_").Append(c.Clip).Append(".full.txt\n");
             string dir = Path.Combine(Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "studio"), "out");
             Directory.CreateDirectory(dir);
             File.WriteAllText(Path.Combine(dir, "stage_" + c.Clip + ".txt"), s.ToString(), new UTF8Encoding(false));
+            // the full one: the short one's head to the key frames, then every frame with its layers, the fastest, the rows
+            int cut = s.ToString().IndexOf("key frames", StringComparison.Ordinal);
+            StringBuilder f = new StringBuilder(cut > 0 ? s.ToString().Substring(0, cut) : s.ToString());
+            f.Append(keyHead).Append(full);
+            f.Append("fastest:\n").Append(c.Body.Fastest());
+            f.Append("\nevery 0.25 s (m, body frame: x right, y up, z ahead; lean forward,right and head up,right in degrees):\n").Append(c.Rows);
+            File.WriteAllText(Path.Combine(dir, "stage_" + c.Clip + ".full.txt"), f.ToString(), new UTF8Encoding(false));
             Say("заміряно");
+        }
+
+        // a key frame's line without its «layers:» (the full report keeps it)
+        private static string Short(string shot) { int i = shot.IndexOf("\n  layers:", StringComparison.Ordinal); return i >= 0 ? shot.Substring(0, i) : shot; }
+
+        // the clip file's version, as tools/anim.js reckons it too: SHA-1 of its text with no «\r» and no byte-order mark, the first 8 hex digits
+        internal static string Hash(string text)
+        {
+            if (text.Length > 0 && text[0] == '﻿') text = text.Substring(1);
+            byte[] b = Encoding.UTF8.GetBytes(text.Replace("\r", ""));
+            using (System.Security.Cryptography.SHA1 sha = System.Security.Cryptography.SHA1.Create())
+            {
+                byte[] h = sha.ComputeHash(b);
+                StringBuilder s = new StringBuilder();
+                for (int i = 0; i < 4; i++) s.Append(h[i].ToString("x2"));
+                return s.ToString();
+            }
         }
 
         // what plays and where it is: said by the time when asking for a change

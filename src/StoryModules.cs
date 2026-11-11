@@ -59,6 +59,9 @@ namespace HuginWhispers
             NpcActor.Unloaded.Add(StoryTales.Forget);
             NpcMind.KeepClip = StoryHold.KeepsClip;    // a scene over: the clip of its standing word stays on
             NpcPlaces.Authored = StoryLife.Places;     // its own life between the words: the places the author gave it
+            NpcActor.Ticks.Add(StoryProps.Keep);       // a thing of its own on its arm: its loop kept on; what waits for a clip's moment (set down, taken up)
+            NpcActor.Unloaded.Add(StoryProps.Forget);
+            NpcPlaces.ClipBegins = a => StoryProps.SetDown(a, true, false); // a visit with a clip of its own: the thing off its arm first, where it stands (its own doing: it goes back for it itself)
         }
     }
 }

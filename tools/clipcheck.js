@@ -8,6 +8,7 @@ const dir = path.join(root, 'assets', 'story', 'clips'), scenes = path.join(root
 const MAX_CHANNELS = 40, MAX_KEYS = 200; // (BodyClips.MaxBones, MaxKeys)
 const FOOT_UP = 0.14; // m: a foot target higher than this is off the ground (the game's stance: 0.12)
 const PROP_OFF = 0.05, HELD = 0.9; // @Prop.w past this: the thing has left where it lay · a hand's .on.w this high: it is on the thing
+const HAND_FULL = 0.95; // a hand target's .w this high: the hand is held there (BodyCheck.Full), and its palm is judged — if anything says where it faces
 const problems = [];
 const say = (file, what) => problems.push('CLIP ' + file + ': ' + what);
 
@@ -18,6 +19,8 @@ for (const s of ['Left', 'Right']) {
 }
 // the clips made before «say» (the user's words) was there; a new one has them, or how it came to be is lost
 const BEFORE_SAY = new Set(['arms_cross', 'door_push', 'heid_rummage', 'key_turn', 'look_caw', 'look_search', 'point_at', 'read_letter', 'rub_hands', 'shield_kneel', 'shrug_small', 'sign_touch', 'step_back']);
+// the clips made before the palm had to be said (2026-11-10), accepted by the user's eye: a new take of one of these says its palm, and its name goes
+const BEFORE_PALM = new Set([]);
 const FIXTURES = ['wall', 'table', 'seat', 'step', 'point', 'piece'];
 const SIDES = ['left', 'right', 'both'];
 // a «want» line: what BodyCheck.Holds reads; null: fine
@@ -33,8 +36,11 @@ function wantWhy(line, length) {
     case 'head': return dirs.includes(w[2]) && num(3) ? null : 'want … head up|down|left|right <deg>';
     case 'lean': return lean.includes(w[2]) && num(3) ? null : 'want … lean forward|back|left|right <deg>';
     case 'hips': return w[2] === 'low' && num(3) ? null : 'want … hips low <m>';
-    case 'hand': return SIDES.includes(w[2]) && (w[3] === 'on' || w[3] === 'holds' || (w[3] === 'near' && num(4) && num(5) && num(6))) ? null : 'want … hand left|right|both on | holds | near <x y z> [m]';
-    case 'palm': return SIDES.includes(w[2]) && palm.includes(w[3]) ? null : 'want … palm left|right|both forward|back|up|down|left|right';
+    case 'hand': return SIDES.includes(w[2]) && ((w[3] === 'on' && (w.length < 5 || (w[4] === 'body' && (w.length < 6 || num(5))))) || w[3] === 'holds' || (w[3] === 'near' && num(4) && num(5) && num(6)) || (w[3] === 'touches' && w[4] === 'prop') || (w[3] === 'below' && w[4] === 'shoulder')) ? null : 'want … hand left|right|both on [body [m]] | holds | near <x y z> [m] | touches prop | below shoulder';
+    case 'palm': return SIDES.includes(w[2]) && (palm.includes(w[3]) || (w[3] === 'to' && w[4] === 'prop')) ? null : 'want … palm left|right|both forward|back|up|down|left|right | to prop';
+    case 'elbow': return ['left', 'right'].includes(w[2]) && w[3] === 'bent' && num(4) ? null : 'want … elbow left|right bent <deg>';
+    case 'look': return w[2] === 'prop' || (num(2) && num(3) && num(4)) ? null : 'want … look prop | <x y z>';
+    case 'smooth': return !m[2] ? 'want <t0-t1> smooth: a stretch' : null;
     case 'foot': return ['left', 'right'].includes(w[2]) && (w[3] === 'down' || (w[3] === 'up' && num(4))) ? null : 'want … foot left|right up <m> | down';
     case 'knee': return ['left', 'right'].includes(w[2]) && w[3] === 'bent' && num(4) ? null : 'want … knee left|right bent <deg>';
     case 'weight': return ['left', 'right'].includes(w[2]) ? null : 'want … weight left|right';
@@ -84,8 +90,11 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
     else if (w[0] === 'mode') { if (w.length < 3 || !['body', 'aim', 'bone'].includes(w[2])) say(f, l + ': mode <bone> body|aim|bone; another word the game leaves out, and the bone\'s numbers then mean something else'); }
     else if (w[0] === 'base') { if (!['game', 'frozen'].includes(w[1])) say(f, l + ': base game|frozen'); }
     else if (w[0] === 'loop') { if (!['0', '1'].includes(w[1])) say(f, l + ': loop 0|1'); }
+    else if (w[0] === 'inertia') { if (isNaN(+w[1]) || +w[1] < 0 || +w[1] > 1) say(f, l + ': inertia 0..1'); }
     else if (w[0] === 'vary') { if (isNaN(+w[1]) || +w[1] < 0 || +w[1] > 1) say(f, l + ': vary 0..1'); }
     else if (w[0] === 'prop') { if (!w[1] || (w[2] && w[2] !== 'r' && w[2] !== 'l') || (w[3] && !(+w[3] > 0))) say(f, l + ': prop <item> [r|l] [scale]'); }
+    else if (w[0] === 'carry') { if (w[1] !== 'yes' && w[1] !== 'no') say(f, l + ': carry yes|no'); }
+    else if (w[0] === 'follow') { if (!/^@(Left|Right)(Hand|Foot)$/.test(w[1] || '') || !w[2]) say(f, l + ': follow @LeftHand|@RightHand|@LeftFoot|@RightFoot <bone> (Spine2, RightShoulder…)'); }
     else if (w[0] === 'cloth') { if (w[1] !== 'off' && w[1] !== 'on') say(f, l + ': cloth off|on'); }
     else if (w[0] === 'strength') { if (isNaN(+w[1]) || +w[1] < 0 || +w[1] > 1) say(f, l + ': strength 0..1'); }
     else if (!isNaN(+w[0]) && w.length >= 5) {
@@ -100,7 +109,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
   if (!eased) say(f, 'no «curve ease»: what a key leaves out would be zero');
   if (!(length > 0)) say(f, 'no length');
   if (length > 60) say(f, 'length ' + length + ': the game cuts a clip at 60 s');
-  for (const line of wants) { const why = wantWhy(line, length); if (why) say(f, 'want ' + line + ': ' + why); else if (!touches && /\bhand\s+\w+\s+on\b/.test(line)) say(f, 'want ' + line + ': «on» what? no «touch» line, so the stage puts nothing there and a scene measures nothing: it can never pass'); else if (/\bhand\s+\w+\s+holds\b/.test(line) && !channels.has('@Prop')) say(f, 'want ' + line + ': holds what? no @Prop in the clip, so nothing is in the hands: it can never pass'); }
+  for (const line of wants) { const why = wantWhy(line, length); if (why) say(f, 'want ' + line + ': ' + why); else if (!touches && /\bhand\s+\w+\s+on\b(?!\s+body)/.test(line)) say(f, 'want ' + line + ': «on» what? no «touch» line, so the stage puts nothing there and a scene measures nothing: it can never pass'); else if (/\b(hand\s+\w+\s+(holds|touches prop)|palm\s+\w+\s+to prop|look prop)\b/.test(line) && !channels.has('@Prop')) say(f, 'want ' + line + ': what thing? no @Prop in the clip, so nothing is in the hands: it can never pass'); }
   if (!said && !BEFORE_SAY.has(name)) say(f, 'no «say»: the words it was asked in, and «want» lines to measure them by (docs/ANIMATION.md)');
   for (const ch of channels) if (!known(ch)) say(f, '«' + ch + '» is no bone or channel: it would move nothing, silently');
   if (channels.size > MAX_CHANNELS) say(f, channels.size + ' channels, the game keeps ' + MAX_CHANNELS + ': the rest would be left out');
@@ -110,6 +119,11 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
   for (const s of ['Left', 'Right']) {
     const h = '@' + s + 'Hand';
     if (channels.has(h) && !channels.has(h + '.w')) say(f, h + ' has no ' + h + '.w: the hand would jump to it');
+    // a hand sent somewhere with its full weight: where its palm faces must be SAID — by .f + .n, by .on.f + .on.n on a thing, or by «want … palm» —
+    // or nothing judges it, and a fist stood where a palm was meant through every rule (door_push 2026-11-04, take_book's left hand 2026-11-07)
+    const held = channels.has(h) && (!keys[h + '.w'] || keys[h + '.w'].some(k => k.v[0] >= HAND_FULL)); // (no .w: the core holds it at full weight all along)
+    const side = s.toLowerCase(), palmSaid = (channels.has(h + '.f') && channels.has(h + '.n')) || (channels.has(h + '.on.f') && channels.has(h + '.on.n')) || wants.some(l => new RegExp('\\bpalm\\s+(' + side + '|both)\\b').test(l));
+    if (held && !palmSaid && !BEFORE_PALM.has(name)) say(f, h + ' is sent somewhere with its full weight, and nothing says where its palm faces: give it ' + h + '.f + ' + h + '.n (directions in the body\'s frame), or «want <t> palm ' + side + ' up|down|forward|back|left|right» — a palm no one said is a palm no one judges');
     if (channels.has(h + '.f') !== channels.has(h + '.n')) say(f, h + '.f and ' + h + '.n go together (fingers and palm): one alone does nothing');
     if ((channels.has(h + '.f') || channels.has(h + '.n')) && !channels.has(h)) say(f, h + '.f/.n turn the hand by its target\'s weight: no ' + h + ', they do nothing');
     if (channels.has(h + '.on')) {

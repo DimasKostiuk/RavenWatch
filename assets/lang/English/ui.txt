@@ -1150,7 +1150,7 @@
 Сорока	Magpie
 Іноді приносить із прогулянки мотлох — камінь, гілку, кістки — і кладе тобі в торбу.	Sometimes brings junk back from an outing — a stone, a stick, bones — and drops it in your pouch.
 Свавільний	Willful
-Часом (10%) не виконує наказ — а сила однаково витрачена. «Повернись» він слухає завжди.	Sometimes (10%) ignores an order — and the strength is spent all the same. It always obeys “Come Back”.
+Часом буває не в настрої — на кілька хвилин, і це видно біля його імені: тоді не слухає наказів. «Повернись» він слухає завжди.	Now and then it is out of humour — for a few minutes, and it shows beside its name: then it ignores orders. It always obeys “Come Back”.
 Боязкий	Timid
 Боїться босів: поруч із босом сидить понурий і не летить на нього, поки бос не втратить чверть здоров'я. Зате перший його удар по такому босу — завжди крит.	Afraid of bosses: near a boss it sits gloomy and won't fly at it until the boss loses a quarter of its health. But its first strike on such a boss is always a crit.
 <b>Характер</b>\n\nЩе не відомий.	<b>Temper</b>\n\nNot known yet.
@@ -1535,15 +1535,14 @@
 ще не знаєш, що саме	you don't know which yet
  (і ще {0}, про які ти не знаєш)	 (and {0} more you don't know about)
 страву|страви|страв	dish|dishes
-\n\n<color=#FF6B6B>Зараз ображений: ще {0}.</color>	\n\n<color=#FF6B6B>Sulking right now: {0} more.</color>
-{0} ображений — ще {1} нічого не робитиме	{0} is sulking — won't do anything for {1}
+\n\n<color=#FF6B6B>Зараз ревнує: ще {0}.</color>	\n\n<color=#FF6B6B>Jealous right now: {0} more.</color>
+{0} ревнує до іншого ворона («Ревнивий») — ще {1} нічого не робитиме	{0} is jealous of the other raven (Jealous) — won't do anything for {1}
 {0} ревнує: {1} хв ні до чого себе не підпустить	{0} is jealous: won't let you near for {1} min
 {0} не їсть: {1}. Перебірливий — дай щось інше.	{0} won't eat: {1}. Picky — give it something else.
-{0} спить: уночі на розвідку не полетить	{0} is asleep: won't scout at night
-ображений, ще {0}	sulking, {0} more
-ніч — спить, на розвідку не полетить	night — asleep, won't go scouting
-{0}: «{1}» — не захотів (сила витрачена)	{0}: “{1}” — didn't feel like it (strength spent)
-{0} боїться: спершу підрань боса (ще {1}% здоров'я до відваги)	{0} is scared: wound the boss first ({1}% more health until it's brave)
+{0} спить («Сонько»): уночі на розвідку не полетить	{0} is asleep (Sleepyhead): won't scout at night
+ревнує («Ревнивий»), ще {0}	jealous (Jealous), {0} more
+ніч — спить («Сонько»)	night — asleep (Sleepyhead)
+{0} боїться боса («Боязкий»): спершу підрань його (ще {1}% здоров'я до відваги)	{0} is scared of the boss (Timid): wound it first ({1}% more health until it's brave)
 {0} хизується — наступний удар на {1} с пізніше	{0} is showing off — next strike {1} s later
 {0} приніс тобі: {1}	{0} brought you: {1}
 Бурчить	Grumbles
@@ -1660,7 +1659,7 @@
 Що далі · годування	What's next · feeding
 Нагодувати	Feed
 {0} — навіть їсти не хоче	{0} — won't even eat
-{0}: поки ображений, з твоїх рук не їсть{1}. Із торби на спині поїсть сам.	{0}: won't eat from your hands while sulking{1}. It'll eat from the pouch on its back by itself.
+{0}: поки ревнує, з твоїх рук не їсть{1}. Із торби на спині поїсть сам.	{0}: won't eat from your hands while jealous{1}. It'll eat from the pouch on its back by itself.
  — мине за ~{0}	 — passes in ~{0}
 {0} зараз {1} — нагодуєш, коли повернеться	{0} is {1} right now — feed it when it's back
 {0} зараз {1}. Нагодуєш, коли повернеться на плече.	{0} is {1} right now. Feed it when it's back on your shoulder.
@@ -1684,7 +1683,7 @@
  <color=#8C93A1>· зараз не можна</color>	 <color=#8C93A1>· not possible right now</color>
 {0} нема на плечі	{0} is not on your shoulder
 <b>Як посадити</b>	<b>How to seat it</b>
-<b><color={0}>Як посадити ворона</color></b>\n\nХугіна й Муніна продає Хальдор. Правий клік на вороні в сумці садить його на плече: Хугіна — на праве, Муніна — на ліве. Ще раз — знімає (довіра від цього трохи тане).	<b><color={0}>How to put a raven on your shoulder</color></b>\n\nHaldor sells Hugin and Munin. Right-clicking a raven in your bag puts it on your shoulder: Hugin on the right, Munin on the left. Again — takes it off (trust melts a little from that).
+<b><color={0}>Як посадити ворона</color></b>\n\nХугіна й Муніна продає Хальдор. Правий клік на вороні в сумці садить його на плече: Хугіна — на праве, Муніна — на ліве. Зняти можна кнопкою на його сторінці в книзі (довіра від цього трохи тане).	<b><color={0}>How to put a raven on your shoulder</color></b>\n\nHaldor sells Hugin and Munin. Right-clicking a raven in your bag puts it on your shoulder: Hugin on the right, Munin on the left. A button on its page in the book takes it off (trust melts a little from that).
 лишилось {0} дн. до наступного повернення	{0} days left until the next return
 підійди до Жертовних каменів	go to the Sacrificial Stones
 <b><color={0}>Повернення ворона</color></b>\n\nВорон загинув у морі, зник чи лишився деінде? Його можна повернути обрядом біля Жертовних каменів.\n\nЦіна: {1}.\n\nВорон повернеться з тим самим рівнем довіри, вишколом і переможеними босами. Лише шкала до наступного рівня почнеться з нуля, а частину спогадів він забуде. Старий ворон, якщо десь лишився, розсиплеться пір'ям. Не частіше ніж раз на {2} днів.	<b><color={0}>Bringing a raven back</color></b>\n\nDid your raven die at sea, vanish, or stay somewhere else? You can bring it back with a rite at the Sacrificial Stones.\n\nCost: {1}.\n\nThe raven returns with the same trust level, training and defeated bosses. Only the bar to the next level starts from zero, and it forgets part of its memories. The old raven, if it's still somewhere, crumbles into feathers. No more than once every {2} days.
@@ -1919,7 +1918,7 @@
 {0}Число можна вписати + Enter. «Готово» — позначиться «ok» і піде в мод.	{0}You can type a number + Enter. “Ready” — gets marked “ok” and goes into the mod.
 Зсув — від місця з Майстерні, у см; права лапа — дзеркально. 	Offset — from the Workshop spot, in cm; the right leg is mirrored.
 Підгонка «{0}» на {1} ({2})	Fitting “{0}” on {1} ({2})
-{0}Ліва сторінка — Мунін, ворон пам'яті, бойовий: сидить на лівому плечі. Права — Хугін, ворон думки, мандрівний: на правому. Обох продає Хальдор; правий клік на вороні в сумці садить його на плече чи знімає.\n\n<b>Довіра, Сила, Ситість.</b> Сила витрачається на дари: Хугін заряджається в мирі, Мунін — у бою. Ситість нижче {1} — ворон не слухає наказів. Наведи на золоті слова, щоб побачити все.\n\n<b>Благо й тягар</b> кожен ворон отримує випадково при покупці; Камінь долі в Хальдора перекидає їх. <b>Норов</b> — його характер, хист і примха.\n\n<b>Що далі</b> — найважливіша справа для ворона саме зараз: годування, ритуал чи наступна ціль. Печатка праворуч її робить.	{0}The left page is Munin, the raven of memory, the fighter: he sits on your left shoulder. The right is Hugin, the raven of thought, the wanderer: on your right. Haldor sells both; right-clicking a raven in your bag puts it on your shoulder or takes it off.\n\n<b>Trust, Strength, Satiety.</b> Strength is spent on gifts: Hugin charges in peace, Munin in battle. Satiety below {1} — the raven won't follow orders. Point at the golden words to see everything.\n\nEvery raven gets a <b>boon and a burden</b> at random when bought; the Fate Stone from Haldor rerolls them. <b>Nature</b> is its temper, knack and quirk.\n\n<b>What's next</b> — the most important thing for the raven right now: feeding, the rite, or the next goal. The seal on the right does it.
+{0}Ліва сторінка — Мунін, ворон пам'яті, бойовий: сидить на лівому плечі. Права — Хугін, ворон думки, мандрівний: на правому. Обох продає Хальдор; правий клік на вороні в сумці садить його на плече, а знімає кнопка на його сторінці.\n\n<b>Довіра, Сила, Ситість.</b> Сила витрачається на дари: Хугін заряджається в мирі, Мунін — у бою. Ситість нижче {1} — ворон не слухає наказів. Наведи на золоті слова, щоб побачити все.\n\n<b>Благо й тягар</b> кожен ворон отримує випадково при покупці; Камінь долі в Хальдора перекидає їх. <b>Норов</b> — його характер, хист і примха.\n\n<b>Що далі</b> — найважливіша справа для ворона саме зараз: годування, ритуал чи наступна ціль. Печатка праворуч її робить.	{0}The left page is Munin, the raven of memory, the fighter: he sits on your left shoulder. The right is Hugin, the raven of thought, the wanderer: on your right. Haldor sells both; right-clicking a raven in your bag puts it on your shoulder, and the button on its page takes it off.\n\n<b>Trust, Strength, Satiety.</b> Strength is spent on gifts: Hugin charges in peace, Munin in battle. Satiety below {1} — the raven won't follow orders. Point at the golden words to see everything.\n\nEvery raven gets a <b>boon and a burden</b> at random when bought; the Fate Stone from Haldor rerolls them. <b>Nature</b> is its temper, knack and quirk.\n\n<b>What's next</b> — the most important thing for the raven right now: feeding, the rite, or the next goal. The seal on the right does it.
 {0}Дари викликаються з кола дарів (<color={1}>{2}</color>), з G → Ворони або своїми клавішами. Кожен коштує сили й має перезарядку; наведи на дар — побачиш усе про нього.\n\n<b>Клавіші</b> — за бажанням. Клікни поле на картці дару й натисни клавішу (можна з Shift, Ctrl чи Alt); Esc — скасувати, Backspace — прибрати. Або ПКМ по дару в колі. Клавіші воронів <b>нічого не забирають</b> у гри й інших модів: якщо клавіша вже зайнята, спрацює і те, і дар. <color=#FF6B6B>!</color> показує, хто ще на ній.\n\nТочка на картці: <color=#5a9a4a>●</color> готовий · <color=#d8a83a>●</color> чекає · <color=#b8322a>●</color> бракує сили. <b>Пасивні</b> дари діють самі. Закриті відкриваються з довірою.	{0}Gifts are called from the Gift Wheel (<color={1}>{2}</color>), from G → Ravens, or with their own keys. Each costs strength and has a cooldown; point at a gift to see everything about it.\n\n<b>Keys</b> — if you like. Click the field on a gift's card and press a key (Shift, Ctrl or Alt allowed); Esc — cancel, Backspace — clear. Or right-click a gift on the wheel. The ravens' keys <b>take nothing away</b> from the game or other mods: if a key is already taken, both it and the gift fire. <color=#FF6B6B>!</color> shows who else is on it.\n\nThe dot on a card: <color=#5a9a4a>●</color> ready · <color=#d8a83a>●</color> waiting · <color=#b8322a>●</color> not enough strength. <b>Passive</b> gifts work by themselves. Closed ones open with trust.
 {0}<b>Довіра.</b> Ворон звикає до того, з ким мандрує. Довіра росте, коли годуєш його, голодного (улюблена їжа — удвічі), і коли ви разом живете — і в мирі, і в бою. Коли шкала повна, вона замерзає й чекає ритуалу: принеси трофеї наступного боса до Жертовних каменів, де висить трофей цього боса. Ворон з'їсть їх, полетить до Одіна й повернеться на новому рівні: більше сили, сильніші дари, нове вбрання.\nДовіра тане, коли ти гинеш, знімаєш ворона з плеча чи він голодує (ситість 0). На 1–2 рівнях ворон ще дичиться й іноді відлітає на кілька хвилин.\n\n<b>Вишкіл</b> — сила удару ворона («Удар в очі», «Кігті»). Кожен виліт, що когось вразив, додає досвіду. Сила не залежить від твоєї зброї: вона росте з вишколом, довірою та за кожного боса, якого ти переміг із ним на плечі.\n\n<b>Повернення.</b> Загиблого чи зниклого ворона можна повернути обрядом біля каменів (на сторінці ворона), не частіше ніж раз на {1} днів.	{0}<b>Trust.</b> A raven gets used to whoever it travels with. Trust grows when you feed it while it's hungry (its favorite food counts double) and as you live together — in peace and in battle. When the bar is full, it freezes and waits for the rite: bring the next boss's trophies to the Sacrificial Stones, where this boss's trophy hangs. The raven eats them, flies to Odin and comes back at a new level: more strength, stronger gifts, new outfits.\nTrust melts when you die, take the raven off your shoulder, or let it starve (satiety 0). At levels 1–2 the raven is still shy and sometimes flies off for a few minutes.\n\n<b>Training</b> is the strength of the raven's strike (“Eye Peck”, “Talons”). Every flight that hits someone adds experience. The strength doesn't depend on your weapon: it grows with training, trust and every boss you beat with it on your shoulder.\n\n<b>Bringing back.</b> A raven that died or vanished can be brought back with a rite at the stones (on the raven's page), no more than once every {1} days.
 Міряю {0} с, грай як зазвичай…	Measuring for {0} s, play as usual…
@@ -1981,8 +1980,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Мунін ще ображений, дебіле.\nЧекай {0}.	Munin is still sulking, moron.\nWait {0}.
 Хугін ще сумує.\nСяде через {0}.	Hugin is still sad.\nHe'll sit in {0}.
 {0}: і з плеча не злізе.	{0}: won't even get off your shoulder.
-У сумці нема Муніна.	No Munin in your bag.
-У сумці нема Хугіна.	No Hugin in your bag.
 Мунін образився на такого дебіла.\nНе сяде на плече ще {0}.	Munin got offended at such a moron.\nWon't sit on your shoulder for {0}.
 Хугін сумно злетів з плеча.\nНе сяде ще {0}.	Hugin sadly flew off your shoulder.\nWon't sit for {0}.
 {0} зараз не на тобі	{0} isn't on you right now
@@ -2002,16 +1999,12 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 летиш · ще {0} · натисни, щоб сісти	flying · {0} more · use to land
 не в польоті	not in flight
 не з крилами Одіна	not with Odin's Wings
-<color=#FF5A5A><b>летить до тебе</b></color>	<color=#FF5A5A><b>flying to you</b></color>
-<color=#FF5A5A><b>в атаці · зараз повернеться</b></color>	<color=#FF5A5A><b>attacking · back in a moment</b></color>
-<color=#FF5A5A><b>на розвідці · повернеться за {0}</b></color>	<color=#FF5A5A><b>scouting · back in {0}</b></color>
 <color=#FFD54F><b>заслона стоїть · ще {0}{1}</b></color>	<color=#FFD54F><b>the ward stands · {0} more{1}</b></color>
 , витримає ще {0}	, holds {0} more
 три удари	three hits
 два удари	two hits
 один удар	one hit
 <color=#FFD54F><b>купол стоїть · натисни, щоб повернути Хугіна</b></color>	<color=#FFD54F><b>the dome stands · use to call Hugin back</b></color>
-<color=#FF5A5A><b>Хугін тримає купол</b></color>	<color=#FF5A5A><b>Hugin is holding the dome</b></color>
 <color=#9a9a9a>ще в роботі</color>	<color=#9a9a9a>still in the works</color>
 без сили · {0}	no strength · {0}
 без сили, ворон ще чужий · {0}	no strength, the raven is still a stranger · {0}
@@ -2026,7 +2019,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 готова	ready
 Перезарядки: {0}. Останній шанс: {1}. Кривава лють: {2}	Cooldowns: {0}. Last Chance: {1}. Blood Rage: {2}
 {0}. Зачекай {1}	{0}. Wait {1}
-{0} ще в польоті	{0} is still in flight
 Мунін ще чистить кігті	Munin is still cleaning his talons
 Хугін ще переводить подих	Hugin is still catching his breath
  · бере найближчу	 · takes the nearest
@@ -2160,14 +2152,9 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Просить їсти ({0}–{1}): усе як завжди, але нагадує про себе. Їжа зараз дає найбільше довіри.	Begging ({0}–{1}): all as usual, but it keeps reminding you. Food gives the most trust right now.
 Ситий ({0}–{1}): сила набирається на {2}% швидше. Найкращий стан.	Full ({0}–{1}): strength gathers {2}% faster. The best state.
 Об'ївся ({0}–100): лінивий — не відлітає погуляти, удар −{1}%.	Stuffed ({0}–100): lazy — doesn't fly off on outings, strike −{1}%.
-Ворон пам'яті	Raven of Memory
-Ворон думки	Raven of Thought
-Спершу поклади ворона в сумку.	Put the raven in your bag first.
-Ліве плече	Left shoulder
-Праве плече	Right shoulder
-Тут сидить Мунін.	Munin sits here.
-Тут сидить Хугін.	Hugin sits here.
-{0}. Клік — зняти в сумку.\n\n{1}	{0}. Click — take off into your bag.\n\n{1}
+Зняти з плеча	Take off the shoulder
+Зняти {0} з плеча?	Take {0} off the shoulder?
+Ворон перейде в сумку й образиться: довіра трохи розтане, а на плече він сяде не одразу.	The raven goes into your bag and takes offence: trust melts a little, and it will not sit on your shoulder for a while.
 Ситуація: {0}{1}{2}{3}{4}{5}{6}, здоров'я {7}%	Situation: {0}{1}{2}{3}{4}{5}{6}, health {7}%
 під землею	underground
 під дахом	under a roof
@@ -2541,7 +2528,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
  | гра: 	 | game: 
 Хугін дражнить ворога — зараз повернеться	Hugin is taunting an enemy — he'll be right back
 <color=#FFD54F><b>дражнить ворога · ще {0} · натисни, щоб повернути</b></color>	<color=#FFD54F><b>taunting an enemy · {0} more · press to call him back</b></color>
-<color=#FF5A5A><b>Хугін дражнить ворога</b></color>	<color=#FF5A5A><b>Hugin is taunting an enemy</b></color>
 Хугін ще не придумав нової витівки	Hugin hasn't thought up a new trick yet
 Гей, бовдуре! Сюди дивись!	Hey, lummox! Look over here!
 вогняний	fiery
@@ -3138,8 +3124,6 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Клік по речі — вдягнути · клік по слоту — зняти · у кутках — руни · тягни ворона мишею · ● нова річ	Click a thing — put it on · click a slot — take it off · in the corners — runes · drag the raven with the mouse · ● a new thing
 Зламай печатку	Break the seal
 Скласти	Fold
-На лівому плечі вже сидить Мунін.	Munin already sits on the left shoulder.
-На правому плечі вже сидить Хугін.	Hugin already sits on the right shoulder.
 {0} {1}: {2}.	{0} {1}: {2}.
 {0} {1}: {2}.\nПовернеться за {3}.	{0} {1}: {2}.\nBack in {3}.
 +{0}% шкоди, +{1}% броні, +{2}% швидкості, без оглушення й відкидання. Втоми потім не буде	+{0}% damage, +{1}% armor, +{2}% speed, no stagger or knockback. No exhaustion after
@@ -3917,7 +3901,8 @@ RavenWatch: у середньому {0} мс на кадр, найгірший �
 Я сховав скарб. Знайди його — дивись на мапу і слухай мене.	I hid a treasure. Find it — watch the map and listen to me.
 Хочу побачити тих, з ким у мене свої рахунки. Підведи мене до них.	I want to see the ones I have a score with. Take me to them.
 Познайом мене ближче з моїми знайомими воронами. Підійди до когось.	Bring me closer to the ravens I know. Walk up to someone.
-прохання	a wish
+прохання	requests
+виконане прохання	a request done
 Ну. Можеш, коли хочеш.	Well. You can when you want to.
 Дякую. Я це запам'ятаю.	Thank you. I'll remember this.
 іскринка|іскринки|іскринок	sparklet|sparklets
@@ -4745,7 +4730,6 @@ Esc — скасувати	Esc — cancel
 {0} зараз {1}.\nТорба в нього на спині: відкриєш, коли повернеться на плече.	{0} is {1} right now.\nThe pouch is on its back: you can open it when it is back on your shoulder.
 {0} уже з тобою.\nНа жердині сиділо лише його відлуння.	{0} is with you already.\nOnly its echo sat on the perch.
 {0} не твій — його дари не для тебе	{0} isn't yours — its gifts aren't for you
-<color=#FF5A5A><b>чужий ворон · не слухає</b></color>	<color=#FF5A5A><b>a stranger's raven · won't listen</b></color>
 Вполюй звіра, забери його трофей і повісь на підставку (здобуто й не повішено: {0})	Hunt a beast, take its trophy and hang it on a stand (won, not hung yet: {0})
 Хугінів слід до скарбу	Hugin's Trail to the Hoard
 Одін кличе сам. Хугін натрапив на старий слід: прикмета за прикметою, а наприкінці — чиясь схованка. Іди за ним. Хто ховав — той, може, досі стереже.	Odin calls himself. Hugin has found an old trail: sign after sign, and at its end someone's hidden hoard. Follow him. Whoever hid it may still be guarding it.
@@ -5118,7 +5102,6 @@ Esc — скасувати	Esc — cancel
 швидкість приручення	taming speed
 Мунін приборкує звіра.\nНатисни «Приборкання» ще раз — і він повернеться.	Munin is taming a beast.\nPress «Taming» again and he comes back.
 <color=#FFD54F><b>приборкує звіра · ще {0} · натисни, щоб повернути</b></color>	<color=#FFD54F><b>taming a beast · {0} left · press to call back</b></color>
-<color=#FF5A5A><b>Мунін приборкує звіра</b></color>	<color=#FF5A5A><b>Munin is taming a beast</b></color>
 Мунін ще не відійшов від минулої худоби	Munin hasn't got over the last beast yet
 {0} раза	{0} times
 Наведи приціл на дику тварину, яку можна приручити.	Aim at a wild beast that can be tamed.
@@ -5250,7 +5233,7 @@ Esc — скасувати	Esc — cancel
 {0} відвик: «{1}»	{0} dropped a habit: «{1}»
 {0}: ворог іде — {1}!	{0}: a foe is coming — {1}!
 {0} гордує: {1}. Гурман — хоче чогось смачнішого.	{0} turns up its beak: {1}. A gourmet — it wants something tastier.
-{0} ниє, що хоче додому: «{1}» буде ще {2}.	{0} whines it wants to go home: «{1}» will be back in {2}.
+{0} ниє, що хоче додому («Хатній»): «{1}» буде ще {2}.	{0} whines it wants to go home (Homebird): «{1}» will be back in {2}.
  — назріває	 — forming
 Звідки: {0}.	Where from: {0}.
 Тримається щонайменше ще {0}.	Stays at least another {0}.
@@ -5309,7 +5292,7 @@ Esc — скасувати	Esc — cancel
 попіл	ash
 кров	blood
 кістяний пил	bone dust
-болото	swamp mud
+болото	the swamp
 Кроків тінню більше нема, але тінь ще тримає	No shadow steps left, but the shadow still holds
 Тінь туди не веде	The shadow does not lead there
 Крок тінню ({0} з {1})	Shadow step ({0} of {1})
@@ -5733,21 +5716,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Дошка	Board
 Назва	Name
 Назва оселі	Settlement name
-Мешканці	Residents
-Ще ніхто тут не живе. Найми когось і вибери цю оселю — або оселі тут того, хто вже з тобою.	Nobody lives here yet. Hire someone and choose this settlement, or settle someone who is already with you here.
-Мешканці {0}/{1}	Residents {0}/{1}
-Чутки	Rumours
-Записки	Notes
 Поки тихо: усе гаразд.	All quiet for now: everything is fine.
-Без назви сюди не пошлеш нікого з найманих. Shift+E — дати назву.	Without a name you cannot send anyone you hire here. Shift+E to name it.
 без роботи	no job
-без ліжка	no bed
-Чутка: людина в біді (подробиці — на дошці)	Rumour: someone in trouble (details on the board)
-{0} голодує — без їжі кине роботу, а згодом піде	{0} is starving: without food they will drop their work and later leave
-{0} голодний|голодна	{0} is hungry
-{0} не має ліжка	{0} has no bed
-{0}: ящик повний	{0}: chest full
-{0} без роботи	{0} has no job
 Місця більше нема	No room left
 Задалеко від його бази (до {0} м).	Too far from their base (up to {0} m).
 Тут його ділянка ({0} м довкола).	Their plot is here ({0} m around).
@@ -5790,31 +5760,13 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Меню закриється: наведи {0} і натисни {1}.	The menu closes: aim {0} and press {1}.
 Відкриває свій вибір.	Opens its own choices.
 Наведи {0} і натисни {1}	Aim {0} and press {1}
-здоров'я 	health
 Наведи {0} і натисни {1}. Ще {2} с.	Aim {0} and press {1}. {2} s left.
 Правий клік — скасувати.	Right click: cancel.
-Яка це людина: хода, вдача, ритм дня, з людьми, у бою — і чим живе.	What kind of person this is: gait, temper, daily rhythm, with people, in a fight, and what they live by.
-Історія	Story
-встає о {0}, лягає о {1}	gets up at {0}, goes to bed at {1}
-жайворонок: 	early bird:
-сова: 	night owl:
-мирний|мирна — тікає	peaceful: runs away
-обережний|обережна — тікає, а загнаний|загнана відбивається	cautious: runs away, fights back when cornered
-боєць|бійчиня — захищає себе й тих, кого супроводжує	fighter: defends themselves and those they escort
-боєць|бійчиня — сам|сама шукає ворогів	fighter: seeks out enemies
-тримається осторонь бою	keeps out of fights
-робота: 	job:
 живе на базі	lives at a base
 найнятий|найнята, ще без дому	hired, no home yet
-ніде не живе	lives nowhere
-має ліжко	has a bed
-тримає комору	keeps the pantry
-має ящик запасів	has a supply chest
-Мені б {0} — {1}.	I could use {0}. {1}.
-одна чутка	one rumor
+Мені б {0} — {1}.	I could use {0}: {1}.
 {0} просить: {1} (віддячить: {2})	{0} asks for: {1} (will repay with: {2})
 Ой… а де ж воно? Нема.	Oh… where did it go? It's gone.
-…ні, забув|забула. Згадаю — скажу.	…no, I've forgotten. I'll tell you when it comes back.
 Тримай: {0}.	Here: {0}.
 Ой, дякую! Саме те, що треба.	Oh, thank you! Just what I needed.
 у кільці ворогів	surrounded by enemies
@@ -5839,11 +5791,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Виселити	Evict
 Оселити тут	Settle here
 Більше ніде не живе: ні дому, ні ліжка, ні розпорядку, ні роботи.	No longer lives anywhere: no home, no bed, no routine, no job.
-Показує на 30 с, що він вважає своєю базою: золоті вогники по межі на землі й позначки на мапі.	Shows for 30 s what they count as their base: golden lights along the edge on the ground and marks on the map.
 Спершу оселі його.	Settle them first.
 Межі ще рахуються — спробуй за мить.	The edges are still being worked out: try again in a moment.
-Межі бази: 	Base edges:
-Його ліжко: тут спить уночі.	Their bed: they sleep here at night.
 лук	bow
  (майстер)	 (master)
 на всі руки, але без особливого хисту	a jack of all trades, no special gift
@@ -5911,11 +5860,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Прохання мешканців	Residents' requests
 Мешканець про щось просить. Спитай його сам або глянь на дошку серця.\n\nПринесеш — віддячить.	A resident is asking for something. Ask them yourself or look at the Hearth's board.\n\nBring it, and they will repay you.
 Ворона в тебе нема — свій знайде тебе сам, а чужого продає Хальдор	You have no raven — your own will find you, a stray one Haldor sells
-до тебе: ворожо	toward you: hostile
-до тебе: холодно	toward you: cold
-до тебе: тепло	toward you: warm
-до тебе: як до рідних	toward you: like family
-до тебе: рівно	toward you: even
 Шафка ще не тут.	Locker not here yet.
 до всіх рівно.	even with everyone.
 ходить по-старечому, руки за спиною	walks like an old man, hands behind the back
@@ -5924,9 +5868,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 ходить перевальцем	waddles
 накульгує	limps
 ходить тихо, похнюпившись	walks quietly, head down
-{0} не битиметься — зброя ні до чого.	{0} won't fight: weapons are no use.
-Відкриває десять комірок поруч із твоєю торбою: броня, одяг, сокира чи кайло для роботи. Не боєць — зброї не візьме.	Opens ten slots next to your bag: armour, clothes, an axe or a pickaxe for work. Not a fighter: won't take weapons.
-Відкриває його десять комірок поруч із твоєю торбою: поклади зброю, щит, броню, стріли чи болти — він вдягне найкраще. Лук чи арбалет бере лише зі стрілами чи болтами. Лісорубу — сокиру, рудокопу — кайло; вони зношуються — забери й полагодь на верстаті або дай нові.	Opens their ten slots next to your bag: put in weapons, a shield, armour, arrows or bolts, and they wear the best. A bow or crossbow only with arrows or bolts. A lumberjack needs an axe, a miner a pickaxe; they wear out: take them back and repair them at a workbench, or give new ones.
 На дошці оселі з'явилась перша чутка про людину в біді.	The first rumour of someone in need is on the settlement's board.
 Оселя {0}	{0}'s Settlement
 Змінити назву	Rename
@@ -5935,23 +5876,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Їдальня тут: мешканці їстимуть за цим столом і вечорами збиратимуться біля нього.	The dining hall is here: residents will eat at this table and gather by it in the evenings.
 Їдальню знято: їстимуть за найближчим столом.	Dining hall removed: they will eat at the nearest table.
 Скарбничка	Treasury
-Скринька внизу: {0} монет. Робітники самі беруть платню раз на 5 днів — разом {1}. Платять вчасно — працюють охочіше й вправнішають.	The box below: {0} coins. Workers take their pay themselves every 5 days, {1} in total. Paid on time, they work more willingly and grow more skilled.
-Стіл їдальні зламано — їдальню знято. Обери новий стіл.	The dining table was broken and the dining hall removed. Choose a new table.
-Не обрано: їдять за столом біля комори, вечорами сидять біля вогню.	Not chosen: they eat at a table by the pantry and sit by the fire in the evenings.
-Обрано стіл: тут їдять і вечорами здебільшого сидять. Інколи хтось вибере вогонь надворі.	Table chosen: they eat here and mostly sit here in the evenings. Sometimes someone picks a fire outside.
-Стіл їдальні зник: поки що їдять де знайдуть. Обери інший.	The dining table is gone: for now they eat wherever they can. Choose another.
-Інший стіл їдальні	Another dining table
-Обрати їдальню	Choose a dining hall
-Перенести їдальню: покажи інший стіл. Їжу братимуть зі скринь довкола нього, а сідатимуть на лави й стільці поруч.	Move the dining hall: show another table. They will take food from the chests around it and sit on the benches and chairs nearby.
-Покажи стіл — тут мешканці обідатимуть і збиратимуться вечорами. Їжу братимуть зі скринь довкола, сідатимуть на лави й стільці поруч.	Show a table: residents will dine here and gather in the evenings. They will take food from the chests around it and sit on the benches and chairs nearby.
-Зняти їдальню	Remove the dining hall
-Без їдальні мешканці їдять де випаде: за столом біля комори чи біля скрині з готовим, а вечорами сидять біля вогню.	Without a dining hall residents eat wherever they can: at a table by the pantry or by a chest with cooked food, and sit by the fire in the evenings.
-настрій {0}%	mood {0}%
 втомлений|втомлена	tired
-Нема столу їдальні — обери інший на дошці	No dining table: choose another on the board
 Нема що їсти	Nothing to eat
-{0} без платні — поклади монети в скарбничку (бере {1} раз на 5 днів)	{0} is unpaid: put coins in the treasury (takes {1} every 5 days)
-{0} невдоволений|невдоволена	{0} is unhappy
 Тут дому нема: потрібна підлога під дахом — обери інший.	No house here: it needs a floor under a roof. Pick another.
 Дім не замкнений — він доглядає лише те, що під дахом.	The house is not closed in: they only look after what is under the roof.
 Здоров'я	Health
@@ -5962,6 +5888,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 на базі нема столу (їжа — у ящику біля столу або в коморі кухаря)	no table at the base (food goes in a chest by a table or in the cook's pantry)
 ящик біля столу особистий — потрібен звичайний	the chest by the table is personal: a regular one is needed
 біля столу (до {0} м) нема ящика	no chest by the table (within {0} m)
+біля столу їдальні (до {0} м, не за стіною) нема ящика	no chest by the dining table (within {0} m, not behind a wall)
 у ящику біля столу лише не готове: {0} — їдять тільки страви з вогнища, печі чи казана	the chest by the table holds only uncooked food: {0}; they eat only dishes from a fire, oven or cauldron
 у ящику біля столу нема страв (з вогнища, печі чи казана)	no dishes in the chest by the table (from a fire, oven or cauldron)
 кілька днів тому	a few days ago
@@ -5971,7 +5898,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Без тями — спершу постав його на ноги (медовуха зцілення, E).	Unconscious: get them back on their feet first (a healing mead, E).
 (мертвий|мертва)	(dead)
 Мені б {0}.	I could use {0}.
-Віддячу: {0}. Чекатиму ще {1}.	I'll repay you with: {0}. I'll wait {1} more.
 Їх нема… дякую. Меду б мені…	They're gone… thank you. Mead, if you have it…
 Моя річ лишилась {0} звідси, кроків за {1}. Там вони…	My things are {0} from here, about {1} paces. They're there…
 {0} не дочекався|дочекалася тебе й пішов|пішла…	{0} didn't wait for you and left…
@@ -6020,7 +5946,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ця скриня ще не готова.	This chest isn't ready yet.
 Це його робоча скриня — для розбору потрібна інша.	This is their work chest: sorting needs another one.
 Скриня для розбору: що покладеш сюди, він рознесе на склад.	Sorting chest: whatever you put here, they will carry to the storeroom.
-Це поза його базою — склад має бути в ній.	That is outside their base: the storeroom must be inside it.
 Тут склад: скринь довкола — {0}.	Storeroom here: {0} chests around.
 Тут склад — але скринь довкола поки нема.	Storeroom here, but there are no chests around yet.
 Сюжетна будівля Зали Варти: лише для автора, гравці її не будують.	A story building of the Hall of the Watch: for the author only, players do not build it.
@@ -6052,13 +5977,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ти піш{ов|ла} слідом пам'яті, до старого щита.	You followed the trail of memory, to the old shield.
 Ти піш{ов|ла} слідом думки, до старого вказівника.	You followed the trail of thought, to the old signpost.
 У покинутій хаті було Відлуння. Воно лишило тобі цю книгу.	There was an Echo in the abandoned house. It left you this book.
-Ти зна{йшов|йшла} Залу Варти. Брама була зачинена.	You found the Hall of the Watch. Its gate was shut.
-Біля каменів табору тебе зустріла Гейд.	Heid met you by the stones of the camp.
-Гейд відчинила браму Зали своїм ключем.	Heid opened the Hall's gate with her key.
-Вогнище в Залі горіло синім і не гріло.	The hearth in the Hall burned blue and gave no warmth.
-На другому поверсі Зали лежав старий лист.	An old letter lay on the Hall's upper floor.
-Із листа ти дізна{вся|лася}, як збудувати серце оселі.	From the letter you learned how to build a Hearth of the Settlement.
-Ти збудува{в|ла} перше серце оселі у світі.	You built the first Hearth of the Settlement in the world.
 Браму Зали Варти відчинено.	The gate of the Hall of the Watch has been opened.
 Кажуть, Зала Варти вже не зачинена.	They say the Hall of the Watch is no longer shut.
 Вогнище в Залі Варти спалахнуло синім. Воно не гріє.	The hearth in the Hall of the Watch flared up blue. It gives no warmth.
@@ -6090,21 +6008,12 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Вогнище горить… синім	The hearth burns… blue
 Обшукай Залу	Search the Hall
 Збудуй серце оселі	Build a hearth heart
-Хтось уже збудував серце	Someone has already built a heart
-Перше серце вже горить у світі. Про те, що сталось, розкаже книга.	The first heart already burns in this world. The book will tell you what happened.
 Це не наш.	Not one of ours.
 Чужий. І старий.	A stranger. And old.
 …ти ж обіця{в|ла}.	…you promised.
 …Зала.	…The Hall.
 …зачинено. У неї ключ.	…shut. She has the key.
 …Ти?	…You?
-Вибач. Задумалась. Я Гейд — доглядаю ці камені.	Forgive me. I was lost in thought. I am Heid — I tend these stones.
-У тебе ворон. Свій. Отже, ти з Варти. Як і я.	You have a raven. Your own. So you are of the Watch. Like me.
-…Знайоме місце. А вона — ні.	…A familiar place. But not her.
-Дивиться так, ніби я їй щось винен.	She looks at me like I owe her something.
-Я встала кілька зим тому. Лікую, кого є.	I rose a few winters ago. I heal whoever there is.
-Ти від брами? Вона зачинена вже давно.	From the gate, are you? It has been shut a long time.
-Вартовому не місце під небом. Ходімо: ключ у мене. Побачиш, що лишилось від Зали.	A watchman has no place under the open sky. Come: I have the key. You will see what is left of the Hall.
 Ходімо.	Come.
 Ключ? Знайшла. Тут усе чиєсь і нічиє.	The key? I found it. Everything here is someone's and no one's.
 Сама сплю на каменях. У Залі… голоси. Дивні.	I sleep by the stones myself. In the Hall… voices. Strange ones.
@@ -6186,7 +6095,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ворон кружляє над тобою	A raven circles above you
 Роздивись старий вказівник	Look at the old signpost
 Вказівник	Signpost
-Ворон повернувся	The raven came back
 …та сама хода.	…the same walk.
 …один твій слід іржавіє в траві.	…one of your trails is rusting in the grass.
 …другий стоїть на роздоріжжі. Досі показує не туди.	…the other stands at the crossroads. Still pointing the wrong way.
@@ -6255,7 +6163,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 на місце	at a spot
 Сидить.	Sits.
 Розмова з ним — те саме, що E.	Talk to them, same as E.
-Натисни ще раз або в центр кола — відпустиш.	Press again or the middle of the circle to release them.
+Натисни ще раз — відпустиш.	Press again to let it go.
 Точно?	Sure?
 без тями	unconscious
 слухає	listens
@@ -6284,11 +6192,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 дозвілля	leisure
 Вдача	Character
 Оселя	Home
-Де він живе: ліжко, виселення.	Where they live: bed, eviction.
 Ліжко	Bed
 на ліжко	at a bed
-Межі бази	Base edges
-Він втратить дім, ліжко, розпорядок і роботу. Натисни ще раз, щоб виселити.	They will lose their home, bed, routine and job. Press again to evict.
 Сховок	Hideout
 на місце, де сховатись	at a place to hide
 Деревина	Wood
@@ -6425,15 +6330,12 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Той олень біля каменів, сам{|а} знаєш. За тим, хто його вбив, люди підуть. Дурне правило, зате старе.	That deer by the stones, you know the one. People will follow whoever killed it. A stupid rule, but an old one.
 Вартовий без людей — просто ще один камінь. Іди.	A watchman without people is just one more stone. Go.
 Іду.	I'm going.
-Я ж казала: голоси. Ночами там говорять ті, кого вже нема. Чи мені так здається. На каменях тихіше.	I told you: voices. At night the ones who are gone talk in there. Or so it seems to me. It's quieter on the stones.
 Що вони кажуть?	What do they say?
 Не знаю. Не дослуховуюсь. І тобі не раджу.	I don't know. I don't listen. I wouldn't advise you to either.
 Зала Варти. Тут колись горів вогонь, і поки горів, було кому сторожити. Тепер пил і холод.	The Hall of the Watch. A fire burned here once, and while it burned, there was someone to keep watch. Now it's dust and cold.
 Тут завжди так. Дрова є? Спробуй, якщо не віриш.	It's always like this. Got firewood? Try it, if you don't believe me.
 Спробую.	I'll try.
 Не знаю. Він не мав горіти взагалі. Не гріє — то й не чіпай.	I don't know. It wasn't supposed to burn at all. It doesn't warm, so leave it be.
-Я ж сказала: знайшла. Мерці за ключами не приходять.	I told you: I found it. The dead don't come back for keys.
-Те, що сама сюди поклала. Забуваю куди. Буває, коли довго живеш сама.	What I put here myself. I forget where. It happens when you live alone for long.
 Вартові. Ті, кого вже нема. Хтось же має чистити мох із їхніх імен.	The watchmen. The ones who are gone. Someone has to clean the moss off their names.
 Ти їх знала?	Did you know them?
 Декого. Не питай кого.	Some. Don't ask which.
@@ -6498,7 +6400,6 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 сам|сама шукає ворогів	seeks out foes
 осторонь бою	stays out of fights
 є	yes
-Збудуй ліжко й дай його: Q → Оселя → Ліжко.	Build a bed and give it: Q → Home → Bed.
 Ліжко: {0}	Bed: {0}
 комора	pantry
 ящик	chest
@@ -6587,7 +6488,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 щойно збудована	just built
 нарікають	grumbling
 живуть добре	living well
-живуть рівно	getting by
+живуть спокійно	living quietly
 Ще ніхто тут не живе.	Nobody lives here yet.
 усі ситі й мають ліжко	everyone is fed and has a bed
 вогнища горять	the fires are burning
@@ -6681,8 +6582,14 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Це ліжко ще не готове.	This bed is not ready yet.
 Це чиєсь ліжко (точка появи гравця): дай вільне.	This is someone's bed (a player's spawn point): give a free one.
 Це ліжко вже має {0}.	{0} already has this bed.
-Це ліжко поза базою людини.	This bed is outside the person's base.
 Тепер це його|її ліжко.	This is his|her bed now.
+Ліжко жителя: {0}	Resident's bed: {0}
+Ліжко жительки: {0}	Resident's bed: {0}
+Зняти ліжко	Take bed away
+Ліжко більше не його|її: спатиме де доведеться, поки не даси інше.	The bed is no longer his|hers: sleeps wherever until you give another.
+У нього|неї й так нема ліжка.	He|She has no bed anyway.
+Його|Її тримає сюжет: зараз не зняти.	The story holds him|her: cannot be taken away now.
+Це ліжко більше не його|її.	This bed is no longer his|hers.
 ЇДАЛЬНЯ:	DINING:
 обрано	chosen
 стіл зник, обери інший	the table is gone, choose another
@@ -6757,3 +6664,539 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ні, це не моє.	No, that is not for me.
 Візьмуся за щось інше, а це — ні.	I will take on something else, but not this.
 Нудьга смертна. Пошукай когось іншого.	Deadly dull. Look for someone else.
+дрова кінчаються	the firewood is running out
+смолоскипам живиці бракує	the torches are short of resin
+жаровні гаснуть	the braziers are going out
+піч голодна	the furnace is hungry
+без руди піч стоїть	the furnace stands idle without ore
+на бронзу олова треба	bronze needs tin
+залізо скінчилось	the iron has run out
+хочу спробувати срібло	I want to try silver
+м'яса на всіх не вистачає	there is not enough meat for everyone
+на юшку	for a broth
+на смаженину	for a roast
+на суп	for a soup
+на свято	for a feast
+на медове сусло	for the honey wort
+на медовуху	for the mead
+на пиво	for beer
+на м'яку підстилку	for soft bedding
+на торби	for bags
+на міцні кошики	for strong baskets
+мітлу підклеїти	to glue the broom
+на ганчірки	for rags
+на варті без них ніяк	no standing guard without them
+старі стріли скінчились	the old arrows are gone
+проти тих, що в броні	for the ones in armour
+на обладунок	for armour
+рукавиці стерлись	my gloves are worn through
+топорище підклеїти	to glue the axe handle
+на теплу куртку	for a warm jacket
+на налокітники	for elbow pads
+смолоскипи в шахту	torches for the mine
+світильникам живиці бракує	the lamps are short of resin
+дров у дім треба	the house needs firewood
+у домі жаровні холонуть	the braziers in the house are going cold
+давно не їв|їла солодкого	I have not had anything sweet for ages
+на подушку	for a pillow
+люблю чорницю	I love blueberries
+сниться ночами	I dream of it at night
+щоб у коморі була їжа	to see there is food in the pantry
+поповнити скарбничку	to fill the coin box
+ти обіця{в|ла}: щоб у коморі була їжа	you promised: to see there is food in the pantry
+ти обіця{в|ла}: поповнити скарбничку	you promised: to fill the coin box
+Пам'ятаю. Заплачу.	I remember. I will pay.
+життя	life
+слово	word
+рука	hand
+час	time
+що вас пов'язує	what ties you
+обірвано · {0}: {1}	cut · {0}: {1}
+{0}, годі. За цю людину я ручаюся.	{0}, enough. I vouch for this one.
+ти переда{в|ла} його|її слово	you carried their word
+за тебе перед ним|нею заступились	someone stood up for you to them
+передати слово: {0}	carry a word to: {0}
+є слово від: {0}	you have a word from: {0}
+дрібні справи	small tasks
+Тобі дещо просили передати.	I was asked to tell you something.
+Є слово для тебе.	I have a word for you.
+Передам.	I will tell them.
+Гаразд, скажу.	All right, I will say it.
+Самі розбирайтеся.	Sort it out yourselves.
+Це не моя справа.	That is none of my business.
+передати слово	carry a word
+нагодувати сусіда	feed a neighbour
+ти нагоду{вав|вала} сусіда, коли він|вона попросив|попросила	you fed a neighbour when they asked
+нагодувати: {0}	feed: {0}
+принести поїсти: просить сусід	bring food: a neighbour asks
+Тримай, поїж. Це за тебе просили.	Here, eat. Someone asked me to look after you.
+На, з'їж. Сусід за тебе хвилюється.	Here, eat. A neighbour is worried about you.
+привітати новенького	greet the newcomer
+ти приві{тав|тала} новенького, коли він|вона попросив|попросила	you greeted the newcomer when they asked
+привітати: {0}	greet: {0}
+привітай: новенький тут	greet: a newcomer is here
+Ласкаво просимо до оселі.	Welcome to our home.
+Вітаю тебе тут. Освоюйся.	Good to have you here. Settle in.
+посидіти, щоб помиритись	sit together to make up
+ти посиді{в|ла} поруч, коли не дотрима{в|ла} слова	you sat with them after breaking your word
+Гаразд, посиджу.	All right, I will sit.
+Вибач. Сідаю.	I am sorry. I am sitting down.
+ти посиді{в|ла} поруч, коли йому|їй було важко	you sat with them when it was hard
+постояти поруч	stand nearby
+ти постоя{в|ла} поруч, коли йому|їй було страшно	you stood by them when they were afraid
+глянути, що там	go and look
+ти схо{див|дила} глянути, чого він|вона боявся|боялася	you went to look at what they feared
+підкинути у вогонь	feed the fire
+ти підкину{в|ла} у вогонь, коли він|вона попросив|попросила	you fed the fire when they asked
+розпалити вогонь в оселі	light a fire at home
+ти да{в|ла} оселі вогонь	you gave the home a fire
+поставити світло біля ліжка	put a light by the bed
+ти постави{в|ла} світло біля його|її ліжка	you put a light by their bed
+розібратися зі звіром	deal with the beast
+ти розібра{вся|лась} зі звіром біля оселі	you dealt with a beast near the home
+повісити трофей	hang a trophy
+ти пові{сив|сила} трофей, коли він|вона попросив|попросила	you hung a trophy when they asked
+посидіти біля вогню	sit by the fire
+ти посиді{в|ла} з ним|нею біля вогню	you sat with them by the fire
+подивитись на зорі	look at the stars
+ти диви{вся|лась} з ним|нею на зорі	you looked at the stars with them
+послухати історію	listen to a story
+ти слуха{в|ла} його|її історію	you listened to their story
+показати ворона	show your raven
+ти показа{в|ла} йому|їй свого ворона	you showed them your raven
+розповісти, де ти бу{в|ла}	tell them where you were
+ти розпові{в|ла}, де бу{в|ла}	you told them where you were
+Зроблю.	I will do it.
+Іншим разом.	Another time.
+Сідай, розкажу.	Sit down, I will tell you.
+Далеко бу{в|ла}. Слухай.	I was far away. Listen.
+Гаразд.	All right.
+Мені зараз не до того.	I have no time for this now.
+мріє про власну кімнату	dreams of a room of their own
+хоче навчитись іншого: {0}	wants to learn something else: {0}
+хоче ще раз побачити місце: {0}	wants to see a place once more: {0}
+луки	the meadows
+чорний ліс	the black forest
+гори	the mountains
+рівнини	the plains
+туманні землі	the mistlands
+далекий край	a far land
+Посиджу.	I will sit.
+Постою.	I will stay.
+Гаразд, я тут.	All right, I am here.
+Гляну.	I will look.
+Гаразд, постою.	All right, I will stay.
+Слухаю.	I am listening.
+Дивись.	Look.
+Підходь, дивись.	Come closer, have a look.
+вогонь не чекає	the fire will not wait
+у ящику вже видно дно	I can see the bottom of the chest
+на ніч не вистачить	it will not last the night
+смолоскипи вже ледь горять	the torches barely burn
+без неї тут стане темно	without it this place goes dark
+жаровні ледь тліють	the braziers barely smoulder
+на вугіллі жар тримається довше	coal holds the heat longer
+піч вистигає	the furnace is cooling
+без вугілля я тут лише дивлюсь	without coal all I do is watch
+жару не вистачає	there is not enough heat
+мідь скінчилась	the copper is gone
+піч є, а плавити нічого	a furnace and nothing to smelt
+без олова бронзи не буде	no tin, no bronze
+міді вистачає, а олова ні	enough copper, but no tin
+залізо тут усім потрібне	everyone here needs iron
+брухт перетоплю, ніхто й не впізнає	I will melt the scrap, no one will know it
+срібла ще не плавив ніхто з нас	none of us has smelted silver yet
+піч готова до срібла	the furnace is ready for silver
+котел порожній	the pot is empty
+люди вже питають про обід	people are asking about dinner
+оленина вийде на славу	venison will turn out grand
+хочу зварити щось путнє	I want to cook something decent
+їх добре смажити до хрускоту	they are good fried crisp
+усі їх люблять, хоч і не зізнаються	everyone likes them, though no one admits it
+давно не було риби	we have not had fish in a while
+м'ясо вже всім набридло	everyone is tired of meat
+такого ми ще не куштували	we have never tasted that
+хочу справжнього м'яса на стіл	I want real meat on the table
+без меду медовухи не буде	no honey, no mead
+бджоли не встигають	the bees cannot keep up
+бочки стоять порожні	the barrels stand empty
+малина дасть гарний смак	raspberries will give it a good taste
+з чорниці медовуха вийде міцніша	blueberries make a stronger mead
+час спробувати щось міцніше	time to try something stronger
+люди заслужили пива	people have earned a beer
+кошики вистелити	to line the baskets
+ягоди в кошику давляться	the berries get crushed in the basket
+торба геть протерлась	my bag is worn through
+усе висипається дорогою	everything falls out on the way
+старі кошики розсипаються	the old baskets are falling apart
+хочу зробити щось на роки	I want to make something that lasts
+мітла розсипається в руках	the broom falls apart in my hands
+рукоять уже хитається	the handle is loose
+старі ганчірки вже нічого не витирають	the old rags wipe nothing now
+бруду більше, ніж ганчірок	more dirt than rags
+сагайдак майже порожній	my quiver is nearly empty
+вартовий без стріл просто глядач	a guard with no arrows just watches
+кремінь звірів уже не бере	flint no longer bites the beasts
+хочу бити сильніше	I want to hit harder
+бронзові стріли від броні відскакують	bronze arrows bounce off armour
+вороги стали міцнішими	the foes have grown tougher
+обладунок тріщить на плечах	my armour is cracking at the shoulders
+наступного удару мій обладунок не витримає	my armour will not take another blow
+долоні вже в мозолях	my palms are all blisters
+сокира вислизає з рук	the axe slips out of my hands
+сокира хитається на топорищі	the axe head wobbles
+топорище ось-ось вилетить	the handle is about to fly off
+вітер продуває наскрізь	the wind goes right through me
+без теплого одягу зиму не витримаю	I will not last the winter without warm clothes
+у шахті лікті стираються першими	in a mine the elbows go first
+камінь не жаліє рук	stone does not spare hands
+у шахті нічого не видно	nothing can be seen in the mine
+наосліп кайлом не помахаєш	you cannot swing a pick blind
+у домі вже темніє	it is getting dark in the house
+світильники ледь горять	the lamps barely burn
+у домі холоднішає	the house is getting colder
+хочу, щоб дім стояв теплий	I want the house kept warm
+жаровні в домі гаснуть	the braziers in the house are going out
+у домі має бути тепло	a house should be warm
+смак дитинства, мабуть	the taste of childhood, I suppose
+хочеться чогось не з котла	I want something not from the pot
+хочу собі трохи радості	I want a little joy for myself
+від кашлю добре	it is good for a cough
+голові твердо	my head lies hard
+сплю на кулаку	I sleep on my fist
+хочу, щоб губи були сині	I want my lips blue
+у лісі її повно, а мені не можна туди	the forest is full of them and I cannot go there
+раз скуштував|скуштувала й не можу забути	I tasted it once and cannot forget it
+кажуть, вона гріє зсередини	they say it warms from within
+Гаразд. Обійдуся без цього.	All right. I will do without it.
+поліно|поліна|полін	log|logs|logs
+поліно доброго дерева|поліна доброго дерева|полін доброго дерева	fine wood log|fine wood logs|fine wood logs
+шматок живиці|шматки живиці|шматків живиці	lump of resin|lumps of resin|lumps of resin
+шматок вугілля|шматки вугілля|шматків вугілля	lump of coal|lumps of coal|lumps of coal
+шматок мідної руди|шматки мідної руди|шматків мідної руди	lump of copper ore|lumps of copper ore|lumps of copper ore
+шматок олов'яної руди|шматки олов'яної руди|шматків олов'яної руди	lump of tin ore|lumps of tin ore|lumps of tin ore
+шматок залізного брухту|шматки залізного брухту|шматків залізного брухту	piece of scrap iron|pieces of scrap iron|pieces of scrap iron
+шматок срібної руди|шматки срібної руди|шматків срібної руди	lump of silver ore|lumps of silver ore|lumps of silver ore
+шматок сирого м'яса|шматки сирого м'яса|шматків сирого м'яса	piece of raw meat|pieces of raw meat|pieces of raw meat
+шматок оленини|шматки оленини|шматків оленини	piece of venison|pieces of venison|pieces of venison
+хвіст ящірки|хвости ящірок|хвостів ящірок	neck tail|neck tails|neck tails
+сира риба|сирі риби|сирих риб	raw fish|raw fish|raw fish
+шматок м'яса локса|шматки м'яса локса|шматків м'яса локса	piece of lox meat|pieces of lox meat|pieces of lox meat
+міра меду|міри меду|мір меду	measure of honey|measures of honey|measures of honey
+ягода малини|ягоди малини|ягід малини	raspberry|raspberries|raspberries
+ягода чорниці|ягоди чорниці|ягід чорниці	blueberry|blueberries|blueberries
+ягода морошки|ягоди морошки|ягід морошки	cloudberry|cloudberries|cloudberries
+міра ячменю|міри ячменю|мір ячменю	measure of barley|measures of barley|measures of barley
+пір'їна|пір'їни|пір'їн	feather|feathers|feathers
+клапоть шкіри|клапті шкіри|клаптів шкіри	leather scrap|leather scraps|leather scraps
+оленяча шкура|оленячі шкури|оленячих шкур	deer hide|deer hides|deer hides
+шкура троля|шкури троля|шкур троля	troll hide|troll hides|troll hides
+кременева стріла|кременеві стріли|кременевих стріл	flint arrow|flint arrows|flint arrows
+бронзова стріла|бронзові стріли|бронзових стріл	bronze arrow|bronze arrows|bronze arrows
+залізна стріла|залізні стріли|залізних стріл	iron arrow|iron arrows|iron arrows
+не в настрої («Свавільний»), ще {0}	out of humour (Willful), {0} more
+ревнує {0}	jealous {0}
+{0} не в настрої («Свавільний»): ще {1} не слухає наказів. «Повернись» слухає завжди.	{0} is out of humour (Willful): ignores orders for {1}. It always obeys “Come Back”.
+не в настрої {0}	out of humour {0}
+{0} уночі спить («Сонько»): на розвідку не літає й сам не гуляє.	{0} sleeps at night (Sleepyhead): no scouting, no outings of its own.
+{0} мерзне («Мерзляк»): сам не гуляє, поки не стане тепло чи сухо.	{0} is freezing (Chilly): no outings of its own until it is warm or dry.
+мерзне	freezing
+{0} боїться боса («Боязкий»): не полетить на нього, поки бос не втратить чверть здоров'я.	{0} is scared of the boss (Timid): won't fly at it until the boss loses a quarter of its health.
+боїться боса	scared of the boss
+{0} хоче додому («Хатній»): ще {1} два його дари недоступні.	{0} wants to go home (Homebird): two of its gifts are shut for {1}.
+хоче додому {0}	homesick {0}
+{0} не в настрої («Свавільний»): {1} не слухатиме наказів	{0} is out of humour (Willful): won't obey orders for {1}
+не на тобі	not on you
+в атаці · зараз повернеться	attacking · back in a moment
+на розвідці · повернеться за {0}	scouting · back in {0}
+чужий ворон · не слухає	a stranger's raven · won't listen
+хоче додому («Хатній») · ще {0}	homesick (Homebird) · {0} more
+\n\n<color=#FF6B6B>Зараз не в настрої: ще {0} не слухає наказів.</color>	\n\n<color=#FF6B6B>Out of humour right now: ignores orders for {0}.</color>
+Виконує твій наказ. Центр кола — відпустити.	Following your order. The middle of the circle lets it go.
+За мною, стій, сядь, туди.	Follow, stay, sit, go there.
+не візьметься	won't take
+такої роботи нема	no such work
+{0} образився, але довіра не змінилась	{0} is offended, but its trust did not change
+там стіна чи двері	a wall or a door stands there
+крутий схил, а над ним нема підлоги	a steep slope with no floor over it
+там вода	water
+поза огорожею двору	outside the yard's fence
+база без огорожі: її дім — коло {0} м і {1} м довкола будівель її селища	an unfenced base is a circle of {0} m and {1} m round the buildings of its own village
+далі {0} м від її дому	more than {0} m from its home
+Поза базою: {0} ({1} м від Серця оселі; межі — на дошці Серця, «Показати межі»).	Outside the base: {0} ({1} m from the Heart of home; the Heart's board shows them, «Show the borders»).
+Спершу оселі його: служать у своїй базі.	Settle them first: they serve at their own base.
+Цей дім далеко від його бази.	That house is far from their base.
+Цей дім тепер його турбота. Межі дому — бірюзові вогники.	That house is now theirs to look after. Its edges: the turquoise lights.
+Обходить усю базу.	Walks round the whole base.
+Знову обходить межу бази.	Walks the base's edge again.
+Тут його пост.	Their post is here.
+{0} не в настрої, але тобі не відмовить: ти врятува{{в|ла}} йому|їй життя.	{0} is in no mood, but will not refuse you: you saved their life.
+{0}: ти не вислуха{{в|ла}} про своє — це запам'ятається	{0}: you did not hear them out about their own worry — that will be remembered
+Межі рахуються — покажу, щойно будуть.	Working out the borders: they will show as soon as they are ready.
+Межі оселі не вдалося порахувати.	The home's borders could not be worked out.
+іде по своє	goes to fetch its own
+бере своє	takes up its own
+це кліп іншого гравця: у файли моду його не записано	This clip belongs to another player; it wasn't saved to the mod's files.
+Ворон без книги	A Raven Without a Book
+Ворон тепер твій, але ще спить і тебе не знає. Посади його на плече (ПКМ по ворону в сумці): хай звикає до тебе.\n\nГоворити з ним, будити й водити за собою вчить Книга воронів. Її в тебе ще нема, і жоден торговець її не продасть: вона давно чекає на того, кого кличуть.\n\nСлухай небо. Чужий ворон знає дорогу до неї: іди на його поклик.	Your raven is yours again, but it's still asleep and doesn't know you. Put it on your shoulder (right-click the raven in your inventory) and let it get used to you.\n\nThe Book of Ravens teaches you to talk to it, wake it, and take it with you. You don't have one yet, and no trader will sell it: it's been waiting a long time for the one who is called.\n\nListen to the sky. A stranger's raven knows the way to it: follow its call.
+Ні. Цього разу я не ховаюсь.	No. I'm not hiding this time.
+Я не з тих, хто б'ється. Піду.	I'm no fighter. I'm leaving.
+Я стояв|стояла! Я не втік|втекла!	I stood my ground! I didn't run away!
+ти обіця{в|ла} поговорити з: 	you promised to talk to:
+ти обіця{в|ла} заступитися за: 	you promised to stand up for:
+Та ми й не сварилися.	We weren't even fighting.
+Ні. Хай спершу перше слово скаже.	No. They can speak first.
+Ну… гаразд. Спробую.	Well... all right. I'll try.
+ворожий|ворожа	hostile|hostile
+холодний|холодна	cold|cold
+теплий|тепла	warm|warm
+близький|близька	close|close
+рівний|рівна	even|even
+бо пхає носа в чужу розмову	because they butt into other people's conversations
+через плітки за спиною	because they gossip behind my back
+Ні. Не зараз.	No. Not now.
+Ну гаразд.	All right, then.
+Зараз не вийде. Вибач.	I can't right now. Sorry.
+Тримай. Тільки нікому.	Here. Just don't tell anyone.
+Сокира чи кайло для роботи. Вони зношуються: забери й полагодь на верстаті або дай нові.	An axe or pickaxe for work. They wear out: take it back and repair it at a workbench, or give them a new one.
+Одна зброя ближнього бою, щоб міг відбитись.	A melee weapon so they can defend themselves.
+Відкриває його десять комірок поруч із твоєю торбою: поклади зброю, щит, броню, стріли чи болти — він вдягне найкраще. Лук чи арбалет бере лише зі стрілами чи болтами.	Opens their ten slots beside your pouch: add a weapon, shield, armor, arrows, or bolts, and they'll equip the best. They only take a bow or crossbow if you provide arrows or bolts, too.
+ти подарува{в|ла} те, що він|вона любить	you gave them something they love
+ти подарува{в|ла} те, чого він|вона терпіти не може	you gave them something they can't stand
+ти вмови{в|ла} його|її лишитися	you convinced them to stay
+ти обіця{в|ла}: 	you promised:
+гордістю	pride
+вигодою	self-interest
+страхом	fear
+дружбою	friendship
+обов'язком	duty
+Настрій ({0})	Mood ({0})
+Настрій	Mood
+Втомлений|Втомлена	Tired|Tired
+Наляканий|Налякана	Afraid|Afraid
+Радіє	Happy
+Сумує	Sad
+Вражений|Вражена	Surprised|Surprised
+Ти відриваєш від роботи	You interrupt their work
+Ти заважаєш їсти	You interrupt their meal
+Набіг поруч	Raid nearby
+Балакучий|Балакуча	Talkative|Talkative
+Небалакучий|Небалакуча	Quiet|Quiet
+Бурчун|Бурчунка	Grumbler|Grumbler
+Злий|Зла загалом (через {0})	Angry in general (because of {0})
+Злий|Зла загалом	Angry in general
+Ставлення до тебе	Their attitude toward you
+Тобі не довіряє	Doesn't trust you
+Злий|Зла через тебе	Angry with you
+Втомився|Втомилася від розмови з тобою	Tired of talking to you
+Ти слухаєш його|її	You're listening to them
+кепсько	poorly
+похмуро	gloomily
+звично	as usual
+добре	well
+чудово	very well
+Відчепись	Leave me alone
+Сухо	curtly
+Звично	normally
+Охоче	willingly
+Від душі	warmly
+Зараз: {0} — {1}	Right now: {0} — {1}
+Як почувається сам|сама.	How they feel on their own.
+До тебе: {0} — {1}	With you: {0} — {1}
+Лише від цього залежить, чи говоритиме з тобою.	This alone determines whether they'll talk to you.
+▲ Особисте й прохання закриті: він|вона надто злий|зла.	▲ Personal topics and requests are closed: they're too angry.
+Разом {0}: «ще на думці» — від {1}, прохання — від {2}.	Total {0}: “still on your mind” from {1}, requests from {2}.
+Разом {0}: «ще на думці» — від {1}.	Total {0}: “still on your mind” from {1}.
+Лежить без тями: нічого не робить і не говорить, поки не отямиться.	Unconscious: does nothing or speak until they come around.
+Що ця людина відчуває саме зараз. Минає само за кілька хвилин.	How this person feels right now. It passes on its own after a few minutes.
+Ця людина поранена: здоров'я не повне.	This person is injured: their health isn't full.
+ГОЛОД	HUNGER
+Голод росте, поки людина на ногах (за важкою роботою швидше), і минає від страви з комори оселі. Голодна працює повільніше й бурчить, дуже голодна кидає роботу, а довго без їжі йде з оселі.	Hunger builds while a person is on their feet (faster during hard work) and is eased by a meal from the home's pantry. When hungry, they work more slowly and grumble; when very hungry, they stop working; without food for too long, they leave home.
+ВТОМА	FATIGUE
+Втома росте за роботою (за важкою швидше). Знесилена людина кидає роботу й сідає перепочити: на лаві чи біля вогню відпочиває найшвидше, на землі повільно, а вночі добре висипається у своєму ліжку.	Fatigue builds with work (faster during hard work). When exhausted, a person stops working and sits down to rest: a bench or a spot by the fire helps them recover fastest, the ground is slow, and at night they sleep well in their own bed.
+Зараз ніщо особливо не тисне й нічим особливим не тішить.	Nothing is weighing on them or lifting their spirits right now.
+Чого ця людина хоче для себе. Збудеться — зрадіє й запам'ятає, хто допоміг; довго не збувається — відпустить її.	What this person wants for themselves. If it comes true, they'll be glad and remember who helped; if it takes too long, they'll let it go.
+Говорить мало: рідко вітається й рідко заводить розмову, без питання здебільшого мовчить.	Quiet: rarely greets anyone or starts a conversation, and usually says little unless asked.
+Любить поговорити: охоче вітається й частіше заводить розмову, навіть коли не питають.	Talkative: gladly greets people and starts conversations often, even when no one asks.
+Небезпеки боїться: тікає від ворога раніше й не підпускає його близько.	Fears danger: flees from enemies sooner and keeps them at a distance.
+Небезпеки не боїться: тікає від ворога пізніше й підпускає його ближче.	Doesn't fear danger: flees from enemies later and lets them get closer.
+Працює неквапом: повільніше робить кожну справу й довше переводить подих.	Works at an easy pace: slower at every task and takes longer to catch their breath.
+Працює рівно: швидше робить кожну справу й коротше переводить подих.	Steady worker: gets every task done faster and catches their breath sooner.
+Рідко відволікається: примхи майже не відривають цю людину від роботи.	Rarely distracted: whims hardly ever pull this person away from work.
+Часто відволікається: примхи частіше відривають цю людину від роботи.	Easily distracted: whims often pull this person away from work.
+Мало дивиться довкола: помічає людей лише зовсім поруч.	Pays little attention to their surroundings: notices people only when they're very close.
+Усе бачить: помічає людей здалеку й роздивляється їх.	Notices everything: spots people at a distance and watches them.
+переконати: {0}	persuade: {0}
+Що найкраще діє, коли треба вмовити цю людину: лишитися, помиритися, зробити те, про що просиш.	What works best when persuading this person to stay, make peace, or do what you ask.
+Як ця людина тримає розмову: коли не хоче говорити, чи вимагає спершу вислухати своє, чи довго пам'ятає, що її не вислухали.	How this person handles a conversation: whether they shut down, insist on being heard first, or hold a grudge when you don't listen.
+ХИСТ	KNACK
+Хист: до чого ця людина має руку. Що вдається, робить швидше (вартовий бачить далі, у бою б'є сильніше); що не її, робить повільніше.	Knack: what this person is good at. They do it faster (a warden sees farther and hits harder in a fight); what doesn't suit them takes longer.
+Ці двоє ворогують. Помирити їх можна в розмові.\nНатисни — картка цієї людини.	These two are enemies. You can make peace between them in a conversation.\nClick to open this person's profile.
+Найближчі одне одному: тягнуться одне до одного, а коли хтось із них піде, інший сумуватиме.\nНатисни — картка цієї людини.	They're closest to each other: they gravitate toward one another, and if one leaves, the other will miss them.\nClick to open this person's profile.
+Ці двоє дружать: охоче проводять час поруч.\nНатисни — картка цієї людини.	These two are friends: they enjoy spending time together.\nClick to open this person's profile.
+Де ця людина найбільше любить бувати: що частіше тут буває, то більше любить.\nНатисни, щоб показати.	Where this person most likes to spend time: the more often they visit, the more they like it.\nClick to show on the map.
+спершу про своє	insists on their own first
+легко замикається	shuts down easily
+довго пам'ятає	holds a grudge
+говорить і не в настрої	talks even when they're not in the mood
+Коли поруч ворог, тікає й ховається, у бій не йде.	When an enemy is nearby, they flee and hide instead of fighting.
+Ця людина в бій не йде, але б'ється, коли ворог наздогнав і тікати нікуди.	This person avoids a fight, but will defend themselves when cornered with nowhere to run.
+Стає до бою, коли ворог нападає на оселю чи на своїх, і виходить у набіг.	Fights when an enemy attacks their home or their own people, and joins raids.
+Ця людина йде на ворога, щойно побачить, не чекаючи, поки той нападе, і виходить у набіг.	This person goes after an enemy as soon as they spot one, without waiting to be attacked, and joins raids.
+У бій не втручається.	Stays out of combat.
+Візьметься за будь-яку роботу, яку їй даси.	Will take on any work you give them.
+Що ця людина робить для оселі. Змінити: Q → Робота.	What this person does for the home. Change it: Q → Work.
+Живе тут, але для оселі нічого не робить: удень походжає базою. Дати роботу: Q → Робота.	Lives here but does no work for the home: spends the day wandering around the base. Assign work: Q → Work.
+Своє ліжко: уночі в ньому добре висипається, а ліжко під дахом піднімає настрій.\nНатисни, щоб показати.	Their own bed: sleeping in it gives them a good night's rest, and a bed under a roof lifts their mood.\nClick to show it.
+Без свого ліжка настрій гірший. Збудуй ліжко й дай його: Q → Оселя → Ліжко.	Without their own bed, their mood suffers. Build one and assign it: Q → Home → Bed.
+Комора кухаря: сюди кухар кладе готові страви, звідси їдять мешканці оселі.\nНатисни, щоб показати.	Cook's pantry: the cook puts prepared meals here, and the home's residents eat from it.\nClick to show it.
+Ящик для роботи: туди складає зроблене чи зібране й звідти бере потрібне.\nНатисни, щоб показати.	Work chest: they put what they've made or gathered here and take what they need from it.\nClick to show it.
+Ран нема: здоров'я повне.	No wounds: health is full.
+Ну от, полегшало.	There, that's better.
+Слова дотримано. Я не забуду.	You kept your word. I won't forget it.
+ти обіця{в|ла}: допомогти з мрією	you promised to help with a dream
+ти обіця{в|ла}: щось зробити, щоб полегшало	you promised to make things better
+{0}: вірить тобі на слово	{0}: takes you at your word
+Віддячу: {0}. Чекатиму ще {1}	I'll repay you: {0}. I'll wait another {1}
+Людина в біді: {0}, {1}, {2}	Someone in trouble: {0}, {1}, {2}
+Натисни, щоб переселити сюди.	Click to settle them here.
+Спершу вислухай: {0} хоче поговорити про своє.	Listen first: {0} wants to talk about something of their own.
+Та я тобі вже все розповів|розповіла.	But I've already told you everything.
+Ось те, що ти просив|просила.	Here's what you asked for.
+Принесу.	I'll bring it.
+Не вірить твоїм обіцянкам: ти вже не дотрима{в|ла} слова.	Doesn't trust your promises: you've already broken your word.
+Він|Вона надто злий|зла, щоб про це говорити.	They're too angry to talk about it.
+Для цього потрібно більше терпіння разом: від {0} (зараз {1}).	This takes more patience in total: {0} more (currently {1}).
+Годі. Мені час.	That's enough. I have to go.
+Так от, про що я…	Now, where was I...
+Потім про це.	Let's talk about it later.
+Не хоче знову про це говорити (ще ~{0} год).	Doesn't want to talk about it again (in ~{0} h).
+Я ж казав|казала.	I told you.
+{0} зараз розмовляє з: {1}	{0} is talking with {1} right now.
+А {0}?	What about {0}?
+Та ні, нікого.	No, nobody.
+Про кого саме?	Who exactly?
+А ще про когось?	Anyone else?
+Негарно так про своїх.	It's not right to talk about our own like that.
+Вибач. Я не хоті{в|ла} тебе образити.	Sorry. I didn't mean to hurt you.
+{0} не хоче говорити: щойно сам|сама закінчив|закінчила розмову з тобою. Спробуй за ~{1} год.	{0} doesn't want to talk: they just finished talking with you. Try again in ~{1} h.
+{0} не хоче говорити: ставиться до тебе вороже.	{0} doesn't want to talk: they're hostile toward you.
+{0} не хоче говорити: розізлився|розізлилася саме на тебе. Злість минає з часом.	{0} doesn't want to talk: they're angry with you. It will pass with time.
+{0} не хоче говорити: терпіння саме до тебе вичерпане (чому — наведи на лінію «до тебе»).	{0} doesn't want to talk: their patience with you has run out (hover over “With you” to see why).
+{0}: погодився|погодилася вислухати	{0}: agreed to hear you out
+Тулуб	Torso
+Ноги	Legs
+Плащ	Cloak
+своє	their own
+Годі, досить.	That's enough.
+Ну, що там у тебе?	Well, what is it?
+Зняти: {0}	Remove: {0}
+Назад.	Back.
+{0}: у твоїй торбі нема нічого такого.	{0}: you don't have anything like that in your pouch.
+Забрати: {0}	Take: {0}
+Готово.	Done.
+Сокира чи кайло для роботи	An axe or pickaxe for work
+Зброя ближнього бою	Melee weapon
+Ось, тримай: {0}.	Here you go: {0}.
+Ні, потім.	No, later.
+Мені? А що там?	For me? What's that?
+Нема за що.	You're welcome.
+Він має рацію.	They're right.
+Не зважай на нього.	Don't mind them.
+Спершу відповідай ворону: {0} чекає.	Answer the raven first: {0} is waiting.
+Ми ж про це вже згадували.	We've been over this.
+Ні. Не переконаєш.	No. You won't convince me.
+Ну… гаразд.	Well... all right.
+Тобі не відмовить у розмові ніколи.	They'll never refuse to talk to you.
+Зачиняється перед тобою легше.	Shuts you out more easily.
+Твоя обіцянка його|її заспокоює.	Your promise reassures them.
+Не вірить твоїм обіцянкам.	Doesn't trust your promises.
+Розповідає більше навіть не в настрої.	Tells you more even when they're not in the mood.
+Попросити про щось можна раніше.	You can ask them for something sooner.
+Не вимагає спершу вислухати своє.	Doesn't insist on being heard first.
+Вимагає вислухати своє раніше.	Insists on being heard sooner.
+Знає цю роботу досконало й робить її на повну швидкість.	Knows this job inside out and works at full speed.
+Робить цю роботу майже як майстер, ще трохи навчиться.	Works almost like a master at this job; just needs a little more practice.
+Поки робить цю роботу помітно повільніше за майстра.	Still works noticeably more slowly than a master at this job.
+Наскільки добре знає свою роботу. Новачок працює повільніше й вчиться з кожною отриманою платнею, аж доки стане майстром. Нова робота — вчитися знову.	How well they know their job. A novice works more slowly and learns with each payment, until they become a master. A new job means learning all over again.
+ТИ	YOU
+твоя відповідь ворону	your reply to the raven
+твоє	yours
+{0}, тихо	{0}, quietly
+веде далі історію	continues the story
+ПРОХАННЯ	FAVOR
+ще {0}	another {0}
+ОБІЦЯНО	PROMISED
+зараз · {0}	now · {0}
+обірвано	cut short
+Книга Ейріка.	Eirik's Book.
+Кошик Гейд	Heid's Basket
+Плетений кошик для трав.	A woven herb basket.
+Скручений аркуш із печаткою. Креслення серця оселі.	A rolled parchment with a seal. A blueprint for a Hearth of the Settlement.
+Розпитай Гейд	Ask Heid
+Ні. Вибач. Здалося, що хтось інший.	No. Sorry. I thought you were someone else.
+Ти ж не пам'ятаєш… Тобто. Звідки б.	You don't remember... I mean, how could you?
+Обмовилась. І зробила вигляд, що ні.	It slipped out. Then I pretended it hadn't.
+…Знайоме місце. А вона — ні. Чи да?	...This place feels familiar. She doesn't. Or does she?
+Я Гейд. Доглядаю ці камені. У тебе ворон — свій. Отже, ти з Варти. Як і я.	I'm Heid. I tend these stones. You have your own raven, so you're of the Watch. Like me.
+Вартовому не місце під небом. Ключ у мене. Спитай, що хочеш, і ходімо.	A Watchkeeper has no place beneath the open sky. I have the key. Ask what you want, then let's go.
+Я Ейрік. Я лишився сам. Я ще пам'ятаю всіх.\nУ відрізаній гілці воля не вертається. Коли повернеться сік, встануть ті, чиї імена тут.\nВони не згадають нас. Не кажіть їм, ким вони були.\n\n(рядок свіжо зрубано)\n\nБережіть для них вогонь. Несіть його туди, де вони житимуть.	I am Eirik. I am the last one left. I still remember them all.\nA severed branch does not regain its will. When the sap flows again, those whose names are here will rise.\nThey won't remember us. Don't tell them who they were.\n\n(The line was freshly carved)\n\nKeep the fire for them. Carry it to where they will live.
+Текст пливе перед очима — нічого не розібрати.	The words swim before your eyes; you can't make any of them out.
+Камінь Торвальда	Torvald's Stone
+Будинок привида	The Ghost's House
+Місце Муніна	Munin's Place
+Місце Хугіна	Hugin's Place
+Брама відчинена. Я відчинила. Ключем, який знайшла. Більше там дивитись нема на що.	The gate's open. I unlocked it with a key I found. There's nothing else worth looking at in there.
+Я там був|була, коли відчинили браму. Звук такий, що аж зуби занили. А звідти пішов холод, наче хтось видихнув.	I was there when the gate opened. The sound made my teeth ache. Then a wave of cold rolled out, like something had breathed on us.
+На власні очі бачив|бачила: брама Зали розчинилась. Я заглянув|заглянула. Пил, тиша і холод. Більше заглядати не хочу.	I saw the Hall's gate swing open with my own eyes. I looked inside: dust, silence, and cold. I won't be looking again.
+Я був|була за кілька кроків від брами Зали, коли вона подалась. Стільки років стояла, і ось. Я аж відступив|відступила.	I was only a few paces from the Hall's gate when it gave way. After all those years, just like that. I actually stepped back.
+Чув|Чула, що брама Зали вже не зачинена. Кажуть, усередині холодніше, ніж надворі взимку.	I heard the Hall's gate isn't shut anymore. They say it's colder inside than out in winter.
+Хтось відчинив браму тієї старої Зали. Наші про це вже всі знають. Ніхто не знає, навіщо.	Someone opened the gate to that old Hall. Everyone around here knows by now. No one knows why.
+Перехожі казали, що десь відчинили двері, які стояли зачинені цілу вічність. Може, й брешуть.	Travelers said someone opened doors that had been shut for ages. Maybe they made it up.
+Дійшла чутка про якусь браму. Чи то зала, чи то склеп. Кажуть, холодом звідти тягне аж досі.	There's talk of some gate being opened. A hall, or maybe a tomb. They say the cold is still pouring out.
+Вогнище загорілось. Синім. Роками не горіло, а тепер горить. Тепла від нього нема, не сподівайся.	The hearth lit up. Blue. It hadn't burned in years, and now it does. Don't expect any warmth from it.
+Я простяг|простягла руку до того вогню. Він синій і холодний. Більше я нічого так швидко не забирав|забирала.	I reached for that fire. Blue and cold. I've never pulled my hand back so fast.
+На моїх очах загорілось вогнище в Залі. Такого кольору вогню я ще не бачив|бачила. І тепла від нього нема.	I watched the Hall's hearth catch fire. I'd never seen flames that color before. And it gives off no heat.
+Я стояв|стояла за кілька кроків, коли воно спалахнуло. Обличчя синє в усіх, а холод такий самий, як і до того.	I was a few paces away when it flared. Everyone's faces turned blue, but the cold didn't change.
+Мені розказали, що в Залі горить синій вогонь і не гріє. Той, хто розказував, не сміявся.	Someone told me there's a blue fire burning in the Hall, and it gives no warmth. They weren't joking.
+Наші кажуть, вогнище в Залі ожило. Тільки кольору не того, і тепла від нього нема.	Our folks say the Hall's hearth has come back to life. Wrong color, though, and no warmth.
+Ходить чутка про синє полум'я в якихось руїнах. Я б не вірив|вірила, та надто вже багато хто каже те саме.	There's a rumor about blue flames in some ruins. I'd have dismissed it, but too many people tell the same story.
+Кажуть, десь далеко вночі видно дивне світло. Синє. Кажуть, то вогонь. Не знаю, що то за вогонь такий.	They say there's a strange light far away at night. Blue. They say it's fire. I don't know what kind of fire glows blue.
+У Залі Варти знайшли старий лист. У ньому креслення серця оселі.	An old letter was found in the Hall of the Watch. It has a blueprint for a Hearth of the Settlement.
+Кажуть, у Залі Варти щось знайшли.	They say someone found something in the Hall of the Watch.
+Лист знайшли. Там креслення серця оселі, та й годі. Нехай будують подалі звідси.	They found a letter. Just a blueprint for a Hearth of the Settlement. Let them build it far from here.
+У Залі знайшли старий лист. Я бачив|бачила той сувій: там креслення серця оселі, дерево, пір'я й ріг.	They found an old letter in the Hall. I saw the scroll: a Hearth of the Settlement, made from wood, feathers, and a horn.
+Я стояв|стояла поруч, коли читали той лист із Зали. Старий, аж кришиться, а креслення видно добре.	I was right there when they read the Hall's letter. The paper was crumbling, but the blueprint was clear.
+На моїх очах на верхньому поверсі Зали читали старий лист. Там написано, як поставити серце оселі. Я таке вперше бачу.	I watched them read an old letter upstairs in the Hall. It explained how to build a Hearth of the Settlement. I'd never seen anything like it.
+Кажуть, у Залі знайшли лист зі старими кресленнями. Наче там сказано, як поставити серце оселі.	They say an old letter with blueprints turned up in the Hall. Apparently it shows how to build a Hearth of the Settlement.
+Чув|Чула, що в Залі лежав лист. Тепер усі знають, як будувати те серце, тільки ріг ще десь треба взяти.	I heard there was a letter in the Hall. Now everyone knows how to build that hearth; they just need to find a horn.
+Мені переказали про лист із Зали. Там креслення, кажуть. Хтось із вартових лишив, поки міг.	I heard about the letter from the Hall. They say it has a blueprint, left behind by one of the Watch while they still could.
+Подейкують, ніби в якихось руїнах знайшли лист, а в ньому щось про серце оселі. Я не знаю, що воно таке.	Word is, someone found a letter in some ruins, with something about a Hearth of the Settlement in it. I don't know what that is.
+Перехожі казали про старий лист із кресленнями. Може, й правда. Папір же не гниє вічно, так?	Travelers were talking about an old letter with blueprints. Might be true. Paper doesn't rot forever, does it?
+Дійшла чутка про якісь креслення зі старої Зали. Що там накреслено, ніхто до ладу не каже.	Word reached me about some plans from the old Hall. Nobody can say what they show.
+Хтось поставив серце. Добре. Там воно й потрібне: далеко звідси.	Someone built a Hearth of the Settlement. Good. That's where it belongs: far from here.
+Я бачив|бачила, як ставили те серце. Ліхтар блиснув, і темно. Я ще довго стояв|стояла й чекав|чекала, чи не блисне знову.	I watched them build that hearth. The lantern flashed, then went dark. I stood there a long time, waiting for it to flash again.
+Я був|була поруч із першим серцем оселі, коли воно ожило. На мить. Той ліхтар, здається, сам злякався.	I was there when the first Hearth of the Settlement came alive. Just for a moment. That lantern seemed to scare itself.
+Чув|Чула, що поставили перше серце оселі. Кажуть, ліхтар на ньому спалахнув і одразу згас.	I heard someone built the first Hearth of the Settlement. They say its lantern flared and went dark right away.
+Мені розповіли про перше серце оселі. Хтось вирішив осісти по-справжньому. Отже, можна.	I heard about the first Hearth of the Settlement. Someone decided to put down real roots. So it can be done.
+Подейкують про якесь серце оселі. Я не знаю, що воно таке, але звучить так, ніби варто мати.	There's talk of some kind of Hearth of the Settlement. I don't know what it is, but it sounds worth having.
+Кажуть, десь люди вже не тікають, а лишаються. І вогонь свій мають. Я б подивився|подивилася.	They say some people have stopped running and settled somewhere, with a fire of their own. I'd like to see that.
+Що це за Варта, про яку ти кажеш?	What is this Watch you keep talking about?
+Чому я нічого не пам'ятаю?	Why can't I remember anything?
+Звідки ти знаєш, що я з Варти?	How do you know I'm with the Watch?
+«Ми». Швидко вона тебе записала.	“Us.” She was quick to count you in.
+Стерегла. Від чого — не скаже. Удобно.	Keeping watch. Won't say what from. Convenient.
+Варта стерегла цей світ. Від чого — вже ніхто не скаже: ті, хто знав, лежать під цими каменями. Лишились ворони. І ми з тобою.	The Watch guarded this world. No one can say from what anymore; those who knew are buried beneath these stones. The ravens remain. And you and I.
+Порожньо. Це вона точно сказала.	Empty. She got that part right.
+Тут так з усіма. Встаєш — і порожньо. Потім дещо вертається. Не все, і не те, що хочеш.	It's like that for everyone here. You wake up empty. Then some things come back. Not everything, and not the things you want.
+«Теж». Її птах сидить осторонь і мовчить. Наші так не вміють.	“Me too.” Her bird sits apart and stays quiet. Ours can't do that.
+Ворон. Вони бувають не в усіх. У кого є — той колись був у Варті. Я теж.	Ravens. Not everyone has one. If you do, you were once in the Watch. I was, too.
+«Майже всі ні про що». Тобто всі прочитала.	“Almost all about nothing.” So she read every one.
+Дуже хоче, щоб ти {пішов|пішла} звідси.	She really wants you gone.
+Голоси… Шось таке вже було. Нє. Пусто.	Voices... Sounds familiar. Nah. Nothing.
+Голоси. Ночами там говорять ті, кого вже нема. Чи мені так здається. На каменях тихіше.	Voices. At night, the dead talk there. Or maybe it just seems that way to me. It's quieter among the stones.
+Занадто легко вона про мерців.	She talks about the dead awfully lightly.
+Знайшла. Мерці за ключами не приходять.	Found it. The dead don't come looking for keys.
+Трави. Тут кожну треба знати в обличчя, бо наступної зими можуть не вирости.	Herbs. You have to know each one by sight here; they might not grow back next winter.
+Той камінь… Нє. Не помню.	That stone... Nah. I don't remember.
+Той її птах. Жодного разу не каркнув. Чого?	Her bird. Hasn't cawed once. Why?

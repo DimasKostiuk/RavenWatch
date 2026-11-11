@@ -140,7 +140,7 @@ namespace HuginWhispers
             return ranks[Mathf.Clamp(level, 0, ranks.Length - 1)];
         }
 
-        // "Довіра: Супутник" — a "name: value" line, so tooltip mods (SeneaL UI) show it as a stat row (the number is only in the book)
+        // "Довіра: Супутник" — a "name: value" line, so tooltip mods show it as a stat row (the number is only in the book)
         internal static string RankLine(bool munin, ItemDrop.ItemData item)
         {
             int level = Level(item);
@@ -248,7 +248,7 @@ namespace HuginWhispers
 
         // This character has ever had a raven of its own (woken and bound to it): until then the keys (book, gifts,
         // orders) do nothing, there is nobody to send, only G → Ворони opens them. Kept on the character; one look at
-        // the bag (and the shoulder cells) every few seconds finds ravens bound before this mark existed.
+        // the bag (and the shoulders) every few seconds finds ravens bound before this mark existed.
         private const string BondedKey = "RavenWatch_bonded";
         private static float _bondedLook;
         internal static bool Bonded(Player p)
@@ -261,7 +261,7 @@ namespace HuginWhispers
             if (inv == null) return false;
             foreach (ItemDrop.ItemData item in inv.GetAllItems())
                 if (IsOwner(item, p)) { p.m_customData[BondedKey] = "1"; return true; }
-            // with SeneaL UI's shoulder cells a raven on the shoulder is not in the bag at all
+            // a raven on the shoulder is not in the bag at all
             foreach (ItemDrop.ItemData item in RavenSeat.Shelved(p))
                 if (IsOwner(item, p)) { p.m_customData[BondedKey] = "1"; return true; }
             return false;

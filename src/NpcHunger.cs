@@ -24,6 +24,7 @@ namespace HuginWhispers
         private bool _read;
         private float _full = 100f, _kept = 100f, _starved, _keptStarved, _last, _nextKeep, _nextMutter;
         internal float LastMeal = -1000f; // (Time.time: a second helping only when still hungry)
+        private float _owed; private string _owedFood = ""; // session: eaten before what was kept is read here (a reload, a new owner): the food is already out of the giver's bag, so it is added once read
 
         private void Awake() { _a = GetComponent<NpcActor>(); _nextMutter = Time.time + Random.Range(120f, 300f); }
 
@@ -53,10 +54,15 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- where it is owned
         private void Update()
         {
-            if (_a == null || !_a.Owned) { _read = false; return; }
+            if (_a == null || !_a.Owned)
+            {
+                _read = false;
+                if (_owed > 0f && _a != null) { float f = _owed; _owed = 0f; _a.Act("eat " + f.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " " + _owedFood); } // (what it ate here, never read here: on to the game that runs it now)
+                return;
+            }
             ZDO z = _a.Zdo;
             if (z == null) return;
-            if (!_read) { if (!NpcLocker.Ready(_a)) return; _read = true; _full = _kept = NpcLocker.Num(z, KFull, 100f); _starved = _keptStarved = NpcLocker.Num(z, KStarved, 0f); _last = Time.time; return; } // (taken over: from what was kept)
+            if (!_read) { if (!NpcLocker.Ready(_a)) return; _read = true; _full = _kept = NpcLocker.Num(z, KFull, 100f); _starved = _keptStarved = NpcLocker.Num(z, KStarved, 0f); _last = Time.time; if (_owed > 0f) { float f = _owed; _owed = 0f; Eat(f, _owedFood); } return; } // (taken over: from what was kept; then what it ate meanwhile)
             if (Time.time - _last < 1f) return;
             float dt = Time.time - _last; _last = Time.time;
             if (!NpcResident.Is(_a) || !_a.Def.Settler) return; // (a person of the story has no pantry to go to: it does not hunger)
@@ -88,7 +94,7 @@ namespace HuginWhispers
 
         internal void Eat(float fill, string food = "")
         {
-            if (!_read) return;
+            if (!_read) { _owed = Mathf.Min(100f, _owed + fill); _owedFood = food ?? ""; Npcs.Log(_a.Id + ": ate before its fullness was read here — added once read"); return; }
             LastFood = food ?? "";
             NpcToil toil = GetComponent<NpcToil>(); if (toil != null) toil.Ate(LastFood); // (its mood minds the same food every time)
             _full = Mathf.Min(100f, _full + fill); _starved = 0f; LastMeal = Time.time;

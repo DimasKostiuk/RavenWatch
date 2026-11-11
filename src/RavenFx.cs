@@ -58,31 +58,49 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- the game's effects by name
         // Many of them (sounds, puffs) are not in the game's list of prefabs, only inside other objects: those are
-        // looked up once among everything loaded, and kept.
+        // looked up once among everything loaded, and kept. A name not there yet is not remembered as missing: everything loaded is
+        // looked over again, at most LooksMore times a world and LookAgain seconds apart, so what a world loads later is found.
         private static readonly Dictionary<string, GameObject> Found = new Dictionary<string, GameObject>();
+        private static readonly HashSet<string> NotFoundTold = new HashSet<string>();
         private static Dictionary<string, GameObject> _loaded;
+        private static float _lookedAt;
+        private static int _looks;
+        internal static float LookAgain = 60f;
+        internal const int LooksMore = 5;
 
         internal static GameObject Prefab(string name)
         {
             GameObject g;
-            if (Found.TryGetValue(name, out g)) return g;
+            if (Found.TryGetValue(name, out g) && g != null) return g;
             g = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(name) : null;
             if (g == null)
             {
-                if (_loaded == null)
-                {
-                    _loaded = new Dictionary<string, GameObject>();
-                    // one name, several objects (a copy playing in the world now, another mod's copy on Jotunn mock
-                    // shaders): the game's asset, on shaders that draw, wins
-                    GameObject had;
-                    foreach (GameObject o in Resources.FindObjectsOfTypeAll<GameObject>())
-                        if (o != null && o.transform.parent == null && (!_loaded.TryGetValue(o.name, out had) || Better(o, had))) _loaded[o.name] = o;
-                }
+                if (_loaded == null) LookOver();
                 _loaded.TryGetValue(name, out g);
-                if (g == null && Plugin.Instance != null) Plugin.Instance.Log("Effect not found in the game: " + name);
+                if (g == null && _looks <= LooksMore && Time.unscaledTime - _lookedAt >= LookAgain) { LookOver(); _loaded.TryGetValue(name, out g); }
+                if (g == null) { if (NotFoundTold.Add(name) && Plugin.Instance != null) Plugin.Instance.Log("Effect not found in the game: " + name); return null; }
             }
             Found[name] = g;
             return g;
+        }
+
+        private static void LookOver()
+        {
+            _lookedAt = Time.unscaledTime;
+            _looks++;
+            _loaded = new Dictionary<string, GameObject>();
+            // one name, several objects (a copy playing in the world now, another mod's copy on Jotunn mock
+            // shaders): the game's asset, on shaders that draw, wins
+            GameObject had;
+            foreach (GameObject o in Resources.FindObjectsOfTypeAll<GameObject>()) // heavy: once a world, then at most LooksMore times, LookAgain s apart, only for a name not found
+                if (o != null && o.transform.parent == null && (!_loaded.TryGetValue(o.name, out had) || Better(o, had))) _loaded[o.name] = o;
+        }
+
+        // everything loaded by name (the author's list of the game's sounds)
+        internal static IEnumerable<GameObject> AllLoaded()
+        {
+            if (_loaded == null) LookOver();
+            return _loaded.Values;
         }
 
         // A game effect list played as the game plays it (EffectList.Create, step by step), but by us: other mods hook
@@ -220,13 +238,14 @@ namespace HuginWhispers
             catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Effect " + name + " failed: " + e.Message); return false; }
         }
 
-        internal static void Forget() { Found.Clear(); _loaded = null; AudioBank.Unload(); } // a new world: other objects loaded
+        internal static void Forget() { Found.Clear(); NotFoundTold.Clear(); _loaded = null; _looks = 0; AudioBank.Unload(); } // a new world: other objects loaded
 
         // when the character appears: the one long look through everything loaded happens now, not mid-game
         internal static void Warm()
         {
             foreach (string n in new string[] { "sfx_raven_flap", "sfx_raven_kaw", "vfx_offering", "sfx_offering", "sfx_levelup", "vfx_skilllevelup", "fx_bossstone_attach", "sfx_bossstone_attach_done", ScreamFx.GateSound, WingsFx.Sound })
                 Prefab(n);
+            SoundPanel.ListIfNone();
         }
 
         // ---------------------------------------------------------------- status effects

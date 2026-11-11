@@ -36,10 +36,19 @@ namespace HuginWhispers
             { "point", new[] { "point_at", "" } },
         };
 
+        // a long line with no gesture of its own: its hands, now and then (NpcSpeech says which)
+        private static void Hands(NpcActor a, string text)
+        {
+            if (a == null) return;
+            string hands = NpcSpeech.Hands(a, text);
+            if (hands.Length > 0) a.Order("clip " + hands);
+        }
+
         // its words with their marks taken out; the first mark's gesture sent to the game that runs it (once — whatever game says the words)
         internal static string Spoken(NpcActor a, string text)
         {
-            if (string.IsNullOrEmpty(text) || text.IndexOf("{~", System.StringComparison.Ordinal) < 0) return text;
+            if (string.IsNullOrEmpty(text)) return text;
+            if (text.IndexOf("{~", System.StringComparison.Ordinal) < 0) { Hands(a, text); return text; } // (no mark: its hands now and then)
             string first = null;
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             int i = 0;
@@ -60,6 +69,7 @@ namespace HuginWhispers
                 if (clip.Length > 0) a.Order("clip " + clip);
             }
             else if (first != null) Npcs.Log((a != null ? a.Id : "?") + ": no gesture «" + first + "» (NpcBody.Words)");
+            if (first == null) Hands(a, text); // (a broken mark: none of its own)
             return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), "  +", " ").Trim();
         }
 
@@ -243,9 +253,37 @@ namespace HuginWhispers
         // Both counted with the jumps (NpcWalk.Jumped: raven npc walk report).
         internal static float PuffFrom = 2.5f; // m: a shorter step is no sight worth a puff
 
+        // Never into a fire (the user 2026-11-08: a person stuck on its way to a seat was put by its goal — into the hearth, and burned there): the
+        // way finder's map and room for a body say nothing of fire, so the one way a body is moved asks it. A spot that burns — the game's own
+        // burning area, or a fire of its base burning within FireClear m — gives way to the nearest one that does not within FireAway m; none: it
+        // stays where it is (false), said in the log
+        internal static float FireClear = 1.3f, FireAway = 3f;
+        internal static bool Burns(Vector3 p)
+        {
+            if (EffectArea.IsPointInsideArea(p + Vector3.up * 0.5f, EffectArea.Type.Burning, 0.4f) != null) return true;
+            NpcBase b = NpcBase.Covering(p);
+            List<Component> fires = b != null ? b.Round(typeof(Fireplace)) : null;
+            if (fires == null) return false;
+            foreach (Component c in fires) { Fireplace f = c as Fireplace; if (f != null && f.IsBurning() && Utils.DistanceXZ(f.transform.position, p) < FireClear && Mathf.Abs(f.transform.position.y - p.y) < 1.5f) return true; }
+            return false;
+        }
+
+        private bool Unburnt(ref Vector3 to, string why)
+        {
+            if (!Burns(to)) return true;
+            for (float r = 1f; r <= FireAway; r += 0.5f)
+            {
+                Vector3 v;
+                if (NpcKit.SameFloor(out v, to, r, NpcKit.Walker) && !Burns(v)) { Npcs.Log(name + ": «" + why + "» would have put it into a fire — " + Utils.DistanceXZ(to, v).ToString("0.0") + " m off it instead"); to = v + Vector3.up * 0.05f; return true; }
+            }
+            Npcs.Log(name + ": «" + why + "» would have put it into a fire, no spot clear of it near — left where it is");
+            return false;
+        }
+
         // true: it was seen go (in a puff)
         internal bool Put(Vector3 to, string why, bool puff = true)
         {
+            if (!Unburnt(ref to, why)) return false;
             Vector3 from = transform.position;
             NpcActor a = _actor != null ? _actor : (_actor = GetComponent<NpcActor>());
             bool seen = puff && a != null && Vector3.Distance(from, to) > PuffFrom && (NpcWalk.Watched(from) || NpcWalk.Watched(to));
@@ -260,6 +298,7 @@ namespace HuginWhispers
 
         internal void Slide(Vector3 to, float seconds, string why)
         {
+            if (!Unburnt(ref to, why)) return;
             if (Attached) Detach(true);
             NpcWalk.Jumped(this, transform.position, to, why);
             if (_c == null || !HoldOn) { Place(to); return; } // (no holding — the studio's «nattach off»: nothing would ever end the slide)
@@ -303,7 +342,7 @@ namespace HuginWhispers
                     if (Mathf.Abs(p.y - off.y) < 1.2f && !Blocked(p) && !Physics.Linecast(off + Vector3.up * 0.9f, p + Vector3.up * 0.9f, Solid, QueryTriggerInteraction.Ignore)) return p + Vector3.up * 0.05f; // (not through a wall)
                 }
             Vector3 v; // (nowhere free round it: the nearest spot on the way finder's map — not left in a nook)
-            if (Pathfinding.instance != null && NpcKit.Valid(out v, off, 2.5f, NpcKit.Walker) && Mathf.Abs(v.y - off.y) < 1.2f) return v + Vector3.up * 0.05f; // (not the floor above or below)
+            if (Pathfinding.instance != null && NpcKit.SameFloor(out v, off, 2.5f, NpcKit.Walker)) return v + Vector3.up * 0.05f;
             return off;
         }
         private static bool Blocked(Vector3 p) { return Physics.CheckCapsule(p + Vector3.up * 0.45f, p + Vector3.up * 1.5f, 0.3f, Solid, QueryTriggerInteraction.Ignore); }
@@ -444,7 +483,8 @@ namespace HuginWhispers
         {
             if (!Owned || _nv.GetZDO().GetLong(KClipUntil, 0L) <= 0L) return;
             BodyAnimator a = BodyAnimator.Of(_c);
-            if (a != null && NoEnd(BodyClips.Find(a.ClipIn(ClipSlot)))) Clip("");
+            PAnimClip on = a != null ? BodyClips.Find(a.ClipIn(ClipSlot)) : null;
+            if (NoEnd(on) && !on.Carried) Clip(""); // (a carry — a weapon on the shoulder — goes on in the walk: «carry yes»)
         }
 
         // a clip of ours playing on it now (any game: from its pose's player of clips)

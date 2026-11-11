@@ -284,7 +284,8 @@ namespace HuginWhispers
             return t;
         }
 
-        private static Sprite Make(string key, int w, int h, Func<float, float, Color> pixel, Vector4 border, bool mips = false, TextureWrapMode wrap = TextureWrapMode.Clamp)
+        // ppu: how many of its pixels make a canvas unit — FinePpu for the ones drawn Fine times larger (their size, slices and least size right by themselves, no multiplier at the Image)
+        private static Sprite Make(string key, int w, int h, Func<float, float, Color> pixel, Vector4 border, bool mips = false, TextureWrapMode wrap = TextureWrapMode.Clamp, float ppu = 100f)
         {
             Sprite s;
             if (Sprites.TryGetValue(key, out s) && s != null) return s;
@@ -297,7 +298,7 @@ namespace HuginWhispers
                     px[y * w + x] = pixel(x + 0.5f, y + 0.5f); // y up, as textures go
             t.SetPixels(px);
             t.Apply(mips, true);
-            s = Sprite.Create(t, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
+            s = Sprite.Create(t, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), ppu, 0, SpriteMeshType.FullRect, border);
             s.hideFlags = HideFlags.HideAndDontSave;
             Sprites[key] = s;
             Late(key, late);
@@ -332,15 +333,16 @@ namespace HuginWhispers
             }, new Vector4(b, b, b, b));
         }
 
-        // the same two drawn Fine times larger and mipmapped: shown with pixelsPerUnitMultiplier = Fine they keep their size,
-        // and on the tilted page a thin frame stays a smooth line (the 1-pixel ones stepped into ladders there)
-        internal const float Fine = 4f;
+        // the same two drawn Fine times larger and mipmapped, Fine times more pixels to a unit (FinePpu): they keep their size, and on the tilted page a thin frame stays a smooth line
+        // (the 1-pixel ones stepped into ladders there). The scale lives in the sprite, not in a multiplier at each Image: with the multiplier Unity took the least size of a sliced
+        // Image without it — Fine times too large: a pill of radius 11 asked for 92 units of height (the user 2026-11-08, «надто розширилось»); rule fine-multiplier
+        internal const float Fine = 4f, FinePpu = 100f * Fine;
         internal static Sprite RoundFine(float r, bool topOnly = false)
         {
             float R = r * Fine;
             int n = Mathf.CeilToInt(R) * 2 + 8;
             float b = Mathf.Ceil(R) + 2f;
-            return Make("roundF:" + r + (topOnly ? "t" : ""), n, n, (x, y) => new Color(1f, 1f, 1f, Mathf.Clamp01((0.5f - BoxDistance(x, y, n, n, R, topOnly)) / 2f)), new Vector4(b, b, b, b), true);
+            return Make("roundF:" + r + (topOnly ? "t" : ""), n, n, (x, y) => new Color(1f, 1f, 1f, Mathf.Clamp01((0.5f - BoxDistance(x, y, n, n, R, topOnly)) / 2f)), new Vector4(b, b, b, b), true, TextureWrapMode.Clamp, FinePpu);
         }
 
         internal static Sprite FrameFine(float r, float width, bool topOnly = false)
@@ -352,13 +354,13 @@ namespace HuginWhispers
             {
                 float d = BoxDistance(x, y, n, n, R, topOnly);
                 return new Color(1f, 1f, 1f, Mathf.Clamp01((0.5f - d) / 2f) * Mathf.Clamp01((0.5f + d + W) / 2f)); // soft by a quarter pixel each side
-            }, new Vector4(b, b, b, b), true);
+            }, new Vector4(b, b, b, b), true, TextureWrapMode.Clamp, FinePpu);
         }
 
         // ---------------------------------------------------------------- paper cards (the user's «Погризені краї», 2026-10-19)
         // A card with gnawed edges: each side goes in and out by its own noise, whose period is the tiled middle, so the
         // tiles meet without a seam; the corners chipped; warmer and darker by the edge and a faint grain, as old paper.
-        // Drawn Fine times larger and shown Tiled with pixelsPerUnitMultiplier = Fine: the edge keeps its size on any card,
+        // Drawn Fine times larger (FinePpu) and shown Tiled: the edge keeps its size on any card,
         // never stretched. torn false: the same paper with straight edges (the pinned sheet).
         internal const float TornBorder = 12f, TornTile = 64f; // canvas units: the edge part, the tiled middle
         private static readonly float[][] TornPhase = { new[] { 0.3f, 2.1f, 4.4f, 1.2f, 5.0f }, new[] { 3.9f, 0.7f, 2.8f, 5.5f, 1.9f }, new[] { 1.6f, 4.9f, 0.2f, 3.3f, 0.9f }, new[] { 5.2f, 3.1f, 1.7f, 0.4f, 4.1f } };
@@ -413,7 +415,7 @@ namespace HuginWhispers
                 float k0 = torn ? 0.35f : 0.8f; // (the straight sheet: only a breath darker at its edge)
                 Color c = Color.Lerp(new Color(0.84f, 0.72f, 0.55f), Color.white, k0 + (1f - k0) * e);
                 return new Color(c.r + grain, c.g + grain, c.b + grain * 1.3f, a);
-            }, new Vector4(b, b, b, b), true);
+            }, new Vector4(b, b, b, b), true, TextureWrapMode.Clamp, FinePpu);
         }
         internal const int TornVariants = 6; // cards side by side gnawed each its own way (the user: as in the designs)
         internal static Sprite TornFill(int v) { v = (v & 0x7fffffff) % TornVariants; return PaperSprite("torn:" + v, true, 0f, v); }

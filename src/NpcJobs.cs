@@ -14,7 +14,7 @@ namespace HuginWhispers
         internal bool AllDay;                // works day and night (a guard), not only in the day
         internal bool Evening;               // works the evening too (a servant: its fires and lights burn then)
         internal string Place;               // taken by pointing at a spot (a servant: its house) — the menu's «наведи на …»
-        internal virtual string Assign(NpcActor a, Vector3 at) { return NpcWorker.SetJob(a, Id); }
+        internal virtual string Assign(NpcActor a, Vector3 at) { return NpcWorker.SetJob(a, Id, NpcMenu.By); } // (only the menu's pick of a place: the one who pressed it)
         internal virtual string Can(NpcActor a) { return null; } // why this one cannot take it (null: it can)
         internal bool StoreAfterEach = true; // (gatherer/cleaner: only when its hands are full or nothing is left)
         internal bool NeedsChest = true;     // takes from a chest or brings to one (a guard does neither)
@@ -64,7 +64,7 @@ namespace HuginWhispers
                 if (w.Carrying(fuelName) + w.InChest(fuelName) <= 0) continue;
                 return new NpcWorker.Errand
                 {
-                    Target = id, At = f.transform.position, Near = 1.8f, Take = fuelName, Count = need, Word = Lang.K("підкладає дрова"), Move = "feed_fire", Urgent = fuel <= 1f, // (about to go out: it hurries)
+                    Target = id, At = f.transform.position, Near = 1.8f, Take = fuelName, Count = need, Word = Lang.K("підкладає дрова"), Move = "feed_fire", Urgent = fuel <= 1f, // (about to go out: first among a servant's errands)
                     Use = (wk, e) =>
                     {
                         // all it brings in one go: one message to the fire, not one a log (the game's own «add this much»)
@@ -378,7 +378,7 @@ namespace HuginWhispers
 
         internal override string Assign(NpcActor a, Vector3 at)
         {
-            string s = NpcWorker.SetJob(a, Id);
+            string s = NpcWorker.SetJob(a, Id, NpcMenu.By);
             if (a.Worker == null || a.Worker.JobId != Id) return s; // (could not take the job)
             return NpcWorker.SetHouse(a, at);
         }
@@ -390,7 +390,7 @@ namespace HuginWhispers
             bool chest = w.Chest != null; // (without one: only what needs nothing — mending, the doors)
             List<Fireplace> fires = new List<Fireplace>();
             if (chest) foreach (Fireplace f in w.InBase<Fireplace>()) if (h.Near(f.transform.position)) fires.Add(f);
-            // 1) a fire about to go out (it hurries) — then mending — then fuel, the floor, the doors
+            // 1) a fire about to go out — then mending — then fuel, the floor, the doors
             NpcWorker.Errand e = chest ? Stoker.Fuel(w, fires) : null;
             if (e != null && e.Urgent) return e;
             NpcWorker.Errand mend = Mend(w, h);
@@ -458,7 +458,7 @@ namespace HuginWhispers
         }
     }
 
-    // cooking stations, cauldrons, ovens: what is done off first (before it burns: it hurries), fuel for an oven, then
+    // cooking stations, cauldrons, ovens: what is done off first (before it burns), fuel for an oven, then
     // the raw from the chest onto the free places — only over a burning fire
     internal sealed class Cook : Job
     {
@@ -492,7 +492,7 @@ namespace HuginWhispers
                 int done = 0, free = 0;
                 for (int i = 0; i < s.m_slots.Length; i++) { string it = z.GetString("slot" + i); if (it.Length == 0) free++; else if (Done(s, it)) done++; }
                 Vector3 at = s.transform.position;
-                // 1) done: off, to the chest (it hurries: it burns if left)
+                // 1) done: off, to the chest (it burns if left)
                 if (done > 0)
                 {
                     HashSet<string> made = new HashSet<string>();
@@ -501,7 +501,7 @@ namespace HuginWhispers
                     int left = done;
                     return new NpcWorker.Errand
                     {
-                        Target = id, At = at, Near = 1.6f, Collect = made, Word = Lang.K("знімає готове"), Urgent = true,
+                        Target = id, At = at, Near = 1.6f, Collect = made, Word = Lang.K("знімає готове"),
                         Use = (wk, e) => { if (left-- <= 0 || !nv.IsValid()) return true; nv.InvokeRPC("RPC_RemoveDoneItem", wk.Pos, 1); return false; }
                     };
                 }
@@ -630,7 +630,8 @@ namespace HuginWhispers
             NpcWorker w = a.Worker;
             Vector3 post;
             if (!NpcResident.Is(a) || w == null || w.JobId != "guard" || !w.Post(out post)) return null;
-            return Utils.DistanceXZ(at, post) <= NpcWorker.PostReach;
+            if (Utils.DistanceXZ(at, post) <= NpcWorker.PostReach) return true;
+            return NpcMind.LayerNow(a) == NpcMind.Layer.Job ? false : (bool?)null; // (on its watch: its post only; off it — a meal, its sleep — its base as any resident's: 2026-11-08 Knud, starving, walked past a greydwarf in his own base)
         }
 
         // on its watch (its job's hours): it looks out as far as it sees — a born guard further

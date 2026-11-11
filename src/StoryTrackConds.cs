@@ -73,6 +73,7 @@ namespace HuginWhispers
                     return StoryWhere.Find(a[1], out at) && Utils.DistanceXZ(at, p.transform.position) <= r;
                 } });
             StoryCond.Register("npcclip", new StoryCond.Kind { Usage = "npcclip <хто> <кліп>   (цей кліп чи його частина зараз на людині)", Min = 2, Test = (p, a) => StoryHold.InClip(Npcs.Find(a[1]), a[2]) });
+            StoryCond.Register("npcprop", new StoryCond.Kind { Usage = "npcprop <хто>   (людина зараз тримає річ у руці чи на руці: своя річ або річ сцени; та, що лежить на землі, — ні)", Min = 1, Test = (p, a) => StoryProps.InHand(Npcs.Find(a[1])) });
             StoryCond.Register("npcat", new StoryCond.Kind { Usage = "npcat <місце> [метрів]   (людина, з якою говориш, зараз у цьому місці: без метрів — на його землі за кресленням; річ чи мітка без метрів — 15 м)", Min = 1,
                 Check = a => a.Length > 2 && Errands.I(a[2], -1) < 1 ? "npcat: метри — число від 1" : null,
                 Test = (p, a) =>

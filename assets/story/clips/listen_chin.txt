@@ -1,0 +1,103 @@
+clip listen_chin
+length 1.2
+loop 0
+pivot 1.1
+curve ease
+vary 0
+fade 0.4 0.5
+mode Spine1 body
+mode Spine2 body
+part listen 0 1.2 hold
+want 1.1 hand right near 0.03 1.4 0.15 0.12
+want 1.1 hand left on body 0.08
+want 1.1 weight left
+
+# Людина слухає стоячи (NpcSpeech, найближчий слухач довгої репліки): поза think_chin без погляду — права рука до підборіддя,
+# ліве передпліччя впоперек живота, кисть на тілі; голову веде мовлення: вона дивиться на мовця й не відводить очей (користувач
+# 2026-11-09). Тримається, поки триває репліка (наказ із терміном), тоді плавно спадає.
+say слухає стоячи: рука до підборіддя, ліва кисть на животі, дивиться на того, хто говорить, і не відволікається
+
+0 @RightHand 0.24 0.95 0.06
+0.1 @RightHand 0.24 0.95 0.06
+0.45 @RightHand 0.12 1.2 0.25
+0.85 @RightHand 0.03 1.4 0.15
+
+0 @RightHand.w 0 0 0
+0.1 @RightHand.w 0 0 0
+0.85 @RightHand.w 1 0 0
+
+0 @RightHand.p 0.2 -1 0.5
+
+0 @RightHand.f 0 1 0.2
+
+0 @RightHand.n -0.6 0 -0.8
+
+0 @LeftHand -0.24 0.95 0.06
+0.2 @LeftHand -0.24 0.95 0.06
+0.5 @LeftHand -0.06 1 0.24
+0.75 @LeftHand 0 1.03 0.11
+
+0 @LeftHand.w 0 0 0
+0.2 @LeftHand.w 0 0 0
+0.75 @LeftHand.w 1 0 0
+
+0 @LeftHand.p -1 -0.4 0
+
+0 @LeftHand.f 1 0 0.1
+
+0 @LeftHand.n 0 0 -1
+
+0 move 0 0 0
+0.2 move 0 0 0
+0.55 move -0.08 -0.01 0
+0.75 move -0.08 -0.01 0
+
+0 Spine1 0 0 0
+0.7 Spine1 -1 -2 0
+
+0 Spine2 0 0 0
+0.7 Spine2 -2 -3 0
+
+0 RightHandIndex1 0 0 0
+0.7 RightHandIndex1 -10 0 0
+
+0 RightHandMiddle1 0 0 0
+0.7 RightHandMiddle1 -25 0 0
+
+0 RightHandRing1 0 0 0
+0.7 RightHandRing1 -35 0 0
+
+0 RightHandPinky1 0 0 0
+0.7 RightHandPinky1 -40 0 0
+
+0 @LeftFoot -0.1 0.11 0.28
+
+0 @LeftFoot.p -0.15 0 1
+
+0 @RightFoot 0.04 0.08 -0.28
+
+0 @RightFoot.p 0.15 0 1
+
+0 LeftHandIndex1 0 0 0
+0.75 LeftHandIndex1 -15 0 0
+
+0 LeftHandIndex2 0 0 0
+0.75 LeftHandIndex2 -15 0 0
+
+0 LeftHandMiddle1 0 0 0
+0.75 LeftHandMiddle1 -15 0 0
+
+0 LeftHandMiddle2 0 0 0
+0.75 LeftHandMiddle2 -15 0 0
+
+0 LeftHandRing1 0 0 0
+0.75 LeftHandRing1 -15 0 0
+
+0 LeftHandRing2 0 0 0
+0.75 LeftHandRing2 -15 0 0
+
+0 LeftHandPinky1 0 0 0
+0.75 LeftHandPinky1 -15 0 0
+
+0 LeftHandPinky2 0 0 0
+0.75 LeftHandPinky2 -15 0 0

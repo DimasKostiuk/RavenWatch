@@ -259,39 +259,8 @@ namespace HuginWhispers
             return _arrow;
         }
 
-        // the game's own font of the centre messages; with SeneaL UI its own fonts (SeneaLUI.Theme.Fonts: Regular for the
-        // words, Bold for the name), so the cards read like the rest of its interface
+        // the game's own font of the centre messages
         private static readonly FieldInfo CenterText = AccessTools.Field(typeof(MessageHud), "m_messageCenterText");
-        private static bool _seneaLFontsLooked;
-        private static FieldInfo _seneaLRegular, _seneaLBold;
-
-        private static TMP_FontAsset SeneaLFont(bool bold)
-        {
-            if (!_seneaLFontsLooked)
-            {
-                _seneaLFontsLooked = true;
-                try
-                {
-                    Type fonts = AccessTools.TypeByName("SeneaLUI.Theme.Fonts");
-                    if (fonts != null)
-                    {
-                        _seneaLRegular = AccessTools.Field(fonts, "Regular");
-                        _seneaLBold = AccessTools.Field(fonts, "Bold");
-                    }
-                }
-                catch { _seneaLRegular = _seneaLBold = null; }
-            }
-            FieldInfo f = bold ? (_seneaLBold ?? _seneaLRegular) : _seneaLRegular;
-            if (f == null || f.FieldType != typeof(TMP_FontAsset)) return null;
-            try { return f.GetValue(null) as TMP_FontAsset; } catch { return null; }
-        }
-
-        internal static TMP_FontAsset Font(bool bold)
-        {
-            TMP_FontAsset own = SeneaLFont(bold);
-            if (own != null) return own;
-            return Font();
-        }
 
         internal static TMP_FontAsset Font()
         {
@@ -301,9 +270,6 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- where the hotbar is
 
-        private static bool _hotLooked;
-        private static FieldInfo _seneaLHotbar;   // SeneaLUI.Hud.HudRoot._elHotbar
-        private static FieldInfo _seneaLLayer;    // its Layer
         private static readonly Vector3[] Corners = new Vector3[4];
         private static readonly List<Graphic> Parts = new List<Graphic>(64);
         private static HotkeyBar _bar;
@@ -333,27 +299,6 @@ namespace HuginWhispers
 
         private static RectTransform HotbarRoot()
         {
-            if (!_hotLooked)
-            {
-                _hotLooked = true;
-                try
-                {
-                    Type hud = AccessTools.TypeByName("SeneaLUI.Hud.HudRoot");
-                    _seneaLHotbar = hud != null ? AccessTools.Field(hud, "_elHotbar") : null;
-                    _seneaLLayer = _seneaLHotbar != null ? AccessTools.Field(_seneaLHotbar.FieldType, "Layer") : null;
-                }
-                catch { _seneaLHotbar = null; _seneaLLayer = null; }
-            }
-            if (_seneaLHotbar != null && _seneaLLayer != null)
-            {
-                try
-                {
-                    object el = _seneaLHotbar.GetValue(null);
-                    RectTransform layer = el != null ? _seneaLLayer.GetValue(el) as RectTransform : null;
-                    if (layer != null && layer.gameObject.activeInHierarchy) return layer;
-                }
-                catch { }
-            }
             // the game's own hotbar: looked for in the scene only now and then, not every check
             if (_bar == null && Time.unscaledTime - _barLooked > 10f) { _barLooked = Time.unscaledTime; _bar = UnityEngine.Object.FindFirstObjectByType<HotkeyBar>(); }
             return _bar != null && _bar.isActiveAndEnabled ? _bar.transform as RectTransform : null;
@@ -561,10 +506,10 @@ namespace HuginWhispers
             pr.anchorMin = pr.anchorMax = new Vector2(0f, 0.5f); pr.pivot = new Vector2(0f, 0.5f);
             pr.anchoredPosition = new Vector2(padL, 0f); pr.sizeDelta = new Vector2(pic, pic);
             Image ring = pr.gameObject.AddComponent<Image>();
-            ring.sprite = SeneaLShoulders.Disc(); ring.color = frameColor; ring.raycastTarget = false;
+            ring.sprite = BookArt.Circle; ring.color = frameColor; ring.raycastTarget = false;
             RectTransform cutRt = Child(pr, "cut");
             cutRt.anchorMin = Vector2.zero; cutRt.anchorMax = Vector2.one; cutRt.offsetMin = new Vector2(1.5f, 1.5f); cutRt.offsetMax = new Vector2(-1.5f, -1.5f);
-            Image ci = cutRt.gameObject.AddComponent<Image>(); ci.sprite = SeneaLShoulders.Disc(); ci.color = new Color(0.03f, 0.035f, 0.045f, 1f); ci.raycastTarget = false;
+            Image ci = cutRt.gameObject.AddComponent<Image>(); ci.sprite = BookArt.Circle; ci.color = new Color(0.03f, 0.035f, 0.045f, 1f); ci.raycastTarget = false;
             cutRt.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             RectTransform face = Child(cutRt, "face");
             face.anchorMin = Vector2.zero; face.anchorMax = Vector2.one; face.offsetMin = new Vector2(2f, 2f); face.offsetMax = new Vector2(-2f, -2f);
@@ -576,7 +521,7 @@ namespace HuginWhispers
             if (shownName.Length == 0) shownName = Plugin.RavenName(munin); // the game gives its own ravens no title
             string mockHead = c._mock ? " <i><color=" + RavenSpeech.MockName + ">" + Lang.T("глузує") + "</color></i>" : ""; // mockery: said so after the name
             string full = "<b><color=" + (guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">" + shownName + "</color></b>" + mockHead + "<b><color=" + (guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName) + ">:</color></b> " + RavenSpeech.MarkNames(text);
-            TextMeshProUGUI body = Label(go.transform, "text", RavenSpeech.Font(false), 15.5f, FontStyles.Normal);
+            TextMeshProUGUI body = Label(go.transform, "text", RavenSpeech.Font(), 15.5f, FontStyles.Normal);
             body.text = full;
             body.color = new Color(0.90f, 0.91f, 0.93f, 1f);
             c._body = body; c._full = full; c._tone = guide ? RavenSpeech.GuideName : munin ? RavenSpeech.MuninName : RavenSpeech.HuginName;

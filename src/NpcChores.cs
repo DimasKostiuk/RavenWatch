@@ -31,20 +31,10 @@ namespace HuginWhispers
             Needs n;
             if (Seen.TryGetValue(key, out n) && Time.time - n.At < Again) return n;
             n = new Needs { At = Time.time };
-            if (b.Wears != null) { foreach (WearNTear w in b.Wears) if (w != null && w.GetHealthPercentage() < MendLow) n.Broken.Add(w); } // (the base's own look: NpcBase)
-            else
-            {
-                List<Piece> pieces = new List<Piece>();
-                Piece.GetAllPiecesInRadius(b.Centre, NpcBase.Reach, pieces);
-                foreach (Piece pc in pieces)
-                {
-                    WearNTear w = pc != null ? pc.GetComponent<WearNTear>() : null;
-                    if (w != null && w.GetHealthPercentage() < MendLow) n.Broken.Add(w);
-                }
-            }
+            if (b.Wears != null) foreach (WearNTear w in b.Wears) if (w != null && w.GetHealthPercentage() < MendLow) n.Broken.Add(w); // (the base's own look: NpcBase; not made yet — nothing to mend till it is)
             foreach (Character c in Character.GetAllCharacters())
                 if (c != null && !c.IsDead() && c.IsTamed() && b.Inside(c.transform.position)) { Tameable t = c.GetComponent<Tameable>(); if (t != null && t.IsHungry()) n.Hungry.Add(c); }
-            foreach (FeederView f in FeederView.All) if (f != null && f.Box != null && b.Inside(f.transform.position)) n.Feeders.Add(f);
+            foreach (FeederView f in FeederView.All) if (f != null && f.Box != null && b.Holds(f.transform.position)) n.Feeders.Add(f);
             if (Seen.Count > 50) Seen.Clear();
             Seen[key] = n;
             return n;
@@ -146,7 +136,7 @@ namespace HuginWhispers
             if (p.Stage == 1)
             {
                 m.Status = Lang.K("іде лагодити");
-                if (!m.Walk(dt, p.To, 1.2f, false)) return false;
+                if (!m.Walk(dt, p.To, 1.2f)) return false;
                 p.Stage = 2; p.Since = Time.time; p.Clock = 0f;
                 Hammer(a, true);
             }
@@ -239,7 +229,7 @@ namespace HuginWhispers
                 Container c = go != null ? go.GetComponentInChildren<Container>() : null;
                 if (c == null || p.Food.Length == 0) return true;
                 m.Status = Lang.K("бере їжу");
-                if (!m.Walk(dt, c.transform.position, 1.8f, false)) return false;
+                if (!m.Walk(dt, c.transform.position, 1.8f)) return false;
                 if (c.IsInUse() && !NpcLid.Mine(c, m.Actor)) return true; // (a player has it open: this chore let go)
                 if (!m.Open(c, 1.2f)) return false; // (its lid up, facing it: NpcMind.Open, the one way)
                 int take = 0;
@@ -258,7 +248,7 @@ namespace HuginWhispers
             _beast.TryGetValue(m, out beastNow); _feeder.TryGetValue(m, out feeder);
             Vector3 to = beastNow != null ? beastNow.transform.position : feeder != null ? feeder.transform.position : p.Home;
             m.Status = beastNow != null ? Lang.K("несе їжу звірові") : Lang.K("несе їжу воронам");
-            if (!m.Walk(dt, to, beastNow != null ? 2f : 1.6f, false)) return false;
+            if (!m.Walk(dt, to, beastNow != null ? 2f : 1.6f)) return false;
             m.Face(to);
             Give(a, p, beastNow, feeder);
             _beast.Remove(m); _feeder.Remove(m);

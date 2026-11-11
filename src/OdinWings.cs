@@ -786,55 +786,48 @@ namespace HuginWhispers
 
     // The run-up's wind (yours: what you hear): a rush of air that grows with OdinWings.Rush, from the game's own wind
     // sound (the longest clip of that name it has), louder and higher the faster you go; it fades out with the run-up.
+    // A bed of the audio core, steered every frame while it blows.
     internal static class WingsWind
     {
         internal static float Volume = 0.5f, PitchLow = 0.85f, PitchHigh = 1.25f, Fade = 0.8f; // at the top; pitch from/to; share a second
-        private static AudioSource _src;
+        private const string Name = "wings_wind";
+        private static readonly SoundAsk Ask = new SoundAsk { Flat = true, World = true, AnyStart = true, Owner = Audio.Gift }; // (round your ears, not a place)
         private static AudioClip _clip;
-        private static AudioSource _like;
-        private static bool _looked;
+        private static bool _looked, _on;
         private static float _now;
 
         internal static void Step(Player p, float rush, float dt)
         {
             _now = Mathf.MoveTowards(_now, p != null && OdinWings.Flying() ? rush : 0f, dt * Fade);
             if (_now <= 0.001f) { Stop(); return; }
-            if (_src == null && !Make(p)) return;
-            _src.volume = Volume * _now * _now;
-            _src.pitch = Mathf.Lerp(PitchLow, PitchHigh, _now);
+            if (!_on && !Look()) return;
+            Ask.Clip = _clip;
+            Ask.Pitch = Mathf.Lerp(PitchLow, PitchHigh, _now);
+            _on = Audio.Bed(Audio.Gift, Name, Volume * _now * _now, 0.2f, Ask);
         }
 
-        internal static void Stop() { if (_src != null) UnityEngine.Object.Destroy(_src.gameObject); _src = null; }
-
-        private static bool Make(Player p)
+        internal static void Stop()
         {
-            if (p == null) return false;
+            if (!_on) return;
+            _on = false;
+            Audio.BedOff(Audio.Gift, Name, 0.3f);
+        }
+
+        // the game's wind clip, found once
+        private static bool Look()
+        {
             if (!_looked)
             {
                 _looked = true;
-                foreach (AudioClip c in Resources.FindObjectsOfTypeAll<AudioClip>())
+                foreach (AudioClip c in Resources.FindObjectsOfTypeAll<AudioClip>()) // heavy: once, the first run-up
                 {
                     string n = c.name.ToLowerInvariant();
                     if (!n.Contains("wind") || n.Contains("window") || n.Contains("mill")) continue;
                     if (_clip == null || c.length > _clip.length) _clip = c;
                 }
-                GameObject like = RavenFx.Prefab("sfx_raven_flap");
-                _like = like != null ? like.GetComponentInChildren<AudioSource>(true) : null; // (its mixer: the game's sound volume counts)
                 if (Plugin.Instance != null) Plugin.Instance.Log("Odin wings run-up wind: " + (_clip != null ? _clip.name + " (" + _clip.length.ToString("0.0") + " s)" : "no wind clip found"));
             }
-            if (_clip == null) return false;
-            if (_clip.loadState == AudioDataLoadState.Unloaded) _clip.LoadAudioData();
-            GameObject go = new GameObject("RavenWatch_WingsWind");
-            go.transform.SetParent(p.transform, false);
-            _src = go.AddComponent<AudioSource>();
-            if (_like != null) _src.outputAudioMixerGroup = _like.outputAudioMixerGroup;
-            _src.clip = _clip;
-            _src.loop = true;
-            _src.spatialBlend = 0f; // (round your ears, not a place)
-            _src.volume = 0f;
-            _src.time = UnityEngine.Random.Range(0f, _clip.length * 0.8f); // (not the same start each run)
-            _src.Play();
-            return true;
+            return _clip != null;
         }
     }
 }

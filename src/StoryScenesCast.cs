@@ -17,8 +17,9 @@ namespace HuginWhispers
         internal static float RunFrom = 12f; // (m: a person of a scene farther off than this runs)
         private static NpcActor _walker;
         private static float _limit; // (this step's own time limit; 0 — the general one)
-        private static Vector3 _walkTo;
-        private static float _walkNear;
+        private static Vector3 _walkTo, _walkFrom;
+        private static float _walkNear, _walkBegan, _walkWalkFrom; // (where and when its walk began; m left when it fell from a run to a walk, below zero none)
+        private static bool _walkRanAny; private static string _walkSaid; // (what the walk came to: the step's Done)
 
         // ---------------------------------------------------------------- one scene a person (the user 2026-11-02)
         // A scene that takes a person locks it: «<player>@<until>» in its ZDO (KScene), written where it is run (the act
@@ -164,10 +165,11 @@ namespace HuginWhispers
                         if (ai > 3 && w.Length > ai + 3) SpawnAt(p, w[1], w[3], new Vector3(F(w[ai + 1], 0f), F(w[ai + 2], 0f), F(w[ai + 3], 0f))); else Spawn(p, w[1], w[3]);
                     } } },
                 { "prop", new StepVerb(StepSeen.World) { Min = 1, PlaceAfter = "from",
-                    Check = st => { string pw; return st.W[3] != "put" && (st.W[3] != "take" || StoryProps.Read(st.W, 4, out pw) == null) ? "npc <хто> " + StoryProps.Usage : null; },
+                    Check = st => { string pw; return st.W[3] != "put" && st.W[3] != "fetch" && (st.W[3] != "take" || StoryProps.Read(st.W, 4, out pw) == null) ? "npc <хто> " + StoryProps.Usage + " · prop fetch" : null; },
                     Begin = OnPerson((p, st, w, a) =>
                     {
-                        if (w[3] == "put") { StoryProps.Put(a); return; }
+                        if (w[3] == "put") { StoryProps.PutDown(a); _waitFor = Time.time + 0.6f; return; } // (a scene's thing back; its own thing set down where it stands)
+                        if (w[3] == "fetch") { StoryProps.Fetch(a.Id); return; } // (its own thing the story had it set down: it may go back for it)
                         string why;
                         StoryProps.Ask ask = w[3] == "take" ? StoryProps.Read(w, 4, out why) : null;
                         if (ask == null) { Note("npc prop: " + StoryProps.Usage); return; }
@@ -176,7 +178,8 @@ namespace HuginWhispers
                         _waitFor = Time.time + 0.6f;
                     }) } },
                 { "go", new StepVerb(StepSeen.World) { Min = 1, PlaceAt = 3, Begin = OnPerson(NpcGo), Busy = (p, st) => Walking(),
-                    Late = st => { if (_walker != null) { WalkerShort(); _walker.Order("stay", NpcMind.Layer.Scene); _walker = null; } } } },
+                    Late = st => { if (_walker != null) { WalkerShort(); _walker.Order("stay", NpcMind.Layer.Scene); _walker = null; } },
+                    Done = (p, st) => _walkSaid } },
                 { "face", new StepVerb(StepSeen.World) { Min = 1, PlaceAt = 3,
                     Begin = OnPerson((p, st, w, a) =>
                     {
@@ -196,10 +199,12 @@ namespace HuginWhispers
                 { "emote", new StepVerb(StepSeen.World) { Min = 1, Begin = OnPerson((p, st, w, a) => a.Order("emote " + w[3] + (Array.IndexOf(w, "loop") > 3 ? " loop" : ""), NpcMind.Layer.Scene)) } },
                 { "mark", new StepVerb(StepSeen.World) { Min = 1, Usage = "npc <хто> mark <мітка> [секунд]",
                     Begin = OnPerson((p, st, w, a) => { _markFrom = Time.time; _waitFor = Time.time + (w.Length > 4 ? F(w[4], 30f) : 30f); }),
-                    Busy = (p, st) => NpcMarkBusy(p, st.W) } },
+                    Busy = (p, st) => NpcMarkBusy(p, st.W),
+                    Done = (p, st) => MarkSaid(CharOf(st.W[1], p), st.W[3]) } },
                 { "clip", new StepVerb(StepSeen.World) { Min = 1, Usage = "npc <хто> clip <кліп>|none", // (one of our clips: BodyClips — npc <who> clip <name>|none [seconds])
                     Check = st => st.W[3] != "none" && BodyClips.Find(st.W[3]) == null ? "npc <хто> clip: нема кліпу «" + st.W[3] + "»" : null,
-                    Begin = OnPerson((p, st, w, a) => a.Order("clip " + w[3] + (w.Length > 4 ? " " + w[4] : ""), NpcMind.Layer.Scene)) } },
+                    Begin = OnPerson((p, st, w, a) => a.Order("clip " + w[3] + (w.Length > 4 ? " " + w[4] : ""), NpcMind.Layer.Scene)),
+                    Done = (p, st) => st.W[3] == "none" ? null : ClipOn(CharOf(st.W[1], p), st.W[3]) } },
                 { "fade", new StepVerb(StepSeen.World) {
                     Begin = OnPerson((p, st, w, a) =>
                     {
@@ -217,9 +222,12 @@ namespace HuginWhispers
             } };
         }
 
+        private static Character CharOf(string who, Player p) { NpcActor a = Actor(who, p.transform.position); return a != null ? a.GetComponent<Character>() : null; }
+
         private static void NpcGo(Player p, Step st, string[] w, NpcActor a)
         {
             Vector3 to;
+            _walkSaid = null;
             int bi = Array.IndexOf(w, "before");
             Vector3 mid = Vector3.zero, outOf = Vector3.zero;
             bool square = bi > 0 && w.Length > bi + 1 && StoryWhere.Before(w[3], out mid, out outOf);
@@ -230,6 +238,7 @@ namespace HuginWhispers
             bool run = Array.IndexOf(w, "run") > 0 || Utils.DistanceXZ(a.transform.position, to) > RunFrom; // (far off: it hurries — the user 2026-11-01)
             a.Order("go " + V(to) + (run ? " run" : "") + " near " + F(near) + (square ? " exact" : ""), NpcMind.Layer.Scene); // (it stops that far off: its own Near; exact: no slack, a clip follows)
             _walker = a; _walkTo = to; _walkNear = square ? near : NpcMind.Reach(near);
+            _walkFrom = a.transform.position; _walkBegan = Time.time; _walkRanAny = false; _walkWalkFrom = -1f;
             float way = Utils.DistanceXZ(a.transform.position, to);
             _limit = Time.time + way / (run ? 3.5f : 1.3f) + 8f; // (as long as the walk takes, and some: stuck — the scene goes on)
         }

@@ -725,7 +725,7 @@ namespace HuginWhispers
         // "на жердині", "у гнізді" or "на Воронячому дереві"
         internal static string OnWord(ItemDrop.ItemData item) { string k = SeatKind(item); return k == "nest" ? Lang.T("у гнізді") : k == "tree" ? Lang.T("на Воронячому дереві") : Lang.T("на жердині"); }
 
-        // this player's ravens: in the bag, or on the shoulder cells
+        // this player's ravens: in the bag, or on the shoulders
         private static readonly List<ItemDrop.ItemData> _mine = new List<ItemDrop.ItemData>(4);
         private static List<ItemDrop.ItemData> Mine(Player p)
         {

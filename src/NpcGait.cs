@@ -222,6 +222,9 @@ namespace HuginWhispers
 
         // the black box's look at it (NpcPoseWatch, on a jump of the pose)
         internal string Trace() { return _b != null ? _b.Trace() : ""; }
+
+        // how far down its carriage put its head this frame (degrees): NpcSpeech lifts it to whom it talks to
+        internal float HeadDown { get { return _b != null ? _b.HeadDown : 0f; } }
     }
 }
 #endif

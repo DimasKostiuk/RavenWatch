@@ -19,9 +19,9 @@ const root = path.join(__dirname, '..'), src = path.join(root, 'src');
 const MinVariants = 6, MinTale = 3;
 const baseFile = path.join(__dirname, 'npcword_baseline.json');
 
-const Values = new Set(['name', 'npc', 'job', 'base', 'other', 'neighbour', 'alone', 'weather', 'daypart', 'food', 'wage', 'item', 'why', 'friend', 'foe', 'feud_a', 'feud_b', 'irked_by', 'friend_near', 'goal_what', 'arc_other']);
+const Values = new Set(['name', 'npc', 'job', 'base', 'other', 'neighbour', 'alone', 'weather', 'daypart', 'food', 'wage', 'item', 'why', 'friend', 'foe', 'feud_a', 'feud_b', 'irked_by', 'friend_near', 'goal_what', 'arc_other', 'task_other', 'task_thing', 'trophy', 'its_make']);
 const TwoPeople = new Set(['розмова', 'відповідь', 'п_сон', 'в_сон', 'п_їжа', 'в_їжа', 'п_робота', 'в_робота', 'п_погода', 'в_погода', 'п_ворони', 'в_ворони', 'п_дім', 'в_дім', 'с_розмова_вечір', 'с_розмова_дощ', 'с_розмова_брама', 'с_розмова_вогонь', 'с_розмова_серце']);
-const Names = 'name|other|neighbour|friend|foe|friend_near|feud_a|feud_b|irked_by|arc_other|m_[a-z_]+';
+const Names = 'name|other|neighbour|friend|foe|friend_near|feud_a|feud_b|irked_by|arc_other|task_other|m_[a-z_]+';
 const NameAfter = new RegExp('(^|[\\s«(])(з|із|зі|у|в|через|до|для|від|про|за|крім|без|на|біля|проти|після|перед|над|під)\\s+\\{(' + Names + ')\\}', 'iu');
 
 const files = fs.readdirSync(src).filter(f => f === 'NpcPhrases.cs' || /^Npc.*Patterns\.cs$/.test(f));

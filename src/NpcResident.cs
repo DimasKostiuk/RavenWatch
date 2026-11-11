@@ -16,12 +16,17 @@ namespace HuginWhispers
     // Kept in its ZDO (resident, bed); the plan itself is the mind's. Where no player is near, its zone sleeps and so
     // does it: when someone comes back it takes up what fits the hour (nothing is made up for the time away).
     // Runs where it is owned, from NpcActor every half second.
+    // Whose bed it is: its link (KBed, changed only by SetBed) is the truth; the bed itself says it too (KBedOf…, SignBed), for whoever points at
+    // it on any game, its person near or not (GivenLine: the words on it, and a player does not take it for a spawn point).
     internal sealed class NpcResident : MonoBehaviour
     {
         internal static readonly int KResident = "RavenWatch_npcResident".GetStableHashCode(); // bool
-        internal static readonly int KBed = "RavenWatch_npcBed".GetStableHashCode();           // string "user:id" of its bed ("" none)
+        internal static readonly int KBed = "RavenWatch_npcBed".GetStableHashCode();           // string: a lasting link to its bed (NpcKit.Save; "" none)
+        internal static readonly int KBedOf = "RavenWatch_bedOf".GetStableHashCode();          // long on the bed: its person's own number (NpcKit.KSid); 0 nobody's
+        internal static readonly int KBedName = "RavenWatch_bedName".GetStableHashCode();      // string on the bed: its person's name (Ukrainian, as kept: turned into the reader's language when shown)
+        internal static readonly int KBedFemale = "RavenWatch_bedFemale".GetStableHashCode();  // bool on the bed: «жителя» or «жительки»
         internal static readonly int KSettledAt = "RavenWatch_npcSettledAt".GetStableHashCode(); // long: world seconds it settled here
-        internal static readonly int KHeart = "RavenWatch_npcHeart".GetStableHashCode();       // string "user:id" of its «Серце оселі» ("" none)
+        internal static readonly int KHeart = "RavenWatch_npcHeart".GetStableHashCode();       // string: a lasting link to its «Серце оселі» (NpcKit.Save; "" none)
         internal static readonly int KMovedOut = "RavenWatch_npcMovedOut".GetStableHashCode(); // Vector3: the home it was moved out of, still hired — it stays by it (NpcStray brings it back there, not to the Hall); zero: none
         internal enum Part { None, Day, Evening, Night }
         internal const int PerBase = 10; // (the user: up to ten people at one base)
@@ -59,7 +64,21 @@ namespace HuginWhispers
                 Desc = a => Is(a) ? a.Form(Lang.T("Де він|вона живе: дошка оселі, ліжко, своє місце, переселення.")) : SettleWhere(a),
                 Not = a => Is(a) ? null : SettleNot(a),
                 Sub = a => Is(a) ? HomeRing : null,
-                Do = (a, p) => Settle(a, p.transform.position) };
+                Do = (a, p) => NpcMenu.OnOwner(a, "settle", p.transform.position, "") };
+        }
+
+        // its menu's deeds, done where it is run, for the one who pressed (NpcMenu.OnOwner, By)
+        internal static void Deeds()
+        {
+            NpcMenu.Deeds["settle"] = (a, at, arg) => Settle(a, at);
+            NpcMenu.Deeds["bed"] = (a, at, arg) => GiveBed(a, at);
+            NpcMenu.Deeds["unbed"] = (a, at, arg) => TakeBed(a);
+            NpcMenu.Deeds["unsettle"] = (a, at, arg) => Unsettle(a);
+            NpcMenu.Deeds["resettle"] = (a, at, arg) => // («<its heart> <its name…>», at: where it stands)
+            {
+                int sp = arg.IndexOf(' ');
+                return Resettle(a, new NpcHeart.Entry { Id = NpcKit.Parse(sp > 0 ? arg.Substring(0, sp) : arg), Pos = at, Name = sp > 0 ? arg.Substring(sp + 1) : "" });
+            };
         }
 
         private static readonly List<NpcMenu.Button> HomeRing = new List<NpcMenu.Button>
@@ -70,18 +89,22 @@ namespace HuginWhispers
                 Do = (a, p) => { NpcBoard.Show(HeartOf(a)); return null; } },
             new NpcMenu.Button { Order = 1, Title = Lang.K("Ліжко"), Icon = "n-bed", Place = Lang.K("на ліжко"), Where = a => NpcKit.WhereIs(NpcLocker.Ref(a.Zdo, KBed)),
                 Desc = a => a.Form(Lang.T("Його|Її ліжко: тут спить уночі.")), Now = a => NpcLocker.HasRef(a.Zdo, KBed),
-                AtPlace = GiveBed },
-            new NpcMenu.Button { Order = 2, Title = Lang.K("Своє місце"), Icon = "n-post", Shown = a => { Vector3 at; return NpcPlaces.Favourite(a, out at); },
+                AtPlace = (a, at) => NpcMenu.OnOwner(a, "bed", at, "") },
+            new NpcMenu.Button { Order = 2, Title = Lang.K("Зняти ліжко"), Icon = "n-unsettle",
+                Desc = a => a.Form(Lang.T("Ліжко більше не його|її: спатиме де доведеться, поки не даси інше.")),
+                Not = a => !NpcLocker.HasRef(a.Zdo, KBed) ? a.Form(Lang.T("У нього|неї й так нема ліжка.")) : NpcLevers.IsProtected(a) ? a.Form(Lang.T("Його|Її тримає сюжет: зараз не зняти.")) : null,
+                Do = (a, p) => NpcMenu.OnOwner(a, "unbed", p.transform.position, "") },
+            new NpcMenu.Button { Order = 3, Title = Lang.K("Своє місце"), Icon = "n-post", Shown = a => { Vector3 at; return NpcPlaces.Favourite(a, out at); },
                 Where = a => { Vector3 at; return NpcPlaces.Favourite(a, out at) ? (Vector3?)at : null; },
                 Desc = a => Lang.T("Де любить бувати у вільний час. Покаже на екрані й на мапі."),
                 Do = (a, p) => { Vector3 at; if (NpcPlaces.Favourite(a, out at)) NpcMenu.ShowPlace(at, null, a.Form(Lang.F("Місце, де любить бувати {0}", a.Name))); return null; } },
-            new NpcMenu.Button { Order = 3, Title = Lang.K("Переселити"), Icon = "n-house", Not = SettleNot,
+            new NpcMenu.Button { Order = 4, Title = Lang.K("Переселити"), Icon = "n-house", Not = SettleNot,
                 Desc = a => Lang.T("До іншої оселі: сам дійде. Там ліжко й робота будуть нові."),
                 Do = (a, p) => { AskMove(a); return null; } },
-            new NpcMenu.Button { Order = 4, Title = Lang.K("Виселити"), Icon = "n-unsettle", Where = a => (Vector3?)NpcRules.Home(a),
+            new NpcMenu.Button { Order = 5, Title = Lang.K("Виселити"), Icon = "n-unsettle", Where = a => (Vector3?)NpcRules.Home(a),
                 Desc = a => Lang.T("Більше ніде не живе: ні дому, ні ліжка, ні розпорядку, ні роботи."), Not = SettleNot,
                 Confirm = Lang.K("Він|Вона втратить дім, ліжко, розпорядок і роботу. Натисни ще раз, щоб виселити."),
-                Do = (a, p) => Unsettle(a) },
+                Do = (a, p) => NpcMenu.OnOwner(a, "unsettle", p.transform.position, "") },
         };
 
         // where to move it: the named hearts of the world (the server's list, as for a hire), nearest first, its own and the full ones left out
@@ -101,7 +124,7 @@ namespace HuginWhispers
                     NpcHeart.Entry to = e;
                     float m = Utils.DistanceXZ(e.Pos, me.transform.position);
                     bool full = e.Folk.Count >= PerBase;
-                    rows.Add(RavenBook.SheetRow.Pair(m >= 1000f ? Lang.F("{0} км", (m / 1000f).ToString("0.#")) : Lang.F("{0} м", Mathf.RoundToInt(m)), e.Name, full ? RavenBook.ToneBad : RavenBook.ToneNone, full ? Lang.T("Там уже живе десятеро: місця нема.") : null, full ? (System.Action)null : () => { RavenBook.HideSheet(); string said = Resettle(a, to); if (said != null && MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, said); }, Lang.F("{0} із {1}", e.Folk.Count, PerBase)));
+                    rows.Add(RavenBook.SheetRow.Pair(m >= 1000f ? Lang.F("{0} км", (m / 1000f).ToString("0.#")) : Lang.F("{0} м", Mathf.RoundToInt(m)), e.Name, full ? RavenBook.ToneBad : RavenBook.ToneNone, full ? Lang.T("Там уже живе десятеро: місця нема.") : Lang.T("Натисни, щоб переселити сюди."), full ? (System.Action)null : () => { RavenBook.HideSheet(); string said = NpcMenu.OnOwner(a, "resettle", to.Pos, NpcKit.Ref(to.Id) + " " + to.Name); if (said != null && MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, said); }, Lang.F("{0} із {1}", e.Folk.Count, PerBase)));
                 }
                 if (rows.Count == 0) rows.Add(RavenBook.SheetRow.Plain(Lang.T("Іншої оселі з назвою нема. Постав ще одне Серце оселі.")));
                 s.Tabs.Add(new RavenBook.SheetTab { Rows = () => rows });
@@ -189,7 +212,9 @@ namespace HuginWhispers
             ZDO z = a.Zdo;
             if (Is(a)) NpcLocker.Put(z, KMovedOut, NpcRules.Home(a)); // (moved out, not sent off: it stays by the heart it lived at — NpcTalk.Unhire clears it)
             z.Set(KResident, false);
-            NpcLocker.Put(z, KBed, "");
+            SetBed(z, ZDOID.None);
+            NpcLocker.Set(a, NpcTasks.KTask, ""); // (a small task, a wish are of its life here)
+            NpcLocker.Set(a, NpcGoals.KGoal, "");
             z.Set(KHeart, "");
             NpcWorker.SetJob(a, ""); // (no base, no work)
             if (a.Mind != null) a.Mind.Put(NpcMind.Layer.Routine, null, "day");
@@ -208,12 +233,95 @@ namespace HuginWhispers
             if (nv == null || !nv.IsValid()) return Lang.T("Це ліжко ще не готове.");
             if (nv.GetZDO().GetLong(ZDOVars.s_owner, 0L) != 0L) return Lang.T("Це чиєсь ліжко (точка появи гравця): дай вільне.");
             ZDOID id = nv.GetZDO().m_uid;
-            foreach (NpcActor o in NpcActor.Live) if (o != null && o != a && NpcLocker.Ref(o.Zdo, KBed) == id) return Lang.F("Це ліжко вже має {0}.", o.Name);
-            if (!NpcBase.For(NpcRules.Home(a)).Inside(bed.transform.position)) return Lang.T("Це ліжко поза базою людини.");
-            NpcLocker.PutRef(z, KBed, id);
+            string holder; bool female;
+            if (Holder(nv.GetZDO(), out holder, out female) && nv.GetZDO().GetLong(KBedOf, 0L) != z.GetLong(NpcKit.KSid, 0L)) return Lang.F("Це ліжко вже має {0}.", Lang.T(holder)); // (the bed says so, its person near or not)
+            string outside = NpcBase.For(NpcRules.Home(a)).Refuse(bed.transform.position); if (outside != null) return outside;
+            SetBed(z, id);
             NpcResident r = a.GetComponent<NpcResident>();
             if (r != null) r._part = Part.None;
+            Player me = NpcMenu.By; // (the one who gave it, on whatever game this runs)
+            NpcGoals.BedGiven(a, me);
+            NpcPromises.Given(a, me, bed.GetComponent<Piece>());
             return a.Form(Lang.T("Тепер це його|її ліжко."));
+        }
+
+        // its bed taken from it, and only that: its home, day and work stay (a bed already taken down: the link left behind goes too)
+        internal static string TakeBed(NpcActor a)
+        {
+            string busy = NpcKit.Busy(a); if (busy != null) return busy;
+            if (NpcLevers.IsProtected(a)) return a.Form(Lang.T("Його|Її тримає сюжет: зараз не зняти."));
+            if (!NpcLocker.HasRef(a.Zdo, KBed)) return a.Form(Lang.T("У нього|неї й так нема ліжка."));
+            SetBed(a.Zdo, ZDOID.None);
+            NpcResident r = a.GetComponent<NpcResident>();
+            if (r != null) r._part = Part.None; // (its day planned afresh: asleep in it, it gets up)
+            return a.Form(Lang.T("Це ліжко більше не його|її."));
+        }
+
+        // ---------------------------------------------------------------- whose bed it is
+        // The one door to a person's bed (given another, moved out, gone): the bed it leaves says nobody's. The new one is signed by its Tick
+        internal static void SetBed(ZDO z, ZDOID bed)
+        {
+            if (z == null) return;
+            ZDOID was = NpcLocker.Ref(z, KBed);
+            if (was != bed) Unsign(z, was);
+            NpcLocker.PutRef(z, KBed, bed);
+        }
+
+        private static void Unsign(ZDO z, ZDOID bed)
+        {
+            ZDO b = !bed.IsNone() && ZDOMan.instance != null ? ZDOMan.instance.GetZDO(bed) : null;
+            long of = z.GetLong(NpcKit.KSid, 0L);
+            if (b == null || of == 0L || b.GetLong(KBedOf, 0L) != of) return; // (signed by another: not its to wipe)
+            if (!b.IsOwner()) b.SetOwner(ZDOMan.GetSessionID());
+            b.Set(KBedOf, 0L); b.Set(KBedName, ""); b.Set(KBedFemale, false);
+        }
+
+        // its bed says it is its own (every half second where it is run; written only on a change, so a bed given in an old save is signed the first time its person is here)
+        private void SignBed(ZDO bed)
+        {
+            ZDO z = _a.Zdo;
+            long me = z != null ? z.GetLong(NpcKit.KSid, 0L) : 0L;
+            if (me == 0L) return; // (its number not given yet: NpcKit.Heal, soon)
+            long had = bed.GetLong(KBedOf, 0L);
+            if (had != me && had != 0L) { NpcActor o = Person(had); if (o != null && Names(o, bed)) return; } // (two given one bed in an old save: the first keeps it, the two do not write over each other)
+            string own = NpcSettlers.NameOf(_a), name = own.Length > 0 ? own : _a.Def != null ? _a.Def.Name : _a.Id; // (as kept: the reader's language when shown)
+            bool female = _a.Female;
+            if (had == me && bed.GetString(KBedName, "") == name && bed.GetBool(KBedFemale, false) == female) return;
+            if (!bed.IsOwner()) bed.SetOwner(ZDOMan.GetSessionID());
+            bed.Set(KBedOf, me); bed.Set(KBedName, name); bed.Set(KBedFemale, female);
+        }
+
+        private static NpcActor Person(long sid) { foreach (NpcActor a in NpcActor.Live) if (a != null && a.Zdo != null && a.Zdo.GetLong(NpcKit.KSid, 0L) == sid) return a; return null; }
+
+        // this person's link still names this bed (its locker not here yet, or the link not found yet: no proof of the contrary)
+        private static bool Names(NpcActor a, ZDO bed)
+        {
+            if (!NpcLocker.Ready(a)) return true;
+            string link = NpcLocker.Text(a.Zdo, KBed);
+            if (link.Length == 0) return false;
+            ZDOID id = NpcKit.Resolve(link);
+            return id.IsNone() || id == bed.m_uid;
+        }
+
+        // the person a bed is given to, as the bed says (false: nobody's, or a player's own: the game's words stand; a person here whose link has left this bed: nobody's)
+        internal static bool Holder(ZDO bed, out string name, out bool female)
+        {
+            name = ""; female = false;
+            long of = bed != null ? bed.GetLong(KBedOf, 0L) : 0L;
+            if (of == 0L || bed.GetLong(ZDOVars.s_owner, 0L) != 0L) return false;
+            NpcActor a = Person(of);
+            if (a != null && !Names(a, bed)) return false;
+            name = bed.GetString(KBedName, ""); female = bed.GetBool(KBedFemale, false);
+            return name.Length > 0;
+        }
+
+        // the words on a resident's bed (null: it is no resident's). Asked each frame it is pointed at, and on E: a few reads of its ZDO
+        internal static string GivenLine(Bed bed)
+        {
+            ZNetView nv = bed != null ? bed.GetComponent<ZNetView>() : null;
+            string name; bool female;
+            if (nv == null || !nv.IsValid() || !Holder(nv.GetZDO(), out name, out female)) return null;
+            return female ? Lang.F("Ліжко жительки: {0}", Lang.T(name)) : Lang.F("Ліжко жителя: {0}", Lang.T(name));
         }
 
         // ---------------------------------------------------------------- its day (every half second, owned)
@@ -241,6 +349,7 @@ namespace HuginWhispers
             Part part = hour >= 6f && hour < 18f ? Part.Day : hour >= 18f && hour < bedtime ? Part.Evening : Part.Night;
             ZDOID bed = Bed;
             bool hasBed = !bed.IsNone() && ZDOMan.instance != null && ZDOMan.instance.GetZDO(bed) != null && !BedAbsent(bed); // (taken down: as if none)
+            if (hasBed) SignBed(ZDOMan.instance.GetZDO(bed));
             Vector3 home = Home;
             bool moved = (home - _homeSeen).sqrMagnitude > 4f; // (its home changed while it was here: the story moved it — StoryPeople — its day planned from the new one)
             if (part != _part || hasBed != _hadBed || moved || _mind.Of(NpcMind.Layer.Routine) == null)
@@ -332,6 +441,18 @@ namespace HuginWhispers
         {
             if (!Is(_a)) return "ніде не живе";
             return "мешканець (" + (_part == Part.Day ? "день" : _part == Part.Evening ? "вечір" : _part == Part.Night ? "ніч" : "—") + ", " + (Bed.IsNone() ? "без ліжка" : "має ліжко") + ", " + NpcHunger.Word(_a) + " " + Mathf.RoundToInt(NpcHunger.Full(_a)) + "); " + Base.Describe();
+        }
+    }
+
+    // a resident's bed says whose it is and that it is a resident's, in place of the game's «nobody's, [E] claim» (last of all postfixes: no other mod's words over it)
+    [HarmonyLib.HarmonyPatch(typeof(Bed), "GetHoverText")]
+    [HarmonyLib.HarmonyPriority(HarmonyLib.Priority.Last)]
+    internal static class NpcBedHoverPatch
+    {
+        private static void Postfix(Bed __instance, ref string __result)
+        {
+            try { string line = NpcResident.GivenLine(__instance); if (line != null) __result = line; }
+            catch (System.Exception e) { PatchGuard.Fail("NpcBedHoverPatch", e); }
         }
     }
 }

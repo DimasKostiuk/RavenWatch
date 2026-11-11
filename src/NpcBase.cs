@@ -8,25 +8,35 @@ namespace HuginWhispers
 {
     // Where a resident lives (npc-plan.md, stage 1): its base, found from the place it was settled at.
     //   A map of 1 m cells round that place (up to Reach). Walls, palisades, fences, doors and gates the players built are
-    //   the edges, and so is the land where nobody walks: a steep bank (a moat's sides, a cliff: more than Bank metres up
-    //   or down to the next cell) and water — unless something built lies over it (a bridge across the moat, a floor over
-    //   a slope): that is a way through, as a gate is. A moat, a fence, or both: one edge. A «paint» is poured in from the rim of the map: what it cannot reach is ENCLOSED (a yard behind a fence
-    //   and the houses in it — the bed in the far corner, the chests by the gate: all its own).
+    //   the edges — standing on the land or on the ground storey's floor (a house on stilts), never a thing to use (a bed, a chest, a
+    //   workbench, a fire) nor the heart — and so is the land where nobody walks: a steep bank (a moat's sides, a cliff: more than
+    //   Bank metres up or down to the next cell) and water — unless something flat is built over it up to a storey high (a bridge
+    //   across the moat, a floor over a slope): that is a way through, as a gate is. A moat, a fence, or both: one edge. A «paint»
+    //   is poured in from the rim of the map: what it cannot reach is ENCLOSED (a yard behind a fence and the houses in it — the bed
+    //   in the far corner, the chests by the gate: all its own).
     //     settled in an enclosed place of at least Yard m²  → FENCED: the base is every enclosed cell
-    //     settled in the open, or only inside one house      → OPEN: a circle of Open m plus a strip round the buildings,
-    //                                                         and the enclosed rooms in it (it may go out to the fire);
-    //                                                         never the water (the sea, a lake) round it
-    // Cheap: made once, spread over a few frames, and made again only when the buildings round it change (their count,
-    // looked at every 30 s) or after a few minutes; in between it is a lookup in a ready map. One map per place, shared
-    // by everyone living there.
+    //     settled in the open, or only inside one house      → OPEN: a circle of Open m and its own village — a strip of Strip m
+    //                                                         round each piece, joined from its home (a gap of two strips: another's
+    //                                                         house, not ours); never the water (the sea, a lake) round it
+    // Cheap (the user 2026-11-08: «база готова — не треба перераховувати; збудував — один дешевий процес раз на хвилину»):
+    //   made once, when first asked on this game, within a frame budget (Budget ms a frame); then never again by itself.
+    //   A piece coming or going within it (Piece.Awake / OnDestroy: built, taken down, loaded — on every game) or the land changed
+    //   (Heightmap.Poke: a hoe) only marks it changed, with the box round it (Touched). Asked again once nothing has changed for
+    //   Settle s and at least Least s after the last one: an update — the land's heights read again from the heightmap (no ray),
+    //   walls and banks only in the changed box, the fill and its things whole (those are cheap). In between it is a lookup in
+    //   a ready map. What each step cost: NpcPerf «base map: …», and a line in the log each time. One map per place, shared by everyone
+    //   living there.
     internal sealed class NpcBase
     {
         internal const float Reach = 50f, Open = 20f, Strip = 4f, Cell = 1f;
         private const int Yard = 200; // m²: smaller than this, an enclosed place is a house, not a fenced yard
         private const float Bank = 1.2f; // m of height from one cell to the next (≈50°): steeper is a bank nobody walks
-        private const float Recheck = 30f, MaxAge = 300f, Stuck = 30f, Least = 60f, Forgotten = 600f;
-        // (Least: never made again sooner than this — a player building changes the count all the time; Forgotten: a base
-        // nobody asked about for this long is let go)
+        private const float Stuck = 30f, Least = 60f, Settle = 3f, FirstWait = 15f, Forgotten = 600f, Budget = 1.5f;
+        internal const float TouchPad = 6f;
+        // (Least: an update never sooner than this after the last — a player building changes it all the time; Settle: no change for this
+        // long first (a zone loading in is a few thousand pieces in a few seconds); FirstWait: its first making waits no longer than this
+        // for that; Forgotten: a base nobody asked about for this long is let go; Budget: ms of a frame; TouchPad: m round a piece that
+        // came or went (a wall's half-length and a cell))
 
         private static readonly Dictionary<long, NpcBase> All = new Dictionary<long, NpcBase>();
         private static readonly Collider[] Hits = new Collider[32];
@@ -40,17 +50,23 @@ namespace HuginWhispers
         private readonly List<int> _cells = new List<int>();
         private readonly List<int> _edge = new List<int>(); // its cells on its OUTER edge (MakeEdge)
         private float _edgeFar, _edgeNear; // (m from the centre: the average and the nearest of them, for its description)
-        private float _madeAt = -1000f, _checkAt, _startedAt, _askedAt;
+        private float _madeAt = -1000f, _startedAt, _askedAt, _bornAt = -1f;
+        // kept between makings, so an update redoes only its changed box: the cells a wall stands on, the land's banks; the box changed
+        // since (cells, inclusive; none: x1 < x0) and the one being made now (Refuse waits on both)
+        private bool[] _pieceWall = new bool[0], _bank = new bool[0];
+        private bool _dirty;
+        private int _dx0, _dy0, _dx1 = -1, _dy1 = -1;
+        private float _touchedAt = -1000f, _dirtySince;
+        private int _mx0, _my0, _mx1 = -1, _my1 = -1;
 
         // ---------------------------------------------------------------- what stands in it, by kind
-        // Made with its map and again (alone, cheaper) when its buildings change in between: one look over its pieces for
-        // everyone who lives there — NpcWork's fires, smelters, chests…, NpcMeals' tables, NpcChores' wear, NpcWhims' tub —
+        // Made with its map, every making: one look over its pieces for everyone who lives there — NpcWork's fires, smelters, chests…, NpcMeals' tables, NpcChores' wear, NpcWhims' tub —
         // instead of each of them looking over all of them every few seconds. A thing gone since is a null in a list.
         internal static readonly System.Type[] Kinds = { typeof(Fireplace), typeof(Smelter), typeof(CookingStation), typeof(Beehive), typeof(Fermenter), typeof(Container), typeof(Bed), typeof(Chair), typeof(CraftingStation), typeof(ItemStand), typeof(Door) };
         // …and these all round it (within Reach, in it or not: a fire in the yard by the heart, a seat on the porch, a door in its wall — a
         // door stands on the edge, never inside): the people's seat, fire and door searches read them instead of going over every piece of
         // the world near (each took 6–7 ms on a big base, 2026-11-05: the load test). A chair: every seat of its piece (a bench has two)
-        internal static readonly System.Type[] RoundKinds = { typeof(Fireplace), typeof(Chair), typeof(Door) };
+        internal static readonly System.Type[] RoundKinds = { typeof(Fireplace), typeof(Chair), typeof(Door), typeof(Container) }; // (a chest: by the dining table, on its far side of the base's edge too)
         private Dictionary<System.Type, List<Component>> _round;
         internal List<Component> Round(System.Type t) { List<Component> l; return _round != null && _round.TryGetValue(t, out l) ? l : null; }
 
@@ -65,9 +81,30 @@ namespace HuginWhispers
         private List<Transform> _tables;
         private List<WearNTear> _wears;
         private List<Piece> _tubs;
-        private bool _thingsMaking;
-        private static readonly Dictionary<string, bool> WetKinds = new Dictionary<string, bool>(); // a kind of piece → has water of its own (asked once a kind)
-        private static readonly int PerfThings = NpcPerf.Id("base things (знімок бази)");
+        private static readonly int PerfThings = NpcPerf.Id("base things (знімок бази)"), PerfHeights = NpcPerf.Id("base map: heights (висоти)"),
+            PerfWalls = NpcPerf.Id("base map: walls (стіни)"), PerfBanks = NpcPerf.Id("base map: banks (схили)"), PerfFill = NpcPerf.Id("base map: fill (заливка)");
+
+        // ---------------------------------------------------------------- what a kind of piece is, once a kind (by its prefab)
+        // which of Kinds it has, a table to eat at, its own water, it wears: the same for every piece of that prefab, so asked of the first
+        // only (a base of four thousand pieces asked eleven component searches of each, every making)
+        private sealed class PieceKind { internal int Mask; internal bool Table, Wet, Wears, Heart; }
+        private static readonly Dictionary<int, PieceKind> PieceKinds = new Dictionary<int, PieceKind>();
+        private static PieceKind KindOf(Piece pc)
+        {
+            ZNetView nv = pc.GetComponent<ZNetView>();
+            int key = nv != null && nv.IsValid() ? nv.GetZDO().GetPrefab() : Utils.GetPrefabName(pc.gameObject).GetStableHashCode();
+            PieceKind k;
+            if (PieceKinds.TryGetValue(key, out k)) return k;
+            k = new PieceKind();
+            for (int i = 0; i < Kinds.Length; i++) if (pc.GetComponentInChildren(Kinds[i]) != null) k.Mask |= 1 << i;
+            k.Table = Utils.GetPrefabName(pc.gameObject).ToLowerInvariant().Contains("table") && pc.GetComponentInChildren<CraftingStation>() == null && pc.GetComponentInChildren<MapTable>() == null; // (piece_table, _round, _oak — and other mods' tables; not a workbench, a prep table, a map table)
+            k.Wet = pc.GetComponentInChildren<WaterVolume>() != null;
+            k.Wears = pc.GetComponent<WearNTear>() != null;
+            k.Heart = pc.GetComponentInChildren<NpcHeart>() != null;
+            PieceKinds[key] = k;
+            return k;
+        }
+        private static readonly int DoorBit = 1 << System.Array.IndexOf(Kinds, typeof(Door));
 
         // its things of a kind (one of Kinds), null — not made yet or not a kind kept
         internal List<Component> Things(System.Type t) { List<Component> l; return _things != null && _things.TryGetValue(t, out l) ? l : null; }
@@ -106,30 +143,130 @@ namespace HuginWhispers
             if (old != null) foreach (long k in old) { All[k].Hide(); All.Remove(k); }
         }
 
+        // asked: made the first time, updated when it changed — never by a clock alone. A few comparisons: it is asked often
         private void Fresh()
         {
-            if (Making && Time.time - _startedAt < Stuck) return;
-            if (Time.time < _checkAt) return;
-            _checkAt = Time.time + Recheck;
-            bool young = Ready && Time.time - _madeAt < Least;
-            bool stale = !Ready || Time.time - _madeAt > MaxAge;
-            if (!stale)
+            if (_bornAt < 0f) _bornAt = Time.time;
+            if (Plugin.Instance == null) return;
+            if (Making)
             {
-                List<Piece> now = new List<Piece>(); Piece.GetAllPiecesInRadius(Centre, Reach, now);
-                bool changed = now.Count != _thingsCount || _lookVersion != LocState.LookVersion; // (a place's state changed: what it has now is another list)
-                if (changed && Ready && !_thingsMaking && Plugin.Instance != null) { _thingsMaking = true; Plugin.Instance.StartCoroutine(MakeThings(now, _in)); } // (a chest put down: seen within Recheck s, its map later)
-                if (young) return;
-                stale = now.Count != Pieces;
+                if (Time.time - _startedAt < Stuck) return;
+                Npcs.Log("base at " + Mathf.RoundToInt(Centre.x) + "," + Mathf.RoundToInt(Centre.z) + ": its making broke off, made whole again");
+                Begin(true); // (a making that broke off: whole again — the old one, if it still runs, writes nothing: _gen)
+                return;
             }
-            if (stale && Plugin.Instance != null) { Making = true; _startedAt = Time.time; Plugin.Instance.StartCoroutine(Make()); } // (a making that broke off is started again after Stuck s)
+            bool settled = Time.time - _touchedAt >= Settle;
+            if (!Ready)
+            {
+                if (!settled && Time.time - _bornAt < FirstWait) return; // (its zone still loading in: the whole of it first)
+                Begin(true);
+                return;
+            }
+            if (_lookVersion != LocState.LookVersion && !_dirty) { _dirty = true; _dirtySince = Time.time; } // (a place's state changed: what it has now is another list — its things only, no box)
+            if (!_dirty || Time.time - _madeAt < Least || (!settled && Time.time - _dirtySince < Least)) return; // (building on and on: once a minute all the same)
+            Begin(false);
+        }
+
+        private int _gen;
+        private void Begin(bool full)
+        {
+            Making = true; _startedAt = Time.time; _gen++;
+            int x0 = _dx0, y0 = _dy0, x1 = _dx1, y1 = _dy1;
+            bool box = _dirty && _dx1 >= _dx0;
+            bool whole = full || !Ready || _pieceWall.Length == 0;
+            if (whole || !box) { _mx0 = _my0 = 0; _mx1 = _my1 = _w - 1; } else { _mx0 = x0; _my0 = y0; _mx1 = x1; _my1 = y1; }
+            _dirty = false; _dx0 = _dy0 = 0; _dx1 = _dy1 = -1; // (what comes while it is made marks it again)
+            Plugin.Instance.StartCoroutine(Make(whole, box ? new RectInt(x0, y0, x1 - x0 + 1, y1 - y0 + 1) : new RectInt(0, 0, 0, 0)));
+        }
+
+        // a piece came or went, or the land changed, here (every game: Piece.Awake / OnDestroy, Heightmap.Poke): each base it touches is marked
+        // changed with that box. Called in bursts (a zone loading in): a look at the few bases there are, nothing else
+        internal static void Touched(Vector3 at, float r)
+        {
+            if (All.Count == 0 || !ReferenceEquals(_world, ZNet.instance)) return;
+            foreach (NpcBase b in All.Values)
+            {
+                float dx = at.x - b.Centre.x, dz = at.z - b.Centre.z, far = Reach + r;
+                if (dx * dx + dz * dz > far * far) continue;
+                b.Mark(at, r);
+            }
+        }
+
+        // the land changed here (a hoe): marked changed, no box — an update finds the cells whose height moved by itself
+        internal static void LandTouched(Vector3 at, float r)
+        {
+            if (All.Count == 0 || !ReferenceEquals(_world, ZNet.instance)) return;
+            foreach (NpcBase b in All.Values)
+            {
+                float dx = at.x - b.Centre.x, dz = at.z - b.Centre.z, far = Reach + r;
+                if (dx * dx + dz * dz > far * far) continue;
+                if (!b._dirty) { b._dirty = true; b._dirtySince = Time.time; }
+                b._touchedAt = Time.time;
+            }
+        }
+
+        private void Mark(Vector3 at, float r)
+        {
+            int x0 = Mathf.Max(0, Mathf.FloorToInt((at.x - r - Centre.x + Reach) / Cell)), x1 = Mathf.Min(_w - 1, Mathf.CeilToInt((at.x + r - Centre.x + Reach) / Cell));
+            int y0 = Mathf.Max(0, Mathf.FloorToInt((at.z - r - Centre.z + Reach) / Cell)), y1 = Mathf.Min(_w - 1, Mathf.CeilToInt((at.z + r - Centre.z + Reach) / Cell));
+            _touchedAt = Time.time;
+            if (x0 > x1 || y0 > y1) return;
+            if (!_dirty) _dirtySince = Time.time;
+            if (!_dirty || _dx1 < _dx0) { _dx0 = x0; _dy0 = y0; _dx1 = x1; _dy1 = y1; }
+            else { _dx0 = Mathf.Min(_dx0, x0); _dy0 = Mathf.Min(_dy0, y0); _dx1 = Mathf.Max(_dx1, x1); _dy1 = Mathf.Max(_dy1, y1); }
+            _dirty = true;
         }
 
         // ---------------------------------------------------------------- inside / a spot in it
+        // a THING is of the base: on its own cell, on one beside it (a bed against a wall stands on the wall's cells), or, a base with no fence, on a wall of its own village
+        // (a narrow room or a loft is all walls on this map of 1 m cells: «there is a wall or a door» of a bed in the owner's own house, 2026-11-09). Who walks where asks Inside
+        private bool[] _holds = new bool[0];
+        internal bool Holds(Vector3 p)
+        {
+            if (!Ready) return Utils.DistanceXZ(p, Centre) <= Open;
+            int i = Index(p);
+            return i >= 0 && i < _holds.Length && _holds[i];
+        }
+
         internal bool Inside(Vector3 p)
         {
             if (!Ready) return Utils.DistanceXZ(p, Centre) <= Open;
             int i = Index(p);
             return i >= 0 && _in[i];
+        }
+
+        // A player gives it a thing of its base (a bed, a storeroom, a post: NpcResident.GiveBed, NpcWork): null — it is in it; else why not, in
+        // words. The one answer for all of them. Its map not made on this game yet (the person run by a friend's game, or let go after
+        // Forgotten s): «wait», never the circle's guess — a bed 25 m off in a house was «out of the base» while the map was being made
+        // (the user 2026-11-08). The thing's own cell or one beside it: a bed against a wall stands half on the wall's cells
+        private byte[] _why = new byte[0];
+        private const byte WhyWall = 1, WhyBank = 2, WhyWater = 3, WhyOpen = 4, WhyFence = 5, WhyFar = 6;
+        internal string Refuse(Vector3 p)
+        {
+            if (!Ready) return Lang.T("Межі ще рахуються — спробуй за мить.");
+            int i = Index(p);
+            if (i >= 0 && Making && In(i % _w, i / _w, _mx0, _my0, _mx1, _my1)) return Lang.T("Межі ще рахуються — спробуй за мить."); // (being made there now)
+            if (_dirty && i >= 0 && (_dx1 < _dx0 || In(i % _w, i / _w, _dx0, _dy0, _dx1, _dy1))) { Hurry(); return Lang.T("Межі ще рахуються — спробуй за мить."); } // (just built there — a house and its bed: not the old map's word, its update now)
+            if (Holds(p)) return null;
+            byte w = i >= 0 && i < _why.Length ? _why[i] : WhyFar;
+            if (w == WhyWall && !Fenced) w = WhyOpen; // (in an open base a wall is no boundary: it stood outside its village, and the wall on its cell was not why)
+            string why = w == WhyWall ? Lang.T("там стіна чи двері")
+                : w == WhyBank ? Lang.T("крутий схил, а над ним нема підлоги")
+                : w == WhyWater ? Lang.T("там вода")
+                : w == WhyFence ? Lang.T("поза огорожею двору")
+                : w == WhyOpen ? Lang.F("база без огорожі: її дім — коло {0} м і {1} м довкола будівель її селища", Mathf.RoundToInt(Open), Mathf.RoundToInt(Strip))
+                : Lang.F("далі {0} м від її дому", Mathf.RoundToInt(Reach));
+            return Lang.F("Поза базою: {0} ({1} м від Серця оселі; межі — на дошці Серця, «Показати межі»).", why, Mathf.RoundToInt(Utils.DistanceXZ(p, Centre)));
+        }
+
+        // in a box of cells, or beside it (a thing against its edge)
+        private static bool In(int x, int y, int x0, int y0, int x1, int y1) { return x >= x0 - 1 && x <= x1 + 1 && y >= y0 - 1 && y <= y1 + 1; }
+
+        // a player waits for it: its update now, not after Least and Settle
+        private void Hurry()
+        {
+            if (Making || Plugin.Instance == null) return;
+            Begin(false);
         }
 
         // a random spot of its own on the land (round the centre while it has no map yet)
@@ -187,7 +324,7 @@ namespace HuginWhispers
             for (int tries = 0; tries < 60; tries++)
             {
                 Vector3 p = CellCentre(_cells[Random.Range(0, _cells.Count)]);
-                foreach (Vector3 d in dirs) if (Wet(p + d * 2f)) { at = Ground(p); water = p + d * 2f; return true; }
+                foreach (Vector3 d in dirs) { int w = Index(p + d * 2f); if (w >= 0 && _h[w] < WaterLevel - 0.3f) { at = Ground(p); water = p + d * 2f; return true; } } // (its own heights: a base far from any water asked 240 rays a try)
             }
             return false;
         }
@@ -195,83 +332,163 @@ namespace HuginWhispers
         internal string Describe()
         {
             if (!Ready) return Making ? "база рахується…" : "база ще не порахована";
-            return (Fenced ? "огороджена" : "відкрита (коло " + Mathf.RoundToInt(Open) + " м + смуга біля будівель)") + ", " + _cells.Count + " м², межа " + _edge.Count + " м (від центру в середньому " + Mathf.RoundToInt(_edgeFar) + " м, найближче " + Mathf.RoundToInt(_edgeNear) + " м), будівель " + Pieces + ", з них стін і дверей " + Blockers + ", схилів і води " + Banks;
+            return (Fenced ? "огороджена" : "відкрита (коло " + Mathf.RoundToInt(Open) + " м + своє селище)") + ", " + _cells.Count + " м², межа " + _edge.Count + " м (від центру в середньому " + Mathf.RoundToInt(_edgeFar) + " м, найближче " + Mathf.RoundToInt(_edgeNear) + " м), будівель " + Pieces + ", клітинок стін і дверей " + Blockers + ", схилів і води " + Banks;
         }
 
         // ---------------------------------------------------------------- making the map
-        private IEnumerator Make()
+        // full: every cell (its first making, or one that broke off); else an update: the land's heights again (cheap), walls and banks only in
+        // the changed box (and banks where the land moved), the fill and its things whole. Into new arrays: the old map answers till it is done
+        private IEnumerator Make(bool full, RectInt box)
         {
-            int n = _w * _w;
-            // the land's height of every cell, once (the game finds it with a ray from the sky: a thousand a frame)
-            float[] h = new float[n];
+            int n = _w * _w, gen = _gen;
+            Pace pace = new Pace(Budget);
             float water = ZoneSystem.instance != null ? ZoneSystem.instance.m_waterLevel : -1000f;
+            // the land's height of every cell, straight from the heightmap (a cell is one of its vertices: 1 m); a ray only where none is loaded
+            pace.Phase(0, PerfHeights);
+            float[] old = _h, h = new float[n];
+            Heightmap hm = null;
             for (int c = 0; c < n; c++)
             {
-                h[c] = ZoneSystem.instance != null ? ZoneSystem.instance.GetGroundHeight(CellCentre(c)) : Centre.y;
-                if ((c + 1) % 1000 == 0) yield return null;
+                Vector3 at = CellCentre(c);
+                float y;
+                if (hm == null || !hm.GetWorldHeight(at, out y)) { hm = Heightmap.FindHeightmap(at); if (hm == null || !hm.GetWorldHeight(at, out y)) y = ZoneSystem.instance != null ? ZoneSystem.instance.GetGroundHeight(at) : Centre.y; } // (the last one found first: a row of cells is mostly one heightmap)
+                h[c] = y;
+                if ((c & 255) == 255 && pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
             }
-            bool[] wall = new bool[n], near = new bool[n];
+            bool again = !full && old.Length == n && _pieceWall.Length == n && _bank.Length == n;
+            if (!again) full = true;
+            int cx0 = full ? 0 : box.xMin, cy0 = full ? 0 : box.yMin, cx1 = full ? _w - 1 : box.xMax - 1, cy1 = full ? _w - 1 : box.yMax - 1;
+            // the walls the players built: every piece's strip; the cells walls stand on, made again in the box only
+            pace.Phase(1, PerfWalls);
             List<Piece> pieces = new List<Piece>();
             Piece.GetAllPiecesInRadius(Centre, Reach, pieces);
-            int blockers = 0, done = 0;
+            bool[] near = new bool[n];
+            bool[] pw = full ? new bool[n] : (bool[])_pieceWall.Clone();
+            if (!full) for (int y = cy0; y <= cy1; y++) for (int x = cx0; x <= cx1; x++) pw[x + y * _w] = false;
+            int done = 0;
             foreach (Piece pc in pieces)
             {
                 if (pc == null) continue;
                 Stamp(near, pc.transform.position, Strip);
-                if (Edge(pc, h)) { blockers++; Rasterise(wall, pc); }
-                if (++done % 20 == 0) yield return null; // (a few pieces a frame)
+                if (cx1 >= cx0 && Reaches(pc.transform.position, cx0, cy0, cx1, cy1) && Edge(pc, h)) Rasterise(pw, pc, cx0, cy0, cx1, cy1);
+                if ((++done & 15) == 0 && pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
             }
-            // the land itself: steep banks and water are edges too, unless something built lies over them (a bridge, a floor)
-            int banks = 0;
+            // the land itself: steep banks and water are edges too, unless something built lies over them (a bridge, a floor). A ray only for a
+            // bank in the box, where the land moved, or never looked at; the rest keep what they were
+            pace.Phase(2, PerfBanks);
+            bool[] bank = new bool[n];
             for (int c = 0; c < n; c++)
             {
-                if (wall[c]) continue;
                 int x = c % _w, y = c / _w;
-                float top;
-                bool edge = h[c] < water - 0.3f;
-                top = Mathf.Max(h[c], Higher(x + 1, y, h), Higher(x - 1, y, h), Higher(x, y + 1, h), Higher(x, y - 1, h));
-                if (!edge) edge = top - h[c] > Bank || h[c] - Lower(x, y, h) > Bank;
-                if (!edge || Bridged(c, h[c], Mathf.Max(top, water))) continue;
-                wall[c] = true; banks++;
-                if (banks % 300 == 0) yield return null;
+                bool wet = h[c] < water - 0.3f;
+                float top = Mathf.Max(h[c], Higher(x + 1, y, h), Higher(x - 1, y, h), Higher(x, y + 1, h), Higher(x, y - 1, h));
+                if (!wet && top - h[c] <= Bank && h[c] - Lower(x, y, h) <= Bank) continue;
+                if (pw[c]) continue; // (a wall stands there: no ray — the cell is an edge either way)
+                bool redo = full || (x >= cx0 && x <= cx1 && y >= cy0 && y <= cy1) || Mathf.Abs(old[c] - h[c]) > 0.05f;
+                if (!redo) { bank[c] = _bank[c]; continue; }
+                bank[c] = !Bridged(c, h[c], Mathf.Max(top, water));
+                if (pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
             }
             // the paint from the rim inwards: what it cannot reach is enclosed
+            pace.Phase(3, PerfFill);
+            bool[] wall = new bool[n];
+            byte[] why = new byte[n]; // (each cell not its own: why — a refusal says it: Refuse)
+            int walls = 0, banks = 0;
+            for (int c = 0; c < n; c++)
+            {
+                if (pw[c]) { wall[c] = true; why[c] = WhyWall; walls++; }
+                else if (bank[c]) { wall[c] = true; why[c] = h[c] < water - 0.3f ? WhyWater : WhyBank; banks++; }
+            }
             bool[] outside = new bool[n];
             Queue<int> q = new Queue<int>();
             float rim = Reach - Cell * 1.5f;
             for (int c = 0; c < n; c++)
                 if (!wall[c] && Utils.DistanceXZ(CellCentre(c), Centre) >= rim) { outside[c] = true; q.Enqueue(c); }
             Flood(q, wall, outside);
-            yield return null;
+            if (pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
             int home = Index(Centre);
             bool homeEnclosed = home >= 0 && !outside[home];
             int yard = 0;
             if (homeEnclosed) { bool[] mine = new bool[n]; Queue<int> hq = new Queue<int>(); mine[home] = true; hq.Enqueue(home); yard = Flood(hq, OrOf(wall, outside), mine); }
             bool fenced = homeEnclosed && yard >= Yard;
+            // its own village: the strips round the pieces, joined from its home (a gap wider than two strips: another's house, not ours)
+            bool[] village = new bool[n];
+            if (home >= 0 && near[home])
+            {
+                Queue<int> vq = new Queue<int>(); village[home] = true; vq.Enqueue(home);
+                while (vq.Count > 0)
+                {
+                    int c = vq.Dequeue(), x = c % _w, y = c / _w;
+                    if (x + 1 < _w) Join(c + 1, near, village, vq);
+                    if (x > 0) Join(c - 1, near, village, vq);
+                    if (y + 1 < _w) Join(c + _w, near, village, vq);
+                    if (y > 0) Join(c - _w, near, village, vq);
+                }
+            }
             bool[] inside = new bool[n];
-            _cells.Clear();
+            List<int> cells = new List<int>(); // (the old map stays whole till the new one takes its place, below)
             for (int c = 0; c < n; c++)
             {
                 if (wall[c]) continue;
                 float d = Utils.DistanceXZ(CellCentre(c), Centre);
-                if (d > Reach) continue;
-                bool enclosed = !outside[c];
-                bool own = fenced ? enclosed : (enclosed || d <= Open || near[c]);
-                if (own && !enclosed && h[c] < water - 0.3f) own = false; // (the sea or a lake by the base: not a place to stroll; a house's floor over it counts as enclosed)
+                if (d > Reach) { why[c] = WhyFar; continue; }
+                bool enclosed = !outside[c], wet = h[c] < water - 0.3f;
+                bool own = fenced ? enclosed : (d <= Open || village[c]); // (a room of its own village is in its strips: its floor is a piece)
+                if (own && !enclosed && wet) own = false; // (the sea or a lake by the base: not a place to stroll; a house's floor over it counts as enclosed)
                 inside[c] = own;
-                if (own) _cells.Add(c);
+                if (own) cells.Add(c);
+                else why[c] = fenced && !enclosed ? WhyFence : wet ? WhyWater : WhyOpen;
             }
-            _thingsMaking = true;
-            yield return MakeThings(pieces, inside);
-            _in = inside; _h = h; Fenced = fenced; Pieces = pieces.Count; Blockers = blockers; Banks = banks;
+            bool[] holds = new bool[n];
+            for (int c = 0; c < n; c++)
+            {
+                int x = c % _w, y = c / _w;
+                bool has = inside[c];
+                for (int dy = -1; dy <= 1 && !has; dy++) for (int dx = -1; dx <= 1 && !has; dx++) { int nx = x + dx, ny = y + dy; has = nx >= 0 && ny >= 0 && nx < _w && ny < _w && inside[nx + ny * _w]; }
+                holds[c] = has || (!fenced && village[c] && h[c] >= water - 0.3f && Utils.DistanceXZ(CellCentre(c), Centre) <= Reach);
+            }
+            yield return MakeThings(pieces, holds, pace);
+            pace.Stop();
+            if (gen != _gen) yield break; // (a newer making took its place)
+            _in = inside; _holds = holds; _why = why; _cells.Clear(); _cells.AddRange(cells); _h = h; _pieceWall = pw; _bank = bank;
+            Fenced = fenced; Pieces = pieces.Count; Blockers = walls; Banks = banks;
             MakeEdge(inside);
             Ready = true; Making = false; _madeAt = Time.time;
-            Npcs.Log("base at " + Mathf.RoundToInt(Centre.x) + "," + Mathf.RoundToInt(Centre.z) + ": " + Describe());
+            Npcs.Log("base at " + Mathf.RoundToInt(Centre.x) + "," + Mathf.RoundToInt(Centre.z) + ": " + (full ? "made whole" : "updated, box " + (cx1 - cx0 + 1) + "×" + (cy1 - cy0 + 1) + " m")
+                + " in " + pace.Ms() + " ms over " + pace.Frames + " frames (heights " + pace.Ms(0) + ", walls " + pace.Ms(1) + ", banks " + pace.Ms(2) + ", fill " + pace.Ms(3) + ", things " + pace.Ms(4) + "): " + Describe());
         }
 
-        private int _thingsCount = -1, _lookVersion = -1;
-        private IEnumerator MakeThings(List<Piece> pieces, bool[] inside)
+        private static void Join(int c, bool[] near, bool[] village, Queue<int> q) { if (near[c] && !village[c]) { village[c] = true; q.Enqueue(c); } }
+
+        // a piece near enough to the box to stand on a cell of it (its middle within TouchPad of it)
+        private bool Reaches(Vector3 p, int x0, int y0, int x1, int y1)
         {
+            float x = (p.x - Centre.x + Reach) / Cell, y = (p.z - Centre.z + Reach) / Cell, pad = TouchPad / Cell;
+            return x >= x0 - pad && x <= x1 + pad && y >= y0 - pad && y <= y1 + pad;
+        }
+
+        // a making's time: Budget ms of a frame at most, each step's own sum (NpcPerf and the log line)
+        private sealed class Pace
+        {
+            private readonly long _budget;
+            private long _frame, _from;
+            private int _id = -1, _phase, _keepId = -1, _keepPhase;
+            private readonly long[] _took = new long[5];
+            internal int Frames = 1;
+            internal Pace(float ms) { _budget = (long)(System.Diagnostics.Stopwatch.Frequency * ms / 1000.0); _frame = NpcPerf.Now(); }
+            internal void Phase(int phase, int id) { Stop(); _phase = phase; _id = id; _from = NpcPerf.Now(); }
+            internal void Stop() { if (_id < 0) return; _took[_phase] += NpcPerf.Now() - _from; NpcPerf.Add(_id, _from); _id = -1; }
+            internal bool Due { get { return NpcPerf.Now() - _frame > _budget; } }
+            internal void Yield() { _keepId = _id; _keepPhase = _phase; Stop(); Frames++; }
+            internal void Resumed() { _frame = NpcPerf.Now(); if (_keepId >= 0) Phase(_keepPhase, _keepId); _keepId = -1; }
+            internal string Ms(int phase) { return (_took[phase] * 1000.0 / System.Diagnostics.Stopwatch.Frequency).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture); }
+            internal string Ms() { long s = 0; foreach (long t in _took) s += t; return (s * 1000.0 / System.Diagnostics.Stopwatch.Frequency).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture); }
+        }
+
+        private int _lookVersion = -1;
+        private IEnumerator MakeThings(List<Piece> pieces, bool[] inside, Pace pace)
+        {
+            pace.Phase(4, PerfThings);
             int lookVersion = LocState.LookVersion;
             Dictionary<System.Type, List<Component>> things = new Dictionary<System.Type, List<Component>>();
             foreach (System.Type t in Kinds) things[t] = new List<Component>();
@@ -281,39 +498,38 @@ namespace HuginWhispers
             List<WearNTear> wears = new List<WearNTear>();
             List<Piece> tubs = new List<Piece>();
             int done = 0;
-            long perf = NpcPerf.Now();
             foreach (Piece pc in pieces)
             {
+                if ((++done & 15) == 0 && pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
                 if (pc == null) continue;
                 // A place of the story (its pieces carry its stamp) is not a home's things: it belongs to the base that stands in it (its own people's, a
                 // story person's: a settler's heart may stand just outside its no-build ring, and it is no one's bench, chest or thing to mend). What its
                 // state has not is nobody's. The story's own spots go past this (people: StoryLife)
                 ZNetView pnv = pc.GetComponent<ZNetView>();
                 Loc place = Blueprint.Copy(pnv) ? Locs.Get(pnv.GetZDO().GetString(LocParts.KOf, "")) : null;
-                if (place != null && (!place.Holds(Centre) || LocState.Absent(pnv))) { if (++done % 25 == 0) { NpcPerf.Add(PerfThings, perf); yield return null; perf = NpcPerf.Now(); } continue; }
-                WearNTear w = pc.GetComponent<WearNTear>();
-                if (w != null && place == null) wears.Add(w); // (mended whole by the story, never by a hammer: LocRepairPatch)
-                foreach (System.Type t in Kinds)
+                if (place != null && (!place.Holds(Centre) || LocState.Absent(pnv))) continue;
+                PieceKind kind = KindOf(pc);
+                if (kind.Wears && place == null) wears.Add(pc.GetComponent<WearNTear>()); // (mended whole by the story, never by a hammer: LocRepairPatch)
+                for (int i = 0; kind.Mask != 0 && i < Kinds.Length; i++)
                 {
+                    if ((kind.Mask & (1 << i)) == 0) continue;
+                    System.Type t = Kinds[i];
                     if (place != null && place.Keeps(t)) continue;
                     Component c = pc.GetComponentInChildren(t);
                     if (c == null) continue;
                     bool rounds = System.Array.IndexOf(RoundKinds, t) >= 0;
-                    if (t == typeof(Chair)) { foreach (Chair ch in pc.GetComponentsInChildren<Chair>()) { if (ch.m_inShip) continue; round[t].Add(ch); if (In(inside, ch.transform.position)) things[t].Add(ch); } continue; } // heavy: once a snapshot, a piece with a seat only
+                    if (t == typeof(Chair)) { foreach (Chair ch in pc.GetComponentsInChildren<Chair>()) { if (ch.m_inShip) continue; round[t].Add(ch); if (In(inside, ch.transform.position)) things[t].Add(ch); } continue; } // heavy: once a making, a piece with a seat only
                     if (rounds) round[t].Add(c);
                     if (In(inside, c.transform.position)) things[t].Add(c);
                 }
-                if (In(inside, pc.transform.position))
+                if ((kind.Table || kind.Wet) && In(inside, pc.transform.position))
                 {
-                    if (Utils.GetPrefabName(pc.gameObject).ToLowerInvariant().Contains("table") && pc.GetComponentInChildren<CraftingStation>() == null && pc.GetComponentInChildren<MapTable>() == null) tables.Add(pc.transform); // (piece_table, _round, _oak — and other mods' tables; not a workbench, a prep table, a map table)
-                    bool wet; string kind = pc.m_name ?? "";
-                    if (!WetKinds.TryGetValue(kind, out wet)) { wet = pc.GetComponentInChildren<WaterVolume>() != null; WetKinds[kind] = wet; }
-                    if (wet) tubs.Add(pc);
+                    if (kind.Table) tables.Add(pc.transform);
+                    if (kind.Wet) tubs.Add(pc);
                 }
-                if (++done % 25 == 0) { NpcPerf.Add(PerfThings, perf); yield return null; perf = NpcPerf.Now(); } // (a few pieces a frame)
             }
-            NpcPerf.Add(PerfThings, perf);
-            _things = things; _round = round; _tables = tables; _wears = wears; _tubs = tubs; _thingsCount = pieces.Count; _thingsMaking = false; _lookVersion = lookVersion;
+            pace.Stop();
+            _things = things; _round = round; _tables = tables; _wears = wears; _tubs = tubs; _lookVersion = lookVersion;
         }
 
         // inside by a map being made (the cells), or — none yet — round the centre
@@ -359,15 +575,30 @@ namespace HuginWhispers
             return low;
         }
 
-        // something built over this cell at about the bank's top (a bridge, a dock, a floor): looked for from just above
-        // the bank's top down to the land, so a roof high over it does not count
+        // something built over this cell (a bridge, a dock, a floor on stilts): a flat piece's top, up to a storey over the bank's top. A roof is
+        // not flat, so one over it does not count (the ray only from just over the bank's top missed a floor higher than that: a house on a
+        // slope was a bank under it, 2026-11-08)
         private static readonly int Decks = LayerMask.GetMask("piece");
+        private const float Storey = 3.5f, FlatFloor = 0.9f;
+        private static readonly RaycastHit[] Rays = new RaycastHit[8];
         private bool Bridged(int c, float ground, float top)
         {
             Vector3 mid = CellCentre(c);
-            float from = top + 1.2f;
-            RaycastHit hit;
-            return Physics.Raycast(new Vector3(mid.x, from, mid.z), Vector3.down, out hit, from - ground + 0.2f, Decks, QueryTriggerInteraction.Ignore) && hit.point.y > ground + 0.4f;
+            float from = top + Storey;
+            int got = Physics.RaycastNonAlloc(new Vector3(mid.x, from, mid.z), Vector3.down, Rays, from - ground + 0.2f, Decks, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < got; i++) if (Rays[i].normal.y >= FlatFloor && Rays[i].point.y > ground + 0.4f) return true;
+            return false;
+        }
+
+        // the floor a piece stands on: a flat piece's top just under it, no higher than a storey over the land (a house on stilts); else the land
+        private float Floor(Bounds b, float ground)
+        {
+            if (b.min.y - ground > Storey + 0.5f) return ground; // (an upper storey: not the base's ground)
+            float from = b.min.y + 0.3f;
+            int got = Physics.RaycastNonAlloc(new Vector3(b.center.x, from, b.center.z), Vector3.down, Rays, from - ground + 0.2f, Decks, QueryTriggerInteraction.Ignore);
+            float best = ground;
+            for (int i = 0; i < got; i++) if (Rays[i].normal.y >= FlatFloor && Rays[i].point.y > best && Rays[i].point.y <= b.min.y + 0.3f) best = Rays[i].point.y;
+            return best;
         }
 
         // ---------------------------------------------------------------- showing it (the menu's «Межі бази»)
@@ -403,7 +634,6 @@ namespace HuginWhispers
             Plugin.Instance.StartCoroutine(HideLater(seconds));
         }
 
-        private bool Own(int x, int y) { return x >= 0 && y >= 0 && x < _w && y < _w && _in[x + y * _w]; }
 
         private IEnumerator HideLater(float seconds) { GameObject was = _shown; yield return new WaitForSeconds(seconds); if (_shown == was) Hide(); }
 
@@ -421,26 +651,30 @@ namespace HuginWhispers
         // ground and taller than a step (not a floor, a roof, a table)
         private bool Edge(Piece pc, float[] h)
         {
-            if (pc.GetComponent<WearNTear>() == null) return false;
-            if (pc.GetComponent<Door>() != null) return true;
+            PieceKind k = KindOf(pc);
+            if (!k.Wears) return false;
+            pc.GetComponentsInChildren(Cols); // heavy: once a making, a piece in the box only (Rasterise reads the same list after: a door too)
+            if ((k.Mask & DoorBit) != 0) return true;
+            if (k.Mask != 0 || k.Heart) return false; // (a thing to use — a bed, a chest, a workbench, a fire — is no wall: a bed with a tall head was one, its own cell out of the base, the user 2026-11-08; nor the heart: its home's own cell was on the edge)
             if (pc.m_name != null && pc.m_name.IndexOf("stair", StringComparison.OrdinalIgnoreCase) >= 0) return false; // (stairs are walked on, not a wall)
-            foreach (Collider c in pc.GetComponentsInChildren<Collider>())
+            foreach (Collider c in Cols)
             {
                 if (c == null || c.isTrigger) continue;
                 Bounds b = c.bounds;
                 if (b.size.y < 1f) continue;
                 int at = Index(b.center);
                 float ground = at >= 0 ? h[at] : b.min.y; // (the heights already found: no ray of its own)
-                if (b.min.y <= ground + 1f) return true;
+                if (b.min.y <= ground + 1f || b.min.y <= Floor(b, ground) + 1f) return true; // (on the land, or on the ground storey's floor: a house on stilts)
             }
             return false;
         }
 
         // the cells it stands on: a cell-sized box at the cell, as tall as the piece, touching this collider (works for
-        // every collider kind, a slanted wall marks only its own cells)
-        private void Rasterise(bool[] wall, Piece pc)
+        // every collider kind, a slanted wall marks only its own cells); only the cells of the box x0..x1, y0..y1 (an update: the changed box)
+        private static readonly List<Collider> Cols = new List<Collider>(); // (the piece Edge just looked at: Rasterise is asked right after it)
+        private void Rasterise(bool[] wall, Piece pc, int bx0, int by0, int bx1, int by1)
         {
-            foreach (Collider c in pc.GetComponentsInChildren<Collider>())
+            foreach (Collider c in Cols)
             {
                 if (c == null || c.isTrigger) continue;
                 Bounds b = c.bounds;
@@ -449,8 +683,8 @@ namespace HuginWhispers
                 Vector3 half = new Vector3(Cell * 0.45f, Mathf.Max(0.25f, b.extents.y), Cell * 0.45f);
                 int x0 = Mathf.FloorToInt((b.min.x - Centre.x + Reach) / Cell), x1 = Mathf.CeilToInt((b.max.x - Centre.x + Reach) / Cell);
                 int y0 = Mathf.FloorToInt((b.min.z - Centre.z + Reach) / Cell), y1 = Mathf.CeilToInt((b.max.z - Centre.z + Reach) / Cell);
-                for (int y = Mathf.Max(0, y0); y <= Mathf.Min(_w - 1, y1); y++)
-                    for (int x = Mathf.Max(0, x0); x <= Mathf.Min(_w - 1, x1); x++)
+                for (int y = Mathf.Max(by0, y0); y <= Mathf.Min(by1, y1); y++)
+                    for (int x = Mathf.Max(bx0, x0); x <= Mathf.Min(bx1, x1); x++)
                     {
                         int i = x + y * _w;
                         if (wall[i]) continue;
@@ -477,6 +711,8 @@ namespace HuginWhispers
 
         private Vector3 CellCentre(int i) { return new Vector3(Centre.x - Reach + (i % _w) * Cell, Centre.y, Centre.z - Reach + (i / _w) * Cell); }
 
+        private static float WaterLevel { get { return ZoneSystem.instance != null ? ZoneSystem.instance.m_waterLevel : -1000f; } }
+
         // under water: the land lower than the sea (a little margin for the shore)
         private static bool Wet(Vector3 p)
         {
@@ -489,6 +725,39 @@ namespace HuginWhispers
         {
             if (ZoneSystem.instance != null) p.y = ZoneSystem.instance.GetGroundHeight(p);
             return p;
+        }
+    }
+
+    // what marks a base changed (NpcBase.Touched, LandTouched): a piece coming in or going (built, taken down, loaded, let go — on every game),
+    // the land's heights made again (a hoe). Only a look at the few bases there are: a zone loading in calls these a few thousand times
+    [HarmonyLib.HarmonyPatch(typeof(Piece), "Awake")]
+    internal static class NpcBasePieceIn
+    {
+        private static void Postfix(Piece __instance)
+        {
+            try { if (!ZNetView.m_forceDisableInit) NpcBase.Touched(__instance.transform.position, NpcBase.TouchPad); } // (the hammer's ghost is made so: not a piece)
+            catch (System.Exception e) { PatchGuard.Fail("NpcBasePieceIn", e); }
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(Piece), "OnDestroy")]
+    internal static class NpcBasePieceOut
+    {
+        private static readonly int Ghost = LayerMask.NameToLayer("ghost");
+        private static void Prefix(Piece __instance)
+        {
+            try { if (__instance.gameObject.layer != Ghost) NpcBase.Touched(__instance.transform.position, NpcBase.TouchPad); } // (the hammer's ghost, let go)
+            catch (System.Exception e) { PatchGuard.Fail("NpcBasePieceOut", e); }
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(Heightmap), "Poke")]
+    internal static class NpcBaseLand
+    {
+        private static void Postfix(Heightmap __instance, bool paintOnly)
+        {
+            try { if (!paintOnly) NpcBase.LandTouched(__instance.transform.position, __instance.m_width * __instance.m_scale * 0.5f); }
+            catch (System.Exception e) { PatchGuard.Fail("NpcBaseLand", e); }
         }
     }
 }

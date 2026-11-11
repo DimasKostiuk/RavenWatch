@@ -13,9 +13,12 @@ namespace HuginWhispers
     //   or none     now and then its hands just hang: Free is a choice too
     // A seat's and the ground's are other clips: the hips half a metre lower, the knees elsewhere (measured: raven npc gait).
     // A new pose is a line of Poses, its three clips a clip's parts («<clip>.in|loop|out», assets/story/clips). A clip not there is passed over.
-    // Only a resident, at its ease (a whim's stay, its day: never an order, a fight, a scene, a job), standing still or seated, its hands free
-    // (a weapon in them: not its pose to take). What takes its place: anything — a gesture, a scene, a clip of a place's; it walks off: the
-    // core lets the loop go (NpcBody.LoopOff). The motor goes on over a pose (NpcGait: its top half only, NpcBody.InPose).
+    // Only a resident, at its ease (a whim's stay, its day: never an order, a fight, a scene, a job — save a guard standing its watch), standing still or seated,
+    // never on its guard (NpcAlert: a fight, a fright, just fought — then the game's own ready stance). What is in its hands picks the poses (Pose.Hands,
+    // NpcGear.HandsOf: free, or the game's stance for its weapon — onehanded, onehanded+shield, knives, greatsword, atgeir, bow…): a guard on duty keeps its weapon out (NpcGear.InHand) and stands at its ease with it — a pose made
+    // for a weapon in hand (the user 2026-11-08: «зброя завжди напоготові, просто поза спокійна»); none made yet for what it holds: the game's stance.
+    // Its hands change under a pose (a weapon drawn or put away): that pose is over. What takes its place: anything — a gesture, a scene, a clip of a
+    // place's; it walks off: the core lets the loop go (NpcBody.LoopOff). The motor goes on over a pose (NpcGait: its top half only, NpcBody.InPose).
     // Only while a player sees it (NpcClock.Seen): a pose is the dearest of what its bones do (hand targets each frame), and nobody far sees it.
     // Where it is run (NpcActor.Ticks): a look every LookEvery s a person, a few compares; a choice once in HoldMin…HoldMax s; a clip's own word
     // to the ZDO only as it changes. Session only: a reload or a new owner picks anew (the clip's term ends what was on).
@@ -29,6 +32,7 @@ namespace HuginWhispers
         {
             public string Id = "";
             public bool Stand, Chair, Ground;
+            public string Hands = NpcGear.HandsFree; // what its hands hold in it (NpcGear.HandsOf): a pose with a weapon says which
             public string InPart = "in", OutPart = "out"; // (an older clip's own names of its parts)
             public string In { get { return Id + "." + InPart; } }
             public string Loop { get { return Id + ".loop"; } }
@@ -48,7 +52,13 @@ namespace HuginWhispers
             new Pose { Id = "sit_hands", Chair = true, Old = 0.4f },
             new Pose { Id = "ground_back", Ground = true, Fire = 0.3f },
             new Pose { Id = "ground_knee", Ground = true, Tired = 1.2f, Fire = 0.3f },
+            // a weapon in hand (a guard on duty, the user 2026-11-08): the ones carried on the shoulder, over the game's stance for them. The others stand as with a sword
+            // at their ease (NpcGear.Stance: the game's own calm stance), the game's stance of a sword, a sword and shield, a bow, a spear is calm already: none needed; the atgeir is carried on the shoulder (NpcGear.Carry)
+            new Pose { Id = "guard_greatsword_rest", Stand = true, Hands = "greatsword" },
+            new Pose { Id = "guard_club2h_rest", Stand = true, Hands = "twohandedclub" },
+
         };
+        internal static float ArmedStill = 0.5f, ArmedHoldMin = 120f, ArmedHoldMax = 300f; // (a weapon in hand: its calm pose at once, held long — the game's ready stance only on its guard)
 
         private sealed class State { public float Next, Still, StageAt, Until; public Pose On; public int Stage; }
         private static readonly Dictionary<NpcActor, State> States = new Dictionary<NpcActor, State>(); // session: off when it goes (Forget)
@@ -56,21 +66,16 @@ namespace HuginWhispers
 
         private static float H(uint seed, string id) { uint h = seed ^ (uint)id.GetStableHashCode(); h ^= h >> 15; h *= 0x2c1b3c6du; h ^= h >> 12; return (h & 0xFFFFu) / 65535f; }
 
-        // its hands are its own: nothing in them
-        private static bool HandsFree(NpcActor a)
-        {
-            Humanoid h = a.GetComponent<Character>() as Humanoid;
-            return h != null && !NpcGear.InHand(a) && (h.m_unarmedWeapon == null || h.GetCurrentWeapon() == h.m_unarmedWeapon.m_itemData); // (a guard keeps its weapons in hand; anyone else has them on its back at its ease: NpcGear.AtEase)
-        }
-
         private static bool May(NpcActor a, out Where where)
         {
             where = Where.Stand;
             NpcMind m = a.Mind;
             NpcBody b = a.Body;
-            if (m == null || b == null || !NpcClock.Seen(a) || !NpcResident.Is(a) || m.Asleep || m.NowLayer > NpcMind.Layer.Whim || m.NowLayer == NpcMind.Layer.Job || !b.ClipFree || !HandsFree(a)) return false;
+            if (m == null || b == null || !NpcClock.Seen(a) || !NpcResident.Is(a) || m.Asleep || m.NowLayer > NpcMind.Layer.Whim || !b.ClipFree || NpcAlert.On(a)) return false;
+            bool watch = m.NowLayer == NpcMind.Layer.Job && Guard.Hired(a); // (a guard at its post or a stop of its rounds: its watch is standing at its ease)
+            if (m.NowLayer == NpcMind.Layer.Job && !watch) return false;
             if (m.SeatedNow && m.Now == NpcMind.Task.Sit) { where = b.HeldGesture == "sit" ? Where.Ground : Where.Chair; return b.SeatsNow; }
-            if (m.Now != NpcMind.Task.Idle || b.HeldGesture.Length > 0) return false;
+            if ((m.Now != NpcMind.Task.Idle && !(watch && m.Now == NpcMind.Task.Work)) || b.HeldGesture.Length > 0) return false;
             Character c = a.GetComponent<Character>();
             return c != null && c.GetVelocity().magnitude < 0.2f && c.IsOnGround();
         }
@@ -86,7 +91,8 @@ namespace HuginWhispers
             Where where;
             if (!May(a, out where)) { s.Still = 0f; return; }
             if (s.Still <= 0f) s.Still = Time.time;
-            if (Time.time < s.Next || Time.time - s.Still < StillFor) return;
+            bool armed = NpcGear.HandsOf(a) != NpcGear.HandsFree;
+            if ((!armed && Time.time < s.Next) || Time.time - s.Still < (armed ? ArmedStill : StillFor)) return;
             s.Next = Time.time + Random.Range(GapMin, GapMax);
             Pose p = Pick(a, where);
             if (p == null || BodyClips.Find(p.In) == null || BodyClips.Find(p.Loop) == null || BodyClips.Find(p.Out) == null) return; // (hands just hang a while; a clip not made: passed over)
@@ -94,7 +100,7 @@ namespace HuginWhispers
             if (!a.Body.Clip(p.In, c.Length + 2f)) return;
             a.Body.PoseWord(true);
             s.On = p; s.Stage = 1; s.StageAt = Time.time + c.Length;
-            s.Until = Time.time + c.Length + Random.Range(HoldMin, HoldMax);
+            s.Until = Time.time + c.Length + (armed ? Random.Range(ArmedHoldMin, ArmedHoldMax) : Random.Range(HoldMin, HoldMax));
             Npcs.Log(a.Who + ": stands «" + p.Id + "»");
         }
 
@@ -108,9 +114,9 @@ namespace HuginWhispers
             bool ours = now == p.In || now == p.Loop || now == p.Out;
             if (!ours || !a.Body.ClipBusy) { Over(a, s); return; }
             Where where;
-            if (s.Stage < 3 && !May(a, out where))
+            if (s.Stage < 3 && (!May(a, out where) || NpcGear.HandsOf(a) != p.Hands)) // (its hands changed under it: a weapon drawn or put away)
             {
-                if (a.Mind == null || a.Mind.NowLayer <= NpcMind.Layer.Whim) a.Body.Clip("");
+                if (a.Mind == null || a.Mind.NowLayer <= NpcMind.Layer.Whim || NpcAlert.On(a)) a.Body.Clip(""); // (on its guard: its own pose off at once — the fight's stance)
                 Over(a, s);
                 return;
             }
@@ -139,18 +145,19 @@ namespace HuginWhispers
             NpcGait g = a.GetComponent<NpcGait>();
             float cold = g != null ? g.Wished("cold") : 0f, tired = NpcToil.Tired(a) / 100f;
             bool fire = NpcPlaces.VisitKind(a) == "fire";
-            float sum = Free, roll;
+            string hands = NpcGear.HandsOf(a);
+            float free = hands == NpcGear.HandsFree ? Free : 0f, sum = free, roll; // (a weapon in hand: never the game's ready stance for a while — its own calm one)
             List<KeyValuePair<Pose, float>> can = new List<KeyValuePair<Pose, float>>();
             foreach (Pose p in Poses)
             {
-                if (!(where == Where.Stand ? p.Stand : where == Where.Chair ? p.Chair : p.Ground)) continue;
+                if (!(where == Where.Stand ? p.Stand : where == Where.Chair ? p.Chair : p.Ground) || p.Hands != hands) continue;
                 if (p.OnlyCold && cold < 0.5f) continue;
                 float v = 0.2f + H(seed, p.Id) * 1.2f + (old ? p.Old : 0f) + w.Bravery * p.Brave + (1f - w.Chatty) * p.Quiet + (morning ? p.Morning : 0f) + cold * p.Cold + (tired > 0.6f ? p.Tired : 0f) + (fire ? p.Fire : 0f);
                 v *= NpcNature.Pose(w.Nature, p.Id); // (its nature: NpcNature)
                 can.Add(new KeyValuePair<Pose, float>(p, v));
                 sum += v;
             }
-            roll = Random.value * sum - Free;
+            roll = Random.value * sum - free;
             foreach (KeyValuePair<Pose, float> c in can) { if (roll < 0f) return null; roll -= c.Value; if (roll < 0f) return c.Key; }
             return null;
         }

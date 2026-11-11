@@ -14,14 +14,12 @@ namespace HuginWhispers
     // Jotunn (when installed) shows the settings of the mods that name it in its in-game menu (Esc → Моди): only
     // named, never needed (the ravens fly on a plain game too)
     [BepInDependency("com.jotunn.jotunn", BepInDependency.DependencyFlags.SoftDependency)]
-    // SeneaL UI (when installed) loads first, so its own «take all» can be patched (SeneaLTakeAllPatch)
-    [BepInDependency("seneaL.valheim.ui", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "ko4erga.ravenwatch";
         public const string Name = "RavenWatch";
 #if RAVEN_ITEM
-        public const string Version = "2.9.0";
+        public const string Version = "2.9.4";
 #else
         public const string Version = "1.1.8";
 #endif
@@ -281,10 +279,6 @@ namespace HuginWhispers
             HFloat(sec, "Words in passing pause minutes", 10f, "The same two players: a word in passing at most this often, and not this soon after a talk of their ravens.", v => PassTalk.PairMinutes = Mathf.Max(0f, v));
             HFloat(sec, "Talks with other players ravens pause minutes", 6f, "At least this long between two such talks your ravens are in (after a boss: half).", v => CrossTalk.GapMinutes = Mathf.Max(1f, v));
             Float(sec, "Own lines per 10 minutes", 4f, "How many own lines both ravens may say in 10 minutes (a talk counts as one; events may go 2 over). What answers your own doing (gifts, thought, feeding) is never held back.", v => Director.PerTenMinutes = Mathf.Max(1, Mathf.RoundToInt(v)));
-            SeneaLShoulders.Wanted = Config.Bind(sec, "SeneaL UI shoulder cells", true, "With SeneaL UI: two round shoulder cells on the head cell of its doll (Munin left, Hugin right), and a raven on the shoulder leaves the bag. Off, or without SeneaL UI: the ravens on the shoulders stay in the bag with the worn frame.").Value;
-            HFloat(sec, "SeneaL UI shoulder cell size", 30f, 28f, "Size of those cells in pixels (SeneaL UI's cell is 64).", v => SeneaLShoulders.Size = Mathf.Clamp(v, 16f, 40f));
-            HFloat(sec, "SeneaL UI shoulder cell out", -10f, 2f, "How far the centre of each cell lies past the head cell's side, pixels (negative: inside it).", v => SeneaLShoulders.OutX = Mathf.Clamp(v, -30f, 30f));
-            HFloat(sec, "SeneaL UI shoulder cell down", 2f, 4f, "How far the centre lies below the head cell's bottom edge, pixels (negative: above it).", v => SeneaLShoulders.DownY = Mathf.Clamp(v, -30f, 30f));
             Use(Hide(sec, "Small passives", true, "Munin's anger and Hugin's light step: small passives every awake raven has from the first level of trust."), v => WeakPassive.Enabled = v);
             HFloat(sec, "Small passives cost", 10f, "Strength a small passive takes when it starts.", v => WeakPassive.Cost = v);
             HFloat(sec, "Small passives cooldown minutes", 30f, "How often a small passive can start at most.", v => WeakPassive.CooldownMinutes = v);
@@ -1654,7 +1648,6 @@ namespace HuginWhispers
             if (Plugin.Instance != null) Plugin.Instance.ResetSession();
             Plugin.RegisterRpcs();
 #if RAVEN_ITEM
-            SeneaL.Patch();
             PovMonoliths.Patch();
 #endif
         }

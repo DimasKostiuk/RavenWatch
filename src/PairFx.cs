@@ -35,7 +35,6 @@ namespace HuginWhispers
             foreach (SkyLook s in Skies.Values) if (s != null) Object.Destroy(s.gameObject);
             foreach (WhirlLook w in Whirls.Values) if (w != null) Object.Destroy(w.gameObject);
             Loads.Clear(); Skies.Clear(); Whirls.Clear();
-            SoundOf.Clear(); // (a new world: the game's objects looked up again)
         }
 
         // twice a second: who near has which of them on
@@ -91,49 +90,13 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- sounds
-        // The first of these the game has, played here, slower by stretch and at this share of its loudness. Played by
-        // an audio source of our own with the game's clip and its mixer group (the effects' volume): the game's own sound
-        // object spawned this way stayed silent.
-        private static readonly Dictionary<string, AudioSource> SoundOf = new Dictionary<string, AudioSource>(); // name → the game's source (its clips beside it in ZSFX)
-        internal static void Sound(string[] names, Vector3 at, float stretch, float volume)
+        // A sound of the catalogue (assets/story/sounds/gifts.txt: which game sounds, how loud), played here through the audio core,
+        // as part of the world: slower by stretch, at this share of its loudness, heard at least 30 m.
+        internal static void Sound(string name, Vector3 at, float stretch, float volume)
         {
-            foreach (string n in names)
-            {
-                AudioSource src;
-                if (!SoundOf.TryGetValue(n, out src))
-                {
-                    GameObject prefab = RavenFx.Prefab(n);
-                    src = prefab != null ? prefab.GetComponentInChildren<AudioSource>(true) : null;
-                    SoundOf[n] = src;
-                }
-                if (src == null) continue;
-                ZSFX z = src.GetComponent<ZSFX>();
-                AudioClip clip = z != null && z.m_audioClips != null && z.m_audioClips.Length > 0 ? z.m_audioClips[Random.Range(0, z.m_audioClips.Length)] : src.clip;
-                if (clip == null) continue;
-                if (clip.loadState == AudioDataLoadState.Unloaded) clip.LoadAudioData();
-                float baseVol = z != null ? Random.Range(z.m_minVol, z.m_maxVol) : src.volume;
-                float basePitch = z != null ? Random.Range(z.m_minPitch, z.m_maxPitch) : src.pitch;
-                GameObject go = new GameObject("RavenWatch_Sound " + n);
-                go.transform.position = at;
-                AudioSource a = go.AddComponent<AudioSource>();
-                a.clip = clip;
-                a.outputAudioMixerGroup = src.outputAudioMixerGroup;
-                a.spatialBlend = src.spatialBlend; a.rolloffMode = src.rolloffMode;
-                a.minDistance = src.minDistance; a.maxDistance = Mathf.Max(src.maxDistance, 30f);
-                a.dopplerLevel = 0f;
-                a.pitch = Mathf.Max(0.1f, basePitch) / Mathf.Max(0.1f, stretch);
-                a.volume = Mathf.Clamp01(Mathf.Max(0.05f, baseVol) * volume);
-                a.Play();
-                Object.Destroy(go, clip.length * Mathf.Max(1f, stretch) / Mathf.Max(0.1f, basePitch) + 0.5f);
-                return;
-            }
+            Audio.Sound(name, at, new SoundAsk { World = true, Stretch = stretch, Volume = volume, Reach = 30f, Owner = Audio.Gift });
         }
-        internal static readonly string[] HeavyFlap = { "sfx_dragon_flap", "sfx_raven_flap" };
-        internal static readonly string[] Creak = { "sfx_door_open", "sfx_door_close" };
-        internal static readonly string[] Cry = { "sfx_raven_kaw" };
-        internal static readonly string[] Gust = { "sfx_frozenking_charge_whoosh", WingsFx.Sound };
-        internal static readonly string[] Thunder = { "sfx_thunder", "sfx_lightning_hit", "sfx_frozenking_charge_whoosh" }; // (the last, stretched low: a far rumble)
-        internal static readonly string[] Whoosh = { "sfx_claw_swing", "sfx_sword_swing" };
+        internal const string HeavyFlap = "pair_flap", Creak = "pair_creak", Cry = "pair_cry", Gust = "pair_gust", Thunder = "pair_thunder", Whoosh = "pair_whoosh";
 
         internal static void Whistle(Vector3 at) { Sound(Whoosh, at, 1.15f, 0.55f); }
 

@@ -12,7 +12,10 @@ namespace HuginWhispers
     // their names and their chat over their heads — so nobody can walk into the shot and spoil it. Only the personal
     // prologue's scenes say it (other scenes keep their own rules). Only drawn: they are there for the world, the scene still
     // stops on a blow as any scene does. When it ends or stops, everything put out is put back.
-    // Twice a second while such a scene plays (new players, new gear), the other players' renderers only.
+    // Only while the scene's camera holds a shot (StoryCamera.Active, not on its way back): the shot is what it keeps clean. A raven
+    // circling over you with a line (raven_nudge, house_call: no shot) hides nobody — the user 2026-11-08 saw a friend vanish as they
+    // walked out of the Hall, his own nudge had begun under the sky. Its camera leaving: they are back.
+    // Twice a second while such a shot holds (new players, new gear), the other players' renderers only.
     internal static class StoryAlone
     {
         private static readonly List<Renderer> _off = new List<Renderer>();
@@ -24,16 +27,25 @@ namespace HuginWhispers
 
         internal static void End()
         {
-            if (!_on) return;
             _on = false;
+            Show();
+        }
+
+        private static void Show()
+        {
             foreach (Renderer r in _off) if (r != null) r.enabled = true;
             _off.Clear();
         }
 
-        // from StoryScenes.Tick, every frame while it plays (the look itself: twice a second)
+        // the others put out now: such a scene, and its shot holds (their bodies, ravens, names, chat — one answer for all)
+        private static bool Hiding { get { return _on && StoryCamera.Active && !StoryCamera.Leaving; } }
+
+        // from StoryScenes.Tick, every frame while it plays (the look itself: twice a second; the shot begun or ended: at once)
         internal static void Tick()
         {
-            if (!_on || Time.time < _next) return;
+            if (!_on) return;
+            if (!Hiding) { if (_off.Count > 0) Show(); _next = 0f; return; }
+            if (Time.time < _next) return;
             _next = Time.time + 0.5f;
             Player me = Player.m_localPlayer;
             foreach (Player o in Player.GetAllPlayers())
@@ -47,7 +59,7 @@ namespace HuginWhispers
         private static void Hide(GameObject g)
         {
             if (g == null) return;
-            foreach (Renderer r in g.GetComponentsInChildren<Renderer>(true)) // heavy: twice a second, only while a scene of one's own plays, the other players and their ravens only
+            foreach (Renderer r in g.GetComponentsInChildren<Renderer>(true)) // heavy: twice a second, only while a shot of a scene of one's own holds, the other players and their ravens only
                 if (r.enabled) { r.enabled = false; _off.Add(r); }
         }
 
@@ -56,7 +68,7 @@ namespace HuginWhispers
         private static FieldInfo _talker, _textGui;
         internal static void Words(Chat chat)
         {
-            if (!_on || FTexts == null || ZNet.instance == null) return;
+            if (!Hiding || FTexts == null || ZNet.instance == null) return;
             IList texts = FTexts.GetValue(chat) as IList;
             if (texts == null) return;
             long me = ZNet.GetUID();
@@ -75,7 +87,7 @@ namespace HuginWhispers
         private static FieldInfo _gui;
         internal static void Names(EnemyHud hud)
         {
-            if (!_on || FHuds == null) return;
+            if (!Hiding || FHuds == null) return;
             IDictionary huds = FHuds.GetValue(hud) as IDictionary;
             if (huds == null) return;
             Player me = Player.m_localPlayer;

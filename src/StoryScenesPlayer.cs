@@ -37,7 +37,7 @@ namespace HuginWhispers
                 { "look", new StepVerb(StepSeen.Own) { Min = 1, PlaceAt = 2, PlaceNot = new[] { "forward" }, Begin = PlayerLook, Setup = PlayerLook } },
                 { "gait", new StepVerb(StepSeen.Own) { Min = 1, Begin = PlayerGait, Setup = PlayerGait, Busy = (p, st) => false } },
                 { "pace", new StepVerb(StepSeen.Own) { Min = 1, Begin = (p, st) => StoryWalk.Pace(st.W[2]), Busy = (p, st) => false } },
-                { "stop", new StepVerb(StepSeen.Own) { Begin = (p, st) => StoryWalk.Halt(st.W.Length > 2 ? F(st.W[2], 0.8f) : 0.8f), Busy = (p, st) => StoryWalk.Halting } },
+                { "stop", new StepVerb(StepSeen.Own) { Begin = (p, st) => StoryWalk.Halt(st.W.Length > 2 ? F(st.W[2], 0.8f) : 0.8f), Busy = (p, st) => StoryWalk.Halting, Done = (p, st) => StoryWalk.Outcome } },
                 { "emote", new StepVerb(StepSeen.Own) { Min = 1,
                     Begin = (p, st) =>
                     {
@@ -52,14 +52,16 @@ namespace HuginWhispers
                         PAnimClip c = BodyClips.Find(st.W[2]);
                         if (c == null || !Gestures.Scene(p, st.W[2], PoseFade)) { Note("player clip: нема кліпу «" + st.W[2] + "» — крок пропущено"); return; }
                         if (!c.Loop && Array.IndexOf(st.W, "nowait") < 0) Hold(c.Length);
-                    } } },
+                    },
+                    Done = (p, st) => st.W[2] == "none" ? null : ClipOn(p, st.W[2]) } },
                 { "mark", new StepVerb(StepSeen.Own) { Min = 1,
                     Begin = (p, st) =>
                     {
                         if (!MarkAhead(p, st.W[2])) { if (MarkTime(p, st.W[2]) < 0f) Note("player mark: у кліпі на гравці нема мітки «" + st.W[2] + "» — крок пропущено"); return; } // (already passed, a step before it took long: nothing to wait for)
                         Hold(st.W.Length > 3 ? F(st.W[3], 30f) : 30f);
                     },
-                    Busy = (p, st) => Time.time < _waitFor && MarkAhead(p, st.W[2]) } },
+                    Busy = (p, st) => Time.time < _waitFor && MarkAhead(p, st.W[2]),
+                    Done = (p, st) => MarkSaid(p, st.W[2]) } },
                 { "go", new StepVerb(StepSeen.Own) { Min = 2, PlaceAt = 2,
                     Begin = (p, st) =>
                     {
@@ -77,15 +79,18 @@ namespace HuginWhispers
                         StoryWalk.Put(p, to, way); // (on the floor under the spot: in a building, not the land beneath it)
                     },
                     Busy = (p, st) => StoryWalk.On && Array.IndexOf(st.W, "nowait") < 0,
-                    Late = st => StoryWalk.Stop() } },
+                    Late = st => StoryWalk.Stop(),
+                    Done = (p, st) => StoryWalk.Outcome } },
                 { "back", new StepVerb(StepSeen.Own) { Min = 1,
                     Begin = (p, st) => { StoryWalk.Back(p, F(st.W[2], 1.2f)); WalkClock(); },
                     Busy = (p, st) => StoryWalk.On && Array.IndexOf(st.W, "nowait") < 0,
-                    Late = st => StoryWalk.Stop() } },
+                    Late = st => StoryWalk.Stop(),
+                    Done = (p, st) => StoryWalk.Outcome } },
                 { "arrive", new StepVerb(StepSeen.Own) { // (its waiting: Busy; [м] — till only that much of the walk is left)
                     Begin = (p, st) => WalkClock(),
                     Busy = (p, st) => StoryWalk.On && StoryWalk.Left(p) > (st.W.Length > 3 ? F(st.W[3], 0f) : 0f),
-                    Late = st => { if (st.W.Length <= 3) StoryWalk.Stop(); } } },
+                    Late = st => { if (st.W.Length <= 3) StoryWalk.Stop(); },
+                    Done = (p, st) => StoryWalk.On ? "still walking, " + F(StoryWalk.Left(p)) + " m left" : StoryWalk.Outcome } },
             } };
         }
 
