@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace HuginWhispers
@@ -41,6 +42,14 @@ namespace HuginWhispers
     // 2026-11-10, review 2: a weaker model took a take a guess, four takes a change). Nothing here is hidden or loosened because a clip the
     // user accepted trips it (the user 2026-11-10: what he accepted may be wrong, the point is to find it): a limit moves only by what a
     // body can do, or by the user's word over a frame; tools/anim.js approved lists what fires on accepted clips for him to judge.
+    // Fold: those lines for a reader, one line an event (fall_back 2026-11-11: 18 lines for 10 events, six of them both hands flying once,
+    // and a weaker model set to mend each line): a jerk the flight of its own limb made is a tail of that flight's line («(+ jerks with it:
+    // LeftArm 4616, … deg/s at 0.64–0.68 s)»: an arm's bone under that hand's flight, a leg's under that foot's — a bone of another limb
+    // stays a line a reader can doubt), lines of one rule with one explanation near in time (a left and a right limb: FoldNear, FoldJerk)
+    // are one line naming each with its number, every «fix:» kept under it once, the lines by the time of the event; in a scene no event
+    // goes across a step's edge. The stage and a scene both say their VERDICT through it; the lines as measured, a line a rule and a
+    // bone, stay in their full reports (nothing is dropped, only said once).
+    // Subject: a line's tag and what it is about, for a row that points at it (the key sheet's rows do not say the VERDICT again).
     // Marks: for a shot of the stage, what the eye cannot tell on 20 px of a hand, drawn as lines (Studio.Mark): the fingers' way (yellow),
     // the palm's normal (cyan), the normal the clip asks (magenta), each target with weight as a red cross with a line from its limb.
     // The clip's own «want» lines (the user's words as measures, BodyClips «say», «want»): Wants reads them, Measure judges them, WantsSaid
@@ -58,6 +67,8 @@ namespace HuginWhispers
     // build, never the first frame measured (a scene starts mid-pose: «trunk straight» on a bent body, 2026-11-07): the trunk's lean from
     // the skeleton's rest (bind) pose, the hips' standing height from its legs at the game's stance knee (StanceKnee); the head on the
     // body and on the chest. Stance numbers said in the log once a body (Stance).
+    // Differs: a report's later rows say only the parts of those words («trunk», «L hand», «knees» …) that differ from the pose as the reader
+    // has it; a part with the same words and its numbers within SameDeg / SameM of the ones said is the same (the full report has every row whole).
     // Light: a few bones a frame, found once; the fixtures a handful of boxes.
     internal sealed class BodyCheck
     {
@@ -927,17 +938,26 @@ namespace HuginWhispers
             return what + (moveStart ? " (its start sooner)" : " (its end later)") + FixLine("batch " + clip + " \"del " + wch + " " + N(from + off) + "; set " + wch + " " + N(to + off) + " " + N(val) + "\"");
         }
 
-        // a bone's jerk: with a limb's flight then (that line's fix), from its own keys (stretched), or neither (said so)
+        // the limb a bone is of, by its target's name less the «@» («RightForeArm» → RightHand, «LeftUpLeg» → LeftFoot); null: the trunk, the head
+        private static string LimbOf(string bone)
+        {
+            string side = bone.StartsWith("Left", StringComparison.Ordinal) ? "Left" : bone.StartsWith("Right", StringComparison.Ordinal) ? "Right" : null;
+            return side == null ? null : side + (bone.IndexOf("Leg", StringComparison.Ordinal) >= 0 || bone.IndexOf("Foot", StringComparison.Ordinal) >= 0 || bone.IndexOf("Toe", StringComparison.Ordinal) >= 0 ? "Foot" : "Hand");
+        }
+        internal static float JerkWith = 0.2f; // s round a limb's flight a bone's jerk is said to be with it (Fold holds a tail to the same)
+
+        // a bone's jerk: with a limb's flight then (that line's fix), from its own keys (stretched), or neither (said so). The first limb that
+        // flew then is named, whatever the bone (a leg's bone «with the LeftHand's flight»): Fold makes such a jerk a tail of a [fast] line
+        // only of the bone's own limb. It knows these lines by their very words (WithRe; the lines' starts: SpeedRe): change them together
         private string JerkFix(int bone, Worst m)
         {
-            foreach (KeyValuePair<string, Worst> f in _fast) if (f.Value.V > (f.Key.EndsWith("Foot", System.StringComparison.Ordinal) ? FootFast : HandFast) && Mathf.Abs(f.Value.At - m.At) < 0.2f) return " (with the " + f.Key + "'s flight: that line's fix)";
+            foreach (KeyValuePair<string, Worst> f in _fast) if (f.Value.V > (f.Key.EndsWith("Foot", System.StringComparison.Ordinal) ? FootFast : HandFast) && Mathf.Abs(f.Value.At - m.At) < JerkWith) return " (with the " + f.Key + "'s flight: that line's fix)";
             PAnimClip c = BodyClips.Find(m.Clip); string name = Names[bone];
             if (c == null || !c.Bones.Contains(name))
             {
                 // (a bone of an arm or a leg with no keys of its own: the limb's target letting it go or taking it fast — basket_set's RightArm, 2026-11-10)
-                string side = name.StartsWith("Left", StringComparison.Ordinal) ? "Left" : name.StartsWith("Right", StringComparison.Ordinal) ? "Right" : null;
-                string limb = side == null ? null : name.IndexOf("Leg", StringComparison.Ordinal) >= 0 || name.IndexOf("Foot", StringComparison.Ordinal) >= 0 || name.IndexOf("Toe", StringComparison.Ordinal) >= 0 ? "@" + side + "Foot" : "@" + side + "Hand";
-                string ramp = limb != null ? WeightRamp(c, limb, m.ClipAt, m.V / BoneJerk) : null;
+                string limb = LimbOf(name);
+                string ramp = limb != null ? WeightRamp(c, "@" + limb, m.ClipAt, m.V / BoneJerk) : null;
                 if (ramp != null) return ramp;
                 return " (no key of this bone in the clip and no limb flew then: the way in or out — a longer «fade» — or a target's pole flipping over)";
             }
@@ -974,6 +994,151 @@ namespace HuginWhispers
 
         // a VERDICT line's rule tag («[miss]» → miss): the key sheet picks its views by it (AnimStage.KeyViews)
         internal static string TagOf(string line) { int a = line.IndexOf('['), b = a >= 0 ? line.IndexOf(']', a) : -1; return a >= 0 && b > a ? line.Substring(a + 1, b - a - 1) : null; }
+
+        // a line's tag and what it is about, for a row that points at it and does not say it again (the key sheet's rows): up to its first
+        // «: » — a want: its own words, they tell it from the others — and SubjectMost characters at most
+        internal static int SubjectMost = 60;
+        internal static string Subject(string line)
+        {
+            const string want = "[want] not what was asked: want ";
+            int nl = line.IndexOf('\n');
+            if (nl >= 0) line = line.Substring(0, nl);
+            if (line.StartsWith(want, StringComparison.Ordinal)) { line = "[want] " + line.Substring(want.Length); int p = line.IndexOf(" (", StringComparison.Ordinal); if (p > 0) line = line.Substring(0, p); }
+            else { int c = line.IndexOf(": ", StringComparison.Ordinal); if (c > 0) line = line.Substring(0, c); }
+            return line.Length > SubjectMost ? line.Substring(0, SubjectMost) + "…" : line;
+        }
+
+        // ---------------------------------------------------------------- one line an event (the head of this file)
+        // bad: the lines as Verdict and WantsSaid made them, the stage's and a scene's own words among them; when: each line's moment (Moments,
+        // of every body measured). What it reads are the words made above («[fast] X flies at … m/s at … s», «[jerk] X at … deg/s at … s»,
+        // JerkFix's «(with the X's flight: that line's fix)»): change those and SpeedRe / WithRe together. A line of no rule («DO NOT TRUST»,
+        // a scene's own) and a line with no moment stay as and where they are. edges: moments no event goes across (a scene: where each
+        // step begins and ends — its report shows a line under the step of its first moment, so a line of the next step folded into it
+        // would be gone from under its own); the stage gives none.
+        internal static float FoldNear = 0.1f, FoldJerk = 0.3f; // s: two lines of one rule with one explanation this near are one event (a left and a right limb) · the same for «[jerk]» (a jerk runs down a limb bone after bone)
+        private sealed class Said
+        {
+            public string Raw, Who = "", Tag, Head, Why, Fix; public float At = -1f; public int Order; public bool Gone; // (Tag null: no rule's line · Head: up to its first «: » · Why: after it, null none · Fix: its «\n      fix: …» lines)
+            public List<Said> With, Jerks; // (folded into this one: lines of its rule and explanation · the bones that jerked with its flight)
+        }
+        private static readonly Regex SaidRe = new Regex(@"^((?:[^\[\]:]+: )?)\[([\w-]+)\] (.*)$", RegexOptions.Compiled | RegexOptions.Singleline); // («who: [tag] the rest», its fix lines and all)
+        private static readonly Regex SpeedRe = new Regex(@"^(\S+) (?:flies )?at ([\d.]+) (m/s|deg/s) at [\d.]+ s$", RegexOptions.Compiled); // (the start of a [fast] or a [jerk] line: what, how fast)
+        private static readonly Regex WithRe = new Regex(@"^a jerk \(with the \w+'s flight: that line's fix\)$", RegexOptions.Compiled);
+        private static int ByTime(Said p, Said q) { return p.At != q.At ? p.At.CompareTo(q.At) : p.Order.CompareTo(q.Order); }
+        // two moments with an edge between them (the later one at the edge is past it: a step has the lines from its beginning on). Held as
+        // the lines say them, to the hundredth: a scene puts a line under its step by the moment in its words
+        private static bool Across(List<float> edges, float a, float b)
+        {
+            if (edges == null) return false;
+            float lo = AsSaid(Mathf.Min(a, b)), hi = AsSaid(Mathf.Max(a, b));
+            foreach (float e in edges) if (lo < e && e <= hi) return true;
+            return false;
+        }
+        private static float AsSaid(float t) { float v; return float.TryParse(N(t), NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? v : t; }
+
+        internal static List<string> Fold(List<string> bad, List<KeyValuePair<float, string>> when, List<float> edges = null)
+        {
+            Dictionary<string, float> at = new Dictionary<string, float>();
+            if (when != null) foreach (KeyValuePair<float, string> m in when) if (m.Key >= 0f && !at.ContainsKey(m.Value)) at[m.Value] = m.Key;
+            List<Said> all = new List<Said>();
+            foreach (string line in bad)
+            {
+                Said x = new Said { Raw = line, Order = all.Count };
+                Match m = SaidRe.Match(line);
+                if (m.Success)
+                {
+                    string body = m.Groups[3].Value;
+                    int nl = body.IndexOf('\n');
+                    if (nl >= 0) { x.Fix = body.Substring(nl); body = body.Substring(0, nl); }
+                    int colon = body.IndexOf(": ", StringComparison.Ordinal);
+                    x.Who = m.Groups[1].Value; x.Tag = m.Groups[2].Value;
+                    x.Head = colon >= 0 ? body.Substring(0, colon) : body; x.Why = colon >= 0 ? body.Substring(colon + 2) : null;
+                    float t;
+                    if (at.TryGetValue(line, out t)) x.At = t;
+                }
+                all.Add(x);
+            }
+            // a jerk a limb's flight made: a tail of the [fast] line of its own limb — an arm's bone under that hand's flight, a leg's under
+            // that foot's — when that limb flew then (JerkWith). A bone of another limb than any that flew, the trunk, the head stay lines:
+            // fall_back 2026-11-11, two leg bones stood under the hands' line, where a reader could no longer doubt them
+            foreach (Said x in all)
+            {
+                if (x.Tag != "jerk" || x.Why == null || x.At < 0f || !WithRe.IsMatch(x.Why)) continue;
+                Match bone = SpeedRe.Match(x.Head);
+                string limb = bone.Success ? LimbOf(bone.Groups[1].Value) : null;
+                if (limb == null) continue;
+                foreach (Said f in all)
+                {
+                    if (f.Tag != "fast" || f.Who != x.Who || f.At < 0f || !f.Head.StartsWith(limb + " ", StringComparison.Ordinal) || Mathf.Abs(f.At - x.At) >= JerkWith || Across(edges, f.At, x.At)) continue;
+                    if (f.Jerks == null) f.Jerks = new List<Said>();
+                    f.Jerks.Add(x); x.Gone = true;
+                    break;
+                }
+            }
+            // lines of one body, one rule, one explanation, near in time: one line (the earliest holds the others)
+            List<Said> timed = new List<Said>(), heads = new List<Said>();
+            foreach (Said x in all) if (!x.Gone && x.At >= 0f) timed.Add(x);
+            timed.Sort(ByTime);
+            foreach (Said x in timed)
+            {
+                Said h = null;
+                float near = (x.Tag == "jerk" ? FoldJerk : FoldNear) + 0.001f;
+                if (x.Why != null) foreach (Said g in heads) if (g.Tag == x.Tag && g.Who == x.Who && g.Why == x.Why && x.At - g.At <= near && !Across(edges, g.At, x.At)) { h = g; break; }
+                if (h == null) { heads.Add(x); continue; }
+                if (h.With == null) h.With = new List<Said>();
+                h.With.Add(x); x.Gone = true;
+            }
+            // by the time of the event: each body's lines with a moment among themselves, in the places they had
+            List<Said> kept = new List<Said>(); List<string> whos = new List<string>();
+            foreach (Said x in all) { if (x.Gone) continue; kept.Add(x); if (x.At >= 0f && !whos.Contains(x.Who)) whos.Add(x.Who); }
+            foreach (string who in whos)
+            {
+                List<int> place = new List<int>(); List<Said> mine = new List<Said>();
+                for (int i = 0; i < kept.Count; i++) if (kept[i].At >= 0f && kept[i].Who == who) { place.Add(i); mine.Add(kept[i]); }
+                mine.Sort(ByTime);
+                for (int i = 0; i < place.Count; i++) kept[place[i]] = mine[i];
+            }
+            List<string> one = new List<string>();
+            foreach (Said x in kept) one.Add(Folded(x));
+            return one;
+        }
+
+        // a line with what was folded into it: «[fast] A 8.77 and B 8.27 m/s at 0.52 s: why (+ jerks with it: C 4616, D 6054 deg/s at
+        // 0.64–0.68 s)», then every «fix:» of them, each once (two limbs on one pair of keys give one «stretch»: run twice it stretches twice)
+        private static string Folded(Said x)
+        {
+            if (x.With == null && x.Jerks == null) return x.Raw;
+            List<Said> g = new List<Said> { x }, jerks = new List<Said>();
+            if (x.With != null) g.AddRange(x.With);
+            g.Sort((p, q) => p.Order.CompareTo(q.Order)); // (as they were said: left before right, down a limb)
+            foreach (Said y in g) if (y.Jerks != null) jerks.AddRange(y.Jerks);
+            StringBuilder s = new StringBuilder(x.Who).Append('[').Append(x.Tag).Append("] ").Append(g.Count > 1 ? SpeedsOf(g) ?? HeadsOf(g) : x.Head);
+            if (x.Why != null) s.Append(": ").Append(x.Why);
+            if (jerks.Count > 0) s.Append(" (+ jerks with it: ").Append(SpeedsOf(jerks) ?? HeadsOf(jerks)).Append(')');
+            List<string> fixes = new List<string>();
+            foreach (Said y in g) FixesOf(y, fixes);
+            foreach (Said y in jerks) FixesOf(y, fixes);
+            foreach (string f in fixes) s.Append('\n').Append(f);
+            return s.ToString();
+        }
+
+        // «A 8.77 and B 8.27 m/s at 0.52 s» of [fast] or [jerk] lines (null: not all such, or not of one unit — HeadsOf says them whole)
+        private static string SpeedsOf(List<Said> g)
+        {
+            StringBuilder s = new StringBuilder();
+            string unit = null; float t0 = float.MaxValue, t1 = float.MinValue;
+            foreach (Said y in g)
+            {
+                Match m = SpeedRe.Match(y.Head);
+                if (!m.Success || (unit != null && unit != m.Groups[3].Value)) return null;
+                unit = m.Groups[3].Value;
+                s.Append(s.Length == 0 ? "" : g.Count == 2 ? " and " : ", ").Append(m.Groups[1].Value).Append(' ').Append(m.Groups[2].Value);
+                t0 = Mathf.Min(t0, y.At); t1 = Mathf.Max(t1, y.At);
+            }
+            return s.Append(' ').Append(unit).Append(" at ").Append(N(t0)).Append(N(t1) != N(t0) ? "–" + N(t1) : "").Append(" s").ToString();
+        }
+        private static string HeadsOf(List<Said> g) { StringBuilder s = new StringBuilder(); foreach (Said y in g) s.Append(s.Length == 0 ? "" : " and ").Append(y.Head); return s.ToString(); }
+        private static void FixesOf(Said y, List<string> into) { if (y.Fix == null) return; foreach (string f in y.Fix.Split('\n')) if (f.Length > 0 && !into.Contains(f)) into.Add(f); }
 
         // ---------------------------------------------------------------- marks on a shot (the head of this file)
         internal static float MarkLen = 0.08f; // m a drawn direction is long
@@ -1115,6 +1280,39 @@ namespace HuginWhispers
         {
             if (_b[up] == null || _b[knee] == null || _b[foot] == null) return 0;
             return Mathf.RoundToInt(Vector3.Angle(_b[up].position - _b[knee].position, _b[foot].position - _b[knee].position));
+        }
+
+        // ---------------------------------------------------------------- those words against the pose said before (the head of this file)
+        // The parts of Words (split by «; », each by what it is about: «trunk», «L hand», «knees») held against the pose as the reader has
+        // it (known: each part as last SAID, brought up to date here): the parts that differ, in their order — "" none, the words whole when
+        // all do. Against what was said, not the row before: a slow drift is said once it is past SameDeg / SameM. A part the words no
+        // longer have (a foot back on the ground) is said gone. (fall_back 2026-11-11: seven rows of 1818 bytes, the last four the body lying still.)
+        internal static float SameDeg = 3f, SameM = 0.02f; // deg (trunk, head, knees) · m (the rest): a number this near the one said is the same; 0: every digit that moves is said
+        internal static string Differs(string words, Dictionary<string, string> known)
+        {
+            StringBuilder s = new StringBuilder();
+            List<string> seen = new List<string>();
+            foreach (string part in words.Split(new[] { "; " }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string key = PartKey(part), was;
+                seen.Add(key);
+                if (known.TryGetValue(key, out was) && PartSame(key, was, part)) continue;
+                known[key] = part;
+                s.Append(s.Length > 0 ? "; " : "").Append(part);
+            }
+            foreach (string key in new List<string>(known.Keys)) if (!seen.Contains(key)) { known.Remove(key); s.Append(s.Length > 0 ? "; " : "").Append(key).Append(": not in this row"); }
+            return s.ToString();
+        }
+        private static string PartKey(string part) { string[] w = part.Split(' '); return w.Length > 1 && (w[0] == "L" || w[0] == "R") ? w[0] + " " + w[1] : w[0]; }
+        private static bool PartSame(string key, string a, string b)
+        {
+            if (a == b) return true;
+            string[] x = a.Split(' '), y = b.Split(' ');
+            if (x.Length != y.Length) return false;
+            float most = (key == "trunk" || key == "head" || key == "knees" ? SameDeg : SameM) + 0.001f, p, q; // (a little over: 0.06 − 0.04 is not 0.02 in a float)
+            for (int i = 0; i < x.Length; i++)
+                if (x[i] != y[i] && (!float.TryParse(x[i], NumberStyles.Float, CultureInfo.InvariantCulture, out p) || !float.TryParse(y[i], NumberStyles.Float, CultureInfo.InvariantCulture, out q) || Mathf.Abs(p - q) > most)) return false;
+            return true;
         }
 
         // ---------------------------------------------------------------- the tempo: how each part of the body moves, a mark every Beat s

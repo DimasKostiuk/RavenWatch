@@ -1,16 +1,25 @@
 // One run from outside the game, the game open and in a world (studio/request.txt, studio/out). The game half of tools/anim.js (the one
 // entry, review 2 2026-11-10): anim.js <verb> …; the studio's folder is tools/studio.path (one line). What to read comes back at once.
-//   clip <clip> [views]        the clip on the stage, on the body and with the thing its row in docs/CLIPS.md names: measured and filmed in one run;
+//   clip <clip> [views]        the clip on the stage, on the body and with the thing its row in docs/CLIPS.md names: measured and filmed in one run
+//                              (the short report says each thing once: one VERDICT line an event, pose rows «Δ» — only what changed; all of it whole in .full.txt);
 //                              prints the short report (VERDICT with a «fix:» command where the core could reckon one, what was asked, the tempo, each
 //                              key frame's pose in words) and the sheets: stage_<clip>_key.png (a row a moment of the VERDICT, the wants, the marks;
 //                              its two views; labelled), stage_<clip>_diff.png (this take | the take before, or what «ab» plays) — and only with
 //                              views asked, stage_<clip>_<view>.png of the whole run (side,chest,… : AutoViews names what the clip would take)
 //   views <clip> <views>       the same as clip <clip> <views>
+//                              Under the report: what this take changed against the one before — the VERDICT lines gone, the new ones, how many stay
+//                              (by tag and subject: verdictLines), so the last change is judged without reading two reports
+//   fix <clip> [n …|list] [--take]   the «fix:» commands of the last report run as they stand (all, or those numbered; «list» only shows them): the core
+//                              reckoned them, nobody retypes them. Only of the file as it is now; a command that fails stops the rest. A command that would
+//                              key a channel the clip's movements make («do») is NOT run: it names the movement to change instead; --take runs it anyway
+//                              (the channel is the author's from then on). A take of such a clip ends with the movements that play at each line's moment
 //   report <clip>              the last report of the clip again — only if it is of the file as it is now (the file's hash in its head, AnimStage.Hash);
 //                              of another version it refuses: «take it again»
 //   scene --dry <scene>        the scene run dry, on node, no game (tools/scene_dry.js): a row a step — when it starts, how long it takes, who is in
 //                              the frame — and the warnings the file alone shows (words over a bird in flight, a person with no «test: npc … at», a
 //                              shot held long, a run of waits, a mark the clip has not got)
+//   scene --cover <scene>      camera lines proposed for the scene's talks that have no shots of their own (scene_dry.js cover): both first, over the
+//                              listener's shoulder at who speaks, close on a short line; nothing is written — take what fits
 //   scene <scene> [fps] [from] the same table first, then the scene at its place in the game: prints its VERDICT, the steps with what each came to,
 //                              each body's numbers, the sheets
 //   done <clip>                the user approved it: its frames and report go (each take is ~5 MB)
@@ -81,6 +90,7 @@ const verdictOf = text => text.slice(text.indexOf('VERDICT'), text.indexOf('pose
 
 function runClip(clip, views, keepOthers) {
   const report = path.join(out, 'stage_' + clip + '.txt');
+  const before = fs.existsSync(report) ? measuredOf(clip, fs.readFileSync(report, 'utf8')) : null; // (the take before, while its report is still there)
   clear('stage_' + clip);
   const stale0 = keepOthers ? 0 : dropStale(clip); // (approved: the sheets of the clips before stay, the user looks at them after)
   if (stale0 > 0) console.log('older takes of other clips taken off: ' + stale0 + ' file(s)');
@@ -99,18 +109,57 @@ function runClip(clip, views, keepOthers) {
   sleep(500);
   const why = stale(clip, text);
   if (why) console.log('WARNING: the file changed during the take — ' + why);
+  runClip.since = before ? since(before, measuredOf(clip, text)) : '';
   return text;
 }
 
+// A clip written by movements (tools/motion.js: «# do» lines, «# scripted:» channels): which of its movements make a channel, which play at a moment.
+// A report's line and its «fix:» speak of keys; in such a clip the keys are the script's, so the mend belongs in a movement (redo) — a key set by hand
+// takes its channel from the script for good (the review 2026-11-11: «fix» did that in silence, and the next «do» of that hand did nothing)
+function scriptOf(name) {
+  const clipTool = require('./clip.js'), motion = require('./motion.js');
+  let c; try { c = clipTool.load(name.split('.')[0]); } catch (e) { return null; }
+  const lines = motion.scriptOf(c).map((l, i) => { const w = l.split(/\s+/), m = /^([0-9.]+)-([0-9.]+)$/.exec(w[0]) || [0, 0, 0]; return { n: i + 1, line: l, t0: +m[1], t1: +m[2], verb: w[1], side: w[2] }; });
+  return lines.length ? { lines, made: motion.listOf(c, 'scripted'), family: clipTool.family } : null;
+}
+const makes = (s, ch) => s.lines.filter(l => { // the movements that write a channel
+  const side = /Left/.test(ch) ? 'left' : /Right/.test(ch) ? 'right' : null, mine = !side || l.side === side || l.side === 'both';
+  if (/^@(Left|Right)Hand/.test(ch)) return mine && (l.verb === 'reach' || l.verb === 'rest');
+  if (/Hand(Index|Middle|Ring|Pinky)/.test(ch)) return mine && l.verb === 'fingers';
+  if (/^@(Left|Right)Foot/.test(ch)) return mine && l.verb === 'step';
+  if (/^Spine[12]$/.test(ch)) return ['lean', 'turn', 'sigh'].includes(l.verb);
+  if (ch === 'move') return ['sink', 'weight', 'step'].includes(l.verb);
+  if (/^@Look/.test(ch)) return ['look', 'nod', 'shake'].includes(l.verb);
+  return false;
+});
+// the channels a command of clip.js keys (set, del, move, hold; a batch: each of its changes)
+const keysOf = w => w[0] === 'batch' ? (w[2] || '').split(';').map(x => x.trim().split(/\s+/)).filter(o => ['set', 'del', 'move', 'hold'].includes(o[0])).map(o => o[1]) : ['set', 'del', 'move', 'hold'].includes(w[0]) ? [w[2]] : [];
+
+// two takes of one clip, the one before and this one: what went, what came, how many stay
+function since(was, now) {
+  const a = [...new Set(was.map(x => x.key))], b = [...new Set(now.map(x => x.key))];
+  const gone = a.filter(k => !b.includes(k)), came = b.filter(k => !a.includes(k)), stay = b.length - came.length;
+  if (!a.length && !b.length) return 'against the take before: clean then, clean now';
+  return 'against the take before: ' + gone.length + ' gone' + (gone.length ? ' (' + gone.join('; ') + ')' : '') + ', ' + came.length + ' new' + (came.length ? ' (' + came.join('; ') + ')' : '') + ', ' + stay + ' still there';
+}
+
+// the «fix:» commands of a report, as it wrote them (each: the words after «node tools/anim.js»)
+const fixesOf = text => text.split('\n').map(l => /^\s*fix: node tools\/anim\.js (.+)$/.exec(l)).filter(Boolean).map(m => { const w = m[1].match(/"[^"]*"|\S+/g) || [], end = w.findIndex(x => x.startsWith('(') || x === '—' || x === '–'); return (end < 0 ? w : w.slice(0, end)).join(' '); });
+// a command line's words, a quoted stretch one word (batch <clip> "set …; set …")
+const wordsOf = line => (line.match(/"[^"]*"|\S+/g) || []).map(w => w.startsWith('"') ? w.slice(1, -1) : w);
+
 // a take's VERDICT lines, each by what it is about — its tag and the part it names («[jerk] RightArm», «[miss] @RightHand», «[palm] right») —
 // so two takes of one clip can be laid side by side: the same mistake twice, or a rule that answers once yes, once no
+// a take's lines as measured, a line a rule and a bone: from stage_<clip>.full.txt (the short report folds one event into one line — BodyCheck.Fold —
+// so a jerk that outlives its mended flight would read as «new»); a report from before the folding: its own lines
+const measuredOf = (clip, text) => { const p = path.join(out, 'stage_' + clip + '.full.txt'); const full = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; return verdictLines(/^VERDICT( as measured|: OK)/m.test(full) ? full : text); };
 const verdictLines = text => {
   const v = text.slice(text.indexOf('VERDICT'), text.search(/^asked|^pose: /m) > 0 ? text.search(/^asked|^pose: /m) : undefined);
   const lines = [];
   for (const l of v.split('\n')) {
     const m = /^  - (\[[\w-]+\])\s+(\S+)?(.*)$/.exec(l);
     const whole = m ? m[1] + ' ' + (m[2] || '') + m[3] : '';
-    if (m) lines.push({ key: m[1] === '[want]' ? whole.split(' (')[0] : m[1] + ' ' + (m[2] || ''), text: whole.slice(0, 220) }); // (a want: its own words tell it from the others)
+    if (m) lines.push({ key: m[1] === '[want]' ? whole.split(' (')[0] : (m[1] + ' ' + ((m[2] || '') + m[3]).split(':')[0].replace(/-?\d+(\.\d+)?/g, '#')).slice(0, 80), text: whole.slice(0, 220) }); // (a want: its own words tell it from the others; any other: what it is about up to its «:», the numbers out — the left foot's line is not the right's)
     else if (/^  - /.test(l)) lines.push({ key: l.slice(4, 40), text: l.slice(4, 220) });
   }
   return lines;
@@ -128,15 +177,21 @@ function status() {
 // a verb and its words (anim.js): throws on a mistake
 function run(cmd, a) {
   if (cmd === 'scene' && a[0] === '--dry') { if (!a[1]) throw new Error('scene --dry <scene>'); console.log(require('./scene_dry.js').dry(a[1])); return; } // (the file alone: the time table and the warnings, no game, no studio)
+  if (cmd === 'scene' && a[0] === '--cover') { if (!a[1]) throw new Error('scene --cover <scene>'); console.log(require('./scene_dry.js').cover(a[1])); return; } // (camera lines proposed for its talk; nothing written)
   inStudio();
   if (cmd === 'status') { status(); return; }
-  const playing = cmd === 'done' || cmd === 'report' ? null : scenePlaying(); // (no game needed for these)
+  const playing = cmd === 'done' || cmd === 'report' || cmd === 'fix' ? null : scenePlaying(); // (no game needed for these)
   if (playing) throw new Error('a scene plays in the game: ' + playing + ' — wait for its end');
   if ((cmd === 'clip' || cmd === 'views') && a[0]) {
     if (cmd === 'views' && !a[1]) throw new Error('views <clip> <view,view…> (front,side,back,three,top,chest,chestside,chestleft,chesttop,contact,handl,handr,holdl,holdr,fingerl,fingerr,head,headside,headtop,feet)');
     const text = runClip(a[0], a[1]);
     ask('raven stage down');
     console.log(text.trimEnd());
+    if (runClip.since) console.log(runClip.since);
+    { const s = scriptOf(a[0]); if (s) {
+      const at = []; for (const l of verdictLines(text)) { const m = /at ([0-9.]+)(?:–([0-9.]+))? s/.exec(l.text); if (!m) continue; const t0 = +m[1], t1 = m[2] ? +m[2] : t0, side = /\bLeft|\bleft/.test(l.text) ? 'left' : /\bRight|\bright/.test(l.text) ? 'right' : null; const on = s.lines.filter(x => x.t0 - 0.3 <= t1 && t0 <= x.t1 + 0.3 && (!side || !['left', 'right'].includes(x.side) || x.side === side)); if (on.length) at.push('  ' + l.key.slice(0, 46) + ' (' + m[1] + ' s) → ' + on.map(x => 'do ' + x.n + ': ' + x.line).join(' · ')); }
+      console.log('this clip is written by movements (node tools/anim.js show ' + a[0] + '): mend the movement (redo <n> …), not its keys' + (at.length ? ' — what plays at each line\'s moment:\n' + at.join('\n') : ''));
+    } }
     console.log('sheets:\n  ' + sheets('stage_' + a[0]).join('\n  '));
   } else if (cmd === 'report' && a[0]) {
     const report = path.join(out, 'stage_' + a[0] + '.txt');
@@ -146,10 +201,39 @@ function run(cmd, a) {
     if (why) throw new Error('old report of ' + a[0] + ': ' + why + ' (node tools/anim.js clip ' + a[0] + ')');
     console.log(text.trimEnd());
     console.log('sheets:\n  ' + sheets('stage_' + a[0]).join('\n  '));
+  } else if (cmd === 'fix' && a[0]) {
+    const report = path.join(out, 'stage_' + a[0] + '.txt');
+    if (!fs.existsSync(report)) throw new Error('no report of ' + a[0] + ': node tools/anim.js clip ' + a[0]);
+    const text = fs.readFileSync(report, 'utf8'), why = stale(a[0], text);
+    if (why) throw new Error('old report of ' + a[0] + ': ' + why + ' — its commands are of another file (node tools/anim.js clip ' + a[0] + ')');
+    const all = fixesOf(text);
+    if (!all.length) { console.log(a[0] + ': the last report has no «fix:» command (what is left is the pose\'s shape, the user\'s to judge, or a line that says why it has none)'); return; }
+    all.forEach((c, i) => console.log((i + 1) + ': ' + c));
+    if (a[1] === 'list') return;
+    const takeIt = a.includes('--take'); a = a.filter(x => x !== '--take');
+    const pick = a.slice(1).map(x => Math.round(parseFloat(x)) - 1);
+    if (pick.some(i => !(i >= 0 && i < all.length))) throw new Error('fix <clip> [n …|list]: the report has ' + all.length + ' command(s)');
+    const clipTool = require('./clip.js');
+    const chosen = pick.length ? pick : all.map((_, k) => k), moves = i => ['stretch', 'shift'].includes(wordsOf(all[i])[0]), when = i => parseFloat(wordsOf(all[i])[2]) || 0;
+    const order = chosen.filter(i => !moves(i)).concat(chosen.filter(moves).sort((x, y) => when(y) - when(x))); // (the commands were reckoned for the file as the take saw it: what moves time last, the latest first)
+    let done = 0;
+    for (const i of order) {
+      const w = wordsOf(all[i]); console.log('— ' + (i + 1) + ': ' + all[i]);
+      const s = takeIt ? null : scriptOf(a[0]), theirs = s ? [...new Set(keysOf(w).flatMap(s.family))].filter(ch => s.made.includes(ch)) : [];
+      if (theirs.length) { // (the clip's movements make that channel: a key set by hand would take it from them for good)
+        const all0 = [...new Set(theirs.flatMap(ch => makes(s, ch)))], when = ['set', 'del'].includes(w[0]) ? parseFloat(w[3]) : NaN, near = all0.filter(x => x.t0 - 0.3 <= when && when <= x.t1 + 0.3), by = near.length ? near : all0; // (the movement that plays at the key's moment, when the command has one)
+        console.log('  NOT RUN: it keys ' + theirs.join(', ') + ' by hand, and the clip\'s movements make ' + (theirs.length > 1 ? 'them' : 'it') + (by.length ? ' (' + by.map(x => 'do ' + x.n + ': ' + x.line).join(' · ') + ')' : ' (the accompaniment: node tools/anim.js alive ' + a[0] + ' <0..2>)') + '. Say it in the movement: node tools/anim.js redo ' + a[0] + ' <n> <t0>-<t1> … — or take the channel from the script for good: node tools/anim.js fix ' + a[0] + ' ' + (i + 1) + ' --take');
+        continue;
+      }
+      try { clipTool.run(w[0], w.slice(1)); } catch (e) { throw new Error('command ' + (i + 1) + ' failed: ' + e.message + '\n' + (done ? done + ' command(s) before it are applied, so the report is of an older file now — take it again: node tools/anim.js clip ' + a[0] : 'nothing was changed')); }
+      done++;
+    }
+    console.log('done; the report is of the file before them: node tools/anim.js clip ' + a[0]);
   } else if (cmd === 'scene' && a[0]) {
     console.log(require('./scene_dry.js').dry(a[0]) + '\n'); // (before the run: what the file says it will be; the run's report then says what it was)
     const name = 'sc_' + a[0], report = path.join(out, name + '.txt');
     clear(name);
+    ask('raven stage down'); // (the stage's mannequin stood in the scene's frames with its line over the picture, zz_heid_meet 2026-11-11)
     ask('raven story scene reload'); // (the files as they are now: 2026-11-06 a run measured the scene from before an edit)
     console.log('scene file: ' + sceneFile(a[0]) + ' — read again just now');
     ask('scene ' + name + ' ' + a[0] + ' ' + (a[1] || 2) + ' ' + (a[2] || 0));
@@ -169,7 +253,7 @@ function run(cmd, a) {
     const review = ['# node tools/anim.js approved, ' + new Date().toLocaleString('uk-UA') + ': ' + names.length + ' approved clip(s), each taken twice. For the user to judge over the key sheet: the clip wrong, or the rule.', ''];
     let moved = 0, clean = 0, shaky = 0;
     for (const clip of names) {
-      const one = verdictLines(runClip(clip, null, true)), text = runClip(clip, null, true), two = verdictLines(text);
+      const one = measuredOf(clip, runClip(clip, null, true)), text = runClip(clip, null, true), two = measuredOf(clip, text);
       const keys = [...new Set([...one, ...two].map(x => x.key))];
       if (!keys.length) { clean++; review.push(clip + ': OK in both takes'); console.log(clip + ': OK in both takes'); }
       else {
@@ -191,8 +275,8 @@ function run(cmd, a) {
     review.push('', names.length + ' clip(s): ' + clean + ' clean in both takes; ' + shaky + ' line(s) only in one take (that rule is not steady on that clip); ' + moved + ' moved against tools/clip_numbers.json');
     fs.writeFileSync(path.join(out, 'approved_review.txt'), review.join('\n') + '\n');
     console.log('\n' + review.join('\n') + '\n\nwritten: ' + path.join(out, 'approved_review.txt').replace(/\\/g, '/'));
-  } else throw new Error('node tools/anim.js clip <clip> [views] | views <clip> <views> | report <clip> | done <clip> | scene [--dry] <scene> [fps] [from] | approved [clip …] [--save] | status');
+  } else throw new Error('node tools/anim.js clip <clip> [views] | views <clip> <views> | report <clip> | fix <clip> [n …|list] | done <clip> | scene [--dry] <scene> [fps] [from] | approved [clip …] [--save] | status');
 }
 
-module.exports = { run, studioDir };
+module.exports = { run, studioDir, since, fixesOf, wordsOf, verdictLines };
 if (require.main === module) { console.error('take.js is the game half of the one tool: node tools/anim.js ' + (process.argv[2] || '<verb>') + ' …'); process.exit(1); }

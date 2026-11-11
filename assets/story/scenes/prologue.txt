@@ -350,31 +350,39 @@ bars off
 # Ворон у гравця вже є (особистий пролог або купив обох): Гейд лише бачить його.
 [scene heid_meet]
 test: world heid_called; npc heid prop carry   # (перевірка студії: її створює сервер за цим словом; кошик знову на руці, як у гравця на цьому етапі — у світі автора після прологу він лежав, і «if npcprop» пропускав усе)
-check: torvald 12                          # (перевірка студії: за 12 м від табору, з боку гравця)
+check: torvald 4                           # (перевірка студії: за 4 м від табору — на відстані розмови; так користувач бачив і схвалив сцену 2026-11-11)
 needs: calm
 place: torvald
 npc heid take                           # щось шукала біля ліжка чи каменя, або саме йшла між ними
 bars on
-camera behind look npc.heid blend 2
+camera two npc.heid player blend 2      # кадри словами (огляд 3): обоє збоку
 wait 1
 if npcclip heid heid_search: npc heid clip heid_search.rises         # випрямляється (ішла між точками: уже стоїть)
 if npcclip heid heid_search: npc heid mark up                        # уже стоїть
 npc heid face player
 wait 1
+camera on npc.heid close cut            # крупно: впізнала
 npc heid say …Ти?                                                        # застигла: впізнала (story-lore.md «Гейд»)
 wait 0.7
-if npcprop heid: npc heid clip basket_set.down                           # швидко ставить кошик біля ніг (ішла з ним на руці; поралась біля ліжка — він уже стоїть там)
-if npcprop heid: npc heid mark down
-npc heid prop put                                                        # кошик лягає, де вона його поставила, і лежить там (StoryProps); нічого на руці — крок порожній
-wait 0.9
+camera on npc.heid.thing close cut                                       # акцент: крупно рука з кошиком, камера йде за ним униз
+if npcprop heid: npc heid clip basket_drop                               # пальці розтискаються, рука слабне — кошик випадає (користувач 2026-11-11: не нахиляється й кладе, а впускає)
+if npcprop heid: npc heid mark drop
+npc heid prop drop                                                       # кошик падає й лежить там до «prop fetch» (StoryProps); нічого на руці — крок порожній
+sound sfx_drop npc.heid
+wait 1.4
+camera on npc.heid close cut push 0.2 3 # крупно з повільним наїздом
 npc heid say Ні. Вибач. Здалося, що хтось інший.
 wait 1.1
+camera shoulder player npc.heid cut     # через плече гравця
 npc heid say Ти ж не пам'ятаєш… Тобто. Звідки б.
+camera on player medium cut             # гравець із вороном на плечі
 if raven hugin: say hugin Обмовилась. І зробила вигляд, що ні.
 if raven munin: say munin …Знайоме місце. А вона — ні. Чи да?
 wait 1.2
+camera shoulder player npc.heid cut push 0.3 6
 npc heid say Я Гейд. Доглядаю ці камені. У тебе ворон — свій. Отже, ти з Варти. Як і я.
 wait 1.2
+camera two npc.heid player cut
 npc heid say Вартовому не місце під небом. Ключ у мене. Спитай, що хочеш, і ходімо.
 camera off blend 1.5
 bars off

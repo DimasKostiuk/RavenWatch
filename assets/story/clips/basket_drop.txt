@@ -1,0 +1,212 @@
+clip basket_drop
+length 2.6
+loop 0
+pivot 1.1
+curve ease
+fade 0.4 0.6
+mode Spine1 body
+mode Spine2 body
+say впізнала й злякалась: пальці правої розтискаються, рука слабне й падає вздовж тіла — кошик випадає; ліва рука до грудей, ледь відсахнулась
+mark 0.35 drop
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 2.6 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do basket_drop "<t0>-<t1> reach right <x y z>; …".
+# scripted: @LeftFoot @RightFoot @Look @Look.w @RightHand @RightHand.w @RightHand.p @RightHand.f @RightHand.n RightHandIndex1 RightHandIndex2 RightHandMiddle1 RightHandMiddle2 RightHandRing1 RightHandRing2 RightHandPinky1 RightHandPinky2 @LeftHand @LeftHand.w @LeftHand.p @LeftHand.f @LeftHand.n LeftHandIndex1 LeftHandIndex2 LeftHandMiddle1 LeftHandMiddle2 LeftHandRing1 LeftHandRing2 LeftHandPinky1 LeftHandPinky2 Spine1 Spine2 move
+# alive 1
+# do 0.1-0.4 fingers right flat
+# do 0.1-0.6 lean back 4
+# do 0.25-0.9 reach left -0.08 1.28 0.2 palm in fingers up
+# do 1-1.6 lean none
+# do 1.5-2.4 rest left
+# do 1.2-1.8 fingers right relaxed
+# do 0.2-0.6 sink 0.02
+# do 0.9-1.5 sink 0
+# do 0.3-0.8 fingers left flat
+# do 1.6-2.3 fingers left relaxed
+# do 0.05-0.4 reach right 0.36 1.0 0.4 palm down fingers forward
+# do 1.0-1.9 rest right
+
+0 @LeftFoot -0.09 0.12 0.28
+
+0 @RightFoot 0.05 0.12 -0.3
+
+0 @Look 0.36 1 0.4
+0.8 @Look 0.36 1 0.4
+1.3 @Look 0.36 1 0.4
+
+0 @Look.w 0 0 0
+0.35 @Look.w 0.5 0 0
+0.8 @Look.w 0.5 0 0
+1.3 @Look.w 0 0 0
+
+0.05 @RightHand 0.27 0.97 -0.2
+0.243 @RightHand 0.359 1.008 0.105
+0.4 @RightHand 0.36 1 0.4
+1 @RightHand 0.36 1 0.4
+1.45 @RightHand 0.315 0.955 0.1
+1.9 @RightHand 0.27 0.97 -0.2
+
+0.05 @RightHand.w 0 0 0
+0.35 @RightHand.w 1 0 0
+1 @RightHand.w 1 0 0
+1.9 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.8 -0.6 0
+
+0.05 @RightHand.f 0 -1 0.1
+0.4 @RightHand.f 0 0 1
+1 @RightHand.f 0 0 1
+1.9 @RightHand.f 0 -1 0.1
+
+0.05 @RightHand.n -1 0 0
+0.4 @RightHand.n 0 -1 0
+1 @RightHand.n 0 -1 0
+1.9 @RightHand.n -1 0 0
+
+0.1 RightHandIndex1 0 0 0
+0.4 RightHandIndex1 -25 0 0
+1.2 RightHandIndex1 -25 0 0
+1.8 RightHandIndex1 0 0 0
+
+0.1 RightHandIndex2 0 0 0
+0.4 RightHandIndex2 -25 0 0
+1.2 RightHandIndex2 -25 0 0
+1.8 RightHandIndex2 0 0 0
+
+0.1 RightHandMiddle1 0 0 0
+0.4 RightHandMiddle1 -25 0 0
+1.2 RightHandMiddle1 -25 0 0
+1.8 RightHandMiddle1 0 0 0
+
+0.1 RightHandMiddle2 0 0 0
+0.4 RightHandMiddle2 -25 0 0
+1.2 RightHandMiddle2 -25 0 0
+1.8 RightHandMiddle2 0 0 0
+
+0.1 RightHandRing1 0 0 0
+0.4 RightHandRing1 -25 0 0
+1.2 RightHandRing1 -25 0 0
+1.8 RightHandRing1 0 0 0
+
+0.1 RightHandRing2 0 0 0
+0.4 RightHandRing2 -25 0 0
+1.2 RightHandRing2 -25 0 0
+1.8 RightHandRing2 0 0 0
+
+0.1 RightHandPinky1 0 0 0
+0.4 RightHandPinky1 -25 0 0
+1.2 RightHandPinky1 -25 0 0
+1.8 RightHandPinky1 0 0 0
+
+0.1 RightHandPinky2 0 0 0
+0.4 RightHandPinky2 -25 0 0
+1.2 RightHandPinky2 -25 0 0
+1.8 RightHandPinky2 0 0 0
+
+0.25 @LeftHand -0.33 0.98 0.22
+0.608 @LeftHand -0.219 1.153 0.228
+0.9 @LeftHand -0.08 1.28 0.2
+1.5 @LeftHand -0.08 1.28 0.2
+1.95 @LeftHand -0.205 1.1 0.21
+2.4 @LeftHand -0.33 0.98 0.22
+
+0.25 @LeftHand.w 0 0 0
+0.64 @LeftHand.w 1 0 0
+1.5 @LeftHand.w 1 0 0
+2.4 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.8 -0.6 0
+
+0.25 @LeftHand.f 0 -1 0.1
+0.575 @LeftHand.f 0 0.1 0.995
+0.9 @LeftHand.f 0 1 0
+1.5 @LeftHand.f 0 1 0
+1.95 @LeftHand.f 0 0 1
+2.4 @LeftHand.f 0 -1 0.1
+
+0.25 @LeftHand.n 1 0 0
+0.575 @LeftHand.n 1 0 0
+0.9 @LeftHand.n 1 0 0
+1.5 @LeftHand.n 1 0 0
+1.95 @LeftHand.n 1 0 0
+2.4 @LeftHand.n 1 0 0
+
+0.3 LeftHandIndex1 0 0 0
+0.8 LeftHandIndex1 -45 0 0
+1.6 LeftHandIndex1 -45 0 0
+2.3 LeftHandIndex1 0 0 0
+
+0.3 LeftHandIndex2 0 0 0
+0.8 LeftHandIndex2 -45 0 0
+1.6 LeftHandIndex2 -45 0 0
+2.3 LeftHandIndex2 0 0 0
+
+0.3 LeftHandMiddle1 0 0 0
+0.8 LeftHandMiddle1 -45 0 0
+1.6 LeftHandMiddle1 -45 0 0
+2.3 LeftHandMiddle1 0 0 0
+
+0.3 LeftHandMiddle2 0 0 0
+0.8 LeftHandMiddle2 -45 0 0
+1.6 LeftHandMiddle2 -45 0 0
+2.3 LeftHandMiddle2 0 0 0
+
+0.3 LeftHandRing1 0 0 0
+0.8 LeftHandRing1 -45 0 0
+1.6 LeftHandRing1 -45 0 0
+2.3 LeftHandRing1 0 0 0
+
+0.3 LeftHandRing2 0 0 0
+0.8 LeftHandRing2 -45 0 0
+1.6 LeftHandRing2 -45 0 0
+2.3 LeftHandRing2 0 0 0
+
+0.3 LeftHandPinky1 0 0 0
+0.8 LeftHandPinky1 -45 0 0
+1.6 LeftHandPinky1 -45 0 0
+2.3 LeftHandPinky1 0 0 0
+
+0.3 LeftHandPinky2 0 0 0
+0.8 LeftHandPinky2 -45 0 0
+1.6 LeftHandPinky2 -45 0 0
+2.3 LeftHandPinky2 0 0 0
+
+0 Spine1 0 0 0
+0.1 Spine1 0 -0.1 0
+0.35 Spine1 -0.7 -1.7 0
+0.5 Spine1 -1.6 -1.6 0
+0.6 Spine1 -1.9 -1.5 0
+0.85 Spine1 -2 -1.4 0
+1 Spine1 -2.7 -0.8 0
+1.15 Spine1 -2.6 0 0
+1.35 Spine1 -1.2 0.8 0
+1.5 Spine1 -0.2 1.1 0
+1.6 Spine1 0 1 0
+2.25 Spine1 0 0.1 0
+2.6 Spine1 0 0 0
+
+0 Spine2 0 0.1 0
+0.1 Spine2 0 -0.2 0
+0.35 Spine2 -0.8 -2.1 0
+0.5 Spine2 -1.9 -2 0
+0.6 Spine2 -2.3 -1.8 0
+0.85 Spine2 -2.5 -1.7 0
+1 Spine2 -3.3 -1 0
+1.15 Spine2 -3.2 0 0
+1.35 Spine2 -1.4 1 0
+1.5 Spine2 -0.3 1.3 0
+1.6 Spine2 0 1.3 0
+2.25 Spine2 0 0.1 0
+2.6 Spine2 0 0 0
+
+0 move 0.004 -0.018 0
+0.2 move 0.007 -0.02 0.003
+0.3 move 0.009 -0.015 0.008
+0.5 move 0.01 -0.028 0.012
+0.6 move 0.01 -0.029 0.012
+0.8 move 0.011 -0.023 0.012
+0.9 move 0.01 -0.032 0.011
+1 move 0.009 -0.034 0.007
+1.3 move 0.005 -0.015 0
+1.5 move 0.002 -0.01 0
+2.6 move 0 0 0

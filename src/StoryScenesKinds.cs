@@ -130,16 +130,17 @@ namespace HuginWhispers
                 { "bars", new StepKind(StepSeen.Own) { Min = 1, Usage = "bars on|off",
                     Check = st => st.W[1] != "on" && st.W[1] != "off" ? "bars on|off" : null,
                     Begin = (p, st) => StoryScreen.Bars(st.W[1] == "on"), Setup = (p, st) => StoryScreen.Bars(st.W[1] == "on") } },
-                { "camera", new StepKind(StepSeen.Own) { Min = 1, PlaceAfter = "look", Usage = "camera <місце|behind|over|face [кут] [м]|follow [вбік] [вгору] [назад]|off> [look …] [blend N|cut] [fov N] [live N] · camera shot <кадр> · camera move <кадр> <кадр> <с> [ease …] [wait] · camera orbit <що> <радіус> <висота> <градусів> <с> [wait]",
-                    Busy = (p, st) => Time.time < _waitFor, // (a move or an orbit with «wait»)
+                { "camera", new StepKind(StepSeen.Own) { Min = 1, PlaceAfter = "look", Usage = "camera <місце|behind|over|face [кут] [м]|follow [вбік] [вгору] [назад]|off> [look …] [blend N|cut] [fov N] [live N] · camera shot <кадр> · camera move <кадр> <кадр> <с> [ease …] [wait] · camera orbit <що> <радіус> <висота> <градусів> <с> [wait] · camera on <хто> [close|medium|full|wide] [front|left|right|back|<градусів>] [low|high] [track] [push <м> <с>] [look …] [wait] · camera shoulder|two <хто> <на кого> [left|right] [push <м> <с>] [wait]",
+                    Check = CameraCheck, // (on, shoulder, two: who they are of, no unknown word)
+                    Busy = (p, st) => Time.time < _waitFor, // (a move, an orbit or a push with «wait»)
                     Begin = (p, st) => CameraStep(p, st.W), Setup = (p, st) => CameraStep(p, st.W) } },
                 { "fade", new StepKind(StepSeen.Own) { Min = 1, Usage = "fade out|in [секунд]   (увесь кадр у чорне й назад; крок чекає, поки скінчиться)",
                     Check = st => st.W[1] != "out" && st.W[1] != "in" ? "fade out|in [секунд]" : null,
                     Begin = (p, st) => { float s = st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f; StoryScreen.Fade(st.W[1] == "out", s); Hold(s); } } },
                 { "player", PlayerKind() },
-                { "prop", new StepKind(StepSeen.Own) { Min = 1, Usage = StoryProps.Usage, PlaceAfter = "from",
-                    Check = st => { if (st.W[1] == "put") return null; string why; return st.W[1] != "take" ? StoryProps.Usage : StoryProps.Read(st.W, 2, out why) == null ? why : null; },
-                    Begin = PropStep, Setup = PropStep } }, // (played from a later step: the thing in his hand already)
+                { "prop", new StepKind(StepSeen.Own) { Min = 1, Usage = StoryProps.Usage, PlaceAfter = "from", PlaceOf = w => StoryProps.PlaceOf(w, 1), // (the piece after «from»: the word storycheck reads here; the game asks PlaceOf — where a thing is thrown as well)
+                    Check = st => StoryProps.Check(st.W, 1),
+                    Begin = PropStep, Setup = PropStep } }, // (played from a later step: the thing in his hand already — or lying where it fell)
                 { "weather", air }, { "thor", air }, { "shake", air },
                 { "bolt", new StepKind(StepSeen.Own) { Min = 1, PlaceAt = 1, PlaceNot = new[] { "near", "ahead" }, Usage = "bolt near|ahead [n] [all] · bolt <місце> [n] [розкид] [all]",
                     Begin = (p, st) =>

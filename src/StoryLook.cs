@@ -9,7 +9,7 @@ namespace HuginWhispers
     // Where the player's head looks in a scene (the user 2026-11-04) and in a talk with a person (the user 2026-11-09: its eyes, while the
     // talk window is open: Talk/TalkEnd from NpcTalk, ticked by it each frame; a scene closes a talk, and its own word wins). Left alone, the game turns it after his look: the turn
     // of his body and the mouse's pitch as it was when the scene took him, so with the camera elsewhere it stared off to one side.
-    // While a scene plays the head looks at what it said (scene step «player look <place|bird|npc.x>», «player face» too), or,
+    // While a scene plays the head looks at what it said (scene step «player look <place|bird|npc.x|npc.x.thing>», «player face» too), or,
     // while a cutscene holds him (a shot, the bars, the black: StoryCamera.TakesPlayer) or the author watches from outside (StoryScenes.Watching: the mouse is his, not the player's),
     // straight before him. With no shot and no word he keeps his own head: he still has the keys.
     // Measured, not trusted: on the author's machine the log says, as a scene first takes the head and whenever the game turns it more
@@ -43,10 +43,11 @@ namespace HuginWhispers
         {
             if (what == "forward") { _aim = null; return null; }
             Vector3 at;
-            if (what == "bird" || what.StartsWith("npc."))
+            bool thing = StoryWhere.IsThing(what); // («npc.<who>.thing», «player.thing»: what that one holds — followed wherever it goes, in a hand, falling, lying)
+            if (what == "bird" || what.StartsWith("npc.") || thing)
             {
                 if (!StoryWhere.Find(what, out at)) return "player look: нема «" + what + "»";
-                float up = what == "bird" ? 0f : 1.5f; // (a person's place is at the feet)
+                float up = what == "bird" || thing ? 0f : 1.5f; // (a person's place is at the feet; a thing's word is the thing itself)
                 Vector3 last = at + Vector3.up * up;
                 _aim = () => { Vector3 now; if (StoryWhere.Find(what, out now)) last = now + Vector3.up * up; return last; }; // (it moves)
                 return null;

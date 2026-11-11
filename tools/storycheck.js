@@ -77,7 +77,7 @@ for (const a of Object.keys(aliasOf)) shots[a] = shots[aliasOf[a]];
 // the places of a «hold» word: the first, and those after «by» and «then»
 const holdPlaces = w => w.filter((x, i) => i === 0 || w[i - 1] === 'by' || w[i - 1] === 'then');
 const placeWhy = word => {
-  if (word === 'bird' || word === 'player' || word === 'sky' || word.startsWith('npc.') || prefixes.some(p => word.startsWith(p))) return null; // (a module's own places: StoryWhere.Prefixed, read from the code)
+  if (word === 'bird' || word === 'player' || word === 'player.thing' || word === 'sky' || word.startsWith('npc.') || prefixes.some(p => word.startsWith(p))) return null; // (a module's own places: StoryWhere.Prefixed, read from the code; «player.thing», «npc.<who>.thing»: what that one holds — StoryWhere.IsThing)
   const [id, piece] = word.split('.');
   if (!places[id]) return 'no place «' + id + '» in locations.list.txt';
   return piece && !places[id].has(piece) ? 'no piece «' + piece + '» in ' + (aliasOf[id] || id) + '.names.txt' : null;
@@ -278,6 +278,24 @@ function optionsWhy(at, all) {
     }
   }
 }
+// a held thing's own numbers in its item file («hang:», «lies:», «falls:»: StoryProps.OwnOf — a word and its number, in pairs): the words as
+// the code lists them. The game reads such a line no further than a word it does not know, and says so only in its log
+{
+  const m = /HangWords = \{([^}]*)\}, LiesWords = \{([^}]*)\}, FallsWords = \{([^}]*)\}/.exec(code);
+  const own = m ? { hang: m[1].match(/\w+/g) || [], lies: m[2].match(/\w+/g) || [], falls: m[3].match(/\w+/g) || [] } : null;
+  if (!own) say('src', 'no HangWords, LiesWords, FallsWords (StoryProps): the own lines of items — hang:, lies:, falls: — are not checked');
+  else for (const [d, name] of [[path.join(story, '..', 'items'), 'items'], [path.join(story, 'items'), 'story/items']]) for (const f of fs.existsSync(d) ? fs.readdirSync(d).filter(x => x.endsWith('.txt')) : []) {
+    fs.readFileSync(path.join(d, f), 'utf8').split(/\r?\n/).forEach((raw, n) => {
+      const k = /^(hang|lies|falls):\s*(.*)$/.exec(raw.replace(/\s+#.*$/, '').trim());
+      if (!k) return;
+      const w = k[2].split(/\s+/).filter(Boolean), at = name + '/' + f + ':' + (n + 1);
+      for (let i = 0; i < w.length; i += 2) {
+        if (!own[k[1]].includes(w[i])) { say(at, k[1] + ': «' + w[i] + '» is none of ' + own[k[1]].join(', ') + ': the game reads the line no further'); break; }
+        if (w[i + 1] === undefined || isNaN(Number(w[i + 1]))) { say(at, k[1] + ': ' + w[i] + ': a number after it'); break; }
+      }
+    });
+  }
+}
 // the words after a sound's name and place (StoryAudio reads these and passes over any other without a word)
 const audioWords = {
   sound: { flags: ['2d', 'wet', 'follow', 'wait'], valued: ['vol', 'range', 'pitch'] },
@@ -297,6 +315,8 @@ function audioWordsWhy(at, w) {
 function stepPlace(w) {
   if (w[0] === 'sound') return w[1] === 'stop' || ['vol', 'range', 'pitch', '2d', 'wet', 'follow', 'wait'].includes(w[2]) ? null : w[2]; // (a module's own: StoryAudio.PlaceOf)
   if (w[0] === 'bed') return w.length < 3 || w[1] === 'off' || !isNaN(Number(w[2])) || ['vol', 'range', 'pitch', '2d', 'wet', 'follow', 'all'].includes(w[2]) ? null : w[2]; // (StoryAudio.BedPlaceOf)
+  if (w[0] === 'prop' && w[1] === 'throw') return w[2] || null; // (where a thing is thrown: StoryProps.PlaceOf, the step's own)
+  if (w[0] === 'npc' && w[2] === 'prop' && w[3] === 'throw') return w[4] || null;
   const v = verbsOf[w[0]];
   const e = v ? v.verbs[w[v.at]] : stepPlaces[w[0]];
   if (!e) return null;
@@ -336,6 +356,7 @@ for (const f of txt('scenes')) {
     if (w[0] === 'bed' && w[1] && w[1] !== 'off') { const why = bedWhy(w[1]); if (why) say(at, why); }
     audioWordsWhy(at, w);
     checkDotted(at, w);
+    if (w[0] === 'camera') { const why = require('./scene_dry.js').cameraWhy(w); if (why) say(at, 'camera: ' + why + ' — the game leaves the whole step out, and nothing on the screen says so'); } // (the words of camera on|shoulder|two, by the game's own lists: a typo was seen only as a missing shot, 2026-11-11)
     optionsWhy(at, w);
   }
 }

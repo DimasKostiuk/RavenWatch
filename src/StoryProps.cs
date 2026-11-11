@@ -9,19 +9,29 @@ namespace HuginWhispers
     // ground in two hands, later a charm, a feather, a key in Heid's hand. Never the thing itself: its look only (HandLook),
     // and the piece it came from hidden meanwhile — by its place (LocState.Held: one owner of a piece's look; let go, the place lays it again by its state). The look comes exactly where the piece lies, the same moment the piece
     // goes, and goes back there before the piece returns: nothing pops.
-    //   state:  on the holder's own ZDO (a player's, or a person's of the story) — Key = «item|hand|piece|pose|until|size|rest|free»;
-    //           written only by the owner (a person's through its act «prop»). Nothing else is sent: every game near
-    //           reads it and draws it (a hand's look, the piece hidden, the pose), so one who comes in mid-scene sees it
-    //           too, and a player who leaves takes it with him (his ZDO is gone).
+    //   state:  on the holder's own ZDO (a player's, or a person's of the story) — Key = «item|hand|piece|pose|until|size|rest|free|square|set|left|way|home»
+    //           (Held.Of: a code of fewer fields — an older one — reads, what it lacks is «none»); written only by the owner (a person's through its act
+    //           «prop»), and only when it changes. Nothing else is sent: every game near reads it and draws it (a hand's look, the piece hidden, the
+    //           pose, the fall, the flight), so one who comes in mid-scene sees it too, and a player who leaves takes it with him (his ZDO is gone).
     //   until:  world seconds (a person's: a crashed scene's prop does not stay in its hand for good); 0 — no end
-    //   hand:   l | r (none — a shield on the left, as the game holds it; anything else on the right)
+    //   hand:   l | r (none — a shield on the left, as the game holds it; anything else on the right) · a — on the right forearm · «-» — in no
+    //           hand: it LIES at its rest (set down, let fall, thrown)
     //   piece:  the place's name of what it came from (prologue_munin.shchyt): each game finds it by that name, or «-»
     //   pose:   a player's clip while held (through Gestures: prop_look_<hand> — looks at it; «-» none)
-    //   rest:   x,y,z,rx,ry,rz in the world: where it lay; «-» nowhere (it grows in the hand)
+    //   rest:   x,y,z,rx,ry,rz in the world: where it lay; «-» nowhere (it grows in the hand). Lying: where it lies now
     //   free:   1 — the clip moves it (the channels @Prop, @LeftHand.on, @RightHand.on: BodyClips), both hands left empty;
     //           0 — on the hand's joint, as the game holds it
     //   square: 1 — as «@Prop.w» lifts it, it turns from how it lay to square before the body (a book: the hands' points are on its edges)
-    // The scene puts every prop back when it ends or stops (StoryScenes), whatever its file said.
+    //   set:    a carried thing's clip with the parts «down» and «up»; «-» none
+    //   left:   lying: 1 — by a word of the story (its own thing waits for «prop fetch»)
+    //   way:    lying: how it came there — 0 set down (it glides) · 1 let fall (straight down, tipping) · 2 thrown (an arc, tumbling); each game
+    //           draws that way from where its own look of the thing was to the rest (StoryPropView.Place)
+    //   home:   lying, a scene's thing taken from a piece: where that piece lies (x,y,z,rx,ry,rz) — put back, it glides there from the ground; «-» none
+    // The words (the scene's steps, the player's and «npc <who> prop …»): take · put · drop (what is held falls from where it is, straight down)
+    // · throw <place|player|npc.x> (it flies an arc there and lies) · fetch · carry (a person's own thing: below). A first sketch of drop and
+    // throw (the user 2026-11-11: the basket is the first prop, others will fall, be thrown, be laid): no physics, nothing in the way, no catching.
+    // What a holder has — in hand, on the arm, lying, in flight — is a word of place too: «npc.<who>.thing», «player.thing» (StoryWhere → ThingAt).
+    // The scene puts every prop back when it ends or stops (StoryScenes), whatever its file said — one let fall or thrown too, from where it lies.
     internal static class StoryProps
     {
         internal static readonly int Key = "RavenWatch_prop".GetStableHashCode();
@@ -39,10 +49,29 @@ namespace HuginWhispers
             public Quaternion RestTurn = Quaternion.identity;
         }
 
-        internal static string Usage = "prop take <предмет> [from <місце.частина>] [left|right|arm] [pose <кліп>|still] [size <м>] [free] [square] · prop put";
+        internal static string Usage = "prop take <предмет> [from <місце.частина>] [left|right|arm] [pose <кліп>|still] [size <м>] [free] [square] · prop put · prop drop · prop throw <місце|player|npc.x>";
         // the words after the item: alone, and with a value after them (storycheck reads these two lists, so a typo stops the build)
         internal const string TakeStep = "prop take";
         internal static readonly string[] TakeFlags = { "left", "right", "arm", "still", "free", "square" }, TakeValued = { "from", "pose", "size" };
+
+        // load time, the player's step and a person's alike: the words of «prop …» from the one at «at» on (take|put|drop|throw); null — fine, else what is wrong
+        internal static string Check(string[] w, int at)
+        {
+            if (w.Length <= at) return Usage;
+            if (w[at] == "put" || w[at] == "drop") return null;
+            if (w[at] == "throw") return w.Length > at + 1 ? null : "prop throw <місце|player|npc.x>";
+            if (w[at] != "take") return Usage;
+            string why;
+            return Read(w, at + 1, out why) == null ? why ?? Usage : null;
+        }
+        // the word of «prop …» that names a place: the piece after «from» (take), where it is thrown (throw); at: where the word after «prop» stands
+        // (the step's PlaceOf; storycheck has the same two in its stepPlace)
+        internal static string PlaceOf(string[] w, int at)
+        {
+            if (w.Length > at + 1 && w[at] == "throw") return w[at + 1];
+            int from = System.Array.IndexOf(w, "from");
+            return from > at && from + 1 < w.Length ? w[from + 1] : null;
+        }
 
         // A thing of a person's OWN (the user 2026-11-10: Heid's basket): the line «carry: <item> [arm|left|right] [clip <loop>] [set <clip>]» of its
         // [person] (StoryPeople). The person leads, the thing follows (Keep): on its feet it carries it — «arm»: hung on the right forearm (ArmX…:
@@ -52,15 +81,80 @@ namespace HuginWhispers
         // «down», the thing glides to the ground) and the thing LIES THERE: hand «-» in the same code, its rest where it was put, no term, drawn
         // by every game near. Free again (StoryLife: its own choices), it walks back to it («fetch», first of its places), the part «up», and the
         // thing glides from the ground onto its arm. Nothing of its own anywhere: it grows in its hand. A scene's end never touches it (Put lets
-        // a lasting thing be). Hand «-» on a player never happens: a player's thing goes back to its piece.
+        // a lasting thing be). A scene's thing, a person's or the player's, lies only by «prop drop» or «prop throw», and only till the scene puts it back.
         internal const string CarryLine = "carry: <предмет> [arm|left|right] [clip <кліп-петля>] [set <кліп з частинами down/up>]";
         // where it hangs on the forearm (tuned live: raven npc tune StoryProps.ArmAlong …): on the line from the elbow to the wrist, ArmAlong of the way
         // (1 the wrist), ArmDrop m below it (the look is centred: half the thing's height for a handle over the arm), ArmOut m away from the body;
-        // turned ArmRx/Ry/Rz degrees from «handle along the forearm». Reckoned from the bones' places each frame, never hung on a bone: the
+        // hanging plumb, its handle along the way the forearm points over the ground, turned ArmRx/Ry/Rz degrees from that. Reckoned from the bones' places each frame, never hung on a bone: the
         // skeleton's bones are scaled and their axes are their own (a look parented to the forearm came out the size of a house, 2026-11-10)
         internal static float ArmAlong = 0.7f, ArmDrop = 0.16f, ArmOut = 0f, ArmRx = 0f, ArmRy = 0f, ArmRz = 0f;
-        internal static float SetAhead = 0.35f, SetAside = 0.25f, SetUp = 0.02f; // where it is set down: before its right foot
+        internal static float SetAhead = 0.35f, SetAside = 0.25f, SetUp = 0.02f; // where it is set down: before its right foot; SetUp: m its middle rests over what it lies on, set down, fallen or thrown (the look is centred)
         internal static float SetDownFor = 2f, PickAfter = 1f, KeepEvery = 2f, KeepFor = 600f, FetchWant = 3f; // s: the «down» part's length · into the «up» part when the thing leaves the ground · the arm's loop asked again · its term · how much it wants its own thing back over any other place
+        internal static float FallTilt = 28f, FallFor = 0.5f; // let fall: degrees it tips over on its way down · seconds to the ground
+        // thrown (a first sketch): m/s over the ground · the arc's top over the straight line, a share of the way · never quicker than this, s · whole turns
+        // it tumbles on the way · thrown at a body, it lands this many m short of it (nobody catches: it lies before its feet)
+        internal static float ThrowSpeed = 7f, ThrowArc = 0.25f, ThrowMin = 0.35f, ThrowTurns = 1f, ThrowShort = 0.6f;
+        internal static float GroundOver = 1f, GroundDeep = 8f; // m over a spot the ray to what lies under it begins · m down it looks
+
+        // ---------------------------------------------------------------- a thing's own numbers
+        // The numbers above are one set for every thing, tuned to Heid's basket. A thing of ours says its own in its item file (assets/story/items,
+        // assets/items: a Workshop model — WsModel.Hang, Lies, Falls), a line each, any word left out:
+        //   hang: along 0.7 drop 0.16 out 0 rx 0 ry 0 rz 0    on a forearm                 (ArmAlong, ArmDrop, ArmOut, ArmRx, ArmRy, ArmRz)
+        //   lies: ahead 0.35 aside 0.25 up 0.02              set down; up for a fall too  (SetAhead, SetAside, SetUp)
+        //   falls: tilt 28 s 0.5                             let fall                     (FallTilt, FallFor)
+        // What its file does not say is the static of that name (a thing of the game's — a shield — has no file: all statics). A word unknown or with
+        // no number: said in the log as the thing is first held, that line read no further; storycheck stops the build on it (it reads the three lists).
+        // Tuned live: «raven npc tune StoryProps.TuneAll 1» — every thing goes by the statics, its file passed over; tune them (… StoryProps.ArmDrop 0.2),
+        // write what fits into the thing's file, TuneAll 0. Read once a thing a session (the files are built in)
+        internal static readonly string[] HangWords = { "along", "drop", "out", "rx", "ry", "rz" }, LiesWords = { "ahead", "aside", "up" }, FallsWords = { "tilt", "s" };
+        internal static bool TuneAll = false; // (set live only: raven npc tune StoryProps.TuneAll 1)
+        internal struct Nums { public float ArmAlong, ArmDrop, ArmOut, ArmRx, ArmRy, ArmRz, SetAhead, SetAside, SetUp, FallTilt, FallFor; }
+        private static readonly Dictionary<string, float[]> _own = new Dictionary<string, float[]>(); // (an item → its own numbers in the order of Nums, NaN where its file says none; null: no line of its own)
+
+        internal static float[] OwnOf(string item)
+        {
+            float[] own;
+            if (_own.TryGetValue(item, out own)) return own;
+            WsModel m = WsItems.ModelOf(item);
+            if (m != null && (m.Hang.Length > 0 || m.Lies.Length > 0 || m.Falls.Length > 0))
+            {
+                own = new float[HangWords.Length + LiesWords.Length + FallsWords.Length];
+                for (int i = 0; i < own.Length; i++) own[i] = float.NaN;
+                ReadOwn(item, "hang", m.Hang, HangWords, own, 0);
+                ReadOwn(item, "lies", m.Lies, LiesWords, own, HangWords.Length);
+                ReadOwn(item, "falls", m.Falls, FallsWords, own, HangWords.Length + LiesWords.Length);
+            }
+            _own[item] = own;
+            return own;
+        }
+
+        private static void ReadOwn(string item, string line, string said, string[] words, float[] into, int at)
+        {
+            string[] w = said.Split(new[] { ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < w.Length; i += 2)
+            {
+                int k = System.Array.IndexOf(words, w[i]);
+                float v = 0f;
+                if (k < 0 || i + 1 >= w.Length || !float.TryParse(w[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out v))
+                {
+                    Story.Log("items: " + item + ": " + line + ": не розумію «" + w[i] + (k >= 0 ? "» без числа" : "»") + " (" + line + ": " + string.Join(" <число> ", words) + " <число>)");
+                    return;
+                }
+                into[at + k] = v;
+            }
+        }
+
+        // the numbers a thing goes by now: its own where its file says them, else the statics (own: OwnOf, kept by whoever asks each frame)
+        internal static Nums NumsOf(float[] own)
+        {
+            Nums n;
+            n.ArmAlong = Pick(own, 0, ArmAlong); n.ArmDrop = Pick(own, 1, ArmDrop); n.ArmOut = Pick(own, 2, ArmOut);
+            n.ArmRx = Pick(own, 3, ArmRx); n.ArmRy = Pick(own, 4, ArmRy); n.ArmRz = Pick(own, 5, ArmRz);
+            n.SetAhead = Pick(own, 6, SetAhead); n.SetAside = Pick(own, 7, SetAside); n.SetUp = Pick(own, 8, SetUp);
+            n.FallTilt = Pick(own, 9, FallTilt); n.FallFor = Pick(own, 10, FallFor);
+            return n;
+        }
+        private static float Pick(float[] own, int i, float common) { return own == null || TuneAll || float.IsNaN(own[i]) ? common : own[i]; }
 
         // «<item> [arm|left|right] [clip <loop>] [set <clip>]»; why: what is wrong, null fine
         internal static Ask ReadCarry(string v, out string why)
@@ -210,6 +304,102 @@ namespace HuginWhispers
             if (!Own(h)) a.Act("prop -"); else SetDown(a, false, true);
         }
 
+        // ---------------------------------------------------------------- let fall, thrown: whatever a holder holds
+        // The words «prop drop», «prop throw <place>» (the player's step) and «npc <who> prop drop|throw …»: the thing in a hand, on the arm or moved
+        // by a clip leaves it and comes to LIE — the same lying state as one set down, with the way it got there (Held.Fell, Thrown: every game
+        // draws the fall or the flight from where its own look was). A person's own thing lies there till the story says «prop fetch»; a scene's
+        // thing — a person's or the player's — till the scene puts it back (Put: it keeps its piece, its term and where the piece lies).
+        // Nothing held, or lying already: nothing happens. Each returns the seconds of the way (the step waits them)
+
+        // a held thing's code as it comes to lie at a spot: in no hand, its rest there
+        private static string LyingCode(Held h, string pose, Vector3 at, Quaternion turn, bool left, int way)
+        {
+            string home = h.Piece != "-" && h.HasRest ? Rest(h.RestAt, h.RestTurn) : "-"; // (where it was taken from: back there when the scene ends)
+            return h.Item + "|-|" + h.Piece + "|" + pose + "|" + h.Until.ToString("0", CultureInfo.InvariantCulture) + "|" + h.Size.ToString("0.###", CultureInfo.InvariantCulture) + "|" + Rest(at, turn)
+                + "|0|0|" + h.Set + "|" + (left ? "1" : "0") + "|" + way.ToString(CultureInfo.InvariantCulture) + "|" + home;
+        }
+
+        // what lies under a spot — a floor, a table, the land: one ray down from «over» m above it (nothing hit: the land's own height there)
+        private static int _groundMask;
+        private static float Ground(Vector3 at, float over)
+        {
+            if (_groundMask == 0) _groundMask = LayerMask.GetMask("piece", "Default", "static_solid", "terrain");
+            RaycastHit hit;
+            if (Physics.Raycast(at + Vector3.up * over, Vector3.down, out hit, over + GroundDeep, _groundMask, QueryTriggerInteraction.Ignore)) return hit.point.y; // heavy: one ray, once as a thing is set down, let fall or thrown
+            return ZoneSystem.instance != null ? ZoneSystem.instance.GetGroundHeight(at) : at.y;
+        }
+
+        // where it is set down: before the holder's right foot, on what lies there
+        private static Vector3 SetSpot(Transform t, Nums n)
+        {
+            Vector3 at = t.position + t.forward * n.SetAhead + t.right * n.SetAside;
+            at.y = Ground(at, GroundOver) + n.SetUp;
+            return at;
+        }
+
+        // where it comes to lie, let fall: straight under where its look is on this game (no look made here: before the foot, as one set down)
+        private static Vector3 FallSpot(Transform holder, Nums n)
+        {
+            StoryPropView v = StoryPropView.Of(holder.gameObject);
+            Vector3 at;
+            if (v == null || !v.Root(out at)) return SetSpot(holder, n);
+            at.y = Ground(at, 0.05f) + n.SetUp;
+            return at;
+        }
+
+        // where it lands, thrown at a point, and the seconds of its flight (atBody: ThrowShort m short of the one it is thrown at, on the thrower's side)
+        private static Vector3 ThrowSpot(Transform holder, Vector3 to, bool atBody, Nums n, out float seconds)
+        {
+            StoryPropView v = StoryPropView.Of(holder.gameObject);
+            Vector3 from;
+            if (v == null || !v.Root(out from)) from = holder.position + Vector3.up;
+            Vector3 back = from - to; back.y = 0f;
+            if (atBody && back.magnitude > ThrowShort) to += back.normalized * ThrowShort;
+            to.y = Ground(to, GroundOver) + n.SetUp;
+            seconds = FlightFor(from, to);
+            return to;
+        }
+        // the seconds of a flight: its way over the ground by ThrowSpeed (the same reckoning where it is written and where it is drawn)
+        internal static float FlightFor(Vector3 from, Vector3 to) { return Mathf.Max(ThrowMin, Utils.DistanceXZ(from, to) / Mathf.Max(0.1f, ThrowSpeed)); }
+
+        // the player's thing (his own game writes): he holds it no more, so his look at it ends with it
+        private static float Leave(Player p, bool thrown, Vector3 to, bool atBody)
+        {
+            ZDO z = NetFlag.Zdo(p, true);
+            string code = z != null ? z.GetString(Key, "") : "";
+            Held h = code.Length > 0 ? Held.Of(code) : null;
+            if (h == null || h.Hand == "-") return 0f;
+            Nums n = NumsOf(OwnOf(h.Item));
+            float seconds = n.FallFor;
+            Vector3 at = thrown ? ThrowSpot(p.transform, to, atBody, n, out seconds) : FallSpot(p.transform, n);
+            BodyAnimator on = h.Pose != "-" ? BodyAnimator.For(p) : null;
+            if (on != null && on.ClipIn(2) == h.Pose) Gestures.SceneEnd(p, PoseFade); // (his look at the thing in his hand, still on him: off with it; a clip the scene put on him since — the throw's own — plays on)
+            z.Set(Key, LyingCode(h, "-", at, p.transform.rotation, true, thrown ? 2 : 1));
+            Story.Log("prop: the player " + (thrown ? "throws " : "lets fall ") + h.Item);
+            return seconds;
+        }
+        internal static float Drop(Player p) { return Leave(p, false, Vector3.zero, false); }
+        internal static float Throw(Player p, Vector3 to, bool atBody) { return Leave(p, true, to, atBody); }
+
+        // a person's (reckoned on the game of the scene, where its look is; written where the person is run: its act «prop»)
+        private static float Leave(NpcActor a, bool thrown, Vector3 to, bool atBody)
+        {
+            Held h = HeldBy(a);
+            if (h == null || !h.Live || h.Hand == "-") return 0f;
+            Nums n = NumsOf(OwnOf(h.Item));
+            float seconds = n.FallFor;
+            Vector3 at = thrown ? ThrowSpot(a.transform, to, atBody, n, out seconds) : FallSpot(a.transform, n);
+            bool own = Own(h);
+            string code = LyingCode(h, own ? h.Pose : "-", at, a.transform.rotation, true, thrown ? 2 : 1);
+            if (own && MayFetch(a)) StoryWorld.SetText(FetchKey(a.Id), ""); // (an old «fetch» frees no new leaving)
+            _pending.Remove(a); // (a setting down or taking up that waited for its clip's moment: the story's word is the later one)
+            a.Act("prop " + code);
+            Story.Log("prop: " + a.Id + (thrown ? " throws " : " lets fall ") + h.Item + (own ? ", left till the story says fetch" : ", the scene's: put back when it ends"));
+            return seconds;
+        }
+        internal static float Drop(NpcActor a) { return Leave(a, false, Vector3.zero, false); }
+        internal static float Throw(NpcActor a, Vector3 to, bool atBody) { return Leave(a, true, to, atBody); }
+
         // the word «npc <who> prop fetch» (a quest's start:, a scene's step): a thing the story had it set down may be gone back for — when it is
         // free and at home (StoryLife). The world's key, as «hold» and «live»: the person need not be near, nor loaded on this game.
         // Taken off by the story again (SetDown byStory) or taken up (PickUp): the key is cleared, so an old word frees no later thing
@@ -229,6 +419,17 @@ namespace HuginWhispers
             return code.Length > 0 ? Held.Of(code) : null;
         }
 
+        // A holder's thing as a word of place («npc.<who>.thing», «player.thing»: StoryWhere): the middle of its look on this game, wherever it is —
+        // in a hand, on the arm, lying, falling, in flight. False: it has none, or its look is not made here (a view found by its body: no search)
+        internal static bool ThingAt(GameObject holder, out Vector3 at)
+        {
+            StoryPropView v = StoryPropView.Of(holder);
+            at = Vector3.zero;
+            return v != null && v.Middle(out at);
+        }
+        // held, or on its way to where it will lie: asked again each frame by what films or looks at it; lying still — found once. None: asked again
+        internal static bool ThingMoves(GameObject holder) { StoryPropView v = StoryPropView.Of(holder); return v == null || v.Moving; }
+
         // holds or has lying anything at all (live)
         internal static bool Holds(NpcActor a) { Held h = HeldBy(a); return h != null && h.Live; }
         // the thing of its own written for this person («carry:» of its [person], StoryPeople); null: none
@@ -240,12 +441,13 @@ namespace HuginWhispers
         }
         // a thing in its hand or on its arm now (the condition «npcprop <who>»); one lying on the ground: no
         internal static bool InHand(NpcActor a) { Held h = HeldBy(a); return h != null && h.Live && h.Hand != "-"; }
-        // its own thing lies on the ground: where; left — by a word of the story (it waits for «prop fetch»), else by its own doing
+        // its own thing lies on the ground: where; left — by a word of the story (it waits for «prop fetch»), else by its own doing.
+        // A scene's thing let fall or thrown is the scene's: never gone back for
         internal static bool Lying(NpcActor a, out Vector3 at, out Quaternion turn, out bool left)
         {
             Held h = HeldBy(a);
             at = Vector3.zero; turn = Quaternion.identity; left = false;
-            if (h == null || h.Hand != "-" || !h.HasRest) return false;
+            if (h == null || !Own(h) || h.Hand != "-" || !h.HasRest) return false;
             at = h.RestAt; turn = h.RestTurn; left = h.Left;
             return true;
         }
@@ -254,6 +456,7 @@ namespace HuginWhispers
         // withClip: the «down» part of its «set» clip plays first (the thing leaves the arm as the hand is down); returns the seconds that takes,
         // 0 when there was nothing to set down (NpcPlaces.ClipBegins waits that long before its own clip).
         // byStory: a word of the story took it off (a scene, a hold) — it lies till the story says «prop fetch»; else its own doing (a visit): it goes back for it itself
+        // (let fall or thrown, not set down: Drop, Throw above — the same lying state, another way to it)
         internal static float SetDown(NpcActor a, bool withClip, bool byStory)
         {
             Held h = HeldBy(a);
@@ -267,11 +470,7 @@ namespace HuginWhispers
                 h = Held.Of(grown); withClip = false;
             }
             else if (h.Hand == "-" || !Own(h)) return 0f; // (lying already; a scene's thing is the scene's, the mannequin's its own)
-            Transform t = a.transform;
-            Vector3 at = t.position + t.forward * SetAhead + t.right * SetAside;
-            if (ZoneSystem.instance != null) at.y = ZoneSystem.instance.GetGroundHeight(at);
-            at.y += SetUp;
-            string code = h.Item + "|-|-|" + h.Pose + "|0|" + h.Size.ToString("0.###", CultureInfo.InvariantCulture) + "|" + Rest(at, t.rotation) + "|0|0|" + h.Set + "|" + (byStory ? "1" : "0");
+            string code = LyingCode(h, h.Pose, SetSpot(a.transform, NumsOf(OwnOf(h.Item))), a.transform.rotation, byStory, 0); // (on what lies before its foot — a floor too: by the land's height alone it would lie under the boards)
             float wait = 0f;
             if (withClip && h.Set != "-" && a.Body != null && a.Body.Clip(h.Set + ".down")) wait = SetDownFor;
             if (byStory && MayFetch(a)) StoryWorld.SetText(FetchKey(a.Id), ""); // (an old «fetch» frees no new leaving)
@@ -368,7 +567,9 @@ namespace HuginWhispers
         {
             public string Item = "", Hand = "r", Piece = "-", Pose = "-", Set = "-"; public double Until; public float Size; // (Hand: l · r · a the right forearm · - lying at its rest)
             public bool HasRest, Free, Square; public Vector3 RestAt; public Quaternion RestTurn = Quaternion.identity;
+            public bool Fell, Thrown; // (lying, the way it came there — the field «way»: 1 let fall, drawn falling from where it was to where it lies · 2 thrown, drawn flying an arc there: Place; neither: set down)
             public bool Left; // (lying: set down by a word of the story — it stays till the story says «prop fetch»; by its own life — it goes back for it itself)
+            public bool HasHome; public Vector3 HomeAt; public Quaternion HomeTurn = Quaternion.identity; // (lying, a scene's thing: where the piece it came from lies — put back, it glides there)
             internal static Held Of(string code)
             {
                 Held h = new Held();
@@ -379,22 +580,25 @@ namespace HuginWhispers
                 if (f.Length > 3) h.Pose = f[3];
                 if (f.Length > 4) double.TryParse(f[4], NumberStyles.Float, CultureInfo.InvariantCulture, out h.Until);
                 if (f.Length > 5) float.TryParse(f[5], NumberStyles.Float, CultureInfo.InvariantCulture, out h.Size);
-                if (f.Length > 6) h.ReadRest(f[6]);
+                if (f.Length > 6) h.HasRest = Spot(f[6], ref h.RestAt, ref h.RestTurn);
                 if (f.Length > 7) h.Free = f[7] == "1";
                 if (f.Length > 8) h.Square = f[8] == "1";
                 if (f.Length > 9 && f[9].Length > 0) h.Set = f[9];
                 if (f.Length > 10) h.Left = f[10] == "1";
+                if (f.Length > 11) { h.Fell = f[11] == "1"; h.Thrown = f[11] == "2"; }
+                if (f.Length > 12) h.HasHome = Spot(f[12], ref h.HomeAt, ref h.HomeTurn);
                 return h;
             }
-            private void ReadRest(string s)
+            // «x,y,z,rx,ry,rz» in the world; «-» or anything else: none (false, nothing written)
+            private static bool Spot(string s, ref Vector3 at, ref Quaternion turn)
             {
                 string[] g = s.Split(',');
-                if (g.Length < 6) return;
+                if (g.Length < 6) return false;
                 float[] v = new float[6];
-                for (int i = 0; i < 6; i++) if (!float.TryParse(g[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v[i])) return;
-                RestAt = new Vector3(v[0], v[1], v[2]);
-                RestTurn = Quaternion.Euler(v[3], v[4], v[5]);
-                HasRest = true;
+                for (int i = 0; i < 6; i++) if (!float.TryParse(g[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v[i])) return false;
+                at = new Vector3(v[0], v[1], v[2]);
+                turn = Quaternion.Euler(v[3], v[4], v[5]);
+                return true;
             }
             internal bool Live { get { return Item.Length > 0 && (Until <= 0.0 || ZNet.instance == null || ZNet.instance.GetTimeSeconds() < Until); } }
         }
@@ -476,7 +680,8 @@ namespace HuginWhispers
     }
 
     // A holder's thing on this game: its look on the hand's joint or where the clip says, what the hands held before hidden
-    // meanwhile (the game may put its weapon back there any moment: hidden again each frame while held).
+    // meanwhile (the game may put its weapon back there any moment: hidden again each frame while held). Lying: its look at its rest, come
+    // there from where it was as the hand let go — set down (a glide), let fall (straight down, tipping), thrown (an arc, tumbling): Place.
     [DefaultExecutionOrder(11000)] // (after every pose, a person's too: NpcPose)
     internal sealed class StoryPropView : MonoBehaviour
     {
@@ -487,7 +692,9 @@ namespace HuginWhispers
         private BodyAnimator _anim;
         private Vector3 _inHand;
         private Transform _wrist; // (on the forearm: the hand bone, the far end of the line the thing hangs on)
-        private Vector3 _fromAt; private Quaternion _fromTurn; private bool _from; // (set down: from where the look was as the hand let go, to its rest)
+        private Vector3 _fromAt; private Quaternion _fromTurn; private bool _from; // (lying: from where the look was as the hand let go, to its rest; put back from the ground: from where it lay)
+        private float[] _own; // (the thing's own numbers, its file's: StoryProps.OwnOf — asked once as its look is made)
+        private float _for; // (lying: the seconds of its way to its rest — a fall's, a flight's; 0: StoryProps.Glide, as every other way)
         private float _g; // (0: where it lay, or nothing yet · 1: taken)
         private Quaternion _asLay = Quaternion.identity; // (how it lay against the body as it took it: a clip reckons the thing as lying square before the body)
         private bool _leaving;
@@ -500,6 +707,11 @@ namespace HuginWhispers
         // the size of its look in its own frame (the stage says it: the clip's points on it are reckoned from this)
         internal Vector3 Size { get { return _box.size; } }
         private Bounds _box;
+        // where it is now: the middle of what the eye sees of it (the word of place «….thing») · its look's own point (what a fall goes straight down from)
+        internal bool Middle(out Vector3 at) { at = _look != null ? _look.transform.TransformPoint(_box.center) : Vector3.zero; return _look != null; }
+        internal bool Root(out Vector3 at) { at = _look != null ? _look.transform.position : Vector3.zero; return _look != null; }
+        // in a hand, on the arm, moved by a clip, or still on its way (falling, in flight, gliding down or back)
+        internal bool Moving { get { return _look != null && (_leaving || _h.Hand != "-" || _g < 1f); } }
 
         // how far a point is from the thing, m; below zero: inside it. Round when its two larger sides are alike (a shield),
         // else a box. For the stage's measure only: no one in play asks
@@ -553,6 +765,7 @@ namespace HuginWhispers
             {
                 _code = ""; _leaving = _look != null;
                 if (!_leaving) { Clear(); return; }
+                if (_h != null && _h.Hand == "-") { _from = true; _fromAt = _look.transform.position; _fromTurn = _look.transform.rotation; _g = 1f; } // (put back from the ground — or from the air, still on its way: from where it is this moment)
                 if (_h != null && _h.Piece != "-" && !LocState.WantsShown(StoryWhere.Piece(_h.Piece))) _g = 0f; // (its piece gone for good — a letter read: it does not glide back to nothing, a second player has no black to hide it)
                 return;
             }
@@ -569,10 +782,13 @@ namespace HuginWhispers
             _look = _h.Free || _h.Size > 0f || lying || arm ? HandLook.Copy(_h.Item, _h.Size, _h.Free || lying || arm) : HandLook.Make(_h.Item, _h.Size); // (a copy with no grip of the game's: on the ground, or hung on a bone)
             if (_look == null) { Story.Log("prop: no look for " + _h.Item); return; }
             _box = Measure();
+            _own = StoryProps.OwnOf(_h.Item);
             if (lying)
             {
-                if (!_h.HasRest) { _h.RestAt = transform.position + transform.forward * StoryProps.SetAhead; _h.RestTurn = transform.rotation; }
+                StoryProps.Nums n = StoryProps.NumsOf(_own);
+                if (!_h.HasRest) { _h.RestAt = transform.position + transform.forward * n.SetAhead; _h.RestTurn = transform.rotation; }
                 _from = was; _fromAt = wasAt; _fromTurn = wasTurn;
+                _for = !_from ? 0f : _h.Thrown ? StoryProps.FlightFor(_fromAt, _h.RestAt) : _h.Fell ? n.FallFor : 0f; // (a fall's seconds, a flight's by its way; seen only after it lay: grown there as ever)
                 _look.transform.SetPositionAndRotation(_from ? _fromAt : _h.RestAt, _from ? _fromTurn : _h.RestTurn);
                 _g = 0f; // (from the hand that let go; or, out of nothing, grown where it lies)
                 Place(0f);
@@ -611,17 +827,21 @@ namespace HuginWhispers
         }
 
         // where a thing on the forearm is now, in the world: on the elbow-to-wrist line, ArmAlong of the way, ArmDrop below, ArmOut away from the body
+        // (the thing's own numbers where its file says them, else the statics: read live each frame, so both are tuned on the stage)
         private void ArmPose(out Vector3 at, out Quaternion turn)
         {
+            StoryProps.Nums n = StoryProps.NumsOf(_own);
             Vector3 elbow = _joint.position;
             Vector3 dir = _wrist != null ? _wrist.position - elbow : transform.forward * 0.25f;
             float len = dir.magnitude;
             if (len < 1e-3f) { dir = transform.forward; len = 0.25f; } else dir /= len;
             Vector3 outward = Vector3.ProjectOnPlane(elbow - transform.position, dir); outward.y = 0f;
             outward = outward.sqrMagnitude > 1e-6f ? outward.normalized : transform.right;
-            at = elbow + dir * (len * StoryProps.ArmAlong) + Vector3.down * StoryProps.ArmDrop + outward * StoryProps.ArmOut;
-            Vector3 up = Vector3.ProjectOnPlane(Vector3.up, dir); if (up.sqrMagnitude < 1e-6f) up = transform.up;
-            turn = Quaternion.LookRotation(dir, up) * Quaternion.Euler(StoryProps.ArmRx, StoryProps.ArmRy, StoryProps.ArmRz);
+            at = elbow + dir * (len * n.ArmAlong) + Vector3.down * n.ArmDrop + outward * n.ArmOut;
+            // (it hangs plumb: turned only round the upright, the way the forearm points over the ground — turned with the forearm itself it tilted with every
+            //  bend of the arm, and fell from that tilt; the user 2026-11-11: «кошик досі криво на модельці Гейд і від того падає дивно»)
+            Vector3 flat = dir; flat.y = 0f; if (flat.sqrMagnitude < 1e-6f) flat = transform.forward;
+            turn = Quaternion.LookRotation(flat.normalized, Vector3.up) * Quaternion.Euler(n.ArmRx, n.ArmRy, n.ArmRz);
         }
 
         // its meshes' corners in the look's own frame (a mesh's own axes may be turned: its thin side is not always its z)
@@ -646,7 +866,7 @@ namespace HuginWhispers
         private void LateUpdate()
         {
             if (_look == null) return;
-            _g = Mathf.MoveTowards(_g, _leaving ? 0f : 1f, Time.deltaTime / StoryProps.Glide);
+            _g = Mathf.MoveTowards(_g, _leaving ? 0f : 1f, Time.deltaTime / Mathf.Max(0.05f, _leaving || _for <= 0f ? StoryProps.Glide : _for));
             Place(_g * _g * (3f - 2f * _g));
             HideOthers();
         }
@@ -655,6 +875,29 @@ namespace HuginWhispers
         private void Place(float k)
         {
             Transform t = _look.transform;
+            if (_h.Hand == "-" && _leaving)
+            {
+                // a scene's thing put back from where it lies (or from the air): to where the piece it came from lies — the piece returns as it arrives; none: it goes small where it is
+                if (_h.HasHome) t.SetPositionAndRotation(Vector3.Lerp(_h.HomeAt, _fromAt, k), Quaternion.Slerp(_h.HomeTurn, _fromTurn, k));
+                else t.localScale = Vector3.one * Mathf.Max(0.01f, k);
+                return;
+            }
+            if (_h.Hand == "-" && _from && _h.Thrown)
+            {
+                // thrown: evenly over the ground, and over the straight line an arc as high as ThrowArc of the way (a thrown thing's curve: its top half-way),
+                // tumbling whole turns round its own side axis, so it comes down as it will lie. Nothing is in its way: a first sketch
+                float g = _g; Vector3 at = Vector3.Lerp(_fromAt, _h.RestAt, g);
+                at.y += 4f * g * (1f - g) * Utils.DistanceXZ(_fromAt, _h.RestAt) * StoryProps.ThrowArc;
+                t.SetPositionAndRotation(at, Quaternion.Slerp(_fromTurn, _h.RestTurn, g) * Quaternion.AngleAxis(360f * Mathf.Round(StoryProps.ThrowTurns) * g, Vector3.right));
+                return;
+            }
+            if (_h.Hand == "-" && _from && _h.Fell)
+            {
+                // let fall: straight down faster and faster (the way down by the square of the time), tipping over and righting itself as it lands
+                float g = _g; Vector3 at = Vector3.Lerp(_fromAt, _h.RestAt, g); at.y = Mathf.Lerp(_fromAt.y, _h.RestAt.y, g * g);
+                t.SetPositionAndRotation(at, Quaternion.Slerp(_fromTurn, _h.RestTurn, g) * Quaternion.AngleAxis(Mathf.Sin(g * Mathf.PI) * StoryProps.NumsOf(_own).FallTilt, Vector3.right));
+                return;
+            }
             if (_h.Hand == "-") { if (_from) t.SetPositionAndRotation(Vector3.Lerp(_fromAt, _h.RestAt, k), Quaternion.Slerp(_fromTurn, _h.RestTurn, k)); else t.localScale = Vector3.one * Mathf.Max(0.01f, k); return; } // (lying: from the hand that let go to the ground, then still; out of nothing: grown there)
             if (_h.Hand == "a")
             {
@@ -703,16 +946,18 @@ namespace HuginWhispers
             _joint = null;
             if (_anim != null) _anim.PropRest(false, Vector3.zero, Quaternion.identity);
             _anim = null;
-            _h = null; _g = 0f; _leaving = false; _code = ""; _from = false; _wrist = null;
+            _h = null; _g = 0f; _leaving = false; _code = ""; _from = false; _wrist = null; _own = null; _for = 0f;
         }
 
         private void OnDestroy() { Clear(); _bodies.Remove(_body); }
 
-        // the bodies that have a view (a person holding nothing and with none is passed over: StoryProps.Look)
-        private static readonly HashSet<int> _bodies = new HashSet<int>();
+        // the bodies that have a view, each with its own (a person holding nothing and with none is passed over: StoryProps.Look; a holder's thing
+        // asked as a word of place is found here, with no search of its parts: StoryProps.ThingAt)
+        private static readonly Dictionary<int, StoryPropView> _bodies = new Dictionary<int, StoryPropView>();
         private int _body;
-        private void Awake() { _body = gameObject.GetInstanceID(); _bodies.Add(_body); }
-        internal static bool On(GameObject body) { return body != null && _bodies.Contains(body.GetInstanceID()); }
+        private void Awake() { _body = gameObject.GetInstanceID(); _bodies[_body] = this; }
+        internal static bool On(GameObject body) { return body != null && _bodies.ContainsKey(body.GetInstanceID()); }
+        internal static StoryPropView Of(GameObject body) { StoryPropView v; return body != null && _bodies.TryGetValue(body.GetInstanceID(), out v) ? v : null; }
     }
 }
 #endif

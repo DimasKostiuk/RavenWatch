@@ -51,6 +51,11 @@ namespace HuginWhispers
     //   msg <текст>                         a line in the middle of the screen
     //   camera <from> [look <what>] [blend 2] [fov 50]   a shot (StoryCamera): from a place, «behind», «over» or «face» (close up);
     //                                       looking at player (default), bird, sky (up before you) or a place; the player stands still
+    //   camera on <who> [close|medium|full|wide] [front|left|right|back] [low|high] [track]   one in the picture, in words: how near, from
+    //                                       which side of it, lower or higher; track: it goes with it (who: player, bird, npc.<who>, a place)
+    //   camera shoulder <a> <b> [left|right] over a's shoulder at b · camera two <a> <b> [left|right]   both from the side; a scene keeps to
+    //                                       one side of the line between two (the 180° rule) unless a line says left|right
+    //   … push <m> <s> [wait]               on these three: the lens goes m nearer over s seconds (all the camera's words: StoryScenesCamera)
     //   camera off [blend 1.5]              the camera back to the player (also when the scene ends or stops)
     //   bars on|off · sub <текст>           the black bars; a subtitle (waits while it is read)
     //   weather <env> [s] [all] · weather off [all]     forced weather (ThunderStorm, Rain, Misty, Clear …); off when the scene ends or stops
@@ -80,6 +85,13 @@ namespace HuginWhispers
     //                                       at it — prop_look_<hand>); «free»: it stays where it lay and the clip moves it
     //                                       (@Prop, BodyClips); «npc <who> prop take|put …» the same for a person.
     //                                       All put back when the scene ends or stops (StoryProps)
+    //   prop drop · npc <who> prop drop     what is held (in a hand, on the arm; a person's own «carry:» thing too) falls from where it is,
+    //                                       straight down, and lies there (waits its fall)
+    //   prop throw <place|player|npc.x> · npc <who> prop throw …   it flies an arc there, tumbling, and lies (at a body: just short of it;
+    //                                       nothing catches it; waits its flight). A first sketch: no physics, nothing in its way
+    //   npc <who> prop fetch                its own thing the story had it leave: it may go back for it
+    //   npc.<who>.thing · player.thing      a place's word: the thing that one holds, wherever it is — in hand, on the arm, lying, in the
+    //                                       air («camera on npc.heid.thing close», «… look npc.heid.thing», «player look npc.heid.thing»)
     //   wait 1.5                            seconds
     //   until near bird 3 | 20              until the conditions hold, at most 20 s
     //   if raven hugin: say hugin Це не наш. a step only when the conditions hold
@@ -305,6 +317,14 @@ namespace HuginWhispers
         private static void PropStep(Player p, Step st)
         {
             if (st.W[1] == "put") { StoryProps.Put(p); Hold(0.5f); return; }
+            if (st.W[1] == "drop") { Hold(Mathf.Max(0.6f, StoryProps.Drop(p))); return; } // (what he holds falls from where it is and lies there till the scene's end)
+            if (st.W[1] == "throw")
+            {
+                Vector3 to; bool body;
+                if (!ThrowAt(st.W[2], out to, out body)) { Note("prop throw: нема місця «" + st.W[2] + "» — крок пропущено"); return; }
+                Hold(StoryProps.Throw(p, to, body)); // (the step waits its flight)
+                return;
+            }
             string why;
             StoryProps.Ask ask = StoryProps.Read(st.W, 2, out why);
             why = ask != null ? StoryProps.Take(p, ask) : why;
@@ -365,6 +385,7 @@ namespace HuginWhispers
             Let("his gait", () => StoryGait.Set(p, "none"));
             if (broken) { Let("the camera", StoryCamera.Reset); Let("the screen", StoryScreen.Reset); } // (the player gets the camera back at once)
             else { Let("the camera", () => StoryCamera.Off(1f)); Let("the screen", () => { StoryScreen.Bars(false); StoryScreen.Fade(false, 1f); }); } // (a scene that forgot «camera off» or «fade in»: given back softly)
+            Let("the line of its shots", _lines.Clear); // (which side of two in talk its camera worked from: StoryScenesCamera)
             bool weather = _weather, all = _weatherAll;
             _weather = _weatherAll = false;
             if (weather) Let("its weather", () => StoryAir.Play("weather off", all));

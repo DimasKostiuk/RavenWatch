@@ -42,9 +42,12 @@ namespace HuginWhispers
     //   raven stage check [views]                                  one run of the clip measured every frame by BodyCheck (the same
     //                                                              rules as a scene's check), into studio/out/stage_<clip>.txt: on
     //                                                              top a VERDICT, each line a mistake already made once, with what
-    //                                                              to change (and a «fix:» command where the core can reckon it); then what
-    //                                                              was asked (the clip's «want» lines), the tempo strips, each key frame's
-    //                                                              pose in words. After the run its KEY SHEET, stage_<clip>_key.png (StageKey):
+    //                                                              to change (and a «fix:» command where the core can reckon it), one line
+    //                                                              an event and by its time (BodyCheck.Fold); then what was asked (the
+    //                                                              clip's «want» lines), the tempo strips, each key frame's pose in words:
+    //                                                              the first whole, then only what changed (Report says the marks). Beside
+    //                                                              it stage_<clip>.full.txt, where nothing is folded: the VERDICT as
+    //                                                              measured, every row whole. After the run its KEY SHEET, stage_<clip>_key.png (StageKey):
     //                                                              a row a moment — the mistakes, the wants, the marks (KeyMoments) — each
     //                                                              held and filmed in the two views that show that kind of mistake (KeyViews),
     //                                                              labelled in the picture; and, when a second mannequin plays another take
@@ -141,7 +144,8 @@ namespace HuginWhispers
                         _other.Order("stay", NpcMind.Layer.Scene);
                     }
                     _clipB = arg; _againB = 0f;
-                    return "Праворуч другий манекен грає «" + arg + "»: порівняти два варіанти за один прогін (raven stage ab off — прибрати).";
+                    if (_clip.Length > 0 && _hold < 0f) Begin(0.2f); // (both from the start, together)
+                    return "Ліворуч від тебе (праворуч від першого) другий манекен грає «" + arg + "»: порівняти два варіанти за один прогін (raven stage ab off — прибрати).";
                 case "gait":
                     if (!Bring(p)) return "Манекена нема.";
                     if (arg == "all") { _gaitEvery = Mathf.Clamp(Num(a.Length > 3 ? a[3] : "", 12f), 4f, 60f); _gaitAt = 0; _gaitNext = 0f; return "Ходи по черзі, кожна " + F(_gaitEvery) + " с (raven stage gait <хода> — спинити на одній)."; }
@@ -347,6 +351,7 @@ namespace HuginWhispers
             BodyAnimator a = BodyAnimator.For(h);
             if (a != null) a.Hold(Slot, _hold);
             _again = c.Loop ? 0f : Time.time + c.Length / Mathf.Max(0.05f, _speed) + Gap; // (one that plays once: again after a breath)
+            if (_other != null && _clipB.Length > 0) _againB = 0f; // (the second one with it, each time round: two takes are compared in step — the user 2026-11-11, they had a clock each)
         }
 
         internal static float PropLow = 0.11f, PropAhead = 0.78f; // (as a shield lies on the ground, as far as the scene's step brings the body)
@@ -437,7 +442,8 @@ namespace HuginWhispers
             {
                 Humanoid hb = _other.GetComponent<Humanoid>();
                 PAnimClip cb = BodyClips.Find(_clipB);
-                if (hb != null && cb != null) { BodyClips.Play(hb, Slot, _clipB, 0.2f, _speed); _againB = cb.Loop ? float.MaxValue : Time.time + cb.Length / Mathf.Max(0.05f, _speed) + Gap; }
+                PAnimClip ca = BodyClips.Find(_clip);
+                if (hb != null && cb != null) { BodyClips.Play(hb, Slot, _clipB, 0.2f, _speed); _againB = cb.Loop || (ca != null && !ca.Loop) ? float.MaxValue : Time.time + cb.Length / Mathf.Max(0.05f, _speed) + Gap; } // (again when the first one begins again: Begin; its own clock only beside a first one that loops)
             }
             if (_fixtures.Count > 0) PlaceFixtures();
             if (_clip.Length == 0) return;
@@ -574,7 +580,7 @@ namespace HuginWhispers
             public float TurnedAt, TurnedNear = 99f, Moved, Turned, Near = 99f, Frames;
             public readonly StringBuilder Rows = new StringBuilder();
             public BodyCheck Body;
-            public string Views = "", Said = "", Text = "", Other; // (Other: what the second mannequin plays beside it on the diff sheet, null none)
+            public string Views = "", Said = "", SaidFull = "", Text = "", Other; // (Said: the VERDICT one line an event, and what was asked · SaidFull: its lines as measured, for the full report · Other: what the second mannequin plays beside it on the diff sheet, null none)
             public List<float> Keys = new List<float>();
             public readonly List<string> Shots = new List<string>(), KeyRows = new List<string>();
             public readonly List<Studio.KeyMoment> Moments = new List<Studio.KeyMoment>();
@@ -760,7 +766,8 @@ namespace HuginWhispers
             return hi - lo;
         }
 
-        // the mistakes already made once, each a line when it is made again; none: OK. Then what was asked
+        // the mistakes already made once, each a line when it is made again; none: OK. Then what was asked. Said one line an event, by the
+        // time of the event (BodyCheck.Fold: the one folding, a scene's too); the lines as measured go to the full report (c.SaidFull)
         private string Verdict(Check c)
         {
             List<string> bad = new List<string>();
@@ -791,7 +798,9 @@ namespace HuginWhispers
                 string baked = BakedDiffers(whole.Name);
                 if (baked != null) bad.Add("[built] " + baked);
             }
-            return (bad.Count == 0 ? "VERDICT: OK\n" : "VERDICT:\n  - " + string.Join("\n  - ", bad.ToArray()) + "\n") + asked;
+            List<string> folded = BodyCheck.Fold(bad, c.Body.Moments);
+            c.SaidFull = (bad.Count == 0 ? "VERDICT: OK\n" : "VERDICT as measured, a line a rule and a bone, nothing folded (" + bad.Count + "):\n  - " + string.Join("\n  - ", bad.ToArray()) + "\n") + asked;
+            return (bad.Count == 0 ? "VERDICT: OK\n" : "VERDICT: " + folded.Count + " problem(s)\n  - " + string.Join("\n  - ", folded.ToArray()) + "\n") + asked; // (the first word, «  - [tag] », «\n      fix: »: tools/take.js reads them)
         }
 
         // what plays here and what the built mod has: a clip changed since the last build plays nowhere else till it is built
@@ -826,46 +835,94 @@ namespace HuginWhispers
         // Two files (review 2 2026-11-10: 12 KB a take, half of it never read): stage_<clip>.txt is the short one — the head with the clip
         // file's hash and time (tools/anim.js holds it against the file: a report of another version is not read), said, VERDICT, asked, the
         // numbers, the tempo, each key frame's pose in words; stage_<clip>.full.txt has all that and the «layers:» of each frame, the
-        // fastest bones, the rows every quarter second
+        // fastest bones, the rows every quarter second.
+        // The short one says a thing once (2026-11-11, fall_back's take 12: 7847 bytes, its 18 VERDICT lines 10 events, its key sheet's
+        // rows each a VERDICT line and a whole pose again; said once, 5548 bytes — reckoned on that report, not yet seen from the game):
+        //   VERDICT       one line an event, by the time of the event, with how many (BodyCheck.Fold; Verdict above)
+        //   key frames    the first row's pose whole, then «Δ» and only the parts that differ from the pose as said so far, «= no change»
+        //                 when none does (BodyCheck.Differs: within SameDeg / SameM is the same); a row with no mark is whole; the line
+        //                 over the rows says so once. No frame is named there: each part is held against where it was last SAID, and the
+        //                 row before may itself stand off that («= as frame 6» was said of a trunk 6 deg off frame 6)
+        //   key sheet     a row its moment, the line's tag and subject (BodyCheck.Subject: never the VERDICT line again), its views, then
+        //                 «Δ frame N:» — what differs from the pose as said up to key frame N, the one within PoseNear s it differs least
+        //                 from («no change»: nothing) — or, none that near, whole
+        // The full one folds nothing: the VERDICT a line a rule and a bone as measured, every row's pose whole.
+        internal static float PoseNear = 0.5f; // s: a key sheet's moment says its pose against a key frame this near at most
         private void Report(Check c)
         {
-            StringBuilder s = new StringBuilder(), full = new StringBuilder();
+            StringBuilder s = new StringBuilder(), full = new StringBuilder(), top = new StringBuilder();
             string file = FileOf(c.Clip);
-            s.Append(c.Clip).Append(", take ").Append(_take).Append(", ×").Append(F(_speed)).Append(", ").Append(c.Frames.ToString("0")).Append(" frames, file ").Append(File.Exists(file) ? Hash(File.ReadAllText(file, Encoding.UTF8)) + " saved " + File.GetLastWriteTime(file).ToString("yyyy-MM-dd HH:mm:ss") : "not a file (built in)").Append('\n');
+            top.Append(c.Clip).Append(", take ").Append(_take).Append(", ×").Append(F(_speed)).Append(", ").Append(c.Frames.ToString("0")).Append(" frames, file ").Append(File.Exists(file) ? Hash(File.ReadAllText(file, Encoding.UTF8)) + " saved " + File.GetLastWriteTime(file).ToString("yyyy-MM-dd HH:mm:ss") : "not a file (built in)").Append('\n');
             PAnimClip shown = BodyClips.Find(c.Clip), whole = BodyClips.Find(Whole(c.Clip));
-            if (whole != null && whole.Say.Length > 0) s.Append("said: ").Append(whole.Say).Append('\n');
-            s.Append(c.Said);
-            s.Append("pose: ").Append(c.Body.Numbers()).Append('\n');
-            s.Append(c.Body.TempoSaid());
+            if (whole != null && whole.Say.Length > 0) top.Append("said: ").Append(whole.Say).Append('\n');
+            string numbers = "pose: " + c.Body.Numbers() + "\n" + c.Body.TempoSaid(); // (the «pose:» line as it is: tools/take.js holds it against the last run's)
+            s.Append(top.ToString()).Append(c.Said).Append(numbers);
             string keyHead = c.Views.Length > 0 ? "key frames: studio/out/stage_" + c.Clip + "_<view>.png, views " + c.Views + ", 4 a row\n" : "key frames (words only; sheets of the whole run on request: raven stage check <views>, node tools/anim.js clip " + c.Clip + " <views>; views the clip would take: " + ((shown ?? whole) != null ? AutoViews(shown ?? whole) : "-") + "):\n";
             s.Append(keyHead);
-            foreach (string shot in c.Shots) { full.Append("  ").Append(shot).Append('\n'); s.Append("  ").Append(Short(shot)).Append('\n'); }
+            if (c.Shots.Count > 0) s.Append("rows after the first: «Δ» = only the parts that changed against the pose as last said, the rest stands (a key sheet row: against the pose as said up to the frame it names); under ").Append(F(BodyCheck.SameDeg)).Append(" deg, ").Append(F(BodyCheck.SameM)).Append(" m is no change (every row whole: stage_").Append(c.Clip).Append(".full.txt)\n");
+            // the pose as the reader has it after each key frame (its parts as last said), its number and its moment: the key sheet's rows are said against these
+            List<Dictionary<string, string>> had = new List<Dictionary<string, string>>(); List<string> hadN = new List<string>(); List<float> hadAt = new List<float>();
+            Dictionary<string, string> known = new Dictionary<string, string>();
+            foreach (string shot in c.Shots)
+            {
+                full.Append("  ").Append(shot).Append('\n');
+                string row = Short(shot), n; float at; int words;
+                if (!RowOf(row, out n, out at, out words)) { s.Append("  ").Append(row).Append('\n'); continue; } // (not the row StageFilm writes: said as it is)
+                string pose = row.Substring(words), d = BodyCheck.Differs(pose, known);
+                s.Append("  ").Append(row, 0, words).Append(d == pose || had.Count == 0 ? pose : d.Length == 0 ? "= no change" : "Δ " + d).Append('\n'); // (no frame named: it is held against the pose as last SAID, part by part, and the row before may itself be up to SameDeg off that)
+                had.Add(new Dictionary<string, string>(known)); hadN.Add(n); hadAt.Add(at);
+            }
             if (!c.KeyDone) { s.Append("key sheet: coming\n"); full.Append("key sheet: coming\n"); }
             else
             {
                 string head = "key sheet: studio/out/stage_" + c.Clip + "_key.png — a row a moment, its two views, labelled" + (c.Other != null ? "; stage_" + c.Clip + "_diff.png — the same, this take | " + c.Other : "") + "\n";
                 s.Append(head); full.Append(head);
-                foreach (string row in c.KeyRows) { full.Append("  ").Append(row).Append('\n'); s.Append("  ").Append(Short(row)).Append('\n'); }
+                for (int i = 0; i < c.KeyRows.Count; i++)
+                {
+                    full.Append("  ").Append(c.KeyRows[i]).Append('\n');
+                    string row = Short(c.KeyRows[i]);
+                    Studio.KeyMoment m = i < c.Moments.Count ? c.Moments[i] : null;
+                    string views = m != null ? " (" + m.Views + ") — " : null;
+                    int p = views != null ? row.IndexOf(views, StringComparison.Ordinal) : -1;
+                    if (p < 0) { s.Append("  ").Append(row).Append('\n'); continue; } // (not the row StageKey writes: said as it is)
+                    string pose = row.Substring(p + views.Length), least = null, of = "";
+                    for (int k = 0; k < had.Count; k++)
+                    {
+                        if (Mathf.Abs(hadAt[k] - m.T) > PoseNear) continue;
+                        string d = BodyCheck.Differs(pose, new Dictionary<string, string>(had[k])); // (a copy: asking changes nothing the reader has)
+                        if (least == null || d.Length < least.Length) { least = d; of = hadN[k]; }
+                    }
+                    s.Append("  ").Append(i + 1).Append(": ").Append(m.T.ToString("0.00", CultureInfo.InvariantCulture)).Append(" s — ").Append(BodyCheck.Subject(m.Label)).Append(views).Append(least == null || least == pose ? pose : "Δ frame " + of + ": " + (least.Length == 0 ? "no change" : least)).Append('\n');
+                }
             }
             StoryPropView view = _dummy != null ? _dummy.GetComponent<StoryPropView>() : null;
             if (view != null && _sizeOf) s.Append("prop size ").Append(P(view.Size)).Append(" m\n");
             if (shown != null && shown.Parts.Count > 0) { s.Append("parts:"); foreach (PAnimPart pt in shown.Parts) s.Append(' ').Append(pt.Name).Append(' ').Append(F(pt.From)).Append('-').Append(F(pt.To)); s.Append('\n'); }
-            s.Append("the rest (layers of each frame, the fastest bones, rows every 0.25 s): stage_").Append(c.Clip).Append(".full.txt\n");
+            s.Append("the rest (the VERDICT a line a rule and a bone, every row's pose whole, layers of each frame, the fastest bones, rows every 0.25 s): stage_").Append(c.Clip).Append(".full.txt\n");
             string dir = Path.Combine(Path.Combine(Path.Combine(BepInEx.Paths.ConfigPath, "RavenWatch"), "studio"), "out");
             Directory.CreateDirectory(dir);
             File.WriteAllText(Path.Combine(dir, "stage_" + c.Clip + ".txt"), s.ToString(), new UTF8Encoding(false));
-            // the full one: the short one's head to the key frames, then every frame with its layers, the fastest, the rows
-            int cut = s.ToString().IndexOf("key frames", StringComparison.Ordinal);
-            StringBuilder f = new StringBuilder(cut > 0 ? s.ToString().Substring(0, cut) : s.ToString());
-            f.Append(keyHead).Append(full);
+            // the full one: the same head, the VERDICT as measured, the numbers, then every frame whole with its layers, the fastest, the rows
+            StringBuilder f = new StringBuilder(top.ToString()).Append(c.SaidFull).Append(numbers);
+            f.Append(keyHead).Append(full.ToString());
             f.Append("fastest:\n").Append(c.Body.Fastest());
-            f.Append("\nevery 0.25 s (m, body frame: x right, y up, z ahead; lean forward,right and head up,right in degrees):\n").Append(c.Rows);
+            f.Append("\nevery 0.25 s (m, body frame: x right, y up, z ahead; lean forward,right and head up,right in degrees):\n").Append(c.Rows.ToString());
             File.WriteAllText(Path.Combine(dir, "stage_" + c.Clip + ".full.txt"), f.ToString(), new UTF8Encoding(false));
             Say("заміряно");
         }
 
         // a key frame's line without its «layers:» (the full report keeps it)
         private static string Short(string shot) { int i = shot.IndexOf("\n  layers:", StringComparison.Ordinal); return i >= 0 ? shot.Substring(0, i) : shot; }
+
+        // a key frame's row as StageFilm writes it («3: 0.72 s — <the pose's words>»): its number, its moment, where its words begin
+        private static bool RowOf(string row, out string n, out float at, out int words)
+        {
+            n = ""; at = 0f; words = 0;
+            int a = row.IndexOf(": ", StringComparison.Ordinal), b = row.IndexOf(" s — ", StringComparison.Ordinal);
+            if (a <= 0 || b <= a || !float.TryParse(row.Substring(a + 2, b - a - 2), NumberStyles.Float, CultureInfo.InvariantCulture, out at)) return false;
+            n = row.Substring(0, a); words = b + 5;
+            return true;
+        }
 
         // the clip file's version, as tools/anim.js reckons it too: SHA-1 of its text with no «\r» and no byte-order mark, the first 8 hex digits
         internal static string Hash(string text)

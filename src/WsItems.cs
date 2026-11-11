@@ -18,6 +18,8 @@ namespace HuginWhispers
     // In the mod: the models built into it (assets/items/*.txt); for testing also the Workshop's files (config
     // "Perches from workshop files", as the perches). The item's own shape (its mesh) is hidden and the model put in
     // its place, centred where the item lies, with a box to roll on round it.
+    // An item the story puts in someone's hand may say in its file how it hangs, lies and falls (hang:, lies:, falls: — kept on its model as
+    // written; StoryProps.OwnOf reads them through ModelOf).
     // A thing for a raven (a model marked "use: gear", RavenGear) is an item too: RavenWatch_gear_<id>, one to a stack,
     // made at a raven table (the one its model names, else the first), given to a raven in the book (Outfits.PutOn).
     internal static class WsItems
@@ -81,6 +83,14 @@ namespace HuginWhispers
                 Defs.Add(d);
             }
             if (Defs.Count > 0) Log(Defs.Count + " item model(s)" + (Perches.FromFiles ? " (with the Workshop's files)" : ""));
+        }
+
+        // the model an item of ours is made from, by its prefab (StoryProps reads a held thing's own lines from it: hang:, lies:, falls:); null: not ours
+        internal static WsModel ModelOf(string prefab)
+        {
+            Load();
+            foreach (Def d in Defs) if (d.Prefab == prefab) return d.Model;
+            return null;
         }
 
         // ---------------------------------------------------------------- the new items' prefabs

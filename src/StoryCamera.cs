@@ -131,6 +131,14 @@ namespace HuginWhispers
             return want;
         }
 
+        // would a shot looking at «target» leave the lens there (Clear would not pull it in)? Asked as a spot is picked (StoryScenes: on,
+        // shoulder, two), by the very cast the frame makes — so what is picked is what is filmed
+        internal static bool Sees(Vector3 target, Vector3 lens)
+        {
+            GameCamera gc = GameCamera.instance;
+            return gc == null || Clear(gc, target, lens) == lens; // heavy: one cast a spot tried, as its shot begins or is picked again
+        }
+
         // the patch's work: true = it set the camera this frame (the game's own is skipped)
         internal static bool Drive(GameCamera gc, float dt)
         {

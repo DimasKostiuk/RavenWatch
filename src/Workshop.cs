@@ -65,6 +65,9 @@ namespace HuginWhispers
         internal string Ready = "";   // «✓ Готово для мода»: who marked it and when (packed by DevKit.Pack; empty: not yet)  // a thing on a raven's neck: "" moves with the neck, "body" carried by the body (RavenGear)
         internal int Stack;
         internal float Weight;
+        // a thing of the story someone holds (use: item, StoryProps): its own numbers, a line each as written — how it hangs on a forearm, where it is
+        // set down, how it falls («hang: along 0.7 drop 0.16 …», «lies: ahead 0.35 …», «falls: tilt 28 s 0.5»; the words and their reading: StoryProps.OwnOf)
+        internal string Hang = "", Lies = "", Falls = "";
         internal string Mount = ""; // "wall": hung on a wall (origin = the point on the wall, the wall is the plane Z = 0, the model in front, +Z)
         internal bool Wall { get { return Mount == "wall"; } }
         // the raven's legs on the perch (PerchPose): left hip, knee, ankle, toes; right the same; the body's lean
@@ -127,6 +130,9 @@ namespace HuginWhispers
             if (m.Stack > 0) sb.Append("stack: ").Append(m.Stack).Append('\n');
             if (m.Weight > 0f) sb.Append("weight: ").Append(F(m.Weight)).Append('\n');
             if (m.Sell > 0) sb.Append("sell: ").Append(m.Sell).Append(m.SellAfter.Length > 0 ? " " + m.SellAfter : "").Append('\n');
+            if (!string.IsNullOrEmpty(m.Hang)) sb.Append("hang: ").Append(m.Hang).Append('\n'); // (kept as written: a save from the Workshop does not lose them)
+            if (!string.IsNullOrEmpty(m.Lies)) sb.Append("lies: ").Append(m.Lies).Append('\n');
+            if (!string.IsNullOrEmpty(m.Falls)) sb.Append("falls: ").Append(m.Falls).Append('\n');
             bool posed = false;
             foreach (float v in m.Pose) if (Mathf.Abs(v) > 0.001f) posed = true;
             if (posed)
@@ -180,6 +186,9 @@ namespace HuginWhispers
                 if (line.StartsWith("station:")) { m.Station = line.Substring(8).Trim(); continue; }
                 if (line.StartsWith("perday:")) { float.TryParse(line.Substring(7).Trim(), NumberStyles.Float, C, out m.PerDay); continue; }
                 if (line.StartsWith("feed:")) { float.TryParse(line.Substring(5).Trim(), NumberStyles.Float, C, out m.Feed); continue; }
+                if (line.StartsWith("hang:")) { m.Hang = NoNote(line.Substring(5)); continue; }
+                if (line.StartsWith("lies:")) { m.Lies = NoNote(line.Substring(5)); continue; }
+                if (line.StartsWith("falls:")) { m.Falls = NoNote(line.Substring(6)); continue; }
                 if (line.StartsWith("sell:")) { string[] sw = line.Substring(5).Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); if (sw.Length > 0) int.TryParse(sw[0], out m.Sell); m.SellAfter = sw.Length > 1 ? sw[1] : ""; continue; }
                 if (line.StartsWith("stand:"))
                 {
@@ -220,6 +229,9 @@ namespace HuginWhispers
             }
             return m;
         }
+
+        // a line of words and numbers with the author's note after « #» cut off (hang:, lies:, falls:)
+        private static string NoNote(string v) { int hash = v.IndexOf(" #", StringComparison.Ordinal); return (hash >= 0 ? v.Substring(0, hash) : v).Trim(); }
 
         private static Vector3 Read(string[] w, int i)
         {

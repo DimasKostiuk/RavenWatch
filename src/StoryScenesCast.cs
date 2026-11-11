@@ -107,6 +107,14 @@ namespace HuginWhispers
             return StoryWhere.Approach(what, from, out at);
         }
 
+        // where a thing is thrown («prop throw <place|player|npc.x>»): a word of place; body — at someone, not at a spot: it lands short of them
+        // (StoryProps.ThrowShort: nobody catches it)
+        private static bool ThrowAt(string what, out Vector3 to, out bool body)
+        {
+            body = what == "player" || what == "bird" || (what.StartsWith("npc.") && !StoryWhere.IsThing(what));
+            return StoryWhere.Find(what, out to);
+        }
+
         // a door of the story's places opened or shut — its state in the world (the door plays it on every game)
         private static void Door(string place, bool open)
         {
@@ -164,11 +172,19 @@ namespace HuginWhispers
                         int ai = Array.IndexOf(w, "at");
                         if (ai > 3 && w.Length > ai + 3) SpawnAt(p, w[1], w[3], new Vector3(F(w[ai + 1], 0f), F(w[ai + 2], 0f), F(w[ai + 3], 0f))); else Spawn(p, w[1], w[3]);
                     } } },
-                { "prop", new StepVerb(StepSeen.World) { Min = 1, PlaceAfter = "from",
-                    Check = st => { string pw; return st.W[3] != "put" && st.W[3] != "fetch" && (st.W[3] != "take" || StoryProps.Read(st.W, 4, out pw) == null) ? "npc <хто> " + StoryProps.Usage + " · prop fetch" : null; },
+                { "prop", new StepVerb(StepSeen.World) { Min = 1, PlaceAfter = "from", PlaceOf = w => StoryProps.PlaceOf(w, 3), // (the piece after «from»: the word storycheck reads here; the game asks PlaceOf — where a thing is thrown as well)
+                    Check = st => { string why = st.W[3] == "fetch" ? null : StoryProps.Check(st.W, 3); return why != null ? "npc <хто> " + why + (why == StoryProps.Usage ? " · prop fetch" : "") : null; },
                     Begin = OnPerson((p, st, w, a) =>
                     {
                         if (w[3] == "put") { StoryProps.PutDown(a); _waitFor = Time.time + 0.6f; return; } // (a scene's thing back; its own thing set down where it stands)
+                        if (w[3] == "drop") { _waitFor = Time.time + Mathf.Max(0.6f, StoryProps.Drop(a)); return; } // (what it holds — its own thing, or one the scene gave it — falls from where it is and lies there)
+                        if (w[3] == "throw")
+                        {
+                            Vector3 to; bool body;
+                            if (!ThrowAt(w[4], out to, out body)) { Note("npc prop throw: нема місця «" + w[4] + "» — крок пропущено"); return; }
+                            _waitFor = Time.time + StoryProps.Throw(a, to, body); // (the step waits its flight)
+                            return;
+                        }
                         if (w[3] == "fetch") { StoryProps.Fetch(a.Id); return; } // (its own thing the story had it set down: it may go back for it)
                         string why;
                         StoryProps.Ask ask = w[3] == "take" ? StoryProps.Read(w, 4, out why) : null;
@@ -185,7 +201,7 @@ namespace HuginWhispers
                     {
                         Vector3 at;
                         if (w[3] == "player") a.Order("look " + NpcKit.Ref(p.GetZDOID()) + " keep", NpcMind.Layer.Scene);
-                        else if (StoryWhere.Find(w[3], out at)) a.Order("lookat " + V(at + Vector3.up * 1.2f), NpcMind.Layer.Scene);
+                        else if (StoryWhere.Find(w[3], out at)) a.Order("lookat " + V(at + Vector3.up * (StoryWhere.IsThing(w[3]) ? 0f : 1.2f)), NpcMind.Layer.Scene); // (a thing's word is the thing itself, where it is this moment: no height over it)
                         else Note("npc face: нема місця «" + w[3] + "»");
                     }) } },
                 { "say", new StepVerb(StepSeen.World) { Min = 1,

@@ -175,6 +175,9 @@ namespace HuginWhispers
                 case "face": return "спереду, на гравця";
                 case "over": return "згори";
                 case "behind": return "через плече";
+                case "on": return "один у кадрі";
+                case "shoulder": return "через плече одного на іншого";
+                case "two": return "двоє збоку";
                 case "orbit": return "оберт навколо";
                 case "shot": return "твій кадр";
                 case "move": return "переїзд між кадрами";

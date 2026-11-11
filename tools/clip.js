@@ -7,6 +7,15 @@
 //                                                               ahead, a draft row in docs/CLIPS.md — it passes clipcheck as it is. The row's body and
 //                                                               thing («реквізит `<item>`», a prefab: RavenWatch_item_…) are what a take puts on the
 //                                                               stage (take.js reads the row): a clip with a thing and none in its row is taken without it
+//   do <clip> "<t0>-<t1> <movement> …; …"                       movements added to the clip's script (tools/motion.js, its head says each: reach, rest, look,
+//                                                               nod, shake, lean, turn, sink, weight, step, sigh, fingers): the keys are made from the
+//                                                               script again, the rest of the body with them — a few words, not eighty keys
+//   undo <clip> <n|all> · redo <clip> <n> <movement>            a script line taken out, or said anew (its number: «show»)
+//   alive <clip> [0..2]                                         how much the rest of the body goes with the hands (1 by default; 0: none); with no
+//                                                               script too: a clip keyed by hand gets its trunk and weight from its hands
+//   auto <clip> <channel…>                                      channels keyed by hand given back to the script (their keys go)
+//   mirror <to> <from>                                          the same clip for the other side, a new one (a thing or a bone in its own axes: refused)
+//   check <clip>                                                what the keys alone say before a take (also after every change of it)
 //   find <words>                                                the catalog's rows with every word (docs/CLIPS.md): a pose like the one wanted
 //   show <clip> [channel]                                       its keys, a channel a line (or one channel's)
 //   at <clip> <t>                                               every channel's value at that moment (straight between its keys; the game eases), the wants then
@@ -28,12 +37,13 @@
 //                                                               save), key by key and head line by line: what the last change did
 // A change after which clipcheck says something new, about any clip or scene, or falls over, is not kept: the file goes back, exit code 1.
 const fs = require('fs'), path = require('path'), cp = require('child_process');
+const motion = require('./motion.js');
 const root = path.join(__dirname, '..');
 const assets = path.join(root, 'assets', 'story', 'clips');
 const n = s => { const v = parseFloat(s); if (isNaN(v)) throw new Error('not a number: ' + s); return v; };
 const f = v => (Math.round(v * 1000) / 1000).toString();
 const three = v => { const o = v.slice(0, 3); while (o.length < 3) o.push(0); return o; };
-const STANCE = { '@LeftFoot': [-0.09, 0.12, 0.28], '@RightFoot': [0.05, 0.12, -0.3] }; // (the game's stance, the feet in the body's frame: docs/ANIMATION.md «Числа»)
+const STANCE = { '@LeftFoot': motion.STANCE.Left, '@RightFoot': motion.STANCE.Right }; // (the game's stance, the feet in the body's frame: docs/ANIMATION.md «Числа»)
 
 function parse(text, name) {
   const head = [], keys = {}, order = [];
@@ -79,7 +89,23 @@ function save(c) {
     if (was !== null) fs.writeFileSync(file, was); else fs.unlinkSync(file);
     throw new Error('not kept, ' + c.name + ' is as it was — ' + (added.length ? 'it made new problems:\n  ' + added.join('\n  ') : 'clipcheck fell over (its words above)'));
   }
+  said(c);
 }
+// what the keys alone say before a take (motion.predict): a take is not spent on it
+function said(c) { const p = motion.predict(c); if (p.length) console.log('before a take, from the keys alone (the take measures the body):\n  ' + p.join('\n  ')); }
+// a channel the author keys by hand is his from then on: the script does not make it again
+// … and with it the channels that only mean something together (the review 2026-11-11: one key set on a scripted @RightHand, and the script made its weight,
+// fingers and palm no more — every later change was refused «@RightHand has no @RightHand.w»; one key on Spine1 and Spine2's share of the lean was gone)
+const family = ch => { const m = /^(@(?:Left|Right)Hand)(\.w|\.p|\.f|\.n)?$/.exec(ch); if (m) return m[2] === '.p' ? [ch] : [m[1], m[1] + '.w', m[1] + '.f', m[1] + '.n']; /* (the elbow's way is its own: keyed by hand, the hand stays the script's) */ if (/^@Look(\.w)?$/.test(ch)) return ['@Look', '@Look.w']; if (ch === 'Spine1' || ch === 'Spine2') return ['Spine1', 'Spine2']; return [ch]; };
+function mineNow(c, chs) {
+  const list = motion.listOf(c, 'scripted'), took = [...new Set(chs.flatMap(family))].filter(ch => list.includes(ch));
+  if (!took.length) return;
+  const left = list.filter(ch => !took.includes(ch));
+  motion.setLine(c, '# scripted:', left.length ? '# scripted: ' + left.join(' ') : null);
+  console.log(took.join(', ') + ': keyed by hand now, as ' + (took.length > 1 ? 'they are (they go together)' : 'it is') + ' — the script\'s movements leave ' + (took.length > 1 ? 'them' : 'it') + ' (node tools/anim.js auto ' + c.name + ' ' + took[0] + ' gives back: the keys set by hand go)');
+}
+// the script made into keys again; its notes said
+function remake(c) { const r = motion.regen(c); for (const x of r.notes) console.log('note: ' + x); }
 
 function headerValue(c, word) { for (const h of c.head) { const w = h.trim().split(/\s+/); if (w[0] === word) return w.slice(1); } return null; }
 function setHeader(c, line) {
@@ -112,6 +138,7 @@ function mapHead(c, map, add) {
     if (w[0] === 'length') return 'length ' + f(n(w[1]) + add);
     if (w[0] === 'part') return 'part ' + w[1] + ' ' + f(map(n(w[2]))) + ' ' + f(map(n(w[3]))) + ' ' + w.slice(4).join(' ');
     if (w[0] === 'mark' || w[0] === 'event') return w[0] + ' ' + f(map(n(w[1]))) + ' ' + w.slice(2).join(' ');
+    if (w[0] === '#' && w[1] === 'do' && w[2]) { const d = w[2].indexOf('-'); return '# do ' + f(map(n(w[2].slice(0, d)))) + '-' + f(map(n(w[2].slice(d + 1)))) + ' ' + w.slice(3).join(' '); }
     if (w[0] === 'want') { const d = w[1].indexOf('-'); return 'want ' + (d > 0 ? f(map(n(w[1].slice(0, d)))) + '-' + f(map(n(w[1].slice(d + 1)))) : f(map(n(w[1])))) + ' ' + w.slice(2).join(' '); }
     return h;
   });
@@ -132,7 +159,8 @@ function newClip(name, a) {
   const L = f(length);
   const head = ['clip ' + name, 'length ' + L, 'loop 0', 'pivot 1.1', 'curve ease', 'fade 0.4 0.6', 'mode Spine1 body', 'mode Spine2 body', 'say ' + say, '',
     '# a new clip\'s frame (anim.js new): the game\'s stance at 0 and at ' + L + ' (the feet below), the look ahead, nothing else yet.',
-    '# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then the keys between.'];
+    '# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do ' + name + ' "<t0>-<t1> reach right <x y z>; …".',
+    '# scripted: @LeftFoot @RightFoot @Look @Look.w'];
   const keys = {}, order = [];
   for (const ch of Object.keys(STANCE)) { keys[ch] = [{ t: 0, v: STANCE[ch] }, { t: length, v: STANCE[ch] }]; order.push(ch); }
   keys['@Look'] = [{ t: 0, v: [0, 1.6, 2] }]; order.push('@Look');
@@ -147,7 +175,24 @@ function newClip(name, a) {
   fs.writeFileSync(cat, lines.join('\n'));
   try { save({ name, head, keys, order }); }
   catch (e) { fs.writeFileSync(cat, was); throw e; }
-  console.log('new clip assets/story/clips/' + name + '.txt (' + L + ' s, body ' + body + (prop ? ', thing ' + prop : '') + ') and its draft row in docs/CLIPS.md; next: want lines, then keys (node tools/anim.js set ' + name + ' …)');
+  console.log('new clip assets/story/clips/' + name + '.txt (' + L + ' s, body ' + body + (prop ? ', thing ' + prop : '') + ') and its draft row in docs/CLIPS.md; next: want lines, then its movements (node tools/anim.js do ' + name + ' "<t0>-<t1> reach right <x y z>; …")');
+}
+
+// the same clip for the other side (motion.mirror): a new clip, its draft row in the catalog beside its source's
+function mirrorClip(to, from) {
+  if (!/^[a-z][a-z0-9_]*$/.test(to || '') || !from) throw new Error('mirror <to> <from>: the new clip\'s name (small letters, digits, _), then the clip it mirrors');
+  if (fs.existsSync(path.join(assets, to + '.txt'))) throw new Error('clip ' + to + ' exists: pick another name');
+  const c = motion.mirror(load(from), to);
+  if (motion.scriptOf(c).length) remake(c);
+  const cat = path.join(root, 'docs', 'CLIPS.md'), was = fs.readFileSync(cat, 'utf8'), lines = was.split('\n');
+  const at = lines.findIndex(l => l.startsWith('| `' + from + '` |'));
+  if (at < 0) throw new Error('docs/CLIPS.md: no row of ' + from + ' to put the mirrored one after');
+  const cells = lines[at].split('|').map(x => x.trim()); // ('', name, shows, body, from → to, parts, touches, used, state, '')
+  cells[1] = '`' + to + '`'; cells[2] += ' (дзеркально до `' + from + '`)'; cells[cells.length - 3] = 'ніде ще'; cells[cells.length - 2] = 'чернетка ' + new Date().toISOString().slice(0, 10) + ': дзеркало `' + from + '`, у грі не бачено';
+  lines.splice(at + 1, 0, '| ' + cells.slice(1, -1).join(' | ') + ' |');
+  fs.writeFileSync(cat, lines.join('\n'));
+  try { save(c); } catch (e) { fs.writeFileSync(cat, was); throw e; }
+  console.log('new clip assets/story/clips/' + to + '.txt: ' + from + ' for the other side, and its draft row in docs/CLIPS.md');
 }
 
 // the takes the stage keeps (one a save): the last one that is not the file as it is now
@@ -181,10 +226,17 @@ function diff(name) {
 
 function apply(c, cmd, a) {
   switch (cmd) {
-    case 'show':
-      for (const ch of c.order) if (!a[0] || ch === a[0]) console.log(ch.padEnd(20) + c.keys[ch].map(k => f(k.t) + ':' + k.v.map(f).join(',')).join('  '));
+    case 'show': {
+      const script = motion.scriptOf(c), made = motion.listOf(c, 'scripted');
+      const one = a[0] && a[0] !== 'all';
+      if (one && !c.keys[a[0]]) throw new Error('show: no channel ' + a[0] + ' in ' + c.name + ' (it has: ' + c.order.join(' ') + ')');
+      if (!one) script.forEach((l, i) => { const w = l.split(/\s+/), side = w[2] === 'left' ? ['Left'] : w[2] === 'right' ? ['Right'] : ['Left', 'Right'], dead = (w[1] === 'reach' || w[1] === 'rest') && side.every(s => c.keys['@' + s + 'Hand'] && !made.includes('@' + s + 'Hand')); console.log('do ' + (i + 1) + ': ' + l + (dead ? '   (not written: that hand is keyed by hand — auto ' + c.name + ' @' + side[0] + 'Hand gives it back)' : '')); });
+      if (!one && (script.length || made.length)) console.log('alive ' + motion.aliveOf(c) + '; made by the script (their keys: show ' + c.name + ' <channel> | all): ' + (made.join(' ') || '—'));
+      for (const ch of c.order) if (a[0] === 'all' || ch === a[0] || (!a[0] && !made.includes(ch))) console.log(ch.padEnd(20) + c.keys[ch].map(k => f(k.t) + ':' + k.v.map(f).join(',')).join('  '));
+      if (one) break;
       for (const h of c.head) if (/^(length|part|mark|fade|say|want|touch)\b/.test(h.trim())) console.log('  ' + h.trim());
       break;
+    }
     case 'at': {
       const t = n(a[0]);
       console.log(c.name + ' at ' + f(t) + ' s (straight between keys; the game eases):');
@@ -194,14 +246,16 @@ function apply(c, cmd, a) {
     }
     case 'set': {
       const ch = a[0], t = n(a[1]), v = three(a.slice(2).map(n));
+      mineNow(c, [ch]);
       if (!c.keys[ch]) { c.keys[ch] = []; c.order.push(ch); }
       const k = c.keys[ch].find(k => Math.abs(k.t - t) < 0.0005);
       if (k) k.v = v; else c.keys[ch].push({ t, v });
       break;
     }
-    case 'del': { const ch = a[0], t = n(a[1]); c.keys[ch] = (c.keys[ch] || []).filter(k => Math.abs(k.t - t) >= 0.0005); break; }
+    case 'del': { const ch = a[0], t = n(a[1]); mineNow(c, [ch]); c.keys[ch] = (c.keys[ch] || []).filter(k => Math.abs(k.t - t) >= 0.0005); break; }
     case 'move': {
       const ch = a[0], t0 = n(a[1]), t1 = n(a[2]), d = a.slice(3).map(n);
+      mineNow(c, [ch]);
       let moved = 0;
       for (const k of c.keys[ch] || []) if (k.t >= t0 - 1e-4 && k.t <= t1 + 1e-4) { k.v = k.v.map((x, i) => x + (d[i] || 0)); moved++; }
       console.log('moved ' + moved + ' key(s)'); break;
@@ -211,16 +265,20 @@ function apply(c, cmd, a) {
       if (!(t1 > t0)) throw new Error('hold: t1 after t0');
       const r = valueAt(c, ch, t0);
       if (!r) throw new Error('hold: no channel ' + ch);
+      mineNow(c, [ch]);
       c.keys[ch] = c.keys[ch].filter(k => k.t <= t0 + 1e-4 || k.t >= t1 - 1e-4);
       for (const t of [t0, t1]) { const k = c.keys[ch].find(k => Math.abs(k.t - t) < 0.0005); if (k) k.v = r.v.slice(); else c.keys[ch].push({ t, v: r.v.slice() }); }
       console.log(ch + ' held ' + f(t0) + '-' + f(t1) + ' at ' + r.v.map(f).join(' ')); break;
     }
     case 'stretch': {
       const t0 = n(a[0]), t1 = n(a[1]), len = n(a[2]), add = len - (t1 - t0);
+      if (!(t1 > t0) || len < 0) throw new Error('stretch <clip> <from> <to> <seconds>: «to» after «from», the seconds not below 0');
       const map = t => t <= t0 ? t : t >= t1 ? t + add : t0 + (t - t0) * len / (t1 - t0);
       for (const ch of c.order) for (const k of c.keys[ch]) k.t = map(k.t);
       mapHead(c, map, add);
-      console.log('span ' + f(t0) + '-' + f(t1) + ' now ' + f(len) + ' s; the clip ' + (add >= 0 ? '+' : '') + f(add) + ' s'); save(c); break;
+      console.log('span ' + f(t0) + '-' + f(t1) + ' now ' + f(len) + ' s; the clip ' + (add >= 0 ? '+' : '') + f(add) + ' s');
+      if (motion.scriptOf(c).length) remake(c); // (the script's times went with it: its keys made again from them)
+      save(c); break;
     }
     case 'shift': { // every key in [from, to] moved dt in time; the head's times in it too; a moved key on a staying one replaces it
       const t0 = n(a[0]), t1 = a[1] === 'end' ? 1e9 : n(a[1]), dt = n(a[2]);
@@ -234,11 +292,14 @@ function apply(c, cmd, a) {
       }
       const length = headerValue(c, 'length'), end = Math.max(...c.order.map(ch => Math.max(0, ...c.keys[ch].map(k => k.t))));
       mapHead(c, map, length && end > n(length[0]) ? end - n(length[0]) : 0);
-      console.log('shifted ' + moved + ' key(s) by ' + f(dt) + ' s' + (replaced ? ', ' + replaced + ' staying key(s) replaced' : '')); save(c); break;
+      console.log('shifted ' + moved + ' key(s) by ' + f(dt) + ' s' + (replaced ? ', ' + replaced + ' staying key(s) replaced' : ''));
+      if (motion.scriptOf(c).length) remake(c);
+      save(c); break;
     }
     case 'copy': {
       const src = load(a[0]), t0 = n(a[1]), t1 = n(a[2]), at = n(a[3]), only = a[4] ? a[4].split(',') : null;
       let put = 0;
+      mineNow(c, src.order.filter(ch => !only || only.indexOf(ch) >= 0));
       for (const ch of src.order) {
         if (only && only.indexOf(ch) < 0) continue;
         if (!c.keys[ch]) { c.keys[ch] = []; c.order.push(ch); }
@@ -258,7 +319,7 @@ function apply(c, cmd, a) {
 // a verb and its words (anim.js): throws on a mistake
 function run(cmd, args) {
   const [name, ...a] = args;
-  if (!name) throw new Error('node tools/anim.js ' + cmd + ' <clip> … (the head of tools/clip.js says each)');
+  if (!name) throw new Error('node tools/anim.js ' + cmd + ' <clip> … (node tools/anim.js help keys says each)');
   if (cmd === 'find') { // (the catalog's rows with every word: a pose like the one wanted, before making one — docs/CLIPS.md)
     const words = [name, ...a].map(w => w.toLowerCase());
     const rows = fs.readFileSync(path.join(root, 'docs', 'CLIPS.md'), 'utf8').split('\n').filter(l => l.startsWith('| `'));
@@ -269,14 +330,45 @@ function run(cmd, args) {
   }
   if (cmd === 'new') { newClip(name, a); return; }
   if (cmd === 'diff') { diff(name); return; }
+  if (cmd === 'mirror') { mirrorClip(name, a[0]); return; }
   const c = load(name);
+  if (cmd === 'check') { const p = motion.predict(c); console.log(p.length ? p.join('\n') : name + ': the keys alone say nothing against it (the take measures the body)'); return; }
+  if (cmd === 'do' || cmd === 'undo' || cmd === 'redo' || cmd === 'alive' || cmd === 'auto') {
+    const script = motion.scriptOf(c), length = motion.lengthOf(c);
+    if (cmd === 'do') {
+      const lines = a.join(' ').split(';').map(s => s.trim()).filter(Boolean);
+      if (!lines.length) throw new Error('do <clip> "<t0>-<t1> <movement> …; …" — ' + motion.VERBS.join(', ') + ' (the head of tools/motion.js says each)');
+      for (const l of lines) motion.parseLine(l, length);
+      motion.setScript(c, script.concat(lines));
+    } else if (cmd === 'undo') {
+      if (a[0] === 'all') motion.setScript(c, []);
+      else { const i = Math.round(n(a[0] || '')) - 1; if (!(i >= 0 && i < script.length)) throw new Error('undo <clip> <n|all>: the script has ' + script.length + ' line(s) (node tools/anim.js show ' + name + ')'); script.splice(i, 1); motion.setScript(c, script); }
+    } else if (cmd === 'redo') {
+      const i = Math.round(n(a[0] || '')) - 1, line = a.slice(1).join(' ').trim();
+      if (!(i >= 0 && i < script.length) || !line) throw new Error('redo <clip> <n> <t0>-<t1> <movement> …: the script has ' + script.length + ' line(s)');
+      motion.parseLine(line, length); script[i] = line; motion.setScript(c, script);
+    } else if (cmd === 'alive') {
+      const k = a[0] === undefined ? 1 : n(a[0]);
+      if (!(k >= 0 && k <= 2)) throw new Error('alive <clip> [0..2]');
+      motion.setLine(c, '# alive ', '# alive ' + f(k));
+    } else {
+      if (!a.length) throw new Error('auto <clip> <channel…>: the channels to give back to the script');
+      for (const ch of a) if (!/^@(Left|Right)(Hand|Foot)(\.[wpfn])?$|^@Look(\.w)?$|^Spine[12]$|^move$|^(Left|Right)Hand(Index|Middle|Ring|Pinky)[123]$/.test(ch)) throw new Error('auto: ' + ch + ' is not a channel the script makes (hands, feet, @Look, Spine1/Spine2, move, fingers): its keys would only be lost');
+      for (const ch of [...new Set(a.flatMap(family))]) { if (!c.keys[ch]) continue; delete c.keys[ch]; c.order = c.order.filter(x => x !== ch); }
+    }
+    remake(c);
+    const now = motion.scriptOf(c); now.forEach((l, i) => console.log('do ' + (i + 1) + ': ' + l));
+    console.log(c.name + ': ' + now.length + ' movement(s), alive ' + motion.aliveOf(c) + ', ' + c.order.reduce((s, ch) => s + c.keys[ch].length, 0) + ' key(s) on ' + c.order.length + ' channel(s)');
+    save(c);
+    return;
+  }
   if (cmd === 'batch') {
     const ops = a.join(' ').split(';').map(s => s.trim()).filter(Boolean);
     for (const op of ops) { const w = op.split(/\s+/); if (['show', 'at', 'copy', 'stretch', 'shift', 'batch'].includes(w[0])) throw new Error('batch: «' + w[0] + '» goes alone'); apply(c, w[0], w.slice(1)); }
     console.log(ops.length + ' change(s) together'); save(c);
   } else if (cmd === 'show' || cmd === 'at' || cmd === 'stretch' || cmd === 'shift' || cmd === 'copy') apply(c, cmd, a);
-  else { apply(c, cmd, a); save(c); }
+  else { apply(c, cmd, a); if (cmd === 'header' && a[0] === 'length' && (motion.scriptOf(c).length || motion.listOf(c, 'scripted').length)) remake(c); save(c); }
 }
 
-module.exports = { run, load, parse, valueAt };
+module.exports = { run, load, parse, valueAt, family };
 if (require.main === module) { console.error('clip.js is the clip half of the one tool: node tools/anim.js ' + (process.argv[2] || '<verb>') + ' …'); process.exit(1); }

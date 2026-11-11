@@ -22,7 +22,11 @@ namespace HuginWhispers
     // A clip of ours played on a body in the scene brings its «want» lines (the user's words as measures): judged there, on the living body.
     // Out: studio/out/<name>.txt, a VERDICT on top, then the steps: a row a step with when it began, how long it took and what came of it
     // (StoryScenes.Outcomes: «ran 14 m in 4.1 s, stopped 0.3 m off»; the VERDICT's lines that fall in its time under it — review 2 2026-11-10, В9), then
-    // each body's numbers, each body's pose in words as each step begins.
+    // each body's numbers, each body's pose in words as each step begins. The VERDICT is said one line an event with how many, each body's
+    // lines by their time (BodyCheck.Fold, the stage's own folding: a flight with the bones of its limb that jerked with it, a left and a
+    // right limb of one moment — never across a step's edge: a line shows under the step of its first moment, and one of the next step
+    // folded into it would be gone from under its own); when that folded anything, the lines as measured — a line a rule and a bone —
+    // are kept beside it in <name>.full.txt.
     //   scene <name> <scene id> [fps=2] [from=0]
     // What it looks for (each a mistake already made):
     //   pose         BodyCheck: the one set of rules, the stage's own (palm, fist, hands, elbows, knees, shoulder, neck, feet sliding,
@@ -590,7 +594,17 @@ namespace HuginWhispers
             for (int i = 0; i < sheets; i++) wrote.Add(name + "_" + i + ".png");
             foreach (Body b in bodies.Values) if (b.Shot > 0 && b.Cams != null) foreach (string v in b.Cams.Views) wrote.Add(name + "_" + b.Who + "_" + v + ".png");
             o.Append("files: ").Append(string.Join(" ", wrote.ToArray())).Append('\n');
-            o.Append("VERDICT:").Append(bad.Count == 0 ? " OK (no mistake made before; the frames still judge it)\n" : "\n");
+            // one line an event, by its time, each body's own (BodyCheck.Fold: the stage's folding, not a second one); what that folded is kept as measured beside the report
+            List<KeyValuePair<float, string>> moments = new List<KeyValuePair<float, string>>();
+            foreach (Body b in bodies.Values) if (b.Pose != null) moments.AddRange(b.Pose.Moments);
+            List<float> edges = new List<float>(); // (no event is folded across a step's beginning or end: a line shows under the step of its first moment, the next step's would be gone from under it)
+            foreach (StepRow r in steps) { edges.Add(r.T0); if (r.T1 >= 0f) edges.Add(r.T1); }
+            List<string> measured = bad;
+            bad = BodyCheck.Fold(measured, moments, edges);
+            string fullFile = Path.Combine(Out, Clean(name) + ".full.txt");
+            if (bad.Count < measured.Count) File.WriteAllText(fullFile, "scene " + id + ", VERDICT as measured, a line a rule and a bone, nothing folded (" + measured.Count + "):\n  - " + string.Join("\n  - ", measured.ToArray()) + "\n", new UTF8Encoding(false));
+            else if (File.Exists(fullFile)) File.Delete(fullFile); // (an older run's: nothing of this one is folded)
+            o.Append("VERDICT:").Append(bad.Count == 0 ? " OK (no mistake made before; the frames still judge it)\n" : " " + bad.Count + " problem(s)" + (bad.Count < measured.Count ? " (one line an event; a line a rule and a bone, as measured: " + Clean(name) + ".full.txt)" : "") + "\n");
             foreach (string l in bad) o.Append("  - ").Append(l).Append('\n');
             // the steps: when each began, how long it took, what came of it (the director's own word as it ended), the VERDICT's lines that fall in its time
             o.Append("steps (began → ended, what came of it; the VERDICT's lines of that time under each):\n");
@@ -612,8 +626,8 @@ namespace HuginWhispers
         }
 
         private sealed class StepRow { public int Index; public string Line; public float T0, T1 = -1f; } // (a step of the run: its index in the scene, its words, when it began and ended)
-        private static readonly Regex AtRe = new Regex(@"\bat (\d+(?:\.\d+)?) s\b", RegexOptions.Compiled);
-        // the moment a VERDICT line names («… at 12.3 s …»), below zero none
+        private static readonly Regex AtRe = new Regex(@"\bat (\d+(?:\.\d+)?)(?:–\d+(?:\.\d+)?)? s\b", RegexOptions.Compiled);
+        // the moment a VERDICT line names («… at 12.3 s …»; of a folded line's «at 12.3–12.5 s» the first), below zero none
         private static float AtOf(string line) { Match m = AtRe.Match(line); float v; return m.Success && float.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? v : -1f; }
 
         private static void SaveSheet(string name, List<Texture2D> frames, int cols = 4)

@@ -14,6 +14,9 @@ namespace HuginWhispers
     //   bird · player · sky  words of their own (Words): the story's raven of the scene playing now · where you stand · high in the air ahead of you
     //                        and to your left (a sound from above)
     //   npc.<who>            a person of the story where it stands now (its template id or tag; the nearest loaded)
+    //   npc.<who>.thing · player.thing   the thing that one holds (StoryProps), where its look is now — in a hand, on the arm, lying, falling,
+    //                        in flight: its own middle, not a spot on the ground (IsThing: what films or looks at it adds no height over it).
+    //                        Not found while it holds nothing. Moves while it is held or on its way; lying still, it stands
     //   <prefix><name>       a module's own places (Prefixed: «me.<name>» — the player's own spot, StorySpot)
     // One table for the load check (Why) and the finding (Find): a word that passes the check is a word that can be found.
     internal static class StoryWhere
@@ -22,19 +25,33 @@ namespace HuginWhispers
         internal delegate bool FindFn(string rest, out Vector3 at);
         internal static readonly Dictionary<string, FindFn> Prefixed = new Dictionary<string, FindFn>
         {
-            { "npc.", (string rest, out Vector3 at) => // (a person of the story where it stands now: StoryScenes.Actor)
+            { "npc.", (string rest, out Vector3 at) => // (a person of the story where it stands now: StoryScenes.Actor; «npc.<who>.thing»: what it holds)
                 {
-                    NpcActor a = StoryScenes.Actor(rest, Player.m_localPlayer != null ? Player.m_localPlayer.transform.position : Vector3.zero);
+                    bool thing = rest.EndsWith(Thing);
+                    NpcActor a = Person(thing ? rest.Substring(0, rest.Length - Thing.Length) : rest);
                     at = a != null ? a.transform.position : Vector3.zero;
-                    return a != null;
+                    return a != null && (!thing || StoryProps.ThingAt(a.gameObject, out at));
                 } },
         };
+
+        // The thing a holder has (StoryProps: in a hand, on the arm, lying, in the air) as a word of place: «npc.<who>.thing», «player.thing»
+        private const string Thing = ".thing";
+        internal static bool IsThing(string name) { return name != null && name.EndsWith(Thing) && (name == "player" + Thing || (name.StartsWith("npc.") && name.Length > 4 + Thing.Length)); }
+        private static NpcActor Person(string who) { return StoryScenes.Actor(who, Player.m_localPlayer != null ? Player.m_localPlayer.transform.position : Vector3.zero); }
+        // whose thing a thing's word names, on this game (null: nobody here)
+        private static GameObject HolderOf(string thing)
+        {
+            if (thing == "player" + Thing) return Player.m_localPlayer != null ? Player.m_localPlayer.gameObject : null;
+            NpcActor a = Person(thing.Substring(4, thing.Length - 4 - Thing.Length));
+            return a != null ? a.gameObject : null;
+        }
 
         // words of their own: a new one is a line here
         private static readonly Dictionary<string, FindFn> Words = new Dictionary<string, FindFn>
         {
             { "bird", (string rest, out Vector3 at) => { at = StoryScenes.BirdAt; return StoryScenes.HasBird; } },
             { "player", (string rest, out Vector3 at) => { Player me = Player.m_localPlayer; at = me != null ? me.transform.position : Vector3.zero; return me != null; } },
+            { "player" + Thing, (string rest, out Vector3 at) => { Player me = Player.m_localPlayer; at = Vector3.zero; return me != null && StoryProps.ThingAt(me.gameObject, out at); } }, // (what you hold, where it is now)
             { "sky", (string rest, out Vector3 at) => // (up in the air ahead of you and to your left: a caw from above, a sound to look for)
                 {
                     Player me = Player.m_localPlayer;
@@ -43,8 +60,14 @@ namespace HuginWhispers
                 } },
         };
 
-        // a word that may name something on the move (asked again each time); a place of the story stands still
-        internal static bool Moves(string name) { string piece; return Words.ContainsKey(name) || name.IndexOf('.') > 0 && Place(name, out piece) == null; }
+        // a word that may name something on the move (asked again each time); a place of the story stands still — and a thing that lies still
+        // (held, falling, in flight, or not here yet: it moves — StoryProps.ThingMoves)
+        internal static bool Moves(string name)
+        {
+            if (IsThing(name)) return StoryProps.ThingMoves(HolderOf(name));
+            string piece;
+            return Words.ContainsKey(name) || name.IndexOf('.') > 0 && Place(name, out piece) == null;
+        }
         private static FindFn PrefixOf(string name, out string rest)
         {
             rest = "";

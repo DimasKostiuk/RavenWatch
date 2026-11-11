@@ -34,7 +34,8 @@ namespace HuginWhispers
     //             by (the game's stance is never quite the key's: a slope, a body, the last step of a walk) is carried until
     //             the clip itself moves that foot, and is lost over the first BodyClips.PlantAway m of that step, in the air.
     //             Its knee starts from the way it pointed when the clip took it, in the body's frame (so the body's own shifting does
-    //             not carry it across), and goes over to the clip's «.p» softly: over BodyClips.PoleFor s, sooner if the foot steps
+    //             not carry it across), and — only when the clip says something of that leg: its foot steps, or its «.p» is not a leg's own way
+    //             (PAnimClip.LegSaid); a clip that only stands on its feet leaves the knee as the game has it — goes over to the clip's «.p» softly: over BodyClips.PoleFor s, sooner if the foot steps
     //             (PoleAway m of the step). Measured: held till the step, it swung 25 cm in half a second as the step began.
     //   Prop    — a thing the clip itself moves (StoryProps, «free»): «@Prop» where it is (body frame, as the targets),
     //             «@Prop.r» how it is turned (degrees in the body's frame), «@Prop.w» (x, 0..1) how far from where it lay
@@ -140,6 +141,27 @@ namespace HuginWhispers
         // holds the legs, a foot's target, the whole body, keeps the game's pose frozen, or touches something (key_turn: the hands on the gate, no
         // legs — walked away with, the key turned in the air, 2026-11-07). One that turns only the head or the arms (look_back, a nod) plays on
         internal bool HoldsWalk { get { return Frozen || Touch.Length > 0 || MovesLegs; } }
+        // does the clip say anything of this leg beyond «stand as you stand»: its foot's target moves (by more than BodyAnimator.FootStep), or its knee is sent
+        // another way than a leg's own (Limb.Pole, by more than BodyClips.PoleSame degrees)? If not, the knee stays as the game has it (BodyAnimator.Planted).
+        // Fifteen clips keyed the leg's own way and never moved a foot, and each swung the knees 8–13 cm in over its first second and back out at its end
+        // (measured 2026-11-11 on wave_off and on a new clip; the user: «ноги після анімації згинаються у стандартну позу, це надто видно»).
+        private readonly Dictionary<string, bool> _legSaid = new Dictionary<string, bool>(); private int _legStamp = -1;
+        internal bool LegSaid(BodyClips.Limb m)
+        {
+            int stamp = Keys.Count * 64 + Bones.Count; // (keys or channels added in the author's window: reckoned again)
+            if (stamp != _legStamp) { _legSaid.Clear(); _legStamp = stamp; }
+            bool said;
+            if (_legSaid.TryGetValue(m.Name, out said)) return said;
+            string pole = m.Name + ".p"; bool first = true; Vector3 from = Vector3.zero;
+            foreach (PAnimKey k in Keys)
+            {
+                Vector3 v;
+                if (k.V.TryGetValue(m.Name, out v)) { if (first) { from = v; first = false; } else if (Vector3.Distance(v, from) > BodyAnimator.FootStep) said = true; }
+                if (k.V.TryGetValue(pole, out v) && v.sqrMagnitude > 0.0001f && Vector3.Angle(v, m.Pole) > BodyClips.PoleSame) said = true;
+            }
+            _legSaid[m.Name] = said;
+            return said;
+        }
         internal bool MovesLegs { get { foreach (string b in Bones) if (b == BodyClips.Move || b == BodyClips.Body || b == "Hips" || b.StartsWith("@LeftFoot", StringComparison.Ordinal) || b.StartsWith("@RightFoot", StringComparison.Ordinal) || b.EndsWith("Leg", StringComparison.Ordinal) || b.EndsWith("Foot", StringComparison.Ordinal) || b.EndsWith("ToeBase", StringComparison.Ordinal)) return true; return false; } }
         // how a bone's three numbers are meant (BodyClips.Turn, Frame, Aim); a bone not here: its own axes
         public readonly Dictionary<string, int> Modes = new Dictionary<string, int>();
@@ -447,7 +469,7 @@ namespace HuginWhispers
             return (da > 0 ? a.Substring(0, da) : a) == (db > 0 ? b.Substring(0, db) : b);
         }
         internal static float MissFrom = 0.95f; // (a target's weight from which the stage counts how far it is from it)
-        internal static float PoleFor = 1f, PoleAway = 0.35f; // seconds a foot's knee takes to go over to the clip's way · m of its step, if that comes first
+        internal static float PoleFor = 1f, PoleAway = 0.35f, PoleSame = 5f; // seconds a foot's knee takes to go over to the clip's way · m of its step, if that comes first · degrees: a knee's way this near a leg's own says nothing (PAnimClip.LegSaid)
         internal static float PlantAway = 0.1f, PlantMost = 0.25f, BentEnough = 0.02f; // m: a foot's offset is gone over this much of its first step · farther off than this, it is another stance: not carried · a limb straighter than this says nothing of where its joint points
 
         // A bone's three numbers mean (per bone of a clip):
@@ -1997,7 +2019,7 @@ namespace HuginWhispers
                 Bone up = BoneOf(m.Upper), low = BoneOf(m.Lower), end = BoneOf(m.End);
                 if (up == null || low == null || end == null) continue;
                 Vector3 under = end.T.position; // (where the pose under it has its end)
-                if (foot >= 0) at = Planted(foot, at, root.InverseTransformPoint(under), root.InverseTransformDirection(low.T.position - up.T.position - (under - up.T.position).normalized * Vector3.Dot(low.T.position - up.T.position, (under - up.T.position).normalized)));
+                if (foot >= 0) at = Planted(foot, at, root.InverseTransformPoint(under), root.InverseTransformDirection(low.T.position - up.T.position - (under - up.T.position).normalized * Vector3.Dot(low.T.position - up.T.position, (under - up.T.position).normalized)), LegSaid(m));
                 Quaternion rides = Ride(m.Name, root, w, ref at); // (a target on a bone: «follow»)
                 if (foot < 0) at = Inertia(m.Name, at, w, ow > 0.001f ? 0f : inertia); // (a hand: a spring, alive held — not one on the thing)
                 float pw;
@@ -2025,7 +2047,19 @@ namespace HuginWhispers
         private readonly Vector3[] _plant = new Vector3[2], _plantFrom = new Vector3[2], _poleFrom = new Vector3[2];
         private readonly float[] _plantAt = new float[2];
 
-        private Vector3 Planted(int foot, Vector3 at, Vector3 under, Vector3 bent)
+        // does a clip that plays say anything of this leg (PAnimClip.LegSaid)? A few clips a frame, each answer kept by its clip
+        private bool LegSaid(BodyClips.Limb m)
+        {
+            foreach (Layer l in _layers)
+                for (int i = 0; i < 2; i++)
+                {
+                    Run r = i == 0 ? l.Was : l.Now;
+                    if (r.C != null && r.Weight > 0.001f && r.C.Bones.Contains(m.Name) && r.C.LegSaid(m)) return true;
+                }
+            return false;
+        }
+
+        private Vector3 Planted(int foot, Vector3 at, Vector3 under, Vector3 bent, bool legSaid)
         {
             if (!_planted[foot])
             {
@@ -2040,7 +2074,10 @@ namespace HuginWhispers
             }
             float gone = Vector3.Distance(at, _plantFrom[foot]);
             _plantK[foot] = Mathf.Min(_plantK[foot], 1f - Mathf.SmoothStep(0f, 1f, gone / BodyClips.PlantAway));
-            _poleK[foot] = Mathf.Min(_poleK[foot], 1f - Mathf.SmoothStep(0f, 1f, Mathf.Max(gone / BodyClips.PoleAway, (Time.time - _plantAt[foot]) / BodyClips.PoleFor)));
+            // (by time only when the clip says something of this leg — it will step, or it sends the knee its own way: a clip that only stands on its feet
+            //  leaves the knee as the game has it, all along; its clock starts when a clip that does say comes on)
+            if (!legSaid) _plantAt[foot] = Time.time;
+            _poleK[foot] = Mathf.Min(_poleK[foot], 1f - Mathf.SmoothStep(0f, 1f, Mathf.Max(gone / BodyClips.PoleAway, legSaid ? (Time.time - _plantAt[foot]) / BodyClips.PoleFor : 0f)));
             return at + _plant[foot] * _plantK[foot];
         }
 
