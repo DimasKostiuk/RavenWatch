@@ -1,5 +1,6 @@
 clip arms_cross
 length 7
+tone plain
 loop 0
 pivot 1.1
 curve ease
@@ -33,7 +34,7 @@ part unfolds 5.4 7 end
 
 0 @RightHand.p 1 -0.3 0.1
 
-0 @RightHand.f 0 0.2 -1
+0 @RightHand.f -0.39 0.21 -0.9
 
 0 @RightHand.n -1 0 0
 
@@ -56,7 +57,7 @@ part unfolds 5.4 7 end
 
 0 @LeftHand.p -1 -0.3 0.1
 
-0 @LeftHand.f 0 0.2 -1
+0 @LeftHand.f 0.35 0.15 -0.93
 
 0 @LeftHand.n 1 0 0
 

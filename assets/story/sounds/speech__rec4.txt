@@ -1,0 +1,8 @@
+# Голос «rec4»: власний запис цієї людини (node tools/sound.js voice), кожен рядок — її дублі одного вигуку.
+speech_breath__rec4 file:speech_breath_1__rec4.ogg file:speech_breath_2__rec4.ogg file:speech_breath_3__rec4.ogg file:speech_breath_4__rec4.ogg file:speech_breath_5__rec4.ogg spread=0.04 vol=0.3   # вдих перед реченням; власний запис
+speech_em__rec4 file:speech_em_1__rec4.ogg spread=0.04   # «ем…»: вагається; власний запис
+speech_sigh__rec4 file:speech_sigh_1__rec4.ogg spread=0.04 vol=0.6   # зітхання; власний запис
+speech_chuckle__rec4 file:speech_chuckle_1__rec4.ogg spread=0.04   # смішок; власний запис
+speech_uhu__rec4 file:speech_uhu_1__rec4.ogg spread=0.04   # «угу»: згода; власний запис
+speech_hm__rec4 file:speech_hm_1__rec4.ogg spread=0.04   # «хм»: думає; власний запис
+speech_hm_ask__rec4 file:speech_hm_ask_1__rec4.ogg spread=0.04   # «хм?»: питає, не розчув; власний запис

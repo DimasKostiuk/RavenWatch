@@ -5,8 +5,9 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // Meals (npc-plan.md, «Голод і їдальня»): where residents eat and what. Nothing to build or set: found by itself.
-    //   the pantry   with a dining table picked: a chest with cooked food up to DiningStraight m from it in a straight line, no wall between (one ray, table to
-    //                chest), the cook's first; else a cook's chest elsewhere; else none, and it stays hungry. With no table picked: a cook's chest in the base (what
+    //   the pantry   a cook's pantry with a dish in it, wherever it stands, first of all (NpcKitchen: «Комора» is where the base eats). Else, with a dining table
+    //                picked: a chest with cooked food up to DiningStraight m from it in a straight line, no wall between (one ray, table to
+    //                chest); none: it stays hungry. With no table picked: a cook's chest in the base (what
     //                it cooks goes there — its chest is marked «Комора»), a chest beside any table, the nearest chest of the base — with cooked food in it.
     //                Found once for the whole base and remembered (Larder): looked for again only when that chest is gone, closed to them or out of food;
     //                found none: not looked for again for LookAgain s
@@ -25,42 +26,17 @@ namespace HuginWhispers
         private const float RayUp = 1.2f; // m over table and chest: above the things that stand in a room, under the height of a wall
         private const float TableNear = 5f, EatMin = 30f, EatMax = 55f, SitWalk = 40f;
 
-        // ---------------------------------------------------------------- what is cooked food (from the game's own lists, once a world)
-        private static HashSet<string> _cooked;
-        private static object _cookedWorld;
-
-        private static HashSet<string> Cooked
-        {
-            get
-            {
-                if (_cooked != null && ReferenceEquals(_cookedWorld, ZNet.instance)) return _cooked;
-                HashSet<string> set = new HashSet<string>();
-                if (ZNetScene.instance != null)
-                    foreach (GameObject go in ZNetScene.instance.m_prefabs)
-                    {
-                        CookingStation s = go != null ? go.GetComponent<CookingStation>() : null;
-                        if (s == null || s.m_conversion == null) continue;
-                        foreach (CookingStation.ItemConversion c in s.m_conversion) if (c != null && c.m_to != null) set.Add(c.m_to.m_itemData.m_shared.m_name);
-                    }
-                if (ObjectDB.instance != null)
-                    foreach (Recipe r in ObjectDB.instance.m_recipes)
-                        if (r != null && r.m_item != null && r.m_craftingStation != null && r.m_craftingStation.m_name == "$piece_cauldron") set.Add(r.m_item.m_itemData.m_shared.m_name);
-                if (set.Count == 0) return set; // (the game not ready yet: asked again)
-                _cooked = set; _cookedWorld = ZNet.instance;
-                return set;
-            }
-        }
-
+        // ---------------------------------------------------------------- what is cooked food: a kitchen's dish (NpcKitchen.IsDish — the game's own lists, once a
+        // world: off a rack or an oven, or made at a cooking tool; the one answer for what a cook carries to its pantry and what its people eat from it)
         private static float Worth(ItemDrop.ItemData it) { return it.m_shared.m_food + it.m_shared.m_foodStamina + it.m_shared.m_foodEitr; }
 
         // the plainest cooked food in a chest (null: none)
         internal static ItemDrop.ItemData Plainest(Inventory inv)
         {
             if (inv == null) return null;
-            HashSet<string> cooked = Cooked;
             ItemDrop.ItemData best = null;
             foreach (ItemDrop.ItemData it in inv.GetAllItems())
-                if (it.m_shared.m_food > 0f && cooked.Contains(it.m_shared.m_name) && (best == null || Worth(it) < Worth(best))) best = it;
+                if (it.m_shared.m_food > 0f && NpcKitchen.IsDish(it.m_shared.m_name) && (best == null || Worth(it) < Worth(best))) best = it;
             return best;
         }
 
@@ -114,7 +90,7 @@ namespace HuginWhispers
         {
             if (b == null || !b.Ready) return null;
             Larder l;
-            if (!Larders.TryGetValue(b, out l)) { if (Larders.Count > 64) Larders.Clear(); l = new Larder(); Larders[b] = l; }
+            if (!Larders.TryGetValue(b, out l)) { if (Larders.Count > 8) Larders.Clear(); l = new Larder(); Larders[b] = l; } // (a base's map let go — forgotten, another world — leaves its entry here, and the entry holds the whole map: a few at most, a larder is found again in one look)
             Transform dining = NpcHeart.DiningOf(b);
             if (dining != l.Table) { l.Table = dining; l.Chest = null; l.NextLook = 0f; } // (another table picked: its own chest)
             if (l.Chest != null && Open(l.Chest) && Plainest(l.Chest.GetInventory()) != null) return l.Chest; // (the one found: nothing more asked)
@@ -153,12 +129,12 @@ namespace HuginWhispers
         private static Container AtTable(NpcBase b, Transform dining)
         {
             List<Container> cooks = CooksChests(b, dining.position);
-            foreach (Container c in cooks) if (InZone(dining, c) && NoWall(dining, c)) return c;
+            if (cooks.Count > 0) return cooks[0]; // (a cook's pantry with food, wherever it stands: the base eats from it first — a picked table only says where they sit; it used to lose to any chest nearer the table, and «нема що їсти» came with a full pantry a wall away: the user 2026-11-12)
             List<Container> l = new List<Container>();
             foreach (Component k in ChestsRound(b)) { Container c = k as Container; if (Open(c) && InZone(dining, c) && Plainest(c.GetInventory()) != null) l.Add(c); }
             l.Sort((x, y) => (x.transform.position - dining.position).sqrMagnitude.CompareTo((y.transform.position - dining.position).sqrMagnitude));
             foreach (Container c in l) if (NoWall(dining, c)) return c;
-            return cooks.Count > 0 ? cooks[0] : null;
+            return null;
         }
 
         private static Container Anywhere(NpcBase b, Vector3 me)
@@ -178,13 +154,12 @@ namespace HuginWhispers
         {
             if (b == null || !b.Ready) return 0f;
             float sum = 0f;
-            HashSet<string> cooked = Cooked;
             Transform dining = NpcHeart.DiningOf(b);
             foreach (Container c in Chests(b, dining))
             {
                 if (!Open(c) || c.GetInventory() == null) continue;
                 float here = 0f;
-                foreach (ItemDrop.ItemData it in c.GetInventory().GetAllItems()) if (it.m_shared.m_food > 0f && cooked.Contains(it.m_shared.m_name)) here += Fill(it) * it.m_stack;
+                foreach (ItemDrop.ItemData it in c.GetInventory().GetAllItems()) if (it.m_shared.m_food > 0f && NpcKitchen.IsDish(it.m_shared.m_name)) here += Fill(it) * it.m_stack;
                 if (here > 0f && (dining == null || IsCooks(c) || (InZone(dining, c) && NoWall(dining, c)))) sum += here;
             }
             return sum;
@@ -260,25 +235,26 @@ namespace HuginWhispers
         {
             if (b == null || !b.Ready) return Lang.T("база ще оглядається");
             Transform dining = NpcHeart.DiningOf(b);
-            if (dining == null && TablesOf(b).Count == 0) return Lang.T("на базі нема столу (їжа — у ящику біля столу або в коморі кухаря)");
             List<string> raw = new List<string>();
             bool chest = false, personal = false;
             foreach (Container c in Chests(b, dining))
             {
-                if (c.GetComponent<Piece>() == null || (dining != null ? !InZone(dining, c) || !NoWall(dining, c) : TableNearest(b, c.transform.position, TableNear) == null)) continue;
+                // (with a table picked: the chests by it; with none: every chest of the base — the nearest with a dish in it is taken, table or no table. It
+                // said «на базі нема столу», though no table is needed: read 2026-11-12)
+                if (c.GetComponent<Piece>() == null || (dining != null && (!InZone(dining, c) || !NoWall(dining, c)))) continue;
                 if (c.m_privacy == Container.PrivacySetting.Private) { personal = true; continue; }
                 chest = true;
                 if (c.GetInventory() == null) continue;
                 foreach (ItemDrop.ItemData it in c.GetInventory().GetAllItems())
-                    if (it.m_shared.m_food > 0f && !Cooked.Contains(it.m_shared.m_name))
+                    if (it.m_shared.m_food > 0f && !NpcKitchen.IsDish(it.m_shared.m_name))
                     {
                         string n = Localization.instance != null ? Localization.instance.Localize(it.m_shared.m_name) : it.m_shared.m_name;
                         if (!raw.Contains(n) && raw.Count < 4) raw.Add(n);
                     }
             }
-            if (!chest) return personal ? Lang.T("ящик біля столу особистий — потрібен звичайний") : dining != null ? Lang.F("біля столу їдальні (до {0} м, не за стіною) нема ящика", Mathf.RoundToInt(DiningStraight)) : Lang.F("біля столу (до {0} м) нема ящика", Mathf.RoundToInt(TableNear));
-            if (raw.Count > 0) return Lang.F("у ящику біля столу лише не готове: {0} — їдять тільки страви з вогнища, печі чи казана", string.Join(", ", raw.ToArray()));
-            return Lang.T("у ящику біля столу нема страв (з вогнища, печі чи казана)");
+            if (!chest) return personal ? Lang.T("ящик біля столу особистий — потрібен звичайний") : dining != null ? Lang.F("біля столу їдальні (до {0} м, не за стіною) нема ящика й нема комори кухаря зі стравами", Mathf.RoundToInt(DiningStraight)) : Lang.T("на базі нема жодного ящика зі стравами");
+            if (raw.Count > 0) return Lang.F("у ящиках лише не готове: {0} — їдять тільки страви, зроблені на кухні", string.Join(", ", raw.ToArray()));
+            return Lang.T("у ящиках нема страв, зроблених на кухні");
         }
 
         private static Container Mark(Container c)

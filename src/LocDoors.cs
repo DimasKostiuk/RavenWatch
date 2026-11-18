@@ -41,7 +41,7 @@ namespace HuginWhispers
         internal static bool InsideOf(Player p, string place)
         {
             if (p == null) return false;
-            return OfPlace(new Ray(p.transform.position + Vector3.up * 0.5f, Vector3.down), 1.6f, place) && OfPlace(new Ray(p.GetHeadPoint(), Vector3.up), 8f, place);
+            return OfPlace(new Ray(p.transform.position + Vector3.up * 0.5f, Vector3.down), 1.6f, place) && OfPlace(new Ray(Body.Head(p), Vector3.up), 8f, place);
         }
 
         private static readonly int PieceMask = LayerMask.GetMask("piece", "piece_nonsolid", "Default", "static_solid");

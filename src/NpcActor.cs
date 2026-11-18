@@ -13,6 +13,8 @@ namespace HuginWhispers
     {
         internal static readonly List<NpcActor> Live = new List<NpcActor>();
         private static readonly Dictionary<Character, NpcActor> ByBody = new Dictionary<Character, NpcActor>();
+        private const string RpcReact = "RavenWatch_NpcReact2"; // (a wordless sound of its own to what was said to it, and after how long: NpcSpeech.Reacted. «2»: a game of before 3.0, which sent the sound alone, neither sends nor reads this one)
+        private const string RpcNext = "RavenWatch_NpcNext"; // (who speaks next in a talk, and when: NpcBubble's thinking dots. An older game does not read it: a warning in its log, nothing else)
         private const string RpcSay = "RavenWatch_NpcSay", RpcSpeak = "RavenWatch_NpcSpeak", RpcOrder = "RavenWatch_NpcOrder", RpcTalk = "RavenWatch_NpcTalk", RpcAppear = "RavenWatch_NpcAppear";
         internal const string RpcAct = "RavenWatch_NpcAct";
 
@@ -26,7 +28,8 @@ namespace HuginWhispers
         private float _nextSay, _nextRules, _nextHitRule, _nextBind, _nextStatus;
         internal System.Collections.Generic.HashSet<string> StoryFacts; internal string StoryFactsOf; // (what its story says of it: NpcBackstory.Fact)
         internal bool EyesOn; internal float EyesLook, EyesFar; // (a player near enough to see it: NpcClock.Seen)
-        internal float NextRemark, NextLook; internal string LastRemark = ""; internal int Stared; // (a player standing by it saying nothing: looks in a row) // (its own words unasked: NpcVoice)
+        internal string DueRemark = ""; // session: a module's word — this theme at its next remark, over the ranking's chance (NpcVoice.Tick; StoryLife: what it came to an outing place to say)
+        internal float NextRemark, NextLook, StareAgain; internal string LastRemark = ""; internal int Stared; // (a player standing by it saying nothing: looks in a row) // (its own words unasked: NpcVoice)
         internal static readonly int KStatus = "RavenWatch_npcStatus".GetStableHashCode(); // string: what it does now (its owner's words)
 
         // what it does now, on any game: its own mind where it is run, else as its owner last said
@@ -75,10 +78,16 @@ namespace HuginWhispers
         internal NpcResident Resident { get { return _resident; } }
         internal NpcSettlers.Look LookKept; internal string LookRaw = ""; // (a settler's look as read: NpcSettlers.Of)
 
-        // its name as shown: a settler's own, else its template's (in the player's language)
+        // its name as kept: a settler's own (its ZDO), else its template's — the Ukrainian source, the same on every game and in
+        // every language. What is stored (a memory, a locker, a quarrel), sent (an act) or compared is this, never Name
+        // No template here (another version, one taken out): the id it was made with — never an empty name in a list
+        internal string Key { get { string own = NpcSettlers.NameOf(this); if (own.Length > 0) return own; if (_def != null) return _def.Name; ZDO z = Zdo; return z != null ? z.GetString(Npcs.KId, "") : ""; } }
+        // its name as shown: the kept one in the reader's language (Lang.T: the names are rows of ui.txt)
+        internal string Name { get { string k = Key; return _def == null || k == Id ? k : Lang.T(k); } }
+        // a kept name read from somewhere (a memory, a bed, the heart's list of its folk) as shown
+        internal static string Shown(string key) { return string.IsNullOrEmpty(key) ? "" : Lang.T(key); }
         // who it is in the log: its template, and its own name when that tells more (many settlers share «settler»)
-        internal string Who { get { string n = Name; return n == Id ? Id : Id + " «" + n + "»"; } }
-        internal string Name { get { string own = NpcSettlers.NameOf(this); return own.Length > 0 ? own : _def != null ? Lang.T(_def.Name) : Id; } }
+        internal string Who { get { string n = Key; return n == Id ? Id : Id + " «" + n + "»"; } }
 
         // a woman or a man (a settler's own, else its template's model) — and words in its form: «старанний|старанна»
         internal bool Female { get { NpcSettlers.Look l = NpcSettlers.Of(this); return l != null ? l.Model == 1 : _def != null && _def.Model == 1; } }
@@ -144,7 +153,9 @@ namespace HuginWhispers
             NpcKit.Born(z, _def); // (its lasting number and its seed from its first moment, where it is owned — born here, or an old save loaded here: what it is made of is seeded by it, NpcKit.Seed)
             if (_def == null) Npcs.Log("an npc «" + id + "» with no template here (another version?): it stands still");
             _nv.Register<string>(RpcSay, RPC_Say);
+            _nv.Register<ZDOID, float>(RpcNext, RPC_Next);
             _nv.Register<string, ZDOID>(RpcSpeak, RPC_Speak);
+            _nv.Register<string, float>(RpcReact, RPC_React);
             _nv.Register<string>(RpcOrder, RPC_Order);
             _nv.Register<ZDOID>(RpcTalk, RPC_Talk);
             _nv.Register<string>(RpcAct, RPC_Act);
@@ -262,10 +273,13 @@ namespace HuginWhispers
             NpcPerf.Add(PerfActor, perf);
         }
 
+        private float _hatAt; private VisEquipment _visL; // (its raven's hat: NpcHat — looked at a second, on every game)
         private void Update0()
         {
+            if (Time.time >= _hatAt && _def != null) { _hatAt = Time.time + 1f; if (_visL == null) _visL = GetComponent<VisEquipment>(); NpcHat.Wear(_visL, transform, _def); }
             if (_waitText != null && Owned) SayWaiting();
             if (_waiting.Count > 0) SendWaiting();
+            if (_paid.Count > 0) PaidTick();
             ZDO zo = Zdo; long owner = zo != null ? zo.GetOwner() : 0L; // (one field read: who ran it before, for an act sent on — FromOwner)
             if (owner != _ownerNow) { if (_ownerNow != 0L) _ownerBefore = _ownerNow; _ownerNow = owner; _ownerAt = Time.time; }
             if (Time.time >= _nextBind)
@@ -324,7 +338,7 @@ namespace HuginWhispers
                 // what the other games draw in its hands and on it is kept in its ZDO and outlives a restart; the body made
                 // anew knows nothing of it, so taking off what it does not hold changes nothing there — a bow lost with its
                 // locker stayed drawn in its hands (2026-10-31). Wiped first: put on again below from what it really has
-                foreach (int k in new[] { ZDOVars.s_rightItem, ZDOVars.s_leftItem, ZDOVars.s_rightBackItem, ZDOVars.s_leftBackItem, ZDOVars.s_chestItem, ZDOVars.s_legItem, ZDOVars.s_helmetItem, ZDOVars.s_shoulderItem, ZDOVars.s_utilityItem })
+                foreach (int k in new[] { ZDOVars.s_rightItem, ZDOVars.s_leftItem, ZDOVars.s_rightBackItem, ZDOVars.s_leftBackItem, ZDOVars.s_chestItem, ZDOVars.s_legItem, ZDOVars.s_helmetItem, ZDOVars.s_shoulderItem, ZDOVars.s_utilityItem, ZDOVars.s_trinketItem })
                     if (z.GetInt(k, 0) != 0) z.Set(k, 0);
                 _body.UnequipAllItems();
                 _body.GetInventory().RemoveAll();
@@ -334,7 +348,7 @@ namespace HuginWhispers
                     GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(g) : null;
                     ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
                     if (drop == null) { Npcs.Log(_def.Id + ": no item «" + g + "»"); continue; }
-                    if (!NpcGear.Wearable(drop)) { Npcs.Log(_def.Id + ": «" + g + "» is not a thing to wear (a creature's own, no icon): left off"); continue; }
+                    if (!NpcGear.Wearable(drop) && !_def.Dvergr) { Npcs.Log(_def.Id + ": «" + g + "» is not a thing to wear (a creature's own, no icon): left off"); continue; }
                     ItemDrop.ItemData t = drop.m_itemData.Clone(); t.m_dropPrefab = prefab;
                     template.Add(t);
                 }
@@ -347,13 +361,16 @@ namespace HuginWhispers
                     if (it.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield) shield = it;
                     if (it.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo || it.m_shared.m_itemType == ItemDrop.ItemData.ItemType.AmmoNonEquipable) continue; // (carried: what it shoots)
                     if (it.IsWeapon()) { if (NpcGear.Ranged(it)) far = it; else near = it; continue; }
-                    _body.EquipItem(it, false);
+                    if (!_body.EquipItem(it, false)) Npcs.Log(_def.Id + ": «" + it.m_shared.m_name + "» not put on: the game said no"); // (never silent: a thing the game refuses stays in the bag)
                 }
                 if (gear != null) { gear.Near = near; gear.Far = far; gear.Shield = shield; }
                 ItemDrop.ItemData hand = near ?? far;
                 if (hand != null) _body.EquipItem(hand, false);
                 if (hand != null && !NpcGear.InHand(this)) NpcGear.Sheathe(_body, false); // (not a guard: on its back at its ease — drawn for a fight)
-                int armor = Mathf.RoundToInt(_body.GetBodyArmor());
+                float worn = 0f; HitData.DamageModifiers mods = new HitData.DamageModifiers();
+                foreach (ItemDrop.ItemData it in _body.GetInventory().GetEquippedItems()) if (NpcGear.IsClothes(it)) { worn += it.GetArmor(); if (it.m_shared.m_damageModifiers != null) mods.Apply(it.m_shared.m_damageModifiers); }
+                _armor = worn; _armorMods = mods; // (Armoured)
+                int armor = Mathf.RoundToInt(worn);
                 if (z.GetInt(KArmor, -1) != armor) z.Set(KArmor, armor); // (its armour for the hover on every game: only the owner dresses it)
                 Npcs.Log(Id + ": dressed — " + Wearing() + (far != null ? "; far " + far.m_shared.m_name : "") + (gear != null && gear.Cells != null ? "; its cells " + gear.Cells.NrOfItems() : ""));
             }
@@ -386,13 +403,35 @@ namespace HuginWhispers
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(d), Time.deltaTime * 3f);
         }
 
-        // hit (whether it can be hurt or not): its mind answers, the story hears
-        internal static void Hit(Character body, Character attacker)
+        // what it wears protects it. The game counts armour for a player alone (Character.RPC_Damage: «if IsPlayer»; a body with no Player says 0 armour and none of
+        // its pieces' resistances — the user 2026-11-11: «дав йому броню», the hover said 0 and a blow took all of it): a person's own, reckoned as it is dressed
+        // (Dress: only where it is run, as the blow is) and taken off the blow before the game's own reckoning (NpcDamagePatch) — before its block and stagger, not after
+        private float _armor;
+        private HitData.DamageModifiers _armorMods;
+        internal static void Armoured(Character body, HitData hit)
+        {
+            NpcActor a;
+            if (hit == null || body == null || !ByBody.TryGetValue(body, out a) || a == null) return; // (being dressed again: as last dressed — never bare for a blow between)
+            HitData.DamageModifier most;
+            hit.ApplyResistance(a._armorMods, out most);
+            hit.ApplyArmor(a._armor);
+        }
+
+        // hit (whether it can be hurt or not): its mind answers, the story hears. The blow goes into the log on the same 3 s as its rule — its kind,
+        // its damage before armour, whose, its health then (2026-11-14: settlers fell senseless a minute after this game took them, and the log named no one)
+        internal static void Hit(Character body, HitData hit)
         {
             NpcActor a;
             if (body == null || !ByBody.TryGetValue(body, out a) || a == null) return;
+            Character attacker = hit != null ? hit.GetAttacker() : null;
             if (a._mind != null && a.Owned) a._mind.HurtBy(attacker);
-            if (a.Owned && Time.time >= a._nextHitRule) { a._nextHitRule = Time.time + 3f; NpcRules.Fire(a, "hit", attacker as Player); }
+            if (a.Owned && Time.time >= a._nextHitRule)
+            {
+                a._nextHitRule = Time.time + 3f;
+                NpcRules.Fire(a, "hit", attacker as Player);
+                string by = attacker != null ? Utils.GetPrefabName(attacker.gameObject) : hit != null && !hit.m_attacker.IsNone() ? "not loaded " + hit.m_attacker : "nobody";
+                Npcs.Log(a.Id + ": hit — " + (hit != null ? hit.m_hitType + " " + hit.GetTotalDamage().ToString("0.#") : "?") + " by " + by + ", health " + body.GetHealth().ToString("0") + "/" + body.GetMaxHealth().ToString("0"));
+            }
             if (a.Owned) StoryBus.Raise("npc_hit", a.Id, attacker != null && attacker.IsPlayer() ? 1 : 0, a.transform.position);
         }
 
@@ -425,7 +464,7 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- words
-        // over its head, for everyone near (the game's own bubble); {name} is the one it says it to (here: you)
+        // over its head, for everyone near (NpcBubble: one capsule per ring of voices); {name} is the one it says it to (here: you)
         internal void Say(string text) { Say(text, null); }
 
         // ---------------------------------------------------------------- one voice at a time (the user 2026-11-06: many people near, their
@@ -435,6 +474,16 @@ namespace HuginWhispers
         //   Event    something happened (a raid over, a meal missed, it is leaving): waits its turn up to WaitMost, then says it; a newer one replaces it
         //   Unasked  its own word in passing (a remark, a mutter, a place, the weather): said only while the ring is quiet, else not at all
         // Who speaks unasked asks FloorFree before it makes its line (NpcVoice, NpcChatter): nothing is made to be thrown away.
+        // A weighty line (the user 2026-11-12: «щоб вони не губились серед звичайного трьопа»): something happened (Voice.Event), or what presses on it
+        // (NpcVoice.Weighty: its own pressing theme — its hunger, its pay, what it asks of you, what you did to it; not a word on you). Every game draws it
+        // the same: the mark goes with the words (Mark, a sign no font draws), and the bubble is in WeightyColor, seen WeightyFar times as far. Small talk,
+        // a remark in passing, an answer in a talk stay as they were. Who decides what is weighty is the core here, not the module that speaks
+        internal static string WeightyColor = "#FFB75E"; internal static float WeightyFar = 1.6f;
+        private const string Mark = "\u200B";
+        // A line that is a place of a talk (a true tale of Torvald's told by the fire: StoryMeets, the user 2026-11-16) says which with its words \u2014 \u00AB<talk> <place>\u00BB
+        // between two ToldMark \u2014 and every game that gets it tells Told (the module there: its own player near enough has heard that place \u2014 the book's \u00AB\u0421\u0430\u0433\u0430\u00BB)
+        private const string ToldMark = "\u2060";
+        internal static Action<NpcActor, string> Told;
         internal enum Voice { Over, Event, Unasked }
         internal static float FloorRadius = 8f, FloorGap = 0.8f, WaitMost = 15f;
         private sealed class Floor { public NpcActor Who; public Vector3 At; public float Until; }
@@ -468,34 +517,38 @@ namespace HuginWhispers
             if (Time.time > _waitUntil) { _waitText = null; return; } // (too late: the moment is gone)
             if (!FloorFree(transform.position, this)) return;
             string t = _waitText; _waitText = null;
-            Say(t, _waitTo, Voice.Over);
+            SayLine(t, _waitTo, true); // (an event's line: weighty)
         }
 
-        internal void Say(string text, Player to, Voice how)
+        internal void Say(string text, Player to, Voice how, bool weighty = false)
         {
             if (how != Voice.Over && !FloorFree(transform.position, this))
             {
                 if (how == Voice.Event && !string.IsNullOrEmpty(text)) { _waitText = text; _waitTo = to; _waitUntil = Time.time + WaitMost; }
                 return;
             }
-            Say(text, to);
+            SayLine(text, to, weighty || how == Voice.Event);
         }
 
         // its line to someone: {name} and «ходив|ходила» of that one — the one it speaks to, else the player nearest it (not
         // the player of the game that runs it: a host's or a server's game — a friend was called by the host's name, 2026-11-01)
         internal void Say(string text, Player to) { SayLine(text, to); }
 
+        // a module that has it keep quiet now (the story: a scene plays near and it is not in it — StoryAside.Hushed; one not met yet — StoryStranger.Hushed): no line of its own at all
+        internal static System.Func<NpcActor, bool> Hushed;
+
         // ...and the words as every game got them (null: nothing said) — the small talk times its next line by them (NpcSpeech.Seconds)
-        internal string SayLine(string text, Player to)
+        internal string SayLine(string text, Player to, bool weighty = false, string told = null)
         {
             if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text)) return null;
+            if (Hushed != null && Hushed(this)) return null;
             text = NpcBody.Spoken(this, text); // (a gesture in its words: played, the mark taken out)
             if (text.Length == 0) return null;
             Player p = to ?? Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer;
             text = Lang.T(text).Replace("{name}", p != null ? p.GetPlayerName() : "");
             if (p != null) text = Grammar.Fix(text, p);
             Hold(text); // (at once here: the next one asking this frame already hears it)
-            _nv.InvokeRPC(ZNetView.Everybody, RpcSay, text);
+            _nv.InvokeRPC(ZNetView.Everybody, RpcSay, (weighty ? Mark : "") + (told != null ? ToldMark + told + ToldMark : "") + text);
             return text;
         }
 
@@ -506,6 +559,16 @@ namespace HuginWhispers
             _nv.InvokeRPC(ZNetView.Everybody, RpcSpeak, text, to.GetZDOID());
         }
 
+        // its wordless sound to what was said to it (your answer in its talk): every game near hears it from the person (NpcSpeech),
+        // after seconds — once the hero has said his answer (NpcTalk.Pick: he hears you out)
+        internal void React(string sound, float after)
+        {
+            if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(sound)) return;
+            _nv.InvokeRPC(ZNetView.Everybody, RpcReact, sound, Mathf.Clamp(after, 0f, 30f));
+        }
+
+        private void RPC_React(long sender, string sound, float after) { NpcSpeech.Reacted(this, sound, after); }
+
         private void RPC_Speak(long sender, string text, ZDOID to)
         {
             GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(to) : null;
@@ -514,12 +577,34 @@ namespace HuginWhispers
 
         private void RPC_Say(long sender, string text)
         {
+            bool weighty = text.StartsWith(Mark, StringComparison.Ordinal);
+            if (weighty) text = text.Substring(Mark.Length);
+            string told = null;
+            int end = text.StartsWith(ToldMark, StringComparison.Ordinal) ? text.IndexOf(ToldMark, ToldMark.Length, StringComparison.Ordinal) : -1;
+            if (end > 0) { told = text.Substring(ToldMark.Length, end - ToldMark.Length); text = text.Substring(end + ToldMark.Length); }
+            if (told != null && Told != null) Told(this, told); // (a place of a talk: heard by whom it reaches here)
             Hold(text); // (every game knows who holds the floor)
             NpcSpeech.Said(this, text); // (its head and chest speak it, those near turn to it: every game from the same words)
-            if (Chat.instance == null) return;
+            if (Chat.instance == null) return; // (no screen here: a server)
             float seen = 25f;
             for (int i = 0; i < HeardFrom.Count; i++) seen = Mathf.Max(seen, HeardFrom[i](this)); // (one lost and calling out: from far — a module's word)
-            Chat.instance.SetNpcText(gameObject, Vector3.up * (_body != null ? 2.1f : 2.6f), seen, RavenSpeech.Seconds(text, RavenSpeech.Pace.Bubble), "", text, false);
+            NpcBubble.Say(this, text, RavenSpeech.Seconds(text, RavenSpeech.Pace.Bubble), weighty ? seen * WeightyFar : seen, weighty); // (one capsule per ring of voices, not the game's bubble per head)
+        }
+
+        // a talk's next line is next's, after so many seconds (NpcChatter, where the talk is run): every game shows its thinking dots
+        // in the capsule this one's line is in (NpcBubble.Next)
+        internal void SayNext(NpcActor next, float after)
+        {
+            if (_nv == null || !_nv.IsValid() || next == null || next.Zdo == null) return;
+            _nv.InvokeRPC(ZNetView.Everybody, RpcNext, next.Zdo.m_uid, Mathf.Clamp(after, 0f, 60f));
+        }
+
+        private void RPC_Next(long sender, ZDOID next, float after)
+        {
+            if (Chat.instance == null) return; // (no screen here)
+            GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(next) : null;
+            NpcActor n = g != null ? g.GetComponent<NpcActor>() : null;
+            if (n != null) NpcBubble.Next(this, n, after);
         }
 
         // ---------------------------------------------------------------- orders (the mind's words: NpcMind.Do)
@@ -603,7 +688,18 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- pointing at it, E
-        public string GetHoverName() { return _def != null ? Name : ""; }
+        public string GetHoverName() { return _def != null ? ShownName : ""; }
+
+        // its name as the player sees it now — over it, on its lines (NpcBubble, a scene's subtitle), on the map (NpcMap): a module's own while it
+        // keeps one nameless (one not met yet: «Чужинець» — StoryStranger), else Name. What is kept or compared stays Key
+        internal string ShownName
+        {
+            get
+            {
+                for (int i = 0; i < NameInstead.Count; i++) { string own = NameInstead[i](this); if (own != null) return own; }
+                return Name;
+            }
+        }
 
         public string GetHoverText()
         {
@@ -620,6 +716,7 @@ namespace HuginWhispers
         // the modules' words on pointing at it and E (NpcModules): a whole hover of its own instead (dead, senseless), a mark
         // after its name, a line under it; E — its own use instead of a talk (null: not theirs; true/false: done)
         internal static readonly List<Func<NpcActor, string>> HoverInstead = new List<Func<NpcActor, string>>();
+        internal static readonly List<Func<NpcActor, string>> NameInstead = new List<Func<NpcActor, string>>(); // (what the game shows as its name over it: the hover's head, the enemy plate — null: its own)
         internal static readonly List<Func<NpcActor, string>> HoverMarks = new List<Func<NpcActor, string>>();
         internal static readonly List<Func<NpcActor, string>> HoverLines = new List<Func<NpcActor, string>>();
         internal static readonly List<Func<NpcActor, Player, bool?>> UseInstead = new List<Func<NpcActor, Player, bool?>>();
@@ -648,6 +745,90 @@ namespace HuginWhispers
             if (_nv == null || !_nv.IsValid()) return;
             if (_nv.IsOwner()) DoAct(act);
             else ToOwner(RpcAct, act);
+        }
+
+        // ---------------------------------------------------------------- a thing given with an act (a healing mead, a bite from your hands)
+        // The thing leaves the giver's bag at once; what it does is done where the person is run. Till 2026-11-12 the two were not tied: the mead was
+        // taken, and when its act was not done — nobody took the person over in WaitFor s, the word was dropped on its way, the person had come to by
+        // itself a moment before, another player's mead got there first — it was gone for nothing. So a thing goes with its act as one: «paid <n> <act>».
+        // The game that runs the person does the act and answers the game it came from: done or not (its module says «not done» with NotDone; an act
+        // that failed or that nobody knows is not done either). Not done, or no answer in PaidWait s: the thing is back in the bag (at your feet when
+        // the bag is full) with a word on the screen. An answer lost on its way gives the thing back though its act was done: a mead too many
+        // rather than one lost. A new thing given for what happens on the person: Pay, never RemoveItem beside Act
+        internal static float PaidWait = 25f; // (over the two waits a word may meet on its way: for an owner, and sent on once)
+        private const string PaidWord = "paid", RpcPaid = "RavenWatch_NpcPaid";
+        private sealed class Paid { public int N; public ItemDrop.ItemData Thing; public float Until; public string Act, Whom; }
+        private static readonly List<Paid> _paid = new List<Paid>(); // session: things given on this game whose acts are not answered yet
+        private static int _paidN;
+        private static bool _notDone;
+        private static ZRoutedRpc _paidRpcOn; // (registered with this one: once a session)
+        internal static void NotDone() { _notDone = true; } // (an act's own «no»: said by its module where the person is run)
+
+        internal void Pay(Player p, ItemDrop.ItemData thing, string act)
+        {
+            if (p == null || thing == null || _nv == null || !_nv.IsValid()) return;
+            PaidRpcs();
+            ItemDrop.ItemData one = thing.Clone(); one.m_stack = 1;
+            ItemMarks.Take(p, thing, 1); // (given on purpose: a kept thing is no loss to undo)
+            Paid paid = new Paid { N = ++_paidN, Thing = one, Until = Time.time + PaidWait, Act = act, Whom = Id };
+            _paid.Add(paid);
+            Act(PaidWord + " " + paid.N.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + act);
+        }
+
+        private static void PaidRpcs()
+        {
+            if (ZRoutedRpc.instance == null || _paidRpcOn == ZRoutedRpc.instance) return;
+            _paidRpcOn = ZRoutedRpc.instance; _paid.Clear(); // (another world: what waited in the last one is not this one's)
+            ZRoutedRpc.instance.Register<int, bool>(RpcPaid, (sender, n, done) => PaidAnswer(n, done));
+        }
+
+        // «paid <n> <act>» where it is run: the act, then its answer to the game the thing was given on
+        private void RunPaid(string act, string[] w)
+        {
+            int n;
+            long from = _actFrom;
+            if (w.Length < 3 || !int.TryParse(w[1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out n)) { Npcs.Log(Id + ": a paid act it cannot read — dropped: " + act); return; }
+            _notDone = false;
+            DoAct(act.Substring(PaidWord.Length + 1 + w[1].Length + 1));
+            bool done = !_notDone;
+            _notDone = false;
+            if (!done) Npcs.Log(Id + ": a thing given for «" + w[2] + "» did nothing here — it goes back");
+            if (from == 0L || ZRoutedRpc.instance == null) PaidAnswer(n, done);
+            else { PaidRpcs(); ZRoutedRpc.instance.InvokeRoutedRPC(from, RpcPaid, n, done); }
+        }
+
+        private static void PaidAnswer(int n, bool done)
+        {
+            for (int i = 0; i < _paid.Count; i++)
+            {
+                if (_paid[i].N != n) continue;
+                Paid paid = _paid[i];
+                _paid.RemoveAt(i);
+                if (!done) GiveBack(paid, "its act was not done");
+                return;
+            }
+        }
+
+        // in a person's Update: only while something waits (none: one count looked at)
+        private static void PaidTick()
+        {
+            for (int i = _paid.Count - 1; i >= 0; i--)
+            {
+                if (Time.time < _paid[i].Until) continue;
+                Paid paid = _paid[i];
+                _paid.RemoveAt(i);
+                GiveBack(paid, "no answer in " + PaidWait + " s");
+            }
+        }
+
+        private static void GiveBack(Paid paid, string why)
+        {
+            Player me = Player.m_localPlayer;
+            string name = paid.Thing.m_dropPrefab != null ? paid.Thing.m_dropPrefab.name : paid.Thing.m_shared.m_name;
+            if (me == null) { Npcs.Log(paid.Whom + ": " + name + " given for «" + paid.Act + "» — " + why + ", and no player here to give it back to"); return; }
+            if (!me.GetInventory().AddItem(paid.Thing)) ItemDrop.DropItem(paid.Thing, 1, me.transform.position + me.transform.forward * 0.8f + Vector3.up * 0.5f, Quaternion.identity);
+            me.Message(MessageHud.MessageType.Center, Lang.T("Не вийшло. Річ знову в тебе."));
+            Npcs.Log(paid.Whom + ": " + name + " given for «" + paid.Act + "» — " + why + ": given back");
         }
 
         // «^<game> <act>»: sent on by a game that no longer ran it; <game> is the one it first came from
@@ -688,13 +869,14 @@ namespace HuginWhispers
         private void DoAct(string act)
         {
             ZDO z = Zdo;
-            if (z == null) return;
+            if (z == null) { _notDone = true; return; }
             string[] w = act.Split(' ');
+            if (w[0] == PaidWord) { RunPaid(act, w); return; } // (a thing given with it: done, and answered)
             if (w[0] == "unhold") { if (w.Length > 1 && _mind != null) _mind.Unhold(NpcKit.Parse(w[1])); return; }
             if (w[0] == "hold") { if (w.Length > 1 && _mind != null) _mind.Hold(NpcKit.Parse(w[1])); return; } // (the core's own: it stands for whoever gives it orders)
             Action<NpcActor, string[]> run;
-            if (Acts.TryGetValue(w[0], out run)) { try { run(this, w); } catch (Exception e) { Npcs.Log(Id + ": act «" + act + "» failed: " + e); } } // (a module's: NpcModules)
-            else Npcs.Log(Id + ": no such act «" + w[0] + "»");
+            if (Acts.TryGetValue(w[0], out run)) { try { run(this, w); } catch (Exception e) { _notDone = true; Npcs.Log(Id + ": act «" + act + "» failed: " + e); } } // (a module's: NpcModules)
+            else { _notDone = true; Npcs.Log(Id + ": no such act «" + w[0] + "»"); }
         }
 
         private void Talk(ZDOID who)

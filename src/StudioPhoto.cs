@@ -4,19 +4,19 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // `photo <id> [yaw] [pitch] [zoom]`: a Workshop model's icon taken as the tab «Фото» takes it (its saved settings,
+    // `photo <id> [yaw] [pitch] [zoom]`: a model's icon (a Workshop file, or one the mod has built in: WsFiles.Known — the story's items) taken as the tab «Фото» takes it (its saved settings,
     // or the standard ones, with these turns), saved as its photo at once, and a copy in out/photo_<id>.png to look at.
     internal static partial class Studio
     {
         private static IEnumerator Photo(string id, float yaw, float pitch, float zoom)
         {
             WsModel m = null;
-            foreach (string f in WsFiles.List())
+            foreach (string f in WsFiles.Known())
             {
                 WsModel x = WsFiles.Load(f);
                 if (x != null && IconPhotos.KeyOf(x) == id) { m = x; break; }
             }
-            if (m == null) { Note("photo_" + id, "no Workshop model with this id"); yield break; }
+            if (m == null) { Note("photo_" + id, "no model with this id (Workshop files and built-in ones)"); yield break; }
             int layer = RavenFx.FreeLayer();
             if (layer < 0) { Note("photo_" + id, "no free layer"); yield break; }
             PhotoStudio studio = new PhotoStudio("RavenWatch_StudioPhoto", new Vector3(0f, 9800f, 0f), layer);

@@ -1,17 +1,20 @@
 // RavenWatch: a translated phrase file checked against its Ukrainian original (build/l10n_source/, tools/langdump.ps1).
 //   node tools/phrasecheck_lang.js <Language> [file]     — the files in lang_wip/<Language>/ (or assets/lang/<Language>/)
+//   node tools/phrasecheck_lang.js English --strict     — the build (the user 2026-11-11: every text in English at once): only
+//                                                          assets/lang, and a theme, list or creature the language lacks is an error
 // It looks for: themes [tag] lost, list refs {list} that do not exist or are empty, unknown placeholders (typos),
 // broken {a|b} forms, thread marks ^id that the original does not know, Cyrillic left outside ids, creature names.
 const fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..");
-const language = process.argv[2] || "English";
-const only = process.argv[3];
+const args = process.argv.slice(2).filter(a => !a.startsWith("--")), strict = process.argv.includes("--strict");
+const language = args[0] || "English";
+const only = args[1];
 const srcDir = path.join(root, "build", "l10n_source");
-const dirs = [path.join(root, "lang_wip", language), path.join(root, "assets", "lang", language)];
+const dirs = strict ? [path.join(root, "assets", "lang", language)] : [path.join(root, "lang_wip", language), path.join(root, "assets", "lang", language)];
 const cyr = /[А-Яа-яІіЇїЄєҐґ]/;
 let problems = 0, warnings = 0;
 const err = (f, n, s) => { problems++; console.log("  ERR  " + f + ":" + n + "  " + s); };
-const warn = (f, n, s) => { warnings++; console.log("  warn " + f + ":" + n + "  " + s); };
+const warn = (f, n, s) => { if (strict && / is missing/.test(s)) return err(f, n, s); warnings++; console.log("  warn " + f + ":" + n + "  " + s); };
 
 function read(file) { return fs.readFileSync(file, "utf8").split(/\r?\n/); }
 
@@ -104,7 +107,7 @@ function checkNames(file, lines, orig) {
 const files = fs.readdirSync(srcDir).filter(f => f.endsWith(".txt") && f !== "dialogues.txt" && (!only || f === only));
 for (const f of files) {
   const target = dirs.map(d => path.join(d, f)).find(p => fs.existsSync(p));
-  if (!target) { console.log("-- " + f + ": not translated yet"); continue; }
+  if (!target) { if (strict) err(f, "-", "no " + language + " file"); else console.log("-- " + f + ": not translated yet"); continue; }
   console.log("== " + f + "  (" + path.relative(root, target) + ")");
   const lines = read(target), orig = read(path.join(srcDir, f));
   if (f === "creature_names.txt") checkNames(f, lines, orig); else checkPatterns(f, lines, orig);

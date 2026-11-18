@@ -312,6 +312,7 @@ namespace HuginWhispers
             { "mstrike", new Vector3(0, 46.5f, 54f) }, { "mthought", new Vector3(0, 69f, 68f) }, { "scream", new Vector3(0, 94.5f, 68f) }, { "fury", new Vector3(0, 120f, 68f) },
             { "wings", new Vector3(1, 46.5f, 84f) }, { "heal", new Vector3(1, 67f, 84f) }, { "ward", new Vector3(1, 87.5f, 84f) }, { "mtame", new Vector3(1, 108f, 84f) }, { "mberserk", new Vector3(1, 128.5f, 84f) },
             // the paired ones (both ravens): the outer row at the very top, between the wings (the user, 2026-10-24)
+            // (their angle here is their order only: the open ones stand centred at the top, no gap left for one not open yet — Paired, the user 2026-11-11)
             { "pload", new Vector3(1, -18f, 76f) }, { "pclear", new Vector3(1, 0f, 76f) }, { "pwhirl", new Vector3(1, 18f, 76f) },
         };
         private static bool _g; // the face drawn now is the gifts' one
@@ -382,6 +383,7 @@ namespace HuginWhispers
             {
                 Wing(into, false, h); Add(into, Kind.Power, false, 0, PowerA0, PowerA1, PowerIn, PowerOut, 1f);
                 Wing(into, true, m); Add(into, Kind.Power, true, 0, PowerA0, PowerA1, PowerIn, PowerOut, -1f);
+                Paired(into, h, m);
             }
             else
             {
@@ -425,14 +427,32 @@ namespace HuginWhispers
             }
         }
 
-        // a raven's gifts as round buttons in his wing, each at its fixed place (GiftPlace)
+        // the paired gifts (both ravens) at the top between the wings: the open ones centred, PairStep apart — one in the very
+        // middle, two either side of it — in the order of their GiftPlace angles
+        private const float PairStep = 18f;
+        private static void Paired(List<Piece> into, List<RavenAbility> h, List<RavenAbility> m)
+        {
+            List<RavenAbility> list = new List<RavenAbility>();
+            foreach (List<RavenAbility> l in new[] { h, m }) foreach (RavenAbility a in l) if (a.Pair && GiftPlace.ContainsKey(a.Id)) list.Add(a);
+            list.Sort((x, y) => GiftPlace[x.Id].y.CompareTo(GiftPlace[y.Id].y));
+            for (int i = 0; i < list.Count; i++)
+            {
+                Vector3 at = GiftPlace[list[i].Id];
+                float ang = (i - (list.Count - 1) * 0.5f) * PairStep;
+                Piece pc = Add(into, Kind.Gift, list[i].Munin, 0, ang, ang, RowR[(int)at.x], RowR[(int)at.x], 1f);
+                pc.CR = at.z * 0.5f * GS;
+                pc.Gift = list[i];
+            }
+        }
+
+        // a raven's own gifts as round buttons in his wing, each at its fixed place (GiftPlace; the paired ones: Paired)
         private static void Wing(List<Piece> into, bool munin, List<RavenAbility> gifts)
         {
             float side = munin ? -1f : 1f;
             foreach (RavenAbility a in gifts)
             {
                 Vector3 at;
-                if (!GiftPlace.TryGetValue(a.Id, out at)) continue; // (a gift with no place yet: not on the circle)
+                if (a.Pair || !GiftPlace.TryGetValue(a.Id, out at)) continue; // (a gift with no place yet: not on the circle)
                 int row = (int)at.x;
                 Piece pc = Add(into, Kind.Gift, munin, 0, at.y, at.y, RowR[row], RowR[row], side); // (Add mirrors Munin's)
                 pc.CR = at.z * 0.5f * GS;
@@ -1488,7 +1508,7 @@ namespace HuginWhispers
         }
 
         // the satiety: a stroke along the middle disc from the raven's food button up (Munin left, Hugin right; one raven
-        // all round), four parts (0–15, 15–40, 40–90, 90–100) faint, lit up to the satiety, three marks of their own sizes
+        // all round), four parts (0–10, 10–30, 30–90, 90–100) faint, lit up to the satiety, three marks of their own sizes
         private static readonly Color[] SatInk = { Hex("#b8322a"), Hex("#d8a83a"), Hex("#8fc45a"), Hex("#9a7ac0") };
         private static readonly float[] SatEdge = { 0f, Satiety.HungryAt, Satiety.AskAt, Satiety.StuffedAt, 100f };
         private static float SatAngle(int mode, bool munin, float v)
@@ -1992,6 +2012,8 @@ namespace HuginWhispers
 
         // the circles' pictures (frames f-*, icons o-*) for other round menus of ours (the NPC menu): one look
         internal static Texture2D Pic(string name) { return Asset(name); }
+        // the same for a sprite or a RawImage: null when the build has no such picture (Pic gives IMGUI the black 4×4 then, which a check by size took for a picture)
+        internal static Texture2D PicOrNone(string name) { Texture2D t = Asset(name); return t == Texture2D.blackTexture ? null : t; }
 
         private static Texture2D Asset(string name)
         {

@@ -1,5 +1,45 @@
 # Changelog
 
+## 3.0.0
+
+**English**
+
+New:
+
+- Settlers now say what their pay is for: they buy, swap, owe each other, save up and lose at dice. Ask one where the coins go, or listen to them talk.
+- Each part of the story opens with its name on the screen in glowing gold, with the sound of finding a new land.
+- Settlers who get on or fall out now feel it: friends lift each other's mood, work faster side by side, sit together and come to each other's aid; enemies quarrel, nearly come to blows and may say «either me or them». It all shows on the settler's card.
+- The settlement board can now hold a feast for everyone, and in a talk you can tell two quarrelling settlers to keep away from each other.
+- A person in need now has a group of their own on the settlement board, and a click marks them on your map until you find them.
+- Hearts of home you have been to and the Hall of the Watch stay marked on your map; remove a mark with a right click if you don't want it.
+- When a talk teaches you something new, a line under the words says it went into the book. What you learn is your own, and in another world the book opens it as that world's story gets there.
+- Your hero now has a voice of their own: in a talk they murmur the answer you pick, and the person hears them out before replying.
+- The people of the story now have a day of their own: each keeps to their hours and places, and in the evening they gather by the fire and talk among themselves.
+
+Changes and fixes:
+
+- «Make peace already» works again even when the quarrel was long ago, and making peace with one neighbour no longer wipes out quarrels with the others.
+- The tree over the Book of ravens is no longer cut off on the right.
+
+**Українською**
+
+Нове:
+
+- Поселенці тепер кажуть, нащо їм платня: купують, міняються, винні одне одному, відкладають і програють у кості. Спитай, куди йдуть монети, або послухай, як вони балакають.
+- Кожна частина історії починається своєю назвою на екрані сяйливим золотом, зі звуком відкриття нових земель.
+- Поселенці тепер відчувають, як ладнають: друзі піднімають одне одному настрій, разом швидше працюють, сідають поруч і приходять на поміч; вороги сваряться, ледь не б'ються і можуть сказати «або я, або ця людина». Усе це видно на картці поселенця.
+- На дошці оселі можна влаштувати свято для всіх, а в розмові — попросити двох посварених триматися одне від одного подалі.
+- Людина в біді має на дошці оселі свою групу, а клік позначає її на мапі, доки не знайдеш.
+- Серця оселі, біля яких ти побував, і Зала Варти лишаються позначені на твоїй мапі; непотрібну мітку зітри правим кліком.
+- Коли розмова відкриває щось нове, під словами з'являється рядок, що це записано в книгу. Розпитане — твоє власне, а в іншому світі книга відкриває його, щойно тамтешній сюжет до нього дійде.
+- Твій герой тепер має свій голос: у розмові він бурмоче відповідь, яку ти вибрав, а людина вислуховує його, перш ніж відповісти.
+- Люди сюжету тепер мають свій день: кожен тримається своїх годин і місць, а ввечері вони сходяться біля вогню й розмовляють між собою.
+
+Зміни й виправлення:
+
+- «Помиріться вже» знову працює, навіть коли сварка була давно, а мир з одним сусідом більше не стирає сварки з іншими.
+- Дерево над Книгою воронів більше не обрізане праворуч.
+
 ## 2.9.4
 
 **English**
@@ -8,10 +48,43 @@ New:
 
 - Heid carries her herb basket on her arm; she sets it down when she needs her hands and comes back for it later.
 - After meeting Heid at the stones you can ask her about the Watch before she leads you to the Hall.
+- A guard can now be asked to change clothes too: what you put on a guard changes only the look, the armour stays.
+- The cook now has a real kitchen: besides racks and ovens they cook at the cauldron and other cooking tools near the pantry, make dough and bake it, cut up fish and keep the kitchen fires fed.
+- A cook can be given a separate ingredients chest, and told what to cook first: simple, middling or the best dishes.
+- A settler's card now says whether their work has everything it needs and what is missing; the Heart's board says the same for every job.
+- The Saga in the book now keeps what you know: the people you meet, the places you find and what you learn of this world. Entries fill in as you see, read and ask.
 
 Changes and fixes:
 
+- In the prologue your raven now lands on your shoulder, not by your neck.
+- The talk scroll has a new top: the parchment hangs wound on a roller in forged hooks, with bronze raven heads on its ends.
 - The meeting with Heid at the stones has new lines.
+- Your own answers in talks with people are no longer the same few words: they change each time and depend on whom you speak with.
+- People sound more like themselves: a grumpy, an old, a cheerful or a timid one speaks in its own words more often.
+- A kind answer now lands by the person: some want it gentle, some plain, some with a joke. A person's card hints which.
+- You can ask a settler about its work and about what its past has left on it.
+- Settlers now ask about you too, remember what you answered and bring it up when the moment fits.
+- In English, people now speak fully in English: their talk, your answers, their chatter, their names and the work menu.
+- Settlers no longer end up shut inside a walled-off spot, and stop going back to a place they cannot walk to.
+- A settler who slept while you were away no longer walks about lying flat.
+- A raven's strike grows only boss by boss: a boss beaten out of turn no longer counts and has to be beaten again in its turn.
+- Armour worn by people now protects them and shows under their name; before, it counted as none.
+- On a dedicated server a saved settler no longer turns back into one in trouble after you rejoin, and keeps its job, bed and chest.
+- A servant can now be given a chest of supplies from the work ring; without it, fuel, the floor and the storeroom never worked.
+- The "Stay" and "There" orders now say how long the person waits, and a wait after "There" no longer ends at once.
+- For a second player the orders ring now shows the order going on and lets it go.
+- A Heart's board now says when no more rumors will come because the world is full.
+- A grey answer in a talk now names the patience it really needs.
+- A sleeping settler no longer talks from its bed: wake it first (the key is shown when you look at it). It wakes up cross, and remembers who did it.
+- A settler told to follow you no longer vanishes home and walks back in circles when you stand where they cannot get: they wait until you move on.
+- A hired settler stuck on the way to the Heart no longer stands there for as long as you are near.
+- A guard's calm stance with knives, a crossbow and the like is now seen by every player.
+- A healing mead or food given to a settler comes back to you if it did nothing.
+- Workers no longer pace along a low step their way leads over.
+- Settlers talk less often: one you stand beside no longer speaks every half minute, and people sitting together pause between their talks.
+- What matters in a settler's words (a need, a request, a grudge, news) now stands out over their head from plain small talk.
+- A rude word is now felt longer, and the day's first kind word warms more.
+- A talk with a settler opens with fewer answers: the rare ones moved under "Let's talk", and topics you asked too often no longer sit there greyed out.
 
 **Українською**
 
@@ -19,10 +92,43 @@ Changes and fixes:
 
 - Гейд носить на руці кошик для трав; ставить його, коли потрібні руки, і повертається по нього згодом.
 - Після зустрічі з Гейд біля каменів можна розпитати її про Варту, перш ніж вона поведе до Зали.
+- Вартового тепер теж можна попросити перевдягтися: вдягнене на вартового міняє лише вигляд, броня лишається.
+- У кухаря тепер справжня кухня: крім решіток і печей він готує на казані та іншому кухонному знарядді біля комори, місить тісто й пече, розбирає рибу й сам тримає вогонь.
+- Кухарю можна дати окрему скриню інгредієнтів і сказати, що готувати спершу: прості, середні чи найкращі страви.
+- Картка поселенця тепер каже, чи має його робота все потрібне й чого бракує; дошка Серця показує те саме для кожної роботи.
+- Сага в книзі тепер зберігає те, що ти знаєш: людей, яких зустрічаєш, місця, які знаходиш, і те, що дізнаєшся про цей світ. Записи дописуються, коли ти щось бачиш, читаєш і розпитуєш.
 
 Зміни й виправлення:
 
+- У пролозі твій ворон тепер сідає на плече, а не біля шиї.
+- У сувою розмови новий верх: пергамент намотано на валик у кованих гаках, на кінцях бронзові воронячі голови.
 - У зустрічі з Гейд біля каменів нові репліки.
+- Твої відповіді в розмовах з людьми більше не ті самі кілька слів: вони щоразу інші й залежать від того, з ким ти говориш.
+- Людей стало чутно: буркотун, старий, веселун чи боязкий частіше говорять своїми словами.
+- Добре слово тепер діє за людиною: комусь до душі лагідне, комусь пряме, комусь жарт. Картка людини підказує, яке саме.
+- Поселенця можна спитати про його роботу й про те, що лишило на ньому минуле.
+- Поселенці тепер самі питають про тебе, пам'ятають відповідь і згадують її до речі.
+- Англійською люди тепер говорять повністю англійською: їхні слова, твої відповіді, балачки, імена й меню роботи.
+- Поселенці більше не опиняються замкненими за стіною і не ходять знову до місця, куди не можуть дійти.
+- Поселенець, що спав, поки тебе не було, більше не ходить лежачи.
+- Удар ворона росте лише бос за босом: бос, переможений поза чергою, більше не зараховується, його треба перемогти знову у свою чергу.
+- Броня на людях тепер справді їх захищає й показується під іменем; раніше вона рахувалась як нуль.
+- На виділеному сервері врятований поселенець більше не стає знову «в біді» після перезаходу й не губить роботу, ліжко та ящик.
+- Слузі тепер можна дати ящик запасів у колі роботи; без нього пальне, підлога й склад не працювали.
+- Накази «Стій» і «Туди» тепер кажуть, скільки людина чекає, а чекання після «Туди» більше не кінчається одразу.
+- Другий гравець тепер бачить у колі наказів, який наказ триває, і може його зняти.
+- Дошка Серця тепер каже, коли чуток більше не буде, бо світ повний.
+- Сіра відповідь у розмові тепер називає те терпіння, якого їй справді треба.
+- Сплячий поселенець більше не розмовляє з ліжка: спершу розбуди (клавішу видно, коли дивишся на нього). Прокидається злим і пам'ятає, хто це зробив.
+- Поселенець із наказом «За мною» більше не зникає додому й не ходить по колу, коли ти стоїш там, куди він не дійде: чекає, поки ти рушиш далі.
+- Найнятий поселенець, що застряг дорогою до Серця, більше не стоїть на місці, поки ти поруч.
+- Спокійну стійку вартового з ножами, арбалетом і подібним тепер бачить кожен гравець.
+- Медовуха зцілення чи їжа, дана поселенцю, вертається до тебе, якщо нічого не зробила.
+- Робітники більше не тупцяють уздовж низької сходинки, через яку веде їхній шлях.
+- Поселенці говорять рідше: той, біля кого стоїш, більше не озивається щопівхвилини, а ті, що сидять разом, роблять паузи між балачками.
+- Важливе в словах поселенця (потреба, прохання, образа, новина) тепер вирізняється над головою з-поміж звичайної балачки.
+- Грубе слово тепер відчувається довше, а перше добре слово за день гріє сильніше.
+- Розмова з поселенцем відкривається коротшим списком відповідей: рідкісні переїхали під «Поговорімо», а теми, про які ти питав забагато, більше не стоять там сірими.
 
 ## 2.9.3
 

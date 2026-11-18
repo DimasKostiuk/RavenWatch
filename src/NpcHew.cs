@@ -24,7 +24,7 @@ namespace HuginWhispers
         internal static string SetArea(NpcActor a, Vector3 aim)
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
-            if (!NpcResident.Is(a)) return "Спершу оселі його: працюють від своєї бази.";
+            if (!NpcResident.Is(a)) return Lang.T("Спершу оселі його: працюють від своєї бази.");
             if (Utils.DistanceXZ(aim, NpcRules.Home(a)) > FarFromBase) return Lang.F("Задалеко від його бази (до {0} м).", Mathf.RoundToInt(FarFromBase));
             NpcLocker.Put(a.Zdo, KArea, aim);
             NpcWorker w = a.Worker; if (w != null) w.Reset();
@@ -225,6 +225,7 @@ namespace HuginWhispers
             Desc = Lang.K("Рубає дерева на своїй ділянці (25 м довкола, до 150 м від бази): спершу колоди, тоді пні, тоді дерева. Потрібна сокира в його спорядженні — вона зношується, як у тебе. Дерево, шишки, смолу несе в ящик."); }
         internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id, NpcMenu.By); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
         internal override NpcWorker.Errand Find(NpcWorker w) { return NpcHew.Find(w, true); }
+        internal override void Lacks(NpcWorker w, List<string> into) { string s = NpcHew.Lacks(w.Actor, true); if (s != null) into.Add(s); }
     }
 
     internal sealed class Miner : Job
@@ -233,6 +234,7 @@ namespace HuginWhispers
             Desc = Lang.K("Копає на своїй ділянці (25 м довкола, до 150 м від бази) руду й каміння, яке бере його кайло. Потрібне кайло в його спорядженні — воно зношується, як у тебе. Руду, камінь несе в ящик."); }
         internal override string Assign(NpcActor a, Vector3 at) { string s = NpcWorker.SetJob(a, Id, NpcMenu.By); return a.Worker == null || a.Worker.JobId != Id ? s : NpcHew.SetArea(a, at); }
         internal override NpcWorker.Errand Find(NpcWorker w) { return NpcHew.Find(w, false); }
+        internal override void Lacks(NpcWorker w, List<string> into) { string s = NpcHew.Lacks(w.Actor, false); if (s != null) into.Add(s); }
     }
 
     // a falling tree, a rolling log, a piece coming down: not on our people (they stand by them all day)

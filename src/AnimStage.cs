@@ -18,10 +18,12 @@ namespace HuginWhispers
     //   raven stage up [template] | down | here | turn <deg>       the mannequin: before you (its body: a template — heid: a clip
     //                                                              made for her on her body), away, here, turned
     //   raven stage play <clip> [speed] · stop · speed <x>         plays it, again and again (a whole clip: all its parts in
-    //                                                              turn; on the screen the part playing now)
+    //                                                              turn; on the screen the part playing now) — on the mannequin of
+    //                                                              the clip's body: a «dv_…» clip takes the dvergr's (BodyOf)
     //   raven stage ab <clip> | ab off                             a second mannequin beside it plays another take (two
     //                                                              versions in one look)
     //   raven stage wall | table | seat | step | point | piece … · clear   what its body touches, as in its scene: AnimStageFixtures
+    //   raven stage chair [prefab] · chair off                     it sits on the game's own bench as a person does (AnimStageFixtures: ChairCmd)
     //   raven stage walk [m] | walk off                            it walks to and fro (a real walk: the core's slowing, its gait)
     //   raven stage gait <kind> | all [s]                          its kind of gait (BodyGait), to compare; all: each in turn, its name shown
     //   raven stage hold <seconds> · go                            held at one moment · on again
@@ -31,8 +33,11 @@ namespace HuginWhispers
     //   raven stage held                                           where the weapon in its right hand points now, in the body's and the hand's frame (NpcGear.HeldAxis)
     //   raven stage fright [s]                                     a fright for that long (NpcFeel): on its guard, then at its ease again — its weapon's stances
     //   raven stage anim [name [value]]                            the animator's own values (statei/statef: the game's stance for a weapon), read or set: a measure
-    //   raven stage prop <item> [x y z [rx ry rz]] · prop none       a thing lying before it for the clip's @Prop channels
-    //                                                              (metres and degrees in its frame), as a scene's «free» prop
+    //   raven stage prop <item> [x y z [rx ry rz]] [square] [size <m>] · prop none
+    //                                                              a thing lying before it for the clip's @Prop channels
+    //                                                              (metres and degrees in its frame), as a scene's «free» prop; after the
+    //                                                              numbers the scene's own words of «prop take» (StoryProps.Read) — the
+    //                                                              thing taken as its scene takes it: tools/take.js passes that line's words
     //   raven stage prop <item> arm                                on its right forearm, as a person carries its own (StoryProps «arm»):
     //                                                              the arm's clips (basket_carry, basket_set) taken with the thing on
     //   raven stage edit <clip>                                    a built-in clip written out as a file, to edit
@@ -62,7 +67,7 @@ namespace HuginWhispers
     [DefaultExecutionOrder(20000)] // (after every pose: what it measures is what is shown)
     internal sealed partial class AnimStage : MonoBehaviour
     {
-        private const string Template = "dummy", Tag = "stage"; // (the author's template, not in the mod: assets/story/npc/_dummy.txt, read only on his machine: StoryFiles)
+        private const string Template = "dummy", DvergrTemplate = "dummy_dvergr", Tag = "stage"; // (the author's template, not in the mod: assets/story/npc/_dummy.txt, read only on his machine: StoryFiles)
         private const int Slot = BodyClips.PreviewSlot;
         internal static float Gap = 1.2f, Fade = 0.25f, Ahead = 3f, Look = 0.4f;
 
@@ -107,6 +112,22 @@ namespace HuginWhispers
             return _me.Do(p, what, arg, a);
         }
 
+        // the mannequin's body by the clip's (the clips' own convention: «dv_…» a dvergr's, any other a person's — NpcMoves.BodyFits): a clip of the
+        // other body takes the stage to its own mannequin; a person's clip on a person's template (dummy, heid) leaves that template as it is
+        private void BodyOf(string clip)
+        {
+            bool dv = clip.StartsWith("dv_", StringComparison.Ordinal);
+            NpcDef now = NpcDefs.Find(_template);
+            if (now != null && now.Dvergr == dv) return;
+            string want = dv ? DvergrTemplate : Template;
+            if (NpcDefs.Find(want) == null) return;
+            DropBody();
+            _template = want;
+        }
+
+        // the mannequin away for another body: off its seat first — the seat would stay round the new one, unseated (AnimStageFixtures.StandUp)
+        private void DropBody() { StandUp(); if (_dummy != null) { _dummy.Remove(); _dummy = null; } }
+
         private string Do(Player p, string what, string arg, string[] a)
         {
             if (_proving && what != "down") return "Ще знімаю кадри помилок останнього заміру."; // (it holds the clip at those moments, and says when it is done)
@@ -116,11 +137,14 @@ namespace HuginWhispers
                     if (arg.Length > 0 && arg != _template) // (another body: the template a scene plays it on — heid, a woman, her build)
                     {
                         if (NpcDefs.Find(arg) == null) return "Нема шаблону «" + arg + "» (raven npc list).";
-                        if (_dummy != null) { _dummy.Remove(); _dummy = null; }
+                        DropBody();
                         _template = arg;
                     }
                     return Bring(p) ? "Манекен перед тобою (" + _template + ")." : "Манекен не вдалося зробити (нема шаблону «" + _template + "»?).";
                 case "down": Destroy(gameObject); return "Манекена прибрано.";
+                case "chair":
+                    if (!Bring(p)) return "Манекена нема.";
+                    return ChairCmd(a); // (AnimStageFixtures)
                 case "wall":
                 case "table":
                 case "seat":
@@ -177,6 +201,7 @@ namespace HuginWhispers
                     }
                 case "play":
                     if (arg.Length == 0) return "raven stage play <кліп> [швидкість]";
+                    BodyOf(arg); // (a dvergr's clip never on a man: «play» on a stage just taken down stood a man up for dv_wave_off, 2026-11-16)
                     if (!Bring(p)) return "Манекена нема.";
                     BodyClips.Load(); // (the files as they are now)
                     if (BodyClips.Find(arg) == null) return "Нема кліпу «" + arg + "».";
@@ -256,25 +281,47 @@ namespace HuginWhispers
                 case "prop":
                     {
                         if (!Bring(p)) return "Манекена нема.";
-                        if (arg.Length == 0) return "raven stage prop <предмет> [x y z [rx ry rz]] | <предмет> arm · prop none";
+                        if (arg.Length == 0) return PropUsage;
                         _dummy.Act("prop -"); // (the stage's own, whatever it was: StoryProps.Put lets a thing on the arm be, as a person's own)
                         if (arg == "none") return "Реквізит прибрано.";
-                        if (a.Length > 3 && a[3] == "arm") // (on its right forearm, as a person carries its own — Heid's basket: StoryProps «carry … arm»; the clip moves the arm, the thing follows it)
+                        // after the thing: numbers first (where it lies, how it is turned), then the scene's own words of «prop take», read by the scene's own
+                        // reader (StoryProps.Read: square, size <m>, arm) — the stage takes the thing as its scene does (tools/take.js passes that line's words).
+                        // Till 2026-11-12 the stage knew none of them: a thing a scene takes «square» was never taken so here
+                        List<string> nums = new List<string>(), words = new List<string> { arg };
+                        for (int i = 3; i < a.Length; i++)
                         {
-                            string onArm = StoryProps.Take(_dummy, new StoryProps.Ask { Item = arg, Hand = "a", Lasting = true });
+                            float ig;
+                            if (words.Count == 1 && nums.Count < 6 && float.TryParse(a[i], NumberStyles.Float, CultureInfo.InvariantCulture, out ig)) nums.Add(a[i]);
+                            else words.Add(a[i]);
+                        }
+                        string bad;
+                        StoryProps.Ask ask = StoryProps.Read(words.ToArray(), 0, out bad);
+                        if (ask == null) return bad + " · " + PropUsage;
+                        if (ask.From.Length > 0) return "«from» — слово сцени: манекен стоїть не біля тієї речі. Де вона лежить, кажи числами. " + PropUsage;
+                        ask.Lasting = true;
+                        if (ask.Hand == "a") // (on its right forearm, as a person carries its own — Heid's basket: StoryProps «carry … arm»; the clip moves the arm, the thing follows it)
+                        {
+                            string onArm = StoryProps.Take(_dummy, ask);
                             return onArm ?? "«" + arg + "» на правому передпліччі манекена.";
                         }
                         // where it lies: as asked; else where the clip itself says it lies before it is taken (its «@Prop» at the start: the clip was made
                         // for that spot — 2026-11-07 the stage put a book elsewhere and every take measured a reach the scene never had); else before its feet
                         PAnimClip c = _clip.Length > 0 ? BodyClips.Find(_clip) : null;
                         bool told = c != null && c.Bones.Contains(BodyClips.PropAt);
-                        Vector3 at = a.Length > 5 ? new Vector3(Num(a[3], 0f), Num(a[4], 0f), Num(a[5], 0f)) : told ? c.Value(BodyClips.PropAt, 0f) : new Vector3(0f, PropLow, PropAhead);
-                        Vector3 turn = a.Length > 8 ? new Vector3(Num(a[6], 0f), Num(a[7], 0f), Num(a[8], 0f)) : told && c.Bones.Contains(BodyClips.PropTurn) ? c.Value(BodyClips.PropTurn, 0f) : Vector3.zero;
+                        Vector3 at = nums.Count >= 3 ? new Vector3(Num(nums[0], 0f), Num(nums[1], 0f), Num(nums[2], 0f)) : told ? c.Value(BodyClips.PropAt, 0f) : new Vector3(0f, PropLow, PropAhead);
+                        // how it lies: as asked, else flat and square before the body — never the clip's «@Prop.r» at its start: that says how the thing is turned in the
+                        // body's frame once the clip has it, and a thing laid so kept that turn ON TOP of the clip's own in the hands (StoryPropView: the clip's turn ·
+                        // how it lay): take_book's book stood −100° in the mannequin's hands and −50° in its scene, where it lies flat and is taken «square» —
+                        // every take of its grip measured hands on a book turned 50° off the one the scene shows (found 2026-11-11 by the grip sheet's «off»)
+                        // (a thing lying turned and taken «square» turns square to the body as the clip lifts it, as in its scene — StoryPropView; lying
+                        //  square, as it does with no turn said, that word changes nothing to see)
+                        Vector3 turn = nums.Count >= 6 ? new Vector3(Num(nums[3], 0f), Num(nums[4], 0f), Num(nums[5], 0f)) : Vector3.zero;
                         Transform root = _dummy.transform;
-                        string why = StoryProps.Take(_dummy, new StoryProps.Ask { Item = arg, Free = true, Lasting = true, HasRest = true, RestAt = root.TransformPoint(at), RestTurn = root.rotation * Quaternion.Euler(turn) });
+                        ask.Free = true; ask.HasRest = true; ask.RestAt = root.TransformPoint(at); ask.RestTurn = root.rotation * Quaternion.Euler(turn);
+                        string why = StoryProps.Take(_dummy, ask);
                         if (why != null) return why;
                         _sizeOf = true;
-                        return "«" + arg + "» лежить перед манекеном. Розмір буде у звіті check.";
+                        return "«" + arg + "» лежить перед манекеном" + (ask.Square ? ", береться «square»" : "") + (ask.Size > 0f ? ", розмір " + F(ask.Size) + " м" : "") + ". Розмір буде у звіті check.";
                     }
                 case "edit":
                     {
@@ -355,6 +402,7 @@ namespace HuginWhispers
         }
 
         internal static float PropLow = 0.11f, PropAhead = 0.78f; // (as a shield lies on the ground, as far as the scene's step brings the body)
+        private const string PropUsage = "raven stage prop <предмет> [x y z [rx ry rz]] [square] [size <м>] | <предмет> arm · prop none";
         private bool _sizeOf;
 
         private void Stop()
@@ -456,10 +504,10 @@ namespace HuginWhispers
         private void OnDestroy()
         {
             if (_me == this) _me = null;
+            ClearFixtures(); // (first: off its seat while it is still there)
             if (_dummy != null) _dummy.Remove();
             if (_other != null) _other.Remove();
             if (_prevClip != null) { BodyClips.Clips.Remove(_prevClip); _prevClip = null; }
-            ClearFixtures();
         }
 
         // ---------------------------------------------------------------- the measure
@@ -905,6 +953,7 @@ namespace HuginWhispers
             // the full one: the same head, the VERDICT as measured, the numbers, then every frame whole with its layers, the fastest, the rows
             StringBuilder f = new StringBuilder(top.ToString()).Append(c.SaidFull).Append(numbers);
             f.Append(keyHead).Append(full.ToString());
+            f.Append(c.Body.GripSheet(view, Animator())); // (the thing's box, and a hand on it: its bones — for tools/grip.js)
             f.Append("fastest:\n").Append(c.Body.Fastest());
             f.Append("\nevery 0.25 s (m, body frame: x right, y up, z ahead; lean forward,right and head up,right in degrees):\n").Append(c.Rows.ToString());
             File.WriteAllText(Path.Combine(dir, "stage_" + c.Clip + ".full.txt"), f.ToString(), new UTF8Encoding(false));

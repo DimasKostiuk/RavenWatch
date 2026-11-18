@@ -1,0 +1,9 @@
+# Голос «rec3»: власний запис цієї людини (node tools/sound.js voice), кожен рядок — її дублі одного вигуку.
+speech_breath__rec3 file:speech_breath_1__rec3.ogg file:speech_breath_2__rec3.ogg file:speech_breath_3__rec3.ogg file:speech_breath_4__rec3.ogg file:speech_breath_5__rec3.ogg spread=0.04 vol=0.3   # вдих перед реченням; власний запис
+speech_em__rec3 file:speech_em_1__rec3.ogg file:speech_em_2__rec3.ogg file:speech_em_3__rec3.ogg file:speech_em_4__rec3.ogg file:speech_em_5__rec3.ogg spread=0.04   # «ем…»: вагається; власний запис
+speech_sigh__rec3 file:speech_sigh_1__rec3.ogg file:speech_sigh_2__rec3.ogg file:speech_sigh_3__rec3.ogg file:speech_sigh_4__rec3.ogg spread=0.04 vol=0.6   # зітхання; власний запис
+speech_khm__rec3 file:speech_khm_1__rec3.ogg file:speech_khm_2__rec3.ogg file:speech_khm_3__rec3.ogg spread=0.04   # «кхм»: прочищає горло; власний запис
+speech_uhu__rec3 file:speech_uhu_1__rec3.ogg file:speech_uhu_2__rec3.ogg file:speech_uhu_3__rec3.ogg file:speech_uhu_4__rec3.ogg file:speech_uhu_5__rec3.ogg file:speech_uhu_6__rec3.ogg spread=0.04   # «угу»: згода; власний запис
+speech_chuckle__rec3 file:speech_chuckle_1__rec3.ogg file:speech_chuckle_2__rec3.ogg file:speech_chuckle_3__rec3.ogg file:speech_chuckle_4__rec3.ogg file:speech_chuckle_5__rec3.ogg spread=0.04   # смішок; власний запис
+speech_hm__rec3 file:speech_hm_1__rec3.ogg file:speech_hm_2__rec3.ogg file:speech_hm_3__rec3.ogg file:speech_hm_4__rec3.ogg spread=0.04   # «хм»: думає; власний запис
+speech_hm_ask__rec3 file:speech_hm_ask_1__rec3.ogg file:speech_hm_ask_2__rec3.ogg file:speech_hm_ask_3__rec3.ogg file:speech_hm_ask_4__rec3.ogg file:speech_hm_ask_5__rec3.ogg spread=0.04   # «хм?»: питає, не розчув; власний запис

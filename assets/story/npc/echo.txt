@@ -2,6 +2,8 @@
 # Напівпрозорий (echo: скільки його видно), у самих штанях. Робить його сцена (npc echo spawn …), у світі не лишається.
 [npc echo]
 name: Відлуння
+shuns: drinks merry loose   # docs/jobs/people-moves.md
+persona: lively=0.5
 body: human
 model: 0
 skin: 0.8 0.8 0.85

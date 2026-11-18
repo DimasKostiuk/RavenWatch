@@ -81,6 +81,8 @@ namespace HuginWhispers
 
         // the keys are the scene's (StoryCamera.TakesPlayer)
         internal static bool Holds { get { return _dir != 0L && _holds && !_fighting; } }
+        // another player's scene plays near this one now (the Hall's raven keeps off heads then: LocRaven)
+        internal static bool Watching { get { return _dir != 0L && Time.time - _heard < Silence; } }
         private static bool _fighting; // (hit, or dead: his keys are his, whatever the scene says)
 
         private static void OnMsg(long sender, ZPackage pkg)

@@ -7,8 +7,10 @@ namespace HuginWhispers
 {
     // Who gets what (RoleOf, the user 2026-11-06): one on guard duty all of what follows. Anyone else keeps here only what NpcTalkDress puts in, with no window of the game: its tool or one melee weapon
     // (Tool: it has work; Hand: it has none and can stand up for itself; None: no button at all) and its clothes, one a slot, worn for their look with no stats at all (Plain). Anything else in its cells goes back (NoWeapons).
+    // Clothes for the look alone (the user 2026-11-11: a guard too): a thing put on in its talk (NpcTalkDress) bears a mark (Look, IsLook) and is the one shown in its slot (LookIn). On one not on guard it gives
+    // nothing; on a guard it is shown with what the best piece of that slot gives (its template's, any in its cells — that thing itself among them), so its look costs it no armour.
     //
-    // A person's own gear (npc-plan.md, fighters): ten cells of its own — the game's chest on its body, so the game's own
+    // A person's own gear (npc-plan.md, fighters): ten cells of its own — the game's chest on a part of its body (Npcs: never on the body pointed at), so the game's own
     // window opens with your bag beside it (Q → «Спорядження»): put gear in, take it out. It wears the best of what is
     // there by the stats: armour piece by piece (its template's clothes where it has nothing better), a weapon for near
     // and one for far — a bow or a crossbow only with arrows or bolts for it in its cells — and a shield with a one-handed
@@ -44,6 +46,7 @@ namespace HuginWhispers
         // a guard on duty, or anyone of its kind on its guard (NpcAlert): its post, its rounds, an order, a fight, a scene, a short whim where it stands at its post
         internal static bool InHand(NpcActor a)
         {
+            if (a != null && a.Def != null && a.Def.Armed) return true; // (a story person whose weapon is its look: «armed: yes»)
             if (!Guard.Is(a)) return false;
             if (NpcAlert.On(a)) return true;
             NpcMind.Layer l = NpcMind.LayerNow(a);
@@ -123,8 +126,11 @@ namespace HuginWhispers
 
         // the game's stance for a weapon is the animator's «statei»/«statef», set by the game only as a weapon is taken up (measured 2026-11-08: a value set
         // stays). For some the game stands ready to strike even at its ease — knives crouched, a crossbow raised: at its ease (not on its guard: NpcAlert) a person
-        // holding one stands as with a sword instead, and walks so; on its guard its own comes back and the game's animator blends into it. Every game draws
-        // its own people: run on each (NpcModules, Everywhere), a look each StanceEvery s, the animator written only as it changes. A weapon carried on the
+        // holding one stands as with a sword instead, and walks so; on its guard its own comes back and the game's animator blends into it. The game that
+        // runs it decides (a look each StanceEvery s) and writes it where every game reads it — its ZDO, by the body's one way (NpcBody.AnimInt, AnimValue):
+        // the game's own sync of the animator then puts it on every other game. (Till 2026-11-12 it was written into this game's animator alone: a game
+        // that does not run a body does not know its weapon, and its ZSyncAnimation put the ZDO's stance back every step of physics — the calm stance
+        // was seen only on the game that ran the guard.) A weapon carried on the
         // shoulder by its own stance (a greatsword, a sledge) and the atgeir keep theirs: their calm poses ride on it (NpcStance)
         internal static readonly HashSet<ItemDrop.ItemData.AnimationState> CalmAsSword = new HashSet<ItemDrop.ItemData.AnimationState> {
             ItemDrop.ItemData.AnimationState.Knives, ItemDrop.ItemData.AnimationState.DualAxes, ItemDrop.ItemData.AnimationState.Crossbow,
@@ -155,8 +161,9 @@ namespace HuginWhispers
             if (a.Body.Clip(want, CarryTerm)) g._carryRenew = Time.time + CarryTerm - 10f;
         }
         // the game blends nothing as the value changes (the user 2026-11-08: «анімація порвалась з бойової на звичайну»): the body's pose is held first
-        // (stance_settle: a frozen base of every bone, on its own layer of this game — no word sent: each game changes the stance itself) and the stance is
-        // changed once it holds in full, under it; the held pose lets go over its fade — from the old stance into the new one
+        // (stance_settle: a frozen base of every bone, on its own layer of this game — no word sent) and the stance is
+        // changed once it holds in full, under it; the held pose lets go over its fade — from the old stance into the new one. A game that does not run
+        // it holds the same pose the frame the synced stance comes (StanceElsewhere): its step of physics has set the number, its animator has not drawn it yet
         internal static float StanceEvery = 0.5f;
         internal const string Settle = "stance_settle";
         private float _stanceNext;
@@ -166,9 +173,10 @@ namespace HuginWhispers
         {
             NpcGear g = a != null ? a.Gear : null;
             if (g == null) return;
+            if (!a.Owned) { g.StanceElsewhere(a); return; }
             if (g._stanceWant >= 0 && Time.time >= g._stanceSwap) // (its pose held in full now: the stance changed under it)
             {
-                if (g._anim != null) { g._anim.SetInteger(StateI, g._stanceWant); g._anim.SetFloat(StateF, g._stanceWant); }
+                PutStance(a, g._stanceWant);
                 g._stanceWant = -1;
                 return;
             }
@@ -180,13 +188,31 @@ namespace HuginWhispers
             if (g._anim == null) g._anim = a.GetComponentInChildren<Animator>();
             if (g._anim == null) return;
             ItemDrop.ItemData.AnimationState real = w.m_shared.m_animationState;
-            int want = (int)(CalmAsSword.Contains(real) && !NpcAlert.On(a) ? ItemDrop.ItemData.AnimationState.OneHanded : real);
+            bool staff = real == ItemDrop.ItemData.AnimationState.Staves && a.Def != null && a.Def.Armed; // (a story person's staff is carried as a staff, upright: as a sword it hung head down by her knee — the first run, 2026-11-14)
+            int want = (int)(CalmAsSword.Contains(real) && !NpcAlert.On(a) && !staff ? ItemDrop.ItemData.AnimationState.OneHanded : real);
             if (g._anim.GetInteger(StateI) == want) return;
-            if (BodyClips.Find(Settle) == null || !NpcClock.Seen(a)) { g._anim.SetInteger(StateI, want); g._anim.SetFloat(StateF, want); return; } // (nobody sees it: no easing to pay for)
+            if (BodyClips.Find(Settle) == null || !NpcClock.Seen(a)) { PutStance(a, want); return; } // (nobody sees it: no easing to pay for)
             BodyClips.Play(h, BodyClips.SettleSlot, Settle, 0.01f, 1f); // (its pose now held; the stance changes next frame)
             g._stanceWant = want; g._stanceSwap = Time.time + 0.06f; // (the hold in full first: its fade in is 0.05 s)
         }
-        private static readonly int StateI = Animator.StringToHash("statei"), StateF = Animator.StringToHash("statef");
+        private static readonly int StateI = Animator.StringToHash("statei");
+        private static void PutStance(NpcActor a, int v) { if (a.Body != null) { a.Body.AnimInt("statei", v); a.Body.AnimValue("statef", v); } } // (both, as the game sets them: Humanoid.SetAnimationState)
+
+        // on a game that does not run it: the stance itself comes by the game's sync; only its pose is held here as it changes
+        private int _stanceSeen = int.MinValue;
+        private void StanceElsewhere(NpcActor a)
+        {
+            _stanceWant = -1; // (run here a moment ago, a change half done: its new owner finishes it)
+            if (_anim == null) _anim = a.GetComponentInChildren<Animator>();
+            if (_anim == null) return;
+            int now = _anim.GetInteger(StateI);
+            if (now == _stanceSeen) return;
+            bool first = _stanceSeen == int.MinValue;
+            _stanceSeen = now;
+            if (first || BodyClips.Find(Settle) == null || !NpcClock.Seen(a)) return;
+            Humanoid h = a.GetComponent<Character>() as Humanoid;
+            if (h != null) BodyClips.Play(h, BodyClips.SettleSlot, Settle, 0.01f, 1f);
+        }
 
         private bool Holding(Humanoid me) { return (Near != null && me.IsItemEquiped(Near)) || (Far != null && me.IsItemEquiped(Far)); }
 
@@ -212,15 +238,43 @@ namespace HuginWhispers
             return t == ItemDrop.ItemData.ItemType.Helmet || t == ItemDrop.ItemData.ItemType.Chest || t == ItemDrop.ItemData.ItemType.Legs || t == ItemDrop.ItemData.ItemType.Shoulder;
         }
 
-        // for its look only: the same thing with nothing in it (the shared part is every item's of that name: a copy of it for this one)
+        // a thing put on for its look (NpcTalkDress): the mark goes with the thing itself, so it is kept with its cells and seen on every game; off as it is given back
+        internal const string LookKey = "RavenWatch_look";
+        internal static bool IsLook(ItemDrop.ItemData it) { return it != null && it.m_customData != null && it.m_customData.ContainsKey(LookKey); }
+        internal static void Look(ItemDrop.ItemData it, bool on)
+        {
+            if (it == null || on == IsLook(it)) return;
+            if (it.m_customData == null) it.m_customData = new Dictionary<string, string>();
+            if (on) it.m_customData[LookKey] = "1"; else it.m_customData.Remove(LookKey);
+        }
+
+        // the one thing of its cells shown in a slot for its look: the marked one; one not on guard — any clothes there (all it keeps is for its look: those put in before the mark too)
+        internal ItemDrop.ItemData LookIn(ItemDrop.ItemData.ItemType slot)
+        {
+            if (Cells == null) return null;
+            ItemDrop.ItemData any = null;
+            foreach (ItemDrop.ItemData it in Cells.GetAllItems())
+            {
+                if (it.m_shared.m_itemType != slot) continue;
+                if (IsLook(it)) return it;
+                if (any == null) any = it;
+            }
+            return RoleOf(_a) == Role.Full ? null : any;
+        }
+
+        // for its look only: the same thing with nothing in it (the shared part is every item's of that name: a copy of it for this one) — or, on a guard, with what
+        // another piece gives (stats: its armour as it counts now, its resistances, its set, its weight on the step)
         private static readonly System.Reflection.MethodInfo CopyShared = typeof(object).GetMethod("MemberwiseClone", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        private static ItemDrop.ItemData Plain(ItemDrop.ItemData it)
+        private static ItemDrop.ItemData Plain(ItemDrop.ItemData it, ItemDrop.ItemData stats)
         {
             ItemDrop.ItemData c = it.Clone();
-            ItemDrop.ItemData.SharedData s = (ItemDrop.ItemData.SharedData)CopyShared.Invoke(it.m_shared, null);
-            s.m_armor = 0f; s.m_armorPerLevel = 0f; s.m_damageModifiers = new List<HitData.DamageModPair>();
-            s.m_equipStatusEffect = null; s.m_setStatusEffect = null; s.m_setName = ""; s.m_setSize = 0; s.m_movementModifier = 0f;
+            ItemDrop.ItemData.SharedData s = (ItemDrop.ItemData.SharedData)CopyShared.Invoke(it.m_shared, null), from = stats != null ? stats.m_shared : null;
+            s.m_armor = 0f; s.m_armorPerLevel = 0f;
+            s.m_damageModifiers = from != null && from.m_damageModifiers != null ? new List<HitData.DamageModPair>(from.m_damageModifiers) : new List<HitData.DamageModPair>();
+            s.m_equipStatusEffect = from != null ? from.m_equipStatusEffect : null; s.m_setStatusEffect = from != null ? from.m_setStatusEffect : null;
+            s.m_setName = from != null ? from.m_setName : ""; s.m_setSize = from != null ? from.m_setSize : 0; s.m_movementModifier = from != null ? from.m_movementModifier : 0f;
             c.m_shared = s;
+            if (stats != null) s.m_armor = stats.GetArmor() - c.GetArmor(); // (what the game adds to this copy of itself taken off: it counts exactly as that piece does)
             return c;
         }
 
@@ -229,7 +283,8 @@ namespace HuginWhispers
         internal static bool Wearable(ItemDrop d)
         {
             ItemDrop.ItemData.SharedData s = d != null && d.m_itemData != null ? d.m_itemData.m_shared : null;
-            return s != null && s.m_icons != null && s.m_icons.Length > 0 && s.m_itemType != ItemDrop.ItemData.ItemType.Customization;
+            if (s == null || s.m_icons == null || s.m_icons.Length == 0 || s.m_itemType == ItemDrop.ItemData.ItemType.Customization) return false;
+            return string.IsNullOrEmpty(s.m_dlc) || (DLCMan.instance != null && DLCMan.instance.IsDLCInstalled(s.m_dlc)); // (a thing of a DLC this game lacks the game never puts on — Humanoid.EquipItem says no: the sisters' HelmetOdin lay in their bag, 2026-11-14)
         }
 
         private static readonly System.Reflection.FieldInfo HiddenR = AccessTools.Field(typeof(Humanoid), "m_hiddenRightItem"), HiddenL = AccessTools.Field(typeof(Humanoid), "m_hiddenLeftItem");
@@ -287,11 +342,10 @@ namespace HuginWhispers
             Role role = RoleOf(_a);
             if (role == Role.Full || Cells == null || !NpcLocker.Ready(_a) || (_kept == null && NpcLocker.Has(_a))) return; // (its cells read here first: never written back half-known)
             List<ItemDrop.ItemData> back = new List<ItemDrop.ItemData>();
-            HashSet<ItemDrop.ItemData.ItemType> worn = new HashSet<ItemDrop.ItemData.ItemType>();
             bool hand = false;
             foreach (ItemDrop.ItemData it in Cells.GetAllItems())
             {
-                if (IsClothes(it)) { if (!worn.Add(it.m_shared.m_itemType)) back.Add(it); continue; }
+                if (IsClothes(it)) { if (it != LookIn(it.m_shared.m_itemType)) back.Add(it); continue; } // (one a slot: the one shown)
                 if (!hand && HandFits(role, it)) { hand = true; continue; }
                 back.Add(it);
             }
@@ -300,6 +354,7 @@ namespace HuginWhispers
             foreach (ItemDrop.ItemData it in back)
             {
                 Cells.RemoveItem(it);
+                Look(it, false);
                 if (p == null || !p.GetInventory().AddItem(it)) ItemDrop.DropItem(it, it.m_stack, transform.position + transform.forward * 0.8f + Vector3.up * 0.5f, Quaternion.identity);
             }
             Npcs.Log(_a.Id + ": no place for " + back.Count + " of its things (" + role + "): given back");
@@ -337,8 +392,12 @@ namespace HuginWhispers
 
         private void Awake()
         {
-            _box = GetComponent<Container>(); _a = GetComponent<NpcActor>();
+            _box = GetComponentInChildren<Container>(true); _a = GetComponent<NpcActor>();
             if (_box != null) Boxes[_box] = this;
+        }
+
+        private void Start() // (its part's chest awake by now: the order of Awake between a body and its part is not the game's promise)
+        {
             Inventory cells = Cells;
             if (cells != null) cells.m_onChanged = (System.Action)System.Delegate.Combine(cells.m_onChanged, new System.Action(() => _changed = true)); // (looked at only when they changed)
         }
@@ -375,7 +434,7 @@ namespace HuginWhispers
         private string Signature()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            foreach (ItemDrop.ItemData it in Cells.GetAllItems()) sb.Append(it.m_shared.m_name).Append(IsAmmo(it) ? it.m_stack : it.m_quality).Append(';');
+            foreach (ItemDrop.ItemData it in Cells.GetAllItems()) sb.Append(it.m_shared.m_name).Append(IsAmmo(it) ? it.m_stack : it.m_quality).Append(IsLook(it) ? "L;" : ";");
             return sb.ToString();
         }
 
@@ -387,18 +446,15 @@ namespace HuginWhispers
             NoWeapons(); // (first: what goes back is not worn; before its dressing clears the change mark)
             _role = RoleOf(_a);
             List<ItemDrop.ItemData> cells = Cells != null ? new List<ItemDrop.ItemData>(Cells.GetAllItems()) : new List<ItemDrop.ItemData>();
-            bool forLook = RoleOf(_a) != Role.Full; // (one not on guard: what you put on it is worn over what it came in, for its look alone)
-            // armour: per slot, the best (its template's piece counts too)
-            foreach (ItemDrop.ItemData.ItemType slot in new[] { ItemDrop.ItemData.ItemType.Helmet, ItemDrop.ItemData.ItemType.Chest, ItemDrop.ItemData.ItemType.Legs, ItemDrop.ItemData.ItemType.Shoulder, ItemDrop.ItemData.ItemType.Utility })
+            bool guard = _role == Role.Full;
+            // armour: per slot, the best (its template's piece counts too). The thing put on for its look (LookIn) is the one shown: one not on guard wears it over what it
+            // came in, with nothing in it; a guard wears it with what its best piece gives
+            foreach (ItemDrop.ItemData.ItemType slot in new[] { ItemDrop.ItemData.ItemType.Helmet, ItemDrop.ItemData.ItemType.Chest, ItemDrop.ItemData.ItemType.Legs, ItemDrop.ItemData.ItemType.Shoulder, ItemDrop.ItemData.ItemType.Utility, ItemDrop.ItemData.ItemType.Trinket })
             {
-                ItemDrop.ItemData best = null;
-                if (forLook)
-                {
-                    ItemDrop.ItemData mine = cells.Find(x => x.m_shared.m_itemType == slot);
-                    if (mine != null) { wear.Add(Plain(mine)); continue; }
-                }
-                foreach (ItemDrop.ItemData it in forLook ? (IEnumerable<ItemDrop.ItemData>)template : Concat(template, cells)) if (it.m_shared.m_itemType == slot && (best == null || it.GetArmor() > best.GetArmor())) best = it;
-                if (best != null) wear.Add(best.Clone());
+                ItemDrop.ItemData look = LookIn(slot), best = null;
+                if (look != null && !guard) { wear.Add(Plain(look, null)); continue; }
+                foreach (ItemDrop.ItemData it in guard ? Concat(template, cells) : template) if (it.m_shared.m_itemType == slot && (best == null || it.GetArmor() > best.GetArmor())) best = it;
+                if (best != null) wear.Add(look != null && look != best ? Plain(look, best) : best.Clone());
             }
             // weapons: the best near one; the best far one it has ammunition for; a shield for a one-handed near one
             ItemDrop.ItemData near = null, far = null, shield = null;
@@ -406,7 +462,7 @@ namespace HuginWhispers
             _fought = fights;
             foreach (ItemDrop.ItemData it in Concat(template, cells))
             {
-                if (!fights) break; // (one who never fights wields nothing)
+                if (!fights && !(_a.Def != null && _a.Def.Armed)) break; // (one who never fights wields nothing — unless its weapon is its look: «armed: yes»)
                 if (it.m_shared.m_useDurability && it.m_durability <= 0f) continue; // (broken: not taken up)
                 if (!it.IsWeapon()) { if (it.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield && (shield == null || it.m_shared.m_blockPower > shield.m_shared.m_blockPower)) shield = it; continue; }
                 if (Ranged(it)) { if (HasAmmo(cells, it) && (far == null || Power(it) > Power(far))) far = it; }
@@ -461,7 +517,7 @@ namespace HuginWhispers
             Read(); // (what the locker holds now, not what was last seen)
             if (Cells.NrOfItems() == 0) return;
             Vector3 at = transform.position + transform.forward * 0.8f + Vector3.up * 0.5f;
-            foreach (ItemDrop.ItemData it in new List<ItemDrop.ItemData>(Cells.GetAllItems())) ItemDrop.DropItem(it, it.m_stack, at, Quaternion.identity);
+            foreach (ItemDrop.ItemData it in new List<ItemDrop.ItemData>(Cells.GetAllItems())) { Look(it, false); ItemDrop.DropItem(it, it.m_stack, at, Quaternion.identity); }
             Cells.RemoveAll();
             Npcs.Log((_a.Def != null ? _a.Id : "npc") + ": put down its gear");
         }
@@ -469,7 +525,7 @@ namespace HuginWhispers
         // its button on the person's round menu
         internal static IEnumerable<NpcMenu.Button> MenuButtons()
         {
-            yield return new NpcMenu.Button { Order = 70, Title = Lang.K("Спорядження"), Icon = "n-gear", AnyTime = true,
+            yield return new NpcMenu.Button { Order = 70, Part = "gear", Title = Lang.K("Спорядження"), Icon = "n-gear", AnyTime = true,
                 Shown = a => RoleOf(a) != Role.None,
                 Not = a => RoleOf(a) != Role.Full && NpcVitals.IsDown(a) ? Lang.T("Без тями — спершу постав його на ноги (медовуха зцілення, E).") : null,
                 Desc = a => { Role r = RoleOf(a); return r == Role.Tool ? Lang.T("Сокира чи кайло для роботи. Вони зношуються: забери й полагодь на верстаті або дай нові.") : r == Role.Hand ? Lang.T("Одна зброя ближнього бою, щоб міг відбитись.") : Lang.T("Відкриває його десять комірок поруч із твоєю торбою: поклади зброю, щит, броню, стріли чи болти — він вдягне найкраще. Лук чи арбалет бере лише зі стрілами чи болтами."); },

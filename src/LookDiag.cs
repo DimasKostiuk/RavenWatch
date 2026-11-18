@@ -17,6 +17,7 @@ namespace HuginWhispers
     //   <raven>_photo_*.png    — the raven filmed with the zone picture on it: as the game stores it and sitting
     // Zones come from the bones: each triangle goes to the bone its corners lean on most (the mesh's own weights when
     // it can be read, else the nearest bone of a baked copy). The eyes come from the glow picture's brightest spots.
+    // «raven looks bones»: the skeleton itself, for another bird put on it — <raven>_skeleton.txt and <raven>_pose_*.png («the skeleton» below).
     internal static class LookDiag
     {
         internal enum Zone { None, Body, Head, Beak, Eyes, Wings, Tips, Tail, Legs }
@@ -234,6 +235,29 @@ namespace HuginWhispers
 
         internal static Color32 ZoneColor(int z) { return z >= 0 && z < ZoneColors.Length ? ZoneColors[z] : new Color32(20, 20, 20, 255); }
 
+        // our own empty place, and the raven's copy made ready on it (quiet, standing straight, the game's animator off):
+        // what every measure here works on
+        private static GameObject Stage()
+        {
+            GameObject stage = new GameObject("RavenWatch_LookDiag");
+            stage.transform.position = new Vector3(0f, 9400f, 0f);
+            return stage;
+        }
+        private static Animator Stand(Raven src, GameObject model)
+        {
+            AppearMute.Quiet(model);
+            Shared.RemoveExclamation(src, model);
+            model.SetActive(true);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+            foreach (Collider c in model.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
+            foreach (Transform t in RavenBones.Of(model.transform, false))
+                if (t != model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
+            Animator anim = model.GetComponentInChildren<Animator>(true);
+            if (anim != null) anim.enabled = false;
+            return anim;
+        }
+
         private static string Run(bool munin)
         {
             string who = munin ? "munin" : "hugin";
@@ -264,22 +288,12 @@ namespace HuginWhispers
 
             // the work is done on a copy standing in our own empty place
             int layer = RavenFx.FreeLayer();
-            GameObject stage = new GameObject("RavenWatch_LookDiag");
-            stage.transform.position = new Vector3(0f, 9400f, 0f);
+            GameObject stage = Stage();
             GameObject model = Object.Instantiate(src.m_visual, stage.transform, false);
             List<Texture2D> made = new List<Texture2D>();
             try
             {
-                AppearMute.Quiet(model);
-                Shared.RemoveExclamation(src, model);
-                model.SetActive(true);
-                model.transform.localPosition = Vector3.zero;
-                model.transform.localRotation = Quaternion.identity;
-                foreach (Collider c in model.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
-                foreach (Transform t in RavenBones.Of(model.transform, false))
-                    if (t != model.transform && t.localScale.sqrMagnitude < 1e-6f) t.localScale = Vector3.one;
-                Animator anim = model.GetComponentInChildren<Animator>(true);
-                if (anim != null) anim.enabled = false;
+                Animator anim = Stand(src, model);
                 SkinnedMeshRenderer skin = null;
                 foreach (SkinnedMeshRenderer s in model.GetComponentsInChildren<SkinnedMeshRenderer>(true)) if (s.sharedMesh == smr.sharedMesh) skin = s;
                 if (skin == null) return who + ": копія без скіну";
@@ -445,16 +459,9 @@ namespace HuginWhispers
                 pos = baked.vertices;
                 int n = pos.Length;
 
-                // where the bones stand in the baked space: of two readings, the one nearer the corners
-                Matrix4x4[] tries = { Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one), skin.transform.localToWorldMatrix };
-                float bestErr = float.MaxValue; int bestTry = 0;
-                for (int k = 0; k < tries.Length; k++)
-                {
-                    float err = 0f;
-                    for (int i = 0; i < n; i += 7) { float d; Nearest(bones, tries[k].MultiplyPoint3x4(pos[i]), out d); err += d; }
-                    if (err < bestErr) { bestErr = err; bestTry = k; }
-                }
-                Matrix4x4 inv = tries[bestTry].inverse;
+                // where the bones stand in the baked space
+                bool sized;
+                Matrix4x4 inv = BakedToWorld(skin, bones, pos, out sized).inverse;
                 bonePos = new Vector3[bones.Length];
                 for (int i = 0; i < bones.Length; i++) bonePos[i] = bones[i] != null ? inv.MultiplyPoint3x4(bones[i].position) : Vector3.zero;
 
@@ -631,7 +638,23 @@ namespace HuginWhispers
 
         private static string Hex(Color32 c) { return c.r.ToString("X2") + c.g.ToString("X2") + c.b.ToString("X2"); }
 
-        private static void Photos(GameObject stage, GameObject model, SkinnedMeshRenderer skin, int layer, string name, Transform focus)
+        // where a baked copy's corners stand in the world: of the two readings (without the skin's own size, with it), the one that
+        // puts them nearer the bones
+        private static Matrix4x4 BakedToWorld(SkinnedMeshRenderer skin, Transform[] bones, Vector3[] pos, out bool sized)
+        {
+            Matrix4x4[] tries = { Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one), skin.transform.localToWorldMatrix };
+            float bestErr = float.MaxValue; int best = 0;
+            for (int k = 0; k < tries.Length; k++)
+            {
+                float err = 0f;
+                for (int i = 0; i < pos.Length; i += 7) { float d; Nearest(bones, tries[k].MultiplyPoint3x4(pos[i]), out d); err += d; }
+                if (err < bestErr) { bestErr = err; best = k; }
+            }
+            sized = best == 1;
+            return tries[best];
+        }
+
+        private static void Photos(GameObject stage, GameObject model, Renderer skin, int layer, string name, Transform focus)
         {
             Camera cam = new GameObject("Cam").AddComponent<Camera>();
             cam.transform.SetParent(stage.transform, false);
@@ -675,6 +698,258 @@ namespace HuginWhispers
                 Object.Destroy(rt); Object.Destroy(shot);
                 Object.Destroy(cam.gameObject); Object.Destroy(key.gameObject); Object.Destroy(fill.gameObject);
             }
+        }
+
+        // ---------------------------------------------------------------- the skeleton, for another bird put on it
+        // «raven looks bones» (the falcon of chapter 1 is to be a plain mesh skinned by us onto a copy of this skeleton, so that our flight
+        // moves it: what must be known first). For each raven, <raven>_skeleton.txt:
+        //   the bones as the skin was bound (its bind poses), in the bird's own measure — x to its right, y up, z forward, metres as the
+        //   game's raven stands — each with its length, how far the pose the game stores is turned off the bound one, and the skin it
+        //   holds (corners, how far along the bone and off it); the bird's size bound, stored and in the middle of the game's flying clip;
+        //   every clip of the game's animator: which bones' PLACES and SIZES it writes (a place written is the raven's own bone length
+        //   put back every frame: a longer wing of another bird would be pulled to it), found by moving every bone off before the clip is
+        //   read at a time — what came back was written, whatever it was written to.
+        // And the pictures <raven>_pose_stored|bind|fly_<view>.png, shot through a baked mesh (whether a render within the same call skins
+        // a skin anew is not known; a baked mesh is what the bones say). «stored» must look as <raven>_photo_asis of «raven looks diag»: if
+        // it does not, the baked mesh is put wrongly and the other two are not to be trusted.
+        private const float WrittenMm = 0.05f; // mm: a bone moved off and found nearer than this to where it was put was not written by the clip
+        private const float MovesMm = 0.5f;    // mm: a written place that changes less than this over the clip is held, not moved
+        private const float SameDeg = 0.5f;    // °: every bone this near its bound turn: the stored pose is the bound one
+
+        internal static string BonesCmd()
+        {
+            Directory.CreateDirectory(Dir);
+            List<string> said = new List<string>();
+            foreach (bool munin in new[] { false, true })
+            {
+                try { said.Add(Skeleton(munin)); }
+                catch (System.Exception e)
+                {
+                    said.Add((munin ? "munin" : "hugin") + ": failed, " + e.Message);
+                    if (Plugin.Instance != null) Plugin.Instance.LogError("Looks bones " + (munin ? "Munin" : "Hugin") + ": " + e);
+                }
+            }
+            return string.Join(" | ", said.ToArray()) + " → " + Dir;
+        }
+
+        private static string N(float v) { return v.ToString("0.###", CultureInfo.InvariantCulture); }
+        private static string P(Vector3 v) { return N(v.x) + " " + N(v.y) + " " + N(v.z); }
+        private static string Mm(float metres) { return (metres * 1000f).ToString("0.#", CultureInfo.InvariantCulture); }
+        // a point of the world in the bird's own measure (the model's axes, metres)
+        private static Vector3 Bird(Transform model, Vector3 world) { return Quaternion.Inverse(model.rotation) * (world - model.position); }
+        // where a bone ends: its first child that is a bone of the skin or an «_end» mark (as Nearest reads it); itself when it has none
+        private static Vector3 EndOf(Transform[] bones, Transform b)
+        {
+            for (int c = 0; c < b.childCount; c++) { Transform ch = b.GetChild(c); if (System.Array.IndexOf(bones, ch) >= 0 || ch.name.EndsWith("_end")) return ch.position; }
+            return b.position;
+        }
+
+        private static string Skeleton(bool munin)
+        {
+            string who = munin ? "munin" : "hugin";
+            Raven src = Shoulder.Template(munin);
+            if (src == null || src.m_visual == null) return who + ": no raven found (enter a world)";
+            GameObject stage = Stage();
+            GameObject model = Object.Instantiate(src.m_visual, stage.transform, false);
+            Mesh baked = new Mesh();
+            try
+            {
+                Animator anim = Stand(src, model);
+                SkinnedMeshRenderer skin = null;
+                foreach (SkinnedMeshRenderer s in model.GetComponentsInChildren<SkinnedMeshRenderer>(true)) if (s.sharedMesh != null && (skin == null || s.sharedMesh.vertexCount > skin.sharedMesh.vertexCount)) skin = s; // heavy: once a command, the author's
+                if (skin == null) return who + ": no skin";
+                Mesh mesh = skin.sharedMesh;
+                Transform[] bones = skin.bones;
+                Matrix4x4[] binds = mesh.bindposes;
+                int n = bones.Length;
+                if (binds == null || binds.Length != n) return who + ": no bind poses to read (" + (binds != null ? binds.Length : 0) + " for " + n + " bones)";
+                for (int i = 0; i < n; i++) if (bones[i] == null) return who + ": bone " + i + " of the skin is not there";
+                Transform mt = model.transform;
+                int[] parent = new int[n];
+                for (int i = 0; i < n; i++) parent[i] = bones[i].parent != null ? System.Array.IndexOf(bones, bones[i].parent) : -1;
+
+                // the pose the game stores, and the bound one: each bone in its parent bone's measure (a bone whose parent is no bone of the skin stays as stored)
+                Vector3[] sPos = new Vector3[n], sScl = new Vector3[n], bPos = new Vector3[n], bScl = new Vector3[n];
+                Quaternion[] sRot = new Quaternion[n], bRot = new Quaternion[n];
+                for (int i = 0; i < n; i++)
+                {
+                    sPos[i] = bones[i].localPosition; sRot[i] = bones[i].localRotation; sScl[i] = bones[i].localScale;
+                    if (parent[i] < 0) { bPos[i] = sPos[i]; bRot[i] = sRot[i]; bScl[i] = sScl[i]; continue; }
+                    Matrix4x4 l = binds[parent[i]] * binds[i].inverse;
+                    bPos[i] = l.GetColumn(3); bRot[i] = l.rotation; bScl[i] = l.lossyScale;
+                }
+                System.Action stored = () => { for (int i = 0; i < n; i++) { bones[i].localPosition = sPos[i]; bones[i].localRotation = sRot[i]; bones[i].localScale = sScl[i]; } };
+                System.Action bound = () => { for (int i = 0; i < n; i++) { bones[i].localPosition = bPos[i]; bones[i].localRotation = bRot[i]; bones[i].localScale = bScl[i]; } };
+
+                StringBuilder rep = new StringBuilder();
+                rep.Append("Raven skeleton: ").Append(src.name).Append(", visual ").Append(src.m_visual.name).Append("; what each part means: src/LookDiag.cs, «the skeleton»\n");
+                rep.Append("mesh ").Append(mesh.name).Append(": corners ").Append(mesh.vertexCount).Append(", readable ").Append(mesh.isReadable).Append(", bones ").Append(n).Append(", root ").Append(skin.rootBone != null ? skin.rootBone.name : "none").Append(", bones a corner (the skin's own setting): ").Append(skin.quality).Append('\n');
+                rep.Append("the model's own size ").Append(P(mt.localScale)).Append("; from the model down to the first bone:");
+                List<Transform> chain = new List<Transform>();
+                for (Transform t = skin.rootBone != null ? skin.rootBone : bones[0]; t != null && t != mt; t = t.parent) chain.Insert(0, t);
+                foreach (Transform t in chain) rep.Append("\n  ").Append(t.name).Append("  at ").Append(P(t.localPosition)).Append("  turned ").Append(P(t.localEulerAngles)).Append("  size ").Append(P(t.localScale));
+                rep.Append('\n');
+
+                // the bound pose: the bones, their skin
+                bound();
+                skin.BakeMesh(baked, true);
+                Vector3[] v = baked.vertices;
+                bool sized;
+                Matrix4x4 toWorld = BakedToWorld(skin, bones, v, out sized);
+                BoneWeight[] bw = mesh.isReadable ? mesh.boneWeights : null;
+                if (bw != null && bw.Length != v.Length) bw = null;
+                int[] corners = new int[n]; float[] lo = new float[n], hi = new float[n], off = new float[n];
+                int alone = 0;
+                Vector3 min = Vector3.one * float.MaxValue, max = Vector3.one * float.MinValue;
+                for (int i = 0; i < v.Length; i++)
+                {
+                    Vector3 w = toWorld.MultiplyPoint3x4(v[i]), p = Bird(mt, w);
+                    min = Vector3.Min(min, p); max = Vector3.Max(max, p);
+                    if (bw == null) continue;
+                    int b = bw[i].boneIndex0;
+                    if (b < 0 || b >= n) continue;
+                    if (bw[i].weight0 > 0.95f) alone++;
+                    Vector3 a = bones[b].position, ab = EndOf(bones, bones[b]) - a;
+                    float len = ab.magnitude, t = len > 1e-6f ? Vector3.Dot(w - a, ab / len) : 0f;
+                    float away = len > 1e-6f ? (w - a - ab / len * t).magnitude : (w - a).magnitude;
+                    if (corners[b] == 0) { lo[b] = t; hi[b] = t; } else { lo[b] = Mathf.Min(lo[b], t); hi[b] = Mathf.Max(hi[b], t); }
+                    off[b] = Mathf.Max(off[b], away);
+                    corners[b]++;
+                }
+                float worst = 0f; int worstAt = -1;
+                for (int i = 0; i < n; i++) { float d = Quaternion.Angle(sRot[i], bRot[i]); if (d > worst) { worst = d; worstAt = i; } }
+                rep.Append("\nthe stored pose against the bound one: ").Append(worst <= SameDeg ? "the same (no bone turned more than " + N(worst) + "°)" : "NOT the same: " + bones[worstAt].name + " is turned " + N(worst) + "° off, see each bone below").Append('\n');
+                rep.Append("the bird bound: ").Append(P(max - min)).Append(" m (wide, high, long), from ").Append(P(min)).Append(" to ").Append(P(max)).Append('\n');
+                if (bw == null) rep.Append("the mesh's own weights cannot be read: no «skin» below\n");
+                else rep.Append("corners held by one bone alone (over 0.95): ").Append(Pct(alone, v.Length)).Append('\n');
+                rep.Append("\nbones, bound (place in the bird's measure, m):\n");
+                for (int i = 0; i < n; i++)
+                {
+                    Transform b = bones[i];
+                    rep.Append("  ").Append(i).Append(' ').Append(b.name).Append(" < ").Append(parent[i] >= 0 ? bones[parent[i]].name : b.parent != null ? b.parent.name + " (no bone)" : "-")
+                       .Append("  at ").Append(P(Bird(mt, b.position))).Append("  long ").Append(N((EndOf(bones, b) - b.position).magnitude))
+                       .Append("  stored off ").Append(N(Quaternion.Angle(sRot[i], bRot[i]))).Append("° ").Append(Mm((b.parent != null ? b.parent.TransformVector(sPos[i] - bPos[i]) : sPos[i] - bPos[i]).magnitude)).Append(" mm");
+                    if (bw != null) rep.Append(corners[i] > 0 ? "  skin " + corners[i] + " corners, along " + N(lo[i]) + " … " + N(hi[i]) + ", off it up to " + N(off[i]) : "  skin none");
+                    rep.Append('\n');
+                }
+
+                // the pictures, and the bird's size in each pose
+                int layer = RavenFx.FreeLayer();
+                if (layer >= 0)
+                {
+                    foreach (Transform t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer; // heavy: once a command, the author's
+                    foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true)) if (r != skin) r.enabled = false; // heavy: once a command, the author's
+                }
+                else rep.Append("\nno free layer: no pictures\n");
+                AnimationClip fly = anim != null ? ShoulderLife.FlyClipOf(anim) : null;
+                rep.Append("\nsizes (wide, high, long, m):\n");
+                rep.Append("  bound: ").Append(PoseShot(stage, model, skin, bones, layer, who + "_pose_bind")).Append('\n');
+                stored();
+                rep.Append("  stored: ").Append(PoseShot(stage, model, skin, bones, layer, who + "_pose_stored")).Append('\n');
+                if (fly != null)
+                {
+                    fly.SampleAnimation(anim.gameObject, fly.length * 0.5f);
+                    float turned = 0f;
+                    for (int i = 0; i < n; i++) turned = Mathf.Max(turned, Quaternion.Angle(bones[i].localRotation, sRot[i]));
+                    rep.Append("  the middle of ").Append(fly.name).Append(" (").Append(N(fly.length)).Append(" s): ").Append(PoseShot(stage, model, skin, bones, layer, who + "_pose_fly"))
+                       .Append(turned < 0.01f ? "   — reading the clip turned NO bone: clips cannot be read this way here, and the clips below say nothing" : "").Append('\n');
+                }
+                else rep.Append("  no flying clip found (ShoulderLife.FlyClipName)\n");
+
+                // the clips: what each writes
+                AnimationClip[] clips = anim != null && anim.runtimeAnimatorController != null ? anim.runtimeAnimatorController.animationClips : new AnimationClip[0];
+                HashSet<string> done = new HashSet<string>();
+                List<string> wingWriters = new List<string>();
+                rep.Append("\nclips of the game's animator (").Append(clips.Length).Append("): bones whose place / size each writes\n");
+                foreach (AnimationClip clip in clips)
+                {
+                    if (clip == null || !done.Add(clip.name)) continue;
+                    // every bone moved off and made bigger; what the clip puts back, it writes
+                    Vector3[] put = new Vector3[n];
+                    for (int i = 0; i < n; i++) { put[i] = sPos[i] * 1.25f + Vector3.one * 0.003f; bones[i].localPosition = put[i]; bones[i].localRotation = sRot[i]; bones[i].localScale = sScl[i] * 1.1f; }
+                    clip.SampleAnimation(anim.gameObject, 0f);
+                    bool[] place = new bool[n], size = new bool[n];
+                    int places = 0, sizes = 0;
+                    for (int i = 0; i < n; i++)
+                    {
+                        Transform b = bones[i];
+                        Vector3 d = b.localPosition - put[i];
+                        place[i] = (b.parent != null ? b.parent.TransformVector(d) : d).magnitude * 1000f > WrittenMm;
+                        size[i] = (b.localScale - sScl[i] * 1.1f).magnitude > 0.001f;
+                        if (place[i]) places++;
+                        if (size[i]) sizes++;
+                    }
+                    // how far a written place goes over the clip
+                    Vector3[] pMin = new Vector3[n], pMax = new Vector3[n];
+                    int steps = Mathf.Clamp(Mathf.CeilToInt(clip.length * 30f), 2, 90);
+                    for (int s = 0; s <= steps; s++)
+                    {
+                        clip.SampleAnimation(anim.gameObject, clip.length * s / steps);
+                        for (int i = 0; i < n; i++)
+                        {
+                            if (!place[i]) continue;
+                            Vector3 p = bones[i].localPosition;
+                            if (s == 0) { pMin[i] = p; pMax[i] = p; } else { pMin[i] = Vector3.Min(pMin[i], p); pMax[i] = Vector3.Max(pMax[i], p); }
+                        }
+                    }
+                    List<string> moving = new List<string>(), held = new List<string>();
+                    bool wing = false;
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (!place[i]) continue;
+                        Transform b = bones[i];
+                        float far = (b.parent != null ? b.parent.TransformVector(pMax[i] - pMin[i]) : pMax[i] - pMin[i]).magnitude;
+                        if (far * 1000f > MovesMm) moving.Add(b.name + " " + Mm(far) + " mm"); else held.Add(b.name);
+                        if (b.name.IndexOf("wing", System.StringComparison.OrdinalIgnoreCase) >= 0) wing = true;
+                    }
+                    if (wing) wingWriters.Add(clip.name);
+                    rep.Append("  ").Append(clip.name).Append(" (").Append(N(clip.length)).Append(" s): place of ").Append(places).Append(" of ").Append(n)
+                       .Append(places == 0 ? "" : " — moving: " + (moving.Count > 0 ? string.Join(", ", moving.ToArray()) : "none") + "; held in one place: " + (held.Count == n ? "all" : held.Count > 0 ? string.Join(", ", held.ToArray()) : "none"))
+                       .Append("; size of ").Append(sizes).Append('\n');
+                }
+                rep.Append("clips that write the place of a wing bone: ").Append(wingWriters.Count > 0 ? wingWriters.Count + " of " + done.Count + " (" + string.Join(", ", wingWriters.ToArray()) + ")" : "none").Append('\n');
+
+                File.WriteAllText(Path.Combine(Dir, who + "_skeleton.txt"), rep.ToString());
+                return who + ": " + n + " bones, the stored pose " + (worst <= SameDeg ? "is" : "is NOT") + " the bound one (" + N(worst) + "°), " + done.Count + " clips, " + wingWriters.Count + " write a wing bone's place";
+            }
+            finally
+            {
+                Object.Destroy(stage);
+                Object.Destroy(baked);
+            }
+        }
+
+        // the copy as its bones stand now: its size in the bird's measure, and — with a layer to shoot on — its pictures, through a baked mesh
+        private static string PoseShot(GameObject stage, GameObject model, SkinnedMeshRenderer skin, Transform[] bones, int layer, string name)
+        {
+            Mesh m = new Mesh();
+            GameObject g = new GameObject("Baked");
+            try
+            {
+                skin.BakeMesh(m, true);
+                Vector3[] v = m.vertices;
+                bool sized;
+                Matrix4x4 toWorld = BakedToWorld(skin, bones, v, out sized);
+                Vector3 min = Vector3.one * float.MaxValue, max = Vector3.one * float.MinValue;
+                foreach (Vector3 c in v) { Vector3 p = Bird(model.transform, toWorld.MultiplyPoint3x4(c)); min = Vector3.Min(min, p); max = Vector3.Max(max, p); }
+                if (layer >= 0)
+                {
+                    m.RecalculateBounds();
+                    g.transform.SetParent(stage.transform, false);
+                    g.transform.position = skin.transform.position; g.transform.rotation = skin.transform.rotation;
+                    g.transform.localScale = sized ? skin.transform.lossyScale : Vector3.one; // (the stage has no size of its own)
+                    g.layer = layer;
+                    g.AddComponent<MeshFilter>().sharedMesh = m;
+                    MeshRenderer r = g.AddComponent<MeshRenderer>();
+                    r.sharedMaterials = skin.sharedMaterials;
+                    bool was = skin.enabled;
+                    skin.enabled = false;
+                    try { Photos(stage, model, r, layer, name, null); }
+                    finally { skin.enabled = was; }
+                }
+                return P(max - min);
+            }
+            finally { Object.DestroyImmediate(g); Object.Destroy(m); }
         }
 
         // a game picture read off the card, as it is stored (no colour conversion on the way)

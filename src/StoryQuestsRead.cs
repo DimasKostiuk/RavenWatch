@@ -52,7 +52,7 @@ namespace HuginWhispers
                     if (h.Length == 2 && h[0] == "quest" && Story.GoodName(h[1]))
                     {
                         if (Find0(h[1]) != null) { Errors.Add(at + "квест «" + h[1] + "» уже є — цей пропущено"); q = null; s = null; continue; }
-                        q = new QuestDef { Id = h[1], From = file }; Quests.Add(q); s = null; w = null;
+                        q = new QuestDef { Id = h[1], From = file, Block = StoryFiles.Block(file) }; Quests.Add(q); s = null; w = null;
                     }
                     else if (h.Length == 2 && h[0] == "stage" && q != null && Story.GoodName(h[1]))
                     {
@@ -80,6 +80,7 @@ namespace HuginWhispers
                         case "chapter": q.Chapter = val; break;
                         case "owner": if (val == "server") q.Server = true; else Errors.Add(at + "owner: server"); break;
                         case "who": q.Who = Conds(val, at); break;
+                        case "scratch": if (val.Length == 0) Errors.Add(at + "scratch: <префікс> …"); else q.Scratch = val.ToLowerInvariant(); break;
                         case "fork":
                             {
                                 int arrow = val.LastIndexOf("->");
@@ -107,6 +108,7 @@ namespace HuginWhispers
                 switch (key)
                 {
                     case "goal": d.Goal = val; break;
+                    case "more": d.More = val; break;
                     case "saga": d.Saga = val; break;
                     case "choice": if (Story.GoodName(val) && val.IndexOf('.') < 0) s.Choice = val; else Errors.Add(at + "choice: назва без крапок і пробілів"); break;
                     case "wait": d.WaitText = val; d.Wait = Conds(val, at); break;
@@ -118,6 +120,7 @@ namespace HuginWhispers
                             break;
                         }
                     case "scene": d.Scene = val; break;
+                    case "music": d.Music = val.Trim(); if (d.Music.Length == 0) Errors.Add(at + "music: off | <трек> [vol V]"); break;
                     case "mark":
                         {
                             string[] m = val.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
@@ -130,6 +133,9 @@ namespace HuginWhispers
                         }
                     case "next": d.Next = val; break;
                     case "call": d.Call = val; break;
+                    case "seek": d.Seek = val; break;
+                    case "stock": { string why = StoryStock.Why(val); if (why == null) d.Stock.Add(val.Trim()); else Errors.Add(at + why); break; }
+                    case "lost": if (val.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length == 2) d.Lost.Add(val.Trim()); else Errors.Add(at + "lost: <предмет> <місце>"); break;
                     case "start": Actions(val, d.Start, at); break;
                     case "done": Actions(val, d.Done, at); break;
                     case "fork":
@@ -188,8 +194,8 @@ namespace HuginWhispers
             }
             bool saga = false;
             foreach (StageDef s in q.Stages) { saga |= s.Saga.Length > 0; foreach (StageDef w in s.Ways) saga |= w.Saga.Length > 0; }
-            if (saga && q.Chapter.Length == 0) Errors.Add(at + "є рядки saga:, а chapter: нема (сага не знатиме, у який розділ їх писати)");
-            else if (q.Chapter.Length > 0 && !StorySaga.HasChapter(q.Chapter)) Errors.Add(at + "chapter: нема розділу «" + q.Chapter + "» (assets/story/saga)");
+            if (saga && q.Chapter.Length == 0) Errors.Add(at + "є рядки saga:, а chapter: нема (сага не знатиме, у яку главу їх писати)");
+            else if (q.Chapter.Length > 0 && !StorySaga.HasChapter(q.Chapter)) Errors.Add(at + "chapter: нема глави «" + q.Chapter + "» (assets/story/saga)");
             int unnamed = 0;
             foreach (StageDef s in q.Stages) if (s.Ways.Count > 0 && s.Choice.Length == 0) unnamed++;
             if (unnamed > 1) Errors.Add(at + "кілька етапів зі шляхами без choice: — назви кожен вибір");
@@ -203,6 +209,7 @@ namespace HuginWhispers
             foreach (StageDef s in q.Stages)
             {
                 if (s.Scene.Length > 0 && StoryScenes.Find(s.Scene) == null) Errors.Add(at + s.Id + ": нема сцени «" + s.Scene + "» (зіграється одразу, нічого не показавши)");
+                if (s.Ways.Count == 0 && s.Scene.Length > 0 && s.OnName.Length > 0) Errors.Add(at + s.Id + ": і scene, і on — етап зі сценою проходить лише її кінцем, а його on забирав би E у речі (дошка серця, розмова) й нічого не робив; подію винеси в окремий етап перед сценою"); // (Passed: scene_done alone; Awaiting would still answer for its «on:»)
                 foreach (StageDef d in s.Ways.Count > 0 ? s.Ways : new List<StageDef> { s })
                 {
                     string why = d.MarkAt.Length > 0 ? StoryWhere.Why(d.MarkAt) : null;

@@ -19,13 +19,13 @@
 
 - `world.md` · гра, мережа, інші моди: `Body.cs`, `Group.cs`, `NearCast.cs`, `NetSize.cs`, `RavenMsg.cs`, `RavenVisitLog.cs`, `RawComfort.cs`, `SkinGuard.cs`, `Stats.cs`
 - `audio.md` · музика бою: `FightMusic.cs`
-- `ui.md` · картинки, книга, меню: `AbilityIcons.cs`, `BandFill.cs`, `BookArtBoard.cs`, `BookArtTalk.cs`, `BuildTab.cs`, `ContentWords.cs`, `GainNote.cs`, `IconRender.cs`
+- `ui.md` · картинки, книга, меню: `AbilityIcons.cs`, `ItemMarks.cs`, `BandFill.cs`, `BookArtBoard.cs`, `BookArtTalk.cs`, `BuildTab.cs`, `ContentWords.cs`, `GainNote.cs`, `IconRender.cs`
 
 ## Інструменти автора
 
 - `tools.md` · вкладки тестового вікна: `ErrandPanel.cs`, `FlightPanel.cs`, `FlightRec.cs`, `FlightStage.cs`, `LandPanel.cs`, `PerchTurnStage.cs`, `PhotoPanel.cs`, `Photos.cs`, `PlayerAnimLog.cs`, `PlayerAnimPanel.cs`, `RunePanel.cs`, `SitPanel.cs`, `TakeoffPanel.cs`, `TemplatePanel.cs`, `WingPanel.cs`, `WsAssets.cs`
-- `tools.md` · Студія: `StudioHero.cs`, `StudioNpc.cs`, `StudioPhoto.cs`
-- `tools.md` · вікно сюжету й місць: `StoryPanel.cs`, `StoryPanelActors.cs`, `StoryPanelBuild.cs`, `StoryPanelDirector.cs`, `StoryPanelFiles.cs`, `StoryPanelLook.cs`, `StoryPanelScenes.cs`, `StoryPanelShots.cs`, `StoryPanelTrack.cs`, `LocPanel.cs`, `BlueprintFrame.cs`, `NpcPreview.cs`, `AuthorNoIntro.cs`
+- `tools.md` · Студія: `StudioHero.cs`, `StudioNpc.cs`, `StudioPhoto.cs`, `StudioFalcon.cs`
+- `tools.md` · вікно сюжету й місць: `StoryPanel.cs`, `StoryPanelActors.cs`, `StoryPanelBuild.cs`, `StoryPanelDirector.cs`, `StoryPanelFiles.cs`, `StoryPanelLook.cs`, `StoryPanelWardrobe.cs`, `StoryPanelScenes.cs`, `StoryPanelShots.cs`, `StoryPanelTrack.cs`, `LocPanel.cs`, `AuthorUi.cs`, `BlueprintFrame.cs`, `NpcPreview.cs`, `AuthorNoIntro.cs`
 - `tools.md` · тести: `Dummy.cs`, `NpcFailTest.cs`, `NpcSelf.cs`, `NpcStress.cs`
 
 ## Люди
@@ -38,5 +38,5 @@
 
 ## Сюжет
 
-- `story.md` · квести й світ: `StoryMap.cs`, `StoryOwn.cs`, `StoryPlaces.cs`, `StoryQuestsRead.cs`, `StorySpot.cs`, `StoryTrackConds.cs`, `StoryWorld.cs`
-- `story.md` · сцена: `StoryAir.cs`, `StoryHush.cs`, `StoryScenesBird.cs`, `StoryScenesCamera.cs`, `StoryScenesCast.cs`, `StoryScenesKinds.cs`, `StoryScenesPlayer.cs`, `StoryScenesRead.cs`
+- `story.md` · квести й світ: `StoryFound.cs`, `StoryMap.cs`, `StoryOwn.cs`, `StoryPlaces.cs`, `StoryQuestsRead.cs`, `StorySpot.cs`, `StoryTrackConds.cs`, `StoryWorld.cs`
+- `story.md` · сцена: `StoryAir.cs`, `StoryAside.cs`, `StoryWaves.cs`, `StoryHush.cs`, `StoryBeasts.cs`, `StoryScenesBird.cs`, `StoryScenesCamera.cs`, `StoryScenesCast.cs`, `StoryScenesKinds.cs`, `StoryScenesLane.cs`, `StoryScenesPlayer.cs`, `StoryScenesRead.cs`

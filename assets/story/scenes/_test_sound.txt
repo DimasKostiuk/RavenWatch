@@ -1,0 +1,139 @@
+# Пробна сцена звукового ядра (не з сюжету, 2026-11-13): усе, що вміє Audio, по одному, з номером пункту на екрані.
+# Запуск: raven story scene reload, тоді raven story scene zz_sound (на рівному місці, не в бою; близько 80 с).
+# На екрані лише номер: текст кирилицею вимагав би перекладу. Що має бути чути на кожному номері:
+#   1  музика гри (крипта) входить плавно за 3 с і грає; ранок, локація, вечір її не перебивають
+#   2  тиша: музика стихла за 3 с, гра нічого свого не ставить
+#   3  фон без місця: гул, тихо      4  той самий гул гучно      5  ледь чути, тоді стихає зовсім
+#   6  свій файл: вереск сокола біля тебе
+#   7  той самий вереск згори зліва: тихіше і з боку
+#   8  світ приглушено: походи — кроків і вітру майже не чути, а «как-как» сокола (звук сцени) чути на повну
+#   9  світ повернувся: кроки як завжди
+#  10  кроки заглушено за назвою: йди — кроків нема зовсім, решта світу є
+#  11  кроки повернулись
+#  12  камера відійшла, вухо ще в гравця: «как-как» близько
+#  13  вухо в камері: той самий звук далі й тихіше
+#  14  музика гри повертається сама
+[scene zz_sound]
+alone: yes
+roams: yes
+msg 1
+music forestcrypt 3
+wait 9
+msg 2
+music off 3
+wait 7
+msg 3
+bed sfx_magma_loop 2 vol 0.4
+wait 5
+msg 4
+bed sfx_magma_loop vol 1
+wait 4
+msg 5
+bed sfx_magma_loop vol 0.15
+wait 4
+bed off 2
+wait 2
+msg 6
+sound falcon_scream player
+wait 3
+msg 7
+sound falcon_scream sky
+wait 3
+msg 8
+mix world 0.15 1.5
+wait 3
+sound falcon_cack player
+wait 5
+msg 9
+mix reset 1.5
+wait 5
+msg 10
+mute sfx_footstep*
+wait 6
+msg 11
+unmute all
+wait 4
+msg 12
+camera on player wide back blend 1
+wait 1.5
+sound falcon_cack player
+wait 3
+msg 13
+ear camera 0.5
+wait 1
+sound falcon_cack player
+wait 3
+ear player 0.5
+camera off blend 1.5
+msg 14
+music game 3
+wait 6
+
+# Вигуки людей голосом «m2» з пулу (запис користувача 2026-11-13 як є тримає в моді по одному дублю): кожен тричі поспіль — три різні дублі, тон трохи гуляє.
+# Запуск: raven story scene zz_hm (близько 50 с). Номер на екрані: 1 хм (думає) · 2 хм? (питає) · 3 ем… (вагається) · 4 угу (згода) · 5 о! (подив) · 6 зітхання · 7 смішок · 8 кхм · 9 вдих перед реченням
+[scene zz_hm]
+alone: yes
+roams: yes
+msg 1
+sound speech_hm__m2 player
+wait 1.7
+sound speech_hm__m2 player
+wait 1.7
+sound speech_hm__m2 player
+wait 2.2
+msg 2
+sound speech_hm_ask__m2 player
+wait 1.7
+sound speech_hm_ask__m2 player
+wait 1.7
+sound speech_hm_ask__m2 player
+wait 2.2
+msg 3
+sound speech_em__m2 player
+wait 1.7
+sound speech_em__m2 player
+wait 1.7
+sound speech_em__m2 player
+wait 2.2
+msg 4
+sound speech_uhu__m2 player
+wait 1.7
+sound speech_uhu__m2 player
+wait 1.7
+sound speech_uhu__m2 player
+wait 2.2
+msg 5
+sound speech_oh__m2 player
+wait 1.7
+sound speech_oh__m2 player
+wait 1.7
+sound speech_oh__m2 player
+wait 2.2
+msg 6
+sound speech_sigh__m2 player
+wait 1.7
+sound speech_sigh__m2 player
+wait 1.7
+sound speech_sigh__m2 player
+wait 2.2
+msg 7
+sound speech_chuckle__m2 player
+wait 1.7
+sound speech_chuckle__m2 player
+wait 1.7
+sound speech_chuckle__m2 player
+wait 2.2
+msg 8
+sound speech_khm__m2 player
+wait 1.7
+sound speech_khm__m2 player
+wait 1.7
+sound speech_khm__m2 player
+wait 2.2
+msg 9
+sound speech_breath__m2 player
+wait 1.7
+sound speech_breath__m2 player
+wait 1.7
+sound speech_breath__m2 player
+wait 2.2

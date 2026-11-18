@@ -2,10 +2,11 @@
 <!-- The post's letter, cut from the user's design (Desktop\export\letter-2c: 2c-closed.png, 2c-open.png) into layers
      without any words (the game writes them): ?part=
        envelope  600×840  the closed letter, its flap's lines (no seal, no name)
-       seal      220×240  the whole wax seal with its rune and drips
+       seal      220×240  the whole wax seal with its mark and drips          &who=<sender> (SEALS below; none: the post's own)
        seal_l / seal_r    its two halves once broken (same canvas: laid over each other they make the seal)
-       paper     840×1120 the open sheet: torn edges, the fold across, the bits of wax left on it
-     Rendered by tools/letter_art.ps1 into assets/book/letter_*.png. -->
+       paper     840×1120 the open sheet: torn edges, the fold across (no wax: that is «bits»)
+       bits      144×104  the bits of the seal left on the sheet, of the sender's wax: the sheet's pixels 320..464 × 396..500 only   &who=<sender>
+     Rendered by tools/letter_art.ps1 into assets/book/letter_*.png (the post's own) and letter_*_<sender>.png. -->
 <html>
 <head>
 <meta charset="utf-8">
@@ -64,39 +65,149 @@ function envelope() {
   </g></svg>`;
 }
 
-// the seal: an uneven twelve-sided blob of wax, a pressed octagon with the rune, two drips under it
-function sealSvg(clip) {
-  const W = 220, H = 240, cx = 110, cy = 104;
-  seed = 23;
-  const blob = [];
-  for (let i = 0; i < 13; i++) { const a = -Math.PI / 2 + i / 13 * Math.PI * 2, r = 98 + (rnd() - 0.5) * 9; blob.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.97]); }
-  const oct = [];
-  for (let i = 0; i < 8; i++) { const a = Math.PI / 8 + i / 8 * Math.PI * 2, r = 76; oct.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
-  // ᚹ wunjo (joy): a stem and its angular flag (not a bar across: that would read as ₽)
-  const rune = `M${cx - 10},${cy - 36} L${cx - 10},${cy + 34} M${cx - 10},${cy - 34} L${cx + 18},${cy - 12} L${cx - 10},${cy + 8}`;
+// Each sender's seal (the user 2026-11-17: «печатка… різні для кожного персонажа… і форму теж урізноманіть»; his picks): its wax, the shape of
+// its blob, the press in it, its mark, its drips — ?who=<name> (a story person's npc id: the game picks letter_seal_<id> for his letters).
+//   post    the post's own (players' letters, and anyone with no seal of his own): ᚹ wunjo on red, as the design has it
+//   lit     Літ, a dvergr builder: ᚦ thurisaz on brown wax, a squared block with cut corners, a double square frame, one short neat drip
+//   heid    Гейд, a healer: ᛒ berkana on green wax, a soft round blob, a round press with a ring in it, one long thin drip
+//   eyvind  Ейвінд: no sign of his own — a thumb pressed into yellow wax, a sloppy soft smear, no press, three uneven drips
+//   bruni   Бруні, «Варта, що лишилась»: the Watch's sign (its black feather) on black wax, glowing green-blue as Hel's flame, a pompous scalloped
+//           blob, a ring of notches round the press, two even drips
+const SEALS = {
+  post:   { wax: ['#c8463e', '#a42e29', '#6e1814'], edge: '#5e1410', light: '#e06a60', press: ['#8e2420', '#a32d28'], deep: '#561009', glint: '#d65a51', shadow: '#2a0c06',
+            blob: { kind: 'round', sides: 13, r: 98, jag: 9, squash: 0.97, seed: 23 }, frame: { kind: 'poly', sides: 8, r: 76, turn: Math.PI / 8 },
+            mark: 'wunjo', drips: [[-52, 70, 22, 48], [26, 74, 18, 30]] },
+  lit:    { wax: ['#b07a46', '#7e4f28', '#45290f'], edge: '#3b2210', light: '#d29a66', press: ['#6a4120', '#84532b'], deep: '#2a1708', glint: '#c08a58', shadow: '#1e1006',
+            blob: { kind: 'chamfer', half: 90, cut: 30, jag: 2.5, seed: 5 }, frame: { kind: 'square', half: 66, inner: 56 },
+            mark: 'thurisaz', drips: [[-9, 86, 18, 24]] },
+  heid:   { wax: ['#8bab64', '#5b7f3a', '#2c4719'], edge: '#22361a', light: '#b3d18e', press: ['#4b6b2e', '#5d7f3a'], deep: '#1b2e10', glint: '#97bd73', shadow: '#0e1a08',
+            blob: { kind: 'round', sides: 30, r: 92, jag: 4, squash: 1, seed: 13 }, frame: { kind: 'circle', r: 70, inner: 61 },
+            mark: 'berkana', drips: [[-34, 70, 13, 64]] },
+  eyvind: { wax: ['#f3cd63', '#d69f2c', '#8e5f16'], edge: '#77500f', light: '#ffe7a4', press: null, deep: '#6a440c', glint: '#f8d985', shadow: '#3a2608',
+            blob: { kind: 'smear', r: 86, waves: [[2, 0.13, 1.3], [3, 0.09, 0.4], [5, 0.05, 2.1]], squash: 0.9, dx: 3, dy: 3 }, frame: { kind: 'none' },
+            mark: 'thumb', drips: [[-66, 50, 16, 40], [6, 78, 25, 46], [46, 60, 12, 26]] },
+  bruni:  { wax: ['#555864', '#26272e', '#0b0b0f'], edge: '#040406', light: '#8b90a0', press: ['#18191e', '#25262d'], deep: '#050507', glint: '#5c6170', shadow: '#000000',
+            glow: '#46d3c1', blob: { kind: 'scallop', bumps: 18, r: 99, depth: 5.5 }, frame: { kind: 'ring', r: 76, ticks: 24 },
+            mark: 'feather', drips: [[-50, 72, 20, 42], [30, 72, 20, 42]] },
+};
+
+// the blob of wax, its outline
+function blobPts(b, cx, cy) {
+  const pts = [];
+  if (b.kind === 'chamfer') { // a squared block, its corners cut (a dvergr's measure), the wax a little uneven
+    seed = b.seed;
+    const h = b.half, c = b.cut, corners = [[-h + c, -h], [h - c, -h], [h, -h + c], [h, h - c], [h - c, h], [-h + c, h], [-h, h - c], [-h, -h + c]];
+    corners.forEach((p, i) => {
+      const q = corners[(i + 1) % corners.length];
+      for (let k = 0; k < 4; k++) { const t = k / 4; pts.push([cx + p[0] + (q[0] - p[0]) * t + (rnd() - 0.5) * b.jag, cy + p[1] + (q[1] - p[1]) * t + (rnd() - 0.5) * b.jag]); }
+    });
+    return pts;
+  }
+  if (b.kind === 'smear') { // wax poured carelessly: a soft outline that bulges and sags, no corners
+    for (let i = 0; i < 72; i++) { const a = i / 72 * Math.PI * 2; let k = 1; for (const w of b.waves) k += w[1] * Math.sin(a * w[0] + w[2]); pts.push([cx + b.dx + Math.cos(a) * b.r * k, cy + b.dy + Math.sin(a) * b.r * k * b.squash]); }
+    return pts;
+  }
+  if (b.kind === 'scallop') { // a ceremonial rim of even bumps
+    for (let i = 0; i < 144; i++) { const a = i / 144 * Math.PI * 2, r = b.r - b.depth + b.depth * Math.cos(a * b.bumps); pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+    return pts;
+  }
+  seed = b.seed;
+  const ox = b.dx || 0, oy = b.dy || 0;
+  for (let i = 0; i < b.sides; i++) { const a = -Math.PI / 2 + i / b.sides * Math.PI * 2, r = b.r + (rnd() - 0.5) * b.jag; pts.push([cx + ox + Math.cos(a) * r, cy + oy + Math.sin(a) * r * b.squash]); }
+  return pts;
+}
+
+// the press in it: a flat sunk face with its rim
+function frameSvg(s, cx, cy) {
+  const f = s.frame, rim = `stroke="${s.edge}" stroke-opacity=".85" stroke-width="3" stroke-linejoin="round"`, lit = `fill="none" stroke="${s.glint}" stroke-opacity=".45" stroke-width="2" transform="translate(1.5,2)"`;
+  if (f.kind === 'poly') {
+    const p = []; for (let i = 0; i < f.sides; i++) { const a = f.turn + i / f.sides * Math.PI * 2; p.push([cx + Math.cos(a) * f.r, cy + Math.sin(a) * f.r]); }
+    return `<path d="${poly(p)}" fill="url(#press)" ${rim}/><path d="${poly(p)}" ${lit} stroke-linejoin="round"/>`;
+  }
+  if (f.kind === 'square') return `<rect x="${cx - f.half}" y="${cy - f.half}" width="${f.half * 2}" height="${f.half * 2}" rx="3" fill="url(#press)" ${rim}/>`
+    + `<rect x="${cx - f.half}" y="${cy - f.half}" width="${f.half * 2}" height="${f.half * 2}" rx="3" ${lit}/>`
+    + `<rect x="${cx - f.inner}" y="${cy - f.inner}" width="${f.inner * 2}" height="${f.inner * 2}" fill="none" stroke="${s.deep}" stroke-opacity=".8" stroke-width="2"/>`
+    + `<rect x="${cx - f.inner}" y="${cy - f.inner}" width="${f.inner * 2}" height="${f.inner * 2}" fill="none" stroke="${s.glint}" stroke-opacity=".35" stroke-width="1.4" transform="translate(1,1.5)"/>`;
+  if (f.kind === 'circle') return `<circle cx="${cx}" cy="${cy}" r="${f.r}" fill="url(#press)" ${rim}/><circle cx="${cx}" cy="${cy}" r="${f.r}" ${lit}/>`
+    + `<circle cx="${cx}" cy="${cy}" r="${f.inner}" fill="none" stroke="${s.deep}" stroke-opacity=".7" stroke-width="1.6"/>`
+    + `<circle cx="${cx}" cy="${cy}" r="${f.inner}" fill="none" stroke="${s.glint}" stroke-opacity=".3" stroke-width="1.2" transform="translate(1,1.5)"/>`;
+  if (f.kind === 'ring') {
+    let t = `<circle cx="${cx}" cy="${cy}" r="${f.r}" fill="url(#press)" ${rim}/><circle cx="${cx}" cy="${cy}" r="${f.r}" ${lit}/>`;
+    for (let i = 0; i < f.ticks; i++) {
+      const a = i / f.ticks * Math.PI * 2, r0 = f.r - 9, r1 = f.r - 3;
+      t += `<line x1="${(cx + Math.cos(a) * r0).toFixed(1)}" y1="${(cy + Math.sin(a) * r0).toFixed(1)}" x2="${(cx + Math.cos(a) * r1).toFixed(1)}" y2="${(cy + Math.sin(a) * r1).toFixed(1)}" stroke="${s.deep}" stroke-width="2.2" stroke-linecap="round"/>`;
+    }
+    return t;
+  }
+  return '';
+}
+
+// the mark pressed into it: a rune's strokes, a thumb, the Watch's feather
+function markSvg(s, cx, cy) {
+  const pressed = (d, w) => `<path d="${d}" fill="none" stroke="${s.glint}" stroke-opacity=".45" stroke-width="${w}" stroke-linecap="square" stroke-linejoin="miter" transform="translate(1.5,2)"/>`
+    + `<path d="${d}" fill="none" stroke="${s.deep}" stroke-width="${w}" stroke-linecap="square" stroke-linejoin="miter"/>`;
+  if (s.mark === 'wunjo') // ᚹ: a stem and its angular flag (not a bar across: that would read as ₽)
+    return pressed(`M${cx - 10},${cy - 36} L${cx - 10},${cy + 34} M${cx - 10},${cy - 34} L${cx + 18},${cy - 12} L${cx - 10},${cy + 8}`, 7);
+  if (s.mark === 'thurisaz') // ᚦ: a stem and a thorn on its middle
+    return pressed(`M${cx - 12},${cy - 38} L${cx - 12},${cy + 38} M${cx - 12},${cy - 20} L${cx + 16},${cy} L${cx - 12},${cy + 20}`, 7.5);
+  if (s.mark === 'berkana') // ᛒ: a stem and its two breasts
+    return pressed(`M${cx - 13},${cy - 38} L${cx - 13},${cy + 38} M${cx - 13},${cy - 38} L${cx + 14},${cy - 19} L${cx - 13},${cy} L${cx + 14},${cy + 19} L${cx - 13},${cy + 38}`, 6.5);
+  if (s.mark === 'thumb') { // a thumb's whorl, pressed a little aside and askew: broken ridges round an oval
+    seed = 97;
+    let t = `<g transform="translate(${cx + 8},${cy + 6}) rotate(-18)">`;
+    for (let i = 1; i <= 6; i++) {
+      const rx = 4 + i * 5, ry = 6 + i * 6.6, len = Math.PI * (rx + ry), dash = (22 + rnd() * 46).toFixed(1), gap = (3 + rnd() * 5).toFixed(1), off = (rnd() * len).toFixed(1);
+      t += `<ellipse cx="1.5" cy="2" rx="${rx}" ry="${ry}" fill="none" stroke="${s.glint}" stroke-opacity=".45" stroke-width="3" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${off}"/>`
+        + `<ellipse cx="0" cy="0" rx="${rx}" ry="${ry}" fill="none" stroke="${s.deep}" stroke-opacity=".75" stroke-width="2.6" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${off}"/>`;
+    }
+    return t + `</g>`;
+  }
+  if (s.mark === 'feather') { // the Watch's black feather, slanting, its vanes and barbs; it glows as Hel's flame
+    const g = `translate(${cx + 2},${cy + 2}) rotate(28)`;
+    let barbs = '';
+    for (let i = 0; i < 9; i++) { const y = -40 + i * 9; barbs += `M0,${y} L${-13 + Math.abs(i - 4) * 1.6},${y + 9} M0,${y} L${12 - Math.abs(i - 4) * 1.5},${y + 8} `; }
+    const vane = `M0,-52 C-20,-36 -22,6 -4,36 L0,40 L4,34 C20,6 18,-36 0,-52 Z`, shaft = `M0,58 L0,-52`;
+    return `<g transform="${g}">`
+      + `<path d="${vane}" fill="${s.glow}" opacity=".55" filter="url(#glow)"/>`
+      + `<path d="${vane}" fill="${s.deep}" stroke="${s.glow}" stroke-width="2" stroke-opacity=".9"/>`
+      + `<path d="${barbs}" stroke="${s.glow}" stroke-opacity=".7" stroke-width="1.4" fill="none"/>`
+      + `<path d="${shaft}" stroke="${s.glow}" stroke-width="3.2" stroke-linecap="round" filter="url(#glowthin)"/>`
+      + `<path d="${shaft}" stroke="#d9fff8" stroke-width="1.4" stroke-linecap="round"/>`
+      + `</g>`;
+  }
+  return '';
+}
+
+// the seal: its blob of wax, the press, the mark, the drips under it
+function sealSvg(clip, who) {
+  const s = SEALS[who] || SEALS.post, W = 220, H = 240, cx = 110, cy = 104;
+  const blob = poly(blobPts(s.blob, cx, cy));
   const clipDef = clip ? `<clipPath id="half"><path d="${clip}"/></clipPath>` : '';
+  let drips = '';
+  for (const d of s.drips) {
+    const x = cx + d[0], y = cy + d[1], w = d[2], h = d[3];
+    drips += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w / 2}" fill="url(#drip)"/><ellipse cx="${x + w / 2}" cy="${y + h - 2}" rx="${w / 2}" ry="${(w / 4.4).toFixed(1)}" fill="${s.wax[2]}"/>`;
+  }
+  const press = s.press || [s.wax[1], s.wax[1]];
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${clipDef}
-  <radialGradient id="wax" cx="34%" cy="26%" r="80%"><stop offset="0" stop-color="#c8463e"/><stop offset=".45" stop-color="#a42e29"/><stop offset="1" stop-color="#6e1814"/></radialGradient>
-  <linearGradient id="press" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8e2420"/><stop offset="1" stop-color="#a32d28"/></linearGradient>
-  <linearGradient id="drip" x1="0" x2="1"><stop offset="0" stop-color="#7a1c18"/><stop offset=".45" stop-color="#b8403a"/><stop offset="1" stop-color="#701814"/></linearGradient>
+  <radialGradient id="wax" cx="34%" cy="26%" r="80%"><stop offset="0" stop-color="${s.wax[0]}"/><stop offset=".45" stop-color="${s.wax[1]}"/><stop offset="1" stop-color="${s.wax[2]}"/></radialGradient>
+  <linearGradient id="press" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${press[0]}"/><stop offset="1" stop-color="${press[1]}"/></linearGradient>
+  <linearGradient id="drip" x1="0" x2="1"><stop offset="0" stop-color="${s.wax[2]}"/><stop offset=".45" stop-color="${s.wax[0]}"/><stop offset="1" stop-color="${s.wax[2]}"/></linearGradient>
   <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="glowthin" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>
   <filter id="soft"><feGaussianBlur stdDeviation="0.6"/></filter></defs>
   <g ${clip ? 'clip-path="url(#half)"' : ''}>
-    <ellipse cx="${cx + 4}" cy="${cy + 14}" rx="96" ry="92" fill="#2a0c06" opacity=".45" filter="url(#sh)"/>
-    <rect x="${cx - 52}" y="${cy + 70}" width="22" height="48" rx="11" fill="url(#drip)"/>
-    <ellipse cx="${cx - 41}" cy="${cy + 116}" rx="11" ry="5" fill="#6a1612"/>
-    <rect x="${cx + 26}" y="${cy + 74}" width="18" height="30" rx="9" fill="url(#drip)"/>
-    <ellipse cx="${cx + 35}" cy="${cy + 102}" rx="9" ry="4" fill="#6a1612"/>
-    <path d="${poly(blob)}" fill="url(#wax)" stroke="#5e1410" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="${poly(blob)}" fill="none" stroke="#e06a60" stroke-opacity=".35" stroke-width="2" transform="translate(-1.5,-1.5)" filter="url(#soft)"/>
-    <path d="${poly(oct)}" fill="url(#press)" stroke="#5e1410" stroke-opacity=".85" stroke-width="3" stroke-linejoin="round"/>
-    <path d="${poly(oct)}" fill="none" stroke="#d65a51" stroke-opacity=".45" stroke-width="2" transform="translate(1.5,2)" stroke-linejoin="round"/>
-    <path d="${rune}" fill="none" stroke="#d65a51" stroke-opacity=".45" stroke-width="7" stroke-linecap="square" transform="translate(1.5,2)"/>
-    <path d="${rune}" fill="none" stroke="#561009" stroke-width="7" stroke-linecap="square"/>
+    <ellipse cx="${cx + 4}" cy="${cy + 14}" rx="96" ry="92" fill="${s.shadow}" opacity=".45" filter="url(#sh)"/>
+    ${drips}
+    <path d="${blob}" fill="url(#wax)" stroke="${s.edge}" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="${blob}" fill="none" stroke="${s.light}" stroke-opacity=".35" stroke-width="2" transform="translate(-1.5,-1.5)" filter="url(#soft)"/>
+    ${frameSvg(s, cx, cy)}
+    ${markSvg(s, cx, cy)}
   </g></svg>`;
 }
 
-// the crack across the seal (top a little left of the middle, down to the right), the same for both halves
+// the crack across the seal (top a little left of the middle, down to the right), the same for both halves and every seal
 function crack() {
   seed = 31;
   const pts = [];
@@ -109,22 +220,18 @@ function half(left) {
   return poly(pts);
 }
 
+// the open sheet, with no wax on it: the bits of its seal left on it are their own layer (bits), of the seal's colour
 function paper() {
   const W = 840, H = 1120, fold = 446;
   seed = 5;
   const pts = edge(4, 10, W - 6, 6, 34, 4.5, 2).concat(edge(W - 6, 6, W - 2, H - 12, 30, 2.4, 1.4), edge(W - 2, H - 12, 6, H - 6, 34, 4.5, 2), edge(6, H - 6, 4, 10, 30, 2.4, 1.4));
   pts.unshift([4, 10]);
   const shape = poly(pts);
-  seed = 41;
-  const bit = [];
-  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.4, r = 30 + rnd() * 16; bit.push([380 + Math.cos(a) * r * 1.15, fold + Math.sin(a) * r * 0.85]); }
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${grain}
   <radialGradient id="g" cx="40%" cy="22%" r="95%"><stop offset="0" stop-color="#e8cc94"/><stop offset=".42" stop-color="#d6b17a"/><stop offset=".78" stop-color="#c49e68"/><stop offset="1" stop-color="#9e7a48"/></radialGradient>
   <radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset=".6" stop-color="#5a3a18" stop-opacity="0"/><stop offset="1" stop-color="#5a3a18" stop-opacity=".36"/></radialGradient>
   <linearGradient id="foldsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3a18" stop-opacity="0"/><stop offset=".5" stop-color="#5a3a18" stop-opacity=".16"/><stop offset=".5" stop-color="#fff0c8" stop-opacity=".12"/><stop offset="1" stop-color="#fff0c8" stop-opacity="0"/></linearGradient>
-  <radialGradient id="wax" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#c8463e"/><stop offset="1" stop-color="#8e2420"/></radialGradient>
   <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
-  <filter id="drop" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="#3a1408" flood-opacity=".45"/></filter>
   <clipPath id="c"><path d="${shape}"/></clipPath></defs>
   <g clip-path="url(#c)">
     <rect width="${W}" height="${H}" fill="url(#g)"/>
@@ -134,18 +241,33 @@ function paper() {
     <rect x="0" y="${fold - 26}" width="${W}" height="52" fill="url(#foldsh)"/>
     <line x1="0" y1="${fold}" x2="${W}" y2="${fold}" stroke="#8a6a3c" stroke-opacity=".75" stroke-width="2.4" filter="url(#soft)"/>
     <line x1="0" y1="${fold + 3}" x2="${W}" y2="${fold + 3}" stroke="#f4dfb0" stroke-opacity=".5" stroke-width="1.6" filter="url(#soft)"/>
-    <g filter="url(#drop)">
-      <path d="${poly(bit)}" fill="url(#wax)" stroke="#6e1814" stroke-width="1"/>
-      <rect x="436" y="${fold + 2}" width="15" height="40" rx="2" fill="#a8322c"/>
-    </g>
   </g></svg>`;
 }
 
+// the bits of the seal left on the open sheet (as the design has them, at its fold), of this sender's wax: only the sheet's pixels round them —
+// x BX..BX+BW, y BY..BY+BH from its top (RavenBookLetter: BitsX, BitsY, BitsW, BitsH — the same numbers), with room for their shadow
+const BX = 320, BY = 396, BW = 144, BH = 104;
+function bits(who) {
+  const s = SEALS[who] || SEALS.post, fold = 446;
+  seed = 41;
+  const bit = [];
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.4, r = 30 + rnd() * 16; bit.push([380 + Math.cos(a) * r * 1.15, fold + Math.sin(a) * r * 0.85]); }
+  return `<svg width="${BW}" height="${BH}" viewBox="${BX} ${BY} ${BW} ${BH}"><defs>
+  <radialGradient id="wax" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="${s.wax[0]}"/><stop offset="1" stop-color="${s.wax[1]}"/></radialGradient>
+  <filter id="drop" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="#3a1408" flood-opacity=".45"/></filter></defs>
+  <g filter="url(#drop)">
+    <path d="${poly(bit)}" fill="url(#wax)" stroke="${s.edge}" stroke-width="1"/>
+    <rect x="436" y="${fold + 2}" width="15" height="40" rx="2" fill="${s.wax[1]}"/>
+  </g></svg>`;
+}
+
+const who = new URLSearchParams(location.search).get('who') || 'post';
 const out = document.getElementById('out');
 if (part === 'envelope') out.innerHTML = envelope();
-else if (part === 'seal') out.innerHTML = sealSvg(null);
-else if (part === 'seal_l') out.innerHTML = sealSvg(half(true));
-else if (part === 'seal_r') out.innerHTML = sealSvg(half(false));
+else if (part === 'seal') out.innerHTML = sealSvg(null, who);
+else if (part === 'seal_l') out.innerHTML = sealSvg(half(true), who);
+else if (part === 'seal_r') out.innerHTML = sealSvg(half(false), who);
+else if (part === 'bits') out.innerHTML = bits(who);
 else out.innerHTML = paper();
 </script>
 </body>

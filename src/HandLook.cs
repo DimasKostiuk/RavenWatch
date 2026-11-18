@@ -7,7 +7,7 @@ namespace HuginWhispers
     // A thing's look for a hand — never the thing itself (nothing of it lives, falls, is picked up or saved):
     //   Grip(item)        what the game itself puts in a hand when the item is equipped (its «attach» child and its
     //                     «equipoffset», VisEquipment's way): a shield sits on the forearm, a sword in the fist
-    //   Copy(item, size)  its meshes only, centred, no bigger than size m (0 — as it is): for things never held in the
+    //   Copy(item, size)  its meshes only, centred (own: at the item's own origin), no bigger than size m (0 — as it is): for things never held in the
     //                     game (a letter, a charm, a bite of food), and for a thing a clip moves (shadow: it casts one)
     //   Make(item, size)  the game's grip when it has one (and no size is asked), else the copy
     // Used by a person at a meal (NpcEat) and the story's props (StoryProps).
@@ -42,7 +42,7 @@ namespace HuginWhispers
             return top;
         }
 
-        internal static GameObject Copy(string item, float size, bool shadow = false)
+        internal static GameObject Copy(string item, float size, bool shadow = false, bool own = false) // (own: at the item's own origin, not centred — a thing whose model has its grip there: NpcTool)
         {
             GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(item) : null;
             if (prefab == null) return null;
@@ -80,7 +80,7 @@ namespace HuginWhispers
             GameObject top = new GameObject("RavenWatch_handLook");
             root.transform.SetParent(top.transform, false);
             root.transform.localScale = Vector3.one * s;
-            root.transform.localPosition = -b.center * s;
+            root.transform.localPosition = own ? Vector3.zero : -b.center * s;
             return top;
         }
     }

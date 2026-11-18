@@ -42,6 +42,7 @@ namespace HuginWhispers
             internal GameObject Dressed; // the prefab its look was put on
             internal bool Gear;         // a thing for a raven (use: gear)
             internal bool IconDone;
+            internal GameObject Grow, GrowDressed; // «grows:»: the plant picked by hand (MakeGrow), and the one its look was put on
         }
 
         private static readonly List<Def> Defs = new List<Def>();
@@ -55,6 +56,7 @@ namespace HuginWhispers
             if (_loaded) return;
             _loaded = true;
             Defs.Clear();
+            _story = null; // (the story's things read anew with them)
             List<WsModel> models = new List<WsModel>();
             try
             {
@@ -78,11 +80,94 @@ namespace HuginWhispers
                 string id = string.IsNullOrEmpty(m.Id) || m.Id == Perches.IdFor("") ? Perches.IdFor(m.Name) : m.Id;
                 d.Prefab = d.Replace ? m.Replaces : gear ? RavenGear.PrefabOf(RavenGear.KeyPrefix + id) : PrefabPrefix + id;
                 Def old;
-                if (by.TryGetValue(d.Prefab, out old)) Defs.Remove(old); // a file wins over the built-in one
+                if (by.TryGetValue(d.Prefab, out old))
+                {
+                    Defs.Remove(old); // a file wins over the built-in one — for its look: the mod's words and the story's rules stay the mod's (the user
+                    // 2026-11-15: a Workshop copy of the Watch's feather from 10-31 came with no «story:», an old note and Del in its menu)
+                    WsModel b = old.Model;
+                    if (b.File.StartsWith("RavenWatch.", StringComparison.Ordinal) && !m.File.StartsWith("RavenWatch.", StringComparison.Ordinal))
+                    {
+                        m.Name = b.Name; m.Note = b.Note; m.Story = b.Story; m.Pickup = b.Pickup;
+                        Log("«" + m.File + "»: its look over the built-in «" + id + "»; the name, note and story rules are the mod's");
+                    }
+                }
                 by[d.Prefab] = d;
                 Defs.Add(d);
             }
             if (Defs.Count > 0) Log(Defs.Count + " item model(s)" + (Perches.FromFiles ? " (with the Workshop's files)" : ""));
+        }
+
+        // ---------------------------------------------------------------- the story's things (a model's «story:» line: the user 2026-11-14)
+        // its words under «Сюжетний предмет» (for whom: «для Кетіля»; «yes» — none), null: not one of the story's. By its prefab, once a load.
+        // «story: для Кетіля until world ketil_south» (the user 2026-11-14: the necklace he left on his bed is a thing as any, to lay down or throw
+        // away): the story's only till those conditions of the world hold — then an item as any (no mark, dropped, hung on a stand, lost on death).
+        // Asked of the story (StoryOver: StoryModules) at most once an OverEvery s an item, its slot drawn each frame
+        private static Dictionary<string, string> _story, _until;
+        internal static Func<string, bool> StoryOver; // (conditions of the world → they hold; a build with no story: none, never over)
+        internal static float OverEvery = 1f;
+        private static readonly Dictionary<string, bool> _over = new Dictionary<string, bool>();
+        private static float _overAt;
+        internal static string StoryOf(ItemDrop.ItemData it)
+        {
+            if (it == null || it.m_dropPrefab == null) return null;
+            if (_story == null)
+            {
+                Load();
+                _story = new Dictionary<string, string>();
+                _until = new Dictionary<string, string>();
+                foreach (Def d in Defs)
+                {
+                    if (d.Replace || string.IsNullOrEmpty(d.Model.Story)) continue;
+                    string s0 = " " + d.Model.Story.Trim();
+                    int u = s0.IndexOf(" until ", StringComparison.Ordinal);
+                    if (u >= 0) { _until[d.Prefab] = s0.Substring(u + 7).Trim(); s0 = s0.Substring(0, u); }
+                    s0 = s0.Trim();
+                    _story[d.Prefab] = s0 == "yes" ? "" : s0;
+                }
+            }
+            string s, until;
+            string prefab = it.m_dropPrefab.name;
+            if (!_story.TryGetValue(prefab, out s)) return null;
+            return _until.TryGetValue(prefab, out until) && Over(prefab, until) ? null : s;
+        }
+        private static bool Over(string prefab, string until)
+        {
+            if (Time.time >= _overAt) { _over.Clear(); _overAt = Time.time + OverEvery; }
+            bool over;
+            if (!_over.TryGetValue(prefab, out over)) _over[prefab] = over = StoryOver != null && StoryOver(until);
+            return over;
+        }
+
+        // its mark (ItemMarks): a gold sign in the slot's corner, a gold line in the tooltip; it stays with you (death, a drop)
+        internal static void StoryMarks()
+        {
+            ItemMarks.Kinds.Add(new ItemMarks.Kind
+            {
+                Name = "story",
+                Icon = it => StoryOf(it) != null ? StorySign() : null,
+                Line = it => { string s = StoryOf(it); return s == null ? null : "<color=#E8C04A>" + Lang.T("Сюжетний предмет") + (s.Length > 0 ? " · " + Lang.T(s) : "") + "</color>"; }
+            });
+            ItemMarks.Keeps.Add(it => StoryOf(it) != null ? Lang.T("Це сюжетна річ: її не викинути.") : null);
+        }
+
+        // the sign: a small gold lozenge with a dark edge, drawn once (no picture of the game's or another's)
+        private static Sprite _sign;
+        private static Sprite StorySign()
+        {
+            if (_sign != null) return _sign;
+            const int n = 32;
+            Texture2D tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            Color gold = new Color(0.91f, 0.75f, 0.29f, 1f), edge = new Color(0.16f, 0.11f, 0.04f, 1f), none = new Color(0f, 0f, 0f, 0f);
+            float c = (n - 1) / 2f;
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float d = Mathf.Abs(x - c) + Mathf.Abs(y - c) * 1.25f; // (a lozenge, a little taller than wide)
+                    tex.SetPixel(x, y, d <= c - 4f ? gold : d <= c - 1f ? edge : none);
+                }
+            tex.Apply();
+            _sign = Sprite.Create(tex, new Rect(0f, 0f, n, n), new Vector2(0.5f, 0.5f));
+            return _sign;
         }
 
         // the model an item of ours is made from, by its prefab (StoryProps reads a held thing's own lines from it: hang:, lies:, falls:); null: not ours
@@ -120,6 +205,11 @@ namespace HuginWhispers
             sh.m_weight = m.Weight > 0f ? m.Weight : 0.5f;
             sh.m_value = 0;
             sh.m_teleportable = true;
+            drop.m_autoPickup = m.Pickup != "hand"; // («pickup: hand»: taken only by E — the prefab's own, so every game's copy: Player.AutoPickup asks it)
+            // a thing of the story («story:») never times out on the ground: the game's ItemDrop.TimedDestruction takes a dropped thing an hour
+            // after it fell, outside a base — a scroll half left by Torvald's stash or the crypt, never picked up, was gone and its stage waited
+            // for ever. The prefab's own, so every copy, and one loaded after a long time away too
+            if (!string.IsNullOrEmpty(m.Story)) drop.m_autoDestroy = false;
             sh.m_questItem = false;
             sh.m_consumeStatusEffect = null;
             // the source's own glow and sparks (the thunderstone's) are not this item's
@@ -226,7 +316,78 @@ namespace HuginWhispers
                 if (d.Replace) continue;
                 GameObject g = Make(d, n => scene.m_prefabs.Find(x => x != null && x.name == n));
                 if (g != null && !scene.m_prefabs.Contains(g)) scene.m_prefabs.Add(g);
+                GameObject grow = g != null && d.Model.Grows > 0f ? MakeGrow(d, scene) : null;
+                if (grow != null && !scene.m_prefabs.Contains(grow)) scene.m_prefabs.Add(grow);
             }
+        }
+
+        // ---------------------------------------------------------------- a plant picked by hand («grows: <m>», the user 2026-11-14: the flower Heid asks for,
+        // ten of them set at the black forest's edge — StoryFound «plant»). The game's own thistle (GrowFrom: its picking, its sound, its colliders, the
+        // picked state everyone sees) with its look hidden and the model in its place, standing on its foot (the model's lowest point at the prefab's
+        // root, as tall as «grows:» says); it gives this item, one, and never grows again (a story's plant: so many in the world, no more). Nothing
+        // hidden when picked and no growing back: the game takes a picked one out of the world (Pickable.SetPicked) — no hidden bush left behind for
+        // ever, and a replant (StoryFound) counts only what stands
+        internal const string GrowPrefix = "RavenWatch_grow_";
+        internal static string GrowFrom = "Pickable_Thistle";
+        internal static string GrowOf(string itemPrefab) { return itemPrefab.StartsWith(PrefabPrefix, StringComparison.Ordinal) ? GrowPrefix + itemPrefab.Substring(PrefabPrefix.Length) : null; }
+        private static GameObject MakeGrow(Def d, ZNetScene scene)
+        {
+            if (d.Grow != null) return d.Grow;
+            GameObject source = scene.m_prefabs.Find(x => x != null && x.name == GrowFrom);
+            if (source == null || source.GetComponent<Pickable>() == null) { Log(d.Model.Name + ": no «" + GrowFrom + "» to grow from"); return null; }
+            GameObject go = UnityEngine.Object.Instantiate(source, _holder.transform, false);
+            go.name = GrowOf(d.Prefab);
+            Pickable pk = go.GetComponent<Pickable>();
+            pk.m_itemPrefab = d.Built;
+            pk.m_amount = 1;
+            pk.m_respawnTimeMinutes = 0f;
+            pk.m_hideWhenPicked = null; // (picked: gone from the world, not a hidden bush kept for ever — its look sits on the root: DressGrow)
+            pk.m_extraDrops = new DropTable();
+            pk.m_overrideName = d.Built.GetComponent<ItemDrop>().m_itemData.m_shared.m_name; // (what the hover says: this item's name, never the thistle's own)
+            d.Grow = go;
+            return go;
+        }
+
+        // its look: the game's thistle hidden, the model on the root, its foot there
+        private static void DressGrow(GameObject g, WsModel m)
+        {
+            Transform under = g.transform;
+            Transform old = under.Find(LookName);
+            if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            foreach (Renderer r in g.GetComponentsInChildren<Renderer>(true)) if (!(r is ParticleSystemRenderer)) r.enabled = false; // heavy: once a plant's prefab, as the world loads (DressAll)
+            foreach (LODGroup lg in g.GetComponentsInChildren<LODGroup>(true)) lg.enabled = false; // heavy: the same once
+            GameObject look = new GameObject(LookName);
+            look.transform.SetParent(under, false);
+            foreach (WsPart p in m.Parts) if (!WsFiles.Special(p.Src)) Perches.Part(look.transform, p, false);
+            foreach (Transform t in look.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = under.gameObject.layer; // heavy: the same once
+            Bounds b;
+            if (!BoundsIn(look, g.transform, out b) || b.size.y <= 0.001f) return;
+            float k = m.Grows / b.size.y;
+            look.transform.localScale = Vector3.one * k;
+            if (!BoundsIn(look, g.transform, out b)) return;
+            look.transform.position += g.transform.TransformVector(new Vector3(-b.center.x, -b.min.y, -b.center.z)); // its foot on the root: the plant stands on the ground it is set on
+            if (_told.Add(m.Name + " grows")) Log(m.Name + ": grows " + b.size.y.ToString("0.00") + " m tall, " + b.size.x.ToString("0.00") + " × " + b.size.z.ToString("0.00") + " m across");
+        }
+
+        // where a look's meshes are, in the frame of «frame» (a prefab is not in the world: its renderers' bounds are empty)
+        private static bool BoundsIn(GameObject look, Transform frame, out Bounds b)
+        {
+            b = new Bounds();
+            bool any = false;
+            Matrix4x4 to = frame.worldToLocalMatrix;
+            foreach (MeshFilter mf in look.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null) continue;
+                Bounds mb = mf.sharedMesh.bounds;
+                Matrix4x4 k = to * mf.transform.localToWorldMatrix;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 c = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                    Vector3 p = k.MultiplyPoint3x4(c);
+                    if (any) b.Encapsulate(p); else { b = new Bounds(p, Vector3.zero); any = true; }
+                }
+            }
+            return any;
         }
 
         // ---------------------------------------------------------------- the look
@@ -254,6 +415,12 @@ namespace HuginWhispers
                 try { Sprite s = d.Dressed == g ? IconPhotos.Get(IconPhotos.KeyOf(d.Model)) : null; if (s != null && g.GetComponent<ItemDrop>() != null) RavenItem.UseIcon(g, s); }
                 catch (Exception e) { Log("icon " + d.Model.Name + ": " + e.Message); }
             }
+            foreach (Def d in Defs)
+            {
+                if (d.Grow == null || d.Grow == d.GrowDressed) continue;
+                try { DressGrow(d.Grow, d.Model); d.GrowDressed = d.Grow; }
+                catch (Exception e) { Log(d.Model.Name + " (grows): " + e.Message); }
+            }
         }
 
         // an item holding its own copy of the look (made in the world, or copied by another mod) shows the prefab's icon
@@ -276,32 +443,26 @@ namespace HuginWhispers
             foreach (LODGroup lg in g.GetComponentsInChildren<LODGroup>(true)) lg.enabled = false;
             GameObject look = new GameObject(LookName);
             look.transform.SetParent(g.transform, false);
-            Glint(g);
+            if (!string.IsNullOrEmpty(m.Story) && g.transform.Find(GlintName) == null) StoryGlint(g); // (a thing of the story lying about: the story pieces' stronger glint — the user 2026-11-14: the feather «лежить та підсвічується»)
+            else Glint(g);
             foreach (WsPart p in m.Parts) if (!WsFiles.Special(p.Src)) Perches.Part(look.transform, p, false);
             foreach (Transform t in look.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = g.layer;
             // where the model is, in the item's own frame (from the meshes: the prefab is not in the world, its bounds are empty)
-            Bounds b = new Bounds();
-            bool any = false;
-            Matrix4x4 toItem = g.transform.worldToLocalMatrix;
-            foreach (MeshFilter mf in look.GetComponentsInChildren<MeshFilter>(true))
-            {
-                if (mf.sharedMesh == null) continue;
-                Bounds mb = mf.sharedMesh.bounds;
-                Matrix4x4 k = toItem * mf.transform.localToWorldMatrix;
-                for (int i = 0; i < 8; i++)
-                {
-                    Vector3 c = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
-                    Vector3 p = k.MultiplyPoint3x4(c);
-                    if (any) b.Encapsulate(p); else { b = new Bounds(p, Vector3.zero); any = true; }
-                }
-            }
-            if (!any) return;
+            Bounds b;
+            if (!BoundsIn(look, g.transform, out b)) return;
             look.transform.localPosition -= b.center; // its middle where the item's middle is
             foreach (Collider c in g.GetComponents<Collider>()) if (!c.isTrigger) UnityEngine.Object.DestroyImmediate(c);
             BoxCollider box = g.AddComponent<BoxCollider>();
             box.center = Vector3.zero;
-            box.size = new Vector3(Mathf.Max(0.05f, b.size.x), Mathf.Max(0.05f, b.size.y), Mathf.Max(0.05f, b.size.z));
+            box.size = new Vector3(Mathf.Max(MinBox, b.size.x), Mathf.Max(MinBox, b.size.y), Mathf.Max(MinBox, b.size.z));
+            // a thin thing thrown from the hand went through the floor in one step of the physics (the user 2026-11-14: Ketil's necklace lay under the
+            // stones): never thinner than MinBox, and its fall checked all the way, not step by step (a few items lying about: cheap)
+            Rigidbody rb = g.GetComponent<Rigidbody>();
+            if (rb != null) rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; // (the one mode a kinematic body takes too: a copy another game owns)
+            if (_told.Add(m.Name)) Log(m.Name + ": a box " + box.size.x.ToString("0.00") + " × " + box.size.y.ToString("0.00") + " × " + box.size.z.ToString("0.00") + " m (the model " + b.size.x.ToString("0.00") + " × " + b.size.y.ToString("0.00") + " × " + b.size.z.ToString("0.00") + ")");
         }
+        internal static float MinBox = 0.12f; // m: the thinnest side of a lying thing's box (the model's own may be a few mm: a necklace, a page)
+        private static readonly HashSet<string> _told = new HashSet<string>(); // (each model's box said once a session)
 
         // Lying on the ground, ours sparkle a little — gold specks rising, a faint warm light close by — or a thing in
         // the grass is hard to find (the thunderstone's own sparks are taken off them in Make). Only an item in the
@@ -315,7 +476,7 @@ namespace HuginWhispers
             Glint(g, 1f);
         }
 
-        // a story thing that must be found (LocTouch: the Hall's old letter, Munin's shield): the one look for all of them. StoryMore: × how many specks, StoryRise: × how high they go,
+        // a story thing that must be found (LocTouch: the Hall's old letter, Munin's shield; an item of the story lying on the ground — Dress): the one look for all of them. StoryMore: × how many specks, StoryRise: × how high they go,
         // StoryBig: × each speck's size (the user 2026-11-06: Munin's shield lost in the grass — the specks must rise over it, ~1.5 m, and be seen)
         internal static float StorySize = 3f, StoryMore = 1.6f, StoryRise = 2.2f, StoryBig = 2f;
         internal static GameObject StoryGlint(GameObject g) { return Glint(g, StorySize, StoryMore, StoryRise, StoryBig); }

@@ -1,0 +1,90 @@
+clip dv_fire_laugh_l
+length 2.6
+tone merry
+loop 0
+pivot 0.75
+curve ease
+fade 0.4 0.6
+mode Spine1 body
+mode Spine2 body
+say двергр регоче, відкинувшись: корпус назад, голова вгору, плечі здригаються тричі (жест слова {~laugh}, біля сусіда)
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 2.6 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do dv_fire_laugh_l "<t0>-<t1> reach right <x y z>; …".
+# scripted: @LeftFoot @RightFoot @Look @Look.w Spine1 Spine2 move
+# do 0.25-0.8 lean back 12
+# do 0.3-0.8 look up 18
+# do 0.8-1.0 sink 0.03
+# do 1.0-1.2 sink 0
+# do 1.2-1.4 sink 0.03
+# do 1.4-1.6 sink 0
+# do 1.6-1.8 sink 0.025
+# do 1.8-2.0 sink 0
+# do 0.85-1.9 nod 6 3
+# do 1.9-2.5 lean none
+# do 1.9-2.5 look ahead
+
+0 @LeftFoot -0.06 0.13 0.22
+
+0 @RightFoot 0.1 0.1 -0.18
+
+0 @Look 0 1.16 2
+0.3 @Look 0 1.778 1.902
+0.85 @Look 0 1.778 1.902
+0.99 @Look 0 1.438 1.98
+1.13 @Look 0 1.828 1.885
+1.34 @Look 0 1.542 1.963
+1.48 @Look 0 1.813 1.89
+1.69 @Look 0 1.613 1.948
+1.83 @Look 0 1.802 1.894
+1.9 @Look 0 1.778 1.902
+2.5 @Look 0 1.778 1.902
+
+0 @Look.w 0 0 0
+0.3 @Look.w 0 0 0
+0.7 @Look.w 0.6 0 0
+0.85 @Look.w 0.6 0 0
+1.9 @Look.w 0.6 0 0
+2.5 @Look.w 0 0 0
+
+0 Spine1 0 0 0
+0.25 Spine1 0 0 0
+0.3 Spine1 -0.2 0 0
+0.35 Spine1 -0.8 0 0
+0.45 Spine1 -2.8 0 0
+0.65 Spine1 -7.5 0 0
+0.75 Spine1 -9 0 0
+0.8 Spine1 -9.2 0 0
+1.9 Spine1 -9.2 0 0
+1.95 Spine1 -9 0 0
+2.05 Spine1 -7.7 0 0
+2.35 Spine1 -1.4 0 0
+2.45 Spine1 -0.2 0 0
+2.5 Spine1 0 0 0
+2.6 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.25 Spine2 0 0 0
+0.3 Spine2 -0.3 0 0
+0.35 Spine2 -1 0 0
+0.45 Spine2 -3.4 0 0
+0.65 Spine2 -9.2 0 0
+0.75 Spine2 -11 0 0
+0.8 Spine2 -11.2 0 0
+1.9 Spine2 -11.2 0 0
+1.95 Spine2 -11 0 0
+2.05 Spine2 -9.5 0 0
+2.35 Spine2 -1.8 0 0
+2.45 Spine2 -0.2 0 0
+2.5 Spine2 0 0 0
+2.6 Spine2 0 0 0
+
+0 move 0 0 0
+0.8 move 0 0 0
+1 move 0 -0.03 0
+1.2 move 0 0 0
+1.4 move 0 -0.03 0
+1.6 move 0 0 0
+1.8 move 0 -0.025 0
+2 move 0 0 0
+2.6 move 0 0 0

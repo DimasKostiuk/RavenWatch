@@ -68,13 +68,15 @@ namespace HuginWhispers
             List<RavenBook.TalkRow> rows = new List<RavenBook.TalkRow>();
             List<Answer> ans = new List<Answer>();
             foreach (Answer a in start.Answers) if (Essential(a) && a.To != "end") AddRow(rows, ans, a, p, 2);
+            Node small; // (what it must do with you that stands under «Поговорімо.» — letting it go: offered at the door all the same)
+            if (_talk.Nodes.TryGetValue("talk", out small)) foreach (Answer a in small.Answers) if (Essential(a) && a.To != "end") AddRow(rows, ans, a, p, 2);
             if (!_sorryTried && why != "walked")
             {
                 Answer sorry = new Answer { Text = Lang.T("Вибач. Я не хоті{в|ла} тебе образити."), To = "start" };
                 sorry.Acts.Add("doorsorry");
                 ans.Add(sorry); rows.Add(new RavenBook.TalkRow { Text = Grammar.Fix(sorry.Text, p), Ring = 2 });
             }
-            Answer bye = new Answer { Text = Lang.T("Бувай."), To = "end" };
+            Answer bye = new Answer { Text = Bye(With, p), To = "end" };
             ans.Add(bye); rows.Add(new RavenBook.TalkRow { Text = bye.Text, Ring = 2 });
             List<Answer> keep = ans; List<RavenBook.TalkRow> keepRows = rows;
             RavenBook.ShowTalk(With.Name, RavenBook.Says(NpcBody.Spoken(With, says)), rows, i => Pick(keep, keepRows, i, DoorPlace), Close, rel, null, false, null);

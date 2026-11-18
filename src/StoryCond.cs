@@ -37,6 +37,17 @@ namespace HuginWhispers
             public Func<Player, string[], bool> Test;  // holds now?
             public Func<Player, string[], string> Why; // may be null: what keeps it from holding now (a scene's wait says it)
             public bool World;                         // asks only the world, never a player: may be asked where no player is (the server's rules of a place)
+            public Func<string[], bool> WorldIf;       // or only with these words: «reached ch1 x» of a quest of the server is the world's (StoryTrackConds)
+            // What stands behind it, for a quest walked with no game (tools/quest_dry.js reads these lines; in the game only the author's jump does — StoryQuests.Rebuild). A kind with
+            // none is «not judged» there, said aloud — so a new kind a quest may wait on gets its line here. {1}, {2}: the condition's own words.
+            //   free                    the player, or time, brings it about whenever
+            //   moment                  holds only for a moment after something done
+            //   at {1}                  free, at a place named by that word (a place of the player's own, «me.x», must have been given: «spot x»)
+            //   after <fact>            comes by itself once that fact of the character stands («since» after «stamp»)
+            //   me <fact> [: <how>]     a lasting fact of the character; world <fact> [: <how>] — of the world. With «: how» something outside the
+            //                           story's data makes it (the player, the game), in words; with none only an action of the data does (StoryActions' Dry)
+            //   step · quest · lived · reached    asked of the quests themselves
+            public string Dry;
         }
 
         private static readonly string[] BossNames = { "eikthyr", "elder", "bonemass", "moder", "yagluth", "queen", "fader" };
@@ -44,34 +55,35 @@ namespace HuginWhispers
         // the kinds, by the word
         private static readonly Dictionary<string, Kind> Kinds = new Dictionary<string, Kind>
         {
-            { "boss", new Kind { Usage = "boss eikthyr|elder|bonemass|moder|yagluth|queen|fader", Min = 1,
+            { "boss", new Kind { Dry = "world boss:{1} : the players kill it", Usage = "boss eikthyr|elder|bonemass|moder|yagluth|queen|fader", Min = 1,
                 Check = a => BossKey(a[1]) == null ? "нема боса «" + a[1] + "»" : null,
                 Test = (p, a) => Stage.Has(p, BossKey(a[1])) } },
-            { "key", new Kind { Usage = "key <глобальний ключ>", Min = 1,
+            { "key", new Kind { Dry = "world key:{1} : the game's own key", Usage = "key <глобальний ключ>", Min = 1,
                 Test = (p, a) => Stage.Has(p, a[1]) } },
-            { "stage", new Kind { Usage = "stage [>=|<|…] N   (скільки босів переможено, 0–7)", Min = 1,
+            { "stage", new Kind { Dry = "free", Usage = "stage [>=|<|…] N   (скільки босів переможено, 0–7)", Min = 1,
                 Check = a => CmpCheck(a, 1), Test = (p, a) => Compare(Stage.Of(p), a, 1) } },
-            { "flag", new Kind { Usage = "flag <назва>", Min = 1,
+            { "flag", new Kind { Dry = "me flag:{1}", Usage = "flag <назва>", Min = 1,
                 Check = a => Story.GoodName(a[1]) ? null : "погана назва прапорця «" + a[1] + "»",
                 Test = (p, a) => Story.Flag(p, a[1]) } },
-            { "var", new Kind { Usage = "var <назва> [>=|<|…] N", Min = 2,
+            { "var", new Kind { Dry = "me var:{1}", Usage = "var <назва> [>=|<|…] N", Min = 2,
                 Check = a => !Story.GoodName(a[1]) ? "погана назва числа «" + a[1] + "»" : CmpCheck(a, 2),
                 Test = (p, a) => Compare(Story.Var(p, a[1]), a, 2) } },
-            { "trust", new Kind { Usage = "trust [>=|<|…] N   (найвища довіра ворона, що з тобою)", Min = 1,
+            { "trust", new Kind { Dry = "free", Usage = "trust [>=|<|…] N   (найвища довіра ворона, що з тобою)", Min = 1,
                 Check = a => CmpCheck(a, 1), Test = (p, a) => Compare(TrustNow(p), a, 1) } },
-            { "raven", new Kind { Usage = "raven hugin|munin|both|any   (сидить на плечі)", Min = 1,
-                Check = a => Array.IndexOf(new[] { "hugin", "munin", "both", "any" }, a[1]) < 0 ? "raven: hugin | munin | both | any" : null,
+            { "raven", new Kind { Dry = "free", Usage = "raven hugin|munin|both|any [awake]   (сидить на плечі; awake — і розбуджений, не спить: Trust.Active)", Min = 1,
+                Check = a => Array.IndexOf(new[] { "hugin", "munin", "both", "any" }, a[1]) < 0 ? "raven: hugin | munin | both | any" : a.Length > 2 && a[2] != "awake" ? "raven <який> [awake]" : null,
                 Test = (p, a) =>
                 {
-                    bool h = Shoulder.Present(p, false), m = Shoulder.Present(p, true);
+                    bool aw = a.Length > 2; // («awake»: the Watch's runes are read by a raven awake — a sleeping one on the shoulder reads nothing: the user 2026-11-15)
+                    bool h = Shoulder.Present(p, false) && (!aw || Trust.Active(Trust.Worn(false))), m = Shoulder.Present(p, true) && (!aw || Trust.Active(Trust.Worn(true)));
                     return a[1] == "hugin" ? h : a[1] == "munin" ? m : a[1] == "both" ? h && m : h || m;
                 } } },
-            { "biome", new Kind { Usage = "biome Meadows|BlackForest|Swamp|Mountain|Plains|Mistlands|AshLands|DeepNorth|Ocean", Min = 1,
+            { "biome", new Kind { Dry = "free", Usage = "biome Meadows|BlackForest|Swamp|Mountain|Plains|Mistlands|AshLands|DeepNorth|Ocean", Min = 1,
                 Check = a => Enum.IsDefined(typeof(Heightmap.Biome), a[1]) ? null : "нема біому «" + a[1] + "»",
                 Test = (p, a) => string.Equals(p.GetCurrentBiome().ToString(), a[1], StringComparison.OrdinalIgnoreCase) } },
-            { "night", new Kind { Usage = "night", Test = (p, a) => EnvMan.instance != null && EnvMan.IsNight() } },
-            { "day", new Kind { Usage = "day", Test = (p, a) => EnvMan.instance != null && !EnvMan.IsNight() } },
-            { "item", new Kind { Usage = "item <Prefab> [N]   (стільки в торбі, без N: хоч один)", Min = 1,
+            { "night", new Kind { Dry = "free", Usage = "night", Test = (p, a) => EnvMan.instance != null && EnvMan.IsNight() } },
+            { "day", new Kind { Dry = "free", Usage = "day", Test = (p, a) => EnvMan.instance != null && !EnvMan.IsNight() } },
+            { "item", new Kind { Dry = "free", Usage = "item <Prefab> [N]   (стільки в торбі, без N: хоч один)", Min = 1,
                 Check = a => a.Length > 2 && Errands.I(a[2], -1) < 1 ? "item: кількість — число від 1" : null,
                 Test = (p, a) =>
                 {
@@ -79,7 +91,7 @@ namespace HuginWhispers
                     ItemDrop d = g != null ? g.GetComponent<ItemDrop>() : null;
                     return d != null && p.GetInventory().CountItems(d.m_itemData.m_shared.m_name) >= (a.Length > 2 ? Errands.I(a[2], 1) : 1);
                 } } },
-            { "errand", new Kind { Usage = "errand   (є доручення з гнізда)", Test = (p, a) => Errands.Of(p) != null } },
+            { "errand", new Kind { Dry = "free", Usage = "errand   (є доручення з гнізда)", Test = (p, a) => Errands.Of(p) != null } },
         };
 
         // another part adds its own kinds (NpcTalk: a person's hired / mine / resident / job)
@@ -100,7 +112,7 @@ namespace HuginWhispers
 #endif
             List<string> errs = new List<string>();
             c = Parse(text, errs);
-            if (world) foreach (Cond one in c) if (one.Kind != null && !one.Kind.World) errs.Add("«" + one.Text + "» питає гравця, а тут лише світ (world, wvar, gate, hearth, state, placed)");
+            if (world) foreach (Cond one in c) if (one.Kind != null && !one.Kind.World && !(one.Kind.WorldIf != null && one.Kind.WorldIf(one.A))) errs.Add("«" + one.Text + "» питає гравця, а тут лише світ (world, wvar, gate, hearth, state, placed; step, reached, quest — квесту сервера)");
             if (errs.Count > 0) { if (log != null) foreach (string e in errs) log(e); c = null; }
             _cached[text] = c;
             return c;

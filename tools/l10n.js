@@ -71,7 +71,22 @@ function asked() {
       if (m[1] === "P" || m[1] === "N" || m[1] === "Word") { let depth = 0; for (; i < text.length; i++) { const c = text[i]; if (c === "(") depth++; else if (c === ")") depth--; else if (c === "," && depth === 0) { i++; break; } } }
       while (/\s/.test(text[i])) i++;
       const line = text.slice(0, m.index).split("\n").length;
-      if (text[i] !== '"') continue; // a value made elsewhere (its texts are marked there: Lang.K / Lang.Keys)
+      if (text[i] !== '"') {
+        // a value made elsewhere (its texts are marked there: Lang.K / Lang.Keys) — but the branches of a choice right in it,
+        // «Lang.T(young ? "молодий|молода" : "старий|стара")», are its texts: a literal right after «?» or «:» of the argument
+        let d = 0, e = i, lastSig = "";
+        for (; e < text.length; e++) {
+          const c = text[e];
+          if (c === '"') {
+            let q = e + 1, b = ""; for (; q < text.length; q++) { if (text[q] === "\\") { b += text[q] + text[q + 1]; q++; continue; } if (text[q] === '"') break; b += text[q]; }
+            if ((lastSig === "?" || lastSig === ":") && cyr.test(b)) { const s = unC(b); if (!out.has(s)) out.set(s, []); out.get(s).push(f + ":" + line); if (m[1] === "F") formats.add(s); if (m[1] === "P" || m[1] === "N") plural.add(s); }
+            e = q; lastSig = '"'; continue;
+          }
+          if (c === "(") d++; else if (c === ")") { if (d === 0) break; d--; } else if (c === "," && d === 0) break;
+          if (!/\s/.test(c)) lastSig = c;
+        }
+        continue;
+      }
       let j = i + 1, body = "";
       for (; j < text.length; j++) { if (text[j] === "\\") { body += text[j] + text[j + 1]; j++; continue; } if (text[j] === '"') break; body += text[j]; }
       let k = j + 1; while (/\s/.test(text[k])) k++;
@@ -93,16 +108,19 @@ function asked() {
       for (const k of [plain, bare]) { if (!out.has(k)) out.set(k, []); out.get(k).push("Abilities.cs (Plain/Bare of «" + name + "»)"); }
     }
   }
-  // the built-in models' own words (assets/gear, perches, items: «name:» and «note:» lines), shown through Lang
+  // the built-in models' own words (assets/gear, perches, items: «name:», «note:» and «story:» lines), shown through Lang
   for (const sub of ["gear", "perches", "items", "story/perches", "story/items"]) {
     const d = path.join(root, "assets", sub);
     if (!fs.existsSync(d)) continue;
     for (const f of fs.readdirSync(d).filter(n => n.endsWith(".txt"))) {
       fs.readFileSync(path.join(d, f), "utf8").split(/\r?\n/).forEach((l, i) => {
-        const m = l.match(/^(name|note):\s*(.*\S)\s*$/);
+        const m = l.match(/^(name|note|story):\s*(.*\S)\s*$/);
         if (!m) return;
-        if (!out.has(m[2])) out.set(m[2], []);
-        out.get(m[2]).push("assets/" + sub + "/" + f + ":" + (i + 1));
+        // («story: для Кетіля until world x   # …»: the text is the words before «until» and the note — WsItems.StoryOf; «story: yes»: a word, not a text)
+        const text = m[1] === "story" ? m[2].replace(/\s+#.*$/, "").replace(/(^|\s+)until\s.*$/, "").trim() : m[2];
+        if (m[1] === "story" && (text === "yes" || text === "")) return;
+        if (!out.has(text)) out.set(text, []);
+        out.get(text).push("assets/" + sub + "/" + f + ":" + (i + 1));
       });
     }
   }
@@ -122,7 +140,7 @@ function asked() {
         if (kind === "quests") {
           const c = line.indexOf(":"); if (c <= 0) return;
           const key = line.slice(0, c).trim().toLowerCase(), val = line.slice(c + 1).trim();
-          if (key === "goal" || key === "name" || key === "saga") put(val, where);
+          if (key === "goal" || key === "more" || key === "name" || key === "saga") put(val, where);
           else if (key === "mark") { const m = val.split(/ +/); const r = parseInt(m[1], 10); put(r > 0 ? m.slice(2).join(" ") : m.slice(1).join(" "), where); }
           else if (key === "start" || key === "done") val.split(";").forEach(x => { x = x.trim(); if (x.startsWith("msg ")) put(rest(x, 1), where); });
           return;
@@ -131,9 +149,10 @@ function asked() {
         const w = line.split(/[ \t]+/);
         if (w[0] === "say") put(rest(line, 2), where);
         else if (w[0] === "msg" || w[0] === "sub") put(rest(line, 1), where);
-        else if (w[0] === "bird" && w[1] === "say") put(rest(line, 2), where);
-        else if (w[0] === "npc" && w[2] === "say") put(rest(line, 3), where);
+        else if ((w[0] === "bird" || w[0] === "player") && w[1] === "say") put(rest(line, 2), where);
+        else if (w[0] === "npc" && (w[2] === "say" || w[2] === "says")) put(rest(line, 3), where); // («says»: the same line, the scene going on)
         else if (w[0] === "do" && w[1] === "msg") put(rest(line, 2), where);
+        else if (w[0] === "letter") { const r = rest(line, 1), sep = r.indexOf("::"); if (sep > 0) { put(r.slice(0, sep).replace(/ seal \S+\s*$/, "").trim(), where); put(r.slice(sep + 2).trim(), where); } } // (a letter: who from — without «seal <id>» — and its words: StoryScenes «letter»)
       });
     }
   }
@@ -147,9 +166,29 @@ function asked() {
       const where = "assets/story/blueprints/locations.list.txt:" + (i + 1);
       let m;
       if ((m = /^(?:name|hearthshut):\s*(.+)$/.exec(line))) put(m[1], where);
+      else if ((m = /^(?:hearthwait|hearthgivewait|insideshut):\s*(.+)$/.exec(line))) { const v = m[1], sep = v.indexOf("::"); if (sep >= 0 && v.slice(sep + 2).trim()) put(v.slice(sep + 2).trim(), where); } // (what the hearth says while it waits for the story)
+      else if ((m = /^pool:\s*\S+\s+(.+)$/.exec(line))) put(m[1], where); // (a list of names: as many and in the same order in every language — storycheck)
       else if ((m = /^read:\s*\S+\s+(.+)$/.exec(line))) { const v = m[1], sep = v.indexOf("::"); put((sep >= 0 ? v.slice(sep + 2) : v).replace(/\\n/g, "\n"), where); } // (a written «\n» is a new line, as in the code's keys)
     });
   }
+  // a story person's greetings and the words it cuts into your talk with (assets/story/npc: «greet:», «interrupt:» lines, said through Lang.T — NpcTalk «{greet}»; a made one, «{@see_player}», has no text of its own).
+  // Missed till 2026-11-14: Ketil's greetings stood in no table and the build said nothing
+  const npcDir = path.join(root, "assets", "story", "npc");
+  if (fs.existsSync(npcDir)) for (const f of fs.readdirSync(npcDir).filter(n => n.endsWith(".txt")))
+    fs.readFileSync(path.join(npcDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      const m = /^(?:greet|interrupt|cry|raven_name):\s*(.+?)\s*$/.exec(raw.trim()); if (m) put(m[1], "assets/story/npc/" + f + ":" + (i + 1)); // (and the words it cuts into your talk with: NpcTalkCutIn.cs; its raven's name over its line in your two's talk: NpcRaven)
+    });
+  // a story person not met yet (assets/story/people, StoryStranger): its shown name after «stranger: … ::» and your ravens' lines of «strangersay:»
+  // («hugin <words> / munin <words>», each part's words through Lang.T)
+  const peopleDir = path.join(root, "assets", "story", "people");
+  if (fs.existsSync(peopleDir)) for (const f of fs.readdirSync(peopleDir).filter(n => n.endsWith(".txt")))
+    fs.readFileSync(path.join(peopleDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note); line = line.trim();
+      const where = "assets/story/people/" + f + ":" + (i + 1);
+      let m;
+      if ((m = /^stranger:\s*(.+)$/.exec(line))) { const sep = m[1].indexOf("::"); if (sep >= 0) put(m[1].slice(sep + 2).trim(), where); }
+      else if ((m = /^strangersay:\s*(.+)$/.exec(line))) for (const part of m[1].split("/")) { const t = part.trim(), sp = t.indexOf(" "); if (sp > 0) put(t.slice(sp + 1).trim(), where); }
+    });
   // the story's tales (assets/story/tales): what a witness and a hearer say
   const talesDir = path.join(root, "assets", "story", "tales");
   if (fs.existsSync(talesDir)) for (const f of fs.readdirSync(talesDir).filter(n => n.endsWith(".txt")))
@@ -157,28 +196,93 @@ function asked() {
       let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note); line = line.trim();
       const m = /^(saw|heard|hearsay|saga|rumor|as \w+):\s*(.+)$/.exec(line); if (m) put(m[2], "assets/story/tales/" + f + ":" + (i + 1));
     });
-  // the saga's chapters (assets/story/saga): their names
+  // the saga (assets/story/saga): a chapter's words, an entry's names and lines (after their «<conditions> :: »), a quote's caption
   const sagaDir = path.join(root, "assets", "story", "saga");
   if (fs.existsSync(sagaDir)) for (const f of fs.readdirSync(sagaDir).filter(n => n.endsWith(".txt")))
     fs.readFileSync(path.join(sagaDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
       let line = raw; const note = line.indexOf(" #"); if (note >= 0) line = line.slice(0, note); line = line.trim();
-      const m = /^name:\s*(.+)$/.exec(line); if (m) put(m[1], "assets/story/saga/" + f + ":" + (i + 1));
+      const m = /^(name|label|lands|epigraph|closing|about|line|answer):\s*(.+)$/.exec(line);
+      if (m) { const sep = m[2].indexOf(" :: "); put((sep >= 0 ? m[2].slice(sep + 4) : m[2]).trim(), "assets/story/saga/" + f + ":" + (i + 1)); }
+      const q = /^quote:\s*\S+\s+(.+)$/.exec(line); if (q) put(q[1].trim(), "assets/story/saga/" + f + ":" + (i + 1));
     });
-  // the story's talks (assets/story/talk): what a place says (its lines joined, as NpcTalk does) and each answer's words
-  const talkDir = path.join(root, "assets", "story", "talk");
-  if (fs.existsSync(talkDir)) for (const f of fs.readdirSync(talkDir).filter(n => n.endsWith(".txt"))) {
+  // a talk's texts, cut as NpcTalk.Parse cuts them: what a place says (all its lines joined, answers between or not, till the
+  // next «@» or «[»), each answer's words (every «a || b» its own text: NpcTalk.OneOf) and a raven's word in it
+  const talkTexts = (text, whereOf) => {
     let says = [], at = "";
     const end = () => { if (says.length) put(says.join("\n"), at); says = []; };
-    fs.readFileSync(path.join(talkDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
-      const line = raw.trim(), where = "assets/story/talk/" + f + ":" + (i + 1);
-      if (!line || line.startsWith("#") || line.startsWith("??")) return;
+    text.replace(/\r/g, "").split("\n").forEach((raw, i) => {
+      const line = raw.trim(), where = whereOf(i);
+      if (!line || line.startsWith("#") || line.startsWith("??") || line.startsWith("?-")) return; // («?-»: the end of a «through» question — NpcTalk.ParseEnd, no words)
       if (line.startsWith("[") || line.startsWith("@")) { end(); return; }
       if (line.startsWith("~")) { const c = line.indexOf(":"); if (c > 0) put(line.slice(c + 1).trim(), where); return; } // (a raven's word in a talk: its own text, never part of what the person says)
-      if (line.startsWith(">")) { end(); const a = line.indexOf("=>"), from = line.startsWith(">|") ? 2 : 1; put((a < 0 ? line.slice(from) : line.slice(from, a)).trim(), where); return; }
+      if (line.startsWith(">")) { const a = line.indexOf("=>"), from = line.startsWith(">|") ? 2 : 1; (a < 0 ? line.slice(from) : line.slice(from, a)).split("||").forEach(w => put(w, where)); return; }
       if (!says.length) at = where;
       says.push(line);
     });
     end();
+  };
+  // the story's gatherings (assets/story/meets, read as NpcChatter.Parse reads «[meet <name>]»): each line without its «<who>: »
+  {
+    const meetsDir = path.join(root, "assets", "story", "meets");
+    if (fs.existsSync(meetsDir)) for (const f of fs.readdirSync(meetsDir).filter(n => n.endsWith(".txt")))
+      fs.readFileSync(path.join(meetsDir, f), "utf8").replace(/\r/g, "").split("\n").forEach((raw, i) => {
+        const l = raw.trim();
+        if (!l || l.startsWith("#") || l.startsWith("[") || l.startsWith("?")) return;
+        const m = /^(\w+):\s*(.+)$/.exec(l); if (m) put(m[2], "assets/story/meets/" + f + ":" + (i + 1));
+      });
+  }
+  // the story's talks (assets/story/talk)
+  const talkDir = path.join(root, "assets", "story", "talk");
+  if (fs.existsSync(talkDir)) for (const f of fs.readdirSync(talkDir).filter(n => n.endsWith(".txt")))
+    talkTexts(fs.readFileSync(path.join(talkDir, f), "utf8"), i => "assets/story/talk/" + f + ":" + (i + 1));
+  // the talks built into the code (NpcTalk's own common, the modules' «[talk common +]», NpcTasks' answers kept in fields): a file
+  // that holds «[talk », every literal of it read as talk lines (a literal is whole lines there; the place's words of the
+  // built-in talks are made, «{greet}» «{concern}», so only answers and ravens' words come of them)
+  for (const f of fs.readdirSync(src).filter(n => n.endsWith(".cs"))) {
+    const text = fs.readFileSync(path.join(src, f), "utf8");
+    if (text.indexOf("[talk ") < 0) continue;
+    const lit = /"((?:[^"\\]|\\.)*)"/g; let m;
+    while ((m = lit.exec(text))) {
+      const s = unC(m[1]);
+      if (!/^\s*(>|~\w+ \w+:)/m.test(s)) continue;
+      const line = text.slice(0, m.index).split("\n").length;
+      talkTexts(s.split("\n").filter(l => /^\s*(>|~)/.test(l)).join("\n"), () => "src/" + f + ":" + line);
+    }
+  }
+  // the residents' small talk built into NpcChatter (Builtin, read as NpcChatter.Parse reads it): each line of a talk without
+  // its «- », each line of one person's; NpcChatter puts each through Lang.T where it is said
+  {
+    const text = fs.readFileSync(path.join(src, "NpcChatter.cs"), "utf8");
+    let i = text.indexOf("string Builtin =");
+    if (i < 0) bad.push("NpcChatter.cs: no «string Builtin =» (tools/l10n.js reads its lines from there)");
+    else {
+      i += "string Builtin =".length; let body = "";
+      for (;;) {
+        while (i < text.length && /[\s+]/.test(text[i])) i++;
+        if (text.startsWith("//", i)) { i = text.indexOf("\n", i); continue; }
+        if (text[i] !== '"') break;
+        let j = i + 1; for (; j < text.length; j++) { if (text[j] === "\\") { j++; continue; } if (text[j] === '"') break; }
+        body += unC(text.slice(i + 1, j)); i = j + 1;
+      }
+      if (text[i] !== ";") bad.push("NpcChatter.cs: Builtin is not literals joined by + (tools/l10n.js cannot read it)");
+      let talks = false;
+      body.split("\n").forEach(raw => {
+        const l = raw.trim();
+        if (!l || l.startsWith("#")) return;
+        if (l.startsWith("[") && l.endsWith("]")) { talks = l.slice(1).startsWith("chat "); return; }
+        if (talks && l.startsWith("?")) return;
+        put(talks && l.startsWith("-") ? l.slice(1).trim() : l, "src/NpcChatter.cs (Builtin)");
+      });
+    }
+  }
+  // a settler's name is a row of its own (NpcActor.Name: Lang.T of the kept name): the same text used for anything else would
+  // give the name that other thing's translation («Руна» — a rune — named a woman «Rune»)
+  {
+    const t = fs.readFileSync(path.join(src, "NpcSettlers.cs"), "utf8"), names = new Set();
+    const re = /string\[\] (?:Men|Women) = Lang\.Keys\(([^)]*)\)/g; let m;
+    while ((m = re.exec(t))) for (const q of m[1].match(/"((?:[^"\\]|\\.)*)"/g) || []) names.add(unC(q.slice(1, -1)));
+    if (!names.size) bad.push("NpcSettlers.cs: no «string[] Men|Women = Lang.Keys(…)» (tools/l10n.js checks the names there)");
+    for (const k of names) { const other = (out.get(k) || []).find(w => !w.startsWith("NpcSettlers.cs")); if (other) bad.push("NpcSettlers.cs: the name «" + k + "» is also a text of " + other + " — one row cannot be both: pick another name"); }
   }
   return { out, bad };
 }
@@ -303,10 +407,35 @@ for (const [k, v] of t) {
   if (blanks(k) !== blanks(v)) say("blanks differ: «" + k.slice(0, 70) + "» → «" + v.slice(0, 70) + "»");
   if (tags(k) !== tags(v)) say("rich-text tags differ: «" + k.slice(0, 70) + "»");
   if (named(k) !== named(v)) say("named blanks ({name}…) differ: «" + k.slice(0, 70) + "»");
+  if (k.split("\n").length !== v.split("\n").length) say("lines differ (" + k.split("\n").length + " → " + v.split("\n").length + "): «" + k.replace(/\n/g, "\\n").slice(0, 70) + "» — a translation keeps every line (2026-11-18: Lit's whole plan was one line in English)");
   if (formats.has(k)) { const b = badFormat(v); if (b) say("translation format broken (" + b + "): «" + v.slice(0, 70) + "»"); }
   if (plural.has(k) && v.split("|").length > k.split("|").length) say("more plural forms than the source: «" + k + "»");
   if (language !== "Ukrainian" && language !== "Russian" && cyr.test(v.replace(/«[^»]*»/g, "").replace(/\{[^{}|]*\}/g, ""))) say("Cyrillic left in the translation: «" + v.slice(0, 70) + "»");
 }
 const unused = [...t.keys()].filter(k => !out.has(k));
 if (unused.length) console.log("-- in the table but not in the code: " + unused.length + " (sync moves them to the end as comments)");
+// --strict (the build, for English — the user 2026-11-11: every text changed is translated at once): a text not translated is a
+// problem, and so is a people's theme English has not or a people's list it has shorter (npc_patterns.txt, cut as NpcPhrases.Parse)
+if (process.argv.includes("--strict")) {
+  untranslated.slice(0, 15).forEach(k => say("not translated: «" + k.replace(/\n/g, "\\n").slice(0, 80) + "» " + (out.get(k) || [""])[0]));
+  if (untranslated.length > 15) { problems += untranslated.length - 15; console.log("  … and " + (untranslated.length - 15) + " more not translated"); }
+  const enFile = path.join(root, "assets", "lang", language, "npc_patterns.txt");
+  const read = lines => { const T = new Set(), L = new Map(); let cur = null; for (let l of lines) { l = l.trim(); if (!l || l.startsWith("#") || l.startsWith("//")) continue; if (l.startsWith("@")) { cur = l.slice(1).trim(); if (!L.has(cur)) L.set(cur, 0); continue; } const m = l.match(/^\[([^\]]+)\]/); if (m) { cur = null; const h = m[1].trim(), q = h.indexOf(" ?"); T.add(q < 0 ? h : h.slice(0, q).trim()); continue; } if (cur) L.set(cur, L.get(cur) + 1); } return { T, L }; };
+  const verb = (file, name) => { const text = fs.readFileSync(path.join(src, file), "utf8"), re = /@"((?:[^"]|"")*)"/g, got = []; let m; if (name) { re.lastIndex = text.indexOf("const string " + name + " = @\""); m = re.exec(text); return m ? [m[1].replace(/""/g, '"')] : []; } while ((m = re.exec(text))) { const s = m[1].replace(/""/g, '"'); if (/^\s*(\[|@)/m.test(s) && s.length > 200) got.push(s); } return got; };
+  const all = /All = \{([^}]*)\}/.exec(fs.readFileSync(path.join(src, "NpcMorePatterns.cs"), "utf8"));
+  const where = new Map(); for (const f of fs.readdirSync(src).filter(n => /^Npc.*Patterns\.cs$/.test(n))) { const re = /const string (\w+) = @"/g, text = fs.readFileSync(path.join(src, f), "utf8"); let m; while ((m = re.exec(text))) where.set(m[1], f); }
+  let uk = []; for (const f of ["NpcPhrases.cs", "NpcTalkPatterns.cs", "NpcSituationPatterns.cs"]) uk = uk.concat(verb(f));
+  const wordsDir = path.join(root, "assets", "story", "words"); // (a story person's own words: data, the same format)
+  if (fs.existsSync(wordsDir)) for (const w of fs.readdirSync(wordsDir).filter(n => n.endsWith(".txt"))) uk.push(fs.readFileSync(path.join(wordsDir, w), "utf8").replace(/\r/g, ""));
+  if (!all) say("NpcMorePatterns.cs: no «All = { … }» (tools/l10n.js reads the people's words in its order)");
+  else for (const n of all[1].split(",").map(s => s.trim()).filter(Boolean)) { if (!where.has(n)) { say("NpcMorePatterns.All: «" + n + "» is no const string of an Npc*Patterns.cs"); continue; } uk = uk.concat(verb(where.get(n), n)); }
+  const U = read(uk.join("\n").split("\n")), E = read(fs.existsSync(enFile) ? fs.readFileSync(enFile, "utf8").split(/\r?\n/) : []);
+  const noTheme = [...U.T].filter(x => !E.T.has(x)), short = [...U.L].filter(([n, c]) => (E.L.get(n) || 0) < c);
+  noTheme.slice(0, 10).forEach(x => say("npc_patterns.txt: theme [" + x + "] has no " + language + " (its Ukrainian is said instead)"));
+  short.slice(0, 10).forEach(([n, c]) => say("npc_patterns.txt: list @" + n + " has " + (E.L.get(n) || 0) + " " + language + " lines, the Ukrainian " + c + " (add the new ones)"));
+  const more = Math.max(0, noTheme.length - 10) + Math.max(0, short.length - 10);
+  if (more) { problems += more; console.log("  … and " + more + " more of the people's words"); }
+  console.log("-- people's words: " + noTheme.length + " theme(s) missing, " + short.length + " list(s) short");
+}
 console.log(problems ? problems + " problem(s)" : "no problems");
+if (problems) process.exitCode = 1;

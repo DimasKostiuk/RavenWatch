@@ -53,22 +53,22 @@ namespace HuginWhispers
         // how it is now, over its kind: the wishes added up (Add), held within bounds (Clamp). Speed and swing are factors, the rest added
         internal sealed class Mix
         {
-            public float Speed = 1f, Stoop, Head, Swing = 1f, Bob, Shrug, Out, Shoulders, Rest, Breath;
+            public float Speed = 1f, Stoop, Head, Swing = 1f, Bob, Shrug, Out, Shoulders, Rest, Breath, Limp; // (Limp: a wish may spare a leg too — mood_hurt, a story person limping home)
             internal static readonly Mix None = new Mix();
-            internal void Clear() { Speed = 1f; Swing = 1f; Stoop = Head = Bob = Shrug = Out = Shoulders = Rest = Breath = 0f; }
+            internal void Clear() { Speed = 1f; Swing = 1f; Stoop = Head = Bob = Shrug = Out = Shoulders = Rest = Breath = Limp = 0f; }
             // a wish of its table row by its strength (0 … 1)
             internal void Add(Style m, float k)
             {
                 if (m == null || k <= 0f) return;
                 k = Mathf.Clamp01(k);
                 Speed *= Mathf.Lerp(1f, m.Speed, k); Swing *= Mathf.Lerp(1f, m.Swing, k);
-                Stoop += m.Stoop * k; Head += m.Head * k; Bob += m.Bob * k; Shrug += m.Shrug * k; Out += m.Out * k; Shoulders += m.Shoulders * k; Rest += m.Rest * k; Breath += m.Breath * k;
+                Stoop += m.Stoop * k; Head += m.Head * k; Bob += m.Bob * k; Shrug += m.Shrug * k; Out += m.Out * k; Shoulders += m.Shoulders * k; Rest += m.Rest * k; Breath += m.Breath * k; Limp += m.Limp * k;
             }
             internal void Clamp()
             {
                 Speed = Mathf.Clamp(Speed, 0.6f, 1.3f); Swing = Mathf.Clamp(Swing, 0.2f, 1.6f); Stoop = Mathf.Clamp(Stoop, -0.6f, 1.2f); Head = Mathf.Clamp(Head, -25f, 28f);
                 Bob = Mathf.Clamp(Bob, 0f, 0.03f); Shrug = Mathf.Clamp(Shrug, -5f, 28f); Out = Mathf.Clamp(Out, -16f, 20f); Shoulders = Mathf.Clamp(Shoulders, -12f, 18f);
-                Rest = Mathf.Clamp(Rest, -8f, 4f); Breath = Mathf.Clamp(Breath, -1f, 2f);
+                Rest = Mathf.Clamp(Rest, -8f, 4f); Breath = Mathf.Clamp(Breath, -1f, 2f); Limp = Mathf.Clamp01(Limp);
             }
         }
 
@@ -244,6 +244,7 @@ namespace HuginWhispers
             HeadDown = 0f;
             if (now == null) now = Mix.None;
             float stoopNow = now.Stoop, headNow = now.Head, swingNow = now.Swing, bobNow = now.Bob, shrugNow = now.Shrug, outNow = now.Out;
+            float limp = Mathf.Clamp01(s.Limp + now.Limp); // (its own spared leg, and a wish's on top)
             float dt = Time.deltaTime;
             _on = Mathf.MoveTowards(_on, off ? 0f : 1f, dt * OnRate); // (off a seat, into a blow, a gesture: eased out and back, never snapped)
             if (_on <= 0f) { Rest(); return; }
@@ -260,7 +261,7 @@ namespace HuginWhispers
             if (legs > 0f)
             {
                 float pace = Mathf.Clamp(1f + (legs - 1f) * 0.8f, 0.7f, 1.3f);
-                if (s.Limp > 0f) pace *= 1f - s.Limp * 0.4f * Mathf.Max(0f, wave) * _strolling;
+                if (limp > 0f) pace *= 1f - limp * 0.4f * Mathf.Max(0f, wave) * _strolling;
                 float target = Mathf.Lerp(1f, pace, _strolling);
                 if ((Mathf.Abs(target - 1f) > 0.002f || Mathf.Abs(_animOwn - 1f) > 0.002f) && Mathf.Abs(_anim.speed - target) > 0.002f) _anim.speed = target; // (only a pace it gave or gives: the game's own left alone)
                 _animOwn = target;
@@ -293,11 +294,11 @@ namespace HuginWhispers
             // its step: hips rolling, a spring, a spared leg (only as it walks)
             if (_strolling > 0.01f)
             {
-                float roll = (s.Sway * wave + s.Limp * 6f * Mathf.Max(0f, wave)) * _strolling;
+                float roll = (s.Sway * wave + limp * 6f * Mathf.Max(0f, wave)) * _strolling;
                 if (Mathf.Abs(roll) > 0.01f) { Turn(_hips, body, 0f, 0f, roll); Turn(_spine1, body, 0f, 0f, -roll * 0.6f); }
                 float twist = s.Twist * wave * _strolling; // (its chest turns against its legs: the shoulder of the arm swung forward)
                 if (Mathf.Abs(twist) > 0.01f) Turn(_spine2, body, 0f, twist, 0f);
-                float bob = (s.Bob + bobNow) * (0.5f + 0.5f * Mathf.Cos(phase * 4f * Mathf.PI)) - s.Limp * 0.03f * Mathf.Max(0f, wave);
+                float bob = (s.Bob + bobNow) * (0.5f + 0.5f * Mathf.Cos(phase * 4f * Mathf.PI)) - limp * 0.03f * Mathf.Max(0f, wave);
                 if (_hips != null && Mathf.Abs(bob) > 0.0005f) _hips.position += Vector3.up * bob * _strolling;
             }
 

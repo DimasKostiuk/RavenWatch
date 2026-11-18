@@ -1,5 +1,6 @@
 clip arms_open
 length 2.4
+tone plain
 loop 0
 pivot 1.1
 curve ease

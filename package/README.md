@@ -78,6 +78,8 @@ A stranger's raven calls you, two trails lead to your own raven, and an abandone
 ### Settlers and the Heart of home
 Build a Heart of home and it hears of people in trouble out in the lands. Save them and they come to live by it: they eat, sleep, work, talk, quarrel and dream, remember what you did and tell you the news. Hire them as guards, cooks, gatherers, smelters, beekeepers and more.
 
+The Heart is not yours from the start. Its drawing lies in the Hall of the Watch, so the prologue comes first, and building it takes one of Eikthyr's antlers. And a person you saved and hired is not settled yet: they have no home. Bring them to a Heart and settle them there (**Q** on the person → «Settle here»). Only then do they get a bed, meals and work.
+
 ## Start in 5 steps
 
 1. **Get a raven.** Buy **Hugin** or **Munin** from Haldor (1500 coins) — or wait: your own raven finds you in the prologue. Either way you can talk to a raven only with the **Book of Ravens**, and that book is found in the prologue: buy a raven early and the prologue calls you at once.
@@ -145,7 +147,7 @@ Every raven has **one random boon and one burden**. Some are plain numbers, othe
 
 Dying, hunger and taking the raven off your shoulder cost trust. A death costs less at levels 1–2, and if you take your raven from your grave within 10 minutes, it gives half of that back.
 
-**Satiety (0–100).** It melts by itself and with every gift. A hungry raven pays more strength for gifts, gathers no strength, steals food from your bag and even coins; a well-fed one gathers strength faster; a stuffed one gets lazy. The farther from home the food was found, the more filling it is. Each raven has its own **favourite food** — a secret at first: it hints at it when it asks for food. Below 15 the raven won't take orders, and at zero it **starves**: it sits glum, strikes half as hard, pecks you for 10 health every 30 minutes, and its trust melts.
+**Satiety (0–100).** It melts by itself and with every gift. A hungry raven pays more strength for gifts, gathers no strength, steals food from your bag and even coins; a well-fed one gathers strength faster; a stuffed one gets lazy. The farther from home the food was found, the more filling it is. Each raven has its own **favourite food** — a secret at first: it hints at it when it asks for food. Below 10 the raven won't take orders, and at zero it **starves**: it sits glum, strikes half as hard, pecks you for 10 health every 30 minutes, and its trust melts.
 
 </details>
 
@@ -344,6 +346,8 @@ RavenWatch робить Хугіна й Муніна твоїми супутни
 ### Поселенці й серце оселі
 Збудуй серце оселі, і воно чутиме про людей у біді по всіх землях. Врятуй їх, і вони прийдуть жити до нього: їдять, сплять, працюють, говорять, сваряться й мріють, пам'ятають, що ти зробив, і розповідають новини. Найми їх вартовими, кухарями, збирачами, плавильниками, пасічниками тощо.
 
+Серця оселі спершу нема. Його креслення лежить у Залі Варти, тож спочатку пролог, а на саму будівлю потрібен ріг Ейктюра. І врятована та найнята людина ще не оселена: дому вона не має. Приведи її до Серця й осели там (**Q** на людині → «Оселити тут»). Лише тоді вона має ліжко, їжу й роботу.
+
 ## Старт у 5 кроків
 
 1. **Здобудь ворона.** Купи **Хугіна** чи **Муніна** в Хальдора (1500 монет) — або зачекай: твій власний ворон знайде тебе в пролозі.
@@ -537,3 +541,11 @@ RavenWatch повний і без нього — кожна фраза видн�
 </details>
 
 </details>
+
+## Credits / Подяки
+
+- Crypt music / музика склепу Варти: «Cinematic Tension Loop Of Epic Proportions (FrogsInSpace Piano Stab Samples)» by **qubodup** (https://freesound.org/s/860590/), piano stab samples by **FrogsInSpace** — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Levelled for the game (quieter); otherwise unchanged.
+- Rite music / музика обряду в Залі: «The Adventure» by **Victor_Natas** (https://freesound.org/s/766921/) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Levelled for the game; otherwise unchanged.
+- Memory music / музика спогаду в хаті Ейріка: «Pad, Ambient, Meditation - Submersion» by **Andrewkn** (https://freesound.org/s/839845/) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Cut to its first 78 s, levelled for the game.
+- Ghost house music / музика хати привида: «Ambient 19_Cello Song» by **PodcastAC** (https://freesound.org/s/720336/) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Cut to its first 90 s, levelled for the game.
+- Hall music / музика обжитої Зали: «Relaxing Chiptune Music» by **Migfus20** (https://freesound.org/s/679053/) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Shortened by whole phrases (its middle cut out, its own ending kept), levelled for the game.

@@ -79,14 +79,14 @@ namespace HuginWhispers
             if (Time.time < _nwNext) return;
             _nwNext = Time.time + 0.3f;
             if (_nwWait != null) _nwWait.text = WaitDots();
-            foreach (Action a in NwLive.ToArray()) { try { a(); } catch { } }
+            foreach (Action a in NwLive.ToArray()) { try { a(); } catch (Exception e) { PatchGuard.Fail("RavenBook.NwLive", e); } } // (one that throws: said once, the others tick on)
             if (_nwDragging == null && NestStamp(p) != _nwStamp) NestWindowDraw(); // (not under a drag: it would lose what is dragged)
         }
         private static TMP_Text _nwWait;
         private static readonly List<Action> NwLive = new List<Action>();
         private static TMP_Text NwTicking(TMP_Text t, Func<string> text)
         {
-            NwLive.Add(() => { if (t == null) return; string s = text(); if (s != null && t.text != s) t.text = s; });
+            NwLive.Add(() => { if (t == null) return; string s = text(); if (s != null) s = Grammar.Fix(s); if (s != null && t.text != s) t.text = s; }); // ({в|ла}: your forms)
             return t;
         }
         private static string WaitDots() { return Lang.T("Ворони кличуть Одіна") + new string('.', 1 + Mathf.FloorToInt(Nest.Waited) % 3); }

@@ -1,6 +1,7 @@
 // One run from outside the game, the game open and in a world (studio/request.txt, studio/out). The game half of tools/anim.js (the one
 // entry, review 2 2026-11-10): anim.js <verb> …; the studio's folder is tools/studio.path (one line). What to read comes back at once.
-//   clip <clip> [views]        the clip on the stage, on the body and with the thing its row in docs/CLIPS.md names: measured and filmed in one run
+//   clip <clip> [views]        the clip on the stage, on the body (the dummy, Heid, the dvergr's dummy: tools/body.js ofCell reads the row's body cell)
+//                              and with the thing its row in docs/CLIPS.md names: measured and filmed in one run
 //                              (the short report says each thing once: one VERDICT line an event, pose rows «Δ» — only what changed; all of it whole in .full.txt);
 //                              prints the short report (VERDICT with a «fix:» command where the core could reckon one, what was asked, the tempo, each
 //                              key frame's pose in words) and the sheets: stage_<clip>_key.png (a row a moment of the VERDICT, the wants, the marks;
@@ -31,11 +32,15 @@
 //                              tools/clip_numbers.json (--save writes them): after a change in the core, what moved in what was already approved
 //   status                     one line each: the game answers the studio or not (raven stage status), a scene playing, the stage (up, on what,
 //                              playing what), the studio's last jobs (another chat may be at it)
+// A clip's take ends with «BY EYE» when its last three saved versions each changed the same part of the body by hand (byEye below): numbers turned a
+// take a guess — it names the tool that reckons that part.
 // It refuses while a scene plays in the game (a run cut off the blue_fire the user was watching, 2026-11-04). Whether the user is at the keys, or
 // another chat uses the studio, it cannot see: «status» shows the last jobs, ask first. A clip's run takes its mannequin and its timer off the screen
 // when it is done.
 // After itself (the user 2026-11-07, 80 files left behind): a clip's run first takes off every other clip's stage files older than StaleMin
-// minutes (a take still being looked at by another chat is fresher); «done» takes off the clip's own. Scenes' files are never touched here.
+// minutes (a take still being looked at by another chat is fresher); «done» takes off the clip's own. A scene's run (the user 2026-11-14: 258 MB lay in
+// studio/out) takes off every other scene's files older than StaleMin, and any other loose shot of the studio older than StaleDays days; its own
+// last run stays till the next run of it replaces it.
 // A report is of one version of the clip's file (review 2 2026-11-10: a report from before an edit was read as the edit's): its head carries the
 // file's hash, and «clip» warns, «report» refuses, when the file is not that version any more.
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
@@ -55,7 +60,7 @@ const sleep = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0,
 const until = (test, seconds, what) => { const end = Date.now() + seconds * 1000; while (Date.now() < end) { const r = test(); if (r) return r; sleep(400); } throw new Error('no ' + what + ' in ' + seconds + ' s: is the game open and in a world?'); };
 const ask = (line, seconds) => { fs.writeFileSync(path.join(studio, 'request.txt'), line + '\n'); until(() => !fs.existsSync(path.join(studio, 'request.txt')), seconds || 20, 'answer to «' + line + '»'); };
 const sheets = prefix => fs.readdirSync(out).filter(f => f.startsWith(prefix) && f.endsWith('.png')).map(f => path.join(out, f).replace(/\\/g, '/'));
-const clear = prefix => { for (const f of fs.readdirSync(out)) if ((f === prefix + '.txt') || (f === prefix + '.full.txt') || (f.startsWith(prefix + '_') && (f.endsWith('.png') || f.endsWith('.txt')))) fs.unlinkSync(path.join(out, f)); };
+const clear = prefix => { for (const f of fs.readdirSync(out)) if ((f === prefix + '.txt') || (f === prefix + '.full.txt') || (f === prefix + '.wav') || (f.startsWith(prefix + '_') && (f.endsWith('.png') || f.endsWith('.txt')))) fs.unlinkSync(path.join(out, f)); };
 // the studio's log (studio/out/log.txt): its last lines; the answer the game wrote to a «raven …» line
 const logLines = () => { const p = path.join(out, 'log.txt'); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').split('\n').filter(Boolean) : []; };
 const answerOf = line => { const l = logLines().reverse().find(x => x.includes('  ' + line + '  →  ')); return l ? l.slice(l.indexOf('→') + 1).trim() : null; };
@@ -82,12 +87,44 @@ const scenePlaying = () => {
 // the scene's own file and when it was saved (what the game has just read: a run reloads before it)
 const sceneFile = id => { const d = path.join(root, 'assets', 'story', 'scenes'); for (const n of fs.readdirSync(d)) { const p = path.join(d, n); if (fs.readFileSync(p, 'utf8').includes('[scene ' + id + ']')) return n + ', saved ' + fs.statSync(p).mtime.toLocaleString('uk-UA'); } return '(no file names it)'; };
 const StaleMin = 30;
+const StaleDays = 1;
+const dropStaleScenes = keep => { let n = 0; for (const f of fs.readdirSync(out)) { if (f === 'log.txt' || f === 'request.txt' || f.startsWith('stage_') || f.startsWith(keep + '.') || f.startsWith(keep + '_')) continue; const p = path.join(out, f); const age = Date.now() - fs.statSync(p).mtimeMs; if (fs.statSync(p).isFile() && (f.startsWith('sc_') ? age > StaleMin * 60000 : age > StaleDays * 86400000)) { fs.unlinkSync(p); n++; } } return n; };
 const dropStale = keep => { let n = 0; for (const f of fs.readdirSync(out)) { if (!f.startsWith('stage_') || f.startsWith('stage_' + keep + '.') || f.startsWith('stage_' + keep + '_')) continue; const p = path.join(out, f); if (Date.now() - fs.statSync(p).mtimeMs > StaleMin * 60000) { fs.unlinkSync(p); n++; } } return n; };
 const rowOf = clip => fs.readFileSync(path.join(root, 'docs', 'CLIPS.md'), 'utf8').split('\n').find(l => l.startsWith('| `' + clip.split('.')[0] + '` |')) || ''; // (a part: its whole clip's row — the body, the thing)
 // (the state cell, the row's last: «бачив користувач» there and no «не затверджено» — shield_kneel's «бачив користувач; … новіша версія … не затверджено» was counted, 2026-11-10)
 const approvedNames = () => fs.readFileSync(path.join(root, 'docs', 'CLIPS.md'), 'utf8').split('\n').filter(l => { if (!l.startsWith('| `')) return false; const c = l.split('|').map(x => x.trim()).filter(Boolean); const state = c[c.length - 1] || ''; return state.includes('бачив користувач') && !state.includes('не затверджено'); }).map(l => /^\| `([\w-]+)`/.exec(l)).filter(Boolean).map(m => m[1]);
 const verdictOf = text => text.slice(text.indexOf('VERDICT'), text.indexOf('pose: ')).trim();
+// The words a scene takes a thing with («prop take <item> … square», «size <m>»: StoryProps.Read) — the stage takes it with the same ones, so a take
+// plays what the scene will (2026-11-12: the stage knew none of them, and a thing its scene takes «square» was never taken so on the mannequin).
+// «from <piece>» is the scene's own (the mannequin stands elsewhere), «free» the stage's anyway. Scenes that differ: the first, and the others said.
+const sceneTake = item => {
+  const d = path.join(root, 'assets', 'story', 'scenes'), found = [];
+  for (const n of fs.readdirSync(d).sort()) fs.readFileSync(path.join(d, n), 'utf8').split('\n').forEach((raw, i) => {
+    const w = raw.split('#')[0].trim().split(/\s+/), at = w.indexOf('prop');
+    if (at < 0 || w[at + 1] !== 'take' || w[at + 2] !== item) return;
+    const keep = [];
+    for (let k = at + 3; k < w.length; k++) { if (w[k] === 'square') keep.push(w[k]); else if (w[k] === 'size' && w[k + 1]) keep.push(w[k], w[++k]); else if (w[k] === 'from' || w[k] === 'pose') k++; }
+    found.push({ words: keep.join(' '), where: n + ':' + (i + 1) });
+  });
+  return found;
+};
 
+// A take's numbers kept with the keys they measured: stage_<clip>.full.txt copied to config/RavenWatch/player_anims_measures/<clip>/<NNN>.full.txt, NNN the
+// saved version of the keys (player_anims_takes/<clip>/<NNN>.txt) whose text the report's own file hash names. The body's model is held against these
+// (node tools/body.js: lengths, the elbow, the wrist, the head, the bones' speeds), and the report in studio/out lives only till the next take of another
+// clip (dropStale): on 2026-11-12 the model's proof went from 15 takes to 1 that way. NOT in the takes folder itself: the stage counts every *.txt there
+// as a take (AnimStage.Takes), and reports kept there made its take numbers wrong the same day.
+function keepMeasure(clip) {
+  const name = clip.split('.')[0], full = path.join(out, 'stage_' + clip + '.full.txt'), dir = path.join(studio, '..', 'player_anims_takes', name);
+  if (!fs.existsSync(full) || !fs.existsSync(dir)) return;
+  const text = fs.readFileSync(full, 'utf8'), h = (/, file ([0-9a-f]{8}) saved/.exec(text) || [])[1];
+  const sha = t => { if (t.charCodeAt(0) === 0xFEFF) t = t.slice(1); return crypto.createHash('sha1').update(t.replace(/\r/g, ''), 'utf8').digest('hex').slice(0, 8); };
+  const of = fs.readdirSync(dir).filter(f => /^\d+\.txt$/.test(f)).sort().filter(f => sha(fs.readFileSync(path.join(dir, f), 'utf8')) === h).pop();
+  if (!h || !of) return; // (no saved keys of that file: numbers with nothing to hold them against)
+  const to = path.join(studio, '..', 'player_anims_measures', name);
+  fs.mkdirSync(to, { recursive: true });
+  fs.writeFileSync(path.join(to, of.replace('.txt', (clip === name ? '' : '.' + clip.slice(name.length + 1)) + '.full.txt')), text);
+}
 function runClip(clip, views, keepOthers) {
   const report = path.join(out, 'stage_' + clip + '.txt');
   const before = fs.existsSync(report) ? measuredOf(clip, fs.readFileSync(report, 'utf8')) : null; // (the take before, while its report is still there)
@@ -96,13 +133,18 @@ function runClip(clip, views, keepOthers) {
   if (stale0 > 0) console.log('older takes of other clips taken off: ' + stale0 + ' file(s)');
   const row = rowOf(clip), cells = row.split('|').map(c => c.trim());
   ask('raven stage down'); // (a clean stage each run: a speed, a game emote, a walk, fixtures, a second mannequin left by the last one changed the measure — review 2026-11-07)
-  ask('raven stage up ' + (cells[3] === 'Гейд' ? 'heid' : 'dummy')); // (the body it was made on: a clip on another is another clip)
+  ask('raven stage up ' + require('./body.js').ofCell(cells[3]).stage); // (the body it was made on — the dummy, Heid, the dvergr's dummy: a clip on another is another clip; the row's body cell is read in one place, body.js)
   const thing = /реквізит `(\w+)`( на руці)?/.exec(row); // («на руці»: on its right forearm, as a person carries its own — Heid's basket)
   const arm = /зброя `(\w+)`(?: і `(\w+)`)?/.exec(row); // (a pose for a weapon in hand: the game's own stance for it under the clip, as on a guard)
   ask('raven stage wield ' + (arm ? arm[1] + (arm[2] ? ' ' + arm[2] : '') : 'none'));
   ask('raven stage play ' + clip);
   sleep(800);
-  ask('raven stage prop ' + (thing ? thing[1] + (thing[2] ? ' arm' : '') : 'none')); // (its .on channels do nothing with no thing)
+  const from = cells[4] || ''; // (where the clip begins: «сидить на лаві …» — on the game's own bench, as a person sits; «сидить на землі …» — the game's sit; after «play»: the mannequin has come into the world by then)
+  if (/^сидить на (лаві|стільці)/.test(from)) { ask('raven stage chair'); sleep(800); }
+  else if (/^сидить на землі/.test(from)) { ask('raven stage emote sit'); sleep(800); }
+  const taken = thing && !thing[2] ? sceneTake(thing[1]) : [];
+  if (taken.length) console.log('the thing as its scene takes it (' + taken[0].where + '): ' + (taken[0].words || 'no words of its own') + taken.filter(t => t.words !== taken[0].words).map(t => ' · ANOTHER scene takes it otherwise (' + t.where + '): ' + (t.words || 'no words')).join(''));
+  ask('raven stage prop ' + (thing ? thing[1] + (thing[2] ? ' arm' : taken.length && taken[0].words ? ' ' + taken[0].words : '') : 'none')); // (its .on channels do nothing with no thing)
   sleep(800);
   ask('raven stage check' + (views ? ' ' + views : ''));
   const text = until(() => { if (!fs.existsSync(report)) return null; const t = fs.readFileSync(report, 'utf8'); return t.includes('key sheet: coming') ? null : t; }, 180, 'report of ' + clip);
@@ -110,6 +152,7 @@ function runClip(clip, views, keepOthers) {
   const why = stale(clip, text);
   if (why) console.log('WARNING: the file changed during the take — ' + why);
   runClip.since = before ? since(before, measuredOf(clip, text)) : '';
+  keepMeasure(clip);
   return text;
 }
 
@@ -124,8 +167,9 @@ function scriptOf(name) {
 }
 const makes = (s, ch) => s.lines.filter(l => { // the movements that write a channel
   const side = /Left/.test(ch) ? 'left' : /Right/.test(ch) ? 'right' : null, mine = !side || l.side === side || l.side === 'both';
-  if (/^@(Left|Right)Hand/.test(ch)) return mine && (l.verb === 'reach' || l.verb === 'rest');
-  if (/Hand(Index|Middle|Ring|Pinky)/.test(ch)) return mine && l.verb === 'fingers';
+  if (/^@(Left|Right)Hand\.on/.test(ch)) return mine && (l.verb === 'grip' || l.verb === 'release');
+  if (/^@(Left|Right)Hand/.test(ch)) return mine && (l.verb === 'reach' || l.verb === 'rest' || l.verb === 'grip');
+  if (/Hand(Thumb|Index|Middle|Ring|Pinky)/.test(ch)) return mine && (l.verb === 'fingers' || l.verb === 'grip' || l.verb === 'release');
   if (/^@(Left|Right)Foot/.test(ch)) return mine && l.verb === 'step';
   if (/^Spine[12]$/.test(ch)) return ['lean', 'turn', 'sigh'].includes(l.verb);
   if (ch === 'move') return ['sink', 'weight', 'step'].includes(l.verb);
@@ -174,9 +218,41 @@ function status() {
   console.log('game:   ' + game + '\nscene:  ' + (playing ? playing + ' is playing — no runs till it ends' : 'none playing') + '\nstudio: ' + (last.length ? 'last jobs (another chat may be at it):\n  ' + last.join('\n  ') : 'no jobs logged'));
 }
 
+// Numbers turned by eye (the user 2026-11-11: «чому наосліп, ми що дарма правили всі ці інструменти» — five saved versions in a row of one clip, each changing
+// the same hand's point on the thing and its fingers by hand, each followed by a take to see how it looks): the clip's saved versions (the stage keeps one
+// a save, config/RavenWatch/player_anims_takes/<clip>/), the last ByEye changes in a row within ByEyeHours — when each of them changed, by hand, keys of
+// the same part of the body, the take ends by saying so and naming what reckons that part; with no such tool: stop and tell the user which is missing.
+// A channel the clip's movements make («# scripted:») is the script's, not a hand's: not counted.
+const ByEye = 3, ByEyeHours = 3;
+const PARTS_OF = [
+  [/^@(Left|Right)Hand\.on|^(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)[123]$/, m => 'the ' + (m[1] || m[2]).toLowerCase() + ' hand\'s hold (its point on the thing, its fingers)', c => 'node tools/anim.js grip ' + c + ' reckons the wrist\'s point and each finger\'s bend from the take\'s sheet (its fingers alone, on no thing: node tools/anim.js grip presets)'],
+  [/^@(Left|Right)Hand/, m => 'the ' + m[1].toLowerCase() + ' arm (its hand\'s point, turn, elbow)', c => 'say it as a movement — node tools/anim.js do ' + c + ' "… reach …" — and the model of the arm (tools/body.js) chooses the way, the elbow and the turn; node tools/anim.js check ' + c + ' says the room to each limit before a take'],
+  [/^@(Left|Right)Foot/, m => 'the ' + m[1].toLowerCase() + ' foot', c => 'say it as a movement — node tools/anim.js do ' + c + ' "… step …"'],
+  [/^(Spine1|Spine2|move|body|Hips)$/, () => 'the trunk (lean, turn, weight, height)', c => 'say it as a movement — node tools/anim.js do ' + c + ' "… lean|turn|sink|weight …" —, or run the report\'s own «fix:» lines (node tools/anim.js fix ' + c + ')'],
+  [/^@Look/, () => 'the look', c => 'say it as a movement — node tools/anim.js do ' + c + ' "… look …"'],
+];
+function byEye(clip, hours) {
+  inStudio();
+  const within = hours || ByEyeHours, name = clip.split('.')[0], dir = path.join(studio, '..', 'player_anims_takes', name);
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir).filter(f => /^\d+\.txt$/.test(f)).sort((a, b) => parseInt(a) - parseInt(b)).slice(-(ByEye + 1)).filter(f => Date.now() - fs.statSync(path.join(dir, f)).mtimeMs < within * 3600000);
+  if (files.length < ByEye + 1) return null;
+  const clipTool = require('./clip.js'), motion = require('./motion.js'), parsed = files.map(f => clipTool.parse(fs.readFileSync(path.join(dir, f), 'utf8'), name));
+  const partOf = ch => { for (const [re, word, tool] of PARTS_OF) { const m = re.exec(ch); if (m) return { word: word(m), tool }; } return null; };
+  let common = null;
+  for (let i = 1; i < parsed.length; i++) {
+    const a = parsed[i - 1], b = parsed[i], made = new Set(motion.listOf(b, 'scripted')), changed = new Map();
+    for (const ch of new Set([...a.order, ...b.order])) { if (made.has(ch) || JSON.stringify(a.keys[ch] || []) === JSON.stringify(b.keys[ch] || [])) continue; const p = partOf(ch); if (p) changed.set(p.word, p.tool); }
+    common = common === null ? changed : new Map([...common].filter(([w]) => changed.has(w)));
+    if (!common.size) return null;
+  }
+  return [...common].map(([word, tool]) => '! BY EYE: ' + word + ' was changed by hand in each of the last ' + ByEye + ' saved versions of ' + name + ' (' + files.slice(1).map(f => parseInt(f)).join(', ') + '). Numbers turned a take a guess are what the tools are there to end: ' + tool(name) + '. If that does not reckon what is wrong here — or these versions ARE that tool\'s own, written one after another and still wrong — STOP and tell the user what the tool does not see: do not take a fourth guess.').join('\n');
+}
+
 // a verb and its words (anim.js): throws on a mistake
 function run(cmd, a) {
   if (cmd === 'scene' && a[0] === '--dry') { if (!a[1]) throw new Error('scene --dry <scene>'); console.log(require('./scene_dry.js').dry(a[1])); return; } // (the file alone: the time table and the warnings, no game, no studio)
+  if (cmd === 'scene' && a[0] === '--sound') { if (!a[1]) throw new Error('scene --sound <scene>'); console.log(require('./scene_dry.js').sound(a[1])); return; } // (a first sound pass proposed: bed, mix, ear, what falls, mute clips; nothing written)
   if (cmd === 'scene' && a[0] === '--cover') { if (!a[1]) throw new Error('scene --cover <scene>'); console.log(require('./scene_dry.js').cover(a[1])); return; } // (camera lines proposed for its talk; nothing written)
   inStudio();
   if (cmd === 'status') { status(); return; }
@@ -193,6 +269,7 @@ function run(cmd, a) {
       console.log('this clip is written by movements (node tools/anim.js show ' + a[0] + '): mend the movement (redo <n> …), not its keys' + (at.length ? ' — what plays at each line\'s moment:\n' + at.join('\n') : ''));
     } }
     console.log('sheets:\n  ' + sheets('stage_' + a[0]).join('\n  '));
+    { const eye = byEye(a[0]); if (eye) console.log(eye); }
   } else if (cmd === 'report' && a[0]) {
     const report = path.join(out, 'stage_' + a[0] + '.txt');
     if (!fs.existsSync(report)) throw new Error('no report of ' + a[0] + ': node tools/anim.js clip ' + a[0]);
@@ -233,14 +310,17 @@ function run(cmd, a) {
     console.log(require('./scene_dry.js').dry(a[0]) + '\n'); // (before the run: what the file says it will be; the run's report then says what it was)
     const name = 'sc_' + a[0], report = path.join(out, name + '.txt');
     clear(name);
+    const gone = dropStaleScenes(name); if (gone) console.log('older studio files of other scenes and shots taken off: ' + gone);
     ask('raven stage down'); // (the stage's mannequin stood in the scene's frames with its line over the picture, zz_heid_meet 2026-11-11)
-    ask('raven story scene reload'); // (the files as they are now: 2026-11-06 a run measured the scene from before an edit)
-    console.log('scene file: ' + sceneFile(a[0]) + ' — read again just now');
+    ask('raven story scene reload'); // (the files as they are now: 2026-11-06 a run measured the scene from before an edit; the clips with them — StoryFiles.ReloadAll: 2026-11-11 a run played a clip's keys from before an edit)
+    console.log('scene file: ' + sceneFile(a[0]) + ' — read again just now, the clips too');
     ask('scene ' + name + ' ' + a[0] + ' ' + (a[1] || 2) + ' ' + (a[2] || 0));
     const text = until(() => fs.existsSync(report) ? fs.readFileSync(report, 'utf8') : null, 420, 'report of ' + a[0]);
     console.log(text);
     const listed = (/^files: (.*)$/m.exec(text) || [])[1]; // (the run's own files, by its report: never an older sheet with a like name)
     console.log('sheets:\n  ' + (listed ? listed.split(' ').filter(Boolean).map(f => path.join(out, f).replace(/\\/g, '/')) : sheets(name)).join('\n  '));
+    const wav = path.join(out, name + '.wav'); // (what was heard in the run: AudioTap — its levels and the core's words stand in the report; the sound itself is measured further by node tools/sound.js info)
+    if (fs.existsSync(wav)) console.log('sound of the run:\n  ' + wav.replace(/\\/g, '/'));
   } else if (cmd === 'done' && a[0]) {
     clear('stage_' + a[0]);
     console.log(a[0] + ': its frames and report taken off');
@@ -278,5 +358,5 @@ function run(cmd, a) {
   } else throw new Error('node tools/anim.js clip <clip> [views] | views <clip> <views> | report <clip> | fix <clip> [n …|list] | done <clip> | scene [--dry] <scene> [fps] [from] | approved [clip …] [--save] | status');
 }
 
-module.exports = { run, studioDir, since, fixesOf, wordsOf, verdictLines };
+module.exports = { run, studioDir, since, fixesOf, wordsOf, verdictLines, byEye, sceneTake };
 if (require.main === module) { console.error('take.js is the game half of the one tool: node tools/anim.js ' + (process.argv[2] || '<verb>') + ' …'); process.exit(1); }

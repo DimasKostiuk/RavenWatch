@@ -156,7 +156,7 @@ namespace HuginWhispers
         private void Own(NpcActor a, bool off)
         {
             Wish(_wishes, "tired", Mathf.Clamp01((NpcToil.Tired(a) / 100f - 0.4f) / 0.6f));
-            if (NpcResident.Is(a) && a.Def.Settler) // (a person of the story carries itself as written)
+            if (NpcResident.Settled(a)) // (a person of the story carries itself as written)
             {
                 float mood = NpcToil.Mood(a) / 100f;
                 Wish(_wishes, "hungry", NpcHunger.Full(a) < 35f ? 1f : 0f);

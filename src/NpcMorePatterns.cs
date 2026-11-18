@@ -8,7 +8,7 @@ namespace HuginWhispers
     // «з», «у», «через»), no he|she of another person ({other}, {neighbour}: present tense, neutral words), «~тон» for one of that way.
     internal static partial class NpcMorePatterns
     {
-        internal static readonly string[] All = { Day, Work, Talk, Life, Mind, Story, Day2, Work2, Life2, Day3, Last4x, Built, Backstory, Arcs, Natures, Tasks, Tasks2, Goals3, Talk3 };
+        internal static readonly string[] All = { Day, Work, Talk, Life, Mind, Story, Day2, Work2, Life2, Day3, Last4x, Built, Backstory, Arcs, Natures, Tasks, Tasks2, Goals3, Talk3, Say, Take, Ask, Wake, Coins, Neighbours };
 
         // ---- pass 1: the words of every day (thoughts aloud, greetings, the hour, the weather, the raven, gossip, hunger, rest)
         internal const string Day = @"

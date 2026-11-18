@@ -1,5 +1,6 @@
 clip pick_low
 length 3.5
+tone plain
 loop 0
 pivot 1.1
 curve ease

@@ -25,7 +25,7 @@ namespace HuginWhispers
         internal static void Actions()
         {
             StoryWhere.Prefixed[Prefix] = (string rest, out Vector3 at) => Find(Player.m_localPlayer, rest, out at);
-            StoryActions.Register("spot", new StoryActions.Kind { Min = 3, Usage = "spot <назва> <від м> <до м>   (своє місце гравця на відкритому, далеко від баз: місце me.<назва>)",
+            StoryActions.Register("spot", new StoryActions.Kind { Dry = "set me spot:{1}", Min = 3, Usage = "spot <назва> <від м> <до м>   (своє місце гравця на відкритому, далеко від баз: місце me.<назва>)",
                 Check = a => !Story.GoodName(a[1]) ? "погана назва «" + a[1] + "»" : Errands.I(a[2], -1) < 1 || Errands.I(a[3], -1) < Errands.I(a[2], -1) ? "spot: від і до — метри, від < до" : null,
                 Do = (p, q, w, rest) => { Pick(p, w[1], Errands.I(w[2], 40), Errands.I(w[3], 80)); return null; } });
         }

@@ -1,0 +1,94 @@
+# ch1_crypt — the crypt of chapter 1 (the Watch's post in the Black Forest, the archivist's grave: docs/plans/story-lore.md, «Глава 1», step 9).
+# THE THIRD DRAFT (2026-11-15), by the author's words: the way in and a passage with no side ways; a fork left and right, mirrored; each
+# side turns forward and comes into the big room of the catacombs by its side door; from the big room a passage straight on into a second
+# big room. The game's pieces do not let a side come in after one turn (the big room has one door a wall, 8 m from the middle, and a fork's
+# arm ends 4 m from it), so each side is: a bend, a long passage, a short one, a turn into the side door.
+# Built by: node tools/rooms.js build ch1_crypt   (the words: the head of tools/rooms.js)
+theme: ForestCrypt
+room entrance forestcrypt_entrance_large
+room hall forestcrypt_Corridor1 from entrance.1 by 2
+room fork forestcrypt_Corridor1 from hall.1 by 3          # entered by its side way: its two ends are the left and the right arm
+# the left side
+room lbend forestcrypt_Bend1 from fork.1 by 1             # turns right: forward again
+room lside forestcrypt_Corridor3 from lbend.2 by 2        # (10 m; it steps 2 m outward, which is what brings the side to the big room's door)
+room lpass forestcrypt_Corridor1 from lside.1 by 2
+room lturn forestcrypt_Corridor1 from lpass.1 by 1        # turns right through its side way, into the big room
+# the right side, the mirror of it
+room rbend forestcrypt_Bend1 from fork.2 by 2
+room rside forestcrypt_Corridor2 from rbend.1 by 2
+room rpass forestcrypt_Corridor1 from rside.1 by 2
+room rturn forestcrypt_Corridor1 from rpass.1 by 2
+# the big room, the passage on, the second big room
+room big1 forestcrypt_room_16 from lturn.3 by 1
+room mid forestcrypt_Corridor1 from big1.2 by 2
+room big2 forestcrypt_room_16 from mid.1 by 4
+# the main road on (the author 2026-11-15): a third big room, then an empty space where he builds the burial hall himself
+room mid2 forestcrypt_Corridor1 from big2.2 by 2
+room big3 forestcrypt_room_16 from mid2.1 by 4
+space tomb from big3.2 30 15 30                              # the author's own hall, built by him with the hammer (2026-11-15): 30 x 30 m, 15 high, its bottom 3 m under the door's floor
+# side rooms off the main road, here and there (dead ends)
+room side1 forestcrypt_room1 from lpass.3 by 2               # left, before the first big room
+room side2 forestcrypt_room1 from rside.3 by 2               # right side passage, inward
+room side3 forestcrypt_new_Burialchamber04 from big2.1       # left of the second big room: THE ARCHIVIST'S GRAVE (below)
+room side4 forestcrypt_new_Burialchamber03 from big2.3       # right of the second big room
+room side5 forestcrypt_room1 from big3.3 by 2                # right of the third big room
+cap entrance.2 forestcrypt_EndCap           # the way in itself: the wall behind the way out (LocInside puts the way out before it)
+cap forestcrypt_EndCap                      # every way left open: a plain wall
+# the archivist's grave (the author 2026-11-15: «могилу зі скринею десь в середині як одне з проходів … стіл з скелетом тим самим архіваріусом»):
+# side3, the burial chamber left of the second big room (16 x 8 m, its door at x 4 on the near wall). At its far end the Watch's rune stone,
+# a chest by the door wall (the archivist's note goes in it: «stash … in.ch1_crypt.chest» — a side quest, later: the user 2026-11-15); by the
+# back wall his table with his bones (the story's model «arkhivarius»: assets/story/perches/sklep_arkhivarius.txt). The second half of the scroll
+# is not here: it lies in «Скриня кургану» in the author's own hall at the end (point skrynia below; ch1_crypt.own.txt: RavenWatch_story_skrynia_kurhanu).
+# Every number here was found in game (LocInside.Fit moves a thing out of the stone and says where: a room's size is no guide).
+thing RavenWatch_story_nadhrobky_vysokyi side3 -7.5 -1.5 0.7 turn 90   # (LocInside.Fit 2026-11-15: at -7.1 0 it stood in the stone altar; the free spot it found)
+thing piece_chest side3 -3.9 -1.5 -2.5 turn 180   # at the game's own chest spot of this room (TreasureChest_forestcrypt -3.9 -1.5 -2.5 facing 178°): -5.9 0 stood inside the stone altar (the game's pickables lie on it at y -0.5)
+point chest side3 -3.9 -1.5 -2.5
+point grave side3 -5.2 -1.5 0 turn 270       # where one stands at the grave, looking at the stone
+thing RavenWatch_story_arkhivarius side3 2.2 -1.5 1.1 turn 180   # behind his table, his back to the wall — the free spot LocInside.Fit found in game (2026-11-15: at 0.5 2.5 and 0.5 1.6 the room's stone pillar went through the table)
+thing Skull1 side3 4.2 -1.5 -1.8               # by the way in, where the game keeps one
+point archivist side3 2.2 -1.5 0 turn 0  # before his table
+point skrynia at -3.9 -3.3 124.4             # the barrow's chest in the author's hall (own.txt: RavenWatch_story_skrynia_kurhanu): the scroll's second half lies here (the user 2026-11-15)
+point tron at -0.253 -4.116 126.18           # the throne with two carved ravens by that chest (own.txt: piece_throne01): sat on — the raven's own word (locations.list «sitsay:», the user 2026-11-16)
+thing Pickable_Mushroom_yellow side3 -7.5 -1.5 3.5
+thing Pickable_Mushroom_yellow side3 -7.5 -1.5 -3.5
+thing Pickable_Mushroom_yellow side3 3.2 -1.5 3.5
+thing Pickable_Mushroom_yellow side3 7.5 -1.5 3.4
+# what stands in the rooms (the author 2026-11-15: «щоб не були такими пустими»): the game's own things at the game's own places — no torches: the light is the yellow mushrooms alone, every one the game keeps (the author: «лише гриби жовті, вони і так світяться»),
+# a chest in each side room, the small things by the game's own chance. Who fights: below (the foes).
+fill entrance mushroom! root!
+fill hall root!
+fill fork root!
+fill lbend mushroom!
+fill rbend mushroom!
+fill lside mushroom! random! root!
+fill rside mushroom! root!
+fill lturn root!
+fill rturn root!
+fill big1 mushroom! root!
+fill big2 mushroom! root!
+fill big3 mushroom! root!
+fill side1 chest! mushroom! root!
+fill side2 chest! mushroom! root!
+fill side5 chest! mushroom! root!
+fill side4 chest! random surtling skull!
+# the foes (the author 2026-11-15: «додай у склеп ворогів»): the crypt's own dead, at the game's own places and by the game's own chance — its
+# skeletons (once each), the poison ones of the burial chambers, the bone piles that raise more until broken (story-lore.md: since the Watch
+# fell nobody keeps the dead lying, so they walk). None in the way in (a quiet first step), none in the archivist's grave room side3 (the
+# dead lie still where he kept watch, and its scene asks for calm), none in the author's hall (no things of the game there).
+fill hall spawner
+fill fork spawner
+fill lside spawner
+fill rside spawner
+fill lpass spawner
+fill rpass spawner
+fill lturn spawner
+fill rturn spawner
+fill big1 spawner
+fill mid spawner
+fill big2 spawner
+fill mid2 spawner
+fill big3 spawner
+fill side1 spawner
+fill side2 spawner
+fill side4 spawner
+fill side5 spawner

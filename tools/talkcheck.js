@@ -56,7 +56,9 @@ const scenes = [];
     if (!t) continue;
     if (t.startsWith('[')) { cur = { id: t.slice(1, t.indexOf(']')), steps: [] }; scenes.push(cur); continue; }
     const [w, tag] = t.split(' ');
-    cur.steps.push({ who: w[0], tag, opt: w.endsWith('?') });
+    // N: a person's raven (NpcRaven «raven_talk»): its words in the book of its own kind — the one that has its tag
+    const who = w[0] === 'N' ? (UK.H.t[tag] ? 'H' : 'M') : w[0];
+    cur.steps.push({ who, tag, opt: w.endsWith('?') });
   }
 }
 // the players' ravens: open (A), reply (B), joins (C, D), the answer to who joined (A or B), close (A)

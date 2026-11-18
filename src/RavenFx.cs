@@ -73,6 +73,7 @@ namespace HuginWhispers
             GameObject g;
             if (Found.TryGetValue(name, out g) && g != null) return g;
             g = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(name) : null;
+            if (g == null) g = FromBundle(name);
             if (g == null)
             {
                 if (_loaded == null) LookOver();
@@ -94,6 +95,53 @@ namespace HuginWhispers
             GameObject had;
             foreach (GameObject o in Resources.FindObjectsOfTypeAll<GameObject>()) // heavy: once a world, then at most LooksMore times, LookAgain s apart, only for a name not found
                 if (o != null && o.transform.parent == null && (!_loaded.TryGetValue(o.name, out had) || Better(o, had))) _loaded[o.name] = o;
+        }
+
+        // The game keeps most of its effects in its own bundles (StreamingAssets/SoftRef: 974 sfx_ prefabs, counted in its manifest
+        // 2026-11-17) and loads one only when something of the game first needs it: a sound nobody has used yet this session (the
+        // build hammer's knocks before you build) is not loaded at all, and the look over everything loaded never finds it. Such a
+        // name is loaded here, as the game itself would (SoftReference), held for the session, never twice. The bundles' names are
+        // read once a session (they do not change between worlds).
+        private static Dictionary<string, SoftReferenceableAssets.AssetID> _inBundles;
+        private static readonly HashSet<string> BundleFailed = new HashSet<string>(); // session: a name that would not load is not tried again
+
+        private static Dictionary<string, SoftReferenceableAssets.AssetID> InBundles()
+        {
+            if (_inBundles != null) return _inBundles;
+            _inBundles = new Dictionary<string, SoftReferenceableAssets.AssetID>();
+            try
+            {
+                foreach (KeyValuePair<string, SoftReferenceableAssets.AssetID> kv in SoftReferenceableAssets.Runtime.GetAllAssetPathsInBundleMappedToAssetID()) // heavy: once a session
+                {
+                    if (!kv.Key.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)) continue;
+                    string n = System.IO.Path.GetFileNameWithoutExtension(kv.Key);
+                    if (!_inBundles.ContainsKey(n)) _inBundles[n] = kv.Value;
+                }
+            }
+            catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("The game's bundles could not be read: " + e.Message); }
+            return _inBundles;
+        }
+
+        private static GameObject FromBundle(string name)
+        {
+            SoftReferenceableAssets.AssetID id;
+            if (BundleFailed.Contains(name) || !InBundles().TryGetValue(name, out id)) return null;
+            SoftReferenceableAssets.SoftReference<GameObject> r = new SoftReferenceableAssets.SoftReference<GameObject>(id);
+            if (!r.IsLoaded && r.Load() != SoftReferenceableAssets.LoadResult.Succeeded) // (Load holds it: never let go, kept for the session)
+            {
+                BundleFailed.Add(name);
+                if (Plugin.Instance != null) Plugin.Instance.Log("Effect in the game's bundles would not load: " + name);
+                return null;
+            }
+            return r.Asset;
+        }
+
+        // the game's sounds in its bundles, loaded or not (the author's list of the game's sounds)
+        internal static List<string> SoundsInBundles()
+        {
+            List<string> r = new List<string>();
+            foreach (string n in InBundles().Keys) if (n.StartsWith("sfx_", StringComparison.OrdinalIgnoreCase)) r.Add(n);
+            return r;
         }
 
         // everything loaded by name (the author's list of the game's sounds)

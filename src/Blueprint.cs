@@ -432,6 +432,10 @@ namespace HuginWhispers
             foreach (Rigidbody b in v.GetComponentsInChildren<Rigidbody>()) b.isKinematic = true; // heavy: once a cart of a place, when it comes into the world
             foreach (Container c in v.GetComponentsInChildren<Container>()) UnityEngine.Object.Destroy(c); // heavy: as above
             foreach (Chair c in v.GetComponentsInChildren<Chair>()) UnityEngine.Object.Destroy(c); // heavy: as above
+            // its wheels' creak: a loop the cart itself keeps at its wheels' speed (Vagon.UpdateAudio) — with the cart's own part gone it rang on at
+            // full, by the Hall for good (the user 2026-11-15: «видає звук ніби застрягла»); and its knock on a blow: a still thing makes no sound
+            if (v.m_wheelLoops != null) foreach (ZSFX s in v.m_wheelLoops) if (s != null) { AudioSource a = s.GetComponent<AudioSource>(); UnityEngine.Object.Destroy(s); if (a != null) { a.Stop(); UnityEngine.Object.Destroy(a); } }
+            foreach (ImpactEffect e in v.GetComponentsInChildren<ImpactEffect>()) UnityEngine.Object.Destroy(e); // heavy: as above
             ZNetView nv = v.GetComponent<ZNetView>();
             UnityEngine.Object.Destroy(v);
             if (nv != null && nv.IsValid() && nv.GetZDO().GetString(LocParts.KOf, "").Length > 0 && Plugin.Instance != null) Plugin.Instance.StartCoroutine(CartOnGround(nv)); // (a place's own, stamped: the author's hand-built one stands as he left it)
@@ -459,10 +463,16 @@ namespace HuginWhispers
                 Quaternion was = t.rotation;
                 t.rotation = level; // (measured as it will stand; put back below if this game may not move it)
                 float low = float.MaxValue;
+                Bounds all = new Bounds(t.position, Vector3.zero);
                 foreach (Renderer r in nv.GetComponentsInChildren<Renderer>()) // heavy: a few times at most, once a cart of a place, when it comes into the world
-                    if (r.enabled && (r is MeshRenderer || r is SkinnedMeshRenderer)) low = Mathf.Min(low, r.bounds.min.y);
+                    if (r.enabled && (r is MeshRenderer || r is SkinnedMeshRenderer)) { low = Mathf.Min(low, r.bounds.min.y); all.Encapsulate(r.bounds); }
                 t.rotation = was;
                 if (low == float.MaxValue) continue; // (nothing drawn yet)
+                // the ground under its four corners too, its highest: on a slope the middle's ground left one side in the earth (the user 2026-11-15:
+                // «частково в текстурах») — now no side is under, the low side a little over
+                float corner;
+                for (int c = 0; c < 4; c++)
+                    if (ZoneSystem.instance.GetGroundHeight(new Vector3((c & 1) == 0 ? all.min.x : all.max.x, t.position.y, (c & 2) == 0 ? all.min.z : all.max.z), out corner)) ground = Mathf.Max(ground, corner);
                 float lift = ground + CartOver - low;
                 if (Mathf.Abs(lift) < CartClose && tilt < CartTilted) yield break;
                 if (!nv.IsOwner()) nv.ClaimOwnership();
@@ -538,7 +548,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- what hangs on an item stand
         // read: the stand's own ZDO (the game keeps the item there by its prefab's hash)
-        private static void Hung(Piece pc, ref Part part)
+        internal static void Hung(Piece pc, ref Part part)
         {
             ItemStand stand = pc.GetComponent<ItemStand>();
             ZNetView nv = pc.GetComponent<ZNetView>();
@@ -559,25 +569,53 @@ namespace HuginWhispers
             GameObject item = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(pt.Item) : null;
             ItemDrop drop = item != null ? item.GetComponent<ItemDrop>() : null;
             if (stand == null || drop == null || nv == null || !nv.IsValid()) { if (Plugin.Instance != null) Plugin.Instance.Log("Blueprint: cannot hang " + pt.Item + " on " + pt.Prefab); return; }
+            HangOn(nv.GetZDO(), pt);
+            nv.InvokeRPC(ZNetView.Everybody, "SetVisualItem", item.name.GetStableHashCode(), pt.Variant, Mathf.Max(1, pt.Quality), pt.Turn);
+        }
+
+        // the same into the stand's ZDO alone: a stand put as a ZDO with no object yet (LocInside) shows it when the game makes it
+        internal static void HangOn(ZDO z, Part pt)
+        {
+            GameObject item = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(pt.Item) : null;
+            ItemDrop drop = item != null ? item.GetComponent<ItemDrop>() : null;
+            if (drop == null) { if (Plugin.Instance != null) Plugin.Instance.Log("Blueprint: cannot hang " + pt.Item + " on " + pt.Prefab); return; }
             ItemDrop.ItemData data = drop.m_itemData.Clone();
             data.m_stack = 1;
             data.m_variant = pt.Variant;
             data.m_quality = Mathf.Max(1, pt.Quality);
             data.m_equipped = false;
             data.m_dropPrefab = item;
-            int hash = item.name.GetStableHashCode();
-            ZDO z = nv.GetZDO();
-            z.Set(ZDOVars.s_item, hash);
+            z.Set(ZDOVars.s_item, item.name.GetStableHashCode());
             ItemDrop.SaveToZDO(data, z);
             z.Set(ZDOVars.s_type, pt.Turn);
-            nv.InvokeRPC(ZNetView.Everybody, "SetVisualItem", hash, data.m_variant, data.m_quality, pt.Turn);
         }
 
         // ---------------------------------------------------------------- helpers
-        // a piece a blueprint put into the world (its building stamped on it: LocParts), not the author's own by hand
+        // a piece a blueprint put into the world (its building stamped on it: LocParts), not the author's own by hand. Only for what is the blueprint's
+        // own (its place's state, layers, «lock…» rules by its stamp): a rule «so in the story's places» asks StoryPiece (arch_check «story-piece»)
         internal static bool Copy(ZNetView nv)
         {
             return nv != null && nv.IsValid() && nv.GetZDO().GetString(LocParts.KOf, "").Length > 0;
+        }
+
+        // a piece of a place of the story, whatever put it there: a blueprint's copy, or a piece of an inside of ours (its rooms, its things, the author's
+        // own there: LocInside). One question for every rule that is so in all the places the author makes or adds to (the user 2026-11-16: the game's
+        // Hugin sat on the map table in the barrow and talked of it — the Hall had been mended, the barrow's inside was not a «Copy»)
+        internal static bool StoryPiece(ZNetView nv)
+        {
+#if RAVEN_STORY
+            if (LocInside.Ours(nv)) return true;
+#endif
+            return Copy(nv);
+        }
+
+        // a stand whose thing stays on it for whoever comes: a blueprint's copy, or one of the author's inside a dungeon of ours (LocInside)
+        internal static bool StandKept(ZNetView nv)
+        {
+#if RAVEN_STORY
+            if (LocInside.StandKept(nv)) return true;
+#endif
+            return Copy(nv);
         }
 
         internal static bool Marked(ZNetView nv)
@@ -658,7 +696,7 @@ namespace HuginWhispers
 
         internal static void ForgetAll() { Known.Clear(); } // (a frame fixed or moved: the author's Hall is elsewhere)
 
-        private static bool Prefix(WearNTear __instance) { return !IsMarked(__instance); }
+        private static bool Prefix(WearNTear __instance) { return !IsMarked(__instance) && !StoryKeep.Holds(__instance); } // (or a piece the story keeps whole for a while: StoryKeep — never cached, it lets go)
 
         internal static bool IsMarked(WearNTear w)
         {
@@ -679,8 +717,11 @@ namespace HuginWhispers
         {
             Vector3 c; Quaternion rot;
             string of;
-            return nv.GetZDO().GetString(LocParts.KOf, "").Length == 0 // (not a copy the blueprint placed)
-                && LocParts.AuthorFrame(w.transform.position, out of, out c, out rot);
+            if (nv.GetZDO().GetString(LocParts.KOf, "").Length != 0) return false; // (a copy the blueprint placed: its mark says it)
+#if RAVEN_STORY
+            if (Blueprint.On && LocInside.In(w.transform.position)) return true; // (what the author builds in an inside of ours, before «keep» marks it: no ground there to stand on, nothing to lean on)
+#endif
+            return LocParts.AuthorFrame(w.transform.position, out of, out c, out rot);
         }
     }
 
@@ -688,7 +729,7 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(WearNTear), "RPC_Damage")]
     internal static class BlueprintDamagePatch
     {
-        private static bool Prefix(WearNTear __instance) { return !BlueprintWearPatch.IsMarked(__instance); }
+        private static bool Prefix(WearNTear __instance) { return !BlueprintWearPatch.IsMarked(__instance) && !StoryKeep.Holds(__instance); }
     }
 
     [HarmonyPatch(typeof(WearNTear), "ApplyDamage")]
@@ -696,7 +737,7 @@ namespace HuginWhispers
     {
         private static bool Prefix(WearNTear __instance, ref bool __result)
         {
-            if (!BlueprintWearPatch.IsMarked(__instance)) return true;
+            if (!BlueprintWearPatch.IsMarked(__instance) && !StoryKeep.Holds(__instance)) return true;
             __result = false;
             return false;
         }
@@ -724,7 +765,7 @@ namespace HuginWhispers
         {
             LocTouch t = __instance.GetComponent<LocTouch>();
             if (t != null && t.On) __result = t.GetHoverText();
-            else if (Blueprint.Copy(__instance.GetComponent<ZNetView>())) __result = "";
+            else if (Blueprint.StandKept(__instance.GetComponent<ZNetView>())) __result = "";
         }
     }
 
@@ -736,7 +777,7 @@ namespace HuginWhispers
         {
             LocTouch t = __instance.GetComponent<LocTouch>();
             if (t != null && t.On) __result = t.GetHoverName();
-            else if (Blueprint.Copy(__instance.GetComponent<ZNetView>())) __result = "";
+            else if (Blueprint.StandKept(__instance.GetComponent<ZNetView>())) __result = "";
         }
     }
 
@@ -745,7 +786,7 @@ namespace HuginWhispers
     {
         private static bool Prefix(ItemStand __instance, Humanoid user, ref bool __result)
         {
-            if (!Blueprint.Copy(__instance.GetComponent<ZNetView>())) return true; // (a copy: nobody, the author too — his own Hall he dresses as he likes)
+            if (!Blueprint.StandKept(__instance.GetComponent<ZNetView>())) return true; // (a copy: nobody, the author too — his own Hall he dresses as he likes)
             __result = true; // (handled, quietly: the item stays in the bag)
             return false;
         }
@@ -757,7 +798,9 @@ namespace HuginWhispers
     {
         private static bool Prefix(Player __instance, Piece piece, ref bool __result)
         {
-            if (piece == null || Perches.StoryAuthor || !Blueprint.Marked(piece.GetComponent<ZNetView>())) return true;
+            if (piece == null) return true;
+            if (StoryKeep.Holds(piece)) { __instance.Message(MessageHud.MessageType.Center, Lang.T("Не зараз: спершу роздивись.")); __result = false; return false; } // (the story keeps it whole a while: StoryKeep — the author too)
+            if (Perches.StoryAuthor || !Blueprint.Marked(piece.GetComponent<ZNetView>())) return true;
             __instance.Message(MessageHud.MessageType.Center, Lang.T("Цього не розібрати: воно належить цьому місцю."));
             __result = false;
             return false;

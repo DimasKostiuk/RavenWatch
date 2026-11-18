@@ -1,5 +1,6 @@
 clip key_turn
 length 5.5
+tone plain
 loop 0
 pivot 1.1
 curve ease
@@ -23,7 +24,7 @@ touch wall 0.56
 0 @RightHand.w 0 0 0
 0.3 @RightHand.w 0 0 0
 1.1 @RightHand.w 1 0 0
-4 @RightHand.w 1 0 0
+3.4 @RightHand.w 1 0 0
 5.2 @RightHand.w 0 0 0
 5.5 @RightHand.w 0 0 0
 

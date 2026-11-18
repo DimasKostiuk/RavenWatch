@@ -1,0 +1,16 @@
+# Сіґрун (story-lore.md «Смертні обрані»): обережна, торгує знанням, збирає трави; розповідає про Драупнір і каже правду про будяк.
+# ТИМЧАСОВИЙ ВИГЛЯД (2026-11-14): справжнього персонажа робить автор (F9 «Вигляд» → «Зберегти» пише сюди). У сюжеті її ще нема.
+[npc sigrun]
+name: Сіґрун
+shuns: none   # docs/jobs/people-moves.md
+persona: lively=1
+body: human
+model: 1
+skin: 0.9 0.8 0.71
+haircolor: 0.42 0.3 0.18
+hair: Hair18_2
+beard: none
+gear: ArmorLeatherChest ArmorLeatherLegs CapeLinen
+fight: off
+walk: 0.95
+menu: no

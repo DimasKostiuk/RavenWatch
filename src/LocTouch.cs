@@ -1,5 +1,8 @@
 #if RAVEN_ITEM && RAVEN_NPC
+using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace HuginWhispers
@@ -7,10 +10,12 @@ namespace HuginWhispers
     // A piece of a place the story wants touched (Loc.Touches, «touch: shchyt step prologue munin_shield»; «-» — always): the piece of
     // that name (LocParts names) glows (not with «quiet») while the story's conditions hold for you, and then E on it:
     //   · «read: <name> [<conditions> ::] <words>» — the first of its lines whose conditions hold, on the game's rune page (the Hall's old
-    //     letter, Eirik's carving: «\n» a new line);
+    //     letter, Eirik's carving: «\n» a new line); which line was read is the character's for good (ReadFlag: the condition «read», the
+    //     book's «quote:» — StorySaga), known by its conditions: a piece's lines may be put in any order and new ones added, but a line
+    //     whose conditions are rewritten counts as not read;
     //   · the story's event «use <place>.<name>» — a quest's «on:» goes on from it (the shield of Munin's place starts its scene);
-    //   · «elsedo: <name> <actions>» — when no stage of yours waits for this very touch (the letter read outside the prologue's moment:
-    //     heartlearn at once — there is no scene to wait for).
+    //   · «elsedo: <name> <actions>» — when no stage of yours would pass on this very touch (StoryQuests.Awaits: its «on:» and its «wait:»;
+    //     the letter read outside the prologue's moment: heartlearn at once — there is no scene to wait for).
     // Out of those conditions it is just a piece again. An item stand keeps its own look and rules: LocInteractPatch (E) and the stand's hover patches ask this first.
     internal sealed class LocTouch : MonoBehaviour, Hoverable, Interactable
     {
@@ -112,12 +117,95 @@ namespace HuginWhispers
         {
             List<KeyValuePair<string, string>> reads;
             if (!l.Reads.TryGetValue(Name, out reads) || TextViewer.instance == null) return;
-            foreach (KeyValuePair<string, string> r in reads)
+            for (int i = 0; i < reads.Count; i++)
             {
+                KeyValuePair<string, string> r = reads[i];
                 if (r.Key.Length > 0 && !StoryCond.Holds(p, r.Key, e => l.Log("read: " + e))) continue;
-                TextViewer.instance.ShowText(TextViewer.Style.Rune, Title(), Lang.T(r.Value), true);
+                TextViewer.instance.ShowText(TextViewer.Style.Rune, Title(), Shown(r.Value), true);
+                Story.SetFlag(p, ReadFlag(l.Id, Name, r.Key), true);
                 return;
             }
+        }
+
+        // The words of a «read:» line as this game shows them (the rune page here, the book's «quote:»): translated, and each
+        // «{pool <place>.<name> <N> [<in a row>]}» in them replaced by N names of that place's «pool:» line, <in a row> (3) to a row. Which N
+        // is the world's: by its seed, so every player of a world reads the same names and another world has others; nothing is kept. They
+        // are chosen by their numbers in the list, not by the words, so every language shows the same people; a list with names added later
+        // changes some of the names in the worlds already begun.
+        private static readonly Regex PoolWord = new Regex(@"\{pool (\w+)\.(\w+) (\d+)(?: (\d+))?\}",RegexOptions.CultureInvariant);
+        internal static string Shown(string raw)
+        {
+            string t = Lang.T(raw ?? "");
+            if (t.IndexOf("{pool ", StringComparison.Ordinal) < 0) return t;
+            return PoolWord.Replace(t, m => Drawn(m.Groups[1].Value, m.Groups[2].Value, int.Parse(m.Groups[3].Value), m.Groups[4].Success ? int.Parse(m.Groups[4].Value) : 3));
+        }
+
+        private static string Drawn(string place, string pool, int n, int row)
+        {
+            Loc l = Locs.Get(place);
+            string list;
+            if (l == null || !l.Pools.TryGetValue(pool, out list))
+            {
+                if (_told.Add("pool." + place + "." + pool)) Story.Log("read: no «pool: " + pool + "» in the place «" + place + "», its names are not shown");
+                return "";
+            }
+            string[] src = list.Split(','), names = Lang.T(list).Split(',');
+            if (names.Length != src.Length)
+            {
+                if (_told.Add("poollang." + place + "." + pool)) l.Log("pool «" + pool + "»: " + src.Length + " names as written, " + names.Length + " in this language — shown as written");
+                names = src;
+            }
+            uint seed = (uint)((WorldGenerator.instance != null ? WorldGenerator.instance.GetSeed() : 0) ^ (place + "." + pool).GetStableHashCode());
+            uint[] keys = new uint[names.Length];
+            int[] order = new int[names.Length];
+            for (int i = 0; i < names.Length; i++)
+            {
+                uint h = seed ^ ((uint)(i + 1) * 2654435761u); // (a name's own number with the world's seed: a name added to the list's end moves no other)
+                h ^= h >> 15; h *= 2246822519u; h ^= h >> 13; h *= 3266489917u; h ^= h >> 16;
+                keys[i] = h; order[i] = i;
+            }
+            Array.Sort(keys, order);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < order.Length && i < n; i++)
+                sb.Append(i == 0 ? "" : i % Mathf.Max(1, row) == 0 ? "\n" : " · ").Append(names[order[i]].Trim());
+            return sb.ToString();
+        }
+
+        // a line read: the character's, written once («read.<place>.<piece>.<its conditions as a few letters>», «0» for the line with none; the
+        // words are the same in every world). By its conditions, not its place among the lines: a line put in before it changes nothing
+        private static string ReadFlag(string place, string name, string when) { return "read." + place + "." + name + "." + (when.Length == 0 ? "0" : ((uint)when.GetStableHashCode()).ToString("x")); }
+
+        // what this player has read on a piece («<place>.<piece>»): of the lines read, the first as written (the one with conditions — the
+        // fullest), untranslated; «»: nothing read, or no such piece
+        internal static string ReadBy(Player p, string piece)
+        {
+            int dot = (piece ?? "").IndexOf('.');
+            Loc l = dot > 0 ? Locs.Get(piece.Substring(0, dot)) : null;
+            List<KeyValuePair<string, string>> reads;
+            if (p == null || l == null || !l.Reads.TryGetValue(piece.Substring(dot + 1), out reads)) return "";
+            foreach (KeyValuePair<string, string> r in reads)
+                if (Story.Flag(p, ReadFlag(l.Id, piece.Substring(dot + 1), r.Key))) return r.Value;
+            return "";
+        }
+
+        // «read <place>.<piece> full»: he has read the piece's first «read:» line — the full words (Eirik's carving by the Watch's fire), not a
+        // later line that only says they cannot be read
+        internal static bool ReadFull(Player p, string piece)
+        {
+            int dot = (piece ?? "").IndexOf('.');
+            Loc l = dot > 0 ? Locs.Get(piece.Substring(0, dot)) : null;
+            List<KeyValuePair<string, string>> reads;
+            if (p == null || l == null || !l.Reads.TryGetValue(piece.Substring(dot + 1), out reads) || reads.Count == 0) return false;
+            return Story.Flag(p, ReadFlag(l.Id, piece.Substring(dot + 1), reads[0].Key));
+        }
+
+        // «read <place>.<piece>»: what is wrong with these words (null: fine)
+        internal static string ReadCheck(string piece)
+        {
+            int dot = (piece ?? "").IndexOf('.');
+            Loc l = dot > 0 ? Locs.Get(piece.Substring(0, dot)) : null;
+            if (l == null) return "read <місце>.<деталь> — нема місця «" + piece + "»";
+            return l.Reads.ContainsKey(piece.Substring(dot + 1)) ? null : "у місця «" + l.Id + "» нема рядка read: для «" + piece.Substring(dot + 1) + "»";
         }
 
         public bool UseItem(Humanoid user, ItemDrop.ItemData item) { return false; }

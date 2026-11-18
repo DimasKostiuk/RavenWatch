@@ -75,7 +75,7 @@ namespace HuginWhispers
         // page is drawn again only when its snapshot changes, and the snapshot holds no seconds
         private static TMP_Text Ticking(TMP_Text t, Func<string> text)
         {
-            Live.Add(() => { if (t == null) return; string s = text(); if (s != null && t.text != s) t.text = s; });
+            Live.Add(() => { if (t == null) return; string s = text(); if (s != null) s = Grammar.Fix(s); if (s != null && t.text != s) t.text = s; }); // ({в|ла}: your forms, as T() put them the first time)
             return t;
         }
         private static KeyCode[] _captureKeys;
@@ -198,6 +198,9 @@ namespace HuginWhispers
             LeaveOutfits();
             OutfitStage.Close();
             Outfits.PlayerView = false; // the world dresses the ravens as tuning says again
+#if RAVEN_STORY
+            SagaClosed(); // (the chronicle's own pick of a chapter: anew next time)
+#endif
             HideTip();
             StageOff();
             if (_stage != null) _stage.SetActive(false);
@@ -397,9 +400,11 @@ namespace HuginWhispers
                 if (tree != null)
                 {
                     Image ygg = Img(_window, "Yggdrasil", tree, Color.white);
-                    // the picture's trunk stands 50 px right of its middle (710 of 1320): moved back so it rises straight
+                    // the picture is the crown's left half and its mirror, the trunk in its very middle, no branch cut off at an edge;
+                    // shown at 460 to 1320 px, so it rises straight
                     // up from the plaque and the tabs; set low enough that its foot goes under the tilted book (no seam above it)
-                    At(ygg.rectTransform, W / 2f - 230f - 50f * 460f / 1320f, 12f, 460f, 460f * 450f / 1320f);
+                    float s = 460f / 1320f, tw = tree.rect.width * s;
+                    At(ygg.rectTransform, W / 2f - tw / 2f, 12f, tw, tree.rect.height * s);
                 }
                 RectTransform plaque = Rect("Plaque", _window);
                 At(plaque, W / 2f - 180f, 56f, 360f, 50f);
@@ -475,13 +480,14 @@ namespace HuginWhispers
                 sheet.GetComponent<Image>().raycastTarget = false; // (the leaf itself is no button: its hidden top under the book neither)
                 ll.raycastTarget = true;
                 BookLink link = ll.gameObject.AddComponent<BookLink>();
-                link.Rest = GoldInk; link.Click = () => { try { Application.OpenURL(DiscordUrl); } catch { } };
+                link.Rest = GoldInk; link.Click = () => { try { Application.OpenURL(DiscordUrl); } catch (Exception e) { if (Plugin.Instance != null) Plugin.Instance.Log("Book of ravens: the Discord link did not open: " + e.Message); } };
                 Tip(ll.gameObject, () => Lang.T("Відкриє наш сервер RavenWatch у Discord: пиши туди про баги, ідеї й помилки в словах воронів."));
 
-                // the tabs, over the book's upper edge
+                // the tabs, over the book's upper edge: their feet on one line, the open one taller (TabW…: a tenth smaller than at first — the user 2026-11-12,
+                // «шоб поміщались коректно на книзі і не перекривали інші елементи»)
                 _tabsBar = Rect("Tabs", _window);
                 At(_tabsBar, 0f, 118f, W, 44f);
-                HorizontalLayoutGroup hb = HBox(_tabsBar, 8f, TextAnchor.LowerCenter);
+                HorizontalLayoutGroup hb = HBox(_tabsBar, TabGap, TextAnchor.LowerCenter);
                 hb.childControlHeight = false; hb.childControlWidth = false;
                 _tabs = new RectTransform[TabNames.Length];
                 _tabH = new float[TabNames.Length];
@@ -490,22 +496,22 @@ namespace HuginWhispers
                 {
                     int tab = i;
                     RectTransform t = Rect("Tab", _tabsBar);
-                    t.sizeDelta = new Vector2(150f, 36f);
+                    t.sizeDelta = new Vector2(TabW, TabLow);
                     Image bg = t.gameObject.AddComponent<Image>();
                     bg.sprite = BookArt.RoundFine(10f, true); bg.type = Image.Type.Sliced;
-                    TMP_Text name = T(t, TabNames[i], 18f, C("#d8c497"), F.Head, TextAlignmentOptions.Top);
-                    Shrink(name, 12f); // a longer word (another language) gets smaller, never out of the tab
-                    Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, -7f));
+                    TMP_Text name = T(t, TabNames[i], 16f, C("#d8c497"), F.Head, TextAlignmentOptions.Top);
+                    Shrink(name, 11f); // a longer word (another language) gets smaller, never out of the tab
+                    Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(5f, 0f), new Vector2(-5f, -6f));
                     Image dot = Img(t, "Dot", BookArt.Circle, Gold);
                     dot.rectTransform.anchorMin = dot.rectTransform.anchorMax = dot.rectTransform.pivot = new Vector2(1f, 1f);
-                    dot.rectTransform.sizeDelta = new Vector2(11f, 11f);
-                    dot.rectTransform.anchoredPosition = new Vector2(4f, 4f);
+                    dot.rectTransform.sizeDelta = new Vector2(10f, 10f);
+                    dot.rectTransform.anchoredPosition = new Vector2(3f, 3f);
                     dot.gameObject.SetActive(false);
                     Button b = t.gameObject.AddComponent<Button>();
                     b.targetGraphic = bg;
                     Tint(b);
                     b.onClick.AddListener(() => { bool was = _capturing != null; _capturing = null; if (tab != _tab) Show(tab); else if (was) Show(_tab, true); }); // the open tab again: nothing to turn (a key wait just ends)
-                    _tabs[i] = t; _tabDots[i] = dot; _tabH[i] = 36f;
+                    _tabs[i] = t; _tabDots[i] = dot; _tabH[i] = TabLow;
                     Tip(t.gameObject, () => TabWhy(tab));
                 }
 
@@ -595,6 +601,7 @@ namespace HuginWhispers
         // fade, no slide), and its bars stand at their values at once — they paint in only when the book is opened.
 
         private static float[] _tabH;
+        private const float TabW = 135f, TabLow = 32f, TabHigh = 40f, TabGap = 7f; // a tab: its width, its height shut and open, the room between two
         private static bool _barsAtOnce; // the page being drawn came from another tab: its bars skip the paint-in
 
         private static void Animate()
@@ -613,7 +620,7 @@ namespace HuginWhispers
             if (_help == null) return;
             bool on = !_help.gameObject.activeSelf;
             _help.gameObject.SetActive(on);
-            if (on) { _helpText.text = HelpFor(_tab); FitHelp(); _help.SetAsLastSibling(); }
+            if (on) { _helpText.text = Grammar.Fix(HelpFor(_tab)); FitHelp(); _help.SetAsLastSibling(); } // ({в|ла}: your forms — 2026-11-17 «де б ти не бу{в|ла}» stood as it is here)
         }
 
         // the card as tall as its words, up to the book's height; still more words: a smaller letter (never past the card)
@@ -769,7 +776,7 @@ namespace HuginWhispers
         private static void MarkTab(int i, bool on)
         {
             RectTransform t = _tabs[i];
-            if (_tabH != null) _tabH[i] = on ? 44f : 36f; else t.sizeDelta = new Vector2(150f, on ? 44f : 36f); // grows there smoothly (Animate)
+            if (_tabH != null) _tabH[i] = on ? TabHigh : TabLow; else t.sizeDelta = new Vector2(TabW, on ? TabHigh : TabLow); // grows there smoothly (Animate)
             t.GetComponent<Image>().color = on ? Gold : C("#3a2c1c");
             TMP_Text name = t.GetComponentInChildren<TMP_Text>(true);
             if (name != null) name.color = on ? C("#2a1a0c") : C("#d8c497");
@@ -777,7 +784,7 @@ namespace HuginWhispers
 
         private static void Renew()
         {
-            foreach (Action a in Live.ToArray()) { try { a(); } catch { } }
+            foreach (Action a in Live.ToArray()) { try { a(); } catch (Exception e) { PatchGuard.Fail("RavenBook.Live", e); } } // (one that throws: said once, the others tick on)
             TabDots();
             long s0 = System.Diagnostics.Stopwatch.GetTimestamp();
             string now = Snapshot();
@@ -884,14 +891,16 @@ namespace HuginWhispers
         }
 
         // the gold "new" mark: a bright drop with a dark rim (plain gold is lost on the parchment), top right of its owner;
-        // over: how far it sticks out past the corner (negative: inside)
-        private static void NewDot(RectTransform owner, float size, float over)
+        // over: how far it sticks out past the corner (negative: inside); up: the same upwards when not the same — a ribbon at a column's very top takes it
+        // no higher than itself, or the column's frame cuts the dot (the user 2026-11-12: «таб з кружком обрізається зверху»)
+        private static void NewDot(RectTransform owner, float size, float over) { NewDot(owner, size, over, over); }
+        private static void NewDot(RectTransform owner, float size, float over, float up)
         {
             Image rim = Img(owner, "New", BookArt.Circle, C("#5a3c14"));
             rim.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             rim.raycastTarget = false;
             rim.rectTransform.anchorMin = rim.rectTransform.anchorMax = rim.rectTransform.pivot = new Vector2(1f, 1f);
-            rim.rectTransform.sizeDelta = new Vector2(size, size); rim.rectTransform.anchoredPosition = new Vector2(over, over);
+            rim.rectTransform.sizeDelta = new Vector2(size, size); rim.rectTransform.anchoredPosition = new Vector2(over, up);
             Image core = Img(rim.rectTransform, "Core", BookArt.Circle, C("#FFD98A"));
             core.raycastTarget = false;
             Stretch(core.rectTransform, Vector2.zero, Vector2.one, new Vector2(2f, 2f), new Vector2(-2f, -2f));
@@ -972,11 +981,11 @@ namespace HuginWhispers
         private static float ColumnX(bool munin) { return munin ? 56f : 644f; }
         private const float ColumnW = 500f, ColumnTop = 46f, ColumnPadBottom = 6f;
 
-        // a column of a page, from top down to the frame's end; it scrolls when its content is taller (the wheel)
-        private static RectTransform Column(string name, float x, float top, float width, float spacing)
+        // a column of a page, from top down to the frame's end (or to bottom: something stands under it); it scrolls when its content is taller (the wheel)
+        private static RectTransform Column(string name, float x, float top, float width, float spacing, float bottom = PageBottom)
         {
             RectTransform view = Rect(name, _pages);
-            At(view, x, top, width, PageBottom - top);
+            At(view, x, top, width, bottom - top);
             view.gameObject.AddComponent<RectMask2D>();
             view.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f); // catches the wheel between the pieces
             RectTransform content = Rect("Content", view);
@@ -1610,16 +1619,16 @@ namespace HuginWhispers
                     Tip(seg.gameObject, () => "<b><color=" + Satiety.ZoneHex[z] + ">" + Satiety.ZoneWords[z] + "</color></b>\n" + Satiety.ZoneText(z));
                 }
                 Stroke(track, value, ZoneBrush[Satiety.Zone(item)], 10f, new Vector2(-2f, 1f), stroke, BarKey(m, Lang.T("Ситість")));
-                // the mark at 15: below it no orders
+                // the mark at Satiety.HungryAt: below it no orders
                 // an inked diamond just over the bar and a quill's stroke down through it (BookArt.Marker)
                 Image tick = Img(bar, "Mark", BookArt.Marker, A(Ink, 0.92f));
                 tick.rectTransform.anchorMin = tick.rectTransform.anchorMax = new Vector2(Satiety.HungryAt / 100f, 1f);
                 tick.rectTransform.pivot = new Vector2(0.5f, 1f);
                 tick.rectTransform.sizeDelta = new Vector2(8f, 24f); tick.rectTransform.anchoredPosition = new Vector2(0f, 6f);
-                TMP_Text fifteen = T(bar, RavenAbilities.R(Satiety.HungryAt), 13f, Brown, F.Body, TextAlignmentOptions.Top);
-                fifteen.rectTransform.anchorMin = fifteen.rectTransform.anchorMax = new Vector2(Satiety.HungryAt / 100f, 1f);
-                fifteen.rectTransform.pivot = new Vector2(0.5f, 1f);
-                fifteen.rectTransform.sizeDelta = new Vector2(40f, 16f); fifteen.rectTransform.anchoredPosition = new Vector2(0f, -17f);
+                TMP_Text markNum = T(bar, RavenAbilities.R(Satiety.HungryAt), 13f, Brown, F.Body, TextAlignmentOptions.Top);
+                markNum.rectTransform.anchorMin = markNum.rectTransform.anchorMax = new Vector2(Satiety.HungryAt / 100f, 1f);
+                markNum.rectTransform.pivot = new Vector2(0.5f, 1f);
+                markNum.rectTransform.sizeDelta = new Vector2(40f, 16f); markNum.rectTransform.anchoredPosition = new Vector2(0f, -17f);
                 Tip(tick.gameObject, () => Lang.F("<b>{0}</b> — нижче ворон голодний і не виконує наказів.", RavenAbilities.R(Satiety.HungryAt)));
             }
 
@@ -2663,7 +2672,7 @@ namespace HuginWhispers
                 case RavensTab: return Lang.T("Наведи на золотий текст — пояснення · ● на вкладці — є що зробити");
                 case GrowTab: return Lang.T("Стрічки «Мунін / Хугін» перемикають ворона · ● — ритуал можна провести");
                 case RunesTab: return Lang.T("Наведи на руну — що дає · клік — на якого ворона · ● нова руна");
-                case SagaTab: return Lang.T("Ліворуч — що сталося у світі · праворуч — твій шлях · ● новий запис");
+                case SagaTab: return Lang.T("Стрічки вгорі — літопис, люди, місця, знання, загадки · ● новий запис");
                 default: return Lang.T("Клік по речі — вдягнути · клік по слоту — зняти · у кутках — руни · тягни ворона мишею · ● нова річ");
             }
         }
@@ -2759,7 +2768,7 @@ namespace HuginWhispers
                 TMP_Text t = T(b, Plugin.RavenName(w), 17f, on ? (w ? SealInk : C("#0e2030")) : (w ? C("#7a3020") : BookArt.HuginInk), F.Head, TextAlignmentOptions.Center);
                 t.textWrappingMode = TextWrappingModes.NoWrap;
                 if (!worn) b.gameObject.AddComponent<CanvasGroup>().alpha = 0.45f;
-                if (dot != null && dot(w)) NewDot(b, 12f, 4f);
+                if (dot != null && dot(w)) NewDot(b, 12f, 4f, -1f); // (the ribbons stand at the column's top: nothing of the dot above them)
                 if (!on && worn)
                 {
                     Button bt = b.gameObject.AddComponent<Button>();
@@ -2955,7 +2964,7 @@ namespace HuginWhispers
             int was = Trust.LevelAs;
             Trust.LevelAs = Mathf.Clamp(lv, 1, Trust.MaxLevel);
             try { cost = g.Cost(); wait = g.Cooldown(); lasts = g.Lasts(); }
-            catch { cost = 0f; wait = 0f; lasts = 0f; }
+            catch (Exception e) { cost = 0f; wait = 0f; lasts = 0f; PatchGuard.Fail("RavenBook.GiftAt " + g.Id, e); }
             finally { Trust.LevelAs = was; }
         }
 
@@ -3901,7 +3910,7 @@ namespace HuginWhispers
                 case RunesTab:
                     return NestHelp(h) + "\n\n" + RunesHelp("");
                 case SagaTab:
-                    return Lang.F("{0}<b>Ліва сторінка — світ.</b> Те, що сталося тут для всіх, з іменами тих, хто це бачив. Чого ти сам{{|а}} не бачи{{в|ла}}, те лишається чуткою, поки тобі не розкажуть люди.\n\n<b>Права сторінка — твій шлях.</b> Угорі — що робити зараз, нижче — що ти вже пройш{{ов|ла}}, по черзі.", h);
+                    return Lang.F("{0}<b>Літопис.</b> Ліва сторінка — світ: те, що сталося тут для всіх, з днем і з іменами тих, хто це бачив. Чого ти сам{{|а}} не бачи{{в|ла}}, те лишається чуткою, поки тобі не розкажуть люди. Права сторінка — твій шлях: угорі — що робити зараз, нижче — що ти вже пройш{{ов|ла}}, по черзі.\n\n<b>Люди, Місця, Знання.</b> Те, що ти знаєш про цей світ. Записи з'являються й доповнюються самі: коли щось побачиш, прочитаєш або розпитаєш у розмові. Ім'я, якого ти ще не знаєш, книга теж не знає.\n\n<b>Загадки.</b> Те, чого ти ще не розумієш. Зачіпки збираються самі, а відповідь з'явиться, коли ти до неї дійдеш. Розпитати людей можна не завжди: книга каже, хто може розповісти більше, і коли про щось уже нікого спитати.", h);
                 case GrowTab:
                     return Lang.F("{0}<b>Довіра.</b> Ворон звикає до того, з ким мандрує. Довіра росте, коли годуєш його, голодного (улюблена їжа — удвічі), і коли ви разом живете — і в мирі, і в бою. Коли шкала повна, вона замерзає й чекає ритуалу: принеси трофеї наступного боса до Жертовних каменів, де висить трофей цього боса. Ворон з'їсть їх, полетить до Одіна й повернеться на новому рівні: більше сили, сильніші дари, нове вбрання.\nДовіра тане, коли ти гинеш, знімаєш ворона з плеча чи він голодує (ситість 0). На 1–2 рівнях ворон ще дичиться й іноді відлітає на кілька хвилин.\n\n<b>Вишкіл</b> — сила удару ворона («Удар в очі», «Кігті»). Кожен виліт, що когось вразив, додає досвіду. Сила не залежить від твоєї зброї: вона росте з вишколом, довірою та за кожного боса, якого ти переміг із ним на плечі.\n\n<b>Повернення.</b> Загиблого чи зниклого ворона можна повернути обрядом біля каменів (на сторінці ворона), не частіше ніж раз на {1} днів.", h, Backup.RestoreDays);
                 default:
@@ -3930,12 +3939,12 @@ namespace HuginWhispers
         {
             if (_tip == null || _hover == null || _hover.Text == null) { HideTip(); return; }
             string text;
-            try { text = _hover.Text(); } catch { text = null; }
+            try { text = _hover.Text(); } catch (Exception e) { text = null; PatchGuard.Fail("RavenBook.TipText", e); }
             if (string.IsNullOrEmpty(text)) { HideTip(); return; }
             text = Grammar.Fix(text); // ({в|ла}: your forms)
             _tipText.text = text;
             List<RavenBookHover.Icon> icons = null;
-            try { if (_hover.Icons != null) icons = _hover.Icons(); } catch { icons = null; }
+            try { if (_hover.Icons != null) icons = _hover.Icons(); } catch (Exception e) { icons = null; PatchGuard.Fail("RavenBook.TipIcons", e); }
             int n = icons != null ? icons.Count : 0, cols = Mathf.Min(TipIconCols, n), rows = cols > 0 ? (n + cols - 1) / cols : 0;
             Vector2 size = _tipText.GetPreferredValues(text, 420f, 0f);
             float w = Mathf.Max(Mathf.Min(420f, size.x), cols * TipIconCell) + 28f;
@@ -4271,7 +4280,7 @@ namespace HuginWhispers
             GameObject go = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(prefab) : null;
             ItemDrop d = go != null ? go.GetComponent<ItemDrop>() : null;
             if (d == null) return null;
-            try { return BookArt.Smooth(d.m_itemData.GetIcon()); } catch { return null; } // mipmapped: no ladders on the tilted page
+            try { return BookArt.Smooth(d.m_itemData.GetIcon()); } catch (Exception e) { PatchGuard.Fail("RavenBook.Icon " + prefab, e); return null; } // mipmapped: no ladders on the tilted page
         }
 
         // at x, top (from the parent's top-left), this size

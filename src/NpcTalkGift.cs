@@ -95,15 +95,15 @@ namespace HuginWhispers
             bool touchy = NpcPhrases.Tones(a).Contains("бурч") || NpcNature.Is(a, "bully");
             string theme = taste > 0 ? "gift_liked" : taste < 0 ? (touchy ? "gift_insult" : "gift_disliked") : "gift_plain";
             long me = p.GetPlayerID();
-            if (taste > 0) { NpcMemory.Tell(a, "gift_liked", me, name); NpcPatience.Spend(a, p, -GiftLikedPatience); Warmer(a); }
+            if (taste > 0) { NpcMemory.Tell(a, "gift_liked", me, NpcMemory.Thing(NpcKit.PrefabOf(it), 1)); NpcPatience.Spend(a, p, -GiftLikedPatience); Warmer(a); }
             else if (taste == 0) NpcAttitude.Tell(a, me, GiftPlainWarm);
-            else if (touchy) { NpcMemory.Tell(a, "gift_insult", me, name); NpcPatience.Irritate(a, p, GiftIrk); Colder(a, false); }
+            else if (touchy) { NpcMemory.Tell(a, "gift_insult", me, NpcMemory.Thing(NpcKit.PrefabOf(it), 1)); NpcPatience.Irritate(a, p, GiftIrk); Colder(a, false); }
             string said = NpcPhrases.Compose(a, theme, p, new Dictionary<string, string> { { "item", name } }) ?? "…";
             Npcs.Log(a.Id + ": given " + name + " (" + kind + ", " + (taste > 0 ? "liked" : taste < 0 ? "not liked" : "plain") + ")");
             List<KeyValuePair<string, Action>> rows = new List<KeyValuePair<string, Action>>
             {
-                new KeyValuePair<string, Action>(Lang.T("Нема за що."), () => Show("start", p)),
-                new KeyValuePair<string, Action>(Lang.T("Бувай."), Close),
+                new KeyValuePair<string, Action>(Welcome(a, p), () => Show("start", p)),
+                new KeyValuePair<string, Action>(Bye(a, p), Close),
             };
             Rows(p, RavenBook.Says(NpcBody.Spoken(a, said)), rows, you);
         }

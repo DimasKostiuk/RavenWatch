@@ -15,12 +15,18 @@
 // cover(id): a first coverage of a scene's talks that have no camera of their own, by the common grammar — both first, then over the listener's
 // shoulder at who speaks, close on a short line, the whole body for a clip, a slow push on a long line. Lines to put in, each with the line it
 // goes before; nothing is written to the file (the author's own shots are never overwritten: the key scenes he films himself).
+// What is heard: a column of the table says what the scene holds at each step (♪ music, ~ a bed, the mix, the ear), every one-shot is listed
+// under it with its moment and length, and the sound has warnings of its own — tools/scene_sound.js (its head says each); sound(id): a first
+// sound pass proposed for a scene, as cover(id) proposes its shots.
 // What it cannot know: how far a walk is (the places' positions are the world's) — a walk is «~» and its limit; whether an «if» holds (counted in).
 //   node tools/scene_dry.js <scene>          or  node tools/anim.js scene --dry <scene>
 const fs = require('fs'), path = require('path'), cp = require('child_process');
 const root = path.join(__dirname, '..');
 const scenesDir = path.join(root, 'assets', 'story', 'scenes'), clipsDir = path.join(root, 'assets', 'story', 'clips');
 // the game's numbers (where they live in the code)
+// the sisters' falcons (Falcon, StoryScenesFalcon): from so far, at its cruise, down at its approach, then the flare and braking
+const FalconFrom = 90, FalconUp = 35, FalconCruise = 11, FalconApproach = 7, FalconBrake = 3.5, FalconLand = 8; // StoryScenes.FalconFrom/Up · Falcon.Cruise/Approach · its braking (BrakeAt, PostureSeconds) · a landing from its circle
+const FalconSkim = 6.5, SkimWay = 56; // Falcon.SkimSpeed · m of a low run as the ambush lays it (the places are the world's: a lane's words are not reckoned here)
 const StepLong = 8, StepMax = 30, CastWait = 180, BirdFar = 40, Cruise = 9, LandSec = 3, WalkSpeed = 1.3, RunSpeed = 3.5, BackSlowest = 0.35, FadePerson = 3; // StudioScene.StepLong · StoryScenes.StepMax · CastWait · (a bird far off) · RavenFlight Hugin.Cruise · its landing · StoryScenesCast (npc go) · StoryWalk.BackSlowest · Fades.Person
 const readSec = text => Math.min(8, Math.max(2, 1.2 + text.length * 0.06)) * 1.1; // RavenSpeech.Seconds, Pace.Scene, ReadScale 1.1
 const ShotShort = 1.2, TalkLines = 4, TalkLong = 14, ShortLine = 28, LongRead = 5, PushSecs = 3; // s a shot is read in · lines and s of talk one shot carries · letters of a line that is a look, not a speech · s of reading that asks for a push · a push's seconds when none are said (StoryScenes.PushSecs)
@@ -81,23 +87,24 @@ function clipOf(name) {
     const p = path.join(clipsDir, whole + '.txt');
     if (!fs.existsSync(p)) clips[whole] = null;
     else {
-      const c = { length: 0, loop: false, parts: {}, marks: [] };
+      const c = { length: 0, loop: false, parts: {}, marks: [], events: [] };
       for (const raw of fs.readFileSync(p, 'utf8').split(/\r?\n/)) {
         const w = raw.trim().split(/\s+/);
         if (w[0] === 'length') c.length = +w[1];
         else if (w[0] === 'loop') c.loop = w[1] === '1';
         else if (w[0] === 'part') c.parts[w[1]] = { from: +w[2], to: +w[3], how: w[4] || 'hold' };
         else if (w[0] === 'mark') c.marks.push({ t: +w[1], name: w[2] });
+        else if (w[0] === 'event') c.events.push({ t: +w[1], name: w[2] }); // (a sound the clip carries: «event <time> <sound> [volume]»)
       }
       clips[whole] = c;
     }
   }
   const c = clips[whole];
   if (!c) return null;
-  if (!part) return { length: c.length, loop: c.loop, marks: c.marks, from: 0, known: true };
+  if (!part) return { length: c.length, loop: c.loop, marks: c.marks, events: c.events, from: 0, known: true };
   const pt = c.parts[part];
   if (!pt) return null;
-  return { length: pt.to - pt.from, loop: pt.how === 'loop', marks: c.marks.filter(m => m.t >= pt.from && m.t <= pt.to).map(m => ({ t: m.t - pt.from, name: m.name })), from: pt.from, known: true };
+  return { length: pt.to - pt.from, loop: pt.how === 'loop', marks: c.marks.filter(m => m.t >= pt.from && m.t <= pt.to).map(m => ({ t: m.t - pt.from, name: m.name })), events: c.events.filter(m => m.t >= pt.from && m.t <= pt.to).map(m => ({ t: m.t - pt.from, name: m.name })), from: pt.from, known: true };
 }
 
 function sceneLines(id) {
@@ -126,17 +133,21 @@ function dry(id) {
   const said = ((sr.stdout || '') + (sr.stderr || '')).split('\n').filter(l => l.includes('[' + id + ']') || (l.startsWith('STORY ') && l.includes(sc.file)));
   const head = {}, steps = [];
   for (const { num, line } of sc.lines) {
-    const m = /^(roams|alone|needs|check|test|place|guard):\s*(.*)$/.exec(line);
+    const m = /^(roams|alone|aside|needs|check|test|place|guard):\s*(.*)$/.exec(line);
     if (m) { head[m[1]] = head[m[1]] ? head[m[1]] + '; ' + m[2] : m[2]; continue; }
     let cond = null, text = line;
     if (line.startsWith('if ')) { const c = line.indexOf(':'); cond = line.slice(3, c).trim(); text = line.slice(c + 1).trim(); }
     steps.push({ num, line, cond, w: text.split(/\s+/), text });
   }
   const warn = [];
+  const lane = require('./scene_sound.js').lane(warn); // (what is heard: its own file)
+  let filmed = false;
   const put = new Set((head.test || '').split(';').map(s => s.trim()).filter(Boolean).filter(a => /^npc \S+ at /.test(a)).map(a => a.split(/\s+/)[1]));
   const bare = !head.check && !head.test; // (said in the table's head: a fact for whoever runs the check, not a mistake of the scene)
   // the walk through the steps
-  let t = 0, cam = false, camSince = 0, camStep = null, bird = null, birdFlying = false, nothing = 0, nothingFrom = null, nothingSteps = 0;
+  const falcons = new Map(); // (name → flying: the scene's falcons)
+  const skims = new Map();   // (name → when its low run began)
+  let t = 0, cam = false, camSince = 0, camStep = null, bird = null, birdFlying = false, nothing = 0, nothingFrom = null, nothingSteps = 0, saidUntil = 0; // (saidUntil: the end of the last «npc <who> says»)
   const cast = new Set(), rows = [], bodyClip = {}; // (who: {clip, at} — the clip started on him and when)
   const shots = []; let shot = null;
   const endShot = () => { if (shot) { shot.end = t; shots.push(shot); shot = null; } };
@@ -157,12 +168,13 @@ function dry(id) {
       else took = Math.min(left, limit);
     };
     switch (kind) {
-      case 'wait': took = +w[1] || 1; break;
+      case 'wait': took = w[1] === 'said' ? Math.max(0, saidUntil - t) : (+w[1] || 1); break;
       case 'until': { const lim = +(s.text.slice(s.text.lastIndexOf('|') + 1).trim()) || 10; took = lim; shown = '≤' + f(lim); if (lim > StepLong) note += 'waits up to ' + f(lim) + ' s for its condition; '; break; }
       case 'sub': sub(w.slice(1).join(' ')); break;
       case 'say': sub(w.slice(2).join(' '), true); note += '(only with ' + w[1] + ' on the shoulder) '; break;
       case 'msg': took = 0; break;
       case 'fade': took = w[2] ? +w[2] : 1.5; break;
+      case 'glow': break; // (the light of a memory: does not wait)
       case 'camera':
         { const ended = shot; endShot(); if (ended && w[1] === 'off') ended.off = true; }
         { const why = cameraWhy(w); if (why) { note += 'THE GAME WILL LEAVE THIS STEP OUT; '; warn.push('line ' + s.num + ': ' + why); } }
@@ -177,7 +189,7 @@ function dry(id) {
           if (w[2] !== 'none') {
             const c = clipOf(w[2]);
             if (!c) { note += 'clip ' + w[2] + ' not a file of assets/story/clips (built in, or a part that is not there): its length unknown; '; shown = '?'; }
-            else { bodyClip.player = { clip: w[2], at: t }; if (c.loop) note += 'loops: on him till the next clip; '; else if (!w.includes('nowait')) took = c.length; }
+            else { bodyClip.player = { clip: w[2], at: t }; note += lane.clip('player', c, t); if (c.loop) note += 'loops: on him till the next clip; '; else if (!w.includes('nowait')) took = c.length; }
           }
         }
         else if (w[1] === 'mark') markOn('player', w[2], +w[3] || 30);
@@ -202,22 +214,53 @@ function dry(id) {
         else if (w[1] === 'leave' || w[1] === 'gone') { bird = null; birdFlying = false; }
         else if (w[1] === 'say') sub(w.slice(2).join(' '), true, true);
         break;
-      case 'npc': {
-        const who = w[1], verb = w[2];
-        if (verb !== 'spawn' && verb !== 'free' && !cast.has(who)) {
-          cast.add(who);
-          if (!put.has(who) && !steps.some(x => x.w[0] === 'npc' && x.w[1] === who && x.w[2] === 'spawn')) warn.push('«' + who + '» is taken from the world and nothing says where: the check waits up to ' + CastWait + ' s for one that is far — add «test: npc ' + who + ' at <place>»');
+      case 'falcon': {
+        const name = w[1], verb = w[2];
+        if (verb === 'come') {
+          const d = +w[3] || FalconFrom, h = +w[4] || FalconUp, flight = Math.hypot(d, h) / ((FalconCruise + FalconApproach) / 2) + FalconBrake;
+          if (w.includes('circle') || w.includes('nowait')) { falcons.set(name, true); took = 0; note += 'on its way ~' + f(flight) + ' s; '; }
+          else { falcons.set(name, false); took = flight; shown = '~' + f(flight); }
+          if (d > BirdFar) note += 'from ' + d + ' m: ~' + f(Math.hypot(d, h) / FalconCruise) + ' s of flying in the frame; ';
         }
-        if (verb === 'go') walk(who, 8 + (w.includes('run') ? 10 : 20));
-        else if (verb === 'say') sub(w.slice(3).join(' '), true);
-        else if (verb === 'fade') { took = w[3] ? +w[3] : FadePerson; cast.delete(who); }
-        else if (verb === 'free') cast.delete(who);
-        else if (verb === 'mark') markOn(who, w[3], +w[4] || 30);
-        else if (verb === 'clip' && w[3] !== 'none') { const c = clipOf(w[3]); if (c) bodyClip[who] = { clip: w[3], at: t }; }
+        else if (verb === 'ready') { /* made beforehand, unseen: nothing on the screen */ }
+        else if (verb === 'skim') { falcons.set(name, true); skims.set(name, t); note += 'the low run: over its place in about ' + f(SkimWay / FalconSkim) + ' s if it has ' + SkimWay + ' m to go (the scene does not wait); '; } // (Falcon.Skim: one pace all the way)
+        else if (verb === 'from') { falcons.set(name, false); if (w[3]) cast.delete(w[3]); } // (a person of the scene turns into a falcon: it makes it)
+        else if (!falcons.has(name)) note += 'no falcon «' + name + '» yet (falcon ' + name + ' come first): the game skips it; ';
+        else if (verb === 'land') { falcons.set(name, false); took = FalconLand; shown = '~' + FalconLand; }
+        else if (verb === 'circle') falcons.set(name, true);
+        else if (verb === 'become') {
+          if (falcons.get(name) && !w.includes('stride')) note += 'it becomes a person in the air: it should land first, or say «stride»; ';
+          // (out of a low run the step waits till the falcon is over its place — unless «nowait»: counted from when its run began, at the way guessed above)
+          if (skims.has(name) && w.includes('stride') && !w.includes('nowait')) { took = Math.max(0, skims.get(name) + SkimWay / FalconSkim - t); shown = '~' + f(took); }
+          skims.delete(name); falcons.delete(name); if (w[3]) cast.add(w[3]);
+        }
+        else if (verb === 'leave') falcons.set(name, true);
+        else if (verb === 'gone') falcons.delete(name);
         break;
       }
-      case 'bars': case 'weather': case 'thor': case 'shake': case 'bolt': case 'do': case 'drop': case 'door': case 'prop': case 'watchers':
-      case 'music': case 'bed': case 'mix': case 'mute': case 'unmute': case 'ear': case 'sound': case 'raven': case 'own':
+      case 'npc': {
+        const who = w[1], verb = w[2];
+        if (verb !== 'spawn' && verb !== 'ready' && verb !== 'free' && !cast.has(who)) {
+          cast.add(who);
+          if (!put.has(who) && !steps.some(x => x.w[0] === 'npc' && x.w[1] === who && (x.w[2] === 'spawn' || x.w[2] === 'ready'))) warn.push('«' + who + '» is taken from the world and nothing says where: the check waits up to ' + CastWait + ' s for one that is far — add «test: npc ' + who + ' at <place>»');
+        }
+        if (verb === 'go') { if (w.includes('nowait')) note += who + ' walks on as the scene goes on; '; else walk(who, 8 + (w.includes('run') ? 10 : 20)); }
+        else if (verb === 'arrive') walk(who + ' (arrive)', +w[3] || 12);
+        else if (verb === 'ready') cast.delete(who); // (made beforehand, unseen: not in the picture till a falcon turns into it)
+        else if (verb === 'say') sub(w.slice(3).join(' '), true);
+        else if (verb === 'says') { sub(w.slice(3).join(' '), true); saidUntil = t + took; took = 0; note += 'the scene goes on as it is said (till ' + f(saidUntil) + ' s: «wait said»); '; }
+        else if (verb === 'fade') { took = w[3] ? +w[3] : FadePerson; cast.delete(who); }
+        else if (verb === 'sparks') { took = w[3] ? +w[3] : 3.5; cast.delete(who); } // (gone in sparks: NpcSparks)
+        else if (verb === 'free') cast.delete(who);
+        else if (verb === 'mark') markOn(who, w[3], +w[4] || 30);
+        else if (verb === 'clip' && w[3] !== 'none') { const c = clipOf(w[3]); if (c) { bodyClip[who] = { clip: w[3], at: t }; note += lane.clip('npc.' + who, c, t); } }
+        break;
+      }
+      case 'lane': case 'bars': case 'weather': case 'thor': case 'shake': case 'bolt': case 'do': case 'drop': case 'door': case 'prop': case 'watchers':
+      case 'raven': case 'own':
+        break;
+      case 'music': case 'bed': case 'mix': case 'mute': case 'unmute': case 'ear': case 'sound':
+        { const r = lane.step(s, t, cam); took = r.took; if (r.shown) shown = r.shown; note += r.note; }
         break;
       default: note += 'a word the game may not know (storycheck says); ';
     }
@@ -227,12 +270,14 @@ function dry(id) {
     else { if (nothing > StepLong && nothingSteps > 1) warn.push('from step ' + nothingFrom.num + ' («' + nothingFrom.line.slice(0, 40) + '»): ' + f(nothing) + ' s of nothing but waits — is anything happening on screen?'); nothing = 0; nothingFrom = null; nothingSteps = 0; }
     if (cam && took > StepLong) note += 'holds the shot ' + f(took) + ' s (StepLong ' + StepLong + '); ';
     if (shot && shown && /^[~≤?]/.test(shown)) shot.unknown = true; // (a walk, an «until»: how long the shot is held the file does not say)
-    const inFrame = [cam ? 'cam' : 'free', bird ? (birdFlying ? 'bird↑' : 'bird') : null, ...cast].filter(Boolean).join(' ');
-    rows.push({ num: s.num, at: t, took, shown: shown || f(took), cond: s.cond, text: s.text, who: inFrame, note: note.trim() });
+    const inFrame = [cam ? 'cam' : 'free', bird ? (birdFlying ? 'bird↑' : 'bird') : null, ...[...falcons].map(([n, fl]) => 'falcon.' + n + (fl ? '↑' : '')), ...cast].filter(Boolean).join(' ');
+    if (cam || (kind === 'bars' && w[1] === 'on')) filmed = true;
+    rows.push({ num: s.num, at: t, took, shown: shown || f(took), cond: s.cond, text: s.text, who: inFrame, heard: lane.heard(), note: note.trim() });
     t += took;
   }
   if (nothing > StepLong && nothingSteps > 1) warn.push('from step ' + nothingFrom.num + ': ' + f(nothing) + ' s of nothing but waits at the end');
   endShot();
+  const soundLines = lane.end(t, filmed, id);
   if (cam) warn.push('the camera is still on at the end (camera off comes with the end of the scene: fine if meant)');
   for (let i = 0; i < shots.length; i++) {
     const a = shots[i], b = shots[i + 1], held = a.end - a.at, either = b && a.cond && b.cond && held === 0; // (two «if» camera lines one after the other: one or the other plays, not both)
@@ -247,9 +292,11 @@ function dry(id) {
   // the table
   const out = [];
   out.push('scene ' + id + ' (' + sc.file + '), dry: ~' + f(t) + ' s in all, ' + steps.length + ' step(s)' + (head.place ? ', place ' + head.place : '') + (head.needs ? ', needs ' + head.needs : '') + (head.test ? '\n  test: ' + head.test : '') + (head.check ? '\n  check: ' + head.check : '') + (bare ? '\n  (no «check:» or «test:» line: a run in the game starts it in the middle of its place, in whatever world the game is in)' : ''));
-  out.push('line | at s | takes | camera, who the scene holds | step | note'); // (the trial 2026-11-11 read «in frame» as who is filmed: it is whether a shot is on and whom the scene has taken)
-  for (const r of rows) out.push(String(r.num).padStart(4) + ' | ' + f(r.at).padStart(5) + ' | ' + r.shown.padStart(6) + ' | ' + r.who.padEnd(14) + ' | ' + (r.cond ? 'if ' + r.cond + ': ' : '') + r.text + (r.note ? '  — ' + r.note : ''));
+  const heardWide = Math.max(5, ...rows.map(r => r.heard.length));
+  out.push('line | at s | takes | camera, who the scene holds | ' + 'heard'.padEnd(heardWide) + ' | step | note'); // (the trial 2026-11-11 read «in frame» as who is filmed: it is whether a shot is on and whom the scene has taken)
+  for (const r of rows) out.push(String(r.num).padStart(4) + ' | ' + f(r.at).padStart(5) + ' | ' + r.shown.padStart(6) + ' | ' + r.who.padEnd(14) + ' | ' + r.heard.padEnd(heardWide) + ' | ' + (r.cond ? 'if ' + r.cond + ': ' : '') + r.text + (r.note ? '  — ' + r.note : ''));
   if (shots.length) { const known = shots.filter(x => !x.unknown), more = shots.length - known.length; if (known.length) { const long = known.reduce((a, b) => b.end - b.at > a.end - a.at ? b : a); out.push('shots: ' + shots.length + (more ? ' (' + more + ' with a walk or a wait in ' + (more > 1 ? 'them' : 'it') + ': how long, the file does not say); the others ' : ', ') + f(known.reduce((s, x) => s + x.end - x.at, 0) / known.length) + ' s each on average, the longest ' + f(long.end - long.at) + ' s (line ' + long.num + ')'); } else out.push('shots: ' + shots.length + ', each with a walk or a wait in it: how long, the file does not say'); }
+  for (const x of soundLines) out.push(x);
   if (warn.length) { out.push('warnings:'); for (const x of warn) out.push('  - ' + x); }
   if (said.length) { out.push('storycheck on it:'); for (const x of said) out.push('  - ' + x); }
   if (!warn.length && !said.length) out.push('warnings: none from the file (the run still judges the poses, the walks, the frame)');
@@ -260,9 +307,9 @@ function dry(id) {
 function cover(id) {
   const sc = sceneLines(id);
   if (!sc) return 'scene_dry: no scene «' + id + '» in assets/story/scenes';
-  const steps = sc.lines.filter(x => !/^(roams|alone|needs|check|test|place|guard):/.test(x.line)).map(x => { let text = x.line, cond = null; if (text.startsWith('if ')) { const c = text.indexOf(':'); cond = text.slice(3, c).trim(); text = text.slice(c + 1).trim(); } return { num: x.num, text, cond, w: text.split(/\s+/) }; });
+  const steps = sc.lines.filter(x => !/^(roams|alone|aside|needs|check|test|place|guard):/.test(x.line)).map(x => { let text = x.line, cond = null; if (text.startsWith('if ')) { const c = text.indexOf(':'); cond = text.slice(3, c).trim(); text = text.slice(c + 1).trim(); } return { num: x.num, text, cond, w: text.split(/\s+/) }; });
   // who speaks at a step, and the words (null: no speech)
-  const speech = s => s.w[0] === 'npc' && s.w[2] === 'say' ? { who: 'npc.' + s.w[1], text: s.w.slice(3).join(' ') } : s.w[0] === 'bird' && s.w[1] === 'say' ? { who: 'bird', text: s.w.slice(2).join(' ') } : s.w[0] === 'say' ? { who: 'player', text: s.w.slice(2).join(' ') } : null; // (say hugin|munin: the raven on his shoulder)
+  const speech = s => s.w[0] === 'npc' && (s.w[2] === 'say' || s.w[2] === 'says') ? { who: 'npc.' + s.w[1], text: s.w.slice(3).join(' ') } : s.w[0] === 'bird' && s.w[1] === 'say' ? { who: 'bird', text: s.w.slice(2).join(' ') } : s.w[0] === 'say' ? { who: 'player', text: s.w.slice(2).join(' ') } : null; // (say hugin|munin: the raven on his shoulder)
   const quiet = s => ['wait', 'sub', 'sound', 'msg', 'music', 'bed', 'mix'].includes(s.w[0]) || (s.w[0] === 'npc' && ['face', 'emote', 'clip', 'mark', 'prop', 'take'].includes(s.w[2])) || (s.w[0] === 'player' && ['look', 'face', 'emote', 'clip', 'mark'].includes(s.w[1])) || (s.w[0] === 'bird' && s.w[1] === 'look');
   // «if» lines of speech one after the other are ONE line, said one way or the other (the raven on the shoulder: hugin's words or munin's): only the first
   // of them is a line of the talk, and only when whoever speaks is the same in each (else nothing is proposed before them: which plays, the file does not say)
@@ -310,7 +357,10 @@ function cover(id) {
     'the whole body for a clip, a slow push on a long line. Take what fits; then node tools/anim.js scene --dry ' + id + '. The key scenes the user films himself (window «Режисер»).\n  ' + out.join('\n  ');
 }
 
-module.exports = { dry, cover, cameraWhy };
+// a first sound pass proposed for a scene (tools/scene_sound.js): lines to put in, nothing written
+const sound = id => require('./scene_sound.js').propose(id, sceneLines, clipOf);
+
+module.exports = { dry, cover, sound, cameraWhy };
 if (require.main === module) {
   const id = process.argv[2];
   if (!id) { console.error('node tools/scene_dry.js <scene>'); process.exit(1); }

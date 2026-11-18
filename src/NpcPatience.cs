@@ -27,7 +27,7 @@ namespace HuginWhispers
         internal static readonly int KIrk = "RavenWatch_npcIrk".GetStableHashCode();     // string "value|worldsec|player" — in its locker
         internal static readonly int KSpent = "RavenWatch_npcSpent".GetStableHashCode(); // string "player=value@worldsec;…" — in its locker
         internal static float Out = 20f, Dry = 45f, Easy = 75f, Warm = 90f, Gate = 20f;
-        internal static float IrkFade = 10f, SpentFade = 8f, Heard = -15f; // points a game hour · what listening may give back at most (spent below zero)
+        internal static float IrkFade = 3f, SpentFade = 4f, Heard = -15f; // (till 2026-11-12 10 and 8: a rude word was gone in a minute and a half of real time, while warmth takes hours — the user: slower) // points a game hour · what listening may give back at most (spent below zero)
         private const int MostSpent = 8;
 
         internal sealed class Part { public string Label; public float Value; public bool Yours; } // (Yours: of how it is with you — «до тебе»; else its own state now — «зараз»)

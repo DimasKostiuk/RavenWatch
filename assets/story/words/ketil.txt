@@ -1,0 +1,32 @@
+# Слова гравця Кетілеві (теми say_*: твої відповіді в його розмові; користувач 2026-11-17). Кетіль порожніє й дивиться на південь — гравець із ним
+# м'який і уважний.
+[ketil:say_got] Розумію.
+[ketil:say_got] Ясно.
+[ketil:say_got] Я почу{в|ла} тебе.
+[ketil:say_got] Добре, Кетілю.
+[ketil:say_got] Зрозуміло.
+[ketil:say_got] Я запам'ятаю.
+[ketil:say_told] Сумна історія.
+[ketil:say_told] Дякую, що розповів.
+[ketil:say_told] Я запам'ятаю це.
+[ketil:say_told] Розумію.
+[ketil:say_told] Тяжко таке носити.
+[ketil:say_told] Почу{в|ла}.
+[ketil:say_trusted] Дякую, що довірився.
+[ketil:say_trusted] Я нікому не скажу.
+[ketil:say_trusted] Це важливо. Дякую.
+[ketil:say_trusted] Я ціную це, Кетілю.
+[ketil:say_trusted] Добре, що ти сказав.
+[ketil:say_trusted] Я пам'ятатиму.
+[ketil:say_care] Тримайся.
+[ketil:say_care] Ти не сам.
+[ketil:say_care] Ми щось придумаємо.
+[ketil:say_care] Відпочинь трохи.
+[ketil:say_care] Я поруч, Кетілю.
+[ketil:say_care] Не здавайся.
+[ketil:say_bye] Бувай, Кетілю.
+[ketil:say_bye] Відпочинь. Я ще прийду.
+[ketil:say_bye] Тримайся тут.
+[ketil:say_bye] До зустрічі.
+[ketil:say_bye] Бережи себе.
+[ketil:say_bye] Не йди нікуди без мене.

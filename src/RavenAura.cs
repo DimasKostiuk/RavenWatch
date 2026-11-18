@@ -126,7 +126,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- hungry
 
-        // A raven at satiety 40 or less asks for food now and then, from the shoulder (not when asleep or away).
+        // A raven at satiety 30 or less asks for food now and then, from the shoulder (not when asleep or away).
         // Now and then, instead, it lets slip a hint about its favourite food (Satiety.Hint).
         internal static float FirstAskMin = 120f, FirstAskMax = 300f, AskMin = 360f, AskMax = 540f; // real seconds: the first ask 2–5 min after it gets hungry, then every 6–9
         internal static float HintChance = 0.35f;

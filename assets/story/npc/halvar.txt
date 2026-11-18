@@ -1,0 +1,16 @@
+# Гальвар (story-lore.md «Смертні обрані», «Тор»): вірить, що досі безсмертний; шанує Тора, кричить йому в грозу; пиятика й кулачні дуелі.
+# ТИМЧАСОВИЙ ВИГЛЯД (2026-11-14): справжнього персонажа робить автор (F9 «Вигляд» → «Зберегти» пише сюди). У сюжеті його ще нема.
+[npc halvar]
+name: Гальвар
+shuns: none   # docs/jobs/people-moves.md
+persona: lively=1
+body: human
+model: 0
+skin: 0.87 0.72 0.6
+haircolor: 0.62 0.28 0.12
+hair: Hair7
+beard: Beard12
+gear: ArmorBronzeChest ArmorBronzeLegs CapeDeerHide
+fight: off
+walk: 1.05
+menu: no

@@ -216,7 +216,7 @@ namespace HuginWhispers
         // the head bone's turn in the body's own space as the player stands at rest (the game's Player prefab, the
         // same rig for every player): what turns past it is the head's own bowing and turning
         private static readonly System.Reflection.FieldInfo HeadF = HarmonyLib.AccessTools.Field(typeof(Character), "m_head");
-        private static Transform HeadBone(Character c) { return c != null && HeadF != null ? HeadF.GetValue(c) as Transform : null; }
+        internal static Transform HeadBone(Character c) { return c != null && HeadF != null ? HeadF.GetValue(c) as Transform : null; }
 
         private static readonly Dictionary<int, Vector3> OnHeadBone = new Dictionary<int, Vector3>(); // an animal's head seat in its head bone's space
 

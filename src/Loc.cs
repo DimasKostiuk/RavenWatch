@@ -26,7 +26,9 @@ namespace HuginWhispers
     //      refused, the server crosses the place out and picks another. Passed: the ground is levelled (BlueprintGround), the wild
     //      things on it go, the pieces go in, and «<key>_built» is set. A place someone teleports next to is built the same way.
     //      Its outer pieces and roofs are landmarks (ZNetView.m_distant, as the game's big trees): the game loads them from far (its
-    //      far ring, about 290 m), so coming back it does not grow piece by piece at 160 m either.
+    //      far ring, about 290 m), so coming back it does not grow piece by piece at 160 m either. Coming into the game (or out of a portal)
+    //      by it, the loading screen waits for those of them the game makes now too (LandmarksMade, asked only then: LocAreaReadyPatch), and its state is laid on all its
+    //      pieces the frame you appear (LocState.Tick): it stands whole round you at once.
     //   3. its pieces carry Blueprint's mark: no wear, no fall, no damage, no hammer but the author's (BlueprintGuard).
     // Here: its shape and where it stands. What it is: LocDef (the list's lines); how it gets into a world: LocBuild; the list: Locs; its parts: LocModules.
     internal sealed partial class Loc : LocDef
@@ -305,6 +307,22 @@ namespace HuginWhispers
             return Shape() && Anchor(out at, out rot) && BlueprintGround.Outside(_rect, Quaternion.Inverse(rot) * (point - at)) <= 0f;
         }
 
+        // coming into the game (or out of a portal) at a spot: are its landmarks that the game makes from there now (its far list) all made? Asked
+        // only while the game's loading screen waits for that spot (LocAreaReadyPatch), only by this place (LoadNear m, in three: an inside of ours
+        // hangs far over its door) — the game itself waits for the zones round the spot, never for the far ring its landmarks come from
+        internal const float LoadNear = 160f;
+        private static readonly List<ZDO> _loadNear = new List<ZDO>(), _loadFar = new List<ZDO>();
+        internal bool LandmarksMade(Vector3 point)
+        {
+            Vector3 at; Quaternion rot;
+            if (!Built || !Where(out at, out rot) || Vector3.Distance(at, point) > LoadNear || ZDOMan.instance == null || ZNet.instance == null || ZNetScene.instance == null) return true;
+            _loadNear.Clear(); _loadFar.Clear();
+            ZDOMan.instance.FindSectorObjects(ZoneSystem.GetZone(point), ZNet.instance.GetSyncedSimulationDistance(), _loadNear, _loadFar); // heavy: only under the loading screen, by this place
+            foreach (ZDO z in _loadFar)
+                if (z != null && Blueprint.IsFar(z) && z.GetString(LocParts.KOf, "") == Id && ZNetScene.instance.FindInstance(z.m_uid) == null && ZNetScene.instance.GetPrefab(z.GetPrefab()) != null) return false; // (one the game cannot make here — its prefab unknown — it never waits for either)
+            return true;
+        }
+
         // ---------------------------------------------------------------- everyone: its mark on the map
         private float _nextLook;
 
@@ -363,6 +381,20 @@ namespace HuginWhispers
 #endif
             if (known && Shape() && Where(out at, out rot)) StoryMap.Set(MarkKey, at, Lang.T(Title), NoBuild);
             else StoryMap.Clear(MarkKey);
+            ShowMapPin();
+        }
+
+        // its lasting mark once its «mappin:» holds for you (the Hall: once you have been there — the user 2026-11-16, «щоб завжди було ясно, де вона стоїть»):
+        // the game's own fire mark with its name, put once a world, yours to take off (MapKeep). With no story: as soon as it stands
+        private void ShowMapPin()
+        {
+            Vector3 at; Quaternion rot;
+            Player me = Player.m_localPlayer;
+            if (MapPin.Length == 0 || me == null) return;
+#if RAVEN_STORY
+            if (!StoryCond.Holds(me, MapPin, e => Log("mappin: " + e))) return;
+#endif
+            if (Shape() && Where(out at, out rot)) MapKeep.Put(me, "place_" + Id, at, MapKeep.PlacePin, Lang.T(Title));
         }
 
         private bool Again { get { return ZoneSystem.instance != null && ZoneSystem.instance.GetGlobalKey(KeyAgain); } }

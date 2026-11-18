@@ -111,6 +111,7 @@ namespace HuginWhispers
         internal sealed class Button
         {
             public int Order;                              // its place round the ring (from the top, clockwise)
+            public string Part = "";                       // the main ring's part it is (Parts): a template's «menu: home talk» shows only these
             public string Title, Icon;                     // its word, its picture (assets/menu)
             public Func<NpcActor, string> TitleNow;        // (a word that changes with it: Оселити тут / Оселя)
             public Func<NpcActor, string> IconNow;         // (a picture that changes with it)
@@ -127,6 +128,9 @@ namespace HuginWhispers
             public string Place;                           // about a place («на ліжко»): the menu closes, you point and press the key again
             public Func<NpcActor, Vector3, string> AtPlace; // ...then this, at the spot pointed at
         }
+
+        // the main ring's parts by their words (a template's «menu: <parts>» names them: NpcDefs)
+        internal static readonly string[] Parts = { "orders", "talk", "home", "work", "gear", "profile" };
 
         private static List<Button> _all;
         internal static List<Button> All
@@ -150,10 +154,10 @@ namespace HuginWhispers
         private static IEnumerable<Button> Core()
         {
             // the orders, all under one button (the user 2026-11-08): lit while one goes on, the middle of the main ring lets it go
-            yield return new Button { Order = 10, Title = Lang.K("Накази"), Icon = "n-follow", Now = Releasable, Sub = a => OrderRing(),
+            yield return new Button { Order = 10, Part = "orders", Title = Lang.K("Накази"), Icon = "n-follow", Now = Releasable, Sub = a => OrderRing(),
                 Desc = a => Releasable(a) ? Lang.T("Виконує твій наказ. Центр кола — відпустити.") : Lang.T("За мною, стій, сядь, туди.") };
             // its talk, as E: the same way in (NpcActor.Interact: senseless, an echo… — the modules' own use first)
-            yield return new Button { Order = 80, Title = Lang.K("Говорити"), Icon = "n-talk", Desc = a => Lang.T("Розмова з ним — те саме, що E."),
+            yield return new Button { Order = 80, Part = "talk", Title = Lang.K("Говорити"), Icon = "n-talk", Desc = a => Lang.T("Розмова з ним — те саме, що E."),
                 Do = (a, p) => { a.Interact(p, false, false); return null; } };
         }
 
@@ -173,28 +177,31 @@ namespace HuginWhispers
                 } };
             // (it waits where it was sent as «Стій» too: «go» that arrived waits as idle)
             yield return new Button { Order = 20, Title = Lang.K("Стій"), Icon = "n-stay", Now = a => Ordered(a, NpcMind.Task.Idle),
-                Desc = a => Ordered(a, NpcMind.Task.Idle) ? Lang.T("Стоїть.") + " " + AgainFrees() : Lang.T("Стоїть, де стоїть, доки не відпустиш."),
+                Desc = a => Ordered(a, NpcMind.Task.Idle) ? Lang.T("Стоїть.") + " " + AgainFrees() : Lang.F("Стоїть, де стоїть: до {0} год гри або доки не відпустиш.", StayHours),
                 Do = (a, p) => { if (Ordered(a, NpcMind.Task.Idle)) return Free(a); a.Order("stay"); return null; } };
-            yield return new Button { Order = 40, Title = Lang.K("Туди"), Icon = "n-there", Place = Lang.K("на місце"), Now = a => Ordered(a, NpcMind.Task.Go), Desc = a => Lang.T("Іде туди, куди покажеш, і чекає там."),
+            yield return new Button { Order = 40, Title = Lang.K("Туди"), Icon = "n-there", Place = Lang.K("на місце"), Now = a => Ordered(a, NpcMind.Task.Go), Desc = a => Lang.F("Іде туди, куди покажеш, і чекає там: до {0} год гри або доки не відпустиш.", StayHours),
                 AtPlace = (a, at) => { a.Order("go " + Npcs.V(at)); return a.Name + ": " + Lang.T("іде туди"); } };
             yield return new Button { Order = 30, Title = Lang.K("Сядь"), Icon = "n-sit", Now = a => Ordered(a, NpcMind.Task.Sit),
                 Desc = a => Ordered(a, NpcMind.Task.Sit) ? Lang.T("Сидить.") + " " + AgainFrees() : Lang.T("Сідає на найближчу лаву чи стілець, а як нема — на землю поруч."),
                 Do = (a, p) => { if (Ordered(a, NpcMind.Task.Sit)) return Free(a); a.Order("sit " + Npcs.V(a.transform.position)); return null; } };
         }
 
-        // what an order of this kind is going on (the Order layer's plan; «go» that arrived waits as idle)
+        // what an order of this kind is going on (the Order layer's plan; «go» that arrived waits as idle) — on any game: NpcMind.OrderOf
         private static bool Ordered(NpcActor a, NpcMind.Task kind)
         {
-            NpcMind.Plan p = a.Mind != null ? a.Mind.Of(NpcMind.Layer.Order) : null;
-            return p != null && p.Kind == kind;
+            NpcMind.Task? k = NpcMind.OrderOf(a);
+            return k.HasValue && k.Value == kind;
         }
 
         // an order of the menu's going on: the middle lets it go
         private static bool Releasable(NpcActor a)
         {
-            NpcMind.Plan p = a != null && a.Mind != null ? a.Mind.Of(NpcMind.Layer.Order) : null;
-            return p != null && (p.Kind == NpcMind.Task.Follow || p.Kind == NpcMind.Task.Idle || p.Kind == NpcMind.Task.Go || p.Kind == NpcMind.Task.Sit);
+            NpcMind.Task? k = NpcMind.OrderOf(a);
+            return k.HasValue && (k.Value == NpcMind.Task.Follow || k.Value == NpcMind.Task.Idle || k.Value == NpcMind.Task.Go || k.Value == NpcMind.Task.Sit);
         }
+
+        // how long a wait lasts by itself (NpcMind.StayTerm), as the buttons say it
+        private static int StayHours { get { return Mathf.RoundToInt(NpcMind.StayHours); } }
 
         private static string Free(NpcActor a) { a.Order("free"); return a.Name + ": " + Lang.T("повертається до своїх справ"); }
         private static string AgainFrees() { return Lang.T("Натисни ще раз — відпустиш."); }
@@ -294,9 +301,14 @@ namespace HuginWhispers
             if (a == null || a.Mind == null) return false; // (Odin: no menu)
             if (!MayOrder(a)) return false; // (orders only for the hired ones — a stranger is talked to, E; an admin: all)
             if (NpcTalk.Busy(a, p)) return true; // (another player talks to it or has its menu open: one at a time, as a talk — the user 2026-11-08)
+            for (int i = 0; i < KeyInstead.Count; i++) { bool? done = KeyInstead[i](a, p); if (done.HasValue) return done.Value; } // (a module's own Q on it: asleep — woken, no ring)
             Open(a, key);
             return true;
         }
+
+        // a module's own Q on a person instead of its ring (null: not theirs; true: done) — as NpcActor.UseInstead is for E; its hover says what Q does then
+        // (NpcActor.HoverInstead). NpcWake: one asleep is woken
+        internal static readonly List<Func<NpcActor, Player, bool?>> KeyInstead = new List<Func<NpcActor, Player, bool?>>();
 
         // the person you look at: the game's own pointing first, else along your look — the menu does not hang on the game
         // counting it as «pointed at». Never farther than a talk (E): the game's own reach from your eyes (the user 2026-11-05:
@@ -321,7 +333,7 @@ namespace HuginWhispers
         }
 
         // who may give it orders here: the hired ones, anyone; an admin, all (its hover names the key only then)
-        internal static bool MayOrder(NpcActor a) { return a.Def != null && !a.Def.NoMenu && (NpcTalk.Hired(a) || Plugin.IsLocalAdmin()); } // (no template here: it only stands, so nothing to order — and E has nothing either)
+        internal static bool MayOrder(NpcActor a) { return a.Def != null && !a.Def.NoMenu && (a.Def.MenuParts != null || NpcTalk.Hired(a) || Plugin.IsLocalAdmin()); } // (no template here: it only stands, so nothing to order — and E has nothing either)
 
         private static void Open(NpcActor a, KeyCode key)
         {
@@ -377,7 +389,7 @@ namespace HuginWhispers
             if (_asked != null && (_askedOf != _npc || Time.time > _askedUntil)) _asked = null;
             foreach (Button b in ring)
             {
-                if (b.Shown != null && !b.Shown(_npc)) { if (main) _items.Add(new Item { B = b, Empty = true, Off = true }); continue; } // (its place kept: the others do not move)
+                if ((b.Shown != null && !b.Shown(_npc)) || (main && _npc.Def != null && _npc.Def.MenuParts != null && !_npc.Def.MenuParts.Contains(b.Part))) { if (main) _items.Add(new Item { B = b, Empty = true, Off = true }); continue; } // (its place kept: the others do not move; a part its template does not give — the same)
                 string not = down && !b.AnyTime ? Lang.T("Без тями — спершу постав його на ноги (медовуха зцілення, E).") : b.Not != null ? b.Not(_npc) : null;
                 List<Button> own = not == null && b.Sub != null ? b.Sub(_npc) : null;
                 bool asks = not == null && b == _asked;

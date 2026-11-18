@@ -20,6 +20,7 @@ namespace HuginWhispers
     //   Руни      — every rune effect by layer with a code to name it by, worn on a stage raven, and the mix (RunePanel; raven wear ui)
     //   Доручення — give yourself any errand, see what is written, go there, the nest, the runes (ErrandPanel; raven errand ui)
     // F8 switches the mouse between the window (cursor shown, the game's input paused) and the game.
+    // The tabs are an AuthorRow (AuthorUi.cs): they break into rows that fit the window, a tab's body gets the height left (the user 2026-11-17).
     internal class DevPanel : MonoBehaviour
     {
         internal const int AnimTab = 0, SoundsTab = 1, PassivesTab = 2, FlightTab = 3, WingsTab = 4, WorkshopTab = 5, TemplatesTab = 6, TurnTab = 7, TakeoffTab = 8, PhotoTab = 9, SitTab = 10, LooksTab = 11, PlayerTab = 12, ErrandsTab = 13, RunesTab = 14;
@@ -173,34 +174,37 @@ namespace HuginWhispers
             _rect.height = Mathf.Min(size.y, Screen.height - 40f);
             _rect.x = Mathf.Clamp(_rect.x, 0f, Mathf.Max(0f, Screen.width - _rect.width));
             _rect.y = Mathf.Clamp(_rect.y, 0f, Mathf.Max(0f, Screen.height - 60f));
+            AuthorRow.Wide = AuthorFrame.Body(_rect);
             _rect = GUI.Window(0x52574456, _rect, Draw, "Ворони: тест", _win);
         }
 
         private void Draw(int id)
         {
+            if (AuthorFrame.Cross(_rect)) { Close(); return; } // (always there, whatever a tab draws)
             GUILayout.Label(MouseHere ? "Мишка: ВІКНО. F8 — віддати мишку грі (камера, персонаж)." : "Мишка: ГРА. F8 — повернути мишку на вікно.");
-            GUILayout.BeginHorizontal();
+            AuthorRow tabs = AuthorRow.Begin();
             foreach (int i in Order)
-                if (GUILayout.Button(Tabs[i], i == _tab ? _tabOn : GUI.skin.button) && i != _tab) Toggle(i);
-            GUILayout.EndHorizontal();
+                if (tabs.Button(Tabs[i], i == _tab ? _tabOn : null) && i != _tab) Toggle(i);
+            tabs.End();
             GUILayout.Space(4);
+            float h = _rect.height - tabs.Extra; // (the tabs' rows past the first come off every body's height)
 
             switch (_tab)
             {
                 case AnimTab: _land.Body(); break;
-                case SoundsTab: _sounds.Body(_rect.height - 40f); break;
-                case FlightTab: _flight.Body(_rect.height - 150f); break;
+                case SoundsTab: _sounds.Body(h - 40f); break;
+                case FlightTab: _flight.Body(h - 150f); break;
                 case WingsTab: _wings.Body(); break;
                 case TakeoffTab: _takeoff.Body(); break;
-                case TemplatesTab: _templates.Body(_rect.height - 130f); break;
-                case WorkshopTab: _workshop.Body(_rect.height - 112f); break;
-                case PhotoTab: _photo.Body(_rect.height - 112f); break;
-                case LooksTab: _looks.Body(_rect.height - 112f); break;
-                case RunesTab: _runes.Body(_rect.height - 112f); break;
-                case TurnTab: _turn.Body(_rect.height - 150f); break;
-                case SitTab: _sit.Body(_rect.height - 150f); break;
-                case PlayerTab: _player.Body(_rect.height - 170f); break;
-                case ErrandsTab: _errands.Body(_rect.height - 112f); break;
+                case TemplatesTab: _templates.Body(h - 130f); break;
+                case WorkshopTab: _workshop.Body(h - 112f); break;
+                case PhotoTab: _photo.Body(h - 112f); break;
+                case LooksTab: _looks.Body(h - 112f); break;
+                case RunesTab: _runes.Body(h - 112f); break;
+                case TurnTab: _turn.Body(h - 150f); break;
+                case SitTab: _sit.Body(h - 150f); break;
+                case PlayerTab: _player.Body(h - 170f); break;
+                case ErrandsTab: _errands.Body(h - 112f); break;
                 default: Passives(); break;
             }
 
@@ -208,7 +212,7 @@ namespace HuginWhispers
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Закрити", GUILayout.Width(100f))) Close();
             GUILayout.EndHorizontal();
-            GUI.DragWindow(new Rect(0f, 0f, 10000f, 26f));
+            GUI.DragWindow(new Rect(0f, 0f, _rect.width - 40f, 26f));
         }
 
         // ---------------------------------------------------------------- Пасивки

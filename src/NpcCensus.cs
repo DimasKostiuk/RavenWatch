@@ -44,8 +44,17 @@ namespace HuginWhispers
                 NpcPerf.Add(PerfWhole, perf);
             }
             Out.Clear();
-            if (k.Ready != null && ZDOMan.instance != null) foreach (ZDO z in k.Ready) if (z != null && z.IsValid()) Out.Add(z); // (gone since: left out)
+            if (k.Ready != null && ZDOMan.instance != null) foreach (ZDO z in k.Ready) if (z != null && z.IsValid() && z.GetPrefab() == hash) Out.Add(z); // (gone since: left out — and one the game's pool has given since to another thing: «valid» is only «in use», the review 2026-11-17)
             return new List<ZDO>(Out);
+        }
+
+        // every person of ours, whatever its body (Npcs.PeoplePrefabs): the one ask for «the people» — a body kind named by itself misses the others
+        // (the dvergr body, 2026-11-13: the story's people, the strays, the hearts counted the human one alone)
+        internal static List<ZDO> People()
+        {
+            List<ZDO> all = new List<ZDO>();
+            foreach (string p in Npcs.PeoplePrefabs) all.AddRange(Of(p));
+            return all;
         }
 
         internal static void Added(ZDO z)
@@ -90,12 +99,13 @@ namespace HuginWhispers
             {
                 // one that walked into a sector already passed is not lost, nor one met twice counted twice: the last
                 // list's still there are kept with this one's — a thing leaves the census only when it is gone
-                foreach (Kind k in Kinds.Values)
+                foreach (KeyValuePair<int, Kind> kv in Kinds)
                 {
+                    Kind k = kv.Value;
                     HashSet<ZDO> seen = new HashSet<ZDO>();
                     List<ZDO> now = new List<ZDO>();
-                    foreach (ZDO z in k.Building) if (z != null && z.IsValid() && seen.Add(z)) now.Add(z);
-                    if (k.Ready != null) foreach (ZDO z in k.Ready) if (z != null && z.IsValid() && seen.Add(z)) now.Add(z);
+                    foreach (ZDO z in k.Building) if (z != null && z.IsValid() && z.GetPrefab() == kv.Key && seen.Add(z)) now.Add(z);
+                    if (k.Ready != null) foreach (ZDO z in k.Ready) if (z != null && z.IsValid() && z.GetPrefab() == kv.Key && seen.Add(z)) now.Add(z); // (one the pool gave to another thing since: off the list, as Of leaves it out)
                     k.Ready = now;
                 }
                 _running = false; _next = Time.time + Every;

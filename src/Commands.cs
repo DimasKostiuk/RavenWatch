@@ -182,7 +182,7 @@ namespace HuginWhispers
                     case "nick": return Nicks.Cmd(p, a.Length > 1 && a[1].ToLowerInvariant().StartsWith("m"), a.Length > 2 ? a[2] : null);
                     case "guide": return Guide.Reset(p);
                     case "eyes": return EyesCmd(a);
-                    case "looks": if (a.Length > 1 && a[1].ToLowerInvariant() == "diag") return LookDiag.Cmd(); DevPanel.Toggle(DevPanel.LooksTab); return DevPanel.Said();
+                    case "looks": if (a.Length > 1 && a[1].ToLowerInvariant() == "diag") return LookDiag.Cmd(); if (a.Length > 1 && a[1].ToLowerInvariant() == "bones") return LookDiag.BonesCmd(); DevPanel.Toggle(DevPanel.LooksTab); return DevPanel.Said();
                     case "wear": return RavenWear.Cmd(p, a);
                     case "runes": return RuneBook.Cmd(p, a);
                     case "bind": return BindRun.Cmd(p, a);

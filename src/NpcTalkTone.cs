@@ -6,6 +6,7 @@ namespace HuginWhispers
 {
     // How you answer what a person says (the user 2026-11-06: an answer must weigh something, and you may choose to be rude on purpose). An
     // answer's deed «!tone warm|cold|rude [weight]» in a talk; an answer with none is plain and costs nothing.
+    //   warm [soft|blunt|joke]   (the air: see Missed below — how this person takes it)
     //   warm   you took its words kindly: more patience and, once a game day a person (ToneRow), warmer to you. A worry's own warm answer
     //          counts once a game day a worry (Warms)
     //   cold   you had no time for what weighs on it: less patience, it remembers (brushed_off); a chatty one takes it harder, a grumpy one less
@@ -15,7 +16,7 @@ namespace HuginWhispers
     // same patience, feeling and memory as the rest of it: nothing of its own is kept but the day's row in your character (NpcTalkMemo).
     internal static partial class NpcTalk
     {
-        internal static float TonePatience = 3f, ToneWarm = 1.5f, ToneCold = 4f, ToneIrk = 12f, ToneRude = 3f;
+        internal static float TonePatience = 3f, ToneWarm = 3f, /* (till 2026-11-12 1.5: the day's first kind word, the user: twice as much) */ ToneCold = 4f, ToneIrk = 12f, ToneRude = 3f;
         private const string ToneRow = "~tone", ColdRow = "~cold";
 
         // once a game day a person: true the first time today (its row in your character), so a line «it feels so» says what really moved
@@ -53,20 +54,38 @@ namespace HuginWhispers
             return k;
         }
 
+        // A kind word has an air (the user 2026-11-12: the right answer is by the person, not by the row it stands in): «!tone warm soft|blunt|joke». How this
+        // person takes that air: NpcNature.TakesBy. From TakeHit it is to its liking (more of everything, and the window says so); at TakeMiss or below it
+        // misses: no warmth, a little patience gone, the window says why, and its words are of that (take_miss_<air>) instead of the place's own. A warm
+        // answer with no air is as before. The kind answers of different airs change places from day to day (NpcTalk.Mixed): the top row is not «the right one»
+        internal static float TakeHit = 1.3f, TakeMiss = 0.65f, MissPatience = 2f;
+
+        private static void Missed(NpcActor a, Player p, string air, float weight)
+        {
+            NpcPatience.Spend(a, p, MissPatience * weight);
+            string why = air == "soft" ? Lang.F("{0} не любить, коли з ним|нею панькаються", a.Name) : air == "joke" ? Lang.F("{0}: йому|їй зараз не до жартів", a.Name) : Lang.F("{0}: для нього|неї це надто різко", a.Name);
+            RavenBook.TalkNote(a.Form(why), false);
+            if (a == With) { string s = NpcPhrases.Compose(a, "take_miss_" + air, p); if (!string.IsNullOrEmpty(s)) _instead = s; } // (its answer is to how you said it)
+        }
+
         private static void Tone(NpcActor a, Player p, string[] w)
         {
             if (a == null || p == null || w.Length < 2) return;
-            float weight;
-            if (w.Length < 3 || !float.TryParse(w[2], NumberStyles.Float, CultureInfo.InvariantCulture, out weight)) weight = 1f;
+            float weight = 1f;
+            string air = null; // («!tone warm blunt 1.5»: the air and the weight, either or none, in any order)
+            for (int i = 2; i < w.Length; i++) { float v; if (float.TryParse(w[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v)) weight = v; else if (System.Array.IndexOf(NpcNature.Airs, w[i]) >= 0) air = w[i]; else Npcs.Log("talk: tone «" + w[i] + "» is no air (soft blunt joke) and no number"); }
             switch (w[1])
             {
                 case "warm":
                 {
-                    float k = Warmth(a) * weight;
+                    float take = air != null ? NpcNature.TakesBy(a, air) : 1f;
+                    if (take <= TakeMiss) { Missed(a, p, air, weight); return; }
+                    float k = Warmth(a) * weight * take;
                     NpcPatience.Spend(a, p, -TonePatience * k);
-                    if (!FirstToday(a, p, ToneRow)) return; // (its feeling moves once a game day: kind words are not a way to farm it)
-                    NpcAttitude.Tell(a, p.GetPlayerID(), ToneWarm * k);
-                    Warmer(a);
+                    bool first = FirstToday(a, p, ToneRow); // (its feeling moves once a game day: kind words are not a way to farm it)
+                    if (first) NpcAttitude.Tell(a, p.GetPlayerID(), ToneWarm * k);
+                    if (take >= TakeHit) RavenBook.TalkNote(a.Form(first ? Lang.F("{0}: такі слова йому|їй до душі, ставлення до тебе теплішає", a.Name) : Lang.F("{0}: такі слова йому|їй до душі", a.Name)), true);
+                    else if (first) Warmer(a);
                     break;
                 }
                 case "cold":

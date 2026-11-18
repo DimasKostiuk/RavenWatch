@@ -44,7 +44,7 @@ namespace HuginWhispers
         {
             Player p = Player.m_localPlayer;
             if (p == null) return cam;
-            Vector3 head = p.GetHeadPoint(), d = cam - head;
+            Vector3 head = Body.Head(p), d = cam - head;
             float far = d.magnitude;
             if (far < 0.01f) return cam;
             int mask = GameCamera.instance != null ? (int)GameCamera.instance.m_blockCameraMask : (int)RavenMotor.Mask;
@@ -233,10 +233,10 @@ namespace HuginWhispers
         // from one shot to another in so many seconds (where, the turn, the width), eased; or looking at something on the way
         internal static Func<StoryCamera.Pose> Move(StoryCamera.Pose a, StoryCamera.Pose b, float seconds, string ease, Func<Vector3> look)
         {
-            float start = Time.unscaledTime, dur = Mathf.Max(0.05f, seconds);
+            float start = StoryClock.Now, dur = Mathf.Max(0.05f, seconds);
             return () =>
             {
-                float k = Ease(ease, (Time.unscaledTime - start) / dur);
+                float k = Ease(ease, (StoryClock.Now - start) / dur);
                 StoryCamera.Pose p = new StoryCamera.Pose { At = Vector3.Lerp(a.At, b.At, k), Rot = Quaternion.Slerp(a.Rot, b.Rot, k), Fov = Mathf.Lerp(Wide(a.Fov), Wide(b.Fov), k) };
                 return look == null ? p : Aim(p, look());
             };
@@ -246,12 +246,12 @@ namespace HuginWhispers
         // the camera stands now
         internal static Func<StoryCamera.Pose> Orbit(Func<Vector3> centre, float radius, float height, float degrees, float seconds, string ease, float fov)
         {
-            float start = Time.unscaledTime, dur = Mathf.Max(0.05f, seconds);
+            float start = StoryClock.Now, dur = Mathf.Max(0.05f, seconds);
             Vector3 c0 = centre(), from = StoryCamera.Now().At - c0; from.y = 0f;
             float a0 = from.sqrMagnitude > 0.01f ? Mathf.Atan2(from.x, from.z) * Mathf.Rad2Deg : 0f;
             return () =>
             {
-                float a = a0 + degrees * Ease(ease, (Time.unscaledTime - start) / dur);
+                float a = a0 + degrees * Ease(ease, (StoryClock.Now - start) / dur);
                 Vector3 c = centre();
                 Vector3 at = c + Quaternion.Euler(0f, a, 0f) * Vector3.forward * radius + Vector3.up * height;
                 return Aim(new StoryCamera.Pose { At = at, Fov = fov }, c);
@@ -286,7 +286,7 @@ namespace HuginWhispers
 
         private static StoryCamera.Pose FlyPose()
         {
-            float dt = Time.unscaledDeltaTime;
+            float dt = StoryClock.Delta;
             if (Input.GetMouseButton(1))
             {
                 _yaw += Input.GetAxis("Mouse X") * 3f;

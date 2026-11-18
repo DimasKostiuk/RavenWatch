@@ -99,7 +99,7 @@ namespace HuginWhispers
                 Id = "master",
                 Pick = a => a.Worker != null && a.Worker.Works && NpcToil.Craft(a, a.Worker.JobId) < 0.95f ? new Goal { Arg = a.Worker.JobId } : null,
                 Done = (a, g) => NpcToil.Craft(a, g.Arg) >= 0.99f,
-                What = (a, g) => Jobs.Word(g.Arg),
+                What = (a, g) => Jobs.Kept(g.Arg),
                 Card = (a, g) => Lang.F("хоче стати майстром: {0}", Jobs.Word(g.Arg)),
                 GiveUp = MasterDays, Long = MasterDays,
             });
@@ -115,7 +115,7 @@ namespace HuginWhispers
                     return new Goal { Arg = pick.Id, Base = pick.More ? Count(a, pick) : 0 };
                 },
                 Done = (a, g) => { Comfort c = ComfortOf(g.Arg); int n = c != null ? Count(a, c) : -1; return c == null || n > g.Base; }, // (a kind no longer known: over)
-                What = (a, g) => { Comfort c = ComfortOf(g.Arg); return c != null ? Lang.T(c.Word) : null; },
+                What = (a, g) => { Comfort c = ComfortOf(g.Arg); return c != null ? c.Word : null; },
                 Card = (a, g) => { Comfort c = ComfortOf(g.Arg); return Lang.F("хоче на базі: {0}", c != null ? Lang.T(c.Word) : "?"); },
                 Deed = (a, g, made, hung) => { Comfort c = ComfortOf(g.Arg); return c != null && c.Trophy == hung && made.GetComponentInChildren(c.T) != null; }, // heavy: once a thing built near one who wishes for a comfort
                 Yours = true,
@@ -135,7 +135,7 @@ namespace HuginWhispers
                     return best != null ? new Goal { Arg = NpcAttitude.PersonKey(best).ToString(CultureInfo.InvariantCulture) } : null;
                 },
                 Done = (a, g) => { long k; return long.TryParse(g.Arg, NumberStyles.Integer, CultureInfo.InvariantCulture, out k) && NpcAttitude.Of(a, k) >= FriendAt; },
-                What = (a, g) => { NpcActor o = Person(g); return o != null ? o.Name : null; },
+                What = (a, g) => { NpcActor o = Person(g); return o != null ? o.Key : null; },
                 Card = (a, g) => { NpcActor o = Person(g); return Lang.F("хоче потоваришувати: {0}", o != null ? o.Name : Lang.T("сусід")); },
             });
             K(new Kind
@@ -149,7 +149,7 @@ namespace HuginWhispers
                     return null;
                 },
                 Done = null,
-                What = (a, g) => NpcRequests.Words(g.Arg, 1),
+                What = (a, g) => NpcMemory.Thing(g.Arg, 1),
                 Card = (a, g) => Lang.F("шукає річ із минулого: {0}", NpcRequests.Words(g.Arg, 1)),
                 Yours = true,
             });
@@ -180,7 +180,7 @@ namespace HuginWhispers
                     return from.Count > 0 ? new Goal { Arg = from[(int)(NpcKit.Seed(a.Zdo) % (uint)from.Count)] } : null;
                 },
                 Done = (a, g) => a.Worker != null && a.Worker.JobId == g.Arg,
-                What = (a, g) => Jobs.Word(g.Arg),
+                What = (a, g) => Jobs.Kept(g.Arg),
                 Card = (a, g) => Lang.F("хоче навчитись іншого: {0}", Jobs.Word(g.Arg)),
                 Then = (a, g) => NpcToil.Learned(a, g.Arg),
                 Yours = true, DoneTheme = "goal_learn_done",
@@ -201,7 +201,7 @@ namespace HuginWhispers
                 Done = (a, g) => { Vector3? at = SpotOf(g); return at != null && Utils.DistanceXZ(a.transform.position, at.Value) <= ReturnNear; },
                 By = (a, g) => { Player p = Player.GetClosestPlayer(a.transform.position, ReturnNear * 2f); return p != null ? p.GetPlayerID() : 0L; },
                 What = (a, g) => { Vector3? at = SpotOf(g); return at != null ? LandWord(at.Value) : ""; },
-                Card = (a, g) => { Vector3? at = SpotOf(g); return Lang.F("хоче ще раз побачити місце: {0}", at != null ? LandWord(at.Value) : "?"); },
+                Card = (a, g) => { Vector3? at = SpotOf(g); return Lang.F("хоче ще раз побачити місце: {0}", at != null ? Lang.T(LandWord(at.Value)) : "?"); },
                 Yours = true, DoneTheme = "goal_return_done",
             });
         }
@@ -287,13 +287,13 @@ namespace HuginWhispers
         {
             switch (WorldGenerator.instance != null ? WorldGenerator.instance.GetBiome(at) : Heightmap.Biome.None)
             {
-                case Heightmap.Biome.Meadows: return Lang.T("луки");
-                case Heightmap.Biome.BlackForest: return Lang.T("чорний ліс");
-                case Heightmap.Biome.Swamp: return Lang.T("болото");
-                case Heightmap.Biome.Mountain: return Lang.T("гори");
-                case Heightmap.Biome.Plains: return Lang.T("рівнини");
-                case Heightmap.Biome.Mistlands: return Lang.T("туманні землі");
-                default: return Lang.T("далекий край");
+                case Heightmap.Biome.Meadows: return Lang.K("луки");
+                case Heightmap.Biome.BlackForest: return Lang.K("чорний ліс");
+                case Heightmap.Biome.Swamp: return Lang.K("болото");
+                case Heightmap.Biome.Mountain: return Lang.K("гори");
+                case Heightmap.Biome.Plains: return Lang.K("рівнини");
+                case Heightmap.Biome.Mistlands: return Lang.K("туманні землі");
+                default: return Lang.K("далекий край");
             }
         }
 
@@ -329,7 +329,7 @@ namespace HuginWhispers
             if (!Next.TryGetValue(a, out next)) { Next[a] = Time.time + UnityEngine.Random.Range(5f, CheckEvery); return; }
             if (Time.time < next) return;
             Next[a] = Time.time + CheckEvery;
-            if (a.Def == null || !a.Def.Settler || !NpcResident.Is(a) || NpcLocker.Get(a, KGoal) == null) return; // (its locker not here yet)
+            if (!NpcResident.Settled(a) || NpcLocker.Get(a, KGoal) == null) return; // (its locker not here yet)
             long now = (long)NpcRescue.Now;
             Goal g = Of(a);
             if (g == null)
@@ -395,7 +395,7 @@ namespace HuginWhispers
         {
             string w = Kinds[g.Kind].What(a, g);
             Dictionary<string, string> d = new Dictionary<string, string>();
-            if (w != null) d["goal_what"] = w;
+            if (w != null) d["goal_what"] = NpcMemory.Said(w);
             return d;
         }
 
@@ -469,7 +469,7 @@ namespace HuginWhispers
         internal static bool ForYou(NpcActor a) { Goal g = Of(a); return g != null && Kinds[g.Kind].Yours; }
 
         // {goal_what} in its words
-        internal static void Values(NpcActor a, Player to, Dictionary<string, string> v) { Goal g = Of(a); string w = g != null ? Kinds[g.Kind].What(a, g) : null; if (w != null) v["goal_what"] = w; }
+        internal static void Values(NpcActor a, Player to, Dictionary<string, string> v) { Goal g = Of(a); string w = g != null ? Kinds[g.Kind].What(a, g) : null; if (w != null) v["goal_what"] = NpcMemory.Said(w); }
 
         // now and then a word of it (NpcVoice)
         private static readonly Dictionary<NpcActor, float> NextWord = new Dictionary<NpcActor, float>(); // session
@@ -517,7 +517,7 @@ namespace HuginWhispers
                 ItemDrop d = ObjectDB.instance.GetItemPrefab(g.Arg).GetComponent<ItemDrop>();
                 if (Gave.Count > 200) Gave.Clear();
                 Gave.Add(GaveKey(a, g));
-                p.GetInventory().RemoveItem(d.m_itemData.m_shared.m_name, 1);
+                ItemMarks.Take(p, g.Arg, 1); // (given on purpose: a kept thing is no loss to undo)
                 int coins = Mathf.Max(Mathf.RoundToInt(ThingLeast), Mathf.RoundToInt(NpcRequests.WorthOf(g.Arg) * ThingPay)); // (by what it is worth, over a request's pay: it is its own heart's thing)
                 Errands.Give(p, ObjectDB.instance.GetItemPrefab("Coins"), coins);
                 _thanks = (NpcPhrases.Compose(a, "goal_done", p, Extra(a, g)) ?? a.Form(Lang.T("Збулося! Я й не вірив|вірила."))) + " " + Lang.F("Тримай: {0}.", NpcRequests.Words("Coins", coins));
@@ -553,7 +553,7 @@ namespace HuginWhispers
             NpcActor.Unloaded.Add(Forget);
             NpcActor.Acts["goalgiven"] = Given;
             NpcActor.Acts["goalbuilt"] = MadeBy;
-            NpcToil.MoodFrom.Add(Mood);
+            NpcToil.MoodFrom.Add(new NpcToil.Share { By = Mood, Up = NpcToil.Why.Wish, Down = NpcToil.Why.Pining });
             NpcPlaces.PersonWorth.Add(Toward);
             NpcProfile.More.Add(Card);
             NpcPhrases.ValueSources.Add(Values);

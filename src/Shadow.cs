@@ -340,7 +340,17 @@ namespace HuginWhispers
             float a = over ? Ease(_k / DarkPart) : Mathf.Lerp(1f, Mathf.Clamp01(SelfOpacity), Ease((_k - DarkPart) / (1f - DarkPart)));
             foreach (Material m in Ghosts.Values)
                 if (m != null) { Color c = m.color; if (!Mathf.Approximately(c.a, a)) { c.a = a; m.color = c; } }
+            // the game's dressing of your body (VisEquipment.UpdateColors, every frame) reads «renderer.materials»: it clones our copy once
+            // (the renderer owns the clone after that) — the alpha goes to the clones on the body too, or it froze where it was cloned (2026-11-15)
+            foreach (Renderer r in Faded.Keys)
+            {
+                if (r == null) continue;
+                r.GetSharedMaterials(ScanM); // (no array made each frame)
+                foreach (Material m in ScanM)
+                    if (m != null && m.name.EndsWith("(shadow) (Instance)", System.StringComparison.Ordinal)) { Color c = m.color; if (!Mathf.Approximately(c.a, a)) { c.a = a; m.color = c; } }
+            }
         }
+        private static readonly List<Material> ScanM = new List<Material>(); // session: the materials of one renderer, read without a new array
 
         // the ravens darken with you; the wisp's light stays its own
         private static void Fade(Renderer r)
@@ -405,7 +415,7 @@ namespace HuginWhispers
             string[] names = { "Legacy Shaders/Transparent/Diffuse", "Standard", "Sprites/Default" };
             foreach (string n in names)
             {
-                Shader s = Shader.Find(n);
+                Shader s = n == "Standard" ? FbxLook.Standard : Shader.Find(n); // (Shader.Find does not see Standard in this game: you looked flat, Sprites/Default — 2026-11-15)
                 if (s == null || !s.isSupported) continue;
                 _ghostShader = s;
                 _standard = n == "Standard";

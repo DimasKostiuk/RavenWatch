@@ -34,7 +34,7 @@ namespace HuginWhispers
             {
                 List<Vector3> players = Players();
                 Scan.Clear();
-                Scan.AddRange(NpcCensus.Of(Npcs.HumanPrefab)); // (the shared census: NpcCensus)
+                Scan.AddRange(NpcCensus.People()); // (the shared census: NpcCensus)
                 HashSet<ZDOID> seen = new HashSet<ZDOID>();
                 foreach (ZDO n in Scan)
                 {
@@ -117,6 +117,19 @@ namespace HuginWhispers
         {
             long owner = n.GetOwner();
             return owner != 0L && owner != ZDOMan.GetSessionID() && ZNet.instance.GetPeer(owner) != null;
+        }
+
+        // walked now by some game: owned by this one with its body here, or by a connected player's. Not «its body is made here»: the game makes
+        // things in whole zones up to two off a player (ZNetScene.CreateObjects), but owns and runs them only within 1.5 zones (ZNetScene
+        // .PointInsideActiveArea: 96 m square, 112 m round) — a body in the ring between stands still with no owner, for ever while the player
+        // stays (the user 2026-11-16: Torvald stopped on his way to the watch as soon as his body was out of sight, and the server, his body
+        // «loaded», left him to walk himself)
+        internal static bool Walked(ZDO n)
+        {
+            long owner = n.GetOwner();
+            if (owner == 0L) return false;
+            if (owner != ZDOMan.GetSessionID()) return ZNet.instance.GetPeer(owner) != null;
+            return ZNetScene.instance != null && ZNetScene.instance.FindInstance(n.m_uid) != null;
         }
 
         private static bool Near(List<Vector3> players, Vector3 at)

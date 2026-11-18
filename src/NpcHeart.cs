@@ -13,9 +13,12 @@ namespace HuginWhispers
     //                world (the hire's list, NpcTalk) and walks there by itself (NpcTravel)
     //   its base     the residents settled by it all live at it: their home is the heart, so they share one base map
     //                (NpcBase) — up to ten of them, near or far: a game sees only those near it, the server all, so the server keeps their count on the heart (ServerTick, HowMany)
-    //   its board    E opens how this settlement lives (NpcBoard, a sheet); its papers in the world count what is wrong there
-    // No blow breaks it (no WearNTear): only the hammer takes it down. Taken down, its residents stay where they lived.
-    //   its lantern  burns while LampLit says so (always; the story: dark till the Hall's spark is brought — StoryHeart),
+    //   its board    E opens how this settlement lives (NpcBoard, a sheet); its papers in the world count what is wrong there —
+    //                unless a module takes that E (UseInstead, its words in the hover: HoverInstead; the story's «on: heart_use»)
+    // No blow breaks it (no WearNTear): only the hammer takes it down. Taken down, its residents stay where they lived; a heart put up again within NpcBase.Reach
+    // of their home takes them (NpcResident.Rehome, if there is room) and its dining table (the table says whose it was: KDiningOf, TableLook) — not its name.
+    //   its lantern  burns while LampLit says so of this heart (always; the story: each heart dark till an ember of the Hall's fire is put in
+    //                it — Light, KLit in its ZDO, every game sees it: StoryHeart, the user 2026-11-15),
     //                looked at every 2 s; Flare: a flash in it that dies out at once (the prologue's first heart). Its light
     //                is the game's own (Perches.MakeLight: LightLod switches it by distance, LightFlicker sets its
     //                brightness each frame), so it is put out by its whole object, and the flicker rests while it flares
@@ -26,14 +29,31 @@ namespace HuginWhispers
         internal static readonly int KDining = "RavenWatch_heartDining".GetStableHashCode(); // string "user:id": its dining table ("" none)
         internal static readonly int KFolk = "RavenWatch_heartFolk".GetStableHashCode();     // int: how many live at it, as the server last counted (-1: not yet)
         internal static readonly int KFolkAt = "RavenWatch_heartFolkAt".GetStableHashCode(); // long: world second the last of those settled (one settled later is not counted yet)
+        internal static readonly int KLit = "RavenWatch_heartLit".GetStableHashCode(); // bool: its lantern lit for good (Light: an ember of the Hall's fire put in it — the story's)
         internal const int NameMax = 20; // (the board's plate grows with it: twenty keep the head's ends in sight; an old longer name is left as it is)
         internal static readonly List<NpcHeart> Loaded = new List<NpcHeart>();
 
         private ZNetView _nv;
         private Piece _piece;
-        internal static Func<bool> LampLit = () => true; // (who says the lanterns burn: the story sets it)
+        internal static Func<NpcHeart, bool> LampLit = h => true; // (who says a heart's lantern burns: the story sets it — StoryHeart: its own KLit)
+        internal bool Lit { get { return _nv != null && _nv.IsValid() && _nv.GetZDO().GetBool(KLit, false); } }
+        // its lantern lit for good (the story's ember put in it): written into its ZDO — every game lights it; a flash first
+        internal void Light()
+        {
+            if (_nv == null || !_nv.IsValid()) return;
+            if (!_nv.IsOwner()) _nv.ClaimOwnership(); // (a piece nobody moves: the one who lights it writes it)
+            _nv.GetZDO().Set(KLit, true);
+            Flare(2.5f);
+        }
+        // a module's own E on a heart instead of its board (null: not theirs; true: done) and the words of that E in its hover
+        // (null: the board's) — as NpcActor.UseInstead / HoverInstead are for a person. The story: «on: heart_use» (StoryHeart)
+        internal static readonly List<Func<NpcHeart, Player, bool?>> UseInstead = new List<Func<NpcHeart, Player, bool?>>();
+        internal static readonly List<Func<NpcHeart, Player, string>> HoverInstead = new List<Func<NpcHeart, Player, string>>();
         private Light[] _lamps = new Light[0];
         private float[] _lampBright = new float[0];
+        // where its lantern hangs (its first light; none — over its middle): a scene's close shot of the lantern («heart.lamp»), not of the middle
+        // of the little house, where the camera had no room (the user 2026-11-15: «кадр зверху — у текстурах»)
+        internal Vector3 LampAt { get { return _lamps.Length > 0 && _lamps[0] != null ? _lamps[0].transform.position : transform.position + Vector3.up * 1.5f; } }
         private LightFlicker[] _flickers = new LightFlicker[0];
         private float _nextLamp, _flareUntil = -1f;
 
@@ -49,7 +69,7 @@ namespace HuginWhispers
             _flickers = new LightFlicker[_lamps.Length];
             for (int i = 0; i < _lamps.Length; i++) { _lampBright[i] = _lamps[i].intensity; _flickers[i] = _lamps[i].GetComponent<LightFlicker>(); }
             FindGlows();
-            Lamp(LampLit(), -1f);
+            Lamp(LampLit(this), -1f);
         }
 
         // just built by you (its creator is set after Awake: so here): it takes its plain name; the first heart you build in
@@ -90,36 +110,7 @@ namespace HuginWhispers
         {
             Transform part = look != null ? look.Find(BoxPart) : null;
             if (part == null) { Npcs.Log("heart: no " + BoxPart + " part in its model — no coin box"); return; }
-            // the model's part copies every look of the chest, near and far: only the nearest is kept
-            GameObject src = scene.GetPrefab(BoxPart);
-            HashSet<string> far = new HashSet<string>();
-            if (src != null)
-                foreach (LODGroup lg in src.GetComponentsInChildren<LODGroup>(true))
-                {
-                    LOD[] lods = lg.GetLODs();
-                    for (int i = 1; i < lods.Length; i++) if (lods[i].renderers != null) foreach (Renderer r in lods[i].renderers) if (r != null) far.Add(r.name);
-                }
-            Bounds b = new Bounds(); bool any = false;
-            foreach (MeshRenderer mr in part.GetComponentsInChildren<MeshRenderer>(true))
-            {
-                if (far.Contains(mr.name)) { UnityEngine.Object.DestroyImmediate(mr.gameObject); continue; }
-                mr.sharedMaterials = Yellower(mr.sharedMaterials);
-                MeshFilter mf = mr.GetComponent<MeshFilter>();
-                if (mf == null || mf.sharedMesh == null) continue;
-                Bounds m = mf.sharedMesh.bounds;
-                for (int k = 0; k < 8; k++)
-                {
-                    Vector3 p = part.InverseTransformPoint(mr.transform.TransformPoint(m.center + Vector3.Scale(m.extents, new Vector3((k & 1) == 0 ? -1 : 1, (k & 2) == 0 ? -1 : 1, (k & 4) == 0 ? -1 : 1))));
-                    if (!any) { b = new Bounds(p, Vector3.zero); any = true; } else b.Encapsulate(p);
-                }
-            }
-            BoxCollider bc = part.gameObject.AddComponent<BoxCollider>();
-            if (any) { bc.center = b.center; bc.size = b.size; } else { bc.center = new Vector3(0f, 0.4f, 0f); bc.size = new Vector3(1f, 0.8f, 0.6f); }
-            Container c = part.gameObject.AddComponent<Container>(); // (the prefab sleeps: it wakes in each heart, told whose ZDO it keeps in)
-            c.m_name = "Скарбничка"; c.m_width = 1; c.m_height = 1;
-            c.m_rootObjectOverride = root.GetComponent<ZNetView>(); c.m_privacy = Container.PrivacySetting.Public; c.m_checkGuardStone = false;
-            Container like = src != null ? src.GetComponent<Container>() : null;
-            if (like != null) { c.m_bkg = like.m_bkg; c.m_openEffects = like.m_openEffects; c.m_closeEffects = like.m_closeEffects; }
+            Perches.ChestOf(root, part, "Скарбничка", 1, 1, Yellower); // (its nearest look, a box to press, the game's chest window: one cell, yellower wood)
         }
 
         // its wood a little yellower — nearer the plain wooden chest; and no snow on its lid (the game's piece shader lays
@@ -197,18 +188,70 @@ namespace HuginWhispers
             ZNetView tv = t.GetComponent<ZNetView>();
             if (tv == null || !tv.IsValid()) return null;
             _nv.ClaimOwnership();
+            ZDOID was = DiningId;
             NpcKit.SetRef(_nv.GetZDO(), KDining, tv.GetZDO().m_uid);
+            _nv.GetZDO().Set(KDiningSet, true);
+            if (was != tv.GetZDO().m_uid) SignTable(was, false);
+            SignTable(tv.GetZDO().m_uid, true);
             _hover = null;
             return Lang.T("Їдальня тут: мешканці їстимуть за цим столом і вечорами збиратимуться біля нього.");
         }
 
         internal void PickDining() { NpcMenu.PickPlace(Lang.K("Їдальня"), Lang.K("на стіл їдальні"), SetDining); }
 
-        // its dining table for the board: 0 none · 1 picked · 2 its table is gone. Gone from the world (broken, taken down: you stand by the heart, its base is loaded — gone, not far): let go here
+        // the table says whose dining table it is (as a bed says whose bed: NpcResident.SignBed), so a heart put up anew within the base takes it
+        // (the user 2026-11-14: the heart taken down and built again — its people and its dining go over to the new one; its name does not)
+        internal static readonly int KDiningOf = "RavenWatch_diningOf".GetStableHashCode(); // string on a table: a lasting link to the heart it is the dining table of ("" none)
+        internal static readonly int KDiningSet = "RavenWatch_heartDiningSet".GetStableHashCode(); // bool on a heart: its dining picked or let go by hand, or taken over once — never taken over again
+        private void SignTable(ZDOID table, bool on)
+        {
+            ZDO t = ZDOMan.instance != null && !table.IsNone() ? ZDOMan.instance.GetZDO(table) : null;
+            if (t == null) return;
+            string had = t.GetString(KDiningOf, "");
+            if (on ? NpcKit.Resolve(had) == Id : had.Length == 0) return; // (a link names its session's id too: «it is ours» asked, not the words — else rewritten each world load)
+            if (!t.IsOwner()) t.SetOwner(ZDOMan.GetSessionID());
+            t.Set(KDiningOf, on ? NpcKit.Save(Id) : "");
+        }
+
+        // every TableEvery s with you near and someone living here: its dining table says so (an old save's: signed now, once); none picked and never chosen
+        // here (KDiningSet: a dining let go by hand stays let go) — a table of its base signed by a heart that is gone, or by this one (put up again just where
+        // the old one stood: the link finds it), is its own now. Its base's own list of tables (NpcBase.Tables), a link looked up each (kept once found)
+        private const float TableEvery = 30f;
+        private float _nextTable;
+        private void TableLook()
+        {
+            if (Time.time < _nextTable || _nv == null || !_nv.IsValid()) return;
+            _nextTable = Time.time + TableEvery;
+            Player me = Player.m_localPlayer;
+            if (me == null || (me.transform.position - transform.position).sqrMagnitude > NpcBase.Reach * NpcBase.Reach || Residents(Id).Count == 0) return; // (its base is made only where someone lives: not for this)
+            if (NpcKit.HasRef(_nv.GetZDO(), KDining)) { if (Dining != null) SignTable(DiningId, true); return; }
+            if (_nv.GetZDO().GetBool(KDiningSet, false)) return;
+            NpcBase b = NpcBase.For(transform.position);
+            if (!b.Ready || b.Tables == null) return;
+            foreach (Transform t in b.Tables)
+            {
+                ZNetView tv = t != null ? t.GetComponent<ZNetView>() : null;
+                ZDO tz = tv != null && tv.IsValid() ? tv.GetZDO() : null;
+                string of = tz != null ? tz.GetString(KDiningOf, "") : "";
+                if (of.Length == 0) continue; // (nobody's)
+                ZDOID whose = NpcKit.Resolve(of);
+                if (!whose.IsNone() && whose != Id) continue; // (another heart's, standing: not ours)
+                _nv.ClaimOwnership();
+                NpcKit.SetRef(_nv.GetZDO(), KDining, tz.m_uid);
+                _nv.GetZDO().Set(KDiningSet, true);
+                SignTable(tz.m_uid, true);
+                _hover = null;
+                Npcs.Log("heart «" + Name + "»: took the dining table of a heart that is gone");
+                return;
+            }
+        }
+
+        // its dining table for the board: 0 none · 1 picked · 2 its table is gone. Gone from the world (broken, taken down: you stand by the heart, its base is loaded — gone, not far): let go here.
+        // A link that found nothing just now (loading in, looked for a little ago: NpcKit.Resolve) is not «gone»: only a table found and then gone from the world lets it go
         internal int DiningState()
         {
             if (_nv == null || !_nv.IsValid()) return 0;
-            if (NpcKit.HasRef(_nv.GetZDO(), KDining) && (DiningId.IsNone() || (ZDOMan.instance != null && ZDOMan.instance.GetZDO(DiningId) == null)))
+            if (NpcKit.HasRef(_nv.GetZDO(), KDining) && !DiningId.IsNone() && ZDOMan.instance != null && ZDOMan.instance.GetZDO(DiningId) == null)
             {
                 _nv.ClaimOwnership();
                 NpcKit.SetRef(_nv.GetZDO(), KDining, ZDOID.None);
@@ -222,7 +265,9 @@ namespace HuginWhispers
         {
             if (_nv == null || !_nv.IsValid()) return;
             _nv.ClaimOwnership();
+            SignTable(DiningId, false);
             NpcKit.SetRef(_nv.GetZDO(), KDining, ZDOID.None);
+            _nv.GetZDO().Set(KDiningSet, true);
             _hover = null;
             if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, Lang.T("Їдальню знято: їстимуть за найближчим столом."));
         }
@@ -237,11 +282,16 @@ namespace HuginWhispers
         private readonly List<GameObject> _seals = new List<GameObject>(); // (a red seal: a paper that asks for something)
         private float _nextPapers;
 
+        // off till their look is drawn (the user 2026-11-15: once the shader was found they showed for the first time — flat white squares behind
+        // the heart, one on its roof, «шось непонятне»; they were placed for the 2.7 m model). The count of troubles goes on: the board's sheet says it
+        internal static bool PapersShown = false;
+
         private void MakePapers()
         {
+            if (!PapersShown) return;
             if (_paper == null)
             {
-                Shader sh = Shader.Find("Standard");
+                Shader sh = FbxLook.Standard; // (Shader.Find("Standard") is null in this game: the papers never showed — 2026-11-15)
                 if (sh == null) return;
                 _paper = new Material(sh) { color = new Color(0.86f, 0.78f, 0.6f) };
                 _paper.SetFloat("_Glossiness", 0.05f);
@@ -327,19 +377,20 @@ namespace HuginWhispers
             if (_flareUntil > 0f)
             {
                 float t = 1f - (_flareUntil - Time.time) / _flareFor; // 0 → 1
-                if (t >= 1f) { _flareUntil = -1f; Lamp(LampLit(), -1f); return; }
+                if (t >= 1f) { _flareUntil = -1f; Lamp(LampLit(this), -1f); return; }
                 Lamp(true, FlareBright * (t < 0.15f ? t / 0.15f : Mathf.SmoothStep(1f, 0f, (t - 0.15f) / 0.85f))); // (up at once, dies down slowly)
                 return;
             }
             if (Time.time < _nextLamp) return;
             _nextLamp = Time.time + 2f;
-            bool lit = LampLit();
+            bool lit = LampLit(this);
             for (int i = 0; i < _lamps.Length; i++) if (_lamps[i] != null && _lamps[i].gameObject.activeSelf != lit) { Lamp(lit, -1f); break; } // (only a change: the game's flicker left alone)
         }
 
         private void Update()
         {
             LampTick();
+            TableLook();
             if (_papers.Count == 0 || Time.time < _nextPapers) return;
             _nextPapers = Time.time + NpcBoard.Every;
             Player me = Player.m_localPlayer;
@@ -359,9 +410,8 @@ namespace HuginWhispers
         internal ZDO Zdo { get { return _nv != null && _nv.IsValid() ? _nv.GetZDO() : null; } }
         internal ZDOID Id { get { return _nv != null && _nv.IsValid() ? _nv.GetZDO().m_uid : ZDOID.None; } }
 
-        // a rumour of someone in need, in words (read: marked on your map)
-        internal string RumourLine() { return _nv != null && _nv.IsValid() ? NpcRescue.BoardLine(_nv.GetZDO(), transform.position) : null; }
-        internal void Know() { RumourLine(); }
+        // when the next rumour of someone in need comes (null while one goes on: the board's «поклик»)
+        internal string RumourLine() { return _nv != null && _nv.IsValid() ? NpcRescue.BoardLine(_nv.GetZDO()) : null; }
         internal string Name { get { return _nv != null && _nv.IsValid() ? _nv.GetZDO().GetString(KName, "") : ""; } }
         internal string Title { get { string n = Name; return n.Length > 0 ? n : Lang.T("Серце оселі"); } }
 
@@ -417,7 +467,9 @@ namespace HuginWhispers
             if (_seen == null) _seen = NpcBoard.Make(this); // heavy: once, when a heart is looked at before its first look (the papers' own, every NpcBoard.Every s, keeps it fresh)
             string first = _seen.Troubles.Count > 0 ? _seen.Troubles[0].Text : null;
             string s = Title + "\n<size=80%>" + Lang.F("Живе: {0}/{1}", _seen.Who.Count, NpcResident.PerBase) + " · " + NpcBoard.StateWord(_seen) + " · " + Lang.F("Скарбничка: {0}", Coins) + (first != null ? "\n<color=#e0b860>" + first + "</color>" : "") + "</size>";
-            s += "\n[<color=yellow><b>$KEY_Use</b></color>] " + Lang.T("Дошка") + "\n[<color=yellow><b>$KEY_AltPlace + $KEY_Use</b></color>] " + Lang.T("Назва");
+            string own = null;
+            for (int i = 0; i < HoverInstead.Count && own == null; i++) own = HoverInstead[i](this, Player.m_localPlayer);
+            s += "\n[<color=yellow><b>$KEY_Use</b></color>] " + (own != null ? "<color=#e0b860>" + own + "</color>" : Lang.T("Дошка")) + "\n[<color=yellow><b>$KEY_AltPlace + $KEY_Use</b></color>] " + Lang.T("Назва");
             _hover = Localization.instance != null ? Localization.instance.Localize(s) : s;
             return _hover;
         }
@@ -426,7 +478,11 @@ namespace HuginWhispers
         {
             if (hold || user != Player.m_localPlayer) return false;
             if (alt) { AskName(); return true; }
-            NpcBoard.Show(this);
+            for (int i = 0; i < UseInstead.Count; i++) { bool? done = UseInstead[i](this, (Player)user); if (done.HasValue) return done.Value; }
+            // the board asks a dozen modules about everyone here: one of them failing must not leave E doing nothing with no word (2026-11-14: a fire that was
+            // gone — the press was lost, only the log knew). The cause goes to the log whole, the player is told; a tab's page is kept the same way (RavenBookBoard.cs)
+            try { NpcBoard.Show(this); }
+            catch (Exception e) { Npcs.Log("heart «" + Name + "»: its board failed: " + e); user.Message(MessageHud.MessageType.Center, Lang.T("Не вдалося це прочитати.")); }
             return true;
         }
 
@@ -458,6 +514,9 @@ namespace HuginWhispers
         // The server knows them all (a game knows only those near it): asked once per hire, answered with names and places.
         internal sealed class Folk { public string Name = "", Job = ""; }
         internal sealed class Entry { public ZDOID Id; public string Name; public Vector3 Pos; public List<Folk> Folk = new List<Folk>(); }
+        // the hearts of the world as the last answer counted them, named or not: all · not lit yet (the Watch's fire gives an ember only while one is
+        // dark: LocHearth). −1: not known (no answer from the server, or one of an older build)
+        internal static int Counted = -1, Dark = -1;
 
         // who lives at each heart, as the server last told: it sees the whole world, a game only what is loaded near it. Asked when a board opens and for the hire's list
         private static readonly Dictionary<ZDOID, List<Folk>> KnownFolk = new Dictionary<ZDOID, List<Folk>>(); // session: ids of this world load
@@ -472,7 +531,7 @@ namespace HuginWhispers
         internal static List<Folk> FarOf(ZDOID heart, List<NpcActor> here)
         {
             List<Folk> far = new List<Folk>(), all;
-            if (KnownFolk.TryGetValue(heart, out all)) foreach (Folk f in all) if (f.Name.Length > 0 && !here.Exists(a => a.Name == f.Name)) far.Add(f);
+            if (KnownFolk.TryGetValue(heart, out all)) foreach (Folk f in all) if (f.Name.Length > 0 && !here.Exists(a => a.Key == f.Name)) far.Add(f);
             return far;
         }
 
@@ -502,7 +561,7 @@ namespace HuginWhispers
             try
             {
                 Dictionary<ZDOID, KeyValuePair<int, long>> folk = new Dictionary<ZDOID, KeyValuePair<int, long>>();
-                foreach (ZDO p in NpcCensus.Of(Npcs.HumanPrefab))
+                foreach (ZDO p in NpcCensus.People())
                 {
                     if (!p.GetBool(NpcResident.KResident, false)) continue;
                     ZDOID at = NpcKit.GetRef(p, NpcResident.KHeart);
@@ -526,8 +585,17 @@ namespace HuginWhispers
         }
 
         private const string RpcAsk = "RavenWatch_HeartsAsk", RpcList = "RavenWatch_HeartsList";
-        private static Action<List<Entry>> _waiting;
+        // session: all who wait for the server's answer — one asking serves them all (a board, a hire's list, a move, the Watch's fire may ask at once:
+        // one slot let a later ask drop an earlier one's answer)
+        private static readonly List<Action<List<Entry>>> _waiting = new List<Action<List<Entry>>>();
         private static int _asked;
+
+        private static void Answer(List<Entry> l)
+        {
+            List<Action<List<Entry>>> all = new List<Action<List<Entry>>>(_waiting);
+            _waiting.Clear();
+            foreach (Action<List<Entry>> done in all) { try { done(new List<Entry>(l)); } catch (Exception e) { Npcs.Log("hearts: an answer's taker failed: " + e); } } // (each its own list: they sort it and take from it; one that throws does not take the answer from the rest)
+        }
 
         internal static void Register()
         {
@@ -539,9 +607,10 @@ namespace HuginWhispers
         {
             if (ZNet.instance == null || ZRoutedRpc.instance == null) { done(new List<Entry>()); return; }
             if (ZNet.instance.IsServer()) { List<Entry> mine = All(); Keep(mine); done(mine); return; }
-            _waiting = done;
             ZNetPeer server = ZNet.instance.GetServerPeer();
-            if (server == null) { _waiting = null; done(Here()); return; }
+            if (server == null) { Counted = Dark = -1; done(Here()); return; } // (no server to ask: those near only, the count not known)
+            _waiting.Add(done);
+            if (_waiting.Count > 1) return; // (asked already: that answer is for this one too)
             ZRoutedRpc.instance.InvokeRoutedRPC(server.m_uid, RpcAsk, new ZPackage());
             int ask = ++_asked;
             if (Plugin.Instance != null) Plugin.Instance.StartCoroutine(GiveUp(ask));
@@ -554,25 +623,25 @@ namespace HuginWhispers
             ZPackage pkg = new ZPackage();
             pkg.Write(all.Count);
             foreach (Entry e in all) { pkg.Write(e.Id); pkg.Write(e.Name); pkg.Write(e.Pos); pkg.Write(e.Folk.Count); foreach (Folk f in e.Folk) { pkg.Write(f.Name); pkg.Write(f.Job); } }
+            pkg.Write(Counted); pkg.Write(Dark); // (after the entries: an older build reads them as before and leaves these)
             ZRoutedRpc.instance.InvokeRoutedRPC(sender, RpcList, pkg);
         }
 
         private static void OnList(long sender, ZPackage pkg)
         {
             List<Entry> l = new List<Entry>();
-            try { int n = pkg.ReadInt(); for (int i = 0; i < n; i++) { Entry e = new Entry { Id = pkg.ReadZDOID(), Name = pkg.ReadString(), Pos = pkg.ReadVector3() }; int m = pkg.ReadInt(); for (int k = 0; k < m; k++) e.Folk.Add(new Folk { Name = pkg.ReadString(), Job = pkg.ReadString() }); l.Add(e); } Keep(l); }
+            try { int n = pkg.ReadInt(); for (int i = 0; i < n; i++) { Entry e = new Entry { Id = pkg.ReadZDOID(), Name = pkg.ReadString(), Pos = pkg.ReadVector3() }; int m = pkg.ReadInt(); for (int k = 0; k < m; k++) e.Folk.Add(new Folk { Name = pkg.ReadString(), Job = pkg.ReadString() }); l.Add(e); } Keep(l); Counted = Dark = -1; if (pkg.GetPos() < pkg.Size()) { Counted = pkg.ReadInt(); Dark = pkg.ReadInt(); } }
             catch (Exception e) { Npcs.Log("hearts list: " + e.Message); }
-            Action<List<Entry>> done = _waiting; _waiting = null;
-            if (done != null) done(l);
+            Answer(l);
         }
 
         private static System.Collections.IEnumerator GiveUp(int ask)
         {
             yield return new WaitForSecondsRealtime(5f);
-            if (ask != _asked || _waiting == null) yield break;
-            Action<List<Entry>> done = _waiting; _waiting = null;
+            if (ask != _asked || _waiting.Count == 0) yield break;
             Npcs.Log("hearts: no answer from the server — only those near are listed");
-            done(Here());
+            Counted = Dark = -1;
+            Answer(Here());
         }
 
         // the named ones loaded here (no server answer)
@@ -583,14 +652,16 @@ namespace HuginWhispers
             return l;
         }
 
-        // is there a heart anywhere in the world, named or not (server: LocState's kindling)
-        internal static bool AnyInWorld()
+        // is there a heart anywhere in the world, named or not, and where one of them stands (the server: the story's «heart_first» and «heart.first»
+        // in a world whose hearts stood before those words — StoryHeart.ServerTick)
+        internal static bool AnyInWorld(out Vector3 at)
         {
+            at = Vector3.zero;
             if (ZDOMan.instance == null) return false;
             foreach (Perches.Def d in Perches.Hearts)
             {
                 List<ZDO> zdos = NpcCensus.Of(d.Prefab); // (the shared census: NpcCensus)
-                if (zdos.Count > 0) return true;
+                if (zdos.Count > 0) { at = zdos[0].GetPosition(); return true; }
             }
             return false;
         }
@@ -600,7 +671,7 @@ namespace HuginWhispers
         {
             List<Entry> l = new List<Entry>();
             Dictionary<ZDOID, List<Folk>> people = new Dictionary<ZDOID, List<Folk>>();
-            foreach (ZDO p in NpcCensus.Of(Npcs.HumanPrefab)) // (the shared census: once an asking)
+            foreach (ZDO p in NpcCensus.People()) // (the shared census: once an asking)
             {
                 if (!p.GetBool(NpcResident.KResident, false)) continue;
                 ZDOID at = NpcKit.GetRef(p, NpcResident.KHeart);
@@ -609,11 +680,13 @@ namespace HuginWhispers
                 if (!people.TryGetValue(at, out folk)) people[at] = folk = new List<Folk>();
                 folk.Add(new Folk { Name = p.GetString(NpcSettlers.KName, ""), Job = NpcLocker.Text(p, NpcWorker.KJob) });
             }
+            Counted = Dark = 0;
             foreach (Perches.Def d in Perches.Hearts)
             {
                 List<ZDO> zdos = NpcCensus.Of(d.Prefab); // (the shared census: NpcCensus)
                 foreach (ZDO z in zdos)
                 {
+                    Counted++; if (!z.GetBool(KLit, false)) Dark++; // (every heart, named or not: an ember is for any dark one)
                     string name = z.GetString(KName, "");
                     if (name.Length > 0) { List<Folk> folk; if (!people.TryGetValue(z.m_uid, out folk)) folk = new List<Folk>(); l.Add(new Entry { Id = z.m_uid, Name = name, Pos = z.GetPosition(), Folk = folk }); }
                 }

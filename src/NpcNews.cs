@@ -75,7 +75,7 @@ namespace HuginWhispers
             if (now != Heightmap.Biome.None && !told.Contains(here) && !pending.Contains(here)) { pending.Add(here); p.m_customData[KPending] = string.Join(",", pending.ToArray()); } // (a land new to you: kept till you meet your people — a restart too)
             if (pending.Count == 0) return;
             NpcActor near = null; float best = 15f * 15f; // (told to the first of your people you meet: till then it waits)
-            foreach (NpcActor o in NpcActor.Live) { if (o == null || !NpcResident.Is(o) || !o.Def.Settler) continue; float d = (o.transform.position - p.transform.position).sqrMagnitude; if (d < best) { best = d; near = o; } }
+            foreach (NpcActor o in NpcActor.Live) { if (o == null || !NpcResident.Settled(o)) continue; float d = (o.transform.position - p.transform.position).sqrMagnitude; if (d < best) { best = d; near = o; } }
             if (near == null) return;
             foreach (string land in pending)
             {

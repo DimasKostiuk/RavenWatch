@@ -1,5 +1,6 @@
 clip basket_set
 length 4.4
+tone plain
 loop 0
 pivot 1.1
 curve ease

@@ -58,7 +58,7 @@ namespace HuginWhispers
             // middle: who is alive near you
             GUILayout.BeginVertical(GUILayout.Width(250f));
             GUILayout.Label("2 · Живі поруч (" + NpcActor.Live.Count + ")", _head);
-            _liveScroll = GUILayout.BeginScrollView(_liveScroll, GUILayout.Height(420f));
+            _liveScroll = GUILayout.BeginScrollView(_liveScroll, GUILayout.Height(Fill(40f)));
             if (NpcActor.Live.Count == 0) GUILayout.Label("Нікого. Створи зліва.", _hint);
             foreach (NpcActor n in NpcActor.Live)
                 if (n != null && GUILayout.Button(n.Describe(p), n == _npc ? _sel : GUI.skin.button)) _npc = n;
@@ -105,13 +105,10 @@ namespace HuginWhispers
                 if (GUILayout.Button("Сядь (де дивлюсь)")) _npc.Order("sit " + Npcs.V(Npcs.Aim(p)));
                 if (GUILayout.Button("Встань")) _npc.Order("stand");
                 GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
+                AuthorRow emotes = AuthorRow.Begin();
                 for (int i = 0; i < Emotes.Length; i++)
-                {
-                    if (i > 0 && i % 4 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
-                    if (GUILayout.Button(Emotes[i])) _npc.Order("emote " + Emotes[i]);
-                }
-                GUILayout.EndHorizontal();
+                    if (emotes.Button(Emotes[i])) _npc.Order("emote " + Emotes[i]);
+                emotes.End();
                 GUILayout.Label("Мова", _head);
                 GUILayout.BeginHorizontal();
                 _npcSay = GUILayout.TextField(_npcSay, 200);

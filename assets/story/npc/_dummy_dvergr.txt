@@ -1,0 +1,23 @@
+# Манекен-двергр сцени анімацій (AnimStage, `raven stage up dummy_dvergr`): лише для автора; не з сюжету. Тіло двергра з гри (Npcs.BuildDvergr), нічого свого не робить.
+# Вигляд — лише рядок gear: вбрання й волосся двергрів гри (DvergerSuitArbalest, DvergerSuitArbalest_Ashlands, DvergerSuitFire, DvergerSuitIce, DvergerSuitSupport;
+# DvergerHairMale, DvergerHairMale_Redbeard, DvergerHairFemale, DvergerHairFemale_Redhair) і річ у руку.
+[npc dummy_dvergr]
+name: Манекен-двергр
+body: dvergr
+gear: DvergerSuitArbalest DvergerHairMale_Redbeard
+# кольори (BodyTint), як просив користувач 2026-11-13: шкіра між синьо-зеленою гри й сірою, вбрання до зеленого, очі до золотого; борода руда з гри
+tint_skin: 0.36 0.47 0.48
+tint_suit: 0.23 0.24 0.145
+tint_eyes: 1 0.74 0.2
+gait: dvergr
+# постава вільного часу (NpcStance): часто рука на поясі
+stance: often
+# його річ (NpcTool): молот у лівій руці або на поясі з його ЛІВОГО боку (користувач 2026-11-16: «молот має висіти з лівої сторони» — ліва рука бере його просто збоку, не через живіт) (користувач 2026-11-13: «молот буде брати лівою рукою»; ліва ж рука лягає на пояс, коли молот висить); числа — метри й градуси в системі тіла (x праворуч, y вгору, z уперед), на око, у грі не підбирані
+tool: RavenWatch_item_molot_dvergra
+tool_hand: 40
+tool_side: left
+tool_grip: -0.07 -0.02 0 90 0 0
+tool_belt: -0.31 0.1 0.02 10 90 0
+fight: off
+# на 20 % більший за двергра гри (користувач 2026-11-13: «це обумовлено теж молотом він чарівний»)
+persona: stoop=0 chatty=0 chrono=0 bravery=1 height=1

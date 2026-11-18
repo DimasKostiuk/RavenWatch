@@ -19,6 +19,7 @@ namespace HuginWhispers
     //             a person's of size 1, Fit); its width (Half) for the seats; its build on its skin and cloth (BodyBuild)
     //   a word's gesture  «{~nod}» in its words (its talk, its lines: Spoken): the mark taken out, our clip of it played — seated its _sit
     //             kind, a hand of the two at random (Words: nod, laugh, proud, shy, shrug, point)
+    //   its own moves  a short move of its own life goes through Move (NpcMoves: its body's clip, never one its template forbids); Clip plays exactly what it is told
     //   ours      other mods' creature changes kept off a person (Path of Valheiman's rarity and its bigger body,
     //             Elite Creatures' traits): asked of them through their own methods (ChampionOwn), every few seconds
     // The mind says what (Attach/Detach/Gesture); this says how. Runs on every game; what changes the world, only owned.
@@ -63,9 +64,8 @@ namespace HuginWhispers
             string[] clips;
             if (a != null && first != null && Words.TryGetValue(first, out clips))
             {
-                bool seated = a.Mind != null && a.Mind.SeatedNow;
-                string[] pick = (seated && clips[1].Length > 0 ? clips[1] : seated ? "" : clips[0]).Split('|');
-                string clip = pick[Random.Range(0, pick.Length)];
+                bool seated = NpcMind.SeatedOf(a); // (any game says the words: its ZDO, not the plan of the game that runs it)
+                string clip = NpcMoves.Pick(a, seated && clips[1].Length > 0 ? clips[1] : seated ? "" : clips[0]); // (its gate: its body's, not one it never makes)
                 if (clip.Length > 0) a.Order("clip " + clip);
             }
             else if (first != null) Npcs.Log((a != null ? a.Id : "?") + ": no gesture «" + first + "» (NpcBody.Words)");
@@ -126,6 +126,7 @@ namespace HuginWhispers
             }
             ZDO z = _nv != null && _nv.IsValid() ? _nv.GetZDO() : null;
             string left = z != null ? z.GetString(KAttach, "") : "";
+            AnimsAsKept(_on ? _attachAnim : left);
             if (left.Length == 0 || _on) return;
             _leftAnim = left; _leftUntil = Time.time + LeftFor; // (not taken off at once: its plan, read at its first thought, may sit it on the seat it is on — then it sits on, with no standing up between; else off after LeftFor)
         }
@@ -141,11 +142,88 @@ namespace HuginWhispers
             if (_leftAnim.Length == 0) return;
             if (!(_on && _attachAnim == _leftAnim))
             {
-                if (_zanim != null) _zanim.SetBool(_leftAnim, false);
+                AnimFlag(_leftAnim, false);
                 ZDO z = Owned ? _nv.GetZDO() : null;
                 if (z != null && z.GetString(KAttach, "") == _leftAnim) z.Set(KAttach, "");
             }
             _leftAnim = "";
+        }
+
+        // Its synced animator flags, the one way we put one on and take it off (attach_bed, attach_chair…, a bow drawn). The game's own
+        // ZSyncAnimation.SetBool writes its ZDO only when this game's animator says otherwise, and an animator made anew (its zone loaded again)
+        // says «off» whatever its ZDO says: taking the flag off then wrote nothing, its ZDO kept «in bed» for good, every game that did not run it
+        // drew it lying, and so did the next one to run it — walking about (the user 2026-11-11: Колль slid about flat on his back after a
+        // night). So its ZDO is written here itself. Rule «anim-flag»
+        private const int AnimSalt = 438569; // (ZSyncAnimation's own salt of its ZDO keys)
+        private static readonly HashSet<string> Ours = new HashSet<string>(); // (the flags we put on in this game: a bow's draw state is named only by its bow)
+        internal void AnimFlag(string anim, bool on)
+        {
+            if (_zanim == null || string.IsNullOrEmpty(anim)) return;
+            if (on) Ours.Add(anim);
+            _zanim.SetBool(anim, on);
+            ZDO z = Owned ? _nv.GetZDO() : null;
+            int key = AnimSalt + ZSyncAnimation.GetHash(anim);
+            if (z != null && (z.GetInt(key, 0) != 0) != on) z.Set(key, on ? 1 : 0);
+        }
+
+        // ...and a synced value of ours (how far its bow is drawn): the same way
+        internal void AnimValue(string name, float v)
+        {
+            if (_zanim == null || string.IsNullOrEmpty(name)) return;
+            _zanim.SetFloat(name, v);
+            ZDO z = Owned ? _nv.GetZDO() : null;
+            int key = AnimSalt + ZSyncAnimation.GetHash(name);
+            if (z != null && Mathf.Abs(z.GetFloat(key, float.MinValue) - v) >= 0.01f) z.Set(key, v); // (not there yet: written — the others would read their animator's own start value)
+        }
+
+        // ...and a synced whole number of ours (the stance of the weapon in its hands: NpcGear.Stance): the same way. Written straight into the
+        // animator it stays on this game alone: every other game's ZSyncAnimation puts back, each step of physics, what the ZDO says
+        internal void AnimInt(string name, int v)
+        {
+            if (_zanim == null || string.IsNullOrEmpty(name)) return;
+            _zanim.SetInt(name, v);
+            ZDO z = Owned ? _nv.GetZDO() : null;
+            int key = AnimSalt + ZSyncAnimation.GetHash(name);
+            if (z != null && z.GetInt(key, int.MinValue) != v) z.Set(key, v);
+        }
+
+        private Animator Anim { get { if (_anim == null) _anim = GetComponentInChildren<Animator>(); return _anim; } }
+
+        // Run here now (once, as it comes to be): this game's animator takes what its ZDO says — as the game itself does for a body it does not
+        // run — so every flag the game sets from here on (in water, on the ground, its speed…) is compared with what the others see, not with a
+        // new animator's «off». A flag of ours is not taken on trust: none stays on but the one it is held by (keep) — one left on by the fault
+        // above in a world that has it already, a bow drawn on the game that ran it
+        private void AnimsAsKept(string keep)
+        {
+            Animator an = _zanim != null && Owned ? Anim : null;
+            if (an == null) return;
+            ZDO z = _nv.GetZDO();
+            foreach (string b in _zanim.m_syncBools)
+            {
+                if (string.IsNullOrEmpty(b)) continue;
+                int h = ZSyncAnimation.GetHash(b);
+                bool now = an.GetBool(h), kept = z.GetInt(AnimSalt + h, now ? 1 : 0) != 0;
+                if (b == keep) { AnimFlag(b, true); continue; }
+                if (b.StartsWith("attach", System.StringComparison.Ordinal) || Ours.Contains(b))
+                {
+                    if (kept || now) { Npcs.Log(name + ": «" + b + "» was left on it with nothing holding it — taken off"); AnimFlag(b, false); }
+                    continue;
+                }
+                if (now != kept) an.SetBool(h, kept);
+            }
+            foreach (string i in _zanim.m_syncInts)
+            {
+                if (string.IsNullOrEmpty(i)) continue;
+                int h = ZSyncAnimation.GetHash(i), now = an.GetInteger(h), kept = z.GetInt(AnimSalt + h, now);
+                if (now != kept) an.SetInteger(h, kept);
+            }
+            foreach (string f in _zanim.m_syncFloats)
+            {
+                if (string.IsNullOrEmpty(f)) continue;
+                int h = ZSyncAnimation.GetHash(f);
+                float now = an.GetFloat(h), kept = z.GetFloat(AnimSalt + h, now);
+                if (Mathf.Abs(now - kept) >= 0.01f) an.SetFloat(h, kept);
+            }
         }
 
         private void NoteAttach(string anim)
@@ -158,6 +236,8 @@ namespace HuginWhispers
         {
             UpdateGesture();
             ClipTerm();
+            if (_clipPost != Post.None) PostWatch();
+            MateLook();
             if (Time.time >= _nextOurs) { _nextOurs = Time.time + 2f; KeepOurs(); }
             if (_sizing) Grow();
             if (_leftAnim.Length > 0 && Time.time >= _leftUntil) DropLeft(); // (no plan sat it on its seat: off)
@@ -215,7 +295,7 @@ namespace HuginWhispers
             _point = point; _attachAnim = anim ?? ""; _detach = detach; _on = true;
             _ignored = root != null ? root.GetComponentsInChildren<Collider>() : null;
             Ignore(true);
-            if (_attachAnim.Length > 0 && _zanim != null) { _zanim.SetBool(_attachAnim, true); NoteAttach(_attachAnim); } // (synced: every game sees it sit)
+            if (_attachAnim.Length > 0 && _zanim != null) { AnimFlag(_attachAnim, true); NoteAttach(_attachAnim); } // (synced: every game sees it sit)
             Held[_c] = this;
             Hold();
         }
@@ -224,8 +304,9 @@ namespace HuginWhispers
         internal void Detach(bool now = false)
         {
             if (!Attached) return;
-            if (_attachAnim.Length > 0 && _zanim != null) { _zanim.SetBool(_attachAnim, false); NoteAttach(""); }
+            if (_attachAnim.Length > 0 && _zanim != null) { AnimFlag(_attachAnim, false); NoteAttach(""); }
             Vector3 off = _point != null ? _point.TransformPoint(_detach) : transform.position;
+            if (_point != null && _attachAnim.IndexOf("bed", System.StringComparison.Ordinal) < 0) off = StepOff(_point, off); // (off a seat: before it, on the floor)
             Ignore(false);
             _ignored = null; _point = null; _attachAnim = ""; _on = false;
             off = FreeAround(off);
@@ -238,7 +319,7 @@ namespace HuginWhispers
             }
             // still held (no falling, no walking push) while it rises and steps off; then the game's again
             _leaving = true; _from = transform.position; _leavePut = _from; _leaveTo = off; _blendAt = Time.time;
-            _blendFor = Mathf.Clamp(Vector3.Distance(_from, off) / 1.5f, 0.25f, 0.45f);
+            _blendFor = Mathf.Clamp(Vector3.Distance(_from, off) / 1.0f, RiseMin, RiseMax); // (up off a seat at a person's pace: 0.25–0.45 s snapped Eyvind up from his bench, the user 2026-11-17)
             Held[_c] = this;
         }
 
@@ -332,6 +413,20 @@ namespace HuginWhispers
 
         // up off a seat: where the seat puts it, unless a table, a wall stands there — then the nearest free spot round it
         private static readonly int Solid = LayerMask.GetMask("piece", "Default", "static_solid");
+        // Off a seat a person steps forward, onto the floor before it: the seat's own detach offset may point up or back (the user 2026-11-17: Eyvind rose
+        // in his scene and stood ON the Hall's bench — piece_bench01's offset with nothing in the way up there). One higher than the seat or not ahead of
+        // it: StepAhead m before the seat, on the floor there. A bed's is its own (one lies on it: its side is where one gets off)
+        internal static float StepAhead = 0.6f;
+        internal static float RiseMin = 0.6f, RiseMax = 0.9f; // s: up off a seat and the step off it (Detach)
+        private static Vector3 StepOff(Transform seat, Vector3 off)
+        {
+            Vector3 ahead = seat.forward; ahead.y = 0f;
+            if (ahead.sqrMagnitude < 0.0001f) return off;
+            ahead.Normalize();
+            if (off.y - seat.position.y <= 0.25f && Vector3.Dot(off - seat.position, ahead) >= 0.25f) return off; // (the seat's own: before it, not up on it)
+            return NpcKit.Floor(seat.position + ahead * StepAhead);
+        }
+
         private static Vector3 FreeAround(Vector3 off)
         {
             if (!Blocked(off)) return off;
@@ -427,8 +522,45 @@ namespace HuginWhispers
         internal const int ClipSlot = 2;
         internal static float ClipFade = 0.3f;
         internal static float LoopTerm = 60f; // s (a scene that wants a loop longer writes its seconds)
+        internal static float WayInHold = 5f; // s a way in («from»: held at its last moment) waits past its length for its loop to take over
+        // a way in's term: its length and a little — held at its end only till its loop is asked (NpcPlaces, StoryHold); asked with no term it
+        // counted as a loop with none (the log: «dv_hammer.in loops with no term — eased off after 60 s», 2026-11-16: it never looped)
+        internal static float WayIn(PAnimClip from) { return from != null ? from.Length + WayInHold : 0f; }
         private static readonly int KClipUntil = "RavenWatch_npcClipUntil".GetStableHashCode(); // long: world milliseconds (its ZDO: it may come to be run on another game)
         private float _clipLook;
+        // a short move of its own life («a|b»: one of them) through its gate (NpcMoves: its body's clip, not one its template says never); false: none it may make.
+        // A scene's, a story word's, a carried thing's clip: Clip, exactly as named
+        internal bool Move(string list, float seconds = 0f, bool asked = false) // (asked: the talk itself asked for it — a favour — so a talk does not hold it back: NpcMoves.May)
+        {
+            if (_actor == null) _actor = GetComponent<NpcActor>();
+            string clip = NpcMoves.Pick(_actor, list, false, false, asked);
+            return clip.Length > 0 && Clip(clip, seconds);
+        }
+
+        // A clip of ours is made for one way of holding the body — standing, on a seat, on the ground (the hips half a metre apart, the knees
+        // elsewhere: NpcMoves.SeatFits) — and it is over the moment the body is held otherwise: sat down or stood up between two looks of whatever
+        // asked for it (a pose, a place's move, a talk's gesture, a toast). The user 2026-11-16: Heid on the bench with a standing pose, «руки в
+        // боки» — «перевір такі казуси, щоб більше ми не бачили такого». One rule here for every asker; a bed is a way of its own. The same clip
+        // asked again takes the way it is asked in (its asker means it there). Looked at PostEvery s, only while a clip of ours is on its slot and run
+        // here; come to be run here, nothing is watched (its seat may come back a moment later: LeftFor — a seated clip would be cut for nothing)
+        private enum Post { None, Stand, Seat, Bed, Ground }
+        internal static float PostEvery = 0.2f;
+        private Post _clipPost;
+        private float _postNext;
+        private Post PostNow() { return _on ? (_attachAnim == "attach_bed" ? Post.Bed : Post.Seat) : HeldGesture == "sit" ? Post.Ground : Post.Stand; }
+        private void PostWatch()
+        {
+            if (Time.time < _postNext) return;
+            _postNext = Time.time + PostEvery;
+            BodyAnimator on = Owned ? BodyAnimator.Of(_c) : null;
+            if (on == null || on.ClipIn(ClipSlot) == null) { _clipPost = Post.None; return; } // (over by itself, or run elsewhere now: nothing to watch)
+            Post now = PostNow();
+            if (now == _clipPost) return;
+            Npcs.Log(_c.m_name + ": its clip was for " + _clipPost + ", the body is " + now + " now — let go");
+            _clipPost = Post.None;
+            Clip("");
+        }
+
         internal bool Clip(string name, float seconds = 0f)
         {
             Humanoid h = _c as Humanoid;
@@ -441,9 +573,37 @@ namespace HuginWhispers
             long until = seconds > 0f ? (long)((WorldTime.Now + seconds) * 1000.0) : 0L;
             if (z.GetLong(KClipUntil, 0L) != until) z.Set(KClipUntil, until);
             BodyAnimator on = stop ? null : BodyAnimator.Of(_c);
-            if (on != null && NoEnd(c) && on.Holding(ClipSlot, name)) return true; // (the same one that does not end by itself, asked again: only its term is new — started over, its pose would jump)
-            if (stop) BodyClips.Stop(h, ClipSlot, ClipFade); else BodyClips.Play(h, ClipSlot, name, ClipFade, 1f);
+            if (on != null && NoEnd(c) && on.Holding(ClipSlot, name)) { _clipPost = PostNow(); return true; } // (the same one that does not end by itself, asked again: only its term is new — started over, its pose would jump; asked where it is now)
+            if (stop) { BodyClips.Stop(h, ClipSlot, ClipFade); MateSet(null, 0f); } else BodyClips.Play(h, ClipSlot, name, ClipFade, 1f); // (let go: its mate with it)
+            _clipPost = stop ? Post.None : PostNow();
             return true;
+        }
+
+        // A clip of two (BodyAnimator.Mate: its hands go to where the other body really stands) is seen alike by everyone near (the user 2026-11-14:
+        // «щоб всі гравці бачили сцену однаково… рука на плечі у всіх»): whom it is played on is written on the person — «<the other's id> <m>», by its
+        // owner (the act «mate», StoryScenes) — and every game sets its own picture's mate from it, looked at five times a second. Taken off when the
+        // clip is let go (Clip) or another one begins without it
+        internal static readonly int KMate = "RavenWatch_npcMate".GetStableHashCode(); // string: «<user>:<id> <m>», «» — none
+        private string _mateIs = ""; private bool _mateFound = true; private float _mateLook;
+        internal void MateSet(string other, float far)
+        {
+            ZDO z = Owned && _nv != null && _nv.IsValid() ? _nv.GetZDO() : null;
+            string v = string.IsNullOrEmpty(other) ? "" : other + " " + far.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            if (z != null && z.GetString(KMate, "") != v) z.Set(KMate, v);
+        }
+        private void MateLook()
+        {
+            if (Time.time < _mateLook || _nv == null || !_nv.IsValid()) return;
+            _mateLook = Time.time + 0.2f;
+            string v = _nv.GetZDO().GetString(KMate, "");
+            if (v == _mateIs && _mateFound) return;
+            _mateIs = v; _mateFound = true;
+            Humanoid h = _c as Humanoid;
+            if (v.Length == 0) { BodyAnimator was = BodyAnimator.Of(_c); if (was != null) was.Mate(null, 0f); return; }
+            string[] w = v.Split(' ');
+            GameObject other = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(NpcKit.Parse(w[0])) : null;
+            if (other == null || h == null) { _mateFound = false; return; } // (the other not here yet: looked for again)
+            BodyAnimator.For(h).Mate(other.transform, w.Length > 1 ? Errands.F(w[1], 0.8f) : 0.8f);
         }
 
         // its term over (twice a second, where it is run)
@@ -497,6 +657,9 @@ namespace HuginWhispers
         internal bool PoseSaid { get { ZDO z = _nv != null && _nv.IsValid() ? _nv.GetZDO() : null; return z != null && z.GetBool(KPose, false); } }
         internal bool InPose { get { BodyAnimator a = BodyAnimator.Of(_c); return a != null && a.CodeBusy && PoseSaid; } }
         internal bool ClipFree { get { BodyAnimator a = BodyAnimator.Of(_c); return a == null || !a.CodeBusy || PoseSaid; } }
+        // the clip on it is only how it carries a thing («carry yes»: Heid's basket on her arm, a weapon on the shoulder), on and not on its way out: a move
+        // made for that carrying (its template's «clip@carry», its spot's own: NpcPlaces.Now) may play over it — whoever keeps the carry takes the arm back after
+        internal bool Carrying { get { BodyAnimator a = BodyAnimator.Of(_c); string on = a != null ? a.ClipIn(ClipSlot) : null; PAnimClip c = on != null && a.Holding(ClipSlot, on) ? BodyClips.Find(on) : null; return c != null && c.Carried; } }
 
         // sitting now (any game: its ZDO): on a seat, or on the ground — not in a bed; AttachedSeen: held on any point
         internal string AttachedSeen { get { ZDO z = _nv != null && _nv.IsValid() ? _nv.GetZDO() : null; return z != null ? z.GetString(KAttach, "") : ""; } }
@@ -512,8 +675,7 @@ namespace HuginWhispers
             int id = z.GetInt(ZDOVars.s_emoteID, 0);
             if (id == _gestureId) return;
             _gestureId = id;
-            if (_anim == null) _anim = GetComponentInChildren<Animator>();
-            if (_anim == null) return;
+            if (Anim == null) return;
             if (_gestureHeld.Length > 0) _anim.SetBool("emote_" + _gestureHeld, false);
             _gestureHeld = "";
             _anim.SetTrigger("emote_stop");
@@ -542,6 +704,7 @@ namespace HuginWhispers
             else if (!_sizing && Mathf.Abs(transform.localScale.y - h) > 0.001f) Size(h); // (a person is its own size: another mod's put back at once)
             if (_vis == null) _vis = GetComponent<VisEquipment>();
             BodyBuild.Set(_vis, w != null ? w.Build : 0f); // (nothing unless it changed)
+            BodyTint.Set(_vis, _actor.Def); // (its own colours — a dvergr's skin, hair, suit, eyes; a person's eyes and cape: nothing unless they changed)
         }
     }
 

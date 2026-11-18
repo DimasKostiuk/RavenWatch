@@ -1,0 +1,40 @@
+# Знання саги (StorySaga): стрічка «Знання» на вкладці «Сага» — що гравець дізнався про цей світ. Формат — у шапці people.txt.
+# Майже все тут приходить із розмов: рядок відкриває умова «asked <розмова> <місце розмови>».
+
+[lore book]
+chapter: prologue
+shown: lived prologue.echo
+name: Книга воронів
+about: лежала в покинутій хаті
+line: Її лишило тобі Відлуння: «…тримай. Вони… слухатимуть».
+line: З нею ти знаєш, як говорити з вороном на плечі.
+
+[lore watch]
+chapter: prologue
+name: Варта
+line: asked heid watch_what :: Гейд: «Варта стерегла цей світ. Від чого — вже ніхто не скаже».
+line: asked heid watch_me :: У кого є ворон, той колись був у Варті. Так каже Гейд.
+line: asked heid hall_what :: Поки в Залі горів вогонь, було кому сторожити.
+line: asked heid stones :: Вартові, яких уже нема, лежать під каменями біля табору Гейд.
+
+[lore memory]
+chapter: prologue
+name: Пам'ять
+line: asked heid no_memory :: Гейд: «Тут так з усіма. Встаєш — і порожньо. Потім дещо вертається. Не все, і не те, що хочеш».
+
+[lore heart]
+chapter: prologue
+shown: knows letter | asked heid heart_what | knows first_heart
+name: Серце оселі
+line: knows letter :: Його креслення було в старому листі із Зали Варти.
+quote: zala.lyst Старий лист
+line: asked heid heart_what :: Гейд: «Вогонь, біля якого живуть люди. Варта колись ставила такі там, де хтось лишався жити».
+line: asked heid horn | asked heid horn_have :: Про ріг кажуть: за тим, хто вбив того оленя, люди підуть.
+line: knows first_heart :: Перше серце вже стоїть. Його ліхтар спалахнув і згас.
+
+[lore blue_fire]
+chapter: prologue
+shown: knows blue_fire
+name: Синій вогонь
+line: Вогнище Зали Варти горить синім. Воно світить, але не гріє.
+line: asked heid blue :: Гейд не знає чому: «Він не мав горіти взагалі».

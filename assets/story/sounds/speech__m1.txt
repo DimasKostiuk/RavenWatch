@@ -1,0 +1,11 @@
+# Тембр «m1»: низький: 99 Гц
+# Зроблено інструментом (node tools/sound.js timbres) із вигуків speech_… — руками не правити: слова тембру в рядку «@timbre m1», гучність і розкид — у рядку самого вигуку.
+speech_hm__m1 file:speech_hm_1__m1.ogg file:speech_hm_2__m1.ogg file:speech_hm_4__m1.ogg file:speech_hm_5__m1.ogg spread=0.04   # «хм»: думає; власний запис
+speech_hm_ask__m1 file:speech_hm_ask_1__m1.ogg file:speech_hm_ask_3__m1.ogg file:speech_hm_ask_4__m1.ogg file:speech_hm_ask_6__m1.ogg spread=0.04   # «хм?»: питає, не розчув; власний запис
+speech_em__m1 file:speech_em_1__m1.ogg file:speech_em_2__m1.ogg file:speech_em_4__m1.ogg file:speech_em_5__m1.ogg spread=0.04   # «ем…»: вагається; власний запис
+speech_uhu__m1 file:speech_uhu_1__m1.ogg file:speech_uhu_2__m1.ogg file:speech_uhu_4__m1.ogg file:speech_uhu_5__m1.ogg spread=0.04   # «угу»: згода; власний запис
+speech_oh__m1 file:speech_oh_1__m1.ogg file:speech_oh_2__m1.ogg file:speech_oh_4__m1.ogg file:speech_oh_5__m1.ogg spread=0.04   # «о!»: подив; власний запис
+speech_sigh__m1 file:speech_sigh_2__m1.ogg file:speech_sigh_3__m1.ogg file:speech_sigh_5__m1.ogg file:speech_sigh_6__m1.ogg spread=0.04 vol=0.6   # зітхання; власний запис
+speech_chuckle__m1 file:speech_chuckle_1__m1.ogg file:speech_chuckle_4__m1.ogg file:speech_chuckle_6__m1.ogg file:speech_chuckle_7__m1.ogg spread=0.04   # смішок; власний запис
+speech_khm__m1 file:speech_khm_1.ogg file:speech_khm_2.ogg file:speech_khm_3.ogg file:speech_khm_4.ogg file:speech_khm_5.ogg file:speech_khm_6.ogg spread=0.04   # «кхм»: прочищає горло; власний запис — запис як є: у тембр не переробляється (голос і шум разом)
+speech_breath__m1 file:speech_breath_1__m1.ogg file:speech_breath_2__m1.ogg spread=0.04 vol=0.3   # вдих перед реченням; власний запис

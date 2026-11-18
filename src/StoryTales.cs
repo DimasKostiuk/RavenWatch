@@ -27,6 +27,7 @@ namespace HuginWhispers
     // (this world's text about him: Knows) and his name goes into the world — «tale_<id>_w<his id>» (StoryWorld.Text), a key of his own, so two seeing it at
     // once never write over each other: the saga's witnesses (the first MaxWitnesses of a tale). In a talk (NpcTalk): a settler tells it first when asked what happened while you were away (NpcAway.Sources); a talk of its own (Heid): the condition «taleuntold» (it remembers one you do not know), the words
     // «{tale}» (that one, as seen or heard) and the deed «!taletold» (now you know). Kept for good, as the story's own memories.
+    // The condition «knows <tale>»: it has happened and this player saw it, was told, or knows it anyway (the book's «Сага»: what one knows).
     // How it spreads (the user 2026-11-05: «як вірус між NPC»), each step a level lower, never over a better one:
     //   saw       a witness (above)
     //   heard     a witness's own people; one a player who knows it comes within CarryNear of (Carry: «you brought it»)
@@ -102,7 +103,7 @@ namespace HuginWhispers
             foreach (Tale t in _all)
             {
                 if ((t.Saga.Length > 0 || t.Rumor.Length > 0) && t.Chapter.Length == 0) Errors.Add(t.Id + ": є saga:/rumor:, а chapter: нема");
-                else if (t.Chapter.Length > 0 && !StorySaga.HasChapter(t.Chapter)) Errors.Add(t.Id + ": chapter: нема розділу «" + t.Chapter + "» (assets/story/saga)");
+                else if (t.Chapter.Length > 0 && !StorySaga.HasChapter(t.Chapter)) Errors.Add(t.Id + ": chapter: нема глави «" + t.Chapter + "» (assets/story/saga)");
                 if (t.Rumor.Length > 0 && t.Saga.Length == 0) Errors.Add(t.Id + ": rumor: без saga: (чутку ніхто не розвіє)");
             }
             foreach (string e in Errors) Story.Log("tales: " + e);
@@ -360,7 +361,7 @@ namespace HuginWhispers
 
         internal static void Register()
         {
-            StoryCond.Register("taleuntold", new StoryCond.Kind { Usage = "taleuntold   (людина, з якою говориш, пам'ятає подію, якої ти не знаєш)",
+            StoryCond.Register("taleuntold", new StoryCond.Kind { Dry = "free", Usage = "taleuntold   (людина, з якою говориш, пам'ятає подію, якої ти не знаєш)",
                 Test = (p, a) => { NpcMemory.Entry e; return Untold(NpcTalk.Him, p, out e) != null; } });
             NpcTalk.Words["{tale}"] = (a, p) =>
             {
@@ -371,6 +372,14 @@ namespace HuginWhispers
                 return WordsOf(a, t, e);
             };
             NpcTalk.Deeds["taletold"] = (a, p, w) => { if (_shown.Length > 0) Learned(p, _shown); };
+            StoryCond.Register("knows", new StoryCond.Kind { Dry = "me knows:{1} : the tale's moment came and he saw it or was told", Usage = "knows <подія>   (подія світу сталася, і гравець її бачив, чув від людини чи знає й так: assets/story/tales)", Min = 1,
+                Check = a => Story.GoodName(a[1]) ? null : "погана назва події «" + a[1] + "»",
+                Test = (p, a) =>
+                {
+                    if (p == null) return false;
+                    foreach (Tale t in All) if (t.Id == a[1]) return StoryWorld.Var(Key(t)) != 0 && (Knows(p, t.Id) || (t.Known != null && StoryCond.All(p, t.Known)));
+                    return false;
+                } });
             // the settlers' «Що тут сталося, поки мене не було?» (NpcAway): a tale first, then what else it remembers of your absence
             NpcAway.Sources.Add(new NpcAway.Source
             {

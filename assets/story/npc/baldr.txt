@@ -1,0 +1,14 @@
+[npc baldr]
+name: Незнайомець
+shuns: none   # docs/jobs/people-moves.md
+body: human
+model: 0
+skin: 0.93 0.86 0.8
+haircolor: 0.85 0.78 0.55
+hair: Hair5
+beard: Beard17
+gear: HelmetCelebration ArmorLeatherChest ArmorTrollLeatherLegs CapeDeerHide TrinketFlametalEitr
+fight: off
+walk: 0.9
+menu: no
+persona: chatty=0.25 bravery=0.3 curiosity=0.7 diligence=0.85 height=1.15 build=-0.25 lively=1

@@ -1,5 +1,6 @@
 clip listen_sit_chin
 length 1.4
+tone plain
 loop 0
 pivot 1.1
 curve ease

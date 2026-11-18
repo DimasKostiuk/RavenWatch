@@ -157,6 +157,7 @@ namespace HuginWhispers
             NpcPerf.Add(PerfPath, perf);
             if (!ok || _ask.Count == 0) return;
             Vector3 far = _ask[_ask.Count - 1]; // (the nearest it gets to us from its goal's side)
+            if ((far - end).sqrMagnitude < 0.04f) { if (_trip != null) _trip.NoBridge++; return; } // (the way back from its goal ends where its own does: no gap between them to cross — measured 2026-11-11, a chest behind a half wall: a link of no length was made and 41 «bridges» in one test led nowhere)
             float dy = far.y - end.y;
             bool linked = LinkAcross(end, far); // (a body walks it: a link of the map from now on — NpcWalkLinks)
             if (!linked && (Utils.DistanceXZ(end, far) > Gap || dy > GapUp || dy < -GapDown || !Clear(end, far))) { if (_trip != null) _trip.NoBridge++; return; }

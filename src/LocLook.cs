@@ -31,13 +31,30 @@ namespace HuginWhispers
             Show(_hidden, nv, WantsShown(nv)); // (at once, this piece only: its look goes this same moment, so nothing blinks — and no place of 2000 pieces laid anew for it)
         }
 
+        // a piece of a place by its layer in that state — and a chest with things in it whatever its layer says (the user 2026-11-17: the Hall's
+        // chest stood from 1.2 in 2.9 and now only in 1.4 «літ» — what a player put in it before is never hidden from him; emptied, it goes by its
+        // layer from the next time its place is laid: a change of state, the world loaded). Only its look: for the story and the people it is
+        // where its layer says (Absent — so «skrynia» of a later state is that state's chest, not the one kept for its things). Its things are
+        // read from its ZDO, as the game's Container.Load reads them (every game the same; its own inventory fills a moment after it is laid):
+        // «items» a byte array, Inventory.Save's version (int), then the count (ushort; an int before Version.Item.Smaller). Asked only of a
+        // piece its layer hides — a handful a place
+        internal static bool PieceShows(ZNetView nv, string layer, int state, int sub)
+        {
+            if (Shows(layer, state, sub)) return true;
+            if (nv == null || !nv.IsValid() || nv.GetComponent<Container>() == null) return false;
+            byte[] items = nv.GetZDO().GetByteArray(ZDOVars.s_items);
+            if (items == null || items.Length < 6) return false; // (none, or an empty inventory: version and count alone)
+            try { ZPackage p = new ZPackage(items); Version.Item v = (Version.Item)p.ReadInt(); return (v >= Version.Item.Smaller ? p.ReadUShort() : p.ReadInt()) > 0; }
+            catch (Exception e) { Plugin.Instance.Log("LocState: a chest's things not read (" + e.Message + "): it goes by its layer"); return false; }
+        }
+
         // this game's player sees this piece now: its layer in its place's state, and no «hidewhile» on its name. The author's hand-built one: always
         internal static bool WantsShown(ZNetView nv)
         {
-            if (nv == null || !nv.IsValid() || !Blueprint.Copy(nv)) return true;
+            if (nv == null || !nv.IsValid() || !Blueprint.Copy(nv)) return true; // blueprint only: layers of its place's state (an inside has none)
             Loc l = Locs.Get(nv.GetZDO().GetString(LocParts.KOf, ""));
             if (l == null) return true;
-            if (!Shows(LocParts.LayerOf(l.Id, nv), StateOf(l), SubOf(l))) return false;
+            if (!PieceShows(nv, LocParts.LayerOf(l.Id, nv), StateOf(l), SubOf(l))) return false;
             Player me = Player.m_localPlayer;
             if (me == null || l.HideWhile.Count == 0) return true;
             string name = LocParts.NameOf(l.Id, nv);
@@ -58,15 +75,28 @@ namespace HuginWhispers
             }
         }
 
-        // each place once a second, one at a time, not all in one frame (each may look over every loaded piece: LocParts)
+        // each place once a second, one at a time, not all in one frame (each may look over every loaded piece: LocParts) — but in the first
+        // frame you are in the world (come in, back from death, a new character) every place near at once, while the loading screen still
+        // covers it: its pieces come in as the blueprint has them, and waiting for its turn they would hide and break before your eyes
         private static int _turn;
+        private static Player _seen; // (the player the places were last laid for: a new one — all of them now)
+        private static bool _wasAway; // (it was teleporting: out of a portal — all of them now too)
         internal static void Tick()
         {
-            if (Time.time < _next) return;
+            Player me = Player.m_localPlayer;
             List<Loc> all = Locs.All;
+            bool away = me != null && me.IsTeleporting();
+            if (me != null && !away && (me != _seen || _wasAway) && all.Count > 0)
+            {
+                _seen = me; _wasAway = false;
+                foreach (Loc each in all) { TickOne(each, me); foreach (Action<Loc, Player> part in LocModules.Near) part(each, me); } // heavy: once as you come into the world or out of a portal — each place within Reach over its loaded pieces
+                _next = Time.time + Every / all.Count;
+                return;
+            }
+            if (away) _wasAway = true;
+            if (Time.time < _next) return;
             if (all.Count == 0) return;
             _next = Time.time + Every / all.Count;
-            Player me = Player.m_localPlayer;
             if (me == null) return;
             if (++_turn >= all.Count) { _turn = 0; CloseDoors(); Prune(); }
             Loc l = all[_turn];
@@ -107,7 +137,7 @@ namespace HuginWhispers
                 bool on = true;
                 if (!laid.Shown.Contains(id))
                 {
-                    on = Shows(LocParts.LayerOf(l.Id, nv), state, sub) && !_held.Contains(id); // (in a hand: hidden whatever its state)
+                    on = PieceShows(nv, LocParts.LayerOf(l.Id, nv), state, sub) && !_held.Contains(id); // (in a hand: hidden whatever its state)
                     Show(_hidden, nv, on);
                     Guides(nv);
                     Lights(_dimmed, Unlit, nv, on, ruined, l, state, sub);
@@ -119,7 +149,7 @@ namespace HuginWhispers
                     if (l.LitWhile.Count > 0) { Fireplace fp = nv.GetComponent<Fireplace>(); List<Fireplace> fl; if (fp != null) { if (!_fires.TryGetValue(l.Id, out fl)) _fires[l.Id] = fl = new List<Fireplace>(); if (!fl.Contains(fp)) fl.Add(fp); } }
                     if (on && l.LockDoors.Length > 0 && nv.GetComponent<Door>() != null && nv.GetComponent<LocDoorView>() == null) nv.gameObject.AddComponent<LocDoorView>(); // (shut as his story has it)
                 }
-                if (!laid.Healed.Contains(id) && Heal(nv, ruined, mine)) laid.Healed.Add(id);
+                if (!laid.Healed.Contains(id) && Heal(nv, Broken(l, nv, state, sub), mine)) laid.Healed.Add(id);
             }
             if (l.LitWhile.Count > 0) LitWhile(l, me);
             if (l.HideWhile.Count > 0) HideWhile(l, me, state, sub);
@@ -141,7 +171,7 @@ namespace HuginWhispers
             foreach (KeyValuePair<string, bool> g in _gone)
                 foreach (ZNetView nv in LocParts.Named(l.Id, g.Key))
                 {
-                    bool want = !g.Value && Shows(LocParts.LayerOf(l.Id, nv), state, sub) && !_held.Contains(nv.GetInstanceID());
+                    bool want = !g.Value && PieceShows(nv, LocParts.LayerOf(l.Id, nv), state, sub) && !_held.Contains(nv.GetInstanceID());
                     if (want == !_hidden.ContainsKey(nv.GetInstanceID())) continue;
                     Show(_hidden, nv, want);
                     if (!want) LaidOf(l).Healed.Add(nv.GetInstanceID()); // (hidden: its strength no matter)
@@ -174,6 +204,40 @@ namespace HuginWhispers
             }
         }
 
+        // a piece of a place drawn broken at this step (the ruin's strength: the game's broken look) or whole. As its state has it (Ruined),
+        // but for a step its «worn:» line names (Loc.Worn: «worn: 1.4 0.5 on wall roof»; the user 2026-11-17: the Hall's last abandoned step,
+        // «літ» — Lit has already begun, «він все таки вже щось встиг зробити»: some walls and the roof still critical, the rest mended): there
+        // only that part of the pieces whose prefab has one of its words and the ruin's own debris (layer «ruin»), all else whole.
+        // Which: by patches — cubes of WornCell m of the blueprint's own frame, each drawn 0..1 by the place's name and its cell (the
+        // same in every world and game), none marked by hand. Its lights, mist and all else as its state has them. Asked once a piece
+        // is laid (Healed); the author's look (LocPreview) each second, his game only
+        internal const float WornCell = 4f;
+        internal static bool Broken(Loc l, ZNetView nv, int state, int sub)
+        {
+            float part = l != null && l.Worn.Count > 0 ? l.WornShare(state, sub) : -1f;
+            if (part < 0f) return Ruined(l, state);
+            string prefab = Utils.GetPrefabName(nv.gameObject), of; Vector3 at;
+            if (!LocParts.Place(nv, out of, out at) || of != l.Id) return Ruined(l, state); // (not in this place's frame: as its state has it)
+            if (MainOf(LocParts.LayerAt(of, prefab, at)) == "ruin") return true; // (the ruin's own debris — fallen beams, rubble — broken whatever is mended)
+            if (part == 0f) return false;
+            bool kind = false;
+            foreach (string w in l.WornOn) if (prefab.IndexOf(w, StringComparison.OrdinalIgnoreCase) >= 0) { kind = true; break; }
+            return kind && WornDraw(l.Id, at) < part;
+        }
+        // a patch's draw (FNV over the place's name and the cell, then mixed: no string.GetHashCode, not the same on every runtime)
+        private static float WornDraw(string id, Vector3 at)
+        {
+            unchecked
+            {
+                uint h = 2166136261u;
+                foreach (char c in id) h = (h ^ c) * 16777619u;
+                h = (h ^ (uint)Mathf.FloorToInt(at.x / WornCell)) * 16777619u;
+                h = (h ^ (uint)Mathf.FloorToInt(at.y / WornCell)) * 16777619u;
+                h = (h ^ (uint)Mathf.FloorToInt(at.z / WornCell)) * 16777619u;
+                h ^= h >> 16; h *= 2246822507u; h ^= h >> 13; h *= 3266489909u; h ^= h >> 16;
+                return (h & 0xFFFFFFu) / 16777216f;
+            }
+        }
         // a ruin still (strength, mist, fires out): its states 1..RuinTo (locations.list «ruin:»)
         internal static bool Ruined(Loc l, int state) { return l != null && state <= l.RuinTo; }
 
@@ -307,7 +371,7 @@ namespace HuginWhispers
 
         // a place that keeps no stations (Loc.LockStations): its workbench is out of the game's lists — nothing built,
         // made or learnt near it; E on it does nothing (LocStationPatch); its ring on the ground never shown
-        private static void DeadStations(ZNetView nv)
+        internal static void DeadStations(ZNetView nv)
         {
             foreach (CraftingStation s in nv.GetComponentsInChildren<CraftingStation>(true)) // heavy: once when the piece is laid
             {
@@ -321,9 +385,9 @@ namespace HuginWhispers
         // Container stay on it, only its looks and touch go off, so whoever looks for them asks this (NpcBase, NpcMind)
         internal static bool Absent(ZNetView nv)
         {
-            if (!Blueprint.Copy(nv)) return false;
+            if (!Blueprint.Copy(nv)) return false; // blueprint only: layers of its place's state (an inside has none)
             Loc l = Locs.Get(nv.GetZDO().GetString(LocParts.KOf, ""));
-            return l != null && !Shows(LocParts.LayerOf(l.Id, nv), StateOf(l), SubOf(l));
+            return l != null && !Shows(LocParts.LayerOf(l.Id, nv), StateOf(l), SubOf(l)); // (by its layer alone: a chest kept in sight for a player's things is not the story's — PieceShows)
         }
 
         // goes up when any place changed its state here: what was gathered of its pieces is looked over again (NpcBase)

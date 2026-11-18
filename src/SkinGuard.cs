@@ -73,6 +73,6 @@ namespace HuginWhispers
         }
 
         [HarmonyPriority(Priority.Last)]
-        private static void Postfix(VisEquipment __instance, bool __result) { if (!__result) return; try { SkinGuard.Fix(__instance); BodyBuild.Bind(__instance); } catch (System.Exception e) { PatchGuard.Fail("SkinGuardPatch", e); } } // (a built body: the new piece onto its build children too)
+        private static void Postfix(VisEquipment __instance, bool __result) { if (!__result) return; try { SkinGuard.Fix(__instance); BodyBuild.Bind(__instance); BodyTint.Bind(__instance); } catch (System.Exception e) { PatchGuard.Fail("SkinGuardPatch", e); } } // (a built body: the new piece onto its build children too)
     }
 }

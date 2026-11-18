@@ -13,7 +13,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- «Сюжет»
         private string _trackPick = "", _worldNew = "", _raise = "";
-        private Vector2 _trackList, _trackStages, _trackLog;
+        private Vector2 _trackList, _trackStages, _trackLog, _trackWorld;
 
         private void Track()
         {
@@ -39,7 +39,9 @@ namespace HuginWhispers
 
             GUILayout.Space(8);
             GUILayout.Label("Світ (спільне для всіх)", _head);
-            foreach (string k in StoryWorld.All())
+            List<string> keys = StoryWorld.All();
+            _trackWorld = GUILayout.BeginScrollView(_trackWorld, GUILayout.Height(Mathf.Min(26f * keys.Count + 8f, Fill(400f, 110f)))); // (the world's keys grow with the story: their own scroll, the character's lines below stay in sight)
+            foreach (string k in keys)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(k);
@@ -47,6 +49,7 @@ namespace HuginWhispers
                 if (GUILayout.Button("прибрати", GUILayout.Width(80f))) { if (sp < 0) StoryWorld.SetFlag(k, false); else StoryWorld.SetText(k.Substring(0, sp), ""); }
                 GUILayout.EndHorizontal();
             }
+            GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
             _worldNew = GUILayout.TextField(_worldNew, 40, GUILayout.Width(180f));
             if (GUILayout.Button("додати прапорець") && Story.GoodName(_worldNew)) { StoryWorld.SetFlag(_worldNew, true); _worldNew = ""; }
@@ -75,18 +78,18 @@ namespace HuginWhispers
             GUILayout.Label("Стан: " + (state.Length > 0 ? state : "не почато") + (at.Length > 0 ? " · етап: " + at : "")
                 + (q.StartsText.Length > 0 ? " · почнеться сам, коли: " + q.StartsText + (q.Starts != null && StoryCond.All(p, q.Starts) ? " ✓" : " ✗") : " · сам не почнеться"));
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Почати з початку")) StoryQuests.Start(p, q);
+            if (GUILayout.Button("Почати з початку")) StoryQuests.Rebuild(p, q, q.First);
             StoryQuests.StageDef cur = q.Stage(at);
             GUI.enabled = cur != null && state == Story.Active;
-            if (GUILayout.Button("Пройти етап зараз") && cur != null) StoryQuests.Jump(p, q, cur.Next);
+            if (GUILayout.Button("Пройти етап зараз") && cur != null) StoryQuests.PassNow(p, q);
             if (GUILayout.Button("Завершити сцену") && cur != null && cur.Scene.Length > 0) { if (StoryScenes.Playing == cur.Scene) StoryScenes.Stop("автор завершив"); StoryBus.Raise("scene_done", cur.Scene, 0); }
             GUI.enabled = true;
-            if (GUILayout.Button("Стерти для персонажа")) StoryQuests.Forget(p, q);
+            if (GUILayout.Button(q.Server ? "Стерти для світу" : "Стерти для персонажа")) StoryQuests.Rebuild(p, q, "");
             if (GUILayout.Button(_editKind == EditQuest ? "До етапів" : "Редагувати файл", GUILayout.Width(150f))) Edit(EditQuest, q.From);
             GUILayout.EndHorizontal();
 
             if (_editKind == EditQuest) { FileEditor(); GUILayout.EndVertical(); GUILayout.EndHorizontal(); return; }
-            _trackStages = GUILayout.BeginScrollView(_trackStages, GUILayout.Height(380f));
+            _trackStages = GUILayout.BeginScrollView(_trackStages, GUILayout.Height(Fill(270f))); // (the quest's head and buttons above, «Що робила доріжка» below)
             foreach (StoryQuests.StageDef s in q.Stages)
             {
                 bool here = s.Id == at && state == Story.Active;
@@ -109,10 +112,10 @@ namespace HuginWhispers
                 GUILayout.Label(more, _hint);
                 if (here && s.Ways.Count > 0)
                 {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("   пройти шлях:", _hint, GUILayout.Width(110f));
-                    foreach (StoryQuests.StageDef w in s.Ways) if (GUILayout.Button(w.Id)) StoryQuests.Choose(p, q, s, w);
-                    GUILayout.EndHorizontal();
+                    AuthorRow ways = AuthorRow.Begin(false);
+                    ways.Label("   пройти шлях:", _hint, 110f);
+                    foreach (StoryQuests.StageDef w in s.Ways) if (ways.Button(w.Id)) StoryQuests.Choose(p, q, s, w);
+                    ways.End();
                 }
             }
             GUILayout.EndScrollView();

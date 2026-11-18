@@ -150,7 +150,7 @@ namespace HuginWhispers
             Npcs.Log(a.Who + ": welcomes you back");
             if (a.Body == null) return;
             if (NpcPersona.Of(a).Chatty >= 0.5f) a.Body.Gesture("wave", false); // (the game's wave: every game sees it)
-            else a.Body.Clip("fire_nod_l");                                    // (a nod: ours)
+            else a.Body.Move("fire_nod_l|fire_nod_r");                         // (a nod: ours)
         }
 
         // ---------------------------------------------------------------- the morning by its heart

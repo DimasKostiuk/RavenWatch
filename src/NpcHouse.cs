@@ -128,9 +128,9 @@ namespace HuginWhispers
 
         internal string Describe()
         {
-            if (!Ready) return Making ? "дім роздивляється…" : "дім ще не роздивлений";
-            if (TooBig) return "це не дім — завеликий дах (подвір'я?)";
-            if (Count < 4) return "тут нема даху — це не дім";
+            if (!Ready) return Making ? Lang.K("дім роздивляється…") : Lang.K("дім ще не роздивлений");
+            if (TooBig) return Lang.K("це не дім — завеликий дах (подвір'я?)");
+            if (Count < 4) return Lang.K("тут нема даху — це не дім");
             return "дім: " + Count + " м²" + (_levels.Count > 1 ? ", поверхів " + _levels.Count : "") + (Open ? " — не замкнений (прохід ширший за 2 м): межі за дахом, можуть бути неточні" : "");
         }
 

@@ -9,11 +9,11 @@ namespace HuginWhispers
     // Satiety: how full the raven is, 0–100, kept in the raven itself (with the world time it was last counted, so
     // it goes on melting in the bag, in a chest or with the game off, at most a few days' worth at once).
     //   - It melts by itself (PerDay a game day) and with every gift used (its strength cost × GiftShare).
-    //   - Zones: 0 starving (the old «голодує»: droops, strike weaker, pecks, trust melts), up to 15 hungry (gifts
-    //     dearer, no strength comes, steals from the bag), up to 40 asks for food, up to 90 fed (strength comes
+    //   - Zones: 0 starving (the old «голодує»: droops, strike weaker, pecks, trust melts), up to 10 hungry (gifts
+    //     dearer, no strength comes, steals from the bag), up to 30 asks for food, up to 90 fed (strength comes
     //     faster), above that stuffed (lazy: no outings, strike weaker).
     //   - Food fills by its class (where it comes from, 1 Meadows .. 5 Ashlands); trust from food only for the
-    //     part of it that fills a real hunger (below 40).
+    //     part of it that fills a real hunger (below 30).
     //   - Every raven has its own favourite food, rolled once and hidden until it has eaten it or let slip enough hints.
     internal static class Satiety
     {
@@ -21,11 +21,11 @@ namespace HuginWhispers
         private const string FavKey = "RavenWatch_fav", FavKnownKey = "RavenWatch_favKnown", FavHintKey = "RavenWatch_favHints";
         private const string OldFedKey = "RavenWatch_fedDay"; // the once-a-day feeding before satiety
 
-        internal static float PerDay = 25f;          // melts by itself in a game day
+        internal static float PerDay = 20f;          // melts by itself in a game day
         internal static float GiftShare = 0.25f;     // a gift's strength cost × this comes off satiety
-        internal const float HungryAt = 15f, AskAt = 40f, StuffedAt = 90f;
+        internal const float HungryAt = 10f, AskAt = 30f, StuffedAt = 90f;
         internal static float HungryCostMul = 1.5f, StarveCostMul = 2f;
-        internal static float FedGainMul = 1.25f;   // strength comes this much faster when fed (41–90)
+        internal static float FedGainMul = 1.25f;   // strength comes this much faster when fed (31–90)
         internal static float StuffedStrikePct = 25f;
         internal static float FavFillMul = 1.5f, FavTrustMul = 2f, FavFedMul = 2f;
         internal static float StealMinutes = 5f, CoinChance = 25f;
@@ -443,7 +443,7 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- stealing
-        // Hungry (15 or less) and on your shoulder: every few minutes it helps itself from your bag (a stranger-minded
+        // Hungry (10 or less) and on your shoulder: every few minutes it helps itself from your bag (a stranger-minded
         // raven takes the best, a fond one the worst and warns first), and now and then it takes coins too.
 
         private static readonly float[] NextSteal = { -1f, -1f };
@@ -535,7 +535,7 @@ namespace HuginWhispers
             return n;
         }
 
-        // Munin, hungry (40 or less), now and then pecks at what you have just killed
+        // Munin, hungry (30 or less), now and then pecks at what you have just killed
         private static float _corpseAt = -999f;
 
         internal static void OnKill()

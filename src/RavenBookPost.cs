@@ -551,7 +551,7 @@ namespace HuginWhispers
             Fixed(cell.gameObject, 68f, 68f);
             Box(cell, 6f, new Color(1f, 1f, 1f, 0.25f), item != null ? PGoldLine : PEdge, item != null ? 2f : 1.5f);
             Sprite icon = null;
-            try { icon = item != null ? BookArt.Smooth(item.GetIcon()) : null; } catch { icon = null; }
+            try { icon = item != null ? BookArt.Smooth(item.GetIcon()) : null; } catch (Exception e) { icon = null; PatchGuard.Fail("RavenBook.PostIcon " + (item != null ? item.m_shared.m_name : ""), e); }
             if (icon != null) { Image im = Img(cell, "Icon", icon, Color.white); im.preserveAspect = true; Stretch(im.rectTransform, Vector2.zero, Vector2.one, new Vector2(7f, 7f), new Vector2(-7f, -7f)); }
             else { TMP_Text g = T(cell, "ᛒ", 26f, A(PSoft, 0.5f), F.Rune, TextAlignmentOptions.Center); Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero); }
             RectTransform words = Rect("Words", row);

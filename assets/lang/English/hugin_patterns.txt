@@ -3081,11 +3081,11 @@ Well then.
 ^xboss.падало>xboss.земля The ground shook so hard I flew off the shoulder. Not on purpose.
 ^xboss.падало>xboss.земля My ears are still ringing from that blow.
 ^xboss.земля>xboss.пісня The skalds will sing about that too. They will get it all wrong, but they will sing.
-^xboss.земля>xboss.пісня I am already composing a song. First line: «The ravens were not afraid».
+^xboss.земля>xboss.пісня I am already composing a song. First line: “The ravens were not afraid”.
 ^xboss.моя>xboss.третя You are both wrong. Mine finished it. I saw from above.
 ^xboss.моя>xboss.третя Neither of them finished it. Mine did, while you two argued.
 ^xboss.третя>xboss.всі Listen, maybe it just died on its own? Out of shame that there were so many of you.
-^xboss.третя>xboss.всі Everyone says «mine». So maybe everyone struck at once?
+^xboss.третя>xboss.всі Everyone says “mine”. So maybe everyone struck at once?
 ^xboss.кричала>xboss.камінь Shouting is nothing. I saw who was hiding behind a rock.
 ^xboss.кричала>xboss.камінь And afterwards someone sat behind a rock. We will not say who.
 ^xboss.камінь>xboss.тактика Hiding behind a rock is tactics. That is what everyone who hid says.
@@ -4985,7 +4985,7 @@ a beast remembers kindness. So does a raven.
 ^chop.осика On oaks? You never leave the bushes.
 ^chop.плече They serve you because you peck until they do.
 ^chop.плече They serve you. And you never say thanks.
-^chop.по_тобі I did say «look out». I always do.
+^chop.по_тобі I did say “look out”. I always do.
 ^chop.ржачно A laugh, until it's on you.
 ^chop.ржачно You laugh at anything that falls. Except yourself.
 ^chop.лапи I will. At least they listen, unlike you.
@@ -5014,7 +5014,7 @@ a beast remembers kindness. So does a raven.
 ^chop.колода Deep. Scary deep, for you.
 ^chop.жуки You've eaten beetles. I saw.
 ^chop.жуки Says the one who eats anything.
-^chop.шо_вийде «Whatever comes out» is your plan for life.
+^chop.шо_вийде “Whatever comes out” is your plan for life.
 ^chop.хай_приходять You'll give it to them. Then hide behind me.
 ^chop.бояться They're scared. Of your voice. It's worse than the axe.
 ^chop.бояться Everyone. Except wolves, trolls and the squirrel.
@@ -5295,7 +5295,7 @@ a beast remembers kindness. So does a raven.
 ^fog.сліпий Temporarily. Don't get used to the company.
 ^fog.сам_засідка An ambush that swears out loud. Very reliable.
 ^fog.сам_засідка An ambush keeps quiet. Try it once.
-^fog.клюнути As long as that «someone» isn't me.
+^fog.клюнути As long as that “someone” isn't me.
 ^fog.клюнути They can peck us by surprise too. Quiet.
 ^fog.ти_вже I know where we are. I'm just not saying.
 ^fog.ти_вже Lost. Together with you. Small comfort.
@@ -5591,13 +5591,13 @@ a beast remembers kindness. So does a raven.
 ^idle_b.обіцяв>idle_b.поки Today. Noted. Holding you to it by the beak.
 ^idle_b.обіцяв>idle_b.поки A promise from Munin. A rare bird.
 ^idle_b.трошки>idle_b.не_в_рахунок There. Already ruined it a little.
-^idle_b.трошки>idle_b.не_в_рахунок You can't do «a little» either.
+^idle_b.трошки>idle_b.не_в_рахунок You can't do “a little” either.
 ^idle_b.розкис>idle_b.тихіше I'm not going soft. I'm stating a fact.
 ^idle_b.розкис>idle_b.тихіше Going soft is your job. I just keep count.
-^idle_b.кинув>idle_b.мо «Maybe». That «maybe» says it all.
+^idle_b.кинув>idle_b.мо “Maybe”. That “maybe” says it all.
 ^idle_b.кинув>idle_b.мо You wouldn't. You don't even know the way home.
 ^idle_b.пісня>idle_b.забудь No song. But I've already written a little poem.
-^idle_b.пісня>idle_b.забудь I won't. But you said «we hold on». I heard.
+^idle_b.пісня>idle_b.забудь I won't. But you said “we hold on”. I heard.
 ^idle_b.старається>idle_b.брешеш He's trying. I've seen it.
 ^idle_b.старається>idle_b.брешеш That's why he doesn't call us back. He remembers.
 ^idle_b.тімя>idle_b.боги That's exactly why they let us go.
@@ -5662,7 +5662,7 @@ a beast remembers kindness. So does a raven.
 ^perch_a.злітай Not happening. I'll sit. Cramped, but on principle.
 ^perch_a.пхайся The wing isn't shoving. It just exists.
 ^perch_a.пхайся I'm not shoving. I'm reclaiming what's mine.
-^perch_a.окей «Okay». From you that's practically a song.
+^perch_a.окей “Okay”. From you that's practically a song.
 ^perch_a.окей I'll remember this. A rare day.
 ^perch_a.пиво Nobody poured for you. You helped yourself.
 ^perch_a.пиво There'll be beer. When you earn it. So, never.
@@ -5709,7 +5709,7 @@ a beast remembers kindness. So does a raven.
 @х_тепло
 ^rest_a.плакав At least I cried quietly. The whole fjord heard you.
 ^rest_a.сторожу If you don't nod off. So, I'm keeping watch.
-^rest_a.сторожу You fall asleep before you finish saying «I'll keep watch».
+^rest_a.сторожу You fall asleep before you finish saying “I'll keep watch”.
 ^rest_a.назавжди Forget us, and stop feeding us. Think again.
 ^rest_a.назавжди Forever won't work. The firewood will run out.
 ^rest_a.про_мене I would. Briefly: ate, swore, slept.
@@ -5729,7 +5729,7 @@ a beast remembers kindness. So does a raven.
 ^rest_a.допер Got it? That fast? The tale is working already.
 ^rest_a.допер Bad because it's about someone clever? I see. Not your genre.
 ^rest_a.жар Stick your own in. You test everything with your beak.
-^rest_a.жар I know they're embers. It's called a «simile».
+^rest_a.жар I know they're embers. It's called a “simile”.
 ^rest_a.хвіст Careful with your tail. You only have one.
 ^rest_a.хвіст If they do, you'll be the brightest raven in Midgard.
 ^rest_a.пика That's exactly why {name} leads, not you.
@@ -6515,7 +6515,7 @@ Don't lean over the side.
 ^ride.смердить You don't smell like flowers either. Yet you get carried.
 ^ride.смердить But it carries us. You don't.
 ^ride.везе Finally you're glad about something.
-^ride.аби With you it's always «as long as». Even to the end of the world.
+^ride.аби With you it's always “as long as”. Even to the end of the world.
 ^ride.дзьобнути You think? That's news.
 ^ride.дзьобнути Where there's someone to peck, there's someone to peck you.
 ^ride.не_було There were. You've got nothing to shake.
@@ -6574,8 +6574,8 @@ Don't lean over the side.
 ^repair.верещить An enemy squeals off-beat. A hammer keeps time.
 ^repair.верещить With you everything's about enemies. Even music.
 ^repair.голова It cracks because it's empty. Resonance.
-^repair.майже «Almost» beats your «that'll do».
-^repair.майже Almost is honest. You'd have said «perfect».
+^repair.майже “Almost” beats your “that'll do”.
+^repair.майже Almost is honest. You'd have said “perfect”.
 ^repair.до_бою Then back here after the fight. As always.
 ^repair.літопис A rare event. You're right.
 ^repair.пики On faces. None lived to tell them.
@@ -12245,11 +12245,11 @@ I shed sparks, so I'm alive.
 Want to warm up — sit closer. Just don't set your cloak on fire.
 Frost melts off me before it can settle.
 @хпор_бачив
-Hear that? A rare raven woke near — «{breed}». Almost as good as me.
-Another special one: «{breed}». There are more of us now.
-«{breed}». Pretty. But I'm the smarter one.
-A rare raven, «{breed}». I wonder if it can think.
-«{breed}» nearby. Don't be jealous, you have me.
+Hear that? A rare raven woke near — “{breed}”. Almost as good as me.
+Another special one: “{breed}”. There are more of us now.
+“{breed}”. Pretty. But I'm the smarter one.
+A rare raven, “{breed}”. I wonder if it can think.
+“{breed}” nearby. Don't be jealous, you have me.
 @хпор_руда
 There's {ore} near. Marked it on the map. No need to thank me.
 I hear iron: {ore}. Dig while I'm in a good mood.
@@ -12456,7 +12456,7 @@ Toiler. Just give me a break now and then.
 @хзв_lost
 {habit}? I think I've outgrown it.
 No longer {habit}. Odd — I don't miss it at all.
-Dropped it. «{habit}» isn't me anymore.
+Dropped it. “{habit}” isn't me anymore.
 @хзв_hangover
 Oh, my head... No mead yesterday — and here we are.
 Don't shout. I feel awful. Where's the mead?
@@ -14525,3 +14525,190 @@ Fine. I'm just a bird. A clever bird.
 Never mind, never mind. You'll remember later.
 Did you just insult me, or did it seem so?
 I'm not here to be minded. I'm here for the truth.
+# --- a search for a person (rev 113): the raven looks for the trail, "warmer / colder"
+[seek_lost_warmer] {шук_тепліше}
+[seek_lost_colder] {шук_холодніше}
+@шук_тепліше
+Closer. The trail is fresh.
+Warmer. Someone walked here not long ago.
+Yes, this way. Smells of a person and of other people's things.
+Closer. The grass is trampled.
+You're doing well. A little more.
+Warmer. I can already hear someone muttering over there.
+~1 Warmer. Don't get excited, you haven't found anything yet.
+~3 Closer. See, together we're still good for something.
+@шук_холодніше
+Colder. The trail is behind us.
+Not that way. Nobody walked here.
+Farther. Meaning worse. Turn around.
+Cold. Are you searching or strolling?
+The trail fades. Back.
+Colder. It only smells of forest here.
+~1 Cold. I'd have found it by now if I had your legs.
+~3 Not that way, but don't fret. We'll turn back.
+# --- a search for a place (rev 114): the raven looks for an old post of the Watch (act 1: the crypt), "warmer / colder"
+[seek_post_warmer] {шук_пост_тепліше}
+[seek_post_colder] {шук_пост_холодніше}
+@шук_пост_тепліше
+Warmer. Smells of stone and old ash.
+Closer. Watchmen walked here once — the ground remembers.
+Yes, this way. I can feel hollow ground underfoot.
+Warmer. The trees here grow as if stepping around something.
+Closer. A little more and you'll see stone.
+You're doing well. It's as quiet as a grave here. Because it probably is one.
+~1 Warmer. Don't thank me, I'm used to doing everything myself.
+~3 Closer. Stay near me — this is a bad place.
+@шук_пост_холодніше
+Colder. Nothing ever stood here but trees.
+Not that way. Nobody builds a post in a bog.
+Farther from it. Turn around.
+Cold. Only mushrooms and greydwarfs here.
+No. The Watch never walked here.
+Colder. The ground here remembers nothing.
+~1 Cold. You really do think with your feet.
+~3 Not that way, but never mind. It's not going anywhere: it has waited longer.
+# --- the throne with carved ravens in the Watch's barrow (rev 115): the player sat down, the raven on the shoulder teases
+[seat_throne_search] {трон_пошук}
+[seat_throne_scroll] {трон_сувій}
+[seat_throne_note] {трон_записка}
+[seat_throne_night] {трон_ніч}
+[seat_throne_ravens] {трон_ворони}
+@трон_пошук
+Sat down. The scroll will surely come to you on its own.
+A throne matters more than the rite, of course. The chest is right there, by the way. Just saying.
+The archivist sat here too. And sat it out, as you can see.
+Comfy? Searching while seated is a new method. Let's see if it works.
+Resting? The dead rest here too. Forever.
+~1 Searching for the scroll with your backside. Bold. Pointless, but bold.
+~3 Sit, catch your breath. Just don't miss the chest at your elbow.
+@трон_сувій
+The scroll in your bag, the throne under you. Jarl of the barrow. Two subjects, and both have feathers.
+Sprawled out like a lord. The dead would approve: they weren't in a hurry either.
+Half the rite in your bag, and you sit. The old house won't come to us by itself.
+Found it — and straight onto the throne. Modesty won't be what kills you.
+Sit, sit. The vow waited centuries, what's another hour.
+~1 One find — and already on a throne. A kingdom of one scroll.
+~3 You earned it. A minute. Then we go.
+@трон_записка
+Sitting on his throne with his note in your bag. He'd appreciate it. Probably.
+He wrote, and you sit. Division of labour, just like the Watch.
+His note, his throne. Find his spoon too, and you can live here.
+Reading someone else's notes on someone else's throne. How lordly.
+~1 Someone else's letter, someone else's throne. Other people's things suit you better than your own.
+~3 Don't worry. He doesn't mind. The dead rarely do.
+@трон_ніч
+It's night outside, and you're sprawled on a throne in a barrow among the dead. Romantic.
+Midnight on a throne in a crypt. That's how every bad story starts.
+Dark, quiet, the dead nearby. The perfect place to fall asleep. Don't.
+Night. Just when the dead get up. And you just sat down.
+~1 Night, crypt, throne. All that's missing is your head on a pike.
+~3 The night is long. Sit, I'll keep watch.
+@трон_ворони
+Look up: they carved ravens on the back. A likeness. Especially the look on the face.
+Two wooden ravens over you. Quieter than us. Jealous?
+A throne for one who has ravens. Sit, you have them. For now.
+Someone carved us on a throne. So once we were respected.
+Wooden ravens have guarded this throne for centuries. We guard you for less, and we're more tired.
+~1 The carver clearly saw me. But made the beak shorter. Envy.
+~3 These wooden ones hold up the throne, we hold up you. Same job, only you're heavier.
+# --- a person's dim raven (rev 116): Hugin speaks to it; it keeps silent, now and then a word
+[dlg_dim_h_open] {дим_х_до}
+[dlg_dim_h_quiet] {дим_х_тиша}
+[dlg_dim_h_word] {дим_х_слово}
+[dlg_dim_n_quiet] {дим_мовчить}
+[dlg_dim_n_word] {дим_каже}
+@дим_х_до
+^dimh Good day, colleague. How is it, thinking without a pair?
+^dimh You're a Hugin too. At least tell me what you're thinking about.
+^dimh Hey, grey one. Are you still in there, or is it just feathers now?
+^dimh I'm Hugin. So are you, it seems. Shall we talk shop?
+^dimh Your old man stole something again. Did you see what?
+^dimh They say you once had a second one. Where did it go?
+^dimh {hat}? Bold. Who gives you these things?
+^dimh A new hat, I see: {hat}. Where do you get them?
+^dimh {hat} suits you. Almost. Where did you get it?
+~1 ^dimh Hey, scarecrow. At least nod if you can hear me.
+~1 ^dimh Are you deaf or just proud? Answer when Hugin talks to you.
+~3 ^dimh I'll sit beside you, if you don't mind. We can be quiet.
+~3 ^dimh Don't worry, I don't bite. Munin is the one who bites.
+@дим_х_тиша
+^dimm Wonderful, Munin. Your charm works again: he's gone mute.
+^dimm Silent. Probably the first time someone didn't answer you out of politeness.
+^dimm It's not you he can't hear, Munin. He can't hear anything. That's worse.
+^dimm A raven without its pair doesn't talk for long. Nobody to argue with.
+^dimm Silence. In his case it isn't rudeness. It's emptiness.
+^dimm Don't take it hard. He doesn't seem to listen to himself either.
+~1 ^dimm Even he decided it's better not to hear you. Clever bird.
+~1 ^dimm Silent. I'd be silent too if someone talked to me like that.
+~3 ^dimm Leave him be, Munin. Some ravens hold their words dearer than we do.
+~3 ^dimm Never mind. He hears more than he shows. Probably.
+@дим_х_слово
+^dimm He spoke. And not to you, Munin, but straight through you.
+^dimm Remember that, Munin, it's your job after all. He can't remember it himself.
+^dimm A thought with no memory. Hence answers like that.
+^dimm Curious. Not an answer, but not raving either.
+^dimm He talks in scraps. Like someone reading a burnt letter.
+^dimm Silent and silent, then said more than you do in a week.
+~1 ^dimm Even he answers with more sense than you, Munin.
+~1 ^dimm See? You can say three words and not sound like a fool. Learn.
+~3 ^dimm Don't be scared. It's just an old raven that remembered how to talk.
+~3 ^dimm Quiet. Let him finish, if he wants to. He rarely wants to.
+@дим_мовчить
+^dimh|dimm …
+^dimh|dimm … …
+^dimh|dimm ……
+@дим_каже
+^dimh|dimm Fire. There used to be a fire here.
+^dimh|dimm The other one remembered. I only think.
+^dimh|dimm Hold the line.
+^dimh|dimm The golden thing bites.
+^dimh|dimm He knew all the names. I don't know a single one.
+^dimh|dimm Don't ask what was. Ask what will be.
+^dimh|dimm Don't touch the hat.
+^dimh|dimm The Watch does not sleep. The Watch… forgot.
+# --- a person's dim raven (rev 117): Hugin asks; now and then it answers to the point, dry and short
+[dlg_dim_h_ask] {дим_х_пит}
+[dlg_dim_h_answer] {дим_х_відп}
+[dlg_dim_n_reply] {дим_відп}
+@дим_х_пит
+^dimhq.мовчиш Silent again. Is that a temper or a practice?
+^dimhq.мовчиш Be honest: are you silent because there's nothing to say, or nobody to say it to?
+~1 ^dimhq.мовчиш Silent as always. Does someone pay you for it?
+^dimhq.шапка {hat}. Just tell me where it's from, and I'll leave you alone.
+^dimhq.шапка No jokes: where do you get these hats? {hat} is going too far.
+^dimhq.старий Your old man stole something again. What this time?
+^dimhq.старий You see everything. What did your master hide in his bag today?
+^dimhq.другий You had a Munin once. What happened to him?
+~3 ^dimhq.другий Don't you miss your pair? I would. Not that I'd admit it.
+^dimhq.живий Are you alive at all, or am I talking to a scarecrow?
+^dimhq.живий Are you even alive in there? You sit like you were carved from wood.
+@дим_відп
+^dimhq.мовчиш|dimmq.мовчиш>dimr.мовчиш Listening.
+^dimhq.мовчиш|dimmq.мовчиш>dimr.мовчиш You talk enough for three as it is.
+^dimhq.мовчиш|dimmq.мовчиш>dimr.мовчиш Silence is easy when you don't remember the words.
+^dimhq.мовчиш|dimmq.мовчиш>dimr.мовчиш Waiting for you to finish.
+^dimhq.шапка|dimmq.шапка>dimr.шапка Not yours.
+^dimhq.шапка|dimmq.шапка>dimr.шапка It wouldn't suit you.
+^dimhq.шапка|dimmq.шапка>dimr.шапка Envy quietly.
+^dimhq.старий|dimmq.старий>dimr.старий A spoon. His own.
+^dimhq.старий|dimmq.старий>dimr.старий Whatever lay about badly.
+^dimhq.старий|dimmq.старий>dimr.старий I looked away. On purpose.
+^dimhq.другий|dimmq.другий>dimr.другий I don't remember. He did the remembering.
+^dimhq.другий|dimmq.другий>dimr.другий Gone out.
+^dimhq.другий|dimmq.другий>dimr.другий Don't ask.
+^dimhq.живий|dimmq.живий>dimr.живий More alive than your jokes.
+^dimhq.живий|dimmq.живий>dimr.живий So far.
+^dimhq.живий|dimmq.живий>dimr.живий Peck me and find out.
+@дим_х_відп
+^dimr.мовчиш Well, Munin, short and precise. You should try it.
+^dimr.мовчиш One sentence, and it's smarter than all of yours today.
+^dimr.шапка He won't tell. Secrets he remembers better than names, it seems.
+^dimr.шапка Let it go, Munin. Some secrets are worn on the head.
+^dimr.старий An honest answer. More honest than the question deserved.
+^dimr.старий There's the whole lesson: a thief needs a raven that knows how to look away.
+^dimr.другий You wanted an answer, Munin. Now live with it.
+^dimr.другий Thank you, Munin. Now it's even quieter here than before.
+^dimr.живий See, Munin? Alive. And sharper than you.
+^dimr.живий Got it? Don't peck someone who answers faster than you think.
+^dimr One phrase, and the talk is closed. Learn, Munin.
+^dimr He said exactly as much as he wanted. A rare temper.

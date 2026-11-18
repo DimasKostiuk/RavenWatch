@@ -49,8 +49,30 @@ namespace HuginWhispers
         }
 
         internal static bool Is(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null && z.GetBool(KResident, false); }
+        // a settler who lives at a base: the one question of hunger, toil, requests, tasks, wishes, news (rule «settled-one»). A person whose template is not
+        // here (another version, a file taken away) is none: asked as «Is(a) && a.Def.Settler» it threw every second in two of them (2026-11-14)
+        internal static bool Settled(NpcActor a) { return Is(a) && a.Def != null && a.Def.Settler; }
         internal Vector3 Home { get { return NpcRules.Home(_a); } }
         internal NpcBase Base { get { return NpcBase.For(Home); } }
+
+        // its link to its heart, word for word, and where it leads, beside the heart nearest its home (the console's «raven npc base <who> heart»: a heart that
+        // counts nobody — «Живе: 0/10» with its people round it, 2026-11-14)
+        internal static string HeartReport(NpcActor a)
+        {
+            ZDO z = a != null ? a.Zdo : null;
+            if (z == null) return "нема людини";
+            string raw = z.GetString(KHeart, "");
+            ZDOID to = NpcKit.GetRef(z, KHeart);
+            Vector3? at = NpcKit.WhereIs(to);
+            Vector3 home = NpcRules.Home(a);
+            NpcHeart near = NpcHeart.Near(home, NpcBase.Reach);
+            string s = "мешканець: " + (Is(a) ? "так" : "ні") + "; посилання на серце: «" + raw + "» → " + (to.IsNone() ? "нікуди" : NpcKit.Ref(to) + (at.HasValue ? " у " + Mathf.RoundToInt(at.Value.x) + "," + Mathf.RoundToInt(at.Value.y) + "," + Mathf.RoundToInt(at.Value.z) : " (не завантажене)"));
+            s += "; дім " + Mathf.RoundToInt(home.x) + "," + Mathf.RoundToInt(home.y) + "," + Mathf.RoundToInt(home.z) + "; найближче серце: ";
+            if (near == null) return s + "нема в " + Mathf.RoundToInt(NpcBase.Reach) + " м";
+            Vector3 hp = near.transform.position;
+            return s + "«" + near.Name + "» " + NpcKit.Ref(near.Id) + " у " + Mathf.RoundToInt(hp.x) + "," + Mathf.RoundToInt(hp.y) + "," + Mathf.RoundToInt(hp.z) + ", його посилання зараз «" + NpcKit.Save(near.Id) + "»"
+                + (near.Id == to ? " — це воно" : " — НЕ те, куди веде посилання людини");
+        }
 
         internal ZDOID Bed { get { return NpcLocker.Ref(_a.Zdo, KBed); } }
 
@@ -58,7 +80,7 @@ namespace HuginWhispers
         // with its own ring — the bed, moving out (asked twice: it takes its home, bed, day and work), an admin's edges
         internal static IEnumerable<NpcMenu.Button> MenuButtons()
         {
-            yield return new NpcMenu.Button { Order = 60, Title = Lang.K("Оселити тут"), Icon = "n-settle", Now = a => Is(a),
+            yield return new NpcMenu.Button { Order = 60, Part = "home", Title = Lang.K("Оселити тут"), Icon = "n-settle", Now = a => Is(a),
                 Where = a => Is(a) ? (Vector3?)NpcRules.Home(a) : null,
                 TitleNow = a => Is(a) ? Lang.T("Оселя") : Lang.T("Оселити тут"),
                 Desc = a => Is(a) ? a.Form(Lang.T("Де він|вона живе: дошка оселі, ліжко, своє місце, переселення.")) : SettleWhere(a),
@@ -137,7 +159,7 @@ namespace HuginWhispers
         {
             string busy = NpcKit.Busy(a); if (busy != null) return busy;
             if (NpcLevers.IsProtected(a)) return a.Form(Lang.T("Його|Її тримає сюжет: зараз не переселити."));
-            NpcMemory.TellHome(a, "neighbour_left", 0L, a.Name);
+            NpcMemory.TellHome(a, "neighbour_left", 0L, a.Key);
             Unsettle(a);
             a.Order("travel " + Npcs.V(to.Pos) + " " + NpcTravel.ToHeart + " " + NpcKit.Ref(to.Id)); // session: read at once there, as the hire's
             a.Say(a.Form(Lang.T("Добре. Дійду сам|сама.")));
@@ -171,7 +193,7 @@ namespace HuginWhispers
             NpcResident r = a.GetComponent<NpcResident>();
             if (r != null) r._part = Part.None; // (its day taken up afresh)
             NpcBase.For(home); // (its base starts being worked out now, a few frames at a time)
-            if (told) NpcMemory.TellHome(a, "news_newcomer", 0L, a.Name); // (those who live there hear of it: a new face — NpcNews)
+            if (told) NpcMemory.TellHome(a, "news_newcomer", 0L, a.Key); // (those who live there hear of it: a new face — NpcNews)
             if (heart == null) return a.Form(Lang.T("Оселився|Оселилася тут."));
             return string.IsNullOrEmpty(heart.Name) ? a.Form(Lang.T("Оселився|Оселилася біля Серця оселі.")) : a.Form(Lang.F("Оселився|Оселилася в оселі «{0}».", heart.Name));
         }
@@ -315,6 +337,9 @@ namespace HuginWhispers
             return name.Length > 0;
         }
 
+        // the story's own words on a bed, over all else (StoryKeep: «[E] Роздивитись» on a bed a stage waits for); null — none
+        internal static System.Func<Bed, string> StoryHover;
+
         // the words on a resident's bed (null: it is no resident's). Asked each frame it is pointed at, and on E: a few reads of its ZDO
         internal static string GivenLine(Bed bed)
         {
@@ -341,9 +366,35 @@ namespace HuginWhispers
             return at == Vector3.zero || Utils.DistanceXZ(me, at) > 30f;
         }
 
+        // its heart taken down and a new one put up within its base (the user 2026-11-14: «щоб вони не згубились»): the heart standing within Reach of its home is
+        // its heart now, if there is room, and its home with it (its base is the heart's: NpcBase.For). Only one that had a heart: its link written and leading
+        // nowhere — a story person lives with none on purpose (StoryPeople.Live), as does one settled away from any heart, and one the story holds is the story's.
+        // Its own ZDO, where it runs; every HeartLook s, and only while the link leads nowhere (NpcKit.Resolve keeps what it found). A heart not loaded yet: nothing
+        // found, asked again. The heart standing just where the link says, the link not finding it: not «gone» — written anew and said so in the log (a cause of its
+        // own, to be found). Its dining table goes over by the table's own word (NpcHeart.TableLook)
+        private const float HeartLook = 30f;
+        private float _nextHeart;
+        private bool _fullTold;
+        private void Rehome()
+        {
+            ZDO z = _a.Zdo;
+            if (z == null || !NpcKit.HasRef(z, KHeart) || !NpcKit.GetRef(z, KHeart).IsNone() || NpcLevers.IsProtected(_a)) return;
+            NpcHeart h = NpcHeart.Near(Home, NpcBase.Reach);
+            if (h == null || h.Id.IsNone()) return;
+            string old = z.GetString(KHeart, "");
+            Vector3 was;
+            bool same = NpcKit.PlaceOf(old, out was) && Utils.DistanceXZ(was, h.transform.position) < 0.5f;
+            if (!same && NpcHeart.HowMany(h.Id, _a) >= PerBase) { if (!_fullTold) { _fullTold = true; Npcs.Log(_a.Name + ": its heart is gone, and «" + h.Name + "» here has no room: left without one"); } return; }
+            NpcKit.SetRef(z, KHeart, h.Id);
+            if (same) { Npcs.Log(_a.Name + ": its link to its heart «" + h.Name + "» found nothing, the heart standing where the link says — written anew («" + old + "» → «" + z.GetString(KHeart, "") + "»)"); return; }
+            z.Set(NpcRules.KHome, h.transform.position);
+            Npcs.Log(_a.Name + ": its heart is gone — lives at «" + h.Name + "» now");
+        }
+
         internal void Tick()
         {
             if (_mind == null || !Is(_a) || EnvMan.instance == null) return;
+            if (Time.time >= _nextHeart) { _nextHeart = Time.time + HeartLook; Rehome(); }
             float hour = Mathf.Repeat(EnvMan.instance.GetDayFraction() * 24f - Shift(_a), 24f); // (an early bird's day starts sooner, a night owl's later)
             float bedtime = Bedtime(_a);
             Part part = hour >= 6f && hour < 18f ? Part.Day : hour >= 18f && hour < bedtime ? Part.Evening : Part.Night;
@@ -451,7 +502,7 @@ namespace HuginWhispers
     {
         private static void Postfix(Bed __instance, ref string __result)
         {
-            try { string line = NpcResident.GivenLine(__instance); if (line != null) __result = line; }
+            try { string line = NpcResident.StoryHover != null ? NpcResident.StoryHover(__instance) : null; if (line == null) line = NpcResident.GivenLine(__instance); if (line != null) __result = line; }
             catch (System.Exception e) { PatchGuard.Fail("NpcBedHoverPatch", e); }
         }
     }

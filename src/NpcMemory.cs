@@ -16,11 +16,37 @@ namespace HuginWhispers
     //   in code       NpcMemory.Tell(a, kind, playerId, what)  ·  NpcMemory.Find(a, kind, playerId)  ·  NpcMemory.Kinds
     //   on the bus    «npc_remember_<kind>» (arg: the person) when it takes a thing in
     // A kind not in Kinds is kept for good (the story's own) — but news_* fades in five days and you_land_* too (NpcNews,
-    // KindOf). One entry per kind and player: the same again counts up.
+    // KindOf). One entry per kind and player: the same again counts up — a kind whose «what» is one of its people (ByWhom: a quarrel, a
+    // friend at its side, a neighbour gone) one entry per that one, so making up with one forgets that one only; QuarrelsMost quarrels at once.
     // Written only where the person is owned (Tell goes there); read anywhere its locker is.
+    // Its «what» is kept as the source, never in the writer's language (the owner's game may speak another): a person by its
+    // kept name (NpcActor.Key), a word by its Ukrainian (Lang.K), a thing as Thing(prefab, count). Said turns it into the
+    // reader's words — for the kinds whose «what» is words (Worded); the others hold ids (a trouble's kind, saw/heard).
     internal static class NpcMemory
     {
         internal static readonly int KMemory = "RavenWatch_npcMemory".GetStableHashCode(); // string "kind,player,time,count,what;…" — in its locker
+
+        // ---------------------------------------------------------------- «what» kept and shown
+        private const string ThingMark = "item:";
+        internal static string Thing(string prefab, int count) { return ThingMark + prefab + "*" + count.ToString(CultureInfo.InvariantCulture); }
+        private static readonly HashSet<string> Worded = new HashSet<string> { "fought_together", "stood_by", "neighbour_left", "news_newcomer", "praised_by", "vouched", "gift_liked", "gift_insult", "request_done", "request_lapsed", "goal_done" };
+        private static bool IsWorded(string kind) { return Worded.Contains(kind) || kind.StartsWith("quarrel_", StringComparison.Ordinal) || kind.StartsWith("task_", StringComparison.Ordinal); }
+        // its «what» is one of its people and each one matters on its own: an entry per that one (Remember). Not for what many share at
+        // once (a raid fought off together: one entry, the last comrade — an entry a comrade filled its Most and pushed the rest out)
+        private static readonly HashSet<string> Whom = new HashSet<string> { "stood_by", "neighbour_left", "praised_by" };
+        private static bool ByWhom(string kind) { return Whom.Contains(kind) || Quarrel(kind); }
+        private static bool Quarrel(string kind) { return kind.StartsWith("quarrel_", StringComparison.Ordinal); }
+        private const int QuarrelsMost = 3; // (quarrels kept at once, the oldest let go first: a feuding home does not crowd out its other memories)
+        // a kept «what» (a name, a word, a thing) in the reader's language
+        internal static string Said(string what)
+        {
+            if (string.IsNullOrEmpty(what)) return "";
+            if (!what.StartsWith(ThingMark, StringComparison.Ordinal)) return Lang.T(what);
+            string t = what.Substring(ThingMark.Length);
+            int star = t.LastIndexOf('*'), n;
+            return star > 0 && int.TryParse(t.Substring(star + 1), NumberStyles.Integer, CultureInfo.InvariantCulture, out n) ? NpcRequests.Words(t.Substring(0, star), n) : NpcRequests.Words(t, 1);
+        }
+        private static string Said(string kind, string what) { return IsWorded(kind) ? Said(what) : what; }
 
         internal sealed class Kind { public float Weight; public float FadeDays; public bool Yours; public float Toward; } // (FadeDays 0: kept for good; Yours: about one player — told to that one only; Toward: how much warmer to that player — NpcAttitude)
         internal static readonly Dictionary<string, Kind> Kinds = new Dictionary<string, Kind>
@@ -53,6 +79,13 @@ namespace HuginWhispers
             { "quarrel_teased", new Kind { Weight = 4f, FadeDays = 3f } }, // a bully picked on it before everyone (NpcAttitude.Tease)
             { "quarrel_butted", new Kind { Weight = 3f, FadeDays = 3f } }, // one butted into its talk with you (NpcTalkThird)
             { "quarrel_gossip", new Kind { Weight = 5f, FadeDays = 5f } }, // it heard what one said of it behind its back (NpcTalkAbout)
+            { "quarrel_snore", new Kind { Weight = 3f, FadeDays = 3f } },  // one snoring by its bed kept it up (NpcNeighbours)
+            { "quarrel_chest", new Kind { Weight = 4f, FadeDays = 4f } },  // one nosed in its work chest (NpcNeighbours)
+            { "quarrel_brawl", new Kind { Weight = 6f, FadeDays = 5f } },  // it nearly came to blows with one (NpcNeighbours)
+            { "fought_together", new Kind { Weight = 4f, FadeDays = 8f } }, // one of its home fought a raid off beside it (NpcNeighbours; what: that one's name)
+            { "stood_by", new Kind { Weight = 5f, FadeDays = 10f } },      // a friend came to its side when a beast hit it (NpcNeighbours; what: that one's name)
+            { "feast", new Kind { Weight = 4f, FadeDays = 5f } },          // a feast at its home (the board's «Свято»: NpcNeighbours)
+            { "peace_made", new Kind { Weight = 1f, FadeDays = 1f } },     // it made up when you asked (NpcAttitude.MadePeace): not again the same day; no words of its own, never on the board
             { "praised_by",    new Kind { Weight = 3f, FadeDays = 6f } },  // it heard one speak well of it (NpcTalkAbout; what: that one's name)
             { "gift_liked",    new Kind { Weight = 4f, FadeDays = 20f, Yours = true, Toward = 6f } },  // you gave it what it likes (NpcTalkGift; what: the thing)
             { "gift_insult",   new Kind { Weight = 3f, FadeDays = 5f, Yours = true, Toward = -3f } },  // you gave it what it cannot stand, and it took it ill (NpcTalkGift)
@@ -103,10 +136,15 @@ namespace HuginWhispers
             List<Entry> l = Read(a);
             if (l == null) return; // (its locker not here yet)
             long now = (long)NpcRescue.Now;
-            Entry e = l.Find(x => x.Kind == kind && x.Player == player);
+            string whom = ByWhom(kind) ? Clean(what ?? "") : null;
+            Entry e = l.Find(x => x.Kind == kind && x.Player == player && (whom == null || x.What == whom));
             bool fresh = e == null || now - e.At > (EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f); // (the same again within a day: counted, its feeling not moved again — let go and hired back is no trick)
             if (e != null) { e.Count++; e.At = now; if (!string.IsNullOrEmpty(what)) e.What = Clean(what); }
-            else l.Add(new Entry { Kind = kind, Player = player, At = now, What = Clean(what ?? "") });
+            else
+            {
+                l.Add(new Entry { Kind = kind, Player = player, At = now, What = Clean(what ?? "") });
+                if (Quarrel(kind)) while (l.FindAll(x => Quarrel(x.Kind)).Count > QuarrelsMost) { Entry old = null; foreach (Entry x in l) if (Quarrel(x.Kind) && (old == null || x.At < old.At)) old = x; l.Remove(old); }
+            }
             Write(a, l);
             Npcs.Log(a.Id + ": remembers " + kind + (player != 0 ? " (" + player + ")" : "") + (string.IsNullOrEmpty(what) ? "" : " — " + what));
             StoryBus.Raise("npc_remember_" + kind, a.Id, e != null ? e.Count : 1, a.transform.position);
@@ -115,13 +153,15 @@ namespace HuginWhispers
             if (player != 0) foreach (Action<NpcActor, string, long, int> t in Taken) t(a, kind, player, e != null ? e.Count : 1);
         }
 
-        internal static void Forget(NpcActor a, string kind, long player)
+        // what: only the one about that (a quarrel made up with one neighbour, not with all: NpcAttitude.MakeUp); null — all of the kind
+        internal static void Forget(NpcActor a, string kind, long player, string what = null)
         {
             if (a == null || !a.Owned) return;
             List<Entry> l = Read(a);
-            if (l == null || l.RemoveAll(x => x.Kind == kind && (player == 0 || x.Player == player)) == 0) return;
+            string kept = what != null ? Clean(what) : null; // (as Remember keeps it)
+            if (l == null || l.RemoveAll(x => x.Kind == kind && (player == 0 || x.Player == player) && (kept == null || x.What == kept)) == 0) return;
             Write(a, l);
-            Npcs.Log(a.Id + ": forgets " + kind);
+            Npcs.Log(a.Id + ": forgets " + kind + (what != null ? " — " + what : ""));
         }
 
         // everyone else who lives at its heart takes it in too (a neighbour gone: told to all who stay)
@@ -131,12 +171,12 @@ namespace HuginWhispers
             foreach (NpcActor o in NpcHeart.Residents(heart)) if (o != a) Tell(o, kind, player, what);
         }
 
-        // «remember <kind> <player> [what…]» / «forget <kind> [player]» (NpcActor.Acts)
+        // «remember <kind> <player> [what…]» / «forget <kind> [player] [what…]» (NpcActor.Acts)
         internal static void Act(NpcActor a, string[] w)
         {
             long player = 0L;
             if (w.Length > 2) long.TryParse(w[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out player);
-            if (w[0] == "forget") { if (w.Length > 1) Forget(a, w[1], player); return; }
+            if (w[0] == "forget") { if (w.Length > 1) Forget(a, w[1], player, w.Length > 3 ? string.Join(" ", w, 3, w.Length - 3) : null); return; }
             if (w.Length > 1) Remember(a, w[1], player, w.Length > 3 ? string.Join(" ", w, 3, w.Length - 3) : "");
         }
 
@@ -193,7 +233,7 @@ namespace HuginWhispers
         };
 
         // a module's own kind of memory, from its own table (NpcTasks), with its words on your card
-        internal static void AddKind(string id, Kind k, string line) { Kinds[id] = k; Lines[id] = new Shown(line); }
+        internal static void AddKind(string id, Kind k, string line, bool against = false) { Kinds[id] = k; Lines[id] = new Shown(line, against); } // (against: it counts against you on its card — NpcWake)
 
         // a kind of memory about you in words (its card; null: none written)
         internal static string LineOf(NpcActor a, Player p, string kind)
@@ -221,12 +261,16 @@ namespace HuginWhispers
 
         private static string BoardWords(string kind, string what, string who)
         {
+            what = Said(kind, what); // (kept as the source: in the reader's words)
             switch (kind)
             {
                 case "neighbour_left": return Lang.F("Пішли з оселі: {0}", what);
                 case "news_newcomer": return Lang.F("Нова людина в оселі: {0}", what);
                 case "fight_won": return Lang.T("Напад на оселю відбито");
                 case "fight_lost": return Lang.T("Напад на оселю не вдалося відбити");
+                case "fought_together": return Lang.F("Разом відбивали напад: {0}", who);
+                case "stood_by": return Lang.F("Стали на захист у бою: {0}", what); // (what: the one who came to its side; who remembers it — the one it saved)
+                case "feast": return Lang.T("Свято в оселі");
                 case "starved": return Lang.F("Голодували: {0}", who);
                 case "unpaid": return Lang.F("Лишились без платні: {0}", who);
                 case "goal_done": return what.Length > 0 ? Lang.F("Збулась мрія: {0} ({1})", who, what) : Lang.F("Збулась мрія: {0}", who);
@@ -247,7 +291,7 @@ namespace HuginWhispers
                 {
                     if (e.Player != 0L || BoardWords(e.Kind, e.What, "") == null) continue;
                     Event ev;
-                    string key = e.Kind + "|" + e.What;
+                    string key = e.Kind == "fought_together" ? e.Kind + "|" + (e.At / (long)Mathf.Max(60f, EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f)).ToString(CultureInfo.InvariantCulture) : e.Kind + "|" + e.What; // (a raid fought off together: one line a day, all who were in it — each keeps it of each other one)
                     if (!seen.TryGetValue(key, out ev)) seen[key] = ev = new Event { Kind = e.Kind, What = e.What, At = e.At };
                     if (e.At > ev.At) ev.At = e.At;
                     if (!ev.Who.Contains(a.Name)) ev.Who.Add(a.Name);
@@ -270,11 +314,16 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- its words: values and themes (NpcModules wires them)
         internal static void Values(NpcActor a, Player to, Dictionary<string, string> v)
         {
+            Dictionary<string, Entry> best = new Dictionary<string, Entry>(); // (a kind's one to speak of: about you first, else the newest — a kind kept per person has several)
             foreach (Entry e in About(a, to != null ? to.GetPlayerID() : 0L))
             {
+                Entry b;
+                if (!best.TryGetValue(e.Kind, out b) || (e.Player != 0 && b.Player == 0) || (e.Player == b.Player && e.At > b.At)) best[e.Kind] = e;
+            }
+            foreach (Entry e in best.Values)
+            {
                 string k = e.Kind;
-                if (v.ContainsKey("ago_" + k) && e.Player == 0) continue; // (about you first)
-                v["m_" + k] = e.What;
+                v["m_" + k] = Said(k, e.What); // (kept as the source: in the reader's words)
                 v["ago_" + k] = Ago(e.At);
                 v["n_" + k] = e.Count.ToString(CultureInfo.InvariantCulture);
             }
@@ -291,14 +340,15 @@ namespace HuginWhispers
             if (l.Count == 0) return;
             if (NpcVoice.Asked) // (a talk asks what weighs on it: its strongest memories now, the fresher the heavier — nothing held back for later)
             {
-                List<KeyValuePair<string, float>> all = new List<KeyValuePair<string, float>>();
+                Dictionary<string, float> heaviest = new Dictionary<string, float>(); // (a theme once, at its freshest: a kind kept per person has several entries)
                 float day = EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f;
                 foreach (Entry x in l)
                 {
                     Kind k = KindOf(x.Kind);
-                    float days = (float)((NpcRescue.Now - x.At) / day), weight = k != null ? k.Weight : 5f;
-                    all.Add(new KeyValuePair<string, float>("mem_" + x.Kind, (days < 1f ? 55f : days < 2f ? 35f : days < 5f ? 22f : 12f) * Mathf.Clamp(weight / 5f, 0.4f, 1.6f)));
+                    float days = (float)((NpcRescue.Now - x.At) / day), weight = k != null ? k.Weight : 5f, w = (days < 1f ? 55f : days < 2f ? 35f : days < 5f ? 22f : 12f) * Mathf.Clamp(weight / 5f, 0.4f, 1.6f), had;
+                    if (!heaviest.TryGetValue("mem_" + x.Kind, out had) || w > had) heaviest["mem_" + x.Kind] = w;
                 }
+                List<KeyValuePair<string, float>> all = new List<KeyValuePair<string, float>>(heaviest);
                 all.Sort((x, y) => y.Value.CompareTo(x.Value));
                 for (int i = 0; i < all.Count && i < 2; i++) themes.Add(all[i]);
                 return;
@@ -306,7 +356,10 @@ namespace HuginWhispers
             if (NextRecall.Count > 128) NextRecall.Clear();
             NextRecall[a] = Time.time + UnityEngine.Random.Range(300f, 600f); // (a chance, not a word said: the theme may lose to another — so not too long)
             List<Entry> today = l.FindAll(x => (x.Kind.StartsWith("news_", StringComparison.Ordinal) || x.Kind.StartsWith("you_land_", StringComparison.Ordinal)) && Ago(x.At) == Ago((long)NpcRescue.Now)); // (fresh news: told sooner)
-            Entry e = today.Count > 0 ? today[UnityEngine.Random.Range(0, today.Count)] : l[UnityEngine.Random.Range(0, l.Count)];
+            List<string> kinds = new List<string>(); // (a kind once, however many it keeps: quarrels with three neighbours are one thing to recall, not three times as likely)
+            foreach (Entry x in l) if (!kinds.Contains(x.Kind)) kinds.Add(x.Kind);
+            string pick = kinds[UnityEngine.Random.Range(0, kinds.Count)];
+            Entry e = today.Count > 0 ? today[UnityEngine.Random.Range(0, today.Count)] : l.Find(x => x.Kind == pick);
             themes.Add(new KeyValuePair<string, float>("mem_" + e.Kind, today.Count > 0 ? 55f : 22f)); // (today's news: said at the first chance — an old memory only now and then)
         }
 

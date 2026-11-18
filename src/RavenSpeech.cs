@@ -92,7 +92,7 @@ namespace HuginWhispers
         {
             new Rate(3f, 1f / 11f, 7f, 35f),   // Card    a raven's card: about 11 letters a second and a moment to notice it
             new Rate(4f, 1f / 20f, 6f, 18f),   // Shout   a gift's words over the raven (RavenSkills)
-            new Rate(1.2f, 0.06f, 2f, 8f),     // Scene   a scene's line, a subtitle: its rhythm
+            new Rate(1.5f, 0.08f, 2.5f, 11f),  // Scene   a scene's line, a subtitle: about 12 letters a second (the user 2026-11-15, eirik_hearth: «не вспіваю читати» at 17 a second, long lines cut at 8 s)
             new Rate(2f, 0.06f, 4f, 12f),      // Bubble  a person's words over its head
             new Rate(2.5f, 0.07f, 4f, 10f),    // Bird    the story's raven
             new Rate(2.5f, 0.06f, 3f, 6f),     // Chatter two people talking: a line each

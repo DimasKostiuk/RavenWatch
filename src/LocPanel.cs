@@ -22,7 +22,10 @@ namespace HuginWhispers
         internal static bool IsOpen { get { return _inst != null && _inst.enabled; } }
         internal static bool Wants { get { return IsOpen && MouseHere; } }
 
-        private Rect _rect = new Rect(60f, 70f, 620f, 760f);
+        private Rect _rect = new Rect(60f, 70f, 640f, 760f);
+        // its frame: as big as the author drags its corner, × in the title; every row of buttons is an AuthorRow (AuthorUi.cs) — the user
+        // 2026-11-17: the places' row grew past the edge and «+ Нова локація» was not to be seen
+        private static readonly AuthorFrame Frame = new AuthorFrame("RavenWatch.LocPanel.", 640f, 480f, 360f);
         private GUIStyle _win, _head, _hint, _warn, _on, _step, _rich;
         private Texture2D _bg;
         private EventSystem _uiOff;
@@ -357,9 +360,7 @@ namespace HuginWhispers
             }
             GUI.color = Color.white; GUI.backgroundColor = Color.white;
             if (!MouseHere) Crosshair();
-            _rect.height = Mathf.Min(760f, Screen.height - 40f);
-            _rect.x = Mathf.Clamp(_rect.x, 0f, Mathf.Max(0f, Screen.width - _rect.width));
-            _rect.y = Mathf.Clamp(_rect.y, 0f, Mathf.Max(0f, Screen.height - 60f));
+            _rect = Frame.Fit(_rect, 0f);
             _rect = GUI.Window(0x52574841, _rect, Draw, "Локації сюжету: " + (_loc != null ? _loc.Title : ""), _win);
         }
 
@@ -404,18 +405,19 @@ namespace HuginWhispers
         {
             Player p = Player.m_localPlayer;
             if (p == null) return;
+            if (AuthorFrame.Cross(_rect)) { Close(); return; } // (always there, however long the rest)
             if (_loc == null || !Locs.All.Contains(_loc)) _loc = (_loc != null ? Locs.Get(_loc.Id) : null) ?? (Locs.All.Count > 0 ? Locs.All[0] : null); // (read again elsewhere: the same place by its id)
             string zala = _loc.Id, title = _loc.Title;
             GUILayout.Label(MouseHere ? "Мишка: ВІКНО. Shift+F10 — віддати мишку грі (ходити, цілитись у деталь)." : "Мишка: ГРА. Наведи приціл на деталь. Shift+F10 — назад до вікна.", _hint);
 
             // the place
             GUILayout.Label("Локація, з якою працюєш (усе нижче — про неї):", _head);
-            GUILayout.BeginHorizontal();
+            AuthorRow places = AuthorRow.Begin(true, 26f);
             foreach (Loc l in Locs.All)
-                if (GUILayout.Button(l.Title, l == _loc ? _on : GUI.skin.button, GUILayout.Height(26f)) && l != _loc)
+                if (places.Button(l.Title, l == _loc ? _on : null) && l != _loc)
                 { _loc = l; LocPreview.Set(l, 0); _confirmHere = false; _note = ""; if (_target != null) Look(); }
-            if (GUILayout.Button(_adding ? "× Скасувати" : "+ Нова локація", GUILayout.Height(26f), GUILayout.Width(130f))) _adding = !_adding;
-            GUILayout.EndHorizontal();
+            if (places.Button(_adding ? "× Скасувати" : "+ Нова локація")) _adding = !_adding;
+            places.End();
             if (_adding)
             {
                 GUILayout.BeginHorizontal();
@@ -448,14 +450,14 @@ namespace HuginWhispers
                 if (Time.time >= _worldOfAt || _worldOfFor != zala) { _worldOfAt = Time.time + 1f; _worldOfFor = zala; _worldOf = BlueprintFrame.WorldOf(zala); } // (a file read: once a second, not every pass)
                 string w = _worldOf;
                 GUILayout.Label(w.Length > 0 ? "Закріплена в іншому світі («" + w + "»). Тут — лише знайти її в будівлі." : "Ще не закріплена. Уже зберігав — стань посеред будівлі й натисни «Знайти»: мод сам знайде, як її було збережено. Нова будівля — стань посередині й «Нова рамка тут».", _warn);
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Знайти рамку в будівлі", GUILayout.Height(28f))) { _note = Blueprint.Frame(p, zala, "find"); _confirmHere = false; if (_target != null) Look(); }
-                if (GUILayout.Button(_confirmHere ? "Точно нова? Натисни ще раз" : "Нова рамка тут (лише нова будівля!)", GUILayout.Height(28f)))
+                AuthorRow frame = AuthorRow.Begin(true, 28f);
+                if (frame.Button("Знайти рамку в будівлі")) { _note = Blueprint.Frame(p, zala, "find"); _confirmHere = false; if (_target != null) Look(); }
+                if (frame.Button(_confirmHere ? "Точно нова? Натисни ще раз" : "Нова рамка тут (лише нова будівля!)"))
                 {
                     if (!_confirmHere) _confirmHere = true;
                     else { _confirmHere = false; _note = Blueprint.Frame(p, zala, "here"); if (_target != null) Look(); }
                 }
-                GUILayout.EndHorizontal();
+                frame.End();
             }
 
             // the look
@@ -463,23 +465,23 @@ namespace HuginWhispers
             GUILayout.Label("2 · Подивитись стан (лише в тебе)", _head);
             GUILayout.Label("Твоя будівля малюється так, як виглядатиме в цьому стані. У світі нічого не змінюється; «Як є» (чи закрите вікно) повертає все.", _hint);
             GUI.enabled = framed;
-            GUILayout.BeginHorizontal();
+            AuthorRow states = AuthorRow.Begin(true, 28f);
             bool mine = LocPreview.Of == _loc;
-            if (GUILayout.Button("Як є", !mine || LocPreview.State == 0 ? _on : GUI.skin.button, GUILayout.Height(28f))) _note = LocPreview.Set(_loc, 0);
+            if (states.Button("Як є", !mine || LocPreview.State == 0 ? _on : null)) _note = LocPreview.Set(_loc, 0);
             for (int i = 1; i <= _loc.Last; i++)
-                if (GUILayout.Button(i + " · " + _loc.WordOf(i), mine && LocPreview.State == i ? _on : GUI.skin.button, GUILayout.Height(28f))) _note = LocPreview.Set(_loc, i, 0);
-            GUILayout.EndHorizontal();
+                if (states.Button(i + " · " + _loc.WordOf(i), mine && LocPreview.State == i ? _on : null)) _note = LocPreview.Set(_loc, i, 0);
+            states.End();
             // the sub-states of the state looked at
             int ls, lk = SubMode(out ls);
             if (ls > 0)
             {
                 GUILayout.Label("Стан «" + _loc.WordOf(ls) + "» іде кроками: «початок» — поки нічого не сталося, далі субстани по черзі. Вибери крок — і нижче правиш лише його.", _hint);
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button(ls + ".0 · початок", lk == 0 ? _on : GUI.skin.button, GUILayout.Height(26f))) _note = LocPreview.Set(_loc, ls, 0);
+                AuthorRow subs = AuthorRow.Begin(true, 26f);
+                if (subs.Button(ls + ".0 · початок", lk == 0 ? _on : null)) _note = LocPreview.Set(_loc, ls, 0);
                 for (int k = 1; k <= _loc.SubsOf(ls); k++)
-                    if (GUILayout.Button(ls + "." + k + " · " + _loc.SubWord(ls, k), lk == k ? _on : GUI.skin.button, GUILayout.Height(26f))) _note = LocPreview.Set(_loc, ls, k);
-                if (GUILayout.Button(_addingSub ? "× Скасувати" : "+ Субстан", GUILayout.Height(26f), GUILayout.Width(110f))) _addingSub = !_addingSub;
-                GUILayout.EndHorizontal();
+                    if (subs.Button(ls + "." + k + " · " + _loc.SubWord(ls, k), lk == k ? _on : null)) _note = LocPreview.Set(_loc, ls, k);
+                if (subs.Button(_addingSub ? "× Скасувати" : "+ Субстан")) _addingSub = !_addingSub;
+                subs.End();
                 if (_addingSub)
                 {
                     GUILayout.BeginHorizontal();
@@ -511,7 +513,7 @@ namespace HuginWhispers
             else if (_targetLayer == null) GUILayout.Label("«" + _targetName + "» — не частина «" + title + "» (поза її рамкою, чи ближче до рамки іншої локації, чи далі " + Mathf.RoundToInt(LocParts.AuthorReach) + " м).", _warn);
             else GUILayout.Label("«" + _targetName + "» є тут:  " + Where(_targetLayer), _rich);
             GUI.enabled = _target != null && _targetLayer != null;
-            GUILayout.BeginHorizontal();
+            AuthorRow layerRow = AuthorRow.Begin(true, 28f);
             // how many pieces in each layer: counted over the whole blueprint's table, so only when the place, the step or the files change
             string countKey = _loc.Id + " " + ls + "." + lk + " " + LocParts.Version;
             bool countNow = countKey != _countKey;
@@ -519,11 +521,11 @@ namespace HuginWhispers
             if (lk > 0)
             {
                 bool? had = _targetLayer != null ? LocState.MarkFor(_targetLayer, ls, lk) : null;
-                if (GUILayout.Button("є лише тут", had == true ? _on : GUI.skin.button, GUILayout.Height(28f))) { _note = SetMark(_target, ls, lk, true); Look(); LocPreview.Again(); }
+                if (layerRow.Button("є лише тут", had == true ? _on : null)) { _note = SetMark(_target, ls, lk, true); Look(); LocPreview.Again(); }
                 bool fromHere = _targetLayer != null && LocState.FromOf(_targetLayer, ls) == lk;
-                if (GUILayout.Button("з'являється звідси", fromHere ? _on : GUI.skin.button, GUILayout.Height(28f))) { _note = SetFrom(_target, ls, lk); Look(); LocPreview.Again(); }
-                if (GUILayout.Button("прибрати тут", had == false ? _on : GUI.skin.button, GUILayout.Height(28f))) { _note = SetMark(_target, ls, lk, false); Look(); LocPreview.Again(); }
-                if (GUILayout.Button("як у початку", GUILayout.Height(28f))) { _note = SetMark(_target, ls, lk, null); Look(); LocPreview.Again(); }
+                if (layerRow.Button("з'являється звідси", fromHere ? _on : null)) { _note = SetFrom(_target, ls, lk); Look(); LocPreview.Again(); }
+                if (layerRow.Button("прибрати тут", had == false ? _on : null)) { _note = SetMark(_target, ls, lk, false); Look(); LocPreview.Again(); }
+                if (layerRow.Button("як у початку")) { _note = SetMark(_target, ls, lk, null); Look(); LocPreview.Again(); }
                 string plus = LocState.Mark(true, ls, lk), minus = LocState.Mark(false, ls, lk);
                 if (countNow) counts.Add("з'являються тут — " + LocParts.CountIf(zala, n => LocState.HasMark(n, plus)));
                 if (countNow) counts.Add("зникають тут — " + LocParts.CountIf(zala, n => LocState.HasMark(n, minus)));
@@ -542,7 +544,7 @@ namespace HuginWhispers
                 }
                 string main = _targetLayer != null ? LocState.MainOf(_targetLayer) : null;
                 for (int i = 0; i < layers.Count; i++)
-                    if (GUILayout.Button(words[i], main == (layers[i] == "-" ? "" : layers[i]) ? _on : GUI.skin.button, GUILayout.Height(28f))) { _note = SetMain(_target, layers[i]); Look(); LocPreview.Again(); }
+                    if (layerRow.Button(words[i], main == (layers[i] == "-" ? "" : layers[i]) ? _on : null)) { _note = SetMain(_target, layers[i]); Look(); LocPreview.Again(); }
                 for (int i = 0; i < layers.Count; i++)
                 {
                     if (layers[i] == "-") continue;
@@ -551,14 +553,14 @@ namespace HuginWhispers
                 }
                 if (countNow) counts.Add("лише в субстанах — " + LocParts.CountIf(zala, LocState.SubOnly));
             }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
+            layerRow.End();
+            AuthorRow undoRow = AuthorRow.Begin(true, 26f);
             GUI.enabled = _target != null && !string.IsNullOrEmpty(_targetLayer);
-            if (GUILayout.Button("Скинути деталь повністю (Num.)", GUILayout.Height(26f))) { _note = Reset(_target); Look(); LocPreview.Again(); }
+            if (undoRow.Button("Скинути деталь повністю (Num.)")) { _note = Reset(_target); Look(); LocPreview.Again(); }
             GUI.enabled = _undo.Count > 0;
-            if (GUILayout.Button("↶ Повернути (Num*) · кроків: " + _undo.Count, GUILayout.Height(26f))) { _note = Undo(); if (_target != null) Look(); LocPreview.Again(); }
+            if (undoRow.Button("↶ Повернути (Num*) · кроків: " + _undo.Count)) { _note = Undo(); if (_target != null) Look(); LocPreview.Again(); }
             GUI.enabled = true;
-            GUILayout.EndHorizontal();
+            undoRow.End();
             if (countNow) { _countKey = countKey; _countText = "У шарах: " + string.Join(", ", counts.ToArray()) + "."; }
             GUILayout.Label(_countText, _hint);
 
@@ -588,39 +590,41 @@ namespace HuginWhispers
                 GUILayout.EndHorizontal();
                 for (int s = LocState.Abandoned; s <= _loc.Last; s++)
                 {
-                    GUILayout.BeginHorizontal();
+                    AuthorRow stateRow = AuthorRow.Begin(true, 24f);
                     for (int k = 0; k <= _loc.SubsOf(s); k++)
                     {
                         string label = k == 0 ? s + " · " + _loc.WordOf(s) : s + "." + k + " · " + _loc.SubWord(s, k);
-                        if (!GUILayout.Button(label, now == s && nowSub == k ? _on : GUI.skin.button, GUILayout.Height(24f))) continue;
+                        if (!stateRow.Button(label, now == s && nowSub == k ? _on : null)) continue;
                         string arg = k > 0 ? s + "." + k : s.ToString();
                         _note = _behind ? LocState.Cmd(_loc, new[] { "blueprint", "state", arg, _loc.Last >= 3 && s >= LocState.Repaired && now < LocState.Repaired ? "out" : "in" })
                                         : LocState.Cmd(_loc, new[] { "blueprint", "state", arg });
                     }
-                    GUILayout.EndHorizontal();
+                    stateRow.End();
                 }
                 GUI.enabled = pending;
                 if (GUILayout.Button("Скасувати зміну, що чекає")) _note = LocState.Cmd(_loc, new[] { "blueprint", "state", "cancel" });
                 GUI.enabled = true;
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Вогнище: " + LocHearth.WordOf(LocHearth.LevelOf(_loc)) + " (далі)")) _note = LocState.Cmd(_loc, new[] { "blueprint", "state", "fire" });
-                if (GUILayout.Button(LocState.GateOpenOf(_loc) ? "Великі двері: відімкнені (замкнути)" : "Великі двері: замкнені (відімкнути)")) _note = LocState.Cmd(_loc, new[] { "blueprint", "state", "gate" });
-                GUILayout.EndHorizontal();
+                AuthorRow worldRow = AuthorRow.Begin();
+                if (worldRow.Button("Вогнище: " + LocHearth.WordOf(LocHearth.LevelOf(_loc)) + " (далі)")) _note = LocState.Cmd(_loc, new[] { "blueprint", "state", "fire" });
+                if (worldRow.Button(LocState.GateOpenOf(_loc) ? "Великі двері: відімкнені (замкнути)" : "Великі двері: замкнені (відімкнути)")) _note = LocState.Cmd(_loc, new[] { "blueprint", "state", "gate" });
                 // built again from the blueprint in this build (a world keeps the one it was built from)
-                if (GUILayout.Button(_confirmRebuild ? "Точно? Її деталі зникнуть і постануть з нового креслення — натисни ще раз" : "Перебудувати з креслення цієї збірки", GUILayout.Height(26f)))
+                if (worldRow.Button(_confirmRebuild ? "Точно? Її деталі зникнуть і постануть з нового креслення — натисни ще раз" : "Перебудувати з креслення цієї збірки", null, 0f, 26f))
                 {
                     if (!_confirmRebuild) _confirmRebuild = true;
                     else { _confirmRebuild = false; _loc.AskRebuild(); _note = _loc.Title + ": прошу сервер перебудувати…"; }
                 }
+                worldRow.End();
             }
             GUILayout.EndScrollView();
 
-            if (_note.Length > 0) GUILayout.Label(_note, _hint);
+            // the footer: the last word (a third of the window at most) and «Закрити», always at the bottom; the corner to drag
+            if (_note.Length > 0) GUILayout.Label(_note, _hint, GUILayout.MaxHeight(_rect.height / 3f));
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Закрити", GUILayout.Width(120f))) Close();
+            if (GUILayout.Button("Закрити (F10)", GUILayout.Width(120f))) Close();
+            GUILayout.Space(AuthorFrame.Grip);
             GUILayout.EndHorizontal();
-            GUI.DragWindow(new Rect(0f, 0f, 10000f, 26f));
+            Frame.Corner(_rect, _hint);
         }
     }
 }

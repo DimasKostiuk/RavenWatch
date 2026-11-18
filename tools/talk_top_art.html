@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!-- The talk scroll's top (the user 2026-11-12: the old rod «бідно виглядає… на металі не видно, шо це метал, зліва шось непонятне висить на чому» —
+     picked «А. Кований карниз»): the parchment wound on a roller that lies in two forged hooks, a bronze raven's head on each end of the
+     roller; each raven holds a ring in its beak — the left one's carries the rune token, the right one's the iron seal with the ✕; the name's
+     plaque hangs on two chains. Its pieces, rendered at 2× by tools/talk_top_art.ps1 into assets/book/talk_<part>.png (sizes in UI units):
+       roll    96×40   the wound parchment on its roller, sliced across (24 at each end: the roller's wooden stub and the roll's rim; the roll
+                       itself 1..31 down, its shadow on the paper below it)
+       raven   58×46   the bronze head, looking left (the right one is the same picture turned); its collar 46..58 sits on the roller's end,
+                       the middle of the collar 20 down; the ring hangs from the beak at 8,24
+       ring    20×22   an iron ring (drawn before the head: the beak covers its top)
+       token   22×24   the bronze token on the left ring (the rune on it is the game's own text)
+       seal    38×40   the iron seal on the right ring (the ✕ on it is the game's own text; the whole of it is the button)
+       strap   14×16   the hook's flat bar, a tile repeated up off the screen
+       rivet   14×14   the bar's rivet over the roll
+       hook    18×32   the hook's lip in front of the roll (the bar bends under the roll and comes up before it)
+       chain   8×12    a chain's tile, down to the plaque
+       wax     56×56   not of the top: the story card's wax seal with its rune (RavenBook.Seal); its body 46 across in the picture's middle
+     The pieces with a drop shadow (raven, ring, token, seal, hook) are rendered SHADE (7) larger on every side: the picture is their size + 14.
+     ?part=all draws the whole top together over a sky, with the paper and a plaque, for the eye: docs/plans/mockups/talk-top-a.png. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html,body{margin:0;background:transparent;overflow:hidden}
+#out{position:relative}
+.p{position:absolute}
+svg{display:block;overflow:visible}
+</style>
+</head>
+<body>
+<div id="out"></div>
+<script>
+const defs = `
+<defs>
+  <linearGradient id="bronze" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f6dc98"/><stop offset=".22" stop-color="#d9ad55"/><stop offset=".55" stop-color="#a87830"/><stop offset=".85" stop-color="#6e4a18"/><stop offset="1" stop-color="#4a300e"/>
+  </linearGradient>
+  <linearGradient id="bronzeDark" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c2954a"/><stop offset=".5" stop-color="#8a6126"/><stop offset="1" stop-color="#3e2809"/>
+  </linearGradient>
+  <linearGradient id="bronzeBand" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff0bc"/><stop offset=".18" stop-color="#eccb7a"/><stop offset=".5" stop-color="#b8883a"/><stop offset=".82" stop-color="#70491a"/><stop offset="1" stop-color="#3e2809"/>
+  </linearGradient>
+  <linearGradient id="iron" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#1c1e20"/><stop offset=".18" stop-color="#565c61"/><stop offset=".36" stop-color="#9aa2a8"/><stop offset=".5" stop-color="#5d6368"/><stop offset=".8" stop-color="#2e3134"/><stop offset="1" stop-color="#131415"/>
+  </linearGradient>
+  <linearGradient id="ironV" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#aab1b7"/><stop offset=".25" stop-color="#6a7076"/><stop offset=".6" stop-color="#3a3e42"/><stop offset="1" stop-color="#17181a"/>
+  </linearGradient>
+  <radialGradient id="ironDisc" cx=".36" cy=".3" r=".8">
+    <stop offset="0" stop-color="#7c838a"/><stop offset=".45" stop-color="#454a4f"/><stop offset="1" stop-color="#141517"/>
+  </radialGradient>
+  <radialGradient id="bronzeDisc" cx=".36" cy=".3" r=".8">
+    <stop offset="0" stop-color="#f8e2a4"/><stop offset=".45" stop-color="#c79a45"/><stop offset="1" stop-color="#5a3a12"/>
+  </radialGradient>
+  <radialGradient id="rivet" cx=".35" cy=".3" r=".75">
+    <stop offset="0" stop-color="#e3e8ec"/><stop offset=".5" stop-color="#7d848a"/><stop offset="1" stop-color="#1e2022"/>
+  </radialGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#b98652"/><stop offset=".25" stop-color="#8a5e36"/><stop offset=".6" stop-color="#5a3a1f"/><stop offset="1" stop-color="#24150a"/>
+  </linearGradient>
+  <linearGradient id="paperRoll" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d8c79c"/><stop offset=".14" stop-color="#fbf2d8"/><stop offset=".4" stop-color="#eddfb8"/><stop offset=".72" stop-color="#cbb684"/><stop offset=".92" stop-color="#9c8452"/><stop offset="1" stop-color="#6e5a32"/>
+  </linearGradient>
+  <linearGradient id="shadow" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2a1806" stop-opacity=".5"/><stop offset=".45" stop-color="#2a1806" stop-opacity=".18"/><stop offset="1" stop-color="#2a1806" stop-opacity="0"/>
+  </linearGradient>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
+  <filter id="drop" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="1" dy="2" stdDeviation="1.4" flood-color="#000" flood-opacity=".5"/></filter>
+</defs>`;
+const svg = (w, h, body) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${defs}${body}</svg>`;
+// a piece with a drop shadow (shade: true) is drawn with SHADE all round it, so its shadow is whole in the picture (the user 2026-11-14: the shadows
+// were cut at the pictures' edges); the game puts such a picture SHADE out from its place (RavenBook.TopPiece). Its size in the list above is the piece's own
+const SHADE = 7;
+const pad = p => p.shade ? SHADE : 0;
+const pic = p => { const s = pad(p); return svg(p.w + 2 * s, p.h + 2 * s, s ? `<g transform="translate(${s},${s})">${p.draw()}</g>` : p.draw()); };
+
+const parts = {
+  // the wound parchment on its roller. Sliced: 24 at each end. The roll 1..31 down, its shadow under it
+  roll: { w: 96, h: 40, draw: () => {
+    const end = x => `
+      <rect x="${x}" y="8" width="10" height="16" rx="2" fill="url(#wood)" stroke="#1c1006" stroke-width=".8"/>
+      <path d="M${x + 1},10 h8" stroke="#e6bf8a" stroke-opacity=".5" stroke-width=".8"/>`;
+    const rim = (x, d) => `
+      <path d="M${x},2.6 v26.8" stroke="#4a3818" stroke-opacity=".7" stroke-width=".9"/>
+      <path d="M${x + d * 1.5},2.2 v27.6" stroke="#fff6dc" stroke-opacity=".5" stroke-width=".7"/>
+      <path d="M${x + d * 3.4},2 v28" stroke="#4a3818" stroke-opacity=".38" stroke-width=".7"/>
+      <path d="M${x + d * 5.6},2 v28" stroke="#4a3818" stroke-opacity=".2" stroke-width=".6"/>`;
+    return `
+      <rect x="8" y="31" width="80" height="9" fill="url(#shadow)"/>
+      ${end(0)}${end(86)}
+      <rect x="6" y="1" width="84" height="30" rx="5" fill="url(#paperRoll)" stroke="#4a3818" stroke-width="1"/>
+      <path d="M10,5.8 h76" stroke="#fffaea" stroke-opacity=".85" stroke-width="1.2"/>
+      <path d="M9,11.5 h78 M9,16.5 h78 M9,21 h78" stroke="#7a6436" stroke-opacity=".14" stroke-width=".6"/>
+      <path d="M7,25.8 h82" stroke="#4a3818" stroke-opacity=".55" stroke-width=".9"/>
+      <path d="M7,27 h82" stroke="#fff6dc" stroke-opacity=".4" stroke-width=".6"/>
+      ${rim(8.6, 1)}${rim(87.4, -1)}`;
+  } },
+
+  // the bronze raven's head, looking left: a long heavy beak, a flat crown, bristles over the beak's root, hackles under the throat;
+  // its collar on the roller's end at the right
+  raven: { w: 58, h: 46, shade: true, draw: () => `
+    <g filter="url(#drop)">
+      <path d="M46,8.5 C42.5,5.6 38,4.2 33.5,5 C30.6,5.6 28.2,6.8 26,8.4 C19,10 11,14 6,19.4 C5,20.5 4,21.6 3.6,23.4
+               L6,23.3 C12,25.6 18,27 24.5,27.5 L27.6,30.2 L28.8,28.6 L32,32 L33.4,30.2 L37,33.6 L38.6,31.6 L42.4,34.2 L46,31.8 Z"
+            fill="url(#bronze)" stroke="#2a1a06" stroke-width="1" stroke-linejoin="round"/>
+      <!-- the lower beak, a shade darker; the mouth's line back to under the eye -->
+      <path d="M5.2,22.8 C12,21.4 19,21 27,22 L24.5,27.5 C18,27 12,25.6 6,23.3 Z" fill="url(#bronzeDark)" opacity=".9"/>
+      <path d="M5,22.7 C12,21.2 19,20.8 27.4,21.9" fill="none" stroke="#2a1a06" stroke-width="1" stroke-linecap="round"/>
+      <path d="M6,21.7 C12.4,20.3 19,19.9 27,20.9" fill="none" stroke="#fff3c4" stroke-opacity=".5" stroke-width=".7" stroke-linecap="round"/>
+      <!-- the light along the beak's ridge and over the crown -->
+      <path d="M8.6,17.6 C14,13.4 20,10.6 26.4,9.2 C30,6.8 35,6 41,7.6" fill="none" stroke="#fff6cf" stroke-opacity=".85" stroke-width="1.3" stroke-linecap="round" filter="url(#soft)"/>
+      <!-- the bristles over the beak's root -->
+      <path d="M26,8.6 L17,12.8 L20.2,13.2 L18.2,15.8 L21.6,15.8 L20.2,18.6 L27.4,16.8 Z" fill="url(#bronzeDark)" opacity=".6"/>
+      <path d="M26,10.6 L18.6,13.6 M26.6,13 L20,16 M27,15.6 L21.6,18" fill="none" stroke="#2a1a06" stroke-opacity=".85" stroke-width=".8" stroke-linecap="round"/>
+      <!-- the brow and the eye -->
+      <path d="M27.4,10 C30.4,8.4 34,8.6 36.8,10.8" fill="none" stroke="#2a1a06" stroke-width="1.1" stroke-linecap="round"/>
+      <circle cx="31.4" cy="13.8" r="3.3" fill="#4a300e" stroke="#2a1a06" stroke-width=".7"/>
+      <circle cx="31.4" cy="13.8" r="2.3" fill="#f6dc98"/>
+      <circle cx="31.4" cy="13.8" r="1.45" fill="#120a02"/>
+      <circle cx="30.8" cy="13.2" r=".55" fill="#fff" opacity=".9"/>
+      <!-- feathers cut into the cheek and the neck -->
+      <path d="M32,19.4 q2.8,2.6 6,.8 M34,24.6 q3.2,2.6 6.8,.6 M39.8,12.4 q2.2,3.4 1.6,7.4 M43.2,10.4 q1.8,4.2 1.2,9.8"
+            fill="none" stroke="#3a2409" stroke-opacity=".85" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M32.2,20.4 q2.8,2.6 6,.8 M34.2,25.6 q3.2,2.6 6.8,.6" fill="none" stroke="#fff3c4" stroke-opacity=".35" stroke-width=".6" stroke-linecap="round"/>
+      <!-- the collar: a sleeve with two raised bands -->
+      <rect x="46" y="8.4" width="12" height="23.4" rx="1.4" fill="url(#bronze)" stroke="#2a1a06" stroke-width="1"/>
+      <rect x="46" y="7" width="3.8" height="26.2" rx="1.5" fill="url(#bronzeBand)" stroke="#2a1a06" stroke-width=".9"/>
+      <rect x="54.2" y="7" width="3.8" height="26.2" rx="1.5" fill="url(#bronzeBand)" stroke="#2a1a06" stroke-width=".9"/>
+      <path d="M50.6,12.6 l2.8,3.4 l-2.8,3.6 M50.6,19.8 l2.8,3.4 l-2.8,3.6" fill="none" stroke="#3a2409" stroke-opacity=".7" stroke-width=".8"/>
+      <path d="M50.2,10.4 h3.6" stroke="#fff6cf" stroke-opacity=".7" stroke-width=".9"/>
+    </g>` },
+
+  // an iron ring, hung from the beak (the beak covers its top)
+  ring: { w: 20, h: 22, shade: true, draw: () => `
+    <g filter="url(#drop)">
+      <circle cx="10" cy="10" r="7" fill="none" stroke="#141517" stroke-width="4.4"/>
+      <circle cx="10" cy="10" r="7" fill="none" stroke="url(#ironV)" stroke-width="3"/>
+      <path d="M5.2,6.4 A6.6,6.6 0 0 1 13.6,4.6" fill="none" stroke="#dfe5ea" stroke-opacity=".8" stroke-width=".9" stroke-linecap="round"/>
+    </g>` },
+
+  // the bronze token (the rune is the game's)
+  token: { w: 22, h: 24, shade: true, draw: () => `
+    <g filter="url(#drop)">
+      <path d="M11,1.4 C14.6,1.4 20,6.4 20,13 C20,18.4 16,22 11,22 C6,22 2,18.4 2,13 C2,6.4 7.4,1.4 11,1.4 Z" fill="url(#bronzeDisc)" stroke="#2a1a06" stroke-width="1"/>
+      <path d="M11,4 C13.6,4 17.6,8 17.6,13 C17.6,17 14.6,19.6 11,19.6 C7.4,19.6 4.4,17 4.4,13 C4.4,8 8.4,4 11,4 Z" fill="none" stroke="#4a300e" stroke-opacity=".7" stroke-width=".8"/>
+      <circle cx="11" cy="4.4" r="1.3" fill="#1a1005"/>
+      <path d="M5.6,9 C7,6.4 8.8,4.6 10.4,3.8" fill="none" stroke="#fff6cf" stroke-opacity=".7" stroke-width=".9" stroke-linecap="round"/>
+    </g>` },
+
+  // the iron seal with the ✕ (the ✕ is the game's): the button
+  seal: { w: 38, h: 40, shade: true, draw: () => `
+    <g filter="url(#drop)">
+      <rect x="16.4" y="0" width="5.2" height="7" rx="1.6" fill="url(#ironV)" stroke="#101112" stroke-width=".8"/>
+      <circle cx="19" cy="22" r="16" fill="url(#ironDisc)" stroke="#0c0d0e" stroke-width="1.2"/>
+      <circle cx="19" cy="22" r="12.6" fill="none" stroke="#0c0d0e" stroke-opacity=".8" stroke-width="1"/>
+      <circle cx="19" cy="22" r="13.6" fill="none" stroke="#c7ced4" stroke-opacity=".28" stroke-width=".7"/>
+      <path d="M7.4,14.6 A14,14 0 0 1 24,8.4" fill="none" stroke="#e6ecf0" stroke-opacity=".55" stroke-width="1.1" stroke-linecap="round"/>
+      ${[[19, 8.2], [32.8, 22], [19, 35.8], [5.2, 22]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.5" fill="url(#rivet)" stroke="#0c0d0e" stroke-width=".4"/>`).join('')}
+    </g>` },
+
+  // the story card's wax seal: a blob of red wax with an uneven rim, a pressed field with the rune raido cut in it (the road: «веде далі історію»), a ring of
+  // small dots round the field, a gloss on its upper left. The body is 46 across, in the middle of the picture
+  wax: { w: 56, h: 56, draw: () => {
+    const cx = 28, cy = 27, radii = [23, 22.3, 23.5, 22.5, 24, 22.8, 23.1, 25.6, 23, 23.4, 22.2, 23.7, 22.6, 23.9];
+    const pt = i => { const a = (i % radii.length) / radii.length * Math.PI * 2 - 0.5, r = radii[i % radii.length]; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; };
+    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], f = p => p[0].toFixed(2) + ',' + p[1].toFixed(2);
+    let blob = 'M' + f(mid(pt(radii.length - 1), pt(0)));
+    for (let i = 0; i < radii.length; i++) blob += ' Q' + f(pt(i)) + ' ' + f(mid(pt(i), pt(i + 1)));
+    blob += ' Z';
+    let dots = '';
+    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2 + 0.22, x = cx + Math.cos(a) * 18.8, y = cy + Math.sin(a) * 18.8; dots += `<circle cx="${(x + 0.35).toFixed(2)}" cy="${(y + 0.4).toFixed(2)}" r="1" fill="#ff9c8a" opacity=".35"/><circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1" fill="#4a0c07"/>`; }
+    const rune = `M${cx - 4.5},${cy - 9.5} V${cy + 9.5} M${cx - 4.5},${cy - 9.5} L${cx + 4.6},${cy - 4.2} L${cx - 4.5},${cy + 1} L${cx + 5.2},${cy + 9.5}`;
+    return `
+      <defs>
+        <radialGradient id="waxBody" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="#d2402f"/><stop offset=".42" stop-color="#a3261a"/><stop offset=".8" stop-color="#7a160d"/><stop offset="1" stop-color="#5a0e08"/></radialGradient>
+        <radialGradient id="waxField" cx=".4" cy=".36" r=".75"><stop offset="0" stop-color="#9a2216"/><stop offset="1" stop-color="#6c130b"/></radialGradient>
+      </defs>
+      <g filter="url(#drop)">
+        <path d="${blob}" fill="url(#waxBody)" stroke="#3c0805" stroke-width="1"/>
+      </g>
+      <path d="M${cx - 19.5},${cy - 6} A20.5,20.5 0 0 1 ${cx + 6},${cy - 19.6}" fill="none" stroke="#ffb3a2" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round" filter="url(#soft)"/>
+      <path d="M${cx + 19.8},${cy + 5} A20.5,20.5 0 0 1 ${cx - 5},${cy + 19.8}" fill="none" stroke="#2e0503" stroke-opacity=".5" stroke-width="1.6" stroke-linecap="round" filter="url(#soft)"/>
+      ${dots}
+      <circle cx="${cx}" cy="${cy}" r="15.4" fill="url(#waxField)" stroke="#3c0805" stroke-opacity=".9" stroke-width="1.1"/>
+      <path d="M${cx - 14.2},${cy - 4} A14.8,14.8 0 0 1 ${cx + 4},${cy - 14.2}" fill="none" stroke="#2e0503" stroke-opacity=".6" stroke-width="1.4" stroke-linecap="round" filter="url(#soft)"/>
+      <path d="M${cx + 14.4},${cy + 4} A14.8,14.8 0 0 1 ${cx - 4},${cy + 14.4}" fill="none" stroke="#ff9c8a" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round" filter="url(#soft)"/>
+      <path d="${rune}" fill="none" stroke="#2e0503" stroke-opacity=".85" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(.7,.9)"/>
+      <path d="${rune}" fill="none" stroke="#f6dccb" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${rune}" fill="none" stroke="#ffffff" stroke-opacity=".5" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round" transform="translate(-.4,-.4)"/>
+      <ellipse cx="${cx - 12.5}" cy="${cy - 14.5}" rx="3.2" ry="1.5" fill="#fff" opacity=".4" transform="rotate(-38 ${cx - 12.5} ${cy - 14.5})" filter="url(#soft)"/>`;
+  } },
+
+  // the hook's flat bar: a tile, seamless up and down
+  strap: { w: 14, h: 16, draw: () => `
+    <rect x="2" y="0" width="10" height="16" fill="url(#iron)"/>
+    <path d="M2.4,0 v16 M11.6,0 v16" stroke="#0c0d0e" stroke-width=".9"/>
+    <path d="M5,3.2 l1.6,1 M7.6,9.6 l1.8,.9 M4.6,12.8 l1.4,.8" stroke="#0c0d0e" stroke-opacity=".35" stroke-width=".8" stroke-linecap="round"/>` },
+
+  rivet: { w: 14, h: 14, draw: () => `
+    <circle cx="7" cy="7" r="3.6" fill="#0c0d0e" opacity=".55"/>
+    <circle cx="7" cy="6.6" r="3" fill="url(#rivet)" stroke="#0c0d0e" stroke-width=".5"/>` },
+
+  // the hook's lip before the roll: up from under it (the bar bends under the roll), its tip beaten round, a rivet in it
+  hook: { w: 18, h: 32, shade: true, draw: () => `
+    <g filter="url(#drop)">
+      <path d="M3.4,26.6 C3.4,29.4 5.4,30.8 9,30.8 C12.6,30.8 14.6,29.4 14.6,26.6 L14.2,9 C14.2,5 12.2,2.2 9,2.2 C5.8,2.2 3.8,5 3.8,9 Z" fill="url(#iron)" stroke="#0c0d0e" stroke-width="1"/>
+      <path d="M5.4,8.8 C5.4,5.8 6.8,4 9,4 C11.2,4 12.6,5.8 12.6,8.8" fill="none" stroke="#e6ecf0" stroke-opacity=".65" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M4,25.4 C6.2,27 11.8,27 14,25.4" fill="none" stroke="#0c0d0e" stroke-opacity=".65" stroke-width="1"/>
+      <path d="M4.6,27.6 C6.6,29 11.4,29 13.4,27.6" fill="none" stroke="#c7ced4" stroke-opacity=".3" stroke-width=".7"/>
+      <circle cx="9" cy="10.4" r="2" fill="url(#rivet)" stroke="#0c0d0e" stroke-width=".4"/>
+    </g>` },
+
+  // a chain, a tile: a link face on, a link edge on
+  chain: { w: 8, h: 12, draw: () => `
+    <rect x="3.1" y="-1.6" width="1.8" height="4.2" rx=".9" fill="#3a3e42" stroke="#0c0d0e" stroke-width=".5"/>
+    <rect x="3.1" y="9.4" width="1.8" height="4.2" rx=".9" fill="#3a3e42" stroke="#0c0d0e" stroke-width=".5"/>
+    <rect x="1.7" y="1.6" width="4.6" height="8.8" rx="2.3" fill="none" stroke="#0c0d0e" stroke-width="2.4"/>
+    <rect x="1.7" y="1.6" width="4.6" height="8.8" rx="2.3" fill="none" stroke="#8d949a" stroke-width="1.3"/>
+    <path d="M2.4,3.4 v4.4" stroke="#e6ecf0" stroke-opacity=".6" stroke-width=".6" stroke-linecap="round"/>` },
+};
+
+const part = new URLSearchParams(location.search).get('part') || 'all';
+const out = document.getElementById('out');
+const piece = (name, x, y, flip, extra) => { const p = parts[name], s = pad(p); return `<div class="p" style="left:${x - s}px;top:${y - s}px;width:${p.w + 2 * s}px;height:${p.h + 2 * s}px;${flip ? 'transform:scaleX(-1);' : ''}${extra || ''}">${pic(p)}</div>`; };
+
+if (parts[part]) {
+  const p = parts[part];
+  out.style.width = (p.w + 2 * pad(p)) + 'px'; out.style.height = (p.h + 2 * pad(p)) + 'px';
+  out.innerHTML = pic(p);
+} else {
+  // the whole top, as the game puts it together (RavenBook.ScrollShell): the scroll's corner at X,Y — 40 from the screen's left, 14 under its top
+  const X = 40, Y = 14, W = 540;
+  out.style.width = '640px'; out.style.height = '170px';
+  out.style.background = 'linear-gradient(180deg,#7fbfe6,#5aa3d2 45%,#3f86b8)';
+  let h = `<div class="p" style="left:230px;top:-40px;width:330px;height:150px;border-radius:50%;background:radial-gradient(ellipse,#2c5f8e,rgba(44,95,142,0));"></div>`;
+  // the paper under the roll
+  h += `<div class="p" style="left:${X + 26}px;top:${Y + 30}px;width:488px;height:210px;background:linear-gradient(180deg,#efe3c4,#e8d9b3);box-shadow:8px 10px 16px rgba(0,0,0,.35)"></div>`;
+  // the hooks' bars, behind the roll
+  for (const x of [112, 428]) {
+    h += `<div class="p" style="left:${X + x - 7}px;top:${Y - 60}px;width:14px;height:80px;background:url('data:image/svg+xml;utf8,${encodeURIComponent(svg(14, 16, parts.strap.draw()))}') repeat-y"></div>`;
+    h += piece('rivet', X + x - 7, Y - 12);
+  }
+  // the rings, behind the heads
+  h += piece('ring', X - 34, Y + 17) + piece('ring', X + W + 14, Y + 17);
+  // the roll, sliced by hand here: its ends and a stretched middle
+  const roll = encodeURIComponent(svg(96, 40, parts.roll.draw()));
+  h += `<div class="p" style="left:${X + 18}px;top:${Y}px;width:${W - 36}px;height:40px;border-style:solid;border-width:0 24px;border-image:url('data:image/svg+xml;utf8,${roll}') 0 24 fill / 0 24px stretch;box-sizing:border-box"></div>`;
+  for (const x of [112, 428]) h += piece('hook', X + x - 9, Y + 6);
+  h += piece('raven', X - 32, Y - 4, false) + piece('raven', X + W - 26, Y - 4, true);
+  // what hangs from the rings
+  h += piece('token', X - 35, Y + 29) + `<div class="p" style="left:${X - 35}px;top:${Y + 36}px;width:22px;text-align:center;font:11px 'Segoe UI Historic','Noto Sans Runic',serif;color:#3a2410">ᚱ</div>`;
+  h += piece('seal', X + W + 5, Y + 31) + `<div class="p" style="left:${X + W + 5}px;top:${Y + 37}px;width:38px;text-align:center;font:31px/32px Georgia,serif;color:#e9cf8e">×</div>`;
+  // the plaque on its chains
+  for (const dx of [-38, 38]) h += `<div class="p" style="left:${X + W / 2 + dx - 4}px;top:${Y + 29}px;width:8px;height:20px;background:url('data:image/svg+xml;utf8,${encodeURIComponent(svg(8, 12, parts.chain.draw()))}') repeat-y"></div>`;
+  h += `<div class="p" style="left:${X + W / 2 - 86}px;top:${Y + 46}px;width:172px;height:40px;box-sizing:border-box;border:2px solid #6a5230;outline:1px solid #1a1009;border-radius:3px;background:linear-gradient(180deg,#45301e,#24170d 60%,#1a1009);box-shadow:0 3px 6px rgba(0,0,0,.5);font:400 20px/34px Georgia,serif;letter-spacing:.3em;color:#e7c98a;text-align:center">ТЮРА</div>`;
+  out.innerHTML = h;
+}
+</script>
+</body>
+</html>

@@ -9,17 +9,18 @@ namespace HuginWhispers
     //   Look        what is wrong now, group by group (Trouble: red it leaves or drops its work · amber not happy · grey could be better), the pantry against who eats, the coin box against the pays. One
     //               look for all who ask: the notes on the board in the world, the hover, the window. Made at most once in Every s a heart, only while you are near it. No ways asked of the path finder,
     //               nothing searched in the world: NpcMeals.Supply, NpcBase.Things, lockers
-    //   on the left Треба зробити (the first TodoMost rows, «і ще N»; an arrow shows the thing, all of a group, on the screen and the map: NpcMenu.ShowPlaces); Комора і скарбничка
-    //   tabs        Мешканці (a row a person, a click its card, «←» back here; who is far: NpcHeart.Known) · Твої справи (the story's stage when it is about this place, your words, requests, wishes) ·
-    //               Життя оселі (who gets on with whom: NpcAttitude.Ties; what happened: NpcMemory.HomeEvents) · Місця (only to read and show). A page's rows are made when it is opened
-    //   the buttons the dining table, its edges, its name
+    //   on the left Треба зробити (the first TodoMost rows, «і ще N»; an arrow shows the thing, all of a group, on the screen and the map: NpcMenu.ShowPlaces); Комора і скарбничка.
+    //               A person in need (NpcRescue) heads it in a group of its own, «поклик» (the user 2026-11-15): a click marks it on your map till you find it and opens the map there
+    //   tabs        Мешканці (a row a person, a click its card, «←» back here; who is far: NpcHeart.FarOf) · Твої справи (the story's stage when it is about this place, your words, requests, wishes) ·
+    //               Життя оселі (who gets on with whom: NpcAttitude.Ties — two at odds: whom to speak to, a click shows them; what happened: NpcMemory.HomeEvents) · Місця (only to read and show). A page's rows are made when it is opened
+    //   the buttons the dining table, its edges, its name, a feast (NpcNeighbours.Feast); an ultimatum in «Треба зробити» (NpcNeighbours)
     internal static class NpcBoard
     {
         internal const float Every = 5f;
         private const int TodoMost = 10, TiesMost = 8, EventsMost = 7, PlacesMost = 10;
         private static readonly int PerfLook = NpcPerf.Id("heart: look (дошка)");
 
-        internal sealed class Trouble { public int Tone; public string Text = "", Sub = "", Far = "", Tip; public Action Go; }
+        internal sealed class Trouble { public int Tone; public string Text = "", Sub = "", Far = "", Tip; public Action Go; public NpcRescue.Short Call; } // (Call: a person in need — its own group)
 
         internal sealed class Look
         {
@@ -49,8 +50,7 @@ namespace HuginWhispers
                 if (l.Who.Count > 0) l.Days = NpcMeals.DaysOf(NpcMeals.Supply(b), l.Who);
                 List<Component> beds = b.Things(typeof(Bed)), fires = b.Things(typeof(Fireplace));
                 l.Beds = beds != null ? beds.Count : 0;
-                l.Fires = fires != null ? fires.Count : 0;
-                if (fires != null) foreach (Component c in fires) { Fireplace f = c as Fireplace; if (f != null && f.IsBurning()) l.Burning++; }
+                if (fires != null) foreach (Component c in fires) { Fireplace f = c as Fireplace; if (f == null) continue; l.Fires++; if (f.IsBurning()) l.Burning++; } // (only those that stand: one gone this very frame is not a fire that went out)
             }
             l.Pay = NpcToil.PayAhead(l.Who, l.Coins);
             Troubles(h, l, b);
@@ -67,12 +67,22 @@ namespace HuginWhispers
         }
         private static Action ToSpot(Vector3 at, string what) { return () => { RavenBook.HideSheet(); NpcMenu.ShowPlace(at, null, what); }; }
         private static Action ToChest(Container c, string what) { return c != null ? ToSpot(c.transform.position, what) : null; }
+        private static Action ToCall(NpcRescue.Short s) { return () => { RavenBook.HideSheet(); NpcRescue.Mark(s); NpcMap.RescueNow(); if (Minimap.instance != null) Minimap.instance.ShowPointOnMap(s.At); }; }
+        private static string CallWord(int seen) { return seen == 2 ? Lang.T("знайдено: тепер допоможи") : seen == 1 ? Lang.T("позначено на мапі, доки не знайдеш") : Lang.T("клік: позначити на мапі"); }
 
         // a group of people of one trouble: one line, a click shows them all
         private static void Group(Look l, int tone, List<NpcActor> who, string text, string sub, string tip)
         {
             if (who.Count == 0) return;
             l.Troubles.Add(new Trouble { Tone = tone, Text = Lang.F(text, Names(who)), Sub = sub, Tip = tip, Go = ToPeople(who) });
+        }
+
+        // the base's first fire that stands (one taken down this very frame is still in its list: NpcBase.Live takes it out a frame later); null — none
+        private static Component FirstFire(NpcBase b)
+        {
+            List<Component> fires = b != null ? b.Things(typeof(Fireplace)) : null;
+            if (fires != null) foreach (Component c in fires) if (c != null) return c;
+            return null;
         }
 
         private static void Troubles(NpcHeart h, Look l, NpcBase b)
@@ -90,15 +100,23 @@ namespace HuginWhispers
                 if (a.StatusNow.Contains("ящик повний")) full.Add(a); // (its status stays Ukrainian where it is kept)
                 if (a.Worker == null || !a.Worker.Works) idle.Add(a);
                 else if (NpcToil.Unpaid(a) > 0) unpaid.Add(a);
-                string j = a.Worker != null ? a.Worker.JobId : "";
-                string lack = j == "lumber" || j == "miner" ? NpcHew.Lacks(a, j == "lumber") : null; // (no tool, a broken one, no plot)
-                if (lack != null) { lacking.Add(a); lacks.Add(a.Name + ": " + lack); }
+                List<string> lack = NpcWorker.Lacks(a); // (what its work wants: no chest, a full one, its job's own — a tool, a plot, fuel, a kitchen's tools and fires. One answer with its card: NpcWorker.Lacks)
+                if (lack != null) { lacking.Add(a); lacks.Add(a.Name + ": " + string.Join("; ", lack.ToArray())); }
             }
             Group(l, RavenBook.ToneBad, starving, Lang.K("Голодують: {0}"), Lang.T("без їжі кинуть роботу, а згодом підуть"), null);
             Group(l, RavenBook.ToneBad, down, Lang.K("Без тями: {0}"), Lang.T("постав на ноги медовухою зцілення"), null);
             Group(l, RavenBook.ToneBad, edge, Lang.K("На межі: {0}"), Lang.T("якщо нічого не зміниться, підуть"), null);
+            foreach (NpcActor a in l.Who) // (one hostile to one of its home: «або я, або …» — NpcNeighbours, its days running out)
+            {
+                NpcNeighbours.Kept k = NpcNeighbours.Of(a);
+                if (k == null || k.Ult == 0L) continue;
+                List<NpcActor> pair = new List<NpcActor> { a };
+                foreach (NpcActor o in l.Who) if (NpcAttitude.PersonKey(o) == k.Ult) pair.Add(o);
+                l.Troubles.Add(new Trouble { Tone = RavenBook.ToneBad, Text = Lang.F("{0}: «Або я, або {1}»", a.Name, NpcNeighbours.NameOf(a, k.Ult)), Far = NpcRescue.Left((long)NpcNeighbours.UltimatumLeft(k)), Go = ToPeople(pair),
+                    Tip = Lang.T("Ця людина не терпить сусіда й поставила умову. Якщо до строку нічого не зміниться, вона піде з оселі.\nЩо можна зробити: поговорити з нею й сказати «Помиріться вже»; розвести їх («Тримайтеся одне від одного подалі»: це лише дає час); відпустити чи переселити когось із двох.") });
+            }
             NpcRescue.Short rumour = NpcRescue.BoardShort(h.Zdo, h.transform.position);
-            if (rumour != null) l.Troubles.Add(new Trouble { Tone = RavenBook.ToneWarn, Text = rumour.Text, Far = rumour.Left, Go = ToSpot(rumour.At, Lang.T("Людина в біді")) });
+            if (rumour != null) l.Troubles.Add(new Trouble { Tone = RavenBook.ToneWarn, Text = rumour.Text, Sub = CallWord(rumour.Seen), Far = rumour.Left, Call = rumour, Go = rumour.Seen == 2 ? null : ToCall(rumour) }); // (found: no mark to put or show any more)
             Player me = Player.m_localPlayer;
             float day = EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f;
             foreach (NpcActor a in l.Who)
@@ -119,8 +137,8 @@ namespace HuginWhispers
             Group(l, RavenBook.ToneNone, idle, Lang.K("Без роботи: {0}"), "", Lang.T("Дай роботу: Q на людині → Робота."));
             if (l.BaseReady && l.Fires > 0 && l.Burning == 0 && l.Who.Count > 0)
             {
-                Component first = b.Things(typeof(Fireplace))[0];
-                l.Troubles.Add(new Trouble { Tone = RavenBook.ToneNone, Text = Lang.T("Згасли всі вогнища"), Go = ToSpot(first.transform.position, Lang.T("Вогнище")) });
+                Component first = FirstFire(b);
+                l.Troubles.Add(new Trouble { Tone = RavenBook.ToneNone, Text = Lang.T("Згасли всі вогнища"), Go = first != null ? ToSpot(first.transform.position, Lang.T("Вогнище")) : null });
             }
             if (l.Who.Count >= NpcResident.PerBase) l.Troubles.Add(new Trouble { Tone = RavenBook.ToneNone, Text = Lang.T("Місця більше нема") });
         }
@@ -164,7 +182,6 @@ namespace HuginWhispers
         {
             if (h == null) return;
             Look l = Make(h, true);
-            h.Know(); // (a rumour read here is marked on your map)
             RavenBook.Board b = new RavenBook.Board { Title = h.Title, Open = tab, Stay = () => h != null };
             b.CountNow = () => Lang.F("{0} із {1} мешканців", NpcHeart.HowMany(h.Id, null), NpcResident.PerBase);
             b.Mood = StateWord(l); b.MoodTone = StateTone(l); b.MoodTip = StateTip(l);
@@ -178,6 +195,13 @@ namespace HuginWhispers
             NpcBase nb = NpcBase.For(h.transform.position);
             b.Edges = () => { RavenBook.HideSheet(); ShowEdges(nb); };
             b.Rename = () => { RavenBook.HideSheet(); h.AskName(); };
+            if (l.Who.Count >= 2) // (a feast for its people: NpcNeighbours — why not now, under the pointer)
+            {
+                int need;
+                string no = NpcNeighbours.FeastWhyNot(h, Player.m_localPlayer, out need);
+                b.FeastTip = Lang.F("Пригости всю оселю: по готовій страві з твоєї торби на кожного ({0}). Усі трохи потеплішають одне до одного, а день буде в доброму настрої. Не частіше ніж раз на три дні.", need) + (no != null ? "\n<color=#8a3416>" + no + "</color>" : "");
+                b.Feast = () => { RavenBook.HideSheet(); NpcNeighbours.Feast(h, Player.m_localPlayer); };
+            }
             bool people = l.Who.Count > 0 || NpcHeart.FarOf(h.Id, l.Who).Count > 0; // (its people's tabs only with people: none known yet — the server's list may still be on its way)
             if (people)
             {
@@ -205,33 +229,43 @@ namespace HuginWhispers
             if (l.Who.Count == 0)
             {
                 note.Title = Lang.T("МЕШКАНЦІ");
+                Calls(l, note); // (a rumour of someone in need: the first heart's first news)
                 RavenBook.BoardGroup none = new RavenBook.BoardGroup { Text = Lang.T("Ще ніхто тут не живе. Найми когось і вибери цю оселю або оселі тут того, хто вже з тобою.") };
-                foreach (Trouble t in l.Troubles) none.Rows.Add(new RavenBook.BoardRow { Text = t.Text, Far = t.Far, Click = t.Go, Arrow = t.Go != null }); // (a rumour of someone in need: the first heart's first news)
+                foreach (Trouble t in l.Troubles) if (t.Call == null) none.Rows.Add(new RavenBook.BoardRow { Text = t.Text, Far = t.Far, Click = t.Go, Arrow = t.Go != null });
                 note.Groups.Add(none);
                 return note;
             }
             if (l.Troubles.Count == 0) { note.Groups.Add(new RavenBook.BoardGroup { Text = Lang.T("Поки тихо: усе гаразд.") }); return note; }
             string[] heads = { Lang.T("згодом"), "", Lang.T("важливо"), Lang.T("горить") };
-            int shown = 0;
+            int calls = Calls(l, note), shown = calls, all = l.Troubles.Count;
             foreach (int level in new[] { RavenBook.ToneBad, RavenBook.ToneWarn, RavenBook.ToneNone })
             {
                 RavenBook.BoardGroup g = new RavenBook.BoardGroup { Head = heads[level], Level = level, Diamond = true };
                 foreach (Trouble t in l.Troubles)
                 {
-                    if (t.Tone != level) continue;
+                    if (t.Tone != level || t.Call != null) continue;
                     if (shown >= TodoMost) continue;
                     g.Rows.Add(new RavenBook.BoardRow { Text = t.Text, Sub = t.Sub, Far = t.Far, Tip = t.Tip, Click = t.Go, Arrow = t.Go != null });
                     shown++;
                 }
                 if (g.Rows.Count > 0) note.Groups.Add(g);
             }
-            if (l.Troubles.Count > shown)
+            if (all > shown)
             {
-                List<string> rest = new List<string>(); int i = 0;
-                foreach (int level in new[] { RavenBook.ToneBad, RavenBook.ToneWarn, RavenBook.ToneNone }) foreach (Trouble t in l.Troubles) if (t.Tone == level) { if (i++ >= shown) rest.Add(t.Text); }
-                note.Groups[note.Groups.Count - 1].Rows.Add(new RavenBook.BoardRow { Text = Lang.F("і ще {0}", l.Troubles.Count - shown), Ink = RavenBook.ToneBad, Tip = string.Join("\n", rest.ToArray()) });
+                List<string> rest = new List<string>(); int i = calls;
+                foreach (int level in new[] { RavenBook.ToneBad, RavenBook.ToneWarn, RavenBook.ToneNone }) foreach (Trouble t in l.Troubles) if (t.Tone == level && t.Call == null) { if (i++ >= shown) rest.Add(t.Text); }
+                note.Groups[note.Groups.Count - 1].Rows.Add(new RavenBook.BoardRow { Text = Lang.F("і ще {0}", all - shown), Ink = RavenBook.ToneBad, Tip = string.Join("\n", rest.ToArray()) });
             }
             return note;
+        }
+
+        // people in need first, in a group of their own (its look: BoardGroup.Call); how many
+        private static int Calls(Look l, RavenBook.BoardNote note)
+        {
+            RavenBook.BoardGroup g = new RavenBook.BoardGroup { Head = Lang.T("поклик"), Call = true };
+            foreach (Trouble t in l.Troubles) if (t.Call != null) g.Rows.Add(new RavenBook.BoardRow { Text = t.Text, Sub = t.Sub, Far = t.Far, Click = t.Go });
+            if (g.Rows.Count > 0) note.Groups.Add(g);
+            return g.Rows.Count;
         }
 
         private static RavenBook.BoardNote Store(Look l, NpcHeart h)
@@ -285,7 +319,7 @@ namespace HuginWhispers
                 });
             }
             foreach (NpcHeart.Folk f in NpcHeart.FarOf(h.Id, who))
-                page.People.Add(new RavenBook.BoardPerson { Name = f.Name, Job = (f.Job.Length > 0 ? Jobs.Word(f.Job) + " · " : "") + Lang.T("далеко"), Far = true, You = "", Tip = Lang.T("Зараз далеко від оселі: як почувається, стане видно, коли повернеться.") });
+                page.People.Add(new RavenBook.BoardPerson { Name = NpcActor.Shown(f.Name), Job = (f.Job.Length > 0 ? Jobs.Word(f.Job) + " · " : "") + Lang.T("далеко"), Far = true, You = "", Tip = Lang.T("Зараз далеко від оселі: як почувається, стане видно, коли повернеться.") });
             RavenBook.BoardGroup work = new RavenBook.BoardGroup { Head = Lang.T("робота") };
             List<string> nobody = new List<string>();
             foreach (string job in new[] { "cook", "guard" }) if (!who.Exists(a => a.Worker != null && a.Worker.JobId == job)) nobody.Add(Jobs.Word(job));
@@ -311,12 +345,16 @@ namespace HuginWhispers
         {
 #if RAVEN_STORY
             Player p = Player.m_localPlayer;
-            StoryQuests.QuestDef q; StoryQuests.StageDef s; Vector3 at;
-            if (p == null || !StoryQuests.Now(p, out q, out s) || !StoryQuests.MarkAt(q, s, out at)) return null;
-            if (Utils.DistanceXZ(at, h.transform.position) > NpcBase.Reach) return null;
-            string goal = StoryQuests.GoalText(s);
-            if (string.IsNullOrEmpty(goal)) return null;
-            return new RavenBook.BoardRow { Text = goal, Arrow = true, Click = ToSpot(at, Lang.T("Сюжет")) };
+            if (p == null) return null;
+            foreach (StoryQuests.Standing a in StoryQuests.NowAll(p)) // (the first quest he stands in whose mark is in this base: a quest beside the chapter's may be the one here)
+            {
+                Vector3 at;
+                if (!StoryQuests.MarkAt(a.Quest, a.Stage, out at) || Utils.DistanceXZ(at, h.transform.position) > NpcBase.Reach) continue;
+                string goal = StoryQuests.GoalText(a.Stage);
+                if (string.IsNullOrEmpty(goal)) continue;
+                return new RavenBook.BoardRow { Text = goal, Arrow = true, Click = ToSpot(at, Lang.T("Сюжет")) };
+            }
+            return null;
 #else
             return null;
 #endif
@@ -348,7 +386,7 @@ namespace HuginWhispers
             }
             foreach (RavenBook.BoardGroup g in new[] { words, asks, small, wishes }) if (g.Rows.Count > 0) page.Groups.Add(g);
             string rumour = h.RumourLine();
-            if (rumour != null && h.Zdo != null && h.Zdo.GetString(NpcRescue.KInfo, "").Length == 0) { RavenBook.BoardGroup g = new RavenBook.BoardGroup { Head = Lang.T("чутки") }; g.Rows.Add(Row("", rumour)); page.Groups.Add(g); } // (when the next one comes; one going on stands in «Треба зробити»)
+            if (rumour != null) { RavenBook.BoardGroup g = new RavenBook.BoardGroup { Head = Lang.T("чутки") }; g.Rows.Add(Row("", rumour)); page.Groups.Add(g); } // (when the next one comes; one going on stands in «Треба зробити», its own group «поклик»)
             if (page.Groups.Count == 0) page.Groups.Add(new RavenBook.BoardGroup { Text = Lang.T("Поки нічого не чекає на тебе.") });
             return page;
         }
@@ -364,7 +402,14 @@ namespace HuginWhispers
             {
                 NpcAttitude.Tie t = ties[i];
                 string pair = Lang.F("{0} і {1}", t.A.Name, t.B.Name);
-                if (t.Foes) foes.Rows.Add(Row("", pair, RavenBook.ToneBad, t.Why));
+                if (t.Foes)
+                {
+                    RavenBook.BoardRow row = Row("", pair, RavenBook.ToneBad, t.Why);
+                    row.TipHead = Lang.T("ЯК ПОМИРИТИ"); // (whom to speak to: the one who holds it — NpcAttitude.Grudge goes by the same)
+                    row.Tip = Lang.F("Образу тримає {0}.\nПоговори з цією людиною: вона сама заговорить про образу — відповідай «Помиріться вже». Бурчуни погоджуються рідше; мириться раз на день, і спершу з тим, на кого ображена найбільше.\nЯкщо не сваритимуться знову, образа згасне й сама, але повільно.", t.Holds.Name);
+                    row.Click = ToPeople(new List<NpcActor> { t.A, t.B }); row.Arrow = true;
+                    foes.Rows.Add(row);
+                }
                 else friends.Rows.Add(Row("", pair, RavenBook.BoardNoDot, t.Close ? Lang.T("близькі") : ""));
             }
             foreach (KeyValuePair<string, long> e in NpcMemory.HomeEvents(who, EventsMost)) events.Rows.Add(Row("", e.Key, RavenBook.BoardNoDot, NpcMemory.Ago(e.Value)));
@@ -381,9 +426,9 @@ namespace HuginWhispers
             NpcBase b = NpcBase.For(h.transform.position);
             if (b != null && b.Ready)
             {
-                List<Component> fires = b.Things(typeof(Fireplace));
+                Component first = FirstFire(b);
                 RavenBook.BoardRow fire = Row(Lang.T("вогнища"), l.Fires == 0 ? Lang.T("нема") : Lang.F("горить {0} із {1}", l.Burning, l.Fires), l.Fires == 0 ? RavenBook.BoardGreyDot : l.Burning == 0 ? RavenBook.ToneBad : l.Burning < l.Fires ? RavenBook.ToneWarn : RavenBook.ToneGood);
-                if (fires != null && fires.Count > 0) { fire.Link = Lang.T("показати"); fire.Click = ToSpot(fires[0].transform.position, Lang.T("Вогнище")); }
+                if (first != null) { fire.Link = Lang.T("показати"); fire.Click = ToSpot(first.transform.position, Lang.T("Вогнище")); }
                 g.Rows.Add(fire);
                 g.Rows.Add(Row(Lang.T("ліжка"), l.Beds == 0 ? Lang.T("нема") : Lang.F("{0}, своє мають {1}", l.Beds, l.HasBed), l.Beds == 0 ? RavenBook.BoardGreyDot : l.HasBed < l.Who.Count ? RavenBook.ToneWarn : RavenBook.ToneGood));
             }

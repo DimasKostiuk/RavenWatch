@@ -11,8 +11,13 @@ namespace HuginWhispers
     //   1 — Hel's fire (2.9): she still holds the Hall, lest the ravens' Watch wake again. A cold, pale sea-green flame
     //       with a deep violet smoke, low and slow, no sparks; it lights but does not warm. It burns on for ever, till:
     //   2 — the Watch's fire (3.0: kindled with the Feather of the Watch, the story's): thick gold, sparks and now and
-    //       then a black feather rising; it warms as any fire. Till the story changes it again.
+    //       then a black feather rising; it warms as any fire. Till the story changes it again. The feather on Hel's fire is no
+    //       free E (chapter 1 gives the feather in play — the rite would be skipped): E with it is the event «hearth_feather <place>»
+    //       of a stage that waits for it (the rite), and the story sets the fire (action «hearth <place> 2»); else it says «not yet».
     // Hel's flame is ours (our smoke puffs, our glow); the Watch's is the game's own fire pit's, with our feathers.
+    // The Watch's fire gives what its place's «hearthgives:» names (the Hall: an ember of it, to light a heart of home — the user 2026-11-15): E, one
+    // at a time — none while one is in the bag; lost, E gives another (Gives); and only while a heart of home somewhere in the world is not lit yet
+    // (the user 2026-11-15): the server's count with its list of hearts says (NpcHeart.Ask: Counted, Dark — named or not) — asked at the E, kept a while for the hover.
     internal sealed class LocHearth : MonoBehaviour, Hoverable, Interactable
     {
         internal const int Cold = 0, Hel = 1, Watch = 2;
@@ -86,12 +91,13 @@ namespace HuginWhispers
             {
                 case Hel:
                     return t + Lang.T("Горить чужим, холодним вогнем. Воно світить, та не гріє.")
-                        + (HasFeather(Player.m_localPlayer) ? "\n[<color=yellow><b>$KEY_Use</b></color>] " + Lang.T("Торкнутися вогню Пером Варти") : "");
-                case Watch: return t + Lang.T("Горить вогнем Варти.");
+                        + (!HasFeather(Player.m_localPlayer) ? "" : FeatherAwaited(Player.m_localPlayer) ? "\n[<color=yellow><b>$KEY_Use</b></color>] " + Lang.T("Торкнутися вогню Пером Варти") : "\n<color=#a0a0a0>" + Lang.T("Перо мовчить. Ще не час.") + "</color>");
+                case Watch: return t + Lang.T("Горить вогнем Варти.") + GiveHover(Player.m_localPlayer);
             }
             Player p = Player.m_localPlayer;
             bool wood = p != null && p.GetInventory().CountItems(WoodItem) > 0;
             if (!Opened) return t + Lang.T("Холодне. Попіл ще пам'ятає вогонь.") + "\n<color=#a0a0a0>" + Lang.T(Shut) + "</color>";
+            if (Waits(p)) return t + Lang.T("Холодне. Попіл ще пам'ятає вогонь.") + "\n<color=#a0a0a0>" + Lang.T(WaitWords) + "</color>";
             return t + Lang.T("Холодне. Попіл ще пам'ятає вогонь.") + "\n"
                 + (wood ? "[<color=yellow><b>$KEY_Use</b></color>] " + Lang.T("Розпалити (дрова)") : "<color=#a0a0a0>" + Lang.T("Щоб розпалити, потрібні дрова.") + "</color>");
         }
@@ -100,10 +106,17 @@ namespace HuginWhispers
         {
             Player p = user as Player;
             if (hold || p == null || Place == null) return false;
-            // Hel's fire touched with the Feather of the Watch: the Watch's own (the feather stays with its bearer)
-            if (Level == Hel && HasFeather(p)) { SetLevel(Watch); return true; }
+            // Hel's fire touched with the Feather of the Watch: the stage that waits for it goes on (the rite) — the story lights the Watch's own
+            if (Level == Hel && HasFeather(p))
+            {
+                if (!FeatherAwaited(p)) { p.Message(MessageHud.MessageType.Center, Lang.T("Перо мовчить. Ще не час.")); return false; }
+                StoryBus.Raise("hearth_feather", Place.Id, 0, transform.position);
+                return true;
+            }
+            if (Level == Watch && Gives.Length > 0) { GiveIfDark(p); return true; }
             if (Level != Cold) return false;
             if (!Opened) { p.Message(MessageHud.MessageType.Center, Lang.T(Shut)); return false; }
+            if (Waits(p)) { p.Message(MessageHud.MessageType.Center, Lang.T(WaitWords)); return false; }
             if (p.GetInventory().CountItems(WoodItem) <= 0) { p.Message(MessageHud.MessageType.Center, Lang.T("Щоб розпалити, потрібні дрова.")); return false; }
             p.GetInventory().RemoveItem(WoodItem, 1);
             SetLevel(Hel);
@@ -116,8 +129,77 @@ namespace HuginWhispers
         // 2026-11-01) — in through a hole, the cold hearth still waits for her. A place with no great door: always open
         private string Shut { get { Loc l = Place; return l != null ? l.HearthShut : ""; } } // (the place's own words: «hearthshut:»)
         private bool Opened { get { Loc l = Place; return l == null || l.Gate.Length == 0 || LocState.GateOpenOf(l); } }
+        // not lit yet while the place's own conditions hold for the one who tries («hearthwait: <conditions> :: <words>»): the story has not come to it —
+        // the Hall's hearth waits till Heid has said her word of it and the stage asks for the fire (the user 2026-11-12: lit at once on coming in, her
+        // lines were skipped). Asked as he looks at it and as he presses: the conditions are read once (StoryCond.Holds), a wrong line never holds
+        private bool Waits(Player p) { Loc l = Place; return p != null && l != null && l.HearthWait.Length > 0 && StoryCond.Holds(p, l.HearthWait, e => l.Log("hearthwait: " + e)); }
+        private string WaitWords { get { Loc l = Place; return l != null && l.HearthWaitWords.Length > 0 ? l.HearthWaitWords : Lang.K("Попіл холодний. Ще не час."); } }
 
-        // the Feather of the Watch in the bag (the story's: from its prologue; the author — `spawn RavenWatch_item_pero_varty`)
+        // «hearthgivewait:» holds for him: what it gives it does not give yet (the Hall: no ember before Heid's scene)
+        private bool GiveWaits(Player p) { Loc l = Place; return p != null && l != null && l.HearthGiveWait.Length > 0 && StoryCond.Holds(p, l.HearthGiveWait, e => l.Log("hearthgivewait: " + e)); }
+        private string GiveWaitWords { get { Loc l = Place; return l != null && l.HearthGiveWaitWords.Length > 0 ? l.HearthGiveWaitWords : Lang.K("Вогонь горить. Брати з нього ще не час."); } }
+
+        // what the Watch's fire gives here (its place's «hearthgives:»; «» — nothing)
+        private string Gives { get { Loc l = Place; return l != null ? l.HearthGives : ""; } }
+        private string GiveHover(Player p)
+        {
+            string name = Gives.Length > 0 ? ItemName(Gives) : null;
+            if (p == null || name == null) return "";
+            if (p.GetInventory().CountItems(name) > 0) return "\n<color=#a0a0a0>" + Lang.T("Жарина вже в тебе.") + "</color>";
+            if (GiveWaits(p)) return "\n<color=#a0a0a0>" + Lang.T(GiveWaitWords) + "</color>"; // (hearthgivewait: the story is not there yet — no «take» offered)
+            if (Time.time - _darkAt < DarkKeep && _darkWhy != null) return "\n<color=#a0a0a0>" + _darkWhy + "</color>"; // (what the last E heard: no heart waits for one now)
+            return "\n[<color=yellow><b>$KEY_Use</b></color>] " + Lang.T("Взяти Жарину");
+        }
+
+        // an ember only for a heart that waits for one: the server's list (a game sees only the hearts near it); asked at the E — its answer comes a moment later
+        private const float DarkKeep = 30f;
+        private static float _darkAt = -1000f;
+        private static string _darkWhy; // session: why not, as the last E heard (null: one waits)
+        private void GiveIfDark(Player p)
+        {
+            if (p == null) return;
+            string name = ItemName(Gives);
+            if (name != null && p.GetInventory().CountItems(name) > 0) { p.Message(MessageHud.MessageType.Center, Lang.T("Жарина вже в тебе.")); return; } // (one at a time: nothing to ask)
+            if (GiveWaits(p)) { p.Message(MessageHud.MessageType.Center, Lang.T(GiveWaitWords)); return; } // (hearthgivewait: the story is not there yet)
+            NpcHeart.Ask(list =>
+            {
+                if (p == null || this == null) return;
+                _darkAt = Time.time;
+                _darkWhy = NpcHeart.Dark != 0 ? null : NpcHeart.Counted == 0 ? Lang.T("Ще нема жодного Серця оселі: Жарина знадобиться, коли збудуєш.") : Lang.T("Усі серця оселі вже горять. Жарина знадобиться для нового."); // (not known — no answer, an older server: it gives; a wrong «no» would hold the story)
+                if (_darkWhy != null) { p.Message(MessageHud.MessageType.Center, _darkWhy); return; }
+                Give(p);
+            });
+        }
+        private bool Give(Player p)
+        {
+            string name = ItemName(Gives);
+            GameObject g = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Gives) : null;
+            if (name == null || g == null) { if (Place != null) Place.Log("hearthgives: no item «" + Gives + "»"); return false; }
+            if (p.GetInventory().CountItems(name) > 0) { p.Message(MessageHud.MessageType.Center, Lang.T("Жарина вже в тебе.")); return false; } // (one at a time)
+            if (!p.GetInventory().AddItem(g, 1)) { p.Message(MessageHud.MessageType.Center, Lang.T("У торбі нема місця.")); return false; }
+            p.Message(MessageHud.MessageType.Center, Lang.T("Ти береш Жарину з вогню Варти."));
+            return true;
+        }
+
+        // an item's name in the bag, by its prefab (null: no such item)
+        private static readonly System.Collections.Generic.Dictionary<string, string> _names = new System.Collections.Generic.Dictionary<string, string>();
+        internal static string ItemName(string prefab)
+        {
+            string n;
+            if (string.IsNullOrEmpty(prefab)) return null;
+            if (_names.TryGetValue(prefab, out n)) return n;
+            GameObject g = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(prefab) : null;
+            ItemDrop d = g != null ? g.GetComponent<ItemDrop>() : null;
+            if (d == null) return null; // (not cached: ObjectDB may not have it yet)
+            n = d.m_itemData.m_shared.m_name;
+            _names[prefab] = n;
+            return n;
+        }
+
+        // a stage of yours waits for the feather on this fire now (and would pass: StoryQuests.Awaits)
+        private bool FeatherAwaited(Player p) { return p != null && Place != null && StoryQuests.Awaits(p, "hearth_feather", Place.Id); }
+
+        // the Feather of the Watch in the bag (the story's: chapter 1, Eirik's raven gives it — eirik_hearth; the author — `spawn RavenWatch_item_pero_varty`)
         private const string FeatherPrefab = "RavenWatch_item_pero_varty";
         private static string _featherName;
         private static bool HasFeather(Player p)
@@ -257,7 +339,7 @@ namespace HuginWhispers
                 Vector3 at = _fire.transform.position;
                 RavenFx.Play("sfx_FireAddFuel", at, Quaternion.identity);
                 RavenFx.Play("sfx_frozenking_charge_whoosh", at, Quaternion.identity);
-                RavenSkills.GiftSay(true, "hearth_hel", Lang.T("Не наш це вогонь… Холодний, як її руки."));
+                RavenSkills.GiftSay(true, "hearth_hel", Lang.T("Не наш це вогонь… Холодний, як її руки.")); // (Munin's word: said only by one who has Munin — GiftSay; the scene after it has each raven's own)
             }
             else
             {

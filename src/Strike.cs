@@ -95,18 +95,20 @@ namespace HuginWhispers
             Put(item, XpKey, FlightsFor(level).ToString());
         }
 
+        // The bosses fallen with this raven on the shoulder: in the line's own order, with no gap. Every boss is a must (the user 2026-11-11):
+        // one beaten out of turn does not count and is not kept (Credit) — it has to fall again once those before it have. One kept so by a
+        // version before that (it waited there for the gap to close) is not read either, and goes at the next boss written
         internal static List<string> BossesSeen(ItemDrop.ItemData item)
         {
             List<string> list = new List<string>();
             string raw = Get(item, BossKey);
             if (string.IsNullOrEmpty(raw)) return list;
-            foreach (string s in raw.Split(',')) if (s.Length > 0 && !list.Contains(s)) list.Add(s);
+            string[] had = raw.Split(',');
+            for (int i = 0; i < Bosses.Length && Array.IndexOf(had, Bosses[i]) >= 0; i++) list.Add(Bosses[i]);
             return list;
         }
 
-        // the base step: the bosses in the line fallen with this raven on the shoulder, one after another from the first
-        // (steps: a later boss counts only once all before it are seen — Fader alone does not lift the strike to the top;
-        // it is kept and counts when the gap is closed)
+        // the base step: how many bosses of the line have fallen with it, one after another from the first
         internal static int Tier(ItemDrop.ItemData item)
         {
             List<string> seen = BossesSeen(item);
@@ -997,12 +999,12 @@ namespace HuginWhispers
             if (now == null) return;
             List<string> seen = BossesSeen(now);
             if (seen.Contains(prefab)) { Log("Boss " + prefab + ": " + Plugin.RavenName(munin) + " has it counted already"); return; }
-            int tierBefore = Tier(now);
-            seen.Add(prefab);
-            Put(now, BossKey, string.Join(",", seen.ToArray()));
+            int tierBefore = Tier(now), i = Array.IndexOf(Bosses, prefab);
+            if (i < 0) return;
+            bool stronger = i == tierBefore; // (the next in its line: it counts. Any other is out of turn — seen, said, not kept)
+            if (stronger) { seen.Add(prefab); Put(now, BossKey, string.Join(",", seen.ToArray())); }
+            else Log("Boss " + prefab + ": out of turn for " + Plugin.RavenName(munin) + " (next in its line: " + Bosses[tierBefore] + ") — not counted");
             int tierAfter = Tier(now);
-            int i = Array.IndexOf(Bosses, prefab);
-            bool stronger = tierAfter > tierBefore;
             float was = BlowWithTier(munin, now, tierBefore), becomes = BlowWithTier(munin, now, tierAfter);
             // not over the game's own banner of the boss's fall: a few seconds later, from the shoulder, and a line
             // in the corner that stays readable (Munin a moment after Hugin, so the two do not talk over each other)
@@ -1012,8 +1014,7 @@ namespace HuginWhispers
                 Munin = munin,
                 Tag = stronger ? "strike_stronger" : "strike_boss",
                 Corner = Plugin.RavenName(munin) + (stronger ? Lang.F(": удар сильнішає — {0} → {1}", R(was), R(becomes))
-                    : i > tierAfter && tierAfter < BossNames.Length ? Lang.F(" бачив, як упав {0}. Зарахується, коли переможете {1}", BossNames[i], BossNames[tierAfter]) // (out of turn: kept for later)
-                    : Lang.F(" бачив, як упав {0}", BossNames[i])),
+                    : Lang.F(" бачив, як упав {0}. Не зараховано: спершу переможіть {1}", BossNames[i], BossNames[tierBefore])), // (out of turn)
             });
         }
 

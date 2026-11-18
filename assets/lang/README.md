@@ -29,6 +29,9 @@ One text per line: `Ukrainian source<TAB>translation`. Leave the right side empt
 - Names in «guillemets» that point at the mod's own things (gifts, tabs) should match their own translations.
 - A raven's little words (its habits «Хм.», «Курва.», how it calls you, a few spare lines) may have no match in
   your language: write `-` as the translation and that word is simply not there (no Ukrainian word slips in).
+- The people's spoken lines that are written, not put together, are rows here too: your answers in a talk (each
+  `a || b` its own row), a person in trouble's words, and the residents' small talk — a two-person chat is one row a
+  line, in the order they say them, so translate the rows that stand together as one dialogue.
 
 Tools (in the mod's sources): `node tools/l10n.js sync <Language>` adds every text the code asks for (empty right
 side), `node tools/l10n.js check <Language>` lists what is missing or broken (blanks, tags, formats).
@@ -85,6 +88,9 @@ ones (or Ukrainian, while English has none).
 - Назви в «лапках», що вказують на речі мода (дари, вкладки), мають збігатися з їхнім власним перекладом.
 - Дрібні слова ворона (примовки «Хм.», «Курва.», як він тебе кличе, кілька запасних реплік) можуть не мати пари у твоїй
   мові: переклад `-` означає, що такого слова просто нема (українське не вскочить).
+- Написані (не складені) слова людей теж рядки тут: твої відповіді в розмові (кожне `a || b` окремим рядком), слова
+  людини в халепі й балачки мешканців — балачка двох іде рядок на репліку в тому порядку, як її кажуть, тож рядки, що
+  стоять разом, перекладай як одну розмову.
 
 Інструменти (у вихідних кодах): `node tools/l10n.js sync <Мова>` додає всі тексти, яких просить код (з порожньою
 правою частиною), `node tools/l10n.js check <Мова>` показує, чого бракує чи що зламано (підстановки, теги, формати).

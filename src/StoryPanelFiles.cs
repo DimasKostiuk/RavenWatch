@@ -28,7 +28,7 @@ namespace HuginWhispers
             bool quest = _editKind == EditQuest;
             string target = StoryFiles.Target(quest ? StoryFiles.Quests : StoryFiles.Scenes, quest ? StoryQuests.Folder : StoryScenes.Folder);
             GUILayout.Label("Файл «" + _editFile + "» → " + (StoryFiles.IsSource ? "у сам мод (одне джерело): " : "твоя копія (перекриває вбудований; немає source.txt): ") + target, StoryFiles.IsSource ? _hint : _warn);
-            _editScroll = GUILayout.BeginScrollView(_editScroll, GUILayout.Height(380f));
+            _editScroll = GUILayout.BeginScrollView(_editScroll, GUILayout.Height(Fill(110f)));
             _editText = GUILayout.TextArea(_editText, GUILayout.ExpandHeight(true));
             GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();

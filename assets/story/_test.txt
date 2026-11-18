@@ -8,3 +8,49 @@
 Перемикачі сюжету | Гейд: не зустріли | story do unworld heid_met
 Перемикачі сюжету | Перше серце: є | story do world heart_first
 Перемикачі сюжету | Перше серце: ще нема | story do unworld heart_first
+# Глава 1: квест (quests/ch1.txt, 2026-11-14). Пропустити дні гри, яких квест чекає (мітка «на день 0»: умова days уже справджується).
+Глава 1 (квест) | Кетіль: прийти одразу | story do wvar t_ch1_heart 1
+Глава 1 (квест) | Ліжко: день минув | story do wvar t_ch1_bed 1
+Глава 1 (квест) | Кетіль: повернути у світ (після засідки) | story do unworld ketil_gone
+Глава 1 (квест) | Хату вибрати наново | story do wforget ch1_ && story jump ch1 ask
+Глава 1 (квест) | Поляна: вибрати наново | story do wforget ch1_glade && story do pickglade ch1_glade 45 near heart.first ring 200 350 south
+Глава 1 (квест) | Ліжко: Кетіль пішов, роздивитись | story jump ch1 gone
+Глава 1 (квест) | Засідка: Кетіль іде на поляну | story jump ch1 trail
+Глава 1 (квест) | Кетіль на камені: одразу | story do wvar t_ketil_died 1
+Глава 1 (квест) | Гейд і Торвальд: етап (Торвальд у таборі) | story jump ch1 tell
+Глава 1 (квест) | Будяк: етап «Хтось дивиться» (будяк у торбі, Чорний ліс) | story jump ch1 thistle
+Глава 1 (квест) | Торвальда нема: етап (будяк — Гейд) | story jump ch1 thistle_back
+Глава 1 (квест) | Схованка: етап пошуку (ворон шукає) | story jump ch1 search
+Глава 1 (квест) | Відвар: етап (будяк — Гейд у розмові) | story jump ch1 brew
+Глава 1 (квест) | Сувій: етап біля серця (сувій — у торбу) | story jump ch1 scroll_heart && story do give RavenWatch_item_suvii_varty_1
+Глава 1 (квест) | Склеп: етап пошуку (ворон шукає) | story jump ch1 crypt
+Глава 1 (квест) | Хата Ейріка: етап (обидві половини — у торбу) | story jump ch1 eirik && story do give RavenWatch_item_suvii_varty_1 && story do give RavenWatch_item_suvii_varty_2
+Глава 1 (квест) | Ворон Ейріка: знову двоколірний | story do unworld eirik_feather
+Глава 1 (квест) | Курган: до входу | story tp kurhan
+Глава 1 (квест) | Курган: печать зняти | story do world crypt_open
+Глава 1 (квест) | Курган: печать поставити | story do unworld crypt_open
+Глава 1 (квест) | Засідка: Кетіль одразу на поляні, я поруч | story jump ch1 trail && story put ketil found.ch1_glade && story tp found.ch1_glade
+# Глава 1: скелет сцен (assets/story/scenes/ch1.txt, 2026-11-13). Сцени без свого місця грають біля точки me.a1: спершу «точка», тоді сцена.
+# Біля серця оселі: 1, 2, 15 (до 40 м), 10 (до 8 м, сувій у торбі). Засідка, схованка, склеп — біля місць, що вибрав світ (кнопки квесту вище).
+# У таборі Гейд: 5, 6, 9. У Залі: 13, 14, 16. Біля хати Ейріка: 12.
+Глава 1 (скелет) | Точка сцени: близько | story do spot a1 10 16
+Глава 1 (скелет) | Точка сцени: далеко | story do spot a1 25 35
+Глава 1 (скелет) | 1 Гість на світло | story scene ketil_comes
+Глава 1 (скелет) | 4 Засідка | story scene ambush
+Глава 1 (скелет) | 10 Перша половина | story scene scroll_first
+Глава 1 (скелет) | 11 Друга половина | story scene crypt_scroll
+Глава 1 (скелет) | 12 Хата Ейріка | story scene eirik_hearth
+Глава 1 (скелет) | 13 Обряд у Залі | story scene hall_rite
+Глава 1 (скелет) | 13б Вогонь золотий | story scene hall_rite_end
+Глава 1 (скелет) | 13в Гейд на світло | story scene heid_light
+Глава 1 (скелет) | 16 Двергр на узліссі | story scene lit_fight
+Глава 1 (скелет) | 17 Двергр: «міг і сам» | story scene lit_thanks
+Глава 1 (скелет) | 18 Двергр у Залі | story scene lit_hall
+Глава 1 (скелет) | 15 Жарина | story scene ember_home
+# Глава 2 (квест, quests/ch2.txt): пропустити дні, яких чекає відбудова
+Глава 2 (квест) | Літ: «завтра» настало | story do wvar t_ch2_start 1
+Глава 2 (квест) | Літ кличе: сцена з чужинцем (E на Літові) | story jump ch2 lit_plan
+Глава 2 (квест) | Ейвінд: знову «Чужинець» (і ворони скажуть ще раз) | story do unworld eyvind_met && story unflag stranger_eyvind
+Глава 2 (квест) | Коло 1: день «не заважай» минув | story do wvar t_ch2_work1 1
+Глава 2 (квест) | Коло 2: два дні минули | story do wvar t_ch2_work2 1
+Глава 2 (квест) | Коло 3: два дні минули | story do wvar t_ch2_work3 1

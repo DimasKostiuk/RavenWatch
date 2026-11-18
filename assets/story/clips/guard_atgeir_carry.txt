@@ -1,5 +1,6 @@
 clip guard_atgeir_carry
 length 4
+tone plain
 loop 1
 pivot 1.1
 curve ease

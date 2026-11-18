@@ -68,7 +68,7 @@ namespace HuginWhispers
                 WearNTear w = on ? pc.GetComponent<WearNTear>() : null;
                 if (w == null) continue;
                 _drawn.Add(w);
-                LocState.Draw(w, ruined ? LocState.Ruin : 1f);
+                LocState.Draw(w, LocState.Broken(Of, nv, State, Sub) ? LocState.Ruin : 1f); // (a «worn:» step's patches too: LocState.Broken)
             }
         }
 

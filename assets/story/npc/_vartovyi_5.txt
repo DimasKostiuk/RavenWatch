@@ -1,0 +1,13 @@
+# Пробна постать для знімків спогаду (хата Ейріка, eirik_hearth: «Бачу вогонь. Людей довкола купа, і ти серед них»; Зала в стані 3, «обжита»;
+# користувач 2026-11-15: «декілька нпс на фоні у броні різній, металевій та із бронзи»). Лише для автора: файл з «_» у мод не йде.
+[npc _vartovyi_5]
+name: Вартова
+body: human
+model: 1
+skin: 0.92 0.8 0.7
+haircolor: 0.2 0.15 0.1
+hair: Hair15
+beard: none
+gear: ArmorIronChest ArmorIronLegs HelmetIron CapeLinen
+fight: off
+menu: no

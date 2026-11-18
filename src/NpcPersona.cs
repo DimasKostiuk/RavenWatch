@@ -19,6 +19,11 @@ namespace HuginWhispers
     //   chrono    its day shifted (hours: − an early bird, + a night owl)    −1.5…+1.5
     //   chatty    how readily it greets and talks unasked                     0.2–0.9
     //   bravery   how late it runs from a foe / how near it lets one come     0.2–0.9
+    //   lively    how much its body does of itself, one number for all of it     0.7–1.3
+    //             (the user 2026-11-17, of Heid: «чому так часто використовує різні анімації… це треба виправити у ядрі»): every gap between the
+    //             moves of its own life is divided by it — a place's short moves (NpcPlaces), a pose of its ease (NpcStance), its raven stroked
+    //             (NpcRaven) — and its hands as it speaks and listens come that much more often (NpcSpeech). Gap is the one way to ask; a
+    //             quiet person is «persona: lively=0.5», nothing else to tune for it. Not rolled in the row (the traits and bodies keep their numbers)
     // Over these a settler's nature (NpcNature: from its seed, its ranges over the rolled ones; «persona: nature=<id>» says which): written traits still win.
     // A settler's body (Kind): heavy one in ten (build 0.5–0.9; the young half as often), tall and lean one in ten
     // (height 1.1–1.18, build −0.65…−0.35), short and stocky one in twenty (height 0.88–0.94, build 0.3–0.55), the rest
@@ -27,7 +32,9 @@ namespace HuginWhispers
     // In a template: «persona: stoop=0.8 chatty=0.9» (any of them; the rest from its id).
     internal sealed class NpcPersona
     {
-        public float Walk, Stoop, Height, Build, Diligence, Laziness, Curiosity, Chrono, Chatty, Bravery;
+        public float Walk, Stoop, Height, Build, Diligence, Laziness, Curiosity, Chrono, Chatty, Bravery, Lively = 1f;
+        // a gap of its own life's moves, by how lively it is: the one way every such gap is reckoned
+        internal static float Gap(NpcActor a, float seconds) { NpcPersona p = a != null && a.Def != null && a.Zdo != null ? Of(a) : null; return p != null ? seconds / p.Lively : seconds; }
         public NpcNature Nature; // (a settler's kind of person: NpcNature; one written by hand: none, unless written)
         internal Dictionary<string, string> Refusals; internal int RefusalsAt; // (NpcNature.WontTake: worked out once for these ways and this language)
 
@@ -55,6 +62,15 @@ namespace HuginWhispers
             return Make(seed != 0u ? seed : 1u, d.Persona, d.Generated, -1);
         }
 
+        // one written by hand with no body loaded (the server looks at a story person's day: StoryLife.Far): the same ways Of gives its body —
+        // its lasting number, its template's line and the story's changes (a settler's age needs its body: Average here). Made anew each call: the caller keeps it
+        internal static NpcPersona OfZdo(ZDO z, NpcDef d)
+        {
+            if (z == null || d == null || d.Generated) return Average;
+            string traits = NpcLocker.Text(z, NpcLevers.KTraits);
+            return Make(NpcKit.Seed(z), traits.Length > 0 ? d.Persona + " " + traits : d.Persona, false, -1);
+        }
+
         internal static readonly NpcPersona Average = new NpcPersona { Walk = 1f, Stoop = 0f, Height = 1f, Build = 0f, Diligence = 0.55f, Laziness = 0.4f, Curiosity = 0.5f, Chrono = 0f, Chatty = 0.5f, Bravery = 0.5f };
 
         private static NpcPersona Make(uint own, string written, bool kinds, int age)
@@ -67,6 +83,8 @@ namespace HuginWhispers
                 Chrono = Roll(ref seed, -1.5f, 1.5f), Chatty = Roll(ref seed, 0.2f, 0.9f), Bravery = Roll(ref seed, 0.2f, 0.9f),
                 Build = Roll(ref seed, -0.25f, 0.25f) // (the last of the row: the traits before it keep their numbers)
             };
+            uint lv = own * 0x85ebca6bu ^ 0xc2b2ae35u; if (lv == 0u) lv = 1u; // (its own draw, apart from the row: nothing before it moves)
+            p.Lively = Roll(ref lv, 0.7f, 1.3f);
             if (kinds) Kind(ref seed, p, age);
             p.Nature = kinds ? NpcNature.Born(own) : null; // (apart from the row above: its body stays what it rolled)
             if (!string.IsNullOrEmpty(written)) foreach (string pair in written.Split(new[] { ' ', ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries)) if (pair.StartsWith("nature=", System.StringComparison.Ordinal)) { NpcNature n = NpcNature.Find(pair.Substring(7)); if (n != null) p.Nature = n; }
@@ -97,6 +115,7 @@ namespace HuginWhispers
                 case "chrono": Chrono = Mathf.Clamp(v, -4f, 4f); break;
                 case "chatty": Chatty = Mathf.Clamp01(v); break;
                 case "bravery": Bravery = Mathf.Clamp01(v); break;
+                case "lively": Lively = Mathf.Clamp(v, 0.25f, 2f); break;
             }
         }
 
@@ -139,7 +158,7 @@ namespace HuginWhispers
             {
                 case "walk": return Walk; case "stoop": return Stoop; case "height": return Height; case "build": return Build;
                 case "diligence": return Diligence; case "laziness": return Laziness; case "curiosity": return Curiosity;
-                case "chrono": return Chrono; case "chatty": return Chatty; case "bravery": return Bravery;
+                case "chrono": return Chrono; case "chatty": return Chatty; case "bravery": return Bravery; case "lively": return Lively;
             }
             return 0f;
         }

@@ -41,7 +41,7 @@ namespace HuginWhispers
         internal static float AttackGap = 8f;                       // s between two flights of one raven
         internal static float FeederReach = 8f;                     // m from the perch to a feeder it eats from
         internal static float HuntSeconds = 360f, HuntFillMin = 10f, HuntFillMax = 15f; // its own hunt keeps it alive, never fed (no flights)
-        internal static float HungryPace = 0.5f;                    // not fed (41 and up): it gathers at half the pace
+        internal static float HungryPace = 0.5f;                    // asking for food (Satiety.Empty): it gathers at half the pace
         internal static float NeglectLoss = 5f;                     // trust a day once it has gone a whole day without the feeder
         internal static float FavFindChance = 0.75f;                // fed its favourite today: a precious find this often
         internal static float PairHours = 2f; internal static int PairPerDay = 4; // your two at home spar: a training flight each this often, at most so many a game day

@@ -262,9 +262,7 @@ namespace HuginWhispers
         private static void Peace(NpcActor a, NpcActor o, Inst i)
         {
             NpcFeel.Tell(a, NpcFeel.Joy, 240f);
-            if (o == null) return;
-            NpcAttitude.TellPerson(o, a, PeaceBy); NpcAttitude.TellPerson(a, o, PeaceBack);
-            o.Act("forget quarrel_raid");
+            NpcAttitude.MakeUp(o, a, "quarrel_raid", PeaceBy, PeaceBack); // (the fighter lets go of its grudge with this one only)
         }
 
         // it stood at the raid: respected, and it keeps that for good
@@ -274,9 +272,7 @@ namespace HuginWhispers
             _brave.Add(a);
             NpcFeel.Tell(a, NpcFeel.Joy, 420f);
             NpcPhrases.SayOr(a, "arc_hidden_wins", a.Form(Lang.T("Я стояв|стояла! Я не втік|втекла!")));
-            if (o == null) return;
-            NpcAttitude.TellPerson(o, a, WinBy); NpcAttitude.TellPerson(a, o, WinBack);
-            o.Act("forget quarrel_raid");
+            NpcAttitude.MakeUp(o, a, "quarrel_raid", WinBy, WinBack);
         }
 
         // ---------------------------------------------------------------- its words, its talk
@@ -324,10 +320,10 @@ namespace HuginWhispers
             "> Наступного разу бийся або йди звідси. => c_arc_push !arc hidden_push hidden_ashamed !attitude -5 !patience -5\n" +
             "> Я поговорю, щоб не тримали на тебе зла. => c_arc_ask !arc hidden_ask hidden_ashamed !promise arc !patience 3\n" +
             "> Мені зараз не до того. => end !tone cold\n" +
-            "@c_arc_back\n{@arc_hidden_back}\n> Добре. => start\n" +
-            "@c_arc_push\n{@arc_hidden_push}\n> Добре. => start\n" +
-            "@c_arc_ask\n{@arc_hidden_ask}\n> Добре. => start\n" +
-            "@c_arc_reply\n{arc_reply}\n> Добре. => start\n";
+            "@c_arc_back\n{@arc_hidden_back}\n> {@say_ok} => start\n" +
+            "@c_arc_push\n{@arc_hidden_push}\n> {@say_ok} => start\n" +
+            "@c_arc_ask\n{@arc_hidden_ask}\n> {@say_ok} => start\n" +
+            "@c_arc_reply\n{arc_reply}\n> {@say_ok} => start\n";
 
         // ---------------------------------------------------------------- wired once (NpcModules)
         internal static void Wire()
@@ -354,7 +350,7 @@ namespace HuginWhispers
             if (a[3] == "start" && a.Length > 4)
             {
                 NpcActor other = null;
-                foreach (NpcActor o in NpcHeart.Residents(Heart(who))) if (o != who && o.Name == a[4]) other = o;
+                foreach (NpcActor o in NpcHeart.Residents(Heart(who))) if (o != who && (o.Name == a[4] || o.Key == a[4])) other = o;
                 if (other == null) return "Нема такого серед людей цієї оселі: " + a[4];
                 string no = WhyNot(who, "hidden"); // (said, not «begun» when it will not: the user's test 2026-11-05)
                 if (no != null) return "Лінію не почато: " + no + ".";

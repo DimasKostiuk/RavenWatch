@@ -1,5 +1,6 @@
 clip stance_settle
 length 0.15
+tone plain
 loop 0
 pivot 1.1
 curve ease

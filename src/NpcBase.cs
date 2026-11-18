@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // Where a resident lives (npc-plan.md, stage 1): its base, found from the place it was settled at.
+    // Where a resident lives (npc-plan.md, stage 1): its base, round its heart (For: a heart within a few metres of its home — a settler's home is its heart; else that place).
     //   A map of 1 m cells round that place (up to Reach). Walls, palisades, fences, doors and gates the players built are
     //   the edges — standing on the land or on the ground storey's floor (a house on stilts), never a thing to use (a bed, a chest, a
     //   workbench, a fire) nor the heart — and so is the land where nobody walks: a steep bank (a moat's sides, a cliff: more than
@@ -54,6 +54,9 @@ namespace HuginWhispers
         // kept between makings, so an update redoes only its changed box: the cells a wall stands on, the land's banks; the box changed
         // since (cells, inclusive; none: x1 < x0) and the one being made now (Refuse waits on both)
         private bool[] _pieceWall = new bool[0], _bank = new bool[0];
+        private bool[] _floored = new bool[0]; // (land lower than the sea with something flat built over it: kept with the banks, an update rays only its box)
+        private bool Floored(int c) { return c >= 0 && c < _floored.Length && _floored[c]; }
+        private bool[] _near = new bool[0], _village = new bool[0]; // (kept for Explain only: what the last making saw)
         private bool _dirty;
         private int _dx0, _dy0, _dx1 = -1, _dy1 = -1;
         private float _touchedAt = -1000f, _dirtySince;
@@ -61,14 +64,49 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- what stands in it, by kind
         // Made with its map, every making: one look over its pieces for everyone who lives there — NpcWork's fires, smelters, chests…, NpcMeals' tables, NpcChores' wear, NpcWhims' tub —
-        // instead of each of them looking over all of them every few seconds. A thing gone since is a null in a list.
+        // instead of each of them looking over all of them every few seconds. A thing gone since (taken down, its zone let go — you went through a portal and came
+        // back: the map stays, its things were all made anew) is taken out of the lists before anyone reads them (Live), so a list holds only what stands: the heart's
+        // board read a fire that was gone and E on the heart did nothing till the map's next update (the user 2026-11-14). The new ones come with that update.
+        // Wears is left as it is (thousands of pieces: its one reader, NpcChores, skips what is gone).
         internal static readonly System.Type[] Kinds = { typeof(Fireplace), typeof(Smelter), typeof(CookingStation), typeof(Beehive), typeof(Fermenter), typeof(Container), typeof(Bed), typeof(Chair), typeof(CraftingStation), typeof(ItemStand), typeof(Door) };
         // …and these all round it (within Reach, in it or not: a fire in the yard by the heart, a seat on the porch, a door in its wall — a
         // door stands on the edge, never inside): the people's seat, fire and door searches read them instead of going over every piece of
         // the world near (each took 6–7 ms on a big base, 2026-11-05: the load test). A chair: every seat of its piece (a bench has two)
         internal static readonly System.Type[] RoundKinds = { typeof(Fireplace), typeof(Chair), typeof(Door), typeof(Container) }; // (a chest: by the dining table, on its far side of the base's edge too)
         private Dictionary<System.Type, List<Component>> _round;
-        internal List<Component> Round(System.Type t) { List<Component> l; return _round != null && _round.TryGetValue(t, out l) ? l : null; }
+        internal List<Component> Round(System.Type t) { Live(); List<Component> l; return _round != null && _round.TryGetValue(t, out l) ? l : null; }
+
+        // a piece of it went (Went: Piece.OnDestroy) or its lists were just made (a piece may have gone while they were): what is gone leaves them, once, at the
+        // first reading in a later frame (a thing taken down is gone only when its frame ends). A few hundred things looked at, only after something went
+        private bool _gone;
+        private int _goneFrame;
+        private static readonly System.Predicate<Component> IsGone = c => c == null;
+        private static readonly int PerfLive = NpcPerf.Id("base things: gone ones out (зниклі зі списків)");
+        private void Live()
+        {
+            if (!_gone || Time.frameCount <= _goneFrame) return;
+            _gone = false;
+            long perf = NpcPerf.Now();
+            int had = 0, left = 0;
+            if (_things != null) foreach (List<Component> l in _things.Values) { had += l.Count; l.RemoveAll(IsGone); left += l.Count; }
+            if (_round != null) foreach (List<Component> l in _round.Values) { had += l.Count; l.RemoveAll(IsGone); left += l.Count; }
+            if (_tables != null) _tables.RemoveAll(IsGone);
+            if (_tubs != null) _tubs.RemoveAll(IsGone);
+            NpcPerf.Add(PerfLive, perf);
+            if (had > 0 && left == 0 && Ready) LetGo();
+        }
+        private void Went() { _gone = true; _goneFrame = Time.frameCount; }
+        internal float MadeAt { get { return _madeAt; } } // (when its lists were last made: what a reader keeps of them from before that is old — NpcPlaces.Roofed)
+
+        // everything it knew went at once: its zone was let go (you left by a portal and came back before the map was forgotten). What stands there now is not
+        // known — and «not known» is the word every reader has already: a base not made yet (Ready false: «ще рахуються», no «нема що їсти», no «вогнища: нема»,
+        // which an empty list of a ready base said for the seconds till its update — the review 2026-11-14). Made whole again as a base first asked: once its
+        // zone has come in (Fresh: settled, FirstWait at most, counted from now). A making under way is of what is gone: it writes nothing (_gen)
+        private void LetGo()
+        {
+            Ready = false; Making = false; _gen++; _bornAt = Time.time;
+            Npcs.Log("base at " + Mathf.RoundToInt(Centre.x) + "," + Mathf.RoundToInt(Centre.z) + ": all its things went at once (its zone let go) — made whole again when its zone is in");
+        }
 
         // the base whose look round it covers this spot (its round lists hold what is near it), null: none ready here
         internal static NpcBase Covering(Vector3 at)
@@ -107,10 +145,10 @@ namespace HuginWhispers
         private static readonly int DoorBit = 1 << System.Array.IndexOf(Kinds, typeof(Door));
 
         // its things of a kind (one of Kinds), null — not made yet or not a kind kept
-        internal List<Component> Things(System.Type t) { List<Component> l; return _things != null && _things.TryGetValue(t, out l) ? l : null; }
-        internal List<Transform> Tables { get { return _tables; } }   // the tables to eat at (not a workbench, a map table)
-        internal List<WearNTear> Wears { get { return _wears; } }     // every piece that wears (round it, as NpcChores always counted)
-        internal List<Piece> Tubs { get { return _tubs; } }           // pieces with water of their own (a hot tub, a mod's pool)
+        internal List<Component> Things(System.Type t) { Live(); List<Component> l; return _things != null && _things.TryGetValue(t, out l) ? l : null; }
+        internal List<Transform> Tables { get { Live(); return _tables; } }   // the tables to eat at (not a workbench, a map table)
+        internal List<WearNTear> Wears { get { return _wears; } }     // every piece that wears (round it, as NpcChores always counted); what is gone stays in it as a null
+        internal List<Piece> Tubs { get { Live(); return _tubs; } }           // pieces with water of their own (a hot tub, a mod's pool)
         private static object _world;   // the world these maps are of (another world: all forgotten)
         private static float _nextPrune;
 
@@ -120,11 +158,17 @@ namespace HuginWhispers
             _w = Mathf.RoundToInt(Reach * 2f / Cell) + 1;
         }
 
-        // the base round this place (made when first asked; kept fresh while asked)
+        // the base round this place (made when first asked; kept fresh while asked). A place within HeartSnap of a heart is that heart's base, centred on it:
+        // one map for all who live there and the heart's board (2026-11-14: a person put by the heart a metre off — the story's Кетіль — made a map of its own,
+        // the bed checked on one, the edges shown of the other). A settler's home IS its heart (NpcResident.Settle, Rehome); only a few metres, so the home of
+        // a story person farther off (its own place by a player's heart) stays its own place's base. The heart not loaded on this game: the place itself
+        private const float HeartSnap = 3f;
         internal static NpcBase For(Vector3 home)
         {
             if (!ReferenceEquals(_world, ZNet.instance)) { All.Clear(); _world = ZNet.instance; } // (a world left and another loaded)
             if (Time.time >= _nextPrune) Prune();
+            NpcHeart heart = NpcHeart.Near(home, HeartSnap); // (the loaded hearts: a few)
+            if (heart != null) home = heart.transform.position;
             long key = ((long)Mathf.RoundToInt(home.x) << 32) ^ (uint)Mathf.RoundToInt(home.z);
             NpcBase b;
             if (!All.TryGetValue(key, out b)) { b = new NpcBase(home); All[key] = b; }
@@ -133,7 +177,7 @@ namespace HuginWhispers
             return b;
         }
 
-        // the maps nobody asked about for a while go (each is some 90 KB)
+        // the maps nobody asked about for a while go (each some 160 KB: its arrays of 101² cells, counted by their sizes)
         private static void Prune()
         {
             _nextPrune = Time.time + 60f;
@@ -146,6 +190,7 @@ namespace HuginWhispers
         // asked: made the first time, updated when it changed — never by a clock alone. A few comparisons: it is asked often
         private void Fresh()
         {
+            Live(); // (what went is out before Ready is read: a base whose all went says «not made» to whoever asks next, not after its first list is read)
             if (_bornAt < 0f) _bornAt = Time.time;
             if (Plugin.Instance == null) return;
             if (Making)
@@ -181,7 +226,7 @@ namespace HuginWhispers
 
         // a piece came or went, or the land changed, here (every game: Piece.Awake / OnDestroy, Heightmap.Poke): each base it touches is marked
         // changed with that box. Called in bursts (a zone loading in): a look at the few bases there are, nothing else
-        internal static void Touched(Vector3 at, float r)
+        internal static void Touched(Vector3 at, float r, bool went = false)
         {
             if (All.Count == 0 || !ReferenceEquals(_world, ZNet.instance)) return;
             foreach (NpcBase b in All.Values)
@@ -189,6 +234,7 @@ namespace HuginWhispers
                 float dx = at.x - b.Centre.x, dz = at.z - b.Centre.z, far = Reach + r;
                 if (dx * dx + dz * dz > far * far) continue;
                 b.Mark(at, r);
+                if (went) b.Went(); // (its lists may hold it: Live)
             }
         }
 
@@ -215,6 +261,42 @@ namespace HuginWhispers
             if (!_dirty || _dx1 < _dx0) { _dx0 = x0; _dy0 = y0; _dx1 = x1; _dy1 = y1; }
             else { _dx0 = Mathf.Min(_dx0, x0); _dy0 = Mathf.Min(_dy0, y0); _dx1 = Mathf.Max(_dx1, x1); _dy1 = Mathf.Max(_dy1, y1); }
             _dirty = true;
+        }
+
+        // ---------------------------------------------------------------- one spot, in full (the console's «raven npc base <who> at»: why a bed there is in or out)
+        // its cell's every word on the last map, the nearest cell of its own village and how far, and the pieces whose middle stands within Strip + 1 m of it
+        // (a village is joined only through those). Asked by hand: one search round the spot, one pass over the map
+        internal string Explain(Vector3 p)
+        {
+            if (!Ready) return Making ? "база рахується…" : "база ще не порахована";
+            int i = Index(p);
+            float d = Utils.DistanceXZ(p, Centre);
+            if (i < 0) return "поза мапою бази (" + Mathf.RoundToInt(d) + " м від центру, мапа ±" + Mathf.RoundToInt(Reach) + " м)";
+            int home = Index(Centre);
+            System.Text.StringBuilder s = new System.Text.StringBuilder();
+            s.Append("центр ").Append(Mathf.RoundToInt(Centre.x)).Append(',').Append(Mathf.RoundToInt(Centre.z)).Append("; точка ").Append(d.ToString("0.0")).Append(" м від нього");
+            s.Append("; клітинка: ").Append(_in[i] ? "у базі" : "не в базі").Append(", дає річ: ").Append(_holds[i] ? "так" : "ні");
+            s.Append(", біля будівлі (").Append(Mathf.RoundToInt(Strip)).Append(" м): ").Append(_near.Length > i && _near[i] ? "так" : "ні");
+            s.Append(", своє селище: ").Append(_village.Length > i && _village[i] ? "так" : "ні");
+            s.Append(", стіна: ").Append(_pieceWall[i] ? "так" : "ні").Append(", схил чи вода: ").Append(_bank[i] ? "так" : "ні");
+            s.Append(", земля нижче моря: ").Append(_h[i] < WaterLevel - 0.3f ? "так" : "ні").Append(", підлога над нею: ").Append(_floored.Length > i && _floored[i] ? "так" : "ні");
+            s.Append(", чому ні: ").Append(new[] { "—", "стіна", "схил", "вода", "відкрита база", "огорожа", "далеко" }[Mathf.Clamp(_why.Length > i ? _why[i] : 0, 0, 6)]);
+            int vil = 0, best = -1; float bd = float.MaxValue;
+            for (int c = 0; c < _village.Length; c++)
+            {
+                if (!_village[c]) continue;
+                vil++;
+                float e = Utils.DistanceXZ(CellCentre(c), p);
+                if (e < bd) { bd = e; best = c; }
+            }
+            s.Append("\nселище від центру: ").Append(home >= 0 && _near.Length > home && _near[home] ? "почалось" : "НЕ почалось (у центрі нема будівлі ближче " + Mathf.RoundToInt(Strip) + " м)").Append(", ").Append(vil).Append(" м²");
+            if (best >= 0 && !(_village[i])) { Vector3 b = CellCentre(best); s.Append("; найближча його клітинка за ").Append(bd.ToString("0.0")).Append(" м (").Append(Mathf.RoundToInt(b.x)).Append(',').Append(Mathf.RoundToInt(b.z)).Append(')'); }
+            List<Piece> round = new List<Piece>();
+            Piece.GetAllPiecesInRadius(p, Strip + 1f, round); // heavy: by hand, from the console only
+            round.Sort((x, y) => Utils.DistanceXZ(x.transform.position, p).CompareTo(Utils.DistanceXZ(y.transform.position, p)));
+            s.Append("\nбудівлі, чия середина ближче ").Append(Mathf.RoundToInt(Strip + 1f)).Append(" м (3D, як рахує гра): ").Append(round.Count);
+            for (int k = 0; k < round.Count && k < 8; k++) { Transform t = round[k].transform; s.Append(k == 0 ? ": " : ", ").Append(Utils.GetPrefabName(round[k].gameObject)).Append(' ').Append(Utils.DistanceXZ(t.position, p).ToString("0.0")).Append(" м, висота ").Append((t.position.y - Centre.y).ToString("+0.0;-0.0")); }
+            return s.ToString();
         }
 
         // ---------------------------------------------------------------- inside / a spot in it
@@ -278,14 +360,22 @@ namespace HuginWhispers
                 Vector3 p = Ground(Centre + new Vector3(r.x, 0f, r.y));
                 return Wet(p) ? Centre : p;
             }
-            return Ground(CellCentre(_cells[Random.Range(0, _cells.Count)]));
+            return StandOn(_cells);
         }
 
         // a spot on its outer edge, on the land (the guard's round); the centre while it has no map
         internal Vector3 EdgeSpot()
         {
             if (!Ready || _edge.Count == 0) return Spot();
-            return Ground(CellCentre(_edge[Random.Range(0, _edge.Count)]));
+            return StandOn(_edge);
+        }
+
+        // a cell of these to stand on: never one with a floor over the low shore (Ground is the land under it — the sea bed under the floor); none in a few
+        // tries: the centre (its heart, on its own floor)
+        private Vector3 StandOn(List<int> cells)
+        {
+            for (int i = 0; i < 8; i++) { int c = cells[Random.Range(0, cells.Count)]; if (!Floored(c)) return Ground(CellCentre(c)); }
+            return Centre;
         }
 
         // Its OUTER edge: its cells next to what lies outside it, reached from the map's rim through cells not its own. Any cell by a cell not
@@ -323,8 +413,10 @@ namespace HuginWhispers
             Vector3[] dirs = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
             for (int tries = 0; tries < 60; tries++)
             {
-                Vector3 p = CellCentre(_cells[Random.Range(0, _cells.Count)]);
-                foreach (Vector3 d in dirs) { int w = Index(p + d * 2f); if (w >= 0 && _h[w] < WaterLevel - 0.3f) { at = Ground(p); water = p + d * 2f; return true; } } // (its own heights: a base far from any water asked 240 rays a try)
+                int c = _cells[Random.Range(0, _cells.Count)];
+                if (Floored(c)) continue; // (a floor over the low shore: not where one kneels to wash — its ground is the sea bed under it)
+                Vector3 p = CellCentre(c);
+                foreach (Vector3 d in dirs) { int w = Index(p + d * 2f); if (w >= 0 && _h[w] < WaterLevel - 0.3f && !Floored(w)) { at = Ground(p); water = p + d * 2f; return true; } } // (its own heights: a base far from any water asked 240 rays a try; water with a floor over it is no water to wash in)
             }
             return false;
         }
@@ -355,7 +447,7 @@ namespace HuginWhispers
                 h[c] = y;
                 if ((c & 255) == 255 && pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
             }
-            bool again = !full && old.Length == n && _pieceWall.Length == n && _bank.Length == n;
+            bool again = !full && old.Length == n && _pieceWall.Length == n && _bank.Length == n && _floored.Length == n;
             if (!again) full = true;
             int cx0 = full ? 0 : box.xMin, cy0 = full ? 0 : box.yMin, cx1 = full ? _w - 1 : box.xMax - 1, cy1 = full ? _w - 1 : box.yMax - 1;
             // the walls the players built: every piece's strip; the cells walls stand on, made again in the box only
@@ -376,17 +468,20 @@ namespace HuginWhispers
             // the land itself: steep banks and water are edges too, unless something built lies over them (a bridge, a floor). A ray only for a
             // bank in the box, where the land moved, or never looked at; the rest keep what they were
             pace.Phase(2, PerfBanks);
-            bool[] bank = new bool[n];
+            bool[] bank = new bool[n], floored = new bool[n];
             for (int c = 0; c < n; c++)
             {
                 int x = c % _w, y = c / _w;
                 bool wet = h[c] < water - 0.3f;
                 float top = Mathf.Max(h[c], Higher(x + 1, y, h), Higher(x - 1, y, h), Higher(x, y + 1, h), Higher(x, y - 1, h));
                 if (!wet && top - h[c] <= Bank && h[c] - Lower(x, y, h) <= Bank) continue;
-                if (pw[c]) continue; // (a wall stands there: no ray — the cell is an edge either way)
+                if (pw[c] && !wet) continue; // (a wall on a slope: no ray — the cell is an edge either way)
                 bool redo = full || (x >= cx0 && x <= cx1 && y >= cy0 && y <= cy1) || Mathf.Abs(old[c] - h[c]) > 0.05f;
-                if (!redo) { bank[c] = _bank[c]; continue; }
-                bank[c] = !Bridged(c, h[c], Mathf.Max(top, water));
+                if (!redo) { bank[c] = !pw[c] && _bank[c]; floored[c] = wet && _floored[c]; continue; }
+                bool built = Bridged(c, h[c], Mathf.Max(top, water));
+                if (!pw[c]) bank[c] = !built;
+                floored[c] = wet && built; // (land lower than the sea with something flat built over it within a storey: land — a wall's cell too, so a bed against the wall of a house over
+                // the low shore is the base's, 2026-11-14. On a wall's cell the flat thing the ray meets may be the wall's own top: a sea wall of its village holds a thing too — harmless, said so)
                 if (pace.Due) { pace.Yield(); yield return null; pace.Resumed(); }
             }
             // the paint from the rim inwards: what it cannot reach is enclosed
@@ -432,12 +527,13 @@ namespace HuginWhispers
                 if (wall[c]) continue;
                 float d = Utils.DistanceXZ(CellCentre(c), Centre);
                 if (d > Reach) { why[c] = WhyFar; continue; }
-                bool enclosed = !outside[c], wet = h[c] < water - 0.3f;
-                bool own = fenced ? enclosed : (d <= Open || village[c]); // (a room of its own village is in its strips: its floor is a piece)
-                if (own && !enclosed && wet) own = false; // (the sea or a lake by the base: not a place to stroll; a house's floor over it counts as enclosed)
+                bool enclosed = !outside[c];
+                bool own = fenced ? enclosed : (d <= Open || village[c]); // (a room of its own village is in its strips: its floor is a piece. Water nobody built over is
+                // a bank before this — an edge, never here; what is left lower than the sea has a floor over it: land, a street or a house over the low shore — 2026-11-14: it was
+                // left out of an open base by the land's height under it, and a bed in such a house was «out of the base»)
                 inside[c] = own;
                 if (own) cells.Add(c);
-                else why[c] = fenced && !enclosed ? WhyFence : wet ? WhyWater : WhyOpen;
+                else why[c] = fenced && !enclosed ? WhyFence : WhyOpen;
             }
             bool[] holds = new bool[n];
             for (int c = 0; c < n; c++)
@@ -445,12 +541,12 @@ namespace HuginWhispers
                 int x = c % _w, y = c / _w;
                 bool has = inside[c];
                 for (int dy = -1; dy <= 1 && !has; dy++) for (int dx = -1; dx <= 1 && !has; dx++) { int nx = x + dx, ny = y + dy; has = nx >= 0 && ny >= 0 && nx < _w && ny < _w && inside[nx + ny * _w]; }
-                holds[c] = has || (!fenced && village[c] && h[c] >= water - 0.3f && Utils.DistanceXZ(CellCentre(c), Centre) <= Reach);
+                holds[c] = has || (!fenced && village[c] && (h[c] >= water - 0.3f || floored[c]) && Utils.DistanceXZ(CellCentre(c), Centre) <= Reach); // (a wall's cell of its village: not in the sea — on land, or with a floor over it)
             }
-            yield return MakeThings(pieces, holds, pace);
+            yield return MakeThings(pieces, holds, pace, gen);
             pace.Stop();
             if (gen != _gen) yield break; // (a newer making took its place)
-            _in = inside; _holds = holds; _why = why; _cells.Clear(); _cells.AddRange(cells); _h = h; _pieceWall = pw; _bank = bank;
+            _in = inside; _holds = holds; _why = why; _cells.Clear(); _cells.AddRange(cells); _h = h; _pieceWall = pw; _bank = bank; _floored = floored; _near = near; _village = village;
             Fenced = fenced; Pieces = pieces.Count; Blockers = walls; Banks = banks;
             MakeEdge(inside);
             Ready = true; Making = false; _madeAt = Time.time;
@@ -486,7 +582,7 @@ namespace HuginWhispers
         }
 
         private int _lookVersion = -1;
-        private IEnumerator MakeThings(List<Piece> pieces, bool[] inside, Pace pace)
+        private IEnumerator MakeThings(List<Piece> pieces, bool[] inside, Pace pace, int gen)
         {
             pace.Phase(4, PerfThings);
             int lookVersion = LocState.LookVersion;
@@ -506,7 +602,7 @@ namespace HuginWhispers
                 // story person's: a settler's heart may stand just outside its no-build ring, and it is no one's bench, chest or thing to mend). What its
                 // state has not is nobody's. The story's own spots go past this (people: StoryLife)
                 ZNetView pnv = pc.GetComponent<ZNetView>();
-                Loc place = Blueprint.Copy(pnv) ? Locs.Get(pnv.GetZDO().GetString(LocParts.KOf, "")) : null;
+                Loc place = Blueprint.Copy(pnv) ? Locs.Get(pnv.GetZDO().GetString(LocParts.KOf, "")) : null; // blueprint only: the place by its stamp, its state (an inside hangs far over any base)
                 if (place != null && (!place.Holds(Centre) || LocState.Absent(pnv))) continue;
                 PieceKind kind = KindOf(pc);
                 if (kind.Wears && place == null) wears.Add(pc.GetComponent<WearNTear>()); // (mended whole by the story, never by a hammer: LocRepairPatch)
@@ -518,7 +614,7 @@ namespace HuginWhispers
                     Component c = pc.GetComponentInChildren(t);
                     if (c == null) continue;
                     bool rounds = System.Array.IndexOf(RoundKinds, t) >= 0;
-                    if (t == typeof(Chair)) { foreach (Chair ch in pc.GetComponentsInChildren<Chair>()) { if (ch.m_inShip) continue; round[t].Add(ch); if (In(inside, ch.transform.position)) things[t].Add(ch); } continue; } // heavy: once a making, a piece with a seat only
+                    if (t == typeof(Chair)) { foreach (Chair ch in pc.GetComponentsInChildren<Chair>()) { if (!NpcMind.Seatable(ch)) continue; /* (a ship's, or a toppled bench: no seat) */ round[t].Add(ch); if (In(inside, ch.transform.position)) things[t].Add(ch); } continue; } // heavy: once a making, a piece with a seat only
                     if (rounds) round[t].Add(c);
                     if (In(inside, c.transform.position)) things[t].Add(c);
                 }
@@ -529,7 +625,9 @@ namespace HuginWhispers
                 }
             }
             pace.Stop();
+            if (gen != _gen) yield break; // (a newer making took its place, or its zone was let go meanwhile: these lists are of what is gone)
             _things = things; _round = round; _tables = tables; _wears = wears; _tubs = tubs; _lookVersion = lookVersion;
+            Went(); // (made over several frames: a piece gone meanwhile is in the new lists)
         }
 
         // inside by a map being made (the cells), or — none yet — round the centre
@@ -735,7 +833,14 @@ namespace HuginWhispers
     {
         private static void Postfix(Piece __instance)
         {
-            try { if (!ZNetView.m_forceDisableInit) NpcBase.Touched(__instance.transform.position, NpcBase.TouchPad); } // (the hammer's ghost is made so: not a piece)
+            try
+            {
+                if (ZNetView.m_forceDisableInit) return; // (the hammer's ghost is made so: not a piece)
+                NpcBase.Touched(__instance.transform.position, NpcBase.TouchPad); LocParts.PieceChanged(__instance.transform.position);
+#if RAVEN_STORY
+                LocInside.PieceIn(__instance); // (a station of the author's inside a dungeon of ours: dead as it comes in)
+#endif
+            }
             catch (System.Exception e) { PatchGuard.Fail("NpcBasePieceIn", e); }
         }
     }
@@ -746,7 +851,7 @@ namespace HuginWhispers
         private static readonly int Ghost = LayerMask.NameToLayer("ghost");
         private static void Prefix(Piece __instance)
         {
-            try { if (__instance.gameObject.layer != Ghost) NpcBase.Touched(__instance.transform.position, NpcBase.TouchPad); } // (the hammer's ghost, let go)
+            try { if (__instance.gameObject.layer != Ghost) { NpcBase.Touched(__instance.transform.position, NpcBase.TouchPad, true); LocParts.PieceChanged(__instance.transform.position); } } // (the hammer's ghost, let go)
             catch (System.Exception e) { PatchGuard.Fail("NpcBasePieceOut", e); }
         }
     }

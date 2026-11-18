@@ -7,14 +7,17 @@ namespace HuginWhispers
 {
     // The small shared tools of every part of a person (npc-plan.md: one core, parts on it), written once:
     //   Ref / Parse                     a link for now (an order, whom it looks at): "user:id", good till the world is closed
+    //   Alike / Names                   two kept links to one thing, a link to this ZDO — told without finding it (it need not be loaded)
     //   Save / Resolve / GetRef / SetRef a lasting link (kept in saves: its heart, bed, chest, locker) — see «lasting links»
     //   IdOf                            a thing's own link
     //   Nearest<T>                      the nearest built thing of a kind round a spot (the bed / chest / bench you point at)
     //   ByFire / FireSide               a spot two steps from the nearest burning fire it can walk up to, on its floor
     //   Busy                            why an NPC cannot be changed from this game now (another game runs it), or null
+    //   PrefabOf                        a thing's prefab name (what a memory keeps of it: NpcMemory.Thing)
     //   Floor                           the floor under a spot (a building's floor, the ground) — never the roof over it
     //   SameFloor                       the walkable spot nearest a spot on that spot's own floor (where a body may be put)
     //   FloorBy                         the walkable floor by a thing, even one standing higher than the floor (a chest on a dais)
+    //   Days / OnDay                    days at random intervals, the same on every game: what people do is never every day of itself (the user 2026-11-16)
     internal static class NpcKit
     {
         internal static readonly int Built = LayerMask.GetMask("piece", "piece_nonsolid", "Default", "Default_small");
@@ -73,6 +76,37 @@ namespace HuginWhispers
         // by hand (Гейд, Торвальд) is seeded by its template — the same person in every world; a settler by its own number —
         // its own in each. Till its seed reaches this game: its lasting number, else its id of this session (new at every
         // world load: seeded by it, a person was another after each restart)
+        // ---------------------------------------------------------------- days at random intervals
+        // The user 2026-11-16: «не кожен день… всі дії мають мати інтервали рандомні в ядрі і лише якщо цього потребуватиму я тоді зробимо певні дії
+        // кожнодневними». A doing that comes by days (a story person's line of its day: StoryLife; a home's evening circle by the fire, its people:
+        // NpcNeighbours) acts on a day, then the next one From…To days on — from its key (what shares the key shares the days) and the world's day
+        // alone: every game, a reload, the server agree, nothing kept. Walked once from the start, then a step a day it is asked; a day before the
+        // last one it acted on (the author's clock turned back) walks from the start again. Runs: one a key — a few a world
+        internal sealed class DayRun { public uint Seed; public int From, To, Prev = int.MinValue, Next = int.MinValue; }
+        internal const int GapFrom = 1, GapTo = 3; // days from a day a doing acts to its next one, unless its own words say other
+        private static readonly Dictionary<string, DayRun> Runs = new Dictionary<string, DayRun>();
+        internal static DayRun Days(string key, int from = GapFrom, int to = GapTo)
+        {
+            if (from < 1) from = 1;
+            if (to < from) to = from;
+            string k = key + "|" + from + "-" + to;
+            DayRun r;
+            if (!Runs.TryGetValue(k, out r)) Runs[k] = r = new DayRun { Seed = (uint)k.GetStableHashCode(), From = from, To = to };
+            return r;
+        }
+        internal static bool OnDay(DayRun r, int day)
+        {
+            if (r.Next == int.MinValue || day < r.Prev) { r.Prev = int.MinValue; r.Next = (int)(r.Seed % (uint)r.To); }
+            while (r.Next < day)
+            {
+                uint h = r.Seed ^ (uint)r.Next * 2654435761u;
+                h ^= h >> 15; h *= 2246822519u; h ^= h >> 13;
+                r.Prev = r.Next;
+                r.Next += r.From + (int)(h % (uint)(r.To - r.From + 1));
+            }
+            return day == r.Next || day == r.Prev;
+        }
+
         internal static readonly int KSeed = "RavenWatch_npcSeed".GetStableHashCode(); // int, never 0
         internal static uint Seed(ZDO z)
         {
@@ -107,6 +141,27 @@ namespace HuginWhispers
             return sid;
         }
 
+        // a lasting link's words: its kind, where it stood when written, its own number (0: none), its id of that session — false: not a lasting link
+        private static bool Fields(string s, out int prefab, out Vector3 at, out long sid, out string now)
+        {
+            prefab = 0; at = Vector3.zero; sid = 0L; now = "";
+            if (string.IsNullOrEmpty(s) || s[0] != '~') return false;
+            string[] f = s.Substring(1).Split(s.IndexOf('/') > 0 ? '/' : '|'); // (an old link: by «|»)
+            float x, y, z;
+            System.Globalization.CultureInfo ci = System.Globalization.CultureInfo.InvariantCulture;
+            if (f.Length < 6 || !int.TryParse(f[0], out prefab) || !float.TryParse(f[1], System.Globalization.NumberStyles.Float, ci, out x) || !float.TryParse(f[2], System.Globalization.NumberStyles.Float, ci, out y)
+                || !float.TryParse(f[3], System.Globalization.NumberStyles.Float, ci, out z) || !long.TryParse(f[4], out sid)) return false;
+            at = new Vector3(x, y, z); now = f[5];
+            return true;
+        }
+
+        // where a lasting link's thing stood when the link was written (none: a link for now, or none at all)
+        internal static bool PlaceOf(string s, out Vector3 at)
+        {
+            int prefab; long sid; string now;
+            return Fields(s, out prefab, out at, out sid, out now);
+        }
+
         // the thing a link names, as numbered now (none: gone, or not here on this game)
         internal static ZDOID Resolve(string s)
         {
@@ -118,14 +173,10 @@ namespace HuginWhispers
             if (Found.TryGetValue(s, out had) && ZDOMan.instance.GetZDO(had) != null) return had;
             float miss;
             if (NotFound.TryGetValue(s, out miss) && Time.time - miss < 30f) return ZDOID.None; // (looked for a little ago: the search over all of a kind is not cheap)
-            string[] f = s.Substring(1).Split(s.IndexOf('/') > 0 ? '/' : '|'); // (an old link: by «|»)
-            int prefab; float x, y, z; long sid;
-            System.Globalization.CultureInfo ci = System.Globalization.CultureInfo.InvariantCulture;
-            if (f.Length < 6 || !int.TryParse(f[0], out prefab) || !float.TryParse(f[1], System.Globalization.NumberStyles.Float, ci, out x) || !float.TryParse(f[2], System.Globalization.NumberStyles.Float, ci, out y)
-                || !float.TryParse(f[3], System.Globalization.NumberStyles.Float, ci, out z) || !long.TryParse(f[4], out sid)) return ZDOID.None;
-            Vector3 at = new Vector3(x, y, z);
+            int prefab; Vector3 at; long sid; string now;
+            if (!Fields(s, out prefab, out at, out sid, out now)) return ZDOID.None;
             ZDO hit = null;
-            ZDO was = ZDOMan.instance.GetZDO(Parse(f[5])); // (this session's id)
+            ZDO was = ZDOMan.instance.GetZDO(Parse(now)); // (this session's id)
             if (was != null && was.GetPrefab() == prefab && (sid == 0L || was.GetLong(KSid, 0L) == sid)) hit = was; // (numbered this session: the same thing, wherever it went since — ids are never given twice in a session)
             if (hit == null && sid != 0L) hit = BySid(prefab, sid);
             if (hit == null && sid == 0L) hit = ByPlace(prefab, at);
@@ -197,6 +248,27 @@ namespace HuginWhispers
 
         // the same thing named by two links (a link kept and one made now)
         internal static bool Same(string a, string b) { ZDOID x = Resolve(a); return !x.IsNone() && x == Resolve(b); }
+
+        // …told without finding it (it need not be loaded here): its own number when both have one, else the same id of this session. A
+        // lasting link holds where the thing stood when it was made, so two links to one thing that moves differ as strings (NpcRescue's marks)
+        internal static bool Alike(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
+            if (a == b) return true;
+            long sa, sb; string na, nb;
+            Kept(a, out sa, out na); Kept(b, out sb, out nb);
+            return sa != 0L && sb != 0L ? sa == sb : na.Length > 0 && na == nb;
+        }
+
+        // a link that names this very ZDO (no search)
+        internal static bool Names(string s, ZDO z) { return z != null && Alike(s, Save(z, false)); }
+
+        private static void Kept(string s, out long sid, out string now)
+        {
+            int prefab; Vector3 at;
+            if (s[0] != '~') { sid = 0L; now = s; return; }
+            if (!Fields(s, out prefab, out at, out sid, out now)) { sid = 0L; now = ""; }
+        }
 
         internal static ZDOID IdOf(Component c)
         {
@@ -349,8 +421,13 @@ namespace HuginWhispers
         // its stairs were an island its map never joined to the ground — 30 of 40 ways ended short, people pushed at the stair and were put
         // there in the end): the humanoid that does not swim, with WalkerClimb and WalkerRadius. Made once for each way finder (a world
         // loaded: a new one), at the end of its list; the game's own kind if that fails (the log says why). Its map is built only where
-        // people ask (their bases): tiles of its own, beside the game's. Its slope stays the game's (one thing changed at a time).
+        // people ask (their bases): tiles of its own, beside the game's. Its slope: WalkerSlope below.
         internal static float WalkerClimb = 0.55f, WalkerRadius = 0.35f;
+        // Its slope (0 — the game's own, 85°: the map takes a rock face for a way; measured 2026-11-11, walks.txt: every one of the five ways written
+        // with a bit steeper than 55° failed, held on that bit). Another one tried live:
+        // raven npc walk set slope <deg> makes the walker anew with it (Remake), on this game till it is closed (0: the game's)
+        internal static float WalkerSlope = 50f; // (two tests side by side 2026-11-11, 48 and 45 walks at the same base: at 50 no walk fewer got there (34 of 45 against 37 of 48 — the rest left off or one seat no way led to in both), stairs and floor edges climbed as before (19 step-ups against 15), steps round a thing 8 against 17, no puff against 1)
+        internal static void Remake() { _walkerOf = null; } // (its kind made again at the next ask: a new one at the end of the way finder's list, its map built where people ask)
         private static Pathfinding _walkerOf;
         private static Pathfinding.AgentType _walker = Pathfinding.AgentType.HumanoidNoSwim;
         internal static Pathfinding.AgentType Walker { get { Pathfinding pf = Pathfinding.instance; if (pf != null && !ReferenceEquals(pf, _walkerOf)) MakeWalker(pf); return _walker; } }
@@ -370,6 +447,7 @@ namespace HuginWhispers
                 System.Reflection.FieldInfo build = HarmonyLib.AccessTools.Field(t, "m_build");
                 UnityEngine.AI.NavMeshBuildSettings b = (UnityEngine.AI.NavMeshBuildSettings)build.GetValue(s);
                 b.agentClimb = WalkerClimb; b.agentRadius = WalkerRadius;
+                if (WalkerSlope > 0f) b.agentSlope = WalkerSlope;
                 build.SetValue(s, b);
                 HarmonyLib.AccessTools.Field(t, "m_canSwim").SetValue(s, false);
                 HarmonyLib.AccessTools.Field(t, "m_areaMask").SetValue(s, HarmonyLib.AccessTools.Field(t, "m_areaMask").GetValue(copy));
@@ -445,6 +523,9 @@ namespace HuginWhispers
             if (ZoneSystem.instance != null) p.y = ZoneSystem.instance.GetGroundHeight(p);
             return p;
         }
+
+        // a thing's prefab name (what is kept of it: NpcMemory.Thing — said in the reader's words where shown)
+        internal static string PrefabOf(ItemDrop.ItemData it) { return it == null ? "" : it.m_dropPrefab != null ? it.m_dropPrefab.name : it.m_shared.m_name; }
 
         // null when this game may change it now; else what to tell the player
         internal static string Busy(NpcActor a)

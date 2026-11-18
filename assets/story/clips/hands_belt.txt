@@ -1,5 +1,6 @@
 clip hands_belt
 length 6
+tone plain
 loop 0
 pivot 1.1
 curve ease
@@ -12,16 +13,18 @@ part loop 1.2 4.8 loop
 part out 4.8 6 end
 
 say стоїть, обидві руки на поясі з боків, лікті в сторони, впевнено
-want 1.2-4.8 hand right near 0.23 1.12 0.03 0.1
-want 1.2-4.8 hand left near -0.23 1.12 0.03 0.1
+want 1.2-4.8 hand right near 0.21 1.04 -0.03 0.1
+want 1.2-4.8 hand left near -0.21 1.04 -0.03 0.1
+# 2026-11-17 (користувач: Гейд у ній згорблена): ключів голови й грудей не було — нахил стійки гри (тулуб уперед 6–7°, шия 21°) лишався; руки на 1,12 м
+# (вище пояса) піднімали плечі на 9–12°. Тепер груди назад (Spine1 −5, Spine2 −4), голова трохи вгору (@Look), руки на самому поясі (1,04)
 want 1.2-4.8 still 40
 
 0 @RightHand 0.24 0.95 0.06
 0.2 @RightHand 0.24 0.95 0.06
 0.7 @RightHand 0.29 1.05 0.08
-1.2 @RightHand 0.23 1.12 0.03
-3 @RightHand 0.23 1.12 0.03
-4.8 @RightHand 0.23 1.12 0.03
+1.2 @RightHand 0.21 1.04 -0.03
+3 @RightHand 0.21 1.04 -0.03
+4.8 @RightHand 0.21 1.04 -0.03
 5.3 @RightHand 0.29 1.05 0.08
 5.8 @RightHand 0.24 0.95 0.06
 6 @RightHand 0.24 0.95 0.06
@@ -41,9 +44,9 @@ want 1.2-4.8 still 40
 0 @LeftHand -0.24 0.95 0.06
 0.2 @LeftHand -0.24 0.95 0.06
 0.7 @LeftHand -0.29 1.05 0.08
-1.2 @LeftHand -0.23 1.12 0.03
-3 @LeftHand -0.23 1.12 0.03
-4.8 @LeftHand -0.23 1.12 0.03
+1.2 @LeftHand -0.21 1.04 -0.03
+3 @LeftHand -0.21 1.04 -0.03
+4.8 @LeftHand -0.21 1.04 -0.03
 5.3 @LeftHand -0.29 1.05 0.08
 5.8 @LeftHand -0.24 0.95 0.06
 6 @LeftHand -0.24 0.95 0.06
@@ -60,11 +63,27 @@ want 1.2-4.8 still 40
 0 @LeftHand.f 0 -0.5 0.85
 
 0 @LeftHand.n 1 0 0
+0 Spine1 0 0 0
+1.2 Spine1 -5 0 0
+3 Spine1 -5.5 1 0
+4.8 Spine1 -5 0 0
+6 Spine1 0 0 0
+
 0 Spine2 0 0 0
-1.2 Spine2 -1 0 0
-3 Spine2 -1.5 1 0
-4.8 Spine2 -1 0 0
+1.2 Spine2 -4 0 0
+3 Spine2 -4.5 1 0
+4.8 Spine2 -4 0 0
 6 Spine2 0 0 0
+
+0 @Look 0 1.6 2
+1.2 @Look 0 1.72 2
+4.8 @Look 0 1.72 2
+6 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+1.2 @Look.w 1 0 0
+4.8 @Look.w 1 0 0
+6 @Look.w 0 0 0
 0 RightHandIndex1 0 0 0
 1.2 RightHandIndex1 -25 0 0
 4.8 RightHandIndex1 -25 0 0

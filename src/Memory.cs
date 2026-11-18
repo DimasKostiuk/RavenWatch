@@ -723,6 +723,7 @@ namespace HuginWhispers
             if (_storyAt < 0f || Time.time < _storyAt) return;
             if (!Director.May(Director.Voice.Fireside)) { _storyAt = Time.time + UnityEngine.Random.Range(15f, 30f); return; } // the director: a little later
             if (Time.time < _quietUntil) { _storyAt = _quietUntil + UnityEngine.Random.Range(2f, 6f); return; }
+            if (RavenSkills.Silenced()) { _storyAt = Time.time + UnityEngine.Random.Range(8f, 15f); return; } // (a scene plays: the ravens say only its lines — eirik_hearth seats the player with the game's «sit»)
             _storyAt = -1f;
             Tell(p);
         }

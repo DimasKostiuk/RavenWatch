@@ -14,9 +14,20 @@ namespace HuginWhispers
     //   raven_outside: perch 20, circle 50, shoulder 30 … and in the open
     //   raven_pet: 60                                   about every so many s it minds its raven, standing about: strokes it
     //                                                   on its shoulder (the clips pet_l/_r), looks at it on a perch nearby
+    //   raven_talk: dim                                 your two may speak to it (RavenTalk, reason «npcr_<this>»): you came within
+    //                                                   TalkNear m, a roll of TalkChance at most once in TalkEvery min; its scenes
+    //                                                   have the step «N» — this raven, in the words of its own kind's book
+    //   raven_name: Ворон Торвальда                     its name over its line in the talk (through Lang)
+    //   raven_speaks: 0.1                               how often it says a word back (reason «npcr_<talk>_word»); else it keeps silent
+    //   raven_answers: 0.08                             how often your raven asks it something and it answers to the point
+    //                                                   (reason «npcr_<talk>_reply»): rolled first, then raven_speaks, then silence
+    //   raven_hat: 5                                    a hat on its head from the pool (Outfits.HatPool), another one every so
+    //                                                   many days of the world: the same on every game, from the person's seed
+    //                                                   and the world's day — nothing sent (HatOf)
     // The person walking: shoulder or circle (the same weights, no perch); in a fight: circling high over it.
-    // A perch: a free seat of any perch within PerchNear m (the Hall's «Жердина Варти» too) — never one a player's raven
-    // sits on or flies to, nor one another person's raven took; a player's raven coming to it later sends this one off.
+    // A perch: a free seat of any perch within PerchNear m (the Hall's «Жердина Варти» too) it can fly to from over its person (StoryBird.Open:
+    // none behind a wall — 2026-11-17 Torvald's raven never got to one and went in a puff) — never one a player's raven
+    // sits on or flies to, nor one another person's raven or a place's raven (LocRaven) took; a player's raven coming to it later sends this one off.
     // The person's owner decides and writes it into the person (KState «mode|a|b|c|d», KSeq); every game flies its own
     // picture from that, only within DrawFar m. Story (quests, scenes' «do»): npcraven <who> shoulder|circle|perch <place>|
     // leave|free|dim <0..1> — what the story says holds HoldSeconds (or till «free»).
@@ -26,6 +37,7 @@ namespace HuginWhispers
         internal static bool Trace;                       // (the author: its flights in the log — raven npc raventrace)
         internal static float DrawFar = 45f, PerchNear = 15f, PerchLeave = 25f, HoldSeconds = 180f;
         internal static float ComeFrom = 35f;             // m: back from the sky after the story sent it off
+        internal static float OpenFrom = 1.4f;            // m over its person's feet a perch must be open to (StoryBird.Open)
         internal static float StayMin = 12f, StayMax = 35f, CircleR = 4.5f, CircleUp = 3.5f, FightR = 7f, FightUp = 6f;
         internal static int Level = 4;                    // its size: as a raven of this trust level on a shoulder
         internal static Vector3 ShoulderOff = new Vector3(0.14f, 0.12f, 0f); // m from the shoulder bone (x mirrored for Munin)
@@ -41,14 +53,16 @@ namespace HuginWhispers
         {
             public bool Munin;
             public string Look = "game";
-            public float Dim, PetEvery;
+            public string Talk, Name;   // (raven_talk, raven_name: null — your two never speak to it)
+            public float Dim, PetEvery, Speaks, Answers;
+            public int HatDays;         // (raven_hat: 0 — no hat)
             public float[] Inside = { 70f, 10f, 20f }, Outside = { 20f, 50f, 30f }; // perch, circle, shoulder
         }
 
         private static readonly Dictionary<NpcDef, Spec> _specs = new Dictionary<NpcDef, Spec>();
         private static readonly Spec NoRaven = new Spec();
 
-        internal static readonly string[] Words = { "raven", "raven_look", "raven_dim", "raven_pet", "raven_inside", "raven_outside" }; // (its template lines: the switch below)
+        internal static readonly string[] Words = { "raven", "raven_look", "raven_dim", "raven_pet", "raven_inside", "raven_outside", "raven_talk", "raven_name", "raven_speaks", "raven_answers", "raven_hat" }; // (its template lines: the switch below)
 
         internal static Spec Of(NpcDef d)
         {
@@ -72,6 +86,11 @@ namespace HuginWhispers
                     case "raven_pet": s.PetEvery = Mathf.Max(0f, Errands.F(v, 0f)); break;
                     case "raven_inside": Weights(v, s.Inside); break;
                     case "raven_outside": Weights(v, s.Outside); break;
+                    case "raven_talk": s.Talk = v.Length > 0 ? v : null; break;
+                    case "raven_name": s.Name = line.Substring(c + 1).Trim(); break; // (its own case: shown)
+                    case "raven_speaks": s.Speaks = Mathf.Clamp01(Errands.F(v, 0f)); break;
+                    case "raven_answers": s.Answers = Mathf.Clamp01(Errands.F(v, 0f)); break;
+                    case "raven_hat": s.HatDays = Mathf.Max(0, Mathf.RoundToInt(Errands.F(v, 0f))); break;
                 }
             }
             if (s != null && !HasLine(d)) s = null; // (only «raven_…» lines, no «raven:» — no raven)
@@ -117,7 +136,7 @@ namespace HuginWhispers
         internal static void Actions()
         {
             StoryActions.Register("npcraven", new StoryActions.Kind
-            {
+            { Dry = "none",
                 Min = 2,
                 Usage = "npcraven <хто> shoulder|circle|perch <місце>|leave|free|dim <0..1>   (ворон людини; сюжет тримає це " + HoldSeconds.ToString("0") + " с або до free)",
                 VerbAt = 2, Verbs = new Dictionary<string, StoryActions.Kind>
@@ -253,7 +272,7 @@ namespace HuginWhispers
             if (mode != _modeWas) { _modeWas = mode; _modeSince = now; }
             NpcMind m = _a.Mind;
             if (s.PetEvery <= 0f || m == null) return;
-            if (_nextMind <= 0f) _nextMind = now + Random.Range(0.3f, 1f) * s.PetEvery; // (not all at once as they come)
+            if (_nextMind <= 0f) _nextMind = now + NpcPersona.Gap(_a, Random.Range(0.3f, 1f) * s.PetEvery); // (not all at once as they come)
             if (now < _nextMind || now - _modeSince < SettleFor) return;
             NpcBody b = _a.Body;
             if (sit != 0 || b == null || !b.ClipFree || m.NowLayer > NpcMind.Layer.Whim || m.AtTable || _body.GetVelocity().magnitude > 0.3f) return; // (not on its way, not in a talk's gesture, not at a meal: asked again next second)
@@ -265,7 +284,7 @@ namespace HuginWhispers
                 _lookOff = now + LookFor;
             }
             else return; // (circling, or its perch out of sight: another moment)
-            _nextMind = now + Random.Range(0.6f, 1.4f) * s.PetEvery;
+            _nextMind = now + NpcPersona.Gap(_a, Random.Range(0.6f, 1.4f) * s.PetEvery);
         }
 
         private static string Mode(ZDO z) { string st = z.GetString(KState, ""); int sp = st.IndexOf(' '); return sp < 0 ? st : st.Substring(0, sp); }
@@ -285,10 +304,10 @@ namespace HuginWhispers
             List<KeyValuePair<PerchView, int>> free = new List<KeyValuePair<PerchView, int>>();
             foreach (PerchView v in PerchView.All)
             {
-                if (v == null || !v.Valid || v.IsSpot || v.IsNest) continue;
+                if (v == null || !v.Valid || v.IsSpot || v.IsNest || v.Gone) continue; // (Gone: a piece of a place its state has not now)
                 if (Vector3.Distance(v.transform.position, from) > r) continue;
                 for (int i = 0; i < v.Count; i++)
-                    if (v.At(i) == null && !v.Busy(i) && !TakenByPeople(v.SeatT(i).position, me)) free.Add(new KeyValuePair<PerchView, int>(v, i));
+                    if (v.At(i) == null && !v.Busy(i) && !TakenByPeople(v.SeatT(i).position, me) && StoryBird.Open(from + Vector3.up * OpenFrom, v.SeatT(i).position)) free.Add(new KeyValuePair<PerchView, int>(v, i)); // (heavy: a ray a free seat, as it chooses one)
             }
             if (free.Count == 0) return false;
             KeyValuePair<PerchView, int> pick = free[Random.Range(0, free.Count)];
@@ -296,8 +315,12 @@ namespace HuginWhispers
             return true;
         }
 
+        // a seat a person's raven is on or bound for (a place's raven asks it: LocRaven)
+        internal static bool Taken(Vector3 seat) { return TakenByPeople(seat, null); }
+
         private static bool TakenByPeople(Vector3 seat, NpcRaven me)
         {
+            if (me != null && LocRaven.Taken(seat)) return true; // (a place's raven sits there: the Hall's)
             foreach (NpcRaven o in _all)
             {
                 if (o == null || o == me || o._a == null) continue;
@@ -378,6 +401,8 @@ namespace HuginWhispers
             if (dim < 0f) dim = s.Dim;
             int seq = z.GetInt(KSeq, 0);
             if (_bird != null && Mathf.Abs(dim - _dimShown) > 0.01f) { string id; _bird.Repaint(LookText(s.Look, dim, out id), id); _dimShown = dim; }
+            if (_bird != null && s.HatDays > 0) WearHat(s, z);
+            if (s.Talk != null) Approach(s, me); // (after its hat: a new one is a thing to say)
             if (_bird != null && seq == _seqSeen) return;
             if (_bird == null && _left && seq == _seqSeen) return; // (flown off by the story's word: not back till the next one)
             _seqSeen = seq;
@@ -460,6 +485,112 @@ namespace HuginWhispers
 
         private static void Drop(NpcActor a) { NpcRaven r = a != null ? a.GetComponent<NpcRaven>() : null; if (r != null) r.Hide(); }
 
+        // ---------------------------------------------------------------- your two speak to it (RavenTalk)
+        // You came near it (every game for its own player, on its picture's quarter-second read): at most once in TalkEvery
+        // min a roll of TalkChance leaves RavenTalk a reason, which waits there for a quiet moment like any event (both on
+        // your shoulders, nobody talking). Whether it answers is rolled here (raven_answers, raven_speaks), so the scene is chosen to fit.
+        internal static float TalkNear = 10f, TalkFar = 16f, TalkEvery = 6f, TalkChance = 0.5f, TalkWait = 2f; // m, m, min, share, min
+        private float _talkNext;
+        // session: the hat your two last had before them, by person (not on this component: the person's coming back into
+        // the area makes it anew, and every return would count as a new hat) — a new one, they speak to it at once
+        private static readonly Dictionary<string, string> HatSeen = new Dictionary<string, string>();
+
+        private void Approach(Spec s, Player me)
+        {
+            if (Time.time < _talkNext || _bird == null || _left) return;
+            if (Vector3.Distance(me.transform.position, _a.transform.position) > TalkNear || StoryScenes.Holder(_a) != 0L) return; // (not while a scene has the person)
+            _talkNext = Time.time + TalkEvery * 60f * Random.Range(0.7f, 1.3f);
+            string seen; HatSeen.TryGetValue(_a.Id, out seen);
+            bool newHat = _hatWorn != null && _hatWorn != seen;
+            if (!newHat && Random.value > TalkChance) return;
+            HatSeen[_a.Id] = _hatWorn;
+            float roll = Random.value; // to the point (raven_answers), else a word (raven_speaks), else silence
+            string end = roll < s.Answers ? RavenTalk.PersonReply : roll < s.Answers + s.Speaks ? RavenTalk.PersonWord : "";
+            RavenTalk.Push(RavenTalk.PersonRaven + s.Talk + end, _a.Id, TalkWait);
+        }
+
+        // the picture of this person's raven here (another player's talk to it: its beak and voice on this game)
+        internal static GameObject BirdOf(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            foreach (NpcRaven r in _all) if (r != null && r._a != null && r._bird != null && r._a.Id == id) return r._bird.gameObject;
+            return null;
+        }
+
+        // the person's raven your talk speaks to, still here (within TalkFar m of you, seen, no scene holding the person);
+        // hat: the name of what it wears on its head now, or null
+        internal static bool Hearer(Player p, string id, out GameObject bird, out bool munin, out string name, out string hat)
+        {
+            bird = null; munin = false; name = null; hat = null;
+            if (p == null || string.IsNullOrEmpty(id)) return false;
+            foreach (NpcRaven r in _all)
+            {
+                if (r == null || r._a == null || r._a.Id != id || r._bird == null || r._left || r._spec == null) continue;
+                if (StoryScenes.Holder(r._a) != 0L || Vector3.Distance(p.transform.position, r._bird.transform.position) > TalkFar) return false;
+                bird = r._bird.gameObject; munin = r._spec.Munin;
+                name = !string.IsNullOrEmpty(r._spec.Name) ? Lang.T(r._spec.Name) : Plugin.RavenName(munin);
+                Outfits.Entry e = r._hatWorn != null ? Outfits.Find(r._hatWorn) : null;
+                if (e != null) hat = Lang.LowerFirst(e.Name); // (mostly mid-sentence: «Шо це на тобі, {hat}?»; a line that starts with it is capitalised when composed)
+                return true;
+            }
+            return false;
+        }
+
+        // the nearest person's raven with this talk, seen here (the console: raven talk npcr_<talk>)
+        internal static string NearestWith(Player p, string talk)
+        {
+            string best = null; float d = TalkFar;
+            foreach (NpcRaven r in _all)
+            {
+                if (r == null || r._a == null || r._bird == null || r._spec == null || r._spec.Talk != talk) continue;
+                float x = Vector3.Distance(p.transform.position, r._bird.transform.position);
+                if (x <= d) { d = x; best = r._a.Id; }
+            }
+            return best;
+        }
+
+        // ---------------------------------------------------------------- its hat (raven_hat)
+        // Which hat now: the pool's piece for the person's seed and the world's day count in HatDays (another than the
+        // last span's), the same on every game with nothing sent; asked on the picture's read only when the day turns
+        // or the picture is new. Never swapped before your eyes: a new picture comes with it on, a day turned while you
+        // look waits till the bird is out of the camera's view. Where it gets them is the story's riddle.
+        private string _hatWorn; private int _hatDay = -1; private StoryBird _hatOn;
+
+        private void WearHat(Spec s, ZDO z)
+        {
+            int day = EnvMan.instance != null ? EnvMan.instance.GetDay() : 0;
+            if (day == _hatDay && _hatOn == _bird) return;
+            if (_hatOn == _bird && InView(_bird.transform.position)) return; // (the day turned, but you see it: later)
+            _hatDay = day; _hatOn = _bird;
+            _hatWorn = HatOf(NpcKit.Seed(z), day / s.HatDays);
+            Outfits.Dress(_bird.gameObject, _hatWorn != null ? _hatWorn + "|||" : "");
+            if (_hatWorn == null) _hatDay = -1; // (no catalog yet: asked again on the next read)
+        }
+
+        private static bool InView(Vector3 at)
+        {
+            Camera cam = Utils.GetMainCamera();
+            if (cam == null) return false;
+            Vector3 v = cam.WorldToViewportPoint(at);
+            return v.z > 0f && v.x > -0.1f && v.x < 1.1f && v.y > -0.1f && v.y < 1.1f; // (a little past the frame's edge too)
+        }
+
+        internal static string HatOf(uint seed, int span)
+        {
+            List<string> pool = Outfits.HatPool();
+            if (pool.Count == 0) return null;
+            int at = Pick(seed, span, pool.Count);
+            if (pool.Count > 1 && at == Pick(seed, span - 1, pool.Count)) at = (at + 1) % pool.Count; // (not the last span's own pick: seldom the same twice running)
+            return pool[at];
+        }
+
+        private static int Pick(uint seed, int span, int n)
+        {
+            uint h = seed * 2654435761u ^ (uint)span * 40503u;
+            h ^= h >> 15; h *= 0x2C1B3C6Du; h ^= h >> 12;
+            return (int)(h % (uint)n);
+        }
+
         // the author's look (raven npc ravens)
         internal static string Describe()
         {
@@ -471,7 +602,8 @@ namespace HuginWhispers
                 ZDO z = r._a.Zdo;
                 sb.Append("\n  ").Append(r._a.Id).Append(": ").Append(z != null ? z.GetString(KState, "—") : "—")
                   .Append(NpcLocker.Long(z, KHeldUntil, 0L) > NpcRescue.Now ? " (сюжет тримає ще " + Mathf.RoundToInt((float)(NpcLocker.Long(z, KHeldUntil, 0L) - NpcRescue.Now)) + " с)" : "")
-                  .Append(r._bird != null ? ", " + r._bird.Describe() : ", не видно тут");
+                  .Append(r._bird != null ? ", " + r._bird.Describe() : ", не видно тут")
+                  .Append(r._hatWorn != null ? ", шапка " + r._hatWorn : "");
             }
             return sb.ToString();
         }

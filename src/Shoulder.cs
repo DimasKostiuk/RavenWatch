@@ -569,7 +569,27 @@ namespace HuginWhispers
             return sb.ToString();
         }
 
-        internal static Transform Bone(Player pl, bool munin) // (the load's ropes tie to it too: PairFx)
+        // Where a raven of that kind sits on this player: the one place for it. The bone alone is the collarbone's root, some 14 cm nearer the neck than the seat
+        // (the user 2026-11-12, the scene's bird landed on the bare bone: «сідає не на плече а майже на шию»).
+        //   SeatOff     from the bone to the seat, in the world: Offset (Munin's mirrored) turned with the body and grown with it. The raven's own pin adds the
+        //               shoulder's riding to it (ShoulderRaven: a breath, a shrug) and its own smoothed lift
+        //   SeatPoint   the seat itself for one who only lands there (StoryScenes «bird shoulder»): with what is worn on the shoulder (ShoulderFit.Lift, asked a
+        //               frame as the pin asks it — its fit is kept a player) and the bent leg (PerchDrop), so the raven's own picture takes its place with no jump
+        internal static Vector3 SeatOff(Player pl, bool munin)
+        {
+            Vector3 fwd = Vector3.ProjectOnPlane(pl.transform.forward, Vector3.up);
+            Quaternion facing = fwd.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(fwd.normalized, Vector3.up) : Quaternion.identity;
+            Vector3 off = munin ? new Vector3(-Offset.x, Offset.y, Offset.z) : Offset; // (Munin sits on the left: the sideways offset is mirrored for him)
+            return facing * (off * pl.transform.localScale.x); // (a grown body: «Звір Муніна»)
+        }
+
+        internal static Vector3 SeatPoint(Player pl, bool munin, Transform bone)
+        {
+            Vector3 at = bone.position + SeatOff(pl, munin);
+            return at + Vector3.up * (ShoulderFit.Lift(pl, munin, at) - PerchDrop);
+        }
+
+        internal static Transform Bone(Player pl, bool munin) // (the load's ropes tie to it too: PairFx; a seat on it: SeatPoint, never the bone itself)
         {
             foreach (string name in new string[] { munin ? MuninBone : HuginBone, munin ? "LeftShoulder" : "RightShoulder", "Spine2", "Spine1" })
             {
@@ -952,11 +972,9 @@ namespace HuginWhispers
             // riding the shoulder: the collarbone's own move (a breath, a shrug, a swing) carries the seat and tips the bird
             Quaternion ride = Ride();
             transform.rotation = Quaternion.Slerp(Quaternion.identity, ride, Shoulder.RideTilt) * Quaternion.Euler(0f, _bodyYaw, 0f) * Quaternion.AngleAxis(tilt, Vector3.forward) * Quaternion.Euler(Shoulder.Rotation);
-            // Munin sits on the left: the sideways offset is mirrored for him
-            Vector3 off = Munin ? new Vector3(-Shoulder.Offset.x, Shoulder.Offset.y, Shoulder.Offset.z) : Shoulder.Offset;
             float big = Player != null ? Player.transform.localScale.x : 1f; // (a grown body: «Звір Муніна»)
             Quaternion rideLift = RideGain(ride, Shoulder.RideLift);
-            transform.position = Bone.position + rideLift * (facing * (off * big));
+            transform.position = Bone.position + rideLift * Shoulder.SeatOff(Player, Munin); // (the seat's one place: the scene's bird lands on the same)
             // on what is worn: in the air no lift; the landing aims straight at the armour (measured as it begins,
             // in your pose then), so it sits down right onto it, nothing to settle afterwards
             bool busy = _airMode != 0 || _arriveStart >= 0f;

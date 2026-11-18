@@ -9,7 +9,8 @@ namespace HuginWhispers
     //               pointer: what its mood is made of); for one hired or living at a base how it is with you on a line painted by the brush. Its patience stays in its talk
     //   Думки       what is on its mind (the same weighing as its talk: NpcVoice.Concerns, its own words), its wish, what it remembers of you
     //   Вдача       its ways as words, its knack
-    //   Свої        who it gets on with among its people and who not, its own place (only when it has any)
+    //   Свої        who it gets on with among its people and who not — each with what it does to them and whom to speak to; what goes on now (an ultimatum, one
+    //               against it, keeping apart, a friend at work by it: NpcNeighbours), its own place (only when it has any)
     //   Побут       bed, chest, work and the work it will not take (why: under the pointer), craft, pay, health: red what wants mending, a click shows the thing (only one hired or living at a base)
     //   Історія     how it came and a scrap of before; «Розкажи більше →» the rest
     // Only what it has: a story person has no pay, no wish, no quarrels. Words, no numbers (to tune a template: its file). What it reads belongs to its modules: the card only says it.
@@ -19,7 +20,7 @@ namespace HuginWhispers
         internal static readonly List<System.Func<NpcActor, Player, List<RavenBook.SheetRow>>> Rows = new List<System.Func<NpcActor, Player, List<RavenBook.SheetRow>>>(); // a module's own rows in «Думки», what is between it and you (NpcThreads)
         internal static IEnumerable<NpcMenu.Button> MenuButtons()
         {
-            yield return new NpcMenu.Button { Order = 5, Title = Lang.K("Вдача"), Icon = "n-persona", AnyTime = true,
+            yield return new NpcMenu.Button { Order = 5, Part = "profile", Title = Lang.K("Вдача"), Icon = "n-persona", AnyTime = true,
                 Desc = a => Lang.T("Яка це людина: як почувається, що думає про тебе, чим живе."),
                 Do = (a, p) => { Show(a); return null; } };
         }
@@ -167,7 +168,9 @@ namespace HuginWhispers
             NpcResident.DayOf(a, out up, out bed);
             add(w.Chrono < -0.7f ? Lang.K("жайворонок") : w.Chrono > 0.7f ? Lang.K("сова") : Lang.K("звичайний день"), Lang.F("Встає о {0}, лягає о {1}.", Clock(up), Clock(bed)));
             add(Fight(a, out tip), tip);
+            if (NpcNeighbours.Snores(a)) add(Lang.K("хропе уві сні"), Lang.T("Уночі хропе. Хто спить поруч, може за це сердитися: його|її ліжко краще ставити подалі від чужих.")); // (NpcNeighbours: by its seed)
             if (a.Def.Settler) chips.Add(new RavenBook.SheetMark { Text = Lang.F("переконати: {0}", NpcNature.WayWord(NpcNature.BestWay(a))), Tip = a.Form(Lang.T("Що найкраще діє, коли треба вмовити цю людину: лишитися, помиритися, зробити те, про що просиш.")) }); // (a hint, not the table: NpcTalkSway)
+            if (a.Def.Settler) { string air = NpcNature.BestAir(a); if (air != null) chips.Add(new RavenBook.SheetMark { Text = Lang.F("до душі: {0}", NpcNature.AirWord(air)), Tip = a.Form(Lang.T("Яке добре слово ця людина приймає найкраще. Сказане інакше може й зачепити.")) }); } // (a hint, not the table: NpcTalkTone)
             if (a.Def.Settler) { string talk = TalkWord(a); if (talk != null) chips.Add(new RavenBook.SheetMark { Text = a.Form(Lang.T(talk)), Tip = a.Form(Lang.T("Як ця людина тримає розмову: коли не хоче говорити, чи вимагає спершу вислухати своє, чи довго пам'ятає, що її не вислухали.")) }); } // (NpcTalkDoor)
             string knack = NpcKnack.Describe(a);
             chips.Add(new RavenBook.SheetMark { Text = Capital(a.Form(knack)), Hot = true, TipHead = Lang.T("ХИСТ"), // (gold: not a trait but its knack, the card's last word)
@@ -182,19 +185,46 @@ namespace HuginWhispers
         {
             Vector3 place;
             if (NpcPlaces.Favourite(a, out place)) return true;
-            return TiesOf(a).Count > 0;
+            return TiesOf(a).Count > 0 || Between(a).Count > 0;
+        }
+
+        // what is going on between it and its people now (NpcNeighbours): its ultimatum, one against it, keeping apart, a friend at work by it — each a row with its why
+        private static List<RavenBook.SheetRow> Between(NpcActor a)
+        {
+            List<RavenBook.SheetRow> l = new List<RavenBook.SheetRow>();
+            NpcNeighbours.Kept k = NpcNeighbours.Of(a);
+            if (k != null && k.Ult != 0L)
+                l.Add(RavenBook.SheetRow.Pair(Lang.T("умова"), Lang.F("або я, або {0}", NpcNeighbours.NameOf(a, k.Ult)), RavenBook.ToneBad,
+                    Lang.F("Ця людина поставила умову. Лишилось: {0}. Якщо до строку нічого не зміниться, вона піде з оселі.\nПомирити: «Помиріться вже» в розмові з нею. Розвести на кілька днів, щоб дати більше часу: «Тримайтеся одне від одного подалі». Або відпустити чи переселити когось із двох.", NpcRescue.Left((long)NpcNeighbours.UltimatumLeft(k))), null));
+            foreach (NpcActor o in NpcHeart.Residents(NpcKit.GetRef(a.Zdo, NpcResident.KHeart)))
+            {
+                NpcNeighbours.Kept ko = o != null && o != a ? NpcNeighbours.Of(o) : null;
+                if (ko == null || ko.Ult == 0L || ko.Ult != NpcAttitude.PersonKey(a)) continue;
+                l.Add(RavenBook.SheetRow.Pair(Lang.T("проти неї умова"), Lang.F("{0}: «або я, або ця людина»", o.Name), RavenBook.ToneBad,
+                    Lang.F("Інша людина з оселі не терпить цю й поставила умову. Лишилось: {0}. Якщо до строку нічого не зміниться, піде вже та людина.\nПомирити: «Помиріться вже» в розмові з тією людиною.", NpcRescue.Left((long)NpcNeighbours.UltimatumLeft(ko))), null));
+            }
+            long now = (long)NpcRescue.Now;
+            if (k != null && k.Apart != 0L && k.ApartUntil > now)
+                l.Add(RavenBook.SheetRow.Pair(Lang.T("тримається подалі"), NpcNeighbours.NameOf(a, k.Apart), RavenBook.ToneWarn,
+                    Lang.F("Ти попроси{{в|ла}} їх розійтися: поки що не сідає поруч, не заговорює й не підходить до цієї людини. Лишилось: {0}.", NpcRescue.Left(k.ApartUntil - now)), null));
+            NpcActor wf = NpcNeighbours.WorkFriend(a);
+            if (wf != null) l.Add(RavenBook.SheetRow.Pair(Lang.T("працює поруч"), wf.Name, RavenBook.ToneGood, Lang.T("Поблизу працює друг: робота йде трохи швидше."), null));
+            return l;
         }
 
         private static List<RavenBook.SheetRow> Own(NpcActor a, RavenBook.Sheet from)
         {
-            List<RavenBook.SheetRow> own = new List<RavenBook.SheetRow>();
+            List<RavenBook.SheetRow> own = Between(a);
             foreach (NpcAttitude.Tie t in TiesOf(a))
             {
                 NpcActor o = t.A == a ? t.B : t.A;
                 System.Action open = () => { if (o != null) Show(o, a.Name, () => Show(a, from.BackWord, from.Back)); };
-                own.Add(t.Foes ? RavenBook.SheetRow.Pair(Lang.T("не терпить"), o.Name + (t.Why.Length > 0 ? " — " + t.Why : ""), RavenBook.ToneBad, Lang.T("Ці двоє ворогують. Помирити їх можна в розмові.\nНатисни — картка цієї людини."), open)
+                // what it does to them, all of it (NpcNeighbours: mood, seats, spats and scuffles, an ultimatum; work, a fight's help) — and whom to speak to
+                own.Add(t.Foes ? RavenBook.SheetRow.Pair(Lang.T("ворогують"), o.Name + (t.Why.Length > 0 ? " — " + t.Why : ""), RavenBook.ToneBad,
+                        Lang.F("Образу тримає {0}.\nПоки ворогують: обом гірше живеться, за стіл сідають якнайдалі, при зустрічі сваряться, а як дійде до ворожнечі — ледь не б'ються, і хтось може поставити умову «або я, або …».\nПомирити: поговори з тим, хто тримає образу, — «Помиріться вже» (раз на день, і спершу з тим, на кого найбільше ображений). Розвести на кілька днів: «Тримайтеся одне від одного подалі».\nНатисни — картка цієї людини.", t.Holds.Name), open)
                     : RavenBook.SheetRow.Pair(t.Close ? Lang.T("близькі") : Lang.T("дружать"), o.Name, RavenBook.ToneGood,
-                        t.Close ? Lang.T("Найближчі одне одному: тягнуться одне до одного, а коли хтось із них піде, інший сумуватиме.\nНатисни — картка цієї людини.") : Lang.T("Ці двоє дружать: охоче проводять час поруч.\nНатисни — картка цієї людини."), open));
+                        t.Close ? Lang.T("Найближчі одне одному: поруч настрій кращий, а як працюють поблизу — робота йде швидше; за стіл сідають поруч; у бою, хто вміє битися, стане на захист; а коли хтось із них піде, інший сумуватиме.\nНатисни — картка цієї людини.")
+                        : Lang.T("Ці двоє дружать: поруч настрій кращий, а як працюють поблизу — робота йде швидше; за стіл сідають поруч; у бою, хто вміє битися, стане на захист.\nНатисни — картка цієї людини."), open));
             }
             Vector3 place;
             if (NpcPlaces.Favourite(a, out place)) { Vector3 at = place; own.Add(RavenBook.SheetRow.Pair(Lang.T("своє місце"), Lang.T("показати"), RavenBook.ToneNone, Lang.T("Де ця людина найбільше любить бувати: що частіше тут буває, то більше любить.\nНатисни, щоб показати."), () => { RavenBook.HideSheet(); NpcMenu.ShowPlace(at, null, a.Form(Lang.F("Місце, де любить бувати {0}", a.Name))); })); }
@@ -258,6 +288,15 @@ namespace HuginWhispers
             bool works = wk != null && wk.Works;
             l.Add(RavenBook.SheetRow.Pair(Lang.T("робота"), works ? Jobs.Word(wk.JobId) : Lang.T("без роботи"), works ? RavenBook.ToneNone : RavenBook.ToneWarn,
                 works ? Lang.T("Що ця людина робить для оселі. Змінити: Q → Робота.") : Lang.T("Живе тут, але для оселі нічого не робить: удень походжає базою. Дати роботу: Q → Робота.")));
+            if (works)
+            {
+                // is its work going, and if not, what it wants (the user 2026-11-12: «підказки по роботі: чи все ок, чого не вистачає»): the job's own answer
+                // (NpcWorker.Lacks, the board's too) and what it does this moment, as its owner last said
+                List<string> lack = NpcWorker.Lacks(a);
+                string doing = NpcMind.LayerNow(a) == NpcMind.Layer.Job ? a.StatusText ?? "" : "";
+                l.Add(RavenBook.SheetRow.Pair(Lang.T("справи"), lack == null ? Lang.T("усе гаразд") : lack.Count == 1 ? lack[0] : Lang.F("бракує: {0}", lack.Count), lack == null ? RavenBook.ToneGood : RavenBook.ToneWarn,
+                    (lack == null ? Lang.T("Для роботи має все потрібне.") : Lang.T("Чого бракує для роботи:") + "\n— " + string.Join("\n— ", lack.ToArray())) + (doing.Length > 0 ? "\n" + Lang.F("Зараз: {0}", doing) : "")));
+            }
             if (a.Def != null && a.Def.Settler) l.Add(WontRow(a));
             if (works && a.Def != null && a.Def.Generated) l.Add(RavenBook.SheetRow.Pair(Lang.T("ремесло"), a.Form(NpcToil.CraftWord(a)), RavenBook.ToneNone, a.Form(NpcToil.CraftTip(a))));
             if (NpcResident.Is(a))
@@ -265,7 +304,8 @@ namespace HuginWhispers
                 bool bed = NpcLocker.HasRef(a.Zdo, NpcResident.KBed);
                 l.Add(RavenBook.SheetRow.Pair(Lang.T("ліжко"), bed ? Lang.T("є") : Lang.T("нема"), bed ? RavenBook.ToneGood : RavenBook.ToneBad, bed ? Lang.T("Своє ліжко: уночі в ньому добре висипається, а ліжко під дахом піднімає настрій.\nНатисни, щоб показати.") : Lang.T("Без свого ліжка настрій гірший. Збудуй ліжко й дай його: Q → Оселя → Ліжко."), bed ? Point(NpcKit.WhereIs(NpcLocker.Ref(a.Zdo, NpcResident.KBed)), a.Form(Lang.F("Ліжко: {0}", a.Name))) : null));
             }
-            if (wk != null && !wk.ChestId.IsNone()) l.Add(RavenBook.SheetRow.Pair(wk.JobId == "cook" ? Lang.T("комора") : Lang.T("ящик"), wk.JobId == "cook" ? Lang.T("тримає") : Lang.T("є"), RavenBook.ToneGood, wk.JobId == "cook" ? Lang.T("Комора кухаря: сюди кухар кладе готові страви, звідси їдять мешканці оселі.\nНатисни, щоб показати.") : Lang.T("Ящик для роботи: туди складає зроблене чи зібране й звідти бере потрібне.\nНатисни, щоб показати."), Point(NpcKit.WhereIs(wk.ChestId), a.Form(wk.JobId == "cook" ? Lang.T("Комора") : Lang.F("Ящик: {0}", a.Name)))));
+            if (wk != null && !wk.ChestId.IsNone()) l.Add(RavenBook.SheetRow.Pair(wk.JobId == "cook" ? Lang.T("комора") : Lang.T("ящик"), wk.JobId == "cook" ? Lang.T("тримає") : Lang.T("є"), RavenBook.ToneGood, wk.JobId == "cook" ? Lang.T("Комора кухаря: сюди кухар кладе готові страви, звідси їдять мешканці оселі. Кухня — знаряддя довкола неї.\nНатисни, щоб показати.") : Lang.T("Ящик для роботи: туди складає зроблене чи зібране й звідти бере потрібне.\nНатисни, щоб показати."), Point(NpcKit.WhereIs(wk.ChestId), a.Form(wk.JobId == "cook" ? Lang.T("Комора") : Lang.F("Ящик: {0}", a.Name)))));
+            if (wk != null && !wk.SupplyId.IsNone()) l.Add(RavenBook.SheetRow.Pair(Lang.T("інгредієнти"), Lang.T("є"), RavenBook.ToneGood, Lang.T("Скриня інгредієнтів: з неї кухар бере все для страв і пальне.\nНатисни, щоб показати."), Point(NpcKit.WhereIs(wk.SupplyId), a.Form(Lang.F("Інгредієнти: {0}", a.Name)))));
             if (works)
             {
                 int unpaid = NpcToil.Unpaid(a);

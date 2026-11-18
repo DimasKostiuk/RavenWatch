@@ -10,6 +10,10 @@ namespace HuginWhispers
     // «Під крилом», Hugin's dome. Every game keeps the same list of domes (sent to everyone, again every few seconds
     // while one stands, so a player who comes later sees it too) and acts on it by itself: draws it, keeps the
     // monsters it runs at the edge, refuses damage inside, keeps the rain off the ones inside.
+    // Turned inside out (a scene's, the chapter 1 ambush: «Hugin's dome inside out — it holds within», story-lore.md): the same dome, Holds,
+    // raised by a scene (HoldOver, HoldOff: the step «dome» of StoryScenesKinds.cs) — a wall for players too: whoever stood inside when it rose
+    // is kept inside, whoever stood outside is kept out (each game its own player: MeIn). No gift of the player's in it: no time of its own (the
+    // scene ends it), no boss blows counted, no Hugin's words, no «Під крилом» III burst. Kept beside the owner's own dome: its key is ~Owner (Key).
     internal static class Dome
     {
         internal static float Radius = 6f;
@@ -36,7 +40,12 @@ namespace HuginWhispers
             public float HitAt = -99f; // the last boss blow it took (the shell flashes)
             public DomeLook Look;
             public bool Finished; // (its end done once)
+            public bool Holds; // (a scene's, inside out: a wall for players both ways)
+            public bool MeIn;  // (Holds: this game's player stood inside as it rose)
         }
+
+        // its place in the list: a player's own dome by its owner, a scene's beside it
+        private static long Key(State s) { return s.Holds ? ~s.Owner : s.Owner; }
 
         private static readonly Dictionary<long, State> Active = new Dictionary<long, State>();
         private static float _nextResend, _nextClean;
@@ -81,6 +90,25 @@ namespace HuginWhispers
 
         internal static bool Mine() { State s; return Active.TryGetValue(Me, out s) && s.Until > Now; }
 
+        // a scene's dome inside out over that spot (StoryScenes' step «dome»): stands till HoldOff (a scene's end lowers it: the step's module end)
+        internal const float HoldFor = 15f; // s it stands past its owner's last word (each resend renews it): a scene whose game crashed leaves no wall for good
+        internal static void HoldOver(Vector3 at, float r)
+        {
+            State s = new State { Owner = Me, Pos = at, Radius = Mathf.Max(1.5f, r), Until = Now + HoldFor, Level = 0, Hp = 1f, MaxHp = 0f, Holds = true };
+            Apply(s);
+            Send(s);
+            _nextResend = Time.time + ResendEvery;
+        }
+
+        internal static void HoldOff()
+        {
+            State s;
+            if (!Active.TryGetValue(~Me, out s)) return;
+            s.Until = 0;
+            Send(s);
+            End(s, true); // (it crumbles: the burst's runes)
+        }
+
         // inside your own dome (not a friend's)
         internal static bool InsideMine(Vector3 pos)
         {
@@ -111,6 +139,7 @@ namespace HuginWhispers
             pkg.Write(s.Level);
             pkg.Write(s.Hp);
             pkg.Write(s.MaxHp);
+            pkg.Write(s.Holds);
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, Rpc, pkg);
         }
 
@@ -120,15 +149,16 @@ namespace HuginWhispers
             {
                 State s = new State { Owner = pkg.ReadLong(), Pos = pkg.ReadVector3(), Radius = pkg.ReadSingle(), Until = pkg.ReadDouble(), Level = pkg.ReadInt() };
                 s.Hp = pkg.ReadSingle(); s.MaxHp = pkg.ReadSingle();
+                s.Holds = pkg.GetPos() < pkg.Size() && pkg.ReadBool(); // (a game of an older build sends none: its dome is a player's own)
                 if (s.Owner != sender) return; // (only its owner speaks for a dome)
                 if (sender == Me) return; // our own, already here
                 State known;
                 if (s.Until <= Now)
                 {
-                    if (Active.TryGetValue(s.Owner, out known)) End(known, true);
+                    if (Active.TryGetValue(Key(s), out known)) End(known, true);
                     return;
                 }
-                if (Active.TryGetValue(s.Owner, out known) && Vector3.Distance(known.Pos, s.Pos) < 0.5f)
+                if (Active.TryGetValue(Key(s), out known) && Vector3.Distance(known.Pos, s.Pos) < 0.5f)
                 {
                     known.Until = s.Until; // the same dome said again
                     if (s.Hp < known.Hp) { known.Hp = s.Hp; known.HitAt = Time.time; } // a blow taken elsewhere (it only goes down)
@@ -142,18 +172,22 @@ namespace HuginWhispers
         private static void Apply(State s)
         {
             State old;
-            if (Active.TryGetValue(s.Owner, out old)) End(old, false);
-            Active[s.Owner] = s;
+            if (Active.TryGetValue(Key(s), out old)) End(old, false);
+            Player me = Player.m_localPlayer;
+            if (s.Holds && me != null) s.MeIn = Flat(me.transform.position, s.Pos) <= s.Radius; // (which side of its wall this game's player is on: kept there)
+            Active[Key(s)] = s;
             s.Look = DomeLook.Make(s);
         }
+
+        private static float Flat(Vector3 a, Vector3 b) { a.y = 0f; b.y = 0f; return Vector3.Distance(a, b); }
 
         private static void End(State s, bool burst)
         {
             State cur;
-            if (Active.TryGetValue(s.Owner, out cur) && ReferenceEquals(cur, s)) Active.Remove(s.Owner);
+            if (Active.TryGetValue(Key(s), out cur) && ReferenceEquals(cur, s)) Active.Remove(Key(s));
             if (s.Look != null) s.Look.Close(burst);
             s.Look = null;
-            if (s.Owner == Me && !s.Finished && Facets.On("dome") && Player.m_localPlayer != null) Twists.DomeFinale(Player.m_localPlayer, s.Pos, s.Radius); // («Під крилом» III: its end bursts)
+            if (s.Owner == Me && !s.Holds && !s.Finished && Facets.On("dome") && Player.m_localPlayer != null) Twists.DomeFinale(Player.m_localPlayer, s.Pos, s.Radius); // («Під крилом» III: its end bursts)
             s.Finished = true;
         }
 
@@ -171,14 +205,15 @@ namespace HuginWhispers
                 if (over != null) foreach (State s in over)
                 {
                     End(s, false);
-                    if (s.Owner == Me) RavenSkills.DomeSay("dome_end", Lang.T("Все, крила втомились. Тримайся.")); // its time ran out: Hugin comes back
+                    if (s.Owner == Me && !s.Holds) RavenSkills.DomeSay("dome_end", Lang.T("Все, крила втомились. Тримайся.")); // its time ran out: Hugin comes back
                 }
             }
             State mine;
-            if (Time.time >= _nextResend && Active.TryGetValue(Me, out mine))
+            if (Time.time >= _nextResend && (Active.ContainsKey(Me) || Active.ContainsKey(~Me)))
             {
                 _nextResend = Time.time + ResendEvery;
-                Send(mine);
+                if (Active.TryGetValue(Me, out mine)) Send(mine);
+                if (Active.TryGetValue(~Me, out mine)) { mine.Until = Now + HoldFor; Send(mine); } // (a scene's: one who comes later sees it too; renewed while its scene plays)
             }
         }
 
@@ -236,6 +271,7 @@ namespace HuginWhispers
         {
             if (Active.Count == 0) return;
             double now = Now;
+            Hold(Player.m_localPlayer, now, dt);
             foreach (Character c in Character.GetAllCharacters())
             {
                 if (c == null || c.IsPlayer() || c.IsDead() || c.IsTamed() || c.IsBoss()) continue;
@@ -270,6 +306,36 @@ namespace HuginWhispers
                     if (inward > 0f) rb.linearVelocity = v + dir * inward; // no more walking in
                 }
                 else c.transform.position += dir * step;
+            }
+        }
+
+        // a dome inside out (Holds) is a wall for this game's player as well: kept on the side he stood on as it rose, pressed back the
+        // same smooth way the monsters are (no walking through: his speed across it taken away)
+        internal static float HoldReach = 1.5f; // m past its wall that still is a step through it
+        private static void Hold(Player me, double now, float dt)
+        {
+            if (me == null || me.IsDead() || me.IsTeleporting() || me.IsAttached()) return;
+            foreach (State s in Active.Values)
+            {
+                if (!s.Holds || s.Until <= now) continue;
+                Vector3 d = me.transform.position - s.Pos;
+                if (Mathf.Abs(d.y) > s.Radius + 2f) continue;
+                d.y = 0f;
+                float dist = d.magnitude, body = 0.4f;
+                Vector3 dir = dist > 0.01f ? d / dist : me.transform.forward;
+                float over = s.MeIn ? dist - (s.Radius - body) : (s.Radius + body) - dist; // (how far past its wall he stands, on the wrong side)
+                if (over <= 0f || over > HoldReach) continue; // (far past it: not walked through, put there — a portal, a ship, a scene's own step: let be)
+                Vector3 back = s.MeIn ? -dir : dir;
+                Vector3 step = back * Mathf.Min(over, PushSpeed * dt);
+                Rigidbody rb = me.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.position += step;
+                    Vector3 v = rb.linearVelocity;
+                    float across = Vector3.Dot(v, -back);
+                    if (across > 0f) rb.linearVelocity = v + back * across;
+                }
+                else me.transform.position += step;
             }
         }
 
@@ -371,6 +437,7 @@ namespace HuginWhispers
             if (attacker != null && attacker.IsBoss())
             {
                 if (underVictim == null) return false;
+                if (underVictim.Holds) return true; // (a scene's: no blows counted, it stands till its scene lowers it)
                 if (hit.GetTotalDamage() <= 0f) return true;
                 if (underVictim.Hp < 0.5f) return false; // already broken here (its burst is on the way): the blow lands
                 underVictim.Hp -= 1f; // here at once: the next blows before the owner answers count too
@@ -548,6 +615,8 @@ namespace HuginWhispers
     internal class DomeLook : MonoBehaviour
     {
         internal static Color Blue = new Color(0.35f, 0.62f, 1f);
+        internal static Color Gold = new Color(1f, 0.76f, 0.28f); // a scene's dome inside out (Holds): the sisters', Freya's warm gold (the user 2026-11-14: «купол треба зробити жовтого кольору»); Hugin's own stays blue
+        private Color Tone { get { return _s != null && _s.Holds ? Gold : Blue; } }
         internal static float ShellOpacity = 0.35f; // the shell texture is mostly clear; this scales what shows
         private static Material _shell, _runes;
         private static Texture2D _runeTex;
@@ -596,14 +665,14 @@ namespace HuginWhispers
             lightGo.transform.localPosition = Vector3.up * 2f;
             _light = lightGo.AddComponent<Light>();
             _light.type = LightType.Point;
-            _light.color = Blue;
+            _light.color = Tone;
             _light.range = r * 1.6f;
             _light.intensity = 0f;
             _light.shadows = LightShadows.None;
 
             _ring = Runes("ring", r, true);
             _air = Runes("air", r, false);
-            _raven = DomeRaven.Make(transform, _s);
+            _raven = _s.Holds ? null : DomeRaven.Make(transform, _s); // (a scene's dome is not Hugin's work: he stays on the shoulder — he speaks of it there, «Це ж моє!»)
         }
 
         // runes: from the ring on the ground they rise slowly; inside they float about and turn
@@ -624,7 +693,7 @@ namespace HuginWhispers
             main.startSpeed = ring ? new ParticleSystem.MinMaxCurve(0.05f, 0.2f) : new ParticleSystem.MinMaxCurve(0.1f, 0.35f);
             main.startSize = ring ? new ParticleSystem.MinMaxCurve(0.35f, 0.55f) : new ParticleSystem.MinMaxCurve(0.25f, 0.45f);
             main.startRotation = new ParticleSystem.MinMaxCurve(-0.4f, 0.4f);
-            main.startColor = new ParticleSystem.MinMaxGradient(Blue, Color.Lerp(Blue, Color.white, 0.45f));
+            main.startColor = new ParticleSystem.MinMaxGradient(Tone, Color.Lerp(Tone, Color.white, 0.45f));
             main.maxParticles = ring ? 40 : 24;
             main.gravityModifier = ring ? -0.03f : -0.01f;
             ParticleSystem.EmissionModule em = ps.emission;
@@ -684,7 +753,7 @@ namespace HuginWhispers
                 _shellRenderer.enabled = fade > 0.02f;
                 MaterialPropertyBlock mpb = Block;
                 mpb.Clear();
-                mpb.SetColor("_Color", new Color(Blue.r, Blue.g, Blue.b, ShellOpacity * fade));
+                mpb.SetColor("_Color", new Color(Tone.r, Tone.g, Tone.b, ShellOpacity * fade));
                 _shellRenderer.SetPropertyBlock(mpb);
             }
             if (_light != null) _light.intensity = 0.9f * shown * fade;

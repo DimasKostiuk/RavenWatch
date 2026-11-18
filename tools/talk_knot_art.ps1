@@ -3,7 +3,7 @@
 $root = 'C:\Users\kosti\Desktop\RavensWatch'
 $chrome = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 $prof = Join-Path $env:TEMP 'rw_chrome_profile'
-$parts = @{ knot1 = '30,26'; knot2 = '30,26'; frayed = '30,30'; end = '30,30'; cord = '11,16' }
+$parts = @{ knot1 = '30,28'; knot2 = '30,28'; frayed = '30,30'; end = '30,30'; cord = '11,16' }
 foreach ($k in $parts.Keys) {
     $out = "$root\assets\book\talk_$k.png"
     if (Test-Path $out) { Remove-Item $out }

@@ -36,8 +36,8 @@ namespace HuginWhispers
             ZDO z = a != null ? a.Zdo : null;
             return z != null ? NpcLocker.Num(z, KFull, 100f) : 100f;
         }
-        internal static bool IsHungry(NpcActor a) { return NpcResident.Is(a) && a.Def.Settler && Full(a) < Hungry; }
-        internal static bool IsStarving(NpcActor a) { return NpcResident.Is(a) && a.Def.Settler && Full(a) < Starving; }
+        internal static bool IsHungry(NpcActor a) { return NpcResident.Settled(a) && Full(a) < Hungry; }
+        internal static bool IsStarving(NpcActor a) { return NpcResident.Settled(a) && Full(a) < Starving; }
         internal static float Slow(NpcActor a) { return IsHungry(a) ? 1.4f : 1f; } // × its work step
 
         // how much of its fullness a game day takes, as its day usually goes (the board's forecast, NpcMeals.Supply): twelve hours at its work's load, four about, eight asleep
@@ -65,7 +65,7 @@ namespace HuginWhispers
             if (!_read) { if (!NpcLocker.Ready(_a)) return; _read = true; _full = _kept = NpcLocker.Num(z, KFull, 100f); _starved = _keptStarved = NpcLocker.Num(z, KStarved, 0f); _last = Time.time; if (_owed > 0f) { float f = _owed; _owed = 0f; Eat(f, _owedFood); } return; } // (taken over: from what was kept; then what it ate meanwhile)
             if (Time.time - _last < 1f) return;
             float dt = Time.time - _last; _last = Time.time;
-            if (!NpcResident.Is(_a) || !_a.Def.Settler) return; // (a person of the story has no pantry to go to: it does not hunger)
+            if (!NpcResident.Settled(_a)) return; // (a person of the story has no pantry to go to: it does not hunger)
             bool asleep = _a.Mind != null && _a.Mind.Asleep;
             bool fed = _full >= Starving;
             _full = Mathf.Max(0f, _full - PerDay / DayLength * dt * (asleep ? AsleepSlower : 1f) * NpcToil.HungerLoad(_a)); // (work makes it hungry: NpcToil)

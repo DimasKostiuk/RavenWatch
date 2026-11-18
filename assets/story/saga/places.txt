@@ -1,0 +1,59 @@
+# Місця саги (StorySaga): стрічка «Місця» на вкладці «Сага». Формат — у шапці people.txt.
+# Назва в книзі своя: робочі назви місць із locations.list («Місце Муніна», «Будинок привида») гравцеві не показуються.
+# «Показати на мапі» — лише тому, хто там уже був (map: been …): книга не показує дороги туди, куди гравець не дійшов.
+
+[place old_shield]
+chapter: prologue
+shown: been prologue_munin
+name: Старий щит
+about: слід пам'яті
+line: Іржавий щит у траві. Чужий ворон назвав його твоїм слідом.
+map: prologue_munin
+
+[place old_signpost]
+chapter: prologue
+shown: been prologue_hugin
+name: Старий вказівник
+about: слід думки
+line: Вказівник на роздоріжжі. Чужий ворон назвав його твоїм слідом і сказав, що він досі показує не туди.
+map: prologue_hugin
+
+# Хата Ейріка: чия вона, гравець у пролозі не знає. Назву відкриває різьба Зали, як імена в people.txt.
+[place old_house]
+chapter: prologue
+shown: been prologue_house | lived prologue.echo
+name: read zala.rizba full :: Хата Ейріка
+name: Покинута хата
+about: lived prologue.echo :: тут лежала книга воронів
+line: lived prologue.echo :: У хаті чекало Відлуння. Воно лишило тобі книгу воронів і згасло.
+line: lived prologue.echo :: Поки воно було тут, хата стояла як обжита.
+map: been prologue_house :: prologue_house
+
+# Зала: що в ній сталося для всіх, гравець знає з подій (knows): слово під назвою й рядки не міняються від того, що зробив хтось інший,
+# поки він цього не бачив і йому не переказали.
+[place hall]
+chapter: prologue
+shown: been zala | knows gate
+name: Зала Варти
+about: knows blue_fire :: вогнище горить синім і не гріє
+about: knows gate :: брама відчинена
+about: стара зала в Луках
+line: knows gate :: Браму відчинено.
+line: knows gate, been zala :: Усередині пил, тиша й холод.
+line: asked heid hall_what :: Гейд: «Тут колись горів вогонь, і поки горів, було кому сторожити».
+line: knows blue_fire :: Вогнище зайнялося синім. Воно світить, але не гріє.
+line: asked heid blue :: Гейд про синій вогонь: «Не знаю. Він не мав горіти взагалі».
+line: asked heid voices :: Гейд каже, що ночами в Залі чути голоси тих, кого вже нема.
+line: knows letter :: У Залі знайшли старий лист із кресленням серця оселі.
+quote: zala.lyst Старий лист
+quote: zala.rizba Різьба на стіні
+map: been zala :: hall
+
+[place stones]
+chapter: prologue
+shown: been torvald
+name: Камені біля табору
+about: asked heid stones :: могили вартових
+line: Кілька каменів з іменами.
+line: asked heid stones :: Гейд: «Вартові. Ті, кого вже нема. Хтось же має чистити мох із їхніх імен».
+map: torvald

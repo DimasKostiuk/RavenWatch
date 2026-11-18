@@ -1,5 +1,6 @@
 clip guard_greatsword_rest
 length 8
+tone plain
 loop 0
 pivot 1.1
 curve ease

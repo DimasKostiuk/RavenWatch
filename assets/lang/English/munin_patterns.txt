@@ -2314,7 +2314,7 @@ to hell with him
 ^idle_c.руки {name} is pawing everything again. Whatever {he|she} sees, {he|she} grabs. Like me.
 @м_кінець
 ^idle_a.казка That story's shit. Like you, professor.
-^idle_a.казка That's it? I fell asleep at «once there was».
+^idle_a.казка That's it? I fell asleep at “once there was”.
 ^idle_a.пера Counted. All there. Now I'll count yours, with my beak.
 ^idle_a.пера I count to three, after that it's a smack in the face.
 ^idle_a.погода The weather, fuck me. Why not tell me about moss while you're at it.
@@ -2442,7 +2442,7 @@ to hell with him
 ^rain.тупцюй I splash because I can. And what are you gonna do about it?
 ^rain.тупцюй I stomp because my feet are freezing, {м_слівце}.
 ^rain.вогонь {He'll|She'll} light one. I'll stare until {he|she} does.
-^rain.вогонь «If». It's always «if» with you.
+^rain.вогонь “If”. It's always “if” with you.
 ^rain.гілка Just try it, {м_слівце}. Just try.
 ^rain.гілка You'll hang on a branch yourself. By the beak.
 @м_туман
@@ -2639,7 +2639,7 @@ Oh, the wiseguy speaks, {м_слівце}.
 ^heavy.сумка What's in the bag, {м_слівце}? Rocks? Rocks and a few more rocks?
 @м_вага_кінець
 ^heavy.руда Treasure, fuck. I'm sliding off along with it.
-^heavy.руда I'll live. But I'll remember who said «you'll live».
+^heavy.руда I'll live. But I'll remember who said “you'll live”.
 ^heavy.важиш But I've got the spite of three lumps of iron.
 ^heavy.важиш I weigh less, but I ache for everyone.
 ^heavy.здурів Anyone would lose it here. From the weight.
@@ -2652,7 +2652,7 @@ Oh, the wiseguy speaks, {м_слівце}.
 @м_портал_кінець
 ^portal.на_мене On you is the best spot, nerd.
 ^portal.на_мене Then don't sit so close to my beak.
-^portal.звикнеш Get used to it, get used to it… Screw you and your «get used to it».
+^portal.звикнеш Get used to it, get used to it… Screw you and your “get used to it”.
 ^portal.звикнеш Get used to it yourself, nerd. I feel like crap as it is.
 ^portal.линяв I wasn't moulting. I was upgrading. Get it?
 ^portal.линяв Moulting, fuck. That's your bald spot growing.
@@ -3562,7 +3562,7 @@ Listen up.
 ^xboss.остання>xboss.моя Mine finished it, {addr}. I saw who stood over the carcass. Not yours.
 ^xboss.остання>xboss.моя Honestly? Mine. And do not make me laugh with yours, fucking hell.
 ^xboss.влучила>xboss.кричала Mine hit, {addr}. And yours squealed like a piglet under the knife.
-^xboss.влучила>xboss.кричала Hit, and more than once. Yours was yelling «run!», I heard it, do not bullshit me.
+^xboss.влучила>xboss.кричала Hit, and more than once. Yours was yelling “run!”, I heard it, do not bullshit me.
 
 @мх_бс_встряє
 ^xboss.падало>xboss.земля It shook me off the shoulder, fuck. I thought, that is it, end of the world.
@@ -5976,7 +5976,7 @@ Eat!
 ^dusk.вечерею They'll choke on me. I'm bitter, {м_слівце}.
 ^dusk.вечерею Let them try. I get stuck in throats.
 ^dusk.не_відповідай I'll answer. With my beak. In the chops.
-^dusk.не_відповідай «Please»? Well… fine. I'm quiet. You're scared, after all.
+^dusk.не_відповідай “Please”? Well… fine. I'm quiet. You're scared, after all.
 ^dusk.дах A roof is great. As long as it doesn't leak like last time, fuck.
 ^dusk.дах Keep hoping. I already know it'll be bushes.
 ^dusk.дим Smoke? Then fly ahead and check.
@@ -6074,7 +6074,7 @@ Eat!
 ^mine.пил_тобі Dust? Thanks, fuck. Generous as always.
 ^mine.пил_тобі Shiny dust. Well… it's something. Give it.
 ^mine.спокій My peace is something shiny in my beak. Not your lectures.
-^mine.сподіваюсь «I hope», fuck. Very reassuring.
+^mine.сподіваюсь “I hope”, fuck. Very reassuring.
 ^mine.сподіваюсь You hope. I've already memorised the way out.
 ^mine.заблукаєш I don't get lost. I scout, damn it.
 ^mine.не_їдять I'll try. Might be tasty.
@@ -6295,7 +6295,7 @@ Eat!
 ~3 ^fed_hugin.попрошу I'm holding you to that, you little shit.
 ^fed_hugin.попрошу Yeah, he'll ask. I'll just take it.
 ~1 ^fed_hugin.попрошу Promises, promises. I'll remember this, {м_слівце}.
-^fed_hugin.попрошу I'll remind you of that «I'll ask».
+^fed_hugin.попрошу I'll remind you of that “I'll ask”.
 ^fed_hugin.проси I'll ask, {м_слівце}. So loud all Midgard goes deaf.
 ^fed_hugin.проси I won't ask. I'll take. Yours.
 ^fed_hugin.мовчи I'm jealous, so what? Choke on it, {м_слівце}.
@@ -6596,7 +6596,7 @@ Eat!
 ^night.шия I'll snuggle. But it means nothing, got it?
 ^night.шия To the neck? It tickles {name} there. Too bad.
 ^night.вогонь Soon is when? Because I'm turning into an icicle.
-^night.вогонь Soon. You always say «soon».
+^night.вогонь Soon. You always say “soon”.
 ^night.миша Hasn't yet. I'll peck it. Just so it knows.
 ^night.миша A mouse is supper, not a friend.
 ^night.змія A snake? Well… let it rustle then.
@@ -6753,7 +6753,7 @@ Eat!
 ^idle_a.чує So what. He nicked the mead of poetry himself, I know it.
 ^idle_a.навіщо To have it, I said. You wouldn't get it.
 ^idle_a.навіщо What for, what for… I'll sell it. Or eat it.
-^idle_a.починай «Whether it's worth it», fuck. There, we're already fighting.
+^idle_a.починай “Whether it's worth it”, fuck. There, we're already fighting.
 ^idle_a.починай While you're thinking, I've already won.
 ^idle_a.програєш Me, sulk? I don't sulk, {м_слівце}! This is how I sit.
 ^idle_a.програєш Lose?! I'll cuss you into the ground in two seconds.
@@ -7533,7 +7533,7 @@ in the Meadows it's as boring as a feast without mead.
 there's nobody to kill here except chickens.
 grass, sun, silence. Horror.
 the Meadows are for weaklings. And here you are.
-even the greydwarves aren't scary here. Only funny.
+even the greydwarfs aren't scary here. Only funny.
 ~1 feeling strong in the Meadows? Because everything here is weaker than you. Barely.
 ~1 even a boar here is smarter than you.
 ~2 the Meadows, fuck. Well, at least it doesn't stink.
@@ -7550,21 +7550,21 @@ Ugh.
 
 @бм_чорнолісся
 The Black Forest, fuck. Dark as a troll's ass.
-greydwarves in the bushes. I can smell them stink.
+greydwarfs in the bushes. I can smell them stink.
 a troll is thumping. Finally something interesting.
 here every tree wants to kill you. Respect.
 moss, mushrooms, rot. My favorite smell.
 the Black Forest isn't the Meadows. Things bite here.
 there are bones under every bush here. Some are fresh.
 ~1 you won't last long in the Black Forest. I bet on the troll.
-~1 you make noise like a herd of cows. The greydwarves are already running.
+~1 you make noise like a herd of cows. The greydwarfs are already running.
 ~2 dark, damn it. But interesting.
 ~2 we'll find someone and slice them up.
 ~3 it's dark here, but I'm with you, you little shit.
 ~3 the Black Forest is ours, fuck. Let them know.
 
 @бм_чорнолісся_порада
-Slice the greydwarves.
+Slice the greydwarfs.
 Look up, you oaf.
 Light a torch.
 ~1 If you croak here — I won't cry.
@@ -7914,7 +7914,7 @@ Fuck.
 ^ferment.одіну Odin won't mind if I take a little sip.
 ^ferment.одіну Odin? He's boozing in Valhalla anyway, fuck. He can share.
 ^ferment.на_око By eye, good. Then more honey. And a bit more.
-^ferment.майже «Almost», fuck. If we get poisoned, it's your recipe.
+^ferment.майже “Almost”, fuck. If we get poisoned, it's your recipe.
 ^ferment.майже Almost means you forgot. Pour by eye.
 ^ferment.слушно First? I've been right all day, nerd.
 ^ferment.каркай I don't croak. I warn.
@@ -7923,7 +7923,7 @@ Fuck.
 @мд_лагодження
 ^repair.молоток>repair.верещить The most honest music is an enemy squealing. But this is all right too.
 ^repair.молоток>repair.голова Bang-bang, fuck. My head's cracking like a nut.
-^repair.нове>repair.майже «Almost» is how we live.
+^repair.нове>repair.майже “Almost” is how we live.
 ^repair.нове>repair.до_бою Good as new till the first fight. Then shit again.
 ^repair.подряпина>repair.літопис Stories go in your chronicle, nerd. Iron should be whole.
 ^repair.подряпина>repair.пики My stories are on enemy faces. What's a scratch.
@@ -12503,7 +12503,7 @@ Yes, white. Ask again and I peck.
 A white raven. Rare as your brains.
 @мпор_ал_хвал
 Other ravens stick to me like flies to shit. Or hate me. Nothing in between.
-Whoever says «pigeon» loses an eye.
+Whoever says “pigeon” loses an eye.
 I'm white, but my soul's black. Fair deal.
 You can see me from the sky. Let them see who's boss.
 Everyone remembers the white raven. Especially the ones I pecked.
@@ -12578,11 +12578,11 @@ Want to warm up — stay close. Just don't singe your beard.
 I smoulder like a coal. But I'm warm.
 The foe burns and I'm happy. Beautiful.
 @мпор_бачив
-Look, «{breed}». Showing off. I'm cooler.
-«{breed}», you say? So what. I'm still prettier.
-Another special one: «{breed}». Better not stick its beak up.
-Oh, «{breed}» woke up. Let's see if it can peck.
-«{breed}». Fuck me, now it'll think it's the boss.
+Look, “{breed}”. Showing off. I'm cooler.
+“{breed}”, you say? So what. I'm still prettier.
+Another special one: “{breed}”. Better not stick its beak up.
+Oh, “{breed}” woke up. Let's see if it can peck.
+“{breed}”. Fuck me, now it'll think it's the boss.
 @мпор_руда
 There's {ore} near, damn it. Dig, why are you standing there.
 My nose doesn't lie: {ore}. Marked it on the map.
@@ -12765,7 +12765,7 @@ I'm a toiler. Don't rush me.
 @мзв_lost
 {habit}? Nah, forget it. Don't feel like it anymore.
 No longer {habit}. And don't ask why.
-That's it, «{habit}» is in the past.
+That's it, “{habit}” is in the past.
 @мзв_hangover
 My head's splitting... Who didn't pour yesterday?! Ah, nobody.
 Dry mouth, damn it. Give me mead.
@@ -14853,3 +14853,154 @@ Always the same. You tell the truth and nobody minds you.
 Noted. I won't mind you either.
 Pfft at you.
 I'll say it again. Louder.
+# --- a search for a person (rev 113): the raven looks for the trail, "warmer / colder"
+[seek_lost_warmer] {шук_тепліше}
+[seek_lost_colder] {шук_холодніше}
+@шук_тепліше
+Oh, warmer! What, grew a nose?
+Closer, closer. I smell it — someone here stinks of old foot rags.
+Yeah, this way. Just don't stomp like a bear.
+Warmer. Hiding somewhere here for sure.
+A bit more. Someone's muttering over there, hear it?
+Warmer, damn it. Finally you do something right.
+~1 Warmer. Don't think it's your doing.
+~3 Closer, mate. We'll dig them up in a moment.
+@шук_холодніше
+Cold, you lump. Nobody came this way.
+Not there! Can't you smell the ground?
+Colder. Look, turn around.
+Empty here. The trail is back there.
+Cold. A bit more and you'll get lost yourself.
+Not there, blast it. Back.
+~1 Cold. I knew you'd get lost.
+~3 Not there, but it's fine. We'll go back.
+# --- a search for a place (rev 114): the raven looks for an old post of the Watch (act 1: the crypt), "warmer / colder"
+[seek_post_warmer] {шук_пост_тепліше}
+[seek_post_colder] {шук_пост_холодніше}
+@шук_пост_тепліше
+Warmer! Stinks of old stone and dead folk. Our kind of place.
+Closer. Hear how quiet it is? That quiet only happens near your own.
+Yeah, this way. Watch your feet, there are holes.
+Warmer. Somewhere here for sure, under the ground.
+A bit more. Something's giving me chills — means we're on the right track.
+Warmer, damn it. Smells like the Hall.
+~1 Warmer. Don't get cocky, I found it.
+~3 Closer, mate. We'll dig our way there in a moment.
+@шук_пост_холодніше
+Cold, you lump. Nobody built anything here.
+Not there! You don't put a post out in the open.
+Colder. Look, go back.
+Empty here, just bushes and greydwarfs.
+Cold. A bit more and we're in a swamp, what a joy.
+Not there, blast it. Turn around.
+~1 Cold. I knew it.
+~3 Not there, but it's fine. We'll find it.
+# --- the throne with carved ravens in the Watch's barrow (rev 115): the player sat down, the raven on the shoulder teases
+[seat_throne_search] {трон_пошук}
+[seat_throne_scroll] {трон_сувій}
+[seat_throne_note] {трон_записка}
+[seat_throne_night] {трон_ніч}
+[seat_throne_ravens] {трон_ворони}
+@трон_пошук
+What, sat down? And who's gonna find the scroll, Odin?
+The chest is right there, and you're sprawled like a jarl at a feast. Damn.
+Sitting? Fine, sit. The dead here sat like that too, till they croaked.
+Look, you're meant to search, not warm the throne.
+What, your legs fell off? The chest is right there, just reach out.
+~1 Searching with your arse, genius? Sure, you'll find it, yeah.
+~3 Sit a bit, it's fine. Just check the chest after, I can smell something in there.
+@трон_сувій
+Oh, jarl of the barrow! Got a scroll, got a throne, but no grub.
+Sprawled like Odin at a feast. Only the mead's missing.
+Scroll in the bag, arse on the throne. Life's sorted, basically.
+What, king already? Go on, give orders, your majesty. Just not to me.
+~1 Found one scrap of paper and you're already on a throne. Pfft.
+~3 You earned it, eh. Sit a bit, then we clear out, it stinks here.
+@трон_записка
+Sitting on a dead man's throne with his scrap of paper. You're a real grave robber, respect.
+He wrote, you read, and me? I sit on you. All fair.
+Nicked the note, took the throne. Find his spoon too and you're him.
+The note in your bag, the throne under you. He'd curse us for sure.
+~1 Taking other people's stuff, sitting on other people's seats. You're not from the Watch, you're from the market.
+~3 Relax, he doesn't mind. The dead don't complain.
+@трон_ніч
+Night, crypt, dead guys, and you on a throne. What's next, dancing?
+Midnight on a throne in a barrow. What, looking for a pretty place to croak?
+Night outside and we're sitting here. Look, if anything moves, I'm running first.
+Dark as a backside. And you just felt like sitting.
+~1 Night. The dead get up, and you sit down. Logic, damn it.
+~3 Sit, sit. I'm on watch. Just don't snore, or the dead'll come running.
+@трон_ворони
+Look, there are ravens carved on the throne! Wooden, but cheeky mugs, like mine.
+What's with the wooden ravens? Who allowed this? I never agreed to pose.
+A throne with ravens. Look, that's ours. Get off.
+These wooden ones keep quiet like Hugin with a hangover.
+~1 The carver, the rat, made my beak crooked. I find him, I peck him dead.
+~3 Well, you sit nice. Almost a jarl. Almost.
+# --- a person's dim raven (rev 116): Munin speaks to it and about its silence
+[dlg_dim_m_open] {дим_м_до}
+[dlg_dim_m_quiet] {дим_м_тиша}
+[dlg_dim_m_word] {дим_м_слово}
+@дим_м_до
+^dimm Hey, gramps! Why are you sitting there like a wet rag?
+^dimm Oi, grey one, are you alive, or can I start pecking you already?
+^dimm Howdy, pal! What, cat got your tongue?
+^dimm Hey, Hugin number two. Say something clever, ours is getting old.
+^dimm What, your old man nicked something again? Spill, where does he stash it?
+^dimm Whoa, {hat}! Where'd you dig that up, fancy boy?
+^dimm What's that on you, {hat}? Off to the fair, are we?
+^dimm {hat} again. What, you pull them off dead guys?
+~1 ^dimm You feathered scarecrow, answer me when I'm asking!
+~1 ^dimm Oi, bag of feathers, am I talking to you or to a stump?
+~3 ^dimm Listen, bro, want me to bring you some grub? You don't look too good.
+~3 ^dimm What, old-timer, feeling down? Sit, sit then.
+@дим_м_тиша
+^dimh Ha, got you! He can't even hear you, smartass.
+^dimh That's it, Hugin, you've bored him to death. He's gone quiet.
+^dimh Silent. Like a stump. Only a stump at least doesn't stare.
+^dimh Some conversation partner. Just your type: nobody interrupts.
+^dimh Read him a poem next. Maybe he'll fall off the branch from joy.
+^dimh Long story short, he's ignoring you. And he's right to.
+~1 ^dimh Hugin, you're talking to him like to an oak. At least an oak rustles.
+~1 ^dimh He's thick as an axe. Leave him alone.
+~3 ^dimh Leave him be. Can't you see he feels like crap?
+~3 ^dimh Let him keep quiet. Maybe it's easier for him that way.
+@дим_м_слово
+^dimh Whoa… It talks! Hugin, it really talks!
+^dimh Huh. I thought he forgot how ages ago.
+^dimh Writing it down: first word in a hundred years. Only writing's not my thing.
+^dimh Chills down my feathers. Don't poke him again.
+^dimh Didn't get a thing, but it sounds bad.
+^dimh Said it and shut up again. What kind of bird is that.
+~1 ^dimh Should've stayed quiet, the creep. Gives me the shivers.
+~1 ^dimh That's your colleague, Hugin. Just as boring, only shorter.
+~3 ^dimh Hey, Hugin… Maybe he wants to talk sometimes too.
+~3 ^dimh Well then. Means something in him still smoulders.
+# --- a person's dim raven (rev 117): Munin asks; now and then it answers to the point, dry and short
+[dlg_dim_m_ask] {дим_м_пит}
+[dlg_dim_m_answer] {дим_м_відп}
+@дим_м_пит
+^dimmq.мовчиш So why are you quiet again? What, swallowed a feather?
+^dimmq.мовчиш Oi, you took a vow of silence or what? To who, the hell?
+~3 ^dimmq.мовчиш Why're you always quiet, old man? Say one word, I won't bite.
+^dimmq.шапка Spill it, fashion boy: where d'you get this stuff? {hat}, damn it!
+^dimmq.шапка Oi, that {hat}, you nick it off someone? Confess.
+^dimmq.старий What'd your old geezer nick today? Spill, I won't tell.
+^dimmq.старий Oi, what's the old man stuffing in his bag again? I can see he's stuffing.
+^dimmq.другий Oi, where's your Munin? What, he dumped you?
+^dimmq.другий And where's your other one? You know, the one that was supposed to remember.
+^dimmq.живий You alive in there, or can I start pecking?
+~1 ^dimmq.живий Oi, bag of feathers, you alive or croaked?
+@дим_м_відп
+^dimr.мовчиш Burned. Hugin, you hear that? That was about you.
+^dimr.мовчиш Ha! A couple of words, and Hugin's gone red under the feathers.
+^dimr.шапка That's it, Hugin, now you definitely want one too.
+^dimr.шапка Trade secret. Told you he wouldn't say.
+^dimr.старий So, same as always. Geezer nicks it, bird covers for him.
+^dimr.старий Now that's a partner. With one like him I'd nick stuff myself.
+^dimr.другий That's how you ask, smartass. Now sit and think what you did.
+^dimr.другий Oi… let's skip questions like that, yeah? Went all cold.
+^dimr.живий Whoa, he bites! I like him already.
+^dimr.живий Alive, and sharp too. Hugin, you've got competition.
+^dimr Said it and went quiet again. But how he said it.
+^dimr Well, Hugin, he answered you. Enjoy it before he changes his mind.

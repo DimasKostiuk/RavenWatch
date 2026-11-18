@@ -11,7 +11,8 @@ namespace HuginWhispers
     //   tiredness   0–100: it grows while it works (heavy work quicker); at the top it puts its work down and sits — on a
     //               bench or by a fire it is rested soonest, on the ground slowly, asleep in its bed well
     //   mood        0–100: its bed under a roof, a fire burning in its base, fed, not always the same food, not worn out,
-    //               not wet in the rain, paid, a module's share (MoodFrom: its wish come true, or wanted long — NpcGoals) — its work ×0.7 at the worst to ×1.2 at the best; at the very bottom three
+    //               not wet in the rain, paid, a module's share (MoodFrom: its wish come true, or wanted long — NpcGoals; woken from its sleep — NpcWake; one of its home it cannot stand, a friend there,
+    //               a feast — NpcNeighbours) — its work ×0.7 at the worst to ×1.2 at the best (a friend at work near it: ×NpcNeighbours.WorkWith); at the very bottom three
     //               game days on end it leaves (to the ravens' home, as a starved one does)
     //   pay         every five game days it walks up to its heart and takes its pay from the heart's coin box («Скарбничка»)
     //               itself — a few coins by its work and how far the world has gone; none there: unpaid, its mood down (and one
@@ -66,13 +67,13 @@ namespace HuginWhispers
         // its work's load whether or not it is at it now (NpcHunger.NeedPerDay): its job alone, so any game reads the same
         internal static float WorkLoad(NpcActor a) { return a != null && a.Worker != null && a.Worker.Works ? Load(a.Worker.JobId) : 1f; }
 
-        // × its work's pace (NpcWorker, NpcHew): its mood and its craft
+        // × its work's pace (NpcWorker, NpcHew): its mood, its craft, a friend at work near it (NpcNeighbours)
         internal static float Pace(NpcActor a)
         {
             if (a == null) return 1f;
             float m = Mood(a);
             float byMood = m < 50f ? 0.7f + 0.3f * m / 50f : 1f + 0.2f * (m - 50f) / 50f;
-            return byMood * Craft(a, a.Worker != null ? a.Worker.JobId : "");
+            return byMood * Craft(a, a.Worker != null ? a.Worker.JobId : "") * NpcNeighbours.WorkPace(a);
         }
 
         // ---------------------------------------------------------------- read on every game (its ZDO)
@@ -107,7 +108,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- what weighs on it (its mood's worst)
         // (kept as a number in its locker: new ones only at the end; those from Bed on lift it, Pining weighs a little)
-        internal enum Why { None, NoBed, BedOpen, Hungry, Starving, SameFood, Tired, Wet, Unpaid, NoFire, Bed, BedRoof, Fire, Fed, Varied, Paid, Wish, Pining }
+        internal enum Why { None, NoBed, BedOpen, Hungry, Starving, SameFood, Tired, Wet, Unpaid, NoFire, Bed, BedRoof, Fire, Fed, Varied, Paid, Wish, Pining, Woken, Foe, Friend, Feast } // (kept by number in its locker: a new one at the end only)
         internal static string WhyWord(NpcActor a)
         {
             ZDO z = a != null ? a.Zdo : null;
@@ -135,6 +136,10 @@ namespace HuginWhispers
                 case Why.Paid: return Lang.T("платять вчасно");
                 case Why.Wish: return Lang.T("збулося те, про що мріяв|мріяла");
                 case Why.Pining: return Lang.T("довго чекає на те, про що мріє");
+                case Why.Woken: return Lang.T("розбудили серед сну");
+                case Why.Foe: return Lang.T("живе поруч із тим, кого не терпить");
+                case Why.Friend: return Lang.T("поруч друг");
+                case Why.Feast: return Lang.T("недавно було свято");
                 default: return "";
             }
         }
@@ -241,7 +246,7 @@ namespace HuginWhispers
             float dt = _read ? Time.time - _lastTick : 0f; _lastTick = Time.time; // (its own last step: the step is shorter while it goes for its pay)
             _next = Time.time + (_pay != null ? PayStep : Tick); // (on its way for its pay: looked at often — its hand into the box must not wait a whole step)
             if (!_read) { if (!NpcLocker.Ready(_a)) return; _read = true; _tired = _keptTired = NpcLocker.Num(z, KTired, 0f); _mood = _keptMood = NpcLocker.Num(z, KMood, 60f); _low = _keptLow = NpcLocker.Num(z, KLow, 0f); _target = _mood; return; }
-            if (!NpcResident.Is(_a) || !_a.Def.Settler || (_a.Vitals != null && _a.Vitals.Down)) return; // (a person of the story: no pay, no mood of the home)
+            if (!NpcResident.Settled(_a) || (_a.Vitals != null && _a.Vitals.Down)) return; // (a person of the story: no pay, no mood of the home)
             dt = Mathf.Clamp(dt, 0f, 30f);
             Tiredness(dt);
             Moods(dt);
@@ -302,7 +307,11 @@ namespace HuginWhispers
         private bool Comfy()
         {
             Vector3 p = transform.position;
-            return NpcMind.SeatNear(p, 1.3f) || NpcKit.Nearest<Fireplace>(p, 4f, f => f.IsBurning() && NpcKit.Warms(f)) != null;
+            if (NpcMind.SeatNear(p, 1.3f)) return true;
+            NpcBase b = NpcBase.Covering(p); // (a base's own list of its fires: no look over every collider near, each step of every seated person)
+            if (b == null) return NpcKit.Nearest<Fireplace>(p, 4f, f => f.IsBurning() && NpcKit.Warms(f)) != null; // (a camp, the wild: no base looks round)
+            foreach (Component c in b.Round(typeof(Fireplace))) { Fireplace f = c as Fireplace; if (f != null && Vector3.Distance(f.transform.position, p) < 4f && f.IsBurning() && NpcKit.Warms(f)) return true; }
+            return false;
         }
 
         // ---- mood
@@ -315,8 +324,10 @@ namespace HuginWhispers
             if (_low > LeaveDays * DayLength && !NpcLevers.IsProtected(_a)) Leave();
         }
 
-        // a module's share of its mood (NpcModules: NpcGoals), points ± on the 0–100 scale, asked once a game minute
-        internal static readonly List<System.Func<NpcActor, float>> MoodFrom = new List<System.Func<NpcActor, float>>();
+        // a module's share of its mood (NpcGoals: its wish; NpcWake: woken from its sleep), points ± on the 0–100 scale, asked once a game minute;
+        // its word on the card by its sign (Up when it lifts, Down when it weighs: a share said nothing of itself, and every one was named a wish)
+        internal sealed class Share { public System.Func<NpcActor, float> By; public Why Up = Why.None, Down = Why.None; }
+        internal static readonly List<Share> MoodFrom = new List<Share>();
 
         private void Weigh()
         {
@@ -346,7 +357,7 @@ namespace HuginWhispers
                 int unpaid = NpcLocker.Int(_a.Zdo, KUnpaid, -1);
                 if (unpaid == 0) add(15f, Why.Paid); else if (unpaid == 1) add(-15f, Why.Unpaid); else if (unpaid >= 2) add(-25f, Why.Unpaid);
             }
-            foreach (System.Func<NpcActor, float> m in MoodFrom) { float by = m(_a); add(by, by > 0f ? Why.Wish : Why.Pining); } // (a module's own share: NpcGoals — proud, or long wanting)
+            foreach (Share m in MoodFrom) { float by = m.By(_a); add(by, by > 0f ? m.Up : m.Down); } // (a module's own share: NpcGoals — proud, or long wanting; NpcWake — woken)
             _target = Mathf.Clamp(t, 0f, 100f);
             if (NpcLocker.Int(_a.Zdo, KWhy, 0) != (int)worst) NpcLocker.Put(_a.Zdo, KWhy, (int)worst);
             NpcLocker.Put(_a.Zdo, KMoodParts, parts.ToString()); // (written only when it changed: NpcLocker.Put; a game minute at the most often)
@@ -368,14 +379,19 @@ namespace HuginWhispers
         }
 
         // at the bottom three days on end: it goes (as a starved one: to the ravens' home)
-        private void Leave()
+        private void Leave() { Leaves(_a, "leave_unhappy", Lang.T("Досить з мене. Піду до Дому воронів."), "npc_left_unhappy", "unhappy too long"); }
+
+        // it leaves its base, where it is run (unhappy too long; its ultimatum ran out — NpcNeighbours): its words, the bus, unhired, on its way to the ravens' home
+        internal static void Leaves(NpcActor a, string theme, string written, string busEvent, string why)
         {
-            NpcPhrases.SayOr(_a, "leave_unhappy", _a.Form(Lang.T("Досить з мене. Піду до Дому воронів.")));
-            Npcs.Log(_a.Id + ": unhappy too long — leaves the base");
-            StoryBus.Raise("npc_left_unhappy", _a.Id, 0, transform.position);
-            _mood = _target = 50f; _low = 0f; Keep();
-            _a.Act("unhire");
-            _a.Order("travel " + Npcs.V(NpcTravel.Refuge) + " " + NpcTravel.ToRefuge);
+            if (a == null) return;
+            NpcPhrases.SayOr(a, theme, a.Form(written));
+            Npcs.Log(a.Id + ": " + why + " — leaves the base");
+            StoryBus.Raise(busEvent, a.Id, 0, a.transform.position);
+            NpcToil t = a.GetComponent<NpcToil>();
+            if (t != null) { t._mood = t._target = 50f; t._low = 0f; t.Keep(); }
+            a.Act("unhire");
+            a.Order("travel " + Npcs.V(NpcTravel.Refuge) + " " + NpcTravel.ToRefuge);
         }
 
         // ---- pay

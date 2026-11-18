@@ -67,6 +67,7 @@ namespace HuginWhispers
             else if (Senses.Swimming) why = "you swim";
             else if (Senses.Sleeping) why = "you sleep";
             else if (Senses.Fight) why = "a fight";
+            else if (Senses.InScene) why = "a scene of the story"; // (it counts on the raven on your shoulder: Senses.InScene)
             for (int i = 0; i < 2; i++)
             {
                 bool munin = i == 1;
@@ -92,7 +93,7 @@ namespace HuginWhispers
         // could a raven go off now: you calm, out in the open, healthy enough
         internal static bool CanGo(Player p)
         {
-            return p != null && !p.IsDead() && !Indoors() && !Senses.Fight && !Shoulder.Hovering(p) && !Senses.Swimming && !Senses.Sleeping
+            return p != null && !p.IsDead() && !Indoors() && !Senses.Fight && !Senses.InScene && !Shoulder.Hovering(p) && !Senses.Swimming && !Senses.Sleeping
                 && Senses.Health01 >= 0.5f;
         }
 

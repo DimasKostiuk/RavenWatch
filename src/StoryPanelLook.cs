@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 namespace HuginWhispers
 {
-    // The story window (StoryPanel), «Вигляд»: our people's looks on a mannequin (NpcPreview).
+    // The story window (StoryPanel), «Вигляд»: our people's looks on a mannequin (NpcPreview). A dvergr (body: dvergr) has controls of its own: DvergrLook.
     internal partial class StoryPanel
     {
         // ---------------------------------------------------------------- «Вигляд»: our people's looks, on a mannequin
@@ -27,7 +27,7 @@ namespace HuginWhispers
             // left: our people
             GUILayout.BeginVertical(GUILayout.Width(180f));
             GUILayout.Label("Наші люди", _head);
-            _peopleScroll = GUILayout.BeginScrollView(_peopleScroll, GUILayout.Height(520f));
+            _peopleScroll = GUILayout.BeginScrollView(_peopleScroll, GUILayout.Height(Fill(40f)));
             foreach (NpcDef x in NpcDefs.All())
             {
                 if (x.Generated) continue; // (settlers: the mod makes each its own)
@@ -46,6 +46,9 @@ namespace HuginWhispers
             {
                 GUILayout.Label("Зміни видно на картинці одразу, а на живих «" + d.Id + "» поруч — за мить. Щоб лишилось — «Зберегти» внизу.", _hint);
 
+                if (d.Dvergr) DvergrLook(d);
+                else
+                {
                 GUILayout.Label("Тіло", _head);
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Чоловік", d.Model == 0 ? _sel : GUI.skin.button, GUILayout.Width(120f))) { d.Model = 0; Changed(); }
@@ -65,13 +68,13 @@ namespace HuginWhispers
                 d.Hair = Pick("Зачіска", d.Hair, _hairs, true);
                 d.Beard = Pick("Борода", d.Beard, _beards, true);
                 d.HairColor = ColourRow(d.HairColor, HairPresets, HairNames);
+                GUILayout.Label("Очі, плащ і голова", _head);
+                d.TintEyes = TintRow("Очі", d.TintEyes, EyePresets, EyeNames);
+                d.TintCape = TintRow("Плащ", d.TintCape, CapePresets, CapeNames);
+                d.TintHead = TintRow("На голові", d.TintHead, CapePresets, CapeNames);
+                GUILayout.Label("Плащ і те, що на голові: колір, яким виходить уся річ, хоч яка вона; світло, тінь і малюнок лишаються свої. Очі світяться лише у двергра.", _hint);
 
-                GUILayout.Label("Одяг і речі в руках", _head);
-                for (int s = 0; s < SlotNames.Length; s++)
-                {
-                    string cur = InSlot(d, s);
-                    string now = Pick(SlotNames[s], cur, _bySlot[s], true);
-                    if (now != cur) { if (cur.Length > 0) d.Gear.Remove(cur); if (now.Length > 0) d.Gear.Add(now); }
+                Wardrobe(d); // (the slots and one grid of pictures: StoryPanelWardrobe.cs)
                 }
 
                 GUILayout.Space(10);
@@ -134,16 +137,77 @@ namespace HuginWhispers
             if (GUILayout.Button("Спиною")) NpcPreview.Yaw = 180f;
             if (GUILayout.RepeatButton(">", GUILayout.Width(40f))) NpcPreview.Yaw -= 90f * Time.unscaledDeltaTime;
             GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal(GUILayout.Width(NpcPreview.W));
+            AuthorRow shots = AuthorRow.Begin();
             for (int i = 0; i < NpcPreview.Shots.Length; i++)
-                if (GUILayout.Button(NpcPreview.Shots[i], NpcPreview.Shot == i ? _sel : GUI.skin.button)) NpcPreview.Shot = i;
-            GUILayout.EndHorizontal();
+                if (shots.Button(NpcPreview.Shots[i], NpcPreview.Shot == i ? _sel : null)) NpcPreview.Shot = i;
+            shots.End();
             GUILayout.Label("Тягни мишкою по картинці, щоб повернути.", _hint);
             GUILayout.EndVertical();
             GUILayout.Space(8);
         }
 
         private void Changed() { _redressAt = Time.unscaledTime + 0.25f; }
+
+        // a dvergr (NpcDef.Dvergr): its look is what it wears — one of the game's own suits, one of its hairs, a thing in its hand; its height
+        private static List<string> _dvSuits, _dvHairs;
+        private static readonly Dictionary<string, string> DvergrNames = new Dictionary<string, string>
+        {
+            { "DvergerSuitArbalest", "Розвідник" }, { "DvergerSuitArbalest_Ashlands", "Розвідник із Попелищ" }, { "DvergerSuitFire", "Маг вогню" }, { "DvergerSuitIce", "Маг криги" }, { "DvergerSuitSupport", "Маг підтримки" },
+            { "DvergerHairMale", "Чоловіче з бородою" }, { "DvergerHairMale_Redbeard", "Чоловіче руде з бородою" }, { "DvergerHairFemale", "Жіноче" }, { "DvergerHairFemale_Redhair", "Жіноче руде" },
+        };
+        private static string DvergrHas(NpcDef d, string start) { foreach (string g in d.Gear) if (g.StartsWith(start, System.StringComparison.Ordinal)) return g; return ""; }
+        private void DvergrLook(NpcDef d)
+        {
+            GUILayout.Label("Зріст", _head);
+            NpcPersona w = NpcPersona.OfTemplate(d);
+            float h = Trait("Зріст", w.Height, 0.8f, 1.25f, "×" + w.Height.ToString("0.00"));
+            if (Mathf.Abs(h - w.Height) > 0.001f) { d.SetTrait("height", h); Changed(); }
+            GUILayout.Label("Вбрання й волосся двергра", _head);
+            foreach (string start in new[] { "DvergerSuit", "DvergerHair" })
+            {
+                string cur = DvergrHas(d, start);
+                string now = Pick(start == "DvergerSuit" ? "Вбрання" : "Волосся", cur, start == "DvergerSuit" ? _dvSuits : _dvHairs, true);
+                if (now != cur) { if (cur.Length > 0) d.Gear.Remove(cur); if (now.Length > 0) d.Gear.Add(now); }
+            }
+            GUILayout.Label("Капюшон належить вбранню: без вбрання двергр голий. Шкіри, статі й статури в нього нема.", _hint);
+            GUILayout.Label("Кольори", _head);
+            d.TintSkin = TintRow("Шкіра", d.TintSkin, DvSkin, DvSkinNames);
+            d.TintHair = TintRow("Волосся й борода", d.TintHair, HairPresets, HairNames);
+            d.TintSuit = TintRow("Вбрання", d.TintSuit, DvSuit, DvSuitNames);
+            d.TintEyes = TintRow("Очі", d.TintEyes, DvEyes, DvEyesNames);
+            GUILayout.Label("Колір — яким виходить уся частина; світло, тінь і малюнок лишаються свої. «Як у грі» знімає колір.", _hint);
+            GUILayout.Label("Річ у руках", _head);
+            for (int s = 5; s <= 6; s++)
+            {
+                string cur = InSlot(d, s);
+                string now = Pick(SlotNames[s], cur, _bySlot[s], true);
+                if (now != cur) { if (cur.Length > 0) d.Gear.Remove(cur); if (now.Length > 0) d.Gear.Add(now); }
+            }
+        }
+
+        // a person's eyes, cape and what is on its head (BodyTint: tint_eyes, tint_cape, tint_head — the head takes the cape's colours)
+        private static readonly Vector3[] EyePresets = { new Vector3(0.92f, 0.64f, 0.16f), new Vector3(0.36f, 0.22f, 0.1f), new Vector3(0.3f, 0.5f, 0.25f), new Vector3(0.55f, 0.6f, 0.65f), new Vector3(0.44f, 0.73f, 1f), new Vector3(0.08f, 0.06f, 0.05f) };
+        private static readonly string[] EyeNames = { "бурштин", "карі", "зелені", "сірі", "блакитні", "темні" };
+        private static readonly Vector3[] CapePresets = { new Vector3(0.5f, 0.37f, 0.26f), new Vector3(0.62f, 0.47f, 0.25f), new Vector3(0.78f, 0.7f, 0.56f), new Vector3(0.33f, 0.22f, 0.15f), new Vector3(0.45f, 0.45f, 0.45f), new Vector3(0.12f, 0.12f, 0.13f) };
+        private static readonly string[] CapeNames = { "кавовий", "вохра", "кремовий", "бурий", "сірий", "темний" };
+
+        // a dvergr's colour (BodyTint): as the game made it, or its own — the people's colour row
+        private static readonly Vector3[] DvSkin = { new Vector3(0.36f, 0.47f, 0.48f), new Vector3(0.45f, 0.45f, 0.45f), new Vector3(0.62f, 0.52f, 0.44f), new Vector3(0.3f, 0.36f, 0.3f), new Vector3(0.5f, 0.58f, 0.66f), new Vector3(0.24f, 0.22f, 0.26f) };
+        private static readonly string[] DvSkinNames = { "сіро-синя", "сіра", "тілесна", "болотна", "бліда", "темна" };
+        private static readonly Vector3[] DvSuit = { new Vector3(0.19f, 0.26f, 0.14f), new Vector3(0.13f, 0.2f, 0.26f), new Vector3(0.3f, 0.1f, 0.09f), new Vector3(0.12f, 0.12f, 0.13f), new Vector3(0.36f, 0.28f, 0.14f), new Vector3(0.24f, 0.14f, 0.28f) };
+        private static readonly string[] DvSuitNames = { "зелене", "синє", "червоне", "чорне", "вохра", "пурпур" };
+        private static readonly Vector3[] DvEyes = { new Vector3(1f, 0.74f, 0.2f), new Vector3(0f, 0.38f, 1f), new Vector3(0.3f, 1f, 0.4f), new Vector3(1f, 0.25f, 0.1f), new Vector3(0.9f, 0.9f, 1f), new Vector3(0.05f, 0.05f, 0.05f) };
+        private static readonly string[] DvEyesNames = { "золоті", "сині", "зелені", "червоні", "білі", "згаслі" };
+        private Vector3 TintRow(string label, Vector3 c, Vector3[] presets, string[] names)
+        {
+            bool own = NpcDef.HasTint(c);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, GUILayout.Width(150f));
+            if (GUILayout.Button("як у грі", !own ? _sel : GUI.skin.button, GUILayout.Width(100f)) && own) { c = NpcDef.NoTint; own = false; Changed(); }
+            if (GUILayout.Button("свій колір", own ? _sel : GUI.skin.button, GUILayout.Width(100f)) && !own) { c = presets[0]; own = true; Changed(); }
+            GUILayout.EndHorizontal();
+            return own ? ColourRow(c, presets, names) : c;
+        }
 
         // a trait on a slider, in steps of 0.05 (written only when moved)
         private float Trait(string label, float v, float lo, float hi, string shown)
@@ -159,13 +223,10 @@ namespace HuginWhispers
         // a colour: presets + three sliders (as the game keeps it: 0..1 each)
         private Vector3 ColourRow(Vector3 c, Vector3[] presets, string[] names)
         {
-            GUILayout.BeginHorizontal();
+            AuthorRow row = AuthorRow.Begin(); // (the column is narrow: as many a row as fit)
             for (int i = 0; i < presets.Length; i++)
-            {
-                if (i > 0 && i % 3 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); } // (three a row: the column is narrow)
-                if (GUILayout.Button(names[i])) { c = presets[i]; Changed(); }
-            }
-            GUILayout.EndHorizontal();
+                if (row.Button(names[i])) { c = presets[i]; Changed(); }
+            row.End();
             Vector3 was = c;
             GUILayout.BeginHorizontal();
             GUILayout.Label("Ч", GUILayout.Width(14f)); c.x = GUILayout.HorizontalSlider(c.x, 0f, 1f, GUILayout.Width(110f));
@@ -195,6 +256,7 @@ namespace HuginWhispers
 
         private static string ItemName(string prefab)
         {
+            string dv; if (DvergrNames.TryGetValue(prefab, out dv)) return dv; // (the game names every one of them «Iron plate armor»)
             GameObject g = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(prefab) : null;
             ItemDrop id = g != null ? g.GetComponent<ItemDrop>() : null;
             return id != null && Localization.instance != null ? Localization.instance.Localize(id.m_itemData.m_shared.m_name) : prefab;
@@ -216,6 +278,7 @@ namespace HuginWhispers
                 case ItemDrop.ItemData.ItemType.Tool:
                 case ItemDrop.ItemData.ItemType.Torch: return 5;
                 case ItemDrop.ItemData.ItemType.Shield: return 6;
+                case ItemDrop.ItemData.ItemType.Trinket: return 7;
             }
             return -1;
         }
@@ -235,7 +298,7 @@ namespace HuginWhispers
         private static void Lists()
         {
             if (_bySlot != null || ObjectDB.instance == null) return;
-            _hairs = new List<string>(); _beards = new List<string>();
+            _hairs = new List<string>(); _beards = new List<string>(); _dvSuits = new List<string>(); _dvHairs = new List<string>();
             _bySlot = new Dictionary<int, List<string>>();
             for (int s = 0; s < SlotNames.Length; s++) _bySlot[s] = new List<string>();
             foreach (GameObject g in ObjectDB.instance.m_items)
@@ -244,6 +307,8 @@ namespace HuginWhispers
                 ItemDrop id = g.GetComponent<ItemDrop>();
                 if (id == null) continue;
                 ItemDrop.ItemData.SharedData s = id.m_itemData.m_shared;
+                if (g.name.StartsWith("DvergerSuit", System.StringComparison.Ordinal)) { _dvSuits.Add(g.name); continue; } // (a dvergr's own: DvergrLook)
+                if (g.name.StartsWith("DvergerHair", System.StringComparison.Ordinal)) { _dvHairs.Add(g.name); continue; }
                 if (s.m_itemType == ItemDrop.ItemData.ItemType.Customization)
                 {
                     if (g.name.StartsWith("Hair")) _hairs.Add(g.name);
@@ -253,8 +318,16 @@ namespace HuginWhispers
                 int slot = SlotOf(s);
                 if (slot >= 0 && NpcGear.Wearable(id)) _bySlot[slot].Add(g.name); // (not a creature's attack: those are items too)
             }
-            _hairs.Sort(System.StringComparer.Ordinal); _beards.Sort(System.StringComparer.Ordinal);
-            foreach (List<string> l in _bySlot.Values) l.Sort(System.StringComparer.Ordinal);
+            _hairs.Sort(System.StringComparer.Ordinal); _beards.Sort(System.StringComparer.Ordinal); _dvSuits.Sort(System.StringComparer.Ordinal); _dvHairs.Sort(System.StringComparer.Ordinal);
+            foreach (List<string> l in _bySlot.Values) l.Sort((a, b) => { int c = Strength(a).CompareTo(Strength(b)); return c != 0 ? c : string.CompareOrdinal(a, b); }); // (weakest first: as the game opens them, biome by biome)
+        }
+
+        // how strong a thing is, to put them in the order the game opens them: armour, a weapon's damage, a shield's block
+        private static float Strength(string prefab)
+        {
+            ItemDrop.ItemData.SharedData s = SharedOf(prefab);
+            if (s == null) return 0f;
+            return s.m_armor + s.m_damages.GetTotalDamage() + s.m_blockPower;
         }
 
         private string SaveDef(NpcDef d)

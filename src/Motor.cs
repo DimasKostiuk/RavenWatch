@@ -55,6 +55,9 @@ namespace HuginWhispers
         private float _divingSince;
         internal static float DiveHold = 0.6f; // s: at least this long in or out of a dive (waves would flip it each second)
         internal bool Diving { get { return _diving; } }
+        // through: for one short leg it neither swerves nor stops at what it meets (a place's raven out and in through its roof, a couple of
+        // seconds: LocRaven, StoryBird.Through) — its driver sets it for that leg alone and takes it off at its end
+        internal bool Through;
 
         private RavenMotor(Transform t, ShoulderLife life, bool munin, Player owner) { _t = t; _life = life; _munin = munin; _owner = owner; }
 
@@ -239,6 +242,7 @@ namespace HuginWhispers
             // another player's raven far from you: nobody sees it closely, no probes for it
             Player me = Player.m_localPlayer;
             if (avoid > 0f && _owner != null && me != null && !ReferenceEquals(_owner, me) && (_t.position - me.transform.position).sqrMagnitude > FarProbe * FarProbe) avoid = 0f;
+            if (Through) { avoid = 0f; _push = Vector3.zero; } // (through a roof: straight on)
             if (Body.Final) { avoid = 0f; _push = Vector3.zero; Body.Gust = 0f; } // the landing goes exactly where it aims
             else
             {
@@ -796,7 +800,7 @@ namespace HuginWhispers
             normal = Vector3.zero;
             Vector3 move = to - from;
             float distance = move.magnitude;
-            if (!AvoidOn || distance < 0.001f) return to;
+            if (!AvoidOn || Through || distance < 0.001f) return to; // (Through: its leg through a roof)
             if (Body != null && Body.Final) return to; // the landing goes exactly where it aims (a shoulder by a wall, a perch's bar)
             Transform owner = _owner != null ? _owner.transform : null;
             RaycastHit hit;

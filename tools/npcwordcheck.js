@@ -12,7 +12,8 @@
 //   unknown   a {name} that is no list of parts and no value (a line with one is silently dropped in the game)
 //   split     «бачив{|ла}»: the engine only pastes, that gives «бачивла»; write «бачи{в|ла}»
 //   name      a name after a preposition: names stay in the nominative (no «з {neighbour}»)
-//   who       «ти … а|б» (the speaker's form said of you: {а|б}) or «я … {а|б}» (yours said of the speaker: а|б)
+//   who       «ти … а|б» (the speaker's form said of you: {а|б}) or «я … {а|б}» (yours said of the speaker: а|б). Your own words to a person
+//             (themes say_*, lists «твоє_…»: NpcMoreSayPatterns) are read the other way round: «ти … {а|б}» and «я … а|б» are the errors there
 //   listener  a {а|б} form in the lines two people say to each other: it would be the player's, not the listener's
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), src = path.join(root, 'src');
@@ -20,7 +21,7 @@ const MinVariants = 6, MinTale = 3;
 const baseFile = path.join(__dirname, 'npcword_baseline.json');
 
 const Values = new Set(['name', 'npc', 'job', 'base', 'other', 'neighbour', 'alone', 'weather', 'daypart', 'food', 'wage', 'item', 'why', 'friend', 'foe', 'feud_a', 'feud_b', 'irked_by', 'friend_near', 'goal_what', 'arc_other', 'task_other', 'task_thing', 'trophy', 'its_make']);
-const TwoPeople = new Set(['розмова', 'відповідь', 'п_сон', 'в_сон', 'п_їжа', 'в_їжа', 'п_робота', 'в_робота', 'п_погода', 'в_погода', 'п_ворони', 'в_ворони', 'п_дім', 'в_дім', 'с_розмова_вечір', 'с_розмова_дощ', 'с_розмова_брама', 'с_розмова_вогонь', 'с_розмова_серце']);
+const TwoPeople = new Set(['розмова', 'відповідь', 'п_сон', 'в_сон', 'п_їжа', 'в_їжа', 'п_робота', 'в_робота', 'п_погода', 'в_погода', 'п_ворони', 'в_ворони', 'п_дім', 'в_дім', 'п_монети', 'в_монети', 'р_монети', 'с_розмова_вечір', 'с_розмова_дощ', 'с_розмова_брама', 'с_розмова_вогонь', 'с_розмова_серце']);
 const Names = 'name|other|neighbour|friend|foe|friend_near|feud_a|feud_b|irked_by|arc_other|task_other|m_[a-z_]+';
 const NameAfter = new RegExp('(^|[\\s«(])(з|із|зі|у|в|через|до|для|від|про|за|крім|без|на|біля|проти|після|перед|над|під)\\s+\\{(' + Names + ')\\}', 'iu');
 
@@ -28,8 +29,12 @@ const files = fs.readdirSync(src).filter(f => f === 'NpcPhrases.cs' || /^Npc.*Pa
 const T = {}, P = {}, lines = [];
 const alsoAt = process.argv.indexOf('--also');
 if (alsoAt > 0) for (const x of process.argv.slice(alsoAt + 1)) files.push(x);
+// the story people's own words are data (assets/story/words/*.txt, the same format, no C# around it): read whole
+const wordsDir = path.join(__dirname, '..', 'assets', 'story', 'words');
+if (fs.existsSync(wordsDir)) for (const w of fs.readdirSync(wordsDir).filter(n => n.endsWith('.txt'))) files.push(path.join(wordsDir, w));
 for (const f of files) {
-  const s = fs.readFileSync(path.isAbsolute(f) ? f : path.join(src, f), 'utf8');
+  const s0 = fs.readFileSync(path.isAbsolute(f) ? f : path.join(src, f), 'utf8');
+  const s = f.endsWith('.txt') ? '@"' + s0.replace(/\r/g, '').split('"').join('""') + '"' : s0;
   const re = /@"((?:[^"]|"")*)"/g; let m;
   while ((m = re.exec(s))) {
     const text = m[1].split('""').join('"');
@@ -103,11 +108,18 @@ for (const x of lines) {
   }
   if (NameAfter.test(body)) say('name', x);
   if (TwoPeople.has(x.list) && /\{[^}|]*\|[^}]*\}/.test(body)) say('listener', x);
+  const yours = x.list.startsWith('твоє_') || x.list.startsWith('[say_') || /^\[\w+:say_/.test(x.list); // ([<who>:say_*]: your words to that story person, 2026-11-17) // (NpcMoreSayPatterns: the player speaks, the forms are the other way round)
   for (const clause of body.split(/[.!?…:;]|,\s+(?:а|і|й|та|що|бо|коли|поки|як)\s+|\s—\s/)) {
     const plain = clause.replace(/\{[^}]*\}/g, ' ');
     const you = /(^|[\s,])[Тт]и(\s|$)/u.test(clause), me = /(^|[\s,])[Яя](\s|$)/u.test(clause);
-    if (you && !me && /\S\|\S/.test(plain)) say('who (ти + форма людини)', x);
-    if (me && !you && /\{[^}|]*\|[^}]*\}/.test(clause)) say('who (я + твоя форма)', x);
+    const person = /\S\|\S/.test(plain), player = /\{[^}|]*\|[^}]*\}/.test(clause);
+    if (yours) { // (your own words to a person: «ти» is it — а|б, «я» is you — {а|б})
+      if (you && !me && player) say('who (твої слова: ти + {а|б}; про людину пиши а|б)', x);
+      if (me && !you && person) say('who (твої слова: я + а|б; про себе пиши {а|б})', x);
+      continue;
+    }
+    if (you && !me && person) say('who (ти + форма людини)', x);
+    if (me && !you && player) say('who (я + твоя форма)', x);
   }
 }
 

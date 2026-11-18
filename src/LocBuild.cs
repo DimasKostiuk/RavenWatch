@@ -32,7 +32,7 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- the author: built again from the blueprint now in the mod
-        // A place stands as its blueprint was when it was built (a world keeps it; a later blueprint does not reach it).
+        // A place stands as its blueprint was when it was built (a world keeps it); a later blueprint's new pieces come in once (FillOnce), nothing is taken away.
         // The author's «перебудувати» (the user 2026-11-01): the server takes every piece of it away (those it stamped,
         // loaded or not) and forgets it was built: it is built again where it stood (BuildAhead), from
         // the blueprint in this build. Its state, its fire, its doors stay as they were (world keys).
@@ -80,12 +80,18 @@ namespace HuginWhispers
         {
             Vector3 at; Quaternion rot;
             if (!Where(out at, out rot) || !Shape()) { if (sender != ZDOMan.GetSessionID()) Plugin.ReplyTo(sender, Title + ": місця ще нема або нема креслення."); return; }
+            int inside = 0;
+#if RAVEN_STORY
+            inside = LocInside.TakeWhole(this, null); // (its inside whole, before its key goes: the rooms and spawners over it are no pieces of its own)
+#endif
             int gone = RemovePieces(at);
             ZoneSystem.instance.RemoveGlobalKey(KeyBuilt);
+            ZoneSystem.instance.RemoveGlobalKey(KeyInside); // (its inside went with its pieces: put anew once it stands again — LocInside.ServerTick)
             if (move) ZoneSystem.instance.RemoveGlobalKey(KeyAgain); else ZoneSystem.instance.SetGlobalKey(KeyAgain);
             if (move)
             {
-                ZoneSystem.instance.RemoveGlobalKey(KeySpot); _gaveUp = false; _nextSeek = Time.time + 2f;
+                CrossOut(at, "moved by the author"); // (the search goes by the world's seed: without this it found the very same spot again — the user 2026-11-15)
+                _gaveUp = false; _nextSeek = Time.time + 2f;
                 // the places beside it go along: built ones taken away too, all sought again with it (never one left alone)
                 foreach (Loc k in Locs.All)
                 {
@@ -94,7 +100,7 @@ namespace HuginWhispers
                     else ZoneSystem.instance.RemoveGlobalKey(k.KeySpot);
                 }
             }
-            Log("taken away for building again (" + gone + " pieces)" + (move ? ", its place sought anew" : ""));
+            Log("taken away for building again (" + gone + " pieces" + (inside > 0 ? ", its inside " + inside + " things" : "") + ")" + (move ? ", its place sought anew" : ""));
             if (sender != ZDOMan.GetSessionID() || Player.m_localPlayer != null) Plugin.ReplyTo(sender, Title + ": прибрано " + gone + " деталей. Постане знову з нового креслення.");
         }
 
@@ -103,7 +109,11 @@ namespace HuginWhispers
         {
             int gone = 0;
             List<ZDO> all = new List<ZDO>();
-            foreach (Vector2s z in Zones(at, Reach() + 20f))
+            float reach = Reach() + 20f;
+#if RAVEN_STORY
+            if (Inside.Length > 0) reach = Mathf.Max(reach, LocInside.Span(Inside)); // (its inside hangs over it, in the same zones: taken away with it)
+#endif
+            foreach (Vector2s z in Zones(at, reach))
             {
                 all.Clear();
                 if (FindObjects != null) FindObjects.Invoke(ZDOMan.instance, new object[] { z, all, new HashSet<ZoneSystem.SectorIndex>() });
@@ -111,7 +121,11 @@ namespace HuginWhispers
                 {
                     if (zdo == null) continue;
                     string of = zdo.GetString(LocParts.KOf, "");
-                    if (of != Id && !(of.Length == 0 && zdo.GetInt(Blueprint.Mark) == 1 && From(zdo.GetPosition()) < 1f)) continue;
+                    bool mine = of == Id || (of.Length == 0 && zdo.GetInt(Blueprint.Mark) == 1 && From(zdo.GetPosition()) < 1f && !Character.InInterior(zdo.GetPosition())); // (not a marked piece of an inside that hangs over it: by the map it stands «in» the place)
+#if RAVEN_STORY
+                    mine |= Inside.Length > 0 && LocInside.Marked(zdo, Inside); // (its own inside: the rooms, the things, the author's pieces)
+#endif
+                    if (!mine) continue;
                     zdo.SetOwner(ZDOMan.GetSessionID());
                     ZDOMan.instance.DestroyZDO(zdo);
                     gone++;
@@ -127,7 +141,7 @@ namespace HuginWhispers
             _nextSeek = Time.time + 5f; // (a look every few seconds: one string asked of the world's keys)
             if (!ZoneSystem.instance.LocationsGenerated) return; // (a new world: its places first, then ours away from them)
             if (Shape()) Jobs();
-            if (Shape() && Built) { KeepHeight(); WildOnce(); return; }
+            if (Shape() && Built) { KeepHeight(); WildOnce(); FillOnce(); return; }
             if (!Shape()) return;
             Vector3 at; Quaternion rot;
             if (Where(out at, out rot)) // (picked: it waits till someone is heading its way)
@@ -169,11 +183,20 @@ namespace HuginWhispers
             SetTight(kin, false); // (sought anew: with its room first)
             try
             {
-                for (int pass = 0; pass < 2 && !ok; pass++)
+                for (int pass = 0; pass < 3 && !ok; pass++)
                 {
+                    // the third pass: none of its own land within reach, with its room or without — any dry, even land (the user 2026-11-15: a place
+                    // the story leads to must stand in every world; a world with no Black Forest for three and a half km round the start still gets its barrow)
+                    if (pass == 2)
+                    {
+                        Log("no " + Biome + " for it within reach (tries " + tried + ", not " + Biome + " " + land + ", uneven/water " + uneven + ", a place of the world near " + places + "): sought once more in any land");
+                        land = uneven = places = built = story = crossed = kin0 = tried = 0;
+                        _seekAnyLand = true;
+                        rnd = new System.Random(WorldGenerator.instance.GetSeed() ^ Id.GetStableHashCode() ^ 0xa11);
+                    }
                     if (pass == 1)
                     {
-                        if (RoomAcross <= 0f && RoomAlong <= 0f && !kin.Exists(k => k.RoomAcross > 0f || k.RoomAlong > 0f)) break; // (no room to leave out)
+                        if (RoomAcross <= 0f && RoomAlong <= 0f && !kin.Exists(k => k.RoomAcross > 0f || k.RoomAlong > 0f)) continue; // (no room to leave out: on to the last pass)
                         first = "with its room: tries " + tried + ", not " + Biome + " " + land + ", uneven/water " + uneven + ", a place of the world near " + places + ", of the story " + story + ", a player's building near " + built + ", crossed out " + crossed + ", no room for the places beside it " + kin0;
                         land = uneven = places = built = story = crossed = kin0 = tried = 0;
                         SetTight(kin, true);
@@ -186,13 +209,13 @@ namespace HuginWhispers
                     float own = Reach() - GroundMargin; // (Room: its walls alone in the second pass)
                     foreach (float[] ring in rings)
                     {
-                        if (ring[2] > 0f && Near.Length > 0) continue; // (beside a place of the story: its land is visited — no «nobody's been there» ring)
+                        if (ring[2] > 0f && (Near.Length > 0 || Nearest)) continue; // (beside a place of the story: its land is visited — no «nobody's been there» ring; «nearest» is the nearest such land, been to or not)
                         for (int i = 0; i < Tries && !ok; i++)
                         {
                             if (++tried % PerFrame == 0) { yield return null; if (ZNet.instance != world || ZoneSystem.instance == null) yield break; }
                             float lo = ring[0], hi = ring[1];
                             if (by != null) { lo += own; hi += own + by.Reach(); }
-                            float ang = (float)rnd.NextDouble() * Mathf.PI * 2f, r = lo + (float)rnd.NextDouble() * (hi - lo);
+                            float ang = (float)rnd.NextDouble() * Mathf.PI * 2f, r = lo + (Nearest ? (float)i / Tries : (float)rnd.NextDouble()) * (hi - lo); // («nearest»: outward step by step, a random side each — the first fit is about the nearest)
                             Vector3 c = new Vector3(centre.x + Mathf.Cos(ang) * r, 0f, centre.z + Mathf.Sin(ang) * r);
                             if (by != null) { float gap = by.From(c) - own; if (gap < ring[0] || gap > ring[1]) { story++; continue; } }
                             Vector3 face = centre - c; face.y = 0f;
@@ -229,7 +252,7 @@ namespace HuginWhispers
                 }
                 Log("its place: " + Mathf.RoundToInt(found.x) + " " + Mathf.RoundToInt(found.z) + ", " + Mathf.RoundToInt(Vector3.Distance(new Vector3(found.x, 0f, found.z), new Vector3(centre.x, 0f, centre.z))) + " m from " + (Near.Length > 0 ? Near : "the start") + " (tries " + tried + ")");
             }
-            finally { _seeking = _seekTight = false; foreach (Loc k in kin) k._seekTight = false; } // (a world left, or a failure: nothing kept tight)
+            finally { _seeking = _seekTight = _seekAnyLand = false; foreach (Loc k in kin) k._seekTight = false; } // (a world left, or a failure: nothing kept tight)
         }
 
         // ---------------------------------------------------------------- the places that stand by it, sought with it
@@ -299,8 +322,10 @@ namespace HuginWhispers
         private const float GroundMargin = 6f; // (BlueprintGround eases the edge over 6 m: that land too)
 
         // all of it and its eased edge in its land (the corners first: most tries fail there)
+        private bool _seekAnyLand; // session: the last pass of the search is going on — any land will do
         private bool Land(Vector3 c, Quaternion q)
         {
+            if (_seekAnyLand) return true; // (dry and even is asked next: Even)
             float g = GroundMargin;
             BlueprintGround.Rect r = Room;
             Vector3[] corners = { new Vector3(r.X0 - g, 0f, r.Z0 - g), new Vector3(r.X1 + g, 0f, r.Z0 - g), new Vector3(r.X0 - g, 0f, r.Z1 + g), new Vector3(r.X1 + g, 0f, r.Z1 + g), Vector3.zero };
@@ -475,6 +500,88 @@ namespace HuginWhispers
             int n = BlueprintGround.Clear(Room, at, rot); // heavy: once a world a place (the objects of its few zones)
             ZoneSystem.instance.SetGlobalKey(KeyWild);
             Log("its ground cleared of the wild by the new rule: " + n + " taken away");
+        }
+
+        // A place built from an older blueprint (the user 2026-11-15: «щоб зала оновлювалась один раз у версії 3.0 — одна перевірка і все»): the
+        // pieces its blueprint has now and the world has not (the bench of «обжита_гейд», any later one) put in — once a world for each blueprint
+        // (KeyFill: its parts' hash; a later blueprint, once more). Nothing taken away: what stands stays as it is (the Hall's chests with a
+        // player's things in them, a player's own building — a rebuild would lose them). A piece is known by its stamp (LocParts: which place,
+        // where in its blueprint) and its prefab, within FillNear m. One missing whose prefab stands within FillMoved m (in its blueprint's frame) as a
+        // piece of it its blueprint no longer has: moved there, not doubled (a chest with a player's things goes with them). Fewer than FillKnown of its blueprint's pieces known (built before pieces
+        // were stamped): nothing put in — it would be a second building over the first — said in the log (the author's «перебудувати» then).
+        // While someone is near (its zones loaded, as KeepHeight); the pieces go up as at its building (Blueprint.Spawn: stamped, so a state's
+        // piece shows only in its state). Cost: once a world a blueprint — the objects of its few zones, a look each (heavy: as RemovePieces).
+        internal static float FillNear = 0.06f, FillKnown = 0.5f, FillMoved = 1.5f;
+        private bool _filling;
+        private int _partsHash;
+        private void FillOnce()
+        {
+            if (_filling || _building || _oneAtATime || Blueprint.Placing || _parts == null || _parts.Count == 0) return;
+            if (_partsHash == 0) { StringBuilder sb = new StringBuilder(); foreach (Blueprint.Part p in _parts) sb.Append(p.Prefab).Append(' ').Append(p.Pos.x.ToString("0.00", CultureInfo.InvariantCulture)).Append(' ').Append(p.Pos.y.ToString("0.00", CultureInfo.InvariantCulture)).Append(' ').Append(p.Pos.z.ToString("0.00", CultureInfo.InvariantCulture)).Append(';'); _partsHash = sb.ToString().GetStableHashCode(); if (_partsHash == 0) _partsHash = 1; }
+            string key = KeyFill(_partsHash);
+            if (ZoneSystem.instance.GetGlobalKey(key)) return;
+            Vector3 at; Quaternion rot;
+            if (!Origin(out at, out rot) || !SomeoneWithin(at, Reach() + 40f)) return;
+            Dictionary<int, List<KeyValuePair<Vector3, ZDO>>> have = new Dictionary<int, List<KeyValuePair<Vector3, ZDO>>>();
+            List<ZDO> all = new List<ZDO>();
+            foreach (Vector2s z in Zones(at, Reach() + 20f))
+            {
+                all.Clear();
+                if (FindObjects != null) FindObjects.Invoke(ZDOMan.instance, new object[] { z, all, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a world a blueprint
+                foreach (ZDO zdo in all)
+                {
+                    if (zdo == null || zdo.GetString(LocParts.KOf, "") != Id) continue;
+                    List<KeyValuePair<Vector3, ZDO>> l;
+                    if (!have.TryGetValue(zdo.GetPrefab(), out l)) have[zdo.GetPrefab()] = l = new List<KeyValuePair<Vector3, ZDO>>();
+                    l.Add(new KeyValuePair<Vector3, ZDO>(zdo.GetVec3(LocParts.KAt, new Vector3(float.MaxValue, 0f, 0f)), zdo));
+                }
+            }
+            List<Blueprint.Part> missing = new List<Blueprint.Part>();
+            HashSet<ZDO> matched = new HashSet<ZDO>();
+            foreach (Blueprint.Part p in _parts)
+            {
+                List<KeyValuePair<Vector3, ZDO>> l;
+                bool found = false;
+                if (have.TryGetValue(p.Prefab.GetStableHashCode(), out l)) foreach (KeyValuePair<Vector3, ZDO> v in l) if ((v.Key - p.Pos).sqrMagnitude < FillNear * FillNear) { found = true; matched.Add(v.Value); break; }
+                if (!found) missing.Add(p);
+            }
+            int known = _parts.Count - missing.Count;
+            // a piece of it that its blueprint no longer has, by one missing of its prefab: moved there (the server owns it for the move)
+            int moved = 0;
+            for (int i = missing.Count - 1; i >= 0 && known >= _parts.Count * FillKnown; i--)
+            {
+                Blueprint.Part p = missing[i];
+                List<KeyValuePair<Vector3, ZDO>> l;
+                if (!have.TryGetValue(p.Prefab.GetStableHashCode(), out l)) continue;
+                ZDO best = null; float bd = FillMoved * FillMoved;
+                foreach (KeyValuePair<Vector3, ZDO> v in l) { float d = (v.Key - p.Pos).sqrMagnitude; if (d < bd && !matched.Contains(v.Value)) { bd = d; best = v.Value; } }
+                if (best == null) continue;
+                matched.Add(best);
+                best.SetOwner(ZDOMan.GetSessionID());
+                best.SetPosition(at + rot * p.Pos);
+                best.SetRotation(rot * p.Rot);
+                LocParts.Stamp(best, Id, p.Pos);
+                missing.RemoveAt(i);
+                moved++;
+            }
+            if (moved > 0) Log("built from an older blueprint: " + moved + " piece(s) moved where its blueprint has them now (seen so once they load anew)");
+            if (known < _parts.Count * FillKnown)
+            {
+                ZoneSystem.instance.SetGlobalKey(key); // (said once a world a blueprint, not every few seconds)
+                Log("its blueprint has " + _parts.Count + " pieces, " + known + " of them known here by their stamp: built before pieces were stamped — nothing put in (the author's «перебудувати» builds it anew)");
+                return;
+            }
+            if (missing.Count == 0) { ZoneSystem.instance.SetGlobalKey(key); return; }
+            ZNet world = ZNet.instance;
+            _filling = _oneAtATime = true;
+            Log("built from an older blueprint: " + missing.Count + " of its " + _parts.Count + " pieces missing here — put in");
+            Blueprint.Spawn(missing, new List<Blueprint.Spot>(), at, rot, Id, IsLandmark, (made, unknown) =>
+            {
+                _filling = _oneAtATime = false;
+                if (ZNet.instance != world || ZoneSystem.instance == null) return;
+                ZoneSystem.instance.SetGlobalKey(key);
+                Log("the pieces its blueprint has now put in: " + made + (unknown > 0 ? ", " + unknown + " unknown to this game" : ""));
+            });
         }
 
         private IEnumerator BuildAhead(Vector3 at, Quaternion rot)

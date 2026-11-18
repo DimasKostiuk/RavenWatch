@@ -319,6 +319,7 @@ namespace HuginWhispers
             else if (_next < _lines.Count && Cuts(_lines[_next])) { _cutAt = Time.time + Pace(l.Text) * CutShare(l.Text); _cutVoice = null; _cutRow = null; } // (no voice: the next breaks in early)
             if (_crowd != null) { CrowdSpeaking(l, Pace(l.Text)); return; } // on several perches: the speaker's beak, everyone's look at it
             if (_perch != null) { _perch.Speaking(l.Munin, Pace(l.Text)); return; } // on a perch: the beak and the other one's look
+            if (l.Bird != null || l.Name != null) { if (l.Bird != null && HasWords(l.Text)) ShoulderLife.TalkOn(l.Bird.transform); return; } // a person's raven in your talk (NpcRaven, named; its bird only here): its own beak when it says a word, your two keep still
             if (_local && _owner != null && ReferenceEquals(_owner, Player.m_localPlayer)) Fireside.Line(_owner, l.Munin, Pace(l.Text), _next >= _lines.Count); // your head on the speaker
             // the raven itself opens its beak (on whoever's shoulder it sits)
             GameObject model = Shoulder.ModelOf(_owner, l.Munin);
@@ -327,6 +328,9 @@ namespace HuginWhispers
             ShoulderLife life = Shoulder.LifeOf(_owner, l.Munin);
             if (life != null) life.Wake(4f);
         }
+
+        // a line with a word in it (a silence «…» has none: no beak, no voice)
+        private static bool HasWords(string s) { foreach (char c in s ?? "") if (char.IsLetter(c)) return true; return false; }
 
         // "Хугін → Мунін: words" in the chat; another player's ravens with their owner's name
         private void ToChat(Line l)

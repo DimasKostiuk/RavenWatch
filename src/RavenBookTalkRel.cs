@@ -11,8 +11,8 @@ namespace HuginWhispers
     //   left margin    a hair line «зараз · <word>»: how it feels in itself (NpcPatience: its state, the same for everyone) — the ink's own brown
     //   right margin   a hair line «до тебе · <word>»: its height its patience to you (what opens its door: NpcPatience.ToYou), its word how it feels about you
     //                  (NpcAttitude level), four ticks for its five steps — the only colour on the page, and muted
-    //   the rope       down the left edge (talk_cord), a knot on it for each thread between you (NpcThreads: talk_knot1/2, turned in turn), its word beside it, a card on
-    //                  the pointer: what tied it and what it changes in your talks; its end above the paper's torn edge — tied neatly (talk_end), or frayed when
+    //   the rope       down the left edge (talk_cord), a knot on it for each thread between you (NpcThreads: talk_knot1/2, turned in turn), its word beside it, a card while
+    //                  the knot is pointed at: what tied it and what it changes in your talks; its end above the paper's torn edge — tied neatly (talk_end), or frayed when
     //                  a thread was cut (talk_frayed), their words beside it
     //   why            both lines show the reasons box beside the scroll while pointed at (the same box the strip had: NpcPatience.Tip)
     // The pictures: tools/talk_knot_art.html (that page's own CSS, at 2×). A talk with no person's feeling (a story person's own) has none of it.
@@ -75,7 +75,7 @@ namespace HuginWhispers
             rope.offsetMin = new Vector2(15f, EndAt - 1f); rope.offsetMax = new Vector2(26f, 0f);
             Image ri = rope.gameObject.AddComponent<Image>(); ri.raycastTarget = false;
             if (cord != null) { ri.sprite = cord; ri.type = Image.Type.Tiled; ri.pixelsPerUnitMultiplier = 2f; } else ri.color = C("#a8864c");
-            Art(m, cut ? "talk_frayed" : "talk_end", new Vector2(6f, EndAt - 30f), new Vector2(30f, 30f)); // (its band on the rope's last pixel)
+            RectTransform end = Art(m, cut ? "talk_frayed" : "talk_end", new Vector2(6f, EndAt - 30f), new Vector2(30f, 30f)); // (its band on the rope's last pixel)
 
             // the two lines and their words
             float px = 1f / Mathf.Max(0.01f, m.lossyScale.y); // (one screen pixel in the paper's units: a 720p screen and a long talk's shrink make a unit less than a pixel)
@@ -90,17 +90,17 @@ namespace HuginWhispers
             {
                 if (k.Cut) continue;
                 float at = KnotLow + KnotStep * (tied - 1 - i);
-                RectTransform knot = Art(m, (i % 2 == 0) ? "talk_knot1" : "talk_knot2", new Vector2(6f, at - 4f), new Vector2(30f, 26f));
-                TMP_Text w = Label(m, k.Word, new Vector2(34f, at + 3f), RWord);
-                KnotCard(m, knot, w, Said(k), k.Does, new Vector2(36f, at - 1f));
+                RectTransform knot = Art(m, (i % 2 == 0) ? "talk_knot1" : "talk_knot2", new Vector2(6f, at - 6f), new Vector2(30f, 28f)); // (the picture 2 taller under the knot for its shadow, 2026-11-14: the knot where it was)
+                Label(m, k.Word, new Vector2(34f, at + 3f), RWord);
+                KnotCard(m, knot, Said(k), k.Does, new Vector2(36f, at - 1f));
                 i++;
             }
             if (cut)
             {
                 List<string> words = new List<string>(); System.Text.StringBuilder deeds = new System.Text.StringBuilder();
                 foreach (TalkKnot k in r.Knots) { if (!k.Cut) continue; words.Add(k.Word); if (deeds.Length > 0) deeds.Append('\n'); deeds.Append(Said(k)); if (k.Does.Length > 0) deeds.Append(". ").Append(k.Does); }
-                TMP_Text w = Label(m, string.Join(" · ", words.ToArray()), new Vector2(34f, EndAt - 12f), RWordCut);
-                KnotCard(m, null, w, Lang.T("обірвано"), deeds.ToString(), new Vector2(36f, EndAt - 16f));
+                Label(m, string.Join(" · ", words.ToArray()), new Vector2(34f, EndAt - 12f), RWordCut);
+                KnotCard(m, end, Lang.T("обірвано"), deeds.ToString(), new Vector2(36f, EndAt - 16f));
             }
         }
 
@@ -153,12 +153,12 @@ namespace HuginWhispers
         {
             RectTransform l = Rect("Label", m); l.anchorMin = l.anchorMax = l.pivot = Vector2.zero; l.sizeDelta = new Vector2(150f, 16f); l.anchoredPosition = at;
             TMP_Text t = T(l, text, 13f, c, F.Italic, TextAlignmentOptions.MidlineLeft); Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.textWrappingMode = TextWrappingModes.NoWrap; t.raycastTarget = false; // (its box is wider than its word: only the knot takes the pointer — the user 2026-11-11)
             return t;
         }
 
-        // the knot's card while pointed at: its deed in italic, what it changes under it — the page's own small card with its arrow
-        private static void KnotCard(RectTransform m, RectTransform knot, TMP_Text label, string head, string does, Vector2 at)
+        // the knot's card while the knot itself (or the frayed end) is pointed at: its deed in italic, what it changes under it — the page's own small card with its arrow
+        private static void KnotCard(RectTransform m, RectTransform knot, string head, string does, Vector2 at)
         {
             RectTransform c = Rect("Card", m); c.anchorMin = c.anchorMax = c.pivot = Vector2.zero; c.anchoredPosition = at;
             Image ci = c.gameObject.AddComponent<Image>(); ci.sprite = BookArt.RoundFine(2f); ci.type = Image.Type.Sliced; ci.color = RCard; ci.raycastTarget = false;
@@ -173,12 +173,8 @@ namespace HuginWhispers
             Image ai = arrow.gameObject.AddComponent<Image>(); ai.color = RCard; ai.raycastTarget = false;
             arrow.SetAsFirstSibling(); // (under the card's own words)
             c.gameObject.SetActive(false);
-            foreach (Graphic g in new Graphic[] { knot != null ? knot.GetComponent<Image>() : null, label })
-            {
-                if (g == null) continue;
-                g.raycastTarget = true;
-                g.gameObject.AddComponent<ShowWhilePointed>().Box = c.gameObject;
-            }
+            knot.GetComponent<Image>().raycastTarget = true;
+            knot.gameObject.AddComponent<ShowWhilePointed>().Box = c.gameObject;
         }
 
         // the reasons box beside the scroll, shown while a line is pointed at (the old strip's own box)

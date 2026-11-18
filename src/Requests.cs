@@ -1076,7 +1076,7 @@ namespace HuginWhispers
         private static bool GroundClear(Vector3 q, out Vector3 spot) { return WorldSpot.GroundClear(q, out spot); }
         private static float Flat(Vector3 a, Vector3 b) { return WorldSpot.Flat(a, b); }
 
-        private static float _cawAt, _wordAt, _wordDist = -1f;
+        private static readonly HotCold _finder = new HotCold(); // (the raven as a finder: the one way of it, a story's search too — StorySeek)
         private static bool _quietTold, _cawTold; // (once a game each, in the log)
 
         // twice a second while a cache waits: the ground checked once it is loaded, the finder's caws, warmer/colder,
@@ -1084,18 +1084,12 @@ namespace HuginWhispers
         private static void CacheTick(Player p, bool munin, ItemDrop.ItemData item, Req r)
         {
             float d = Flat(p.transform.position, r.Place);
-            if (d > CawFrom) { _wordDist = -1f; return; }
+            if (d > CawFrom || HotCold.Held) { _finder.Reset(); return; } // (the story's search holds the raven: one finder at a time — HotCold)
             // with you (on the shoulder in any pose, or out flying near): the finder's caw comes from you anyway
             if (Shoulder.ModelOf(p, munin) == null) { if (!_quietTold) { _quietTold = true; Log("cache finder quiet: " + Plugin.RavenName(munin) + " is not with you (" + Mathf.RoundToInt(d) + " m off)"); } return; }
-            // the finder: caws faster the nearer (every 7 s far off, about twice a second on it)
-            if (Time.time >= _cawAt)
-            {
-                float k = Mathf.Clamp01(d / CawFrom);
-                _cawAt = Time.time + Mathf.Lerp(0.45f, 7f, k * k);
-                ScreamFx.Caw(p, munin, (munin ? 0.9f : 1.25f) + (1f - k) * 0.15f, Mathf.Lerp(0.6f, 0.35f, k));
-                if (!_cawTold) { _cawTold = true; Log("cache finder: " + Plugin.RavenName(munin) + " caws, " + Mathf.RoundToInt(d) + " m off"); }
-            }
-            if (d > CacheNear) { _wordDist = -1f; return; }
+            // the finder: caws faster the nearer (HotCold)
+            if (_finder.Caw(p, munin, d, CawFrom) && !_cawTold) { _cawTold = true; Log("cache finder: " + Plugin.RavenName(munin) + " caws, " + Mathf.RoundToInt(d) + " m off"); }
+            if (d > CacheNear) { _finder.Reset(); return; }
             if (!r.Verified && ZoneSystem.instance != null && ZoneSystem.instance.IsZoneLoaded(r.Place))
             {
                 Vector3 spot;
@@ -1127,14 +1121,9 @@ namespace HuginWhispers
                 }
                 return;
             }
-            if (Time.time < _wordAt) return;
-            if (_wordDist < 0f) { _wordDist = d; _wordAt = Time.time + 8f; return; }
-            float moved2 = _wordDist - d;
-            if (Mathf.Abs(moved2) < 7f) return;
-            _wordAt = Time.time + 12f;
-            _wordDist = d;
-            if (moved2 > 0f) Speak(p, munin, Say(p, munin, "req_warmer", munin ? Lang.T("Тепліше.") : Lang.T("Тепліше…")), false);
-            else Speak(p, munin, Say(p, munin, "req_colder", munin ? Lang.T("Холодно, бовдуре.") : Lang.T("Холодніше…")), false);
+            int word = _finder.Word(d);
+            if (word > 0) Speak(p, munin, Say(p, munin, "req_warmer", munin ? Lang.T("Тепліше.") : Lang.T("Тепліше…")), false);
+            else if (word < 0) Speak(p, munin, Say(p, munin, "req_colder", munin ? Lang.T("Холодно, бовдуре.") : Lang.T("Холодніше…")), false);
         }
 
         private static PerchView _digSpot;

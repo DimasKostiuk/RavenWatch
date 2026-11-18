@@ -1,5 +1,5 @@
 {
  "_": "npcnetcheck: keys written with ZDO.Set in src/Npc*, Story*, Body*, Guard*. person = on the person's own ZDO (sent whole with every step: only what every game must see at once); other = on another thing. A seldom-read value of a person goes to NpcLocker.Lives instead.",
- "person": ["KArmor", "KAttach", "KBorn", "KBy", "KClipUntil", "KDown", "KEat", "KFade", "KFeel", "KFoes", "KGait", "KGone", "KHeart", "KHeld", "KHeldAt", "KHeldBy", "KHired", "KHits", "KHome", "KId", "KInfo", "KStatus", "KLonger", "KItem", "KKind", "KLook", "KLost", "KMode", "KName", "KNext", "KPose", "KResident", "KScene", "KSeed", "KSid", "KStage", "KTag", "KTravel", "KTurns", "KUntil"],
- "other": ["KBedFemale", "KBedName", "KBedOf", "KFolk", "KFolkAt", "KDim", "KSeq", "KState", "Key"]
+ "person": ["KArmor", "KAttach", "KBorn", "KBy", "KClipUntil", "KDown", "KEat", "KFade", "KFeel", "KFoes", "KGait", "KGone", "KHeart", "KHeld", "KHeldAt", "KHeldBy", "KHired", "KHits", "KHome", "KId", "KInfo", "KStatus", "KLonger", "KItem", "KKind", "KLook", "KLost", "KMate", "KMode", "KName", "KNext", "KPose", "KResident", "KScene", "KSeed", "KSid", "KStage", "KTag", "KTool", "KTravel", "KTurns", "KUntil", "KFight"],
+ "other": ["KBedFemale", "KBedName", "KBedOf", "KDiningOf", "KDiningSet", "KCapped", "KFolk", "KFolkAt", "KDim", "KSeq", "KState", "Key", "KGhost", "KLit", "KWave", "KRise", "KFoe", "KHel", "KKept"]
 }

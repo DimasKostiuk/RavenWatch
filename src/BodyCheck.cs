@@ -21,17 +21,31 @@ namespace HuginWhispers
     //   elbow   an elbow far behind the chest while its hand is held somewhere; an arm folded tight
     //   knee    a knee under the ground; a knee across the body's middle
     //   miss    a limb's target out of reach at its full weight
+    //   moved   a limb's end, at the frame's END, off where the pose's own solve put it (BodyAnimator.SolvedAt) by more than MovedFar: something moved
+    //           it after our pose in the same frame — the game's own step on that body, or a later layer of ours. «miss» is read off the solve and is
+    //           blind to it: the game drew a woman player's shoulders in after the pose, both her hands stood 3.65 cm inward and every rule here said
+    //           nothing (take_book in its scene, 2026-11-12: found only by the grip sheet's «wrist» against «asked»). Not the clip's to mend: the core's
     //   speed   a hand or a foot flying, a bone turning in a jerk (only while one of our clips holds the body: the game's own gestures are not ours)
     //   slide   a foot going along the ground while the body stands (near the lowest it has been, not in a step: a step is no slide)
     //   shoulder  a collarbone turned far off how it stood (a reach out of the arm's length pulls it)
     //   neck    the head turned far off the chest
     //   free hand  swinging far behind the body as it bends
     //   prop    the head into the thing, fingers inside it, a forearm, an arm, a thigh, the trunk through it (Limbs)
-    //   grip    a hand the clip has on the thing («@LeftHand.on» at full weight): does it hold it — its palm on the thing and turned to it, at
-    //           least two fingertips on its surface, not shut to a fist — or what touches instead (knuckles, a fist before it, nothing): the
-    //           user 2026-11-07, a left fist before the book passed every rule above. The pose's words say it each frame (GripOf)
+    //   grip    a hand the clip has on the thing («@LeftHand.on» at full weight): does it hold it — its palm on the thing and turned to it,
+    //           three of its four fingers LYING on its surface (the tip on it and the last bone along it, not end on: a hook pokes), the thumb
+    //           on it too (or the thing resting on a palm turned up), not shut to a fist — or what touches instead: the user 2026-11-07, a left
+    //           fist before the book passed every rule above; 2026-11-11, «two fingertips near it» said HOLDS of hooks. The pose's words say
+    //           every digit each frame, m off its surface (GripOf, DigitsSaid); the full report carries the hand's bones (GripSheet) for
+    //           tools/grip.js, which reckons the wrist's place and each finger's bend: a grip is not turned by eye
+    //   touch-fingers  a palm held on a fixture (its target at the surface, full weight, the clip not closing the fingers itself): three of its
+    //           four fingers lie on that surface too — the same measure as a grip's (Digits), said in the pose's words for a hand ON a fixture
     //   touch   the stage's fixtures (AnimStageFixtures: boxes in the body's frame): a hand or a foot whose target lies at a fixture's
     //           surface (within Meant of it), at its full weight, is off that surface or into it; the hips onto a seat; a hand to a point
+    //   still   in a scene's shot (InShot): the body in the picture and nothing of it moving for longer than StillFor s — no bone, no limb: an actor
+    //           left standing like a post while the shot holds on it (the game's own idle breathes: that is no stillness)
+    //   start   in a scene (InScene): a clip of ours came on a body that was not in the pose the clip begins from — over the clip's way in the hips
+    //           or the back went much farther than the clip's own keys ask there, so its fade carried the body (a «rises» played on one who stands,
+    //           a part that kneels begun without the part that goes down)
     //   real    in a scene (Real): a hand its clip says touches something («touch wall 0.55», «touch piece <prefab> 0.55»), its target at that
     //           surface, at full weight: how far the world's real surface is, by a ray along its palm (a stage's box is not the gate)
     // Each is a number kept with the moment it was worst; Verdict says the ones over their limit, with what to change, and Moments
@@ -75,6 +89,7 @@ namespace HuginWhispers
         internal static float PalmOff = 25f, FistCurl = 60f, InsideDeep = 0.2f, Past = 0.03f, ElbowBack = 0.2f, KneeUnder = 0.02f, Full = 0.95f; // deg · deg · how deep into the trunk's column (0 its surface, 1 the spine) · m · m · m · a target's weight that counts as held
         internal static float TouchFull = 0.99f, Meant = 0.15f, TouchFar = 0.07f, TouchIn = 0.03f, Palm = 0.03f, Sole = 0.06f, SeatHover = 0.1f, PointNear = 0.05f; // a target's weight a touch is measured at (at 0.95 the core still holds a limb 5% back to the game's pose: 2-4 cm short on its way in and out, no mistake) · m from a surface its target means it · m off · m in · the wrist off the palm's face · the ankle off the sole · m the hips hover over a seat · m a hand from a point
         internal static float FootFast = 1.5f, HandFast = 3f, BoneJerk = 600f, MissFar = 0.05f, KneeCross = 0.05f, HandBehindFar = 0.28f, BentDown = 0.2f, HeadNear = 0.3f, FingerDeep = 0.02f; // m/s · m/s · deg/s · m · m · m · m the hips down to count as bent · m · m
+        internal static float MovedFar = 0.01f; // m a limb's end may stand off its own solve at the frame's end (reasoned from two readings, 2026-11-12: 0.000 on the mannequin, 0.035 with the game's shoulder step after the pose — nothing between them measured yet)
         internal static float FootOnGround = 0.03f, FootSlide = 0.2f, StandSpeed = 0.2f, StepMost = 0.1f; // m over its lowest it is still on the ground · m along the ground in one run is a slide · m/s the body counts as standing · m a frame: more, it was put there
         internal static float ShoulderBent = 25f, NeckMost = 75f, ElbowFold = 25f; // deg
         internal static float HeadUp = 0.1f, HeadRound = 0.4f, HeadDeep = 0.05f, HeadNearSay = 0.1f; // m the head's middle over its bone · its radius × the shoulders' width · how deep in counts
@@ -95,6 +110,12 @@ namespace HuginWhispers
                 Vector3 o = Vector3.Max(d, Vector3.zero);
                 return o.magnitude + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0f);
             }
+            internal Vector3 Normal(Vector3 p) // (the way out of its surface near p, body frame: the slope of Distance)
+            {
+                const float e = 0.004f;
+                Vector3 g = new Vector3(Distance(p + Vector3.right * e) - Distance(p - Vector3.right * e), Distance(p + Vector3.up * e) - Distance(p - Vector3.up * e), Distance(p + Vector3.forward * e) - Distance(p - Vector3.forward * e));
+                return g.sqrMagnitude > 1e-10f ? g.normalized : Vector3.up;
+            }
             internal Vector3 Closest(Vector3 p) { Vector3 h = Size * 0.5f, q = p - Center; return Center + new Vector3(Mathf.Clamp(q.x, -h.x, h.x), Mathf.Clamp(q.y, -h.y, h.y), Mathf.Clamp(q.z, -h.z, h.z)); }
         }
         internal readonly List<Fixture> Fixtures = new List<Fixture>();
@@ -110,11 +131,17 @@ namespace HuginWhispers
         private readonly Transform[,,] _fing = new Transform[2, 5, 2]; // (side, finger, joint 2 · 3)
         private readonly Quaternion[] _wristRest = { Quaternion.identity, Quaternion.identity }; private readonly bool[] _wristKnown = new bool[2];
 
-        // a finger's tip in the world: its last joint and on by most of the bone before it (the last bone's pivot is the last joint, ~2 cm short)
+        private readonly Transform[,] _knuckle = new Transform[2, 5], _fingEnd = new Transform[2, 5]; // (joint 1, where the finger leaves the palm · the skeleton's own end of the finger past joint 3, where it has one)
+
+        // a finger's tip in the world: the skeleton's own end of it where the last bone has one (TipFrom..TipTo m past the last joint: anything else is
+        // not a fingertip), else its last joint and on by most of the bone before it (the last bone's pivot is the last joint, ~2 cm short). The grip
+        // sheet says which a body has (GripSheet)
+        internal static float TipFrom = 0.005f, TipTo = 0.05f;
         private bool Tip(int side, int finger, out Vector3 tip)
         {
-            Transform a = _fing[side, finger, 0], b = _fing[side, finger, 1];
+            Transform a = _fing[side, finger, 0], b = _fing[side, finger, 1], end = _fingEnd[side, finger];
             tip = b != null ? b.position : Vector3.zero;
+            if (b != null && end != null) { tip = end.position; return true; }
             if (a == null || b == null) return b != null;
             tip = b.position + (b.position - a.position) * 0.8f;
             return true;
@@ -131,7 +158,8 @@ namespace HuginWhispers
         // moved here from the stage and the scene's own checks
         private sealed class Worst { public float V, At; public string Clip; public float ClipAt; public Vector3 Tgt, Joint; public float Reach; public bool OnThing; }
         private string _clipNow; private float _momentNow; // (the topmost clip of ours this frame and its moment: what a fix names)
-        private readonly Dictionary<string, Worst> _miss = new Dictionary<string, Worst>(), _fast = new Dictionary<string, Worst>();
+        private readonly Dictionary<string, Worst> _miss = new Dictionary<string, Worst>(), _fast = new Dictionary<string, Worst>(), _moved = new Dictionary<string, Worst>();
+        private readonly Dictionary<string, int> _movedFrames = new Dictionary<string, int>(), _solvedFrames = new Dictionary<string, int>(); // (frames a limb stood over MovedFar off its solve · frames it was solved at all)
         private readonly Dictionary<int, Worst> _spin = new Dictionary<int, Worst>();
         private readonly Quaternion[] _was = new Quaternion[Names.Length];
         private readonly bool[] _wasSeen = new bool[Names.Length];
@@ -162,7 +190,16 @@ namespace HuginWhispers
             for (int i = 0; i < Names.Length; i++) _b[i] = BodyClips.SkeletonBone(h, _vis, Names[i]);
             for (int s = 0; s < 2; s++)
                 for (int k = 0; k < 5; k++)
+                {
                     for (int j = 0; j < 2; j++) _fing[s, k, j] = BodyClips.SkeletonBone(h, _vis, (s == 0 ? "Left" : "Right") + "Hand" + Fingers[k] + (j + 2));
+                    _knuckle[s, k] = BodyClips.SkeletonBone(h, _vis, (s == 0 ? "Left" : "Right") + "Hand" + Fingers[k] + "1");
+                    Transform last = _fing[s, k, 1];
+                    for (int i = 0; last != null && i < last.childCount; i++) // (its own end bone, if the skeleton has one: «…Index4», «…Index3_end»)
+                    {
+                        Transform e = last.GetChild(i); float far = Vector3.Distance(e.position, last.position);
+                        if (e.name.IndexOf(Fingers[k], StringComparison.Ordinal) >= 0 && far >= TipFrom && far <= TipTo) { _fingEnd[s, k] = e; break; }
+                    }
+                }
         }
 
         // the head as it is: the skin's points bound to the head bone (its bind pose), their middle and size in the bone's frame — once a
@@ -193,6 +230,21 @@ namespace HuginWhispers
             _headC = Vector3.zero; _headR = 0f; _headFrom = "a guess from the shoulders (the skin could not be read)";
         }
 
+        // the head as a ball, in the world: its middle and its radius (read from the skin, else guessed from the shoulders: HeadShape)
+        private void HeadBall(Transform root, float width, out Vector3 c, out float r)
+        {
+            c = _headR > 0f ? _b[Head].TransformPoint(_headC) : _b[Head].position + root.up * HeadUp;
+            r = _headR > 0f ? _headR * _b[Head].lossyScale.x : HeadRound * width;
+        }
+        // … for a row of the report: «headball x,y,z r» in the body's frame (tools/body.js fits the head of its model to these)
+        private string HeadSaid()
+        {
+            if (_b[Head] == null || !_headRead) return "";
+            float width = _b[ArmL] != null && _b[ArmR] != null ? Vector3.Distance(_b[ArmL].position, _b[ArmR].position) : 0.36f;
+            Vector3 c; float r; HeadBall(_h.transform, width, out c, out r);
+            return "  headball " + P(_h.transform.InverseTransformPoint(c)) + " r " + r.ToString("0.000", CultureInfo.InvariantCulture) + (_headR > 0f ? "" : " guessed");
+        }
+
         private Vector3 L(int i) { Transform root = _h.transform; return _b[i] != null ? root.InverseTransformPoint(_b[i].position) : Vector3.zero; }
 
         // the fixture a target lies at (within Meant of its surface), else null
@@ -212,10 +264,12 @@ namespace HuginWhispers
             float dt = Mathf.Max(Time.deltaTime, 0.001f);
             bool clipped = an != null && an.CodeBusy && _h.GetVelocity().magnitude < MoveLimit; // (one of ours holds it, and it is not walking)
             _clippedNow = clipped;
-            { float m = 0f; PAnimClip now = an != null ? an.CodeClip(out m) : null; _clipNow = now != null ? now.Name : null; _momentNow = m; }
+            PAnimClip nowClip;
+            { float m = 0f; nowClip = an != null ? an.CodeClip(out m) : null; _clipNow = nowClip != null ? nowClip.Name : null; _momentNow = m; }
             if (_first) First(root);
             _realGap[0] = _realGap[1] = 9f; _gripOn[0] = _gripOn[1] = false;
             Vector3 hips = L(Hips);
+            if (InScene) Began(nowClip, hips.y, t);
             _hipsHigh = Mathf.Max(_hipsHigh, hips.y); if (hips.y < _hipsLow) _hipsLow = hips.y;
             for (int s = 0; s < 2; s++)
             {
@@ -249,6 +303,7 @@ namespace HuginWhispers
                         float curl = Vector3.Angle(m1.position - hand.position, m3.position - m1.position);
                         if (curl > _curl[s]) { _curl[s] = curl; _curlAt[s] = t; _curlClip[s] = _clipNow; _curlClipAt[s] = _momentNow; }
                     }
+                    if (on != null && tw >= TouchFull && !curls) TouchDigits(s, on, an, t);
                 }
                 // past the other arm: crossed over and out beyond that side's elbow
                 Vector3 otherElbow = L(left ? ForeR : ForeL);
@@ -290,6 +345,12 @@ namespace HuginWhispers
                     float bend = Quaternion.Angle(Quaternion.identity, d * Quaternion.Inverse(Normal(twist)));
                     if (twisted > _wristTwist[s]) { _wristTwist[s] = twisted; _wristTwistAt[s] = t; }
                     if (twisted < _wristTwistLow[s]) { _wristTwistLow[s] = twisted; _wristTwistLowAt[s] = t; }
+                    if (bend > WristBend && !onThing) // (every frame over the limit, for the stretch the line says and the keys its fix mends: BendOver)
+                    {
+                        Vector3 f = Vector3.zero; float fWeight = 0f;
+                        bool hasF = an.ChannelNow(limb + ".f", out f, out fWeight) && f.sqrMagnitude > 1e-6f;
+                        _wristOver[s].Add(new BendAt { T = t, Clip = _clipNow, ClipAt = _momentNow, Bend = bend, HasF = hasF, F = hasF ? f.normalized : Vector3.zero, Fore = root.InverseTransformDirection(hand.position - fore.position).normalized });
+                    }
                     if (bend > _wristBend[s])
                     {
                         _wristBend[s] = bend; _wristBendAt[s] = t; _wristBendClip[s] = _clipNow; _wristBendClipAt[s] = _momentNow; _wristOn[s] = onThing;
@@ -327,8 +388,7 @@ namespace HuginWhispers
             if (_b[Head] != null)
             {
                 if (!_headRead) HeadShape(width);
-                Vector3 hc = _headR > 0f ? _b[Head].TransformPoint(_headC) : _b[Head].position + root.up * HeadUp;
-                float hr = _headR > 0f ? _headR * _b[Head].lossyScale.x : HeadRound * width;
+                Vector3 hc; float hr; HeadBall(root, width, out hc, out hr);
                 InHead(hc, hr, _b[HandL], null, t, "left hand"); InHead(hc, hr, _b[HandR], null, t, "right hand");
                 InHead(hc, hr, _b[ForeL], _b[HandL], t, "left forearm"); InHead(hc, hr, _b[ForeR], _b[HandR], t, "right forearm");
             }
@@ -370,6 +430,20 @@ namespace HuginWhispers
                         w.Tgt = an.ChannelNow(m.Name, out tg, out tgw) ? tg : Vector3.zero;
                     }
                 }
+            // moved: each solved limb's end now, at the frame's end, against where its solve left it — both in the body's frame (the head of this file)
+            if (an != null)
+                foreach (BodyClips.Limb m in BodyClips.Limbs)
+                {
+                    Vector3 solved;
+                    int end = m.Name == "@LeftHand" ? HandL : m.Name == "@RightHand" ? HandR : m.Name == "@LeftFoot" ? FootL : FootR;
+                    if (_b[end] == null || !an.SolvedAt(m.Name, out solved)) continue;
+                    float off = Vector3.Distance(L(end), solved);
+                    int n; _solvedFrames.TryGetValue(m.Name, out n); _solvedFrames[m.Name] = n + 1;
+                    if (off > MovedFar) { _movedFrames.TryGetValue(m.Name, out n); _movedFrames[m.Name] = n + 1; }
+                    Worst w;
+                    if (!_moved.TryGetValue(m.Name, out w)) _moved[m.Name] = w = new Worst { V = -1f };
+                    if (off > w.V) { w.V = off; w.At = t; w.Tgt = L(end) - solved; } // (Tgt: which way it went, in the body's frame — x right, y up, z ahead)
+                }
             if (an != null && an.PropOn) PropChecks(an, t);
             // the look reached: the face (its own axis from the rest, not the animator's) to the point the clip sends the head to, once fully on
             {
@@ -389,6 +463,11 @@ namespace HuginWhispers
         private readonly float[] _wristTwist = { -999f, -999f }, _wristTwistAt = new float[2], _wristTwistLow = { 999f, 999f }, _wristTwistLowAt = new float[2], _wristBend = new float[2], _wristBendAt = new float[2];
         private readonly string[] _wristBendClip = new string[2], _curlClip = new string[2]; private readonly float[] _wristBendClipAt = new float[2], _curlClipAt = new float[2]; // (what a fix names)
         private readonly Vector3[] _wristFore = new Vector3[2], _wristF = new Vector3[2], _wristPalm = new Vector3[2]; private readonly bool[] _wristHasF = new bool[2], _wristOn = new bool[2];
+        // A wrist over its limit, frame by frame (BendOver): the worst moment alone said «at 2.67 s» of a wrist bent the whole scratch long, its fix
+        // mended that one moment, and the next take showed «a new bend» at 1.83 s that had been there all along (scratch_head 2026-11-11)
+        private struct BendAt { public float T, ClipAt, Bend; public string Clip; public bool HasF; public Vector3 F, Fore; }
+        private readonly List<BendAt>[] _wristOver = { new List<BendAt>(), new List<BendAt>() };
+        internal static float BendGap = 0.25f, BendMoment = 0.15f, BendKeyPad = 0.15f, BendKeyNear = 0.2f; // s: two frames over the limit this near are one stretch · stretches shorter than this in all are a moment, not said · a key this near a stretch is the stretch's · a key is mended by a frame this near it
         private string _hipsInClip, _hipsGapClip, _kneeClip; private float _hipsInClipAt, _hipsGapClipAt, _kneeClipAt;
         private static Quaternion Normal(Quaternion q) { float m = Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w); return m < 1e-6f ? Quaternion.identity : new Quaternion(q.x / m, q.y / m, q.z / m, q.w / m); }
         internal static float CurlAsked = 15f, PalmSwing = 60f; // deg the clip bends the middle finger itself: a fist it means · deg/s its «.n» turns: faster, the palm is on its way, not judged
@@ -559,6 +638,44 @@ namespace HuginWhispers
                 _was[i] = q; _wasSeen[i] = true;
             }
             Tempo(t);
+            // «still»: in the picture of a shot and nothing of it moves
+            if (InShot && _limbSeen && _sp < StillM && _spin0 < StillDeg)
+            {
+                if (_stillFrom < 0f) _stillFrom = t;
+                if (t - _stillFrom > _still) { _still = t - _stillFrom; _stillAt = _stillFrom; }
+            }
+            else _stillFrom = -1f;
+        }
+
+        // the scene's check says these (StudioScene): the body is one of a scene · it is in the picture of a shot this frame
+        internal bool InScene, InShot;
+        internal static float StillFor = 3f, StillDeg = 2f, StillM = 0.01f; // s nothing of it moves in a shot before it is said · deg/s and m/s under which a bone and a limb do not move (unmeasured: first numbers; a body frozen outright reads 0)
+        private float _stillFrom = -1f, _still, _stillAt;
+        internal static float StartHips = 0.12f, StartLean = 20f, StartLeast = 0.2f; // m the hips, deg the back may go over a clip's way in past what its own keys ask there · s: a way in is at least this long (unmeasured: first numbers)
+        private PAnimClip _startClip; private string _clipBefore; private float _startHips, _startLean, _startT, _hipsBefore, _leanBefore; private bool _poseWas;
+        private string _startSaid; private float _startAt, _startOff;
+        // a clip of ours comes on: the pose just before it kept, and at the end of its way in — did the body go where the clip's own keys do not send it?
+        private void Began(PAnimClip now, float hipsY, float t)
+        {
+            float lean, side; Lean(out lean, out side, false);
+            if (now != null && now.Name != _clipBefore && _poseWas) { _startClip = now; _startHips = _hipsBefore; _startLean = _leanBefore; _startT = t; }
+            _clipBefore = now != null ? now.Name : null;
+            if (_startClip != null && now != _startClip) _startClip = null; // (gone before its way in ended: nothing to say)
+            if (_startClip != null && _momentNow >= Mathf.Max(StartLeast, _startClip.FadeIn))
+            {
+                PAnimClip c = _startClip; float m = _momentNow;
+                _startClip = null;
+                float askedY = c.Bones.Contains(BodyClips.Move) ? Mathf.Abs(c.Value(BodyClips.Move, m).y - c.Value(BodyClips.Move, 0f).y) : 0f, askedLean = 0f;
+                foreach (string b in new[] { "Spine1", "Spine2", BodyClips.Body }) if (c.Bones.Contains(b)) askedLean += Mathf.Abs(c.Value(b, m).x - c.Value(b, 0f).x);
+                float down = _startHips - hipsY, hipsOff = Mathf.Abs(down) - askedY, leanOff = Mathf.Abs(lean - _startLean) - askedLean;
+                float off = Mathf.Max(hipsOff / StartHips, leanOff / StartLean);
+                if (off > 1f && off > _startOff)
+                {
+                    _startOff = off; _startAt = _startT;
+                    _startSaid = c.Name + " came on at " + N(_startT) + " s on a body not in the pose it begins from: over its first " + N(m) + " s the hips went " + N(Mathf.Abs(down)) + " m " + (down > 0f ? "down" : "up") + " and the back turned " + N(Mathf.Abs(lean - _startLean)) + " deg, where its own keys ask " + N(askedY) + " m and " + N(askedLean) + " deg — its fade carried the body there: play first the clip or the part that brings the body to that pose (its row in docs/CLIPS.md, «від → до»), or a clip that begins from how the body stands";
+                }
+            }
+            _hipsBefore = hipsY; _leanBefore = lean; _poseWas = true;
         }
 
         // the limbs a thing in the hands may go through: from joint to joint, how thick (m, the skin from the bone's line: NOT measured on the model)
@@ -602,18 +719,112 @@ namespace HuginWhispers
                 if (!GripOf(s == 0, an, view, out why, out bad)) continue; // (not on the thing now)
                 _gripOn[s] = true; _gripNowWhy[s] = why; _gripNowBad[s] = bad;
                 _gripFrames[s]++;
+                GripLook(s, an, view, t);
                 if (why == null) continue;
                 _gripBad[s]++;
-                if (bad > _gripWorst[s]) { _gripWorst[s] = bad; _gripAt[s] = t; _gripWhy[s] = why; }
+                if (bad > _gripWorst[s]) { _gripWorst[s] = bad; _gripAt[s] = t; _gripWhy[s] = why; _gripClip[s] = _clipNow; }
             }
         }
 
         // ---------------------------------------------------------------- grip
-        internal static float GripPalm = 0.045f, GripTip = 0.025f, GripShut = 0.045f, GripShare = 0.1f; // m the palm's face off the thing · m a real fingertip off its surface still on it · m a fingertip this near its own palm and off the thing: curled into it · the share of frames on it that may not hold (NOT measured in the game)
+        // A hand on the thing, digit by digit (the user 2026-11-11: «ти явно не бачиш як пальці виглядають на книзі» — a grip turned by eye take after
+        // take, and «two fingertips near it» had said HOLDS of the hooks he called fists). Each digit against the thing's surface: its tip's distance
+        // (below zero: inside), its middle joints' (a knuckle through it), and how its last bone meets the surface — along it (it lies: the pad on the
+        // thing) or end on (it pokes: a hook). A hand holds when its palm is on the thing and turned to it, GripLie of its four fingers lie on it and
+        // its thumb is on it too (or the thing rests on a palm turned up), and it is not shut to a fist. These limits are a hand's, set by reasoning,
+        // NOT measured in the game — and never to be fitted to a clip someone accepted. The pose's words say every digit each frame (DigitsSaid);
+        // the full report carries a sheet of the hand's own bones at the middle of its time on the thing (GripSheet): tools/grip.js reckons from it
+        // where the wrist goes and how far each finger bends, so a grip is not mended a take a guess.
+        internal static float GripPalm = 0.045f, GripTip = 0.025f, GripShut = 0.045f, GripShare = 0.1f, GripSteep = 50f, GripUnder = 0.7f, GripSheetEvery = 0.5f; // m the palm's face off the thing · m a real fingertip off its surface still on it · m a fingertip this near its own palm and off the thing: curled into it · the share of frames on it that may not hold · deg a finger's last bone into the surface past which it pokes, not lies · the palm's way up (its cosine) from which the thing rests on it · s between the sheet's looks
+        internal static int GripLie = 3; // of its four fingers
         private readonly int[] _gripFrames = new int[2], _gripBad = new int[2];
         private readonly float[] _gripWorst = new float[2], _gripAt = new float[2];
-        private readonly string[] _gripWhy = new string[2], _gripNowWhy = new string[2];
+        private readonly string[] _gripWhy = new string[2], _gripNowWhy = new string[2], _gripClip = new string[2];
         private readonly bool[] _gripOn = new bool[2]; private readonly float[] _gripNowBad = new float[2]; // (this frame's, for «want … holds»)
+        private static readonly string[] DigitWord = { "thumb", "index", "middle", "ring", "pinky" };
+        private readonly float[,] _digTip = new float[2, 5], _digMid = new float[2, 5], _digSteep = new float[2, 5]; // (as GripOf last measured them)
+        private readonly bool[,] _digHas = new bool[2, 5];
+        private readonly float[] _digPalm = new float[2];
+
+        // a digit as last measured, in a word: IN the thing · lies on it · pokes at it (on it, end on) · stands on it (its tip on it, the finger steeply off it) · on it (the thumb) · in the air
+        private string DigitState(int side, int k)
+        {
+            float d = _digTip[side, k];
+            if (d < -FingerDeep || _digMid[side, k] < -FingerDeep) return "IN";
+            if (d > GripTip) return "air";
+            return k == 0 ? "on" : _digSteep[side, k] > GripSteep ? "pokes" : _digSteep[side, k] < -GripSteep ? "stands" : "lies"; // (stands: its last bone goes steeply OFF the surface, only its tip near it — take_book's first measured take read «lies -64», «lies -82» of fingers standing up from the book's edge, 2026-11-11)
+        }
+        // … all five, for the pose's words (m off the thing's surface, below zero inside it; after a finger's word the degrees its last bone goes into the surface)
+        private string DigitsSaid(int side)
+        {
+            StringBuilder s = new StringBuilder("palm ").Append(M(_digPalm[side]));
+            for (int k = 0; k < 5; k++)
+            {
+                if (!_digHas[side, k]) continue;
+                string st = DigitState(side, k);
+                s.Append(" · ").Append(DigitWord[k]).Append(' ').Append(M(_digTip[side, k])).Append(' ').Append(st);
+                if (st == "IN" && _digMid[side, k] < _digTip[side, k]) s.Append(" (a joint ").Append(M(_digMid[side, k])).Append(')');
+                else if (k > 0 && st != "air") s.Append(' ').Append(Mathf.RoundToInt(_digSteep[side, k]));
+            }
+            return s.ToString();
+        }
+        private static string M(float v) { return v.ToString("0.000", CultureInfo.InvariantCulture); }
+
+        // every digit of a hand against a surface (dist: m off it, below zero inside · normal: its way out there), kept for the words (_dig…): how many
+        // of the four fingers lie on it, is the thumb on it, how many are curled back to the palm (face: the palm's middle); off: each finger that does not lie, in words.
+        // One measure for the thing in the hands (GripOf) and for what a palm is held on — a wall, a table, a door (TouchDigits)
+        private void Digits(int side, Vector3 face, Func<Vector3, float> dist, Func<Vector3, Vector3> normal, List<string> off, out int lie, out int fingers, out bool thumb, out int shut)
+        {
+            lie = 0; fingers = 0; shut = 0; thumb = false;
+            for (int k = 0; k < 5; k++)
+            {
+                Vector3 tip;
+                _digHas[side, k] = Tip(side, k, out tip);
+                if (!_digHas[side, k]) continue;
+                Transform j2 = _fing[side, k, 0], j3 = _fing[side, k, 1];
+                float d = dist(tip);
+                _digTip[side, k] = d;
+                _digMid[side, k] = Mathf.Min(j2 != null ? dist(j2.position) : 9f, j3 != null ? dist(j3.position) : 9f);
+                Vector3 last = j3 != null ? tip - j3.position : Vector3.zero;
+                _digSteep[side, k] = last.sqrMagnitude > 1e-8f ? Mathf.Asin(Mathf.Clamp(Vector3.Dot(last.normalized, -normal(tip)), -1f, 1f)) * Mathf.Rad2Deg : 0f; // (how far its last bone goes INTO the surface: 0 along it, 90 end on)
+                string st = DigitState(side, k);
+                if (k == 0) { thumb = st == "on"; continue; }
+                fingers++;
+                if (st == "lies") lie++;
+                else
+                {
+                    off.Add(DigitWord[k] + (st == "IN" ? " " + N(-Mathf.Min(d, _digMid[side, k])) + " m inside it" : st == "pokes" ? " pokes at it end on (" + Mathf.RoundToInt(_digSteep[side, k]) + " deg into its surface)" : st == "stands" ? " stands off it on its tip (" + Mathf.RoundToInt(-_digSteep[side, k]) + " deg off its surface)" : " " + N(d) + " m in the air"));
+                    if (st == "air" && Vector3.Distance(tip, face) < GripShut) shut++; // (curled back to its own palm and not on the surface: a fist)
+                }
+            }
+        }
+
+        // a palm held on a fixture (the stage's wall, table, door: a hand whose target lies at its surface, at its full weight, and whose clip does not
+        // close its fingers itself): its fingers belong on that surface too — a palm on a door with the fingers standing off it, or poking at it, is the
+        // same mistake as a fist, a size smaller (the user's «гарно лягати», 2026-11-11, for every surface a hand is on, not the book alone)
+        private readonly int[] _touchFrames = new int[2], _touchBad = new int[2], _touchLeast = { 9, 9 };
+        private readonly float[] _touchDigAt = new float[2]; private readonly string[] _touchDigWhy = new string[2], _touchDigOn = new string[2];
+        private bool OnFixture(int side, Fixture f, BodyAnimator an, List<string> off, out int lie, out int fingers)
+        {
+            lie = 0; fingers = 0;
+            Transform root = _h.transform, hand = _b[side == 0 ? HandL : HandR];
+            Vector3 along, palm;
+            if (an == null || hand == null || !an.HandFacing(side == 0, hand, out along, out palm) || palm.sqrMagnitude < 1e-8f) return false;
+            Vector3 face = hand.position + along * 0.45f + palm.normalized * 0.015f;
+            bool thumb; int shut;
+            _digPalm[side] = f.Distance(root.InverseTransformPoint(face));
+            Digits(side, face, p => f.Distance(root.InverseTransformPoint(p)), p => root.TransformDirection(f.Normal(root.InverseTransformPoint(p))), off, out lie, out fingers, out thumb, out shut);
+            return true;
+        }
+        private void TouchDigits(int side, Fixture f, BodyAnimator an, float t)
+        {
+            List<string> off = new List<string>(); int lie, fingers;
+            if (!OnFixture(side, f, an, off, out lie, out fingers) || fingers == 0) return;
+            _touchFrames[side]++;
+            if (lie >= Mathf.Min(GripLie, fingers)) return;
+            _touchBad[side]++;
+            if (lie < _touchLeast[side]) { _touchLeast[side] = lie; _touchDigAt[side] = t; _touchDigOn[side] = f.Name; _touchDigWhy[side] = lie + " of " + fingers + " fingers lying on it: " + string.Join(", ", off.ToArray()); }
+        }
 
         // a hand the clip has on the thing now (false: it has not): why = null when it holds it, else what touches instead; bad: how far from a grip (the worst kept)
         private bool GripOf(bool left, BodyAnimator an, StoryPropView view, out string why, out float bad)
@@ -629,28 +840,114 @@ namespace HuginWhispers
             float palmGap = view.Distance(face);
             Vector3 near = view.Closest(face);
             bool turned = palmGap < 0.005f || Vector3.Dot(palm, (near - face).normalized) > 0.2f; // (to the nearest of its surface, not its middle: a palm on a book's face near the rim)
-            int side = left ? 0 : 1, tips = 0, shut = 0, fingers = 0;
-            bool thumb = false;
-            for (int k = 0; k < 5; k++)
-            {
-                Vector3 tip;
-                if (!Tip(side, k, out tip)) continue;
-                float d = view.Distance(tip);
-                bool onIt = d <= GripTip && d >= -FingerDeep;
-                if (k == 0) { thumb = onIt; continue; }
-                fingers++;
-                if (onIt) tips++;
-                else if (Vector3.Distance(tip, face) < GripShut) shut++; // (curled back to its own palm and not on the thing: a fist)
-            }
+            int side = left ? 0 : 1, lie, shut, fingers;
+            bool thumb;
+            _digPalm[side] = palmGap;
+            List<string> off = new List<string>();
+            Digits(side, face, view.Distance, view.Normal, off, out lie, out fingers, out thumb, out shut);
+            bool under = Vector3.Dot(palm, Vector3.up) > GripUnder && palmGap <= GripPalm; // (the thing rests on the palm: no thumb needed to hold it)
             List<string> no = new List<string>();
             if (palmGap > GripPalm) no.Add("palm " + N(palmGap) + " m off it");
             if (!turned) no.Add("palm turned away from it");
-            if (tips + (thumb ? 1 : 0) < 2) no.Add("fingertips on it " + tips + " of " + fingers + (thumb ? ", the thumb on it" : ", the thumb off it"));
+            if (lie < Mathf.Min(GripLie, fingers)) no.Add("fingers lying on it " + lie + " of " + fingers + " (" + string.Join(", ", off.ToArray()) + ")");
+            if (!thumb && !under && _digHas[side, 0]) no.Add("the thumb " + (_digTip[side, 0] < -FingerDeep || _digMid[side, 0] < -FingerDeep ? "inside it" : N(_digTip[side, 0]) + " m off it"));
             if (shut >= 3) no.Add("shut to a fist before it (" + shut + " fingers curled to the palm)");
             if (no.Count == 0) return true;
             why = string.Join(", ", no.ToArray());
-            bad = Mathf.Max(0f, palmGap - GripPalm) + (turned ? 0f : 0.1f) + Mathf.Max(0, 2 - tips - (thumb ? 1 : 0)) * 0.03f + (shut >= 3 ? 0.05f : 0f);
+            bad = Mathf.Max(0f, palmGap - GripPalm) + (turned ? 0f : 0.1f) + Mathf.Max(0, Mathf.Min(GripLie, fingers) - lie) * 0.03f + (thumb || under ? 0f : 0.03f) + (shut >= 3 ? 0.05f : 0f);
             return true;
+        }
+
+        // ---------------------------------------------------------------- the grip sheet (the head of the grip above)
+        // The hand's own bones while it is on the thing, a look every GripSheetEvery s: each digit's three joints (place and turn) and its tip in the
+        // HAND's frame (from the wrist bone; z the fingers' way — wrist to the middle knuckle —, y the palm's way made square to it, x = y × z: the frame
+        // the core turns by «.on.f» and «.on.n», BodyAnimator.HandFacing), the keys its clip had on those bones then, and in the THING's frame (as «.on»
+        // is said: BodyAnimator.PropAt) the wrist, the fingers' and the palm's way, the thing's box. A finger key turns its bone over the pose under it
+        // (BodyClips.Turn), so the same key reads otherwise on the left hand and under another stance: the sheet is the measure of that.
+        private sealed class GripShot
+        {
+            public float T, PalmGap, BoxOff, ClipAt; public string Clip; public Vector3 Wrist, Asked, F, N, BoxAt; // (BoxOff, BoxAt: deg the thing's look stood off the turn «.on» is said in, then, and its box's middle in that frame — a look moved aside with no turn reads «off 0»)
+            public readonly Vector3[] P = new Vector3[15], Key = new Vector3[15], Tip = new Vector3[5]; public readonly Quaternion[] Q = new Quaternion[15]; public readonly float[] KeyW = new float[15]; public readonly bool[] Has = new bool[5];
+        }
+        private readonly List<GripShot>[] _gripShots = { new List<GripShot>(), new List<GripShot>() };
+        private const int GripShotsMost = 120;
+        private void GripLook(int side, BodyAnimator an, StoryPropView view, float t)
+        {
+            List<GripShot> list = _gripShots[side];
+            if (list.Count >= GripShotsMost || (list.Count > 0 && t >= list[list.Count - 1].T && t - list[list.Count - 1].T < GripSheetEvery)) return;
+            bool left = side == 0;
+            Transform hand = _b[left ? HandL : HandR];
+            Vector3 along, palm, pp; Quaternion pr;
+            if (hand == null || !an.HandFacing(left, hand, out along, out palm) || along.sqrMagnitude < 1e-8f || palm.sqrMagnitude < 1e-8f) return;
+            an.PropAt(out pp, out pr);
+            Quaternion hq = Quaternion.Inverse(Quaternion.LookRotation(along, palm)), tq = Quaternion.Inverse(pr);
+            GripShot g = new GripShot { T = t, Clip = _clipNow, ClipAt = _momentNow, PalmGap = _digPalm[side], Wrist = tq * (hand.position - pp), F = tq * along.normalized, N = tq * palm.normalized };
+            float ig; an.ChannelNow((left ? "@LeftHand" : "@RightHand") + ".on", out g.Asked, out ig);
+            Vector3 bc, bs; Quaternion bq; bool round;
+            if (view.Box(out bc, out bq, out bs, out round)) { g.BoxOff = Quaternion.Angle(pr, bq); g.BoxAt = tq * (bc - pp); }
+            for (int k = 0; k < 5; k++)
+            {
+                Vector3 tip;
+                Transform[] j = { _knuckle[side, k], _fing[side, k, 0], _fing[side, k, 1] };
+                g.Has[k] = j[0] != null && j[1] != null && j[2] != null && Tip(side, k, out tip);
+                if (!g.Has[k]) continue;
+                Tip(side, k, out tip);
+                g.Tip[k] = hq * (tip - hand.position);
+                for (int i = 0; i < 3; i++)
+                {
+                    g.P[k * 3 + i] = hq * (j[i].position - hand.position); g.Q[k * 3 + i] = hq * j[i].rotation;
+                    if (!an.ChannelNow((left ? "Left" : "Right") + "Hand" + Fingers[k] + (i + 1), out g.Key[k * 3 + i], out g.KeyW[k * 3 + i])) { g.Key[k * 3 + i] = Vector3.zero; g.KeyW[k * 3 + i] = -1f; } // (−1: the clip does not key that bone)
+                }
+            }
+            list.Add(g);
+        }
+
+        private static string V4(Vector3 v) { return v.x.ToString("0.####", CultureInfo.InvariantCulture) + " " + v.y.ToString("0.####", CultureInfo.InvariantCulture) + " " + v.z.ToString("0.####", CultureInfo.InvariantCulture); }
+        // the sheet, for the full report ("" when no hand was on a thing): each hand at the look nearest the middle of its time on the thing
+        internal string GripSheet(StoryPropView view, BodyAnimator an)
+        {
+            StringBuilder s = new StringBuilder();
+            if (view != null && an != null) // (the thing itself, whether a hand was on it or not: a movement of the script lays a hand on it by these — tools/grip.js forScript)
+            {
+                Vector3 pp, bc, bs; Quaternion pr, bq; bool round;
+                an.PropAt(out pp, out pr);
+                if (view.Box(out bc, out bq, out bs, out round))
+                {
+                    Quaternion tq = Quaternion.Inverse(pr);
+                    s.Append("grip sheet (node tools/anim.js grip <clip> reckons from it; m. The hand's frame: from the wrist bone, z its fingers' way — wrist to the middle knuckle —, y its palm's way, x = y × z; turns are quaternions x y z w in that frame. The thing's frame: as «.on» is said):\n");
+                    s.Append("grip thing: centre ").Append(V4(tq * (bc - pp))).Append(" size ").Append(V4(bs)).Append(round ? " round" : " box").Append(" off ").Append(N(Quaternion.Angle(pr, bq))).Append(" deg\n");
+                    List<Vector3> pc = new List<Vector3>(), ps = new List<Vector3>();
+                    view.Parts(pc, ps);
+                    if (pc.Count > 1) for (int i = 0; i < pc.Count; i++) s.Append("grip part: centre ").Append(V4(tq * (pc[i] - pp))).Append(" size ").Append(V4(ps[i])).Append('\n');
+                }
+            }
+            // (a scene's body: by its report the thing is put back and its look gone — the hands' looks are said all the same, each with how far the
+            //  thing stood off the turn «.on» is said in, and how far the wrist was off its asked point: what a scene's grip differs by from the stage's)
+            bool headed = s.Length > 0;
+            for (int side = 0; side < 2; side++)
+            {
+                List<GripShot> list = _gripShots[side];
+                if (list.Count == 0) continue;
+                float mid = (list[0].T + list[list.Count - 1].T) * 0.5f;
+                GripShot g = list[0];
+                foreach (GripShot x in list) if (Mathf.Abs(x.T - mid) < Mathf.Abs(g.T - mid)) g = x;
+                if (!headed) { s.Append("grip sheet (the thing's look was gone by the report: the hands as they were on it; m, the hand's frame as on the stage):\n"); headed = true; }
+                string name = side == 0 ? "left" : "right";
+                s.Append("grip ").Append(name).Append(" at ").Append(N(g.T)).Append(" s (on the thing ").Append(N(list[0].T)).Append("–").Append(N(list[list.Count - 1].T)).Append(" s, the thing then ").Append(N(g.BoxOff)).Append(" deg off its said turn, its middle ").Append(V4(g.BoxAt)).Append(" off its said place").Append(g.Clip != null ? ", the clip " + g.Clip + " at " + N(g.ClipAt) + " s" : "").Append("): wrist ").Append(V4(g.Wrist)).Append(" asked ").Append(V4(g.Asked)).Append(" f ").Append(V4(g.F)).Append(" n ").Append(V4(g.N)).Append(" palm ").Append(M(g.PalmGap)).Append(" tips ").Append(_fingEnd[side, 2] != null ? "bones" : "reckoned").Append('\n');
+                for (int k = 0; k < 5; k++)
+                {
+                    if (!g.Has[k]) continue;
+                    s.Append("grip ").Append(name).Append(' ').Append(Fingers[k]).Append(':');
+                    for (int i = 0; i < 3; i++)
+                    {
+                        Quaternion q = g.Q[k * 3 + i];
+                        s.Append(" | p ").Append(V4(g.P[k * 3 + i])).Append(" q ").Append(q.x.ToString("0.#####", CultureInfo.InvariantCulture)).Append(' ').Append(q.y.ToString("0.#####", CultureInfo.InvariantCulture)).Append(' ').Append(q.z.ToString("0.#####", CultureInfo.InvariantCulture)).Append(' ').Append(q.w.ToString("0.#####", CultureInfo.InvariantCulture));
+                        s.Append(" key ").Append(g.KeyW[k * 3 + i] < 0f ? "-" : V4(g.Key[k * 3 + i]) + " w " + N(g.KeyW[k * 3 + i]));
+                    }
+                    s.Append(" | tip ").Append(V4(g.Tip[k])).Append(_fingEnd[side, k] != null ? " bones" : " reckoned").Append('\n');
+                }
+            }
+            return s.ToString();
         }
 
         private static int _realMask;
@@ -738,12 +1035,18 @@ namespace HuginWhispers
                     if (_wristTwist[s] > WristTwistTo) Say(bad, w + "[twist] " + side[s] + " wrist twisted " + N(_wristTwist[s]) + " deg round the forearm at " + N(_wristTwistAt[s]) + " s, past " + N(WristTwistTo) + ": no wrist turns so — turn " + hand + ".n / .on.n back, or move the hand", _wristTwistAt[s]);
                     if (_wristTwistLow[s] < WristTwistFrom) Say(bad, w + "[twist] " + side[s] + " wrist twisted " + N(_wristTwistLow[s]) + " deg round the forearm at " + N(_wristTwistLowAt[s]) + " s, past " + N(WristTwistFrom) + ": no wrist turns so — turn " + hand + ".n / .on.n back, or move the hand", _wristTwistLowAt[s]);
                 }
-                if (_wristBend[s] > WristBend) Say(bad, w + "[bend] " + side[s] + " wrist bent " + N(_wristBend[s]) + " deg off the forearm at " + N(_wristBendAt[s]) + " s: no wrist bends so — " + BendFix(s, hand), _wristBendAt[s]);
+                if (_wristBend[s] > WristBend) Say(bad, w + "[bend] " + side[s] + " wrist bent " + N(_wristBend[s]) + " deg off the forearm at " + N(_wristBendAt[s]) + " s: no wrist bends so" + BendOver(s) + " — " + BendFix(s, hand), _wristBendAt[s]);
                 if (_curl[s] > FistCurl) Say(bad, w + "[fist] " + side[s] + " hand closed to a fist (" + N(_curl[s]) + " deg) at " + N(_curlAt[s]) + " s while its palm is set: open the fingers (" + Side[s] + "HandIndex1/2, Middle1/2, Ring1/2, Pinky1/2 about −25)" + FistFix(s, Side[s]), _curlAt[s]);
                 if (_past[s] > Past) Say(bad, w + "[past] " + side[s] + " hand sticks out " + N(_past[s]) + " m past the other elbow at " + N(_pastAt[s]) + " s: bring its x " + N(_past[s] + 0.03f) + " m nearer the middle (onto the other arm)", _pastAt[s]);
                 if (_elbow[s] > ElbowBack) Say(bad, w + "[elbow] " + side[s] + " elbow " + N(_elbow[s]) + " m behind the chest at " + N(_elbowAt[s]) + " s: turn its pole (" + hand + ".p) out and forward", _elbowAt[s]);
             }
             foreach (KeyValuePair<string, Worst> m in _miss) if (m.Value.V > MissFar) Say(bad, w + "[miss] " + m.Key + " misses by " + N(m.Value.V) + " m at " + N(m.Value.At) + " s with its weight on: out of reach" + MissFix(m.Key, m.Value), m.Value.At);
+            foreach (KeyValuePair<string, Worst> m in _moved)
+            {
+                if (m.Value.V <= MovedFar) continue;
+                int over, all; _movedFrames.TryGetValue(m.Key, out over); _solvedFrames.TryGetValue(m.Key, out all);
+                Say(bad, w + "[moved] " + m.Key + " stands " + M(m.Value.V) + " m off where the pose put it at " + N(m.Value.At) + " s (by " + V4(m.Value.Tgt) + " in the body's frame: x right, y up, z ahead; over the limit in " + over + " of the " + all + " frames it was solved): something moves that limb AFTER our pose in the same frame — the game's own step on this body, or a later layer. No key of the clip mends it and every number of that limb here is of the moved one: it is the core's to find (BodyAnimator against what runs after it), say it before judging the clip", m.Value.At);
+            }
             foreach (KeyValuePair<string, Worst> m in _fast)
             {
                 bool foot = m.Key.EndsWith("Foot", System.StringComparison.Ordinal);
@@ -758,10 +1061,13 @@ namespace HuginWhispers
             for (int s = 0; s < 2; s++) if (Mathf.Abs(_sole[s]) > SoleTilt) Say(bad, w + "[sole] the " + (s == 0 ? "left" : "right") + " foot stands " + (_sole[s] > 0f ? "on its heel, the toe " + N(_sole[s]) + " m up in the air" : "up on its toes, the heel " + N(-_sole[s]) + " m up") + " at " + N(_soleAt[s]) + " s: the sole flat on the ground (the foot's turn, or its target lower)", _soleAt[s]);
             if (_lookOff > LookMiss) Say(bad, w + "[look] the face stays " + N(_lookOff) + " deg off its @Look point at " + N(_lookOffAt) + " s: past what the head turns (BodyClips.LookMost) — turn the body toward it, or bring the point nearer the face's way", _lookOffAt);
             if (_limbDeep > 0f) Say(bad, w + "[prop-limb] the " + _limbDeepOf + " goes " + N(_limbDeep) + " m into the prop at " + N(_limbDeepAt) + " s: hold it off the body", _limbDeepAt);
+            for (int s = 0; s < 2; s++)
+                if (_touchFrames[s] > 0 && _touchBad[s] > _touchFrames[s] * GripShare)
+                    Say(bad, w + "[touch-fingers] " + side[s] + " hand is held on the " + _touchDigOn[s] + " with its fingers not on it in " + _touchBad[s] + " of " + _touchFrames[s] + " frames (worst at " + N(_touchDigAt[s]) + " s: " + _touchDigWhy[s] + "): a palm on a surface lays its fingers on it — their keys (" + Side[s] + "HandIndex1/2 … Pinky1/2; node tools/anim.js grip presets says the keys that straighten this hand's fingers)", _touchDigAt[s]);
             if (_through > 0f) Say(bad, w + "[prop-fingers] fingers inside the prop in " + _through.ToString("0", CultureInfo.InvariantCulture) + " frames (last at " + N(_throughAt) + " s): move the wrist out past its edge", _throughAt);
             for (int s = 0; s < 2; s++)
                 if (_gripFrames[s] > 0 && _gripBad[s] > _gripFrames[s] * GripShare)
-                    Say(bad, w + "[grip] " + side[s] + " hand does not hold the prop in " + _gripBad[s] + " of " + _gripFrames[s] + " frames it is on it (worst at " + N(_gripAt[s]) + " s: " + _gripWhy[s] + "): its palm on the thing, turned to it (@" + Side[s] + "Hand.on, .on.n), the fingers round it (" + Side[s] + "HandIndex1/2 … Pinky1/2), not a fist", _gripAt[s]);
+                    Say(bad, w + "[grip] " + side[s] + " hand does not hold the prop in " + _gripBad[s] + " of " + _gripFrames[s] + " frames it is on it (worst at " + N(_gripAt[s]) + " s: " + _gripWhy[s] + "): its palm on the thing, turned to it (@" + Side[s] + "Hand.on, .on.n), the fingers lying on it (" + Side[s] + "HandIndex1/2 … Pinky1/2), the thumb on it, not a fist — node tools/anim.js grip " + (_gripClip[s] ?? "<clip>").Split('.')[0] + " reckons the wrist's place and each finger's bend from this take's sheet: do not turn them by eye", _gripAt[s]);
             if (_shoulder > ShoulderBent) Say(bad, w + "[shoulder] " + _shoulderSide + " shoulder bent " + _shoulder.ToString("0", CultureInfo.InvariantCulture) + " deg off its stance at " + N(_shoulderAt) + " s: a reach out of the arm's length pulls it", _shoulderAt);
             if (_fold < ElbowFold) Say(bad, w + "[fold] " + _foldSide + " elbow folded to " + _fold.ToString("0", CultureInfo.InvariantCulture) + " deg at " + N(_foldAt) + " s", _foldAt);
             if (_neck > NeckMost) Say(bad, w + "[neck] head turned " + _neck.ToString("0", CultureInfo.InvariantCulture) + " deg off the chest at " + N(_neckAt) + " s", _neckAt);
@@ -776,6 +1082,8 @@ namespace HuginWhispers
             if (_seat.Length > 0 && _hipsGap > SeatHover) Say(bad, w + "[seat] the hips hover " + N(_hipsGap) + " m over the " + _seat + " at their lowest: lower the body that much more («move» y)" + MoveFix(_hipsGapClip, _hipsGapClipAt, -_hipsGap), -1f);
             foreach (KeyValuePair<string, float> p in _point) if (p.Value > PointNear) Say(bad, w + "[point] no hand comes nearer than " + N(p.Value) + " m to the " + p.Key, -1f);
             if (_inside > InsideDeep) Say(bad, w + "[inside] " + _insideWhat + " inside the body (" + N(_inside * 100f) + "% of the way to the spine) at " + N(_insideAt) + " s: move it out in front of the chest", _insideAt);
+            if (_still > StillFor) Say(bad, w + "[still] nothing of the body moves for " + N(_still) + " s from " + N(_stillAt) + " s while it is in the picture of a shot: an actor stood like a post — a clip, a look, a turn of the head there, or a shot that is not of it", _stillAt);
+            if (_startSaid != null) Say(bad, w + "[start] " + _startSaid, _startAt);
             if (_inHead > HeadDeep) Say(bad, w + "[head] " + _inHeadWhat + " inside the head (" + N(_inHead * 100f) + "% of the way to its middle) at " + N(_inHeadAt) + " s: move it out onto the head's surface (in front of the brow, beside the temple)", _inHeadAt);
             if (_knee < -KneeUnder) Say(bad, w + "[knee-under] a knee " + N(-_knee) + " m under the ground at " + N(_kneeAt) + " s: the body goes lower than the leg folds — raise «move» y there" + MoveFix(_kneeClip, _kneeClipAt, -_knee + KneeUnder), _kneeAt);
         }
@@ -813,7 +1121,7 @@ namespace HuginWhispers
         {
             PAnimClip c = BodyClips.Find(clip);
             float best = Mathf.Round(at * 100f) / 100f, gap = 9f;
-            if (c != null) foreach (PAnimKey k in c.Keys) if (k.V.ContainsKey(channel) && Mathf.Abs(k.T - at) < gap) { gap = Mathf.Abs(k.T - at); best = k.T; }
+            if (c != null) foreach (PAnimKey k in c.Keys) if (k.Has(channel) && Mathf.Abs(k.T - at) < gap) { gap = Mathf.Abs(k.T - at); best = k.T; }
             return best;
         }
 
@@ -856,6 +1164,25 @@ namespace HuginWhispers
             return s + ": the target " + N(over + 0.03f) + " m nearer the " + root + " — or «move» y " + N(-(over + 0.03f)) + " there, or the body leant so the " + root + " comes that much nearer" + FixLine("set " + clip + " " + limb + " " + N(KeyNear(clip, limb, at)) + " " + V(near));
         }
 
+        // how long a wrist is over its limit, in the run's time: its stretches (frames BendGap apart are one), said when they make more than a
+        // moment — «the pose it holds», not a point to mend
+        private string BendOver(int s)
+        {
+            List<BendAt> o = _wristOver[s];
+            if (o.Count == 0) return "";
+            StringBuilder b = new StringBuilder(); float from = o[0].T, to = o[0].T, sum = 0f; int n = 0;
+            for (int i = 1; i <= o.Count; i++)
+            {
+                if (i < o.Count && o[i].T - to <= BendGap) { to = o[i].T; continue; }
+                sum += to - from;
+                if (n++ > 0) b.Append(", ");
+                b.Append(N(from)).Append("–").Append(N(to));
+                if (i < o.Count) from = to = o[i].T;
+            }
+            if (sum < BendMoment) return "";
+            return ", and it is over " + N(WristBend) + " deg for " + N(sum) + " s in all (" + b + " s): the pose it holds, not a moment";
+        }
+
         // a wrist bent past what it bends: .f turned toward the forearm's way by what is over (and a little), or given to a hand that has none
         private string BendFix(int s, string hand)
         {
@@ -865,6 +1192,29 @@ namespace HuginWhispers
             if (!WholeOf(ref clip, ref at) || !Fixable(clip, hand)) return "point " + hand + ".f " + N(turn) + " deg more along the forearm, or move the hand";
             if (_wristHasF[s])
             {
+                // every key of «.f» the clip's file has in the stretches it is over (BendKeyPad round them), each turned by what the wrist was over
+                // at the frame nearest it — one key mended left the rest of the stretch bent (the head of BendAt)
+                PAnimClip c = BodyClips.Find(clip); float shift = at - _wristBendClipAt[s]; // (a part's moments are its whole clip's less where it begins: WholeOf)
+                StringBuilder ops = new StringBuilder(); int keys = 0;
+                if (c != null) foreach (PAnimKey k in c.Keys)
+                {
+                    if (!k.Has(hand + ".f")) continue;
+                    float gap = BendKeyNear; int best = -1; bool inside = false;
+                    for (int i = 0; i < _wristOver[s].Count; i++)
+                    {
+                        BendAt b = _wristOver[s][i];
+                        if (b.Clip != _wristBendClip[s] || !b.HasF) continue;
+                        float d = Mathf.Abs(b.ClipAt + shift - k.T);
+                        if (d <= BendKeyPad) inside = true;
+                        if (d < gap) { gap = d; best = i; }
+                    }
+                    if (!inside || best < 0) continue;
+                    BendAt w = _wristOver[s][best];
+                    Vector3 to = Vector3.RotateTowards(w.F, w.Fore, (w.Bend - WristBend + 10f) * Mathf.Deg2Rad, 0f).normalized;
+                    if (keys++ > 0) ops.Append("; ");
+                    ops.Append("set ").Append(hand).Append(".f ").Append(N(k.T)).Append(' ').Append(V(to));
+                }
+                if (keys > 1) return "point " + hand + ".f along the forearm at each of its " + keys + " keys in that stretch (worst: " + N(turn) + " deg more, the forearm's way " + V(_wristFore[s]) + "), or move the hand" + FixLine("batch " + clip + " \"" + ops + "\"");
                 Vector3 f = Vector3.RotateTowards(_wristF[s], _wristFore[s], turn * Mathf.Deg2Rad, 0f).normalized;
                 return "point " + hand + ".f " + N(turn) + " deg more along the forearm (its way " + V(_wristFore[s]) + "), or move the hand" + FixLine("set " + clip + " " + hand + ".f " + N(KeyNear(clip, hand + ".f", at)) + " " + V(f));
             }
@@ -894,7 +1244,7 @@ namespace HuginWhispers
             if (ramp != null) return ramp;
             if (c == null || !c.Bones.Contains(target)) return " (not a target of the clip: the way in or out — a longer «fade», or its first key nearer the game's stance)";
             float t1 = -1f, t2 = -1f;
-            foreach (PAnimKey k in c.Keys) { if (!k.V.ContainsKey(target)) continue; if (k.T <= at) t1 = k.T; else if (t2 < 0f) t2 = k.T; }
+            foreach (PAnimKey k in c.Keys) { if (!k.Has(target)) continue; if (k.T <= at) t1 = k.T; else if (t2 < 0f) t2 = k.T; }
             if (t1 < 0f || t2 < 0f) return " (outside its keys: the way in or out)";
             Vector3 a = c.Value(target, t1), b = c.Value(target, t2);
             float d = Vector3.Distance(a, b), need = d / (limit * 0.75f), own = d / Mathf.Max(0.01f, t2 - t1);
@@ -916,7 +1266,7 @@ namespace HuginWhispers
             float tp = -1f, t1 = -1f, t2 = -1f, tn = -1f;
             foreach (PAnimKey k in c.Keys)
             {
-                if (!k.V.ContainsKey(wch)) continue;
+                if (!k.Has(wch)) continue;
                 if (k.T <= at) { tp = t1; t1 = k.T; } else if (t2 < 0f) t2 = k.T; else if (tn < 0f) tn = k.T;
             }
             if (t1 < 0f || t2 < 0f) return null;
@@ -962,7 +1312,7 @@ namespace HuginWhispers
                 return " (no key of this bone in the clip and no limb flew then: the way in or out — a longer «fade» — or a target's pole flipping over)";
             }
             float t1 = -1f, t2 = -1f;
-            foreach (PAnimKey k in c.Keys) { if (!k.V.ContainsKey(name)) continue; if (k.T <= m.ClipAt) t1 = k.T; else if (t2 < 0f) t2 = k.T; }
+            foreach (PAnimKey k in c.Keys) { if (!k.Has(name)) continue; if (k.T <= m.ClipAt) t1 = k.T; else if (t2 < 0f) t2 = k.T; }
             if (t1 < 0f || t2 < 0f) return " (outside its keys: the way in or out)";
             float deg = (c.Value(name, t2) - c.Value(name, t1)).magnitude, need = deg / (BoneJerk * 0.75f);
             string clip = c.Name; float ig = 0f; bool file = !c.IsPart && WholeOf(ref clip, ref ig);
@@ -1184,6 +1534,7 @@ namespace HuginWhispers
         {
             StringBuilder s = new StringBuilder("palm off L " + N(_palm[0]) + " R " + N(_palm[1]) + " deg · wrist twist L " + Range(0) + " R " + Range(1) + " deg, bend L " + N(_wristBend[0]) + " R " + N(_wristBend[1]) + " deg · fingers curl L " + N(_curl[0]) + " R " + N(_curl[1]) + " deg · past the other elbow L " + N(_past[0]) + " R " + N(_past[1]) + " m · elbow behind L " + N(_elbow[0]) + " R " + N(_elbow[1]) + " m · tightest elbow " + N(_fold) + " deg · shoulder " + N(_shoulder) + " deg · neck " + N(_neck) + " deg · deepest in the body " + N(_inside * 100f) + "% (" + (_insideWhat.Length > 0 ? _insideWhat : "-") + ") · knee lowest " + N(_knee) + " m · feet lowest L " + N(_lowest[0]) + " R " + N(_lowest[1]) + " m · hips " + N(_hipsLow) + " .. " + N(_hipsHigh) + " m · feet slid L " + N(_slid[0]) + " R " + N(_slid[1]) + " m");
             foreach (KeyValuePair<string, Worst> m in _miss) s.Append(" · ").Append(m.Key).Append(" missed by ").Append(N(m.Value.V)).Append(" m");
+            foreach (KeyValuePair<string, Worst> m in _moved) s.Append(" · ").Append(m.Key).Append(" moved after the pose ").Append(M(m.Value.V)).Append(" m"); // (said always, under the limit too: the number that would have named 2026-11-12's fault at a glance)
             foreach (KeyValuePair<string, Touch> k in _touch) s.Append(" · ").Append(k.Key).Append(": off ").Append(N(k.Value.Far)).Append(", in ").Append(N(-k.Value.In)).Append(" m");
             if (_seat.Length > 0) s.Append(" · hips over the ").Append(_seat).Append(" at their lowest ").Append(N(_hipsGap)).Append(" m");
             if (_headGap < HeadNearSay) s.Append(" · nearest to the head: ").Append(_headGapWhat).Append(' ').Append(N(_headGap)).Append(" m from its surface at ").Append(N(_headGapAt)).Append(" s (head from ").Append(_headFrom).Append(") — look at the head views");
@@ -1205,7 +1556,7 @@ namespace HuginWhispers
         {
             float lf, lr, hu, hr;
             Lean(out lf, out lr, true); HeadAim(out hu, out hr);
-            return "hips " + N(L(Hips).y) + "  lean " + N(lf) + "," + N(lr) + "  head " + N(hu) + "," + N(hr) + "  Lfoot " + P(L(FootL)) + "  Rfoot " + P(L(FootR)) + "  Lknee " + P(L(KneeL)) + "  Rknee " + P(L(KneeR)) + "  Lhand " + P(L(HandL)) + "  Rhand " + P(L(HandR)) + "  Lelbow " + P(L(ForeL)) + "  Relbow " + P(L(ForeR)) + "  Lshoulder " + P(L(ArmL)) + "  Rshoulder " + P(L(ArmR));
+            return "hips " + N(L(Hips).y) + "  lean " + N(lf) + "," + N(lr) + "  head " + N(hu) + "," + N(hr) + "  Lfoot " + P(L(FootL)) + "  Rfoot " + P(L(FootR)) + "  Lknee " + P(L(KneeL)) + "  Rknee " + P(L(KneeR)) + "  Lhand " + P(L(HandL)) + "  Rhand " + P(L(HandR)) + "  Lelbow " + P(L(ForeL)) + "  Relbow " + P(L(ForeR)) + "  Lshoulder " + P(L(ArmL)) + "  Rshoulder " + P(L(ArmR)) + HeadSaid();
         }
 
         // the pose now in words: what a frame shows, to hold against what was asked
@@ -1263,8 +1614,8 @@ namespace HuginWhispers
                 if (an.ChannelNow((left ? "@LeftHand" : "@RightHand") + ".n", out askN, out askW) && askW >= Full && askN.sqrMagnitude > 1e-6f) { string ask = Facing(askN.normalized); if (ask != got) w += " (asked " + ask + " ✗)"; }
             }
             string why; float ig;
-            if (an != null && an.PropOn && GripOf(left, an, _h.GetComponent<StoryPropView>(), out why, out ig)) return w + (why == null ? ", HOLDS the prop" : ", on the prop but not holding it: " + why); // (on the thing: what the table under it says is not about this hand)
-            foreach (Fixture f in Fixtures) { if (f.Kind == "point") continue; float d = f.Distance(h) - Palm; if (d <= TouchFar && d >= -TouchIn) { w += ", ON the " + f.Name; break; } }
+            if (an != null && an.PropOn && GripOf(left, an, _h.GetComponent<StoryPropView>(), out why, out ig)) return w + (why == null ? ", HOLDS the prop" : ", on the prop but not holding it: " + why) + " [" + DigitsSaid(left ? 0 : 1) + "]"; // (on the thing: what the table under it says is not about this hand · every digit against its surface, m: the eye does not see 2 cm of a finger on a frame)
+            foreach (Fixture f in Fixtures) { if (f.Kind == "point") continue; float d = f.Distance(h) - Palm; if (d <= TouchFar && d >= -TouchIn) { w += ", ON the " + f.Name; List<string> ig2 = new List<string>(); int l2, f2; if (OnFixture(left ? 0 : 1, f, an, ig2, out l2, out f2) && f2 > 0) w += " [" + DigitsSaid(left ? 0 : 1) + "]"; break; } }
             float body = PalmToBody(left);
             if (body < BodySay) w += body <= BodyOn && body >= -BodyInMost ? ", ON the body" : body < -BodyInMost ? ", " + N(-body) + " m INTO the body" : ", " + N(body) + " m off the body"; // (a front view shows no depth)
             return w;
@@ -1432,7 +1783,7 @@ namespace HuginWhispers
                             if (to > SpineMost) { to = SpineMost; capped = true; }
                             foreach (PAnimKey k in c.Keys) // (the hold: the keys round it with the same value)
                             {
-                                Vector3 v; if (!k.V.TryGetValue(s, out v) || Mathf.Abs(k.T - t) > HoldNear || Mathf.Abs(v.x - kv.x) > 0.5f) continue;
+                                Vector3 v; if (!k.Has(s) || !k.V.TryGetValue(s, out v) || Mathf.Abs(k.T - t) > HoldNear || Mathf.Abs(v.x - kv.x) > 0.5f) continue;
                                 if (ops.Length > 0) ops.Append("; ");
                                 ops.Append("set ").Append(s).Append(' ').Append(N(k.T)).Append(' ').Append(V(new Vector3(sign * to, v.y, v.z)));
                             }

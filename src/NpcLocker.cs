@@ -121,7 +121,7 @@ namespace HuginWhispers
         }
 
         // nothing in it at all: no text of any module kept here, no value a person keeps here (Lives) — only such a one is given up for a full one
-        private static readonly int[] Texts = { ZDOVars.s_items, NpcWorker.KCarry, NpcRequests.KRequest, NpcRequests.KBrought, NpcMemory.KMemory, NpcAttitude.KAttitude, NpcAttitude.KQuarrel, NpcThreads.KThreads, NpcThreads.KGiven, NpcGoals.KGoal, NpcGoals.KGoalNext, NpcGoals.KGoalDone, NpcPromises.KPromise, NpcTasks.KTask, NpcTasks.KTaskSeen, NpcArcs.KArc, NpcToil.KCraft };
+        private static readonly int[] Texts = { ZDOVars.s_items, NpcWorker.KCarry, NpcRequests.KRequest, NpcRequests.KBrought, NpcMemory.KMemory, NpcAttitude.KAttitude, NpcAttitude.KQuarrel, NpcThreads.KThreads, NpcThreads.KGiven, NpcGoals.KGoal, NpcGoals.KGoalNext, NpcGoals.KGoalDone, NpcPromises.KPromise, NpcTasks.KTask, NpcTasks.KTaskSeen, NpcArcs.KArc, NpcToil.KCraft, NpcNeighbours.KNeighbours };
         private static bool Empty(ZDO l)
         {
             foreach (int k in Texts) if (l.GetString(k, "").Length > 0) return false;
@@ -169,6 +169,11 @@ namespace HuginWhispers
         //   read     Text · Num · Int · Long · Vec · Flag · Ref · HasRef  — what the person still holds first (written while its locker was not
         //            here, or an old save not moved yet: Put takes it off the person whenever the locker gets it), then the locker's, then the default
         //   write    Put (where the person is run): into the locker and off the person; its locker not here: onto the person (moved later)
+        //   off the person (Off): a mark written over the value — «none» to every read here (Gone for a text; NaN, MinValue for a number), never
+        //            the game's ZDO.RemoveString…: that takes the key off this game's copy only (no new revision, and ZDO.Deserialize only adds and
+        //            overwrites keys — read in the game's code 2026-11-12), so the server and every other game kept the old value, read it first
+        //            («what the person still holds») and, at the next owner's Migrate, wrote it back over the locker: one saved from its trouble
+        //            was «in need» again after a relog on a dedicated server. A mark is a value like any other: sent once, the same on every game
         //   a new value of a person: here, unless every game must see it the very moment it changes — npcnetcheck stops a new key on
         //   the person that is not in Lives nor in its list of the person's own (tools/npcnetcheck.js)
         internal enum Kind { Text, Num, Int, Long, Vec }
@@ -181,13 +186,13 @@ namespace HuginWhispers
                 {
                     { NpcVoice.KSeen, Kind.Text }, { NpcMind.KPlans, Kind.Text }, { NpcMind.KStayUntil, Kind.Long },
                     { NpcResident.KBed, Kind.Text }, { NpcResident.KSettledAt, Kind.Long }, { NpcResident.KMovedOut, Kind.Vec },
-                    { NpcWorker.KJob, Kind.Text }, { NpcWorker.KChest, Kind.Text }, { NpcWorker.KInbox, Kind.Text }, { NpcWorker.KTarget, Kind.Text },
+                    { NpcWorker.KJob, Kind.Text }, { NpcWorker.KChest, Kind.Text }, { NpcWorker.KSupply, Kind.Text }, { NpcKitchen.KTier, Kind.Int }, { NpcWorker.KInbox, Kind.Text }, { NpcWorker.KTarget, Kind.Text },
                     { NpcWorker.KNowhere, Kind.Text }, { NpcWorker.KHouse, Kind.Vec }, { NpcWorker.KStore, Kind.Vec }, { NpcWorker.KPost, Kind.Vec },
                     { NpcWorker.KPatrol, Kind.Int }, { NpcHew.KArea, Kind.Vec }, { NpcTidy.KOff, Kind.Int },
                     { NpcLevers.KVars, Kind.Text }, { NpcLevers.KTraits, Kind.Text }, { NpcKnack.KKnack, Kind.Text }, { NpcBackstory.KStory, Kind.Text },
                     { NpcToil.KMood, Kind.Num }, { NpcToil.KTired, Kind.Num }, { NpcToil.KLow, Kind.Num }, { NpcToil.KWhy, Kind.Int }, { NpcToil.KMoodParts, Kind.Text },
                     { NpcToil.KUnpaid, Kind.Int }, { NpcToil.KPayNext, Kind.Long }, { NpcHunger.KFull, Kind.Num }, { NpcHunger.KStarved, Kind.Num },
-                    { NpcNews.KKeys, Kind.Int }, { NpcRequests.KAskNext, Kind.Long }, { NpcMind.KFought, Kind.Text },
+                    { NpcNews.KKeys, Kind.Int }, { NpcRequests.KAskNext, Kind.Long }, { NpcMind.KFought, Kind.Text }, { NpcTimbre.KTimbre, Kind.Text },
 #if RAVEN_STORY
                     { NpcRaven.KHeldUntil, Kind.Long }, // (the story's word to a person's raven)
 #endif
@@ -215,7 +220,8 @@ namespace HuginWhispers
         }
 
         private static readonly Vector3 NoVec = new Vector3(float.NaN, float.NaN, float.NaN);
-        internal static string Text(ZDO z, int key, string def = "") { if (z == null) return def; string s = z.GetString(key, null); if (s != null) return s; ZDO l = Here(z); return l != null ? l.GetString(key, def) : def; }
+        private const string Gone = "\u0001"; // (a text taken off the person: Off)
+        internal static string Text(ZDO z, int key, string def = "") { if (z == null) return def; string s = z.GetString(key, null); if (s != null && s != Gone) return s; ZDO l = Here(z); return l != null ? l.GetString(key, def) : def; }
         internal static float Num(ZDO z, int key, float def) { if (z == null) return def; float v = z.GetFloat(key, float.NaN); if (!float.IsNaN(v)) return v; ZDO l = Here(z); return l != null ? l.GetFloat(key, def) : def; }
         internal static int Int(ZDO z, int key, int def) { if (z == null) return def; int v = z.GetInt(key, int.MinValue); if (v != int.MinValue) return v; ZDO l = Here(z); return l != null ? l.GetInt(key, def) : def; }
         internal static long Long(ZDO z, int key, long def) { if (z == null) return def; long v = z.GetLong(key, long.MinValue); if (v != long.MinValue) return v; ZDO l = Here(z); return l != null ? l.GetLong(key, def) : def; }
@@ -239,20 +245,36 @@ namespace HuginWhispers
 
         private static NpcActor Of(ZDO z) { foreach (NpcActor a in NpcActor.Live) if (a != null && a.Zdo == z) return a; return null; }
 
-        internal static void Put(ZDO z, int key, string v) { if (z == null) return; v = v ?? ""; ZDO l = Into(z); if (l == null) { if (z.GetString(key, "") != v) z.Set(key, v); return; } if (l.GetString(key, null) != v) l.Set(key, v); z.RemoveString(key); }
-        internal static void Put(ZDO z, int key, float v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetFloat(key, float.NaN) != v) z.Set(key, v); return; } if (l.GetFloat(key, float.NaN) != v) l.Set(key, v); z.RemoveFloat(key); }
-        internal static void Put(ZDO z, int key, int v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetInt(key, int.MinValue) != v) z.Set(key, v); return; } if (l.GetInt(key, int.MinValue) != v) l.Set(key, v); z.RemoveInt(key); }
-        internal static void Put(ZDO z, int key, long v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetLong(key, long.MinValue) != v) z.Set(key, v); return; } if (l.GetLong(key, long.MinValue) != v) l.Set(key, v); z.RemoveLong(key); }
-        internal static void Put(ZDO z, int key, Vector3 v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetVec3(key, NoVec) != v) z.Set(key, v); return; } if (l.GetVec3(key, NoVec) != v) l.Set(key, v); z.RemoveVec3(key); }
+        internal static void Put(ZDO z, int key, string v) { if (z == null) return; v = v ?? ""; ZDO l = Into(z); if (l == null) { if (z.GetString(key, "") != v) z.Set(key, v); return; } if (l.GetString(key, null) != v) l.Set(key, v); Off(z, key, Kind.Text); }
+        internal static void Put(ZDO z, int key, float v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetFloat(key, float.NaN) != v) z.Set(key, v); return; } if (l.GetFloat(key, float.NaN) != v) l.Set(key, v); Off(z, key, Kind.Num); }
+        internal static void Put(ZDO z, int key, int v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetInt(key, int.MinValue) != v) z.Set(key, v); return; } if (l.GetInt(key, int.MinValue) != v) l.Set(key, v); Off(z, key, Kind.Int); }
+        internal static void Put(ZDO z, int key, long v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetLong(key, long.MinValue) != v) z.Set(key, v); return; } if (l.GetLong(key, long.MinValue) != v) l.Set(key, v); Off(z, key, Kind.Long); }
+        internal static void Put(ZDO z, int key, Vector3 v) { if (z == null) return; ZDO l = Into(z); if (l == null) { if (z.GetVec3(key, NoVec) != v) z.Set(key, v); return; } if (l.GetVec3(key, NoVec) != v) l.Set(key, v); Off(z, key, Kind.Vec); }
         internal static void Put(ZDO z, int key, bool v) { Put(z, key, v ? 1 : 0); }
         internal static void PutRef(ZDO z, int key, ZDOID id) { Put(z, key, NpcKit.Save(id)); }
 
-        // the person still holds it (an old save, or written while its locker was away)
+        // a value off the person, for every game (the header says why not the game's Remove…): its mark written over it, once — one that holds
+        // nothing of it, or the mark already, is not written to (no send). Only where the person is run: a write from elsewhere is lost at
+        // its owner's next one, and its revision raised here would shut that owner's news out for a while
+        private static void Off(ZDO z, int key, Kind k)
+        {
+            if (!z.IsOwner() || !Holds(z, key, k)) return;
+            switch (k)
+            {
+                case Kind.Text: z.Set(key, Gone); break;
+                case Kind.Num: z.Set(key, float.NaN); break;
+                case Kind.Int: z.Set(key, int.MinValue); break;
+                case Kind.Long: z.Set(key, long.MinValue); break;
+                default: z.Set(key, NoVec); break;
+            }
+        }
+
+        // the person still holds it (an old save, or written while its locker was away); its mark (Off) is none
         private static bool Holds(ZDO z, int key, Kind k)
         {
             switch (k)
             {
-                case Kind.Text: return z.GetString(key, null) != null;
+                case Kind.Text: { string s = z.GetString(key, null); return s != null && s != Gone; }
                 case Kind.Num: return !float.IsNaN(z.GetFloat(key, float.NaN));
                 case Kind.Int: return z.GetInt(key, int.MinValue) != int.MinValue;
                 case Kind.Long: return z.GetLong(key, long.MinValue) != long.MinValue;
@@ -269,13 +291,25 @@ namespace HuginWhispers
             if (!l.IsOwner()) l.SetOwner(ZDOMan.GetSessionID());
             switch (k)
             {
-                case Kind.Text: l.Set(key, z.GetString(key, "")); z.RemoveString(key); break;
-                case Kind.Num: l.Set(key, z.GetFloat(key, 0f)); z.RemoveFloat(key); break;
-                case Kind.Int: l.Set(key, z.GetInt(key, 0)); z.RemoveInt(key); break;
-                case Kind.Long: l.Set(key, z.GetLong(key, 0L)); z.RemoveLong(key); break;
-                default: l.Set(key, z.GetVec3(key, Vector3.zero)); z.RemoveVec3(key); break;
+                case Kind.Text: l.Set(key, z.GetString(key, "")); break;
+                case Kind.Num: l.Set(key, z.GetFloat(key, 0f)); break;
+                case Kind.Int: l.Set(key, z.GetInt(key, 0)); break;
+                case Kind.Long: l.Set(key, z.GetLong(key, 0L)); break;
+                default: l.Set(key, z.GetVec3(key, Vector3.zero)); break;
             }
+            Off(z, key, k);
             return true;
+        }
+
+        // the person taken away where it is not loaded (the server keeping the story's people): its locker too
+        internal static void RemoveOf(ZDO person)
+        {
+            if (person == null || !NpcKit.HasRef(person, KLocker)) return;
+            ZDOID id = NpcKit.GetRef(person, KLocker);
+            ZDO l = id.IsNone() ? null : ZDOMan.instance.GetZDO(id);
+            if (l == null) return;
+            if (!l.IsOwner()) l.SetOwner(ZDOMan.GetSessionID());
+            ZDOMan.instance.DestroyZDO(l);
         }
 
         // the person taken away: its locker too

@@ -207,7 +207,7 @@ namespace HuginWhispers
                 if (_fn != _asked || Time.unscaledTime >= _askAt)
                 {
                     _asked = _fn; _askAt = Time.unscaledTime + 0.5f;
-                    try { _said = Grammar.Fix(_fn()); } catch { _said = null; }
+                    try { _said = Grammar.Fix(_fn()); } catch (Exception e) { _said = null; PatchGuard.Fail("RavenBook.WinTip", e); }
                 }
                 if (string.IsNullOrEmpty(_said)) { if (_box.gameObject.activeSelf) _box.gameObject.SetActive(false); return; }
                 if (_text.text != _said)

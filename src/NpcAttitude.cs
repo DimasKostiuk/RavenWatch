@@ -11,19 +11,24 @@ namespace HuginWhispers
     // it remembers you did (NpcMemory.Kinds Toward: you saved it, brought it round, took it in, brought what it asked, sent it off),
     // a little each day it sees you (no blow of yours: a player's blows never reach the people); left alone it drifts back to even. Hunger and pay do not touch it (the
     // user: those weigh on its mood, not on you).
-    //   levels   hostile ≤ −50 · cold < −15 · even · warm ≥ 25 · close ≥ 60
+    //   levels   hostile ≤ −50 · cold ≤ −15 · even · warm ≥ 25 · close ≥ 60 (HostileAt, ColdAt, WarmAt, CloseAt: one place — the board's «сваряться»
+    //            and «дружать», the table's spats, its words: one line for all of them)
     //   its words   a theme's own for the level is tried first: see_player_cold, about_you_close, how_hostile… (Variant)
     //   the story   ?npcattitude >= 50 [npc]  ·  !attitude +10  ·  NpcAttitude.Add / Of / Level
     //   quarrels    one of its people did it wrong (Quarrel: the last food — NpcMeals, its own place taken — NpcPlaces, idling
     //               near while it works and a bully teasing it — Tick here, words at a table — NpcChatter, hid while it fought — NpcLife, paid when it
-    //               was not — NpcToil, butting into its talk — NpcTalkThird, words behind its back — NpcTalkAbout): colder to that one, and it keeps it in mind (NpcMemory quarrel_<why>); once a game day a
-    //               pair at most, harder for two who get on badly (Fit). Made up the way they got on: talks warm them again
+    //               was not — NpcToil, butting into its talk — NpcTalkThird, words behind its back — NpcTalkAbout; snoring by its bed, nosing in its chest, a scuffle — NpcNeighbours): colder to that one, and it keeps it in mind (NpcMemory quarrel_<why>); once a game day a
+    //               pair at most, harder for two who get on badly (Fit). Made up the way they got on: talks warm them again; «Помиріться вже» and the
+    //               other ways to make up go by how it feels (Grudge: the one it is coldest to), not by its memory — that keeps a few quarrels and
+    //               fades in days, while the cold stays
     // Written only where the person is owned (Add goes there); read anywhere its locker is.
     internal static class NpcAttitude
     {
         internal static readonly int KAttitude = "RavenWatch_npcAttitude".GetStableHashCode(); // string "player=value@day;…" — in its locker
 
         private const int Most = 8, MostPeople = 12;    // players kept · other people kept (in each, the one nearest even goes first)
+        internal const float HostileAt = -50f, ColdAt = -15f, WarmAt = 25f, CloseAt = 60f;
+        internal static bool Cold(float v) { return v <= ColdAt; }
         private const float Seen = 2f, SeenUpTo = 30f;  // a day it sees you: a little warmer, up to this
         private const int DriftAfter = 5;               // days unseen before it drifts back (a point a day)
 
@@ -92,7 +97,7 @@ namespace HuginWhispers
             NpcLocker.Set(a, KQuarrel, string.Join(";", parts.ToArray()));
             float by = QuarrelBy * Mathf.Lerp(1.5f, 0.5f, Mathf.InverseLerp(PairLeast, PairMost, Fit(a, o)));
             Add(a, key, -by);
-            NpcMemory.Remember(a, "quarrel_" + w[2], 0L, o.Name);
+            NpcMemory.Remember(a, "quarrel_" + w[2], 0L, o.Key);
             Npcs.Log(a.Id + ": quarrels with " + o.Id + " (" + w[2] + ", −" + by.ToString("0", CultureInfo.InvariantCulture) + ")");
         }
 
@@ -126,7 +131,7 @@ namespace HuginWhispers
                 if (o == null || o == a || Utils.DistanceXZ(o.transform.position, a.transform.position) > TeaseNear) continue; // (the near test first: the nature's lookup after)
                 if (!NpcNature.Is(o, "coward") && !NpcNature.Is(o, "lazy") && !NpcNature.Is(o, "loner")) continue;
                 NpcPhrases.SayOr(a, "nature_bully_tease", "", new Dictionary<string, string> { { "other", o.Name } }, NpcActor.Voice.Unasked);
-                if (a.Body != null && a.Body.ClipFree && a.Mind != null && !a.Mind.SeatedNow) { a.Mind.Face(o.transform.position); a.Body.Clip("fist_palm"); } // (its fist in its palm as it says it)
+                if (a.Body != null && a.Body.ClipFree && a.Mind != null && !a.Mind.SeatedNow) { a.Mind.Face(o.transform.position); a.Body.Move("fist_palm"); } // (its fist in its palm as it says it)
                 Quarrel(o, a, "teased");
                 return;
             }
@@ -134,58 +139,78 @@ namespace HuginWhispers
 
         internal static void Forget(NpcActor a) { NextLazy.Remove(a); }
 
-        // «Помиріться вже» (its talk, !makepeace — {peace} its answer): make it up with the one it last quarrelled with? Its patience to you
-        // and its ways say (a grumbler hardly); yes: both warmer, as far as they may be (Fit), and the quarrel let go from its mind
+        // «Помиріться вже» (its talk, !makepeace — {peace} its answer): make it up with the one of its people it holds most against (Grudge)?
+        // Its patience to you and its ways say (a grumbler hardly); yes: both warmer, as far as they may be (Fit), and that quarrel let go from its mind
         internal static string PeaceSaid = "";
         internal static float PeaceBy = 12f, PeaceBack = 6f;
         internal static void MakePeace(NpcActor a, Player p, string[] w)
         {
             PeaceSaid = "…";
             if (a == null || p == null) return;
-            NpcActor o;
-            NpcMemory.Entry last = LastQuarrel(a, out o);
-            if (last == null) { PeaceSaid = NpcPhrases.Compose(a, "peace_none", p) ?? a.Form(Lang.T("Та ми й не сварилися.")); return; }
-            Dictionary<string, string> who = new Dictionary<string, string> { { "other", last.What } };
+            string kind;
+            NpcActor o = Grudge(a, out kind);
+            if (o == null) { PeaceSaid = NpcPhrases.Compose(a, "peace_none", p) ?? a.Form(Lang.T("Та ми й не сварилися.")); return; }
+            NpcMemory.Entry made = NpcMemory.Find(a, "peace_made", 0L); // (once a game day it makes up: a grudge is not talked away in one evening — kept in its own memory, the same for every player and after a reload)
+            if (made != null && (long)(made.At / Mathf.Max(60f, EnvMan.instance != null ? EnvMan.instance.m_dayLengthSec : 1800f)) == Today()) { PeaceSaid = NpcPhrases.Compose(a, "peace_again", p, new Dictionary<string, string> { { "other", o.Name } }) ?? a.Form(Lang.T("Сьогодні вже мирились. Дай час.")); return; }
+            Dictionary<string, string> who = new Dictionary<string, string> { { "other", o.Name } };
             bool grumpy = NpcPhrases.Tones(a).Contains("бурч");
-            if (o == null || NpcPatience.Of(a, p) < NpcPatience.Dry || UnityEngine.Random.value > (grumpy ? 0.35f : 0.75f))
+            if (NpcPatience.Of(a, p) < NpcPatience.Dry || UnityEngine.Random.value > (grumpy ? 0.35f : 0.75f))
             {
                 PeaceSaid = NpcPhrases.Compose(a, "peace_no", p, who) ?? a.Form(Lang.T("Ні. Хай спершу перше слово скаже."));
                 NpcPatience.Spend(a, p, 4f);
-                if (o != null) NpcTalk.SwayOn("peace"); // (the other is here: it may be talked round — NpcTalkSway)
+                NpcTalk.SwayOn("peace"); // (it may be talked round — NpcTalkSway)
                 return;
             }
-            MadePeace(a, o, last, p);
+            MadePeace(a, o, kind, p);
         }
 
-        // its last quarrel and the one it was with (null: gone from its home, or none)
-        internal static NpcMemory.Entry LastQuarrel(NpcActor a, out NpcActor o)
+        // the one of its people it holds most against (cold to it: Cold — null: none) and the quarrel it remembers with that one (kind: "" — faded).
+        // A module's word first (GrudgeFirst: its key — NpcNeighbours: the one of its ultimatum), while it is cold to that one still
+        internal static Func<NpcActor, long> GrudgeFirst;
+        internal static NpcActor Grudge(NpcActor a, out string kind)
         {
-            o = null;
-            NpcMemory.Entry last = null;
-            foreach (string k in NpcMemory.Kinds.Keys)
+            kind = "";
+            List<Feel> mine = a != null ? Read(a) : null;
+            if (mine == null) return null;
+            long first = GrudgeFirst != null ? GrudgeFirst(a) : 0L;
+            NpcActor worst = null; float lo = ColdAt;
+            foreach (NpcActor o in NpcHeart.Residents(NpcKit.GetRef(a.Zdo, NpcResident.KHeart)))
             {
-                if (!k.StartsWith("quarrel_", StringComparison.Ordinal)) continue;
-                NpcMemory.Entry e = NpcMemory.Find(a, k, 0L);
-                if (e != null && (last == null || e.At > last.At)) last = e;
+                if (o == null || o == a) continue;
+                float f = Toward(mine, o);
+                if (!Cold(f)) continue;
+                if (first != 0L && PersonKey(o) == first) { worst = o; break; }
+                if (f <= lo) { lo = f; worst = o; }
             }
-            if (last == null) return null;
-            foreach (NpcActor x in NpcHeart.Residents(NpcKit.GetRef(a.Zdo, NpcResident.KHeart))) if (x != null && x != a && x.Name == last.What) o = x;
+            NpcMemory.Entry last = worst != null ? LastWith(a, worst) : null;
+            if (last != null) kind = last.Kind;
+            return worst;
+        }
+
+        // its last quarrel it remembers with that one (null: none, or faded)
+        private static NpcMemory.Entry LastWith(NpcActor a, NpcActor o)
+        {
+            NpcMemory.Entry last = null;
+            foreach (NpcMemory.Entry e in NpcMemory.About(a, 0L)) if (e.Kind.StartsWith("quarrel_", StringComparison.Ordinal) && e.What == o.Key && (last == null || e.At > last.At)) last = e;
             return last;
         }
 
         // it said yes to peace (asked, or talked round: NpcTalkSway)
-        internal static void MadePeace(NpcActor a, NpcActor o, NpcMemory.Entry last, Player p)
+        internal static void MadePeace(NpcActor a, NpcActor o, string kind, Player p)
         {
-            MakeUp(a, o, last.Kind);
-            PeaceSaid = NpcPhrases.Compose(a, "peace_yes", p, new Dictionary<string, string> { { "other", last.What } }) ?? a.Form(Lang.T("Ну… гаразд. Спробую."));
+            NpcMemory.Tell(a, "peace_made", 0L, o.Key); // (its day of making up: MakePeace asks it)
+            MakeUp(a, o, kind);
+            PeaceSaid = NpcPhrases.Compose(a, "peace_yes", p, new Dictionary<string, string> { { "other", o.Name } }) ?? a.Form(Lang.T("Ну… гаразд. Спробую."));
             Npcs.Log(a.Id + ": makes it up with " + o.Id + " (asked)");
         }
 
-        // «a» and «o» made up (any game): both warmer, as far as they may be (Fit), and that quarrel let go from the mind of the one who was wronged
-        internal static void MakeUp(NpcActor a, NpcActor o, string quarrelKind)
+        // «a» and «o» made up (any game; the talk, a small task, a line of its life): both warmer, as far as they may be (Fit), and that quarrel
+        // let go from the mind of the one who was wronged — that one with «o» only, its quarrels with the others kept
+        internal static void MakeUp(NpcActor a, NpcActor o, string quarrelKind, float by = -1f, float back = -1f)
         {
-            TellPerson(a, o, PeaceBy); TellPerson(o, a, PeaceBack);
-            a.Act("forget " + quarrelKind);
+            if (a == null || o == null) return;
+            TellPerson(a, o, by >= 0f ? by : PeaceBy); TellPerson(o, a, back >= 0f ? back : PeaceBack);
+            if (!string.IsNullOrEmpty(quarrelKind)) a.Act("forget " + quarrelKind + " 0 " + o.Key);
         }
 
         // who of its people it gets on with best ({friend}) and worst ({foe}), and two of them at odds with each other ({feud_a}, {feud_b}):
@@ -198,7 +223,7 @@ namespace HuginWhispers
             List<Feel> mine = Read(a);
             if (mine != null && mine.Count > 0)
             {
-                NpcActor best = null, worst = null; float hi = 25f, lo = -15f;
+                NpcActor best = null, worst = null; float hi = WarmAt, lo = ColdAt;
                 foreach (NpcActor o in NpcHeart.Residents(heart))
                 {
                     if (o == null || o == a) continue;
@@ -211,7 +236,7 @@ namespace HuginWhispers
                 }
                 if (best != null) v["friend"] = best.Name;
                 if (worst != null) v["foe"] = worst.Name;
-                NpcActor near = null; float most = 25f; // (one it likes, near it now: from the same reading, not one a person)
+                NpcActor near = null; float most = WarmAt; // (one it likes, near it now: from the same reading, not one a person)
                 foreach (NpcActor o in NpcActor.Live)
                 {
                     if (o == null || o == a || (o.transform.position - a.transform.position).sqrMagnitude >= NpcTalk.FriendNearM * NpcTalk.FriendNearM) continue;
@@ -255,7 +280,7 @@ namespace HuginWhispers
                     if (l == null) continue;
                     foreach (Feel e in l)
                     {
-                        if (e.Player >= 0L || Drifted(e) > -15f) continue; // (a person, cold to it)
+                        if (e.Player >= 0L || !Cold(Drifted(e))) continue; // (a person, cold to it)
                         NpcActor y = folk.Find(o => o != null && o != x && PersonKey(o) == e.Player);
                         if (y == null) continue;
                         k.A = x.Name; k.B = y.Name; k.WithA = x; k.WithB = y;
@@ -272,12 +297,12 @@ namespace HuginWhispers
         // the person it likes best among these, at least warm (null: none)
         internal static NpcActor Friend(NpcActor a, IEnumerable<NpcActor> among)
         {
-            NpcActor best = null; float most = 25f;
+            NpcActor best = null; float most = WarmAt;
             foreach (NpcActor o in among) { if (o == null || o == a) continue; float v = OfPerson(a, o); if (v >= most) { most = v; best = o; } }
             return best;
         }
 
-        internal static string Level(float v) { return v <= -50f ? "hostile" : v < -15f ? "cold" : v >= 60f ? "close" : v >= 25f ? "warm" : "even"; }
+        internal static string Level(float v) { return v <= HostileAt ? "hostile" : Cold(v) ? "cold" : v >= CloseAt ? "close" : v >= WarmAt ? "warm" : "even"; }
         internal static string Level(NpcActor a, Player p) { return p != null ? Level(Of(a, p.GetPlayerID())) : "even"; }
 
         // its card, the board: how it is with you, a word — and a place on the scale (0 … 1) and a sign for a row
@@ -310,7 +335,7 @@ namespace HuginWhispers
         internal static int Rank(string level) { return level == "hostile" ? 0 : level == "cold" ? 1 : level == "warm" ? 3 : level == "close" ? 4 : 2; } // (which of its five words)
 
         // ---------------------------------------------------------------- who with whom among these (the board, its card): each one's locker read once, when asked
-        internal sealed class Tie { public NpcActor A, B; public bool Foes; public bool Close; public string Why = ""; }
+        internal sealed class Tie { public NpcActor A, B, Holds; public bool Foes; public bool Close; public string Why = ""; } // (Holds: of two at odds, the one colder — whom «Помиріться вже» is said to: Grudge)
 
         internal static List<Tie> Ties(List<NpcActor> folk)
         {
@@ -323,8 +348,8 @@ namespace HuginWhispers
                     NpcActor a = folk[i], b = folk[j];
                     if (a == null || b == null) continue;
                     float ab = Toward(read[a], b), ba = Toward(read[b], a);
-                    if (ab <= -15f || ba <= -15f) l.Add(new Tie { A = a, B = b, Foes = true, Why = QuarrelWord(ab <= ba ? a : b, ab <= ba ? b : a) });
-                    else if (ab >= 25f && ba >= 25f) l.Add(new Tie { A = a, B = b, Close = ab >= 60f && ba >= 60f });
+                    if (Cold(ab) || Cold(ba)) l.Add(new Tie { A = a, B = b, Foes = true, Holds = ab <= ba ? a : b, Why = QuarrelWord(ab <= ba ? a : b, ab <= ba ? b : a) });
+                    else if (ab >= WarmAt && ba >= WarmAt) l.Add(new Tie { A = a, B = b, Close = ab >= CloseAt && ba >= CloseAt });
                 }
             l.Sort((x, y) => x.Foes == y.Foes ? y.Close.CompareTo(x.Close) : y.Foes.CompareTo(x.Foes)); // (the quarrels first)
             return l;
@@ -337,11 +362,10 @@ namespace HuginWhispers
             return e != null ? Drifted(e) : 0f;
         }
 
-        // what it holds against that one, in words ("": nothing it remembers): its last quarrel (NpcMemory quarrel_<why>, what: the name)
+        // what it holds against that one, in words ("": nothing it remembers): its last quarrel (NpcMemory quarrel_<why>, what: that one's Key)
         internal static string QuarrelWord(NpcActor a, NpcActor o)
         {
-            NpcMemory.Entry last = null;
-            foreach (NpcMemory.Entry e in NpcMemory.About(a, 0L)) if (e.Kind.StartsWith("quarrel_", StringComparison.Ordinal) && e.What == o.Name && (last == null || e.At > last.At)) last = e;
+            NpcMemory.Entry last = LastWith(a, o);
             if (last == null) return "";
             switch (last.Kind)
             {
@@ -354,6 +378,9 @@ namespace HuginWhispers
                 case "quarrel_teased": return Lang.T("через кпини при всіх");
                 case "quarrel_butted": return Lang.T("бо пхає носа в чужу розмову");
                 case "quarrel_gossip": return Lang.T("через плітки за спиною");
+                case "quarrel_snore": return Lang.T("бо хропе так, що не заснути");
+                case "quarrel_chest": return Lang.T("бо нишпорить у чужому ящику");
+                case "quarrel_brawl": return Lang.T("ледь не побилися");
                 default: return "";
             }
         }
@@ -417,6 +444,7 @@ namespace HuginWhispers
             if (level == "even") return null;
             float chance = level == "hostile" ? 0.9f : level == "cold" ? 0.75f : level == "close" ? 0.7f : 0.5f;
             if (UnityEngine.Random.value > chance) return null;
+            if (NpcPhrases.Yours(theme)) return theme + "_" + level; // (your words to it: curt to a cold one, dear to a close one — say_bye_cold…; no words for this level: the plain theme)
             if (theme.StartsWith("how_", StringComparison.Ordinal)) return level == "hostile" || level == "cold" ? "how_" + level : null; // (warm or dear: its plain how is warm enough)
             switch (theme)
             {

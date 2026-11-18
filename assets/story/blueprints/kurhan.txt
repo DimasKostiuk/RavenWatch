@@ -1,0 +1,5 @@
+# RavenWatch blueprint 1
+name kurhan
+pieces 1
+ground 0
+dungeon_forestcrypt_door 0 0 0 0 0 0 1

@@ -107,6 +107,7 @@ namespace HuginWhispers
                     if (w.Length > 2 && TryF(w[2], out f)) d.Max = f;
                     d.Far = w.Length > 3 && TryF(w[3], out f) ? f : d.Max * 2f;
                     d.Edge = Array.IndexOf(w, "edge") > 0;
+                    d.Nearest = Array.IndexOf(w, "nearest") > 0;
                 } },
             { "clear", (d, v, w) => { float f; if (TryF(v, out f)) d.Clear = f; } },
             { "nobuild", (d, v, w) => { float f; if (TryF(v, out f)) d.NoBuild = f; } },
@@ -124,6 +125,7 @@ namespace HuginWhispers
             { "fog", (d, v, w) => { d.Fog = v != "no" && v != "ні" && v != "0"; d.FogWhile = d.Fog && !Yes(v) ? v : ""; } }, // (yes, or the conditions it hangs while)
             { "cold", (d, v, w) => d.ColdWhile = v },
             { "mapmark", (d, v, w) => d.MapMark = v },
+            { "mappin", (d, v, w) => d.MapPin = v },
             { "ruinlit", (d, v, w) => d.RuinLit = w },
             { "litfrom", (d, v, w) =>
                 {
@@ -133,10 +135,26 @@ namespace HuginWhispers
                     Array.Copy(w, 1, p, 0, p.Length);
                     d.LitFrom.Add(new LocDef.LitStep { State = s, Sub = k, Prefabs = p });
                 } },
+            { "worn", (d, v, w) =>
+                {
+                    int on = Array.IndexOf(w, "on");
+                    if (on < 2 || on % 2 != 0 || on + 1 >= w.Length) { Plugin.Instance.Log("Locs: " + d.Id + ": worn: «" + v + "» — <крок> <частка> … on <слова префабів>"); return; }
+                    for (int i = 0; i < on; i += 2)
+                    {
+                        int s, k; float f;
+                        if (!LocState.SubNumber(w[i], out s, out k) || !TryF(w[i + 1], out f)) { Plugin.Instance.Log("Locs: " + d.Id + ": worn: «" + w[i] + " " + w[i + 1] + "» is no step and part"); continue; }
+                        d.Worn.Add(new LocDef.WornStep { State = s, Sub = k, Share = Mathf.Clamp01(f) });
+                    }
+                    d.WornOn = new string[w.Length - on - 1];
+                    Array.Copy(w, on + 1, d.WornOn, 0, d.WornOn.Length);
+                } },
             { "litwhile", (d, v, w) => { if (w.Length >= 2) d.LitWhile.Add(new KeyValuePair<string, string>(w[0], After(v, w))); } },
             { "hidewhile", (d, v, w) => { if (w.Length >= 2) d.HideWhile.Add(new KeyValuePair<string, string>(w[0], After(v, w))); } },
             { "gate", (d, v, w) => d.Gate = v },
             { "hearthshut", (d, v, w) => d.HearthShut = v },
+            { "hearthgives", (d, v, w) => d.HearthGives = v.Trim() },
+            { "hearthgivewait", (d, v, w) => { int sep = v.IndexOf("::", StringComparison.Ordinal); d.HearthGiveWait = (sep < 0 ? v : v.Substring(0, sep)).Trim(); d.HearthGiveWaitWords = sep < 0 ? "" : v.Substring(sep + 2).Trim(); } },
+            { "hearthwait", (d, v, w) => { int sep = v.IndexOf("::", StringComparison.Ordinal); d.HearthWait = (sep < 0 ? v : v.Substring(0, sep)).Trim(); d.HearthWaitWords = sep < 0 ? "" : v.Substring(sep + 2).Trim(); } },
             { "lockdoors", (d, v, w) => d.LockDoors = v },
             { "shutdoors", (d, v, w) => d.ShutDoors = v },
             { "opendoors", (d, v, w) => d.OpenDoors = w },
@@ -164,7 +182,24 @@ namespace HuginWhispers
                     if (!d.Reads.TryGetValue(w[0], out reads)) d.Reads[w[0]] = reads = new List<KeyValuePair<string, string>>();
                     reads.Add(new KeyValuePair<string, string>(sep < 0 ? "" : rest.Substring(0, sep).Trim(), (sep < 0 ? rest : rest.Substring(sep + 2)).Trim().Replace("\\n", "\n")));
                 } },
+            { "pool", (d, v, w) => { if (w.Length >= 2) d.Pools[w[0]] = After(v, w); } },
             { "elsedo", (d, v, w) => { if (w.Length >= 2) d.ElseDo[w[0]] = After(v, w); } },
+            { "shell", (d, v, w) =>
+                {
+                    if (w.Length == 0) return;
+                    d.Shell = w[0];
+                    float x = 0f, y = 0f, z = 0f, t = 0f;
+                    if (w.Length >= 4) { TryF(w[1], out x); TryF(w[2], out y); TryF(w[3], out z); }
+                    if (w.Length >= 5) TryF(w[4], out t);
+                    d.ShellShift = new Vector3(x, y, z); d.ShellTurn = t;
+                } },
+            { "insidemusic", (d, v, w) => { if (w.Length == 0) return; d.InsideMusic = w[0]; int at = Array.IndexOf(w, "vol"); float f; d.InsideMusicVol = at > 0 && at + 1 < w.Length && TryF(w[at + 1], out f) ? Mathf.Clamp01(f) : 1f; } },
+            { "raven", (d, v, w) => { if (w.Length < 2) return; d.RavenLook = w[0]; d.RavenHome = w[1]; d.RavenWhen = After(v, w).Substring(w[1].Length).Trim(); } }, // (LocRaven)
+            { "ravenroof", (d, v, w) => { float x, y, z; if (w.Length >= 3 && TryF(w[0], out x) && TryF(w[1], out y) && TryF(w[2], out z)) { d.RavenRoof = new Vector3(x, y, z); d.HasRavenRoof = true; } } },
+            { "ravensits", (d, v, w) => d.RavenSits = w },
+            { "sitsay", (d, v, w) => { if (w.Length >= 2) d.SitSays.Add(new LocDef.SitSay { Place = w[0], Tag = w[1], When = After(v, w).Substring(w[1].Length).Trim() }); } },
+            { "insideshut", (d, v, w) => { int sep = v.IndexOf("::", StringComparison.Ordinal); d.InsideShut = (sep < 0 ? v : v.Substring(0, sep)).Trim(); d.InsideShutWords = sep < 0 ? "" : v.Substring(sep + 2).Trim(); } },
+            { "inside", (d, v, w) => { if (w.Length == 0) return; d.Inside = w[0]; int at = Array.IndexOf(w, "door"); d.InsideDoor = at > 0 && at + 1 < w.Length ? w[at + 1] : ""; } },
         };
 
         private static void Parse(string text, List<Loc> into)

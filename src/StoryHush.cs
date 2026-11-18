@@ -10,13 +10,15 @@ namespace HuginWhispers
     // The quiet round a story event (the user 2026-11-02): another player must not spoil a scene by bringing monsters to
     // it — and nobody should notice a wall. Round the event's place (a scene's «place:», or the mark of the stage that
     // leads to a scene), never round the player — unless the scene has no place: then round him while it plays.
+    // Every distance of it is StoryWhere.Apart: a round on the land never reaches an inside of ours hung over it (the user 2026-11-15: a
+    // round on the grass over the barrow left the whole crypt without foes), nor one inside the land under it.
     //   grows:  it is there once the player is on such a stage and within Approach m of the place; small (Min m) far
     //           off, wider as he comes, full (Max) when he is at the place or the scene plays; it never shrinks while he
     //           steps about — it fades slowly (Fade m/s) once nobody wants it
     //   Max:    the scene's «guard: <m>» (off — none), else by the place's size (Loc.Reach), MaxLo–MaxHi m; never less
     //           than the scene's «calm» looks (Senses.FoeRange) and CalmMargin m more — a monster the scene would wait for
     //           is run off, not waited for (the user 2026-11-03: a boar 15 m off held the shield's scene)
-    //   soft:   the whole round — no monster is born within it (and BirthMargin m more); a monster that is not chasing
+    //   soft:   the whole round — no monster is born within it (a free spawn of the world: BirthMargin m more); one not chasing
     //           anyone runs out of it; one in a fight may follow its foe in
     //   hard:   the core (HardShare of it, HardLo–HardHi m) — nobody stays in it; a monster whose target stands in it
     //           lets the target go and runs off (archers shooting in from outside too, within Shoot m)
@@ -110,7 +112,7 @@ namespace HuginWhispers
                     if (m.Full) want = m.Max;
                     else
                     {
-                        float d = Utils.DistanceXZ(p.transform.position, m.At) - m.Max;
+                        float d = StoryWhere.Apart(m.At, p.transform.position) - m.Max;
                         if (d <= 0f) want = m.Max;
                         else if (d < Approach) want = Mathf.Lerp(Mathf.Min(Min, m.Max), m.Max, 1f - d / Approach);
                     }
@@ -192,12 +194,16 @@ namespace HuginWhispers
             Count();
         }
 
-        internal static bool NoBirth(Vector3 point)
+        // no birth here: within a round (StoryWhere.Apart — never across the line between the land and an inside: a round on the grass over a
+        // crypt of ours left the whole crypt without foes, the user 2026-11-15). The world's free spawns keep BirthMargin m more (they come from
+        // out of sight and walk in); a fixed spawner of a place (a dungeon's guard, a nest) only the round itself — it is the place's own foe
+        internal static bool NoBirth(Vector3 point, bool fixedPoint)
         {
             if (_count == 0) return false;
             Prune();
+            float margin = fixedPoint ? 0f : BirthMargin;
             foreach (List<Ring> l in _rings.Values)
-                foreach (Ring r in l) if (Utils.DistanceXZ(point, r.At) < r.Soft + BirthMargin) return true;
+                foreach (Ring r in l) if (StoryWhere.Apart(r.At, point) < r.Soft + margin) return true;
             return false;
         }
 
@@ -223,11 +229,11 @@ namespace HuginWhispers
             {
                 foreach (Ring r in l)
                 {
-                    float d = Utils.DistanceXZ(pos, r.At);
+                    float d = StoryWhere.Apart(r.At, pos);
                     if (d > r.Soft * edge + Shoot) continue;
                     bool inHard = d < r.Hard * edge;
                     bool inSoft = d < r.Soft * edge;
-                    bool targetHard = target != null && Utils.DistanceXZ(target.transform.position, r.At) < r.Hard; // (its prey in the core: shooting in from outside too)
+                    bool targetHard = target != null && StoryWhere.Apart(r.At, target.transform.position) < r.Hard; // (its prey in the core: shooting in from outside too)
                     if (inHard || targetHard || (inSoft && target == null)) { from = r.At; off = true; break; }
                 }
                 if (off) break;
@@ -252,7 +258,7 @@ namespace HuginWhispers
         private static bool Near(Vector3 pos)
         {
             foreach (List<Ring> l in _rings.Values)
-                foreach (Ring r in l) if (Utils.DistanceXZ(pos, r.At) < r.Soft * (1f + Jitter) + Shoot) return true;
+                foreach (Ring r in l) if (StoryWhere.Apart(r.At, pos) < r.Soft * (1f + Jitter) + Shoot) return true;
             return false;
         }
 
@@ -279,7 +285,7 @@ namespace HuginWhispers
     {
         private static bool Prefix(Vector3 spawnPoint)
         {
-            try { return !StoryHush.NoBirth(spawnPoint); }
+            try { return !StoryHush.NoBirth(spawnPoint, false); }
             catch (Exception e) { PatchGuard.Fail("StoryHushSpawn", e); return true; }
         }
     }
@@ -289,7 +295,7 @@ namespace HuginWhispers
     {
         private static bool Prefix(CreatureSpawner __instance, ref ZNetView __result)
         {
-            try { if (!StoryHush.NoBirth(__instance.transform.position)) return true; }
+            try { if (!StoryHush.NoBirth(__instance.transform.position, true)) return true; }
             catch (Exception e) { PatchGuard.Fail("StoryHushPoint", e); return true; }
             __result = null;
             return false;
@@ -301,7 +307,7 @@ namespace HuginWhispers
     {
         private static bool Prefix(SpawnArea __instance, ref bool __result)
         {
-            try { if (!StoryHush.NoBirth(__instance.transform.position)) return true; }
+            try { if (!StoryHush.NoBirth(__instance.transform.position, true)) return true; }
             catch (Exception e) { PatchGuard.Fail("StoryHushNest", e); return true; }
             __result = false;
             return false;

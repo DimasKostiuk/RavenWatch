@@ -38,6 +38,7 @@ namespace HuginWhispers
         }
 
         // the others put out now: such a scene, and its shot holds (their bodies, ravens, names, chat — one answer for all)
+        internal static bool Hides(Character c) { return _on && c is Player && c != Player.m_localPlayer; } // (one the scene puts out while its shot holds: not in the picture, so not in a lens's way — StoryScenes.People)
         private static bool Hiding { get { return _on && StoryCamera.Active && !StoryCamera.Leaving; } }
 
         // from StoryScenes.Tick, every frame while it plays (the look itself: twice a second; the shot begun or ended: at once)

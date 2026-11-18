@@ -84,8 +84,8 @@ namespace HuginWhispers
         // a healing mead given (on its owner's game: NpcActor «revive»)
         internal void Revive(long by = 0L)
         {
-            if (!Down && !IsDown(_a)) return; // (its ZDO too: taken over just now, not looked at here yet)
-            if (NpcRescueHits.Died(_a)) return;
+            if (!Down && !IsDown(_a)) { NpcActor.NotDone(); return; } // (its ZDO too: taken over just now, not looked at here yet. On its feet already — it came to by itself, another's mead got here first: this one goes back, NpcActor.Pay)
+            if (NpcRescueHits.Died(_a)) { NpcActor.NotDone(); return; }
             GetUp(Revived);
             NpcRescueHits.Revived(_a); // (in need: half its blows back)
             if (by != 0L) NpcMemory.Remember(_a, "revived", by, "");
@@ -105,7 +105,7 @@ namespace HuginWhispers
         // a healing mead given it on its feet (its talk): half better at once, as one given while senseless (Revive)
         internal void Dosed()
         {
-            if (Down || _c == null || _c.GetHealth() >= _c.GetMaxHealth()) return;
+            if (Down || _c == null || _c.GetHealth() >= _c.GetMaxHealth()) { NpcActor.NotDone(); return; } // (nothing to heal: the mead goes back — NpcActor.Pay)
             _c.Heal(_c.GetMaxHealth() * Revived, false);
             Npcs.Log(_a.Id + ": drank a healing mead from a player");
         }
@@ -121,15 +121,20 @@ namespace HuginWhispers
         internal static bool IsDown(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null && z.GetBool(KDown, false); }
         internal static bool IsDown(Character c) { return IsDown(NpcActor.Of(c)); }
 
-        // nobody's foe now: its template's «unseen: yes» (kept by a power: no monster sees it), on its way (NpcTravel) or
-        // senseless — one look into its ZDO for the last two
+        // nobody's foe now: its template unseen (UnseenBy), on its way (NpcTravel) or senseless — one look into its ZDO for the last two
         internal static bool Unseen(Character c)
         {
             NpcActor a = NpcActor.Of(c);
-            if (a != null && a.Def != null && a.Def.Unseen) return true;
+            if (a != null && UnseenBy(a.Def)) return true;
             ZDO z = a != null ? a.Zdo : null;
             return z != null && (z.GetBool(NpcTravel.KTravel, false) || z.GetBool(KDown, false));
         }
+
+        // its template keeps monsters off it: «unseen: yes» — or, not written, it is a story person of the world (the user 2026-11-15: «сюжетні нпс не повинні
+        // бути видимі монстрам, лише якщо цього потребуватиме сюжет» — Torvald was set upon by beasts): StoryOwn, the story module's word whose templates
+        // its people wear (a set made once as they are read: IsEnemy asks this of every pair a monster looks at)
+        internal static System.Func<string, bool> StoryOwn;
+        internal static bool UnseenBy(NpcDef d) { return d != null && (d.UnseenSaid ? d.Unseen : StoryOwn != null && StoryOwn(d.Id)); }
 
         // ---------------------------------------------------------------- a healing mead (only those: no doubt what it does)
         private static readonly string[] Meads = { "MeadHealthMinor", "MeadHealthMedium", "MeadHealthMajor", "MeadHealthLingering" };
@@ -154,9 +159,8 @@ namespace HuginWhispers
         {
             ItemDrop.ItemData m = Mead(p);
             if (m == null) { p.Message(MessageHud.MessageType.Center, Lang.T("Потрібна медовуха зцілення")); return false; }
-            p.GetInventory().RemoveItem(m, 1);
-            a.Act("revive " + p.GetPlayerID().ToString(System.Globalization.CultureInfo.InvariantCulture)); // (its owner gets it up — and remembers who, if it did)
             Npcs.Log(a.Id + ": given " + (m.m_dropPrefab != null ? m.m_dropPrefab.name : "a mead"));
+            a.Pay(p, m, "revive " + p.GetPlayerID().ToString(System.Globalization.CultureInfo.InvariantCulture)); // (its owner gets it up — and remembers who, if it did; not done there: the mead is yours again)
             return true;
         }
     }

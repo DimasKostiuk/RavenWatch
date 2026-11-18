@@ -8,7 +8,8 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // «Бібліотека звуків» (console: raven sounds, the test window's «Звуки» tab): in one list every sound of the game (the sfx_ objects), our own
+    // «Бібліотека звуків» (console: raven sounds, the test window's «Звуки» tab): in one list every sound of the game (the sfx_ objects, also the
+    // ones still in its bundles, unloaded: a row like that is loaded on its first ▶ or click, RavenFx.Prefab), our own
     // files and the catalogue (assets/story/sounds), to listen to them in the game itself. A search, groups, ▶ to play (each press plays it anew,
     // one of its variants), ■ to stop, ★ to keep it among the chosen ones (config/RavenWatch/sounds_chosen.txt, the author's own).
     // A row clicked by its name opens below: what it plays, loudness, pitch, range, 2d, wet, heard from a distance through the audio core, as a scene
@@ -50,6 +51,7 @@ namespace HuginWhispers
         private bool _showDesk;
         private string _editName = "", _editTokens = "", _mute = "sfx_footstep*";
         private float _vol = 1f, _pitch, _range, _voice = 1f;
+        private float _spread; // (the line's «spread»: no slider of its own, kept so that «Зберегти» does not drop it)
         private bool _flat, _wet, _desk;
 
         private static string ChosenFile { get { return Path.Combine(Path.Combine(Paths.ConfigPath, "RavenWatch"), "sounds_chosen.txt"); } }
@@ -69,6 +71,9 @@ namespace HuginWhispers
             // many sounds are not in the game's list, only inside other objects
             foreach (GameObject g in Resources.FindObjectsOfTypeAll<GameObject>()) // heavy: as said above
                 if (g != null && g.transform.parent == null && !g.scene.IsValid()) Add(found, g);
+            // and the ones still in the game's bundles, not loaded yet: listed by name, loaded on their first ▶ or click (Fill)
+            foreach (string n in RavenFx.SoundsInBundles())
+                if (!found.ContainsKey(n)) found[n] = new Snd { Name = n, Lower = n.ToLowerInvariant(), Group = GroupOf(n.ToLowerInvariant()) };
             _game = new List<Snd>(found.Values);
             List<string> names = new List<string>();
             foreach (Snd s in _game) names.Add(s.Name);
@@ -88,7 +93,9 @@ namespace HuginWhispers
         {
             if (AudioBank.GameListThere) return;
             List<string> names = new List<string>();
-            foreach (GameObject g in RavenFx.AllLoaded()) if (IsSound(g)) names.Add(g.name);
+            HashSet<string> had = new HashSet<string>();
+            foreach (GameObject g in RavenFx.AllLoaded()) if (IsSound(g) && had.Add(g.name)) names.Add(g.name);
+            foreach (string n in RavenFx.SoundsInBundles()) if (had.Add(n)) names.Add(n);
             WriteList(names);
         }
 
@@ -96,7 +103,7 @@ namespace HuginWhispers
         {
             if (g == null) return false;
             string lower = g.name.ToLowerInvariant();
-            return lower.StartsWith("sfx_") && !lower.Contains("(clone)") && g.GetComponent<ZNetView>() == null && g.GetComponentInChildren<AudioSource>(true) != null; // heavy: the list of the game's sounds, on its making only
+            return lower.StartsWith("sfx_") && !lower.Contains("(clone)") && g.GetComponentInChildren<AudioSource>(true) != null; // heavy: the list of the game's sounds, on its making only (a networked sfx_ is a sound too: AudioBank.OfPrefab)
         }
 
         // the game's sounds with the files and the catalogue beside them (no search through the scene: after every save)
@@ -134,8 +141,17 @@ namespace HuginWhispers
         {
             if (g == null || found.ContainsKey(g.name) || !IsSound(g)) return;
             string lower = g.name.ToLowerInvariant();
-            AudioSource src = g.GetComponentInChildren<AudioSource>(true); // heavy: the list of the game's sounds, on its making only
-            Snd s = new Snd { Name = g.name, Lower = lower, Prefab = g };
+            Snd s = new Snd { Name = g.name, Lower = lower, Group = GroupOf(lower) };
+            Fill(s, g);
+            found[g.name] = s;
+        }
+
+        // what a row knows of its sound (variants, length, the clips for ◀); a row still in the game's bundles: loaded now
+        private static void Fill(Snd s, GameObject g)
+        {
+            if (g == null) return;
+            s.Prefab = g;
+            AudioSource src = g.GetComponentInChildren<AudioSource>(true); // heavy: the list of the game's sounds, on its making, or one row on its first click
             ZSFX z = g.GetComponentInChildren<ZSFX>(true); // heavy: the same
             if (z != null && z.m_audioClips != null && z.m_audioClips.Length > 0)
             {
@@ -143,9 +159,12 @@ namespace HuginWhispers
                 s.Clips = z.m_audioClips;
                 foreach (AudioClip c in z.m_audioClips) if (c != null) s.Length = Mathf.Max(s.Length, c.length);
             }
-            else if (src.clip != null) { s.Variants = 1; s.Length = src.clip.length; s.Clips = new AudioClip[] { src.clip }; }
-            s.Group = GroupOf(lower);
-            found[g.name] = s;
+            else if (src != null && src.clip != null) { s.Variants = 1; s.Length = src.clip.length; s.Clips = new AudioClip[] { src.clip }; }
+        }
+
+        private static void Loaded(Snd s)
+        {
+            if (s.Prefab == null && s.Group != BankGroup && s.Group != FilesGroup) Fill(s, RavenFx.Prefab(s.Name));
         }
 
         private static bool Any(string s, params string[] words) { foreach (string w in words) if (s.Contains(w)) return true; return false; }
@@ -206,6 +225,7 @@ namespace HuginWhispers
 
         private void Play(Snd s)
         {
+            Loaded(s);
             if (!Hear(s.Name, null)) { _note = "Не грає: у цій грі такого нема."; return; }
             _note = "▶ " + s.Name + Len() + (s.Variants > 1 ? " (варіантів: " + s.Variants + ", щоразу інший)" : "") + (_far > 0f ? ", за " + Mathf.RoundToInt(_far) + " м" : "");
             // its backwards copies made now, silently, so ◀ answers at once
@@ -235,6 +255,7 @@ namespace HuginWhispers
 
         private void PlayBack(Snd s)
         {
+            Loaded(s);
             if (s.Clips == null || s.Clips.Length == 0) { _note = "У цього звуку нема кліпу."; return; }
             AudioClip clip = null;
             for (int tries = 0; tries < 8 && clip == null; tries++) clip = s.Clips[UnityEngine.Random.Range(0, s.Clips.Length)];
@@ -293,12 +314,13 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- tuning one
         private void Pick(Snd s)
         {
+            Loaded(s);
             _nextPick = s;
             bool bank = s.Group == BankGroup;
             AudioBank.Entry e = bank ? AudioBank.Find(s.Name) : new AudioBank.Entry { Tokens = new[] { s.Name } };
             _editName = bank ? s.Name : Suggest(s.Name);
             _editTokens = string.Join(" ", e.Tokens);
-            _vol = e.Vol; _pitch = e.Pitch; _range = e.Range; _flat = e.Flat; _wet = e.Wet;
+            _vol = e.Vol; _pitch = e.Pitch; _range = e.Range; _flat = e.Flat; _wet = e.Wet; _spread = e.Spread;
         }
 
         private static string Suggest(string name)
@@ -311,7 +333,7 @@ namespace HuginWhispers
 
         private AudioBank.Entry Edited()
         {
-            return new AudioBank.Entry { Tokens = _editTokens.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries), Vol = _vol, Pitch = _pitch, Range = _range, Flat = _flat, Wet = _wet };
+            return new AudioBank.Entry { Tokens = _editTokens.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries), Vol = _vol, Pitch = _pitch, Range = _range, Spread = _spread, Flat = _flat, Wet = _wet };
         }
 
         private static float Row(string title, float v, float min, float max, float step)

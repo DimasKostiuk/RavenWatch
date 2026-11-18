@@ -79,6 +79,7 @@ namespace HuginWhispers
         internal static void Register(string word, StepKind k) { Kinds[word] = k; }
 
         private static void Hold(float seconds) { _waitFor = Time.time + seconds; }
+        private static float _saidUntil; // (when the line of the last «npc <who> says» is over: «wait said»)
 
         private static Dictionary<string, StepKind> Builtin()
         {
@@ -96,7 +97,7 @@ namespace HuginWhispers
             };
             return new Dictionary<string, StepKind>
             {
-                { "wait", new StepKind(StepSeen.World) { Min = 1, Usage = "wait <секунд>", Begin = (p, st) => Hold(F(st.W[1], 1f)) } },
+                { "wait", new StepKind(StepSeen.World) { Min = 1, Usage = "wait <секунд> | wait said", Begin = (p, st) => Hold(st.W[1] == "said" ? Mathf.Max(0f, _saidUntil - Time.time) : F(st.W[1], 1f)) } }, // («said»: till the line of «npc <who> says» is over)
                 { "until", new StepKind(StepSeen.World) { Usage = "until <умови> | <секунд>",
                     Check = st =>
                     {
@@ -125,6 +126,29 @@ namespace HuginWhispers
                         RavenSkills.StoryLine(munin, line);
                         Spoken(Plugin.RavenName(munin), line); // (in a shot the game's screen is hidden: its words as a subtitle)
                     } } },
+                // letter <від кого> :: <текст>: a letter on his screen (the post's window, RavenBook.ShowLetter: the envelope, the seal, the sheet), no
+                // raven's word on it; the step waits till he folds it (LetterMost s at most). Its words through Lang.T, «\n» a new line.
+                // <від кого>: a story person's npc id («letter lit :: …») — his name on it (NpcDefs: name:) and his own seal (the user 2026-11-17:
+                // letter_seal_<id>, tools/letter_art.html); any other word — that word on it, and the post's seal; «<words> seal <id>» — those words on
+                // it and that sender's own seal, for one who writes but is no person of the world (the user 2026-11-18: Bruni signs «Варта, що лишилась»)
+                { "letter", new StepKind(StepSeen.Own) { Min = 3, Usage = "letter <від кого> [seal <печатка>] :: <текст>",
+                    Check = st =>
+                    {
+                        string[] lt = LetterParts(st.Text);
+                        if (lt == null) return "letter <від кого> [seal <печатка>] :: <текст>";
+                        if (lt[2] != null) return LatinId(lt[2]) ? null : "letter: печатка «" + lt[2] + "» — назва латиницею (SEALS у tools/letter_art.html)";
+                        return LatinId(lt[0]) && NpcDefs.Find(lt[0]) == null ? "letter: нема людини «" + lt[0] + "» (npc/<назва>.txt, малими) — або ім'я словами, як стоятиме на конверті" : null;
+                    },
+                    Begin = (p, st) =>
+                    {
+                        string[] lt = LetterParts(st.Text);
+                        NpcDef by = lt[2] == null ? NpcDefs.Find(lt[0]) : null;
+                        RavenBook.ShowLetter(Lang.T(by != null ? by.Name : lt[0]), false, Grammar.Fix(Lang.T(lt[1]), p).Replace("\\n", "\n"), null, by != null ? by.Id : lt[2]);
+                        if (_bird != null && _birdCarry.Length > 0) Act("drop", ""); // (the bird that brought it: out of its beak, on every game — StoryScenesBird.LetterAhead)
+                        _limit = Time.time + LetterMost;
+                    },
+                    Busy = (p, st) => RavenBook.LetterOpen,
+                    Done = (p, st) => RavenBook.LetterOpen ? "the letter still open at the step's limit" : "the letter read and folded" } },
                 { "sub", new StepKind(StepSeen.Shared) { Min = 1, Usage = "sub <текст>",
                     Begin = (p, st) => { string line = Grammar.Fix(Lang.T(Rest(st.Text, 1)), p); float t = RavenSpeech.Seconds(line, RavenSpeech.Pace.Scene); Hold(t); if (!_ownOff) StoryScreen.Sub(line, t + 0.4f); StoryWatch.Line(line); } } },
                 { "bars", new StepKind(StepSeen.Own) { Min = 1, Usage = "bars on|off",
@@ -137,6 +161,15 @@ namespace HuginWhispers
                 { "fade", new StepKind(StepSeen.Own) { Min = 1, Usage = "fade out|in [секунд]   (увесь кадр у чорне й назад; крок чекає, поки скінчиться)",
                     Check = st => st.W[1] != "out" && st.W[1] != "in" ? "fade out|in [секунд]" : null,
                     Begin = (p, st) => { float s = st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f; StoryScreen.Fade(st.W[1] == "out", s); Hold(s); } } },
+                { "glow", new StepKind(StepSeen.Own) { Min = 1, Usage = "glow <0..1> [секунд]   (світло спогаду: теплий край кадру, що повільно дихає; glow 0 — геть; кінець сцени гасить його сам за 1,5 с, обрив — одразу)",
+                    Check = st => { float v; return !float.TryParse(st.W[1], NumberStyles.Float, CultureInfo.InvariantCulture, out v) || v < 0f || v > 1f ? "glow <0..1> [секунд]" : null; },
+                    Begin = (p, st) => StoryScreen.Glow(F(st.W[1], 0f), st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f), Setup = (p, st) => StoryScreen.Glow(F(st.W[1], 0f), 0.05f) } }, // (played from a later step: as strong at once)
+                { "dim", new StepKind(StepSeen.Own) { Min = 1, Usage = "dim <0..1> [секунд]   (кадр темнішає, не чорніє: тло видіння; dim 0 — назад; кінець сцени знімає сам)",
+                    Check = st => { float v; return !float.TryParse(st.W[1], NumberStyles.Float, CultureInfo.InvariantCulture, out v) || v < 0f || v > 1f ? "dim <0..1> [секунд]" : null; },
+                    Begin = (p, st) => StoryScreen.Dim(F(st.W[1], 0f), st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f), Setup = (p, st) => StoryScreen.Dim(F(st.W[1], 0f), 0.05f) } },
+                { "memory", new StepKind(StepSeen.Own) { Min = 1, Usage = "memory <знімок> [x y] [ширина] [секунд]   (уривок пам'яті поверх кадру: прозорий знімок з assets/story/memories проступає, пливе й тане; x y — середина частками екрана (0.5 0.45), ширина — частка (0.5), секунд тримається (4); крок не чекає)",
+                    Check = st => { for (int i = 2; i < st.W.Length; i++) { float v; if (!float.TryParse(st.W[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v) || v < 0f) return "memory <знімок> [x y] [ширина] [секунд]"; } return StoryScreen.HasMemory(st.W[1]) ? null : "нема знімка «" + st.W[1] + "» (assets/story/memories)"; },
+                    Begin = (p, st) => { string why = StoryScreen.Memory(st.W[1], st.W.Length > 3 ? F(st.W[2], 0.5f) : 0.5f, st.W.Length > 3 ? F(st.W[3], 0.45f) : 0.45f, st.W.Length > 4 ? F(st.W[4], 0.5f) : 0.5f, st.W.Length > 5 ? F(st.W[5], 4f) : 4f); if (why != null) Note(why); } } },
                 { "player", PlayerKind() },
                 { "prop", new StepKind(StepSeen.Own) { Min = 1, Usage = StoryProps.Usage, PlaceAfter = "from", PlaceOf = w => StoryProps.PlaceOf(w, 1), // (the piece after «from»: the word storycheck reads here; the game asks PlaceOf — where a thing is thrown as well)
                     Check = st => StoryProps.Check(st.W, 1),
@@ -167,6 +200,9 @@ namespace HuginWhispers
                     Check = st => st.W[2] != "open" && st.W[2] != "close" ? "door <місце> open|close" : null,
                     Begin = (p, st) => Door(st.W[1], st.W[2] == "open") } },
                 { "bird", BirdKind() },
+                { "falcon", FalconKind() },
+                { "lane", new StepKind(StepSeen.World) { Min = 3, PlaceAt = 2, Usage = "lane <назва> <звідки> <куди> [clear <м>]   (пряма чиста смуга сцени; місця на ній: lane.<назва>@<м>[@<убік>])",
+                    Check = LaneCheck, Begin = LaneLay, Setup = LaneLay } }, // (StoryScenesLane)
                 { "npc", NpcKind() },
             };
         }

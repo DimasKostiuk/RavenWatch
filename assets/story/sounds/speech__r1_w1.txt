@@ -1,0 +1,11 @@
+# Тембр «r1_w1»: жіночий нижчий: ~187 Гц
+# Зроблено інструментом (node tools/sound.js timbres) із вигуків записаного голосу «rec1» (speech_…__rec1) — руками не правити: слова тембру в рядку «@timbre r1_w1», гучність і розкид — у рядку самого вигуку.
+speech_hm__r1_w1 file:speech_hm_1__r1_w1.ogg file:speech_hm_3__r1_w1.ogg file:speech_hm_4__r1_w1.ogg file:speech_hm_6__r1_w1.ogg spread=0.04   # «хм»: думає; власний запис
+speech_hm_ask__r1_w1 file:speech_hm_ask_2__r1_w1.ogg file:speech_hm_ask_4__r1_w1.ogg file:speech_hm_ask_5__r1_w1.ogg file:speech_hm_ask_7__r1_w1.ogg spread=0.04   # «хм?»: питає, не розчув; власний запис
+speech_em__r1_w1 file:speech_em_1__r1_w1.ogg file:speech_em_3__r1_w1.ogg file:speech_em_5__r1_w1.ogg file:speech_em_7__r1_w1.ogg spread=0.04   # «ем…»: вагається; власний запис
+speech_uhu__r1_w1 file:speech_uhu_1__r1_w1.ogg file:speech_uhu_3__r1_w1.ogg file:speech_uhu_5__r1_w1.ogg file:speech_uhu_7__r1_w1.ogg spread=0.04   # «угу»: згода; власний запис
+speech_oh__r1_w1 file:speech_oh_1__r1_w1.ogg file:speech_oh_3__r1_w1.ogg file:speech_oh_6__r1_w1.ogg file:speech_oh_8__r1_w1.ogg spread=0.04   # «о!»: подив; власний запис
+speech_sigh__r1_w1 file:speech_sigh_1__r1_w1.ogg file:speech_sigh_2__r1_w1.ogg file:speech_sigh_3__r1_w1.ogg spread=0.04 vol=0.6   # зітхання; власний запис
+speech_chuckle__r1_w1 file:speech_chuckle_1__r1_w1.ogg file:speech_chuckle_7__r1_w1.ogg spread=0.04   # смішок; власний запис
+speech_khm__r1_w1 file:speech_khm_4__r1_w1.ogg file:speech_khm_5__r1_w1.ogg file:speech_khm_6__r1_w1.ogg file:speech_khm_7__r1_w1.ogg spread=0.04   # «кхм»: прочищає горло; власний запис
+@none speech_breath__r1_w1   # нема: у записі голосу «rec1» цього вигуку нема

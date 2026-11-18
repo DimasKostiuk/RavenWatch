@@ -130,7 +130,7 @@ namespace HuginWhispers
 
         private static NpcActor NamedAtHome(NpcActor a, string name)
         {
-            foreach (NpcActor o in NpcHeart.Residents(Heart(a))) if (Folk(a, o) && o.Name == name) return o;
+            foreach (NpcActor o in NpcHeart.Residents(Heart(a))) if (Folk(a, o) && o.Key == name) return o;
             return null;
         }
 
@@ -344,6 +344,7 @@ namespace HuginWhispers
         }
 
         private static string OtherName(NpcActor a, Task t) { NpcActor o = OtherOf(a, t); return o != null ? o.Name : "…"; }
+        private static string OtherKey(NpcActor a, Task t) { NpcActor o = OtherOf(a, t); return o != null ? o.Key : "…"; } // (kept: what its memory holds)
         private static string MainName(NpcActor o, Task t) { Task x; NpcActor m = MainOf(o, t.Player, t.Sort, out x); return m != null ? m.Name : "…"; }
 
         // ---------------------------------------------------------------- asking (where it is run)
@@ -363,7 +364,7 @@ namespace HuginWhispers
                 if (Of(a) == null) { Write(a, null); Npcs.Log(a.Id + ": its small task passed"); }
                 return;
             }
-            if (a.Def == null || !a.Def.Settler || !NpcResident.Is(a)) return;
+            if (!NpcResident.Settled(a)) return;
             long now = (long)NpcRescue.Now;
             Player p = Player.GetClosestPlayer(a.transform.position, AskNear);
             if (p == null || a.Mind == null || a.Mind.NowLayer >= NpcMind.Layer.Fight || !NpcVoice.Free(a) || NpcPatience.Angry(a)) return;
@@ -527,7 +528,7 @@ namespace HuginWhispers
             if (t == null || t.Player != who || t.Until != until) return;
             Kind k = Kinds[t.Sort];
             if (w[0] == "taskstay") { Stay(a, k); return; }
-            string other = OtherName(a, t);
+            string other = OtherKey(a, t);
             Write(a, null);
             if (a.Mind != null) a.Mind.EndWhim(Whose);
             if (w[0] == "taskdrop") { Npcs.Log(a.Id + ": its small task «" + t.Sort + "» let go"); return; }
@@ -610,15 +611,15 @@ namespace HuginWhispers
         {
             StringBuilder s = new StringBuilder("[talk common +]\n@start +\n");
             foreach (Kind k in Kinds.Values) if (k.Tell.Length > 0) s.Append("?? taskabout ").Append(k.Id).Append('\n').Append(k.Tell).Append('\n');
-            s.Append("@c_task_told\n{task_reply}\n> Добре. => start\n@c_task_here\n{task_reply}\n> Добре. => start\n");
+            s.Append("@c_task_told\n{task_reply}\n> {@say_ok} => start\n@c_task_here\n{task_reply}\n> {@say_ok} => start\n");
             foreach (Kind k in Kinds.Values)
             {
                 s.Append("@c_task_").Append(k.Id).Append("_ask\n{concern}\n");
                 if (k.Here.Length > 0) s.Append(k.Here).Append('\n');
                 else s.Append(k.Yes).Append(" => c_task_").Append(k.Id).Append("_yes\n");
                 s.Append(k.No).Append(" => c_task_").Append(k.Id).Append("_no !taskdrop\n> Мені зараз не до того. => end !tone cold\n");
-                if (k.Here.Length == 0) s.Append("@c_task_").Append(k.Id).Append("_yes\n{@").Append(k.YesTheme).Append("}\n> Добре. => start\n");
-                s.Append("@c_task_").Append(k.Id).Append("_no\n{@").Append(k.NoTheme).Append("}\n> Добре. => start\n");
+                if (k.Here.Length == 0) s.Append("@c_task_").Append(k.Id).Append("_yes\n{@").Append(k.YesTheme).Append("}\n> {@say_ok} => start\n");
+                s.Append("@c_task_").Append(k.Id).Append("_no\n{@").Append(k.NoTheme).Append("}\n> {@say_ok} => start\n");
             }
             return s.ToString();
         }

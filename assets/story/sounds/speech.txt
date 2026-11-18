@@ -1,0 +1,19 @@
+# Вигуки людей без слів (каталог звуків: формат у шапці story.txt). Запис користувача 2026-11-13, порізаний на дублі інструментом
+# (node tools/sound.js add <файл> <назва> voice --split --own); сирі записи: voice-proto/rec/speech.
+# Дублі однієї назви — її варіанти: щоразу інший, тон трохи гуляє (spread=). Гучність на слух: вкладка «Звуки».
+# Самі звучать у розмові людей (NpcSpeech): speech_hm — «хм», поки думає перед відповіддю; speech_breath — вдих перед реченням.
+# У МОДІ ТУТ НЕ ВСІ ДУБЛІ: рядок тримає один (назва вигуку мусить мати файл; «кхм» — усі, їх грають чоловічі тембри як є). Решта —
+# нестиснені в sound_masters, з них інструмент робить тембри. Після «add --force» рядок знову назве всі дублі: зайві .ogg і слова file: прибрати.
+# Це один голос (тембр «own»). Решту голосів робить із цих самих дублів інструмент: тембри в timbres.txt, файли speech__<тембр>.txt
+# (node tools/sound.js timbres — після кожної зміни тут). Людина бере назву у своєму тембрі сама (NpcTimbre): speech_hm → speech_hm__f_mid.
+# Решта — для сцен: «sound speech_khm npc.<хто>» — тембром і тоном тієї людини, від її голови.
+# Вдих і зітхання тихіші за голос (vol=): запис вирівняно до гучності голосу, а подих у житті значно тихший. Початкові числа, не на слух.
+speech_hm file:speech_hm_1.ogg spread=0.04   # «хм»: думає; власний запис
+speech_hm_ask file:speech_hm_ask_1.ogg spread=0.04   # «хм?»: питає, не розчув; власний запис
+speech_em file:speech_em_1.ogg spread=0.04   # «ем…»: вагається; власний запис
+speech_uhu file:speech_uhu_1.ogg spread=0.04   # «угу»: згода; власний запис
+speech_oh file:speech_oh_1.ogg spread=0.04   # «о!»: подив; власний запис
+speech_sigh file:speech_sigh_1.ogg spread=0.04 vol=0.6   # зітхання; власний запис
+speech_chuckle file:speech_chuckle_1.ogg spread=0.04   # смішок; власний запис
+speech_khm file:speech_khm_1.ogg file:speech_khm_2.ogg file:speech_khm_3.ogg file:speech_khm_4.ogg file:speech_khm_5.ogg file:speech_khm_6.ogg spread=0.04   # «кхм»: прочищає горло; власний запис
+speech_breath file:speech_breath_1.ogg spread=0.04 vol=0.3   # вдих перед реченням; власний запис

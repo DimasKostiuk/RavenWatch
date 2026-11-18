@@ -1,5 +1,6 @@
 clip look_caw
 length 15
+tone plain
 loop 0
 curve ease
 mode Spine1 body

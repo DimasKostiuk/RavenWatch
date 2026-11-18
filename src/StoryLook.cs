@@ -25,10 +25,14 @@ namespace HuginWhispers
         internal static float Settle = 0.4f, FollowStep = 0.15f; // degrees off the aim: there, it stands · m a person's eyes move before the head follows
 
         private static Func<Vector3> _aim, _talk; // (a scene's word · a talk's person)
+        private static float _ease = Ease;      // (this aim's turn: «player look <place> <s>» — a slow look round a room, the camera in his eyes)
+        // where his head looks now, as it turns (a shot through his eyes: «camera eyes» — the picture turns as his head does)
+        internal static Vector3 Dir(Player p) { return _on != null ? _dir : p.GetLookDir(); }
 
         // a talk opened with this person (NpcTalk.Open): the head on its eyes till TalkEnd
         internal static void Talk(Character who)
         {
+            _ease = Ease; // (a talk turns the head at the usual pace, whatever slow look a scene left)
             if (who == null) { _talk = null; return; }
             Vector3 last = who.GetEyePoint();
             _talk = () => { if (who != null) { Vector3 now = who.GetEyePoint(); if ((now - last).sqrMagnitude > FollowStep * FollowStep) last = now; } return last; };
@@ -39,11 +43,14 @@ namespace HuginWhispers
         private static Vector3 _dir;
 
         // a note when there is no such place, else null. forward: straight before him
-        internal static string At(string what)
+        internal static string At(string what, float ease = 0f)
         {
+            _ease = ease > 0f ? ease : Ease;
             if (what == "forward") { _aim = null; return null; }
             Vector3 at;
-            bool thing = StoryWhere.IsThing(what); // («npc.<who>.thing», «player.thing»: what that one holds — followed wherever it goes, in a hand, falling, lying)
+            Character body = StoryWhere.BodyOf(what); // (a creature of the scene: its eyes, as it moves)
+            if (body != null) { Vector3 seen = body.GetEyePoint(); _aim = () => { if (body != null) seen = body.GetEyePoint(); return seen; }; return null; }
+            bool thing = StoryWhere.IsLow(what); // («npc.<who>.thing», «player.thing»: what that one holds — followed wherever it goes, in a hand, falling, lying; «kept.<name>»: a thing lying low)
             if (what == "bird" || what.StartsWith("npc.") || thing)
             {
                 if (!StoryWhere.Find(what, out at)) return "player look: нема «" + what + "»";
@@ -70,11 +77,11 @@ namespace HuginWhispers
                 _dir = p.GetLookDir();
                 _on.m_lookAt = _point;
             }
-            Vector3 head = p.GetHeadPoint();
+            Vector3 head = Body.Head(p);
             Vector3 want = aim != null ? aim() - head : p.transform.forward;
             if (want.sqrMagnitude < 0.01f) want = p.transform.forward;
             want.Normalize();
-            _dir = Vector3.Angle(_dir, want) < Settle ? want : Vector3.Slerp(_dir, want, 1f - Mathf.Exp(-Time.deltaTime / Ease)); // (there: it stands, not creeping on)
+            _dir = Vector3.Angle(_dir, want) < Settle ? want : Vector3.Slerp(_dir, want, 1f - Mathf.Exp(-Time.deltaTime / _ease)); // (there: it stands, not creeping on)
             Vector3 at = head + _dir * Far;
             if ((at - _point.position).sqrMagnitude > 1e-4f) _point.position = at; // (the head bobs a breath: the point stays where it is)
             if (Blueprint.On && Time.time >= _logAt) // (said when it goes wrong, not every LogEvery s: the log is read)
@@ -103,7 +110,7 @@ namespace HuginWhispers
         }
 
         // the scene is over, however: the head his own again
-        internal static void End() { _aim = null; _told = false; if (_talk == null) Free(); }
+        internal static void End() { _aim = null; _told = false; _ease = Ease; if (_talk == null) Free(); } // (a scene's slow look is its own: the next talk turns the head at the usual pace)
 
         private static void Free()
         {

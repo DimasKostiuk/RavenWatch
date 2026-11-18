@@ -43,6 +43,12 @@ namespace HuginWhispers
                 if (s == null) { Errors.Add(at + "рядок поза сценою"); continue; }
                 if (line.StartsWith("roams:")) { string v = line.Substring(6).Trim(); s.Roams = v == "yes" || v == "так" || v == "1"; continue; }
                 if (line.StartsWith("alone:")) { string v = line.Substring(6).Trim(); s.Alone = v == "yes" || v == "так" || v == "1"; continue; }
+                if (line.StartsWith("aside:"))
+                {
+                    string v = line.Substring(6).Trim();
+                    if (v == "away") s.Away = true; else if (v != "step") Errors.Add(at + "aside: away | step");
+                    continue;
+                }
                 if (line.StartsWith("needs:")) { s.NeedsText = line.Substring(6).Trim(); s.Needs = Conds(s.NeedsText, at); continue; }
                 if (line.StartsWith("check:")) { s.Check = line.Substring(6).Trim(); continue; } // (where the studio's check begins it: StudioScene)
                 if (line.StartsWith("test:")) { s.Test = s.Test.Length > 0 ? s.Test + "; " + line.Substring(5).Trim() : line.Substring(5).Trim(); continue; } // (the world the studio's check plays it in: StudioScene)
@@ -94,9 +100,16 @@ namespace HuginWhispers
             }
         }
 
+        // made by the scene itself: «npc <who> spawn …», or a falcon that becomes it («falcon <f> become <who> [as …]») — never waited for from the
+        // world (2026-11-14, the review: the ambush's sisters were taken for people of the world, a quest's play waited CastWait s for them and
+        // then finished the scene quietly, Ketil gone without it)
         private static bool Spawned(SceneDef s, string who)
         {
-            foreach (Step o in s.Steps) if (o.W.Length > 2 && o.W[0] == "npc" && o.W[1] == who && o.W[2] == "spawn") return true;
+            foreach (Step o in s.Steps)
+            {
+                if (o.W.Length > 2 && o.W[0] == "npc" && o.W[1] == who && (o.W[2] == "spawn" || o.W[2] == "ready")) return true;
+                if (o.W.Length > 3 && o.W[0] == "falcon" && o.W[2] == "become" && o.W[3] == who) return true;
+            }
             return false;
         }
 

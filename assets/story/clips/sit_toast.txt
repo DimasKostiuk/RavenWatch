@@ -1,0 +1,74 @@
+clip sit_toast
+length 6.4
+tone drinks
+loop 0
+pivot 1.1
+curve ease
+vary 0.3
+fade 0.5 0.6
+mode Spine1 body
+mode Spine2 body
+mark 1.5 cheer
+mark 3.1 sip
+prop Tankard r
+say тост сидячи за столом на святі: кухоль з коліна вгору перед собою «за нас», двічі трусонути, тоді надпити й назад на коліно
+
+# сидячи (свято за столом, NpcPlaces.FeastSit; за ним кухлі підіймають і решта за столом — NpcPlaces.Toast): права рука з коліна вгору-вперед
+# над столом на рівні підборіддя (не над головою: кадр 2026-11-16), два короткі потруси, до рота, ковток, назад на коліно. Висоти — сидячі (sit_drink: коліно 0.71, рот 1.07); тост — на 0.45 нижче за
+# стоячий toast. Ліва рука лежить, як сидить людина.
+
+0 @RightHand 0.29 0.71 0.29
+0.3 @RightHand 0.29 0.71 0.29
+0.8 @RightHand 0.28 0.92 0.42
+1.25 @RightHand 0.3 1.1 0.55
+1.5 @RightHand 0.3 1.15 0.57
+1.7 @RightHand 0.3 1.09 0.55
+1.9 @RightHand 0.3 1.15 0.57
+2.15 @RightHand 0.3 1.1 0.55
+2.7 @RightHand 0.13 1.05 0.22
+3 @RightHand 0.11 1.07 0.19
+4 @RightHand 0.11 1.08 0.18
+4.5 @RightHand 0.12 1 0.19
+5.2 @RightHand 0.22 0.88 0.32
+6.4 @RightHand 0.29 0.71 0.29
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+0.8 @RightHand.w 1 0 0
+5.6 @RightHand.w 1 0 0
+6.2 @RightHand.w 0 0 0
+6.4 @RightHand.w 0 0 0
+
+0 @RightHand.p 1 0.2 0
+
+0 @RightHand.f -0.3 0 0.95
+1.25 @RightHand.f -0.2 0.3 0.93
+2.15 @RightHand.f -0.2 0.3 0.93
+3 @RightHand.f -0.3 0.55 0.78
+4 @RightHand.f -0.3 0.55 0.78
+4.5 @RightHand.f -0.3 0 0.95
+
+0 @RightHand.n -0.95 0 -0.3
+1.25 @RightHand.n -0.95 0 -0.3
+3 @RightHand.n -0.95 -0.1 -0.3
+4 @RightHand.n -0.95 -0.1 -0.3
+4.5 @RightHand.n -0.95 0 -0.3
+
+0 @Look 0 1.2 2
+0.9 @Look 0.25 1.5 1.6
+1.5 @Look 0 1.4 2
+2.2 @Look 0 1.4 2
+2.8 @Look 0 2 1.5
+3 @Look 0 2.2 1
+4 @Look 0 2.2 1
+4.6 @Look 0 2 1.5
+5.4 @Look 0 1.2 2
+
+0 @Look.w 0 0 0
+0.9 @Look.w 0.6 0 0
+2.2 @Look.w 0.6 0 0
+3 @Look.w 0.7 0 0
+4 @Look.w 0.7 0 0
+4.6 @Look.w 0.5 0 0
+5.4 @Look.w 0 0 0
+6.4 @Look.w 0 0 0

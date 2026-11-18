@@ -1,5 +1,7 @@
 # Одін-мандрівник: тіло Одіна гри (без його зникання), лише обертається до гравця.
 [npc odin]
 name: Мандрівник
+shuns: drinks merry loose   # docs/jobs/people-moves.md
+persona: lively=0.5
 body: odin
 greet: …

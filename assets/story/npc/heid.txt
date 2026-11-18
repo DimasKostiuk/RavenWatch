@@ -9,6 +9,7 @@ haircolor: 0.22 0.17 0.13
 hair: Hair18_2
 beard: none
 gear: ArmorDress3 CapeDeerHide HelmetAshlandsMediumHood PT_BeltSwamp
+tint_cape: 0.33 0.38 0.23
 # під захистом Хель: не б'ється й не тікає, жоден звір її не бачить (і не поранить: вона не mortal)
 fight: off
 unseen: yes
@@ -16,13 +17,20 @@ walk: 0.95
 run: 0.65                                 # біжить помірно: тіло гравця бігає спринтом
 # своя хода (assets/gaits.txt): жіноча, м'яка в стегнах, і втомлена
 gait: heid
-persona: chatty=0.35 curiosity=0.4 bravery=0.4 diligence=0.9 height=0.89
+persona: chatty=0.35 curiosity=0.4 bravery=0.4 diligence=0.9 height=0.89 lively=0.45
 greet: …Кажи.
 greet: Слухаю.
 greet: Що тобі?
 talk: heid
+voice: own                                # свої слова без питання (NpcVoice): лише власні теми assets/story/words/heid.txt — idle, see_player, at_<вид місця> (StoryLife.Themes); спільна книга поселенців — ні (користувач 2026-11-16)
 menu: no                                  # лише розмова (E), жодних наказів на Q
 on near 5: look player
+# Її власне життя ніколи не грає цих видів кліпів (NpcMoves, рядок кліпу tone; docs/jobs/people-moves.md; користувач 2026-11-15: «Гейд часто має анімацію пиття з келиху»): біля вогню вона не п'є з кухля.
+# Сцена чи слово сюжету грають що скажуть.
+shuns: drinks loose
+# Її власні жести (NpcMoves «moves:»): перебирає трави в кошику — лише поки кошик на руці (@carry; користувач прийняв 2026-11-15).
+# Рука на серці (heid_heart) — жест місць біля каменів: «moves» її рядків spot: у people/heid.txt.
+moves: heid_herbs@carry
 # Її ворон (NpcRaven): німий «Хугін» від Хель — чорний з холодним відливом, бліді очі. У Залі здебільшого на жердині.
 raven: hugin
 raven_look: hel

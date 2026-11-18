@@ -1,0 +1,20 @@
+[npc ketil]
+name: Кетіль
+body: human
+model: 0
+skin: 1 0.86 0.74
+haircolor: 0.35 0.24 0.15
+hair: Hair5_2
+beard: none
+gear: HelmetHat5 ArmorTunic4 TrinketIronHealth ArmorTrollLeatherLegs
+fight: off
+walk: 0.8
+gait: hollow
+menu: home talk
+talk: ketil
+shuns: drinks merry loose                 # користувач 2026-11-17: «Кетілю не треба тостів, сміху і т.д. — звичайні жести» (NpcMoves: вид жесту — рядок кліпу tone)
+greet: А… це ти.
+greet: Сідай, як хочеш.
+greet: Я тут. Нікуди не дівся.
+greet: Тихо сьогодні.
+persona: build=-0.55 height=1 lively=1

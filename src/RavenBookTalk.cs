@@ -33,6 +33,7 @@ namespace HuginWhispers
         private static readonly Color TCutHugin = C("#a9c7e8"), TCutMunin = C("#e8b86a"), TAsideHugin = C("#2f4a68"), TAsideMunin = C("#6a4510");
 
         internal static bool TalkInstant; // (config «Instant talks»: no fades, no waits)
+        internal static float TalkPace = 1.15f; // (the user 2026-11-18: every line of a talk 15 % slower to come — its gap after the one before, its coming in; the hums are the sound's own. Live: raven npc tune RavenBook.TalkPace)
 
         // a settler's request on its pinned scrap (NpcTalk: NpcRequests) — the thing, the pay in coins, how long it waits, whether you promised
         internal sealed class TalkScrap { public string Item = "", Words = "", Pay = "", Left = ""; public bool Promised; }
@@ -72,12 +73,12 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the scroll (the user 2026-11-06, docs/plans/mockups/talk-flow.html)
         // One window a talk, kept while you talk to that person; a click does not draw it anew but moves it on (TalkFlow): what was there folds away (the line you picked lit a moment),
         // then two parts come in, each at its own pace — on top the talk: your line, its lines one by one (before your raven butts in, a short while to read the line before it;
-        // the raven's portrait and dots, then its words), on the bottom your answers one by one, from the moment the turn begins; the answers to your raven in its frame, once it spoke.
+        // the raven's portrait and dots, then its words), on the bottom your answers one by one, once the last line said is whole (TalkPace: how slow the lines come); the answers to your raven in its frame, once it spoke.
         // A click on the talk's part shows all of it at once; Esc and the ✕ close it as ever. «Instant talks» (TalkInstant): no fades, no waits.
         // Your raven aloud (the user 2026-11-08, «каша з діалогів»: A + В): one frame of its colour where it butts in — its words, the person's word to it (named), your answers to it
         // (a must: NpcTalkRaven.Lock) — the talk goes on above and under it. Two speak in a turn (your raven aloud, another person): every block has its speaker's name.
         // The first screen (menu): its worry with its answers on top, the rest (its request, its story, «на думці», «твоє») below.
-        // Its pictures: BookArt.TalkPaper (each person its own torn bottom), TalkRod, TalkBand, TalkRope.
+        // Its pictures: BookArt.TalkPaper (each person its own torn bottom); its top — assets/book/talk_roll, talk_raven, talk_ring, talk_token, talk_seal, talk_strap, talk_rivet, talk_hook, talk_chain (tools/talk_top_art.html).
         private const float TalkW = 540f, TalkLeft = 40f, TalkTop = 84f, TalkLeast = 300f, TalkPaperW = TalkW - 52f;
         private const float TalkHang = 14f, TalkPaperMin = 430f; // (a talk: its rod right under the screen's top, its ropes running off it; its paper this high at the least; more words make it taller, but the margins' lines and rope never: they hang from its top at their own length, RelMargins — the user 2026-11-08, «половину менше … смужки настрою ніколи не розширяются і мотузка теж»)
         private static readonly Color TBlock = C("#4b1c0d"), TBlockInk = C("#f6e9cc"), TPaper = C("#efe3c4"), TStoryInk = C("#7f4e04"), TStoryFill = C("#f6e1ad"),
@@ -185,7 +186,32 @@ namespace HuginWhispers
             return x;
         }
 
-        // the scroll itself: the rod on two ropes, its plaque, its ✕, the paper
+        // a picture of the scroll's top at its place: x right and y down from the scroll's corner, in canvas units (the pictures are twice that).
+        // A piece with a drop shadow is drawn with a margin round it for its shadow (tools/talk_top_art.html: SHADE; the user 2026-11-14 — the shadows were cut at the pictures' edges):
+        // a picture wider than its place is that margin all round — it stands out by it, its pivot on the piece's own corner (a turned head turns about the same edge
+        // as before), and the pointer takes only the piece (raycastPadding: what is put on it reads its body from there, TopBody)
+        private static readonly HashSet<string> _topMissing = new HashSet<string>(); // (said once a game)
+        private static Image TopPiece(RectTransform top, string pic, float x, float y, float w, float h)
+        {
+            Sprite s = BookArt.Picture(pic);
+            float pad = s != null ? Mathf.Max(0f, (s.rect.width / 2f - w) / 2f) : 0f; // (the roll is narrower than its place, a tile the same: none)
+            if (pad > 0f && Mathf.Abs((s.rect.height / 2f - h) / 2f - pad) > 0.5f && _topMissing.Add(pic + ":size") && Plugin.Instance != null)
+                Plugin.Instance.Log("talk scroll: picture «" + pic + "» is " + s.rect.width + "×" + s.rect.height + " px, not its place " + w + "×" + h + " with the same margin all round: drawn stretched (tools/talk_top_art.html)");
+            RectTransform r = Rect(pic, top); r.anchorMin = r.anchorMax = new Vector2(0f, 1f); r.sizeDelta = new Vector2(w + 2f * pad, h + 2f * pad);
+            r.pivot = new Vector2(pad / r.sizeDelta.x, 1f - pad / r.sizeDelta.y); r.anchoredPosition = new Vector2(x, -y);
+            Image i = r.gameObject.AddComponent<Image>(); i.sprite = s; i.pixelsPerUnitMultiplier = 2f; i.raycastTarget = false; i.raycastPadding = new Vector4(pad, pad, pad, pad);
+            if (i.sprite == null) { i.enabled = false; if (_topMissing.Add(pic) && Plugin.Instance != null) Plugin.Instance.Log("talk scroll: no picture «" + pic + "» in the build (assets/book): that piece of its top is not drawn"); } // (nothing there rather than a white box)
+            return i;
+        }
+
+        // what is put on a top piece (the rune, the ✕) over its body, less its shadow's margin (TopPiece); in: its own inset from that body (left, bottom, right, top)
+        private static void TopBody(Image piece, RectTransform r, float l, float b, float rt, float t)
+        {
+            Vector4 p = piece.raycastPadding;
+            Stretch(r, Vector2.zero, Vector2.one, new Vector2(p.x + l, p.y + b), new Vector2(-(p.z + rt), -(p.w + t)));
+        }
+
+        // the scroll itself: its top (the roll on its hooks, the ravens' heads, the ✕ on its seal, the plaque), the paper
         private static RectTransform ScrollShell(Transform root, string who, Action close, out RectTransform paper)
         {
             RectTransform scroll = Rect("Scroll", root);
@@ -196,31 +222,9 @@ namespace HuginWhispers
             Fixed(scroll.gameObject, TalkW, -1f);
             scroll.sizeDelta = new Vector2(TalkW, scroll.sizeDelta.y);
 
-            // the rod (the user's frame 2026-11-06): two ropes up, wood with iron bands, a ring with a token at its left end, the iron ✕ at its right
+            // its top's room in the column: what stands there is drawn after the paper, below (the roll's shadow falls on the paper)
             RectTransform rod = Rect("Rod", scroll);
             Fixed(rod.gameObject, TalkW, 32f);
-            foreach (float side in new[] { 0f, 1f })
-            {
-                RectTransform rope = Rect("Rope", rod); rope.anchorMin = rope.anchorMax = new Vector2(side, 1f); rope.pivot = new Vector2(0.5f, 0f);
-                rope.sizeDelta = new Vector2(7f, 90f); rope.anchoredPosition = new Vector2(side == 0f ? 112f : -112f, -14f);
-                Image ri = rope.gameObject.AddComponent<Image>(); ri.sprite = BookArt.TalkRope; ri.type = Image.Type.Tiled; ri.raycastTarget = false;
-            }
-            RectTransform wood = Rect("Wood", rod); Stretch(wood, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, 0f));
-            Image wi = wood.gameObject.AddComponent<Image>(); wi.sprite = BookArt.TalkRod; wi.type = Image.Type.Sliced; wi.raycastTarget = false;
-            UnityEngine.UI.Shadow ws = wood.gameObject.AddComponent<UnityEngine.UI.Shadow>(); ws.effectColor = new Color(0f, 0f, 0f, 0.55f); ws.effectDistance = new Vector2(0f, -5f);
-            foreach (float side in new[] { 0f, 1f })
-            {
-                RectTransform band = Rect("Band", rod); band.anchorMin = band.anchorMax = new Vector2(side, 0.5f); band.sizeDelta = new Vector2(12f, 36f); band.anchoredPosition = new Vector2(side == 0f ? 40f : -40f, 0f);
-                Image bi = band.gameObject.AddComponent<Image>(); bi.sprite = BookArt.TalkBand; bi.raycastTarget = false;
-            }
-            RectTransform end = Rect("End", rod); end.anchorMin = end.anchorMax = new Vector2(0f, 0.5f); end.sizeDelta = new Vector2(26f, 38f); end.anchoredPosition = new Vector2(5f, 0f);
-            Image ei = end.gameObject.AddComponent<Image>(); ei.sprite = BookArt.RoundFine(9f); ei.type = Image.Type.Sliced; ei.color = C("#6a4426"); ei.raycastTarget = false;
-            RectTransform ring = Rect("Ring", rod); ring.anchorMin = ring.anchorMax = new Vector2(0f, 0.5f); ring.sizeDelta = new Vector2(24f, 24f); ring.anchoredPosition = new Vector2(5f, -27f);
-            Image rgi = ring.gameObject.AddComponent<Image>(); rgi.sprite = BookArt.Ring(0.12f); rgi.color = C("#6a6e70"); rgi.raycastTarget = false;
-            RectTransform token = Rect("Token", rod); token.anchorMin = token.anchorMax = new Vector2(0f, 0.5f); token.sizeDelta = new Vector2(15f, 19f); token.anchoredPosition = new Vector2(5f, -47f);
-            Image toi = token.gameObject.AddComponent<Image>(); toi.sprite = BookArt.Circle; toi.color = C("#c9a050"); toi.raycastTarget = false;
-            TMP_Text tt = T(token, "ᚱ", 10f, C("#3a2410"), F.Rune, TextAlignmentOptions.Center); Stretch(tt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            RectTransform x = CloseButton(rod, close); x.anchorMin = x.anchorMax = new Vector2(1f, 0.5f); x.anchoredPosition = new Vector2(-4f, 2f);
 
             // the paper: its parts are the caller's
             paper = Rect("Paper", scroll);
@@ -229,14 +233,31 @@ namespace HuginWhispers
             Fixed(paper.gameObject, TalkPaperW, -1f);
             paper.GetComponent<LayoutElement>().minHeight = TalkPaperMin;
 
-            foreach (float dx in new[] { -38f, 38f })
-            {
-                RectTransform str = Rect("String", scroll); str.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-                str.anchorMin = str.anchorMax = new Vector2(0.5f, 1f); str.sizeDelta = new Vector2(2f, 18f); str.anchoredPosition = new Vector2(dx, -32f);
-                Image sti = str.gameObject.AddComponent<Image>(); sti.color = C("#2a1c10"); sti.raycastTarget = false;
-            }
+            // the top (the user 2026-11-12, «А. Кований карниз»: the old rod looked poor, its iron did not read as iron, its ring hung on nothing). The parchment is wound on a roller
+            // that lies in two forged hooks, their bars running up off the screen; a bronze raven's head on each end of the roller holds a ring in its beak — the left one's carries
+            // the rune token, the right one's the iron seal with the ✕ (the whole seal is the button); the name's plaque hangs on two chains. The pictures and each one's place
+            // (counted from the scroll's corner, as here): tools/talk_top_art.html
+            RectTransform top = Rect("Top", scroll); top.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            top.anchorMin = top.anchorMax = top.pivot = new Vector2(0f, 1f); top.sizeDelta = new Vector2(TalkW, 32f); top.anchoredPosition = Vector2.zero;
+            foreach (float at in new[] { 112f, TalkW - 112f }) { TopPiece(top, "talk_strap", at - 7f, -90f, 14f, 110f).type = Image.Type.Tiled; TopPiece(top, "talk_rivet", at - 7f, -12f, 14f, 14f); } // (behind the roll)
+            TopPiece(top, "talk_ring", -34f, 17f, 20f, 22f); TopPiece(top, "talk_ring", TalkW + 14f, 17f, 20f, 22f); // (before the heads: the beak covers the ring's top)
+            Image roll = TopPiece(top, "talk_roll", 18f, 0f, TalkW - 36f, 40f);
+            Sprite across = BookArt.Sliced("talk_roll", 24f, 0f); if (across != null) { roll.sprite = across; roll.type = Image.Type.Sliced; }
+            foreach (float at in new[] { 112f, TalkW - 112f }) TopPiece(top, "talk_hook", at - 9f, 6f, 18f, 32f); // (the hooks' lips before the roll)
+            TopPiece(top, "talk_raven", -32f, -4f, 58f, 46f);
+            TopPiece(top, "talk_raven", TalkW + 32f, -4f, 58f, 46f).rectTransform.localScale = new Vector3(-1f, 1f, 1f); // (the same head turned: it grows left from its place)
+            Image token = TopPiece(top, "talk_token", -35f, 29f, 22f, 24f);
+            TMP_Text tt = T(token.transform, "ᚱ", 10f, C("#3a2410"), F.Rune, TextAlignmentOptions.Center); TopBody(token, tt.rectTransform, 0f, 0f, 0f, 3f);
+            Image seal = TopPiece(top, "talk_seal", TalkW + 5f, 31f, 38f, 40f); seal.gameObject.name = "Close";
+            // the ✕ on the disc (r 16 round 19,22 of the seal: 3 in from its sides, 6 from its top, 2 from its bottom), centred by the sign's own shape, not by
+            // the font's line (the user 2026-11-14: «збільши на 20% та відцентруй рівно» — it sat low and to the side; 26 before)
+            TMP_Text xt = T(seal.transform, "×", 31f, C("#e9cf8e"), F.Body, TextAlignmentOptions.MidlineGeoAligned); TopBody(seal, xt.rectTransform, 3f, 2f, 3f, 6f);
+            xt.textWrappingMode = TextWrappingModes.NoWrap; xt.overflowMode = TextOverflowModes.Overflow;
+            Clickable(seal.gameObject, close);
+            Hover(seal.gameObject, new Graphic[] { xt }, xt.color, null);
+            foreach (float dx in new[] { -38f, 38f }) TopPiece(top, "talk_chain", TalkW / 2f + dx - 4f, 29f, 8f, 22f).type = Image.Type.Tiled;
             Plaque(scroll, who, 40f, false);
-            RectTransform pl = (RectTransform)scroll.Find("Plaque"); if (pl != null) { pl.anchoredPosition = new Vector2(0f, -58f); pl.SetAsLastSibling(); }
+            RectTransform pl = (RectTransform)scroll.Find("Plaque"); if (pl != null) { pl.anchoredPosition = new Vector2(0f, -66f); pl.SetAsLastSibling(); }
             return scroll;
         }
 
@@ -254,7 +275,7 @@ namespace HuginWhispers
             private TalkRel _keptRel; // (this window's last: a new person, a new window)
             private float _buildAt;
             private const float Lit = 0.14f, OutFor = 0.3f, InFor = 0.25f, AnsFor = 0.22f, AnsStart = 0.35f, AnsEvery = 0.09f, Dots = 0.7f,
-                GapMin = 0.6f, GapMax = 2f, PerChar = 0.022f, CutMin = 0.8f, CutMax = 1.4f, CutPerChar = 0.015f;
+                GapMin = 0.6f, GapMax = 2f, PerChar = 0.022f, CutMin = 0.8f, CutMax = 1.4f, CutPerChar = 0.015f, HumAfter = 0.35f, AnsAfter = 0.3f;
 
             internal bool Folding { get { return _next != null; } }
             private static float Now { get { return Time.unscaledTime; } }
@@ -272,12 +293,14 @@ namespace HuginWhispers
             internal void Rush()
             {
                 enabled = true;
+                NpcTalk.YouCut(); // (the hero's line too: what it says comes now)
                 float now = Now;
                 foreach (Item i in _items)
                 {
                     if (i.Out) continue;
                     if (i.SwapAt > now) i.SwapAt = now;
-                    if (!i.Done && i.At > now) { i.At = now; i.Dur = 0f; }
+                    if (!i.Done && i.At > now) { i.At = now; i.Dur = 0f; i.Shown = null; } // (all of it now: shown, not hummed — five hums at once)
+                    if (i.Swap != null && i.SwapAt > now) { Action swap = i.Swap; i.Swap = () => { NpcTalk.Hushed = true; try { swap(); } finally { NpcTalk.Hushed = false; } }; } // (its word to your raven too: shown, not hummed)
                 }
                 NpcTalk.IdleStir();
             }
@@ -303,7 +326,8 @@ namespace HuginWhispers
             {
                 RectTransform r = Rect("Item", parent);
                 VBox(r, 0f, TextAnchor.UpperLeft, 0, 0, 0, 0);
-                RectMask2D mask = r.gameObject.AddComponent<RectMask2D>(); // (it grows from nothing: what does not fit yet is not drawn — only while it moves: grown, a seal over its card's corner is whole)
+                RectMask2D mask = r.gameObject.AddComponent<RectMask2D>(); // (it grows from nothing: what does not fit yet is not drawn — only while it moves)
+                mask.padding = new Vector4(0f, 0f, -SealOut, -SealOut); // (its frame reaches SealOut past its right and its top: a seal over its card's corner is whole while it grows and while it folds away too — the user 2026-11-12, «червоний круг після кліку стає на секунду обрізаним»; the game's Clipping takes z and w off the right and the top, so less than nothing adds)
                 LayoutElement le = r.gameObject.AddComponent<LayoutElement>(); le.preferredHeight = -1f; le.minHeight = 0f; le.flexibleHeight = 0f; // (its own min is none: it folds to nothing)
                 CanvasGroup cg = r.gameObject.AddComponent<CanvasGroup>();
                 Item i = new Item { R = r, Le = le, Cg = cg, Mask = mask, Grow = true };
@@ -336,7 +360,11 @@ namespace HuginWhispers
                     When(y, 0f, InFor);
                     at = InFor;
                 }
+                at = Mathf.Max(at, NpcTalk.YouLeft); // (the hero is still saying his answer aloud: it hears him out — NpcTalk.Pick)
                 bool worry = false;
+                float humEnd = 0f; // (when the person's last hummed words end: its lines and its word to your raven)
+                float whole = -1f; // (when the last line is whole: the answers come only after it — the user 2026-11-18)
+                float pace = TalkPace, inFor = InFor * pace, dots = Dots * pace; // (each line comes in and waits for the one before it this much slower: TalkPace)
                 int itsLast = t.Lines.FindLastIndex(x => x.Kind == SayPerson && !x.ToRaven); // (a reproach or a lead comes before its worry: the answers are to what it said last, 2026-11-08; not its word to your raven)
                 string named = t.Lines.Exists(x => x.Kind == SayRaven || x.Kind == SayOther) ? _talkWho : null; // (two speak: whose block is whose)
                 for (int k = 0; k < t.Lines.Count; k++)
@@ -345,7 +373,8 @@ namespace HuginWhispers
                     if (k > 0)
                     {
                         int len = t.Lines[k - 1].Text.Length;
-                        at += l.Kind == SayRaven || l.Kind == SayAside ? Mathf.Clamp(len * CutPerChar, CutMin, CutMax) : Mathf.Clamp(len * PerChar, GapMin, GapMax);
+                        at += pace * (l.Kind == SayRaven || l.Kind == SayAside ? Mathf.Clamp(len * CutPerChar, CutMin, CutMax) : Mathf.Clamp(len * PerChar, GapMin, GapMax));
+                        if (l.Kind != SayAside && humEnd > 0f) at = Mathf.Max(at, humEnd + HumAfter * pace); // (every hum before it heard out first, the user 2026-11-17: the hums lay over each other; your raven's thought in the margin needs no quiet)
                     }
                     Item it = Add(_talkSaid);
                     if (l.Kind == SayRaven && raven.Count > 0 && k + 1 < t.Lines.Count && t.Lines[k + 1].ToRaven) // (the person answered it: the raven's frame, your answers in it — they come with its words)
@@ -360,11 +389,13 @@ namespace HuginWhispers
                         Color ink = l.Munin ? C("#4e3312") : C("#24384f");
                         for (int q = 0; q < raven.Count; q++) TalkLine(list, rows[raven[q]], raven[q], q < raven.Count - 1, 17f, ink, false, Hint);
                         after.gameObject.SetActive(false); // (grows in with the raven's words: Swap)
-                        When(it, at, InFor);
+                        When(it, at, inFor);
                         string w = l.Text;
                         string toRaven = reply.Text;
-                        it.SwapAt = Now + S(at + Dots); it.Swap = () => { said.text = "«" + w + "»"; after.gameObject.SetActive(true); NpcTalk.LineShown(toRaven); }; // (its word to your raven comes with it: it speaks it)
-                        at += Dots;
+                        it.SwapAt = Now + S(at + dots); it.Swap = () => { said.text = "«" + w + "»"; after.gameObject.SetActive(true); NpcTalk.LineShown(toRaven); }; // (its word to your raven comes with it: it speaks it)
+                        humEnd = Mathf.Max(humEnd, at + dots + NpcTalk.HumFor(toRaven));
+                        whole = Mathf.Max(whole, at + dots + inFor);
+                        at += dots;
                         raven.Clear(); // (answered here, nowhere else)
                         k++; // (its reply is in the frame)
                         continue;
@@ -372,17 +403,20 @@ namespace HuginWhispers
                     if (l.Kind == SayRaven)
                     {
                         TMP_Text words = TalkRavenBlock(it.R, l, false);
-                        When(it, at, InFor);
+                        When(it, at, inFor);
                         string w = l.Text;
-                        it.SwapAt = Now + S(at + Dots); it.Swap = () => words.text = "«" + w + "»";
-                        at += Dots;
+                        it.SwapAt = Now + S(at + dots); it.Swap = () => words.text = "«" + w + "»";
+                        whole = Mathf.Max(whole, at + dots + inFor);
+                        at += dots;
                         continue;
                     }
-                    if (l.Kind == SayAside) { TalkAside(it.R, l); When(it, at, InFor * 2f); continue; }
-                    if (l.Kind == SayYou) { T(it.R, "«" + l.Text + "»", 15f, PSoft, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal; When(it, at, InFor); continue; }
+                    if (l.Kind == SayAside) { TalkAside(it.R, l); When(it, at, inFor * 2f); whole = Mathf.Max(whole, at + inFor * 2f); continue; }
+                    if (l.Kind == SayYou) { T(it.R, "«" + l.Text + "»", 15f, PSoft, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal; When(it, at, inFor); whole = Mathf.Max(whole, at + inFor); continue; }
                     TalkBlock(it.R, l.Text, l.Kind == SayOther ? l.Name : named);
-                    if (l.Kind == SayOther) { When(it, at, InFor); continue; } // (not the one you talk to: its answers are not under these words; it says them over its head too)
+                    whole = Mathf.Max(whole, at + inFor);
+                    if (l.Kind == SayOther) { When(it, at, inFor); continue; } // (not the one you talk to: its answers are not under these words; it says them over its head too)
                     string spoken = l.Text; it.Shown = () => NpcTalk.LineShown(spoken); // (its head and chest speak it as it comes in: NpcSpeech)
+                    humEnd = Mathf.Max(humEnd, at + NpcTalk.HumFor(spoken));
                     if (t.Menu && k == itsLast && under.Count > 0) // (the first screen: its worry's answers under its last words)
                     {
                         worry = true;
@@ -390,7 +424,7 @@ namespace HuginWhispers
                         VBox(list, 0f, TextAnchor.UpperLeft, 8, 8, 0, 4);
                         for (int q = 0; q < under.Count; q++) TalkLine(list, rows[under[q]], under[q], q < under.Count - 1, 17f, PInk, false, Hint);
                     }
-                    When(it, at, InFor);
+                    When(it, at, inFor);
                 }
                 if (TalkNotes.Count > 0) // (what your last answer moved)
                 {
@@ -399,11 +433,13 @@ namespace HuginWhispers
                     VBox(notes, 2f, TextAnchor.UpperLeft, 8, 8, 2, 4);
                     foreach (KeyValuePair<string, bool> note in TalkNotes) T(notes, note.Key, 15f, note.Value ? TUp : TDown, F.Italic, TextAlignmentOptions.TopLeft).textWrappingMode = TextWrappingModes.Normal;
                     TalkNotes.Clear();
-                    When(n, at + InFor, InFor);
+                    When(n, at + inFor, inFor);
                 }
 
-                // below, at their own pace from the start of the turn
-                float b = AnsStart;
+                // below, at their own pace — from the moment the LAST line said is whole (the user 2026-11-17: «спочатку хоч одна репліка нпс, а потім
+                // мої — ніби новий чистий аркуш»; 2026-11-18: after the first one only, your answer stood under Lit's first words while his second
+                // was still to come — «дивно виглядає»); a turn with no line — from its start
+                float b = whole >= 0f ? Mathf.Max(AnsStart, whole + AnsAfter) : AnsStart;
                 if (!worry) for (int q = 0; q < under.Count; q++) { Item a = Add(_talkLow); TalkLine(a.R, rows[under[q]], under[q], q < under.Count - 1, 17f, PInk, false, Hint); When(a, b, AnsFor); b += AnsEvery; }
                 if (story.Count > 0) { Item a = Add(_talkLow); TalkStory(a.R, rows, story, Hint); When(a, b, AnsFor); b += AnsEvery; }
                 if (t.Scrap != null) { Item a = Add(_talkLow); TalkPinned(a.R, t.Scrap, rows, scrapRows, Hint); When(a, b, AnsFor); b += AnsEvery; }
@@ -719,7 +755,7 @@ namespace HuginWhispers
                 TalkHook(row.gameObject, answers[i], i, new Graphic[] { t }, TStoryInk, fill, hint);
             }
             T(card, Lang.T("веде далі історію"), 14f, A(TStoryInk, 0.75f), F.Italic, TextAlignmentOptions.TopLeft);
-            Seal(card, "R");
+            Seal(card);
         }
 
         // a thin frame over a box that lays out its children: drawn on it, not one of its rows
@@ -730,14 +766,17 @@ namespace HuginWhispers
             e.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
-        private static void Seal(RectTransform card, string letter)
+        // the story card's seal, half over its corner: red wax with the rune raido pressed in it (the road: «веде далі історію»). A picture
+        // (assets/book/talk_wax, tools/talk_top_art.html: its body 46 across in the middle of 56); none in the build: the plain red round, as before
+        private const float SealOut = 28f; // how far it reaches past its card's right and top (what a part's frame leaves whole: TalkFlow.Add)
+        private static void Seal(RectTransform card)
         {
             RectTransform s = Rect("Seal", card);
             s.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            s.anchorMin = s.anchorMax = new Vector2(1f, 1f); s.sizeDelta = new Vector2(46f, 46f); s.anchoredPosition = new Vector2(-4f, -2f);
-            Image si = s.gameObject.AddComponent<Image>(); si.sprite = BookArt.Circle; si.color = TSeal; si.raycastTarget = false;
-            TMP_Text l = T(s, letter, 22f, C("#f3d9c8"), F.Head, TextAlignmentOptions.Center);
-            Stretch(l.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            s.anchorMin = s.anchorMax = new Vector2(1f, 1f); s.sizeDelta = new Vector2(56f, 56f); s.anchoredPosition = new Vector2(-4f, -2f);
+            Image si = s.gameObject.AddComponent<Image>(); si.raycastTarget = false;
+            si.sprite = BookArt.Picture("talk_wax");
+            if (si.sprite == null) { s.sizeDelta = new Vector2(46f, 46f); si.sprite = BookArt.Circle; si.color = TSeal; }
         }
 
         // a settler's request: a scrap pinned to the scroll, a little askew — the thing, its pay, how long it waits, «ОБІЦЯНО» once promised,

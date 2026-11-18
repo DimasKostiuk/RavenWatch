@@ -1,0 +1,47 @@
+clip dv_hand_belt
+length 6
+tone plain
+loop 0
+pivot 0.75
+curve ease
+vary 0.3
+fade 0.6 0.8
+mode Spine1 body
+mode Spine2 body
+part in 0 1.2 hold
+part loop 1.2 4.8 loop
+part out 4.8 6 end
+
+say двергр стоїть гордо, ліва рука на поясі збоку (на стегні), лікоть убік, права вільно
+want 1.2-4.8 hand left near -0.22 0.73 -0.03 0.1
+want 1.2-4.8 still 40
+
+0 @LeftHand -0.44 0.6 0.02
+0.2 @LeftHand -0.44 0.6 0.02
+0.7 @LeftHand -0.36 0.68 0.03
+1.2 @LeftHand -0.22 0.73 -0.03
+3 @LeftHand -0.22 0.73 -0.03
+4.8 @LeftHand -0.22 0.73 -0.03
+5.3 @LeftHand -0.36 0.68 0.03
+5.8 @LeftHand -0.44 0.6 0.02
+6 @LeftHand -0.44 0.6 0.02
+
+0 @LeftHand.w 0 0 0
+0.2 @LeftHand.w 0 0 0
+1.2 @LeftHand.w 1 0 0
+4.8 @LeftHand.w 1 0 0
+5.8 @LeftHand.w 0 0 0
+6 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -1 0 -0.4
+
+0 @LeftHand.f 0 -0.5 0.85
+
+0 @LeftHand.n 1 0 0
+
+0 Spine2 0 0 0
+1.2 Spine2 1 0 0
+3 Spine2 1.5 -1 0
+4.8 Spine2 1 0 0
+6 Spine2 0 0 0
+

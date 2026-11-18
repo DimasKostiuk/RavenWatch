@@ -49,7 +49,7 @@ namespace HuginWhispers
             PerchView best = null; int hostSeat = -1; float bestScore = Bonds.FriendAt - 0.01f;
             foreach (PerchView v in PerchView.All)
             {
-                if (v == null || !v.Valid || v.IsSpot || v.FreeSeat() < 0 || Vector3.Distance(v.transform.position, p.transform.position) > Reach) continue;
+                if (v == null || !v.Valid || v.IsSpot || v.Gone || v.FreeSeat() < 0 || Vector3.Distance(v.transform.position, p.transform.position) > Reach) continue;
                 for (int i = 0; i < v.Count; i++)
                 {
                     Perches.Occupant o = v.At(i);

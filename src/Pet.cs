@@ -38,7 +38,7 @@ namespace HuginWhispers
         private static bool Calm(Player p)
         {
             if (p.IsDead() || !p.IsOnGround() || p.InWater() || p.IsAttached() || p.IsRiding() || p.InAttack() || p.IsBlocking() || p.InDodge() || p.IsCrouching() || p.InEmote() || p.IsSitting()) return false; // (an emote, sitting on the ground: the hands are busy)
-            return !OdinWings.Flying() && !Beast.On() && !FateRite.Busy && !InventoryGui.IsVisible() && !Minimap.IsOpen();
+            return !OdinWings.Flying() && !Beast.On() && !FateRite.Busy && !InventoryGui.IsVisible() && !Minimap.IsOpen() && !RavenSkills.Silenced(); // (Silenced: a story scene plays — he stroked his raven as the dome closed over him, the ambush 2026-11-14)
         }
 
         private static void Stroke(Player p)

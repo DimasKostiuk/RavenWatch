@@ -3,7 +3,8 @@
 // The documents are checked too (at the end): every code name they give in back-ticks is in the code (arch-doc: the map, its sections,
 // the job pages docs/jobs/*.md), and every file of src/ is named in the map or a section (arch-file), so its section is one search away.
 // Two kinds of rule:
-//   RULES    never: a line that does this stops the build. `allow` lists the files that own the thing.
+//   RULES    never: a line that does this stops the build. `allow` lists the files that own the thing. A rule reads the line's code,
+//            its comment taken off; one marked `whole` reads the whole line (code-in-comment: the comment is what it judges).
 //   RATCHET  old code as it stands is written down per file (tools/arch_baseline.json), and those counts may only fall.
 //            A new case goes through the core or, where the rule has a mark and it is really needed, says why on its
 //            own line. After mending old ones: --tighten (it only ever lowers).
@@ -23,18 +24,29 @@ const RULES = [
     why: 'no other UI mod is named or reached into in the code: find it through the game\'s own objects (FeederUi.WindowOf), guard at the game\'s own doors (GraveRavens.Keeps)' },
   { id: 'game-move', files: npc, bad: /(^|[^.\w])(MoveTo|MoveTowards)\(|\.MoveTo\(/,
     why: 'the game\'s walk halts on a bend over 10°; walk through NpcMind.Move → NpcWalk.Step → NpcMind.Steer' },
+  // Shader.Find("Standard") is null in this game: the echo stayed flat, the heart's papers never showed, the shadow looked flat (2026-11-15)
+  { id: 'standard-shader', files: any, bad: /Shader\.Find\(\s*"Standard"\s*\)/,
+    why: 'the standard shader through FbxLook.Standard (the loaded shaders\' list: Shader.Find does not see it here)', allow: ['WsAssets.cs'] },
   { id: 'path-ask', files: npc, bad: /\.(GetPath|HavePath)\(/,
     why: 'a person\'s way asked of the game\'s way finder: NpcWalk.Have / NpcWalk.Way (kept answers, the frame\'s limit, measured); a walk\'s own way: NpcWalk.Ask',
     allow: ['NpcWalk.cs', 'NpcWalkAsk.cs', 'NpcWalkRoom.cs', 'NpcNav.cs'] },
   // a person's bed changed past the one door left the bed still signed with its old person (2026-11-09)
   { id: 'bed-door', files: f => /^(Npc|Story)\w*\.cs$/.test(f) && f !== 'NpcResident.cs', bad: /NpcLocker\.Put(Ref)?\(\s*[\w.]+\s*,\s*(NpcResident\.)?KBed\b/,
     why: 'a person\'s bed changes only through NpcResident.SetBed: the bed itself says whose it is, and the one it leaves must say nobody\'s' },
+  // «a settler who lives here» was spelled out in nine places, five of them with no look at the template itself: a resident whose template
+  // was gone (a file taken away, another version) threw every second in its hunger and its toil (2026-11-14)
+  { id: 'settled-one', files: f => /^Npc\w*\.cs$/.test(f) && f !== 'NpcResident.cs', bad: /NpcResident\.Is\(\s*\w+\s*\)\s*(&&|\|\|)\s*!?\w+\.Def\.Settler\b|\.Def\.Settler\s*(&&|\|\|)\s*!?NpcResident\.Is\(/,
+    why: '«a resident who is a settler» is one question: NpcResident.Settled (it holds for a person whose template is not here too)' },
   { id: 'door-rpc', files: any, bad: /"UseDoor"/,
     why: 'the door command is a switch; use NpcDoors.Open / Shut', allow: ['NpcDoors.cs'] },
   // BodyClips owns the search; FateRite looks inside the raven itself; RavenFx is the game's own effect-child lookup
   { id: 'find-bone', files: any, bad: /Utils\.FindChild\(/,
     why: 'on a body it finds same-named bones of worn items and of the ravens sitting on it; use BodyClips.SkeletonBone',
     allow: ['BodyClips.cs', 'FateRite.cs', 'RavenFx.cs'] },
+  // the game's head call throws for a body without a humanoid head (Lit, the dvergr: 2026-11-17 the Hall's raven on his head stopped its place's
+  // raven 30 s each time); a person, a story body, a place's bird: Body.Head (asked, never thrown) or Body.HeadBone (kept)
+  { id: 'head-point', files: f => /^(Npc|Story|Loc)/.test(f), bad: /\.GetHeadPoint\(\)/,
+    why: 'a person or a story body may have no head the game knows (a dvergr): the call throws; use Body.Head or Body.HeadBone' },
   { id: 'bone-layer', files: npc, bad: /void LateUpdate\s*\(/,
     why: 'bones of a person: a layer in NpcPose, in its order, not a LateUpdate of its own',
     allow: ['NpcFade.cs', 'NpcPose.cs', 'NpcPoseWatch.cs', 'NpcPreview.cs', 'NpcRaven.cs'] },
@@ -43,6 +55,15 @@ const RULES = [
   { id: 'body-put', files: npc, bad: /(^|[\s(_])(?!dot\b)(\w+\.)?transform\.position\s*=[^=]|\b(rb|_rb|m_body)\.position\s*=[^=]|\.MovePosition\(/,
     why: 'a person\'s body is walked (NpcWalk) or seated (NpcBody); put or slid somewhere by us only through NpcBody.Put / NpcBody.Slide (held, drawn every frame, counted as a jump)',
     allow: ['NpcBody.cs', 'NpcEat.cs', 'NpcPreview.cs', 'NpcHouse.cs', 'NpcBase.cs'] },
+  // a synced animator flag on a person (2026-11-11): the game's ZSyncAnimation.SetBool writes the ZDO only when this game's animator differs,
+  // and an animator made anew says «off» whatever the ZDO says — «in bed» stayed in a person's ZDO and it walked about lying
+  { id: 'anim-flag', files: npc, bad: /\b(za|\w*zanim|m_animator)\.Set(Bool|Int|Float)\((?!anim, on\)|name, v\))|GetComponent<ZSyncAnimation>\(\)\.Set(Bool|Int|Float)\(/,
+    why: 'a person\'s synced animator flag or value goes through NpcBody.AnimFlag / AnimValue (it writes the ZDO itself: the game\'s SetBool skips it when this game\'s animator already says so)' },
+  // a key taken off a ZDO (2026-11-12, read in the game's code): ZDO.RemoveString… takes it off this game's copy only — no new revision, and
+  // ZDO.Deserialize only adds and overwrites keys — so the server and every other game keep the old value. NpcLocker took a person's values
+  // off it so, and the old ones came back over its locker at the next owner (one saved was «in need» again after a relog on a dedicated server)
+  { id: 'zdo-remove', files: any, bad: /\.Remove(String|Int|Bool|Long|Float|Vec3|Quaternion|ByteArray)\(/,
+    why: 'the game\'s ZDO.Remove… takes a key off this game\'s copy only (not sent: the server and the other games keep the old value); write a value every game gets — "" or a mark (a person\'s value into its locker: NpcLocker.Put, its mark NpcLocker.Off)' },
   // the mind's clock (2026-11-07): the game runs a creature's mind twenty times a second from its physics step and hands it 0.05 s; a frame's
   // time there is the physics step's 0.02 s, and the turn on a bend, a slide, the walk report all ran 2.5 times slow
   { id: 'mind-time', files: f => /^(NpcMind|NpcWalk)\w*\.cs$/.test(f), bad: /Time\.(deltaTime|fixedDeltaTime)\b/,
@@ -50,8 +71,20 @@ const RULES = [
   // the map has roofs and upper floors too: a settler who could not reach his work was put on the roof over it, past a height check that compared the spot with itself (2026-11-09)
   { id: 'same-floor', files: f => /^(NpcBody|NpcMind\w*|NpcWalkStuck)\.cs$/.test(f), bad: /NpcKit\.Valid\(/,
     why: 'what puts a body somewhere takes a spot on its own floor: NpcKit.SameFloor (the map has roofs and upper floors too)' },
+  // a person's name as shown is in the reader's language (2026-11-11: the names became translated): what is kept or compared is its source
+  { id: 'kept-name', files: f => /^(Npc|Story)\w*\.cs$/.test(f), bad: /NpcMemory\.(Tell|Remember|TellHome)\([^;]*\.Name\)|\.What\s*==\s*[\w.]+\.Name\b|\b\w+\.Name\s*==\s*[\w.]+\.What\b/,
+    why: 'a person\'s Name is shown (Lang.T, the reader\'s language): a memory keeps and a check compares its NpcActor.Key; a kept name is shown through NpcActor.Shown' },
   { id: 'npc-seed', files: npc, bad: /m_uid\.(ID|UserID)\s*\*|m_uid\.GetHashCode\(\)|\(u?int\)\s*\w+\.m_uid\.(ID|UserID)\b/,
     why: 'a ZDOID is new at every world load: seeded by it a person is another after a restart; seed by NpcKit.Seed(zdo)', allow: ['NpcKit.cs'] },
+  // a person's own life played clips by name in eleven places, none asking whether they fit it (2026-11-15: Heid drank from a tankard at every fire, a dwarf
+  // would have got a man's hand points): a move of its own life goes through its gate, NpcBody.Move (NpcMoves: its body's clips, its template's never/moves)
+  { id: 'own-move', files: npc, bad: /\bBody\.Clip\(\s*"(?!"|none")/,
+    why: 'a short move of a person\'s own life goes through NpcBody.Move (NpcMoves: a clip of its body, never one its template forbids, its own moves); Clip plays exactly what a scene, a story word or a carried thing names' },
+  // «so in the story's places» asked as «a blueprint's copy» (2026-11-16): the game's Hugin was kept off the Hall's map table, and sat on the barrow's,
+  // whose inside is put by LocInside, not by a blueprint — the user: «чому це правило не поширюється на всі створені мною або доповнені локації»
+  { id: 'story-piece', files: any, whole: true, bad: /^(?!.*\/\/ blueprint only:)(?:(?!\/\/).)*Blueprint\.Copy\(/,
+    why: 'a rule for the story\'s places asks Blueprint.StoryPiece (a blueprint\'s copy or a piece of an inside of ours); Blueprint.Copy only for what is the blueprint\'s own — its place\'s state, layers, «lock…» rules by its stamp — said on its line: // blueprint only: <why>',
+    allow: ['Blueprint.cs'] },
   { id: 'one-animator', files: any, bad: /new\s+PAnimClip\s*\(/,
     why: 'one player of clips: BodyAnimator; clips live in BodyClips', allow: ['BodyClips.cs', 'PlayerAnimPanel.cs'] },
   { id: 'one-music', files: any, bad: /MusicMan\.instance|\.TriggerMusic\(/,
@@ -106,12 +139,36 @@ const RULES = [
   { id: 'wild-core', files: any, bad: /GetComponent<(TreeLog|MineRock5?|Destructible|StaticPhysics)>\(\)/,
     why: 'the world\'s own growth and stone, and nobody\'s: Wild.Is(zdo | view) (its kind by prefab: Wild.Kind)', allow: ['Wild.cs'] },
   // (its card and its heart's board too: read on anyone's game — its card said «у бою тікає» of everyone on a second player's, 2026-11-08)
-  { id: 'mind-elsewhere', files: f => /^(NpcTalk\w*|NpcPatience|NpcFavours|NpcAway|NpcProfile|NpcBoard)\.cs$/.test(f), bad: /\.Mind\.(NowLayer|SeatedNow|Now|Style)\b|\.Vitals\.Down\b/,
-    why: 'what it does now, on any game: NpcMind.LayerNow(person) / NpcMind.SeatedOf(person) / NpcMind.EatingOf(person), down: NpcVitals.IsDown(person), how it fights: NpcNature.FightNow(person); its Mind and Vitals stand still where it is not run' },
+  { id: 'mind-elsewhere', files: f => /^(NpcTalk\w*|NpcPatience|NpcFavours|NpcAway|NpcProfile|NpcBoard|NpcMenu)\.cs$/.test(f), bad: /\.Mind\.(NowLayer|SeatedNow|Now|Style)\b|\.Mind\.Of\(|\.Vitals\.Down\b/,
+    why: 'what it does now, on any game: NpcMind.LayerNow(person) / NpcMind.SeatedOf(person) / NpcMind.EatingOf(person), its order: NpcMind.OrderOf(person), down: NpcVitals.IsDown(person), how it fights: NpcNature.FightNow(person); its Mind and Vitals stand still where it is not run' },
   // its last fight was read from the mind's own fields by the themes a talk asks on the talker's game (2026-11-08): there they stand still, «after a fight» never came
   { id: 'fought-mind', files: any, bad: /\.Fought(At|Ran|Won)\b/,
     why: 'its last fight on any game: NpcMind.FoughtOf(person, out ran, out won)', allow: ['NpcMind.cs'] },
+  // a note put into the middle of a line took the rest of the line into itself (2026-11-11, NpcTalkAbout: «…; // (note) r.Count = tone; r.At = NowSec;» —
+  // two assignments in a comment compile, the build was green and the retelling of words broke). Judged on the whole line, its comment too (`whole`)
+  { id: 'code-in-comment', files: any, whole: true, bad: { test: swallowed },
+    why: 'the line\'s comment ends with a statement (an assignment, a call, a return): code after «//» does not run — put the note at the end of the line, or on the line above' },
 ];
+
+// where a line's comment begins: the first «//» outside a string or a character (-1: none)
+function commentAt(line) {
+  let q = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q) { if (c === '\\') i++; else if (c === q) q = null; continue; }
+    if (c === '"' || c === '\'') q = c;
+    else if (c === '/' && line[i + 1] === '/') return i;
+  }
+  return -1;
+}
+// code-in-comment: code stands before the comment, and the comment's last words are a statement closed by «;». A line that is all comment is not
+// judged (prose there may say «x = y;»), nor a statement elsewhere in a note than at its end (measured on src 2026-11-12: 9 notes of 233 244 lines
+// hold «word = words;» somewhere, none after code and at its end)
+const SWALLOWED = /(^|[\s;)}])(?:[A-Za-z_][\w.\[\]]*\s(?:=|\+=|-=|\*=|\|=|&=)\s[^=;][^;]*|[A-Za-z_][\w.]*\([^;]*\)|(?:return|break|continue)\b[^;]*);\s*$/;
+function swallowed(line) {
+  const at = commentAt(line);
+  return at > 0 && line.slice(0, at).trim().length > 0 && SWALLOWED.test(line.slice(at + 2));
+}
 
 // the { … } that opens at or after `from`; null if none closes (braces in strings are rare enough to ignore here)
 function block(text, from) {
@@ -177,6 +234,8 @@ const RATCHET = [
     why: 'a ZDOID changes on every world load, so a kept "user:id" points nowhere after a restart: NpcKit.Save / Resolve; if it lives one session only: // session: <why>' },
   { id: 'heavy-call', count: perLine(/FindObjects?OfType|GetAllCharacters\(\)|Physics\.(Overlap|RaycastAll|SphereCastAll)|GetComponentsInChildren/, 'heavy:'),
     why: 'a heavy call: use what is gathered already (Senses, NpcCensus, a cache) or run it on an event or a rare timer; where it is needed, say when and how often: // heavy: <when>' },
+  { id: 'flat-distance', only: /^(Story|Loc)/, count: perLine(/Utils\.DistanceXZ\(/, 'flat:'),
+    why: 'a distance by the map alone sees a crypt of ours (it hangs 5120 m over its door) and the grass over it as one spot — the user 2026-11-15: a story\'s quiet round on the grass left the whole crypt without foes. Measure from a story place with StoryWhere.Apart; where the map alone is right (a log\'s number, a step on one floor), say why: // flat: <why>' },
   { id: 'patch-guard', count: bareCount,
     why: 'a patch on the game\'s creature code needs try + PatchGuard.Fail: one that throws must not break the game\'s method' },
 ];
@@ -192,7 +251,7 @@ function ratchetCounts() {
   for (const r of RATCHET) {
     out[r.id] = {};
     for (const f of Object.keys(sources).sort()) {
-      if ((r.skip || []).includes(f)) continue;
+      if ((r.skip || []).includes(f) || (r.only && !r.only.test(f))) continue;
       const n = r.count(sources[f]);
       if (n) out[r.id][f] = n;
     }
@@ -220,7 +279,7 @@ for (const f of Object.keys(sources)) {
   if (!rules.length) continue;
   sources[f].split('\n').forEach((line, i) => {
     const c = code(line);
-    for (const r of rules) if (r.bad.test(c)) {
+    for (const r of rules) if (r.bad.test(r.whole ? line : c)) {
       found++;
       console.log('ARCH ' + r.id + ': src/' + f + ':' + (i + 1) + '\n  ' + line.trim().slice(0, 120) + '\n  → ' + r.why);
     }
@@ -308,6 +367,21 @@ else {
   for (const r of RATCHET) for (const f of Object.keys(now[r.id])) {
     const had = (base[r.id] || {})[f] || 0;
     if (now[r.id][f] > had) { found++; console.log('ARCH ' + r.id + ': src/' + f + ' has ' + now[r.id][f] + ', allowed ' + had + '\n  → ' + r.why); }
+  }
+}
+
+// babble-copy: the author's tool plays the people's wordless talk outside the game (node tools/sound.js talk: tools/sound_talk.py), a copy
+// of NpcBabble's «line's rules» in Python. A copy that drifts makes the page lie about the game (the user 2026-11-16: «інструмент +
+// перевірку»): the rules as they act (comments and spaces out) must have the mark the copy says it plays (its RULES_OF)
+{
+  const cs = fs.readFileSync(path.join(src, 'NpcBabble.cs'), 'utf8');
+  const a = cs.indexOf('// ---------------------------------------------------------------- the line\'s rules');
+  const b = cs.indexOf('// ---------------------------------------------------------------- end of the line\'s rules');
+  const py = fs.readFileSync(path.join(__dirname, 'sound_talk.py'), 'utf8').match(/^RULES_OF = '([0-9a-f]*)'/m);
+  if (a < 0 || b < a) { found++; console.log('ARCH babble-copy: src/NpcBabble.cs has lost its marks «the line\'s rules» … «end of the line\'s rules» (tools/sound_talk.py copies what is between them)'); }
+  else {
+    const mark = require('crypto').createHash('sha1').update(cs.slice(a, b).replace(/\/\/[^\n]*/g, '').replace(/\s+/g, ''), 'utf8').digest('hex').slice(0, 16);
+    if (!py || py[1] !== mark) { found++; console.log('ARCH babble-copy: the rules of a hummed line in src/NpcBabble.cs changed (' + mark + '), tools/sound_talk.py plays ' + (py ? py[1] : 'none') + '\n  → make the copy (class Rules) do what the game now does, then node tools/sound.js talk --mark'); }
   }
 }
 

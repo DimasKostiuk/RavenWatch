@@ -293,7 +293,7 @@ namespace HuginWhispers
             "@c_promise_nag_arc\n{concern}\n> Пам'ятаю. Ще не було нагоди. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise arc !patience -2\n" + Busy +
             "@c_promise_nag_food\n{concern}\n> Пам'ятаю. Принесу. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise food !patience -2\n" + Busy +
             "@c_promise_nag_pay\n{concern}\n> Пам'ятаю. Заплачу. => c_heard !patience 2\n> Не вийшло. Вибач. => c_released !unpromise pay !patience -2\n" + Busy + // (an answer's words for the English table: TalkWords)
-            "@c_released\n{@promise_released}\n> Добре. => start\n";
+            "@c_released\n{@promise_released}\n> {@say_ok} => start\n";
 
         // ---------------------------------------------------------------- wired once (NpcModules)
         internal static void Wire()

@@ -18,7 +18,7 @@ namespace HuginWhispers
     // his machine, never built in (rw_build leaves it out of assets/story/npc), so players never get it; storycheck stops a quest or scene naming it.
     internal static class StoryFiles
     {
-        internal const string Quests = "quests", Scenes = "scenes", Npc = "npc", Talk = "talk";
+        internal const string Quests = "quests", Scenes = "scenes", Npc = "npc", Talk = "talk", Words = "words"; // (words: a story person's own put-together words — NpcPhrases' format, read after the built-in books)
         private static string _source;
         private static bool _read;
 
@@ -49,12 +49,18 @@ namespace HuginWhispers
 
 #if RAVEN_STORY
         // every file of the story read anew (the windows' «Перечитати», the console): one list, so none is forgotten
+        // (the clips were forgotten till 2026-11-12: the game plays a clip from memory, so a scene run after an edit of a clip showed the old keys
+        //  and its numbers were of the old file — only a stage take of that clip read it again)
         internal static void ReloadAll()
         {
             Again();
+            NpcPhrases.Reload(); // (the story people's own words: assets/story/words)
+            BodyClips.Load(); // (the clips a scene plays, as their files are now)
             StoryLooks.Reload();
             StoryPeople.Reload();
+            NpcChatter.Reload(); // (the gatherings' talks: assets/story/meets)
             Locs.Load();
+            LocInside.Reload(); // (the layouts of insides: assets/story/rooms)
             LocParts.Reread();
             LocState.Again();
             StoryCond.ForgetWrong();
@@ -66,6 +72,20 @@ namespace HuginWhispers
 #endif
 
         private static string Dir(string kind) { string s = Source; return s != null ? Path.Combine(s, kind) : null; }
+
+        // The story's block a file is of (docs/jobs/story-data.md «Блоки сюжету»): a block is a chapter (глава), numbered through the whole story
+        // (the user 2026-11-17: three acts, chapters in them — which act a chapter is of, saga/chapters.txt says, not the file's name):
+        // «ch3.txt», «ch3_heid.txt» — 3; any other name — the prologue's, 0.
+        // One reading for all (a quest's chapter: QuestDef.Block, StoryQuests.ChapterNow; a talk's question lives only in its chapter: NpcTalk.Parse; storycheck's blockOf reads it the same)
+        private const string BlockPrefix = "ch";
+        internal static int Block(string file)
+        {
+            string f = Path.GetFileName(file ?? "");
+            int i = BlockPrefix.Length, n = 0;
+            if (!f.StartsWith(BlockPrefix, StringComparison.Ordinal)) return 0;
+            while (i < f.Length && char.IsDigit(f[i])) n = n * 10 + (f[i++] - '0');
+            return i > BlockPrefix.Length ? n : 0;
+        }
 
         // every file of a kind: name → text (the order above)
         internal static Dictionary<string, string> All(string kind, string legacy, bool legacyOn)
@@ -87,6 +107,28 @@ namespace HuginWhispers
                     catch (Exception e) { Story.Log("files: " + f + ": " + e.Message); }
                 }
             return files;
+        }
+
+        // A file's blocks that add to one read before («[talk heid +]», «[person heid +]») — adds: true — or all the others (false), the rest of its lines
+        // blanked so the errors still name the right line. A kind read in two passes, all the files' own blocks first and then all the adding ones, does
+        // not hang on the order its files come in: a chapter's own file may add to a person of another (docs/jobs/story-data.md «Блоки сюжету»)
+        // heads: the words its blocks begin with («talk»; «chapter», «person», «place», «lore»): a bracketed line of any other word is a block's own text
+        internal static string Part(string text, bool adds, params string[] heads)
+        {
+            string[] l = (text ?? "").Split('\n');
+            bool inAdd = false;
+            for (int i = 0; i < l.Length; i++)
+            {
+                string t = Bare(l[i]);
+                if (t.StartsWith("[") && t.EndsWith("]") && IsHead(t, heads)) inAdd = t.Substring(1, t.Length - 2).TrimEnd().EndsWith("+");
+                if (inAdd != adds) l[i] = "";
+            }
+            return string.Join("\n", l);
+        }
+        private static bool IsHead(string line, string[] heads)
+        {
+            foreach (string h in heads) if (line.Length > h.Length + 1 && string.CompareOrdinal(line, 1, h, 0, h.Length) == 0 && line[h.Length + 1] == ' ') return true;
+            return false;
         }
 
         // a story file's lines that say something: «# …» and « #…» after a line are notes, blank ones nothing; each with

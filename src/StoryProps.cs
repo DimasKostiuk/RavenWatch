@@ -50,6 +50,7 @@ namespace HuginWhispers
         }
 
         internal static string Usage = "prop take <предмет> [from <місце.частина>] [left|right|arm] [pose <кліп>|still] [size <м>] [free] [square] · prop put · prop drop · prop throw <місце|player|npc.x>";
+        // a person's own: «npc <who> prop fetch» (it may go back for its own thing) · «npc <who> prop carry» (its own thing from where it lies onto its arm now: the scene plays its «up» clip itself)
         // the words after the item: alone, and with a value after them (storycheck reads these two lists, so a typo stops the build)
         internal const string TakeStep = "prop take";
         internal static readonly string[] TakeFlags = { "left", "right", "arm", "still", "free", "square" }, TakeValued = { "from", "pose", "size" };
@@ -88,7 +89,7 @@ namespace HuginWhispers
         // hanging plumb, its handle along the way the forearm points over the ground, turned ArmRx/Ry/Rz degrees from that. Reckoned from the bones' places each frame, never hung on a bone: the
         // skeleton's bones are scaled and their axes are their own (a look parented to the forearm came out the size of a house, 2026-11-10)
         internal static float ArmAlong = 0.7f, ArmDrop = 0.16f, ArmOut = 0f, ArmRx = 0f, ArmRy = 0f, ArmRz = 0f;
-        internal static float SetAhead = 0.35f, SetAside = 0.25f, SetUp = 0.02f; // where it is set down: before its right foot; SetUp: m its middle rests over what it lies on, set down, fallen or thrown (the look is centred)
+        internal static float SetAhead = 0.35f, SetAside = 0.25f, SetUp = 0f; // where it is set down: before its right foot; SetUp: m its foot rests over what it lies on, set down, fallen or thrown (its look is centred on its middle: Half lifts it by half its height)
         internal static float SetDownFor = 2f, PickAfter = 1f, KeepEvery = 2f, KeepFor = 600f, FetchWant = 3f; // s: the «down» part's length · into the «up» part when the thing leaves the ground · the arm's loop asked again · its term · how much it wants its own thing back over any other place
         internal static float FallTilt = 28f, FallFor = 0.5f; // let fall: degrees it tips over on its way down · seconds to the ground
         // thrown (a first sketch): m/s over the ground · the arc's top over the straight line, a share of the way · never quicker than this, s · whole turns
@@ -100,7 +101,7 @@ namespace HuginWhispers
         // The numbers above are one set for every thing, tuned to Heid's basket. A thing of ours says its own in its item file (assets/story/items,
         // assets/items: a Workshop model — WsModel.Hang, Lies, Falls), a line each, any word left out:
         //   hang: along 0.7 drop 0.16 out 0 rx 0 ry 0 rz 0    on a forearm                 (ArmAlong, ArmDrop, ArmOut, ArmRx, ArmRy, ArmRz)
-        //   lies: ahead 0.35 aside 0.25 up 0.02              set down; up for a fall too  (SetAhead, SetAside, SetUp)
+        //   lies: ahead 0.35 aside 0.25 up 0                 set down; up (its foot over the ground) for a fall too  (SetAhead, SetAside, SetUp)
         //   falls: tilt 28 s 0.5                             let fall                     (FallTilt, FallFor)
         // What its file does not say is the static of that name (a thing of the game's — a shield — has no file: all statics). A word unknown or with
         // no number: said in the log as the thing is first held, that line read no further; storycheck stops the build on it (it reads the three lists).
@@ -260,7 +261,12 @@ namespace HuginWhispers
             if (h.Free && h.HasRest)
             {
                 Vector3 before = p.transform.InverseTransformPoint(h.RestAt);
-                Story.Log("prop " + h.Item + " lies at " + before.x.ToString("0.00") + " " + before.y.ToString("0.00") + " " + before.z.ToString("0.00") + " before him (x right, y up, z ahead), turned " + Quaternion.Angle(p.transform.rotation, h.RestTurn).ToString("0") + " deg from him");
+                // (… and how it is turned in his frame, each axis: with these six numbers the stage lays the thing as this scene found it —
+                //  «turned N deg» alone could not be laid anywhere, 2026-11-12)
+                Vector3 lay = (Quaternion.Inverse(p.transform.rotation) * h.RestTurn).eulerAngles;
+                string at3 = before.x.ToString("0.00", CultureInfo.InvariantCulture) + " " + before.y.ToString("0.00", CultureInfo.InvariantCulture) + " " + before.z.ToString("0.00", CultureInfo.InvariantCulture);
+                string turn3 = Mathf.DeltaAngle(0f, lay.x).ToString("0.#", CultureInfo.InvariantCulture) + " " + Mathf.DeltaAngle(0f, lay.y).ToString("0.#", CultureInfo.InvariantCulture) + " " + Mathf.DeltaAngle(0f, lay.z).ToString("0.#", CultureInfo.InvariantCulture);
+                Story.Log("prop " + h.Item + " lies at " + at3 + " before him (x right, y up, z ahead), turned " + Quaternion.Angle(p.transform.rotation, h.RestTurn).ToString("0") + " deg from him — on the stage: raven stage prop " + h.Item + " " + at3 + " " + turn3 + (h.Square ? " square" : ""));
             }
             return why;
         }
@@ -329,33 +335,70 @@ namespace HuginWhispers
             return ZoneSystem.instance != null ? ZoneSystem.instance.GetGroundHeight(at) : at.y;
         }
 
+        // Half the height of a thing's look, upright as it lies. The look is centred on its meshes' middle (HandLook.Copy), and a rest is where that middle is:
+        // with the middle put on the ground the basket stood half in the earth (the user 2026-11-12: «кошик у землі на половину»). So what is set on the
+        // ground is its foot: every lying spot is the ground + this + its «up». Measured once a thing and size a game (a copy of its look made and gone)
+        private static readonly Dictionary<string, float> _half = new Dictionary<string, float>();
+        internal static float Half(string item, float size)
+        {
+            string key = item + "|" + size.ToString("0.###", CultureInfo.InvariantCulture);
+            float half;
+            if (_half.TryGetValue(key, out half)) return half;
+            half = 0f;
+            GameObject look = HandLook.Copy(item, size);
+            if (look != null)
+            {
+                float low = float.MaxValue, high = float.MinValue;
+                foreach (MeshFilter f in look.GetComponentsInChildren<MeshFilter>()) // heavy: once a thing and size a game
+                {
+                    if (f.sharedMesh == null) continue;
+                    Bounds m = f.sharedMesh.bounds;
+                    Vector3[] points = f.sharedMesh.isReadable ? f.sharedMesh.vertices : new Vector3[8]; // (its own points: a turned mesh's box overstates it)
+                    if (!f.sharedMesh.isReadable) for (int i = 0; i < 8; i++) points[i] = m.center + Vector3.Scale(m.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                    foreach (Vector3 c in points)
+                    {
+                        float y = look.transform.InverseTransformPoint(f.transform.TransformPoint(c)).y;
+                        if (y < low) low = y;
+                        if (y > high) high = y;
+                    }
+                }
+                if (high > low) half = Mathf.Max(0f, -low); // (from the look's own middle down to its lowest point)
+                UnityEngine.Object.Destroy(look);
+            }
+            else Story.Log("prop: no look of " + item + " to measure: it lies by its middle");
+            _half[key] = half;
+            return half;
+        }
+        // how high over what lies under it a thing's rest is: its foot on it (Half), its own «up» over that
+        private static float Up(Nums n, Held h) { return Half(h.Item, h.Size) + n.SetUp; }
+
         // where it is set down: before the holder's right foot, on what lies there
-        private static Vector3 SetSpot(Transform t, Nums n)
+        private static Vector3 SetSpot(Transform t, Nums n, Held h)
         {
             Vector3 at = t.position + t.forward * n.SetAhead + t.right * n.SetAside;
-            at.y = Ground(at, GroundOver) + n.SetUp;
+            at.y = Ground(at, GroundOver) + Up(n, h);
             return at;
         }
 
         // where it comes to lie, let fall: straight under where its look is on this game (no look made here: before the foot, as one set down)
-        private static Vector3 FallSpot(Transform holder, Nums n)
+        private static Vector3 FallSpot(Transform holder, Nums n, Held h)
         {
             StoryPropView v = StoryPropView.Of(holder.gameObject);
             Vector3 at;
-            if (v == null || !v.Root(out at)) return SetSpot(holder, n);
-            at.y = Ground(at, 0.05f) + n.SetUp;
+            if (v == null || !v.Root(out at)) return SetSpot(holder, n, h);
+            at.y = Ground(at, 0.05f) + Up(n, h);
             return at;
         }
 
         // where it lands, thrown at a point, and the seconds of its flight (atBody: ThrowShort m short of the one it is thrown at, on the thrower's side)
-        private static Vector3 ThrowSpot(Transform holder, Vector3 to, bool atBody, Nums n, out float seconds)
+        private static Vector3 ThrowSpot(Transform holder, Vector3 to, bool atBody, Nums n, Held h, out float seconds)
         {
             StoryPropView v = StoryPropView.Of(holder.gameObject);
             Vector3 from;
             if (v == null || !v.Root(out from)) from = holder.position + Vector3.up;
             Vector3 back = from - to; back.y = 0f;
             if (atBody && back.magnitude > ThrowShort) to += back.normalized * ThrowShort;
-            to.y = Ground(to, GroundOver) + n.SetUp;
+            to.y = Ground(to, GroundOver) + Up(n, h);
             seconds = FlightFor(from, to);
             return to;
         }
@@ -371,7 +414,7 @@ namespace HuginWhispers
             if (h == null || h.Hand == "-") return 0f;
             Nums n = NumsOf(OwnOf(h.Item));
             float seconds = n.FallFor;
-            Vector3 at = thrown ? ThrowSpot(p.transform, to, atBody, n, out seconds) : FallSpot(p.transform, n);
+            Vector3 at = thrown ? ThrowSpot(p.transform, to, atBody, n, h, out seconds) : FallSpot(p.transform, n, h);
             BodyAnimator on = h.Pose != "-" ? BodyAnimator.For(p) : null;
             if (on != null && on.ClipIn(2) == h.Pose) Gestures.SceneEnd(p, PoseFade); // (his look at the thing in his hand, still on him: off with it; a clip the scene put on him since — the throw's own — plays on)
             z.Set(Key, LyingCode(h, "-", at, p.transform.rotation, true, thrown ? 2 : 1));
@@ -388,7 +431,7 @@ namespace HuginWhispers
             if (h == null || !h.Live || h.Hand == "-") return 0f;
             Nums n = NumsOf(OwnOf(h.Item));
             float seconds = n.FallFor;
-            Vector3 at = thrown ? ThrowSpot(a.transform, to, atBody, n, out seconds) : FallSpot(a.transform, n);
+            Vector3 at = thrown ? ThrowSpot(a.transform, to, atBody, n, h, out seconds) : FallSpot(a.transform, n, h);
             bool own = Own(h);
             string code = LyingCode(h, own ? h.Pose : "-", at, a.transform.rotation, true, thrown ? 2 : 1);
             if (own && MayFetch(a)) StoryWorld.SetText(FetchKey(a.Id), ""); // (an old «fetch» frees no new leaving)
@@ -470,7 +513,7 @@ namespace HuginWhispers
                 h = Held.Of(grown); withClip = false;
             }
             else if (h.Hand == "-" || !Own(h)) return 0f; // (lying already; a scene's thing is the scene's, the mannequin's its own)
-            string code = LyingCode(h, h.Pose, SetSpot(a.transform, NumsOf(OwnOf(h.Item))), a.transform.rotation, byStory, 0); // (on what lies before its foot — a floor too: by the land's height alone it would lie under the boards)
+            string code = LyingCode(h, h.Pose, SetSpot(a.transform, NumsOf(OwnOf(h.Item)), h), a.transform.rotation, byStory, 0); // (on what lies before its foot — a floor too: by the land's height alone it would lie under the boards)
             float wait = 0f;
             if (withClip && h.Set != "-" && a.Body != null && a.Body.Clip(h.Set + ".down")) wait = SetDownFor;
             if (byStory && MayFetch(a)) StoryWorld.SetText(FetchKey(a.Id), ""); // (an old «fetch» frees no new leaving)
@@ -553,9 +596,13 @@ namespace HuginWhispers
                 SetDown(a, withClip, false);
                 return;
             }
-            if (h.Pose == "-" || loopOn || !a.Body.ClipFree) return; // (another clip on it: the arm follows that one, the thing follows the arm)
+            if (h.Pose == "-" || loopOn) return;
+            string over = anim != null ? anim.ClipIn(NpcBody.ClipSlot) : null;
+            bool ending = over != null && !anim.Holding(NpcBody.ClipSlot, over); // (a move over the loop on its way out: the loop takes the arm from where that leaves it — no arm let down and raised again)
+            if (!a.Body.ClipFree && !ending) { _kept[a] = Time.time + KeepSoon; return; } // (another clip on it: the arm follows that one, the thing follows the arm; looked at again soon, for its end)
             a.Body.Clip(h.Pose, KeepFor);
         }
+        internal static float KeepSoon = 0.25f; // s: the next look while another clip has the arm of one that carries
         internal static float StillSpeed = 0.3f; // m/s: below it the person is there, at what it went to do
 
         internal static void Forget(NpcActor a) { _pending.Remove(a); _kept.Remove(a); }
@@ -718,6 +765,12 @@ namespace HuginWhispers
         internal float Distance(Vector3 world)
         {
             if (_look == null) return 99f;
+            if (_parts.Count > 1) // (a thing that is not one box — a basket under its handle: the nearest of its boxes)
+            {
+                Vector3 p = _look.transform.InverseTransformPoint(world); float best = 99f;
+                foreach (Bounds part in _parts) best = Mathf.Min(best, BoxDistance(p - part.center, part.extents));
+                return best;
+            }
             Vector3 q = _look.transform.InverseTransformPoint(world) - _box.center, e = _box.extents;
             int thin = e.x <= e.y && e.x <= e.z ? 0 : e.y <= e.z ? 1 : 2;
             float a = thin == 0 ? e.y : e.x, b = thin == 2 ? e.y : e.z, qa = thin == 0 ? q.y : q.x, qb = thin == 2 ? q.y : q.z;
@@ -727,8 +780,60 @@ namespace HuginWhispers
                 float radial = Mathf.Sqrt(qa * qa + qb * qb) - Mathf.Max(a, b);
                 return radial > 0f || out0 > 0f ? new Vector2(Mathf.Max(radial, 0f), Mathf.Max(out0, 0f)).magnitude : Mathf.Max(radial, out0);
             }
+            return BoxDistance(q, e);
+        }
+        // a point (from a box's middle) against that box: m off it, below zero inside
+        private static float BoxDistance(Vector3 q, Vector3 e)
+        {
             Vector3 d = new Vector3(Mathf.Abs(q.x) - e.x, Mathf.Abs(q.y) - e.y, Mathf.Abs(q.z) - e.z);
             return d.x > 0f || d.y > 0f || d.z > 0f ? Vector3.Max(d, Vector3.zero).magnitude : Mathf.Max(d.x, Mathf.Max(d.y, d.z));
+        }
+        // … and the nearest point of that box's surface to it (inside: out by the nearest face)
+        private static Vector3 BoxClosest(Vector3 q, Vector3 e)
+        {
+            Vector3 c = new Vector3(Mathf.Clamp(q.x, -e.x, e.x), Mathf.Clamp(q.y, -e.y, e.y), Mathf.Clamp(q.z, -e.z, e.z));
+            if (c == q) { Vector3 g = e - new Vector3(Mathf.Abs(q.x), Mathf.Abs(q.y), Mathf.Abs(q.z)); int i = g.x <= g.y && g.x <= g.z ? 0 : g.y <= g.z ? 1 : 2; c[i] = Mathf.Sign(q[i]) * e[i]; }
+            return c;
+        }
+
+        // The thing's shape for the stage's measure: ONE box (or a round) when its points fill their box — a book, a shield —, else the boxes its
+        // points fall into when cut where that frees the most room (a basket: its body and the slab of its handle), SplitDeep cuts deep at most.
+        // A cut is kept only if the two boxes together are under SplitGain of the one (a half of a round is half its box: no cut). The hole under a
+        // handle's arch stays solid: a hand on the handle's top reads right, a hand through the arch does not. Once a look made.
+        // Its points are a mesh's corners, not its room: a plain box of 48 corners, all on its two ends, would fall into two end slabs — so only a mesh of
+        // SplitPoints points or more is cut at all (a modelled thing; fewer: one box), and a cut is kept only when each side's points reach over SplitFill
+        // of that side's own length along the cut (a slab at one end of an empty half is no part of a thing).
+        internal static float SplitGain = 0.75f, SplitLeast = 0.05f, SplitFill = 0.6f; internal static int SplitDeep = 3, SplitCuts = 9, SplitPoints = 300;
+        private readonly List<Bounds> _parts = new List<Bounds>();
+        private static Bounds BoundsOf(List<Vector3> pts) { Bounds b = new Bounds(pts[0], Vector3.zero); for (int i = 1; i < pts.Count; i++) b.Encapsulate(pts[i]); return b; }
+        private static float Room(Bounds b) { Vector3 s = Vector3.Max(b.size, Vector3.one * 0.005f); return s.x * s.y * s.z; }
+        private static void Split(List<Vector3> pts, int deep, List<Bounds> into)
+        {
+            Bounds whole = BoundsOf(pts);
+            if (deep >= SplitDeep || pts.Count < SplitPoints) { into.Add(whole); return; }
+            float best = Room(whole) * SplitGain; int axis = -1; float at = 0f;
+            for (int ax = 0; ax < 3; ax++)
+                for (int k = 1; k <= SplitCuts; k++)
+                {
+                    float cut = whole.min[ax] + whole.size[ax] * k / (SplitCuts + 1);
+                    Bounds lo = new Bounds(), hi = new Bounds(); int nl = 0, nh = 0;
+                    foreach (Vector3 p in pts) { if (p[ax] < cut) { if (nl++ == 0) lo = new Bounds(p, Vector3.zero); else lo.Encapsulate(p); } else { if (nh++ == 0) hi = new Bounds(p, Vector3.zero); else hi.Encapsulate(p); } }
+                    if (nl < pts.Count * SplitLeast || nh < pts.Count * SplitLeast) continue;
+                    if (lo.size[ax] < SplitFill * (cut - whole.min[ax]) || hi.size[ax] < SplitFill * (whole.max[ax] - cut)) continue;
+                    float room = Room(lo) + Room(hi);
+                    if (room < best) { best = room; axis = ax; at = cut; }
+                }
+            if (axis < 0) { into.Add(whole); return; }
+            List<Vector3> a = new List<Vector3>(), b = new List<Vector3>();
+            foreach (Vector3 p in pts) (p[axis] < at ? a : b).Add(p);
+            Split(a, deep + 1, into); Split(b, deep + 1, into);
+        }
+        // its boxes in the world (one: the whole): each middle and its size in metres — the stage's grip sheet
+        internal void Parts(List<Vector3> centres, List<Vector3> sizes)
+        {
+            if (_look == null) return;
+            Transform t = _look.transform;
+            foreach (Bounds b in _parts) { centres.Add(t.TransformPoint(b.center)); sizes.Add(Vector3.Scale(b.size, t.lossyScale)); }
         }
 
         // the nearest point of its surface to a point, in the world (the same shape as Distance: a grip is turned to this, not to its middle — a palm
@@ -737,6 +842,12 @@ namespace HuginWhispers
         {
             if (_look == null) return world;
             Transform t = _look.transform;
+            if (_parts.Count > 1)
+            {
+                Vector3 p = t.InverseTransformPoint(world), nearest = p; float least = 99f;
+                foreach (Bounds part in _parts) { Vector3 on = BoxClosest(p - part.center, part.extents) + part.center; float far = (on - p).magnitude; if (far < least) { least = far; nearest = on; } }
+                return t.TransformPoint(nearest);
+            }
             Vector3 q = t.InverseTransformPoint(world) - _box.center, e = _box.extents;
             int thin = e.x <= e.y && e.x <= e.z ? 0 : e.y <= e.z ? 1 : 2;
             float a = thin == 0 ? e.y : e.x, b = thin == 2 ? e.y : e.z;
@@ -758,6 +869,31 @@ namespace HuginWhispers
         }
         private static Vector3 AxisOnly(int i) { Vector3 v = Vector3.zero; v[i] = 1f; return v; }
 
+        // the way out of its surface at a point near it, in the world: the slope of Distance (so the same shape, a box or a round), by six
+        // looks SlopeStep apart — the stage's measure of how a finger lies on it (BodyCheck.GripOf)
+        internal static float SlopeStep = 0.004f;
+        internal Vector3 Normal(Vector3 world)
+        {
+            float e = SlopeStep;
+            Vector3 g = new Vector3(Distance(world + Vector3.right * e) - Distance(world - Vector3.right * e), Distance(world + Vector3.up * e) - Distance(world - Vector3.up * e), Distance(world + Vector3.forward * e) - Distance(world - Vector3.forward * e));
+            return g.sqrMagnitude > 1e-10f ? g.normalized : Vector3.up;
+        }
+
+        // its box in the world: the middle, the turn, the size in metres; round: Distance reads it as a round (the stage's grip sheet says
+        // it, and tools/grip.js reckons a hand on the same shape)
+        internal bool Box(out Vector3 centre, out Quaternion turn, out Vector3 size, out bool round)
+        {
+            centre = Vector3.zero; turn = Quaternion.identity; size = Vector3.zero; round = false;
+            if (_look == null) return false;
+            Transform t = _look.transform;
+            centre = t.TransformPoint(_box.center); turn = t.rotation; size = Vector3.Scale(_box.size, t.lossyScale);
+            Vector3 e = _box.extents;
+            int thin = e.x <= e.y && e.x <= e.z ? 0 : e.y <= e.z ? 1 : 2;
+            float a = thin == 0 ? e.y : e.x, b = thin == 2 ? e.y : e.z;
+            round = _parts.Count <= 1 && Mathf.Abs(a - b) < 0.1f * Mathf.Max(a, b);
+            return true;
+        }
+
         internal void Set(string code)
         {
             if (code == _code) return;
@@ -778,7 +914,7 @@ namespace HuginWhispers
             if (ve == null) return;
             bool lying = _h.Hand == "-", arm = _h.Hand == "a";
             _joint = lying ? null : _h.Hand == "l" ? ve.m_leftHand : arm ? BodyClips.SkeletonBone(GetComponent<Character>(), null, "RightForeArm") : ve.m_rightHand;
-            if (_joint == null && !_h.Free && !lying) return;
+            if (_joint == null && !lying && (!_h.Free || arm)) return; // (on the forearm of a body with no such bone: nothing to hang it on, «free» or not — ArmPose reads that bone each frame)
             _look = _h.Free || _h.Size > 0f || lying || arm ? HandLook.Copy(_h.Item, _h.Size, _h.Free || lying || arm) : HandLook.Make(_h.Item, _h.Size); // (a copy with no grip of the game's: on the ground, or hung on a bone)
             if (_look == null) { Story.Log("prop: no look for " + _h.Item); return; }
             _box = Measure();
@@ -848,6 +984,7 @@ namespace HuginWhispers
         private Bounds Measure()
         {
             Bounds b = new Bounds(); bool any = false;
+            List<Vector3> all = new List<Vector3>(); bool own = true; // (its own points, for its boxes: a mesh that cannot be read gives only corners — one box then)
             foreach (MeshFilter f in _look.GetComponentsInChildren<MeshFilter>()) // heavy: once per look made
             {
                 if (f.sharedMesh == null) continue;
@@ -858,8 +995,12 @@ namespace HuginWhispers
                 {
                     Vector3 p = _look.transform.InverseTransformPoint(f.transform.TransformPoint(c));
                     if (any) b.Encapsulate(p); else { b = new Bounds(p, Vector3.zero); any = true; }
+                    all.Add(p);
                 }
+                if (!f.sharedMesh.isReadable) own = false;
             }
+            _parts.Clear();
+            if (any && own) Split(all, 0, _parts); else if (any) _parts.Add(b);
             return b;
         }
 

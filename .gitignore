@@ -21,3 +21,9 @@ docs/plans/
 *.exe
 *.pdb
 node_modules/
+
+# Uncompressed takes the sound tool keeps to make timbres from (this machine only)
+sound_masters/
+
+# Python caches
+__pycache__/

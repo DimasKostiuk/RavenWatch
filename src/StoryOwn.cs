@@ -29,7 +29,7 @@ namespace HuginWhispers
         {
             if (_conds) return;
             _conds = true;
-            StoryCond.Register("ownraven", new StoryCond.Kind { Usage = "ownraven hugin|munin|both|any|none   (ворон цього виду вже твій: був, є чи загубився)", Min = 1,
+            StoryCond.Register("ownraven", new StoryCond.Kind { Dry = "me own : a raven of his own comes (the trader, or a scene of the story gives one)", Usage = "ownraven hugin|munin|both|any|none   (ворон цього виду вже твій: був, є чи загубився)", Min = 1,
                 Check = a => System.Array.IndexOf(new[] { "hugin", "munin", "both", "any", "none" }, a[1]) < 0 ? "ownraven hugin|munin|both|any|none" : null,
                 Test = (p, a) =>
                 {
@@ -43,8 +43,8 @@ namespace HuginWhispers
                         default: return !h && !m;
                     }
                 } });
-            StoryCond.Register("book", new StoryCond.Kind { Usage = "book   (книга воронів уже в гравця: RavenBook.Given)", Test = (p, a) => RavenBook.Given(p) });
-            StoryActions.Register("book", new StoryActions.Kind { Min = 0, Usage = "book   (книга воронів — тепер у тебе: відкриває книгу, коло й накази)",
+            StoryCond.Register("book", new StoryCond.Kind { Dry = "me book", Usage = "book   (книга воронів уже в гравця: RavenBook.Given)", Test = (p, a) => RavenBook.Given(p) });
+            StoryActions.Register("book", new StoryActions.Kind { Dry = "set me book", Min = 0, Usage = "book   (книга воронів — тепер у тебе: відкриває книгу, коло й накази)",
                 Do = (p, q, w, rest) => { if (!RavenBook.Given(p)) { RavenBook.Give(p); RavenMsg.Center(p, Lang.T("Книга воронів тепер у тебе.")); StoryBus.Raise("book", "", 0); } return null; } });
         }
 
@@ -111,10 +111,10 @@ namespace HuginWhispers
             }
             if (here) Shoulder.SeatedNext(munin); // (no fly-in: the picture is on your shoulder already)
             RavenSeat.Sit(p, item, true);
-            if (here) { StoryScenes.BirdVanishWhen(() => Shoulder.Present(p, munin)); Back(p, munin); StoryScenes.Note("own: " + (munin ? "Мунін" : "Хугін") + " тепер твій (на плечі)"); return; } // (the bird on your shoulder is it: the same frame)
+            if (here) { StoryScenes.BirdVanishWhen(() => Shoulder.Present(p, munin)); Back(p, munin); StoryScenes.Track("own: " + (munin ? "Мунін" : "Хугін") + " тепер твій (на плечі)"); return; } // (the bird on your shoulder is it: the same frame)
             Trust.SendAway(item, FlySeconds, Why); // (on your shoulder in a moment — it flies in)
             RavenFx.Play("sfx_raven_kaw", p.transform.position + p.transform.forward * 25f + Vector3.up * 12f, Quaternion.identity); // (from afar)
-            StoryScenes.Note("own: " + (munin ? "Мунін" : "Хугін") + " летить до гравця");
+            StoryScenes.Track("own: " + (munin ? "Мунін" : "Хугін") + " летить до гравця");
         }
 
         // it landed (Trust: back from its flight «story_own»)

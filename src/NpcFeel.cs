@@ -56,10 +56,9 @@ namespace HuginWhispers
             if (own != null) move = own;
             if (a.Body != null && m != null && m.NowLayer < NpcMind.Layer.Fight && !m.SeatedNow && a.Body.ClipFree && (own != null || Moves.TryGetValue(kind, out move)))
             {
-                string[] pick = move.Split('|');
-                string clip = pick[Random.Range(0, pick.Length)];
-                PAnimClip c = BodyClips.Find(clip);
-                if (a.Body.Clip(clip) && kind == Fright && c != null) m.Still(c.Length); // (its feet step back: it stands for it, then runs or walks on — a raid's first moment)
+                string clip = NpcMoves.Pick(a, move); // (its gate: its body's, not one it never makes)
+                PAnimClip c = clip.Length > 0 ? BodyClips.Find(clip) : null;
+                if (clip.Length > 0 && a.Body.Clip(clip) && kind == Fright && c != null) m.Still(c.Length); // (its feet step back: it stands for it, then runs or walks on — a raid's first moment)
             }
             if (kind == Fright || kind == Grief) NpcNature.Comfort(a); // (a caring one near soothes it)
             Player p = Player.GetClosestPlayer(a.transform.position, 15f);

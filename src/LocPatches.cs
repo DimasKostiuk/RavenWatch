@@ -12,9 +12,32 @@ namespace HuginWhispers
     // ItemStand.Interact: the user 2026-11-08 took things off the Hall's stands; MultiUserChest has its own on Container.Interact):
     //   an item stand of a place: what hangs there stays — but one the story wants touched now (LocTouch: Munin's shield) answers with the story's event
     //   a chest of a place that keeps them shut (Loc.LockChests): nobody opens it, the author neither (his own is open)
-    //   a bed given to a resident (NpcResident.GivenLine): no player takes it for a spawn point
+    //   a bed given to a resident (NpcResident.GivenLine): no player takes it for a spawn point — but a bed the story waits to be looked at
+    //     (StoryKeep.Use) answers with the story's event first
     // Quietly, with no «[E]» on it either (its hover: the patches below, last of all postfixes): just a thing standing there — the user 2026-11-01.
     // Only E is guarded here; what a mod does round a player by itself (stacking into chests near) never asks it
+#if RAVEN_STORY
+    // a piece of the author's inside that is only a thing to look at (LocInside.Usable: not a seat, a chest, the author's stand): the crosshair finds
+    // nothing on it — no «[E] Привласнити» on its bed, no word of its map table (the user 2026-11-15); its E is guarded below all the same. The last
+    // object asked is kept, so a frame on the same thing asks nothing new
+    [HarmonyPatch(typeof(Player), "FindHoverObject")]
+    internal static class LocInsideHoverPatch
+    {
+        private static GameObject _last;
+        private static bool _quiet;
+        private static void Postfix(ref GameObject hover)
+        {
+            try
+            {
+                if (hover == null) return;
+                if (!ReferenceEquals(hover, _last)) { _last = hover; _quiet = LocInside.Own(hover.GetComponentInParent<ZNetView>()) && !LocInside.Usable(hover); }
+                if (_quiet) hover = null;
+            }
+            catch (System.Exception e) { PatchGuard.Fail("LocInsideHoverPatch", e); }
+        }
+    }
+#endif
+
     [HarmonyPatch(typeof(Player), "Interact")]
     [HarmonyPriority(Priority.First)]
     internal static class LocInteractPatch
@@ -26,14 +49,21 @@ namespace HuginWhispers
             try
             {
                 if (go == null || __instance.InAttack() || __instance.InDodge()) return true; // (the game's own first words: then it does nothing itself)
+#if RAVEN_STORY
+                if (LocInside.Own(go.GetComponentInParent<ZNetView>()) && !LocInside.Usable(go)) return false; // (a piece of the author's inside a dungeon of ours: a thing to look at — but a seat and a chest)
+#endif
                 ItemStand st = go.GetComponentInParent<ItemStand>();
                 if (st != null)
                 {
                     LocTouch t = st.GetComponent<LocTouch>();
                     if (t != null && t.On) { if (t.Interact(__instance, hold, alt) && Anim != null) Anim.Invoke(__instance, new object[] { st.gameObject }); return false; } // (E held comes every frame: the touch answers a press only · the game's own reach-and-touch only where the place asks for it)
-                    return !Blueprint.Copy(st.GetComponent<ZNetView>()); // (the author's own Hall he dresses as he likes)
+                    return !Blueprint.Copy(st.GetComponent<ZNetView>()); // blueprint only: an inside's stands are kept above (LocInside.Usable) — the author's own Hall he dresses as he likes
                 }
-                if (NpcResident.GivenLine(go.GetComponentInParent<Bed>()) != null) return false;
+                Bed bed = go.GetComponentInParent<Bed>();
+                // a bed the story waits to be looked at (StoryKeep: «[E] Роздивитись» on it): the stage's event, here, before the guard of a resident's bed below —
+                // the bed kept is the one its person was given, still signed while he is away, and that guard took the press the hover promised (2026-11-14 review)
+                if (bed != null && !hold && StoryKeep.Use(bed, __instance)) { if (Anim != null) Anim.Invoke(__instance, new object[] { bed.gameObject }); return false; }
+                if (NpcResident.GivenLine(bed) != null) return false;
                 return !LocChestLock.Shut(go.GetComponentInParent<Container>());
             }
             catch (System.Exception e) { PatchGuard.Fail("LocInteractPatch", e); return true; }
@@ -45,7 +75,7 @@ namespace HuginWhispers
         internal static bool Shut(Container c)
         {
             ZNetView nv = c != null ? c.GetComponentInParent<ZNetView>() : null;
-            if (!Blueprint.Copy(nv)) return false;
+            if (!Blueprint.Copy(nv)) return false; // blueprint only: its place's «lockchests:» by its stamp (an inside's chests: LocInsideChestPatch)
             Loc l = Locs.Get(nv.GetZDO().GetString(LocParts.KOf, ""));
             return l != null && l.LockChests;
         }
@@ -55,7 +85,13 @@ namespace HuginWhispers
     [HarmonyPriority(Priority.Last)]
     internal static class LocChestHoverPatch
     {
-        private static void Postfix(Container __instance, ref string __result) { if (LocChestLock.Shut(__instance)) __result = ""; }
+        private static void Postfix(Container __instance, ref string __result)
+        {
+            if (LocChestLock.Shut(__instance)) { __result = ""; return; }
+#if RAVEN_STORY
+            if (__result.Length > 0) __result += StoryChest.HoverOf(__instance); // (a chest the stage wants filled says what is still missing: StoryChest)
+#endif
+        }
     }
 
     [HarmonyPatch(typeof(Container), "GetHoverName")]
@@ -65,14 +101,14 @@ namespace HuginWhispers
         private static void Postfix(Container __instance, ref string __result) { if (LocChestLock.Shut(__instance)) __result = ""; }
     }
 
-    // a guide point of a piece a blueprint put into the world — or of the author's own building it is saved from (the user 2026-11-04:
-    // Hugin sat on the cartography table of his test Hall): out of the game's raven's list as soon as it comes in
+    // a guide point of a piece of a place of the story — a blueprint's, an inside's (the user 2026-11-16: the map table in the barrow), or of the author's
+    // own building it is saved from (the user 2026-11-04: Hugin sat on the cartography table of his test Hall): out of the game's raven's list as soon as it comes in
     [HarmonyPatch(typeof(GuidePoint), "Start")]
     internal static class LocGuidePatch
     {
         private static void Postfix(GuidePoint __instance)
         {
-            try { if (Blueprint.Copy(__instance.GetComponentInParent<ZNetView>()) || Locs.InAuthorCopy(__instance.transform.position)) Raven.UnregisterStaticText(__instance.m_text); }
+            try { if (Blueprint.StoryPiece(__instance.GetComponentInParent<ZNetView>()) || Locs.InAuthorCopy(__instance.transform.position)) Raven.UnregisterStaticText(__instance.m_text); }
             catch (System.Exception e) { PatchGuard.Fail("LocGuidePatch", e); }
         }
     }
@@ -84,7 +120,10 @@ namespace HuginWhispers
         internal static bool Dead(CraftingStation s)
         {
             ZNetView nv = s != null ? s.GetComponentInParent<ZNetView>() : null;
-            if (!Blueprint.Copy(nv)) return false;
+#if RAVEN_STORY
+            if (LocInside.Own(nv)) return true; // (a station of the author's inside a dungeon of ours: never one)
+#endif
+            if (!Blueprint.Copy(nv)) return false; // blueprint only: its place's «lockstations:» by its stamp (an inside's: above)
             Loc l = Locs.Get(nv.GetZDO().GetString(LocParts.KOf, ""));
             return l != null && l.LockStations;
         }
@@ -108,14 +147,15 @@ namespace HuginWhispers
         }
     }
 
-    // a bed of a place that keeps them empty (Loc.LockBeds): no sleep, no spawn point — for anyone
+    // a bed of a place that keeps them empty (Loc.LockBeds): no sleep, no spawn point — for anyone. (A bed the story waits to be looked at never comes
+    // here: LocInteractPatch takes that press)
     [HarmonyPatch(typeof(Bed), "Interact")]
     internal static class LocBedPatch
     {
         private static bool Prefix(Bed __instance, Humanoid human, ref bool __result)
         {
             ZNetView nv = __instance.GetComponentInParent<ZNetView>();
-            if (!Blueprint.Copy(nv)) return true;
+            if (!Blueprint.Copy(nv)) return true; // blueprint only: its place's «lockbeds:» by its stamp (an inside's bed takes no E: LocInteractPatch)
             Loc l = Locs.Get(nv.GetZDO().GetString(LocParts.KOf, ""));
             if (l == null || !l.LockBeds) return true;
             if (human == Player.m_localPlayer) human.Message(MessageHud.MessageType.Center, Lang.T("Це ліжко не для тебе: тут спав хтось інший."));
@@ -172,6 +212,37 @@ namespace HuginWhispers
             if (character != null) character.Message(MessageHud.MessageType.Center, Lang.T(why));
             __result = false;
             return false;
+        }
+    }
+
+    // Coming into the game, or out of a portal, by a place of the story: the game's loading screen waits for the place's landmarks too
+    // (Loc.LandmarksMade: the place's own word). Only while that screen is up (no player yet, or one teleporting — the game's own
+    // InLoadingScreen) — every other ask of «is it ready» in play (a raven's, a perch's) is the game's alone and costs nothing here.
+    // WaitMost s at most a loading: a landmark never made does not hold you for good (counted from the first «not yet» of this loading, let go in play)
+    [HarmonyPatch(typeof(ZNetScene), "IsAreaReady")]
+    internal static class LocAreaReadyPatch
+    {
+        private const float WaitMost = 12f;
+        private static float _waitFrom = -1f;
+        private static bool _told;
+
+        private static void Postfix(Vector3 point, ref bool __result)
+        {
+            try
+            {
+                Player me = Player.m_localPlayer;
+                if (me != null && !me.IsTeleporting()) { _waitFrom = -1f; return; } // (in play: the game's own answer — and the next loading counts its wait anew)
+                if (!__result) return;
+                foreach (Loc l in Locs.All)
+                {
+                    if (l.LandmarksMade(point)) continue;
+                    if (_waitFrom < 0f) { _waitFrom = Time.realtimeSinceStartup; _told = false; }
+                    if (Time.realtimeSinceStartup - _waitFrom > WaitMost) { if (!_told) { _told = true; Story.Log(l.Id + ": its landmarks not all made after " + WaitMost + " s — let in all the same"); } return; }
+                    __result = false;
+                    return;
+                }
+            }
+            catch (System.Exception e) { PatchGuard.Fail("LocAreaReadyPatch", e); }
         }
     }
 

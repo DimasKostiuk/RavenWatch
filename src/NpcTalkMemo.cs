@@ -24,6 +24,7 @@ namespace HuginWhispers
 //   s|seed|leave|0|sec|          you tried to talk it out of leaving (NpcTalkSway: once an hour)
 //   i|seed|theme|n|sec|          its opening worry you left unanswered, n times running (NpcTalkDoor: it weighs more, a reproach)
 //   o|seed||0|sec|               it ended a talk with you itself (NpcTalkDoor: its door shut a while)
+//   q|seed||day|sec|rain=like,…  what you told it of yourself when it asked, and the game day of the last answer (NpcTalkAsk)
     // A character walks between worlds and a person written by hand is the same person in every one (NpcKit.Seed), so a row may come from a
     // world whose clock ran further: Elsewhere — it says nothing of now, whatever it counted (a later time would read as «asked ever more»).
     // At most MostRows, a person at most MostOfOne; what goes first when there is no room (Spare): a worry told long enough ago to weigh
@@ -96,7 +97,7 @@ namespace HuginWhispers
             Row best = null; int bestRank = int.MaxValue;
             foreach (Row r in among)
             {
-                int rank = r.Kind == "t" && (Elsewhere(r) || NowSec - r.At >= ToldFor * GameHour) ? 0 : (r.Kind == "f" && r.Count == 1) || r.Kind == "m" || (r.Kind == "g" && r.Key == "~gift") ? 2 : 1; // (a memory warmed once, today's gift: let go, they would warm again)
+                int rank = r.Kind == "t" && (Elsewhere(r) || NowSec - r.At >= ToldFor * GameHour) ? 0 : (r.Kind == "f" && r.Count == 1) || r.Kind == "m" || r.Kind == "q" || (r.Kind == "g" && r.Key == "~gift") ? 2 : 1; // (a memory warmed once, today's gift: let go, they would warm again)
                 if (best == null || rank < bestRank || (rank == bestRank && r.At < best.At)) { best = r; bestRank = rank; }
             }
             return best;

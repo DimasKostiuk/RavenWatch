@@ -126,6 +126,7 @@ namespace HuginWhispers
                 case "repaired": return state >= Repaired;
                 case "lived": return state >= Lived;
                 case "fixed": return state == Repaired; // (only while repaired: scaffolds, planks left over)
+                case Gone: return false;
             }
             int n;
             if (Numbered(main, "only", out n)) return state == n;
@@ -140,11 +141,16 @@ namespace HuginWhispers
             return layer != null && layer.StartsWith(kind) && int.TryParse(layer.Substring(kind.Length), out n) && n >= 1;
         }
 
+        // «gone»: a piece the author took out of the blueprint (the user 2026-11-17: the Hall's two benches by the fire, one bench in their place).
+        // A world built before still has it — nothing is taken away from a built place (FillOnce) — so there it is hidden in every state, as
+        // any piece its state has not: its looks and touch off, a chest's things kept in it. Its line stays in the layers file for those worlds
+        internal const string Gone = "gone";
+
         internal static bool GoodLayer(string layer)
         {
             int n, s, k;
             Parsed p = Parse(layer);
-            if (p.Main.Length > 0 && System.Array.IndexOf(Layers, p.Main) < 0 && !Numbered(p.Main, "only", out n) && !Numbered(p.Main, "from", out n)) return false;
+            if (p.Main.Length > 0 && System.Array.IndexOf(Layers, p.Main) < 0 && p.Main != Gone && !Numbered(p.Main, "only", out n) && !Numbered(p.Main, "from", out n)) return false;
             foreach (string m in p.Marks) if (!SubNumber(m.Substring(1), out s, out k) || s < 1 || k < 1) return false;
             return p.Main.Length > 0 || p.Marks.Length > 0;
         }
@@ -168,6 +174,7 @@ namespace HuginWhispers
                 case "repaired": return "з відремонтованої";
                 case "lived": return "з обжитої";
                 case "fixed": return "лише у відремонтованій";
+                case Gone: return "прибрана з креслення: у вже збудованих світах схована";
             }
             int n;
             if (Numbered(main, "only", out n)) return "лише в стані " + n;

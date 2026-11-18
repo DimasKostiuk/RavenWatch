@@ -19,6 +19,10 @@ tired   speed=0.78 stoop=0.8   head=12  swing=0.4  sway=3   bob=0     limp=0   b
 careful speed=0.82 stoop=0.35  head=10  swing=0.45 sway=0   bob=0     limp=0   back=0   shoulders=4   shrug=4  out=14  toes=0   twist=0  nod=0  spread=0.15  rest=3.5 tilt=6 breath=1.6
 # унікальні
 heid    speed=0.9  stoop=0.15  head=3   swing=0.3  sway=9   bob=0     limp=0   back=0   shoulders=4   shrug=-2 out=-10 toes=-2  twist=0  nod=2  narrow=5  spread=0  rest=7 tilt=4 breath=1.4
+# згаслий (Кетіль, акт 1; ті, хто продав пам'ять Хель): не старий і не втомлений — порожній: повільно, руки висять мертво й майже не махають, голова трохи вниз, ніякого хитання й кивка, ледь дихає. Числа на око, у грі ще не бачено.
+hollow  speed=0.72 stoop=0.45  head=14  swing=0.12 sway=0.5 bob=0     limp=0   back=0   shoulders=10  shrug=-3 out=-4  toes=2   twist=0  nod=0  spread=0  rest=3 tilt=10 breath=0.7
+# двергр (тіло гри на людській основі: Npcs.HumanBase): гордий — спина й плечі розправлені, підборіддя вгору, крок важкий; числа на око, у грі ще не підбирані.
+dvergr  speed=0.95 stoop=-0.45 head=-5  swing=0.8  sway=6   bob=0.01  limp=0   back=0   shoulders=-7  shrug=0  out=8   toes=8   twist=4  nod=0  spread=0  rest=5 tilt=2 breath=1.8
 # бажання
 mood_cold    stoop=0.2   head=4   swing=0.7  shrug=14 out=-12 shoulders=6  speed=0.96 rest=-2 breath=0.4
 mood_fright  stoop=0.4   head=-4  swing=0.8  shrug=22 out=-8  shoulders=8  speed=1.1  rest=-3 breath=1
@@ -29,3 +33,5 @@ mood_tired   stoop=0.4   head=6   swing=0.8  shoulders=6  speed=0.82 rest=1 brea
 mood_hungry  stoop=0.1   head=8   speed=0.92
 mood_low     stoop=0.15  head=12  swing=0.7  shoulders=6  speed=0.92
 mood_glad    stoop=-0.1  head=-4  swing=1.15 bob=0.008 speed=1.05
+# шкандибає: важіль людини «limp <годин гри>» (Торвальд зі схованки, 2026-11-15)
+mood_hurt    stoop=0.3   head=6   swing=0.8  shoulders=4  speed=0.82 limp=0.85 rest=-2

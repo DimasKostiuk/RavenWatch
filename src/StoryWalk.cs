@@ -40,7 +40,8 @@ namespace HuginWhispers
     // A scene that takes up his walk where it is: «keep» — on at the pace he comes at (walking, trotting, running); Pace changes
     // it on the way (under a fade: to a slow walk), so the shot starts with him already going. Every walk slows over the last
     // SoftFrom m, so the game's walk fades out by itself. «soft»: no exact spot to reach (nothing is taken there), he stops
-    // within SoftNear; what the scene may wait for on the way: Left.
+    // within SoftNear and turns there to what he went to (within SoftTurned); what the scene may wait for on the way: Left.
+    // Nearer to it than asked already (the spot behind him, within BackWithin): he steps back to it facing it, not off with his back to it.
     internal static class StoryWalk
     {
         internal static float Most = 7f, Near = 0.06f, Turned = 3f, Slow = 0.45f, TurnSpeed = 150f, Least = 0.25f, Body = 0.3f; // (Near, Slow, Least: as tuned in game on the shield; Body: his width)
@@ -64,6 +65,7 @@ namespace HuginWhispers
         private static float _goAt;
         private static bool _run, _slow, _walked, _soft, _back;
         internal static float SoftFrom = 3f, SoftNear = 0.35f, SoftLeast = 0.18f;
+        internal static float SoftTurned = 20f, BackWithin = 1.6f; // degrees: a soft walk, come, turned to what he went to within this · m: a spot behind him this near — he steps back to it, facing the thing
 
         // m still to go (0: no walk on)
         internal static float Until { get { return _until; } } // (when the walk on now gives up: the scene's step waits as long, not its general limit)
@@ -111,6 +113,9 @@ namespace HuginWhispers
             }
             Vector3 left = _to - p.transform.position; left.y = 0f;
             _softTurn = false; _haltAt = -1f; _back = false; _contact = before; _heldPutAt = -1f;
+            // nearer to it than «within» already: the spot lies behind him — a step or two back he takes facing it, as one does (the user 2026-11-15: he
+            // turned and walked off, his back to Heid and Torvald); farther, he goes there and turns to it as he comes (the tick: «there»)
+            if (!keep && !before && Vector3.Dot(left, dir) < 0f && left.magnitude <= BackWithin) { _back = true; Story.Log("player go: the spot is " + left.magnitude.ToString("0.00") + " m behind him — he steps back facing it"); }
             Outcome = null; _start = p.transform.position; _began = Time.time;
             if (!keep && StoryScreen.Dark && left.magnitude > Shuffle) { Put(p, _to, _way); Outcome = "put on the spot under the black, " + left.magnitude.ToString("0.0") + " m at once"; Story.Log("player go: " + Outcome); return null; } // (nobody sees a walk in the black)
             _shuffle = !keep && !soft && left.magnitude <= Shuffle; // (a few cm off: no step to take)
@@ -143,6 +148,7 @@ namespace HuginWhispers
             if (way.sqrMagnitude > 0.01f) { p.transform.rotation = Quaternion.LookRotation(way, Vector3.up); if (FLookYaw != null) { FLookYaw.SetValue(p, Quaternion.LookRotation(way)); p.FaceLookDirection(); } }
             p.SetMoveDir(Vector3.zero);
             Gestures.Stand(p);
+            StoryScenes.MovedTo(at); // (the scene put him here: it plays here now)
         }
 
         // a clip of ours a walk must let go of (PAnimClip.HoldsWalk: his legs, the whole body, a frozen pose, a touch) goes first, and the walk starts
@@ -345,7 +351,8 @@ namespace HuginWhispers
             if (Time.time < _goAt) { p.SetMoveDir(Vector3.zero); return; } // (its clip lets go of his feet first: LetFeetGo)
             Vector3 d = _to - p.transform.position; d.y = 0f;
             float far = d.magnitude;
-            if (far > Near && Time.time >= _gainAt)
+            bool there = _soft && far <= SoftNear; // (soft, come: he only turns to what he went to — nothing to gain, nothing holds him)
+            if (far > Near && !there && Time.time >= _gainAt)
             {
                 if (_gainFar - far < BlockedGain)
                 {
@@ -358,14 +365,15 @@ namespace HuginWhispers
                 }
                 _gainAt = Time.time + BlockedFor; _gainFar = far;
             }
-            Vector3 face = _back ? _way : far > Slow || (_soft && far > 0.01f) ? d / far : _way; // (back: facing as he was, the walk goes behind him) // (along the way, then turned as the spot wants; soft: no spot to turn to — on as he walks)
+            Vector3 face = _back || there ? _way : far > Slow || (_soft && far > 0.01f) ? d / far : _way; // (back: facing as he was, the walk goes behind him) // (along the way, then turned as the spot wants; soft: on as he walks, and come — to what he went to: the user 2026-11-15, he stood with his back to Heid and Torvald)
             Vector3 now = p.transform.forward; now.y = 0f;
             float toTurn = Vector3.Angle(now, face);
             float turnAt = _keep ? TurnSpeed : FaceSpeed * Mathf.Clamp01((Time.time - _goAt) / FaceEaseIn) * Mathf.Clamp(toTurn / FaceEaseEnd, 0.15f, 1f);
             Vector3 turned = Vector3.RotateTowards(now.normalized, face, turnAt * Mathf.Deg2Rad * Time.fixedDeltaTime, 0f);
             if (FLookYaw != null) { FLookYaw.SetValue(p, Quaternion.LookRotation(turned)); p.FaceLookDirection(); }
             float off = Vector3.Angle(now, _way);
-            if ((_soft ? far <= SoftNear : far <= Near && off <= Turned) || Time.time >= _until || p.IsDead())
+            if (there && off > SoftTurned && Time.time < _until && !p.IsDead()) { p.SetMoveDir(Vector3.zero); return; } // (come: still turning on the spot)
+            if ((_soft ? there : far <= Near && off <= Turned) || Time.time >= _until || p.IsDead())
             {
                 if (!p.IsDead()) { Outcome = Went(p) + "; stands " + far.ToString("0.00") + " m from the spot, turned off by " + off.ToString("0") + " deg" + (Time.time >= _until ? " (its time ran out)" : ""); Settle(p, "player go: stands " + far.ToString("0.00") + " m from the spot, turned off by " + off.ToString("0") + " deg — his feet settle"); return; }
                 Done(p);

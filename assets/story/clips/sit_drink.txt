@@ -1,5 +1,6 @@
 clip sit_drink
 length 4.7
+tone drinks
 loop 0
 pivot 1.1
 curve ease

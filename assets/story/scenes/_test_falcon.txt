@@ -1,0 +1,22 @@
+# Пробна сцена сокола сестер (не з сюжету, 2026-11-13): прилітає, сідає, стає людиною, знову соколом, відлітає.
+# Людина — тестова воїтелька (assets/story/npc/_sestra.txt), поки нема сестер. Запуск: raven story scene zz_falcon
+[scene zz_falcon]
+alone: yes
+roams: yes
+bars on
+camera on player wide back blend 1
+falcon a come 80 30 land
+camera on falcon.a full cut
+wait 0.5
+falcon a become sestra
+wait 3
+camera on npc.sestra medium cut
+wait 2.5
+camera on npc.sestra full cut
+falcon a from sestra
+wait 1.2
+falcon a leave up
+camera on falcon.a wide track blend 1
+wait 4
+camera off blend 1.5
+bars off

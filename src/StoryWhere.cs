@@ -14,10 +14,14 @@ namespace HuginWhispers
     //   bird · player · sky  words of their own (Words): the story's raven of the scene playing now · where you stand · high in the air ahead of you
     //                        and to your left (a sound from above)
     //   npc.<who>            a person of the story where it stands now (its template id or tag; the nearest loaded)
-    //   npc.<who>.thing · player.thing   the thing that one holds (StoryProps), where its look is now — in a hand, on the arm, lying, falling,
-    //                        in flight: its own middle, not a spot on the ground (IsThing: what films or looks at it adds no height over it).
+    //   falcon.<name>        a sister's falcon of the scene playing now, where it is — its own middle; turned into a person: hers (StoryScenes.FalconAt)
+    //   beast.<name>         a creature of the game the scene playing now made (StoryBeasts: the skeleton, the boar), its middle
+    //   lane.<name>@<m>[@<side>]   so many m along a lane of the scene playing now, so many to its right (StoryScenes.LaneAt)
+    //   npc.<who>.thing · player.thing   the thing that one holds (StoryProps; a person holding none — its own thing, NpcTool), where its look is now — in a hand, on the arm, lying, falling,
+    //                        in flight: its own middle, not a spot on the ground (IsLow: what films or looks at it adds no height over it).
     //                        Not found while it holds nothing. Moves while it is held or on its way; lying still, it stands
-    //   <prefix><name>       a module's own places (Prefixed: «me.<name>» — the player's own spot, StorySpot)
+    //   <prefix><name>       a module's own places (Prefixed: «me.<name>» — the player's own spot, StorySpot; «kept.<name>» — the bed the story keeps,
+    //                        where one lies on it, StoryKeep: a thing lying low, Lying)
     // One table for the load check (Why) and the finding (Find): a word that passes the check is a word that can be found.
     internal static class StoryWhere
     {
@@ -25,18 +29,45 @@ namespace HuginWhispers
         internal delegate bool FindFn(string rest, out Vector3 at);
         internal static readonly Dictionary<string, FindFn> Prefixed = new Dictionary<string, FindFn>
         {
+            { "falcon.", (string rest, out Vector3 at) => StoryScenes.FalconAt(rest, out at) }, // (a sister's falcon of the scene: StoryScenesFalcon)
+            { "beast.", (string rest, out Vector3 at) => StoryBeasts.At(rest, out at) },        // (a creature of the game the scene made: StoryBeasts)
+            { "lane.", (string rest, out Vector3 at) => StoryScenes.LaneAt(rest, out at) },     // (so far along a lane of the scene: StoryScenesLane)
             { "npc.", (string rest, out Vector3 at) => // (a person of the story where it stands now: StoryScenes.Actor; «npc.<who>.thing»: what it holds)
                 {
                     bool thing = rest.EndsWith(Thing);
                     NpcActor a = Person(thing ? rest.Substring(0, rest.Length - Thing.Length) : rest);
                     at = a != null ? a.transform.position : Vector3.zero;
-                    return a != null && (!thing || StoryProps.ThingAt(a.gameObject, out at));
+                    return a != null && (!thing || StoryProps.ThingAt(a.gameObject, out at) || NpcTool.LookAt(a, out at)); // (nothing of the story in its hands: its own thing — the dwarf's hammer, NpcTool)
                 } },
         };
+
+        // a module's place the WORLD keeps (its prefix here: «heart.» — StoryHeart, «found.» — StoryFound), known with no player and no place of the
+        // story: a person may live there (Standing), stand by it (StoryHold). Not «npc.», «falcon.», «me.»: those are a scene's or a player's
+        internal static readonly HashSet<string> WorldKept = new HashSet<string>();
+        internal static bool OfModule(string name)
+        {
+            if (name != null) foreach (string k in WorldKept) if (name.StartsWith(k, System.StringComparison.Ordinal)) return true;
+            return false;
+        }
 
         // The thing a holder has (StoryProps: in a hand, on the arm, lying, in the air) as a word of place: «npc.<who>.thing», «player.thing»
         private const string Thing = ".thing";
         internal static bool IsThing(string name) { return name != null && name.EndsWith(Thing) && (name == "player" + Thing || (name.StartsWith("npc.") && name.Length > 4 + Thing.Length)); }
+
+        // a module's place that names a thing lying low, not a spot to stand on (its prefix here: «kept.» — StoryKeep, the bed the story keeps): it
+        // stands still, and a shot, a look, a turn aim at it itself — a bed's mattress is a metre under the aim a place gets (PlaceUp)
+        internal static readonly HashSet<string> Lying = new HashSet<string>();
+        private static bool OfLying(string name)
+        {
+            if (name != null) foreach (string k in Lying) if (name.StartsWith(k, System.StringComparison.Ordinal)) return true;
+            return false;
+        }
+        // what a shot, a look, a turn aims at itself, with no height over it: a thing someone holds, a thing lying low. The one rule of it
+        // (a falcon's word is its own middle in the air — and the middle of the person it turned into: a shot of it aimed 1.2 m over the bird till 2026-11-14)
+        // a word that names a body — a creature the scene made (StoryBeasts: «beast.<name>»): a shot frames it whole and follows its head, a look
+        // follows it as it moves, as a person's (StoryScenesCamera.Who, StoryLook.At; the review 2026-11-18: taken for a place, a shot aimed 1.2 m over its middle)
+        internal static Character BodyOf(string name) { return name != null && name.StartsWith("beast.", System.StringComparison.Ordinal) ? StoryBeasts.CharOf(name.Substring(6)) : null; }
+        internal static bool IsLow(string name) { return IsThing(name) || OfLying(name) || (name != null && name.StartsWith("falcon.")); }
         private static NpcActor Person(string who) { return StoryScenes.Actor(who, Player.m_localPlayer != null ? Player.m_localPlayer.transform.position : Vector3.zero); }
         // whose thing a thing's word names, on this game (null: nobody here)
         private static GameObject HolderOf(string thing)
@@ -55,7 +86,7 @@ namespace HuginWhispers
             { "sky", (string rest, out Vector3 at) => // (up in the air ahead of you and to your left: a caw from above, a sound to look for)
                 {
                     Player me = Player.m_localPlayer;
-                    at = me != null ? me.GetHeadPoint() + me.transform.forward * 10f - me.transform.right * 8f + Vector3.up * 14f : Vector3.zero;
+                    at = me != null ? HuginWhispers.Body.Head(me) + me.transform.forward * 10f - me.transform.right * 8f + Vector3.up * 14f : Vector3.zero;
                     return me != null;
                 } },
         };
@@ -65,6 +96,7 @@ namespace HuginWhispers
         internal static bool Moves(string name)
         {
             if (IsThing(name)) return StoryProps.ThingMoves(HolderOf(name));
+            if (OfLying(name)) return false;
             string piece;
             return Words.ContainsKey(name) || name.IndexOf('.') > 0 && Place(name, out piece) == null;
         }
@@ -106,18 +138,35 @@ namespace HuginWhispers
 
         // a named piece loaded here: the middle of its parts' roots, at the height of the lowest. A gate's two leaves: between them, whichever way
         // they swing (a door's root stays where it is); one part: its root, as ever
+        // A name may be pieces of different states (the Hall's chest: the abandoned Hall's and the repaired one's): those its state has now; none of them
+        // there — all of them, as before (a scene may film a piece hidden this moment)
         private static bool NamedAt(Loc loc, string piece, out Vector3 at)
         {
             at = Vector3.zero;
             Vector3 sum = Vector3.zero; float low = float.MaxValue; int n = 0;
-            foreach (ZNetView nv in LocParts.Named(loc.Id, piece))
-            {
-                if (nv == null || !nv.IsValid()) continue;
-                sum += nv.transform.position; low = Mathf.Min(low, nv.transform.position.y); n++;
-            }
+            List<ZNetView> named = LocParts.Named(loc.Id, piece);
+            for (int pass = 0; pass < 2 && n == 0; pass++)
+                foreach (ZNetView nv in named)
+                {
+                    if (nv == null || !nv.IsValid() || (pass == 0 && LocState.Absent(nv))) continue;
+                    sum += nv.transform.position; low = Mathf.Min(low, nv.transform.position.y); n++;
+                }
             if (n == 0) return false;
             at = new Vector3(sum.x / n, low, sum.z / n);
             return true;
+        }
+
+        // how far one is from a place by the map — and never near across the game's line between the land and an inside (3000 m): an inside of
+        // ours hangs over its own door (LocInside), so by the map its grave and the grass over it are one spot
+        internal static float Apart(Vector3 place, Vector3 who) { return Character.InInterior(place) != Character.InInterior(who) ? float.MaxValue : Utils.DistanceXZ(place, who); } // flat: the one measure itself, once the line is checked
+
+        // where a place stands on the map: a module's own word for it (OnMap: a point inside one of our dungeons — the way into it on the land; by its
+        // own spot the map showed «Скриня кургану» over the shore, 120 m off the barrow, the user 2026-11-15), else where it is
+        internal static readonly Dictionary<string, FindFn> OnMap = new Dictionary<string, FindFn>();
+        internal static bool MapAt(string name, out Vector3 at)
+        {
+            if (!string.IsNullOrEmpty(name)) foreach (KeyValuePair<string, FindFn> kv in OnMap) if (name.StartsWith(kv.Key)) return kv.Value(name.Substring(kv.Key.Length), out at);
+            return Find(name, out at);
         }
 
         internal static bool Find(string name, out Vector3 at)
@@ -148,10 +197,11 @@ namespace HuginWhispers
         }
 
         // «<place>[.<name>]» where no player and nothing loaded may be (the server keeping the story's people): where it is, its object in the world's own
-        // list (null — none, or a whole place), its place; why not (null — found)
+        // list (null — none, or a whole place), its place (null too for a module's own word: «heart.first»); why not (null — found)
         internal static string Standing(string spot, out Vector3 at, out ZDO zdo, out Loc loc)
         {
-            at = Vector3.zero; zdo = null;
+            at = Vector3.zero; zdo = null; loc = null;
+            if (OfModule(spot)) return Find(spot, out at) ? null : "«" + spot + "» is not in this world yet"; // (a module's place the world keeps: «heart.first», «found.<name>»)
             string piece;
             loc = Place(spot, out piece);
             if (loc == null) return "no place «" + spot + "»";

@@ -14,12 +14,16 @@ namespace HuginWhispers
     // a, b … the game (or the folder) has is used. Each of them:
     //   sfx_…            a game sound (the object in the «Звуки» tab)
     //   Creature/kind    a creature's or item's own sound: Ghost/idle, ShieldBanded/block (its effect list's sounds, no sparks;
-    //                    they are loaded with their owner, a lone sfx_ name often is not)
+    //                    they are loaded with their owner; a lone sfx_ name still in the game's bundles is loaded by RavenFx.Prefab)
     //   game:<name>      a track of the game's music (in «music» and «bed»; a bare name of a track works too)
     //   file:<x.ogg>     a file of our own (.ogg .wav .mp3): assets/story/sounds on the author's machine (StoryFiles.Source),
     //                    plugins/sounds in the package
-    // Options: vol=0.8  pitch=0.9  range=60  2d  wet. A name not in the files stands for itself. pitch counts for music and
-    // beds too; range, 2d, wet for sounds and beds that have a place (Audio.Bed).
+    // Several files in one line are its variants: one of them each time, by chance, never the one before («hm file:hm_1.ogg file:hm_2.ogg
+    // file:hm_3.ogg»; a track or a bed: one of them when it starts). A game sound has its own variants already.
+    // A line on «@» is no sound: a word of another reader of these files («@timbre <name> …»: a person's voice, NpcTimbre).
+    // Options: vol=0.8  pitch=0.9  spread=0.05  range=60  2d  wet. A name not in the files stands for itself. pitch counts for music and
+    // beds too; spread for one-shots (each time its pitch a little off, here ±5%: a sound heard often is not the same each time; on top of
+    // any pitch, a person's own too); range, 2d, wet for sounds and beds that have a place (Audio.Bed).
     // A file is read when a scene that names it begins (Prepare), or when first asked: never twice, a failure not retried. A
     // one-shot asked while its file is on the way waits for it (Audio.Later), as music and beds do.
     // Long ones (music, beds) stay compressed in memory; all are thrown away when a new world loads (RavenFx.Forget) and when
@@ -36,8 +40,9 @@ namespace HuginWhispers
         internal sealed class Entry
         {
             public string[] Tokens = new string[0];
-            public float Vol = 1f, Pitch, Range;
+            public float Vol = 1f, Pitch, Range, Spread;
             public bool Flat, Wet;
+            internal int LastClip = -1; // (of its own files, the one played last: Shot.Pick)
 
             // its line as the files write it, after the name
             internal string Words()
@@ -45,6 +50,7 @@ namespace HuginWhispers
                 StringBuilder b = new StringBuilder(string.Join(" ", Tokens));
                 if (Mathf.Abs(Vol - 1f) > 0.001f) b.Append(" vol=").Append(N(Vol));
                 if (Pitch > 0f) b.Append(" pitch=").Append(N(Pitch));
+                if (Spread > 0f) b.Append(" spread=").Append(N(Spread));
                 if (Range > 0f) b.Append(" range=").Append(N(Range));
                 if (Flat) b.Append(" 2d");
                 if (Wet) b.Append(" wet");
@@ -64,6 +70,37 @@ namespace HuginWhispers
             public float FadeIn, FadeOut, FadeAfter = -1f, MinDelay, MaxDelay, MinPan, MaxPan, ReverbAt;
             public bool RandomPan;
             public int Room = RoomOwn;
+            public Entry Turns; // (our own files: the line they are of remembers which one played last)
+            internal const int OwnTakes = 3;
+
+            // the clip to play now: one of its variants; of our own files never the one before
+            // own: a person's number — of a sound with more than OwnTakes takes it has its own three, the same three every time (its own
+            // «hm»: two people of one timbre do not hum the very same takes)
+            internal AudioClip Pick(uint own = 0u)
+            {
+                if (Clips == null || Clips.Length == 0) return Like != null ? Like.clip : null;
+                int n = Clips.Length;
+                if (own != 0u && n > OwnTakes)
+                {
+                    int a = (int)(own % (uint)n), b = (a + 1 + (int)((own >> 8) % (uint)(n - 1))) % n, c = (b + 1 + (int)((own >> 16) % (uint)(n - 1))) % n;
+                    if (c == a) c = (c + 1) % n;
+                    if (c == b) c = (c + 1) % n; // (a, b, c: three different takes for every n over three)
+                    int turn = UnityEngine.Random.Range(0, OwnTakes), pick = turn == 0 ? a : turn == 1 ? b : c;
+                    if (Turns != null && pick == Turns.LastClip) pick = pick == a ? b : pick == b ? c : a; // (not the one before)
+                    if (Turns != null) Turns.LastClip = pick;
+                    return Clips[pick];
+                }
+                if (Turns == null || Clips.Length < 2 || Turns.LastClip < 0 || Turns.LastClip >= Clips.Length)
+                {
+                    int any = UnityEngine.Random.Range(0, Clips.Length);
+                    if (Turns != null) Turns.LastClip = any;
+                    return Clips[any];
+                }
+                int i = UnityEngine.Random.Range(0, Clips.Length - 1);
+                if (i >= Turns.LastClip) i++;
+                Turns.LastClip = i;
+                return Clips[i];
+            }
         }
 
         private sealed class FileClip { public AudioClip Clip; public bool Done; }
@@ -76,8 +113,20 @@ namespace HuginWhispers
         private static readonly Dictionary<string, FileClip> Files = new Dictionary<string, FileClip>();
         private static readonly HashSet<string> Told = new HashSet<string>();
 
-        internal static void Again() { Reread(); Unload(); } // (the author's files read anew: a scene reload)
-        private static void Reread() { _all = null; Told.Clear(); }
+        internal static void Again() // (the author's files read anew: a scene reload)
+        {
+            Reread(); Unload();
+#if RAVEN_NPC
+            NpcBabble.Forget(); // (the manner and the hums are lines of the same files; the clips it copied from are let go)
+#endif
+        }
+        private static void Reread()
+        {
+            _all = null; Told.Clear();
+#if RAVEN_NPC
+            NpcTimbre.Forget(); // (the timbres are lines of the same files)
+#endif
+        }
 
         internal static void LogOnce(string key, string text) { if (Told.Add(key) && Plugin.Instance != null) Plugin.Instance.Log("Audio: " + text); }
 
@@ -90,7 +139,7 @@ namespace HuginWhispers
                 foreach (KeyValuePair<int, string> ln in StoryFiles.Lines(f.Value))
                 {
                     string[] w = ln.Value.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (w.Length < 2) continue;
+                    if (w.Length < 2 || w[0][0] == '@') continue;
                     Entry e = new Entry();
                     List<string> tokens = new List<string>();
                     for (int i = 1; i < w.Length; i++)
@@ -101,7 +150,8 @@ namespace HuginWhispers
                         else if (t.StartsWith("vol=", StringComparison.Ordinal)) e.Vol = Errands.F(t.Substring(4), 1f);
                         else if (t.StartsWith("pitch=", StringComparison.Ordinal)) e.Pitch = Errands.F(t.Substring(6), 0f);
                         else if (t.StartsWith("range=", StringComparison.Ordinal)) e.Range = Errands.F(t.Substring(6), 0f);
-                        else if (t.IndexOf('=') >= 0) LogOnce("option " + w[0] + t, "«" + w[0] + "»: no option «" + t + "» (vol= pitch= range= 2d wet): left out");
+                        else if (t.StartsWith("spread=", StringComparison.Ordinal)) e.Spread = Mathf.Clamp(Errands.F(t.Substring(7), 0f), 0f, 0.5f);
+                        else if (t.IndexOf('=') >= 0) LogOnce("option " + w[0] + t, "«" + w[0] + "»: no option «" + t + "» (vol= pitch= spread= range= 2d wet): left out");
                         else tokens.Add(t);
                     }
                     e.Tokens = tokens.ToArray();
@@ -145,13 +195,16 @@ namespace HuginWhispers
         {
             clip = null;
             vol = e.Vol;
+            bool files = false;
             foreach (string t in e.Tokens)
             {
                 if (t.StartsWith("file:", StringComparison.Ordinal))
                 {
-                    FileClip f = Load(t.Substring(5), true);
-                    if (!f.Done) return 0;
-                    if (f.Clip != null) { clip = f.Clip; return 1; }
+                    if (files) continue; // (all the line's files were looked at with its first)
+                    files = true;
+                    List<AudioClip> own;
+                    if (!OwnFiles(e, true, out own)) return 0;
+                    if (own.Count > 0) { clip = own[UnityEngine.Random.Range(0, own.Count)]; return 1; }
                     continue;
                 }
                 MusicMan.NamedMusic m = Audio.GameTrack(GameName(t));
@@ -162,18 +215,51 @@ namespace HuginWhispers
             return -1;
         }
 
-        // a one-shot: the first of its tokens there is. A file is one Shot with no source to copy from. loading: its file is on the
-        // way (the sounds after it do not stand in: it will be there in a moment)
+        // a line's own files, all of them: its variants (those that could be read). false: one is still on its way
+        private static bool OwnFiles(Entry e, bool longOne, out List<AudioClip> clips)
+        {
+            clips = new List<AudioClip>();
+            bool all = true;
+            foreach (string t in e.Tokens)
+            {
+                if (!t.StartsWith("file:", StringComparison.Ordinal)) continue;
+                FileClip f = Load(t.Substring(5), longOne);
+                if (!f.Done) all = false;
+                else if (f.Clip != null) clips.Add(f.Clip);
+            }
+            return all;
+        }
+
+        // a line's own files by name, each with its clip (NpcBabble: the samples of a voice's sounds). false: one is still on its way
+        internal static bool FilesOf(Entry e, List<KeyValuePair<string, AudioClip>> into)
+        {
+            bool all = true;
+            if (e == null) return true;
+            foreach (string t in e.Tokens)
+            {
+                if (!t.StartsWith("file:", StringComparison.Ordinal)) continue;
+                FileClip f = Load(t.Substring(5), false);
+                if (!f.Done) all = false;
+                else if (f.Clip != null) into.Add(new KeyValuePair<string, AudioClip>(t.Substring(5), f.Clip));
+            }
+            return all;
+        }
+
+        // a one-shot: the first of its tokens there is. Its files are one Shot with no source to copy from, each file a variant of it.
+        // loading: a file is on the way (the sounds after it do not stand in: it will be there in a moment)
         internal static List<Shot> ShotsOf(Entry e, out bool loading)
         {
             loading = false;
+            bool files = false;
             foreach (string t in e.Tokens)
             {
                 if (t.StartsWith("file:", StringComparison.Ordinal))
                 {
-                    FileClip f = Load(t.Substring(5), false);
-                    if (!f.Done) { loading = true; return null; }
-                    if (f.Clip != null) return new List<Shot> { new Shot { Clips = new[] { f.Clip }, Room = RoomByDistance } };
+                    if (files) continue; // (all the line's files were looked at with its first)
+                    files = true;
+                    List<AudioClip> own;
+                    if (!OwnFiles(e, false, out own)) { loading = true; return null; }
+                    if (own.Count > 0) return new List<Shot> { new Shot { Clips = own.ToArray(), Room = RoomByDistance, Turns = e } };
                     continue;
                 }
                 if (t.StartsWith("game:", StringComparison.Ordinal)) continue;
@@ -215,7 +301,15 @@ namespace HuginWhispers
 
         private static List<Shot> OfPrefab(GameObject prefab)
         {
-            if (prefab == null || prefab.GetComponent<ZNetView>() != null) return null;
+            if (prefab == null) return null;
+            // a networked object (a creature, a piece) is not a sound: its name gives none. A sound object of the game may be
+            // networked too (sfx_build_hammer_*, 2026-11-17: «none of it in this game» though loaded) — its clips are only read
+            // here, the object itself is never made, so its ZNetView does not count
+            if (!prefab.name.StartsWith("sfx_", StringComparison.OrdinalIgnoreCase) && prefab.GetComponent<ZNetView>() != null)
+            {
+                LogOnce(prefab.name, "«" + prefab.name + "» is a networked object, not a sound: name its sfx_ or Owner/kind");
+                return null;
+            }
             List<Shot> r = new List<Shot>();
             foreach (ZSFX z in prefab.GetComponentsInChildren<ZSFX>(true)) // heavy: once per named sound, its result kept in Shots
                 r.Add(Of(z));

@@ -16,6 +16,9 @@ namespace HuginWhispers
             Parts p = new Parts("LocModules");
             p.Add("place spots", Locs.ServerTick);     // each place's spot, once a world, and its building ahead of the players (LocBuild)
             p.Add("place steps", LocState.ServerTick); // a change waiting till nobody sees it; «becomes:», «follows:»
+#if RAVEN_STORY
+            p.Add("place insides", LocInside.ServerTick); // «inside:»: its inside of the game's rooms put over it, once a world
+#endif
             return p;
         }
 
@@ -26,6 +29,10 @@ namespace HuginWhispers
             p.Add("place looks", LocState.Tick); // its state laid on the pieces loaded round you
             p.Add("place fog", LocFog.Tick);     // Hel's mist («fog:»)
             p.Add("place cold", LocCold.Tick);   // the cold inside its building («cold:»)
+#if RAVEN_STORY
+            p.Add("place insides", LocInside.Tick); // «inside:»: its ways in and out and its air, this game's own while it is near
+            p.Add("place raven", LocRaven.Tick);    // «raven:»: its own raven (the Hall's postman), its mind and picture
+#endif
             return p;
         }
 

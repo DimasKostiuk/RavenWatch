@@ -9,10 +9,14 @@ namespace HuginWhispers
     // begins, how long it goes on, what it leaves when the scene is played from a later step. A new verb is a new entry, the director never changes.
     internal static partial class StoryScenes
     {
-        private const string PlayerUsage = "player face <місце|npc.x|bird> · player emote <жест>|stop · player go <місце> <м> [front] [before] [run] [keep] [soft] [nowait] · player back <м> · player stop [с] · player look <місце|bird|npc.x>|forward · player gait <хода>|none · player pace walk|jog|run · player arrive [місце] [м] · player clip <кліп>|none [nowait] · player mark <мітка> [с]";
+        private const string PlayerUsage = "player say <текст> · player face <місце|npc.x|bird> · player emote <жест>|stop · player go <місце> <м> [front] [before] [run] [keep] [soft] [nowait] · player back <м> · player stop [с] · player look <місце|bird|npc.x>|forward · player gait <хода>|none · player pace walk|jog|run · player arrive [місце] [м] · player clip <кліп>|none [nowait] · player mark <мітка> [с]";
 
         // a walk as long as the walk itself may take, not the general StepMax (a long «player go» stopped halfway at 30 s)
         private static void WalkClock() { if (StoryWalk.On) _limit = StoryWalk.Until + 2f; }
+
+        // a lasting gesture of the scene's («player emote sit loop»): the game keeps it till he moves — the scene's end or stop takes it off (Release, OwnOff)
+        private static bool _emoteLoop;
+        private static void StopEmote(Player p) { if (!_emoteLoop) return; _emoteLoop = false; if (p != null) Gestures.StopEmote(p); }
 
         private static StepKind PlayerKind()
         {
@@ -35,15 +39,34 @@ namespace HuginWhispers
                         p.FaceLookDirection();
                     } } },
                 { "look", new StepVerb(StepSeen.Own) { Min = 1, PlaceAt = 2, PlaceNot = new[] { "forward" }, Begin = PlayerLook, Setup = PlayerLook } },
+                // «player say <текст>»: the hero says a line himself (the user 2026-11-16: a few short lines in the scenes, where silence looks odd; no choice
+                // in a scene) — a subtitle under his own name, on his screen and those near (StoryWatch), and hummed in his own voice, the «hero» timbre of
+                // his sex (NpcTimbre.OfHero, NpcBabble: the same hum as his answers in a talk; the voice package, when it has his voice, takes over there)
+                { "say", new StepVerb(StepSeen.Shared) { Min = 1, // (Shared, as «sub»: those near get it even once the director has his own back — a server's scene, he was hit)
+                    Begin = (p, st) =>
+                    {
+                        string line = Grammar.Fix(Lang.T(Rest(st.Text, 2)), p), who = p.GetPlayerName();
+                        float t = RavenSpeech.Seconds(line, RavenSpeech.Pace.Scene);
+                        Hold(t);
+                        if (!_ownOff) StoryScreen.Sub(who, line, t + 0.4f); // (in a shot and out of one: the hero has no bubble over his head)
+                        StoryWatch.Line(who, line);
+#if RAVEN_NPC
+                        long id = p.GetPlayerID();
+                        NpcBabble.Say(NpcTimbre.OfHero(p), SitOn.HeadBone(p), line, (uint)id ^ (uint)(id >> 32) ^ 0x53434E45u, t, true);
+                        NpcSpeech.HeroSaid(p, line, t); // (the people of his scene turn to him: as to a person's line)
+#endif
+                    } } },
                 { "gait", new StepVerb(StepSeen.Own) { Min = 1, Begin = PlayerGait, Setup = PlayerGait, Busy = (p, st) => false } },
                 { "pace", new StepVerb(StepSeen.Own) { Min = 1, Begin = (p, st) => StoryWalk.Pace(st.W[2]), Busy = (p, st) => false } },
                 { "stop", new StepVerb(StepSeen.Own) { Begin = (p, st) => StoryWalk.Halt(st.W.Length > 2 ? F(st.W[2], 0.8f) : 0.8f), Busy = (p, st) => StoryWalk.Halting, Done = (p, st) => StoryWalk.Outcome } },
                 { "emote", new StepVerb(StepSeen.Own) { Min = 1,
                     Begin = (p, st) =>
                     {
-                        if (st.W[2] == "stop") { Gestures.StopEmote(p); return; }
+                        if (st.W[2] == "stop") { Gestures.StopEmote(p); _emoteLoop = false; return; }
                         EmoteTalk.OursUntil = Time.time + 1f; // (the scene's gesture: the ravens do not talk about it)
-                        p.StartEmote(st.W[2], Array.IndexOf(st.W, "loop") < 0);
+                        bool loop = Array.IndexOf(st.W, "loop") >= 0;
+                        if (!p.StartEmote(st.W[2], !loop)) { Note("player emote: гра не почала жест «" + st.W[2] + "» (сидить на чомусь, тягне лук, нема сил…)"); return; }
+                        if (loop) _emoteLoop = true; // (a gesture that lasts — sitting: the scene's end takes it off, Release)
                     } } },
                 { "clip", new StepVerb(StepSeen.Own) { Min = 1,
                     Begin = (p, st) =>
@@ -94,7 +117,7 @@ namespace HuginWhispers
             } };
         }
 
-        private static void PlayerLook(Player p, Step st) { string no = StoryLook.At(st.W[2]); if (no != null) Note(no); }
+        private static void PlayerLook(Player p, Step st) { float s; string no = StoryLook.At(st.W[2], st.W.Length > 3 && float.TryParse(st.W[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out s) ? s : 0f); if (no != null) Note(no); } // («player look <place> <s>»: that slow a turn — 2–3 s, a look round a room
         private static void PlayerGait(Player p, Step st) { string no = StoryGait.Set(p, st.W[2]); if (no != null) Note(no); }
     }
 }

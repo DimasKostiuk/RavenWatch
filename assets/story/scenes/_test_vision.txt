@@ -1,0 +1,35 @@
+# Знімки для видіння старої Варти (обряд у Залі, hall_rite: кроки dim / memory; користувач 2026-11-15 — «екран темнішає і з'являються
+# скріншоти прозорі поверх екрана як уривки пам'яті»). Лише для автора (файл з «_»): постаті довкола вогнища Зали, три кадри — їх
+# знімає Студія (node tools/anim.js scene zz_vision_stage), а кадри кроків (sc_zz_vision_stage_step_<k>.png) обрізаються в
+# assets/story/memories/<знімок>.jpg (тон і розмиті краї гра кладе сама: StoryScreen.MakeMemory).
+[scene zz_vision_stage]
+place: zala
+test: gate hall open
+check: hall.vohnyshche 4
+player go hall.vohnyshche 2.4
+player face hall.vohnyshche
+fade out 0.5
+npc _vartovyi_1 spawn zala at 2.6 0 -0.4 whole
+npc _vartovyi_2 spawn zala at -2.2 0 0.9 whole
+npc _vartovyi_3 spawn zala at 0.4 0 2.0 whole
+npc _eirik spawn zala at -1.6 0 -2.2 whole
+npc _vartovyi_1 face hall.vohnyshche
+npc _vartovyi_2 face hall.vohnyshche
+npc _vartovyi_3 face hall.vohnyshche
+npc _eirik face hall.vohnyshche
+wait 1.5
+fade in 0.5
+# 1 vartovi_vohon — коло людей біля вогню
+camera on hall.vohnyshche wide high cut
+wait 2
+# 2 eirik_voron — Ейрік, над ним його двоколірний ворон
+bird come 14 7 circle nowait
+camera on npc._eirik medium 25 cut
+wait 3
+# 3 ty_sered_nykh — ти серед них
+camera on player medium 30 cut
+wait 2
+camera two player npc._vartovyi_1 cut
+wait 2
+bird leave up
+camera off blend 0.5

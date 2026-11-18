@@ -7,6 +7,7 @@ namespace HuginWhispers
     // People on the map (npc-plan.md): a mark with its name for each person loaded near you, following it as it moves.
     // Not saved (made again each time), not sent anywhere: every game draws the ones it has. Odin has none (the story
     // keeps him a secret). Looked at twice a second, from the people's own Update (no extra loop when there are none).
+    // Hidden: a module's word that a person is not to be shown now (the story: one a search is for — StorySeek.Hides, the user 2026-11-15).
     internal static class NpcMap
     {
         private const float Every = 0.5f;
@@ -15,6 +16,7 @@ namespace HuginWhispers
         private static Minimap _map;
         private static float _next;
         private static Sprite _icon;
+        internal static System.Func<Vector3, bool> Hidden; // (a module's: no mark at this spot now)
 
         internal static void Tick()
         {
@@ -26,11 +28,13 @@ namespace HuginWhispers
             {
                 if (a == null || a.Mind == null || (a.Def != null && a.Def.Echo > 0f)) continue; // (Odin, an echo: no mark)
                 Minimap.PinData pin;
+                if (Hidden != null && Hidden(a.transform.position)) { if (Pins.TryGetValue(a, out pin)) Forget(a); continue; } // (not to be shown now: its mark off till then)
                 bool guard = Guard.Is(a), was;
-                if (Pins.TryGetValue(a, out pin) && pin != null && (!PinGuard.TryGetValue(a, out was) || was != guard)) { _map.RemovePin(pin); pin = null; } // (became a guard, or stopped: its mark anew)
+                string shown = a.ShownName; // (its name as the game shows it: one not met yet is «Чужинець» here too — StoryStranger)
+                if (Pins.TryGetValue(a, out pin) && pin != null && (!PinGuard.TryGetValue(a, out was) || was != guard || pin.m_name != shown)) { _map.RemovePin(pin); pin = null; } // (became a guard, or stopped, or its shown name changed: its mark anew)
                 if (pin == null)
                 {
-                    pin = _map.AddPin(a.transform.position, Minimap.PinType.None, a.Name, false, false, 0L, default(Splatform.PlatformUserID));
+                    pin = _map.AddPin(a.transform.position, Minimap.PinType.None, shown, false, false, 0L, default(Splatform.PlatformUserID));
                     PinGuard[a] = guard;
                     Sprite s = guard ? GuardIcon() : Icon();
                     if (s != null) pin.m_icon = s;
@@ -49,11 +53,13 @@ namespace HuginWhispers
             if (pin != null && Minimap.instance != null && _map == Minimap.instance) Minimap.instance.RemovePin(pin);
         }
 
-        // ---------------------------------------------------------------- people in need you read of (NpcRescue): a teal mark
-        // at each, while it lasts; a lost thing's own mark once its owner has said where (its person loaded here)
+        // ---------------------------------------------------------------- people in need you marked on a board (NpcRescue): a teal mark
+        // at each, while it lasts and till you find it; a lost thing's own mark once its owner has said where (its person loaded here), found or not
         private static readonly Dictionary<string, Minimap.PinData> Rescues = new Dictionary<string, Minimap.PinData>();
         private static float _nextRescue;
         private static Sprite _rescueIcon;
+
+        internal static void RescueNow() { _nextRescue = 0f; } // (one marked just now: drawn at the next look, not in up to 2 s)
 
         private static void RescuePins()
         {
@@ -61,15 +67,17 @@ namespace HuginWhispers
             Dictionary<string, KeyValuePair<Vector3, string>> want = new Dictionary<string, KeyValuePair<Vector3, string>>();
             foreach (NpcRescue.Known k in NpcRescue.All())
             {
-                ZDO nz = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(k.Npc) : null; // (its own «until» when this game has it: stretched once you reached it)
+                ZDOID id = k.Npc;
+                ZDO nz = ZDOMan.instance != null && !id.IsNone() ? ZDOMan.instance.GetZDO(id) : null; // (its own «until» when this game has it: stretched once you reached it)
                 if (System.Math.Max(k.Until, nz != null ? nz.GetLong(NpcRescue.KUntil, 0L) : 0L) < now) continue;
-                if (nz != null && nz.GetInt(NpcRescue.KStage, 0) >= NpcRescueHits.Dead) continue; // (died, or its time ran out)
-                want[NpcKit.Ref(k.Npc)] = new KeyValuePair<Vector3, string>(k.At, Lang.T("Людина в біді") + ": " + NpcRescue.KindWord(k.Kind));
+                if (nz != null && (nz.GetInt(NpcRescue.KStage, 0) >= NpcRescueHits.Dead || nz.GetString(NpcRescue.KKind, "").Length == 0)) continue; // (died, its time ran out, or it is in need no more — hired by anyone: NpcRescueSite.Done)
+                if (!k.Found) want[k.Link] = new KeyValuePair<Vector3, string>(k.At, Lang.T("Людина в біді") + ": " + NpcRescue.KindWord(k.Kind));
+                if (nz == null) continue; // (not here: no lost thing of it to show)
                 foreach (NpcActor a in NpcActor.Live)
                 {
-                    if (a == null || a.Zdo == null || a.Zdo.m_uid != k.Npc) continue;
+                    if (a == null || a.Zdo == null || a.Zdo.m_uid != id) continue;
                     Vector3 item = a.Zdo.GetVec3(NpcRescue.KItem, Vector3.zero);
-                    if (item != Vector3.zero && NpcLevers.Flag(a, "lost")) { want[NpcKit.Ref(k.Npc) + "/item"] = new KeyValuePair<Vector3, string>(item, a.Form(Lang.F("Річ, яку загубив|загубила {0}", a.Name))); Glow(item, k.Npc); }
+                    if (item != Vector3.zero && NpcLevers.Flag(a, "lost")) { want[k.Link + "/item"] = new KeyValuePair<Vector3, string>(item, a.Form(Lang.F("Річ, яку загубив|загубила {0}", a.Name))); Glow(item, id); }
                 }
             }
             foreach (KeyValuePair<string, KeyValuePair<Vector3, string>> w in want)
@@ -111,8 +119,8 @@ namespace HuginWhispers
         private static Sprite RescueIcon()
         {
             if (_rescueIcon != null) return _rescueIcon;
-            Texture2D t = OrdersMenu.Pic("n-rescue");
-            if (t == null || t.width <= 2) return null;
+            Texture2D t = OrdersMenu.PicOrNone("n-rescue");
+            if (t == null) return null;
             _rescueIcon = Sprite.Create(t, new Rect(0f, 0f, t.width, t.height), new Vector2(0.5f, 0.5f));
             return _rescueIcon;
         }
@@ -122,8 +130,8 @@ namespace HuginWhispers
         private static Sprite GuardIcon()
         {
             if (_guardIcon != null) return _guardIcon;
-            Texture2D t = OrdersMenu.Pic("n-pin-guard");
-            if (t == null || t.width <= 2) return Icon();
+            Texture2D t = OrdersMenu.PicOrNone("n-pin-guard");
+            if (t == null) return Icon();
             _guardIcon = Sprite.Create(t, new Rect(0f, 0f, t.width, t.height), new Vector2(0.5f, 0.5f));
             return _guardIcon;
         }
@@ -132,8 +140,8 @@ namespace HuginWhispers
         private static Sprite Icon()
         {
             if (_icon != null) return _icon;
-            Texture2D t = OrdersMenu.Pic("n-pin");
-            if (t == null || t.width <= 2) return null;
+            Texture2D t = OrdersMenu.PicOrNone("n-pin");
+            if (t == null) return null;
             _icon = Sprite.Create(t, new Rect(0f, 0f, t.width, t.height), new Vector2(0.5f, 0.5f));
             return _icon;
         }

@@ -14,6 +14,12 @@ namespace HuginWhispers
     //   raven stage point <x> <y> <z>                 a point in its frame (a lock, a handle, a hook) — how near a hand comes
     //   raven stage piece <prefab> <m> [turn]         the game's own piece (its look only: no net, no touch of its own), its near
     //                                                 face that far ahead — what a scene really has there (stave_gate: the Hall's)
+    //   raven stage chair [prefab] · chair off        the mannequin SITS on the game's own seat (piece_bench01 unless said), as a person sits
+    //                                                 in life (NpcMind: Body.Attach to the seat's attach point with the seat's own animation,
+    //                                                 attach_chair…): the piece set so that point is where the mannequin stands and faces — a
+    //                                                 seated clip made and measured on the stage (the user 2026-11-17: «нехай він сидить на
+    //                                                 віртуальній лаві чи стільчику»; before, a seated clip was shown on a person only). Kept
+    //                                                 through «play» and a clip's own «touch»; «clear», «chair off», «down» stand it up
     //   raven stage clear                             all of them away
     // A clip's own «touch» line is the same words: «play» sets it up by itself and takes it away for a clip with another.
     // Each is a box in the body's frame (a piece: its look's bounds). Drawn see-through (a piece as it is), kept where the mannequin
@@ -111,7 +117,50 @@ namespace HuginWhispers
             }
         }
 
-        private void ClearFixtures() { foreach (Fix x in _fixtures) if (x.Look != null) Destroy(x.Look); _fixtures.Clear(); _touchFix = null; _touchWords = ""; }
+        private void ClearFixtures() { StandUp(); foreach (Fix x in _fixtures) if (x.Look != null) Destroy(x.Look); _fixtures.Clear(); _touchFix = null; _touchWords = ""; }
+
+        // ---------------------------------------------------------------- a seat it sits on (raven stage chair)
+        private Fix _chairFix;
+        private string ChairCmd(string[] a)
+        {
+            if (_dummy == null || _dummy.Body == null) return "Манекена нема.";
+            if (a.Length > 2 && a[2] == "off") { StandUp(); return "Манекен устав."; }
+            string prefab = a.Length > 2 ? a[2] : "piece_bench01";
+            GameObject src = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(prefab) : null;
+            Chair seat = src != null ? src.GetComponentInChildren<Chair>(true) : null;
+            if (seat == null || seat.m_attachPoint == null) return "У «" + prefab + "» нема сидіння гри (Chair).";
+            StandUp();
+            Fix x = new Fix { F = new BodyCheck.Fixture { Kind = "piece" } };
+            string why = Piece(x, prefab, 0f, 0f);
+            if (why != null) return why;
+            // the seat's point in the piece's own frame (the look's children are set in it: Piece); the piece turned and moved so that point is
+            // the mannequin's own place, facing its way — attached there, it does not move, and the piece follows it as any fixture (PlaceFixtures)
+            Vector3 at = src.transform.InverseTransformPoint(seat.m_attachPoint.position);
+            Quaternion turn = Quaternion.Inverse(src.transform.rotation) * seat.m_attachPoint.rotation;
+            x.LookTurn = -turn.eulerAngles.y;
+            x.LookAt = -(Quaternion.Euler(0f, x.LookTurn, 0f) * at);
+            x.Look.transform.rotation = Quaternion.Euler(0f, x.LookTurn, 0f); x.Look.transform.position = x.LookAt; // (its box for the check, in the body's frame)
+            Bounds b = new Bounds(); bool any = false;
+            foreach (Renderer r in x.Look.GetComponentsInChildren<Renderer>()) { if (any) b.Encapsulate(r.bounds); else { b = r.bounds; any = true; } } // heavy: once, as the author asks for the seat
+            x.F.Center = b.center; x.F.Size = b.size;
+            GameObject point = new GameObject("RavenWatch_Stage_seat_point");
+            point.transform.SetParent(x.Look.transform, false);
+            point.transform.localPosition = at; point.transform.localRotation = turn;
+            _fixtures.Add(x); _chairFix = x;
+            PlaceFixtures();
+            _dummy.Body.Attach(point.transform, seat.m_attachAnimation, x.Look, seat.m_detachOffset);
+            return "Манекен сидить на «" + prefab + "» (" + seat.m_attachAnimation + "), як людина в житті. chair off — устати.";
+        }
+
+        // off its seat, the seat away (chair off, clear, down)
+        private void StandUp()
+        {
+            if (_chairFix == null) return;
+            if (_dummy != null && _dummy.Body != null && _dummy.Body.Attached) _dummy.Body.Detach(true);
+            if (_chairFix.Look != null) Destroy(_chairFix.Look);
+            _fixtures.Remove(_chairFix);
+            _chairFix = null;
+        }
 
         // what the clip about to play says it touches
         private Fix _touchFix;

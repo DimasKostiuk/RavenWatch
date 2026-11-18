@@ -17,6 +17,7 @@ namespace HuginWhispers
     // Pick: the first that fits. Best: the open and flat ones of many (Forest: known on land not loaded too; Uneven), then of those the one with fewest trees,
     // a tree close by counted twice (the user 2026-11-07: a scene's shots there, trees must not cover it all).
     // At most Tries tries, each cheap but the loaded ones (a ray down, a sphere for the trees): once per pick, never a frame.
+    // Open: the same land's tests where no player is asked (the server — a place of the world: the story's glade), by the world's numbers only.
     internal static class WorldSpot
     {
         internal static float Clear = 70f; // m from anything built, a bed, a mark of yours
@@ -48,10 +49,30 @@ namespace HuginWhispers
             return false;
         }
 
+        // land all the way from a to b by the world's own height (every 8 m): water no longer than wetMost m at a stretch (SwimMost: a river one swims
+        // across; 0 — none at all). One for everyone who asks «can one walk there»: a person made out of sight walking in (NpcTravel.ComeFrom), a place of
+        // the story the player walks to (Open «onFoot», StoryFound pickloc — the user 2026-11-15: Heid's thistle edge was put 1753 m off across the sea).
+        // A straight line: a bay between them reads as water though one may walk round it — so it is a «first», never a «must» for those who ask
+        internal const float SwimMost = 40f;
+        internal static bool DryWay(Vector3 a, Vector3 b, float wetMost)
+        {
+            if (WorldGenerator.instance == null || ZoneSystem.instance == null) return true;
+            float water = ZoneSystem.instance.m_waterLevel + 0.3f, d = Utils.DistanceXZ(a, b), wet = 0f;
+            for (float t = 8f; t < d; t += 8f)
+            {
+                Vector3 q = Vector3.Lerp(a, b, t / d);
+                if (WorldGenerator.instance.GetHeight(q.x, q.z) >= water) { wet = 0f; continue; }
+                wet += 8f;
+                if (wet > wetMost) return false;
+            }
+            return true;
+        }
+
         // the world's own tests of a spot (q.y: the world's height there); what it fails is counted (Why)
-        private static int _wet, _steep, _based, _placed, _ground;
-        private static void Start() { _wet = _steep = _based = _placed = _ground = 0; Why = ""; }
-        private static string Told() { return "вода " + _wet + ", круто " + _steep + ", база " + _based + ", місця світу " + _placed + ", земля " + _ground; }
+        private static int _wet, _steep, _based, _placed, _ground, _sea;
+        internal static int SeaAll; // (every spot ever turned down for the sea: a caller asks whether «over water» could find anything more)
+        private static void Start() { _wet = _steep = _based = _placed = _ground = _sea = 0; Why = ""; }
+        private static string Told() { return "вода " + _wet + ", круто " + _steep + ", база " + _based + ", місця світу " + _placed + ", земля " + _ground + (_sea > 0 ? ", через море " + _sea : ""); }
         private static bool Fits(Player p, ref Vector3 q, string lands, float water, float shore, string ignore, bool anyLand)
         {
             if (!Dry(ref q, lands, water, shore)) return false;
@@ -140,6 +161,98 @@ namespace HuginWhispers
             }
             Why = Told();
             return best < float.MaxValue;
+        }
+
+        // The most open land for a place of the world, picked where no player is asked (the server: the story's glade, StoryFound «pickglade»):
+        // of Samples points min..max m from «from» (within arc° either side of «toward», when it gives one), dry, all of it one land
+        // (its middle and eight points on its edge r m out; None: any), no water within r + GladeShore m, away from the world's places
+        // (NearPlace) and from «taken» by «clear» m: the flattest and least wooded by the world's own numbers (Uneven + Forest: the same
+        // whether its zone was ever made or not — its trees are cleared away after). Once per pick: some 60 asks of the world's height a point.
+        // edge: a land that must lie within edgeM m of it (the black forest's edge — Meadows within so many m: the user 2026-11-14, Heid's flowers);
+        // None — no edge asked. onFoot: only a spot one walks to from «from» (DryWay, a river swum at most); asked first by whoever lays a place out
+        // for the player to walk to (the last of the best checked only: the line costs up to max/8 asks of the height). fits: one more test of the
+        // caller's own (a glade kept away from other places too — pickglade «apart», the user 2026-11-18: Eyvind's meadow 300 m from the Hall AND the middle)
+        internal static float GladeShore = 6f;
+        internal static bool Open(Vector3 from, float min, float max, float r, Heightmap.Biome land, Vector3 toward, float arc, List<Vector3> taken, float clear, out Vector3 at, out float uneven,
+            Heightmap.Biome edge = Heightmap.Biome.None, float edgeM = 0f, bool onFoot = false, System.Func<Vector3, bool> fits = null)
+        {
+            at = Vector3.zero; uneven = 0f;
+            Start();
+            if (WorldGenerator.instance == null || ZoneSystem.instance == null) return false;
+            float water = ZoneSystem.instance.m_waterLevel, best = float.MaxValue;
+            toward.y = 0f;
+            bool aimed = toward.sqrMagnitude > 0.01f && arc < 180f;
+            if (aimed) toward.Normalize();
+            List<Vector3> rays = edge != Heightmap.Biome.None ? EdgeSpots(from, min, max, r, land, edge, aimed ? toward : Vector3.forward, aimed ? arc : 180f) : null;
+            int n = (rays != null ? rays.Count : 0) + Samples;
+            for (int i = 0; i < n; i++)
+            {
+                bool onRay = rays != null && i < rays.Count;
+                Vector3 q = onRay ? rays[i] : aimed ? from + Quaternion.Euler(0f, Random.Range(-arc, arc), 0f) * toward * Random.Range(min, max) : Round(from, min, max);
+                if (!Dry(ref q, null, water, r + GladeShore)) continue;
+                if (!OneLand(q, r, land) || !Borders(q, edgeM, edge)) { _ground++; continue; }
+                float score = Uneven(q, r) + Forest(q) + (edge != Heightmap.Biome.None ? Mathf.Max(0f, Utils.DistanceXZ(from, q) - min) / EdgeFarPer : 0f); // (an edge: the nearer the better — the forest's start on the side of «from»)
+                if (score >= best) continue;
+                if (taken != null && taken.Exists(b => Flat(b, q) < clear)) { _based++; continue; }
+                if (fits != null && !fits(q)) { _based++; continue; } // (the caller's own test: counted with the bases — «too near»)
+                if (NearPlace(q)) { _placed++; continue; }
+                if (onFoot && !DryWay(from, q, SwimMost)) { _sea++; SeaAll++; continue; }
+                best = score; at = q; uneven = Uneven(q, r);
+            }
+            Why = Told();
+            return best < float.MaxValue;
+        }
+
+        // an edge's spots, found rather than hit by chance (the user 2026-11-15: of 160 random points none fell on the black forest's edge by Heid's camp —
+        // a strip some 25 m wide — and the pick went 1753 m off): from «from» out along EdgeRayCount rays (within arc° of «toward»), every EdgeStep m min..max,
+        // where the edge's land turns into «land» — the forest's start on the side of «from» — the spot r + EdgeIn m inside it; at most two a ray.
+        // Some EdgeRayCount·max/EdgeStep asks of the world's land (48·75 for 600 m): once per pick
+        internal static int EdgeRayCount = 48;
+        internal static float EdgeStep = 8f, EdgeIn = 4f, EdgeFarPer = 50f; // (EdgeFarPer: so many m farther weigh as one m of slope)
+        private static List<Vector3> EdgeSpots(Vector3 from, float min, float max, float r, Heightmap.Biome land, Heightmap.Biome edge, Vector3 toward, float arc)
+        {
+            List<Vector3> l = new List<Vector3>();
+            if (land == Heightmap.Biome.None) return l; // (no land asked: no edge to cross into)
+            for (int i = 0; i < EdgeRayCount; i++)
+            {
+                float deg = arc >= 180f ? i * 360f / EdgeRayCount : -arc + 2f * arc * i / Mathf.Max(1, EdgeRayCount - 1);
+                Vector3 dir = Quaternion.Euler(0f, deg, 0f) * toward;
+                Heightmap.Biome was = WorldGenerator.instance.GetBiome(from + dir * min);
+                int got = 0;
+                for (float d = min + EdgeStep; d <= max && got < 2; d += EdgeStep)
+                {
+                    Vector3 p = from + dir * d;
+                    Heightmap.Biome b = WorldGenerator.instance.GetBiome(p);
+                    if (b == land && was == edge) { l.Add(p + dir * (r + EdgeIn)); got++; }
+                    was = b;
+                }
+            }
+            return l;
+        }
+
+        private static bool OneLand(Vector3 q, float r, Heightmap.Biome land)
+        {
+            if (land == Heightmap.Biome.None) return true;
+            if (WorldGenerator.instance.GetBiome(q) != land) return false;
+            for (int a = 0; a < 8; a++)
+            {
+                float deg = a * 45f * Mathf.Deg2Rad;
+                if (WorldGenerator.instance.GetBiome(new Vector3(q.x + Mathf.Cos(deg) * r, 0f, q.z + Mathf.Sin(deg) * r)) != land) return false;
+            }
+            return true;
+        }
+
+        // that land within m of it: one of eight points on each of two rings (m/2, m) is of it
+        private static bool Borders(Vector3 q, float m, Heightmap.Biome land)
+        {
+            if (land == Heightmap.Biome.None) return true;
+            for (int ring = 1; ring <= 2; ring++)
+                for (int a = 0; a < 8; a++)
+                {
+                    float deg = a * 45f * Mathf.Deg2Rad, d = m * ring / 2f;
+                    if (WorldGenerator.instance.GetBiome(new Vector3(q.x + Mathf.Cos(deg) * d, 0f, q.z + Mathf.Sin(deg) * d)) == land) return true;
+                }
+            return false;
         }
 
         // how far the ground rises and falls within r m (the world's height on three rings)

@@ -106,7 +106,7 @@ namespace HuginWhispers
 #if RAVEN_ITEM
             if (plant && !cheated) HuginChores.OnPlanted();
 #if RAVEN_STORY
-            StoryHeart.Placed(p, from);
+            StoryHeart.Placed(p, from, made);
 #endif
 #if RAVEN_NPC
             if (made != null) StoryBus.Raise("piece_placed", Utils.GetPrefabName(made.gameObject), 0, made.transform.position);

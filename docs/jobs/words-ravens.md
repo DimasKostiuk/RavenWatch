@@ -7,10 +7,10 @@
 | Що | Файли |
 |---|---|
 | Складені фрази: шаблони `[тег]` і списки частин `@список`, окремо масив `Hugin` і масив `Munin` | `src/*Patterns.cs` без `Npc` на початку; рушій і шапка — `src/Patterns.cs`. Новий файл стає в ряд у `Patterns.All` |
-| Розмови воронів між собою | `src/TalkPatterns.cs` (його шапка каже нитки); ворони різних гравців — `src/CrossPatterns.cs`: прав його напряму, `tools/crossgen.js` застарів, не запускай |
+| Розмови воронів між собою | `src/TalkPatterns.cs` (його шапка каже нитки); з вороном людини (Торвальдів тьмяний Хугін, крок `N` сцен `dim_*`: його слова в книзі його роду) — `src/DimRavenPatterns.cs`; ворони різних гравців — `src/CrossPatterns.cs`: прав його напряму, `tools/crossgen.js` застарів, не запускай |
 | Репліки ворона в розмові з людиною | `src/NpcAsidePatterns.cs` (теги `ppl_<група>`) |
 | Цілі рядки (події, слово після посадки) | `src/Defaults.cs`, `src/DefaultsEvents.cs`, `src/Quips.cs` |
-| Англійська | `assets/lang/English/hugin_patterns.txt`, `munin_patterns.txt`: ті самі теги, списки й позначки; правила перекладу — `assets/lang/README.md`, частина 3 |
+| Англійська | `assets/lang/English/hugin_patterns.txt`, `munin_patterns.txt`: ті самі теги, списки й позначки; правила перекладу — `assets/lang/README.md`, частина 3. Перекладай у тій самій правці, що й українське (користувач 2026-11-11; збірка: `tools/bookcheck.js`) |
 
 ## Як записано
 

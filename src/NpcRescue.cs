@@ -9,8 +9,10 @@ namespace HuginWhispers
 {
     // People in need (npc-plan.md, «порятунок»): how settlers come — not the story's. Each named «Серце оселі» hears, once
     // in five to seven game days and only when its last one is over, of someone in trouble out in the lands already
-    // reached; its board tells what and where and how long is left (LastsDays: three days), and whoever reads it gets a mark of its
-    // own colour on the map. Out there a settler (NpcSettlers):
+    // reached; its board tells what and where and how long is left (LastsDays: three days) in a group of its own («поклик»), and whoever
+    // clicks it there gets a mark of its own colour on the map, kept till they find the person (come within FoundNear; the user 2026-11-15).
+    // Out there a settler (NpcSettlers):
+    //   (its foes: those still about it — within Leash m; one that ran off is not waited for, and each hunts the one who came and keeps to the spot: the game's own hunt and patrol point)
     //   surrounded  foes round it (a few of its land's); slain, it is safe
     //   captive     a camp of them round it, it sits bound; slain, and untied by a word (its talk)
     //   hungry      sits worn out; a cooked meal from you (its talk)
@@ -35,6 +37,7 @@ namespace HuginWhispers
         internal static readonly int KNext = "RavenWatch_rescueNext".GetStableHashCode();   // on a heart: long, world seconds of the next one
         internal static readonly int KNpc = "RavenWatch_rescueNpc".GetStableHashCode();    // on a heart: string ref of its person in need
         internal static readonly int KInfo = "RavenWatch_rescueInfo".GetStableHashCode();  // on a heart: "kind|x|z|until" (its board)
+        internal static readonly int KCapped = "RavenWatch_rescueFull".GetStableHashCode(); // on a heart: bool, its next one was due and the world had Cap settlers (its board says why none comes; the server's word, at a change only)
         internal static readonly int KKind = "RavenWatch_rescue".GetStableHashCode();      // on the person: its trouble ("" none)
         internal static readonly int KLonger = "RavenWatch_rescueLonger".GetStableHashCode(); // on the person: bool, its time stretched once someone reached it
         internal static readonly int KUntil = "RavenWatch_rescueUntil".GetStableHashCode(); // on the person: long, world seconds
@@ -159,7 +162,9 @@ namespace HuginWhispers
                         }
                         if (now < h.GetLong(KNext, 0L)) continue;
                         if (settlers < 0) settlers = Settlers();
-                        if (settlers >= Cap) continue;
+                        bool full = settlers >= Cap;
+                        if (h.GetBool(KCapped, false) != full) { Own(h); h.Set(KCapped, full); } // (its board said only «Чуток поки нема» at the cap, for good and with no reason: read 2026-11-12)
+                        if (full) continue;
                         if (Start(h, now)) { settlers++; _next = Mathf.Min(_next, Time.time + TickBusy); } // (one begun: looked at again soon)
                     }
                 }
@@ -187,7 +192,7 @@ namespace HuginWhispers
         internal static int Settlers()
         {
             int n = 0;
-            List<ZDO> all = NpcCensus.Of(Npcs.HumanPrefab); // (the shared census: NpcCensus)
+            List<ZDO> all = NpcCensus.People(); // (the shared census: NpcCensus)
             foreach (ZDO z in all) { NpcDef d = NpcDefs.Find(z.GetString(Npcs.KId, "")); if (d != null && d.Generated) n++; }
             return n;
         }
@@ -233,6 +238,7 @@ namespace HuginWhispers
             if (!remove) return; // (hired: its own game takes its trouble off it — NpcRescueSite; the server never takes over a person)
             foreach (string r in (npc.GetString(KFoes, "") + "," + npc.GetString(KLost, "")).Split(',')) { ZDO f = r.Length > 0 ? ZDOMan.instance.GetZDO(NpcKit.Resolve(r)) : null; if (f != null) { Own(f); ZDOMan.instance.DestroyZDO(f); } }
             Own(npc);
+            NpcLocker.RemoveOf(npc); // (its locker with it: left behind, its things went to whoever lived near — NpcLocker.Adopt)
             ZDOMan.instance.DestroyZDO(npc);
             Npcs.Log("rescue: the one in need is gone");
         }
@@ -278,28 +284,19 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- a heart's board (any game near it)
-        internal static string BoardLine(ZDO heart, Vector3 at)
+        // when none goes on: when the next one comes, or why none does; null while one goes on (its line: BoardShort)
+        internal static string BoardLine(ZDO heart)
         {
-            if (heart == null) return null;
-            string info = heart.GetString(KInfo, "");
-            if (info.Length > 0)
-            {
-                string[] f = info.Split('|');
-                long until; float x, z;
-                if (f.Length >= 4 && long.TryParse(f[3], out until) && float.TryParse(f[1], NumberStyles.Float, CultureInfo.InvariantCulture, out x) && float.TryParse(f[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z))
-                {
-                    Vector3 where = new Vector3(x, 0f, z);
-                    Know(NpcKit.GetRef(heart, KNpc), f[0], where, until);
-                    return Lang.F("Людина в біді: {0}. {1}, {2}. Лишилось: {3}. Позначено на мапі.", KindWord(f[0]), Direction(at, where), Distance(at, where), Left(until - (long)Now));
-                }
-            }
+            if (heart == null || heart.GetString(KInfo, "").Length > 0) return null;
             long next = heart.GetLong(KNext, 0L) - (long)Now;
             if (heart.GetString(NpcHeart.KName, "").Length == 0) return Lang.T("Безіменне серце чуток не чує — дай йому назву.");
+            if (next <= 0 && heart.GetBool(KCapped, false)) return Lang.F("Чуток більше нема: у цьому світі вже живе {0} поселенців. Нові прийдуть, коли хтось піде.", Cap);
             return next > 0 ? Lang.F("Чуток поки нема. Наступні — десь за {0}.", Left(next)) : Lang.T("Чуток поки нема.");
         }
 
-        // one going on, in short (a heart's board, «Треба зробити»); null: none. Marks nothing: that is BoardLine, when the board is opened
-        internal sealed class Short { public string Text = "", Left = ""; public Vector3 At; }
+        // one going on, in short (a heart's board, its «поклик»); null: none. Marks nothing by itself: Mark, when its line is clicked.
+        // Seen: this character's — 0 not marked · 1 marked · 2 found
+        internal sealed class Short { public string Text = "", Left = "", Kind = "", Link = ""; public Vector3 At; public long Until; public int Seen; }
         internal static Short BoardShort(ZDO heart, Vector3 at)
         {
             string info = heart != null ? heart.GetString(KInfo, "") : "";
@@ -308,8 +305,13 @@ namespace HuginWhispers
             long until; float x, z;
             if (f.Length < 4 || !long.TryParse(f[3], out until) || !float.TryParse(f[1], NumberStyles.Float, CultureInfo.InvariantCulture, out x) || !float.TryParse(f[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z)) return null;
             Vector3 where = new Vector3(x, WorldGenerator.instance != null ? WorldGenerator.instance.GetHeight(x, z) : at.y, z); // (kept without its height: its ring on the land, not under it)
-            return new Short { Text = Lang.F("Людина в біді: {0}, {1}, {2}", KindWord(f[0]), Direction(at, where), Distance(at, where)), Left = Left(until - (long)Now), At = where };
+            string link = heart.GetString(KNpc, ""); // (its lasting link as the heart keeps it: the person far off is not loaded on a client — a link, not an id found now)
+            Known k = link.Length == 0 ? null : All().Find(e => NpcKit.Alike(e.Link, link));
+            return new Short { Text = Lang.F("Людина в біді: {0}, {1}, {2}", KindWord(f[0]), Direction(at, where), Distance(at, where)), Left = Left(until - (long)Now), At = where, Kind = f[0], Link = link, Until = until, Seen = k == null ? 0 : k.Found ? 2 : 1 };
         }
+
+        // its line on a board clicked: marked on this character's map till found (Know: nothing twice)
+        internal static void Mark(Short s) { if (s != null) Know(s.Link, s.Kind, s.At, s.Until, false); }
 
         internal static string Left(long seconds)
         {
@@ -328,22 +330,27 @@ namespace HuginWhispers
             return Lang.T(w[Mathf.RoundToInt(ang / 45f) % 8]);
         }
 
-        // ---------------------------------------------------------------- the marks you know of (read on a board): kept in
-        // the character for this world, drawn on the map until over (NpcMap)
-        internal sealed class Known { public ZDOID Npc; public string Kind; public Vector3 At; public long Until; }
+        // ---------------------------------------------------------------- the marks you know of (clicked on a board): kept in
+        // the character for this world, drawn on the map until over or found (NpcMap). Found: you came within FoundNear of the
+        // person (NpcRescueSite) — its mark off; a lost thing's own mark stays (it is still to be fetched). Found before it was
+        // ever clicked, it is kept as found: a later click marks nothing
+        internal const float FoundNear = 15f;
+        // Link: the person's lasting link, kept as it came (told apart by NpcKit.Alike — never found again and written back: one not loaded here would lose it)
+        internal sealed class Known { public string Link = "", Kind = ""; public Vector3 At; public long Until; public bool Found; public ZDOID Npc { get { return NpcKit.Resolve(Link); } } }
         private const string SeenKey = "RavenWatch_rescues";
 
-        internal static void Know(ZDOID npc, string kind, Vector3 at, long until)
+        internal static void Know(string link, string kind, Vector3 at, long until, bool found)
         {
             Player p = Player.m_localPlayer;
-            if (p == null || npc.IsNone()) return;
+            if (p == null || string.IsNullOrEmpty(link)) return;
             List<Known> l = All();
-            foreach (Known k in l) if (k.Npc == npc) return;
-            l.Add(new Known { Npc = npc, Kind = kind, At = at, Until = until });
+            Known was = l.Find(k => NpcKit.Alike(k.Link, link));
+            if (was != null) { if (!found || was.Found) return; was.Found = true; }
+            else l.Add(new Known { Link = link, Kind = kind, At = at, Until = until, Found = found });
             Save(l);
         }
 
-        internal static void Forget(ZDOID npc) { List<Known> l = All(); if (l.RemoveAll(k => k.Npc == npc) > 0) Save(l); }
+        internal static void Forget(ZDO person) { List<Known> l = All(); if (l.RemoveAll(k => NpcKit.Names(k.Link, person)) > 0) Save(l); }
 
         internal static List<Known> All()
         {
@@ -357,9 +364,9 @@ namespace HuginWhispers
             {
                 string[] f = e.Split('|');
                 long until; float x, z;
-                if (f.Length < 6 || f[0] != world || !long.TryParse(f[5], out until) || until + (long)Day < now) continue; // (another world's, or long over)
+                if (f.Length < 6 || f[0] != world || f[1].Length == 0 || !long.TryParse(f[5], out until) || until + (long)Day < now) continue; // (another world's, long over, or its link lost)
                 if (!float.TryParse(f[3], NumberStyles.Float, CultureInfo.InvariantCulture, out x) || !float.TryParse(f[4], NumberStyles.Float, CultureInfo.InvariantCulture, out z)) continue;
-                l.Add(new Known { Npc = NpcKit.Resolve(f[1]), Kind = f[2], At = new Vector3(x, 0f, z), Until = until });
+                l.Add(new Known { Link = f[1], Kind = f[2], At = new Vector3(x, 0f, z), Until = until, Found = f.Length > 6 && f[6] == "1" }); // (six fields: an older record, not found)
             }
             return l;
         }
@@ -370,7 +377,7 @@ namespace HuginWhispers
             if (p == null || ZNet.instance == null) return;
             string world = ZNet.instance.GetWorldUID().ToString(CultureInfo.InvariantCulture);
             StringBuilder sb = new StringBuilder();
-            foreach (Known k in l) { if (sb.Length > 0) sb.Append(';'); sb.Append(world).Append('|').Append(NpcKit.Save(k.Npc)).Append('|').Append(k.Kind).Append('|').Append(Mathf.RoundToInt(k.At.x)).Append('|').Append(Mathf.RoundToInt(k.At.z)).Append('|').Append(k.Until); }
+            foreach (Known k in l) { if (sb.Length > 0) sb.Append(';'); sb.Append(world).Append('|').Append(k.Link).Append('|').Append(k.Kind).Append('|').Append(Mathf.RoundToInt(k.At.x)).Append('|').Append(Mathf.RoundToInt(k.At.z)).Append('|').Append(k.Until).Append('|').Append(k.Found ? '1' : '0'); }
             p.m_customData[SeenKey] = sb.ToString();
         }
     }
@@ -384,6 +391,7 @@ namespace HuginWhispers
         private void Awake() { _a = GetComponent<NpcActor>(); }
 
         private int _seenStage = -1; // (this game's: the stage it last saw — its turn to «saved» told to whoever is near)
+        private bool _found; // session: this game's player came near it once while it is loaded here (its mark off: NpcRescue.Know, once)
 
         private void Update()
         {
@@ -393,6 +401,8 @@ namespace HuginWhispers
             string kind = z != null ? z.GetString(NpcRescue.KKind, "") : "";
             if (kind.Length == 0) { _seenStage = -1; return; }
             Told(z);
+            Player me = Player.m_localPlayer;
+            if (!_found && me != null && Utils.DistanceXZ(me.transform.position, transform.position) <= NpcRescue.FoundNear) { _found = true; NpcRescue.Know(NpcKit.Save(z, false), kind, transform.position, z.GetLong(NpcRescue.KUntil, 0L), true); } // (found: on every game, its own player's)
             if (!_a.Owned) return;
             if (NpcTalk.Hired(_a)) { Done(z); return; } // (hired: a person like any other now)
             int stage = z.GetInt(NpcRescue.KStage, 0);
@@ -556,6 +566,10 @@ namespace HuginWhispers
             StoryBus.Raise("npc_saved", _a.Id, 0, transform.position);
         }
 
+        // Its foes still to be slain: alive and still about it — within Leash m, by where the world says each is (its ZDO: known whether its body is
+        // loaded here or not). One that ran off (a greyling fleeing hurt, a neck gone down the stream) or strayed is not waited for: «alive — or not
+        // here to see» held the rescue for ever on a foe nobody could find (the user 2026-11-16: fought them off, the captive still «drive them off»)
+        internal const float Leash = 45f;
         private bool FoesLeft(ZDO z)
         {
             foreach (string r in z.GetString(NpcRescue.KFoes, "").Split(','))
@@ -565,7 +579,8 @@ namespace HuginWhispers
                 if (f == null) continue;
                 ZNetView fv = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(f) : null; GameObject go = fv != null ? fv.gameObject : null;
                 Character c = go != null ? go.GetComponent<Character>() : null;
-                if (c == null || !c.IsDead()) return true; // (alive — or not here to see: counted alive)
+                if (c != null && c.IsDead()) continue;
+                if (Utils.DistanceXZ(f.GetPosition(), transform.position) <= Leash) return true; // (alive and about; its body not loaded yet after a reload: by its place)
             }
             return false;
         }
@@ -607,6 +622,8 @@ namespace HuginWhispers
                 float h; if (ZoneSystem.instance != null && ZoneSystem.instance.GetGroundHeight(at, out h)) at.y = h + 0.2f;
                 GameObject go = UnityEngine.Object.Instantiate(prefab, at, Quaternion.LookRotation(round - at));
                 ZNetView nv = go.GetComponent<ZNetView>();
+                BaseAI ai = go.GetComponent<BaseAI>();
+                if (ai != null) { ai.SetPatrolPoint(); ai.SetHuntPlayer(true); } // (the game's own words: it hunts the one who came — as a raid's do, so none is left idling behind the trees (the user 2026-11-16: a neck there held the rescue) — and with nobody to chase walks back here, not off across the land)
                 if (nv != null && nv.IsValid()) into.Add(NpcKit.Save(nv.GetZDO(), true));
             }
         }

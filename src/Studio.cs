@@ -30,7 +30,8 @@ namespace HuginWhispers
     //                                                  flight and the landing, on your shoulder or on a perch
     //                                                  give up 0: no waiting, it follows the raven as it is now (in flight already)
     //   moment <h|m> <heal|scream|dress|fury> [s]    — a gift's pose on that raven for a while, with no gift (then film it)
-    //   raven <the mod's console words>               — a «raven …» console command, its answer into the log
+    //   raven <the mod's console words>               — a «raven …» console command, its answer into the log (con: the answer is NOT seen)
+    //   falcon <name> [frames] [fps] [views]         — the nearest falcon of the sisters from its own cameras (StudioFalcon.cs)
     //   con <the game's console words>               — a command of the game's console (spawn, god, env, skiptime…)
     //   reload                                       — the sitting templates read again from their files
     // On you (the player): ylook, ypose, yplay, yfilm, ywait, gift — see StudioHero.cs.
@@ -132,6 +133,7 @@ namespace HuginWhispers
                     case "shot": job = Shot(Arg(a, 1, "shot")); break;
                     case "burst": job = Burst(Arg(a, 1, "burst"), Num(a, 2, 2f), Num(a, 3, 8f)); break;
 #if RAVEN_STORY
+                    case "falcon": job = FalconShots(Arg(a, 1, "falcon"), (int)Num(a, 2, 1f), Num(a, 3, 4f), Arg(a, 4, "side,front,top,back")); break;
                     case "scene": job = SceneCheck(Arg(a, 1, "scene"), Arg(a, 2, ""), Num(a, 3, 2f), (int)Num(a, 4, 0f)); break;
 #endif
                     case "pose": job = Pose(Arg(a, 1, "pose"), Arg(a, 2, ""), Arg(a, 3, "h"), (int)Num(a, 4, 6f), Arg(a, 5, "side,front,top"), false, 0f); break;
@@ -184,7 +186,7 @@ namespace HuginWhispers
                 {
                     bool more;
                     try { more = job.MoveNext(); }
-                    catch (Exception e) { Log(line, "failed: " + e.Message); break; }
+                    catch (Exception e) { Log(line, "failed: " + e.Message + " (where: the game's log, «Studio:»)"); if (Plugin.Instance != null) Plugin.Instance.Log("Studio: «" + line + "» failed: " + e); break; } // (the message alone named no line: a scene's whole report was lost to «Object reference not set», 2026-11-12)
                     if (!more) { Log(line, "done"); break; }
                     yield return job.Current;
                 }
@@ -298,7 +300,7 @@ namespace HuginWhispers
         }
 
         // words on a frame (a time, a rule, a step: what the frame is, read in the picture itself — review 2 2026-11-10): a 5×7 bitmap font, each
-        // glyph five columns, the low bit its top row, ASCII only (what is not ASCII is drawn as «?»; a few signs are mapped), scale px a dot,
+        // glyph five columns, the low bit its top row, ASCII only (Ukrainian letters are written in Latin ones first — Latin below; what else is not ASCII is drawn as «?»; a few signs are mapped), scale px a dot,
         // on a dark band so it reads on any background. Text(…) draws one line; Label(…) puts it in a cell of a sheet, at the top
         private static readonly byte[] Font = {
             0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x5F,0x00,0x00, 0x00,0x07,0x00,0x07,0x00, 0x14,0x7F,0x14,0x7F,0x14, 0x24,0x2A,0x7F,0x2A,0x12, 0x23,0x13,0x08,0x64,0x62, 0x36,0x49,0x55,0x22,0x50, 0x00,0x05,0x03,0x00,0x00,
@@ -320,8 +322,32 @@ namespace HuginWhispers
             switch (c) { case '×': return 'x' - ' '; case '✗': return 'X' - ' '; case '—': case '–': case '−': return '-' - ' '; case '«': case '»': return '"' - ' '; case '·': return '.' - ' '; case '°': return '^' - ' '; case '→': return '>' - ' '; }
             return '?' - ' ';
         }
+        // a step's words are often Ukrainian (a line a person says) and the font has no such letters: written in Latin ones, so the picture still
+        // says which line it is — «35. npc echo say ???????. ?????» told nothing (the echo scene's sheets, 2026-11-12). Nothing to change: s itself
+        private const string Cyr = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя";
+        private static readonly string[] Lat = { "a", "b", "v", "h", "g", "d", "e", "ye", "zh", "z", "y", "i", "yi", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "f", "kh", "ts", "ch", "sh", "shch", "'", "yu", "ya" };
+        internal static string Latin(string s)
+        {
+            int first = -1;
+            for (int i = 0; i < s.Length; i++) if (s[i] > '~') { first = i; break; }
+            if (first < 0) return s;
+            StringBuilder o = new StringBuilder(s.Length + 8);
+            foreach (char ch in s)
+            {
+                if (ch <= '~') { o.Append(ch); continue; }
+                if (ch == '…') { o.Append("..."); continue; }
+                if (ch == '’' || ch == 'ʼ') { o.Append('\''); continue; }
+                char low = char.ToLowerInvariant(ch);
+                int k = Cyr.IndexOf(low);
+                if (k < 0) { o.Append(ch); continue; } // (a sign the glyphs map themselves, or one nobody knows: «?» as before)
+                string l = Lat[k];
+                o.Append(low != ch && l.Length > 0 ? char.ToUpperInvariant(l[0]) + l.Substring(1) : l);
+            }
+            return o.ToString();
+        }
         internal static void Text(Texture2D t, int x, int y, string s, Color32 c, int scale = TextScale)
         {
+            s = Latin(s);
             int w = s.Length * 6 * scale, h = 8 * scale;
             Color32 band = new Color32(0, 0, 0, 255);
             for (int py = y - scale; py < y + h; py++) for (int px = x - scale; px < x + w; px++) if (px >= 0 && py >= 0 && px < t.width && py < t.height) t.SetPixel(px, py, band);
@@ -344,6 +370,8 @@ namespace HuginWhispers
         {
             int x = (cell % cols) * px + 4, top = (rows - 1 - cell / cols) * px + px - 4;
             int most = px / (6 * TextScale) - 1;
+            if (line1 != null) line1 = Latin(line1); // (before it is cut to the cell: the Latin letters of one of ours are up to four)
+            if (line2 != null) line2 = Latin(line2);
             if (line1 != null) Text(sheet, x, top - 8 * TextScale, line1.Length > most ? line1.Substring(0, most) : line1, new Color32(255, 230, 120, 255));
             if (line2 != null) Text(sheet, x, top - 17 * TextScale, line2.Length > most ? line2.Substring(0, most) : line2, new Color32(235, 235, 235, 255));
         }

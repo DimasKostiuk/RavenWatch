@@ -107,15 +107,16 @@ namespace HuginWhispers
         }
 
         // a picture drawn at 2× (the popup cards' pieces, tools/card_art.html) cut for slicing: border in UI units (an
-        // Image shows it with pixelsPerUnitMultiplier = 2)
-        internal static Sprite Sliced(string name, float border)
+        // Image shows it with pixelsPerUnitMultiplier = 2); down: its top and bottom border when not the same (0: stretched across only — the talk scroll's roll)
+        internal static Sprite Sliced(string name, float border, float down = -1f)
         {
-            string key = "sliced:" + name;
+            if (down < 0f) down = border;
+            string key = "sliced:" + name + (down != border ? ":" + down.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
             Sprite s;
             if (Sprites.TryGetValue(key, out s)) return s;
             Texture2D t = Texture(name);
-            float b = border * 2f;
-            s = t != null ? Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(b, b, b, b)) : null;
+            float b = border * 2f, d = down * 2f;
+            s = t != null ? Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(b, d, b, d)) : null;
             if (s != null) s.hideFlags = HideFlags.HideAndDontSave;
             Sprites[key] = s;
             return s;
@@ -199,7 +200,7 @@ namespace HuginWhispers
                 if (Body != null && Italic != null && Body.fontWeightTable != null && Body.fontWeightTable.Length > 4)
                     Body.fontWeightTable[4].italicTypeface = Italic; // <i> in the words: the real italic
             }
-            catch { }
+            catch (Exception e) { Log("fonts: no real italic for <i> (" + e.Message + "): a slanted Alegreya instead"); }
             // a rune inside ordinary words (ᚹ in a line of Alegreya): the runic font among their fallbacks,
             // last (the game's font, which has no runes, is still asked first for anything else they lack)
             if (Runic != null)
@@ -267,7 +268,7 @@ namespace HuginWhispers
                     h = AccessTools.Field(typeof(TMP_FontAsset), "m_HashCode");
                     if (h != null) h.SetValue(f, 0);
                 }
-                catch { }
+                catch (Exception e) { Log("font " + file + " hashes: " + e.Message + " (a second font may be lost)"); }
                 try { MaterialReferenceManager.AddFontAsset(f); } // made at run time: without this a <font="..."> tag cannot find it and shows as text
                 catch (Exception e) { Log("font " + file + " <font> tag: " + e.Message); } // the font itself still works
                 return f;
@@ -576,6 +577,18 @@ namespace HuginWhispers
             }, Vector4.zero, true);
         }
 
+        // a thin ring cut into dashes (a riddle's open seal in the Saga: RavenBookSaga.cs, SagaSeal). 128 px: it is never bigger than ~48 px on the screen
+        internal static Sprite DashedRing(float k, int dashes)
+        {
+            float inner = 63.5f - 128f * k;
+            return Make("dashring:" + k.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture) + ":" + dashes, 128, 128, (x, y) =>
+            {
+                float dx = x - 64f, dy = y - 64f, d = Mathf.Sqrt(dx * dx + dy * dy);
+                float t = (Mathf.Atan2(dy, dx) / (2f * Mathf.PI) + 1f) * dashes % 1f; // (where along its dash: on for the first 0.55)
+                return new Color(1f, 1f, 1f, Mathf.Clamp01(63.5f - d) * Mathf.Clamp01(d - inner) * (t < 0.55f ? 1f : 0f));
+            }, Vector4.zero, true);
+        }
+
         // a soft white glow, strongest in the middle (Odin's light over the nest window)
         internal static Sprite Glow { get { return Make("glow", 128, 128, (x, y) => { float d = Mathf.Clamp01(Mathf.Sqrt((x - 64f) * (x - 64f) + (y - 64f) * (y - 64f)) / 64f); return new Color(1f, 1f, 1f, (1f - d) * (1f - d)); }, Vector4.zero, true); } }
 
@@ -646,7 +659,7 @@ namespace HuginWhispers
         // a thin line faded at both ends (transparent, full from 15% to 85%, transparent)
         internal static Sprite Fade2 { get { return Make("fade-2", 64, 2, (x, y) => new Color(1f, 1f, 1f, Mathf.Clamp01(Mathf.Min(x, 64f - x) / 9.6f)), Vector4.zero); } }
 
-        // the satiety's mark (at 15): an inked diamond on top and a thin stroke down through the bar, narrowing as a quill's
+        // the satiety's mark (at Satiety.HungryAt): an inked diamond on top and a thin stroke down through the bar, narrowing as a quill's
         // line does; soft-edged and mipmapped so it stays still on the tilted page (a hard 2-pixel line shimmered there)
         internal static Sprite Marker
         {
@@ -802,8 +815,8 @@ namespace HuginWhispers
         {
             if (_readAt >= 0f && Time.unscaledTime - _readAt < ReadEvery) return;
             _readAt = Time.unscaledTime;
-            try { _target = Mathf.Clamp01(Value()); } catch { _target = 0f; }
-            if (Stroke != null) { try { _stroke = Stroke(); } catch { _stroke = null; } }
+            try { _target = Mathf.Clamp01(Value()); } catch (Exception e) { _target = 0f; PatchGuard.Fail("BookArt.Bar " + name, e); }
+            if (Stroke != null) { try { _stroke = Stroke(); } catch (Exception e) { _stroke = null; PatchGuard.Fail("BookArt.BarStroke " + name, e); } }
         }
 
         private void Paint()

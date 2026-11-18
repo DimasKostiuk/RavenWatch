@@ -8,7 +8,9 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // The story's people (story-plan.md, «NPC»). Two bodies, one prefab each, made once from the game's own:
+    // The story's people (story-plan.md, «NPC»). Three bodies, one prefab each, made once from the game's own:
+    //   RavenWatch_npc_dvergr — the game's «Dverger» with its mind, drops and words taken out and ours put in (BuildDvergr): a dwarf
+    //                          of the story, on its own skeleton.
     //   RavenWatch_npc_human — the game's Player with the player's scripts taken out and a Humanoid put in their place
     //                          (the way VanillaNPC does it): walks, runs, wears gear, holds things, can fight later;
     //                          our own mind on it (NpcMind, a BaseAI of ours: goes, follows, looks).
@@ -17,12 +19,14 @@ namespace HuginWhispers
     // object); its mind runs where it is owned, and whoever spawns it owns it.
     internal static class Npcs
     {
-        internal const string HumanPrefab = "RavenWatch_npc_human", OdinPrefab = "RavenWatch_npc_odin";
+        internal const string HumanPrefab = "RavenWatch_npc_human", OdinPrefab = "RavenWatch_npc_odin", DvergrPrefab = "RavenWatch_npc_dvergr";
+        internal static readonly string[] PeoplePrefabs = { HumanPrefab, DvergrPrefab }; // (the bodies with a mind of ours: whoever counts or seeks people asks NpcCensus.People)
+        internal static string PrefabOf(NpcDef d) { return d.Odin ? OdinPrefab : d.Dvergr ? DvergrPrefab : HumanPrefab; } // (the body a template asks for)
         internal static readonly int KId = "RavenWatch_npc".GetStableHashCode();      // string: the NpcDef id
         internal static readonly int KBy = "RavenWatch_npcBy".GetStableHashCode();    // long: whose story it serves (0: the world's)
         internal static readonly int KTag = "RavenWatch_npcTag".GetStableHashCode();  // string: its name in a scene ("" none)
 
-        private static GameObject _holder, _human, _odin, _locker;
+        private static GameObject _holder, _human, _odin, _dvergr, _locker;
         internal static string NextId = "";  // the spawner's word for the NPC being made (its Awake reads it before the ZDO has one)
 
         private static readonly HashSet<string> PlayerOnly = new HashSet<string> { "PlayerController", "Talker", "Skills", "Player" };
@@ -40,10 +44,12 @@ namespace HuginWhispers
             }
             if (_human == null) { try { _human = BuildHuman(scene); } catch (Exception e) { Log("human body: " + e); } }
             if (_odin == null) { try { _odin = BuildOdin(scene); } catch (Exception e) { Log("odin body: " + e); } }
+            if (_dvergr == null) { try { _dvergr = BuildDvergr(scene); } catch (Exception e) { Log("dvergr body: " + e); } }
             if (_locker == null) _locker = NpcLocker.Build(_holder.transform);
             Add(scene, _locker, NpcLocker.Prefab);
             Add(scene, _human, HumanPrefab);
             Add(scene, _odin, OdinPrefab);
+            Add(scene, _dvergr, DvergrPrefab);
             LeftToUs();
         }
 
@@ -66,6 +72,7 @@ namespace HuginWhispers
                     if (leave == null) { Log("Path of Valheiman: its creatures' API has no LeaveAlone — our people may get stars"); return; }
                     leave.Invoke(null, new object[] { HumanPrefab, "RavenWatch" });
                     leave.Invoke(null, new object[] { OdinPrefab, "RavenWatch" });
+                    leave.Invoke(null, new object[] { DvergrPrefab, "RavenWatch" });
                     Log("Path of Valheiman: our people left to us (no stars, no rarity, no modifiers)");
                     return;
                 }
@@ -114,6 +121,16 @@ namespace HuginWhispers
             h.m_randomShield = new GameObject[0];
             h.m_randomSets = new Humanoid.ItemSet[0];
             h.m_randomItems = new Humanoid.RandomItem[0];
+            Person(go, scene);
+            StringBuilder sb = new StringBuilder();
+            foreach (Component c in go.GetComponents<Component>()) if (c != null) sb.Append(c.GetType().Name).Append(' ');
+            Log("human body made: " + keep.Count + " fields from the player; " + sb.ToString().Trim());
+            return go;
+        }
+
+        // what every person's body gets, whatever it is made of (the player's, a Dvergr's): our mind, its body's layers, its gear's cells, its needs
+        private static void Person(GameObject go, ZNetScene scene)
+        {
             NpcMind mind = go.AddComponent<NpcMind>();
             mind.m_pathAgentType = Pathfinding.AgentType.HumanoidNoSwim; // (the game's own BaseAI asks with this; our feet ask as their own kind: NpcKit.Walker, made when a world loads)
             mind.m_viewRange = 30f;
@@ -136,9 +153,11 @@ namespace HuginWhispers
             if (os != null) actor.m_vanish = os.m_despawn; // (Odin's puff of smoke: a person put somewhere as the last safety goes and comes in it)
             go.AddComponent<NpcResident>();
             go.AddComponent<NpcWorker>();
-            // its gear's cells: the game's chest on its body (its window, its keeping in the ZDO); after NpcActor, so E is still its talk
-            Container box = go.AddComponent<Container>();
-            box.m_name = "Спорядження"; box.m_width = NpcGear.Width; box.m_height = NpcGear.Height;
+            // its gear's cells: the game's chest on a part of its body (its window, its keeping in its ZDO — as a ship's hold, m_rootObjectOverride), not on the body
+            // itself: what is pointed at is the body, and a UI mod that looks for a chest there (GetComponentInParent) showed a person's cells under its name as a chest's (the user 2026-11-11)
+            GameObject cells = new GameObject("Gear"); cells.transform.SetParent(go.transform, false);
+            Container box = cells.AddComponent<Container>();
+            box.m_rootObjectOverride = go.GetComponent<ZNetView>(); box.m_name = "Спорядження"; box.m_width = NpcGear.Width; box.m_height = NpcGear.Height;
             box.m_privacy = Container.PrivacySetting.Public; box.m_checkGuardStone = false;
             GameObject chest = scene.GetPrefab("piece_chest_wood");
             Container like = chest != null ? chest.GetComponent<Container>() : null;
@@ -159,9 +178,65 @@ namespace HuginWhispers
             if (bones != null) bones.updateMode = AnimatorUpdateMode.Normal;
             int character = LayerMask.NameToLayer("character");
             if (go.layer != character && go.layer != LayerMask.NameToLayer("character_net")) go.layer = character;
+        }
+
+        // The game's Dvergr as a person's body (the user 2026-11-13: a dwarf of the story — its own clips, in scenes, talked to). Its own skeleton,
+        // skin and animator (walk, turn, stand: what our clips lie over); the game's mind, its drops and its own words over its head taken out, ours put
+        // in as on the human body (Person). Its look is what it wears: the game's own suits and hair are things skinned to its bones (DvergerSuit…,
+        // DvergerHair…), named in its template's «gear:». Our layers find its bones by the player's names: BodyClips.SkeletonBone.
+        // What it stands and walks on (HumanBase): the people's own base — the player's animations, carried over to its skeleton by the game itself (both bodies
+        // are humanoid to it, so a player's clip plays on a dvergr's proportions). The game's own Dvergr stands and walks aiming a crossbow: feet half a metre
+        // apart one before the other, hips sunk, chest turned aside (measured on the stage 2026-11-13; the user: «осанка дивна… треба його зробити гордим»).
+        // With it come the values the other games must hear of (ZSyncAnimation's lists: the player's) and a pace for its shorter legs (Stride × the player's).
+        internal static bool HumanBase = true;  // (false: the game's own Dvergr animations — its crossbow stance, for a look only: nothing of ours straightens it; read as the body is made: a restart)
+        internal static float Stride = 0.65f;   // its walk and run × the player's: its legs are that much shorter (hips 0.55 m against 0.91), or its feet slide
+        private static readonly HashSet<string> DvergrOnly = new HashSet<string> { "MonsterAI", "CharacterDrop", "NpcTalk" };
+        private static GameObject BuildDvergr(ZNetScene scene)
+        {
+            GameObject src = scene.GetPrefab("Dverger");
+            if (src == null) { Log("the game's Dverger prefab not found: no dvergr NPCs"); return null; }
+            GameObject go = UnityEngine.Object.Instantiate(src, _holder.transform, false);
+            go.name = DvergrPrefab;
+            for (int i = 0; i < 5; i++)
+            {
+                List<Component> drop = new List<Component>();
+                foreach (Component c in go.GetComponents<Component>()) if (c != null && DvergrOnly.Contains(c.GetType().Name)) drop.Add(c);
+                if (drop.Count == 0) break;
+                foreach (Component c in drop) UnityEngine.Object.DestroyImmediate(c); // (one that others need goes on a later round)
+            }
+            foreach (Component c in go.GetComponents<Component>()) if (c != null && DvergrOnly.Contains(c.GetType().Name)) { Log("could not take out " + c.GetType().Name + ": no dvergr NPCs"); UnityEngine.Object.Destroy(go); return null; }
+            Humanoid h = go.GetComponent<Humanoid>();
+            if (h == null) { Log("the Dverger has no Humanoid: no dvergr NPCs"); UnityEngine.Object.Destroy(go); return null; }
+            h.m_name = "NPC";
+            h.m_group = "ravenwatch_npc";
+            h.m_faction = Character.Faction.Players;
+            h.m_boss = false;
+            h.m_health = 200f;
+            h.m_defeatSetGlobalKey = "";
+            h.m_defaultItems = new GameObject[0]; // (its suit and its crossbow are things of the game's Dverger: a person wears what its template says)
+            h.m_randomWeapon = new GameObject[0];
+            h.m_randomArmor = new GameObject[0];
+            h.m_randomShield = new GameObject[0];
+            h.m_randomSets = new Humanoid.ItemSet[0];
+            h.m_randomItems = new Humanoid.RandomItem[0];
+            string basis = "the game's own animations";
+            GameObject player = HumanBase ? scene.GetPrefab("Player") : null;
+            Animator mine = go.GetComponentInChildren<Animator>(true), his = player != null ? player.GetComponentInChildren<Animator>(true) : null;
+            if (HumanBase && (mine == null || his == null || his.runtimeAnimatorController == null || mine.avatar == null || !mine.avatar.isHuman)) Log("dvergr body: the player's animations cannot be given to it (" + (mine == null ? "no animator" : his == null ? "no player" : mine.avatar == null || !mine.avatar.isHuman ? "its avatar is not humanoid" : "no controller") + "): the game's own");
+            else if (HumanBase)
+            {
+                mine.runtimeAnimatorController = his.runtimeAnimatorController;
+                mine.applyRootMotion = his.applyRootMotion;
+                ZSyncAnimation sync = go.GetComponent<ZSyncAnimation>(), from = player.GetComponent<ZSyncAnimation>();
+                if (sync != null && from != null) { sync.m_syncBools = new List<string>(from.m_syncBools); sync.m_syncFloats = new List<string>(from.m_syncFloats); sync.m_syncInts = new List<string>(from.m_syncInts); }
+                Character pc = player.GetComponent<Character>();
+                if (pc != null) { h.m_walkSpeed = pc.m_walkSpeed * Stride; h.m_speed = pc.m_speed * Stride; h.m_runSpeed = pc.m_runSpeed * Stride; h.m_crouchSpeed = pc.m_crouchSpeed * Stride; h.m_turnSpeed = pc.m_turnSpeed; h.m_runTurnSpeed = pc.m_runTurnSpeed; }
+                basis = "the player's animations on its skeleton, walk " + h.m_walkSpeed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " run " + h.m_runSpeed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            Person(go, scene);
             StringBuilder sb = new StringBuilder();
             foreach (Component c in go.GetComponents<Component>()) if (c != null) sb.Append(c.GetType().Name).Append(' ');
-            Log("human body made: " + keep.Count + " fields from the player; " + sb.ToString().Trim());
+            Log("dvergr body made (" + basis + "): " + sb.ToString().Trim());
             return go;
         }
 
@@ -206,8 +281,8 @@ namespace HuginWhispers
         {
             NpcDef d = NpcDefs.Find(id);
             if (d == null) { Log("no npc «" + id + "»"); return null; }
-            GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(d.Odin ? OdinPrefab : HumanPrefab) : null;
-            if (prefab == null) { Log("no body for «" + id + "» (" + (d.Odin ? OdinPrefab : HumanPrefab) + " not made)"); return null; }
+            GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(PrefabOf(d)) : null;
+            if (prefab == null) { Log("no body for «" + id + "» (" + PrefabOf(d) + " not made)"); return null; }
             at = Free(at);
             at = NpcKit.Floor(at); // (on the floor there, not on the roof over it)
             NextId = id;
@@ -250,7 +325,7 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             foreach (NpcActor a in NpcActor.Live)
             {
-                if (a == null || (a.Id != idOrTag && a.Tag != idOrTag && !string.Equals(a.Name, idOrTag, System.StringComparison.OrdinalIgnoreCase))) continue; // (its template, its tag in a scene, or its own name: «Кнуд»)
+                if (a == null || (a.Id != idOrTag && a.Tag != idOrTag && !string.Equals(a.Name, idOrTag, System.StringComparison.OrdinalIgnoreCase) && !string.Equals(a.Key, idOrTag, System.StringComparison.OrdinalIgnoreCase))) continue; // (its template, its tag in a scene, or its own name: «Кнуд»)
                 float d = p != null ? Vector3.Distance(a.transform.position, p.transform.position) : 0f;
                 if (d < bd) { bd = d; best = a; }
             }
@@ -310,8 +385,15 @@ namespace HuginWhispers
                     return sb.ToString();
                 }
                 case "self": return NpcSelf.Check(); // (who each one is, against the last run: the same after a restart?)
-                case "reload": NpcDefs.Reload(); NpcTalk.Reload(); NpcChatter.Reload(); NpcPhrases.Reload(); return "Перечитано: " + NpcDefs.All().Count + ".";
+                case "reload": // (the people drawn here take the new templates at once — till 2026-11-15 a living body kept the template it was made with: Heid's
+                {              //  new cape colour came only once her body was made anew; a template's pace, fight, gear the same — NpcActor.Rebind dresses it again)
+                    NpcDefs.Reload(); NpcTalk.Reload(); NpcChatter.Reload(); NpcPhrases.Reload();
+                    int bound = 0;
+                    foreach (NpcActor x in NpcActor.Live.ToArray()) if (x != null) { x.Rebind(); bound++; }
+                    return "Перечитано: " + NpcDefs.All().Count + "; людей тут перев'язано до нових шаблонів: " + bound + ".";
+                }
                 case "walk": return NpcWalk.Command(p, a); // (its feet, for everyone: NpcWalk)
+                case "ghost": return NpcFade.Spawn(p, a); // (a creature of the game made a ghost before you: NpcFade)
                 case "stress": return NpcStress.Cmd(p, a); // (the author's load test: NpcStress)
                 case "perf": return NpcPerf.Command(a); // (what the people cost: NpcPerf)
                 case "tune": return a.Length > 2 ? Studio.Field(a[2], a.Length > 3 ? a[3] : null) : "raven npc tune Клас.Поле [значення] — число на цій грі до перезапуску (тест без нової збірки)"; // (the author's live numbers: Studio.Field)
@@ -374,7 +456,7 @@ namespace HuginWhispers
         }
     }
 
-    // an NPC that is not mortal: blows do nothing
+    // an NPC that is not mortal: blows do nothing; a mortal one's armour is taken off the blow here (NpcActor.Armoured: the game counts a player's alone)
     [HarmonyPatch(typeof(Character), "RPC_Damage")]
     internal static class NpcDamagePatch
     {
@@ -384,9 +466,11 @@ namespace HuginWhispers
             try
             {
                 if (__instance.GetComponent<NpcActor>() == null) return true;
-                NpcActor.Hit(__instance, hit != null ? hit.GetAttacker() : null);
+                NpcActor.Hit(__instance, hit);
                 if (NpcRescueHits.Take(__instance, hit)) return false; // (one in need: blows counted, not damage)
-                return !NpcActor.Immortal(__instance);
+                if (NpcActor.Immortal(__instance)) return false;
+                if (__instance.IsOwner()) NpcActor.Armoured(__instance, hit); // (the game goes on only where it is run: the blow is reckoned once)
+                return true;
             }
             catch (Exception e) { PatchGuard.Fail("NpcDamagePatch", e); return true; }
         }

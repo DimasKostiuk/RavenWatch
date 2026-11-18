@@ -553,7 +553,7 @@ namespace HuginWhispers
             }
         }
 
-        // it asks for food: awake, yours, here, and its satiety 40 or less (food matters even with the trust bar full)
+        // it asks for food: awake, yours, here, and its satiety 30 or less (food matters even with the trust bar full)
         internal static bool Hungry(ItemDrop.ItemData item, Player p)
         {
             return item != null && Active(item) && !Stranger(item, p) && !Away(item) && Satiety.Value(item) <= Satiety.AskAt;
@@ -977,6 +977,17 @@ namespace HuginWhispers
 
         internal static string AwayWhy(ItemDrop.ItemData item) { return item != null ? Read(item, AwayWhyKey) : ""; }
 
+        // a shy raven's own flight (Wander): the one trip nobody sent it on
+        internal const string Shy = "shy";
+
+        // its shy flight cut short, as if never begun (a scene counts on it: StorySceneRavens): back on the shoulder at the next draw, nothing said
+        internal static void CutShy(ItemDrop.ItemData item)
+        {
+            if (item == null || item.m_customData == null || AwayWhy(item) != Shy) return;
+            item.m_customData.Remove(AwayKey);
+            item.m_customData.Remove(AwayWhyKey);
+        }
+
         // after a ritual, before it takes off to Odin
         internal static bool Leaving(ItemDrop.ItemData item) { return !string.IsNullOrEmpty(Read(item, LeaveKey)); }
 
@@ -1055,6 +1066,7 @@ namespace HuginWhispers
             if (perched) return true;
             if (p == null || !Senses.Ready || p.IsDead() || p.IsTeleporting()) return false; // (right after login nothing is known yet)
             if (Senses.Underground || Senses.Indoors || Senses.Fight) return false; // (gathered twice a second: no roof rays of our own)
+            if (Senses.InScene) return false; // (a scene of the story plays: it counts on the raven on your shoulder)
             return EnvMan.instance == null || !EnvMan.instance.IsEnvironment("Caves"); // a cave in the world, under its dark weather
         }
 
@@ -1127,7 +1139,7 @@ namespace HuginWhispers
             if (check <= 0 || UnityEngine.Random.value >= WanderChance[i]) return; // the first look only starts the clock
             float minutes = UnityEngine.Random.Range(Mathf.Min(WanderMinMinutes[i], WanderMaxMinutes[i]), Mathf.Max(WanderMinMinutes[i], WanderMaxMinutes[i]));
             Write(item, AwayKey, (now + minutes * 60f).ToString("R", CultureInfo.InvariantCulture));
-            Write(item, AwayWhyKey, "shy");
+            Write(item, AwayWhyKey, Shy);
             string went = level == 1
                 ? (munin ? Lang.T("Мунін ще тебе не терпить і відлетів.") : Lang.T("Хугін ще тебе соромиться й відлетів."))
                 : (munin ? Lang.T("Мунін полетів кудись у своїх справах.") : Lang.T("Хугін полетів провітритися."));

@@ -1,0 +1,68 @@
+# Пробна сцена перетворення сестер (не з сюжету; 2026-11-14, замість проби 2026-11-13): ватажка сідає й загортається у крила («плащ із крил»),
+# дві рядові виходять із польоту кроком («stride»; один макет sestra_2 на двох: «as»); наприкінці всі три знову соколами відлітають.
+# Нічого прозорого: мить підміни ховає пір'я. Запуск: raven story scene zz_falcons (стань на відкритому).
+[scene zz_falcons]
+alone: yes
+roams: yes
+bars on
+camera on player wide back blend 1
+falcon a come 80 30 land
+camera on falcon.a full cut
+wait 0.8
+falcon a become sestra
+camera on npc.sestra full cut
+wait 2.5
+camera on player wide back cut
+falcon b come 100 40 land dive nowait
+falcon c come 120 45 land dive nowait
+falcon b become sestra_2 stride
+npc sestra_2 go player near 4
+falcon c become sestra_3 as sestra_2 stride
+npc sestra_3 go player near 4
+camera on npc.sestra_2 full cut
+wait 3
+camera on npc.sestra full cut
+falcon a from sestra
+wait 1.6
+falcon a leave up
+falcon b from sestra_2
+falcon c from sestra_3
+wait 1.4
+falcon b leave up
+falcon c leave up
+camera on falcon.a wide track blend 1
+wait 4
+camera off blend 1.5
+bars off
+
+# Пробна сцена низького прольоту (не з сюжету; 2026-11-14, для засідки): три соколи клином летять на тебе спереду, останні 20 м над самою
+# землею, камера-візок збоку на висоті метра; на швидкості стають жінками й без зупинки йдуть ще 5 м. Лише проліт і підміна: числа польоту
+# (Falcon.SkimSpeed, SkimUp, SkimFlare, WakeSeconds, DriftShare) підбираються тут. Запуск: raven story scene zz_skim (стань на відкритому,
+# обличчям туди, де 50 м чистого: смуга кладеться приблизно перед тобою й сама повертає від дерев).
+[scene zz_skim]
+alone: yes
+bars on
+lane t player sky clear 48
+falcon a ready
+falcon b ready
+falcon c ready
+npc sestra ready lane.t@70
+npc sestra_2 ready lane.t@72@-4
+npc sestra_3 ready lane.t@72@4 as sestra_2
+wait 0.5
+falcon a skim lane.t@75 lane.t@19 run 20 up 22
+falcon b skim lane.t@80@-2.9 lane.t@21.5@-2.9 run 20 up 24
+falcon c skim lane.t@82.5@2.3 lane.t@22.5@2.3 run 20 up 21
+wait 3.4
+camera rail t falcon.a side 6 up 1 lead 1.5 cut
+sound falcon_attack falcon.a vol 1.3 delay 0.6
+sound falcon_scream falcon.b pitch 0.92 vol 1.1 delay 2.2
+sound falcon_scream falcon.c pitch 1.06 vol 1.1 delay 3.4
+sound sfx_valkyrie_flapwing falcon.a pitch 0.65 vol 1.3 delay 5
+falcon a become sestra stride go lane.t@14 nowait
+falcon b become sestra_2 stride go lane.t@16.8@-2.9 nowait
+falcon c become sestra_3 as sestra_2 stride go lane.t@17.6@2.3
+npc sestra_3 arrive 8
+wait 2.5
+camera off blend 1.5
+bars off

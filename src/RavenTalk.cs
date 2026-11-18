@@ -20,6 +20,11 @@ namespace HuginWhispers
     // it tries again a little later. By the fire a talk sometimes comes instead of a story. And when you call a raven's
     // thought, the other one now and then answers it.
     //
+    // A person's raven near (NpcRaven, «raven_talk:» in its template) leaves a reason «npcr_<talk>» (or «…_word» when it
+    // says a word back, «…_reply» when it answers what was asked; PersonTalk): its scenes have the step N — that raven,
+    // its words from the book of its own kind, its name over them; your two's lines before it are said to it. {hat}: what
+    // it wears on its head now.
+    //
     // Shown in a talk bubble over your head (TalkBubble); players within 30 m see it too, sent once per talk.
     internal static class RavenTalk
     {
@@ -32,9 +37,9 @@ namespace HuginWhispers
         private const string RpcTalk = "RavenWatch_Talk";
         private const string RecentKey = "RavenWatch_talkRecent";
         private const string FileName = "dialogues.txt";
-        private const int Revision = 6; // 6: the everyday moments of 2.1.0 (raid, trade, ride, smelter, fermenter, repair, mead, chair, home, trophy, trophy hung, cart, garden); 5: talks on a perch (when=perch); 2: a long walk, a long voyage; 3: crossing into another land; 4: the moments (dungeon, fall, load, portal, fish, wood, ore, snow, storm, dawn, dusk, a friend)
+        private const int Revision = 8; // 8: a person's raven answers to the point (npcr_dim_reply: dim_ra, dim_rb); 7: a person's raven spoken to (npcr_dim, npcr_dim_word: a dim lone Hugin, mostly silent; step N); 6: the everyday moments of 2.1.0 (raid, trade, ride, smelter, fermenter, repair, mead, chair, home, trophy, trophy hung, cart, garden); 5: talks on a perch (when=perch); 2: a long walk, a long voyage; 3: crossing into another land; 4: the moments (dungeon, fall, load, portal, fish, wood, ore, snow, storm, dawn, dusk, a friend)
 
-        private sealed class Step { public bool Munin; public string Tag; public bool Optional; }
+        private sealed class Step { public bool Munin, Other; public string Tag; public bool Optional; } // Other: the person's raven (N)
         private sealed class Scene { public string Id; public string When; public int Weight = 1; public readonly List<Step> Steps = new List<Step>(); }
 
         private static List<Scene> _scenes;
@@ -100,6 +105,14 @@ namespace HuginWhispers
             "[perch_b] when=perch", "M dlg_perch_m_open", "H dlg_perch_h_reply", "M? dlg_m_close", "",
             "[nest_a] when=nest", "H dlg_nest_h_open", "M dlg_nest_m_reply", "H? dlg_h_close", "",
             "[nest_b] when=nest", "M dlg_nest_m_open", "H dlg_nest_h_reply", "M? dlg_m_close", "",
+            // a person's dim raven (raven_talk dim) — spoken to, it keeps silent; now and then a word back
+            "[dim_a] when=npcr_dim", "H dlg_dim_h_open", "N dlg_dim_n_quiet", "M dlg_dim_m_quiet", "",
+            "[dim_b] when=npcr_dim", "M dlg_dim_m_open", "N dlg_dim_n_quiet", "H dlg_dim_h_quiet", "",
+            "[dim_wa] when=npcr_dim_word", "H dlg_dim_h_open", "N dlg_dim_n_word", "M dlg_dim_m_word", "",
+            "[dim_wb] when=npcr_dim_word", "M dlg_dim_m_open", "N dlg_dim_n_word", "H dlg_dim_h_word", "",
+            // … and, still more rarely, it answers your raven's question to the point: dry, one short phrase (raven_answers)
+            "[dim_ra] when=npcr_dim_reply", "H dlg_dim_h_ask", "N dlg_dim_n_reply", "M? dlg_dim_m_answer", "",
+            "[dim_rb] when=npcr_dim_reply", "M dlg_dim_m_ask", "N dlg_dim_n_reply", "H? dlg_dim_h_answer", "",
         };
 
         internal static void Init(string dir)
@@ -115,6 +128,7 @@ namespace HuginWhispers
                     all.Add(Lang.T("# Розмови Хугіна й Муніна між собою. Сцена: [назва] when=привід weight=вага, далі кроки по черзі:"));
                     all.Add(Lang.T("#   H або M — хто говорить, далі тег (його шаблони й частини — у hugin_patterns.txt / munin_patterns.txt)."));
                     all.Add(Lang.T("#   H? / M? — крок, якого може й не бути: перший пропущений закінчує розмову, тож пиши його як гарне останнє слово."));
+                    all.Add(Lang.T("#   N — ворон людини поруч (лише в приводах npcr_…: рядок raven_talk у шаблоні людини); його тег — у файлі його роду."));
                     all.Add(Lang.T("# Приводи: idle (просто так), rest (біля вогню), walk (довго йдемо), sail (довго пливемо), cross (перейшли в інший край), biome (уперше в новому краї),"));
                     all.Add(Lang.T("#   dungeon (підземелля), fall (падіння), heavy (перевантаження), portal, fish (риба), chop (рубка), mine (руда), snow, storm, dawn, dusk, friend (інший гравець поруч), rain, fog, night, boss, near_death, death, fed_hugin, fed_munin, gap_h, gap_m,"));
                     all.Add(Lang.T("#   perch (обидва на жердині; там же й idle, rest, rain, fog, snow, storm, night, dawn, dusk, friend, gap_h, gap_m)."));
@@ -179,8 +193,8 @@ namespace HuginWhispers
                 string who = bits[0].ToUpperInvariant();
                 bool opt = who.EndsWith("?");
                 who = who.TrimEnd('?');
-                if (who != "H" && who != "M" && who != "Х" && who != "М") continue;
-                cur.Steps.Add(new Step { Munin = who == "M" || who == "М", Tag = bits[1], Optional = opt });
+                if (who != "H" && who != "M" && who != "Х" && who != "М" && who != "N") continue;
+                cur.Steps.Add(new Step { Munin = who == "M" || who == "М", Other = who == "N", Tag = bits[1], Optional = opt });
             }
             list.RemoveAll(s => s.Steps.Count == 0);
             _scenes = list;
@@ -372,8 +386,33 @@ namespace HuginWhispers
                 case "cross": return arg == null || (Here(p) != arg && Here(p) != "Ocean"); // not gone back where it came from
                 case "sail": return p.GetStandingOnShip() != null;                         // still aboard
                 case "walk": return Time.time - _walkedAt < 60f && p.GetStandingOnShip() == null; // still on the road
-                default: return true;
+                default: { GameObject b; bool m; string n, h; return !reason.StartsWith(PersonRaven, StringComparison.Ordinal) || Hearer(p, arg, out b, out m, out n, out h); } // a person's raven: still near
             }
+        }
+
+        // ---------------------------------------------------------------- a person's raven (NpcRaven: its step N)
+        internal const string PersonRaven = "npcr_"; // (+ the template's raven_talk: NpcRaven.Approach leaves it)
+        internal const string PersonWord = "_word", PersonReply = "_reply"; // (+ one of these: it says a word back / answers to the point)
+
+#if RAVEN_STORY
+        // the talk a person's raven reason is for: «npcr_dim_reply» → «dim»
+        private static string PersonTalk(string reason)
+        {
+            string talk = reason.Substring(PersonRaven.Length);
+            foreach (string end in new[] { PersonWord, PersonReply })
+                if (talk.EndsWith(end, StringComparison.Ordinal)) return talk.Substring(0, talk.Length - end.Length);
+            return talk;
+        }
+#endif
+
+        private static bool Hearer(Player p, string id, out GameObject bird, out bool munin, out string name, out string hat)
+        {
+#if RAVEN_STORY
+            return NpcRaven.Hearer(p, id, out bird, out munin, out name, out hat);
+#else
+            bird = null; munin = false; name = null; hat = null;
+            return false;
+#endif
         }
 
         private static string Here(Player p) { return p.GetCurrentBiome().ToString(); }
@@ -482,6 +521,7 @@ namespace HuginWhispers
         {
             List<string> order = new List<string>();
             foreach (string r in WaitingOrder) if (Reasons.ContainsKey(r)) order.Add(r);
+            foreach (string r in Reasons.Keys) if (r.StartsWith(PersonRaven, StringComparison.Ordinal)) order.Add(r); // (a person's raven near: NpcRaven)
             if (idle)
             {
                 bool rain, snow, storm, fog;
@@ -667,8 +707,20 @@ namespace HuginWhispers
                 }
                 return Lang.T("Жодна сцена зараз не підійшла.");
             }
+#if RAVEN_STORY
+            if (reason.StartsWith(PersonRaven, StringComparison.Ordinal)) // (a person's raven: the nearest one with that talk)
+            {
+                string talk = PersonTalk(reason);
+                string id = NpcRaven.NearestWith(p, talk);
+                if (id == null) return Lang.F("Поруч нема ворона людини з розмовою «{0}» (raven_talk у шаблоні).", talk);
+                ReasonArgs[reason] = id;
+                bool played = Play(p, reason, Chattiness(reason));
+                if (!Reasons.ContainsKey(reason)) ReasonArgs.Remove(reason);
+                return played ? Lang.F("Розмова: {0}", reason) : Lang.F("Нема сцени для «{0}».", reason);
+            }
+#endif
             if (Play(p, reason, Chattiness(reason))) return Lang.F("Розмова: {0}", reason);
-            return Lang.F("Нема сцени для «{0}». Приводи: idle, rest, walk, sail, cross, dungeon, fall, heavy, portal, fish, chop, mine, snow, storm, dawn, dusk, friend, rain, fog, night, boss, near_death, death, biome, fed_hugin, fed_munin, gap_h, gap_m, а також react (відповідь на думку) і any (будь-яка).", reason);
+            return Lang.F("Нема сцени для «{0}». Приводи: idle, rest, walk, sail, cross, dungeon, fall, heavy, portal, fish, chop, mine, snow, storm, dawn, dusk, friend, rain, fog, night, boss, near_death, death, biome, fed_hugin, fed_munin, gap_h, gap_m, npcr_dim, npcr_dim_word, npcr_dim_reply (ворон людини поруч), а також react (відповідь на думку) і any (будь-яка).", reason);
         }
 
         // ---------------------------------------------------------------- a scene
@@ -684,7 +736,7 @@ namespace HuginWhispers
             for (int i = 0; i < lines.Count; i++)
             {
                 TalkBubble.Line l = lines[i];
-                if (l.Text == null || l.Text.Length < BreakInLength || TalkBubble.Cuts(l)) continue;
+                if (l.Text == null || l.Text.Length < BreakInLength || TalkBubble.Cuts(l) || l.Name != null) continue; // (a person's raven's rare word is never cut)
                 bool cutter = !l.Munin;
                 if (UnityEngine.Random.value >= (cutter ? BreakInM : BreakInH)) continue;
                 string word = Satiety.Say(p, cutter, "cut_in");
@@ -714,7 +766,8 @@ namespace HuginWhispers
                 Remember(p, s.Id);
                 BreakIn(p, lines);
                 TalkBubble.Play(p, lines, true);
-                Send(p, lines);
+                string hearer; ReasonArgs.TryGetValue(reason, out hearer);
+                Send(p, lines, reason.StartsWith(PersonRaven, StringComparison.Ordinal) ? hearer : null);
                 float total = 0f;
                 foreach (TalkBubble.Line l in lines) total += TalkBubble.Pace(l.Text);
                 Director.Spoke(reason == "boss" || reason == "death" || reason == "near_death" || reason == "biome" || reason == "heavy" || reason == "fall" || reason == "portal" || reason == "dungeon" ? Director.Voice.Event
@@ -746,21 +799,31 @@ namespace HuginWhispers
                 if (reason == "fed_hugin" || reason == "fed_munin") Composer.Extra["food"] = string.IsNullOrEmpty(arg) ? Lang.T("Їжа") : arg;
                 if (reason == "cross") Composer.BiomeForms(Composer.Extra, "from", arg); // {from} {from_in}: where you came from
                 if (reason == "friend") { Player f = Friend(p); if (f == null) return null; Composer.Extra["friend"] = f.GetPlayerName(); }
+                // a person's raven in the talk (step N): still near, else no talk
+                bool other = false; foreach (Step st in s.Steps) other |= st.Other;
+                GameObject hearer = null; bool hMunin = false; string hName = null, hat = null;
+                if (other && !Hearer(p, arg, out hearer, out hMunin, out hName, out hat)) return null;
+                if (!string.IsNullOrEmpty(hat)) Composer.Extra["hat"] = hat; // {hat}: a line without it when it wears none
+                bool heard = false; // (it has had its say: your two's lines after it are said to each other)
                 string thread = null; // what the talk is about: set by the first line with a ^mark, followed by the rest
                 foreach (Step st in s.Steps)
                 {
                     if (lines.Count >= MaxLines) break;
                     if (st.Optional && UnityEngine.Random.value > chatty && !Asked(lines)) break; // the first one left out ends the talk (a question is always answered)
+                    bool kind = st.Other ? hMunin : st.Munin; // (its words: the book of its own kind)
                     Patterns.ThreadWant = thread;
                     string line = null;
                     for (int tries = 0; tries < 4; tries++) // not the same words again in one talk ("я сам тебе доб'ю" twice)
                     {
-                        line = Plugin.Instance.ComposeTagged(p, st.Munin, st.Tag);
+                        line = Plugin.Instance.ComposeTagged(p, kind, st.Tag);
                         if (string.IsNullOrEmpty(line) || !Echoes(line, lines)) break;
                     }
                     if (string.IsNullOrEmpty(line)) { if (st.Optional) break; return null; }
                     thread = Follow(thread);
-                    lines.Add(new TalkBubble.Line { Munin = st.Munin, Text = Grammar.Fix(line, p) });
+                    TalkBubble.Line l = new TalkBubble.Line { Munin = kind, Text = Grammar.Fix(line, p) };
+                    if (st.Other) { l.Name = hName; l.Bird = hearer; if (lines.Count > 0) l.To = Plugin.RavenName(lines[lines.Count - 1].Munin); heard = true; }
+                    else if (other && !heard) l.To = hName;
+                    lines.Add(l);
                 }
             }
             finally { Composer.Extra.Clear(); Patterns.ThreadWant = null; Patterns.Fits = null; }
@@ -885,7 +948,7 @@ namespace HuginWhispers
             ZRoutedRpc.instance.Register<ZPackage>(RpcTalk, new Action<long, ZPackage>(OnTalk));
         }
 
-        internal static void Send(Player p, List<TalkBubble.Line> lines)
+        internal static void Send(Player p, List<TalkBubble.Line> lines, string hearer = null) // hearer: the person whose raven has a line in it (NpcRaven)
         {
             if (ZRoutedRpc.instance == null || ZNet.instance == null) return;
             ZPackage pkg = new ZPackage();
@@ -893,6 +956,8 @@ namespace HuginWhispers
             pkg.Write(p.transform.position);
             pkg.Write(lines.Count);
             foreach (TalkBubble.Line l in lines) { pkg.Write(l.Munin); pkg.Write(l.Text); }
+            foreach (TalkBubble.Line l in lines) { pkg.Write(l.Name ?? ""); pkg.Write(l.To ?? ""); } // (after the lines: an older game reads none of it)
+            pkg.Write(hearer ?? "");
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcTalk, pkg);
         }
 
@@ -902,10 +967,16 @@ namespace HuginWhispers
             if (me == null || sender == ZDOMan.GetSessionID()) return;
             ZDOID id = pkg.ReadZDOID();
             Vector3 pos = pkg.ReadVector3();
+            if (Vector3.Distance(me.transform.position, pos) > 100f) return; // far off: nothing; nearer, it runs and shows as you come within 30 m
             int n = Mathf.Min(pkg.ReadInt(), MaxLines);
             List<TalkBubble.Line> lines = new List<TalkBubble.Line>();
             for (int i = 0; i < n; i++) lines.Add(new TalkBubble.Line { Munin = pkg.ReadBool(), Text = pkg.ReadString() });
-            if (Vector3.Distance(me.transform.position, pos) > 100f) return; // far off: nothing; nearer, it runs and shows as you come within 30 m
+            for (int i = 0; i < n && pkg.GetPos() < pkg.Size(); i++) { TalkBubble.Line l = lines[i]; string nm = pkg.ReadString(), to = pkg.ReadString(); l.Name = nm.Length > 0 ? nm : null; l.To = to.Length > 0 ? to : null; lines[i] = l; } // (a person's raven in it: its name; an older game sends none)
+            string hearer = pkg.GetPos() < pkg.Size() ? pkg.ReadString() : "";
+#if RAVEN_STORY
+            GameObject bird = NpcRaven.BirdOf(hearer); // (its picture here: its own beak and voice)
+            if (bird != null) for (int i = 0; i < lines.Count; i++) if (lines[i].Name != null) { TalkBubble.Line l = lines[i]; l.Bird = bird; lines[i] = l; }
+#endif
             foreach (Player other in Player.GetAllPlayers())
                 if (other != null && other != me && other.GetZDOID() == id) { if (!Shadow.Flagged(other)) TalkBubble.Play(other, lines, false); break; }
         }

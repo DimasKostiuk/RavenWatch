@@ -20,6 +20,8 @@ namespace HuginWhispers
     //     protect · unprotect                     the story holds it: nobody sends it off, unsettles it, hunger does not
     //                                             take it away
     //     nojob <job> · okjob <job>               a job it will not take (or will again)
+    //     limp <game hours>                       it limps that long (the world's clock: every game the same) — its gait's wish «hurt»
+    //                                             (gaits.txt mood_hurt; Limping, NpcModules: the user 2026-11-15 — Torvald out of his hiding place)
     //   conditions (StoryCond: in talks, in the story's own files)
     //     npcflag <name> [npc]   npcvar <name> <op> <number> [npc]   npcis <template> [npc]
     //     (npc: its template id or scene tag; none — the one you talk to)
@@ -60,6 +62,9 @@ namespace HuginWhispers
         internal static bool Flag(NpcActor a, string name) { string v = Var(a, name); return v != null && v != "0" && v.Length > 0; }
         internal static float Num(NpcActor a, string name) { float f; return float.TryParse(Var(a, name) ?? "", NumberStyles.Float, Inv, out f) ? f : 0f; }
         internal static bool IsProtected(NpcActor a) { return Flag(a, Protected); }
+        internal const string LimpVar = "limp_until"; // (the world's second it stops limping)
+        internal static bool Limping(NpcActor a) { return ZNet.instance != null && Num(a, LimpVar) > ZNet.instance.GetTimeSeconds(); }
+        internal static float GameHour() { return (EnvMan.instance != null ? Mathf.Max(60f, EnvMan.instance.m_dayLengthSec) : 1800f) / 24f; }
         internal static string NoJob(NpcActor a, string job) { return !string.IsNullOrEmpty(job) && Flag(a, "nojob_" + job) ? Lang.T("Цієї роботи не візьме.") : null; }
         internal static string Traits(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcLocker.Text(z, KTraits) : ""; }
 
@@ -74,6 +79,13 @@ namespace HuginWhispers
             {
                 case "npcflag": if (w.Length < 2) return Usage; SetVar(z, w[1], "1"); return "прапорець " + w[1];
                 case "npcunflag": if (w.Length < 2) return Usage; SetVar(z, w[1], null); return "без прапорця " + w[1];
+                case "limp":
+                {
+                    float h;
+                    if (w.Length < 2 || !float.TryParse(w[1], NumberStyles.Float, Inv, out h) || h < 0f || ZNet.instance == null) return Usage;
+                    SetVar(z, LimpVar, h > 0f ? (ZNet.instance.GetTimeSeconds() + h * GameHour()).ToString("0", Inv) : null);
+                    return h > 0f ? "кульгає " + h.ToString("0.#", Inv) + " год гри" : "не кульгає";
+                }
                 case "npcvar":
                 {
                     if (w.Length < 3) return Usage;
@@ -130,8 +142,8 @@ namespace HuginWhispers
             return Usage;
         }
 
-        internal const string Usage = "npcflag|npcunflag <назва> · npcvar <назва> <значення|+N|-N> · trait <риса> <значення|+x|-x> · knack <робота|melee|bow> <×|+x|-x> · become <шаблон> · protect · unprotect · nojob|okjob <робота>";
-        internal static readonly string[] Deeds = { "npcflag", "npcunflag", "npcvar", "trait", "knack", "become", "protect", "unprotect", "nojob", "okjob" };
+        internal const string Usage = "npcflag|npcunflag <назва> · limp <годин гри> · npcvar <назва> <значення|+N|-N> · trait <риса> <значення|+x|-x> · knack <робота|melee|bow> <×|+x|-x> · become <шаблон> · protect · unprotect · nojob|okjob <робота>";
+        internal static readonly string[] Deeds = { "npcflag", "npcunflag", "npcvar", "trait", "knack", "become", "protect", "unprotect", "nojob", "okjob", "limp" };
         // a template's persona words without its nature (a word, not a number), which is checked here
         internal static string[] NoNature(NpcDef d, string from, string v)
         {
@@ -144,7 +156,9 @@ namespace HuginWhispers
             return rest.ToArray();
         }
 
-        internal static readonly string[] TraitNames = { "walk", "stoop", "height", "build", "diligence", "laziness", "curiosity", "chrono", "chatty", "bravery" };
+        // NpcPersona's words, every one it reads (Put) and gives (Get): the templates' «persona:» check and the levers ask this list
+        // («lively» came into NpcPersona 2026-11-17 and not here: every template with «lively=» was said to be wrong in the log)
+        internal static readonly string[] TraitNames = { "walk", "stoop", "height", "build", "diligence", "laziness", "curiosity", "chrono", "chatty", "bravery", "lively" };
 
         private static void SetVar(ZDO z, string name, string value)
         {

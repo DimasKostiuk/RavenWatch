@@ -21,6 +21,19 @@ namespace HuginWhispers
         private float _next;
 
         internal bool Valid { get { return _nv != null && _nv.IsValid(); } }
+        // a piece of a place of the story its state has not now (LocState.Absent: a perch of the Hall before the story brings it): no perch for anyone —
+        // none is sent to it, none visits it, one sitting on it goes back (Perches: its owner's look). Valid is the net's word only: its ZDO is still read and written
+        internal bool Gone
+        {
+            get
+            {
+#if RAVEN_NPC
+                return Valid && LocState.Absent(_nv);
+#else
+                return false;
+#endif
+            }
+        }
         private Transform[] _flips;
         internal bool Owner { get { return Valid && _nv.IsOwner(); } }
         internal ZDOID Id { get { return Valid ? _nv.GetZDO().m_uid : ZDOID.None; } }
@@ -744,7 +757,7 @@ namespace HuginWhispers
         public bool Interact(Humanoid user, bool hold, bool alt)
         {
             Player p = user as Player;
-            if (hold || p == null || p != Player.m_localPlayer || !Valid) return false;
+            if (hold || p == null || p != Player.m_localPlayer || !Valid || Gone) return false;
             bool munin = alt;
             int hs = SeatOf(p.GetPlayerID(), munin);
             Perches.Occupant ho = hs >= 0 ? At(hs) : null;

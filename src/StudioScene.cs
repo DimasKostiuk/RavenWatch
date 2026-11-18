@@ -19,6 +19,8 @@ namespace HuginWhispers
     //                              sheet, each labelled; a frame no different from the last one kept is left out (FrameSame)
     //   <name>_<who>_<view>.png    each body close (front, side), as each step begins and when it jolts (a limb flies, a bone jerks: the
     //                              moment to look at): its pose can be judged in them, in a wide shot it cannot
+    // and the sound: <name>.wav — what the listener heard through the whole run (AudioTap), with its part of the report: the level of each
+    // second and every word the audio core said, by its moment. The pictures show a scene, they never said what it sounds like.
     // A clip of ours played on a body in the scene brings its «want» lines (the user's words as measures): judged there, on the living body.
     // Out: studio/out/<name>.txt, a VERDICT on top, then the steps: a row a step with when it began, how long it took and what came of it
     // (StoryScenes.Outcomes: «ran 14 m in 4.1 s, stopped 0.3 m off»; the VERDICT's lines that fall in its time under it — review 2 2026-11-10, В9), then
@@ -30,7 +32,8 @@ namespace HuginWhispers
     //   scene <name> <scene id> [fps=2] [from=0]
     // What it looks for (each a mistake already made):
     //   pose         BodyCheck: the one set of rules, the stage's own (palm, fist, hands, elbows, knees, shoulder, neck, feet sliding,
-    //                limbs flying, targets missed, a thing in the hands; here also the world's real surface a clip's «touch» means)
+    //                limbs flying, targets missed, a thing in the hands; here also the world's real surface a clip's «touch» means, a body
+    //                that stands frozen in the picture of a shot («still») and a clip begun on a body not in its first pose («start»))
     //   flicker      a renderer's material changed again and again (the game put its own back: the echo's hair; once is a fade, no flicker)
     //   off screen   a shot on, and the one it is about not in the picture (a person; for the player only the number: a shot may be of the raven)
     //   blocked      a shot on, the body in the picture and something between it and the camera
@@ -42,6 +45,11 @@ namespace HuginWhispers
     //   black        the picture black longer than SceneBlack s in one go (a walk hidden in a fade that went on: the sign 2026-11-04)
     //   walk held    a «player go» that gained no way and was given up (StoryWalk.Helds)
     //   stopped      the scene broken off before its end (StoryScenes.LastStopOf), or held for the author's «Далі»
+    //   broke        a step that threw as it began and did nothing (StoryScenes.Broke): the scene went on without it — said FIRST in the VERDICT
+    //   piece missing  a named piece of a place that a step names, and no such piece in this world (the player near enough for it to be loaded):
+    //                the place's word still gives a spot, so the scene plays on air — the book of the ghost's house, the signpost, 2026-11-12
+    //   not as written  every note the director said in the run (StoryScenes.Note → Amiss): a step skipped for want of a place, a thing taken from a
+    //                piece that is not there, a shot from another side — each with its scene and step. The scene goes on, and looks whole
     //   errors       an exception or an error of ours in the log while it played
     //   dropped      a line of its file the game would not read (StoryScenes.Errors: that step is simply not played)
     //   far          the player not at its place when it began (it does not begin then: StoryScenes.Play)
@@ -90,14 +98,15 @@ namespace HuginWhispers
             Transform v = anim.transform;
             Body b = new Body { Who = who, C = c };
             b.Head = BodyClips.SkeletonBone(c, v, "Head"); b.FootL = BodyClips.SkeletonBone(c, v, "LeftFoot");
-            if (c is Humanoid) b.Pose = new BodyCheck((Humanoid)c) { Real = true };
+            if (c is Humanoid) b.Pose = new BodyCheck((Humanoid)c) { Real = true, InScene = true };
             foreach (Renderer r in c.GetComponentsInChildren<Renderer>(true)) if (!(r is ParticleSystemRenderer)) b.Mats[r] = r.sharedMaterial != null ? r.sharedMaterial.GetInstanceID() : 0; // heavy: once per body
             b.Cams = Make(BodyViews, BodyFrame);
             b.Sheets = HeroSheets(b.Cams, BodyFrames, out b.Cols, out b.Rows);
             return b;
         }
 
-        private static int _sceneMask;
+        internal static float PieceSeenFrom = 40f; // m from a place its pieces are surely loaded: only then «a piece is missing» is said
+        private static int _sceneMask, _brokeWas, _amissWas; // (· how many steps had broken before this run began: StoryScenes.Broke · how many notes of «not as written» had been said: StoryScenes.AmissSaid)
         private static void Measure(Body b, string step, float t, float dt, bool walked)
         {
             if (b.C == null) return;
@@ -114,9 +123,14 @@ namespace HuginWhispers
                 b.Changed[r] = ++times;
                 if (times >= 2) { b.Swaps++; if (b.SwapStep.Length == 0) b.SwapStep = r.name + " at " + t.ToString("0.0") + " s, " + step; }
             }
-            if (b.Pose != null) b.Pose.Measure(t, walked);
             // in the picture while a shot is on
             Camera cam = Camera.main;
+            if (b.Pose != null)
+            {
+                Vector3 hv = StoryCamera.Active && cam != null && b.Head != null ? cam.WorldToViewportPoint(b.Head.position) : Vector3.zero;
+                b.Pose.InShot = hv.z > 0f && hv.x > 0f && hv.x < 1f && hv.y > 0f && hv.y < 1f; // (BodyCheck's «still»: only a body the shot shows)
+                b.Pose.Measure(t, walked);
+            }
             if (StoryCamera.Active && cam != null && b.Head != null)
             {
                 Vector3 vp = cam.WorldToViewportPoint(b.Head.position);
@@ -278,9 +292,8 @@ namespace HuginWhispers
                 string[] w = a.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
                 if (w.Length == 4 && w[0] == "npc" && w[2] == "at")
                 {
-                    Vector3 at; NpcActor who = Npcs.Find(w[1]);
-                    if (who == null || !StoryWhere.Approach(w[3], p.transform.position, out at)) { bad.Add(a); continue; } // (beside it, not in it: a person put into the hearth burns)
-                    who.Order("tp " + Npcs.V(at), NpcMind.Layer.Scene); who.Order("free", NpcMind.Layer.Scene);
+                    Vector3 at; NpcActor who;
+                    if (Story.PutPerson(p, w[1], w[3], out who, out at) != null) { bad.Add(a); continue; } // (beside it, not in it: Story.PutPerson)
                     _putAt[who] = at; _prepared.Add(a);
                     continue;
                 }
@@ -344,6 +357,9 @@ namespace HuginWhispers
                     if (put.Key == null || Utils.DistanceXZ(put.Key.transform.position, put.Value) > 3f) prepared = (prepared != null ? prepared + " · " : "") + (put.Key != null ? put.Key.Id : "?") + " was not put there (its land is not run by this game: it stands frozen)";
             }
             List<string> touched = new List<string>(); string touchWalk = null; int touchWalkAt = -1;
+            if (StoryScenes.Broke.Count > 40) StoryScenes.Broke.RemoveRange(0, StoryScenes.Broke.Count - 40);
+            _brokeWas = StoryScenes.Broke.Count;
+            _amissWas = StoryScenes.AmissSaid;
             int stopsWas = StoryScenes.CountOf(StoryScenes.StopsOf, id), latesWas = StoryScenes.CountOf(StoryScenes.LatesOf, id); // (before it begins: a person missing stops it in its very first step, and that read «OK», 2026-11-07)
             string onStage = OnItsStage(p, id);
             if (from > 0 && StoryScenes.Playing == id) { StoryScenes.Stop("перевірка почне її з кроку " + (from + 1)); stopsWas = StoryScenes.CountOf(StoryScenes.StopsOf, id); } // (its quest began it from the start: this stop is the check's own)
@@ -363,6 +379,7 @@ namespace HuginWhispers
             int sheet = 0, stepSheet = 0;
             bool stepShotDue = false;
             float t0 = Time.time, nextShot = 0f, nextClose = -1f, keptAt = -99f, tailUntil = -1f, every = 1f / Mathf.Clamp(fps, 0.5f, 8f), most = 300f;
+            AudioTap.Begin(most + SceneTail + 10f); // (what is heard from this moment on: the same seconds as the steps')
             string lastStep = "";
             bool ended = false;
             try
@@ -372,6 +389,9 @@ namespace HuginWhispers
                     yield return new WaitForEndOfFrame();
                     float t = Time.time - t0;
                     bool playing = StoryScenes.Playing == s.Id;
+                    // (each step's outcome kept with its own row as the director says it: the story may begin the next scene while this one's tail is still
+                    //  measured, and a scene's start clears the director's list — every step of «echo» read «not ended in the run» once «echo_door» began, 2026-11-12)
+                    if (playing || string.IsNullOrEmpty(StoryScenes.Playing)) foreach (StepRow r in steps) { string c; if (r.Came == null && StoryScenes.Outcomes.TryGetValue(r.Index, out c)) r.Came = c; }
                     if (!playing && tailUntil < 0f) { if (steps.Count > 0) steps[steps.Count - 1].T1 = t; tailUntil = Time.time + SceneTail; rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  (its end: measured on for ").Append(SceneTail.ToString("0.#", CultureInfo.InvariantCulture)).Append(" s)\n"); nextClose = t + StepShotAfter; nextShot = t; }
                     else if (playing && Time.time - t0 > most) break;
                     string step = !playing ? "after its end" : StoryScenes.At >= 0 && StoryScenes.At < s.Steps.Count ? (StoryScenes.At + 1) + ". " + s.Steps[StoryScenes.At].Line : "-";
@@ -501,6 +521,7 @@ namespace HuginWhispers
             finally
             {
                 Application.logMessageReceived -= SceneLog;
+                AudioTap.End(Path.Combine(Out, Clean(name) + ".wav"), Clean(name) + ".wav");
                 try
                 {
                     if (frames.Count > 0) { SaveSheet(name + "_" + sheet, frames); sheet++; }
@@ -543,7 +564,7 @@ namespace HuginWhispers
                 {
                     if (st.Scene != scene) continue;
                     if (Story.StageOf(p, q.Id) == st.Id && Story.Quest(p, q.Id) == Story.Active) return null;
-                    StoryQuests.Jump(p, q, st.Id);
+                    StoryQuests.SetOn(p, q, st.Id);
                     return q.Id + "." + st.Id;
                 }
             }
@@ -564,6 +585,31 @@ namespace HuginWhispers
             foreach (string e in StoryScenes.Errors) if (e.IndexOf(s.From, System.StringComparison.Ordinal) >= 0) bad.Add("a line of its file not read, so not played: " + e);
             foreach (string e in StoryQuests.Errors) bad.Add("a line of the quests not read: " + e);
             int stops = StoryScenes.CountOf(StoryScenes.StopsOf, id) - stopsWas, lates = StoryScenes.CountOf(StoryScenes.LatesOf, id) - latesWas;
+            for (int i = Mathf.Min(_brokeWas, StoryScenes.Broke.Count); i < StoryScenes.Broke.Count; i++) bad.Add("A STEP BROKE and did nothing, the scene went on without it — " + StoryScenes.Broke[i] + " (the error with its place in the code: «scene step:» in LogOutput.log). Mend the code before judging anything else in this run");
+            // (what the scene did NOT do as its file says, each with its step — StoryScenes.Note: a step skipped for want of a place, a thing taken from a
+            //  piece that is not there, a shot from another side. They were lines of the log only: the book of «echo» was taken from nowhere in every
+            //  run of two days and the VERDICT was about the grip, 2026-11-12)
+            {
+                int said = Mathf.Min(StoryScenes.AmissSaid - _amissWas, StoryScenes.Amiss.Count);
+                if (StoryScenes.AmissSaid - _amissWas > said) bad.Add("NOT AS WRITTEN: " + (StoryScenes.AmissSaid - _amissWas - said) + " more note(s) of the scene are older than the last 40 kept — the log, «Story: track:»");
+                for (int i = StoryScenes.Amiss.Count - said; i < StoryScenes.Amiss.Count; i++) bad.Add("NOT AS WRITTEN: " + StoryScenes.Amiss[i] + " (the scene went on: what that step was to do is not in the measures after it)");
+            }
+            // (a named piece of a place that a step of the scene names, and no such piece stands in this world: the place's word still gives a spot —
+            //  from the names table — so the hand touches air and the raven sits on air, and nothing said so. Twice on 2026-11-12: the book of the
+            //  ghost's house, the signpost. Only a place near enough to be loaded; a piece its state hides is still there and is found)
+            {
+                Player me = Player.m_localPlayer; HashSet<string> told = new HashSet<string>();
+                foreach (StoryScenes.Step st in s.Steps)
+                {
+                    string word = st.Kind != null ? st.Kind.PlaceWord(st.W) : null;
+                    int dot = word != null ? word.IndexOf('.') : -1;
+                    if (dot <= 0 || !told.Add(word)) continue;
+                    Loc l = Locs.Get(word.Substring(0, dot));
+                    string piece = word.Substring(dot + 1), prefab; Vector3 local, locAt; Quaternion locRot;
+                    if (l == null || me == null || !LocParts.NameSpot(l.Id, piece, out prefab, out local) || !l.Anchor(out locAt, out locRot) || Utils.DistanceXZ(locAt, me.transform.position) > PieceSeenFrom) continue;
+                    if (LocParts.Named(l.Id, piece).Count == 0) bad.Add("A PIECE IS MISSING: «" + word + "» (" + prefab + ") is named by step " + st.Num + " and by the place's names, and no such piece stands in this world: what touches it, takes it or lands on it plays on air — not the scene's fault and not the clip's. The place built again from its blueprint: an empty file " + l.Id + ".rebuild in config/RavenWatch/blueprints (the place has " + LocParts.All(l.Id).Count + " of its pieces loaded now)");
+                }
+            }
             if (stops > 0) bad.Add("STOPPED before its end: " + StoryScenes.LastStopOf[id]);
             if (lates > 0) bad.Add(lates + " step(s) cut off at their time limit, so what they waited for never came (last: «" + StoryScenes.LastLateOf[id] + "»)");
             foreach (string tch in touched) if (tch.Contains("NOT") || tch.Contains("could not")) bad.Add("touch: " + tch);
@@ -576,6 +622,7 @@ namespace HuginWhispers
             if (stepLong > StepLong) bad.Add("one step held the shot " + stepLong.ToString("0.0") + " s («" + longStep + "»): is anything happening on screen?");
             if (camIn > CamInMost) bad.Add("the camera inside something for " + camIn.ToString("0.0") + " s");
             foreach (string e in _sceneErrors) bad.Add("log " + e);
+            if (AudioTap.Verdict != null) bad.Add(AudioTap.Verdict);
             Loc at = s.Place.Length > 0 ? Locs.Get(s.Place) : null;
             if (at != null && at.Built && at.FrameOffBy < 0f) bad.Add("its place «" + at.Id + "»: its frame not checked in this run (no piece of it loaded, or its origin not written yet): shots and named spots unconfirmed");
             if (at != null && at.FrameOffBy > Loc.FrameOff) bad.Add("its place «" + at.Id + "» stands off its own frame by " + at.FrameOffBy.ToString("0.00", CultureInfo.InvariantCulture) + " m: every shot and named spot of it is off by that (Loc.CheckFrame) — mend the place, not the scene");
@@ -610,7 +657,7 @@ namespace HuginWhispers
             o.Append("steps (began → ended, what came of it; the VERDICT's lines of that time under each):\n");
             foreach (StepRow r in steps)
             {
-                string came; StoryScenes.Outcomes.TryGetValue(r.Index, out came);
+                string came = r.Came; // (as kept during the run: by now the director's list may be the next scene's)
                 o.Append("  ").Append(r.T0.ToString("0.0", CultureInfo.InvariantCulture)).Append(" → ").Append(r.T1 >= 0f ? r.T1.ToString("0.0", CultureInfo.InvariantCulture) : "end").Append(" s  ").Append(r.Line).Append(came != null ? "  — " + came : "  — (not ended in the run)").Append('\n');
                 foreach (string l in bad) { float when = AtOf(l); if (when >= r.T0 && (r.T1 < 0f || when < r.T1)) o.Append("      - ").Append(l).Append('\n'); }
             }
@@ -618,14 +665,28 @@ namespace HuginWhispers
             foreach (Body b in bodies.Values)
             {
                 o.Append(b.Who).Append(": in shots on screen ").Append(b.OnScreen.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s, off ").Append(b.OffScreen.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s, blocked ").Append(b.Blocked.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s, about ").Append(b.SizeN > 0f ? Mathf.RoundToInt(100f * b.SizeSum / b.SizeN).ToString() : "-").Append("% of the picture's height, look kept changing ").Append(b.Swaps).Append(" times");
-                if (b.Pose != null) o.Append("; ").Append(b.Pose.Numbers()).Append('\n').Append("  ").Append(b.Pose.Stance).Append('\n').Append(b.Pose.TempoSaid());
-                else o.Append('\n');
+                // (each body's own part by itself: one that breaks says so in its place and the rest of the report is written — the VERDICT, the steps and
+                //  the other bodies were all lost to one line of one body, 2026-11-12)
+                try
+                {
+                    if (b.Pose != null) o.Append("; ").Append(b.Pose.Numbers()).Append('\n').Append("  ").Append(b.Pose.Stance).Append('\n').Append(b.Pose.TempoSaid());
+                    // (a hand on a thing in the scene: the same sheet as the stage's, to hold the two against each other. A body gone by the report — the ghost
+                    //  that fades at the scene's end — has nothing to ask a thing of)
+                    if (b.Pose != null && b.C != null && b.C is Humanoid) o.Append(b.Pose.GripSheet(b.C.GetComponent<StoryPropView>(), BodyAnimator.Of((Humanoid)b.C)));
+                    else o.Append('\n');
+                }
+                catch (System.Exception e)
+                {
+                    o.Append("\n  THIS BODY'S PART OF THE REPORT BROKE: ").Append(e.Message).Append(" (where: the game's log, «Studio:»)\n");
+                    if (Plugin.Instance != null) Plugin.Instance.Log("Studio: the scene report's part of «" + b.Who + "» failed: " + e);
+                }
             }
+            o.Append('\n').Append(AudioTap.Last);
             o.Append("\nsteps and frames:\n").Append(rows);
             File.WriteAllText(Path.Combine(Out, Clean(name) + ".txt"), o.ToString(), new UTF8Encoding(false));
         }
 
-        private sealed class StepRow { public int Index; public string Line; public float T0, T1 = -1f; } // (a step of the run: its index in the scene, its words, when it began and ended)
+        private sealed class StepRow { public int Index; public string Line, Came; public float T0, T1 = -1f; } // (a step of the run: its index in the scene, its words, when it began and ended)
         private static readonly Regex AtRe = new Regex(@"\bat (\d+(?:\.\d+)?)(?:–\d+(?:\.\d+)?)? s\b", RegexOptions.Compiled);
         // the moment a VERDICT line names («… at 12.3 s …»; of a folded line's «at 12.3–12.5 s» the first), below zero none
         private static float AtOf(string line) { Match m = AtRe.Match(line); float v; return m.Success && float.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? v : -1f; }

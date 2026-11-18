@@ -22,7 +22,7 @@ namespace HuginWhispers
     //   gift     a keepsake of its own, its name on it (NpcKeepsake): one dear, once
     //   secret   what it never told anyone (NpcBackstory.Secret): one dear, once, not angry
     //   night    it walks with you at night a while, afraid or not
-    //   dress    it lets you change its clothes or take them back, for now (DressFor; NpcTalkDress): anyone not on guard duty
+    //   dress    it lets you change its clothes or take them back, for now (DressFor; NpcTalkDress): a guard too, its look alone (NpcGear.LookIn)
     //   bandage  you are hurt: it binds your wound (asked from its worry for you, c_hurt, not from «Попросити»), a little health on your game
     // Not yet: a song (needs its voice). In a talk: ?favour <id> · !favour <id> · {favour} its answer.
     internal static class NpcFavours
@@ -48,15 +48,15 @@ namespace HuginWhispers
             { "dance", new Favour { Id = "dance", Fit = (a, t) => t.Contains("весел") ? 1.3f : t.Contains("бурч") ? 0.4f : t.Contains("боязк") ? 0.5f : 1f,
                 There = (a, p, w) => { if (a.Body == null) return false; a.Body.Gesture("dance", true); if (a.Mind != null) a.Mind.Still(DanceFor); a.StartCoroutine(StopDance(a)); return true; } } },
             { "examine", new Favour { Id = "examine", Can = (a, p) => Held(p) != null, Fit = (a, t) => NpcPersona.Of(a).Curiosity > 0.6f ? 1.2f : 1f,
-                Yes = Examined, There = (a, p, w) => { if (a.Body == null) return false; a.Body.Clip("look_examine"); return true; } } },
+                Yes = Examined, There = (a, p, w) => { if (a.Body == null) return false; a.Body.Move("look_examine", 0f, true); return true; } } },
             { "show", new Favour { Id = "show", Can = (a, p) => { Vector3 at; return NpcPlaces.Favourite(a, out at); }, Fit = (a, t) => NpcPersona.Of(a).Curiosity > 0.6f ? 1.2f : 1f,
-                Yes = Shown, There = (a, p, w) => { Vector3 at; if (!NpcPlaces.Favourite(a, out at)) return false; if (a.Mind != null) a.Mind.Face(at); if (a.Body != null) a.Body.Clip("point_at"); return true; } } },
+                Yes = Shown, There = (a, p, w) => { Vector3 at; if (!NpcPlaces.Favourite(a, out at)) return false; if (a.Mind != null) a.Mind.Face(at); if (a.Body != null) a.Body.Move("point_at", 0f, true); return true; } } },
             { "sit", new Favour { Id = "sit", Can = (a, p) => NpcResident.Is(a), Fit = (a, t) => NpcPersona.Of(a).Chatty > 0.6f ? 1.2f : 1f,
                 There = (a, p, w) => a.Mind != null && p != null && a.Mind.TakeWhim(new NpcMind.Plan { Kind = NpcMind.Task.Sit, To = p.transform.position + p.transform.right * 1.2f }, SitFor, Whose) } },
             { "food", new Favour { Id = "food", Can = (a, p) => NpcResident.Is(a), Fit = (a, t) => NpcHunger.IsHungry(a) ? 0.4f : 1f, There = Food, Cant = "favour_food_none" } },
             { "gift", new Favour { Id = "gift", Dear = true, Once = true, Can = (a, p) => NpcResident.Is(a) && GiftOf(a) != null, Yes = Gift } },
             { "secret", new Favour { Id = "secret", Dear = true, Once = true, Can = (a, p) => !NpcPatience.Angry(a) && NpcBackstory.Secret(a).Length > 0, Yes = Secret } },
-            { "dress", new Favour { Id = "dress", Can = (a, p) => NpcGear.RoleOf(a) != NpcGear.Role.Full && (NpcResident.Is(a) || NpcTalk.Hired(a)) && NpcPatience.Of(a, p) >= DressFrom, Fit = (a, t) => t.Contains("весел") ? 1.2f : t.Contains("бурч") ? 0.7f : 1f } },
+            { "dress", new Favour { Id = "dress", Can = (a, p) => a.Gear != null && (NpcResident.Is(a) || NpcTalk.Hired(a)) && NpcPatience.Of(a, p) >= DressFrom, Fit = (a, t) => t.Contains("весел") ? 1.2f : t.Contains("бурч") ? 0.7f : 1f } },
             { "night", new Favour { Id = "night", Can = (a, p) => EnvMan.IsNight() && NpcResident.Is(a), Fit = (a, t) => t.Contains("смілив") ? 1.2f : t.Contains("боязк") ? 0.4f : 1f,
                 There = (a, p, w) => a.Mind != null && a.Mind.WalkWith(p, WalkFor, Whose) } }, // (not over a duty of its own: a meal, its rest)
             // you are hurt and ask it to bind your wound (its worry for you, c_hurt): healed on your own game, as a gift is given there

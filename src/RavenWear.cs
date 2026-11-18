@@ -27,7 +27,7 @@ namespace HuginWhispers
     internal static class WearCatalog
     {
         internal static readonly string[] KindIds = { "f", "b", "h" };
-        internal static readonly string[] KindNames = { "Фрея", "Бальдр", "Геймдаль" };
+        internal static readonly string[] KindNames = Lang.Keys("Фрея", "Бальдр", "Геймдаль"); // (shown through Lang.T where they are used)
         internal const int Kinds = 3;
 
         private static List<WearDef>[] _by;

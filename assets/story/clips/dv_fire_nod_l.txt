@@ -1,0 +1,56 @@
+clip dv_fire_nod_l
+length 2.4
+tone plain
+loop 0
+pivot 0.75
+curve ease
+fade 0.4 0.6
+mode Spine1 body
+mode Spine2 body
+say двергр повільно й вагомо киває раз: згоден (жест слова {~nod}, біля місць)
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 2.4 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do dv_fire_nod_l "<t0>-<t1> reach right <x y z>; …".
+# scripted: @LeftFoot @RightFoot @Look @Look.w Spine1 Spine2
+# do 0.3-0.8 lean forward 3
+# do 0.4-1.5 nod 16 1
+# do 1.5-2.2 lean none
+
+0 @LeftFoot -0.06 0.13 0.22
+
+0 @RightFoot 0.1 0.1 -0.18
+
+0 @Look 0 1.16 2
+0.4 @Look 0 1.16 2
+0.93 @Look 0 0.383 1.843
+1.31 @Look 0 1.28 1.996
+1.5 @Look 0 1.16 2
+1.8 @Look 0 1.16 2
+
+0 @Look.w 0 0 0
+0.4 @Look.w 0 0 0
+0.55 @Look.w 0.7 0 0
+1.5 @Look.w 0.7 0 0
+1.8 @Look.w 0 0 0
+
+0 Spine1 0 0 0
+0.3 Spine1 0 0 0
+0.45 Spine1 0.5 0 0
+0.7 Spine1 2.1 0 0
+0.8 Spine1 2.3 0 0
+1.5 Spine1 2.3 0 0
+1.65 Spine1 2 0 0
+2.05 Spine1 0.3 0 0
+2.2 Spine1 0 0 0
+2.4 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.3 Spine2 0 0 0
+0.45 Spine2 0.6 0 0
+0.7 Spine2 2.5 0 0
+0.8 Spine2 2.8 0 0
+1.5 Spine2 2.8 0 0
+1.65 Spine2 2.5 0 0
+2.05 Spine2 0.3 0 0
+2.2 Spine2 0 0 0
+2.4 Spine2 0 0 0

@@ -1,0 +1,11 @@
+# Тембр «f3»: вищий жіночий: 218 Гц
+# Зроблено інструментом (node tools/sound.js timbres) із вигуків speech_… — руками не правити: слова тембру в рядку «@timbre f3», гучність і розкид — у рядку самого вигуку.
+speech_hm__f3 file:speech_hm_1__f3.ogg file:speech_hm_2__f3.ogg file:speech_hm_4__f3.ogg file:speech_hm_5__f3.ogg spread=0.04   # «хм»: думає; власний запис
+speech_hm_ask__f3 file:speech_hm_ask_1__f3.ogg file:speech_hm_ask_3__f3.ogg file:speech_hm_ask_4__f3.ogg file:speech_hm_ask_6__f3.ogg spread=0.04   # «хм?»: питає, не розчув; власний запис
+speech_em__f3 file:speech_em_1__f3.ogg file:speech_em_2__f3.ogg file:speech_em_4__f3.ogg file:speech_em_5__f3.ogg spread=0.04   # «ем…»: вагається; власний запис
+speech_uhu__f3 file:speech_uhu_1__f3.ogg file:speech_uhu_2__f3.ogg file:speech_uhu_4__f3.ogg file:speech_uhu_5__f3.ogg spread=0.04   # «угу»: згода; власний запис
+speech_oh__f3 file:speech_oh_1__f3.ogg file:speech_oh_2__f3.ogg file:speech_oh_4__f3.ogg file:speech_oh_5__f3.ogg spread=0.04   # «о!»: подив; власний запис
+speech_sigh__f3 file:speech_sigh_2__f3.ogg file:speech_sigh_3__f3.ogg file:speech_sigh_4__f3.ogg file:speech_sigh_5__f3.ogg spread=0.04 vol=0.6   # зітхання; власний запис
+speech_chuckle__f3 file:speech_chuckle_1__f3.ogg file:speech_chuckle_4__f3.ogg file:speech_chuckle_6__f3.ogg file:speech_chuckle_7__f3.ogg spread=0.04   # смішок; власний запис
+@none speech_khm__f3   # «кхм»: прочищає горло; власний запис — нема: голос і шум разом у тембр іншої статі не переробляються; людина тут мовчить, доки не буде свого запису
+@none speech_breath__f3   # вдих перед реченням; власний запис — нема: у записі це лише повітря, а повітря іншої статі чути як чуже; людина тут мовчить, доки не буде свого запису

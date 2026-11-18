@@ -1,6 +1,6 @@
 # RavenWatch blueprint 1
 name torvald
-pieces 56
+pieces 57
 ground -0.002
 RavenWatch_story_kamin_imen_velykyi -1.588 0.067 -3.844 0 -0.02858 0 -0.99959
 RavenWatch_story_kamin_polehlykh 3.886 -0.005 0.809 0 -0.72703 0 -0.68661
@@ -58,3 +58,4 @@ stone_pile 3.098 -0.414 6.874 0.27086 -0.20943 -0.18265 -0.92164
 stone_pile 2.539 0.081 7.278 0 -0.22305 0 -0.97481
 stone_pile 2.394 -0.198 8.128 0 -0.57911 0 -0.81525
 stone_pillar 6.66 0.946 6.369 0 -0.84701 0 -0.53158
+piece_cauldron 1.14 0.2 2.37 0 -0.81525 0 0.57911

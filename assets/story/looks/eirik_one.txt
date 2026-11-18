@@ -1,0 +1,14 @@
+# Ворон Ейріка після глави 1 (сцена eirik_hearth): він вирвав своє перо для обряду — і одна з двох його барв згасла, попелясті крила стали
+# чорними, як решта. Відтоді він такий і в пролозі тих, хто прийде пізніше (when: умова світу; квест глави 1 ставить eirik_feather).
+default: yes
+when: world eirik_feather
+streak: yes
+id: story_eirik_one
+name: Ворон Ейріка
+for: any
+zone body 08080A 26262C 100 80
+zone head 08080A 2A2A30 100 80
+zone tail 08080A 26262C 100 80
+zone wings 08080A 26262C 100 80
+zone tips 0C0C0E 2E2E34 100 80
+eyes BFD2DC 2.5

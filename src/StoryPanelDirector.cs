@@ -104,13 +104,10 @@ namespace HuginWhispers
             }
             else
             {
-                int col = 0;
+                AuthorRow scenes = AuthorRow.Begin(); // (as many a row as fit, beside «Сцена:»)
                 foreach (StoryScenes.SceneDef d in StoryScenes.Scenes)
-                {
-                    if (col > 0 && col % 7 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); GUILayout.Space(64f); } // (seven a row)
-                    col++;
-                    if (GUILayout.Button(d.Id + (StoryScenes.Playing == d.Id ? " ▶" : ""))) DirOpen(d);
-                }
+                    if (scenes.Button(d.Id + (StoryScenes.Playing == d.Id ? " ▶" : ""))) DirOpen(d);
+                scenes.End();
             }
             GUILayout.EndHorizontal();
             StoryScenes.SceneDef s = StoryScenes.Find(_dirScene);
@@ -142,10 +139,10 @@ namespace HuginWhispers
         {
             GUILayout.BeginVertical(GUILayout.Width(330f));
             GUILayout.Label("2 · Кадри місця", _head);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("гравець", _dirLoc == StoryShots.PlayerFrame ? _sel : GUI.skin.button)) _dirLoc = StoryShots.PlayerFrame; // (a scene that plays anywhere: the shot round the player himself)
-            foreach (Loc l in Locs.All) if (l.Stands && GUILayout.Button(l.Id, l.Id == _dirLoc ? _sel : GUI.skin.button)) _dirLoc = l.Id;
-            GUILayout.EndHorizontal();
+            AuthorRow locs = AuthorRow.Begin();
+            if (locs.Button("гравець", _dirLoc == StoryShots.PlayerFrame ? _sel : null)) _dirLoc = StoryShots.PlayerFrame; // (a scene that plays anywhere: the shot round the player himself)
+            foreach (Loc l in Locs.All) if (l.Stands && locs.Button(l.Id, l.Id == _dirLoc ? _sel : null)) _dirLoc = l.Id;
+            locs.End();
             bool flying = StoryShots.Flying;
             if (GUILayout.Button(flying ? "Вільна камера: ВИМКНУТИ" : "Вільна камера: увімкнути", flying ? _sel : GUI.skin.button, GUILayout.Height(28f))) StoryShots.Fly(!flying);
             GUILayout.Label("ПКМ затиснута — дивитись і коліщатко (кут); WASD, Q/E чи Ctrl/Пробіл — вниз/вгору, Shift — швидко, Alt — повільно.", _hint);
@@ -192,12 +189,9 @@ namespace HuginWhispers
         {
             GUILayout.BeginVertical(GUILayout.Width(440f));
             GUILayout.Label("3 · Рух камери", _head);
-            for (int row = 0; row * 3 < DirKinds.Length; row++)
-            {
-                GUILayout.BeginHorizontal();
-                for (int i = row * 3; i < row * 3 + 3 && i < DirKinds.Length; i++) if (GUILayout.Button(DirKindWords[i], i == _dirKind ? _sel : GUI.skin.button)) _dirKind = i;
-                GUILayout.EndHorizontal();
-            }
+            AuthorRow kinds = AuthorRow.Begin();
+            for (int i = 0; i < DirKinds.Length; i++) if (kinds.Button(DirKindWords[i], i == _dirKind ? _sel : null)) _dirKind = i;
+            kinds.End();
             string k = DirKinds[_dirKind];
             if (k == "shot" || k == "move") GUILayout.Label("A: " + (_shotA.Length > 0 ? _shotA : "—") + (k == "move" ? "    B: " + (_shotB.Length > 0 ? _shotB : "—") : ""), _hint);
             GUILayout.Space(4);
@@ -209,9 +203,9 @@ namespace HuginWhispers
             if (k == "move" || k == "orbit")
             {
                 Slider("Рух, с", ref _dirSecs, 0.5f, 30f, 0.5f);
-                GUILayout.BeginHorizontal();
-                for (int i = 0; i < Eases.Length; i++) if (GUILayout.Button(EaseWords[i], i == _dirEase ? _sel : GUI.skin.button)) _dirEase = i;
-                GUILayout.EndHorizontal();
+                AuthorRow eases = AuthorRow.Begin();
+                for (int i = 0; i < Eases.Length; i++) if (eases.Button(EaseWords[i], i == _dirEase ? _sel : null)) _dirEase = i;
+                eases.End();
                 _dirWait = GUILayout.Toggle(_dirWait, " сцена чекає кінця руху (wait)");
             }
             if (k == "orbit")
@@ -249,14 +243,14 @@ namespace HuginWhispers
                 GUILayout.EndScrollView();
                 if (!pair)
                 {
-                    GUILayout.BeginHorizontal();
-                    for (int i = 0; i < StoryScenes.OnSizes.Length; i++) if (GUILayout.Button(OnSizeWords[i], StoryScenes.OnSizes[i] == _dirSize ? _sel : GUI.skin.button)) _dirSize = StoryScenes.OnSizes[i];
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Сама", _dirAngle.Length == 0 ? _sel : GUI.skin.button)) _dirAngle = ""; // (no angle asked: the first clear one)
-                    for (int i = 0; i < StoryScenes.OnAngles.Length; i++) if (GUILayout.Button(OnAngleWords[i], StoryScenes.OnAngles[i] == _dirAngle ? _sel : GUI.skin.button)) _dirAngle = StoryScenes.OnAngles[i];
-                    if (GUILayout.Button("Кут", _dirAngle == "deg" ? _sel : GUI.skin.button)) _dirAngle = "deg";
-                    GUILayout.EndHorizontal();
+                    AuthorRow sizes = AuthorRow.Begin();
+                    for (int i = 0; i < StoryScenes.OnSizes.Length; i++) if (sizes.Button(OnSizeWords[i], StoryScenes.OnSizes[i] == _dirSize ? _sel : null)) _dirSize = StoryScenes.OnSizes[i];
+                    sizes.End();
+                    AuthorRow angles = AuthorRow.Begin();
+                    if (angles.Button("Сама", _dirAngle.Length == 0 ? _sel : null)) _dirAngle = ""; // (no angle asked: the first clear one)
+                    for (int i = 0; i < StoryScenes.OnAngles.Length; i++) if (angles.Button(OnAngleWords[i], StoryScenes.OnAngles[i] == _dirAngle ? _sel : null)) _dirAngle = StoryScenes.OnAngles[i];
+                    if (angles.Button("Кут", _dirAngle == "deg" ? _sel : null)) _dirAngle = "deg";
+                    angles.End();
                     if (_dirAngle == "deg") Slider("Збоку, °", ref _dirOnDeg, -180f, 180f, 5f);
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("Знизу", _dirTilt == "low" ? _sel : GUI.skin.button)) _dirTilt = "low";
@@ -350,7 +344,7 @@ namespace HuginWhispers
         {
             GUILayout.BeginVertical(GUILayout.Width(380f));
             GUILayout.Label("1 · Кроки сцени", _head);
-            _dirSteps = GUILayout.BeginScrollView(_dirSteps, GUILayout.Height(400f));
+            _dirSteps = GUILayout.BeginScrollView(_dirSteps, GUILayout.Height(Fill(90f)));
             for (int i = 0; i < s.Steps.Count; i++)
             {
                 bool cam = s.Steps[i].W.Length > 0 && s.Steps[i].W[0] == "camera";

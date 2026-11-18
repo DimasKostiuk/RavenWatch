@@ -10,6 +10,10 @@ const FOOT_UP = 0.14; // m: a foot target higher than this is off the ground (th
 const PROP_OFF = 0.05, HELD = 0.9; // @Prop.w past this: the thing has left where it lay · a hand's .on.w this high: it is on the thing
 const HAND_FULL = 0.95; // a hand target's .w this high: the hand is held there (BodyCheck.Full), and its palm is judged — if anything says where it faces
 const problems = [];
+// what the game can play by name (tools/game_sounds.txt, the game writes it: the «Звуки» tab) — a clip's event of any other sfx is silent in the game
+// (2026-11-15: sfx_knife_swing and sfx_land are in the game's files, but inside other things' effects: no prefab of their own, nothing heard)
+const gameList = path.join(__dirname, 'game_sounds.txt'), gameSfx = new Set();
+if (fs.existsSync(gameList)) for (const l of fs.readFileSync(gameList, 'utf8').split(/\r?\n/)) { const [k, n] = l.split(' '); if (k === 'sfx') gameSfx.add(n); }
 const say = (file, what) => problems.push('CLIP ' + file + ': ' + what);
 
 const bones = new Set(['body', 'move', 'Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head']);
@@ -18,7 +22,7 @@ for (const s of ['Left', 'Right']) {
   for (const f of ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']) for (const j of [1, 2, 3]) bones.add(s + 'Hand' + f + j);
 }
 // the clips made before «say» (the user's words) was there; a new one has them, or how it came to be is lost
-const BEFORE_SAY = new Set(['arms_cross', 'door_push', 'heid_rummage', 'key_turn', 'look_caw', 'look_search', 'point_at', 'read_letter', 'rub_hands', 'shield_kneel', 'shrug_small', 'sign_touch', 'step_back']);
+const BEFORE_SAY = new Set(['arms_cross', 'door_push', 'heid_rummage', 'key_turn', 'look_caw', 'look_search', 'point_at', 'rub_hands', 'shield_kneel', 'shrug_small', 'sign_touch', 'step_back']);
 // the clips made before the palm had to be said (2026-11-10), accepted by the user's eye: a new take of one of these says its palm, and its name goes
 const BEFORE_PALM = new Set([]);
 const FIXTURES = ['wall', 'table', 'seat', 'step', 'point', 'piece'];
@@ -72,7 +76,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
   const channels = new Set(), times = new Set();
   let length = 0, eased = false;
   const parts = [], rows = [], wants = [], keys = {};
-  let said = false, touches = false;
+  let said = false, touches = false, toned = false;
   for (const raw of fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/)) {
     const l = raw.trim();
     if (!l || l.startsWith('#')) continue;
@@ -82,7 +86,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
     else if (w[0] === 'curve') eased = w[1] === 'ease';
     else if (w[0] === 'part') parts.push({ name: w[1], from: +w[2], to: +w[3], how: w[4] || 'hold' });
     else if (w[0] === 'mark') { rows.push({ t: +w[1], what: 'mark ' + w[2] }); c.marks.push({ t: +w[1], name: w[2] }); }
-    else if (w[0] === 'event') { rows.push({ t: +w[1], what: 'event ' + w[2] }); if (w.length < 3 || isNaN(+w[1])) say(f, l + ': event <time> <sound> [volume]'); }
+    else if (w[0] === 'event') { rows.push({ t: +w[1], what: 'event ' + w[2] }); if (w.length < 3 || isNaN(+w[1])) say(f, l + ': event <time> <sound> [volume]'); else if (gameSfx.size && w[2].startsWith('sfx_') && !gameSfx.has(w[2])) say(f, l + ': no sound «' + w[2] + '» the game can play by name (tools/game_sounds.txt): silent in the game'); }
     else if (w[0] === 'say') said = true;
     else if (w[0] === 'want') wants.push(l.slice(4).trim());
     else if (w[0] === 'touch') { touches = true; if (!FIXTURES.includes(w[1])) say(f, '«touch» is a fixture\'s words: ' + FIXTURES.join(', ') + ' (AnimStageFixtures)'); else if (w[1] === 'piece' ? isNaN(+w[3]) : w[1] !== 'seat' && w[1] !== 'point' && isNaN(+w[2])) say(f, l + ': how far it is is missing'); }
@@ -93,6 +97,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
     else if (w[0] === 'inertia') { if (isNaN(+w[1]) || +w[1] < 0 || +w[1] > 1) say(f, l + ': inertia 0..1'); }
     else if (w[0] === 'vary') { if (isNaN(+w[1]) || +w[1] < 0 || +w[1] > 1) say(f, l + ': vary 0..1'); }
     else if (w[0] === 'prop') { if (!w[1] || (w[2] && w[2] !== 'r' && w[2] !== 'l') || (w[3] && !(+w[3] > 0))) say(f, l + ': prop <item> [r|l] [scale]'); }
+    else if (w[0] === 'tone') { toned = true; if (!['plain', 'loose', 'merry', 'drinks'].includes(w[1])) say(f, l + ': tone plain|loose|merry|drinks (NpcMoves.Tones)'); }
     else if (w[0] === 'carry') { if (w[1] !== 'yes' && w[1] !== 'no') say(f, l + ': carry yes|no'); }
     else if (w[0] === 'follow') { if (!/^@(Left|Right)(Hand|Foot)$/.test(w[1] || '') || !w[2]) say(f, l + ': follow @LeftHand|@RightHand|@LeftFoot|@RightFoot <bone> (Spine2, RightShoulder…)'); }
     else if (w[0] === 'cloth') { if (w[1] !== 'off' && w[1] !== 'on') say(f, l + ': cloth off|on'); }
@@ -110,6 +115,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
   if (!(length > 0)) say(f, 'no length');
   if (length > 60) say(f, 'length ' + length + ': the game cuts a clip at 60 s');
   for (const line of wants) { const why = wantWhy(line, length); if (why) say(f, 'want ' + line + ': ' + why); else if (!touches && /\bhand\s+\w+\s+on\b(?!\s+body)/.test(line)) say(f, 'want ' + line + ': «on» what? no «touch» line, so the stage puts nothing there and a scene measures nothing: it can never pass'); else if (/\b(hand\s+\w+\s+(holds|touches prop)|palm\s+\w+\s+to prop|look prop)\b/.test(line) && !channels.has('@Prop')) say(f, 'want ' + line + ': what thing? no @Prop in the clip, so nothing is in the hands: it can never pass'); }
+  if (!toned) say(f, 'no «tone»: the kind of move it is — plain|loose|merry|drinks (NpcMoves.Tones). Go over every person in docs/jobs/people-moves.md first: whom it fits, whom not (the user 2026-11-17)');
   if (!said && !BEFORE_SAY.has(name)) say(f, 'no «say»: the words it was asked in, and «want» lines to measure them by (docs/ANIMATION.md)');
   for (const ch of channels) if (!known(ch)) say(f, '«' + ch + '» is no bone or channel: it would move nothing, silently');
   if (channels.size > MAX_CHANNELS) say(f, channels.size + ' channels, the game keeps ' + MAX_CHANNELS + ': the rest would be left out');
@@ -177,6 +183,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
   let end = null;
   for (const p of parts) {
     c.parts.add(p.name); c.partAt[p.name] = p;
+    c.lastPart = p; c.length = length;
     if (!(p.from < p.to) || p.to > length + 1e-6) say(f, 'part ' + p.name + ': ' + p.from + '..' + p.to + ' is not within the clip');
     if (!['hold', 'loop', 'end'].includes(p.how)) say(f, 'part ' + p.name + ': «' + p.how + '» is not hold, loop or end');
     if (end !== null && p.from < end) say(f, 'part ' + p.name + ' starts inside the one before');
@@ -194,7 +201,11 @@ let named = 0;
 const clipHeld = (at, name) => {
   named++;
   const [clip, part] = name.split('.');
-  if (clips[clip]) { if (part && !clips[clip].parts.has(part)) say(at, 'clip ' + clip + ' has no part «' + part + '»'); }
+  if (clips[clip]) {
+    if (part && !clips[clip].parts.has(part)) say(at, 'clip ' + clip + ' has no part «' + part + '»');
+    const last = clips[clip].lastPart; // (a clip that ends held, played whole: it plays to its end and lets the body go — Ketil rose from his knees in the sparks, 2026-11-14)
+    if (!part && last && last.how === 'hold' && last.to >= clips[clip].length - 1e-6) say(at, 'clip ' + clip + ' ends in its part «' + last.name + '» that holds, but is played whole: whole, it lets the body go at its end — play «' + clip + '.' + last.name + '»');
+  }
   else if (!builtin.has(name)) say(at, 'no clip «' + name + '» in assets/story/clips or the built-in ones: it would play only where a config has it');
 };
 // a standing word (StoryHold), a scene's «do» or a quest's start:/done:
@@ -231,5 +242,21 @@ const catalog = path.join(__dirname, '..', 'docs', 'CLIPS.md');
 const rows = fs.existsSync(catalog) ? fs.readFileSync(catalog, 'utf8') : '';
 for (const name of Object.keys(clips)) if (rows.indexOf('| `' + name + '` |') < 0) say(name + '.txt', 'no row in docs/CLIPS.md: say what it shows, on which body, from → to, its parts, where it is used, its state');
 
+// the people of the story and their moves (the user 2026-11-17: every new or changed person, every new clip — all of them gone over): a person
+// written by hand says what kinds of moves are not its own («shuns: …», «shuns: none») and how lively it is («persona: … lively=…»), and stands in
+// the table of docs/jobs/people-moves.md, which is the list gone over for each new clip
+{
+  const npcDir = path.join(root, 'assets', 'story', 'npc'), page = path.join(root, 'docs', 'jobs', 'people-moves.md');
+  const table = fs.existsSync(page) ? fs.readFileSync(page, 'utf8') : '';
+  if (!table) problems.push('PEOPLE docs/jobs/people-moves.md is missing: the table of the story\'s people and their moves');
+  for (const f of fs.existsSync(npcDir) ? fs.readdirSync(npcDir).filter(x => x.endsWith('.txt') && !x.startsWith('_') && x !== 'settler.txt') : []) {
+    const lines = fs.readFileSync(path.join(npcDir, f), 'utf8').split(/\r?\n/).map(x => x.replace(/#.*/, '').trim()), id = f.replace(/\.txt$/, '');
+    const shuns = lines.find(x => /^shuns\s*:/.test(x)), persona = lines.find(x => /^persona\s*:/.test(x)) || '';
+    if (!shuns) problems.push('PEOPLE npc/' + f + ': no «shuns:» line — which kinds of moves are not this person\'s (loose merry drinks, or «shuns: none»); the user says so, docs/jobs/people-moves.md');
+    else for (const t of shuns.split(':')[1].trim().split(/\s+/)) if (!['none', 'loose', 'merry', 'drinks'].includes(t)) problems.push('PEOPLE npc/' + f + ': shuns «' + t + '» — loose|merry|drinks|none');
+    if (!/\blively=/.test(persona)) problems.push('PEOPLE npc/' + f + ': no «lively=» in its «persona:» line — how much its body does of itself (1 as anyone, 0.45 Heid); docs/jobs/people-moves.md');
+    if (table && !new RegExp('^\\| `' + id + '` \\|', 'm').test(table)) problems.push('PEOPLE npc/' + f + ': no row in docs/jobs/people-moves.md — the list gone over for every new clip');
+  }
+}
 if (problems.length) { for (const p of problems) console.log(p); console.log('clipcheck: ' + problems.length + ' problem(s)'); process.exit(1); }
 console.log('clipcheck: ok (' + Object.keys(clips).length + ' clip file(s), ' + named + ' named by scenes)');

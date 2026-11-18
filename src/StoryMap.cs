@@ -13,33 +13,37 @@ namespace HuginWhispers
         internal static readonly Color Mark = new Color(1f, 0.8f, 0.3f, 1f);     // the «!» and the name
         internal static readonly Color Ring = new Color(1f, 0.78f, 0.3f, 0.8f);  // the ring round the place
 
-        private sealed class Entry { internal Vector3 At; internal string Label; internal float Radius; internal Minimap.PinData Mark, Ring; }
+        private sealed class Entry { internal Vector3 At; internal string Label; internal float Radius; internal bool Bare; internal Minimap.PinData Mark, Ring; }
         private static readonly Dictionary<string, Entry> Marks = new Dictionary<string, Entry>();
         private static Minimap _map;
 
         internal static int Count { get { return Marks.Count; } }
 
-        // a main task's mark here (the same key again: moved or renamed, drawn anew only when it changed)
-        internal static void Set(string key, Vector3 at, string label, float radius)
+        // a main task's mark here (the same key again: moved or renamed, drawn anew only when it changed). bare: its ring alone, no «!» (one is in the
+        // search's ring already — the user 2026-11-15: «коли заходжу у зону, прибирати знак оклику, повертати, коли покинув зону»)
+        internal static void Set(string key, Vector3 at, string label, float radius, bool bare = false)
         {
             if (Minimap.instance == null) return;
             Fresh();
             Entry e;
             if (Marks.TryGetValue(key, out e))
             {
-                if ((e.At - at).sqrMagnitude < 0.25f && e.Label == label && Mathf.Approximately(e.Radius, radius)) return;
+                if ((e.At - at).sqrMagnitude < 0.25f && e.Label == label && Mathf.Approximately(e.Radius, radius) && e.Bare == bare) return;
                 Remove(e);
             }
-            e = new Entry { At = at, Label = label, Radius = radius };
+            e = new Entry { At = at, Label = label, Radius = radius, Bare = bare };
             if (radius > 0f)
             {
                 e.Ring = Minimap.instance.AddPin(at, Minimap.PinType.EventArea, "", false, false, 0L, default(Splatform.PlatformUserID));
                 e.Ring.m_worldSize = radius * 2f;
                 e.Ring.m_icon = ErrandMap.GreyOf(e.Ring.m_icon); // (coloured gold in Tint)
             }
-            e.Mark = Minimap.instance.AddPin(at, Minimap.PinType.RandomEvent, label, false, false, 0L, default(Splatform.PlatformUserID));
-            e.Mark.m_animate = true;
-            e.Mark.m_icon = ErrandMap.GreyOf(e.Mark.m_icon);
+            if (!bare || radius <= 0f)
+            {
+                e.Mark = Minimap.instance.AddPin(at, Minimap.PinType.RandomEvent, label, false, false, 0L, default(Splatform.PlatformUserID));
+                e.Mark.m_animate = true;
+                e.Mark.m_icon = ErrandMap.GreyOf(e.Mark.m_icon);
+            }
             Marks[key] = e;
         }
 

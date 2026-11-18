@@ -120,7 +120,7 @@ namespace HuginWhispers
         // what one said of b reached b (heard, or carried by you)
         private static void WordsReached(NpcActor b, NpcActor speaker, bool good)
         {
-            if (good) { if (WarmPair(b, speaker)) NpcAttitude.TellPerson(b, speaker, PraiseWarm); NpcMemory.Tell(b, "praised_by", 0L, speaker.Name); } // (warmer once a game day a pair: WarmPair)
+            if (good) { if (WarmPair(b, speaker)) NpcAttitude.TellPerson(b, speaker, PraiseWarm); NpcMemory.Tell(b, "praised_by", 0L, speaker.Key); } // (warmer once a game day a pair: WarmPair)
             else NpcAttitude.Quarrel(b, speaker, "gossip");
         }
 
@@ -130,7 +130,7 @@ namespace HuginWhispers
             Row old = CarriedRow(p, about);
             if (old != null) Rows(p).Remove(old);
             Row r = PutRow(p, "h", about, SeedOf(speaker).ToString(CultureInfo.InvariantCulture));
-            r.Words = Clean(speaker.Name, 40); r.Count = tone; r.At = NowSec;
+            r.Words = Clean(speaker.Key, 40); r.Count = tone; r.At = NowSec; // (the speaker kept by its key: shown through NpcActor.Shown)
             SaveRows(p);
         }
 
@@ -153,7 +153,7 @@ namespace HuginWhispers
             NpcActor from = null;
             uint seed;
             if (uint.TryParse(r.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out seed)) foreach (NpcActor o in Folk(a, int.MaxValue)) if (SeedOf(o) == seed) from = o;
-            PassonSaid = NpcPhrases.Compose(a, good ? "passon_good" : "passon_bad", p, new Dictionary<string, string> { { "other", r.Words } }) ?? "…";
+            PassonSaid = NpcPhrases.Compose(a, good ? "passon_good" : "passon_bad", p, new Dictionary<string, string> { { "other", NpcActor.Shown(r.Words) } }) ?? "…";
             if (from == null) return; // (gone from its home: words, nothing between them now)
             WordsReached(a, from, good);
             if (good) Tone(a, p, new[] { "tone", "warm" }); // (a kind word brought: you too)
@@ -166,7 +166,7 @@ namespace HuginWhispers
         {
             Places[AboutPlace] = ShowFolkAbout;
             Deeds["passon"] = PassOn;
-            Words["{carried}"] = (a, p) => { Row r = CarriedRow(p, a); return r != null ? r.Words : "…"; };
+            Words["{carried}"] = (a, p) => { Row r = CarriedRow(p, a); return r != null ? NpcActor.Shown(r.Words) : "…"; };
             Words["{passon}"] = (a, p) => PassonSaid;
             StoryCond.Register("hasfolk", new StoryCond.Kind { Usage = "hasfolk   (в його оселі є ще поселенці)", Test = (p, w) => HasFolk(Him) });
             StoryCond.Register("carried", new StoryCond.Kind { Usage = "carried   (ти чув, що про нього казав хтось із його оселі)", Test = (p, w) => CarriedRow(p, Him) != null });

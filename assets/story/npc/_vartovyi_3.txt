@@ -1,0 +1,13 @@
+# Пробна постать для знімків видіння (обряд у Залі, видіння старої Варти: assets/story/memories; 2026-11-15). Лише для автора: файл
+# з «_» у мод не йде. Обличчя у видінні не розгледіти — вигляд простий.
+[npc _vartovyi_3]
+name: Вартовий
+body: human
+model: 0
+skin: 0.78 0.62 0.5
+haircolor: 0.15 0.12 0.1
+hair: Hair5
+beard: Beard3
+gear: ArmorTrollLeatherChest ArmorTrollLeatherLegs HelmetTrollLeather CapeTrollHide
+fight: off
+menu: no

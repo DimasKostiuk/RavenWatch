@@ -1,0 +1,65 @@
+# Знімки спогаду для хати Ейріка (сцена eirik_hearth, крок «Згадай»: «Бачу вогонь. Людей довкола купа, і ти серед них»; користувач 2026-11-15 — кадри
+# тлом у тій сцені). Лише для автора (файл з «_»). Зала — у стані 3, «обжита» (перед прогоном: raven blueprint state zala 3; вогонь — золотий,
+# raven blueprint state zala fire, доки не скаже «Варти»). У кадрі лише стара Варта в залізі й бронзі: гравець, Гейд, Торвальд і Літ спершу
+# виходять надвір до сходів (користувач: «прибрати мене зі знімку»). Два місця — біля вогню і біля трону (користувач: «ракурс, як всі стоять
+# біля трону»). Знімає Студія (node tools/anim.js scene zz_memory_fire, zz_memory_throne), кадри кроків (sc_<сцена>_step_<k>.png) обрізаються в
+# assets/story/memories/<знімок>.jpg (тон і розмиті краї гра кладе сама: StoryScreen.MakeMemory).
+[scene zz_memory_fire]
+place: zala
+test: gate hall open
+check: hall.vohnyshche 4
+npc heid go hall.skhody 2
+npc torvald go hall.skhody 3
+player go hall.skhody 1.5
+fade out 0.5
+npc _vartovyi_1 spawn zala at 2.4 0 -0.6 whole
+npc _vartovyi_2 spawn zala at -2.1 0 0.9 whole
+npc _vartovyi_4 spawn zala at 0.6 0 2.2 whole
+npc _vartovyi_5 spawn zala at -1.4 0 -2.0 whole
+npc _vartovyi_6 spawn zala at 3.6 0 1.8 whole
+npc _vartovyi_3 spawn zala at -3.8 0 -1.4 whole
+npc _vartovyi_1 face hall.vohnyshche
+npc _vartovyi_2 face hall.vohnyshche
+npc _vartovyi_4 face hall.vohnyshche
+npc _vartovyi_5 face hall.vohnyshche
+npc _vartovyi_6 face hall.vohnyshche
+npc _vartovyi_3 face hall.vohnyshche
+wait 1.5
+fade in 0.5
+# 1 vohon_varty — коло Варти біля золотого вогню, широко згори
+camera on hall.vohnyshche wide high cut
+wait 2.5
+# 2 varta_bilia_vohniu — гурт збоку, вогонь з краю (не засвічує середину)
+camera two npc._vartovyi_4 npc._vartovyi_1 cut
+wait 2.5
+camera off blend 0.5
+
+[scene zz_memory_throne]
+place: zala
+test: gate hall open
+check: hall.tron 5
+npc heid go hall.skhody 2
+npc torvald go hall.skhody 3
+player go hall.skhody 1.5
+fade out 0.5
+npc _vartovyi_1 spawn zala at 7.0 0 -4.6 whole
+npc _vartovyi_5 spawn zala at 7.3 0 -3.9 whole
+npc _vartovyi_4 spawn zala at 7.6 0 -3.15 whole
+npc _vartovyi_2 spawn zala at 7.9 0 -2.4 whole
+npc _vartovyi_6 spawn zala at 8.2 0 -1.7 whole
+npc _vartovyi_3 spawn zala at 6.4 0 -2.7 whole
+npc _vartovyi_1 face hall.tron
+npc _vartovyi_5 face hall.tron
+npc _vartovyi_4 face hall.tron
+npc _vartovyi_2 face hall.tron
+npc _vartovyi_6 face hall.tron
+npc _vartovyi_3 face hall.tron
+wait 1.5
+fade in 0.5
+# 1 varta_bilia_tronu — Варта півколом перед троном, широко згори
+camera on hall.tron wide high cut
+wait 2.5
+# 2 tron_i_varta — ближче: трон і передні вартові
+camera two npc._vartovyi_4 npc._vartovyi_2 cut
+wait 2.5
+camera off blend 0.5

@@ -1,5 +1,6 @@
 clip wipe_brow
 length 3.3
+tone plain
 loop 0
 pivot 1.1
 curve ease

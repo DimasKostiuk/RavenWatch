@@ -1,5 +1,6 @@
 clip fall_back
 length 3.4
+tone plain
 loop 0
 pivot 1.1
 curve ease

@@ -19,7 +19,7 @@ namespace HuginWhispers
         public const string Guid = "ko4erga.ravenwatch";
         public const string Name = "RavenWatch";
 #if RAVEN_ITEM
-        public const string Version = "2.9.4";
+        public const string Version = "3.0.0";
 #else
         public const string Version = "1.1.8";
 #endif
@@ -538,23 +538,23 @@ namespace HuginWhispers
             HFloat(sec, "Lost per hungry day", 10f, 5f, "Trust a worn raven loses per game day spent starving (satiety 0).", v => Trust.HungryLossPerDay = v);
             HFloat(sec, "Starving strike damage cut percent", 50f, "At satiety 0 the raven droops on the shoulder and its strike (Eye Peck / Talons) does this much less damage.", v => Trust.StarveStrikePct = Mathf.Clamp(v, 0f, 100f));
             HFloat(sec, "Trust from food: daily limit", 24f, "Most trust a raven gets from food in one game day.", v => Trust.FoodDailyCap = Mathf.Max(0f, v));
-            HFloat(sec, "Satiety lost per game day", 25f, 30f, "Satiety (0–100) a raven loses by itself in one game day.", v => Satiety.PerDay = Mathf.Max(0f, v));
+            HFloat(sec, "Satiety lost per game day", 20f, 25f, "Satiety (0–100) a raven loses by itself in one game day.", v => Satiety.PerDay = Mathf.Max(0f, v));
             HFloat(sec, "Satiety per gift percent", 25f, 30f, "Every gift used takes this share of its strength cost off the raven's satiety.", v => Satiety.GiftShare = Mathf.Max(0f, v) / 100f);
             HFloat(sec, "Order strength cost", 1f, "Strength an order costs (beside, circling, a trick, the chase).", v => Orders.Cost = Mathf.Max(0f, v));
             HFloat(sec, "Order scouting strength cost", 10f, "Strength the scouting order costs.", v => Orders.ScoutCost = Mathf.Max(0f, v));
             HFloat(sec, "Order satiety: beside or circling", 2.5f, 3f, "Satiety the order to fly beside you or circle over you takes (it lasts 5 minutes).", v => Orders.HungerStay = Mathf.Max(0f, v));
             HFloat(sec, "Order satiety: a trick", 1.25f, 1.5f, "Satiety one trick takes.", v => Orders.HungerTrick = Mathf.Max(0f, v));
             HFloat(sec, "Order satiety: the chase", 5f, 6f, "Satiety the chase takes from each raven.", v => Orders.HungerChase = Mathf.Max(0f, v));
-            HFloat(sec, "Hungry gift cost multiplier", 1.5f, "Gifts cost this many times more strength when the raven is hungry (satiety 15 or less).", v => Satiety.HungryCostMul = Mathf.Max(1f, v));
+            HFloat(sec, "Hungry gift cost multiplier", 1.5f, "Gifts cost this many times more strength when the raven is hungry (satiety 10 or less).", v => Satiety.HungryCostMul = Mathf.Max(1f, v));
             HFloat(sec, "Starving gift cost multiplier", 2f, "And at satiety 0.", v => Satiety.StarveCostMul = Mathf.Max(1f, v));
-            HFloat(sec, "Fed strength gain multiplier", 1.25f, "Strength comes this many times faster while the raven is fed (satiety 41–80). When hungry (15 or less) none comes.", v => Satiety.FedGainMul = Mathf.Max(0f, v));
+            HFloat(sec, "Fed strength gain multiplier", 1.25f, "Strength comes this many times faster while the raven is fed (satiety 31–90). When hungry (10 or less) none comes.", v => Satiety.FedGainMul = Mathf.Max(0f, v));
             HFloat(sec, "Stuffed strike damage cut percent", 25f, "Above satiety 80 the raven is stuffed: it does not fly about on its own and strikes this much weaker.", v => Satiety.StuffedStrikePct = Mathf.Clamp(v, 0f, 100f));
             HFloat(sec, "Favourite food fill multiplier", 1.5f, "Each raven has its own hidden favourite food: it fills this many times more.", v => Satiety.FavFillMul = Mathf.Max(1f, v));
             HFloat(sec, "Favourite food trust multiplier", 2f, "And gives this many times more trust (and the fed strike bonus lasts as many times longer).", v => { Satiety.FavTrustMul = Mathf.Max(1f, v); Satiety.FavFedMul = Satiety.FavTrustMul; });
-            HFloat(sec, "Hungry steal minutes", 5f, "A hungry raven (satiety 15 or less) helps itself from your bag this often.", v => Satiety.StealMinutes = Mathf.Max(1f, v));
+            HFloat(sec, "Hungry steal minutes", 5f, "A hungry raven (satiety 10 or less) helps itself from your bag this often.", v => Satiety.StealMinutes = Mathf.Max(1f, v));
             HFloat(sec, "Hungry coin steal chance percent", 25f, "Chance that, when it steals, it also takes coins.", v => Satiety.CoinChance = Mathf.Clamp(v, 0f, 100f));
             HFloat(sec, "Hungry coin steal amount", 100f, "Coins taken at once (all of them, if you have fewer).", v => Satiety.CoinTake = Mathf.Max(0, Mathf.RoundToInt(v)));
-            HFloat(sec, "Munin corpse peck chance percent", 50f, "A hungry Munin (satiety 40 or less) may peck at what you kill (at most once a minute).", v => Satiety.CorpseChance = Mathf.Clamp(v, 0f, 100f));
+            HFloat(sec, "Munin corpse peck chance percent", 50f, "A hungry Munin (satiety 30 or less) may peck at what you kill (at most once a minute).", v => Satiety.CorpseChance = Mathf.Clamp(v, 0f, 100f));
             HFloat(sec, "Munin corpse peck satiety", 8f, "Satiety a peck at a kill gives Munin.", v => Satiety.CorpseFill = Mathf.Max(0f, v));
             HFloat(sec, "Starving peck minutes", 30f, "A starving raven pecks you this often (never when your health is this low or lower).", v => Trust.StarvePeckMinutes = Mathf.Max(1f, v));
             HFloat(sec, "Starving peck damage", 10f, "Health a starving raven's peck takes.", v => Trust.StarvePeckDamage = Mathf.Max(0f, v));
@@ -968,6 +968,7 @@ namespace HuginWhispers
             LocModules.ServerTick(); // (the story's places: the server's part)
             LocModules.Tick(); // (and everyone's)
             NpcMap.Tick(); // (the marks of people in need even with nobody loaded near: throttled inside)
+            MapKeep.Tick(); // (the hearts' lasting marks on your map: every 2 s inside)
 #endif
 #if RAVEN_ITEM && RAVEN_STORY
             StoryModules.ServerTick(); // (the server: the story's people, a world's first heart)
@@ -1334,6 +1335,14 @@ namespace HuginWhispers
             return cur != null && cur.m_key != null && cur.m_key.StartsWith(KeyPrefix, StringComparison.Ordinal);
         }
 
+        // a raven of ours whose words nobody waits for any more (the visit ran out, a scene began) has said its piece: the game lets it fly off, as after a talk
+        internal static void LetGo(Raven raven)
+        {
+            if (raven == null || RavenHasTalked == null || !IsSpawned(raven) || (bool)RavenHasTalked.GetValue(raven)) return;
+            RavenHasTalked.SetValue(raven, true);
+            RavenVisitLog.Log("Game raven: its words are not waited for any more — let go");
+        }
+
         // A raven bringing a visit does not turn back on its own: vanilla sends ravens off when an enemy is near
         // the spot or a raid is on, and calls them again seconds later, so it flickered in the air over and over.
         // It leaves once talked to, once the visit runs out (Leaves after minutes), or when the player walks far off.
@@ -1435,7 +1444,7 @@ namespace HuginWhispers
         // the raven still has something to say to this player
         internal static bool Waiting { get { return Instance != null && Instance._pendingKey != null; } }
         // a scene begins (StoryScenes: it never waits for a raven): the visit nobody heard runs out now, the way it runs out by itself
-        internal static void RunOutVisit() { if (Instance != null) Instance._pendingSince = Time.time - 1000000f; }
+        internal static void RunOutVisit() { if (Instance == null) return; Instance._pendingSince = Time.time - 1000000f; if (Instance._quipEndsAt > 0f) Instance._quipEndsAt = Time.time; } // (a quick raven mid-word goes too: QuipDone on the next frame)
         // a raven still holding an older visit's text (same key) is not this visit's raven
         internal static bool IsPending(Raven.RavenText text)
         {
@@ -1664,7 +1673,8 @@ namespace HuginWhispers
         {
             Raven.RavenText cur = Plugin.CurrentText(__instance);
             bool ours = cur != null && cur.m_key != null && cur.m_key.StartsWith(Plugin.KeyPrefix, StringComparison.Ordinal);
-            if (ours) Plugin.MarkSpawned(); // m_currentText is only set when the raven lands with this text
+            if (ours && Plugin.IsPending(cur)) Plugin.MarkSpawned(); // m_currentText is only set when the raven lands with this text
+            else if (ours && !Plugin.HoldsQuip(__instance)) Plugin.LetGo(__instance); // (our words nobody waits for now — run out, a scene began: it keeps the old text it landed with, so the game never sends it off; the Guide hung over the glade through the whole ambush, 2026-11-14)
 #if RAVEN_ITEM
             GuideLook.Update(__instance);
 #endif

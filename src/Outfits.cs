@@ -189,6 +189,22 @@ namespace HuginWhispers
         // in the book at all: a finished piece (or any piece while tuning)
         internal static bool Listed(Entry e) { return e != null && (Tuning || Builtin.ContainsKey(e.Prefab) || (e.Gear != null && (e.Gear.BuiltIn || Perches.FromFiles))); }
 
+        // Every finished head piece, as a player has them (no tuning, no author's files), in one order on every game
+        // (by prefab, not by the shown name): the hats a person's raven wears in turn (NpcRaven «raven_hat»). Made again
+        // only with a new catalog.
+        private static List<string> _hats = new List<string>();
+        private static List<Entry> _hatsFrom;
+        internal static List<string> HatPool()
+        {
+            List<Entry> cat = Catalog();
+            if (ReferenceEquals(_hatsFrom, cat)) return _hats;
+            _hatsFrom = cat;
+            _hats = new List<string>();
+            foreach (Entry e in cat) if (e.Slot == Head && (e.Gear != null ? e.Gear.BuiltIn : Builtin.ContainsKey(e.Prefab))) _hats.Add(e.Prefab);
+            _hats.Sort(string.CompareOrdinal);
+            return _hats;
+        }
+
         // This raven may wear this piece now. The level counts once the raven is back from Odin (a ritual's new
         // level opens its pieces on its return); Odin's gifts are kept in the raven. asPlayer: by the game's own rules
         // even while the author tunes the outfits (a raven's wish must never ask for what a player could not have yet)
@@ -709,7 +725,9 @@ namespace HuginWhispers
         internal class Piece : MonoBehaviour { }
         private class State : MonoBehaviour { public string Code = ""; public int Version; }
 
-        // dress the raven model as the code says ("head|neck|back|legs", an older "head|neck" too); nothing happens when it already is
+        // dress the raven model as the code says ("head|neck|back|legs", an older "head|neck" too); nothing happens when it already is.
+        // A slot may hold several pieces joined by «+» — only a story's bird asks so (StoryLooks «wear:»: Bruni's raven, claws and bracelets on its
+        // legs, the user 2026-11-18); a player's raven keeps one a slot (its item, its ZDO: CodeOn)
         internal static void Dress(GameObject raven, string code)
         {
             if (raven == null) return;
@@ -720,9 +738,10 @@ namespace HuginWhispers
             st.Code = code; st.Version = Version;
             Undress(raven);
             string[] parts = code.Split('|');
-            for (int slot = Head; slot < Slots; slot++)
+            for (int slot = Head; slot < Slots && slot < parts.Length; slot++)
+            foreach (string one in parts[slot].Split('+'))
             {
-                Entry e = parts.Length > slot ? Find(parts[slot]) : null;
+                Entry e = Find(one);
                 if (e != null) PutOn(raven, e);
             }
         }

@@ -9,7 +9,7 @@ namespace HuginWhispers
     // its own fields), only its looks left on it, on a layer nobody else draws, its own camera and lamps.
     // Dressed from the template every frame it is drawn (the game's setters change nothing when nothing changed), turned
     // round (Yaw, a drag on the picture), framed from the whole body to the face (Shot). Filmed only while the tab asks
-    // (Want); gone a few seconds after.
+    // (Want); gone a few seconds after. The body is the one its template asks for (Npcs.PrefabOf: a person's, a dvergr's): another kind picked, made anew.
     internal sealed class NpcPreview : MonoBehaviour
     {
         internal const int W = 360, H = 480;
@@ -26,6 +26,7 @@ namespace HuginWhispers
         private Camera _cam;
         private RenderTexture _rt;
         private GameObject _body;
+        private string _bodyOf = ""; // (the prefab it was made of)
         private VisEquipment _vis;
         private int _layer = -1;
 
@@ -56,7 +57,6 @@ namespace HuginWhispers
             Lamp(1.1f, Color.white, Quaternion.Euler(35f, 160f, 0f));
             Lamp(0.55f, new Color(0.8f, 0.85f, 1f), Quaternion.Euler(20f, -30f, 0f));
             Lamp(0.45f, Color.white, Quaternion.Euler(-20f, 0f, 0f));
-            MakeBody();
         }
 
         private void Lamp(float power, Color c, Quaternion turn)
@@ -68,9 +68,11 @@ namespace HuginWhispers
 
         // the people's body with only its looks left: made asleep (nothing of it wakes before it is stripped), woken with
         // no network object (the game's own switch for its character preview)
-        private void MakeBody()
+        private void MakeBody(string of)
         {
-            GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(Npcs.HumanPrefab) : null;
+            if (_body != null) { _body.transform.parent.gameObject.SetActive(false); Destroy(_body.transform.parent.gameObject); _body = null; _vis = null; } // (its holder with it)
+            _bodyOf = of; Problem = "";
+            GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(of) : null;
             if (prefab == null) { Problem = "Тіла NPC ще нема (світ не завантажений)."; return; }
             GameObject holder = new GameObject("body");
             holder.SetActive(false);
@@ -98,7 +100,9 @@ namespace HuginWhispers
         private void LateUpdate()
         {
             if (Time.unscaledTime - _wanted > 5f) { Destroy(gameObject); return; } // (the tab long closed: gone)
-            if (Time.unscaledTime - _wanted > 0.3f || _def == null || _vis == null || _cam == null) return; // (not drawn just now: not filmed)
+            if (Time.unscaledTime - _wanted > 0.3f || _def == null || _cam == null || _def.Odin) return; // (not drawn just now: not filmed)
+            if (_bodyOf != Npcs.PrefabOf(_def)) MakeBody(Npcs.PrefabOf(_def)); // heavy: once a kind of body picked in the tab (a body made, stripped to its looks)
+            if (_vis == null) return;
             Dress(_def);
             Layer(_body.transform); // (what it was dressed in just now is made on the game's layers: onto ours)
             _body.transform.localRotation = Quaternion.Euler(0f, 180f + Yaw, 0f); // (its face towards the camera at 0)
@@ -116,17 +120,21 @@ namespace HuginWhispers
         private void Dress(NpcDef d)
         {
             if (d.Odin) return;
-            _vis.SetModel(d.Model);
-            _vis.SetSkinColor(d.Skin);
-            _vis.SetHairColor(d.HairColor);
-            _vis.SetHairItem(Hash(d.Hair));
-            _vis.SetBeardItem(d.Model == 0 ? Hash(d.Beard) : 0);
+            if (!d.Dvergr) // (a dvergr's look is its gear alone: NpcDef)
+            {
+                _vis.SetModel(d.Model);
+                _vis.SetSkinColor(d.Skin);
+                _vis.SetHairColor(d.HairColor);
+                _vis.SetHairItem(Hash(d.Hair));
+                _vis.SetBeardItem(d.Model == 0 ? Hash(d.Beard) : 0);
+            }
+            string trinket = ""; // (the game takes this slot by name)
             int chest = 0, legs = 0, helmet = 0, shoulder = 0, utility = 0, right = 0, left = 0;
             foreach (string g in d.Gear)
             {
                 GameObject pf = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(g) : null;
                 ItemDrop id = pf != null ? pf.GetComponent<ItemDrop>() : null;
-                if (!NpcGear.Wearable(id)) continue; // (what it would wear in the world: not a creature's attack)
+                if (id == null || (!NpcGear.Wearable(id) && !d.Dvergr)) continue; // (what it would wear in the world: not a creature's attack; a dvergr's suit and hair are a creature's own — NpcActor.Dress)
                 int h = g.GetStableHashCode();
                 switch (id.m_itemData.m_shared.m_itemType)
                 {
@@ -135,6 +143,7 @@ namespace HuginWhispers
                     case ItemDrop.ItemData.ItemType.Helmet: helmet = h; break;
                     case ItemDrop.ItemData.ItemType.Shoulder: shoulder = h; break;
                     case ItemDrop.ItemData.ItemType.Utility: utility = h; break;
+                    case ItemDrop.ItemData.ItemType.Trinket: trinket = g; break;
                     case ItemDrop.ItemData.ItemType.Shield:
                     case ItemDrop.ItemData.ItemType.Bow: left = h; break;
                     case ItemDrop.ItemData.ItemType.OneHandedWeapon:
@@ -145,11 +154,13 @@ namespace HuginWhispers
                 }
             }
             _vis.SetChestItem(chest); _vis.SetLegItem(legs); _vis.SetHelmetItem(helmet);
-            _vis.SetShoulderItem(shoulder, 0, 0); _vis.SetUtilityItem(utility);
+            _vis.SetShoulderItem(shoulder, 0, 0); _vis.SetUtilityItem(utility); _vis.SetTrinketItem(trinket);
             _vis.SetRightItem(right, 0); _vis.SetLeftItem(left, 0, 0);
             NpcPersona w = NpcPersona.OfTemplate(d); // (its height and build as in the world: NpcBody)
             if (Mathf.Abs(_body.transform.localScale.y - w.Height) > 0.001f) _body.transform.localScale = Vector3.one * w.Height;
-            BodyBuild.Set(_vis, w.Build); // (nothing unless it changed)
+            if (!d.Dvergr) BodyBuild.Set(_vis, w.Build); // (nothing unless it changed; a dvergr has no build)
+            BodyTint.Set(_vis, d); // (its own colours: a dvergr's, a person's eyes and cape)
+            NpcHat.Wear(_vis, _body.transform, d); // (a raven's hat of ours: nothing made unless it changed)
         }
 
         private static int Hash(string item) { return string.IsNullOrEmpty(item) || ObjectDB.instance == null || ObjectDB.instance.GetItemPrefab(item) == null ? 0 : item.GetStableHashCode(); }

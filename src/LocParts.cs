@@ -210,7 +210,7 @@ namespace HuginWhispers
         internal static string Layer(ZNetView nv, string layer)
         {
             if (string.IsNullOrEmpty(layer)) layer = "-";
-            if (layer != "-" && !LocState.GoodLayer(layer)) return "Шар: " + string.Join(", ", LocState.Layers) + ", only<N>, from<N>, позначки субстанів +1.1 / -1.1 через кому, чи - (без шару).";
+            if (layer != "-" && !LocState.GoodLayer(layer)) return "Шар: " + string.Join(", ", LocState.Layers) + ", only<N>, from<N>, gone (прибрана з креслення: у вже збудованих світах ховається), позначки субстанів +1.1 / -1.1 через кому, чи - (без шару).";
             string done = Write(nv, layer, Layers);
             if (done == null) return Bad(nv);
             LocState.Again();
@@ -308,8 +308,13 @@ namespace HuginWhispers
         // effects and people change that every frame), and at once when the author's files change (Version). Its pieces by its own stamp or — the author's world —
         // by his building's frame (Place: one rule with Loc.Anchor); round where it stands (Loc.Anchor). A piece gone
         // since is left out when asked. Named ones found from that same look.
-        internal static float LookAgain = 2f, MinAgain = 0.25f; // (the longest a look is kept; the soonest again when the game's pieces came or went)
-        private sealed class Look { public float At = -100f; public int Ver = -1, Loaded = -1; public object World; public List<ZNetView> All; public readonly List<ZNetView> Pieces = new List<ZNetView>(); public readonly List<Vector3> Spots = new List<Vector3>(); public readonly List<bool> Stamped = new List<bool>(); public readonly Dictionary<string, List<ZNetView>> Named = new Dictionary<string, List<ZNetView>>(); }
+        // Measured 2026-11-11 (raven npc perf, 1115 s by a base): 1.2 looks a second, 2.1 ms each — 2.5 ms of every second, the second dearest thing
+        // the people's side did, though nothing had changed. A place whose spot is known (Fixed) is now looked over only when a piece came or went
+        // within its reach (PieceChanged: the game's Piece.Awake / OnDestroy, the patches NpcBase already has), MinAgain s apart at most, and once
+        // in SafeAgain s all the same. A place with no spot yet (looked for round the player), and the author's game (his frame may move, his
+        // files change), keep the look by the clock as before.
+        internal static float LookAgain = 2f, MinAgain = 0.25f, SafeAgain = 30f; // (the longest a look by the clock is kept; the soonest again when pieces came or went; the longest a look by pieces is kept)
+        private sealed class Look { public bool Fixed, Dirty; public Vector3 Centre; public float Reach; public float At = -100f; public int Ver = -1, Loaded = -1; public object World; public List<ZNetView> All; public readonly List<ZNetView> Pieces = new List<ZNetView>(); public readonly List<Vector3> Spots = new List<Vector3>(); public readonly List<bool> Stamped = new List<bool>(); public readonly Dictionary<string, List<ZNetView>> Named = new Dictionary<string, List<ZNetView>>(); }
         private static readonly System.Reflection.FieldInfo AllPieces = AccessTools.Field(typeof(Piece), "s_allPieces");
         private static System.Collections.ICollection _allPieces;
         // how many pieces the game has loaded now (its own list); the game changed: every object it has instead, as before
@@ -329,15 +334,21 @@ namespace HuginWhispers
             if (!_looks.TryGetValue(of, out k)) _looks[of] = k = new Look();
             int loaded = PiecesLoaded(); // (a piece came or went: one of this place, maybe — hidden layers must not flash)
             float age = Time.time - k.At;
-            if (k.Ver == Version && ReferenceEquals(k.World, ZNet.instance) && age < LookAgain && (loaded == k.Loaded || age < MinAgain)) return k;
+            bool byPieces = k.Fixed && !Blueprint.On;
+            if (k.Ver == Version && ReferenceEquals(k.World, ZNet.instance)
+                && (byPieces ? age < SafeAgain && (!k.Dirty || age < MinAgain) : age < LookAgain && (loaded == k.Loaded || age < MinAgain))) return k;
             long perf = NpcPerf.Now();
-            k.At = Time.time; k.Ver = Version; k.World = ZNet.instance; k.Loaded = loaded;
+            k.At = Time.time; k.Ver = Version; k.World = ZNet.instance; k.Loaded = loaded; k.Dirty = false; k.Fixed = false;
             k.Pieces.Clear(); k.Spots.Clear(); k.Stamped.Clear(); k.Named.Clear(); k.All = null;
             Vector3 at; Quaternion rot;
             Loc l = Locs.Get(of);
             float reach = l != null && l.Shape() ? l.Reach() + 10f : 60f; // (no blueprint in this build: a ring as wide as the Hall's)
             if (l == null || !l.Anchor(out at, out rot)) { if (Player.m_localPlayer == null) return k; at = Player.m_localPlayer.transform.position; }
-            else if (BeyondLoaded(at, reach)) { NpcPerf.Add(PerfLook, perf); return k; }
+            else
+            {
+                k.Fixed = true; k.Centre = at; k.Reach = reach; // (it stands there: its pieces come and go round that spot only)
+                if (BeyondLoaded(at, reach)) { NpcPerf.Add(PerfLook, perf); return k; }
+            }
             _near.Clear();
             Piece.GetAllPiecesInRadius(at, reach, _near); // heavy: walks every loaded piece of the world; one look a place, every LookAgain s, every MinAgain s at most while pieces come and go, and only while the place can be loaded
             foreach (Piece pc in _near)
@@ -349,6 +360,19 @@ namespace HuginWhispers
             }
             NpcPerf.Add(PerfLook, perf);
             return k;
+        }
+
+        // a piece came into the world or left it here (every game: NpcBasePieceIn / NpcBasePieceOut): the places it may be of are looked over again
+        // when next asked. Called in bursts as a zone loads: a look at the few places there are, nothing else
+        internal static void PieceChanged(Vector3 at)
+        {
+            if (_looks.Count == 0) return;
+            foreach (Look k in _looks.Values)
+            {
+                if (!k.Fixed || k.Dirty) continue;
+                float dx = at.x - k.Centre.x, dz = at.z - k.Centre.z, far = k.Reach + 2f;
+                if (dx * dx + dz * dz <= far * far) k.Dirty = true;
+            }
         }
 
         // nothing of a place this far from this game's view can be loaded (the game's own ring, near + far, one zone to spare), so no piece to look for: measured 2026-11-06, 5.5 ms a look with every place 400-600 m away. A dedicated server asks always: it has no view of its own

@@ -95,6 +95,47 @@ namespace HuginWhispers
             return l;
         }
 
+        // a place the world keeps as a text «x y z» (the first heart, a location found): every game and the server read the same; false — none yet
+        internal static bool Pos(string name, out UnityEngine.Vector3 at)
+        {
+            at = UnityEngine.Vector3.zero;
+            string[] w = Text(name).Split(' ');
+            float x, y, z;
+            if (w.Length < 3 || !float.TryParse(w[0], NumberStyles.Float, CultureInfo.InvariantCulture, out x) || !float.TryParse(w[1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
+                || !float.TryParse(w[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z)) return false;
+            at = new UnityEngine.Vector3(x, y, z);
+            return true;
+        }
+        internal static void SetPos(string name, UnityEngine.Vector3 at)
+        {
+            SetText(name, at.x.ToString("0.#", CultureInfo.InvariantCulture) + " " + at.y.ToString("0.#", CultureInfo.InvariantCulture) + " " + at.z.ToString("0.#", CultureInfo.InvariantCulture));
+        }
+
+        // A block of the story over (a quest's «scratch:», docs/jobs/story-data.md «Блоки сюжету»): its own keys taken away — a flag, number or text named
+        // with one of the prefixes, or so named after the words of the kinds that keep such keys (ScratchKinds: a module adds its own — «t_» a day's mark,
+        // «found_», «stash_»…): «ch1_x», «t_ch1_heart», «stashed_found_ch1_house». Nothing else is touched (a quest's state «q_…», a tale, a word to a
+        // person): a quest named so keeps its state. Each key gone is one send of the list to every game: once a block. How many
+        internal static readonly List<string> ScratchKinds = new List<string>();
+        internal static int Forget(string prefixes) { return Forget(prefixes, false); }
+        // whole: the names exactly (one place found, turned off: «ch1_house» — not «ch1_house2» beside it), and a thing's own key at that place
+        // («ch1_thistle__ravenwatch_item_budyak_heid»: ThingSep — StoryFound's lay, plant)
+        internal const string ThingSep = "__";
+        internal static int Forget(string prefixes, bool whole)
+        {
+            int n = 0;
+            string[] pre = prefixes.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            foreach (string k in All())
+            {
+                int sp = k.IndexOf(' ');
+                string name = sp < 0 ? k : k.Substring(0, sp), bare = name;
+                for (bool cut = true; cut; ) { cut = false; foreach (string kind in ScratchKinds) if (bare.StartsWith(kind, System.StringComparison.Ordinal)) { bare = bare.Substring(kind.Length); cut = true; break; } } // («stashed_found_ch1_house» → «ch1_house»)
+                foreach (string p in pre)
+                    if (whole ? bare == p || bare.StartsWith(p + ThingSep, System.StringComparison.Ordinal) : bare.StartsWith(p, System.StringComparison.Ordinal)) { ZoneSystem.instance.RemoveGlobalKey(Prefix + name); n++; break; }
+            }
+            if (n > 0) Story.Log("world: " + n + " key(s) of «" + prefixes + "» forgotten" + Cost());
+            return n;
+        }
+
         // the author's «as if this world never had a story» (the panel, the console)
         internal static int Clear()
         {

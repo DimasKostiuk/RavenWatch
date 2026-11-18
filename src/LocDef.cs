@@ -16,6 +16,7 @@ namespace HuginWhispers
         internal string Near = "";                   // round another place of the story («» — round the start)
         internal Dictionary<string, float> Apart = new Dictionary<string, float>(); // «apart: prologue_munin 100»: its middle at least that far from that place's (both ways)
         internal bool Edge;                          // Min..Max counted between the walls of the two (not from the other's middle)
+        internal bool Nearest;                       // «from: … nearest»: the ring swept from its inner edge out — the first spot that fits, the nearest such land (the user 2026-11-17: Torvald's post in the Black Forest nearest to the world's middle)
         internal float Min = 300f, Max = 1500f, Far = 3000f; // m from the start / from that place (the last ring only if the first has no place)
         internal float Clear = 40f;                  // m round the footprint free of any player's building
         internal float RoomAlong, RoomAcross;        // «room: 5 8»: its own ground beyond the blueprint's walls, m in front and behind / on each side (the user 2026-11-06: room for its states to come — a caravan's road); sought, levelled and cleared with it
@@ -30,14 +31,21 @@ namespace HuginWhispers
         internal string ColdWhile = "";              // «cold: state zala < 1.2»: inside its building you are cold while these hold (LocCold) — world conditions
         internal bool Refuge;                        // «refuge: yes»: the ravens' home — the unhired go there to be hired again (NpcTravel; the Hall)
         internal string HearthShut = "Попіл не займається. Тут ще замкнено.";  // «hearthshut: <слова>»: its hearth when its great door is still locked
+        internal string HearthGives = ""; // «hearthgives: <item prefab>»: its hearth, burning with the Watch's fire, gives one of these on E — one at a time (the Hall: the ember that lights a heart of home)
+        internal string HearthGiveWait = "", HearthGiveWaitWords = ""; // «hearthgivewait: <conditions> :: <words>»: what it gives (hearthgives) it does not give while these hold — the story is not there yet (the Hall: no ember before Heid's scene, the user 2026-11-15)
+        internal string HearthWait = "", HearthWaitWords = "";  // «hearthwait: <conditions> :: <words>»: its hearth is not lit while these hold for the one who tries (the story is not there yet), and says these words
         internal string MapMark = "";                // «mapmark: world heart_first, !been zala»: its golden mark on the map for whoever these hold for (no story: always)
+        internal string MapPin = "";                 // «mappin: been zala»: once these hold, a lasting mark of the game's on your map with its name (MapKeep: put once a world, yours to take off)
         internal List<Rule> Becomes = new List<Rule>(); // «becomes: 1.1 hearth zala >= 1»: the server moves it on to that step once these hold — forward only, behind the scenes
         internal Rule Follow;                        // «follows: 2 state zala >= 1.2»: that state while these hold, else its first — both ways, behind the scenes (Heid's camp)
         internal Dictionary<string, List<KeyValuePair<string, string>>> Reads = new Dictionary<string, List<KeyValuePair<string, string>>>(); // «read: rizba hearth zala 2 :: <words>»: what E on a touched piece shows, the first whose conditions hold
-        internal Dictionary<string, string> ElseDo = new Dictionary<string, string>(); // «elsedo: lyst heartlearn»: the story's actions on a touch no stage of yours waits for (LocTouch)
+        internal Dictionary<string, string> Pools = new Dictionary<string, string>(); // «pool: imena_1 Арне, Бйорн, …»: a list of names a «read:» line draws from by «{pool <place>.<name> N}» — which N is the world's (LocTouch.Shown)
+        internal Dictionary<string, string> ElseDo =new Dictionary<string, string>(); // «elsedo: lyst heartlearn»: the story's actions on a touch no stage of yours waits for (LocTouch)
         internal HashSet<string> TouchQuiet = new HashSet<string>(); // («touch: rizba quiet …»: no glow — E on it all the same)
         internal string[] RuinLit = new string[0];   // pieces (prefabs) still burning in its ruin — the rest of its fires are out
         internal List<LitStep> LitFrom = new List<LitStep>(); // pieces (prefabs) burning in its ruin from a step on (Hall: hearth from 1.1)
+        internal List<WornStep> Worn = new List<WornStep>(); // «worn: 1.4 0.5 on wall roof»: at that step only part of its walls and roofs broken, all else whole — mending begun (LocState.Broken)
+        internal string[] WornOn = new string[0];    // …the words of their prefabs
         internal List<KeyValuePair<string, string>> LitWhile = new List<KeyValuePair<string, string>>(); // «litwhile: fire_pit !flag echo_gone»: that fire burns (no fuel needed) for you while the story's conditions hold for you, else it is out (LocState.LitWhile)
         internal List<KeyValuePair<string, string>> HideWhile = new List<KeyValuePair<string, string>>(); // «hidewhile: lyst flag letter_read»: that named piece is gone for you while the story's conditions hold for you (any of its lines); a world's condition: for everyone (LocState.HideWhile: the Hall's old letter, once read)
         internal List<KeyValuePair<string, string>> StateWhile = new List<KeyValuePair<string, string>>(); // «statewhile: 2 !flag echo_gone»: the state each player sees is his own — that one while the story's conditions hold for him, else the first (LocState.StateOf: the ghost's house lived in till he has the book)
@@ -53,7 +61,20 @@ namespace HuginWhispers
         internal bool Grass;                         // its ground keeps all its grass (else bare earth under its floors, grass round them)
         internal float BareRound;                    // >0: bare earth only within that many m of its middle, grass round it («grass: 5»)
         internal Dictionary<string, Color> Tints = new Dictionary<string, Color>(); // pieces (prefabs) recoloured in it
-        internal string KeyBase;                     // its world keys' stem
+        internal string Inside = "", InsideDoor = ""; // «inside: ch1_crypt door vkhid»: an inside of the game's rooms hangs over it (the layout of assets/story/rooms: LocInside), and E on that named piece of it is the way in
+        internal string Shell = "";                  // «shell: Crypt2 [x y z turn]»: the look of a location of the game (its mound, its stones) stands over the place, set so that the game's own way in is at the inside's door (LocInside)
+        internal Vector3 ShellShift; internal float ShellTurn; // …moved and turned by that from where its own way in puts it (the author's eye)
+        internal string InsideMusic = ""; internal float InsideMusicVol = 1f; // «insidemusic: <sound> [vol V]»: its own music while the player is in its inside, the game's back once out (LocInsideMusic; the crypt, the user 2026-11-15)
+        internal string InsideShut = "", InsideShutWords = ""; // «insideshut: <conditions> :: <words>»: the way in is sealed for a player while these hold for him, and says these words
+        internal List<SitSay> SitSays = new List<SitSay>(); // «sitsay: in.ch1_crypt.tron seat_throne_search step ch1 crypt_search»: sat on a seat there — your raven's word of that tag, the first line whose conditions hold (LocSitSay)
+        internal sealed class SitSay { internal string Place = "", Tag = "", When = ""; }
+        // its own raven (LocRaven; the Hall's postman, the user 2026-11-17): «raven: <look> <named piece> <conditions>» — of that look
+        // (assets/story/looks), its word kept in that piece's ZDO, alive in the world while the conditions hold; «ravenroof: x y z» the point
+        // under its roof it goes out and comes in through (its blueprint's frame); «ravensits: <prefabs>» what it sits on besides the perches
+        internal string RavenLook = "", RavenHome = "", RavenWhen = "";
+        internal Vector3 RavenRoof; internal bool HasRavenRoof;
+        internal string[] RavenSits = new string[0];
+        internal string KeyBase;                    // its world keys' stem
 
         // a step of its states and the world conditions that bring it (becomes, follows)
         internal sealed class Rule { internal int State, Sub; internal string When = ""; }
@@ -64,6 +85,7 @@ namespace HuginWhispers
         internal string KeyBuilt { get { return KeyBase + "_built"; } }
         internal string KeyNo { get { return KeyBase + "_no"; } }
         internal string KeyAgain { get { return KeyBase + "_again"; } } // (built again where it stood: no player-building check, it stood there already)
+        internal string KeyFill(int blueprint) { return KeyBase + "_fill" + blueprint.ToString(System.Globalization.CultureInfo.InvariantCulture); } // (the pieces of that blueprint put into it where they were missing: Loc.FillOnce (LocBuild.cs))
         internal string KeyWild { get { return KeyBase + "_wild"; } } // (its ground cleared by Wild's answer: a place built before it kept the bushes — LocBuild.WildOnce)
         internal string KeyTight { get { return KeyBase + "_tight"; } } // (no place with its room in this world: it stands by its walls alone — Loc.Room)
         internal string KeyState { get { return KeyBase + "_state"; } }
@@ -71,6 +93,7 @@ namespace HuginWhispers
         internal string KeySub { get { return KeyBase + "_sub"; } }
         internal string KeyGate { get { return KeyBase + "_gate"; } }
         internal string KeyFire { get { return KeyBase + "_fire"; } } // (its hearth's fire, if it has one: LocHearth)
+        internal string KeyInside { get { return KeyBase + "_inside"; } } // (where its inside hangs, «x y z yaw», once the server has put it: LocInside)
         // the keys the story changes as it goes (its state, its gate, its fire) — not where it stands nor that it is built: what a
         // studio check gives back after its run (StudioScene.TestState); a place built during a run stays built
         internal string[] StoryKeys { get { return new[] { KeyState, KeyNext, KeySub, KeyGate, KeyFire }; } }
@@ -90,6 +113,15 @@ namespace HuginWhispers
             foreach (LitStep f in LitFrom)
                 if ((state > f.State || (state == f.State && sub >= f.Sub)) && Array.IndexOf(f.Prefabs, prefab) >= 0) return true;
             return false;
+        }
+
+        // «worn: 1.4 0.5 on wall roof»: at that step this part of its pieces whose prefab has one of these words still looks broken,
+        // the rest of the place whole (LocState.Broken); -1 — a step not named: as its state has it
+        internal struct WornStep { internal int State, Sub; internal float Share; }
+        internal float WornShare(int state, int sub)
+        {
+            foreach (WornStep w in Worn) if (w.State == state && w.Sub == sub) return w.Share;
+            return -1f;
         }
     }
 }

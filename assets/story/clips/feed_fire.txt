@@ -1,5 +1,6 @@
 clip feed_fire
 length 4.1
+tone plain
 loop 0
 pivot 1.1
 curve ease

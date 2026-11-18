@@ -1,0 +1,12 @@
+# the sub-states each place's state had at the last build (storycheck: a new one asks its marked pieces again)
+kurhan 1 0
+prologue_house 1 0
+prologue_house 2 0
+prologue_hugin 1 0
+prologue_munin 1 0
+torvald 1 2
+torvald 2 0
+torvald_post 1 0
+zala 1 4
+zala 2 2
+zala 3 0

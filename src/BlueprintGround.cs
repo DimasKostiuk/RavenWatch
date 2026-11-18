@@ -17,6 +17,7 @@ namespace HuginWhispers
     //     painted bare (no grass through the floor), trees/rocks/bushes on it taken away;
     //   - undo: the terrain as it was (the trees and rocks taken stay gone);
     //   - here: the author's square round him flat at his feet (raven blueprint ground <half m> | undo), the same way.
+    //   - a glade: trees/rocks/bushes taken away round a spot, the ground left as it is (ClearRound: the story's glade, StoryFound).
     internal static class BlueprintGround
     {
         internal const float NoGround = -0.15f; // (a blueprint saved before «ground»: just under the floor)
@@ -32,6 +33,7 @@ namespace HuginWhispers
         private static readonly MethodInfo MSave = typeof(TerrainComp).GetMethod("Save", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly MethodInfo FindObjects = HarmonyLib.AccessTools.Method(typeof(ZDOMan), "FindObjects");
         private static readonly MethodInfo MakeObject = HarmonyLib.AccessTools.Method(typeof(ZNetScene), "CreateObject");
+        private static readonly FieldInfo FMade = HarmonyLib.AccessTools.Field(typeof(ZoneSystem), "m_generatedZones"); // (the game keeps «is this zone made» to itself: IsZoneGenerated is private)
         private static readonly int CompilerHash = "_TerrainCompiler".GetStableHashCode();
 
         // the last levelling, to put back on undo: per terrain piece its arrays as they were
@@ -274,24 +276,60 @@ namespace HuginWhispers
             float hx = (r.X1 - r.X0) * 0.5f + Margin + WildPad, hz = (r.Z1 - r.Z0) * 0.5f + Margin + WildPad;
             float reach = Mathf.Sqrt(hx * hx + hz * hz);
             Quaternion inv = Quaternion.Inverse(rot);
+            return Sweep(centre, reach, q => { Vector3 d = inv * (q - centre); return Mathf.Abs(d.x) <= hx && Mathf.Abs(d.z) <= hz; });
+        }
+
+        // the same, round: a glade of the story r m across its middle (StoryFound «pickglade»), on the server once its land was made (Made)
+        internal static int ClearRound(Vector3 centre, float r)
+        {
+            if (FindObjects == null || ZDOMan.instance == null) return 0;
+            float reach = r + WildPad;
+            return Sweep(centre, reach, q => WorldSpot.Flat(q, centre) <= reach);
+        }
+
+        // every zone within r m of it made already (its trees and stones are in the world's list: ZoneSystem's own word — the server makes the
+        // zones round every player itself)
+        internal static bool Made(Vector3 centre, float r)
+        {
+            HashSet<Vector2s> made = ZoneSystem.instance != null && FMade != null ? FMade.GetValue(ZoneSystem.instance) as HashSet<Vector2s> : null;
+            if (made == null) return false;
+            Vector2s lo = ZoneSystem.GetZone(centre - new Vector3(r, 0f, r)), hi = ZoneSystem.GetZone(centre + new Vector3(r, 0f, r));
+            for (int x = lo.x; x <= hi.x; x++)
+                for (int y = lo.y; y <= hi.y; y++)
+                    if (!made.Contains(new Vector2s((short)x, (short)y))) return false;
+            return true;
+        }
+
+        // every object of the world's list in the zones within reach of it, loaded or not (the server holds them all; a client — what it has):
+        // the one way for whoever must reach what nobody has loaded (Sweep; LocInside's «clear world»)
+        internal static void ObjectsAround(Vector3 centre, float reach, List<ZDO> into)
+        {
             Vector2s lo = ZoneSystem.GetZone(centre - new Vector3(reach, 0f, reach)), hi = ZoneSystem.GetZone(centre + new Vector3(reach, 0f, reach));
-            List<ZDO> all = new List<ZDO>();
-            int gone = 0;
+            List<ZDO> one = new List<ZDO>();
             for (int x = lo.x; x <= hi.x; x++)
                 for (int y = lo.y; y <= hi.y; y++)
                 {
-                    all.Clear();
-                    FindObjects.Invoke(ZDOMan.instance, new object[] { new Vector2s((short)x, (short)y), all, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a zone, when a place is levelled
-                    foreach (ZDO z in all)
-                    {
-                        if (!Wild.Is(z) || z.GetInt(Blueprint.Mark) == 1) continue; // (a blueprint's own pieces have no creator either)
-                        Vector3 d = inv * (z.GetPosition() - centre);
-                        if (Mathf.Abs(d.x) > hx || Mathf.Abs(d.z) > hz) continue;
-                        z.SetOwner(ZDOMan.GetSessionID());
-                        ZDOMan.instance.DestroyZDO(z); // (a body there goes with it: the game's own OnZDODestroyed)
-                        gone++;
-                    }
+                    one.Clear();
+                    FindObjects.Invoke(ZDOMan.instance, new object[] { new Vector2s((short)x, (short)y), one, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a zone, when a place is levelled, a glade cleared, the author's clear
+                    into.AddRange(one);
                 }
+        }
+
+        // what is wild and nobody's within reach of it, where «inside» says: away, by the world's list (Clear, ClearRound)
+        private static int Sweep(Vector3 centre, float reach, Func<Vector3, bool> inside)
+        {
+            List<ZDO> all = new List<ZDO>();
+            ObjectsAround(centre, reach, all);
+            int gone = 0;
+            foreach (ZDO z in all)
+            {
+                if (!Wild.Is(z) || z.GetInt(Blueprint.Mark) == 1) continue; // (a blueprint's own pieces have no creator either)
+                if (Character.InInterior(z.GetPosition())) continue; // (the land's, not a dungeon's hanging over it: a crypt's mushrooms and spawners over the same spot — LocInside, the game's own)
+                if (!inside(z.GetPosition())) continue;
+                z.SetOwner(ZDOMan.GetSessionID());
+                ZDOMan.instance.DestroyZDO(z); // (a body there goes with it: the game's own OnZDODestroyed)
+                gone++;
+            }
             return gone;
         }
 

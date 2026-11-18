@@ -12,6 +12,11 @@ namespace HuginWhispers
     // «Вигляд» (StoryPanelLook), «Камера» and «Атмосфера» (StoryPanelShots), «Сцени» (StoryPanelScenes), «Режисер»
     // (StoryPanelDirector: the shots, the moves, into a scene), «Тест» (StoryPanelTest: the test's console lines as buttons); the one editor
     // of the story's text files (StoryPanelFiles). This file: the window, its tabs, its fields.
+    // Its frame (the user 2026-11-14: «багато де вона не розтягується, кнопки закрити я не бачу»): the window is as big as the author makes it — drag its
+    // lower right corner (kept: PlayerPrefs), first as tall as the screen allows; a tab draws in a body of a known height (BodyH) that scrolls when it
+    // is taller, so the footer (the last word, «Закрити») never falls off the bottom; the cross in the title closes it whatever a tab draws. A tab's
+    // long list takes its height from the body (Fill), not a number of its own. The frame (size, corner, ×) is the author windows' one: AuthorFrame;
+    // the tabs and every row of buttons in a tab: AuthorRow (AuthorUi.cs) — a row breaks before it runs past its column (the user 2026-11-17).
     internal partial class StoryPanel : MonoBehaviour
     {
         private static readonly string[] Tabs = { "Сюжет", "Креслення", "Актори", "Вигляд", "Камера", "Сцени", "Атмосфера", "Режисер", "Тест" };
@@ -28,7 +33,14 @@ namespace HuginWhispers
         private GUIStyle _win, _tabOn, _head, _hint, _sel, _warn;
         private Texture2D _bg, _dot, _dotGold;
         private EventSystem _uiOff;
-        private Vector2 _listScroll, _placeScroll, _rightScroll;
+        private Vector2 _listScroll, _placeScroll, _rightScroll, _bodyScroll;
+
+        // the frame: its size as the author dragged it (AuthorFrame), the body a tab draws in (between the tabs and the footer)
+        private const float HeadFixed = 62f, FootH = 58f;
+        private static readonly AuthorFrame Frame = new AuthorFrame("RavenWatch.StoryPanel.", 1120f, 640f, 360f);
+        private float _bodyH = 600f;
+        // a long list's height in a tab: the body less what stands above it in that tab (and the list's own few rows at least)
+        private float Fill(float above, float min = 120f) { return Mathf.Max(min, _bodyH - above); }
 
         // «Креслення»
         private string _saveName = "", _placeName = "", _confirmSave = "";
@@ -57,7 +69,7 @@ namespace HuginWhispers
         private float _redressAt = -1f;
         private static List<string> _hairs, _beards;
         private static Dictionary<int, List<string>> _bySlot;
-        private static readonly string[] SlotNames = { "Шолом", "Груди", "Ноги", "Плащ", "Пояс", "Права рука", "Ліва рука" };
+        private static readonly string[] SlotNames = { "Шолом", "Груди", "Ноги", "Плащ", "Пояс", "Права рука", "Ліва рука", "Прикраса" };
         private static readonly Vector3[] SkinPresets = { new Vector3(1f, 0.86f, 0.74f), new Vector3(0.85f, 0.72f, 0.6f), new Vector3(0.7f, 0.55f, 0.42f), new Vector3(0.5f, 0.37f, 0.27f), new Vector3(0.33f, 0.24f, 0.18f), new Vector3(0.78f, 0.8f, 0.82f) };
         private static readonly string[] SkinNames = { "світла", "звичайна", "засмагла", "смаглява", "темна", "бліда (відлуння)" };
         private static readonly Vector3[] HairPresets = { new Vector3(0.08f, 0.07f, 0.06f), new Vector3(0.35f, 0.24f, 0.15f), new Vector3(0.62f, 0.28f, 0.12f), new Vector3(0.85f, 0.7f, 0.42f), new Vector3(0.6f, 0.6f, 0.58f), new Vector3(0.92f, 0.92f, 0.9f) };
@@ -75,6 +87,18 @@ namespace HuginWhispers
             _inst.enabled = true;
             MouseHere = true;
             _inst.Refresh();
+        }
+
+        // the author's look at the look tab from the console (raven story ui look <id> [slot]): open on it, that person picked, that slot's grid shown —
+        // the studio photographs the window so (the user 2026-11-13: «впевнись що все виглядає нормально»)
+        internal static string OpenLook(string id, int slot)
+        {
+            if (!IsOpen) Toggle();
+            _inst._tab = LookTab;
+            if (id.Length > 0) { if (NpcDefs.Find(id) == null) return "Нема людини «" + id + "»."; _inst._lookId = id; _inst._saveId = id; _inst._saveNameNpc = NpcDefs.Find(id).Name; }
+            if (slot > HatSlot) return "Слот " + slot + ": нема такого (0–" + HatSlot + ", " + HatSlot + " — шапка ворона).";
+            if (slot >= 0) { _inst._wearSlot = slot; _inst._wearKind = ""; _inst._wearFind = ""; }
+            return "Вигляд: " + (_inst._lookId.Length > 0 ? _inst._lookId : "нікого не вибрано") + ", слот " + _inst._wearSlot;
         }
 
         internal static string Said()
@@ -170,27 +194,26 @@ namespace HuginWhispers
             }
             WorldMarks();
             GUI.color = Color.white; GUI.backgroundColor = Color.white;
-            _rect.width = Mathf.Min(DirCompact ? 460f : _tab == DirectorTab && _dirMore ? 1260f : 1120f, Screen.width - 10f); // (the director's three columns; the free camera: out of the picture)
-            _rect.height = Mathf.Min(DirCompact ? 150f : 800f, Screen.height - 40f);
-            _rect.x = Mathf.Clamp(_rect.x, 0f, Mathf.Max(0f, Screen.width - _rect.width));
-            _rect.y = Mathf.Clamp(_rect.y, 0f, Mathf.Max(0f, Screen.height - 60f));
+            _rect = Frame.Fit(_rect, _tab == DirectorTab && _dirMore ? 1260f : 0f); // (the director's three columns need their width)
+            if (DirCompact) { _rect.width = Mathf.Min(460f, Screen.width - 10f); _rect.height = Mathf.Min(150f, Screen.height - 40f); } // (the free camera: out of the picture)
             _rect = GUI.Window(0x52575354, _rect, Draw, "Ворони: сюжет", _win);
         }
 
         private void Draw(int id)
         {
             if (DirCompact) { DirFlying(); GUI.DragWindow(new Rect(0f, 0f, 10000f, 26f)); return; }
-            GUILayout.Label(MouseHere ? "Мишка: ВІКНО. Shift+F9 — віддати мишку грі (ходити, дивитись). F9 — закрити вікно."
-                                      : "Мишка: ГРА. Shift+F9 — повернути мишку на вікно.", _hint);
-            GUILayout.BeginHorizontal();
+            if (AuthorFrame.Cross(_rect)) { Close(); return; } // (always there, whatever a tab draws)
+            string hint = MouseHere ? "Мишка: ВІКНО. Shift+F9 — віддати мишку грі (ходити, дивитись). F9 — закрити вікно." : "Мишка: ГРА. Shift+F9 — повернути мишку на вікно.";
+            GUILayout.Label(hint, _hint);
+            AuthorRow tabs = AuthorRow.Begin();
             for (int i = 0; i < Tabs.Length; i++)
-            {
-                if (GUILayout.Button(Tabs[i], i == _tab ? _tabOn : GUI.skin.button)) _tab = i;
-            }
+                if (tabs.Button(Tabs[i], i == _tab ? _tabOn : null)) _tab = i;
+            tabs.End();
             GUI.enabled = true;
-            GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
+            _bodyH = Mathf.Max(80f, _rect.height - HeadFixed - tabs.Extra - _hint.CalcHeight(new GUIContent(hint), _rect.width - 24f) - FootH); // (a known height, the same in the layout pass and the drawing one: the window's padding and tabs (their rows past the first), the hint as it wraps, the footer)
+            _bodyScroll = GUILayout.BeginScrollView(_bodyScroll, GUILayout.Height(_bodyH));
             if (_tab == TrackTab) Track();
             else if (_tab == BuildTab) Build();
             else if (_tab == ActorsTab) Actors();
@@ -200,14 +223,15 @@ namespace HuginWhispers
             else if (_tab == AirTab) AirTabDraw();
             else if (_tab == DirectorTab) DirectorTabDraw();
             else if (_tab == TestTab) TestTabDraw();
+            GUILayout.EndScrollView();
 
-            GUILayout.FlexibleSpace();
-            if (Note.Length > 0) GUILayout.Label(Note, _hint);
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Закрити (F9)", GUILayout.Width(120f))) Close();
+            // the footer: the last word (two lines at most: the whole of it in the log) and «Закрити», always at the bottom
+            GUILayout.BeginHorizontal(GUILayout.Height(FootH - 16f));
+            GUILayout.Label(Note, _hint, GUILayout.Height(FootH - 16f), GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("Закрити (F9)", GUILayout.Width(120f), GUILayout.Height(26f))) Close();
+            GUILayout.Space(AuthorFrame.Grip);
             GUILayout.EndHorizontal();
-            GUI.DragWindow(new Rect(0f, 0f, 10000f, 26f));
+            Frame.Corner(_rect, _hint);
         }
     }
 }

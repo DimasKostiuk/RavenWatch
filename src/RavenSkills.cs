@@ -741,11 +741,13 @@ namespace HuginWhispers
         // Hugin about his dome, in the tone of his trust
         internal static void DomeSay(string tag, string fallback) { GiftSay(false, tag, fallback); }
 
-        // a gift's word said by itself, later than its press (the dome folding, the ward breaking)
+        // a gift's word said by itself, later than its press (the dome folding, the ward breaking), and a raven's word on something that happened (the Hall's
+        // hearth lit). Only a raven that is his says it: one of that kind worn (on the shoulder, or away on its gift) — with only Hugin, lighting the
+        // hearth spoke as Munin (the user 2026-11-12). No such raven: nothing is said
         internal static void GiftSay(bool munin, string tag, string fallback)
         {
             Player p = Player.m_localPlayer;
-            if (p == null) return;
+            if (p == null || RavenSeat.On(p, munin) == null) return;
             string line = Plugin.Instance != null ? Plugin.Instance.ComposeTagged(p, munin, tag) : null;
             Speak(p, munin, string.IsNullOrEmpty(line) ? fallback : line);
         }

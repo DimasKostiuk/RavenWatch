@@ -90,7 +90,7 @@ namespace HuginWhispers
         private void EdStrip(StoryScenes.SceneDef s)
         {
             GUILayout.BeginVertical(GUILayout.Width(560f));
-            _edStrip = GUILayout.BeginScrollView(_edStrip, GUILayout.Height(560f));
+            _edStrip = GUILayout.BeginScrollView(_edStrip, GUILayout.Height(Fill(90f)));
             float at = 0f;
             for (int i = 0; i < s.Steps.Count; i++)
             {
@@ -234,15 +234,10 @@ namespace HuginWhispers
             {
                 GUILayout.Label("Як він іде до кінця сцени чи наступного такого рядка:", _hint);
                 string now = st.W.Length > 2 ? st.W[2] : "";
-                int col = 0;
-                GUILayout.BeginHorizontal();
+                AuthorRow gaits = AuthorRow.Begin();
                 foreach (string g in EdGaits())
-                {
-                    if (col > 0 && col % 3 == 0) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); }
-                    col++;
-                    if (GUILayout.Button(EdGaitWord(g), now == g ? _sel : GUI.skin.button)) Note = PutLine(s, _dirStep, "player gait " + g, true);
-                }
-                GUILayout.EndHorizontal();
+                    if (gaits.Button(EdGaitWord(g), now == g ? _sel : null)) Note = PutLine(s, _dirStep, "player gait " + g, true);
+                gaits.End();
             }
             else if (a == "player" && b == "pace")
             {
@@ -452,7 +447,7 @@ namespace HuginWhispers
             bool follow = !_dirAdding && _dirKind == System.Array.IndexOf(DirKinds, "follow");
             if (follow) // (it goes on going with him: only where it rides, measured from his head)
             {
-                Vector3 local = Quaternion.Inverse(Quaternion.Euler(0f, p.transform.eulerAngles.y, 0f)) * (now.At - p.GetHeadPoint());
+                Vector3 local = Quaternion.Inverse(Quaternion.Euler(0f, p.transform.eulerAngles.y, 0f)) * (now.At - Body.Head(p));
                 _dirSide = local.x; _dirUp = local.y; _dirBack = -local.z;
             }
             else

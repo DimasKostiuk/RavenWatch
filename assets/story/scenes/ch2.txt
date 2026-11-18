@@ -1,0 +1,584 @@
+# Сцени глави 2 «Зала встає» (назва робоча; docs/plans/story-lore.md «Глава 2 — кістяк»): формат — шапка src/StoryScenes.cs, як знімати — docs/jobs/scene.md.
+
+# Початок глави: Літ і чужинець на лаві (етап plan_scene; користувач 2026-11-16 затвердив знайомство, 2026-11-17 — сцена на самому початку: «літ
+# зове нас до себе і розказує у сцені, що знає як відбудувати залу і що йому треба певні матеріали, і тоді веде нас до скрині й перераховує, що
+# там уже є, і тут уже встрягає незнайомець. В кінці сцени ми можемо ще раз поговорити з Літом» — докладно він каже в розмові, ch2_plan).
+# Після першого прогону 2026-11-17 (користувач): Літ уже стоїть біля скрині («щоб я не йшов до нього через багаття» — квест тримає його там), Ейвінд
+# сидить на лаві під стіною ліворуч від брами (hall.lavka, ~11 м від скрині). Прогін показав: Літ ішов до скрині повз Ейвінда й застряг — кліпи, поки
+# людина йде, відпускаються, тож жоден його кліп не зіграв; тепер ходи нема.
+# Суть: двоє дорослих пів дня не помічали чужинця, бо кожен думав, що він чийсь. Користувач 2026-11-17: ми підходимо до скрині разом із Літом; кашель —
+# кадр очима Ейвінда, ми обидва синхронно повертаємось до лави, тоді одне на одного: «Це хто? Він з тобою?» — «Я думав, це твій підмайстер», тоді «Ти хто такий?». Глядач бачить Ейвінда раніше за героїв: Літ рахує, знятий через
+# плече того, хто сидить на лаві. Числа: у скрині 48 дощок (квест кладе їх: stash … count 48); Літ рахує 46, Ейвінд виправляє «48» і сам себе
+# спростовує (дві тріснуті він би не рахував — то 46): точне число й тріснуті дошки знає той, хто їх тримав (перша зачіпка «хто краде зі скрині»).
+# Міняєш 48 у quests/ch2.txt (lit_plan) — міняй числа тут і в talk/ch2_lit.txt (ch2_plan, ch2_corner).
+# Мешканці на час сцени йдуть із кадру (aside: away; користувач 2026-11-17). Музика (користувач 2026-11-17: «постав цю мелодію…»,
+# ~20:40 — «на початку сцени»): з першого кадру eyvind_accordion (Freesound 654167, LagMusics, CC0) замість музики гри, по колу до кінця сцени,
+# ще 10 с після неї стихає (під його «Гей. Підійди»), тоді — знову гри.
+# Кліпів, яких ще нема (кожен — на схвалення окремо): dv_startle — Літ підскакує; махнути рукою сидячи. knee_rub — прийнято 2026-11-17 («о, наче добре вийшло»).
+[scene eyvind_meet]
+place: zala
+aside: away
+check: hall.skrynia 5
+test: stash Wood zala.skrynia 4 count 48; npc lit at hall.skrynia; npc eyvind at hall.lavka
+needs: near hall.skrynia 12, npcnear lit hall.skrynia 4, calm   # Літ стоїть біля скрині (квест: hold), гравець підійшов до нього
+npc lit take
+npc eyvind take
+npc eyvind sit hall.lavka                 # на тій самій лаві, що в команді квесту (NpcMind.StaysDown): сцена його не підводить
+npc lit face player
+player look npc.lit
+music eyvind_accordion 1.5 keep 10        # акордеон з першого кадру (користувач 2026-11-17 ~20:40: «на початку сцени»): музика гри стихає за 1,5 с, разом із камерою
+bars on
+camera two npc.lit player blend 1.5
+mix world 0.5 1.5                         # розмова: світ трохи тихший
+wait 0.6
+npc lit say Прийш{ов|ла}. Добре. Я поміряв. Тричі.
+wait 0.4
+camera on npc.lit wide 35 cut             # ширше: за ним Зала, уже трохи підлатана (стан 1.4 «літ», worn:) — користувач 2026-11-17
+npc lit say Поки ти невідомо чим займа{вся|лася}, я дещо підлатав. Дещо. Решта — гірше.
+wait 0.6
+camera on npc.lit close cut push 0.2 4    # він знає — і це його гордість
+npc lit say Знаю, як її підняти. Стіни стоятимуть, і дах не світитиметься наскрізь.
+wait 0.5
+camera shoulder player npc.lit cut        # (два довгі рядки під одним крупним — 12,9 с: другий через плече гравця)
+npc lit say Але з повітря не кладуть. Треба дерево, камінь, цвяхи, бронза. Багато.
+wait 0.6
+camera on npc.lit medium cut
+npc lit say Ось. Дивись, що вже є.
+npc lit face hall.skrynia                 # повертається до скрині — тут же, нікуди не йде
+player go npc.lit 1.1 soft                # і ми підходимо до Літа біля скрині — стоїмо поруч (користувач 2026-11-17: тоді синхронний поворот до лави цікавіший; до самого Літа, не до скрині — лави між вогнем і скринею не стануть на дорозі)
+player look hall.skrynia
+npc eyvind face npc.lit                   # він дивиться, як Літ рахує
+npc lit tool hand now                     # Лот у руку: рахує ним об долоню
+camera shoulder npc.eyvind npc.lit cut    # через плече того, хто сидить на лаві: Літ рахує, а за ним хтось увесь час дивиться — глядач бачить його раніше за них
+npc lit clip dv_count
+npc lit say …Сорок чотири. Сорок п'ять. Сорок шість.
+npc lit clip none
+camera on npc.lit close cut push 0.25 3
+npc lit say Сорок шість. Для початку — мало.
+npc lit tool auto
+mix world 0.2 0.8                         # рахунок скінчено — і тиша ще глибша: у ній і пролунає кашель
+wait 1.5                                  # тиша
+sound speech_khm npc.eyvind               # кашель з-під стіни — здалеку й раніше, ніж його видно
+wait 0.6
+camera eyes npc.eyvind look npc.lit cut   # його очима (користувач 2026-11-17): двоє біля скрині, до нього боком
+ear camera 1                              # його голос — біля самої лінзи
+npc eyvind says Сорок вісім. Якщо бути точним. Дві дошки тріснуті, я б їх не рахував.
+wait 2                                    # за 2 с від початку його слів (користувач 2026-11-17: «через 2 сек одразу повертати нас до нього»)
+npc lit face npc.eyvind                   # обоє разом, синхронно, повертаються до лави — і дивляться на нього (з його очей)
+player face npc.eyvind
+player look npc.eyvind
+wait said                                 # дивляться, поки він договорить
+wait 0.6
+ear player 1
+mix world 0.5 0.6                         # отямились — світ повертається до розмови
+camera two player npc.lit cut             # тоді одне на одного
+npc lit face player
+player face npc.lit
+player look npc.lit
+wait 1.2
+camera shoulder player npc.lit cut
+npc lit say Це хто? Він з тобою?               # (було «Він не з тобою?» — користувач 2026-11-18, дослівно)
+wait 0.5
+camera shoulder npc.lit player cut
+player say Я дума{в|ла}, це твій підмайстер.     # («він твій» — наче про собаку: користувач 2026-11-17)
+wait 2.2                                  # прочитати — і пауза: обоє повільно розуміють
+sound speech_oh npc.lit                   # Літ підскакує
+npc lit face npc.eyvind
+camera on npc.lit full cut
+#   npc lit clip dv_startle               # (кліпу ще нема: на схвалення)
+wait 0.4
+npc lit clip dv_point_at
+npc lit say Ти хто такий?
+wait 0.6
+camera on player close cut                # обличчя → очима: він переводить погляд на лаву…
+player look npc.eyvind 2
+wait 1.6
+camera eyes cut                           # …і ми бачимо його очима: чужинець сидить і мило дивиться на нас
+npc eyvind face player
+#   npc eyvind clip …                     # (махнути рукою сидячи — кліпу ще нема)
+wait 2
+camera on npc.eyvind full 50 cut          # нерухомо, збоку, на весь зріст, з лавою в кадрі — камера не йде за ним (користувач 2026-11-17: «більш кінематографічно, статична»)
+npc eyvind clip sit_elbows.in             # спершу нахиляється вперед, лікті на коліна — збирається встати (користувач 2026-11-17: «різко встає з лави»)
+wait 1
+npc eyvind stay                           # підводиться з лави (сходить уперед, перед лаву: NpcBody.StepOff; підйом 0.6–0.9 с: NpcBody.RiseMin/RiseMax)
+npc eyvind clip knee_rub                  # і одразу хапається за коліно (користувач 2026-11-17: «встає з лави — показати, що в нього коліно»)
+sound speech_sigh npc.eyvind              # стогне
+wait 1.4
+npc eyvind say Ейвінд. Я тут уже з пів дня. Ніхто не питав, я й не набивався.
+do world eyvind_met                       # назвався: відтепер він Ейвінд і над репліками (StoryStranger). do — сцена зіграна з цієї миті: обірветься далі — етап однаково пройде
+wait 0.5
+npc eyvind clip talk_hands                # (прогін 2026-11-17 сказав «NO clip» — дивитись: справжня відмова чи перевірка в тому ж кадрі)
+camera on npc.eyvind medium cut
+npc eyvind say А міряєш ти гарно, майстре. Я б і сам носив, та коліно.
+npc eyvind clip none
+wait 0.5
+camera on npc.lit close cut
+npc lit clip dv_point_at                  # на лаву
+npc lit say Сядь. Отам. І сиди.           # (було «Звідси.» — обірвано звучить: користувач 2026-11-17)
+wait 0.6
+camera shoulder npc.lit npc.eyvind cut    # через плече Літа: той, кого прогнали…
+npc eyvind say Звісно, звісно.
+npc eyvind sit hall.lavka                 # …сідає назад на ту саму лаву
+wait 2
+camera on npc.lit close cut push 0.2 3
+wait 2                                    # Літ мовчки дивиться на лаву
+npc lit face player
+npc lit say Так. На чому я спинився… Сорок шість. Решту спитаєш — скажу.
+wait 1
+if raven munin: camera on player medium 25 cut
+if raven munin: say munin Він знав, які дошки тріснуті. Не заглядаючи в скриню.
+wait 0.8
+mix reset 2
+camera off blend 1.5
+bars off
+wait 0.8
+npc eyvind say Гей. Підійди, поговоримо.   # (користувач 2026-11-17: кличе вже в руках гравця — квест ch2_eyvind, ціль «Розпитай Ейвінда, хто він такий»)
+
+# Запрошення Літа (етап invite; користувач 2026-11-17): ворон Зали фізично приносить лист ОДНОМУ гравцеві — етап сервера дає сцену одному, решта поруч
+# бачить того самого птаха. Керування лишається в гравця (ні камери, ні смуг; roams: сцена йде за ним). Ворон мовчить: ні слова, лише каркне, коли
+# віддає лист (вікно пошти, без рядка ворона). «from hall»: з Зали — крізь її дах, з її боку; «home hall»: назад, крізь дах (LocRaven).
+# Склав лист — етап пройдено: напис глави 2 у всіх на сервері (saga/chapters.txt), ціль «Літ кличе тебе». Бій лист не губить (користувач
+# 2026-11-17): сцена roams чекає на своєму кроці, ворон кружляє над гравцем, тихо — віддає лист; 5 хв бою — ворон додому, етап пробує знову (FightWait).
+[scene lit_invite]
+roams: yes
+guard: off
+needs: calm, sky
+bird come 60 18 from hall hover
+letter lit :: Приходь. Поміряв.            # lit — людина сюжету: на конверті її ім'я, печатка — її (ᚦ на бурому, letter_seal_lit; користувач 2026-11-17)
+bird home hall
+
+# Літ читає стіни (етап walls, кінець кола 1; користувач 2026-11-17): скриню складено й гриби Ейвіндові віддано — біля вогню Варти Літ іде
+# вздовж стіни й стукає Лотом: кожна стіна з іншої землі; біля брами спиняється — тут не знає. Торвальд від вогню: «Двері там були. З мого чобота»
+# (його байка глави 1, talk/ch1_torvald.txt). Літ міряє стертий поріг — і розмір сходиться.
+# Суть: майстер, що читає камінь, як книгу, спіткнувся там, де відповідь знає «дурний» старий, — і вперше дивиться на нього всерйоз.
+# Торвальд сидить біля вогню на землі (квест: hold … emote sit), Ейвінд — на своїй лаві, мовчки. Мешканці йдуть із кадру (aside: away). Музика — гри.
+[scene walls_read]
+place: zala
+aside: away
+check: hall.vohnyshche 6
+test: npc lit at hall.stina_prava; npc torvald at hall.vohnyshche; npc eyvind at hall.lavka
+needs: near hall.vohnyshche 10, npcnear lit hall.stina_prava 8, npcnear torvald hall.vohnyshche 6, npcnear eyvind hall.lavka 4, calm
+npc lit take
+npc torvald take
+npc torvald sit npc.torvald               # сидить на землі біля вогню, як посадив квест (NpcMind.StaysDown)
+npc eyvind take
+npc eyvind sit hall.lavka                 # на своїй лаві: мовчить і слухає
+npc lit tool hand now
+npc lit face hall.stina_prava
+player look npc.lit
+bars on
+camera on npc.lit full 30 blend 1.5       # Літ біля стіни, Лот у руці
+mix world 0.5 1.5
+npc lit clip dv_hammer.loop               # стукає Лотом по стіні — слухає камінь
+wait 2
+npc lit clip none
+npc lit tool auto                         # Лот на пояс: далі руки в боки (dv_survey — обидві руки), міряє оком (dv_measure — права)
+camera on npc.lit medium cut
+npc lit say Камінь — з гір. Холодний, важкий. Тут такого не ламають.
+wait 0.6
+npc lit clip dv_survey                    # оглядає вгору, на балку
+camera on npc.lit medium low cut
+npc lit say А балка — не звідси. Такого дерева в цих лісах нема.
+wait 0.6
+camera on npc.lit close cut push 0.2 3
+npc lit say Хтось носив сюди найкраще з кожної землі. Кожна стіна — інша.
+wait 0.8
+npc lit go hall.dveri_holovni run near 1.4 nowait   # до брами — зсередини, з його боку, жваво (користувач 2026-11-17: «before» вів на зовнішній бік, надвір, і він повз)
+wait 0.4
+camera on npc.lit wide cut                # нерухомий широкий кадр, без track: камера, що їхала за ним, билась об речі й смикалась (користувач 2026-11-17)
+npc lit arrive
+npc lit face hall.dveri_holovni
+camera on npc.lit medium cut
+npc lit say А тут — не знаю. Тут щось було. Не брама.
+wait 1.5
+camera on npc.torvald medium cut          # від вогню, не встаючи
+npc torvald face npc.lit
+npc torvald say Двері там були. З мого чобота.
+wait 0.8
+camera on npc.lit close cut
+npc lit face npc.torvald
+npc lit say Чобіт. Звісно.
+wait 0.6
+npc lit face hall.dveri_holovni
+npc lit clip dv_measure                   # міряє оком стертий поріг
+camera on npc.lit full cut
+wait 1.2
+npc lit say Поріг стертий. Посередині, одним місцем. Сорок два пальці.
+wait 1
+npc lit face npc.torvald                  # переводить погляд на старого — на його ноги
+camera on npc.torvald full cut
+wait 1.4
+camera on npc.lit close cut
+npc lit say …Як твоя підошва.
+wait 0.8
+camera on npc.torvald medium cut
+npc torvald say Добрі були двері. Скрипіли тільки в дощ.
+wait 1
+mix world 0.3 0.8                         # тиша: Літ уперше дивиться на старого всерйоз
+camera on npc.lit close cut push 0.3 2.5
+sound speech_hm npc.lit
+wait 2.5
+if raven hugin: camera on player medium 25 cut
+if raven hugin: say hugin Він уперше подивився на старого, а не крізь нього.
+wait 0.8
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Як стояла Зала (етап how_scene; користувач 2026-11-17, його задум і порядок): E на Торвальді — комічна розмова. Старий довго морочить голову
+# дурницями, Літ злиться, Гейд заходить і сміється; Літ не витримує: «розставлю на свій розсуд, отут буде новий стіл» — і старий раптом рівно, по
+# фактах: старий стіл не міняють, лави, зброя (про ліжка — ні: Варта в Залі не спала, користувач), вівтар, де вертали загублене золото, камінь,
+# де вписувались. Усі мовчать. 10 с тиші: камера стрибає між обличчями. Тоді знову дурниця — і «Лоте». Це золотий вогонь уперше на нього діє.
+# КАМЕРА (користувач): не літає й не наближається — кожен у своєму кадрі, склейки між ними (без push і track). Ейвінд мовчки сидить на лаві:
+# двічі камера на ньому — видно, що слухає уважно; і коли старий каже про вівтар — на секунду на нього, тоді назад на Торвальда.
+# Дивиться на того, хто говорить (користувач 2026-11-18): це ядро робить саме — усі люди сцени чують кожну репліку (NpcSpeech.SceneOf).
+# Торвальд — на землі біля вогню (hold … emote sit), Літ стоїть біля вогню, Гейд — біля кухні (hold … sit), звідти й заходить.
+# Музика (користувач 2026-11-18): та сама, що в знайомстві з Ейвіндом (eyvind_accordion), з першого кадру; щойно старий починає згадувати, що де
+# стояло («Не буде. Там стоїть старий…»), плавно стихає — сцена без музики; перед «…А козел, до речі, був смачний» знову виходить з тиші.
+# Стихає гучністю (mix music), а не зупинкою: трек іде далі, повертається з того самого місця. Після сцени ще 10 с, тоді — музика гри.
+[scene hall_how]
+place: zala
+aside: away
+check: hall.vohnyshche 4
+test: npc torvald at hall.vohnyshche; npc lit at hall.vohnyshche; npc heid at hall.kukhnia; npc eyvind at hall.lavka
+needs: near hall.vohnyshche 8, npcnear torvald hall.vohnyshche 6, npcnear lit hall.vohnyshche 8, npcnear heid hall.kukhnia 8, npcnear eyvind hall.lavka 4, calm
+fade out 0.5                              # з чорного, не наїздом камери (користувач 2026-11-17): люди стають на місця під чорним
+npc torvald take
+npc torvald sit npc.torvald               # на землі біля вогню (NpcMind.StaysDown)
+npc lit take
+npc heid take
+npc heid sit hall.kukhnia                 # біля кухні, як посадив квест
+npc eyvind take
+npc eyvind sit hall.lavka
+npc eyvind face npc.torvald
+npc lit face npc.torvald
+npc torvald face player
+player look npc.torvald
+music eyvind_accordion 1.5 keep 10        # акордеон з першого кадру, як у eyvind_meet (користувач 2026-11-18)
+bars on
+camera two player npc.torvald cut
+mix world 0.5 1.5
+fade in 0.8
+wait 0.6
+player say Торвальде, Літ питає, як тут усе стояло. Колись.
+wait 0.6
+camera on npc.torvald close cut
+npc torvald say Стояло? Добре стояло. Рівно. Аж поки не сіло.
+wait 0.6
+camera on npc.lit medium cut
+npc lit say Де стояли столи?
+wait 0.4
+camera on npc.torvald close cut
+npc torvald say Під мисками. Де ж іще стоять столи.
+wait 0.6
+camera on npc.lit close cut
+sound speech_sigh npc.lit
+wait 1.4
+npc heid stay                             # Гейд підводиться біля кухні…
+npc heid go npc.torvald near 2.5 walk nowait   # …і йде до вогню, поки старий меле далі
+camera on npc.torvald close cut
+npc torvald say А ще тут був козел. Він їв солому з даху, а ми їли козла. Чесно було.
+npc torvald clip ground_torvald_slap      # регоче з власної байки
+wait 0.6
+camera on npc.heid wide cut               # заходить у кадр від кухні
+wait 1.4
+npc heid arrive
+npc heid face npc.lit
+camera on npc.heid close cut
+npc heid say Він тобі ще про велетня розкаже. Слухай, слухай.
+sound speech_chuckle npc.heid
+wait 0.8
+camera on npc.eyvind close cut            # Ейвінд №1: слухає уважно
+wait 1.5
+camera on npc.lit medium cut
+npc lit say Я питаю, де стояло вогнище. А не хто кого їв.
+wait 0.4
+camera on npc.torvald close cut
+npc torvald face npc.lit
+npc torvald say Вогнище? Там, де тепло. Ти що, не мерзнеш?
+wait 0.4
+camera on npc.heid close cut
+sound speech_chuckle npc.heid             # сміється
+wait 1.4
+player look npc.torvald
+camera on player close cut
+player say Торвальде. Ну хоч щось.
+wait 1.2
+camera on npc.torvald close cut
+npc torvald face hall.vohnyshche
+wait 2.5                                  # довго думає
+npc torvald say …Щось було. Кругле.
+wait 1
+camera on npc.eyvind close cut            # Ейвінд №2
+wait 1.5
+camera on npc.lit full cut
+npc lit face hall.stil
+npc eyvind face hall.stil                 # Ейвінд дивиться туди, куди показав Літ — і так, поки старий не скаже про вівтар
+npc lit clip dv_point_at                  # показує рукою в зал
+npc lit say Ні. То не діло. Розставлю все на свій розсуд. Отут буде великий стіл. Новий.
+wait 0.4
+camera on npc.torvald close cut
+npc torvald face npc.lit
+mix music 0 3                             # старий починає згадувати, що де стояло — музика плавно стихає, далі без неї
+npc torvald say Не буде. Там стоїть старий. Дуб із Чорного лісу, Ейрік сам вибирав. Його не міняють. Його відмивають.
+mix world 0.2 0.8                         # усі дивляться на нього й мовчать
+wait 1.2
+camera on npc.lit close cut
+wait 1.4
+camera on npc.heid close cut              # вона вже не сміється
+wait 1.4
+camera on npc.torvald close cut
+npc torvald say Лави — уздовж стін, щоб спиною до каменю. Зброя — на стовпах, щоб рука вночі знала, куди йти.
+wait 0.6
+npc torvald face hall.vivtar
+player look hall.vivtar
+npc torvald say Там вівтар. До нього йшли, коли губили щось золоте. Він вертав.
+camera on npc.eyvind close cut            # на Ейвінда: золото
+npc eyvind face npc.torvald               # різко повертає голову до старого — щиро зацікавився (користувач 2026-11-17)
+wait 2.2                                  # на секунду довше (користувач 2026-11-17)
+camera on npc.torvald close cut
+npc torvald face hall.kamin
+player look hall.kamin
+npc torvald say А там камінь. Хто вписав своє ім'я, той лишався. Я не вписав.
+wait 1
+camera on npc.lit close cut               # 10 с тиші: усі задумались, камера стрибає між обличчями
+wait 2.5
+camera on npc.heid close cut
+wait 2.5
+player look npc.torvald
+camera on player close cut
+wait 2.5
+npc torvald face hall.vohnyshche
+camera on npc.torvald close right cut     # (збоку: наступний кадр — його ж крупно спереду) старий дивиться у вогонь
+mix music 1 2.5                           # музика знову з тиші, поки він дивиться у вогонь — до «козла» вона вже звучить (користувач 2026-11-18)
+wait 2.5
+mix world 0.5 2
+npc torvald face npc.lit
+camera on npc.torvald close cut
+npc torvald say …А козел, до речі, був смачний.
+wait 0.8
+npc torvald say Лоте, а ти чого такий малий? Не доїдаєш?
+wait 0.4
+camera on npc.lit close cut
+npc lit say Літ. Лот — це молот.
+wait 1.2
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Лот (етап lot_ask; користувач 2026-11-17: «щоб у Літа питав хтось про Лота — чому він взагалі має назву і чому схожий більше на сокиру, ніж
+# на молот; відповідь цікаву, але не всю — нехай буде загадка»; 2026-11-18 — переписано й перенесено на мить, коли Зала вперше стала «відремонтованою»:
+# «кат сцена з тим, як Ейвінд розпитує Літа про молот, входить у довіру, треба зробити гарно і кінематографічно. У сцені в кінці він посилає
+# Ейвінда зайнятись чимось корисним і щиро не розуміє, що він тут забув і що він хоче, але каже, що поважає його цікавість до будівництва»).
+# Суть: злодій підбирає ключ до майстра — не лестощами, а цікавістю до роботи; Літ відтає на мить довше, ніж хотів, і сам не розуміє чому.
+# Камера: глядач бачить Ейвінда раніше за Літа (через його плече з лави — Літ клепає, не знаючи, що на нього дивляться), підхід — у глибині кадру
+# за Літом, розмова — від широкого до крупного; Лот крупно (ім'я) і рука, що тягнеться до нього; мовчання Літа — 2 с крупно з наїздом.
+# Гравець мовчить: розмова не до нього, він свідок (scene.md «Гравець говорить рідко»). Загадка «Лот» — у Сазі (saga/ch2.txt): цитати Літа
+# («спершу треба зрубати», «прийшов із ним», «те, що від імені лишилось») лишаються ці самі. Відповідь (користувач: варіант «б») — пізніше.
+# Мешканці йдуть із кадру (aside: away). Музика — гри. Слова — мої чернетки, кадри не прогнані.
+[scene lot_ask]
+place: zala
+aside: away
+check: hall.vohnyshche 6
+test: npc lit at hall.stina_prava; npc eyvind at hall.lavka
+needs: near hall.vohnyshche 20, npcnear lit hall.vohnyshche 25, npcnear eyvind hall.lavka 4, calm
+npc lit take
+npc eyvind take
+npc eyvind sit hall.lavka                 # на своїй лаві (NpcMind.StaysDown)
+npc lit tool hand now
+npc lit clip dv_hammer.loop               # клепає стіну
+player look npc.lit
+bars on
+mix world 0.6 1.5
+camera on npc.lit wide 35 blend 1.5       # Зала вже ціла — і в ній один двергр за роботою
+wait 2.2
+camera shoulder npc.eyvind npc.lit cut    # через плече Ейвінда з лави: Літ клепає, а за ним дивляться — глядач бачить це раніше за нього
+wait 2.5
+camera on npc.eyvind full 40 cut          # нерухомо, на весь зріст: він вирішив
+npc eyvind clip sit_elbows.in
+wait 0.8
+npc eyvind stay                           # підводиться (NpcBody.StepOff, RiseMin/RiseMax)
+npc eyvind clip knee_rub                  # коліно — як завжди
+sound speech_sigh npc.eyvind
+wait 1.2
+npc eyvind go npc.lit near 1.6 walk nowait
+camera on npc.lit medium 30 cut           # Літ на передньому плані б'є далі, а Ейвінд іде до нього в глибині кадру
+wait 2
+npc eyvind arrive 14
+camera two npc.eyvind npc.lit cut
+mix world 0.45 0.8
+npc eyvind face npc.lit
+npc eyvind clip look_examine              # роздивляється шов, не майстра
+wait 0.6
+npc eyvind say Шов рівний. Як по шнуру. А шнура я в тебе не бачив.
+wait 0.5
+camera on npc.lit medium cut              # не обертається, б'є далі
+npc lit say Шнур — для тих, хто не бачить.
+wait 0.6
+camera on npc.eyvind medium cut
+sound speech_chuckle npc.eyvind
+wait 0.5
+npc eyvind say От і я кажу.
+wait 0.8
+npc eyvind say Слухай, майстре. А чого твій молоток схожий на сокиру?
+wait 0.4
+npc lit clip none                         # уперше спиняється
+camera shoulder npc.eyvind npc.lit cut
+wait 0.6
+npc lit say Бо спершу треба зрубати. Тоді класти.
+wait 0.8
+camera shoulder npc.lit npc.eyvind cut
+npc eyvind say А ім'я йому навіщо? Я своїй ложці імені не давав.
+wait 0.6
+npc lit clip dv_look_lot                  # дивиться на Лота
+camera on npc.lit close cut push 0.2 3
+wait 1.2
+npc lit say Не я давав. Він прийшов із ним.
+wait 1.5                                  # пауза: дивиться на молот
+camera on npc.lit.thing close cut         # Лот крупно
+npc lit say Лот — не ім'я. Лот — це те, що від імені лишилось.
+wait 1
+camera two npc.eyvind npc.lit cut
+npc eyvind clip point_at                  # рука тягнеться до Лота
+npc eyvind say А дзьоб тоді на…
+npc lit tool belt                         # Лот — на пояс, геть від чужої руки: довіра має межу
+wait 0.4
+camera on npc.lit close cut
+npc lit say Ні.
+wait 1
+npc lit face npc.eyvind
+camera shoulder npc.eyvind npc.lit cut
+npc lit say Ти пів дня сидиш у мене за спиною. Не носиш. Не міряєш. Питаєш.
+wait 0.5
+npc lit say Чого тобі треба?
+wait 0.6
+camera on npc.eyvind medium cut
+npc eyvind clip talk_hands
+npc eyvind say Цікаво. Була купа дощок — а тепер стіна. Як воно стає, мені ніхто ніколи не казав.
+npc eyvind clip none
+wait 0.6
+camera on npc.lit close cut push 0.25 3   # Літ мовчить: такого він не чекав
+wait 2.2
+sound speech_hm npc.lit
+wait 0.5
+npc lit say …Цікаво йому.
+wait 0.8
+camera shoulder npc.eyvind npc.lit cut
+npc lit say Не розумію я тебе, Ейвінде. Що ти тут забув і чого хочеш — хоч убий, не розумію.
+wait 0.5
+camera on npc.lit close cut push 0.15 3   # і чесно: те, що він поважає
+npc lit say Але як воно стає — то добре питання. Цікавість до діла я поважаю.
+wait 0.8
+camera on npc.eyvind close cut            # і це його влучило: на мить без жодного жарту
+wait 1.5
+sound speech_chuckle npc.eyvind
+npc eyvind clip shrug_small
+npc eyvind say Я ж казав — я ввічливий.
+wait 0.6
+camera on npc.lit medium cut
+npc lit clip dv_point_at                  # на лаву
+npc lit say А тепер іди займись чимось корисним. Під руку не стій.
+wait 0.6
+camera two npc.eyvind npc.lit cut
+npc eyvind say Звісно, звісно.
+npc eyvind go hall.lavka near 1 walk nowait   # назад до своєї лави (сяде сам: квест тримає його там — hold hall.lavka sit)
+wait 1.5
+npc lit face hall.stina_prava
+npc lit tool hand now
+npc lit clip dv_hammer.loop               # і знову до стіни
+camera on npc.lit full 30 cut
+wait 1.5
+npc lit clip none
+npc lit face npc.eyvind                   # …і ще раз озирається йому вслід: щось у ньому таки відтануло
+camera on npc.lit close cut push 0.2 2.5
+wait 2
+npc lit face hall.stina_prava
+npc lit clip dv_hammer.loop
+wait 0.6
+if raven munin: camera on player medium 25 cut
+if raven munin: say munin Дзьоб. Як у мене. Шо, теж наш?
+if raven hugin: say hugin Літ не відповідає нікому. А цьому — майже все.
+wait 0.8
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Лист Літа між колами 1 і 2 (етап call1; користувач 2026-11-18: «Літ каже, пришле ворона, коли поремонтує трохи більше; через 1–2 дні приходить
+# лист прийти до Зали»). Так само, як запрошення (lit_invite): ворон Зали фізично несе лист ОДНОМУ гравцеві, керування в гравця. Лише коли Зала
+# вже «відремонтована» (2): лист не кличе дивитись на те, чого ще нема (LocState міняє її за кадром; запобіжник — 5 днів гри).
+[scene lit_called]
+roams: yes
+guard: off
+needs: calm, sky, state zala >= 2
+bird come 60 18 from hall hover
+letter lit :: Приходь. Стіни стоять.
+bird home hall
+
+# Перший лист слуги Хель (етап bruni1; story-lore.md «Вартовий, що служить Хель»; користувач 2026-11-18: «як тільки відходимо від Зали — ворон,
+# лист від Бруні, підписаний пафосно, перший»). Летить ЙОГО ворон (вигляд bruni — ЗАГЛУШКА: вигляди двох воронів Бруні дає користувач) — не з
+# боку Зали, звідусіль; лише за 50 м від вогню Варти, під небом. Підпис — «Варта, що лишилась» (на конверті теж), печатка — його (letter_seal_bruni:
+# знак Варти на чорному воску, зеленаво-синє світло). Тон не злий: йому треба виконати службу, а не вбити нас. Ворон мовчить, віддає й летить геть.
+# Наші ворони — після, кожен своє (не обов'язкове: хто лист, той і так прочитав).
+[scene bruni_letter1]
+roams: yes
+guard: off
+needs: calm, sky, !near hall.vohnyshche 50
+bird come 60 18 hover look bruni
+letter Варта, що лишилась seal bruni :: Загасіть вогонь.\nВам однаково, а мені ні.\n\n— Варта, що лишилась
+bird leave up
+if raven munin: say munin Шо за «Варта»? Ми ж і є Варта. Ну, ти. І ми.
+if raven hugin: say hugin Чужий ворон. Він знав, де тебе шукати.
+
+# Скелет і кабан (етап eyv_deer; користувач 2026-11-18): Ейвінд знову дає мітку — на луках, ~300 м і від середини світу, і від Зали. Там — точка
+# тригера: «Ми йдемо і різко зупиняємось. Перед нами скелет. Він іде до нас здалеку, ми насторожуємось, але його раптом убиває кабан звичайний.
+# Теж комічна сценка… Після цього ми робимо невеликий жест — розводимо руками, мовляв, ну ок, не будемо з ним битись, — і кажемо фразу "Ну хоча
+# б на один бій менше буде". Кабан після неї лишається». Очі скелета — зеленувато-сині, Хель (перша зачіпка, що Бруні вже десь тут).
+# Суть: велика зловісна прикмета — і звичайнісінький кабан, що ставить на ній крапку. Глядач бачить кабана раніше за героя: він пасеться в
+# глибині широкого кадру, поки ми дивимось на скелета. Істоти — справжні істоти гри (StoryBeasts): скелет іде, не б'ючись (його розум вимкнено,
+# сцена веде його по прямій), кабан б'ється сам (його ціль — скелет); скелет — на один удар (hp 1). Сцена їх не вважає боєм (StoryScenes.Ours).
+# Кабан лишається у світі (keep): після сцени — звичайний кабан. Рядок гравця — дослівно користувача. Музика — гри. Кадри не прогнані.
+[scene skel_boar]
+needs: near found.ch2_luky 30, calm
+check: found.ch2_luky 28
+lane meet player found.ch2_luky clear 40
+player stop 0.3                           # ішов — і різко став
+beast skel spawn Skeleton lane.meet@32 face player hel hp 1
+beast boar spawn Boar lane.meet@14@-16 face lane.meet@22 keep
+player look beast.skel
+bars on
+mix world 0.6 1
+camera on player medium 25 cut            # обличчя: щось побачив
+wait 1.3
+camera eyes cut                           # його очима: далеко на лузі — постать
+sound sfx_skeleton_alerted beast.skel
+wait 1.6
+beast skel go player near 8 nowait        # іде до нас, не поспішаючи
+camera on beast.skel full low cut push 0.5 2.5   # знизу: кістки — і зеленувато-сині очі
+wait 2.5
+if raven munin: camera on player medium 25 cut
+if raven munin: say munin Глянь на очі. Такий самий вогонь горів у Залі — синьо-зелений. Шо він тут робить?
+if !raven munin, raven hugin: say hugin Очі. Не червоні. Як той вогонь у Залі.
+camera on player close cut                # насторожились
+player back 0.8                           # на крок назад
+wait 0.4
+camera on beast.skel wide 70 cut          # широко, збоку: скелет іде — а в глибині кадру кабан
+wait 1.2
+beast boar hunt beast.skel                # і кабан кидається
+sound sfx_boar_alerted beast.boar
+wait 1.4
+beast skel dead 8                         # удар — і скелета нема
+beast boar stay face player
+wait 1
+camera on beast.boar full cut             # кабан над кістками
+sound sfx_boar_idle beast.boar
+wait 1.8
+camera on player medium 25 cut
+player face beast.boar
+player clip arms_open nowait              # розводимо руками: ну, гаразд — не будемо битись
+player say Ну хоча б на один бій менше буде.
+wait 0.8
+if raven hugin: say hugin Нас урятував кабан. Нікому не кажи.
+wait 0.6
+mix reset 2
+camera off blend 1.5
+bars off

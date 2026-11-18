@@ -1,0 +1,3 @@
+vezha stone_pillar 0.798 5.176 7.821
+drabyna wood_stepladder 1.795 0.176 4.045
+prapor piece_banner02 1.255 4.051 2.366

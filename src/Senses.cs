@@ -17,6 +17,14 @@ namespace HuginWhispers
 
         internal static bool Underground, Indoors, OnShip, AtHelm, Sailing, Swimming, Sleeping, Night, Afk, Encumbered;
         internal static bool Ready; // gathered at least once for the player now in the world
+        // a scene of the story plays on this game (the story says so: StoryModules sets SceneNow; no story — never). No raven leaves the shoulder by itself
+        // in it (Trust.FreeToLeave, Outing.CanGo): the user 2026-11-16 — a shy level-1 Munin flew off in the middle of the scroll's scene, its lines were
+        // skipped, the stage went back to «put a raven on» and the scene had to be played again
+        internal static System.Func<bool> SceneNow;
+        internal static bool InScene { get { return SceneNow != null && SceneNow(); } }
+        // each creature drawn here, as the once-a-second pass goes over them (a module's look at them in the same pass: the story's Hel eyes,
+        // HelEyes.Look — never a pass of its own); none — nothing asked
+        internal static System.Action<Character> Seen;
         internal static bool Traveling { get { return Walked > TravelMeters && !Fight && !Indoors && !Underground && !OnShip; } }
         // a fight is with someone: an enemy near, or a creature hit by you or hitting you lately. A swing alone is not one
         // (chopping, mining), nor is a scratch (cold, poison, a campfire underfoot).
@@ -95,6 +103,7 @@ namespace HuginWhispers
             foreach (Character c in Character.GetAllCharacters())
             {
                 if (c == null || c == p || c.IsDead() || c.IsPlayer()) continue;
+                if (Seen != null) Seen(c);
                 float d = (c.transform.position - me).sqrMagnitude;
                 if (c.IsBoss()) { if (d <= BossRange * BossRange && boss == null) boss = c; }
                 if (d > FoeRange * FoeRange || !BaseAI.IsEnemy(p, c)) continue;

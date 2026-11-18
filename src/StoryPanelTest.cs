@@ -6,15 +6,19 @@ namespace HuginWhispers
 {
     // The story window's tab «Тест» (the user 2026-11-04: what a test needs, under the hand, no console): every button is one
     // line of the console, run as it would be typed, and what it answers is shown beside it. No logic of its own: a new
-    // test command is a new row here. A line starting «con » goes to the game's own console. A row marked sure asks for a
+    // test command is a new row here. A line starting «con » goes to the game's own console; several lines joined by « && » run one after another
+    // («story do wforget ch1_ && story jump ch1 ask»: a block's keys away, then its stage again). A row marked sure asks for a
     // second click. What names the story (its quests and their stages, its places, scenes, the player's own spots) comes from what is
     // loaded; the story's own switches (a flag of the ghost's house, Heid called) from the author's file <source>/_test.txt
     // («<група> | <напис> | <рядок консолі> [| sure]»; never in the mod) — the rows made once, again when the story is read again.
+    // Its buttons flow (the user 2026-11-14: «Ключі акту стерти…», now «глави», stood cut on both sides in a button of a fixed width): each as wide as its words,
+    // a row as wide as the list, words too long for it on a second line; under the pointer it says the console line it runs.
     internal partial class StoryPanel
     {
         private const int TestTab = 8;
-        private const float TestButton = 138f;
-        private const int TestInRow = 5;
+        private const float TestButton = 110f; // (the narrowest; a button grows with its words)
+        private GUIStyle _testBtn;
+        private TestRow _testQueued; // (a press waits for the next layout pass: a command that reads the story again changes the rows, never in the middle of a drawing)
         private Vector2 _testScroll, _testOut;
         private string _testSaid = "Натисни кнопку: тут буде відповідь.", _testSure = "";
 
@@ -61,8 +65,10 @@ namespace HuginWhispers
 
         private void TestTabDraw()
         {
+            if (Event.current.type == EventType.Layout && _testQueued != null) { TestRow q = _testQueued; _testQueued = null; TestPress(q); }
             GUILayout.BeginHorizontal();
-            _testScroll = GUILayout.BeginScrollView(_testScroll, GUILayout.Width(740f));
+            _testTip = "";
+            _testScroll = GUILayout.BeginScrollView(_testScroll, GUILayout.Width(TestListW()), GUILayout.Height(Fill(8f)));
             TestGroup("Почати заново (стерти персонажа — потім вийди зі світу й зайди знову)", TestStart);
             TestGroup("Ворони й час", TestRaven);
             TestGroup("Стан", TestState);
@@ -74,8 +80,9 @@ namespace HuginWhispers
             GUILayout.EndScrollView();
 
             GUILayout.BeginVertical();
+            GUILayout.Label(_testTip.Length > 0 ? _testTip : " ", _hint); // (the button under the pointer: what it runs)
             GUILayout.Label("Відповідь", _head);
-            _testOut = GUILayout.BeginScrollView(_testOut);
+            _testOut = GUILayout.BeginScrollView(_testOut, GUILayout.Height(Fill(36f)));
             GUILayout.Label(_testSaid, _hint);
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
@@ -154,31 +161,37 @@ namespace HuginWhispers
 
         private void TestButtons(IList<TestRow> rows)
         {
-            for (int i = 0; i < rows.Count; i += TestInRow)
+            if (_testBtn == null) _testBtn = new GUIStyle(GUI.skin.button) { wordWrap = true };
+            AuthorRow row = AuthorRow.Begin(false); // (as many a row as the list holds, measured: AuthorUi.cs)
+            foreach (TestRow r in rows)
             {
-                GUILayout.BeginHorizontal();
-                for (int k = i; k < i + TestInRow && k < rows.Count; k++)
-                {
-                    TestRow r = rows[k];
-                    bool asked = r.Sure && _testSure == r.Line;
-                    if (GUILayout.Button(asked ? "Точно?" : r.Word, asked ? _sel : GUI.skin.button, GUILayout.Width(TestButton))) TestPress(r);
-                }
-                GUILayout.EndHorizontal();
+                bool asked = r.Sure && _testSure == r.Line;
+                GUIContent c = new GUIContent(asked ? "Точно?" : r.Word, "raven " + r.Line);
+                if (row.Button(c, asked ? _sel : _testBtn, TestButton)) _testQueued = r;
             }
+            row.End();
+            if (GUI.tooltip.Length > 0) _testTip = GUI.tooltip;
         }
+        private string _testTip = "";
+        private float TestListW() { return Mathf.Max(420f, _rect.width * 0.64f); }
 
         private void TestPress(TestRow r)
         {
             if (r.Sure && _testSure != r.Line) { _testSure = r.Line; return; }
             _testSure = "";
-            string said;
-            if (r.Line.StartsWith("con "))
+            System.Text.StringBuilder all = new System.Text.StringBuilder();
+            foreach (string part in r.Line.Split(new[] { " && " }, System.StringSplitOptions.RemoveEmptyEntries))
             {
-                if (global::Console.instance == null) said = "Консолі гри нема.";
-                else { global::Console.instance.TryRunCommand(r.Line.Substring(4)); said = "Гра: " + r.Line.Substring(4); }
+                string line = part.Trim(), said;
+                if (line.StartsWith("con "))
+                {
+                    if (global::Console.instance == null) said = "Консолі гри нема.";
+                    else { global::Console.instance.TryRunCommand(line.Substring(4)); said = "Гра: " + line.Substring(4); }
+                }
+                else said = Commands.Run(line);
+                all.Append(all.Length > 0 ? "\n\n" : "").Append("raven ").Append(line).Append('\n').Append(said ?? "");
             }
-            else said = Commands.Run(r.Line);
-            _testSaid = "raven " + r.Line + "\n" + (said ?? "");
+            _testSaid = all.ToString();
             _testOut = Vector2.zero;
         }
     }

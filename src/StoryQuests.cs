@@ -19,12 +19,16 @@ namespace HuginWhispers
     //   chapter: prologue                the saga's chapter its entries go into (StorySaga; needed once a stage has «saga:»)
     //   starts: hall                     conditions (StoryCond) — the quest starts by itself once they hold
     //   first: settle
+    //   scratch: ch1_                   a quest of the server: the world keys of its own block (marks, finds, chests: their names begin so, or have it
+    //                                    after a word of their kind — t_ch1_heart, found_ch1_house) are taken away when it ends; what later blocks,
+    //                                    the people and the book ask is never named so (storycheck). docs/jobs/story-data.md «Блоки сюжету»
     //   nudge: raven_nudge 12            a stage with a mark standing this many minutes of real play: this scene plays (nothing is
     //                                    skipped, the scene only shows the way: place «goal.mark»), again after twice as long, then twice
     //                                    that, at most NudgeMost times a stage (the user 2026-11-07: it called on and on), then quiet till the next stage
     //
     //   [stage settle]
     //   goal: Освойся                    the line shown (the panel now, the tracker later)
+    //   more: …                          a longer word on it, only in the book («Сага» → «Зараз», under the goal): why and how, where the goal is short
     //   fork: gate hall open -> inside   checked on entering and while waiting: holds → straight to that stage
     //   mark: hall 30 Зала Варти         the golden «!» on the map while this stage lasts (place, ring metres, label)
     //   start: msg …                     actions on entering, split by «;»
@@ -34,8 +38,16 @@ namespace HuginWhispers
     //   done: gate hall open; flag x     actions on passing
     //   next: call                       the next stage, or «end» (the quest done); none = the next one in the file
     //   call: heid                       the person to talk to now: a thread of gold over its head (StoryCallMark), for this player alone
+    //   seek: found.ch1_stash lost      a search: the raven on the shoulder is the finder of that place while this stage lasts — caws, says warmer or
+    //                                    colder in the words of that search (StorySeek: tags seek_<words>_warmer|_colder); the stage's ring on the map
+    //                                    stands off that place (SeekOff), so it says where to look, not where it is
+    //   stock: found.ch2e_pechera 50 Troll 1 Pickable_Mushroom_yellow 1-4 what the stage sends you to find there is there when you come (StoryStock):
+    //                                    a creature made at the game's own spawner, things to pick grown again or new round them
+    //   lost: <item> found.ch1_stash    a thing of the story this stage waits for, on the ground there: gone (a server's cleaning, another mod) while you are
+    //                                    near and do not carry it — laid there again (StoryLost); storycheck asks it of a stage that waits for a thing laid on the ground
     //   saga: Хтось тебе кликав.         the book's «Сага» entry once the stage is passed (not when a fork skips it): kept in
-    //                                    the character in the order lived (Story.AddSaga), so what came before the book is there too
+    //                                    the character in the order lived (Story.AddSaga), so what came before the book is there too.
+    //                                    A quest of the server: to those who were there — StoryQuestsServer.cs, Witnessed
     //
     // Ways — the player's own choice (the user 2026-11-02): a stage may hold several [way <id>] blocks instead of its own
     // wait/on/scene. All of them stand at once (each its goal line and map mark); the first one done wins (file order
@@ -56,23 +68,28 @@ namespace HuginWhispers
 
         internal sealed class StageDef
         {
-            public string Id = "", Goal = "", Scene = "", Next = "", OnName = "", OnArgs = "", WaitText = "", MarkAt = "", MarkLabel = "", Choice = "", Saga = "", Call = "";
+            public string Music = ""; // «music: off | <track> [vol V]»: while the stage stands, the player hears that (StoryStageMusic)
+            public string Id = "", Goal = "", More = "", Scene = "", Next = "", OnName = "", OnArgs = "", WaitText = "", MarkAt = "", MarkLabel = "", Choice = "", Saga = "", Call = "", Seek = "";
             public float MarkRadius;
             public List<Cond> Wait;
             public readonly List<Fork> Forks = new List<Fork>();
             public readonly List<string> Start = new List<string>(), Done = new List<string>();
+            public readonly List<string> Lost = new List<string>(); // «lost: <item> <place>»: the thing laid there again while this stage stands, if gone (StoryLost)
+            public readonly List<string> Stock = new List<string>(); // «stock: <place> <m> <Prefab> <N> …»: at least that many there when you come (StoryStock: a troll cave's troll, its mushrooms)
             public readonly List<StageDef> Ways = new List<StageDef>(); // (a way is a small stage of its own: goal, mark, wait, on, done, next)
         }
 
         internal sealed class QuestDef
         {
-            public string Id = "", Name = "", First = "", StartsText = "", From = "", Chapter = "", NudgeScene = "";
+            public string Id = "", Name = "", First = "", StartsText = "", From = "", Chapter = "", NudgeScene = "", Scratch = ""; // (Scratch: «scratch:» — the prefixes of its own world keys, gone with its end: StoryWorld.Forget)
             public int NudgeMinutes;
+            public int Block; // (the story's block of its file, read once: StoryFiles.Block — ChapterNow)
             public List<Cond> Starts;
             public bool Server;   // («owner: server»: one stage for the whole world, StoryQuestsServer)
             public List<Cond> Who; // («who:»: the players it leads)
             public readonly List<Fork> Forks = new List<Fork>(); // (a server quest's own forks: on every stage)
-            public string Raw, AtNow = "", OwedFrom = "", Latch = ""; // session: the world's word on it as last read · the stage this game has seen passed
+            public string Raw, AtNow = "", OwedFrom = "", Latch = "", EndedAt = ""; // session: the world's word on it as last read · the stage this game has seen passed
+            public readonly List<KeyValuePair<string, float>> Left = new List<KeyValuePair<string, float>>(); public string Mine = "", NearStage = "", WorldOf; public float NearAt; // session, of one world (WorldOf): stages with «saga:» the world has just passed, and when this game saw it · the last one the server granted this game itself (OnGo) · the last one this player stood by the place of, and when (Witnessed)
             public bool Owed, OwedRan; // (actions granted and not run yet: the world's word)
             public float AskUntil, ClaimUntil, ClaimAskedAt, ActAskAt; // session: an answer awaited from the server · this game's claim on its scene
             public readonly List<StageDef> Stages = new List<StageDef>();
@@ -122,6 +139,7 @@ namespace HuginWhispers
                 {
                     if (q.Server) ServerStep(p, q);
                     else if (Story.Quest(p, q.Id) == Story.Active) Step(p, q);
+                    else if (Story.Quest(p, q.Id) == Story.Done) Resume(p, q); // (the story told on since it ended here)
                     Mark(p, q);
                 }
                 catch (Exception e) { Failed(q.Id + " pass", e); } // (one quest's fault: the others and the modules go on)
@@ -137,18 +155,23 @@ namespace HuginWhispers
         // the stage this player stands at in an active quest (null: not active, or a stage gone from the file)
         internal static StageDef StageNow(Player p, QuestDef q) { return State(p, q) == Story.Active && Leads(p, q) ? q.Stage(At(p, q)) : null; }
 
-        // a stage of this player's (or a way of it) waits for this very event now: a touch it waits for is its, not the place's «elsedo:»
-        internal static bool Awaits(Player p, string name, string arg)
+        // a stage of this player's (or a way of it) waits for this very event now and would pass on it — its «wait:» holds too (Passed:
+        // «on:» and «wait:» both). A touch it waits for is its, not the place's «elsedo:»; E it would not pass on is not taken from
+        // the thing's own use (a heart's board, a person's talk) for nothing
+        internal static bool Awaits(Player p, string name, string arg) { return Awaiting(p, name, arg) != null; }
+
+        // that stage (or way) itself: its goal is the words of the E it takes (StoryHeart: «[E] <goal>»); null — none
+        internal static StageDef Awaiting(Player p, string name, string arg)
         {
             StoryEvent e = new StoryEvent { Name = name, Arg = arg ?? "" };
             foreach (QuestDef q in Quests)
             {
                 StageDef s = StageNow(p, q);
-                if (s == null) continue;
-                if (s.OnName.Length > 0 && StoryBus.Matches(e, s.OnName, s.OnArgs)) return true;
-                foreach (StageDef w in s.Ways) if (w.OnName.Length > 0 && StoryBus.Matches(e, w.OnName, w.OnArgs)) return true;
+                if (s == null || (q.Server && q.Owed)) continue; // (a quest of the server whose stage's actions are not run yet hears nothing: ServerStep — a press taken then was lost, the thing's own use too)
+                if (s.OnName.Length > 0 && StoryBus.Matches(e, s.OnName, s.OnArgs) && StoryCond.All(p, s.Wait)) return s;
+                foreach (StageDef w in s.Ways) if (w.OnName.Length > 0 && StoryBus.Matches(e, w.OnName, w.OnArgs) && StoryCond.All(p, w.Wait)) return w;
             }
-            return false;
+            return null;
         }
 
         // the scene the stages after this one come to (a few steps on: way → touch the shield → the scene); null — none
@@ -179,14 +202,31 @@ namespace HuginWhispers
             return false;
         }
 
-        // the player's stage now plays a scene as soon as it may
+        // every quest the player stands in now, in the files' order — the chapter's own first, a quest beside it after (the user
+        // 2026-11-17: Lit's chest and Eyvind's mushrooms at once, both goals in sight). One list, filled anew at each ask: read it at once
+        // (the screen twice a second, the book when it draws). Now — its first
+        internal struct Standing { internal QuestDef Quest; internal StageDef Stage; }
+        private static readonly List<Standing> _active = new List<Standing>();
+        internal static List<Standing> NowAll(Player p)
+        {
+            Load();
+            _active.Clear();
+            if (p == null) return _active;
+            foreach (QuestDef d in Quests) { StageDef s = StageNow(p, d); if (s != null) _active.Add(new Standing { Quest = d, Stage = s }); }
+            return _active;
+        }
+
+        // a stage the player stands at now (any of his quests) plays a scene as soon as it may
         internal static bool WantsScene(Player p)
         {
-            QuestDef q; StageDef s;
-            if (!Now(p, out q, out s) || s.Scene.Length == 0) return false;
-            if (!q.Server) return true;
-            StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene); // (a stage of the world may stand long with its scene for someone else: not about to start here unless it could)
-            return sc != null && StoryScenes.Near(p, sc) && StoryCond.All(p, sc.Needs);
+            foreach (Standing a in NowAll(p))
+            {
+                if (a.Stage.Scene.Length == 0) continue;
+                if (!a.Quest.Server) return true;
+                StoryScenes.SceneDef sc = StoryScenes.Find(a.Stage.Scene); // (a stage of the world may stand long with its scene for someone else: not about to start here unless it could)
+                if (sc != null && StoryScenes.Near(p, sc) && StoryCond.All(p, sc.Needs)) return true;
+            }
+            return false;
         }
 
         // a stage's goal in words, its ways side by side (translated)
@@ -204,12 +244,13 @@ namespace HuginWhispers
             return StoryMap.Where("story." + q.Id, out at) || (s.Ways.Count > 0 && StoryMap.Where("story." + q.Id + ".0", out at));
         }
 
-        // the goal line on the screen (StoryScreen.Goal): the first active quest's stage — its ways side by side
+        // the goal lines on the screen (StoryScreen.Goal): the first active quest's stage — its ways side by side — and, under it and
+        // paler, the one beside it (a third and more: only the book shows them, the screen keeps two)
         private static void ShowGoal(Player p)
         {
-            QuestDef q; StageDef s;
-            if (Now(p, out q, out s)) StoryScreen.Goal(Lang.T(q.Name), GoalText(s));
-            else StoryScreen.Goal("", "");
+            List<Standing> a = NowAll(p);
+            StoryScreen.Goal(a.Count > 0 ? Lang.T(a[0].Quest.Name) : "", a.Count > 0 ? GoalText(a[0].Stage) : "",
+                a.Count > 1 ? Lang.T(a[1].Quest.Name) : "", a.Count > 1 ? GoalText(a[1].Stage) : "");
         }
 
         // the stage's mark on the map (StoryMap: set again each pass costs nothing when unchanged; gone with the stage)
@@ -227,6 +268,15 @@ namespace HuginWhispers
         }
 
         internal static float SceneMarkRadius = 10f;
+        // a search's ring on the map (the stage's «seek:»): its middle up to SeekOff of its radius away from the spot, the way from the spot's own
+        // whole metres (every game draws the same ring; none knows the spot from it)
+        internal static float SeekOff = 0.6f, SeekOffLeast = 0.35f; // (the spot at least this share of the radius off the middle: the user 2026-11-15 — the barrow came out in the middle of its ring, «дивно»)
+        private static Vector3 SeekRing(Vector3 at, float radius)
+        {
+            System.Random r = new System.Random(Mathf.RoundToInt(at.x) * 73856093 ^ Mathf.RoundToInt(at.z) * 19349663);
+            double a = r.NextDouble() * Math.PI * 2d, d = (SeekOffLeast + r.NextDouble() * (SeekOff - SeekOffLeast)) * radius;
+            return new Vector3(at.x + (float)(Math.Cos(a) * d), at.y, at.z + (float)(Math.Sin(a) * d));
+        }
         private static void MarkOne(string key, StageDef s)
         {
             Vector3 at;
@@ -237,8 +287,15 @@ namespace HuginWhispers
                 StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene);
                 if (sc != null && sc.Place.Length > 0 && sc.Place != StoryShots.PlayerFrame ) { where = sc.Place; radius = SceneMarkRadius; }
             }
-            if (where.Length == 0 || !StoryWhere.Find(where, out at)) { StoryMap.Clear(key); return; }
-            StoryMap.Set(key, at, Lang.T(s.MarkLabel.Length > 0 ? s.MarkLabel : s.Goal), radius);
+            if (where.Length == 0 || !StoryWhere.MapAt(where, out at)) { StoryMap.Clear(key); return; } // (a point inside a dungeon of ours: drawn at its way in)
+            bool bare = false;
+            if (s.Seek.Length > 0 && StorySeek.Words(s.Seek).Length > 0 && StorySeek.Words(s.Seek)[0] == where)
+            {
+                radius *= StorySeek.RingOf(where); at = SeekRing(at, radius);
+                Player me = Player.m_localPlayer; // (in the search's ring: its ring alone, the «!» back once he leaves it)
+                bare = me != null && Utils.DistanceXZ(me.transform.position, at) <= radius;
+            } // (a search: the ring off the spot, the same on every game; with no raven, narrowed as he comes — StorySeek)
+            StoryMap.Set(key, at, Lang.T(s.MarkLabel.Length > 0 ? s.MarkLabel : s.Goal), radius, bare);
         }
 
         // only what some stage waits for (an «on:», a scene's end) is kept for the next pass: a fight's hundred kills cost nothing
@@ -434,35 +491,44 @@ namespace HuginWhispers
         internal static void Finish(Player p, QuestDef q, string state)
         {
             if (q.Server) { Ask(q, At(p, q), "end", false, true); return; } // (the author's panel: storycheck keeps the action «end» off a server's quest)
+            StageDef last = q.Stage(Story.StageOf(p, q.Id));
             Story.SetQuest(p, q.Id, state);
             Story.SetStage(p, q.Id, "");
+            Story.SetStage(p, EndedKey(q), state == Story.Done && last != null && last.Next == "end" ? last.Id : ""); // (the stage it ended at by its own «next: end»: Resume)
             Note(q.Id + ": " + (state == Story.Done ? "пройдено" : "провалено"));
             StoryBus.Raise("quest_" + state, q.Id, 0);
         }
 
-
-        // ---------------------------------------------------------------- the author's (the panel, the console)
-        internal static void Jump(Player p, QuestDef q, string stage)
+        // A story told on in a later version of the mod (the user 2026-11-15: «ті, хто до того моменту пройде його частину, не застрягнуть — квест піде
+        // далі просто після оновлення»): a quest done by its stage's own «next: end» keeps that stage (the character's «endat_<id>», the world's «-done
+        // <stage>»); once that stage leads on in the files read now, the quest is active again on the new stage, its «start:» run as on any step.
+        // Ended any other way (a fork, the action «end», failed) — nothing kept: it stays as it ended. Asked a pass where the quest is done
+        private static string EndedKey(QuestDef q) { return "endat_" + q.Id; }
+        private static void Resume(Player p, QuestDef q)
         {
-            if (q.Server) { Note(q.Id + ": автор → " + stage); Ask(q, At(p, q), stage, false, true); return; }
-            if (Story.Quest(p, q.Id) != Story.Active) Story.SetQuest(p, q.Id, Story.Active);
-            Note(q.Id + ": автор → " + stage);
-            Enter(p, q, stage);
+            string at = Story.StageOf(p, EndedKey(q));
+            if (at.Length == 0) return;
+            StageDef s = q.Stage(at);
+            if (s == null || s.Next.Length == 0 || s.Next == "end" || q.Stage(s.Next) == null) return; // (still the end, or that stage gone from the files)
+            Story.SetStage(p, EndedKey(q), "");
+            Story.SetQuest(p, q.Id, Story.Active);
+            Note(q.Id + ": далі в новій версії — після «" + s.Id + "» тепер «" + s.Next + "»");
+            Enter(p, q, s.Next);
         }
 
-        internal static void Forget(Player p, QuestDef q)
+
+        // ---------------------------------------------------------------- the author's (the panel, the console)
+        // the author's jump, start over («» first) and forget («»): the world and the character put as if the story had been walked there — StoryRebuild.cs
+        internal static void Jump(Player p, QuestDef q, string stage) { Rebuild(p, q, stage); }
+
+        // a personal quest's stage word alone, nothing else touched (the studio's scene check: its world is put by the scene's own «check:» / «test:» lines
+        // and given back after the run — StudioScene.OnItsStage)
+        internal static void SetOn(Player p, QuestDef q, string stage)
         {
-            if (q.Server)
-            {
-                StoryWorld.SetText(KeyOf(q), "");
-                foreach (StageDef s in q.Stages) if (s.Scene.Length > 0) StoryWorld.Remove("scene." + s.Scene);
-                Note(q.Id + ": стерто для цього світу");
-                return;
-            }
-            Story.SetQuest(p, q.Id, "");
-            Story.SetStage(p, q.Id, "");
-            Story.ForgetSaga(p, q.Id);
-            Note(q.Id + ": стерто для персонажа");
+            if (q.Server) return;
+            if (Story.Quest(p, q.Id) != Story.Active) Story.SetQuest(p, q.Id, Story.Active);
+            Note(q.Id + ": студія → " + stage);
+            Enter(p, q, stage);
         }
 
         internal static void Note(string s)

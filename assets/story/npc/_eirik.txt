@@ -1,0 +1,12 @@
+[npc _eirik]
+name: Ейрік
+body: human
+model: 0
+skin: 0.5 0.37 0.27
+haircolor: 0.08 0.07 0.06
+hair: Hair2
+beard: Beard23
+gear: ArmorLeatherChest ArmorLeatherLegs CapeLinen HelmetHat7
+fight: off
+menu: no
+persona: build=-0.45 height=0.95

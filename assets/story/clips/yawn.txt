@@ -1,5 +1,6 @@
 clip yawn
-length 3
+length 3.65
+tone loose
 loop 0
 pivot 1.1
 curve ease
@@ -17,16 +18,16 @@ say позіхнути: долоня до рота, голова трохи на
 0.65 @RightHand 0.2 1.25 0.25
 1 @RightHand 0.04 1.57 0.2
 1.9 @RightHand 0.03 1.59 0.19
-2.3 @RightHand 0.2 1.25 0.25
-2.6 @RightHand 0.24 0.95 0.06
-3 @RightHand 0.24 0.95 0.06
+2.671 @RightHand 0.2 1.25 0.25
+3.25 @RightHand 0.24 0.95 0.06
+3.65 @RightHand 0.24 0.95 0.06
 
 0 @RightHand.w 0 0 0
 0.3 @RightHand.w 0 0 0
 0.9 @RightHand.w 1 0 0
-2 @RightHand.w 1 0 0
-2.6 @RightHand.w 0 0 0
-3 @RightHand.w 0 0 0
+2.093 @RightHand.w 1 0 0
+3.25 @RightHand.w 0 0 0
+3.65 @RightHand.w 0 0 0
 
 0 @RightHand.p 0.8 -0.6 0
 
@@ -34,19 +35,19 @@ say позіхнути: долоня до рота, голова трохи на
 0.4 Spine2 0 0 0
 1.3 Spine2 -13 0 0
 1.9 Spine2 -13 0 0
-2.7 Spine2 0 0 0
-3 Spine2 0 0 0
+3.35 Spine2 0 0 0
+3.65 Spine2 0 0 0
 
 0 @Look 0 1.6 2
 1.2 @Look 0 2.3 1.2
-2 @Look 0 2.3 1.2
-2.6 @Look 0 1.6 2
+2.093 @Look 0 2.3 1.2
+3.25 @Look 0 1.6 2
 
 0 @Look.w 0 0 0
 0.8 @Look.w 0.6 0 0
-2.1 @Look.w 0.6 0 0
-2.7 @Look.w 0 0 0
-3 @Look.w 0 0 0
+2.286 @Look.w 0.6 0 0
+3.35 @Look.w 0 0 0
+3.65 @Look.w 0 0 0
 
 0 @RightHand.f -0.7 0.7 0
 
@@ -56,14 +57,14 @@ say позіхнути: долоня до рота, голова трохи на
 0.4 @LeftHand -0.24 0.95 0.06
 1.2 @LeftHand -0.32 0.88 -0.12
 1.9 @LeftHand -0.32 0.88 -0.12
-2.6 @LeftHand -0.24 0.95 0.06
-3 @LeftHand -0.24 0.95 0.06
+3.25 @LeftHand -0.24 0.95 0.06
+3.65 @LeftHand -0.24 0.95 0.06
 
 0 @LeftHand.w 0 0 0
 0.4 @LeftHand.w 0 0 0
 1.1 @LeftHand.w 0.7 0 0
-2 @LeftHand.w 0.7 0 0
-2.7 @LeftHand.w 0 0 0
-3 @LeftHand.w 0 0 0
+2.093 @LeftHand.w 0.7 0 0
+3.35 @LeftHand.w 0 0 0
+3.65 @LeftHand.w 0 0 0
 
 0 @LeftHand.p -1 -0.3 0

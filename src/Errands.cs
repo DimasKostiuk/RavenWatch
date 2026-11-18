@@ -1233,7 +1233,7 @@ namespace HuginWhispers
             foreach (string m in ErrandMods.Lines(r)) sb.Append('\n').Append(m);
             for (int i = 0; i < r.Steps.Length; i++)
                 sb.Append('\n').Append(i < r.Step ? "✓ " : i == r.Step ? "• " : "  ").Append(r.Steps[i].Describe(r, i, p));
-            return sb.ToString();
+            return Grammar.Fix(sb.ToString(), p); // (written for this player: his forms)
         }
 
         // ---------------------------------------------------------------- console (for testing, not in the docs)

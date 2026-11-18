@@ -207,7 +207,7 @@ namespace HuginWhispers
             {
                 if (o == null || o == a || o.Def == null || !o.Def.Settler || Utils.DistanceXZ(o.transform.position, a.transform.position) > VouchNear || NpcAttitude.Of(o, me) >= VouchBelow) continue;
                 NpcPhrases.SayOr(a, "thread_vouch", a.Form(Lang.F("{0}, годі. За цю людину я ручаюся.", o.Name)), new Dictionary<string, string> { { "other", o.Name } });
-                NpcMemory.Tell(o, "vouched", me, a.Name);
+                NpcMemory.Tell(o, "vouched", me, a.Key);
                 return true;
             }
             return false;

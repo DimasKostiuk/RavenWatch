@@ -2,8 +2,9 @@
 // quotes and «\n» again and again). The clip half of tools/anim.js (the one entry, review 2 2026-11-10): anim.js <verb> <clip> …
 // Each change is written to assets/story/clips: the one copy (the game on the author's machine reads it there, the stage plays it
 // at once, the build ships it — BodyClips.Dir, 2026-11-06), then tools/clipcheck.js is run.
-//   new <clip> [--body heid|player|any] [--length 4] [--prop <item>] "<say>"
-//                                                               a new clip's frame (newClip): head, say, the game's stance at 0 and at the end, the look
+//   new <clip> --tone plain|loose|merry|drinks [--body heid|player|dvergr|any] [--length 4] [--prop <item>] "<say>"
+//                                                               a new clip's frame (newClip): head, say, the stance of its body at 0 and at the end (a
+//                                                               dvergr stands otherwise than a person: tools/body.js), the look
 //                                                               ahead, a draft row in docs/CLIPS.md — it passes clipcheck as it is. The row's body and
 //                                                               thing («реквізит `<item>`», a prefab: RavenWatch_item_…) are what a take puts on the
 //                                                               stage (take.js reads the row): a clip with a thing and none in its row is taken without it
@@ -37,13 +38,12 @@
 //                                                               save), key by key and head line by line: what the last change did
 // A change after which clipcheck says something new, about any clip or scene, or falls over, is not kept: the file goes back, exit code 1.
 const fs = require('fs'), path = require('path'), cp = require('child_process');
-const motion = require('./motion.js');
+const motion = require('./motion.js'), bodies = require('./body.js').BODIES;
 const root = path.join(__dirname, '..');
 const assets = path.join(root, 'assets', 'story', 'clips');
 const n = s => { const v = parseFloat(s); if (isNaN(v)) throw new Error('not a number: ' + s); return v; };
 const f = v => (Math.round(v * 1000) / 1000).toString();
 const three = v => { const o = v.slice(0, 3); while (o.length < 3) o.push(0); return o; };
-const STANCE = { '@LeftFoot': motion.STANCE.Left, '@RightFoot': motion.STANCE.Right }; // (the game's stance, the feet in the body's frame: docs/ANIMATION.md «Числа»)
 
 function parse(text, name) {
   const head = [], keys = {}, order = [];
@@ -144,33 +144,48 @@ function mapHead(c, map, add) {
   });
 }
 
-// a new clip's frame (Г11): the game's stance at 0 and at the end, the look ahead, the user's words; a draft row in the catalog first (clipcheck wants it)
+// the span [t0, t1] of a clip made «len» s long: its keys spread, everything after it later by what was added (keys, the head's times, the script's).
+// The one place that does it: the verb «stretch», and motion.slower trying in memory how long a hasty movement must be
+function stretchTo(c, t0, t1, len) {
+  const add = len - (t1 - t0), map = t => t <= t0 ? t : t >= t1 ? t + add : t0 + (t - t0) * len / (t1 - t0);
+  for (const ch of c.order) for (const k of c.keys[ch]) k.t = map(k.t);
+  mapHead(c, map, add);
+  return add;
+}
+
+// a new clip's frame (Г11): the stance of its body at 0 and at the end, the look ahead, the user's words; a draft row in the catalog first (clipcheck
+// wants it). The row's body cell is what every tool picks the body by afterwards (body.js ofCell: «двергр…» the dvergr's, «Гейд» hers, else the player's)
+const BODY_CELL = { heid: 'Гейд', player: 'гравець', dvergr: 'двергр (`dummy_dvergr`)', any: 'будь-хто (мешканці)' };
 function newClip(name, a) {
   if (!/^[a-z][a-z0-9_]*$/.test(name || '')) throw new Error('new <clip>: a name of small letters, digits and _');
   const file = path.join(assets, name + '.txt');
   if (fs.existsSync(file)) throw new Error('clip ' + name + ' exists: edit it, or pick another name');
-  let body = 'any', length = 4, prop = null; const words = [];
-  for (let i = 0; i < a.length; i++) { if (a[i] === '--body') body = a[++i]; else if (a[i] === '--length') length = n(a[++i]); else if (a[i] === '--prop') prop = a[++i]; else words.push(a[i]); }
+  let body = 'any', length = 4, prop = null, tone = null; const words = [];
+  for (let i = 0; i < a.length; i++) { if (a[i] === '--body') body = a[++i]; else if (a[i] === '--length') length = n(a[++i]); else if (a[i] === '--prop') prop = a[++i]; else if (a[i] === '--tone') tone = a[++i]; else words.push(a[i]); }
+  // its kind, said as it is made (the user 2026-11-17: «при додаванні нових анімацій треба перераховувати всіх нпс і визначати, чи пасує вона їм»): the gate
+  // gives a move to whoever does not shun its kind (NpcMoves), so the kind is chosen with the people's list in hand — docs/jobs/people-moves.md
+  if (!['plain', 'loose', 'merry', 'drinks'].includes(tone)) throw new Error('--tone plain|loose|merry|drinks: the kind of move it is (loose: a stretch, a yawn, a scratch · merry: a laugh · drinks: a tankard, a toast · plain: any other). First go over every person in docs/jobs/people-moves.md: whom does it fit, whom not');
   if (prop !== null && !/^\w+$/.test(prop || '')) throw new Error('--prop <item>: the prefab of the thing (RavenWatch_item_…): letters, digits and _');
   const say = words.join(' ').trim();
-  if (!say) throw new Error('new <clip> [--body heid|player|any] [--length s] "<say>": the user\'s words, what the clip is measured by (docs/jobs/clip.md)');
-  if (!['heid', 'player', 'any'].includes(body)) throw new Error('--body heid|player|any (the catalog\'s body: the stage plays it on that one)');
+  if (!say) throw new Error('new <clip> [--body heid|player|dvergr|any] [--length s] "<say>": the user\'s words, what the clip is measured by (docs/jobs/clip.md)');
+  if (!BODY_CELL[body]) throw new Error('--body ' + Object.keys(BODY_CELL).join('|') + ' (the catalog\'s body: the stage plays it on that one, and the clip is reckoned on its measures)');
+  const B = bodies[body] || bodies.player, STANCE = { '@LeftFoot': B.stance.Left, '@RightFoot': B.stance.Right }; // (that body's stance, its feet in its own frame, and where its eyes are; «any»: a person's)
   if (!(length > 0.5)) throw new Error('--length: seconds, more than 0.5');
   const L = f(length);
-  const head = ['clip ' + name, 'length ' + L, 'loop 0', 'pivot 1.1', 'curve ease', 'fade 0.4 0.6', 'mode Spine1 body', 'mode Spine2 body', 'say ' + say, '',
+  const head = ['clip ' + name, 'length ' + L, 'loop 0', 'pivot ' + f(B.pivot), 'curve ease', 'fade 0.4 0.6', 'tone ' + tone, 'mode Spine1 body', 'mode Spine2 body', 'say ' + say, '',
     '# a new clip\'s frame (anim.js new): the game\'s stance at 0 and at ' + L + ' (the feet below), the look ahead, nothing else yet.',
     '# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do ' + name + ' "<t0>-<t1> reach right <x y z>; …".',
     '# scripted: @LeftFoot @RightFoot @Look @Look.w'];
   const keys = {}, order = [];
   for (const ch of Object.keys(STANCE)) { keys[ch] = [{ t: 0, v: STANCE[ch] }, { t: length, v: STANCE[ch] }]; order.push(ch); }
-  keys['@Look'] = [{ t: 0, v: [0, 1.6, 2] }]; order.push('@Look');
+  keys['@Look'] = [{ t: 0, v: [0, B.eyes[1], 2] }]; order.push('@Look');
   keys['@Look.w'] = [{ t: 0, v: [0, 0, 0] }]; order.push('@Look.w');
   const cat = path.join(root, 'docs', 'CLIPS.md'), was = fs.readFileSync(cat, 'utf8');
   const lines = was.split('\n');
   let at = lines.findIndex(l => l.startsWith('## Сюжетні кліпи'));
   at = at < 0 ? -1 : lines.findIndex((l, i) => i > at && l.startsWith('|---'));
   if (at < 0) throw new Error('docs/CLIPS.md: no table under «## Сюжетні кліпи» to put the row in');
-  const row = '| `' + name + '` | ' + say + ' | ' + (body === 'heid' ? 'Гейд' : body === 'player' ? 'гравець' : 'будь-хто (мешканці)') + ' | стійка → стійка | — (' + L + ' с) | ' + (prop ? 'реквізит `' + prop + '`' : '—') + ' | ніде ще | чернетка ' + new Date().toISOString().slice(0, 10) + ': каркас, ключів нема |';
+  const row = '| `' + name + '` | ' + say + ' | ' + BODY_CELL[body] + ' | стійка → стійка | — (' + L + ' с) | ' + (prop ? 'реквізит `' + prop + '`' : '—') + ' | ніде ще | чернетка ' + new Date().toISOString().slice(0, 10) + ': каркас, ключів нема |';
   lines.splice(at + 1, 0, row);
   fs.writeFileSync(cat, lines.join('\n'));
   try { save({ name, head, keys, order }); }
@@ -271,11 +286,9 @@ function apply(c, cmd, a) {
       console.log(ch + ' held ' + f(t0) + '-' + f(t1) + ' at ' + r.v.map(f).join(' ')); break;
     }
     case 'stretch': {
-      const t0 = n(a[0]), t1 = n(a[1]), len = n(a[2]), add = len - (t1 - t0);
+      const t0 = n(a[0]), t1 = n(a[1]), len = n(a[2]);
       if (!(t1 > t0) || len < 0) throw new Error('stretch <clip> <from> <to> <seconds>: «to» after «from», the seconds not below 0');
-      const map = t => t <= t0 ? t : t >= t1 ? t + add : t0 + (t - t0) * len / (t1 - t0);
-      for (const ch of c.order) for (const k of c.keys[ch]) k.t = map(k.t);
-      mapHead(c, map, add);
+      const add = stretchTo(c, t0, t1, len);
       console.log('span ' + f(t0) + '-' + f(t1) + ' now ' + f(len) + ' s; the clip ' + (add >= 0 ? '+' : '') + f(add) + ' s');
       if (motion.scriptOf(c).length) remake(c); // (the script's times went with it: its keys made again from them)
       save(c); break;
@@ -332,7 +345,7 @@ function run(cmd, args) {
   if (cmd === 'diff') { diff(name); return; }
   if (cmd === 'mirror') { mirrorClip(name, a[0]); return; }
   const c = load(name);
-  if (cmd === 'check') { const p = motion.predict(c); console.log(p.length ? p.join('\n') : name + ': the keys alone say nothing against it (the take measures the body)'); return; }
+  if (cmd === 'check') { const p = motion.predict(c), arms = motion.arms(c); console.log(p.length ? p.join('\n') : name + ': the keys alone say nothing against it (the take measures the body)'); if (arms) console.log(arms); return; }
   if (cmd === 'do' || cmd === 'undo' || cmd === 'redo' || cmd === 'alive' || cmd === 'auto') {
     const script = motion.scriptOf(c), length = motion.lengthOf(c);
     if (cmd === 'do') {
@@ -353,7 +366,8 @@ function run(cmd, args) {
       motion.setLine(c, '# alive ', '# alive ' + f(k));
     } else {
       if (!a.length) throw new Error('auto <clip> <channel…>: the channels to give back to the script');
-      for (const ch of a) if (!/^@(Left|Right)(Hand|Foot)(\.[wpfn])?$|^@Look(\.w)?$|^Spine[12]$|^move$|^(Left|Right)Hand(Index|Middle|Ring|Pinky)[123]$/.test(ch)) throw new Error('auto: ' + ch + ' is not a channel the script makes (hands, feet, @Look, Spine1/Spine2, move, fingers): its keys would only be lost');
+      // (a hand's hold on a thing «.on…» and the thumb are the script's too — grip; motion.js's note «keyed by hand» sends you here with them, 2026-11-15)
+      for (const ch of a) if (!/^@(Left|Right)(Hand|Foot)(\.on)?(\.[wpfn])?$|^@Look(\.w)?$|^Spine[12]$|^move$|^(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)[123]$/.test(ch)) throw new Error('auto: ' + ch + ' is not a channel the script makes (hands, feet, @Look, Spine1/Spine2, move, fingers): its keys would only be lost');
       for (const ch of [...new Set(a.flatMap(family))]) { if (!c.keys[ch]) continue; delete c.keys[ch]; c.order = c.order.filter(x => x !== ch); }
     }
     remake(c);
@@ -370,5 +384,5 @@ function run(cmd, args) {
   else { apply(c, cmd, a); if (cmd === 'header' && a[0] === 'length' && (motion.scriptOf(c).length || motion.listOf(c, 'scripted').length)) remake(c); save(c); }
 }
 
-module.exports = { run, load, parse, valueAt, family };
+module.exports = { run, load, parse, valueAt, family, stretchTo };
 if (require.main === module) { console.error('clip.js is the clip half of the one tool: node tools/anim.js ' + (process.argv[2] || '<verb>') + ' …'); process.exit(1); }

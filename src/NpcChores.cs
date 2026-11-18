@@ -14,7 +14,7 @@ namespace HuginWhispers
     // New chores: an id here, its Find and its steps; a whim for it in NpcWhims.
     internal static class NpcChores
     {
-        private const float Again = 30f, MendLow = 0.9f, FeederLow = 3f;
+        private const float Again = 30f, MendLow = 0.9f, FeederLow = 3f, NoWayMost = 4f;
         internal const string Mend = "mend", Tend = "tend";
 
         internal static NpcMind.Plan Plan(string chore) { return new NpcMind.Plan { Kind = NpcMind.Task.Chore, Pose = chore }; }
@@ -114,6 +114,7 @@ namespace HuginWhispers
             if (p.Stage == 0)
             {
                 if (p.Tries >= 3f) return true; // (three done)
+                if (Time.time < p.Hand) { m.Halt(); return false; } // (a piece no way led to: the next one looked at a second later, not at its next thought)
                 WearNTear best = null; float bd = float.MaxValue;
                 foreach (WearNTear w in Of(r.Base).Broken)
                 {
@@ -125,7 +126,15 @@ namespace HuginWhispers
                 Of(r.Base).Broken.Remove(best); // (taken: another resident mends another one)
                 Vector3 stand = Stand(best.transform.position, r.Base.Centre);
                 if (best.transform.position.y - stand.y > 4f) return false; // (a roof out of a hammer's reach from the ground: another)
-                if (Pathfinding.instance != null && !NpcWalk.Have(m.transform.position, stand) && NpcDoors.Toward(m.transform.position, stand, NpcKit.Walker) == null) return false; // (out of its reach, not even through a door: another)
+                if (Pathfinding.instance != null && !NpcWalk.Have(m.transform.position, stand) && NpcDoors.Toward(m.transform.position, stand, NpcKit.Walker) == null) // (out of its reach, not even through a door: another)
+                {
+                    // each such look asks up to seven ways (one, and six doors): one a second, and after NoWayMost of them in a row this chore is over —
+                    // a base of many damaged pieces no way leads to had them asked at every thought, twenty a second, and again each half minute
+                    p.Hand = Time.time + 1f;
+                    if (++p.Count >= NoWayMost) { Npcs.Log(a.Id + ": no way to " + NoWayMost + " damaged pieces in a row — its mending let go"); return true; }
+                    return false;
+                }
+                p.Count = 0f;
                 p.Who = NpcKit.IdOf(best); p.To = stand; p.Look = best.transform.position; p.Stage = 1;
                 m.NewGoal();
                 return false;

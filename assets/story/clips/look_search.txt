@@ -1,5 +1,6 @@
 clip look_search
 length 11
+tone plain
 loop 0
 curve ease
 mode Spine1 body

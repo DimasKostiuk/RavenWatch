@@ -122,7 +122,7 @@ namespace HuginWhispers
 
         internal static void Tick(NpcActor a)
         {
-            if (a == null || !a.Owned || a.Zdo == null || !NpcResident.Is(a) || !a.Def.Settler) return; // (a person of the story has no way to take what it asked for)
+            if (a == null || !a.Owned || a.Zdo == null || !NpcResident.Settled(a)) return; // (a person of the story has no way to take what it asked for)
             float look;
             if (NextLook.TryGetValue(a, out look) && Time.time < look) return;
             if (NextLook.Count > 64) NextLook.Clear();
@@ -154,7 +154,7 @@ namespace HuginWhispers
         private static void Lapsed(NpcActor a, Request r)
         {
             if (r == null) return;
-            NpcMemory.Remember(a, "request_lapsed", 0L, Words(r.Item, r.Count));
+            NpcMemory.Remember(a, "request_lapsed", 0L, NpcMemory.Thing(r.Item, r.Count));
             if (Player.GetClosestPlayer(a.transform.position, 12f) != null) NpcPhrases.SayOr(a, "request_lapsed", a.Form(Lang.T("Гаразд. Обійдуся без цього.")), null, NpcActor.Voice.Unasked);
         }
 
@@ -349,7 +349,7 @@ namespace HuginWhispers
             Errands.Give(p, ObjectDB.instance.GetItemPrefab(r.Reward), r.RewardCount); // (stack by stack; what does not fit at your feet)
             string paid = Lang.F("Тримай: {0}.", Words(r.Reward, r.RewardCount));
             LastPaid = (NpcPhrases.Compose(a, "request_thanks", p) ?? Lang.T("Ой, дякую! Саме те, що треба.")) + " " + a.Form(paid);
-            NpcMemory.Tell(a, "request_done", p.GetPlayerID(), Words(r.Item, r.Count)); // (remembered first: a promise of it looks for this as soon as the request is gone — NpcPromises)
+            NpcMemory.Tell(a, "request_done", p.GetPlayerID(), NpcMemory.Thing(r.Item, r.Count)); // (remembered first: a promise of it looks for this as soon as the request is gone — NpcPromises)
             a.Act("requestdone " + r.Until.ToString(CultureInfo.InvariantCulture)); // (its owner takes it off — that very request)
             Npcs.Log(a.Id + ": got " + r.Count + " " + r.Item + ", paid " + r.RewardCount + " " + r.Reward);
             StoryBus.Raise("npc_request_done", a.Id, r.Count, a.transform.position);

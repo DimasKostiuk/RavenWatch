@@ -1,0 +1,18 @@
+[npc sestra_2]
+name: Соколина сестра
+shuns: drinks loose   # docs/jobs/people-moves.md
+body: human
+model: 1
+skin: 0.888 0.982 0.944
+haircolor: 0.2 0.16 0.12
+hair: Hair18_2
+beard: none
+gear: ArmorLeatherChest ArmorLeatherLegs CapeFeather KnifeSilver HelmetMage
+tint_eyes: 0.92 0.64 0.16
+tint_cape: 0.5 0.37 0.26
+tint_head: 0.5 0.37 0.26
+fight: off
+walk: 0.95
+menu: no
+persona: height=0.95 build=-0.25 lively=1
+armed: yes

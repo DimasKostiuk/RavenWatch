@@ -59,6 +59,7 @@ namespace HuginWhispers
                 case "dense": Dense = Mathf.Max(0.5f, v); break;
                 case "shapefar": ShapeFar = v; break;
                 case "steep": Steep = v; break;
+                case "slope": NpcKit.WalkerSlope = Mathf.Clamp(v, 0f, 85f); NpcKit.Remake(); WalkerChanged(); break; // (the map's own slope for people: a new walker kind, its links and kept answers let go)
                 case "see": See = v; break;
                 case "wide": Wide = v; break;
                 case "avoid": Avoid = v; break;
@@ -75,7 +76,7 @@ namespace HuginWhispers
                 case "slowfrom": NpcMind.SlowFrom = v; break;
                 case "slowto": NpcMind.SlowTo = v; break;
                 case "slowmin": NpcMind.SlowMin = v; break;
-                default: return "ключі: ahead aheadrun corner retry repath reach final room push nogain seen stuck gap gapdown gapup margin steep see wide avoid look home homeseen turn turnrun slowfrom slowto slowmin clear dense shapefar";
+                default: return "ключі: slope ahead aheadrun corner retry repath reach final room push nogain seen stuck gap gapdown gapup margin steep see wide avoid look home homeseen turn turnrun slowfrom slowto slowmin clear dense shapefar";
             }
             return Get();
         }
@@ -132,7 +133,7 @@ namespace HuginWhispers
         private int _wayAsks;
         private static readonly List<KeyValuePair<Vector3, float>> _avoid = new List<KeyValuePair<Vector3, float>>();
         internal static void KeepOff(Vector3 at) { _avoid.RemoveAll(k => k.Value < Time.time); if (_avoid.Count < 200) _avoid.Add(new KeyValuePair<Vector3, float>(at, Time.time + AvoidFor)); }
-        internal static bool Avoided(Vector3 at) { foreach (KeyValuePair<Vector3, float> k in _avoid) if (k.Value > Time.time && (k.Key - at).sqrMagnitude < 1.2f * 1.2f) return true; return false; }
+        internal static bool Avoided(Vector3 at, float within = 1.2f) { foreach (KeyValuePair<Vector3, float> k in _avoid) if (k.Value > Time.time && (k.Key - at).sqrMagnitude < within * within) return true; return false; } // (within: a thing's own place, when what was kept off is the spot stood on by it)
         internal string Doing = "";
 
         // a walk towards a goal (every frame while it means to go there); true when there
@@ -191,7 +192,7 @@ namespace HuginWhispers
             Vector3 want = (way.normalized + _apart * Push).normalized;
             if (Yield(me, way.normalized, ref want, now)) return false; // (a player in its way: it waits for him, then goes round him)
             if (DoorOnWay(me, want, now)) return false; // (a shut door right in its way: opened, then through)
-            if (left > Final) want = RoundThings(me, want); // (by its goal it walks up to it: its seat, its chest stand there)
+            if (left > Final && !ClimbsAhead(me)) want = RoundThings(me, want); // (by its goal it walks up to it: its seat, its chest stand there; a step its way climbs is walked at, not round — StepUp takes it up)
             Go(want, run, _turn != 0f ? "walks round a thing" : "walks");
             return false;
         }
@@ -301,11 +302,22 @@ namespace HuginWhispers
         }
 
         // past that corner along its way — it went by wider than Corner (a widened corner, its aim cutting inside): on to the next
+        // Where its way turns back on itself (sharper than a right angle: round a gate post, the end of a wall) «ahead along the next bit» is true
+        // on its way in as well, 3 m before the corner: it was counted passed at once and the body walked straight at the point after it, into
+        // what the corner goes round (measured 2026-11-11, walks.txt: a 125° turn by a wood_gate, a person 1.3 m short of the corner pushed into
+        // the gate twice and was put past it; 14 of 124 ways written had such a turn). There the corner is passed only when a body's width is
+        // free straight to the point after it (looked at five times a second at most, only at such a corner)
+        private float _passAt; private int _passI = -1; private bool _passFree;
         private bool Passed(Vector3 me, int i)
         {
             if (i + 1 >= _path.Count) return false;
             Vector3 seg = _path[i + 1] - _path[i], d = me - _path[i]; seg.y = 0f; d.y = 0f;
-            return seg.sqrMagnitude > 0.01f && d.sqrMagnitude < 9f && Vector3.Dot(d, seg) > 0f;
+            if (seg.sqrMagnitude <= 0.01f || d.sqrMagnitude >= 9f || Vector3.Dot(d, seg) <= 0f) return false;
+            if (i == 0) return true;
+            Vector3 into = _path[i] - _path[i - 1]; into.y = 0f;
+            if (Vector3.Dot(into, seg) >= 0f) return true;
+            if (i != _passI || Time.time >= _passAt) { _passI = i; _passAt = Time.time + 0.2f * _slow; _passFree = Body(me, _path[i + 1]); }
+            return _passFree;
         }
 
         // the point some way ahead on its way (it walks a curve through the corners, not to each one and turn)
@@ -432,7 +444,7 @@ namespace HuginWhispers
             return false;
         }
 
-        internal static float EaseFrom = 2f, EaseLeast = 0.4f; // m before its goal it starts to slow; the share of its speed at the end
+        internal static float EaseFrom = 3f, EaseLeast = 0.2f; // m before its goal it starts to slow; the share of its speed at the end (2 and 0.4 till 2026-11-14: the sisters stopped dead after their walk out of the feathers — the user)
         private float _left = 99f;
 
         private void Go(Vector3 dir, bool run, string doing)
@@ -440,6 +452,7 @@ namespace HuginWhispers
             dir = NoPush(_m.transform.position, dir);
             if (dir.sqrMagnitude < 0.01f) { _m.StopMoving(); _anchorAt = Time.time; Doing = "waits: a player right in its way"; return; } // (all of its step was into a player: no being stranded either)
             Doing = doing;
+            if (Time.time >= _stepDownNext && StepDown(_m.transform.position, dir)) { _stepDownNext = Time.time + 1f; return; } // (a ledge its way goes down: taken down it, not walked off it)
             if (_left < _shortBest - ShortGain) { _shortSince = -1f; _shortBest = _left; } // (nearer by a step: not standing short of it. A shuffle at the same spot, a way asked again and walked a little, is no gain: else its clock began anew each time and it pushed till it was put home, 2026-11-05)
             _m.Steer(dir, run, run ? 1f : Mathf.Lerp(EaseLeast, 1f, Mathf.SmoothStep(0f, 1f, (_left - _near) / EaseFrom))); // (a walk slows as it comes, no sudden stop; a run — to a foe, away from one — keeps its speed)
             if (_trip != null) { if (_trip.HaltSince >= 0f) Flush(); _trip.Moving(_m); Dips(); } // (a halt over: written now)

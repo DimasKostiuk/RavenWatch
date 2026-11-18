@@ -1,0 +1,1 @@
+dveri dungeon_forestcrypt_door 0 0 0

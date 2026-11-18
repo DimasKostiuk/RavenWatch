@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 
 namespace HuginWhispers
 {
-    // A heart's board on the screen (the user's design 2026-11-06, docs/plans/mockups/heart-board.html): planks hanging on two chains, its head with the name's plate that grows with the name, a
+    // A heart's board on the screen (the user's design 2026-11-06, docs/plans/mockups/heart-board.html): planks hanging on two chains between two posts, on a foot beam with its name in runes (the user's picture 2026-11-11), its head with the name's plate that grows with the name, a
     // plaque with how they live, on the left its notes (Треба зробити, Комора і скарбничка), on the right a note with tabs (its page made only when opened), under it the wooden buttons, always there.
     // Who shows it only says what is on it (Board): nothing here knows a heart (NpcBoard). It shares with a sheet (RavenBookSheet) its place, its keys and its box for the why: one such window at a time.
     internal static partial class RavenBook
@@ -16,7 +16,7 @@ namespace HuginWhispers
         internal const int BoardNoDot = -1, BoardGreyDot = -2;
 
         internal sealed class BoardRow { public string Label = "", Text = "", Sub = "", Far = "", Link = "", Tip, TipHead; public int Dot = BoardNoDot, Ink; public bool Arrow; public Action Click; }
-        internal sealed class BoardGroup { public string Head = "", Text = ""; public int Level = BoardNoDot; public List<BoardRow> Rows = new List<BoardRow>(); public bool Diamond; }
+        internal sealed class BoardGroup { public string Head = "", Text = ""; public int Level = BoardNoDot; public List<BoardRow> Rows = new List<BoardRow>(); public bool Diamond, Call; } // (Call: a person in need — teal as its map mark, each row on a teal ground of its own (its hover tints that ground), the mark's medallion instead of the arrow)
         internal sealed class BoardNote { public string Title = ""; public List<BoardGroup> Groups = new List<BoardGroup>(); }
         internal sealed class BoardPerson { public string Name = "", Job = "", You = "", Tip, TipHead; public int Food, Rest, Mood, YouRank = 2; public bool JobBad, Far; public Action Click; }
         internal sealed class BoardPage { public List<BoardPerson> People; public List<BoardGroup> Groups = new List<BoardGroup>(); }
@@ -32,14 +32,17 @@ namespace HuginWhispers
             public int Open;
             public Func<bool> Stay;
             public int Dining; // 0 none · 1 picked · 2 its table is gone
-            public Action Choose, Remove, ShowTable, Edges, Rename;
+            public Action Choose, Remove, ShowTable, Edges, Rename, Feast; // (Feast: null — no button; FeastTip what it is and why not now)
+            public string FeastTip = "";
         }
 
-        private const float BoardDown = 16f, BoardHeadH = 72f, BoardW = 980f, BoardBodyW = 944f, BoardLeftW = 400f, BoardRightW = 476f;
+        private const float BoardDown = 16f, BoardHeadH = 72f, BoardFootH = 36f, BoardW = 1008f, BoardBodyW = 944f, BoardSide = (BoardW - BoardBodyW) * 0.5f, BoardPostOut = 8f, // (the posts stand outside the planks: the board wider by them, no column narrower)
+            BoardLeftW = 400f, BoardRightW = 476f;
         private static readonly Color BPaper = C("#efe2c0"), BTitle = C("#8a3416"), BLabel = C("#6b5636"), BSub = C("#7a3a1c"), BTabOn = C("#5a230f"), BTabOff = C("#5a3e26"), BTabOnInk = C("#f0d590"), BTabOffInk = C("#e2cfa6"),
             BRule = C("#4b1c0d"), BDotGood = C("#8fbf5a"), BDotWarn = C("#e0b04a"), BDotBad = C("#e0603e"), BDotGrey = C("#a89c86"), BFar = C("#7a6a52"), BGold = C("#d9b877"), BName = C("#f0d590");
         private static readonly Color[] BYou = { C("#9a2216"), C("#8a3416"), C("#6b5636"), C("#7f4e04"), C("#4f6a2a") };
         private static readonly Color BRowLit = new Color(1f, 0.745f, 0.31f, 0.38f);
+        private static readonly Color BCall = C("#3d8a84"), BCallInk = C("#1f4a48"); // (the rescue mark's teal: tools/npc_icons.html «n-rescue»)
 
         private static Board _board;
         private static RectTransform _boardTabs, _boardBody;
@@ -67,7 +70,7 @@ namespace HuginWhispers
             Fixed(all.gameObject, BoardW, -1f);
             all.sizeDelta = new Vector2(BoardW, all.sizeDelta.y);
 
-            foreach (float x in new[] { 190f, 780f })
+            foreach (float x in new[] { 204f, 794f })
             {
                 RectTransform chain = Rect("Chain", all); chain.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 chain.anchorMin = chain.anchorMax = new Vector2(0f, 1f); chain.pivot = new Vector2(0.5f, 0f); chain.sizeDelta = new Vector2(18f, 80f); chain.anchoredPosition = new Vector2(x, 0f);
@@ -75,6 +78,8 @@ namespace HuginWhispers
             }
             RectTransform room = Rect("HeadRoom", all); Fixed(room.gameObject, BoardW, BoardHeadH - 6f); // (the planks start a little under the head)
             BoardBody(all, b);
+            BoardPosts(all);
+            BoardFoot(all, b);
             BoardHead(all, b);
             BoardDraw();
             SheetBox();
@@ -112,14 +117,43 @@ namespace HuginWhispers
             RectTransform x = CloseButton(all, HideSheet); x.anchorMin = x.anchorMax = x.pivot = new Vector2(1f, 1f); x.anchoredPosition = new Vector2(14f, -14f);
         }
 
-        // what is carved into the head beside the plate: its own name in runes, again and again, as far as there is room
-        private static void BoardRunes(RectTransform head, string name, TextAlignmentOptions align)
+        // a post on each side, from under the head down under the foot beam: both lie over its ends
+        private static void BoardPosts(RectTransform all)
+        {
+            foreach (bool left in new[] { true, false })
+            {
+                RectTransform post = Rect("Post", all); post.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                float x = left ? 0f : 1f;
+                Stretch(post, new Vector2(x, 0f), new Vector2(x, 1f), new Vector2(left ? BoardPostOut : -BoardSide, BoardFootH * 0.5f), new Vector2(left ? BoardSide : -BoardPostOut, -BoardHeadH * 0.5f));
+                Image pi = post.gameObject.AddComponent<Image>(); pi.sprite = BookArt.BoardPost; pi.type = Image.Type.Tiled; pi.raycastTarget = false;
+            }
+        }
+
+        // the beam the planks stand on: iron ends as the head's, the name in runes, smaller and fainter
+        private static void BoardFoot(RectTransform all, Board b)
+        {
+            RectTransform foot = Rect("Foot", all); Fixed(foot.gameObject, BoardW, BoardFootH);
+            HBox(foot, 0f, TextAnchor.MiddleCenter, 44, 44, 0, 0);
+            RectTransform wood = Rect("Beam", foot); wood.gameObject.AddComponent<LayoutElement>().ignoreLayout = true; Stretch(wood, Vector2.zero, Vector2.one, new Vector2(18f, 0f), new Vector2(-18f, 0f));
+            Image wi = wood.gameObject.AddComponent<Image>(); wi.sprite = BookArt.BoardBeam; wi.raycastTarget = false;
+            foreach (bool left in new[] { true, false })
+            {
+                RectTransform iron = Rect("Iron", foot); iron.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                iron.anchorMin = iron.anchorMax = new Vector2(left ? 0f : 1f, 0.5f); iron.sizeDelta = new Vector2(30f, BoardFootH); iron.anchoredPosition = new Vector2(left ? 15f : -15f, 0f);
+                if (!left) iron.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                Image ii = iron.gameObject.AddComponent<Image>(); ii.sprite = BookArt.BoardIron(true, true); ii.raycastTarget = false;
+            }
+            BoardRunes(foot, b.Title, TextAlignmentOptions.Midline, 13f, 0.3f);
+        }
+
+        // what is carved into the head beside the plate, and into the foot beam: its own name in runes, again and again, as far as there is room
+        private static void BoardRunes(RectTransform head, string name, TextAlignmentOptions align, float size = 16f, float ink = 0.42f)
         {
             RectTransform box = Rect("Runes", head);
             LayoutElement le = box.gameObject.AddComponent<LayoutElement>(); le.flexibleWidth = 1f; le.minWidth = 0f; le.preferredWidth = 0f; le.preferredHeight = 24f;
             box.gameObject.AddComponent<RectMask2D>();
             string runes = BookArt.RuneWords(name);
-            TMP_Text t = T(box, runes + " · " + runes + " · " + runes, 16f, A(C("#e6c77d"), 0.42f), F.Rune, align);
+            TMP_Text t = T(box, runes + " · " + runes + " · " + runes, size, A(C("#e6c77d"), ink), F.Rune, align);
             t.characterSpacing = 45f; t.textWrappingMode = TextWrappingModes.NoWrap; t.overflowMode = TextOverflowModes.Overflow;
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         }
@@ -140,10 +174,7 @@ namespace HuginWhispers
             Fixed(body.gameObject, BoardBodyW, -1f);
             Image wi = body.gameObject.AddComponent<Image>(); wi.sprite = BookArt.BoardWood; wi.raycastTarget = true; // (a click on the wood is no click on the world)
             Outline(body, BookArt.FrameFine(2f, 2f), C("#24170c"));
-            VBox(body, 16f, TextAnchor.UpperLeft, 24, 24, 30, 30);
-            RectTransform rail = Rect("Rail", body); rail.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            rail.anchorMin = new Vector2(0f, 0f); rail.anchorMax = new Vector2(1f, 0f); rail.pivot = new Vector2(0.5f, 0f); rail.sizeDelta = new Vector2(0f, 10f); rail.anchoredPosition = new Vector2(0f, 14f);
-            Image ri = rail.gameObject.AddComponent<Image>(); ri.sprite = BookArt.BoardRail; ri.raycastTarget = false;
+            VBox(body, 16f, TextAnchor.UpperLeft, 24, 24, 30, 24); // (no iron bar along its foot any more: it stands on the foot beam)
             BoardPlate(body, b);
             RectTransform grid = Rect("Grid", body); HBox(grid, 20f, TextAnchor.UpperLeft, 0, 0, 0, 0);
             RectTransform left = Rect("Left", grid); VBox(left, 14f, TextAnchor.UpperLeft, 0, 0, 0, 0); Fixed(left.gameObject, BoardLeftW, -1f);
@@ -210,28 +241,31 @@ namespace HuginWhispers
             if (g.Head.Length > 0)
             {
                 RectTransform head = Rect("Head", box); HBox(head, 7f, TextAnchor.MiddleLeft, 0, 0, 4, 2);
-                Color ink = g.Level == ToneBad ? C("#9a2216") : g.Level == ToneWarn ? C("#7f4e04") : g.Diamond ? BLabel : BTitle;
-                if (g.Diamond) BoardDiamond(head, 8f, g.Level == ToneBad ? BDotBad : g.Level == ToneWarn ? BDotWarn : BDotGrey, true);
+                Color ink = g.Call ? BCallInk : g.Level == ToneBad ? C("#9a2216") : g.Level == ToneWarn ? C("#7f4e04") : g.Diamond ? BLabel : BTitle;
+                if (g.Diamond || g.Call) BoardDiamond(head, 8f, g.Call ? BCall : g.Level == ToneBad ? BDotBad : g.Level == ToneWarn ? BDotWarn : BDotGrey, true);
                 T(head, g.Head, 14f, ink, F.Italic, TextAlignmentOptions.MidlineLeft).textWrappingMode = TextWrappingModes.NoWrap;
             }
-            foreach (BoardRow r in g.Rows) BoardRowDraw(box, r);
+            foreach (BoardRow r in g.Rows) BoardRowDraw(box, r, g.Call);
             if (g.Text.Length > 0) { TMP_Text t = T(box, g.Text, 17f, BLabel, F.Italic, TextAlignmentOptions.TopLeft); t.textWrappingMode = TextWrappingModes.Normal; t.lineSpacing = 6f; }
         }
 
-        private static void BoardRowDraw(Transform to, BoardRow r)
+        private static void BoardRowDraw(Transform to, BoardRow r, bool call = false)
         {
             RectTransform row = Rect("Row", to);
-            HBox(row, 10f, TextAnchor.UpperLeft, 0, 0, 4, 4);
-            Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = new Color(1f, 1f, 1f, 0f);
+            HBox(row, 10f, TextAnchor.UpperLeft, call ? 8 : 0, call ? 6 : 0, 4, 4);
+            // a call's teal is the row's own ground: the hover tints that very ground and gives it back (no band under it whose edges would show round the lit row)
+            Image fill = row.gameObject.AddComponent<Image>(); fill.sprite = BookArt.RoundFine(3f); fill.type = Image.Type.Sliced; fill.color = call ? A(BCall, 0.16f) : new Color(1f, 1f, 1f, 0f);
             if (r.Label.Length > 0) { Room(T(row, r.Label, 14f, BLabel, F.Italic, TextAlignmentOptions.TopLeft), 92f, 10f); }
             if (r.Dot != BoardNoDot) { RectTransform at = Rect("At", row); Fixed(at.gameObject, 13f, 22f); HBox(at, 0f, TextAnchor.MiddleCenter, 0, 0, 0, 0); BoardDot(at, r.Dot, 10f); }
             RectTransform words = Rect("Words", row); VBox(words, 1f, TextAnchor.UpperLeft, 0, 0, 0, 0); LayoutElement wl = words.gameObject.AddComponent<LayoutElement>(); wl.flexibleWidth = 1f; wl.minWidth = 0f; wl.preferredWidth = 0f;
             Color ink = r.Ink == ToneBad ? BTitle : PInk;
             TMP_Text t = T(words, r.Text, 18f, ink, F.Body, TextAlignmentOptions.TopLeft); t.textWrappingMode = TextWrappingModes.Normal;
-            if (r.Sub.Length > 0) { TMP_Text s = T(words, r.Sub, 14f, BSub, F.Italic, TextAlignmentOptions.TopLeft); s.textWrappingMode = TextWrappingModes.Normal; }
+            if (r.Sub.Length > 0) { TMP_Text s = T(words, r.Sub, 14f, call ? BCallInk : BSub, F.Italic, TextAlignmentOptions.TopLeft); s.textWrappingMode = TextWrappingModes.Normal; }
             if (r.Far.Length > 0) Keep(T(row, r.Far, 14f, BLabel, F.Italic, TextAlignmentOptions.TopRight));
             if (r.Link.Length > 0) Keep(T(row, r.Link, 14f, BTitle, F.Italic, TextAlignmentOptions.TopRight));
-            if (r.Arrow || (r.Click != null && r.Link.Length == 0)) { RectTransform at = Rect("At", row); Fixed(at.gameObject, 18f, 22f); HBox(at, 0f, TextAnchor.MiddleCenter, 0, 0, 0, 0); SheetArrowImage(at, BTitle, true, 18f); }
+            Texture2D mark = call ? OrdersMenu.PicOrNone("n-rescue") : null;
+            if (mark != null) { RectTransform at = Rect("Mark", row); Fixed(at.gameObject, 26f, 26f); RawImage mi = at.gameObject.AddComponent<RawImage>(); mi.texture = mark; mi.raycastTarget = false; } // (the map's own mark: a click puts it there)
+            else if (r.Arrow || (r.Click != null && r.Link.Length == 0)) { RectTransform at = Rect("At", row); Fixed(at.gameObject, 18f, 22f); HBox(at, 0f, TextAnchor.MiddleCenter, 0, 0, 0, 0); SheetArrowImage(at, BTitle, true, 18f); }
             if (r.Tip != null) SheetHook(row.gameObject, r.TipHead, r.Tip, r.Click, new Graphic[] { t }, ink, null, fill, BRowLit);
             else SheetHook(row.gameObject, null, null, r.Click, new Graphic[] { t }, ink, fill);
             RectTransform rule = Rect("Rule", to); Fixed(rule.gameObject, -1f, 1f);
@@ -380,6 +414,8 @@ namespace HuginWhispers
             {
                 TMP_Text show = T(st, Lang.T("показати"), 14f, BGold, F.Italic, TextAlignmentOptions.MidlineLeft); show.textWrappingMode = TextWrappingModes.NoWrap;
                 SheetArrowImage(st, BGold, true, 16f);
+                RectTransform dash = Rect("Dash", now.transform); Stretch(dash, Vector2.zero, new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(0f, 2f)); // (a dashed line under the word: it can be clicked)
+                Image da = dash.gameObject.AddComponent<Image>(); da.sprite = BookArt.BoardDash; da.type = Image.Type.Tiled; da.color = A(BGold, 0.7f); da.raycastTarget = false;
                 Clickable(st.gameObject, b.ShowTable);
                 Hover(st.gameObject, new Graphic[] { now, show }, stInk, stFill);
             }
@@ -395,6 +431,7 @@ namespace HuginWhispers
             RectTransform land = Rect("Land", box); HBox(land, 10f, TextAnchor.MiddleCenter, 0, 0, 0, 0);
             BoardAct(land, Lang.T("Показати межі"), ActSmall, false, Lang.T("ПОКАЗАТИ МЕЖІ"), Lang.T("На 30 секунд: золоті вогники по межі оселі й позначки на мапі. Усе всередині мешканці вважають своїм."), b.Edges);
             BoardAct(land, Lang.T("Змінити назву"), ActSmall, false, Lang.T("ЗМІНИТИ НАЗВУ"), Lang.T("Під цією назвою оселю бачать у списку, куди послати найманих."), b.Rename);
+            if (b.Feast != null) { RectTransform feast = Rect("Feast", box); HBox(feast, 10f, TextAnchor.MiddleCenter, 0, 0, 0, 0); BoardAct(feast, Lang.T("Влаштувати свято"), ActMain, false, Lang.T("СВЯТО"), b.FeastTip, b.Feast); }
         }
 
         private static void BoardAct(RectTransform row, string word, float w, bool main, string tipHead, string tip, Action click)

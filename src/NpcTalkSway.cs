@@ -91,10 +91,10 @@ namespace HuginWhispers
                     break;
                 case "peace":
                 {
-                    NpcActor o;
-                    NpcMemory.Entry last = NpcAttitude.LastQuarrel(a, out o);
-                    if (last == null || o == null) { SwaySaid = lead; return; }
-                    NpcAttitude.MadePeace(a, o, last, p);
+                    string kind;
+                    NpcActor o = NpcAttitude.Grudge(a, out kind);
+                    if (o == null) { SwaySaid = lead; return; }
+                    NpcAttitude.MadePeace(a, o, kind, p);
                     SwaySaid = lead + " " + NpcAttitude.PeaceSaid;
                     break;
                 }
@@ -115,7 +115,7 @@ namespace HuginWhispers
                 "@c_peace +\n" + SwayAnswers("peace") +
                 "@c_leaving\n{concern}\n" + SwayAnswers("leave") +
                 "> Що тебе гнітить? => how\n> Іди, якщо хочеш. || Тримати не буду. => end !tone cold\n" +
-                "@swayed\n{sway}\n> То що ж тобі вдягти? => dress ?dressok\n> Добре. => start\n> Бувай. => end\n");
+                "@swayed\n{sway}\n> То що ж тобі вдягти? => dress ?dressok\n> {@say_ok} => start\n> {@say_bye} => end\n");
         }
     }
 }

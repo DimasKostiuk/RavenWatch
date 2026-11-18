@@ -485,6 +485,9 @@ namespace HuginWhispers
             try
             {
                 ChampionLife.Put(__instance);
+#if RAVEN_NPC
+                NpcFade.Creature(__instance); // (a creature marked a ghost: painted see-through as it comes into this game)
+#endif
             }
             catch (System.Exception pgx) { PatchGuard.Fail("ChampionAwakePatch", pgx); }
         }

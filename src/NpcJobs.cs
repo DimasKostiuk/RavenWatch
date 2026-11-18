@@ -17,7 +17,13 @@ namespace HuginWhispers
         internal virtual string Assign(NpcActor a, Vector3 at) { return NpcWorker.SetJob(a, Id, NpcMenu.By); } // (only the menu's pick of a place: the one who pressed it)
         internal virtual string Can(NpcActor a) { return null; } // why this one cannot take it (null: it can)
         internal bool StoreAfterEach = true; // (gatherer/cleaner: only when its hands are full or nothing is left)
-        internal bool NeedsChest = true;     // takes from a chest or brings to one (a guard does neither)
+        internal bool NeedsChest = true;     // cannot work without a chest of its own: takes from it or brings to it (a guard does neither; a servant mends and shuts doors without one)
+        internal bool HasChest = true;       // may be given one («Ящик» in its ring): all but a guard. Not NeedsChest: a servant needs none and still has one — its button asked
+                                             // NeedsChest, so a servant could be given no chest at all and its fuel, its floor and its refill never ran (read 2026-11-12)
+        internal bool HasSupply;             // may be given a second chest to take from («Інгредієнти»: a cook) — its own chest then only receives what it keeps (Keeps); none set: one chest for both
+        internal virtual bool Keeps(ItemDrop.ItemData it) { return true; } // …what of its hands goes to its own chest then (a cook: its dishes); the rest back to where it takes from
+        // what it lacks for its work now, in the player's words, a line each (its card «Побут», the heart's board) — asked on any game, only while that is shown
+        internal virtual void Lacks(NpcWorker w, List<string> into) { }
         internal string Move = "reach_in";   // its body's move at each errand (a clip: NpcWorker, Stage.Use); an errand's own Move wins; "" none (its tool's swing is its own)
         internal abstract NpcWorker.Errand Find(NpcWorker w);
         // the fuel its chest should hold (the game's names of the things: «$item_wood»…) — a servant keeps it topped up
@@ -34,49 +40,107 @@ namespace HuginWhispers
         internal static Job Find(string id) { foreach (Job j in All) if (j.Id == id) return j; return null; }
 
         // its word for a player, in the reader's language (the phrases' own language: Lang.W(Find(id).Word))
-        internal static string Word(string id) { Job j = Find(id); return Lang.T(j != null ? j.Word : Lang.K("без роботи")); }
+        internal static string Kept(string id) { Job j = Find(id); return j != null ? j.Word : Lang.K("без роботи"); } // (the source: what is kept — a goal's memory)
+        internal static string Word(string id) { return Lang.T(Kept(id)); }
     }
 
-    // fires and torches: fuel from the chest when they burn low
+    // fires and torches: fuel from the chest when they burn low. The base's own first; a player's house (NpcPrivate) only
+    // when they want nothing; a fire a servant keeps (its house, and the servant has its fuel) never: that is the
+    // servant's work (the user, 2026-11-14)
     internal sealed class Stoker : Job
     {
-        internal Stoker() { Move = "feed_fire"; Id = "stoker"; Word = Lang.K("палій"); Icon = "n-stoker"; Desc = Lang.K("Вогнища й факели в базі: підкладає пальне з ящика, коли догорають."); }
+        internal Stoker() { Move = "feed_fire"; Id = "stoker"; Word = Lang.K("палій"); Icon = "n-stoker"; Desc = Lang.K("Вогнища й факели в базі: підкладає пальне з ящика, коли догорають. У хату гравця йде в останню чергу, а в дім, який доглядає слуга, не ходить."); }
 
-        internal override NpcWorker.Errand Find(NpcWorker w) { return Fuel(w, w.InBase<Fireplace>()); }
+        internal override NpcWorker.Errand Find(NpcWorker w) { Sort(w); return Fuel(w, Open) ?? Fuel(w, InHouse); }
 
-        internal override void Fuels(NpcWorker w, HashSet<string> into) { foreach (Fireplace f in w.InBase<Fireplace>()) if (!f.m_infiniteFuel && f.m_canRefill) Add(into, f.m_fuelItem); }
+        internal override void Fuels(NpcWorker w, HashSet<string> into)
+        {
+            Sort(w);
+            foreach (Fireplace f in Open) if (!f.m_infiniteFuel && f.m_canRefill) Add(into, f.m_fuelItem);
+            foreach (Fireplace f in InHouse) if (!f.m_infiniteFuel && f.m_canRefill) Add(into, f.m_fuelItem);
+        }
 
-        // a fire or a light of these that burns low: fuel from the chest (the servant's too, for its house)
+        // its base's fires (nearest first, InBase) in two lists, filled anew each time and read at once (nothing kept from
+        // them: an errand holds its own fire); the servants here with a chest and their houses, looked up once a time
+        private static readonly List<Fireplace> Open = new List<Fireplace>(), InHouse = new List<Fireplace>();
+        private static readonly List<KeyValuePair<NpcWorker, NpcHouse>> Keepers = new List<KeyValuePair<NpcWorker, NpcHouse>>();
+        private static void Sort(NpcWorker w)
+        {
+            Open.Clear(); InHouse.Clear();
+            Servant.Keepers(Keepers);
+            NpcBase b = w.Base;
+            foreach (Fireplace f in w.InBase<Fireplace>())
+            {
+                if (f == null || Kept(f)) continue;
+                Vector3 p = f.transform.position;
+                NpcHouse h = NpcPrivate.At(b, p);
+                if (h == null || NpcKit.UnderSky(p)) Open.Add(f); // (nothing built over it: a yard, no one's house — as NpcPrivate.Off)
+                else InHouse.Add(f);
+            }
+            Keepers.Clear(); // (no worker held past this look)
+        }
+
+        // a servant fuels this one: its house's (as Servant.Fuels: on a floor of it or its edge), and it has the fuel at hand
+        // (none in its chest: the stoker may go, last of all if it is a player's house)
+        private static bool Kept(Fireplace f)
+        {
+            if (Keepers.Count == 0 || f.m_fuelItem == null) return false;
+            string name = f.m_fuelItem.m_itemData.m_shared.m_name;
+            foreach (KeyValuePair<NpcWorker, NpcHouse> k in Keepers)
+                if (k.Value.Near(f.transform.position) && k.Key.Carrying(name) + k.Key.InChest(name) > 0) return true;
+            return false;
+        }
+
+        // none of its fires' fuel in its chest
+        internal override void Lacks(NpcWorker w, List<string> into)
+        {
+            Container c = w.Chest;
+            if (c == null || c.GetInventory() == null) return; // (not to be seen from this game)
+            HashSet<string> fuels = new HashSet<string>(); Fuels(w, fuels);
+            if (fuels.Count == 0) { into.Add(Lang.T("на базі нема вогнищ, які можна підживити")); return; }
+            foreach (string f in fuels) if (c.GetInventory().CountItems(f) > 0) return;
+            into.Add(Lang.T("у ящику нема пального для вогнищ"));
+        }
+
+        // a fire or a light of these that burns low: fuel from the chest (the servant's too, for its house). One about to
+        // go out first (Urgent), else the first of them (the lists come nearest first: InBase)
         internal static NpcWorker.Errand Fuel(NpcWorker w, IEnumerable<Fireplace> fires)
         {
+            Fireplace low = null; float lowFuel = 0f;
             foreach (Fireplace f in fires)
             {
-                if (f.m_infiniteFuel || !f.m_canRefill || f.m_fuelItem == null) continue;
+                if (f == null || f.m_infiniteFuel || !f.m_canRefill || f.m_fuelItem == null) continue;
                 ZNetView nv = f.GetComponent<ZNetView>();
                 if (nv == null || !nv.IsValid()) continue;
                 if (f.m_canTurnOff && nv.GetZDO().GetInt(ZDOVars.s_state, 1) == 0) continue; // (put out on purpose)
                 float fuel = nv.GetZDO().GetFloat(ZDOVars.s_fuel);
-                if (fuel > f.m_maxFuel - 2f) continue;
-                ZDOID id = nv.GetZDO().m_uid;
-                if (!Reserve.IsFree(id, w.Me)) continue;
+                if (fuel > f.m_maxFuel - Mathf.Min(2f, f.m_maxFuel * 0.5f)) continue; // (two short; a small one, a mod's: half of it)
+                if (!Reserve.IsFree(nv.GetZDO().m_uid, w.Me)) continue;
                 string fuelName = f.m_fuelItem.m_itemData.m_shared.m_name;
-                int need = Mathf.Max(1, Mathf.FloorToInt(f.m_maxFuel - fuel));
                 if (w.Carrying(fuelName) + w.InChest(fuelName) <= 0) continue;
-                return new NpcWorker.Errand
-                {
-                    Target = id, At = f.transform.position, Near = 1.8f, Take = fuelName, Count = need, Word = Lang.K("підкладає дрова"), Move = "feed_fire", Urgent = fuel <= 1f, // (about to go out: first among a servant's errands)
-                    Use = (wk, e) =>
-                    {
-                        // all it brings in one go: one message to the fire, not one a log (the game's own «add this much»)
-                        if (f == null || nv == null || !nv.IsValid()) return true;
-                        int put = Mathf.Min(wk.Carrying(fuelName), Mathf.FloorToInt(f.m_maxFuel - nv.GetZDO().GetFloat(ZDOVars.s_fuel)));
-                        for (int k = 0; k < put; k++) wk.Spend(fuelName);
-                        if (put > 0) nv.InvokeRPC("RPC_AddFuelAmount", (float)put);
-                        return true;
-                    }
-                };
+                if (fuel <= 1f) return FuelErrand(f, nv, fuel);
+                if (low == null) { low = f; lowFuel = fuel; }
             }
-            return null;
+            return low != null ? FuelErrand(low, low.GetComponent<ZNetView>(), lowFuel) : null;
+        }
+
+        private static NpcWorker.Errand FuelErrand(Fireplace f, ZNetView nv, float fuel)
+        {
+            string fuelName = f.m_fuelItem.m_itemData.m_shared.m_name;
+            return new NpcWorker.Errand
+            {
+                Target = nv.GetZDO().m_uid, At = f.transform.position, Near = 1.8f, Take = fuelName, Count = Mathf.Max(1, Mathf.FloorToInt(f.m_maxFuel - fuel)),
+                Word = Lang.K("підкладає дрова"), Move = "feed_fire", Urgent = fuel <= 1f, // (about to go out: first among a servant's errands)
+                Use = (wk, e) =>
+                {
+                    // all it brings in one go: one message to the fire, not one a log (the game's own «add this much»)
+                    if (f == null || nv == null || !nv.IsValid()) return true;
+                    int put = Mathf.Min(wk.Carrying(fuelName), Mathf.FloorToInt(f.m_maxFuel - nv.GetZDO().GetFloat(ZDOVars.s_fuel)));
+                    for (int k = 0; k < put; k++) wk.Spend(fuelName);
+                    if (put > 0) nv.InvokeRPC("RPC_AddFuelAmount", (float)put);
+                    return true;
+                }
+            };
         }
     }
 
@@ -198,6 +262,7 @@ namespace HuginWhispers
             foreach (ItemDrop d in drops)
             {
                 if (d == null || d.GetComponent("EggGrow") != null) continue; // (an egg lying warm to hatch: left where it is)
+                if (NpcWorker.Untouchable(d)) continue; // (the story's, the ravens', a keepsake, a quest thing: never moved about — a raven laid down in the base went into the cleaner's chest; the servant's putting away asked this already)
                 if (!NpcTidy.Takes(w.Actor, NpcTidy.KindOf(d))) continue; // (a kind it was told to leave)
                 if (NpcTidy.Claimed(w.Base, w.Pos, d)) continue; // (a station's make by it: its worker's)
                 ZDOID id = NpcKit.IdOf(d);
@@ -221,6 +286,20 @@ namespace HuginWhispers
             Desc = Lang.K("Доглядає один дім: лагодить побите, зачиняє двері; з ящиком запасів — ще й підкладає пальне вогнищам і світильникам, прибирає підлогу, бере пальне зі складу у свою скриню, коли воно закінчується, а те, що ти кладеш у його скриню чи скриню для розбору, розкладає на складі (нема місця — по скринях бази, де лежить те саме, не в доми інших гравців). Сюжетні й особливі речі не чіпає."); }
 
         private const int Low = 10, Fill = 30; // (its chest with less of its house's fuel than this: brought up to that)
+
+        // the servants on this game that fuel their house's fires (a chest to hand, the house looked over), with that house
+        // (Stoker.Sort: the stoker stays out of those fires)
+        internal static void Keepers(List<KeyValuePair<NpcWorker, NpcHouse>> into)
+        {
+            into.Clear();
+            foreach (NpcActor o in NpcActor.Live)
+            {
+                NpcWorker k = o != null ? o.Worker : null;
+                if (k == null || !(k.Job is Servant) || k.Chest == null) continue;
+                NpcHouse h = k.House;
+                if (h != null && h.Good) into.Add(new KeyValuePair<NpcWorker, NpcHouse>(k, h));
+            }
+        }
 
         // the fuel of its house's fires and lights
         internal override void Fuels(NpcWorker w, HashSet<string> into)
@@ -265,7 +344,7 @@ namespace HuginWhispers
                 Container from = Nearest(store, own, name, w, work) ?? Nearest(chests, own, name, w, work);
                 if (from == null) continue;
                 string what = name; int want = Fill - have; Container src = from;
-                return new NpcWorker.Errand { Target = ownId, At = src.transform.position, Near = 2f, Word = store.Contains(src) ? "бере пальне зі складу" : "шукає пальне по базі",
+                return new NpcWorker.Errand { Target = ownId, At = src.transform.position, Near = 2f, Word = store.Contains(src) ? Lang.K("бере пальне зі складу") : Lang.K("шукає пальне по базі"),
                     Use = (wk, e) => { wk.TakeFrom(src, what, want); return true; } }; // (carried: to its own chest next — its carry goes there)
             }
             return null;
@@ -300,7 +379,7 @@ namespace HuginWhispers
                 Container dst = Spot(w, it, store, chests, own, inbox, ref inStore, ref inBase);
                 if (dst == null) { nowhere.Add(name); dst = inbox != null && inbox.GetInventory().CanAddItem(it, 1) ? inbox : own != null && own.GetInventory().CanAddItem(it, 1) ? own : null; } // (no place now: back where it came from — if it fits there; else it keeps it, named)
                 if (dst == null) continue;
-                return PutErrand(w, dst, name, null, 0, store.Contains(dst) ? "розкладає на складі" : dst == inbox ? "повертає речі на розбір" : "несе речі на місце");
+                return PutErrand(w, dst, name, null, 0, store.Contains(dst) ? Lang.K("розкладає на складі") : dst == inbox ? Lang.K("повертає речі на розбір") : Lang.K("несе речі на місце"));
             }
             if (inbox != null && Open(inbox, w.Actor))
                 foreach (ItemDrop.ItemData it in inbox.GetInventory().GetAllItems())
@@ -322,7 +401,7 @@ namespace HuginWhispers
                     if (fuels.Contains(name) || nowhere.Contains(name) || NpcWorker.Untouchable(it)) continue;
                     Container dst = Spot(w, it, store, chests, own, inbox, ref inStore, ref inBase);
                     if (dst == null) { nowhere.Add(name); continue; }
-                    NpcWorker.Errand e = PutErrand(w, dst, name, name, own.GetInventory().CountItems(name), store.Contains(dst) ? "розкладає на складі" : "несе речі на місце");
+                    NpcWorker.Errand e = PutErrand(w, dst, name, name, own.GetInventory().CountItems(name), store.Contains(dst) ? Lang.K("розкладає на складі") : Lang.K("несе речі на місце"));
                     if (e != null) return e;
                 }
             w.SetNowhere(nowhere);
@@ -386,7 +465,7 @@ namespace HuginWhispers
         internal override NpcWorker.Errand Find(NpcWorker w)
         {
             NpcHouse h = w.House;
-            if (h == null || !h.Good) { w.Doing = h == null ? "чекає, який дім доглядати" : h.Describe(); return null; }
+            if (h == null || !h.Good) { w.Doing = h == null ? Lang.K("чекає, який дім доглядати") : h.Describe(); return null; }
             bool chest = w.Chest != null; // (without one: only what needs nothing — mending, the doors)
             List<Fireplace> fires = new List<Fireplace>();
             if (chest) foreach (Fireplace f in w.InBase<Fireplace>()) if (h.Near(f.transform.position)) fires.Add(f);
@@ -458,89 +537,20 @@ namespace HuginWhispers
         }
     }
 
-    // cooking stations, cauldrons, ovens: what is done off first (before it burns), fuel for an oven, then
-    // the raw from the chest onto the free places — only over a burning fire
+    // a cook: its kitchen is the cooking tools round its pantry, its work the dishes they make of what lies in its ingredients' chest (or its pantry,
+    // with no second chest) — all of it NpcKitchen: what next, the tools, the dishes, what it lacks. Here only what a job says of itself
     internal sealed class Cook : Job
     {
-        internal Cook() { Id = "cook"; Word = Lang.K("кухар"); Icon = "n-cook"; Desc = Lang.K("Решітки, казани й печі: знімає готове (поки не пригоріло) у ящик, кладе сире з ящика на вільні місця над вогнем."); }
+        internal Cook() { Id = "cook"; Word = Lang.K("кухар"); Icon = "n-cook"; HasSupply = true;
+            Desc = Lang.K("Кухня біля комори: решітки, печі, казан та інше знаряддя. Бере зі скрині інгредієнтів (або з комори), готує все, що з цього виходить, знімає готове, поки не пригоріло, тримає вогонь і несе страви в комору."); }
 
         internal override void Fuels(NpcWorker w, HashSet<string> into) { foreach (CookingStation s in w.InBase<CookingStation>()) if (s.m_useFuel) Add(into, s.m_fuelItem); }
 
-        private static bool Done(CookingStation s, string item)
-        {
-            if (item.Length == 0) return false;
-            if (s.m_overCookedItem != null && item == s.m_overCookedItem.name) return true;
-            foreach (CookingStation.ItemConversion c in s.m_conversion) if (c != null && c.m_to != null && c.m_to.name == item) return true;
-            return false;
-        }
+        internal override bool Keeps(ItemDrop.ItemData it) { return it != null && NpcKitchen.IsDish(it.m_shared.m_name); } // (its dishes to the pantry; a dough, a leftover, an overcooked coal back to its ingredients)
 
-        private static bool FireLit(CookingStation s)
-        {
-            if (!s.m_requireFire) return true;
-            try { return HarmonyLib.Traverse.Create(s).Method("IsFireLit").GetValue<bool>(); } catch { return false; }
-        }
+        internal override void Lacks(NpcWorker w, List<string> into) { NpcKitchen.Lacks(w, into); }
 
-        internal override NpcWorker.Errand Find(NpcWorker w)
-        {
-            foreach (CookingStation s in w.InBase<CookingStation>())
-            {
-                ZNetView nv = s.GetComponent<ZNetView>();
-                if (nv == null || !nv.IsValid() || s.m_slots == null) continue;
-                ZDOID id = nv.GetZDO().m_uid;
-                if (!Reserve.IsFree(id, w.Me)) continue;
-                ZDO z = nv.GetZDO();
-                int done = 0, free = 0;
-                for (int i = 0; i < s.m_slots.Length; i++) { string it = z.GetString("slot" + i); if (it.Length == 0) free++; else if (Done(s, it)) done++; }
-                Vector3 at = s.transform.position;
-                // 1) done: off, to the chest (it burns if left)
-                if (done > 0)
-                {
-                    HashSet<string> made = new HashSet<string>();
-                    foreach (CookingStation.ItemConversion c in s.m_conversion) if (c != null && c.m_to != null) made.Add(c.m_to.name);
-                    if (s.m_overCookedItem != null) made.Add(s.m_overCookedItem.name);
-                    int left = done;
-                    return new NpcWorker.Errand
-                    {
-                        Target = id, At = at, Near = 1.6f, Collect = made, Word = Lang.K("знімає готове"),
-                        Use = (wk, e) => { if (left-- <= 0 || !nv.IsValid()) return true; nv.InvokeRPC("RPC_RemoveDoneItem", wk.Pos, 1); return false; }
-                    };
-                }
-                // 2) fuel for an oven
-                if (s.m_useFuel && s.m_fuelItem != null && z.GetFloat(ZDOVars.s_fuel) <= s.m_maxFuel - 2)
-                {
-                    string fuel = s.m_fuelItem.m_itemData.m_shared.m_name;
-                    if (w.Carrying(fuel) + w.InChest(fuel) > 0)
-                        return new NpcWorker.Errand
-                        {
-                            Target = id, At = at, Near = 1.8f, Move = "feed_fire", Take = fuel, Count = s.m_maxFuel - Mathf.CeilToInt(z.GetFloat(ZDOVars.s_fuel)), Word = Lang.K("підкладає дрова в піч"),
-                            Use = (wk, e) => { if (!nv.IsValid() || z.GetFloat(ZDOVars.s_fuel) > s.m_maxFuel - 1 || !wk.Spend(fuel)) return true; nv.InvokeRPC("RPC_AddFuel"); return false; }
-                        };
-                }
-                // 3) raw onto the free places (over a burning fire, or an oven with fuel)
-                if (free > 0 && (FireLit(s) || (s.m_useFuel && z.GetFloat(ZDOVars.s_fuel) > 0f)))
-                {
-                    foreach (CookingStation.ItemConversion c in s.m_conversion)
-                    {
-                        if (c == null || c.m_from == null) continue;
-                        string raw = c.m_from.m_itemData.m_shared.m_name, prefab = c.m_from.name;
-                        if (w.Carrying(raw) + w.InChest(raw) <= 0) continue;
-                        return new NpcWorker.Errand
-                        {
-                            Target = id, At = at, Near = 1.6f, Take = raw, Count = free, Word = Lang.K("кладе м'ясо"), Move = "feed_fire",
-                            Use = (wk, e) =>
-                            {
-                                bool room = false;
-                                for (int i = 0; i < s.m_slots.Length; i++) if (z.GetString("slot" + i).Length == 0) { room = true; break; }
-                                if (!nv.IsValid() || !room || !wk.Spend(raw)) return true;
-                                nv.InvokeRPC("RPC_AddItem", prefab, false);
-                                return false;
-                            }
-                        };
-                    }
-                }
-            }
-            return null;
-        }
+        internal override NpcWorker.Errand Find(NpcWorker w) { return NpcKitchen.Next(w); }
     }
 
     // beehives (honey to the chest) and fermenting barrels (the ready mead tapped, an empty one filled from the chest)
@@ -643,9 +653,9 @@ namespace HuginWhispers
         private const int RoundAsks = 3;        // ways asked for one round's spot at most (none fits: it stands at its post)
         private const float RoundDetour = 1.8f; // a spot is near when its way on foot is at most this × the straight line (+3 m)
 
-        internal Guard() { Move = ""; Id = "guard"; Word = Lang.K("вартовий"); Icon = "n-guard"; Desc = Lang.K("Стоїть на посту (кнопка «Пост») і обходить довкола, без посту — межу бази; б’є лише ворогів біля посту чи в базі, мирних звірів не чіпає (лише для бійців). Вартує вдень і вночі."); AllDay = true; NeedsChest = false; }
+        internal Guard() { Move = ""; Id = "guard"; Word = Lang.K("вартовий"); Icon = "n-guard"; Desc = Lang.K("Стоїть на посту (кнопка «Пост») і обходить довкола, без посту — межу бази; б’є лише ворогів біля посту чи в базі, мирних звірів не чіпає (лише для бійців). Вартує вдень і вночі."); AllDay = true; NeedsChest = false; HasChest = false; }
 
-        internal override string Can(NpcActor a) { return (a.Mind != null && (a.Mind.Style == NpcMind.Fight.Defend || a.Mind.Style == NpcMind.Fight.Hunt)) || (a.Def != null && a.Def.Generated) ? null : "Він не боєць — вартувати не візьметься."; } // (a settler: its nature's word, NpcNature.WontTake)
+        internal override string Can(NpcActor a) { return (a.Mind != null && (a.Mind.Style == NpcMind.Fight.Defend || a.Mind.Style == NpcMind.Fight.Hunt)) || (a.Def != null && a.Def.Generated) ? null : Lang.T("Він не боєць — вартувати не візьметься."); } // (a settler: its nature's word, NpcNature.WontTake)
 
         // with a post: stands on it, now and then a round near it (inside its base); without one: the base's edge
         internal override NpcWorker.Errand Find(NpcWorker w)
@@ -674,7 +684,7 @@ namespace HuginWhispers
             bool all = NpcWorker.Patrols(w.Actor);
             Vector3 at = all ? w.Base.Spot() : w.Base.EdgeSpot(); // (the whole base, or its edge)
             int look = UnityEngine.Random.Range(4, 9); // (a few breaths at each stop)
-            return new NpcWorker.Errand { At = at, Near = 1.5f, Word = all ? "обходить базу" : "обходить межу", Use = (wk, e) => --look <= 0 };
+            return new NpcWorker.Errand { At = at, Near = 1.5f, Word = all ? Lang.K("обходить базу") : Lang.K("обходить межу"), Use = (wk, e) => --look <= 0 };
         }
 
 

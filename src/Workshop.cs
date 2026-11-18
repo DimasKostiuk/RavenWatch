@@ -16,7 +16,8 @@ namespace HuginWhispers
     // A model is a list of parts; each part is a prefab of the game (or of a mod) whose meshes are copied, moved,
     // turned, sized and tinted. Nothing of the game is copied out: the files keep only names and numbers, and the
     // meshes are taken from what the game has loaded. One special part, @seat, marks where a raven sits.
-    // Files: config/RavenWatch/models/<name>.txt, readable by hand.
+    // Files: config/RavenWatch/models/<name>.txt, readable by hand. The mod's own models (built in: perches, raven gear, items, the story's
+    // items) are read the same way from its resources (WsFiles.Known: a source that is a resource name — the tab «Фото» and the studio's photo).
 
     internal class WsPart
     {
@@ -68,6 +69,9 @@ namespace HuginWhispers
         // a thing of the story someone holds (use: item, StoryProps): its own numbers, a line each as written — how it hangs on a forearm, where it is
         // set down, how it falls («hang: along 0.7 drop 0.16 …», «lies: ahead 0.35 …», «falls: tilt 28 s 0.5»; the words and their reading: StoryProps.OwnOf)
         internal string Hang = "", Lies = "", Falls = "";
+        internal string Pickup = ""; // «pickup: hand»: an item lying in the world is taken only by E, never pulled into the bag as you pass (WsItems.Make: the necklace on Ketil's bed)
+        internal float Grows; // «grows: 0.6»: it grows in the world too, a plant that tall (m) picked by hand (WsItems: its prefab RavenWatch_grow_<id>); 0 — it does not
+        internal string Story = ""; // «story: для Кетіля [until <the world's conditions>]» (or «yes»): a thing of the story — its mark, kept on death, never dropped (WsItems.StoryMarks), till those conditions hold (WsItems.StoryOf); «» an item as any
         internal string Mount = ""; // "wall": hung on a wall (origin = the point on the wall, the wall is the plane Z = 0, the model in front, +Z)
         internal bool Wall { get { return Mount == "wall"; } }
         // the raven's legs on the perch (PerchPose): left hip, knee, ankle, toes; right the same; the body's lean
@@ -130,9 +134,12 @@ namespace HuginWhispers
             if (m.Stack > 0) sb.Append("stack: ").Append(m.Stack).Append('\n');
             if (m.Weight > 0f) sb.Append("weight: ").Append(F(m.Weight)).Append('\n');
             if (m.Sell > 0) sb.Append("sell: ").Append(m.Sell).Append(m.SellAfter.Length > 0 ? " " + m.SellAfter : "").Append('\n');
+            if (!string.IsNullOrEmpty(m.Story)) sb.Append("story: ").Append(m.Story).Append('\n');
             if (!string.IsNullOrEmpty(m.Hang)) sb.Append("hang: ").Append(m.Hang).Append('\n'); // (kept as written: a save from the Workshop does not lose them)
             if (!string.IsNullOrEmpty(m.Lies)) sb.Append("lies: ").Append(m.Lies).Append('\n');
             if (!string.IsNullOrEmpty(m.Falls)) sb.Append("falls: ").Append(m.Falls).Append('\n');
+            if (!string.IsNullOrEmpty(m.Pickup)) sb.Append("pickup: ").Append(m.Pickup).Append('\n');
+            if (m.Grows > 0f) sb.Append("grows: ").Append(m.Grows.ToString("0.###", CultureInfo.InvariantCulture)).Append('\n');
             bool posed = false;
             foreach (float v in m.Pose) if (Mathf.Abs(v) > 0.001f) posed = true;
             if (posed)
@@ -186,9 +193,12 @@ namespace HuginWhispers
                 if (line.StartsWith("station:")) { m.Station = line.Substring(8).Trim(); continue; }
                 if (line.StartsWith("perday:")) { float.TryParse(line.Substring(7).Trim(), NumberStyles.Float, C, out m.PerDay); continue; }
                 if (line.StartsWith("feed:")) { float.TryParse(line.Substring(5).Trim(), NumberStyles.Float, C, out m.Feed); continue; }
+                if (line.StartsWith("story:")) { m.Story = NoNote(line.Substring(6)); continue; }
                 if (line.StartsWith("hang:")) { m.Hang = NoNote(line.Substring(5)); continue; }
                 if (line.StartsWith("lies:")) { m.Lies = NoNote(line.Substring(5)); continue; }
                 if (line.StartsWith("falls:")) { m.Falls = NoNote(line.Substring(6)); continue; }
+                if (line.StartsWith("pickup:")) { m.Pickup = NoNote(line.Substring(7)); continue; }
+                if (line.StartsWith("grows:")) { float.TryParse(NoNote(line.Substring(6)), NumberStyles.Float, CultureInfo.InvariantCulture, out m.Grows); continue; }
                 if (line.StartsWith("sell:")) { string[] sw = line.Substring(5).Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); if (sw.Length > 0) int.TryParse(sw[0], out m.Sell); m.SellAfter = sw.Length > 1 ? sw[1] : ""; continue; }
                 if (line.StartsWith("stand:"))
                 {
@@ -246,7 +256,7 @@ namespace HuginWhispers
         {
             try
             {
-                WsModel m = FromText(System.IO.File.ReadAllText(file, Encoding.UTF8));
+                WsModel m = FromText(TextOf(file));
                 m.File = file;
                 if (string.IsNullOrEmpty(m.Name)) m.Name = Path.GetFileNameWithoutExtension(file);
                 return m;
@@ -282,11 +292,11 @@ namespace HuginWhispers
         {
             try
             {
-                DateTime at = System.IO.File.GetLastWriteTimeUtc(file);
+                DateTime at = IsBuiltIn(file) ? DateTime.MinValue : System.IO.File.GetLastWriteTimeUtc(file); // (a built-in one never changes in a game)
                 Head h;
                 if (Heads.TryGetValue(file, out h) && h.At == at) return h;
                 h = new Head { At = at };
-                foreach (string raw in System.IO.File.ReadAllLines(file, Encoding.UTF8))
+                foreach (string raw in TextOf(file).Split('\n'))
                 {
                     string line = raw.Trim();
                     if (line.StartsWith("part ")) break;
@@ -300,6 +310,54 @@ namespace HuginWhispers
         }
         internal static string UseOf(string file) { return HeadOf(file).Use; }
         internal static bool ReadyOf(string file) { return HeadOf(file).Ready; }
+
+        // ---------------------------------------------------------------- the mod's own models (built in)
+        // a source is a file, or the name of a resource the build put in (rw_build: assets/perches, gear, items, story/items, story/perches)
+        private static readonly string[] BuiltInKinds = { "RavenWatch.perches.", "RavenWatch.gear.", "RavenWatch.items." };
+        internal static bool IsBuiltIn(string src)
+        {
+            if (string.IsNullOrEmpty(src)) return false;
+            foreach (string k in BuiltInKinds) if (src.StartsWith(k, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        // the text of a model: its file, or its resource
+        internal static string TextOf(string src)
+        {
+            if (!IsBuiltIn(src)) return System.IO.File.ReadAllText(src, Encoding.UTF8);
+            using (Stream st = typeof(WsFiles).Assembly.GetManifestResourceStream(src))
+            {
+                if (st == null) throw new FileNotFoundException("no built-in model " + src);
+                using (StreamReader rd = new StreamReader(st, Encoding.UTF8)) return rd.ReadToEnd();
+            }
+        }
+
+        internal static bool Exists(string src) { return IsBuiltIn(src) ? typeof(WsFiles).Assembly.GetManifestResourceInfo(src) != null : System.IO.File.Exists(src); }
+
+        // every model the mod knows by its id: the Workshop's files, then the built-in ones no file stands for (a file wins, as in the game —
+        // WsItems, Perches). For the author's picture of each (the tab «Фото», the studio's `photo`): the story's items have no file in the Workshop.
+        // heavy: every built-in model read and parsed (~60 small texts) — once per call: the tab opened or its list renewed, a studio photo; never in play
+        internal static List<string> Known()
+        {
+            List<string> l = List();
+            HashSet<string> ids = new HashSet<string>();
+            foreach (string f in l) { WsModel m = Load(f); if (m != null) ids.Add(IconPhotos.KeyOf(m)); }
+            List<string> own = new List<string>();
+            try
+            {
+                foreach (string res in typeof(WsFiles).Assembly.GetManifestResourceNames())
+                {
+                    if (!IsBuiltIn(res) || !res.EndsWith(".txt", StringComparison.Ordinal)) continue;
+                    WsModel m = Load(res);
+                    if (m == null || m.Parts.Count == 0 || !ids.Add(IconPhotos.KeyOf(m))) continue; // (a file of the same id stands for it)
+                    own.Add(res);
+                }
+            }
+            catch (Exception e) { Log("built-in list: " + e.Message); }
+            own.Sort(StringComparer.OrdinalIgnoreCase);
+            l.AddRange(own);
+            return l;
+        }
     }
 
     // ---------------------------------------------------------------- what can be taken: every prefab with a mesh
@@ -1699,23 +1757,16 @@ namespace HuginWhispers
         }
 
         // the asset sets as buttons, the folder read again (files added or taken away), the folder opened
-        // buttons laid in rows that fit the left column (one row grew it past the window when a set was added — 2026-11-02);
+        // buttons laid in rows that fit the left column (AuthorRow: one row grew it past the window when a set was added — 2026-11-02);
         // the one clicked, or −1
         private const float LeftWidth = 330f;
         private int Rows(string[] names, int on)
         {
             int clicked = -1;
-            float used = 0f;
-            GUILayout.BeginHorizontal();
+            AuthorRow row = AuthorRow.Begin(false);
             for (int i = 0; i < names.Length; i++)
-            {
-                GUIStyle st = i == on ? _on : GUI.skin.button;
-                float w = st.CalcSize(new GUIContent(names[i])).x + 4f;
-                if (used > 0f && used + w > LeftWidth - 6f) { GUILayout.EndHorizontal(); GUILayout.BeginHorizontal(); used = 0f; }
-                if (GUILayout.Button(names[i], st, GUILayout.Width(w))) clicked = i;
-                used += w + st.margin.horizontal;
-            }
-            GUILayout.EndHorizontal();
+                if (row.Button(names[i], i == on ? _on : null)) clicked = i;
+            row.End();
             return clicked;
         }
 
@@ -1851,9 +1902,9 @@ namespace HuginWhispers
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             GUILayout.Label("Збережені моделі", _head);
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < FileTabs.Length; i++) if (GUILayout.Button(FileTabs[i] + " " + CountIn(i), _fileTab == i ? _on : GUI.skin.button)) { _fileTab = i; _fileScroll = Vector2.zero; }
-            GUILayout.EndHorizontal();
+            AuthorRow fileTabs = AuthorRow.Begin();
+            for (int i = 0; i < FileTabs.Length; i++) if (fileTabs.Button(FileTabs[i] + " " + CountIn(i), _fileTab == i ? _on : null)) { _fileTab = i; _fileScroll = Vector2.zero; }
+            fileTabs.End();
             _fileScroll = GUILayout.BeginScrollView(_fileScroll, GUILayout.Height(170f));
             int shownFiles = 0;
             foreach (string f in _files)
@@ -2031,11 +2082,13 @@ namespace HuginWhispers
             bool newItem = item && string.IsNullOrEmpty(_m.Replaces);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Для мода", GUILayout.Width(70f));
+            AuthorRow uses = AuthorRow.Begin();
             for (int i = 0; i < UseIds.Length; i++)
             {
                 bool on = (_m.Use ?? "") == UseIds[i];
-                if (GUILayout.Button(UseNames[i], on ? _on : GUI.skin.button)) { if (!on) SetUse(UseIds[i]); }
+                if (uses.Button(UseNames[i], on ? _on : null)) { if (!on) SetUse(UseIds[i]); }
             }
+            uses.End();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (perch || table || gear || newItem || _m.Use == Perches.FeederUse)
@@ -2065,11 +2118,13 @@ namespace HuginWhispers
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Куди", GUILayout.Width(90f));
                 string slot = RavenGear.SlotOf(_m);
+                AuthorRow slots = AuthorRow.Begin();
                 for (int i = 0; i < RavenGear.SlotIds.Length; i++)
                 {
                     bool on = slot == RavenGear.SlotIds[i];
-                    if (GUILayout.Button(RavenGear.SlotNames[i], on ? _on : GUI.skin.button)) { if (!on) { Change(); _m.Slot = RavenGear.SlotIds[i]; WsStage.RavenAgain(); } }
+                    if (slots.Button(RavenGear.SlotNames[i], on ? _on : null)) { if (!on) { Change(); _m.Slot = RavenGear.SlotIds[i]; WsStage.RavenAgain(); } }
                 }
+                slots.End();
                 if (GUILayout.Button(WsStage.GearMunin ? "На картинці: Мунін" : "На картинці: Хугін", GUILayout.Width(150f))) WsStage.GearMunin = !WsStage.GearMunin;
                 GUILayout.EndHorizontal();
                 if (slot == RavenGear.Neck)
@@ -2086,11 +2141,13 @@ namespace HuginWhispers
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Де будувати", GUILayout.Width(90f));
+                AuthorRow builds = AuthorRow.Begin();
                 for (int i = 0; i < StationIds.Length; i++)
                 {
                     bool on = (_m.Station ?? "") == StationIds[i] || (string.IsNullOrEmpty(_m.Station) && i == 0);
-                    if (GUILayout.Button(StationNames[i], on ? _on : GUI.skin.button)) { if (!on) { Change(); _m.Station = i == 0 ? "" : StationIds[i]; } }
+                    if (builds.Button(StationNames[i], on ? _on : null)) { if (!on) { Change(); _m.Station = i == 0 ? "" : StationIds[i]; } }
                 }
+                builds.End();
                 GUILayout.EndHorizontal();
             }
             if (!gear && !item)
@@ -2110,12 +2167,14 @@ namespace HuginWhispers
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Що це", GUILayout.Width(90f));
-            if (GUILayout.Button("Новий предмет", fresh ? _on : GUI.skin.button)) { if (!fresh) { Change(); _m.Replaces = ""; } }
+            AuthorRow what = AuthorRow.Begin();
+            if (what.Button("Новий предмет", fresh ? _on : null)) { if (!fresh) { Change(); _m.Replaces = ""; } }
             for (int i = 0; i < WsItems.Replaceable.Length; i++)
             {
                 bool on = _m.Replaces == WsItems.Replaceable[i];
-                if (GUILayout.Button("Вигляд: " + WsItems.ReplaceableNames[i], on ? _on : GUI.skin.button)) { if (!on) { Change(); _m.Replaces = WsItems.Replaceable[i]; } }
+                if (what.Button("Вигляд: " + WsItems.ReplaceableNames[i], on ? _on : null)) { if (!on) { Change(); _m.Replaces = WsItems.Replaceable[i]; } }
             }
+            what.End();
             GUILayout.EndHorizontal();
             if (fresh)
             {
@@ -2130,22 +2189,26 @@ namespace HuginWhispers
                 // where it is made: the game's stations and the raven tables there are
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Де майструвати", GUILayout.Width(100f));
+                AuthorRow crafts = AuthorRow.Begin();
                 for (int i = 0; i < StationIds.Length; i++)
                 {
                     bool on = (_m.Station ?? "") == StationIds[i] || (string.IsNullOrEmpty(_m.Station) && i == 0);
-                    if (GUILayout.Button(StationNames[i], on ? _on : GUI.skin.button)) { if (!on) { Change(); _m.Station = i == 0 ? "" : StationIds[i]; } }
+                    if (crafts.Button(StationNames[i], on ? _on : null)) { if (!on) { Change(); _m.Station = i == 0 ? "" : StationIds[i]; } }
                 }
+                crafts.End();
                 GUILayout.EndHorizontal();
                 List<Perches.Def> tables = Perches.Tables;
                 if (tables.Count > 0)
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("", GUILayout.Width(100f));
+                    AuthorRow tableRow = AuthorRow.Begin();
                     foreach (Perches.Def d in tables)
                     {
                         bool on = _m.Station == d.Prefab;
-                        if (GUILayout.Button(d.Name, on ? _on : GUI.skin.button)) { if (!on) { Change(); _m.Station = d.Prefab; } }
+                        if (tableRow.Button(d.Name, on ? _on : null)) { if (!on) { Change(); _m.Station = d.Prefab; } }
                     }
+                    tableRow.End();
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.Label("<color=#9A9A9A>id " + _m.Id + " · новий предмет поки лише матеріал (без дії) · ціна: предмет:кількість через пробіл · з'явиться після перезаходу у світ (у конфігу «Perches from workshop files» = true)</color>", _small);
@@ -2195,7 +2258,9 @@ namespace HuginWhispers
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(title, GUILayout.Width(110f));
-            for (int i = 0; i < steps.Length; i++) if (GUILayout.Button(text(steps[i]), i == at ? _on : GUI.skin.button)) at = i;
+            AuthorRow row = AuthorRow.Begin();
+            for (int i = 0; i < steps.Length; i++) if (row.Button(text(steps[i]), i == at ? _on : null)) at = i;
+            row.End();
             GUILayout.EndHorizontal();
         }
 

@@ -10,16 +10,21 @@ namespace HuginWhispers
     // The story's memory (story-plan.md): what this character's own story has already seen and chosen. Each player has
     // their own, kept in the character (player customData RavenWatch_story, with its format number; unknown fields
     // kept), never in the world. Flags (a thing happened), numbers (how much of something), each quest's state, and the
-    // saga's own entries in the order they were lived (StorySaga: «quest.stage» or «quest.stage.way», only those with a «saga:»).
-    //   v=1;f=ch1_asked+met_odin;n.odin_favour=2;q.ch1_shepit=done;g=prologue.call+prologue.roads.munin
+    // saga's own entries in the order they were lived (StorySaga: «quest.stage» or «quest.stage.way», only those with a «saga:»),
+    // and short texts by a name (Text: what of the book's «Сага» was read; no «;» in one).
+    //   v=1;f=ch1_asked+met_odin;n.odin_favour=2;q.ch1_shepit=done;g=prologue.call+prologue.roads.munin;t.saga_read=heid:1f3a2b
     internal sealed class StoryState
     {
         internal const int Format = 1;
-        public readonly List<string> Flags = new List<string>();
+        public readonly List<string> Flags = new List<string>(); // (in the order set: kept so; changed only through Has/Set below)
+        private readonly HashSet<string> _flagSet = new HashSet<string>(); // (the same, to ask: every condition asks twice a second — 85 µs against 6 for 78 «asked» at 500 flags, .NET 8, 2026-11-16)
+        internal bool Has(string f) { return _flagSet.Contains(f); }
+        internal bool Set(string f, bool on) { if (on ? !_flagSet.Add(f) : !_flagSet.Remove(f)) return false; if (on) Flags.Add(f); else Flags.Remove(f); return true; }
         public readonly Dictionary<string, int> Vars = new Dictionary<string, int>();
         public readonly Dictionary<string, string> Quests = new Dictionary<string, string>(); // id → active | done | failed
         public readonly Dictionary<string, string> Stages = new Dictionary<string, string>(); // id → the stage it stands at (StoryQuests)
         public readonly List<string> Saga = new List<string>(); // the saga's entries lived, in order (StorySaga)
+        public readonly Dictionary<string, string> Texts = new Dictionary<string, string>(); // a short text by a name (Story.Text)
         private readonly List<KeyValuePair<string, string>> _other = new List<KeyValuePair<string, string>>();
 
         internal string Code()
@@ -30,6 +35,7 @@ namespace HuginWhispers
             foreach (KeyValuePair<string, string> kv in Quests) sb.Append(";q.").Append(kv.Key).Append('=').Append(kv.Value);
             foreach (KeyValuePair<string, string> kv in Stages) sb.Append(";s.").Append(kv.Key).Append('=').Append(kv.Value);
             if (Saga.Count > 0) sb.Append(";g=").Append(string.Join("+", Saga.ToArray()));
+            foreach (KeyValuePair<string, string> kv in Texts) sb.Append(";t.").Append(kv.Key).Append('=').Append(kv.Value);
             foreach (KeyValuePair<string, string> kv in _other) sb.Append(';').Append(kv.Key).Append('=').Append(kv.Value);
             return sb.ToString();
         }
@@ -44,11 +50,12 @@ namespace HuginWhispers
                 if (eq <= 0) continue;
                 string k = part.Substring(0, eq), v = part.Substring(eq + 1);
                 if (k == "v") continue;
-                if (k == "f") { foreach (string f in v.Split('+')) if (f.Length > 0 && !s.Flags.Contains(f)) s.Flags.Add(f); }
+                if (k == "f") { foreach (string f in v.Split('+')) if (f.Length > 0) s.Set(f, true); }
                 else if (k == "g") { foreach (string g in v.Split('+')) if (g.Length > 0 && !s.Saga.Contains(g)) s.Saga.Add(g); }
                 else if (k.StartsWith("n.") && k.Length > 2) s.Vars[k.Substring(2)] = Errands.I(v, 0);
                 else if (k.StartsWith("q.") && k.Length > 2) s.Quests[k.Substring(2)] = v;
                 else if (k.StartsWith("s.") && k.Length > 2) s.Stages[k.Substring(2)] = v;
+                else if (k.StartsWith("t.") && k.Length > 2) s.Texts[k.Substring(2)] = v;
                 else s._other.Add(new KeyValuePair<string, string>(k, v));
             }
             return s;
@@ -64,6 +71,19 @@ namespace HuginWhispers
         private static StoryState _state;
 
         internal static bool GoodName(string n) { return !string.IsNullOrEmpty(n) && n.IndexOfAny(Bad) < 0; }
+
+        // this world's number as the end of a character's key of this world only («heard.…», «mapkeep_…», «been.…»): made once a world, not on every ask
+        private static string _worldId = "0";
+        private static long _worldUid;
+        internal static string WorldId
+        {
+            get
+            {
+                long uid = ZNet.instance != null ? ZNet.instance.GetWorldUID() : 0L;
+                if (uid != _worldUid) { _worldUid = uid; _worldId = uid.ToString(CultureInfo.InvariantCulture); }
+                return _worldId;
+            }
+        }
 
         // the character's story (an empty one when none yet; never null for a player)
         internal static StoryState Of(Player p)
@@ -85,14 +105,13 @@ namespace HuginWhispers
         internal static void Reset() { _raw = null; _state = null; }
 
         // ---------------------------------------------------------------- flags
-        internal static bool Flag(Player p, string f) { return p != null && Of(p).Flags.Contains(f); }
+        internal static bool Flag(Player p, string f) { return p != null && Of(p).Has(f); }
 
         internal static void SetFlag(Player p, string f, bool on)
         {
             if (p == null || !GoodName(f)) return;
             StoryState s = Of(p);
-            if (on == s.Flags.Contains(f)) return;
-            if (on) s.Flags.Add(f); else s.Flags.Remove(f);
+            if (!s.Set(f, on)) return;
             Save(p, s);
             Log((on ? "flag " : "unflag ") + f);
         }
@@ -112,6 +131,22 @@ namespace HuginWhispers
         }
 
         internal static void AddVar(Player p, string n, int d) { SetVar(p, n, Var(p, n) + d); }
+
+        // ---------------------------------------------------------------- short texts
+        internal static string Text(Player p, string n) { string v; return p != null && Of(p).Texts.TryGetValue(n, out v) ? v : ""; }
+
+        // «» is the same as never set; a text with «;» would cut the character's story in two: refused, said in the log
+        internal static void SetText(Player p, string n, string v)
+        {
+            if (p == null || !GoodName(n)) return;
+            v = v ?? "";
+            if (v.IndexOf(';') >= 0) { Log("text " + n + ": «;» in it — not kept"); return; }
+            StoryState s = Of(p);
+            string old;
+            if ((s.Texts.TryGetValue(n, out old) ? old : "") == v) return;
+            if (v.Length == 0) s.Texts.Remove(n); else s.Texts[n] = v;
+            Save(p, s);
+        }
 
         // ---------------------------------------------------------------- quests
         internal const string Active = "active", Done = "done", Failed = "failed";
@@ -192,6 +227,7 @@ namespace HuginWhispers
         }
 
         // the author's test: there at once, on the ground (or its floor, if higher) — a place's own spot, never one of its pieces
+        private const float TpBefore = 9f; // m before the door of a place with an inside: clear of the mound's own passage
         internal static bool Tp(Player p, Vector3 at) { return Tp(p, at, p.transform.rotation); }
         // false: the game refused it (a portal still going, its pause after one): said in the log, never silent
         internal static bool Tp(Player p, Vector3 at, Quaternion turn)
@@ -202,13 +238,28 @@ namespace HuginWhispers
             return went;
         }
 
+#if RAVEN_STORY
+        // the author's test: a person of the story put at a place at once (beside it, not in it: a person put into the hearth burns) — the studio's
+        // «npc <who> at <place>» (StudioScene) and the console «raven story put <who> <place>». Only a person loaded here (its body near the player):
+        // its owner moves it, and the place may be far (Ketil from the heart to his glade, 2026-11-14). Null: done, else why not
+        internal static string PutPerson(Player p, string who, string place, out NpcActor a, out Vector3 at)
+        {
+            a = Npcs.Find(who); at = Vector3.zero;
+            if (a == null) return "нема «" + who + "» поруч (його тіло мусить бути завантажене: стань біля нього)";
+            if (!StoryWhere.Approach(place, p.transform.position, out at)) return "нема місця «" + place + "»";
+            a.Order("tp " + Npcs.V(at), NpcMind.Layer.Scene); a.Order("free", NpcMind.Layer.Scene);
+            return null;
+        }
+#endif
+
         // ---------------------------------------------------------------- console (for testing, not in the docs)
-        // raven story · flag x · unflag x · var x N · quest x active|done|failed|- · check <conditions> · reset
+        // raven story · flag x · unflag x · var x N · quest x active|done|failed|- · check <conditions> · reset · put <who> <place>
         internal static string Cmd(Player p, string[] a)
         {
             if (p == null) return "Нема гравця.";
             string what = a.Length > 1 ? a[1].ToLowerInvariant() : "";
 #if RAVEN_STORY
+            if ((what == "ui") && a.Length > 2 && a[2].ToLowerInvariant() == "look") { if (!Blueprint.On) return "Вікно сюжету спить: немає теки " + Blueprint.Root; int sl; return StoryPanel.OpenLook(a.Length > 3 ? a[3] : "", a.Length > 4 && int.TryParse(a[4], out sl) ? sl : -1); } // (raven story ui look <id> [slot]: the look tab, for the studio)
             if (what.Length == 0 || what == "ui") { if (!Blueprint.On) return "Вікно сюжету спить: немає теки " + Blueprint.Root; StoryPanel.Toggle(); return StoryPanel.Said(); }
 #else
             if (what.Length == 0 || what == "ui") return Describe(p); // (the story's window: from 3.0)
@@ -216,6 +267,15 @@ namespace HuginWhispers
 #if RAVEN_STORY
             if (what == "saga") return StorySaga.Describe(p); // (the book's «Сага» as words: what it would show now)
             if (what == "people") return StoryPeople.Describe(p, a.Length > 2 ? a[2] : ""); // (where the story's people are, and why)
+            if (what == "falcon") return Falcon.Cmd(p, a); // (the author's look at a falcon of the sisters: Falcon)
+            if (what == "put")
+            {
+                if (a.Length < 4) return "raven story put <хто> <місце>   (людину сюжету — туди одразу; вона мусить бути поруч)";
+                NpcActor who; Vector3 to;
+                string why = PutPerson(p, a[2], a[3], out who, out to);
+                return why ?? "«" + a[2] + "» тепер біля «" + a[3] + "» (" + Mathf.RoundToInt(to.x) + " " + Mathf.RoundToInt(to.z) + ")";
+            }
+            if (what == "rooms") return LocRooms.Cmd(p, a); // (the author's look at a dungeon of the game: its rooms and the things in them, into a file)
             if (StoryPeople.All.Exists(x => x.Id == what)) return StoryPeople.Describe(p, what); // (`raven story <person>`: one of them)
 #endif
             string name = a.Length > 2 ? a[2] : "";
@@ -259,13 +319,14 @@ namespace HuginWhispers
                     {
                         StoryQuests.QuestDef q = StoryQuests.Find(name);
                         if (q == null) return "raven story " + what + " <квест>" + (what == "jump" ? " <етап>" : "") + " — нема квесту «" + name + "»";
-                        if (what == "start") StoryQuests.Start(p, q);
-                        else if (what == "forget") StoryQuests.Forget(p, q);
+                        if (what == "start") StoryQuests.Rebuild(p, q, q.First);
+                        else if (what == "forget") StoryQuests.Rebuild(p, q, "");
                         else { if (a.Length < 4) return "raven story jump <квест> <етап>"; StoryQuests.Jump(p, q, a[3]); }
                         return StoryPanel.TrackText(p);
                     }
                 case "bird":
                     {
+                        if (name.Length > 0) return StoryScenes.TryBird(p, name); // (the author's: a bird of a look called here, its orders — no scene)
                         if (StoryBird.Live.Count == 0) return "Сюжетних воронів нема.";
                         StringBuilder sb = new StringBuilder("Сюжетні ворони (" + StoryBird.Live.Count + "):");
                         foreach (StoryBird b in StoryBird.Live) if (b != null) sb.Append("\n  ").Append(b.Describe());
@@ -284,6 +345,7 @@ namespace HuginWhispers
                     if (name == "clear") return "Світових ключів сюжету стерто: " + StoryWorld.Clear();
                     if (name.Length > 0) StoryWorld.SetFlag(name.TrimStart('!'), !name.StartsWith("!"));
                     return "Світ: " + string.Join(", ", StoryWorld.All().ToArray());
+                case "title": return StorySaga.ShowTitle(name);
                 case "played":
                     StoryTrackConds.AddMinutes(p, Errands.I(name, 10));
                     return "Зіграно хвилин: " + StoryTrackConds.Played(p) / 60;
@@ -294,6 +356,10 @@ namespace HuginWhispers
                         if (!StoryWhere.Find(name, out at)) return "raven story " + what + " <місце> — нема місця «" + name + "» (hall, hall.<назва>, torvald, prologue_house, prologue_munin, мітка автора…)";
                         string xyz = Mathf.RoundToInt(at.x) + " " + Mathf.RoundToInt(at.y) + " " + Mathf.RoundToInt(at.z);
                         if (what == "where") return name + ": " + xyz + ", " + Mathf.RoundToInt(Utils.DistanceXZ(at, p.transform.position)) + " м від тебе";
+                        // (a place whose way in is its own middle — a barrow over an inside of ours: the game's mound has its door at its heart, and the
+                        //  author carried there stood inside the mound, 2026-11-15: before its front instead, looking at it)
+                        Loc inPlace = what == "tp" ? Locs.Get(name) : null; Vector3 mid; Quaternion front;
+                        if (inPlace != null && inPlace.Inside.Length > 0 && inPlace.Anchor(out mid, out front)) { Tp(p, mid + front * new Vector3(0f, 0f, TpBefore), front * Quaternion.Euler(0f, 180f, 0f)); return "До «" + name + "» (перед вхід): " + xyz; }
                         Tp(p, at);
                         return "До «" + name + "»: " + xyz;
                     }
@@ -317,7 +383,8 @@ namespace HuginWhispers
                         LocTouch.Touch(a[2], at);
                     }
                     return "Торкнувся «" + a[2] + "».";
-                case "npcravens": return NpcRaven.Describe();
+                case "npcravens": return NpcRaven.Describe() + LocRaven.Describe();
+                case "placeraven": LocRaven.Trace = !LocRaven.Trace; return "Ворон місця (Зали): його слова й польоти в лог — " + (LocRaven.Trace ? "так" : "ні");
                 case "raventrace": NpcRaven.Trace = !NpcRaven.Trace; return "Польоти воронів людей у лог: " + (NpcRaven.Trace ? "так" : "ні");
                 case "own":
                 case "unown":
@@ -334,7 +401,7 @@ namespace HuginWhispers
                     Log("reset for " + p.GetPlayerName());
                     return "Сюжет персонажа стерто.";
             }
-            return Describe(p) + "\nraven story flag|unflag x · var x N|+N|-N · quest x active|done|failed|- · check <умови> · conds · events · trace · raise <подія> [arg] [N] · reset · quests · start|forget <квест> · jump <квест> <етап> · scene <id>|stop|reload · world [x|!x|clear] · played [+хв] · saga · own hugin|munin · unown hugin|munin|both · npcravens · raventrace · where|tp <місце> · mark <назва>";
+            return Describe(p) + "\nraven story flag|unflag x · var x N|+N|-N · quest x active|done|failed|- · check <умови> · conds · events · trace · raise <подія> [arg] [N] · reset · quests · start|forget <квест> · jump <квест> <етап> · scene <id>|stop|reload · world [x|!x|clear] · played [+хв] · saga · title <глава> · own hugin|munin · unown hugin|munin|both · npcravens · raventrace · placeraven · where|tp <місце> · mark <назва> · rooms [kinds [theme]]";
         }
     }
 }

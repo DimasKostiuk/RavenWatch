@@ -41,9 +41,9 @@ namespace HuginWhispers
             // left: from where
             GUILayout.BeginVertical(GUILayout.Width(330f));
             GUILayout.Label("1 · Звідки знімає", _head);
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < ShotFrom.Length; i++) if (GUILayout.Button(ShotFromWords[i], i == _shotFrom ? _sel : GUI.skin.button)) _shotFrom = i;
-            GUILayout.EndHorizontal();
+            AuthorRow from = AuthorRow.Begin();
+            for (int i = 0; i < ShotFrom.Length; i++) if (from.Button(ShotFromWords[i], i == _shotFrom ? _sel : null)) _shotFrom = i;
+            from.End();
             GUILayout.Label(_shotFrom == 0 ? "За твоїм плечем, повернута на ціль; сама шукає ракурс, де нічого не заважає, і йде за рухом."
                           : _shotFrom == 1 ? "Високо над тобою (буря, Тор, загальний план)." : "З мітки (на висоті очей над нею). Обери мітку нижче або запам'ятай свою камеру.", _hint);
             if (_shotFrom == 2)

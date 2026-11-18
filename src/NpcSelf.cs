@@ -74,7 +74,7 @@ namespace HuginWhispers
             string story = NpcBackstory.Has(a) ? NpcBackstory.Text(a, true) : "";
             return new[]
             {
-                a.Id, NpcKit.Seed(a.Zdo).ToString(ci), a.Name, a.Zdo.GetString(NpcSettlers.KLook, ""), w.ToString().Trim(), NpcLevers.Traits(a),
+                a.Id, NpcKit.Seed(a.Zdo).ToString(ci), a.Key, a.Zdo.GetString(NpcSettlers.KLook, ""), w.ToString().Trim(), NpcLevers.Traits(a),
                 NpcGait.Of(a).Kind.ToString(), story.Length > 0 ? story.GetStableHashCode().ToString(ci) : ""
             };
         }

@@ -18,12 +18,14 @@
 
 | Перевірка | Що тримає |
 |---|---|
-| `node tools/arch_check.js` | правила карти; `arch-doc`: кожна назва в зворотних лапках у карті, її розділах і сторінках `docs/jobs/` є в коді |
+| `node tools/arch_check.js` | правила карти; `arch-doc`: кожна назва в зворотних лапках у карті, її розділах і сторінках `docs/jobs/` є в коді; «babble-copy»: копія правил бурмотіння (`tools/sound_talk.py`) грає те саме, що `NpcBabble` |
 | `node tools/storycheck.js` | стадії, сцени, місця, люди, вигляди в `assets/story` існують; слова кроків, умов, дій і рядків місць є в коді; код не називає квести, місця, людей сюжету |
 | `node tools/clipcheck.js` | кліпи й ті, що названі в сценах |
 | `node tools/talkcheck.js`, `node tools/bookcheck.js` | фрази воронів: `docs/jobs/words-ravens.md` |
 | `node tools/npcwordcheck.js` | слова людей, різноманіття й форми: `docs/jobs/words-people.md` |
 | `node tools/npcnetcheck.js` | новий ключ людини в мережі: `docs/arch/npc-core.md` |
+| `node tools/l10n.js check English --strict` | кожен текст має англійську одразу (користувач 2026-11-11): рядок `ui.txt` без перекладу, тема людей без англійської, список людей коротший за український; ім'я поселенця, що збігається з іншим текстом; переклад з іншою кількістю рядків, ніж оригінал (2026-11-18: план Літа був одним реченням). Виправлення: `node tools/l10n.js sync English` і переклад нових рядків, рядки людей у `assets/lang/English/npc_patterns.txt` |
+| `tools/langdump.ps1` + `node tools/phrasecheck_lang.js English --strict` (після компіляції) | українські оригінали фраз воронів зі щойно зібраної dll у `build/l10n_source`, і кожна тема, список і істота в них має англійську в `assets/lang/English` |
 | `tools/patchcheck.ps1` (після компіляції) | кожен патч Harmony знаходить свій метод саме на тому типі, що названий, бо інакше він нічого не робить, а гра пише лише рядок у лог |
 
 Перемикач `-NoTalkCheck` вимикає три перевірки фраз: лише на прохання користувача.

@@ -29,7 +29,12 @@ namespace HuginWhispers
     // its turn (NpcClock). A choice in two parts, so that it costs what it may: all the places are weighed by what is already known (the
     // base's lists, Most a kind; where the people stand, once) with no physics and no way finder; only the best few are then looked at
     // closely (Ready: a player's house, a fire's spots, the floor), at most Tries. Whether there is a way: the walk's own (NpcWalk.CantReach:
-    // the whim is let go, and that place left alone BadFor s), no path asked here as well.
+    // the whim is let go), no path asked here as well. A place its feet found no way to, or that it was put by (NpcMind.GaveUpOn, PutBy), is
+    // left alone by everyone, longer each time (NoWay); one it never set off to — its trouble is where it stands — by itself, BadFor s.
+    // Its home's days (the user 2026-11-16: the settlers have no day by the hour — their day is their work; for them a visible «Свято» and an evening
+    // circle): a feast (the heart board's «Свято», NpcNeighbours.Feast: Feasting) — FeastFor s at the dining table (none: by the fire), longer stays, a
+    // drink and a toast now and then (FeastSit), and a toast at the table is taken up by the others seated there (Toast); an evening circle
+    // (NpcNeighbours.Circle: not every evening — NpcKit.Days) — its evening by the fire with the others of its home (Need.Circle).
     internal static class NpcPlaces
     {
         internal static float LookEvery = 0.5f, GapMin = 4f, GapMax = 14f, FirstMin = 2f, FirstMax = 12f, MullMin = 0.7f, MullMax = 1.5f;
@@ -41,8 +46,12 @@ namespace HuginWhispers
         internal static float FriendWorth = 0.6f; // what a dear neighbour adds to going up to it (a cold one takes as much away)
         internal static float NearThing = 1.2f, FreshWay = 0.4f, FreshFor = 1200f, ScarFor = 1200f, BadFor = 60f, CrowdLike = 0.3f;
         private const int Most = 24, Tries = 3;
+        internal static Func<NpcActor, bool> Feasting, Circle; // its home's feast is on now · its home's evening circle is tonight (NpcNeighbours)
+        internal static float FeastWant = 3f, FeastFireWant = 1f, FeastStay = 2f, CircleWant = 1.5f, ToastNear = 4f;
+        internal const string FeastSit = "sit_toast|sit_drink|sit_drink|fire_laugh_sit_l|fire_laugh_sit_r|fire_nod_sit_l"; // seated at a feast (sit_toast: Toast)
+        internal static float NoWayFor = 300f, NoWayMost = 3600f, OwnTrouble = 2f; // s a place nobody walks to is left alone the first time (× 4 each time after, to NoWayMost) · m: it never got this far from where it set off — no word about the place
 
-        internal sealed class Need { public float Cold, Tired, Lazy, Diligent, Chatty, Curious, Brave; public bool Old, Night, Late; public NpcNature Nature; }
+        internal sealed class Need { public float Cold, Tired, Lazy, Diligent, Chatty, Curious, Brave; public bool Old, Night, Late, Feast, Circle; public NpcNature Nature; }
 
         internal sealed class Kind
         {
@@ -57,6 +66,7 @@ namespace HuginWhispers
             public string Clip = "", From = "", Out = ""; // what it does there the whole stay (its way in, the loop, its way out): a place of its base
             public string Now = "", NowSit = "";         // …or now and then a short one, standing or seated («a|b»: one of them)
             public float NowMin = 8f, NowMax = 15f;       // s between those
+            public bool Outward;                // the author's: it stands with its back to the thing and looks out from it (a watch by a gate: StoryLife)
         }
 
         // A kind: its worth to a person now. Words go through Lang.K: the table sees them, the status translates them.
@@ -64,7 +74,7 @@ namespace HuginWhispers
         private static void K(Kind k) { k.Hash = k.Id.GetStableHashCode(); Kinds[k.Id] = k; }
         static NpcPlaces()
         {
-            K(new Kind { Id = "fire", Going = Lang.K("іде до вогню"), There = Lang.K("гріється біля вогню"), Min = 60f, Max = 150f, Cap = 4, LateStay = 2f, Wants = n => 0.35f + n.Cold * 1.2f + n.Lazy * 0.3f + (n.Late ? 0.9f : 0f), Now = "fire_warm|fire_warm|drink", NowSit = "sit_drink|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r" });
+            K(new Kind { Id = "fire", Going = Lang.K("іде до вогню"), There = Lang.K("гріється біля вогню"), Min = 60f, Max = 150f, Cap = 4, LateStay = 2f, Wants = n => 0.35f + n.Cold * 1.2f + n.Lazy * 0.3f + (n.Late ? 0.9f : 0f) + (n.Circle ? CircleWant : 0f) + (n.Feast ? FeastFireWant : 0f), Now = "fire_warm|fire_warm|drink|rub_hands", NowSit = "sit_drink|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r" });
             K(new Kind { Id = "seat", Going = Lang.K("іде сісти"), There = Lang.K("перепочиває"), Min = 45f, Max = 120f, Reach = 0.9f, Cap = 1, LateStay = 2f, Wants = n => 0.25f + n.Tired * 1.2f + n.Lazy * 0.5f + (n.Old ? 0.3f : 0f) + (n.Late ? 0.35f : 0f), NowSit = "fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r", NowMin = 15f, NowMax = 35f });
             K(new Kind { Id = "heart", Now = "fire_nod_l|fire_nod_r", Going = Lang.K("іде до Серця оселі"), There = Lang.K("стоїть біля Серця оселі"), Min = 15f, Max = 30f, Reach = 4f, Cap = 3, Wants = n => 0.3f + n.Diligent * 0.2f - (n.Late ? 0.35f : 0f) });
             K(new Kind { Id = "stores", Going = Lang.K("іде глянути запаси"), There = Lang.K("перевіряє запаси"), Min = 12f, Max = 25f, Reach = 1.6f, Cap = 1, Wants = n => 0.15f + n.Diligent * 0.6f - (n.Late ? 0.5f : 0f) });
@@ -74,11 +84,12 @@ namespace HuginWhispers
             K(new Kind { Id = "person", Now = "talk_hands|talk_hands|arms_open|fire_nod_l|fire_nod_r|fire_laugh_l|fire_laugh_r|shrug_small|point_at", NowMin = 6f, NowMax = 12f, Going = Lang.K("іде до сусіда"), There = Lang.K("стоїть із сусідом"), Min = 20f, Max = 45f, Reach = 1f, Cap = 1, NoFav = true, Wants = n => 0.1f + n.Chatty * 0.9f + (n.Late ? 0.2f : 0f) });
             K(new Kind { Id = "scar", Going = Lang.K("іде глянути на місце бою"), There = Lang.K("оглядає місце бою"), Min = 15f, Max = 30f, Reach = 3f, Cap = 2, NoFav = true, Wants = n => 0.3f + n.Curious * 0.6f + n.Brave * 0.3f, Clip = "look_search.around" });
             K(new Kind { Id = "roam", Going = Lang.K("походжає"), There = Lang.K("походжає"), Min = 6f, Max = 14f, Reach = 2f, Cap = 2, NoFav = true, Wants = n => 0.35f - (n.Late ? 0.35f : 0f) });
-            K(new Kind { Id = "table", NowSit = "sit_drink|sit_drink|sit_tap|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r", Going = Lang.K("іде до столу"), There = Lang.K("сидить за столом"), Min = 60f, Max = 140f, LateStay = 2f, Reach = 1.5f, Cap = 8, Wants = n => (n.Late ? 0.9f : 0.05f) + n.Chatty * 0.5f }); // (the table the player picked for meals: its evening with the others)
+            K(new Kind { Id = "table", NowSit = "sit_drink|sit_drink|sit_tap|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r", Going = Lang.K("іде до столу"), There = Lang.K("сидить за столом"), Min = 60f, Max = 140f, LateStay = 2f, Reach = 1.5f, Cap = 8, Wants = n => (n.Late ? 0.9f : 0.05f) + n.Chatty * 0.5f + (n.Feast ? FeastWant : 0f) }); // (the table the player picked for meals: its evening with the others)
             K(new Kind { Id = "ravens", Now = "fire_nod_l|fire_laugh_r|point_at", Going = Lang.K("іде глянути на воронів"), There = Lang.K("дивиться на воронів"), Min = 15f, Max = 35f, Reach = 2.5f, Cap = 2, Wants = n => 0.1f + n.Curious * 0.6f - (n.Late ? 0.2f : 0f) }); // (a perch with a raven on it)
-            K(new Kind { Id = "watch", Now = "point_at|scratch_head|fire_nod_r", Going = Lang.K("іде глянути, що будують"), There = Lang.K("дивиться, що будують"), Min = 10f, Max = 25f, Reach = 3f, Cap = 3, NoFav = true, Wants = n => 0.15f + n.Curious * 1.1f }); // (a thing a player has just built)
-            K(new Kind { Id = "think", Now = "scratch_head|shrug_small", NowMin = 12f, NowMax = 25f, Going = Lang.K("повільно йде"), There = Lang.K("задумався|задумалась"), Min = 30f, Max = 70f, Reach = 1.5f, Cap = 1, Wants = n => 0.4f }); // (the author's: a spot a person stands at in thought)
+            K(new Kind { Id = "watch", Now = "point_at|scratch_head|fire_nod_r|shade_eyes", Going = Lang.K("іде глянути, що будують"), There = Lang.K("дивиться, що будують"), Min = 10f, Max = 25f, Reach = 3f, Cap = 3, NoFav = true, Wants = n => 0.15f + n.Curious * 1.1f }); // (a thing a player has just built)
+            K(new Kind { Id = "think", Now = "scratch_head|shrug_small|think_chin", NowMin = 12f, NowMax = 25f, Going = Lang.K("повільно йде"), There = Lang.K("задумався|задумалась"), Min = 30f, Max = 70f, Reach = 1.5f, Cap = 1, Wants = n => 0.4f }); // (the author's: a spot a person stands at in thought)
             K(new Kind { Id = "tend", Clip = "heid_search.loop", From = "heid_search.bends", Out = "heid_search.rises", Going = Lang.K("іде до справ"), There = Lang.K("порається"), Min = 30f, Max = 80f, Reach = 1.5f, Cap = 1, Wants = n => 0.3f + n.Diligent * 0.5f }); // (the author's: its own small work at a spot)
+            K(new Kind { Id = "post", Going = Lang.K("іде на варту"), There = Lang.K("стоїть на варті"), Min = 60f, Max = 150f, Reach = 2f, Cap = 1, NoFav = true, Outward = true, Wants = n => 0.3f + n.Brave * 0.3f }); // (the author's: a watch by a gate, its back to it — the side is the spot's «by»)
             K(new Kind { Id = "fetch", Going = Lang.K("іде по своє"), There = Lang.K("бере своє"), Min = 3f, Max = 4f, Reach = 1f, Cap = 1, NoFav = true, Wants = n => 0f }); // (the author's: a thing of its own set down somewhere — back to it (StoryLife, its Extra says how much)
         }
 
@@ -87,6 +98,7 @@ namespace HuginWhispers
             public Kind K;
             public Vector3 At, Look;
             public Component Thing;     // the chest it opens, the seat…
+            public string Moves = "";   // the author's: its own short moves there («a|b»: StoryLife «spot … moves»), SpotMoves of the time over the kind's
             public bool Sit, NoLook, Guest;
             public int Key, ThingKey; // (which place it is: by the thing, not the side it is walked up to; 0: no thing)
             public float Worth, Extra, Min, Max; // (Min/Max 0: the kind's)
@@ -94,12 +106,15 @@ namespace HuginWhispers
             public bool Exact;          // it stands on the very spot (a clip whose hands work on the thing)
             public Func<Vector3> Stand; // the author's: where it stands exactly, reckoned only if this place is the one (Ready)
             public Action<NpcActor> There; // the author's: done once as it arrives (a thing of its own taken up: StoryLife)
+            public bool Shared;         // the author's: a gathering's place (StoryLife «meet») — whoever is there is company: never «taken», however many
+            public bool Tool;           // the author's: its own thing (NpcTool) in its hand there — taken up before its clip, back on its belt as it goes (ClipBegins, ClipEnds)
             public string Parts = "";   // (raven npc why)
         }
 
         // a visit with a clip of its own is about to begin it (the author's: what is in the person's hands goes down first — StoryProps);
         // returns the seconds to wait before the visit's own clip, 0 none
-        internal static Func<NpcActor, float> ClipBegins;
+        internal static Func<NpcActor, Place, float> ClipBegins; // before a visit's own clip: what its hands hold goes down, its own thing comes up (the place's Tool) — the s it waits (StoryModules)
+        internal static Action<NpcActor, Place> ClipEnds;        // its visit with a clip over: put right what ClipBegins did (its own thing back on its belt)
 
         // the author's places of a person (StoryLife): null — none: its base's own
         internal static Func<NpcActor, List<Place>> Authored;
@@ -108,6 +123,7 @@ namespace HuginWhispers
         {
             public float Look, Next, Stay, ClipAsked, NextNow;
             public NpcMind.Plan Plan; public Place Visit; public bool There; public int Stage;
+            public Vector3 From; // where it set off from
             public string ClipOn = "", Last = "", Last2 = ""; // (Last2: the place last refused and why)
             public bool Hooked; public float Wait;                                            // (the visit's clip: ClipBegins asked once, and the wait it said)
             public Dictionary<int, int> Fav;                                                // its locker's count of its visits, read once
@@ -157,7 +173,7 @@ namespace HuginWhispers
         // nothing over its own day and nothing to do in it now: not a seat of the evening, not its bed, not a whim, not a talk
         private static bool AtEase(NpcActor a, NpcMind m)
         {
-            return NpcResident.Is(a) && m.NowLayer <= NpcMind.Layer.Routine && m.Now == NpcMind.Task.Idle && !m.SeatedNow && !m.Asleep && m.Of(NpcMind.Layer.Whim) == null;
+            return NpcResident.Is(a) && m.NowLayer <= NpcMind.Layer.Routine && m.Now == NpcMind.Task.Idle && !m.SeatedNow && !m.Asleep && m.Of(NpcMind.Layer.Whim) == null && !m.InTalk;
         }
 
         // ---------------------------------------------------------------- the visit
@@ -166,8 +182,9 @@ namespace HuginWhispers
             NpcMind.Plan p = m.Of(NpcMind.Layer.Whim);
             if (p != s.Plan) // (over, or something it must do took its place)
             {
-                if (!s.There && p == null) s.Bad[s.Visit.Key] = Time.time + BadFor; // (it never got there: no way, NpcWalk: not that place again for a while)
+                if (!s.There && p == null) { if (m.GaveUpOn(s.Plan.To)) NoWayTo(a, s, false); else s.Bad[s.Visit.Key] = Time.time + BadFor; } // (it never got there. Its feet found no way: that place left alone, NoWayTo; its whim ran out on its way, a talk held it: not that place again for a while, by itself)
                 ClipOff(a, s);
+                if (s.Hooked && ClipEnds != null) ClipEnds(a, s.Visit); // (its own thing back on its belt)
                 s.Plan = null; s.Visit = null; s.There = false; s.Stage = 0; s.Hooked = false;
                 s.Next = Time.time + UnityEngine.Random.Range(GapMin, GapMax) * NpcClock.Slow(a);
                 return;
@@ -180,12 +197,27 @@ namespace HuginWhispers
                 s.There = true;
                 p.Word = s.Visit.K.There;
                 p.Until = Time.time + s.Stay; // (its stay counts from here, however long the way was)
-                s.NextNow = Time.time + UnityEngine.Random.Range(2f, s.Visit.K.NowMin);
-                Arrive(a, m, s);
+                s.NextNow = Time.time + NpcPersona.Gap(a, UnityEngine.Random.Range(2f, s.Visit.K.NowMin));
+                if (m.PutBy(p.To)) NoWayTo(a, s, true); // (put there, not walked: no visit of its own to count, no word said — and nobody is sent there for a while)
+                else if (p.Seated && p.Seat == null && Utils.DistanceXZ(a.transform.position, p.To) > 3f) NoWayTo(a, s, false); // (its seat not reached: it sat on the ground where it got to — NpcMind.Sitting — which is no visit to that seat either)
+                else Arrive(a, m, s);
                 if (s.Visit.There != null) s.Visit.There(a);
             }
+            if (NpcMoves.Talking(a)) { Hush(a, s); return; } // (someone talks to it: no move of the place's, its long clip out — asked anew after; its stay waits meanwhile, NpcMind)
             Clips(a, p, s);
             Now(a, m, p, s);
+        }
+
+        // in a talk: the visit's own clip that does not fit one (a hammer, a bend over the herbs — not arms folded: NpcMoves.TalkFits) goes out by its way
+        // out, or off; begun again from its way in after the talk (Stage 0). A short move of the place's already on plays out
+        private static void Hush(NpcActor a, State s)
+        {
+            Place v = s.Visit;
+            if (s.Stage != 1 && s.Stage != 2) return;
+            if (NpcMoves.TalkFits(v.Clip)) return;
+            PAnimClip way = v.Out.Length > 0 ? BodyClips.Find(v.Out) : null;
+            if (way != null) Ask(a, s, v.Out, way.Length + 1f, 0); else { ClipOff(a, s); s.Stage = 0; }
+            s.NextNow = Time.time + NpcPersona.Gap(a, UnityEngine.Random.Range(2f, s.Visit.K.NowMin)); // (no short move the moment the talk is over)
         }
 
         private static void Arrive(NpcActor a, NpcMind m, State s)
@@ -245,16 +277,23 @@ namespace HuginWhispers
         private static void Clips(NpcActor a, NpcMind.Plan p, State s)
         {
             Place v = s.Visit;
-            if (v.Clip.Length == 0 || a.Body == null || (s.Stage == 0 && !NpcClock.Seen(a))) return; // (not begun with nobody to see it; you come while it is there: then)
+            if (a.Body == null) return;
+            if (v.Clip.Length == 0) // (no clip of the place's — its short moves only: its own thing still comes into its hand for them, «think tool moves dv_count»: he counted with the hammer on his belt)
+            {
+                if (v.Tool && !s.Hooked && ClipBegins != null) { s.Hooked = true; s.Wait = Time.time + ClipBegins(a, v); }
+                return;
+            }
+            if (s.Stage == 0 && !NpcClock.Seen(a)) return; // (not begun with nobody to see it; you come while it is there: then)
             PAnimClip way = v.Out.Length > 0 ? BodyClips.Find(v.Out) : null;
             float outFor = way != null ? way.Length : 0f;
+            if (s.Stage == 0 && Time.time >= p.Until - outFor - LookEvery) return; // (never begun and its stay nearly over — a player just come into sight: no way out of a clip it was not in)
             if (s.Stage < 3 && way != null && Time.time >= p.Until - outFor - LookEvery) { Ask(a, s, v.Out, 0f, 3); return; }
             if (s.Stage == 0)
             {
-                if (!s.Hooked) { s.Hooked = true; s.Wait = Time.time + (ClipBegins != null ? ClipBegins(a) : 0f); } // (once a visit: what its hands hold goes down first)
+                if (!s.Hooked) { s.Hooked = true; s.Wait = Time.time + (ClipBegins != null ? ClipBegins(a, v) : 0f); } // (once a visit: what its hands hold goes down first)
                 if (Time.time < s.Wait) return;
                 PAnimClip from = v.From.Length > 0 ? BodyClips.Find(v.From) : null;
-                if (from != null) { Ask(a, s, v.From, 0f, 1); return; }
+                if (from != null) { Ask(a, s, v.From, NpcBody.WayIn(from), 1); return; }
                 Ask(a, s, v.Clip, s.Stay + 5f, 2);
                 return;
             }
@@ -272,19 +311,52 @@ namespace HuginWhispers
         }
 
         internal static float NatureMoves = 0.4f; // a share of the short moves that are its nature's own, not the place's
-        // now and then a short one of its kind's or its nature's (a place with a clip of its own: that one only), not over another clip, not in its last seconds
+        internal static float SpotMoves = 0.6f;   // a share of them that are the author's for this very spot (Place.Moves: Heid's hand on her heart by the stones)
+        // now and then a short one: the author's for this spot (Place.Moves), its kind's or its nature's, or its template's own (NpcMoves: «moves:», «never:»; a place with a clip of its own: that one only), not over another clip, not in its last seconds
+        private static bool Feasts(Kind k) { return k.Id == "table" || k.Id == "fire"; } // (where a feast is kept: its table, else its fire)
+
+        // a short move's whole length and a little: begun only while its stay has that much left (a fixed 4 s let the visit's end cut the longer ones —
+        // a hand on her heart 5.6 s, a palm on the master's mark 6.8 s)
+        private static float Whole(string clip) { PAnimClip c = BodyClips.Find(clip); return (c != null ? c.Length : 4f) + 0.5f; }
+
         private static void Now(NpcActor a, NpcMind m, NpcMind.Plan p, State s)
         {
             Kind k = s.Visit.K;
-            if (s.Visit.Clip.Length > 0 || a.Body == null || Time.time < s.NextNow) return;
-            s.NextNow = Time.time + UnityEngine.Random.Range(k.NowMin, k.NowMax);
+            if (s.Visit.Clip.Length > 0 || a.Body == null || Time.time < s.NextNow || Time.time < s.Wait) return;
+            bool feast = m.SeatedNow && Feasts(k) && Feasting != null && Feasting(a);
+            s.NextNow = Time.time + NpcPersona.Gap(a, UnityEngine.Random.Range(k.NowMin, k.NowMax) * (feast ? 0.6f : 1f)); // (by how lively it is: NpcPersona.Gap)
             if (!NpcClock.Seen(a)) return; // (nobody to see it)
+            if (feast) // (a feast: its drink and its toasts, nothing of its nature's over them)
+            {
+                string fc = NpcMoves.Pick(a, FeastSit, false, true);
+                if (fc.Length == 0 || !a.Body.ClipFree || Time.time + Whole(fc) > p.Until) return;
+                if (a.Body.Clip(fc)) { s.ClipOn = fc; if (fc == "sit_toast") Toast(a); }
+                return;
+            }
             NpcNature nature = NpcNature.Of(a);
             string own = nature != null && !m.SeatedNow ? nature.Moves : ""; // (its nature's own, standing: NpcNature.Moves)
-            string[] pick = (own.Length > 0 && UnityEngine.Random.value < NatureMoves ? own : m.SeatedNow ? k.NowSit : k.Now).Split('|');
-            string clip = pick[UnityEngine.Random.Range(0, pick.Length)];
-            if (clip.Length == 0 || !a.Body.ClipFree || p.Until - Time.time < 4f) return;
+            bool spot = s.Visit.Moves.Length > 0 && UnityEngine.Random.value < SpotMoves; // (the author's for this spot: those, and nothing of its own over them)
+            string clip = NpcMoves.Pick(a, spot ? s.Visit.Moves : own.Length > 0 && UnityEngine.Random.value < NatureMoves ? own : m.SeatedNow ? k.NowSit : k.Now, !spot, m.SeatedNow); // (its gate and its own moves: NpcMoves)
+            if (clip.Length == 0 || Time.time + Whole(clip) > p.Until) return; // (not one its stay's end would cut)
+            // its arm's loop of a thing it carries (Heid's basket) is no clip in its way for a move made for that carrying — the author's for this spot, its
+            // template's «clip@carry»: with the loop counted as any clip she never made one of them (2026-11-17: heid_herbs needs the very loop that barred it)
+            if (!a.Body.ClipFree && !(a.Body.Carrying && (spot || NpcMoves.MadeFor(a, clip, "carry")))) return;
             if (a.Body.Clip(clip)) s.ClipOn = clip;
+        }
+
+        // a toast at a feast: said aloud (its theme «feast»), and the others of its home seated at the same table or fire, run here and free, raise
+        // theirs with it (a look over those loaded: a handful — once a toast)
+        private static void Toast(NpcActor a)
+        {
+            NpcPhrases.SayOr(a, "feast", "", null, NpcActor.Voice.Unasked);
+            foreach (NpcActor o in NpcActor.Live)
+            {
+                if (o == null || o == a || !o.Owned || o.Body == null || o.Mind == null || !o.Mind.SeatedNow || !o.Body.ClipFree) continue;
+                if ((o.transform.position - a.transform.position).sqrMagnitude > ToastNear * ToastNear || Feasting == null || !Feasting(o)) continue;
+                State os;
+                if (!States.TryGetValue(o, out os) || os.Visit == null || !Feasts(os.Visit.K)) continue;
+                if (o.Body.Move("sit_toast")) os.ClipOn = "sit_toast"; // (through its gate: a seat, its template's «never»)
+            }
         }
 
         // off, if the clip on its body is still the one this visit asked for (a scene's own stays)
@@ -351,18 +423,37 @@ namespace HuginWhispers
         private static bool Go(NpcActor a, NpcMind m, State s, Place p, Need n)
         {
             float min = p.Min > 0f ? p.Min : p.K.Min, max = p.Max > 0f ? p.Max : p.K.Max;
-            float stay = UnityEngine.Random.Range(min, max) * (1f + (n.Lazy - 0.5f) * 0.6f) * (n.Late ? p.K.LateStay : 1f);
+            float stay = UnityEngine.Random.Range(min, max) * (1f + (n.Lazy - 0.5f) * 0.6f) * (n.Late ? p.K.LateStay : 1f) * (n.Feast && Feasts(p.K) ? FeastStay : 1f);
             float way = Utils.DistanceXZ(a.transform.position, p.At) / 1.2f;
             NpcMind.Plan plan = Plan(p);
             plan.SetOff = Time.time + UnityEngine.Random.Range(MullMin, MullMax) * (1f + n.Lazy * 0.5f);
             plan.AimAt = p.Look;
             if (!m.TakeWhim(plan, way + stay + 5f, NpcMind.Leisure)) return false;
-            s.Plan = plan; s.There = false; s.Stage = 0; s.Stay = stay;
+            s.Plan = plan; s.There = false; s.Stage = 0; s.Stay = stay; s.From = a.transform.position;
             s.Visit = Copy(p);
             Went(s, p);
             s.Last = p.K.Id + " " + p.Worth.ToString("0.00", CultureInfo.InvariantCulture);
             Npcs.Log(a.Who + ": goes to «" + p.K.Id + "» at " + Mathf.RoundToInt(p.At.x) + "," + Mathf.RoundToInt(p.At.z) + " (" + p.Worth.ToString("0.00", CultureInfo.InvariantCulture) + ", stays " + Mathf.RoundToInt(stay) + " s)");
             return true;
+        }
+
+        // A place nobody gets to on foot (measured 2026-11-11, walks.txt: one station inside stone walls was chosen 5 times in an hour, each time
+        // 12 s at a rock and a puff — a failed walk was kept BadFor s by that person alone, and a put counted as a visit): left alone by everyone,
+        // NoWayFor s the first time, × 4 each time it fails again within NoWayMost s of being let back. Not when the one who failed never left
+        // where it stood (OwnTrouble): then no way leads from there to anywhere, and the place is not to blame. A player builds: all judged afresh (Built)
+        private sealed class NoWayOf { public float Until; public int Times; }
+        private static readonly Dictionary<int, NoWayOf> NoWay = new Dictionary<int, NoWayOf>(); // session: a place's key → till when; the base may be built on by tomorrow
+        private static bool NoWayNow(int key) { NoWayOf l; return NoWay.TryGetValue(key, out l) && Time.time < l.Until; }
+        private static void NoWayTo(NpcActor a, State s, bool put)
+        {
+            int key = s.Visit.Key;
+            if (!put && Utils.DistanceXZ(a.transform.position, s.From) < OwnTrouble) { s.Bad[key] = Time.time + BadFor; return; }
+            NoWayOf l;
+            if (!NoWay.TryGetValue(key, out l)) { if (NoWay.Count >= 128) NoWay.Clear(); NoWay[key] = l = new NoWayOf { Until = -NoWayMost }; }
+            l.Times = Time.time - l.Until < NoWayMost ? l.Times + 1 : 1;
+            float term = Mathf.Min(NoWayMost, NoWayFor * Mathf.Pow(4f, l.Times - 1));
+            l.Until = Time.time + term;
+            Npcs.Log(a.Who + ": " + (put ? "was put by" : "found no way to") + " «" + s.Visit.K.Id + "» at " + Mathf.RoundToInt(s.Visit.At.x) + "," + Mathf.RoundToInt(s.Visit.At.z) + " — nobody goes there for " + Mathf.RoundToInt(term) + " s (time " + l.Times + ")");
         }
 
         // it chose it: remembered; what it no longer weighs (long past, its pause over) let go, so these stay small
@@ -390,7 +481,7 @@ namespace HuginWhispers
         // (the list's places are used again at the next choice: what it goes to is its own copy)
         private static Place Copy(Place p)
         {
-            return new Place { K = p.K, At = p.At, Look = p.Look, Thing = p.Thing, Sit = p.Sit, NoLook = p.NoLook, Guest = p.Guest, Key = p.Key, ThingKey = p.ThingKey, Worth = p.Worth, Clip = p.Clip, From = p.From, Out = p.Out, Exact = p.Exact, There = p.There };
+            return new Place { K = p.K, At = p.At, Look = p.Look, Thing = p.Thing, Sit = p.Sit, NoLook = p.NoLook, Guest = p.Guest, Key = p.Key, ThingKey = p.ThingKey, Worth = p.Worth, Clip = p.Clip, From = p.From, Out = p.Out, Exact = p.Exact, There = p.There, Moves = p.Moves, Tool = p.Tool, Shared = p.Shared };
         }
 
         private static Need NeedOf(NpcActor a)
@@ -400,6 +491,8 @@ namespace HuginWhispers
             Need n = new Need { Tired = NpcToil.Tired(a) / 100f, Lazy = w.Laziness, Diligent = w.Diligence, Chatty = w.Chatty, Curious = w.Curiosity, Brave = w.Bravery, Old = look != null && look.Age == 2, Nature = w.Nature };
             NpcResident r = a.Resident;
             n.Late = r != null && r.PartNow != NpcResident.Part.Day;
+            n.Feast = Feasting != null && Feasting(a);
+            n.Circle = n.Late && Circle != null && Circle(a);
             if (EnvMan.instance == null) return n;
             n.Night = EnvMan.IsNight();
             n.Cold = Cold();
@@ -419,8 +512,9 @@ namespace HuginWhispers
             Vector3 me = a.transform.position;
             float bad;
             int crowd = Crowd(p);
-            if (crowd >= p.K.Cap && !explain) Taken(a, s, p); // (its own place, someone in it: it may hold that against one of its people)
-            if (crowd >= p.K.Cap || (s.Bad.TryGetValue(p.Key, out bad) && Time.time < bad)) { p.Worth = float.MinValue; p.Parts = crowd >= p.K.Cap ? "зайнято" : "нема шляху"; return; }
+            bool full = crowd >= p.K.Cap && !p.Shared;
+            if (full && !explain) Taken(a, s, p); // (its own place, someone in it: it may hold that against one of its people)
+            if (full || (s.Bad.TryGetValue(p.Key, out bad) && Time.time < bad) || NoWayNow(p.Key)) { p.Worth = float.MinValue; p.Parts = full ? "зайнято" : "нема шляху"; return; }
             float want = p.K.Wants(n) + p.Extra + NpcNature.Place(n.Nature, p.K.Id); // (its nature: NpcNature)
             float like = (((NpcKit.Seed(a.Zdo) ^ (uint)p.Key) * 2654435761u >> 16 & 0xFFFF) / 65535f * 2f - 1f) * Liking; // (its own liking of this place: the same every run)
             float fresh = IsFresh(p.ThingKey) ? FreshCost * n.Curious : 0f;
@@ -473,7 +567,7 @@ namespace HuginWhispers
             for (int i = 0; i < _others; i++)
             {
                 NpcActor o = _otherWho[i];
-                if (o == null || (_otherAt[i] - p.At).sqrMagnitude >= r || NpcKit.GetRef(o.Zdo, NpcResident.KHeart) != heart || NpcAttitude.OfPerson(a, o) >= 25f) continue; // (a friend in it: shared, not a quarrel)
+                if (o == null || (_otherAt[i] - p.At).sqrMagnitude >= r || NpcKit.GetRef(o.Zdo, NpcResident.KHeart) != heart || NpcAttitude.OfPerson(a, o) >= NpcAttitude.WarmAt) continue; // (a friend in it: shared, not a quarrel)
                 NpcAttitude.Quarrel(a, o, "place");
                 return;
             }
@@ -496,7 +590,7 @@ namespace HuginWhispers
         {
             if (_used >= Pool.Count) Pool.Add(new Place());
             Place p = Pool[_used++];
-            p.K = Kinds[kind]; p.At = at; p.Look = look; p.Thing = thing; p.There = null; p.Sit = false; p.NoLook = false; p.Guest = false; p.Worth = 0f; p.Extra = 0f; p.Min = 0f; p.Max = 0f; p.Clip = p.K.Clip; p.From = p.K.From; p.Out = p.K.Out; p.Exact = false; p.Stand = null; p.Parts = "";
+            p.K = Kinds[kind]; p.At = at; p.Look = look; p.Thing = thing; p.There = null; p.Sit = false; p.NoLook = false; p.Guest = false; p.Worth = 0f; p.Extra = 0f; p.Min = 0f; p.Max = 0f; p.Clip = p.K.Clip; p.From = p.K.From; p.Out = p.K.Out; p.Exact = false; p.Stand = null; p.Parts = ""; p.Moves = ""; p.Tool = false; p.Shared = false;
             Vector3 stands = thing != null ? thing.transform.position : keyAt ?? at;
             p.Key = p.K.Hash ^ PosKey(stands); p.ThingKey = thing != null ? PosKey(thing.transform.position) : 0;
             Out.Add(p);
@@ -534,7 +628,7 @@ namespace HuginWhispers
             if (dining != null) { Place table = New("table", dining.position, dining.position + Vector3.up, null, dining.position); table.Sit = true; table.Guest = true; }
             foreach (PerchView v in PerchView.All)
             {
-                if (v == null || (v.At(0) == null && v.At(1) == null)) continue;
+                if (v == null || v.Gone || (v.At(0) == null && v.At(1) == null)) continue;
                 Vector3 at = v.transform.position;
                 if (b.Inside(at)) New("ravens", Side(at, me, 2f), at + Vector3.up * 1.3f, v);
             }
@@ -649,6 +743,7 @@ namespace HuginWhispers
         private static void Built(Vector3 at)
         {
             if (!ReferenceEquals(_world, ZNet.instance)) { NewThings.Clear(); AllScars.Clear(); RecentBuilt.Clear(); _world = ZNet.instance; }
+            NoWay.Clear(); // (the base has changed: a way may lead there now)
             if (NewThings.Count > 64) NewThings.Clear();
             NewThings[PosKey(at)] = Time.time;
             if (RecentBuilt.Count >= 8) RecentBuilt.RemoveAt(0);
@@ -701,13 +796,15 @@ namespace HuginWhispers
         private static readonly Type[] Shelters = { typeof(Fireplace), typeof(Container), typeof(Chair), typeof(Bed), typeof(CookingStation) };
         private static readonly Dictionary<string, KeyValuePair<float, List<Component>>> Dry = new Dictionary<string, KeyValuePair<float, List<Component>>>(); // base → {when, its things under a roof}
         internal static bool Roofed(NpcActor a, NpcBase b, out Vector3 at, out bool seat) { string why; return Roofed(a, b, out at, out seat, out why); }
+        private static readonly List<KeyValuePair<float, Component>> _dryNear = new List<KeyValuePair<float, Component>>();
+        private static readonly Comparison<KeyValuePair<float, Component>> ByNear = (x, y) => x.Key.CompareTo(y.Key);
         internal static bool Roofed(NpcActor a, NpcBase b, out Vector3 at, out bool seat, out string why)
         {
             at = a.transform.position; seat = false; why = "";
             string key = Mathf.RoundToInt(b.Centre.x) + "," + Mathf.RoundToInt(b.Centre.z);
             KeyValuePair<float, List<Component>> had;
             List<Component> dry;
-            if (Dry.TryGetValue(key, out had) && Time.time - had.Key < 60f) dry = had.Value;
+            if (Dry.TryGetValue(key, out had) && Time.time - had.Key < 60f && had.Key >= b.MadeAt) dry = had.Value; // (kept from before its base's things were made anew — its zone let go and back: all of them gone, «no roof» for a minute of rain)
             else
             {
                 dry = new List<Component>();
@@ -721,15 +818,20 @@ namespace HuginWhispers
                 if (Dry.Count > 50) Dry.Clear();
                 Dry[key] = new KeyValuePair<float, List<Component>>(Time.time, dry);
             }
-            float best = float.MaxValue; Component near = null; int off = 0;
-            foreach (Component c in dry)
+            // the nearest first, and only those looked at closely: not one no way led to a little ago (NpcWalk.KeepOff — every look of a shower it set
+            // off to the same roof it could not reach, 12 s at a wall each time), not one in a player's own house (a ray each)
+            _dryNear.Clear();
+            foreach (Component c in dry) if (c != null) _dryNear.Add(new KeyValuePair<float, Component>(Utils.DistanceXZ(a.transform.position, c.transform.position), c));
+            _dryNear.Sort(ByNear);
+            Component near = null; int off = 0, noWay = 0;
+            foreach (KeyValuePair<float, Component> k in _dryNear)
             {
-                if (c == null) continue;
-                if (NpcPrivate.Off(a, b, c.transform.position)) { off++; continue; } // (a player's own house: not for it)
-                float d = Utils.DistanceXZ(a.transform.position, c.transform.position);
-                if (d < best) { best = d; near = c; }
+                Vector3 at0 = k.Value.transform.position;
+                if (NpcWalk.Avoided(at0, 2.7f)) { noWay++; continue; } // (the spot it stands on by a thing: 1.1 m off it, settled up to 1.5 m)
+                if (NpcPrivate.Off(a, b, at0)) { off++; continue; } // (a player's own house: not for it)
+                near = k.Value; break;
             }
-            if (near == null) { why = "no roof: " + dry.Count + " things of its base under a roof, " + off + " of them in a player's house"; return false; }
+            if (near == null) { why = "no roof: " + dry.Count + " things of its base under a roof, " + off + " of them in a player's house, " + noWay + " no way led to"; return false; }
             seat = near is Chair; // (a seat: «sit» finds it from the spot by it — within 4 m)
             at = Settled(Side(near.transform.position, a.transform.position, 1.1f));
             return true;

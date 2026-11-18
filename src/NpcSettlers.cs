@@ -28,8 +28,8 @@ namespace HuginWhispers
             public readonly List<string> Gear = new List<string>();
         }
 
-        private static readonly string[] Men = { "Ейнар", "Гуннар", "Б'єрн", "Ульф", "Сігурд", "Торстейн", "Гаральд", "Рагнар", "Лейф", "Свен", "Кнуд", "Арне", "Торкель", "Інгвар", "Гальвдан", "Асгейр", "Бруні", "Даг", "Ейвінд", "Гейр", "Грім", "Гудмунд", "Гаук", "Івар", "Кетіль", "Колль", "Одд", "Орм", "Рольф", "Снорре", "Стейн", "Торбйорн", "Трюгве", "Вальгард", "Агні", "Фроді", "Гаскульд", "Отар", "Скегі", "Вермунд" };
-        private static readonly string[] Women = { "Астрід", "Сігрун", "Інгрід", "Тове", "Гельга", "Рагнгільд", "Фрейдіс", "Сольвейг", "Тюра", "Ауд", "Бера", "Брюнгільд", "Дагні", "Ейдіс", "Ерна", "Грета", "Інга", "Йорунн", "Лів", "Оса", "Руна", "Сігне", "Свангільд", "Торгільд", "Торунн", "Ульфгільд", "Вальдіс", "Відіс", "Аслауг", "Боргільд", "Герд", "Гердіс", "Альфгільд", "Гудню", "Сіґні", "Тордіс", "Унн", "Ейр", "Фріда", "Гальдора" };
+        private static readonly string[] Men = Lang.Keys("Ейнар", "Гуннар", "Б'єрн", "Ульф", "Сігурд", "Торстейн", "Гаральд", "Рагнар", "Лейф", "Свен", "Кнуд", "Арне", "Торкель", "Інгвар", "Гальвдан", "Асгейр", "Бруні", "Даг", "Гейр", "Грім", "Гудмунд", "Гаук", "Івар", "Колль", "Одд", "Орм", "Рольф", "Снорре", "Стейн", "Торбйорн", "Трюгве", "Вальгард", "Агні", "Фроді", "Гаскульд", "Отар", "Скегі", "Вермунд"); // (kept as written in its ZDO, shown through Lang.T: NpcActor.Name)
+        private static readonly string[] Women = Lang.Keys("Астрід", "Сігрун", "Інгрід", "Тове", "Гельга", "Рагнгільд", "Фрейдіс", "Сольвейг", "Тюра", "Ауд", "Бера", "Брюнгільд", "Дагні", "Ейдіс", "Ерна", "Грета", "Інга", "Йорунн", "Лів", "Оса", "Рунвейг", "Сігне", "Свангільд", "Торгільд", "Торунн", "Ульфгільд", "Вальдіс", "Відіс", "Аслауг", "Боргільд", "Герд", "Гердіс", "Альфгільд", "Гудню", "Сіґні", "Тордіс", "Унн", "Ейр", "Фріда", "Гальдора");
         private static readonly Vector3[] Skins = { new Vector3(0.98f, 0.85f, 0.74f), new Vector3(0.92f, 0.78f, 0.66f), new Vector3(0.85f, 0.72f, 0.6f), new Vector3(0.76f, 0.61f, 0.49f), new Vector3(0.62f, 0.47f, 0.36f), new Vector3(0.47f, 0.34f, 0.26f) };
         private static readonly Vector3[] Hairs = { new Vector3(0.85f, 0.72f, 0.45f), new Vector3(0.72f, 0.58f, 0.36f), new Vector3(0.6f, 0.45f, 0.28f), new Vector3(0.45f, 0.34f, 0.22f), new Vector3(0.2f, 0.15f, 0.1f), new Vector3(0.08f, 0.07f, 0.06f), new Vector3(0.62f, 0.28f, 0.12f), new Vector3(0.5f, 0.22f, 0.12f) };
         private static readonly Vector3[] Greys = { new Vector3(0.75f, 0.75f, 0.72f), new Vector3(0.9f, 0.9f, 0.88f), new Vector3(0.6f, 0.58f, 0.55f) };
@@ -75,12 +75,34 @@ namespace HuginWhispers
         private static string Name(string[] names, System.Random rnd)
         {
             HashSet<string> taken = new HashSet<string>();
-            foreach (ZDO o in NpcCensus.Of(Npcs.HumanPrefab)) { string n = o.GetString(KName, ""); if (n.Length > 0) taken.Add(n); } // (the shared census: no pass of its own)
-            foreach (NpcDef d in NpcDefs.All()) if (!d.Generated) foreach (string w in Lang.T(d.Name).Split(' ')) taken.Add(w);
+            foreach (ZDO o in NpcCensus.People()) { string n = o.GetString(KName, ""); if (n.Length > 0) taken.Add(n); } // (the shared census: no pass of its own)
+            foreach (NpcDef d in NpcDefs.All()) if (!d.Generated) foreach (string w in d.Name.Split(' ')) taken.Add(w); // (the source, as the names are kept: Ukrainian, shown through Lang.T by NpcActor.Name)
             List<string> free = new List<string>();
             foreach (string n in names) if (!taken.Contains(n)) free.Add(n);
             return free.Count > 0 ? free[rnd.Next(free.Count)] : names[rnd.Next(names.Length)];
         }
+
+        // a settler made before a story person took its name (chapter 1, 2026-11-14: a settler «Кетіль» from before Ketil's template stood by the same heart
+        // as Ketil, and the player talked to the wrong one): a new name, once, where it is owned — Name, which leaves the story's names out
+        internal static void KeepName(NpcActor a)
+        {
+            ZDO z = a != null ? a.Zdo : null;
+            if (z == null || !a.Owned) return;
+            string n = z.GetString(KName, "");
+            if (n.Length == 0 || !StoryName(n)) return;
+            Look l = Of(a);
+            string name = Name(l != null && l.Model == 1 ? Women : Men, new System.Random((int)NpcKit.Seed(z))); // (its own look says man or woman: a name gone from the lists says nothing)
+            if (name == n) return; // (all taken: as it was)
+            z.Set(KName, name);
+            Npcs.Log("a settler «" + n + "» renamed «" + name + "»: a person of the story bears that name now");
+        }
+        private static bool StoryName(string n)
+        {
+            string s = Plain(n);
+            foreach (NpcDef d in NpcDefs.All()) if (!d.Generated) foreach (string w in d.Name.Split(' ')) if (Plain(w) == s) return true;
+            return false;
+        }
+        private static string Plain(string n) { return n.Replace('ґ', 'г').Replace('Ґ', 'Г'); } // («Сіґрун» of the story and a settler «Сігрун» are one name to the ear)
 
         private static List<string> Existing(string start, int from, int to)
         {

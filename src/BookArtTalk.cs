@@ -8,7 +8,7 @@ namespace HuginWhispers
     // each and kept here as every picture of the book is (Make).
     //   TalkPaper(v)   the parchment, sliced: its colour across, its fibres, its edges shaded, its bottom torn — a wavy line with nicks and two bites, a darker rim (TornVariants of them,
     //                  each person its own by its name)
-    //   TalkRod        the wooden rod, sliced across: grain, knots, rounded ends · TalkBand: an iron band with two rivets · TalkRope: a twisted rope, tiled down
+    // (its top — the roll on its hooks, the ravens' heads — is pictures of assets/book: tools/talk_top_art.html, RavenBook.ScrollShell)
     internal static partial class BookArt
     {
         internal const float TalkPaperTop = 30f, TalkPaperBottom = 84f, TalkPaperSide = 8f; // its slices, in pixels = canvas units
@@ -63,61 +63,6 @@ namespace HuginWhispers
             float[] o = new float[w];
             for (int x = 0; x < w; x++) { float f = x / (float)(w - 1) * N; int i = Mathf.Min(N - 1, (int)f); o[x] = Mathf.Lerp(pts[i], pts[i + 1], f - i); }
             return o;
-        }
-
-        internal static Sprite TalkRod
-        {
-            get
-            {
-                return Make("talkrod", 256, 32, (x, y) =>
-                {
-                    float out_ = BoxDistance(x, y, 256f, 32f, 16f, false);
-                    if (out_ > 0.5f) return Color.clear;
-                    float v = y / 32f;
-                    Color c = Stops(1f - v, new[] { 0f, 0.4f, 0.7f, 1f }, new[] { "#8a5e36", "#5e3c20", "#3a2414", "#1e130a" });
-                    float shade = 0f;
-                    if (Mathf.Repeat(y, 4f) < 1f) shade -= 0.06f;          // (grain along it)
-                    if (Mathf.Repeat(x, 23f) < 2f) shade += 0.07f;         // (knots)
-                    if (y > 29f) shade -= 0.2f;                            // (its top lit)
-                    c = shade < 0f ? Color.Lerp(c, C("#c99a64"), -shade) : Color.Lerp(c, Color.black, shade);
-                    c.a = Mathf.Clamp01(0.5f - out_);
-                    return c;
-                }, new Vector4(16f, 0f, 16f, 0f));
-            }
-        }
-
-        internal static Sprite TalkBand
-        {
-            get
-            {
-                return Make("talkband", 12, 36, (x, y) =>
-                {
-                    float out_ = BoxDistance(x, y, 12f, 36f, 3f, false);
-                    if (out_ > 0.5f) return Color.clear;
-                    Color c = Stops(x / 12f, new[] { 0f, 0.4f, 0.7f, 1f }, new[] { "#2a2c2e", "#7a7e80", "#3a3c3e", "#1a1b1c" });
-                    foreach (float ry in new[] { 8f, 28f })
-                    {
-                        float dd = Mathf.Sqrt((x - 6f) * (x - 6f) + (y - ry) * (y - ry));
-                        if (dd < 3f) c = Color.Lerp(C("#d9dcdd"), C("#55595b"), dd / 3f);
-                    }
-                    c.a = Mathf.Clamp01(0.5f - out_);
-                    return c;
-                }, Vector4.zero);
-            }
-        }
-
-        internal static Sprite TalkRope
-        {
-            get
-            {
-                return Make("talkrope", 8, 14, (x, y) =>
-                {
-                    float t = Mathf.Repeat(x * 0.36f + y, 7f);
-                    Color c = t < 3f ? C("#c9a46a") : t < 5f ? C("#8a6a3c") : C("#5e4524");
-                    float edge = Mathf.Abs(x - 4f) / 4f;
-                    return Color.Lerp(c, Color.black, edge * edge * 0.45f);
-                }, Vector4.zero, false, TextureWrapMode.Repeat);
-            }
         }
 
         // ---------------------------------------------------------------- a sheet's own pictures (the user's picture 2026-11-06, docs/plans/mockups/npc-card-2026-11-06.png)

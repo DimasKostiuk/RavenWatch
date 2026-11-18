@@ -11,24 +11,30 @@ namespace HuginWhispers
     // The scene director (story-plan.md part 7): a scene is a text file of steps played one after another; one scene at
     // a time. A quest's stage «scene: <id>» plays it and passes on «scene_done <id>». Played live: the player keeps
     // the keys unless a shot, the bars or the black hold him (StoryCamera.TakesPlayer). All it took is given back in one place (Release). The world never pauses — a scene that goes wrong stops:
-    //   death · a fight (hit, or a foe at you) · going off more than 60 m from where it plays
+    //   death · a fight (hit, or a foe at you; one that roams waits it out instead: FightWait) · going off more than 60 m from where it plays
     // and its actors vanish; the stage plays it again later (after Retry seconds, when «needs» hold again).
     // Every step has its own time limit: a scene never hangs.
     //
     // Files: assets/story/scenes/*.txt — read where StoryFiles says (built in; on the author's machine the mod's own folder,
     // edited in F9 «Сцени»). This file: playing; reading: StoryScenesRead; the kinds of steps: StoryScenesKinds; the player's, the bird's, the people's
-    // verbs: StoryScenesPlayer / Bird / Cast; the camera: StoryScenesCamera.
+    // verbs: StoryScenesPlayer / Bird / Cast; the sisters' falcons: StoryScenesFalcon; the camera: StoryScenesCamera.
     //   [scene raven_call]
     //   needs: calm                         conditions to begin (StoryCond)
     //   place: prologue_house               where it is filmed (the author's shots of that place: StoryShots)
     //   roams: yes                          it goes with the player wherever he walks (a raven over him): not stopped when he is
-    //                                       FarStop m from where it began — a foe, a blow, death still stop it (2026-11-08: the prologue's
-    //                                       nudge died three times as the player walked on while Munin flew 60 m to him)
+    //                                       FarStop m from where it began (2026-11-08: the prologue's nudge died three times as the
+    //                                       player walked on while Munin flew 60 m to him); a fight neither stops it nor skips his
+    //                                       steps: it waits, its bird circling over him, and goes on when calm (FightWait; FightMost
+    //                                       s at most — then stopped, and played again); death still stops it
     //   alone: yes                          a scene of one's own: the other players are not drawn in this game while
     //                                       it plays (StoryAlone — nobody walks into the shot)
     //   guard: 30 | off                     the quiet round the event (StoryHush): its full size in m; none — by the
     //                                       place's size; off — none. It grows round the place as the player comes on
     //                                       the stage that leads here; no place — round the player while it plays
+    //   aside: away                         the people it does not hold leave the frame (StoryAside: all within Quiet m go off
+    //                                       to Gone m) — the user 2026-11-17, Eyvind in the Hall: «нехай на момент сцени нпс уходять,
+    //                                       але не завжди: в деяких сценах ок, що на фоні хтось ходить»; none (or «step») — they only
+    //                                       step off the player (Clear → To m) and may walk on behind
     // It never begins in a fight at you (FoeNear: what would stop it at once), whatever its «needs».
     // It begins only when every person it takes from the world (npc <who> …, not its own «spawn») is near and free. It never waits for
     // a raven of the game (the user 2026-11-07: the heart built, the hammer gone — and 23 s of nothing while it waited for one): a raven
@@ -42,11 +48,25 @@ namespace HuginWhispers
     //   bird circle 30 [4.5] [3.5]          round over you for 30 s (radius, metres over your head)
     //   bird over [10]                      waits till it is really over you, within so many m (it set off from afar and circles)
     //   bird leave hall                     off that way and gone (the step does not wait for it)
+    //   bird come from hall hover           a place's own raven (LocRaven; the Hall's postman): out of its place to hang in the air before you
+    //   bird home hall                      … and back home, in through its roof
+    //   letter Літ :: Приходь. Поміряв.     a letter on his screen (the post's window); the step waits till he folds it
+    //   letter Варта, що лишилась seal bruni :: …   signed in words with that sender's own seal (one who writes but is no person of the world)
     //   bird gone                           a puff of feathers
+    //   bird wear <look> [4]                its colours go over into that look of assets/story/looks, slowly (StoryBird.Wear: a few repaints)
     //   bird come … nowait                  the scene goes on as it flies in (then «bird circle»: it never sits)
     //   bird come … as hugin|munin          your own raven's picture (plain black, its size asleep); … look <id> another look of assets/story/looks
     //   bird come … at <place> side -0.5    on top of a thing, this far right (below zero: left) of its middle as you see it
     //   bird shoulder [hugin|munin]         onto your shoulder (its kind's); then «own <kind> here» makes it yours
+    //   falcon <name> come [from] [up] land [<place>] [dive] [nowait] · … circle   a sister's falcon (Falcon), several by name:
+    //                                       flies in and lands (waits till it stands), or circles over you
+    //   falcon <name> land [<place>] [dive] · circle · leave [<place>|up] · gone
+    //   falcon <name> skim <from> <to> [run 20] [up 35]   the low run: made high over «from», straight to «to», the last «run» m low over the
+    //                                       ground, never braking (does not wait); over «to»: «falcon <name> become <who> stride go <place>» —
+    //                                       gone behind its feathers at that speed, the person walks on to the place
+    //   falcon <name> become <who> · falcon <name> from <who>   on its feet it turns into a person (made there for the scene) ·
+    //                                       a person turns into a falcon standing there; falcon.<name>: where it is (StoryScenesFalcon)
+    //   lane <name> <from> <toward> [clear 45]   a straight clear line for the scene; lane.<name>@<m>[@<side>]: a place on it (StoryScenesLane)
     //   say hugin|munin <текст>             your own raven says it (only if it is on your shoulder)
     //   msg <текст>                         a line in the middle of the screen
     //   camera <from> [look <what>] [blend 2] [fov 50]   a shot (StoryCamera): from a place, «behind», «over» or «face» (close up);
@@ -56,6 +76,9 @@ namespace HuginWhispers
     //   camera shoulder <a> <b> [left|right] over a's shoulder at b · camera two <a> <b> [left|right]   both from the side; a scene keeps to
     //                                       one side of the line between two (the 180° rule) unless a line says left|right
     //   … push <m> <s> [wait]               on these three: the lens goes m nearer over s seconds (all the camera's words: StoryScenesCamera)
+    //   camera eyes npc.<who> [look <what>] [cut|blend s]   through that person's eyes: from its head at what it looks at (none: the player)
+    //   camera eyes [cut|blend s] [live n]  through his own eyes: from his head, where his head looks (turned by «player look <place> [s]» — s: how slow
+    //                                       the turn, 2–3 for a look round a room); he and the ravens on his shoulder are not drawn while it is on
     //   camera off [blend 1.5]              the camera back to the player (also when the scene ends or stops)
     //   bars on|off · sub <текст>           the black bars; a subtitle (waits while it is read)
     //   weather <env> [s] [all] · weather off [all]     forced weather (ThunderStorm, Rain, Misty, Clear …); off when the scene ends or stops
@@ -63,7 +86,12 @@ namespace HuginWhispers
     //   thor [all] · shake <strength> [all]
     //                                       «all»: in every game of the world, round each player
     //   fade out|in [1.5]                   the whole picture to black and back (waits)
-    //   player face <place> · player emote <gesture>|stop    the player himself turns softly on the spot and looks there (does not wait) / a gesture
+    //   glow <0..1> [1.5]                   the light of a memory from the picture's edges, breathing (StoryScreen.Glow; does not wait; the end takes it off)
+    //   dim <0..1> [1.5]                    the picture darkened, not black: under a vision (StoryScreen.Dim; does not wait; the end takes it off)
+    //   memory <picture> [x y] [w] [4]      a memory over the picture: a see-through picture of assets/story/memories comes, drifts, goes (StoryScreen.Memory;
+    //                                       x y its middle and w its width as shares of the screen — 0.5 0.45 0.5; seconds it holds; does not wait)
+    //   player face <place> · player emote <gesture> [loop]|stop    the player himself turns softly on the spot and looks there (does not wait) / a
+    //                                       gesture of the game; «loop» — it lasts (sit: he sits) till «stop» or the scene's end
     //   player stop [0.8]                   the walk on now ends where he is, slowing over the seconds (waits)
     //   player back <m>                     he steps back that far, slowly, facing as he faces (waits; a clip of ours fades first)
     //   player face <place> slow            the same turn, slower
@@ -101,17 +129,27 @@ namespace HuginWhispers
     //   drop <item> <place|player|npc.x>    a thing left on the ground there (networked, anyone may pick it up)
     //   npc <who> take                      a person of the story into the scene (who: its template id or its tag; the
     //                                       nearest loaded one): it stops what it does — its mind's Scene layer, over all
-    //   npc <who> go <place|player|bird|npc.x> [run] [near 1.6]   walks there — runs when farther than RunFrom m (waits till it is near: NpcMind.Reach)
+    //   npc <who> go <place|player|bird|npc.x> [run|walk] [near 1.6]   walks there — runs when farther than RunFrom m, never with «walk» (waits till it is near: NpcMind.Reach)
     //   npc <who> go <place.piece> before <m> [run]   to that spot exactly, square before the thing's middle on its outer side: a clip that follows
     //                                       touches it. Not come to it: said (the log, the scene check's VERDICT)
+    //   npc <who> go … nowait               the scene goes on as it walks (it speaks walking, the camera looks elsewhere)
+    //   npc <who> arrive [seconds=12]       waits till that person's walk is over — one begun without waiting («go … nowait», a falcon's «become … stride go <place>»)
     //   npc <who> face player|bird|<place>  turns and keeps looking (does not wait)
     //   npc <who> say <текст>               a line over it, as it says it to you (waits while it is read)
+    //   npc <who> says <текст>              the same, and the scene goes on while it is said; «wait said» — till it is over
     //   npc <who> emote <gesture> [loop]    a gesture (wave, bow, kneel, cry…; loop: held)
+    //   npc <who> clip <clip>|none [on npc.<x>|player [m=0.8]]   one of our clips on that person; «on»: a clip of two — written for one who stands m
+    //                                       before it face to face on level ground, its hands carried to where the other really stands (BodyAnimator.Mate)
     //   npc <who> mark <name> [seconds]     waits till the clip on that person passes that «mark» (BodyClips), at most 30 s: never a «wait» that counts a clip's seconds
     //   npc <who> sit <place> · stay · free sits by a place · stands · back to its own day (free: «вільно», a standing word ends too)
     //   do npc <who> hold <place> …         a word that outlives the scene (StoryHold): what it does when the scene lets it go
     //   do npc <who> free                   the standing word gone; one the scene holds stays the scene's till its end
-    //   npc <who> spawn <place>             made for this scene at a place (its template id), facing you, coming in slowly
+    //   npc <who> spawn <place> [whole]     made for this scene at a place (its template id), facing you, coming in slowly; «whole»: there at once, never
+    //                                       see-through (behind a black screen: «fade out» before it)
+    //   npc <who> sparks [seconds]          it stands whole while dark yellow sparks rise out of it, and is gone behind their last burst (NpcSparks)
+    //   npc <who> spawn <place> behind <m>  … that far behind the place as the camera sees it: out of the picture, at your back (chapter 1, the one who
+    //                                       watches from the forest's edge: «npc stranger spawn player behind 24 whole»); on dry ground, not in a trunk
+    //                                       or a rock (StoryScenesCast.SpawnBehind); nowhere to stand: skipped, a note
     //   npc <who> spawn <place> at x y z    … always at that spot of the place (metres in its blueprint's frame), on its floor
     //                                       (StoryScenesCast.SpawnIn s); not kept in the
     //                                       world — fades away when the scene ends or stops (NpcFade)
@@ -130,6 +168,7 @@ namespace HuginWhispers
             public string Id = "", From = "", NeedsText = "", Place = "", Check = "", Test = "";
             public bool Alone; // («alone: yes»: the other players not drawn here while it plays — StoryAlone)
             public bool Roams; // («roams: yes»: it goes with the player — no stop for walking off from where it began)
+            public bool Away;  // («aside: away»: the people it does not hold leave the frame, not only step off the player — StoryAside)
             public List<Cond> Needs;
             public float Guard = -1f; // (the quiet round's full size: «guard:»; none (-1) — by the place's size, StoryHush.MaxFor; 0 — off)
             public readonly List<Step> Steps = new List<Step>();
@@ -139,7 +178,7 @@ namespace HuginWhispers
         internal static readonly List<SceneDef> Scenes = new List<SceneDef>();
         internal static readonly List<string> Errors = new List<string>();
         internal static readonly List<string> Recent = new List<string>();
-        internal static float Retry = 20f, FarStop = 60f, Seen = 100f, StepMax = 30f;
+        internal static float Retry = 20f, FarStop = 60f, Seen = 100f, StepMax = 30f, LetterMost = 300f; // (LetterMost: s a letter may lie open before the scene goes on: «letter»)
         private const string Rpc = "RavenWatch_StoryAct";
 
         private static bool _loaded;
@@ -147,6 +186,9 @@ namespace HuginWhispers
         private static int _at = -1;
         private static float _stepAt, _until, _waitFor;
         private static Vector3 _anchor;
+        // the scene itself put him elsewhere (StoryWalk.Put: under the black, a held walk): «walked off from where it plays» is measured from there
+        // (2026-11-14, the ambush: «player go» put him 90 m off under the black, and the next frame stopped the scene as if he had walked away)
+        internal static void MovedTo(Vector3 at) { if (_now != null) _anchor = at; }
         private static float _hurtAt = -100f;
         private static StoryBird _bird;
         private static readonly Dictionary<string, float> _stopped = new Dictionary<string, float>(); // a scene stopped: not before Retry
@@ -175,7 +217,7 @@ namespace HuginWhispers
             {
                 if (p.IsDead() || !Near(p, s) || Missing(p, s) != null) return; // (its people: till the old lock runs out, or the first of them would stop it)
                 resume = Mathf.Max(resume, StoryQuests.Committed(p, id)); // (its pulse may be two seconds old: a lasting step never twice)
-                if (StoryQuests.Mine(id)) { _handing = true; if (Play(s, resume)) { StoryWatch.Resumed(); Note("сцену «" + id + "» перейнято з кроку " + (resume + 1)); return; } _handing = false; }
+                if (StoryQuests.Mine(id)) { _handing = true; if (Play(s, resume)) { StoryWatch.Resumed(); Track("сцену «" + id + "» перейнято з кроку " + (resume + 1)); return; } _handing = false; }
                 return;
             }
             float stoppedAt;
@@ -195,7 +237,7 @@ namespace HuginWhispers
                 string key = id + ":" + needs + ":" + (why != null && why.IndexOf(':') > 0 ? why.Substring(0, why.IndexOf(':')) : why);
                 if (_toldNeeds != key)
                 {
-                    _toldNeeds = key; Note("сцена «" + id + "» чекає: " + needs + (why != null ? " — " + why : ""));
+                    _toldNeeds = key; Track("сцена «" + id + "» чекає: " + needs + (why != null ? " — " + why : ""));
                     if (Time.time - LocTouch.UsedAt < 5f && Senses.Pressed(p)) RavenMsg.Center(p, Lang.T("Не зараз: поруч ворог.")); // (you touched it and nothing happened: why — the scene starts once it is quiet)
                 }
                 return;
@@ -204,15 +246,15 @@ namespace HuginWhispers
             if (foe != null) // (it would stop at once: it waits for the fight's end as for its needs)
             {
                 if (_toldNeeds == null || !_toldNeeds.StartsWith(id + ":")) _needsSince = Time.time;
-                if (_toldNeeds != id + ":fight") { _toldNeeds = id + ":fight"; Note("сцена «" + id + "» чекає: бій — " + Localization.instance.Localize(foe.m_name) + " поруч"); }
+                if (_toldNeeds != id + ":fight") { _toldNeeds = id + ":fight"; Track("сцена «" + id + "» чекає: бій — " + Localization.instance.Localize(foe.m_name) + " поруч"); }
                 return;
             }
-            if (_toldNeeds != null && _toldNeeds.StartsWith(id + ":")) { _toldNeeds = null; Note("сцена «" + id + "» дочекалась за " + (Time.time - _needsSince).ToString("0") + " с"); }
+            if (_toldNeeds != null && _toldNeeds.StartsWith(id + ":")) { _toldNeeds = null; Track("сцена «" + id + "» дочекалась за " + (Time.time - _needsSince).ToString("0") + " с"); }
             string missing = Missing(p, s);
             if (missing != null)
             {
                 Vector3 place;
-                if (s.Place.Length > 0 && StoryWhere.Find(s.Place, out place) && Utils.DistanceXZ(place, p.transform.position) > FarStop) _missingSince = Time.time; // (counted only while the player is there)
+                if (s.Place.Length > 0 && StoryWhere.Find(s.Place, out place) && StoryWhere.Apart(place, p.transform.position) > FarStop) _missingSince = Time.time; // (counted only while the player is there)
                 if (_toldMissing != id + missing) { _toldMissing = id + missing; _missingSince = Time.time; Note("сцена «" + id + "» чекає: «" + missing + "» нема поруч або зайнята"); }
                 else if (Time.time - _missingSince > CastWait && StoryQuests.Mine(id)) { _toldMissing = null; Note("«" + missing + "» так і не прийшла — сцена без неї"); Finish(p, s, 0); } // (never stuck for good: its lasting steps done, the story goes on)
                 return;
@@ -229,7 +271,7 @@ namespace HuginWhispers
         internal static bool Near(Player p, SceneDef s)
         {
             Vector3 place;
-            return s.Place.Length == 0 || !StoryWhere.Find(s.Place, out place) || Utils.DistanceXZ(place, p.transform.position) <= FarStop;
+            return s.Place.Length == 0 || !StoryWhere.Find(s.Place, out place) || StoryWhere.Apart(place, p.transform.position) <= FarStop;
         }
 
         // ---------------------------------------------------------------- once is once
@@ -276,11 +318,12 @@ namespace HuginWhispers
             if (p == null || s == null) return false;
             Vector3 place;
             if (p.IsTeleporting()) { Note("сцена «" + s.Id + "» не почалась: гравець ще в порталі"); return false; }
-            if (s.Place.Length > 0 && StoryWhere.Find(s.Place, out place) && Utils.DistanceXZ(place, p.transform.position) > FarStop)
+            if (s.Place.Length > 0 && StoryWhere.Find(s.Place, out place) && StoryWhere.Apart(place, p.transform.position) > FarStop)
             { NoteOnce(s.Id + ":far", "сцена «" + s.Id + "» не почалась: гравець за " + Mathf.RoundToInt(Utils.DistanceXZ(place, p.transform.position)) + " м від «" + s.Place + "»"); return false; }
             if (_now != null) Stop("інша сцена");
             _toldOnce = null;
             _now = s; _at = Mathf.Clamp(from, 0, s.Steps.Count) - 1; _anchor = p.transform.position; _hurtAt = Senses.HurtByFoeAt;
+            _fightAt = -1f; _fightAll = 0f; _calmSince = -1f; _birdRinged = false; _saidUntil = 0f; // (FightWait: none waited yet; «wait said»: no line of this scene yet)
             Outcomes.Clear(); _endedAt = -1;
             _ownOff = _handing; _handing = false; _server = StoryQuests.OwnerOf(s.Id) != null;
             StoryWatch.Begin(s);
@@ -289,8 +332,8 @@ namespace HuginWhispers
             StoryAudio.Prepare(s); // (its files read now: its steps find them there)
             if (from > 0) SetUp(p, s, from);
             _go = false; _held = false;
-            Note("сцена «" + s.Id + "» почалась" + (from > 0 ? " з кроку " + (from + 1) : ""));
-            if (Plugin.Waiting) { Plugin.RunOutVisit(); Note("сцена «" + s.Id + "»: ворон гри зі словами, яких ніхто не вислухав, відлітає — сцена не чекає"); }
+            Track("сцена «" + s.Id + "» почалась" + (from > 0 ? " з кроку " + (from + 1) : ""));
+            if (Plugin.Waiting) { Plugin.RunOutVisit(); Track("сцена «" + s.Id + "»: ворон гри зі словами, яких ніхто не вислухав, відлітає — сцена не чекає"); } // (the scene's ordinary course, not a step done otherwise: as a Note it stood in a check's VERDICT beside the real one, 2026-11-12)
             StoryBus.Raise("scene_start", s.Id, 0);
             Next();
             return true;
@@ -343,11 +386,12 @@ namespace HuginWhispers
             _now = null; _at = -1;
             Let("its claim", () => StoryQuests.Unclaim(id));
             Let("its watchers", () => StoryWatch.End(true, reached));
-            Let("the bird", () => { HandOver(true); if (_bird != null) Act("gone", ""); });
+            Let("the bird", () => { HandOver(true); if (_bird != null && !BirdHomeAtEnd()) Act("gone", ""); }); // (a place's raven: home)
             _bird = null;
+            Let("the falcons", () => FalconsEnd(true));
             Release(true);
             Count(StopsOf, id); LastStopOf[id] = why;
-            Note("сцена «" + id + "» перервана: " + why);
+            Track("сцена «" + id + "» перервана: " + why);
             StoryBus.Raise("scene_stop", id, 0);
         }
 
@@ -358,10 +402,11 @@ namespace HuginWhispers
             _now = null; _at = -1;
             StoryQuests.Commit(Player.m_localPlayer, id, 0); // (played to the end: nothing left to finish)
             Let("its watchers", () => StoryWatch.End(false, -1));
-            Let("the bird", () => { HandOver(true); if (_bird != null) Act("free", ""); }); // (left where it is, nobody's now: it flies off by itself a little later — StoryBird.Release)
+            Let("the bird", () => { HandOver(true); if (_bird != null && !BirdHomeAtEnd()) Act("free", ""); }); // (left where it is, nobody's now: it flies off by itself a little later — StoryBird.Release; a place's raven: home)
             _bird = null;
+            Let("the falcons", () => FalconsEnd(false));
             Release(false);
-            Note("сцена «" + id + "» скінчилась");
+            Track("сцена «" + id + "» скінчилась");
             StoryBus.Raise("scene_done", id, 0);
         }
 
@@ -369,6 +414,10 @@ namespace HuginWhispers
         // walk, look, gait, gesture, the others hidden, the camera and the screen, its weather; then the modules' own (Ends: what is heard)
         internal static readonly List<Action<bool>> Ends = new List<Action<bool>>();
         internal static readonly List<Action<bool>> OwnEnds = new List<Action<bool>>(); // (what a module holds of the director himself: given back too when a scene of the server goes on without him)
+        // a creature the scene itself plays (a module's: StoryBeasts — the skeleton that walks at you, the boar): no fight of yours, it neither
+        // stops the scene nor keeps it waiting (FoeNear, FightWait); the user 2026-11-18
+        internal static readonly List<Func<Character, bool>> Ours = new List<Func<Character, bool>>();
+        private static bool OursOne(Character c) { foreach (Func<Character, bool> f in Ours) if (f(c)) return true; return false; }
         private static bool _weather, _weatherAll; // (this scene forced the weather: off with it — here, or in every game)
 
         // Each part alone (Let): the scene is already over and nobody calls this again, so a fault in one must not leave the camera, the black or the keys taken
@@ -376,15 +425,17 @@ namespace HuginWhispers
         {
             Player p = Player.m_localPlayer;
             Let("its people", FreeCast);
+            Let("its lanes", _lanes.Clear);
             Let("the thing in his hand", () => StoryProps.Put(p));
             Let("his gesture", () => Gestures.SceneEnd(p, PoseFade));
+            Let("his sitting", () => StopEmote(p));
             Let("his walk", StoryWalk.Stop);
             Let("his look", StoryLook.End);
             Let("his turns", () => StoryGait.Turns(p, false));
             Let("the others hidden", StoryAlone.End);
             Let("his gait", () => StoryGait.Set(p, "none"));
             if (broken) { Let("the camera", StoryCamera.Reset); Let("the screen", StoryScreen.Reset); } // (the player gets the camera back at once)
-            else { Let("the camera", () => StoryCamera.Off(1f)); Let("the screen", () => { StoryScreen.Bars(false); StoryScreen.Fade(false, 1f); }); } // (a scene that forgot «camera off» or «fade in»: given back softly)
+            else { Let("the camera", () => StoryCamera.Off(1f)); Let("the screen", () => { StoryScreen.Bars(false); StoryScreen.Fade(false, 1f); StoryScreen.GlowOff(); StoryScreen.DimOff(); }); } // (a scene that forgot «camera off», «fade in» or «glow 0»: given back softly)
             Let("the line of its shots", _lines.Clear); // (which side of two in talk its camera worked from: StoryScenesCamera)
             bool weather = _weather, all = _weatherAll;
             _weather = _weatherAll = false;
@@ -404,7 +455,50 @@ namespace HuginWhispers
         private static Character FoeNear(Player p)
         {
             Character foe = Senses.NearestFoe; // (the same foe «calm» asks of: Senses.Pressed; a boss too)
-            return foe != null && !foe.IsDead() && Vector3.Distance(foe.transform.position, p.transform.position) < FoeStop ? foe : null;
+            return foe != null && !foe.IsDead() && !OursOne(foe) && Vector3.Distance(foe.transform.position, p.transform.position) < FoeStop ? foe : null; // (the scene's own creature: none)
+        }
+
+        // A scene that goes with him (roams: the Hall's letter, a raven's call) is not lost to a fight (the user 2026-11-17: the letter's raven
+        // never came and its letter was skipped as the greydwarfs came, the stage passed with nothing read): it stops on the step it is at, its
+        // bird circles over him (as the post's raven waits by one in a fight), and calm again for CalmFor s it goes on from that very step,
+        // its clocks moved by the wait, its bird back to what it was told. A fight over FightMost s in all: stopped — the bird home (a place's
+        // raven) or gone, the stage stands and plays it again after Retry s, to whoever its server gives it then (maybe another).
+        // Only while it leaves him his keys (no shot, bars, black: StoryCamera.TakesPlayer; no walk: StoryWalk.On) — one that holds them stops as any scene (a server's: goes
+        // on without his steps, and then never waits). Death: stopped (Tick). A fight here: a foe within FoeStop m (once waiting, within FoeStop +
+        // CalmMore: one stepping on the edge does not toss the bird between its ring and him), or a blow in the last HurtCalm s. Calm again, the
+        // step has at least ResumeRoom s more (its bird must get back before him). Cost: a distance and a few numbers a frame while it plays.
+        internal static float CalmFor = 2f, FightMost = 300f, HurtCalm = 4f, CalmMore = 4f, ResumeRoom = 12f, FightRingR = 6f, FightRingUp = 5f;
+        private static float _fightAt = -1f, _fightAll, _calmSince = -1f;
+        private static bool FightWait(Player p)
+        {
+            Character foe = Senses.NearestFoe;
+            bool fight = (foe != null && !foe.IsDead() && !OursOne(foe) && Vector3.Distance(foe.transform.position, p.transform.position) < FoeStop + (_fightAt >= 0f ? CalmMore : 0f)) || (Senses.HurtByFoeAt > _hurtAt + 0.01f && Time.time - Senses.HurtByFoeAt < HurtCalm); // (a blow since the scene began or went on: one just before it is no fight of its)
+            if (fight)
+            {
+                _calmSince = -1f;
+                if (_fightAt < 0f && (StoryCamera.TakesPlayer || StoryWalk.On)) return false; // (a shot, the bars, the black or a walk of the scene hold his keys: he could not fight — stopped as any scene)
+                if (_fightAt < 0f) { _fightAt = Time.time; Note("сцена «" + _now.Id + "» чекає, поки скінчиться бій" + (_bird != null ? ": птах кружляє над гравцем" : "")); }
+                BirdWaits(true, p); // (asked each frame: a bird still on its way through a roof circles once it is out)
+            }
+            else if (_fightAt >= 0f && _calmSince < 0f) _calmSince = Time.time;
+            if (_fightAt < 0f) return false;
+            if (_fightAll + Time.time - _fightAt > FightMost) { Stop("бій не скінчився за " + Mathf.RoundToInt(FightMost) + " с: етап спробує знову"); return true; }
+            if (_calmSince < 0f || Time.time - _calmSince < CalmFor) return true;
+            float lost = Time.time - _fightAt; // (calm again: on from that step)
+            _fightAll += lost; _fightAt = -1f; _calmSince = -1f;
+            _stepAt = Mathf.Max(_stepAt + lost, Time.time - StepMax + ResumeRoom); if (_limit > 0f) _limit = Mathf.Max(_limit + lost, Time.time + ResumeRoom);
+            if (_waitFor > 0f) _waitFor += lost; if (_until > 0f) _until += lost;
+            _hurtAt = Senses.HurtByFoeAt; // (that fight's blows are over: not a «удар» for the old stop below)
+            BirdWaits(false, p);
+            Note("бій скінчився: сцена «" + _now.Id + "» далі");
+            return false;
+        }
+
+        // the people it holds: still its — the ones made beforehand too (unrenewed, the sisters' locks ran out while they waited and the scene let
+        // them go the moment they came, 2026-11-14); every LockRenew s
+        private static void RenewLocks()
+        {
+            if ((_cast.Count > 0 || _ready.Count > 0) && Time.time >= _renewAt) { _renewAt = Time.time + LockRenew; foreach (NpcActor a in _cast.Values) Lock(a, true); foreach (NpcActor a in _ready.Values) Lock(a, true); }
         }
 
         // every frame (StoryQuests.Tick)
@@ -414,6 +508,11 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             if (p == null) { Stop("гравця нема"); return; } // (the same full stop as any other: its people let go, the camera given back)
             StoryAlone.Tick();
+            if (_now.Roams && !_ownOff) // (a scene that goes with him — a letter: it waits a fight out, its bird over him; one already given back to him goes its old way)
+            {
+                if (p.IsDead()) { Stop("смерть"); return; } // (death stops it whole, server's or not: never on through his steps unseen — the letter skipped)
+                if (FightWait(p)) { if (_now != null) { StoryQuests.Renew(_now.Id); StoryWatch.Tick(); RenewLocks(); } return; } // (still his: its claim and its people renewed)
+            }
             if (!_ownOff) // (one's own scene ends with these; a scene of the server only gives him back what it held of him, and goes on)
             {
                 string hit = p.IsDead() ? "смерть" : Senses.HurtByFoeAt > _hurtAt + 0.01f ? "удар" : null;
@@ -421,18 +520,20 @@ namespace HuginWhispers
                 if (foe != null) hit = "ворог поруч: " + Localization.instance.Localize(foe.m_name);
                 if (hit != null) { if (_server) OwnOff(p, hit); else { Stop(hit); return; } }
             }
-            if (!_now.Roams && Utils.DistanceXZ(_anchor, p.transform.position) > FarStop) { Stop("гравець відійшов від місця сцени"); return; } // (from where it began: the bird comes from afar; a scene that roams goes with him)
+            if (StoryWalk.On) _anchor = p.transform.position; // (the scene itself walks him: not his walking off, however far — the review 2026-11-14)
+            if (!_now.Roams && Utils.DistanceXZ(_anchor, p.transform.position) > FarStop) { Stop("гравець відійшов від місця сцени"); return; } // (from where it began, or where the scene itself put him: MovedTo — the bird comes from afar; a scene that roams goes with him)
             if (!_ownOff) StoryLook.Tick(p);
             HandOver(false);
             StoryQuests.Renew(_now.Id);
             StoryWatch.Tick();
-            if (_cast.Count > 0 && Time.time >= _renewAt) { _renewAt = Time.time + LockRenew; foreach (NpcActor a in _cast.Values) Lock(a, true); } // (the people it holds: still its)
+            RenewLocks();
             if (_held) { if (!_go) return; _go = false; _held = false; Next(); return; } // (step by step: the author's «Далі»)
+            if (_at < 0 || _at >= _now.Steps.Count) { Stop("сцена не почалась як слід: нема кроку " + (_at + 1)); return; } // (its beginning broke off before its first step — Play threw: stopped whole here, not thrown at every frame with every stage of the story standing behind it)
             Step cur = _now.Steps[_at];
             if (Time.time > (_limit > 0f ? _limit : _stepAt + Mathf.Max(StepMax, _waitFor - _stepAt + 5f))) // (its own limit, else the general one on its clock)
             {
                 if (cur.Kind != null && cur.Kind.Late != null) cur.Kind.Late(cur);
-                Note("крок «" + cur.Line + "» задовгий — далі"); Count(LatesOf, _now.Id); LastLateOf[_now.Id] = cur.Line;
+                Track("крок «" + cur.Line + "» задовгий — далі"); Count(LatesOf, _now.Id); LastLateOf[_now.Id] = cur.Line;
                 EndStep("CUT OFF at its time limit");
                 Next();
                 return;
@@ -452,6 +553,7 @@ namespace HuginWhispers
             Let("the screen", StoryScreen.Reset);
             Let("the thing in his hand", () => StoryProps.Put(p));
             Let("his gesture", () => Gestures.SceneEnd(p, PoseFade));
+            Let("his sitting", () => StopEmote(p));
             Let("his walk", StoryWalk.Stop);
             Let("his look", StoryLook.End);
             Let("his gait", () => StoryGait.Set(p, "none"));
@@ -470,6 +572,10 @@ namespace HuginWhispers
         internal static readonly Dictionary<string, int> StopsOf = new Dictionary<string, int>(), LatesOf = new Dictionary<string, int>();
         internal static readonly Dictionary<string, string> LastStopOf = new Dictionary<string, string>(), LastLateOf = new Dictionary<string, string>();
         internal static int CountOf(Dictionary<string, int> d, string id) { int c; return d.TryGetValue(id, out c) ? c : 0; }
+        // the steps that threw as they began and so did nothing, each with what it threw (Begin). The scene goes on without them, and it looked
+        // whole: on 2026-11-11 every camera step of a scene threw, it played with no shot at all, and its check's VERDICT said nothing of it —
+        // the log's line was an ordinary one. The check counts these before and after its run (StudioScene); kept short: the last 40
+        internal static readonly List<string> Broke = new List<string>();
         // what each step of the scene played last came to (its index → «4.1 s: ran 14 m, stopped 0.3 m off»), said as the step ends: its kind's Done,
         // how long it took, cut off or not (EndStep). Read by the studio's scene check (a row a step, the VERDICT's lines under their step) and written to
         // the log — review 2 2026-11-10: «walk HELD» was known, but whether she ran, how far, how near she stopped had to be read off the frames
@@ -488,7 +594,7 @@ namespace HuginWhispers
             }
             string text = F(Time.time - _stepAt) + " s" + (!string.IsNullOrEmpty(said) ? ": " + said : "") + (how != null ? " — " + how : "");
             Outcomes[_at] = text;
-            Note("     → " + text);
+            Track("     → " + text);
         }
 
         // what a clip step came to: the clip of ours on that body now and how far it is in (one read)
@@ -560,8 +666,8 @@ namespace HuginWhispers
                 if (_at >= _now.Steps.Count) { Done(); return; }
                 Step st = _now.Steps[_at];
                 _stepAt = Time.time; _limit = 0f; _waitFor = 0f; _until = 0f; // (the step's own clock, clean: a step that knows how long it may take sets its own)
-                if (st.If != null && !StoryCond.All(p, st.If)) { Note("  " + (_at + 1) + ". пропущено (умова): " + st.Line); _endedAt = _at; continue; } // (never begun: nothing came of it)
-                Note("  " + (_at + 1) + ". " + st.Line);
+                if (st.If != null && !StoryCond.All(p, st.If)) { Track("  " + (_at + 1) + ". пропущено (умова): " + st.Line); _endedAt = _at; continue; } // (never begun: nothing came of it)
+                Track("  " + (_at + 1) + ". " + st.Line);
                 Begin(p, st);
                 if (_now != null && st.Kind != null && st.Kind.Lasting) StoryQuests.Commit(p, _now.Id, _at + 1); // (begun for good: the steps from the next one on are what a stop leaves)
                 if (_now != null && (Waiting(p) || StepHolds)) return; // (step by step: one at a time, even the ones that do not wait)
@@ -593,12 +699,32 @@ namespace HuginWhispers
             return text.Substring(pos).Trim();
         }
 
+        // «letter <від кого> [seal <печатка>] :: <текст>» → { from, text, seal (null: none named) }; null: not so written
+        private static string[] LetterParts(string text)
+        {
+            string rest = Rest(text, 1);
+            int sep = rest.IndexOf("::", StringComparison.Ordinal);
+            if (sep <= 0) return null;
+            string from = rest.Substring(0, sep).Trim(), words = rest.Substring(sep + 2).Trim(), seal = null;
+            int si = from.LastIndexOf(" seal ", StringComparison.Ordinal);
+            if (si > 0) { seal = from.Substring(si + 6).Trim(); from = from.Substring(0, si).Trim(); }
+            return from.Length > 0 && words.Length > 0 && (seal == null || seal.Length > 0) ? new[] { from, words, seal } : null;
+        }
+
+        // a story person's or a seal's id: Latin letters, digits, «_» (a name in words is not)
+        private static bool LatinId(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            foreach (char ch in s) if (ch > 127 || !(char.IsLetterOrDigit(ch) || ch == '_')) return false;
+            return true;
+        }
+
         private static void Begin(Player p, Step st)
         {
             StepKind k = st.Kind; // (its verb's own entry, where it has verbs)
             if (k == null || k.Begin == null || (_ownOff && k.Seen == StepSeen.Own)) return;
             try { k.Begin(p, st); }
-            catch (Exception e) { Note("крок «" + st.Line + "» зламався: " + e.Message + " — далі"); Story.Log("scene step: " + e); } // (the scene goes on: a step's own limit never comes for one that never began)
+            catch (Exception e) { Track("крок «" + st.Line + "» зламався: " + e.Message + " — далі"); Story.Log("scene step: " + e); Broke.Add("«" + st.Line + "»: " + e.Message); } // (the scene goes on: a step's own limit never comes for one that never began)
         }
 
         // the player himself in a scene: turned to look at something, a gesture (his own game: he is the owner)
@@ -666,7 +792,22 @@ namespace HuginWhispers
         private static string _toldOnce;
         private static void NoteOnce(string key, string s) { if (_toldOnce == key) return; _toldOnce = key; Note(s); }
 
+        // Two kinds of a director's line. Track: the scene's ordinary course — it began, a step, what the step came to, it ended. Note: the scene did
+        // NOT do as its file says — a step skipped for want of a place, a thing taken from a piece that is not there, a shot from another side.
+        // A note is also kept in Amiss with the step it fell in (the last 40): the studio's scene check counts them before and after its run and says
+        // each in its VERDICT. Till 2026-11-12 both were one line of the log: «prop: «prologue_house.knyha» нема поруч» stood among the track's lines
+        // while two days of grip runs measured a book taken from before the holder, and the VERDICT said nothing of it. A new line that is the
+        // ordinary course is a Track; anything else a Note — so what is forgotten shows in a check rather than hides.
+        internal static readonly List<string> Amiss = new List<string>();
+        internal static int AmissSaid; // (how many were ever said: the list keeps only the last 40, so a check counts by this)
         internal static void Note(string s)
+        {
+            AmissSaid++;
+            Amiss.Add((_now != null ? "«" + _now.Id + "» " + (_at >= 0 && _at < _now.Steps.Count ? (_at + 1) + ". " + _now.Steps[_at].Line + " — " : "") : "") + s); // (whose step: the story may begin the next scene while a check still measures the tail of its own)
+            if (Amiss.Count > 40) Amiss.RemoveAt(0);
+            Track(s);
+        }
+        internal static void Track(string s)
         {
             Recent.Add(DateTime.Now.ToString("HH:mm:ss") + "  " + s);
             if (Recent.Count > 60) Recent.RemoveAt(0);

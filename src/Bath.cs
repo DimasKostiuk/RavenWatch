@@ -363,6 +363,9 @@ namespace HuginWhispers
                 if (!wet) continue;
                 ZNetView nv = pc.GetComponent<ZNetView>();
                 if (nv == null || !nv.IsValid() || pc.gameObject.name.IndexOf("_planned", System.StringComparison.Ordinal) >= 0) continue; // (really built: not the ghost you are placing, not a mod's plan of one — PlanBuild)
+#if RAVEN_NPC
+                if (LocState.Absent(nv)) continue; // (a piece of a place of the story its state has not now: no tub — the game's list of pieces has it all the same)
+#endif
                 WaterVolume w = pc.GetComponentInChildren<WaterVolume>();
                 Collider c = w != null ? w.GetComponent<Collider>() : null;
                 if (c == null) continue;

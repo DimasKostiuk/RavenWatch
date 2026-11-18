@@ -16,6 +16,8 @@ namespace HuginWhispers
     // asks for them. Parts name them "asset/<set>/<file>" (spaces turned into '_'), so a model file stays one word per part.
     // The files the mod's own models use are built into the DLL (assets/fbx/<file>.fbx → RavenWatch.fbx.<file>.fbx,
     // found by the file's name); any other shows nothing where the files are missing. A file in the folder wins.
+    // A skinned model (a mesh on an armature: its LimbNodes and the Skin's clusters) comes out skinned (FbxLook.Skin): its bones
+    // laid at their joints, unturned, under «Bones»; who moves them is its owner (the sisters' falcon: Falcon).
     internal static class WsAssets
     {
         internal const string Prefix = "asset/";
@@ -329,6 +331,9 @@ namespace HuginWhispers
             Dictionary<long, FbxNode> videoOf = new Dictionary<long, FbxNode>(); // texture → its video (file, maybe embedded)
             Dictionary<long, FbxNode> normOf = new Dictionary<long, FbxNode>(); // material → its normal map
             Dictionary<long, FbxNode> emitOf = new Dictionary<long, FbxNode>(); // material → its glow map (runes, eyes that shine)
+            Dictionary<long, long> skinOf = new Dictionary<long, long>();          // geometry → its Skin deformer
+            Dictionary<long, List<long>> clustersOf = new Dictionary<long, List<long>>(); // Skin → its clusters
+            Dictionary<long, long> boneOf = new Dictionary<long, long>();          // cluster → its bone (a LimbNode model)
             if (conns != null)
                 foreach (FbxNode c in conns.Kids)
                 {
@@ -349,6 +354,9 @@ namespace HuginWhispers
                         if (prop == "DiffuseColor" || prop == "Maya|baseColor" || prop == "3dsMax|Parameters|base_color_map" || !texOf.ContainsKey(parent)) texOf[parent] = co.N;
                     }
                     else if (co.Kind == "Video" && pk == "Texture") videoOf[parent] = co.N;
+                    else if (co.Kind == "Deformer" && pk == "Geometry" && co.N.S(2) == "Skin") skinOf[parent] = child;
+                    else if (co.Kind == "Deformer" && pk == "Deformer" && co.N.S(2) == "Cluster") { List<long> l; if (!clustersOf.TryGetValue(parent, out l)) clustersOf[parent] = l = new List<long>(); l.Add(child); }
+                    else if (co.Kind == "Model" && pk == "Deformer") boneOf[parent] = child;
                 }
 
             // the file's axes and unit: to Unity (Y up, X mirrored as Unity's own importer does, metres)
@@ -378,13 +386,25 @@ namespace HuginWhispers
                 Matrix4x4 m = World(kv.Key, byId, parentModel, world) * GeoOffset(kv.Value.N);
                 List<FbxNode> mats;
                 matsOf.TryGetValue(kv.Key, out mats);
-                Mesh mesh = BuildMesh(geo, m, up, upS, front, frontS, coord, coordS, toMetres, mats != null ? mats.Count : 1);
+                long skinId;
+                bool skinned = skinOf.TryGetValue(geo.L(0), out skinId) && clustersOf.ContainsKey(skinId);
+                List<int> corners = skinned ? new List<int>() : null;
+                Mesh mesh = BuildMesh(geo, m, up, upS, front, frontS, coord, coordS, toMetres, mats != null ? mats.Count : 1, corners);
                 if (mesh == null) continue;
                 mesh.name = kv.Value.N.S(1);
                 GameObject part = new GameObject(kv.Value.N.S(1));
                 part.transform.SetParent(root.transform, false);
-                part.AddComponent<MeshFilter>().sharedMesh = mesh;
-                MeshRenderer mr = part.AddComponent<MeshRenderer>();
+                Renderer mr;
+                if (skinned)
+                {
+                    Skin skin = new Skin { Up = up, UpS = upS, Front = front, FrontS = frontS, Coord = coord, CoordS = coordS, Scale = toMetres };
+                    mr = skin.Make(part, root.transform, mesh, corners, clustersOf[skinId], boneOf, byId, parentModel, world);
+                }
+                else
+                {
+                    part.AddComponent<MeshFilter>().sharedMesh = mesh;
+                    mr = part.AddComponent<MeshRenderer>();
+                }
                 Material[] ms = new Material[mesh.subMeshCount];
                 for (int i = 0; i < ms.Length; i++)
                 {
@@ -404,6 +424,90 @@ namespace HuginWhispers
             }
             if (made == 0) { UnityEngine.Object.Destroy(root); throw new Exception("no meshes"); }
             return root;
+        }
+
+        // A skinned mesh: every LimbNode of the file a bone, laid at its joint and unturned (the file's own bone turns are not
+        // kept: the X mirror into Unity's axes would twist them; the owner turns the bones in the model's frame), each bone's bind
+        // pose from there, each vertex its four strongest weights (the clusters' weights are by control point: corners maps them).
+        private sealed class Skin
+        {
+            internal int Up, UpS, Front, FrontS, Coord, CoordS;
+            internal float Scale;
+
+            internal Renderer Make(GameObject part, Transform root, Mesh mesh, List<int> corners, List<long> clusters, Dictionary<long, long> boneOf,
+                Dictionary<long, Obj> byId, Dictionary<long, long> parentModel, Dictionary<long, Matrix4x4> world)
+            {
+                Transform holder = new GameObject("Bones").transform;
+                holder.SetParent(root, false);
+                List<long> ids = new List<long>();
+                Dictionary<long, Vector3> at = new Dictionary<long, Vector3>();
+                foreach (KeyValuePair<long, Obj> kv in byId)
+                {
+                    if (kv.Value.Kind != "Model" || kv.Value.N.S(2) != "LimbNode") continue;
+                    ids.Add(kv.Key);
+                    at[kv.Key] = Axes(World(kv.Key, byId, parentModel, world).MultiplyPoint3x4(Vector3.zero), Up, UpS, Front, FrontS, Coord, CoordS) * Scale;
+                }
+                Transform[] bones = new Transform[ids.Count];
+                Matrix4x4[] bind = new Matrix4x4[ids.Count];
+                Dictionary<long, int> index = new Dictionary<long, int>();
+                for (int i = 0; i < ids.Count; i++) { index[ids[i]] = i; bones[i] = new GameObject(byId[ids[i]].N.S(1)).transform; }
+                int top = 0;
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    long p;
+                    bool under = parentModel.TryGetValue(ids[i], out p) && index.ContainsKey(p);
+                    if (!under) top = i;
+                    bones[i].SetParent(under ? bones[index[p]] : holder, false);
+                    bones[i].localPosition = at[ids[i]] - (under ? at[p] : Vector3.zero);
+                    bind[i] = Matrix4x4.Translate(-at[ids[i]]); // (the part sits at the root's origin, unturned: the mesh's frame is the root's)
+                }
+
+                // the weights by control point, then the four strongest of each vertex
+                Dictionary<int, List<KeyValuePair<int, float>>> byCp = new Dictionary<int, List<KeyValuePair<int, float>>>();
+                foreach (long cl in clusters)
+                {
+                    long b; Obj co;
+                    if (!boneOf.TryGetValue(cl, out b) || !index.ContainsKey(b) || !byId.TryGetValue(cl, out co)) continue;
+                    FbxNode ixn = co.N.Kid("Indexes"), wn = co.N.Kid("Weights");
+                    int[] ix = ixn != null ? ixn.P(0) as int[] : null;
+                    double[] w = wn != null ? wn.P(0) as double[] : null;
+                    if (ix == null || w == null) continue;
+                    for (int k = 0; k < ix.Length && k < w.Length; k++)
+                    {
+                        if (w[k] <= 0.0) continue;
+                        List<KeyValuePair<int, float>> l;
+                        if (!byCp.TryGetValue(ix[k], out l)) byCp[ix[k]] = l = new List<KeyValuePair<int, float>>();
+                        l.Add(new KeyValuePair<int, float>(index[b], (float)w[k]));
+                    }
+                }
+                BoneWeight[] bw = new BoneWeight[corners.Count];
+                int bare = 0;
+                for (int v = 0; v < corners.Count; v++)
+                {
+                    List<KeyValuePair<int, float>> l;
+                    if (!byCp.TryGetValue(corners[v], out l) || l.Count == 0) { bw[v].boneIndex0 = top; bw[v].weight0 = 1f; bare++; continue; }
+                    l.Sort((x, y) => y.Value.CompareTo(x.Value));
+                    float sum = 0f;
+                    for (int k = 0; k < l.Count && k < 4; k++) sum += l[k].Value;
+                    BoneWeight one = new BoneWeight();
+                    if (l.Count > 0) { one.boneIndex0 = l[0].Key; one.weight0 = l[0].Value / sum; }
+                    if (l.Count > 1) { one.boneIndex1 = l[1].Key; one.weight1 = l[1].Value / sum; }
+                    if (l.Count > 2) { one.boneIndex2 = l[2].Key; one.weight2 = l[2].Value / sum; }
+                    if (l.Count > 3) { one.boneIndex3 = l[3].Key; one.weight3 = l[3].Value / sum; }
+                    bw[v] = one;
+                }
+                mesh.boneWeights = bw;
+                mesh.bindposes = bind;
+                SkinnedMeshRenderer smr = part.AddComponent<SkinnedMeshRenderer>();
+                smr.sharedMesh = mesh;
+                smr.bones = bones;
+                smr.rootBone = holder;
+                Bounds bb = mesh.bounds;
+                bb.Expand(bb.size.magnitude * 0.6f); // (its wings beat out of the rest pose's box: never culled while seen)
+                smr.localBounds = bb;
+                WsFiles.Log("asset " + mesh.name + ": skinned, " + bones.Length + " bones, " + clusters.Count + " clusters, " + bare + " of " + corners.Count + " vertices on no bone");
+                return smr;
+            }
         }
 
         private static int GetInt(Dictionary<string, FbxNode> d, string k, int def) { FbxNode n; return d.TryGetValue(k, out n) ? (int)n.D(4) : def; }
@@ -463,7 +567,8 @@ namespace HuginWhispers
             return new Vector3(-r, u, f);
         }
 
-        private static Mesh BuildMesh(FbxNode geo, Matrix4x4 m, int up, int upS, int front, int frontS, int coord, int coordS, float scale, int slots)
+        // corners (when given): the file's control point of each vertex made (a skin's weights are by control point)
+        private static Mesh BuildMesh(FbxNode geo, Matrix4x4 m, int up, int upS, int front, int frontS, int coord, int coordS, float scale, int slots, List<int> corners)
         {
             FbxNode vn = geo.Kid("Vertices"), pn = geo.Kid("PolygonVertexIndex");
             if (vn == null || pn == null) return null;
@@ -493,6 +598,7 @@ namespace HuginWhispers
                     int c = pvi[pv] < 0 ? ~pvi[pv] : pvi[pv];
                     Vector3 p = new Vector3((float)cp[c * 3], (float)cp[c * 3 + 1], (float)cp[c * 3 + 2]);
                     pos.Add(Axes(m.MultiplyPoint3x4(p), up, upS, front, frontS, coord, coordS) * scale);
+                    if (corners != null) corners.Add(c);
                     if (hasN)
                     {
                         Vector3 n = Attr3(normals, "Normals", "NormalsIndex", pv, c, poly);
@@ -557,13 +663,27 @@ namespace HuginWhispers
 
         // ---- materials: the file's diffuse colour, its texture when found beside the file
 
+        // the standard shader, the one place it is looked for (the mod's models; the see-through copies, NpcFade): Shader.Find does not see it
+        // in this game (2026-11-15: the echo stayed flat), the loaded shaders' list does. Null: none here
+        private static Shader _standard; private static bool _standardLooked;
+        internal static Shader Standard
+        {
+            get
+            {
+                if (_standard != null || _standardLooked) return _standard;
+                _standardLooked = ZNetScene.instance != null; // (asked before the game's world is up: asked again later)
+                _standard = Shader.Find("Standard");
+                if (_standard == null) foreach (Shader s in Resources.FindObjectsOfTypeAll<Shader>()) if (s != null && s.name == "Standard") { _standard = s; break; } // heavy: once a game
+                return _standard;
+            }
+        }
+
         private static Shader Shader
         {
             get
             {
                 if (_shader != null) return _shader;
-                _shader = Shader.Find("Standard");
-                if (_shader == null) foreach (Shader s in Resources.FindObjectsOfTypeAll<Shader>()) if (s != null && s.name == "Standard") { _shader = s; break; }
+                _shader = Standard;
                 if (_shader == null) _shader = Shader.Find("Custom/Piece");
                 if (_shader == null) _shader = Shader.Find("Legacy Shaders/Diffuse");
                 WsFiles.Log("assets: shader " + (_shader != null ? _shader.name : "none"));

@@ -12,7 +12,8 @@ namespace HuginWhispers
     // The one place that decides what is heard (the user 2026-11-04: «predictable, and control as full as can be»). Whoever
     // wants a sound or a silence asks here and is written down as its owner; when the owner ends (End) all it held is let go,
     // softly, in one call. Nothing here runs a frame unless something is held or fading (Run is switched off).
-    //   Music    layers: the game < fight < scene. The highest layer that wants something is what is heard; a layer that
+    //   Music    layers: the game < place < fight < stage < scene (place: a place's own music while the player is in it — LocInsideMusic;
+    //            stage: a quest stage's «music:» while it stands — StoryStageMusic: the silence of the rite's fight, over the fight's music). The highest layer that wants something is what is heard; a layer that
     //            wants silence is real silence. While any layer holds, the game's MusicMan picks nothing (raids, locations,
     //            sailing, morning: one prefix on UpdateCurrentMusic); its source fades out on our time, and comes back by itself
     //            when the last one lets go. Our own tracks and the game's play alike, through sources of our own: a crossfade
@@ -33,7 +34,7 @@ namespace HuginWhispers
     //            A clip's sounds (wet) obey it too; a scene's own never do: it asked for them.
     //   Ear      the listener: on the player's eyes (the game's) or on the scene's camera.
     // Every change is written in the log; «raven audio» says what is held and by whom.
-    internal enum AudioLayer { Fight = 0, Scene = 1 }
+    internal enum AudioLayer { Place = 0, Fight = 1, Stage = 2, Scene = 3 }
     internal enum AudioMix { World = 0, Ambient = 1, Music = 2, Voice = 3 }
 
     internal sealed class SoundAsk
@@ -44,6 +45,7 @@ namespace HuginWhispers
         public float FadeIn, Skip, Delay;       // (seconds: up from silence, left out at its start, before it starts)
         public bool AnyStart;                   // (a bed: starts somewhere in its clip)
         public AudioClip Clip;                  // (a bed: this clip, not one looked up by name)
+        public uint Own;                        // (a person's own takes: of a sound with many it says only its three, the same three always — AudioBank.Shot.Pick; 0: any)
         public AudioBank.Entry Try;             // (the author listening: these words, not the line in the files)
         public Transform Follow;
         public string Owner = "";
@@ -51,12 +53,13 @@ namespace HuginWhispers
 
     internal static class Audio
     {
-        internal const string Scene = "scene", Panel = "panel", Air = "air", Fight = "fight", Gift = "gift", Library = "library";
+        internal const string Scene = "scene", Panel = "panel", Air = "air", Fight = "fight", Gift = "gift", Library = "library", Place = "place", Stage = "stage";
         private const string Kept = "kept";
         private const int MaxLines = 32;
+        internal static float OnceTail = 8f; // (s: a track played once fades out over its last this many — live: raven npc tune Audio.OnceTail)
         internal static float EndFade = 3f, BrokenFade = 1.5f, MuteFade = 0.5f, MusicFade = 3f, FightFade = 3f, MaxLoad = 15f, SoundLate = 2f, LouderFade = 0.4f, BedRange = 40f;
 
-        private sealed class Want { public string Owner, Name; public float Fade, Until, Vol = 1f, Keep; public bool Once; public AudioBank.Entry Try; }
+        private sealed class Want { public string Owner, Name; public float Fade, Until, Vol = 1f, Keep, Rest; public bool Once; public AudioBank.Entry Try; } // (Rest: when it ends — run out or its track done — that many s of real silence before the music under it comes back)
 
         private sealed class Line
         {
@@ -72,7 +75,7 @@ namespace HuginWhispers
         }
         private const int KindSound = 0, KindBed = 1, KindMusic = 2;
 
-        private static readonly Want[] Wants = new Want[2];
+        private static readonly Want[] Wants = new Want[4]; // (a layer each: AudioLayer)
         private static readonly List<Line> Lines = new List<Line>();
         private static Line _cur;
         private static string _playing;
@@ -82,21 +85,23 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- music
 
         // name null: real silence. term: let go by itself that many seconds from now, unless asked again (0: only by End)
-        internal static bool Music(string owner, AudioLayer layer, string name, float fade, float term, float vol, bool once, float keep, AudioBank.Entry words = null)
+        // rest: when it ends (its term, its keep, its track done once), that many seconds of real silence first (the user 2026-11-15: after the
+        // ambush's music — «тиша 30 сек і тоді знову стандартні мелодії гри»)
+        internal static bool Music(string owner, AudioLayer layer, string name, float fade, float term, float vol, bool once, float keep, AudioBank.Entry words = null, float rest = 0f)
         {
             if (name != null && !AudioBank.IsTrack(words ?? AudioBank.Find(name))) { AudioBank.LogOnce("music " + name, "no music «" + name + "» (" + owner + ")"); return false; }
             Want w = Wants[(int)layer];
-            if (owner == Air && w != null && (w.Owner == Scene || w.Owner == Panel || w.Owner == Library)) { Log("music from another game left out: " + w.Owner + " holds it"); return true; } // (your own scene goes first)
+            if (owner == Air && w != null && (w.Owner == Scene || w.Owner == Panel || w.Owner == Library || w.Owner == Kept)) { Log("music from another game left out: " + w.Owner + " holds it"); return true; } // (your own scene goes first)
             float until = term > 0f ? Time.unscaledTime + term : 0f;
             if (w != null && w.Owner == owner && w.Name == name)
             {
-                w.Until = until; w.Vol = vol; w.Keep = keep; w.Once = once; w.Try = words;
+                w.Until = until; w.Vol = vol; w.Keep = keep; w.Once = once; w.Try = words; w.Rest = rest;
                 if (w != Top()) return true; // (a higher layer is heard: this one's words wait)
                 if (_trackDone && name != null) { _playing = null; Need(); MusicNow(); } // (it ended, once, or could not start: asked again, it is tried again)
                 else if (_cur != null) Takes(_cur, w);
                 return true; // (asked again: the same track goes on)
             }
-            Wants[(int)layer] = new Want { Owner = owner, Name = name, Fade = Mathf.Max(0f, fade), Until = until, Vol = vol, Once = once, Keep = keep, Try = words };
+            Wants[(int)layer] = new Want { Owner = owner, Name = name, Fade = Mathf.Max(0f, fade), Until = until, Vol = vol, Once = once, Keep = keep, Try = words, Rest = Mathf.Max(0f, rest) };
             Log("music " + layer + ": " + (name ?? "silence") + " (" + owner + ", " + fade.ToString("0.#") + " s)");
             Need();
             MusicNow();
@@ -243,10 +248,11 @@ namespace HuginWhispers
             bool played = false;
             foreach (AudioBank.Shot s in shots)
             {
-                AudioClip clip = s.Clips != null && s.Clips.Length > 0 ? s.Clips[UnityEngine.Random.Range(0, s.Clips.Length)] : s.Like != null ? s.Like.clip : null;
+                AudioClip clip = s.Pick(ask.Own);
                 if (clip == null) continue;
                 float vol = (s.MaxVol > 0f ? UnityEngine.Random.Range(s.MinVol, s.MaxVol) : 1f) * e.Vol * ask.Volume;
                 float pitch = (ask.Pitch > 0f ? ask.Pitch : e.Pitch > 0f ? e.Pitch : s.MaxPitch > 0f ? UnityEngine.Random.Range(s.MinPitch, s.MaxPitch) : 1f) / Mathf.Max(0.1f, ask.Stretch);
+                if (e.Spread > 0f) pitch *= 1f + UnityEngine.Random.Range(-e.Spread, e.Spread); // (the catalogue's «spread»: not the same each time)
                 bool flat = ask.Flat || e.Flat, wet = WetNow(ask, e);
                 float range = ask.Range > 0f ? ask.Range : e.Range;
                 float delay = UnityEngine.Random.Range(s.MinDelay, s.MaxDelay) + ask.Delay, pan = s.RandomPan ? UnityEngine.Random.Range(s.MinPan, s.MaxPan) : 0f;
@@ -761,6 +767,11 @@ namespace HuginWhispers
             float k = l.K * l.K * (3f - 2f * l.K); // (an S-curve: no sudden start or stop)
             float v = l.Asked * l.Cat * k;
             if (l.Kind == KindMusic) v *= MusicMan.m_masterMusicVolume * MixK[(int)AudioMix.Music];
+            if (l.Kind == KindMusic && !l.Loop && l.Src != null && l.Src.clip != null) // (a track played once goes out softly over its last OnceTail s, not cut at its last sample — the user 2026-11-15: the ambush's track)
+            {
+                float left = (l.Src.clip.length - l.Src.time) / Mathf.Max(0.01f, Mathf.Abs(l.Src.pitch));
+                if (left < OnceTail) { float t = Mathf.Clamp01(left / OnceTail); v *= t * t * (3f - 2f * t); }
+            }
             return Mathf.Clamp01(v);
         }
 
@@ -809,8 +820,12 @@ namespace HuginWhispers
             {
                 Want w = Wants[i];
                 if (w == null) continue;
-                bool done = w.Owner == Kept && i == TopLayer() && _trackDone;
-                if ((w.Until > 0f && Time.unscaledTime >= w.Until) || done) { Log("music " + (AudioLayer)i + ": " + (w.Name ?? "silence") + " ended"); Wants[i] = null; _nextFade = EndFade; }
+                bool done = w.Owner == Kept && w.Name != null && i == TopLayer() && _trackDone; // (a silence of «rest» is never «done»: it ends by its time)
+                if ((w.Until > 0f && Time.unscaledTime >= w.Until) || done)
+                {
+                    if (w.Rest > 0f && w.Name != null) { Log("music " + (AudioLayer)i + ": " + w.Name + " ended — " + w.Rest.ToString("0.#") + " s of silence before what is under it"); w.Name = null; w.Until = Time.unscaledTime + w.Rest; w.Rest = 0f; _nextFade = EndFade; held = true; continue; }
+                    Log("music " + (AudioLayer)i + ": " + (w.Name ?? "silence") + " ended"); Wants[i] = null; _nextFade = EndFade;
+                }
                 else held = true;
             }
             if (_held || held) MusicNow();
@@ -863,7 +878,7 @@ namespace HuginWhispers
             }
         }
 
-        private static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Audio: " + s); }
+        private static void Log(string s) { if (Plugin.Instance != null) Plugin.Instance.Log("Audio: " + s); AudioTap.Heard(s); } // (and into a run's report, with its moment, while the studio records one)
 
         // «raven audio»: what is held, and by whom
         internal static string Report()

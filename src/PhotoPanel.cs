@@ -5,7 +5,8 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // The test window's tab «Фото»: a picture for each model made in the Workshop, taken by hand.
+    // The test window's tab «Фото»: a picture for each model made in the Workshop — and for each the mod has built in (WsFiles.Known: the
+    // story's items too, the user 2026-11-15: «фото до всіх предметів»), taken by hand.
     // Light on purpose: the list is only the files' names (their heads read, as the Workshop does), and only the model
     // picked is put together, in its own small studio (IconPhotos / PhotoStudio), gone when the tab is left.
     // The big picture follows every move; beside it the icon itself (the clean shot, as the game will show it) at the
@@ -17,6 +18,7 @@ namespace HuginWhispers
 
         private List<string> _files = new List<string>();
         private readonly Dictionary<string, string> _keys = new Dictionary<string, string>(); // file → id
+        private readonly Dictionary<string, string> _names = new Dictionary<string, string>(); // a built-in source → its model's name (the list's label)
         private int _tab;
         private Vector2 _listScroll, _setScroll;
         private string _file;
@@ -45,7 +47,7 @@ namespace HuginWhispers
         {
             enabled = true;
             ReadList();
-            if (_file != null && File.Exists(_file)) Pick(_file);
+            if (_file != null && WsFiles.Exists(_file)) Pick(_file);
             else _note = "Вибери модель зліва. Фото лягають у " + IconPhotos.Dir;
         }
 
@@ -70,8 +72,8 @@ namespace HuginWhispers
 
         private void ReadList()
         {
-            _files = WsFiles.List();
-            _keys.Clear();
+            _files = WsFiles.Known();
+            _keys.Clear(); _names.Clear();
         }
 
         private string KeyOfFile(string f)
@@ -81,6 +83,7 @@ namespace HuginWhispers
             WsModel m = WsFiles.Load(f);
             k = m != null ? IconPhotos.KeyOf(m) : "";
             _keys[f] = k;
+            if (m != null) _names[f] = m.Name;
             return k;
         }
 
@@ -114,6 +117,7 @@ namespace HuginWhispers
             _m = m;
             _key = IconPhotos.KeyOf(m);
             _keys[file] = _key;
+            _names[file] = m.Name; // (the list's label: picked again as the tab opens, before the list read its name)
             _view.Sync(m);
             _studio.Prepare();
             _measureIn = 2;
@@ -184,17 +188,19 @@ namespace HuginWhispers
         private void List(float h)
         {
             GUILayout.Label("Мої моделі (Майстерня)", _head);
-            GUILayout.BeginHorizontal();
+            AuthorRow tabs = AuthorRow.Begin(false);
             for (int i = 0; i < Tabs.Length; i++)
-                if (GUILayout.Button(Tabs[i], i == _tab ? _on : GUI.skin.button, GUILayout.ExpandWidth(false))) _tab = i;
-            GUILayout.EndHorizontal();
+                if (tabs.Button(Tabs[i], i == _tab ? _on : null)) _tab = i;
+            tabs.End();
             _listScroll = GUILayout.BeginScrollView(_listScroll, GUILayout.Height(Mathf.Max(100f, h - 90f)));
             foreach (string f in _files)
             {
                 string use = WsFiles.UseOf(f);
                 if (!InTab(_tab, use)) continue;
                 bool has = IconPhotos.HasOwn(KeyOfFile(f));
-                string label = (has ? "<color=#7CD67C>● </color>" : "<color=#777777>○ </color>") + Path.GetFileNameWithoutExtension(f)
+                string name; bool own = WsFiles.IsBuiltIn(f);
+                if (!own || !_names.TryGetValue(f, out name)) name = Path.GetFileNameWithoutExtension(f);
+                string label = (has ? "<color=#7CD67C>● </color>" : "<color=#777777>○ </color>") + name + (own ? "  <color=#9A9A9A>(вшита)</color>" : "")
                     + (use.Length > 0 ? "  <color=#9A9A9A>" + use + "</color>" : "");
                 if (GUILayout.Button(label, f == _file ? _on : _rowL, GUILayout.Height(24f)) && f != _file) Pick(f);
             }
@@ -242,7 +248,9 @@ namespace HuginWhispers
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Тло (лише тут, не на фото):", GUILayout.ExpandWidth(false));
-            for (int i = 0; i < BgNames.Length; i++) if (GUILayout.Button(BgNames[i], i == _bg ? _on : GUI.skin.button)) _bg = i;
+            AuthorRow bgs = AuthorRow.Begin(false);
+            for (int i = 0; i < BgNames.Length; i++) if (bgs.Button(BgNames[i], i == _bg ? _on : null)) _bg = i;
+            bgs.End();
             GUILayout.EndHorizontal();
             GUILayout.Label("<color=#9A9A9A>Тягни — крутити, правою/Shift — зсунути, коліщатко — ближче.</color>", _small);
         }

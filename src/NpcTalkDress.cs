@@ -4,9 +4,10 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // What you give a person who is not on guard duty (the user 2026-11-06; who gets what: NpcGear.RoleOf). In its talk's own window, rows like any answers (its look: later, a window of its own):
-    //   its clothes   «Перевдягнися» among its favours (NpcFavours «dress»: its patience, a roll, DressFor). Head, body, legs, cape: real things out of your bag into its cells (NpcGear keeps them), worn in place of
-    //                 what it was given when it came, with no stats at all (NpcGear.Plain). Any player may, in that same way: taking one off only while it agrees to the favour, and it holds that against you (NpcMemory «clothes_taken»).
+    // What you give a person in its talk (the user 2026-11-06; who gets what: NpcGear.RoleOf). In its talk's own window, rows like any answers (its look: later, a window of its own):
+    //   its clothes   «Перевдягнися» among its favours (NpcFavours «dress»: its patience, a roll, DressFor). Head, body, legs, cape: real things out of your bag into its cells (NpcGear keeps them), marked as put on
+    //                 for their look (NpcGear.Look) and shown in place of what it wore (NpcGear.LookIn): with no stats at all on one not on guard, with its best piece's on a guard (the user 2026-11-11: a guard too).
+    //                 Any player may, in that same way: taking one off only while it agrees to the favour, and it holds that against you (NpcMemory «clothes_taken»).
     //   its hand      its button «Спорядження» (Q): one cell. One with work: its tool, an axe or a pick. One with none who can stand up for itself: one melee weapon
     // Your cells' owner: as the game's own chest window, this game takes the person over first (Claim), so that nothing is written twice. Sent off or gone: all of it at its feet (NpcGear.DropAll).
     internal static partial class NpcTalk
@@ -51,14 +52,18 @@ namespace HuginWhispers
         private static void ToBag(Player p, NpcGear g, ItemDrop.ItemData it)
         {
             g.Cells.RemoveItem(it);
+            NpcGear.Look(it, false);
             if (!p.GetInventory().AddItem(it)) ItemDrop.DropItem(it, it.m_stack, p.transform.position + p.transform.forward * 0.8f + Vector3.up * 0.5f, Quaternion.identity);
         }
 
-        private static bool ToCells(Player p, NpcGear g, ItemDrop.ItemData it)
+        // look: put on for its look (its clothes) — the mark NpcGear shows it by
+        private static bool ToCells(Player p, NpcGear g, ItemDrop.ItemData it, bool look)
         {
             if (!p.GetInventory().ContainsItem(it)) return false; // (the list stood open a while: it is not in your bag now — never two of it)
             p.GetInventory().RemoveItem(it);
+            if (look) NpcGear.Look(it, true);
             if (g.Cells.AddItem(it)) return true;
+            NpcGear.Look(it, false); // (a guard's cells full: yours again, as it was)
             p.GetInventory().AddItem(it);
             return false;
         }
@@ -90,7 +95,7 @@ namespace HuginWhispers
             {
                 ItemDrop.ItemData.ItemType type = s.Key;
                 string label = Lang.T(s.Value);
-                ItemDrop.ItemData on = InCells(g, it => it.m_shared.m_itemType == type);
+                ItemDrop.ItemData on = g.LookIn(type);
                 rows.Add(new KeyValuePair<string, System.Action>(on != null ? label + ": " + ItemWord(on) : label + ": " + Lang.T("своє"), () => ShowDressSlot(p, type, label)));
             }
             rows.Add(new KeyValuePair<string, System.Action>(Lang.T("Годі, досить."), () => Show("start", p)));
@@ -108,17 +113,17 @@ namespace HuginWhispers
                 rows.Add(new KeyValuePair<string, System.Action>(ItemWord(it), () =>
                 {
                     if (!Claim(a, g)) { Show("start", p); return; }
-                    ItemDrop.ItemData old = InCells(g, x => x.m_shared.m_itemType == type);
+                    ItemDrop.ItemData old = g.LookIn(type);
                     if (old != null) ToBag(p, g, old);
-                    bool put = ToCells(p, g, thing);
-                    ShowDress(p, put ? NpcPhrases.Compose(a, "dress_thanks", p) : null);
+                    bool put = ToCells(p, g, thing, true);
+                    ShowDress(p, put ? NpcPhrases.Compose(a, "dress_thanks", p) : Lang.F("{0}: комірки повні, спершу забери щось зі «Спорядження».", label)); // (a guard's ten cells: its gear fills them)
                 }));
             }
-            ItemDrop.ItemData on = InCells(g, x => x.m_shared.m_itemType == type);
+            ItemDrop.ItemData on = g.LookIn(type);
             if (on != null) rows.Add(new KeyValuePair<string, System.Action>(Lang.F("Зняти: {0}", ItemWord(on)), () =>
             {
                 if (!Claim(a, g)) { Show("start", p); return; }
-                ItemDrop.ItemData now = InCells(g, x => x.m_shared.m_itemType == type);
+                ItemDrop.ItemData now = g.LookIn(type);
                 if (now != null) { ToBag(p, g, now); NpcMemory.Tell(a, "clothes_taken", p.GetPlayerID(), ""); }
                 ShowDress(p, NpcPhrases.Compose(a, "dress_took", p));
             }));
@@ -147,7 +152,7 @@ namespace HuginWhispers
                     if (!Claim(a, g)) { Close(); return; }
                     ItemDrop.ItemData old = InCells(g, x => NpcGear.HandFits(role, x));
                     if (old != null) ToBag(p, g, old);
-                    ToCells(p, g, thing);
+                    ToCells(p, g, thing, false);
                     ShowHand(p);
                 }));
             }

@@ -12,9 +12,13 @@ namespace HuginWhispers
     // seal and the sender's name comes up out of nothing, from half its size. A click on the seal (or LetterAutoOpen
     // seconds) breaks it: the envelope shudders, the seal's halves fall away, the envelope gives way to the sheet still
     // folded, which opens along its fold, and the words come up on it. «Скласти» folds it away; then the next one.
+    // A letter of the story (a scene's step «letter»: Lit's, brought by the Hall's raven) opens here too, with no raven's slip (no line).
+    // Its seal is its sender's own (the user 2026-11-17: «різні для кожного персонажа… і форму теж»): letter_seal_<seal>, its halves and the bits of
+    // its wax left on the sheet (letter_bits_<seal>), made by tools/letter_art.html (SEALS: its shape, wax, mark); a sender with none of his
+    // own, and the post between players, has the post's (letter_seal, letter_bits).
     internal static partial class RavenBook
     {
-        private sealed class Got { public string From, Text, Line; public bool Munin; }
+        private sealed class Got { public string From, Text, Line, Seal; public bool Munin; }
         private static readonly Queue<Got> Letters = new Queue<Got>();
         private static GameObject _lwRoot;
         internal static float LetterAutoOpen = 15f;
@@ -30,14 +34,15 @@ namespace HuginWhispers
         private static Image _lDim;
         private static RectTransform _lClosed, _lSeal, _lHalfL, _lHalfR, _lOpen, _lTop;
         private static CanvasGroup _lClosedG, _lHalvesG, _lOpenG, _lWordsG;
-        private static RawImage _lTopImg;
+        private static RawImage _lTopImg, _lTopWax;
         private static LetterSealHover _lHover;
 
         internal static bool LetterOpen { get { return _lwRoot != null && _lwRoot.activeSelf; } }
 
-        internal static void ShowLetter(string from, bool munin, string text, string line)
+        // seal: the sender's own seal (a story person's npc id: its pictures), none — the post's
+        internal static void ShowLetter(string from, bool munin, string text, string line, string seal = null)
         {
-            Letters.Enqueue(new Got { From = from, Text = text, Line = line, Munin = munin });
+            Letters.Enqueue(new Got { From = from, Text = text, Line = line, Munin = munin, Seal = seal });
             if (!LetterOpen) NextLetter();
         }
 
@@ -87,7 +92,7 @@ namespace HuginWhispers
             hr.anchorMin = new Vector2(0f, 0f); hr.anchorMax = new Vector2(1f, 0f); hr.pivot = new Vector2(0.5f, 1f);
             hr.sizeDelta = new Vector2(0f, 28f); hr.anchoredPosition = new Vector2(0f, -10f);
 
-            _lSeal = SealPiece(_lClosed, "letter_seal");
+            _lSeal = SealPiece(_lClosed, "letter_seal", g.Seal);
             Image si = _lSeal.GetComponent<Image>();
             si.raycastTarget = true;
             Button b = _lSeal.gameObject.AddComponent<Button>();
@@ -100,14 +105,14 @@ namespace HuginWhispers
             RectTransform halves = Centered(Rect("Halves", root), 600f * EnvK, 840f * EnvK);
             _lHalvesG = halves.gameObject.AddComponent<CanvasGroup>();
             _lHalvesG.alpha = 0f; _lHalvesG.blocksRaycasts = false;
-            _lHalfL = SealPiece(halves, "letter_seal_l");
-            _lHalfR = SealPiece(halves, "letter_seal_r");
+            _lHalfL = SealPiece(halves, "letter_seal_l", g.Seal);
+            _lHalfR = SealPiece(halves, "letter_seal_r", g.Seal);
         }
 
-        // a piece of the seal where the design has it: its middle at (300, 428) of the envelope
-        private static RectTransform SealPiece(Transform parent, string pic)
+        // a piece of the seal where the design has it: its middle at (300, 428) of the envelope; the sender's own, else the post's
+        private static RectTransform SealPiece(Transform parent, string pic, string seal)
         {
-            Image i = Img(parent, pic, BookArt.Picture(pic), Color.white);
+            Image i = Img(parent, pic, Own(pic, seal), Color.white);
             if (i.sprite == null) { i.sprite = BookArt.Circle; i.color = C("#a42e29"); }
             RectTransform r = i.rectTransform;
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f - 428f / 840f);
@@ -115,6 +120,27 @@ namespace HuginWhispers
             r.sizeDelta = new Vector2(220f * EnvK, 240f * EnvK);
             r.anchoredPosition = Vector2.zero;
             return r;
+        }
+
+        // the sender's own picture of a piece (<pic>_<seal>) if there is one, else the post's
+        private static string OwnName(string pic, string seal) { return !string.IsNullOrEmpty(seal) && BookArt.Texture(pic + "_" + seal) != null ? pic + "_" + seal : pic; }
+        private static Sprite Own(string pic, string seal) { return BookArt.Picture(OwnName(pic, seal)); }
+
+        // the bits of the seal left on the sheet: a small picture of the sheet's pixels BitsX, BitsY (from its top), BitsW × BitsH — as
+        // tools/letter_art.html cuts it («bits»: the same numbers) — laid over a part of the sheet that holds its rows from..to: the share of it there
+        private const float BitsX = 320f, BitsY = 396f, BitsW = 144f, BitsH = 104f;
+        private static RawImage Bits(RectTransform part, Texture2D wax, float from, float to)
+        {
+            float a = Mathf.Max(from, BitsY), b = Mathf.Min(to, BitsY + BitsH);
+            if (wax == null || b <= a) return null;
+            RawImage img = Rect("Wax", part).gameObject.AddComponent<RawImage>();
+            img.texture = wax; img.raycastTarget = false;
+            img.uvRect = new Rect(0f, (BitsY + BitsH - b) / BitsH, 1f, (b - a) / BitsH); // (a texture's v runs up from its bottom)
+            RectTransform r = img.rectTransform;
+            float h = to - from;
+            r.anchorMin = new Vector2(BitsX / PaperW, 1f - (b - from) / h); r.anchorMax = new Vector2((BitsX + BitsW) / PaperW, 1f - (a - from) / h);
+            r.offsetMin = r.offsetMax = Vector2.zero;
+            return img;
         }
 
         private static RectTransform Centered(RectTransform r, float w, float h)
@@ -133,6 +159,7 @@ namespace HuginWhispers
             _lOpenG = _lOpen.gameObject.AddComponent<CanvasGroup>();
             _lOpenG.alpha = 0f; _lOpenG.blocksRaycasts = false;
             Texture2D tex = BookArt.Texture("letter_paper");
+            Texture2D wax = BookArt.Texture(OwnName("letter_bits", g.Seal)); // (the bits of the seal on it, of the sender's wax; none — no bits)
             float top = FoldY / PaperH; // the part above the fold (the one folded over)
 
             RawImage bottom = Rect("Lower", _lOpen).gameObject.AddComponent<RawImage>();
@@ -140,6 +167,7 @@ namespace HuginWhispers
             bottom.uvRect = new Rect(0f, 0f, 1f, 1f - top); // (a texture's v runs up from its bottom)
             RectTransform br = bottom.rectTransform;
             br.anchorMin = Vector2.zero; br.anchorMax = new Vector2(1f, 1f - top); br.offsetMin = br.offsetMax = Vector2.zero;
+            Bits(br, wax, FoldY, PaperH);
 
             _lTopImg = Rect("Upper", _lOpen).gameObject.AddComponent<RawImage>();
             _lTopImg.texture = tex; _lTopImg.color = tex != null ? Color.white : Paper;
@@ -147,6 +175,7 @@ namespace HuginWhispers
             _lTop = _lTopImg.rectTransform;
             _lTop.anchorMin = new Vector2(0f, 1f - top); _lTop.anchorMax = Vector2.one; _lTop.offsetMin = _lTop.offsetMax = Vector2.zero;
             _lTop.pivot = new Vector2(0.5f, 0f); // it turns on the fold
+            _lTopWax = Bits(_lTop, wax, 0f, FoldY); // (its bits turn with it)
 
             RectTransform words = Rect("Words", _lOpen);
             Stretch(words, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -178,7 +207,15 @@ namespace HuginWhispers
             sig.richText = false;
             Px(sig.rectTransform, 92f, 160f + h / PaperK + 14f, 656f, size * 1.6f / PaperK);
 
-            // the raven's word, on a slip laid a little askew
+            // the raven's word, on a slip laid a little askew (none from a raven that says nothing: the story's letter, the Hall's raven)
+            if (!string.IsNullOrEmpty(g.Line)) Slip(words, g);
+
+            RectTransform fold = DarkButton(words, Lang.T("Скласти"), FoldLetter);
+            Px(fold, 572f, 968f, 176f, 72f);
+        }
+
+        private static void Slip(RectTransform words, Got g)
+        {
             RectTransform slip = Rect("Slip", words);
             slip.anchorMin = slip.anchorMax = new Vector2(0f, 1f);
             slip.pivot = new Vector2(0.5f, 0.5f);
@@ -190,9 +227,6 @@ namespace HuginWhispers
             said.richText = false;
             Stretch(said.rectTransform, Vector2.zero, Vector2.one, new Vector2(14f, 8f), new Vector2(-14f, -8f));
             said.enableAutoSizing = true; said.fontSizeMin = 11f; said.fontSizeMax = 24f * PaperK;
-
-            RectTransform fold = DarkButton(words, Lang.T("Скласти"), FoldLetter);
-            Px(fold, 572f, 968f, 176f, 72f);
         }
 
         // a place on the sheet in the design's pixels (from its upper left corner)
@@ -243,6 +277,7 @@ namespace HuginWhispers
         {
             _lTop.localScale = new Vector3(1f, Mathf.Abs(s) < 0.02f ? 0.02f * Mathf.Sign(s + 0.0001f) : s, 1f);
             _lTopImg.color = _lTopImg.texture == null ? Paper : s < 0f ? LetterBack : Color.white;
+            if (_lTopWax != null) _lTopWax.enabled = s >= 0f; // (the wax is on its face: not seen through its back)
         }
 
         private static float EaseOut(float t) { t = Mathf.Clamp01(t); float u = 1f - t; return 1f - u * u * u; }

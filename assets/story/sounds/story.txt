@@ -3,11 +3,24 @@
 #   Істота/вид       звук істоти чи предмета, лише звук, без іскор: Ghost/idle, Wraith/alert, ShieldBanded/block
 #   game:<назва>     трек музики гри (для music і bed)
 #   file:<x.ogg>     наш файл, лежить у цій самій папці (.ogg .wav .mp3)
-# Параметри: vol=0.8  pitch=0.9  range=60  2d  wet. Приклад: hall_dark file:hall_dark.ogg vol=0.7
-# Підібрати на слух і записати сюди: вкладка «Звуки» (клік по назві). Новий файл: поклади в цю теку, «Оновити список».
+# Кілька наших файлів в одному рядку — варіанти: щоразу грає інший, ніколи той самий двічі поспіль (hm file:hm_1.ogg file:hm_2.ogg file:hm_3.ogg).
+# Параметри: vol=0.8  pitch=0.9  spread=0.05  range=60  2d  wet. Приклад: hall_dark file:hall_dark.ogg vol=0.7
+#   spread=0.05      щоразу тон трохи інший (±5%): для звуку, який чути часто (крок, «хм»)
+# Сирий файл (завантажений, записаний) сюди кладе інструмент: node tools/sound.js add <файл> <назва> [shot|voice|bed|music] --src "<звідки, чий, ліцензія>"
+# (обрізає тишу, рівняє гучність, пише .ogg і рядок із джерелом; --split ріже один запис із паузами на варіанти). Тоді на слух: вкладка «Звуки» (клік по назві).
 # Сцени: «music hall_dark 4», «bed wind_cave», «bed wind_cave hall 3 range 30», «sound whisper npc.echo», згасання людини: «npc echo fade 4 whisper» (шапка StoryAudio).
 whisper Ghost/idle Ghost/alert sfx_ghost_idle                 # шепіт: привид згасає (пролог) — і далі в інших сценах
 iron_far ShieldBanded/block ShieldIronSquare/block sfx_metalgate_close     # залізо десь далеко (пролог, щит Муніна) — спогад
 gate_stuck sfx_darkwood_door_close sfx_door_close pitch=0.7 vol=0.9 range=30   # стулки брами здригнулись і не піддались (пролог, Зала зачинена)
-# Мовлення людей (NpcSpeech): якщо записати тут ці назви, людина їх чутиме; нема — тиша.
-#   speech_breath  вдих перед реченням      speech_hm  «хм», поки думає перед відповіддю
+# Вигуки людей (хм, вдих, зітхання, смішок…): speech.txt
+# Соколи сестер (Falcon): сапсан, що кричить на ворона — National Park Service, Bryce Canyon, «Raven and Peregrine» (2018), суспільне надбання; на тон нижче (0.85) — більший і лютіший птах (користувач 2026-11-13)
+falcon_scream file:falcon_scream.ogg pitch=0.85 range=90 wet     # вереск: сокіл іде в кидок
+falcon_cack file:falcon_cack.ogg pitch=0.85 range=80 wet         # «как-как-как»: кружляє (зрідка, сам)
+falcon_attack file:falcon_attack.ogg pitch=0.85 range=90 wet     # напад: соколи падають (сцена: sound falcon_attack falcon.a)
+ketil_mercy file:ketil_mercy.ogg   # джерело: Freesound 747623, «Sad movie music» by JeSSeper09+ (https://freesound.org/s/747623/), CC0 1.0
+crypt_tension file:crypt_tension.ogg   # склеп Варти: тихо на фоні, поки гравець у склепі (insidemusic kurhan); джерело: Freesound 860590, «Cinematic Tension Loop Of Epic Proportions (FrogsInSpace Piano Stab Samples)» by qubodup (https://freesound.org/s/860590/), CC BY 4.0; piano stab samples by FrogsInSpace — credit both
+rite_adventure file:rite_adventure.ogg   # обряд у Залі (сцена hall_rite): входить і згасає разом зі сценою; далі — тиша бою (етап rite_fight: music: off); джерело: Freesound 766921, «The Adventure» by Victor_Natas (https://freesound.org/s/766921/), CC BY 4.0 — credit Victor_Natas
+eirik_memory file:eirik_memory.ogg   # спогад у хаті Ейріка (сцена eirik_hearth): входить зі світлом спогаду, грає ще ~10 с після сцени й згасає; джерело: Freesound 839845, «Pad, Ambient, Meditation - Submersion» by Andrewkn (https://freesound.org/s/839845/), CC BY 4.0 — credit Andrewkn; cut to its first 78 s
+echo_cello file:echo_cello.ogg   # хата Ейріка, пролог (сцена echo): з темряви на вході, грає через усю сцену, ~10 с після неї й згасає; джерело: Freesound 720336, «Ambient 19_Cello Song» by PodcastAC (https://freesound.org/s/720336/), CC BY 4.0 — credit PodcastAC; cut to its first 90 s
+hall_friends file:hall_friends.ogg   # Зала обжита (сцена lit_hall): з першого кадру, двоє приятелів біля вогню; тихе закінчення треку лягає на тавро, грає ще кілька секунд після сцени; джерело: Freesound 679053, «Relaxing Chiptune Music» by Migfus20 (https://freesound.org/s/679053/), CC BY 4.0 — credit Migfus20; shortened by whole phrases: 0–81.9 s + its own ending from 153.9 s
+eyvind_accordion file:eyvind_accordion.ogg   # Ейвінд і Літ (сцена eyvind_meet): з першого кадру, по колу до кінця сцени, ще трохи після неї; трек дав автор 2026-11-17; обрізано до кінця відзвуку (0–98,5 с), щоб повтор не мав паузи; джерело: Freesound 654167, «crazy accordions loop» by LagMusics (https://freesound.org/s/654167/), CC0 1.0

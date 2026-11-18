@@ -59,10 +59,63 @@ namespace HuginWhispers
         // «touch:», LocTouch). A new behaviour: a line here
         internal static readonly Dictionary<string, Action<GameObject>> Scripts = new Dictionary<string, Action<GameObject>>
         {
+            { "chest", g => StoryChest(g) }, // (its chest part a chest of the game under the building's own name: the barrow's chest, chapter 1)
 #if RAVEN_ITEM && RAVEN_NPC
             { "hearth", g => g.AddComponent<LocHearth>() }, // (its fires: cold, Hel's, the Watch's — kept by its place)
 #endif
         };
+
+        // a part of a building made a chest of the game (the heart's coin box, a story building's «script: chest»): only the nearest of the copied
+        // looks kept, a box to look at and press round what is left, the game's chest window and sounds, kept in the building's own ZDO; open to
+        // anyone (never a personal chest: the barrow's was its author's alone, 2026-11-15). The prefab sleeps: it wakes in each building.
+        // w, h 0: the cells of the game's chest it was copied from. paint: the looks' materials, changed (the heart's yellower wood)
+        internal static Container ChestOf(GameObject root, Transform part, string name, int w, int h, Func<Material[], Material[]> paint)
+        {
+            GameObject src = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(part.name) : null;
+            HashSet<string> far = new HashSet<string>();
+            if (src != null)
+                foreach (LODGroup lg in src.GetComponentsInChildren<LODGroup>(true)) // heavy: once a prefab
+                {
+                    LOD[] lods = lg.GetLODs();
+                    for (int i = 1; i < lods.Length; i++) if (lods[i].renderers != null) foreach (Renderer r in lods[i].renderers) if (r != null) far.Add(r.name);
+                }
+            Bounds b = new Bounds(); bool any = false;
+            foreach (MeshRenderer mr in part.GetComponentsInChildren<MeshRenderer>(true)) // heavy: once a prefab
+            {
+                if (far.Contains(mr.name)) { UnityEngine.Object.DestroyImmediate(mr.gameObject); continue; }
+                if (paint != null) mr.sharedMaterials = paint(mr.sharedMaterials);
+                MeshFilter mf = mr.GetComponent<MeshFilter>();
+                if (mf == null || mf.sharedMesh == null) continue;
+                Bounds m = mf.sharedMesh.bounds;
+                for (int k = 0; k < 8; k++)
+                {
+                    Vector3 p = part.InverseTransformPoint(mr.transform.TransformPoint(m.center + Vector3.Scale(m.extents, new Vector3((k & 1) == 0 ? -1 : 1, (k & 2) == 0 ? -1 : 1, (k & 4) == 0 ? -1 : 1))));
+                    if (!any) { b = new Bounds(p, Vector3.zero); any = true; } else b.Encapsulate(p);
+                }
+            }
+            BoxCollider bc = part.gameObject.AddComponent<BoxCollider>();
+            if (any) { bc.center = b.center; bc.size = b.size; } else { bc.center = new Vector3(0f, 0.4f, 0f); bc.size = new Vector3(1f, 0.8f, 0.6f); }
+            Container like = src != null ? src.GetComponent<Container>() : null;
+            Container c = part.gameObject.AddComponent<Container>();
+            c.m_name = name; c.m_width = w > 0 ? w : like != null ? like.m_width : 5; c.m_height = h > 0 ? h : like != null ? like.m_height : 2;
+            c.m_rootObjectOverride = root.GetComponent<ZNetView>(); c.m_privacy = Container.PrivacySetting.Public; c.m_checkGuardStone = false;
+            if (like != null) { c.m_bkg = like.m_bkg; c.m_openEffects = like.m_openEffects; c.m_closeEffects = like.m_closeEffects; }
+            return c;
+        }
+
+        // «script: chest»: the building's first part that is a chest of the game becomes a chest under the building's own name
+        private static void StoryChest(GameObject root)
+        {
+            Piece pc = root.GetComponent<Piece>();
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) // heavy: once a prefab
+            {
+                GameObject src = t != root.transform && ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(t.name) : null;
+                if (src == null || src.GetComponent<Container>() == null) continue;
+                ChestOf(root, t, pc != null ? pc.m_name : t.name, 0, 0, null);
+                return;
+            }
+            Log((pc != null ? pc.m_name : root.name) + ": «script: chest» — no part of it is a chest of the game");
+        }
 
         internal sealed class Def
         {
@@ -163,7 +216,13 @@ namespace HuginWhispers
                 d.Name = m.Name; d.Note = m.Note; d.Cost = string.IsNullOrEmpty(m.Cost) ? DefaultCost : m.Cost;
                 d.Model = m; d.Pose = m.Pose; d.Stand = m.Stand; d.PerDay = m.PerDay > 0f ? m.PerDay : DailyCap; d.Wall = m.Wall; d.Station = string.IsNullOrEmpty(m.Station) ? "piece_workbench" : m.Station;
                 Def old;
-                if (ByPrefab.TryGetValue(d.Prefab, out old)) { Defs.Remove(old); Tables.Remove(old); Nests.Remove(old); Trees.Remove(old); Feeders.Remove(old); Hearts.Remove(old); Stories.Remove(old); All.Remove(old); } // a file of the same id wins over the built-in one
+                if (ByPrefab.TryGetValue(d.Prefab, out old))
+                {
+                    Defs.Remove(old); Tables.Remove(old); Nests.Remove(old); Trees.Remove(old); Feeders.Remove(old); Hearts.Remove(old); Stories.Remove(old); All.Remove(old); // a file of the same id wins over the built-in one —
+                    // for its look and poses: the mod's words, behaviour and cost stay the mod's (an old Workshop copy must not take them back: WsItems the same)
+                    if (old.Model != null && old.Model.File.StartsWith("RavenWatch.", StringComparison.Ordinal) && !m.File.StartsWith("RavenWatch.", StringComparison.Ordinal))
+                    { d.Name = old.Name; d.Note = old.Note; d.Script = old.Script; d.Cost = old.Cost; Log("«" + m.File + "»: its look over the built-in «" + d.Id + "»; the name, note, script and cost are the mod's"); }
+                }
                 ByPrefab[d.Prefab] = d;
                 (table ? Tables : nest ? Nests : tree ? Trees : feeder ? Feeders : heart ? Hearts : story ? Stories : Defs).Add(d);
                 All.Add(d);
@@ -960,6 +1019,7 @@ namespace HuginWhispers
         internal static void Sit(Player p, PerchView v, bool munin, int seat, string mode)
         {
             ItemDrop.ItemData item;
+            if (v == null || v.Gone) return; // (the one door onto a perch: a piece of a place its state has not now is none — PerchView.Gone; the finders skip it too)
             string why = WhyNot(p, munin, out item);
             if (why != null) { RavenMsg.Center(p, why); return; }
             if (seat < 0) seat = FreeSeatOf(v);
@@ -1054,7 +1114,7 @@ namespace HuginWhispers
             float bestD = FindRadius;
             foreach (PerchView v in PerchView.All)
             {
-                if (!v.Valid || v.IsSpot) continue; // (a «sit here» spot is nobody's perch to be sent to)
+                if (!v.Valid || v.IsSpot || v.Gone) continue; // (a «sit here» spot is nobody's perch to be sent to; a piece of a place not there now: none)
                 float d = Vector3.Distance(v.transform.position, p.transform.position);
                 if (d > bestD) continue;
                 int s = -1;
@@ -1446,7 +1506,7 @@ namespace HuginWhispers
         private static PerchView Nearest(Player p)
         {
             PerchView best = null; float d = 30f;
-            foreach (PerchView v in PerchView.All) { if (v.IsSpot) continue; float x = Vector3.Distance(v.transform.position, p.transform.position); if (x < d) { d = x; best = v; } }
+            foreach (PerchView v in PerchView.All) { if (v.IsSpot || v.Gone) continue; float x = Vector3.Distance(v.transform.position, p.transform.position); if (x < d) { d = x; best = v; } }
             return best;
         }
 
@@ -1669,6 +1729,9 @@ namespace HuginWhispers
                 {
                     Occupant o = Parse(z.GetString(SeatKey(s.Seat), ""));
                     Misses.Remove(s.Token);
+                    GameObject pg = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(s.Zdo) : null;
+                    PerchView pv = pg != null ? pg.GetComponent<PerchView>() : null;
+                    if (pv != null && pv.Gone) { Leave(p, item, munin, Lang.F("Жердини, де сидів {0}, тут зараз нема.\nВін летить до тебе.", Plugin.RavenName(munin))); continue; } // (a piece of a place its state has not now)
                     bool roof; int comfort;
                     if (ParseEnv(z.GetString(EnvKey, ""), out roof, out comfort)) item.m_customData[MulKey] = Mul(roof, comfort).ToString("0.###", CultureInfo.InvariantCulture);
                     if (o == null || o.Token != s.Token) Leave(p, item, munin, Lang.F("{0} зігнали з жердини.\nВін летить до тебе.", Plugin.RavenNameGen(munin)));

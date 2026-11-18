@@ -1,0 +1,71 @@
+clip knees_down
+length 3.4
+tone plain
+loop 0
+pivot 1.1
+curve ease
+feet ground
+fade 0.4 0.6
+mode Spine1 body
+mode Spine2 body
+part down 0 3.4 hold
+mark 2.7 knees
+# коліна об землю: праве, тоді ліве — глухий крок гри, тихо (у грі не чуто, 2026-11-15)
+event 1.35 sfx_footstep 0.4
+event 2.5 sfx_footstep 0.5
+say опускається на обидва коліна: спершу праве, тоді ліве; голова хилиться
+
+# Кетіль у засідці (scenes/ch1.txt, ambush): після удару ножем (throat_cut сестри, мітка cut) він сам опускається на коліна. Ноги — за зразком heid_rummage (перевірені там на одному коліні): права ступня вже позаду
+# й лишається, праве коліно лягає першим; тоді ліва ступня йде назад згори. Не встає: з колін він зникає в іскрах (npc ketil sparks).
+# Ключі руками (не рухами do): тіло не стоїть. У грі не знято.
+
+0 @LeftFoot -0.09 0.12 0.28
+1.3 @LeftFoot -0.09 0.12 0.28
+1.55 @LeftFoot -0.1 0.22 0.18
+1.9 @LeftFoot -0.13 0.28 -0.1
+2.2 @LeftFoot -0.14 0.2 -0.3
+2.45 @LeftFoot -0.14 0.12 -0.36
+3.4 @LeftFoot -0.14 0.12 -0.36
+
+0 @LeftFoot.p -0.15 0 1
+1.3 @LeftFoot.p -0.15 0 1
+2.6 @LeftFoot.p -0.15 -0.6 0.7
+3.4 @LeftFoot.p -0.15 -0.6 0.7
+
+0 @RightFoot 0.05 0.12 -0.3
+3.4 @RightFoot 0.05 0.12 -0.3
+
+0 @RightFoot.p 0.15 0 1
+0.3 @RightFoot.p 0.15 0 1
+1.6 @RightFoot.p 0.15 -0.6 0.7
+3.4 @RightFoot.p 0.15 -0.6 0.7
+
+0 move 0 0 0
+0.2 move 0 0 0
+0.8 move 0.02 -0.12 0.02
+1.4 move 0.03 -0.3 0.04
+2 move 0.01 -0.38 0.05
+2.7 move 0 -0.42 0.06
+3.4 move 0 -0.42 0.06
+
+0 Spine1 0 0 0
+0.2 Spine1 0 0 0
+1.4 Spine1 9 0 0
+2.7 Spine1 6 0 0
+3.4 Spine1 6 0 0
+
+0 Spine2 0 0 0
+0.2 Spine2 0 0 0
+1.4 Spine2 7 0 0
+2.7 Spine2 5 0 0
+3.4 Spine2 5 0 0
+
+0 @Look 0 1.6 2
+1 @Look 0 1.6 2
+2.8 @Look 0 0.7 1.5
+3.4 @Look 0 0.7 1.5
+
+0 @Look.w 0 0 0
+1 @Look.w 0 0 0
+2.8 @Look.w 0.7 0 0
+3.4 @Look.w 0.7 0 0

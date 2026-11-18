@@ -1,5 +1,6 @@
 clip sit_hands
 length 6
+tone plain
 loop 0
 pivot 1.1
 curve ease
