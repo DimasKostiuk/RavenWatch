@@ -25,3 +25,68 @@
 [eyvind:say_bye_cold] Я запам'ятаю. Усе.
 [eyvind:say_bye_cold] Ага. Іноді пізно. Іноді ніколи.
 [eyvind:say_bye_cold] Годі з мене твоїх обіцянок. Бувай.
+
+# Дорога до Зали зі Сверре (етап sverre_home, meets/ch2_road.txt [road eyvind_home]): відстав — наздогнав
+[eyvind:road_back] Так от, про що це я…
+[eyvind:road_back] Ти відстаєш. А я ж тільки розговорився.
+[eyvind:road_back] О, ти тут. Слухай далі, поки я добрий.
+[eyvind:road_back] Не відставай. Мені вперше хочеться говорити правду, а нема кому.
+[eyvind:road_back] Ага, наздогна{в|ла}. То на чому я…
+[eyvind:road_back] Ходиш, як я колись кульгав. Слухай далі.
+
+# Його власні слова без питання (voice: own у шаблоні; користувач 2026-11-22: день Ейвінда). Поки Сверре нема — сидить і дивиться; відколи
+# Сверре в Залі (фаза eyvind_lively, people/phases.txt) — при ділі. Манера: слизький, іронічний, усе — про коліно й про те, як він не заважає.
+[eyvind:idle ?!phase eyvind_lively, phase eyvind_in_hall] Сиджу. Хтось же має.
+[eyvind:idle ?!phase eyvind_lively, phase eyvind_in_hall] Усі щось носять. Аж дивитись утомно.
+[eyvind:idle ?!phase eyvind_lively, phase eyvind_in_hall] Я не лінивий. Я ощадний.
+[eyvind:idle ?!phase eyvind_lively, phase eyvind_in_hall] Якби хто спитав — я зайнятий.
+[eyvind:idle ?!phase eyvind_lively, phase eyvind_in_hall] Гарна лава. Обжита.
+[eyvind:idle ?phase eyvind_in_hall] Коліно каже — на дощ. Коліно часто бреше.
+[eyvind:idle ?phase eyvind_in_hall] Тепло тут. Я ж казав.
+[eyvind:idle ?phase eyvind_lively] Ношу, бачиш? Сам не вірю.
+[eyvind:idle ?phase eyvind_lively] Дошка до дошки. Хто б подумав.
+[eyvind:idle ?phase eyvind_lively] Сверре сьогодні кивнув. Здається.
+[eyvind:idle ?phase eyvind_lively] Літ мене не вигнав. День удався.
+[eyvind:idle ?phase eyvind_lively] Коліно мовчить. Образилось, мабуть.
+[eyvind:idle ?phase eyvind_lively] Спина тепер замість коліна.
+# іноді підходить до Літа й дивиться (рядок дня «say by_lit»)
+[eyvind:by_lit] Дивлюся, як люди працюють. Заспокоює.
+[eyvind:by_lit] Він б'є, а я рахую. Комусь же треба.
+[eyvind:by_lit] Не заважаю. Стою тихо. Майже.
+[eyvind:by_lit] Рівно кладе. Аж заздрісно. Трохи.
+[eyvind:by_lit] Спитаю щось — прожене. То я мовчки.
+[eyvind:by_lit] Цікаво, скільки тут цвяхів. Просто цікаво.
+# при ділі біля стіни (вид місця watch)
+[eyvind:at_watch] Оцю — туди. Чи ту — сюди. Зараз спитаю.
+[eyvind:at_watch] Літ показав пальцем. Я зрозумів. Майже.
+[eyvind:at_watch] Несу, несу. Не підганяй.
+[eyvind:at_watch] Тут криво. Не я клав. Чесно.
+[eyvind:at_watch] Ще дві — і сяду. Ну, три.
+[eyvind:at_watch] Двергр каже «рівно». Я кажу «стоїть».
+# ---------------------------------------------------------------- що сюжет відкриває згодом і обставини (огляд 2026-11-22)
+# Зала встала (rise_after)
+[eyvind:idle ?reached ch2 rise_after] Я теж клав. Дві дошки. Ну, три.
+[eyvind:idle ?reached ch2 rise_after] Зала стоїть, а я при ній. Хто б подумав.
+# Побачив тебе (до знайомства мовчить сам: stranger); поки сидить — слизько, при ділі — трохи тепліше. Поза Залою (хатина, пошук Сверре) не жартує:
+# його слова без питання — лише у фазі eyvind_in_hall (people/phases.txt)
+[eyvind:see_player ?phase eyvind_in_hall] Знову ти. Я вже почав сумувати. Майже.
+[eyvind:see_player ?phase eyvind_in_hall] Підходь, підходь. Я не кусаюсь. Коліно — може.
+[eyvind:see_player ?phase eyvind_in_hall] А, це ти. Я думав, Літ — рахувати мене.
+[eyvind:see_player ?!phase eyvind_lively, phase eyvind_in_hall] О, друже. Я не заважаю. Бачиш, сиджу.
+[eyvind:see_player ?!phase eyvind_lively, phase eyvind_in_hall] Не дивись так. Я тут нічого не чіпав. Цього разу.
+[eyvind:see_player ?phase eyvind_lively] Бачиш? Ношу. Не кажи нікому — не повірять.
+[eyvind:see_player ?phase eyvind_lively] Друже! Не стій — бери дошку. Жартую. Стій.
+# Ти перевантажений: око на чуже добро
+[eyvind:heavy ?phase eyvind_in_hall] Ого, скільки добра. Давай поможу. Наполовину.
+[eyvind:heavy ?phase eyvind_in_hall] Я б поніс. Та коліно. Але подивитися можу.
+[eyvind:heavy ?phase eyvind_in_hall] Тягнеш, як Літ дошки. Тільки Літ не стогне.
+[eyvind:heavy ?phase eyvind_in_hall] Скинь щось. Не мені. Просто скинь.
+[eyvind:heavy ?!phase eyvind_lively, phase eyvind_in_hall] Таке носять удвох. Я — другий. Подумки.
+[eyvind:heavy ?phase eyvind_lively] Давай сюди. Я тепер ношу. Сам не вірю.
+# Трофей на тобі ({trophy})
+[eyvind:you_trophy ?phase eyvind_in_hall] {trophy}? Гарна річ. Продати можна дорого. Я просто кажу.
+[eyvind:you_trophy ?phase eyvind_in_hall] Це в тебе {trophy}? Я б не показував. Тут люди всякі. Я, наприклад.
+[eyvind:you_trophy ?phase eyvind_in_hall] {trophy}… {Сам|Сама} здобу{в|ла}? Чи, як я, знайш{ов|ла}?
+[eyvind:you_trophy ?phase eyvind_in_hall] Оце {trophy}! Розкажеш, як було? Я потім перекажу. Краще.
+[eyvind:you_trophy ?phase eyvind_in_hall] Я колись теж мав щось таке. Ну, тримав. Недовго.
+[eyvind:you_trophy ?phase eyvind_in_hall] {trophy}. Гарне. Набридне — знаєш, де моя лава.

@@ -161,6 +161,16 @@ namespace HuginWhispers
             RavenMotor.LookAhead = Row("Дивиться наперед, с", RavenMotor.LookAhead, 0.2f, 2f, 0.05f);
             RavenMotor.PushStrength = Row("Відхиляється до, м", RavenMotor.PushStrength, 0.5f, 10f, 0.25f);
             RavenMotor.GroundClear = Row("Над землею й водою, м", RavenMotor.GroundClear, 0.5f, 5f, 0.1f);
+            GUILayout.Label("<b>Під дахом</b> (чує, скільки має простору: швидкість і розвороти за ним, без поривів, низько над підлогою) і <b>політ до місця</b>:");
+            GUILayout.BeginHorizontal();
+            RavenMotor.RoomOn = GUILayout.Toggle(RavenMotor.RoomOn, RavenMotor.RoomOn ? " Чує тісноту ✓" : " Чує тісноту", "Button");
+            RavenMotor.DetourOn = GUILayout.Toggle(RavenMotor.DetourOn, RavenMotor.DetourOn ? " Обхід до місця ✓" : " Обхід до місця", "Button");
+            RavenMotor.SeatLog = GUILayout.Toggle(RavenMotor.SeatLog, RavenMotor.SeatLog ? " Заміри в лог ✓" : " Заміри в лог", "Button");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            RavenMotor.KeepSideOn = GUILayout.Toggle(RavenMotor.KeepSideOn, RavenMotor.KeepSideOn ? " Тримає бік обльоту ✓" : " Тримає бік обльоту", "Button");
+            RavenMotor.AirWayOn = GUILayout.Toggle(RavenMotor.AirWayOn, RavenMotor.AirWayOn ? " Обхід повітрям ✓" : " Обхід повітрям", "Button");
+            GUILayout.EndHorizontal();
             if (_dirty) { _dirty = false; RavenMotor.Version++; }
 
             GUILayout.EndScrollView();

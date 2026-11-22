@@ -27,8 +27,9 @@ namespace HuginWhispers
             float span = Time.time - _lookedAt;
             float moved = span > 0f && span < 2f ? (pos - _lastPos).magnitude / span : 0f;
             _lastPos = pos; _lookedAt = Time.time;
-            if (!Calm(p) || moved > StillSpeed) { _stillSince = -1f; return; }
+            if (!Calm(p) || moved > StillSpeed) { _stillSince = -1f; Moments.Moved(); return; }
             if (_stillSince < 0f) { _stillSince = Time.time; _next = Time.time + StillAfter + Random.Range(0f, 10f); return; }
+            Moments.Still(p, Time.time - _stillSince); // (your own small moves by the moment: the same standing calm)
             if (Time.time < _next) return;
             _next = Time.time + Random.Range(EveryMin, EveryMax);
             Stroke(p);

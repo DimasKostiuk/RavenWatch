@@ -22,6 +22,10 @@ namespace HuginWhispers
     //   The visit  it stops and looks where it means to go, walks, does the thing facing it (sits, opens the chest, its clip),
     //             stays as long as the kind says, from the moment it is there. All through NpcMind.TakeWhim as a whim of its
     //             pleasure: a duty, an order, a fight, a scene take it off as they take off any whim
+    //   An errand   a place may name the one it goes on to at once (Place.Then: the author's — a plank taken by the chest and carried to the fire,
+    //             StoryLife «haul»): the visit to the first over as it should, the second is gone to with no pause and no new choice; not gone to
+    //             (a talk, an order, no way), its Ends is still done — what the first put in its hands is taken off. A place's own moment of
+    //             its clip (AtMark, MarkAt s into it) and its end however it came (Ends) are the author's too
     //   raven npc why <who>   every place it could go to now, with the sum and its parts; each choice is in the log too.
     // Not a plan kept in its ZDO: a whim ends at a reload, and its next look picks again. Where it has been lately is a session's
     // (it may well go to the same bench again after a restart), so is what is new and where a fight was.
@@ -74,7 +78,7 @@ namespace HuginWhispers
         private static void K(Kind k) { k.Hash = k.Id.GetStableHashCode(); Kinds[k.Id] = k; }
         static NpcPlaces()
         {
-            K(new Kind { Id = "fire", Going = Lang.K("іде до вогню"), There = Lang.K("гріється біля вогню"), Min = 60f, Max = 150f, Cap = 4, LateStay = 2f, Wants = n => 0.35f + n.Cold * 1.2f + n.Lazy * 0.3f + (n.Late ? 0.9f : 0f) + (n.Circle ? CircleWant : 0f) + (n.Feast ? FeastFireWant : 0f), Now = "fire_warm|fire_warm|drink|rub_hands", NowSit = "sit_drink|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r" });
+            K(new Kind { Id = "fire", Going = Lang.K("іде до вогню"), There = Lang.K("гріється біля вогню"), Min = 60f, Max = 150f, Cap = 4, LateStay = 2f, Wants = n => 0.35f + n.Cold * 1.2f + n.Lazy * 0.3f + (n.Late ? 0.9f : 0f) + (n.Circle ? CircleWant : 0f) + (n.Feast ? FeastFireWant : 0f), Now = "fire_warm|fire_warm|drink|rub_hands|sneeze", NowSit = "sit_drink|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r" });
             K(new Kind { Id = "seat", Going = Lang.K("іде сісти"), There = Lang.K("перепочиває"), Min = 45f, Max = 120f, Reach = 0.9f, Cap = 1, LateStay = 2f, Wants = n => 0.25f + n.Tired * 1.2f + n.Lazy * 0.5f + (n.Old ? 0.3f : 0f) + (n.Late ? 0.35f : 0f), NowSit = "fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r", NowMin = 15f, NowMax = 35f });
             K(new Kind { Id = "heart", Now = "fire_nod_l|fire_nod_r", Going = Lang.K("іде до Серця оселі"), There = Lang.K("стоїть біля Серця оселі"), Min = 15f, Max = 30f, Reach = 4f, Cap = 3, Wants = n => 0.3f + n.Diligent * 0.2f - (n.Late ? 0.35f : 0f) });
             K(new Kind { Id = "stores", Going = Lang.K("іде глянути запаси"), There = Lang.K("перевіряє запаси"), Min = 12f, Max = 25f, Reach = 1.6f, Cap = 1, Wants = n => 0.15f + n.Diligent * 0.6f - (n.Late ? 0.5f : 0f) });
@@ -87,7 +91,7 @@ namespace HuginWhispers
             K(new Kind { Id = "table", NowSit = "sit_drink|sit_drink|sit_tap|fire_nod_sit_l|fire_nod_sit_r|fire_laugh_sit_l|fire_laugh_sit_r", Going = Lang.K("іде до столу"), There = Lang.K("сидить за столом"), Min = 60f, Max = 140f, LateStay = 2f, Reach = 1.5f, Cap = 8, Wants = n => (n.Late ? 0.9f : 0.05f) + n.Chatty * 0.5f + (n.Feast ? FeastWant : 0f) }); // (the table the player picked for meals: its evening with the others)
             K(new Kind { Id = "ravens", Now = "fire_nod_l|fire_laugh_r|point_at", Going = Lang.K("іде глянути на воронів"), There = Lang.K("дивиться на воронів"), Min = 15f, Max = 35f, Reach = 2.5f, Cap = 2, Wants = n => 0.1f + n.Curious * 0.6f - (n.Late ? 0.2f : 0f) }); // (a perch with a raven on it)
             K(new Kind { Id = "watch", Now = "point_at|scratch_head|fire_nod_r|shade_eyes", Going = Lang.K("іде глянути, що будують"), There = Lang.K("дивиться, що будують"), Min = 10f, Max = 25f, Reach = 3f, Cap = 3, NoFav = true, Wants = n => 0.15f + n.Curious * 1.1f }); // (a thing a player has just built)
-            K(new Kind { Id = "think", Now = "scratch_head|shrug_small|think_chin", NowMin = 12f, NowMax = 25f, Going = Lang.K("повільно йде"), There = Lang.K("задумався|задумалась"), Min = 30f, Max = 70f, Reach = 1.5f, Cap = 1, Wants = n => 0.4f }); // (the author's: a spot a person stands at in thought)
+            K(new Kind { Id = "think", Now = "scratch_head|shrug_small|think_chin|nose_rub", NowMin = 12f, NowMax = 25f, Going = Lang.K("повільно йде"), There = Lang.K("задумався|задумалась"), Min = 30f, Max = 70f, Reach = 1.5f, Cap = 1, Wants = n => 0.4f }); // (the author's: a spot a person stands at in thought)
             K(new Kind { Id = "tend", Clip = "heid_search.loop", From = "heid_search.bends", Out = "heid_search.rises", Going = Lang.K("іде до справ"), There = Lang.K("порається"), Min = 30f, Max = 80f, Reach = 1.5f, Cap = 1, Wants = n => 0.3f + n.Diligent * 0.5f }); // (the author's: its own small work at a spot)
             K(new Kind { Id = "post", Going = Lang.K("іде на варту"), There = Lang.K("стоїть на варті"), Min = 60f, Max = 150f, Reach = 2f, Cap = 1, NoFav = true, Outward = true, Wants = n => 0.3f + n.Brave * 0.3f }); // (the author's: a watch by a gate, its back to it — the side is the spot's «by»)
             K(new Kind { Id = "fetch", Going = Lang.K("іде по своє"), There = Lang.K("бере своє"), Min = 3f, Max = 4f, Reach = 1f, Cap = 1, NoFav = true, Wants = n => 0f }); // (the author's: a thing of its own set down somewhere — back to it (StoryLife, its Extra says how much)
@@ -109,6 +113,10 @@ namespace HuginWhispers
             public bool Shared;         // the author's: a gathering's place (StoryLife «meet») — whoever is there is company: never «taken», however many
             public bool Tool;           // the author's: its own thing (NpcTool) in its hand there — taken up before its clip, back on its belt as it goes (ClipBegins, ClipEnds)
             public string Parts = "";   // (raven npc why)
+            public Place Then;          // the author's: an errand — the place it goes on to at once when this visit is over as it should (its own object, not the pool's: Apart)
+            public Action<NpcActor> Ends;   // the author's: done once its visit is over however it ended — and when it was to be gone to as a Then and was not
+            public Action<NpcActor> AtMark; // the author's: done once MarkAt s into its clip (a thing let go as the hand is down)
+            public float MarkAt = -1f;
         }
 
         // a visit with a clip of its own is about to begin it (the author's: what is in the person's hands goes down first — StoryProps);
@@ -126,6 +134,7 @@ namespace HuginWhispers
             public Vector3 From; // where it set off from
             public string ClipOn = "", Last = "", Last2 = ""; // (Last2: the place last refused and why)
             public bool Hooked; public float Wait;                                            // (the visit's clip: ClipBegins asked once, and the wait it said)
+            public bool Marked;                                                               // (the visit's clip: its AtMark done)
             public Dictionary<int, int> Fav;                                                // its locker's count of its visits, read once
             public readonly Dictionary<int, float> Seen = new Dictionary<int, float>();    // session: a place → when it chose it
             public readonly Dictionary<string, float> KindSeen = new Dictionary<string, float>(); // session: a kind → when
@@ -176,6 +185,16 @@ namespace HuginWhispers
             return NpcResident.Is(a) && m.NowLayer <= NpcMind.Layer.Routine && m.Now == NpcMind.Task.Idle && !m.SeatedNow && !m.Asleep && m.Of(NpcMind.Layer.Whim) == null && !m.InTalk;
         }
 
+        // free to go on to the next place of its errand, the moment the visit to the first is over: as AtEase, but what its mind does this very look is
+        // not asked (the whim just ended: it may not have turned to its idle yet)
+        private static bool Onward(NpcActor a, NpcMind m)
+        {
+            return NpcResident.Is(a) && m.NowLayer <= NpcMind.Layer.Routine && !m.SeatedNow && !m.Asleep && m.Of(NpcMind.Layer.Whim) == null && !m.InTalk;
+        }
+
+        // it is on an errand now, or at a place that ends by a word of the author's (Place.Then, Place.Ends): what it holds is that visit's to take off
+        internal static bool OnErrand(NpcActor a) { State s; return States.TryGetValue(a, out s) && s.Visit != null && (s.Visit.Then != null || s.Visit.Ends != null); }
+
         // ---------------------------------------------------------------- the visit
         private static void Visiting(NpcActor a, NpcMind m, State s)
         {
@@ -185,11 +204,32 @@ namespace HuginWhispers
                 if (!s.There && p == null) { if (m.GaveUpOn(s.Plan.To)) NoWayTo(a, s, false); else s.Bad[s.Visit.Key] = Time.time + BadFor; } // (it never got there. Its feet found no way: that place left alone, NoWayTo; its whim ran out on its way, a talk held it: not that place again for a while, by itself)
                 ClipOff(a, s);
                 if (s.Hooked && ClipEnds != null) ClipEnds(a, s.Visit); // (its own thing back on its belt)
-                s.Plan = null; s.Visit = null; s.There = false; s.Stage = 0; s.Hooked = false;
+                Place was = s.Visit; bool done = s.There && p == null; // (it was there and its stay ran out: over as it should)
+                s.Plan = null; s.Visit = null; s.There = false; s.Stage = 0; s.Hooked = false; s.Marked = false;
                 s.Next = Time.time + UnityEngine.Random.Range(GapMin, GapMax) * NpcClock.Slow(a);
+                if (was.Ends != null) was.Ends(a);
+                if (was.Then != null) // (an errand: on to its next place at once — or what it carries there is taken off)
+                {
+                    _refused = "";
+                    if (done && Onward(a, m) && Ready(a, was.Then) && Go(a, m, s, was.Then, NeedOf(a))) return;
+                    Npcs.Log(a.Who + ": its errand ends at «" + was.K.Id + "»: " + (!done ? "the first place was left early" : _refused.Length > 0 ? _refused : "not free to go on"));
+                    if (was.Then.Ends != null) was.Then.Ends(a);
+                }
                 return;
             }
-            if (m.NowLayer > NpcMind.Layer.Whim) { ClipOff(a, s); s.Stage = 0; return; } // (an order, a fight, a scene over it: its clip is theirs now; it starts anew when it is back)
+            if (m.NowLayer > NpcMind.Layer.Whim) // (an order, a fight, a scene over it: its clip is theirs now; it starts anew when it is back)
+            {
+                ClipOff(a, s); s.Stage = 0;
+                if (s.Visit.Ends != null || s.Visit.Then != null) // (an errand does not wait under them with a thing in its hands: it is over now — the whim let go, what it carried taken off)
+                {
+                    Action<NpcActor> ends = s.Visit.Ends ?? s.Visit.Then.Ends;
+                    s.Visit.Ends = null; s.Visit.Then = null; // (its own copy: the visit's end below does neither again)
+                    Npcs.Log(a.Who + ": its errand at «" + s.Visit.K.Id + "» is cut: something it must do took its place");
+                    if (ends != null) ends(a);
+                    m.EndWhim(NpcMind.Leisure);
+                }
+                return;
+            }
             bool there = p.Kind == NpcMind.Task.Idle || p.Kind == NpcMind.Task.Pose || p.Seated;
             if (!there) return;
             if (!s.There)
@@ -200,7 +240,7 @@ namespace HuginWhispers
                 s.NextNow = Time.time + NpcPersona.Gap(a, UnityEngine.Random.Range(2f, s.Visit.K.NowMin));
                 if (m.PutBy(p.To)) NoWayTo(a, s, true); // (put there, not walked: no visit of its own to count, no word said — and nobody is sent there for a while)
                 else if (p.Seated && p.Seat == null && Utils.DistanceXZ(a.transform.position, p.To) > 3f) NoWayTo(a, s, false); // (its seat not reached: it sat on the ground where it got to — NpcMind.Sitting — which is no visit to that seat either)
-                else Arrive(a, m, s);
+                else if (s.Visit.Then == null) Arrive(a, m, s); // (the first place of an errand is no visit to count, nothing to say of, no chest to open: its There is all)
                 if (s.Visit.There != null) s.Visit.There(a);
             }
             if (NpcMoves.Talking(a)) { Hush(a, s); return; } // (someone talks to it: no move of the place's, its long clip out — asked anew after; its stay waits meanwhile, NpcMind)
@@ -283,6 +323,7 @@ namespace HuginWhispers
                 if (v.Tool && !s.Hooked && ClipBegins != null) { s.Hooked = true; s.Wait = Time.time + ClipBegins(a, v); }
                 return;
             }
+            if (v.AtMark != null && !s.Marked && s.Stage == 2 && Time.time - s.ClipAsked >= v.MarkAt) { s.Marked = true; v.AtMark(a); } // (looked at every LookEvery s: that late at most)
             if (s.Stage == 0 && !NpcClock.Seen(a)) return; // (not begun with nobody to see it; you come while it is there: then)
             PAnimClip way = v.Out.Length > 0 ? BodyClips.Find(v.Out) : null;
             float outFor = way != null ? way.Length : 0f;
@@ -365,7 +406,8 @@ namespace HuginWhispers
             if (s.ClipOn.Length == 0) return;
             string on = s.ClipOn; s.ClipOn = "";
             BodyAnimator b = BodyAnimator.Of(a.GetComponent<Character>());
-            if (a.Body != null && b != null && b.ClipIn(NpcBody.ClipSlot) == on) a.Body.Clip("");
+            string now = b != null ? b.ClipIn(NpcBody.ClipSlot) : null;
+            if (a.Body != null && now != null && (now == on || now == NpcMoves.Its(a.Def, on))) a.Body.Clip(""); // (on a dvergr its own «dv_» one plays: NpcBody.Clip)
         }
 
         // ---------------------------------------------------------------- the choice
@@ -429,7 +471,7 @@ namespace HuginWhispers
             plan.SetOff = Time.time + UnityEngine.Random.Range(MullMin, MullMax) * (1f + n.Lazy * 0.5f);
             plan.AimAt = p.Look;
             if (!m.TakeWhim(plan, way + stay + 5f, NpcMind.Leisure)) return false;
-            s.Plan = plan; s.There = false; s.Stage = 0; s.Stay = stay; s.From = a.transform.position;
+            s.Plan = plan; s.There = false; s.Stage = 0; s.Marked = false; s.Stay = stay; s.From = a.transform.position;
             s.Visit = Copy(p);
             Went(s, p);
             s.Last = p.K.Id + " " + p.Worth.ToString("0.00", CultureInfo.InvariantCulture);
@@ -481,7 +523,7 @@ namespace HuginWhispers
         // (the list's places are used again at the next choice: what it goes to is its own copy)
         private static Place Copy(Place p)
         {
-            return new Place { K = p.K, At = p.At, Look = p.Look, Thing = p.Thing, Sit = p.Sit, NoLook = p.NoLook, Guest = p.Guest, Key = p.Key, ThingKey = p.ThingKey, Worth = p.Worth, Clip = p.Clip, From = p.From, Out = p.Out, Exact = p.Exact, There = p.There, Moves = p.Moves, Tool = p.Tool, Shared = p.Shared };
+            return new Place { K = p.K, At = p.At, Look = p.Look, Thing = p.Thing, Sit = p.Sit, NoLook = p.NoLook, Guest = p.Guest, Key = p.Key, ThingKey = p.ThingKey, Worth = p.Worth, Clip = p.Clip, From = p.From, Out = p.Out, Exact = p.Exact, There = p.There, Moves = p.Moves, Tool = p.Tool, Shared = p.Shared, Min = p.Min, Max = p.Max, Then = p.Then, Ends = p.Ends, AtMark = p.AtMark, MarkAt = p.MarkAt };
         }
 
         private static Need NeedOf(NpcActor a)
@@ -590,15 +632,22 @@ namespace HuginWhispers
         {
             if (_used >= Pool.Count) Pool.Add(new Place());
             Place p = Pool[_used++];
+            Fill(p, kind, at, look, thing, keyAt);
+            Out.Add(p);
+            return p;
+        }
+        private static void Fill(Place p, string kind, Vector3 at, Vector3 look, Component thing, Vector3? keyAt)
+        {
+            p.Then = null; p.Ends = null; p.AtMark = null; p.MarkAt = -1f;
             p.K = Kinds[kind]; p.At = at; p.Look = look; p.Thing = thing; p.There = null; p.Sit = false; p.NoLook = false; p.Guest = false; p.Worth = 0f; p.Extra = 0f; p.Min = 0f; p.Max = 0f; p.Clip = p.K.Clip; p.From = p.K.From; p.Out = p.K.Out; p.Exact = false; p.Stand = null; p.Parts = ""; p.Moves = ""; p.Tool = false; p.Shared = false;
             Vector3 stands = thing != null ? thing.transform.position : keyAt ?? at;
             p.Key = p.K.Hash ^ PosKey(stands); p.ThingKey = thing != null ? PosKey(thing.transform.position) : 0;
-            Out.Add(p);
-            return p;
         }
         private static int PosKey(Vector3 at) { return (Mathf.RoundToInt(at.x) * 73856093) ^ (Mathf.RoundToInt(at.y) * 19349663) ^ (Mathf.RoundToInt(at.z) * 83492791); }
         // an author's place (StoryLife): made through the same pool, in the list being gathered
         internal static Place Spot(string kind, Vector3 at, Vector3 look, Vector3 thing) { return New(kind, at, look, null, thing); }
+        // an author's place that is not of the list — the next one of an errand (Place.Then): its own object, kept by the place that leads to it
+        internal static Place Apart(string kind, Vector3 at, Vector3 look, Vector3 thing) { Place p = new Place(); Fill(p, kind, at, look, null, thing); return p; }
         internal static List<Place> Begin() { Out.Clear(); _used = 0; return Out; }
 
         // all it could go to, by what is known already: nothing here asks physics or the way finder (Ready does, for the few)

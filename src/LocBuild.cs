@@ -10,8 +10,12 @@ using UnityEngine;
 
 namespace HuginWhispers
 {
-    // A place of the story coming into a world, on the server: its spot once a world (Seek), the places that stand by it (KinFit), built ahead of
+    // A place of the story coming into a world, on the server: its spot once a world (Seek), the places that stand by its walls (KinFit), built ahead of
     // anyone (BuildAhead), the author's rebuild and jobs. The whole story: the head of Loc.cs.
+    // Two kinds of «from: <another place>» (the user 2026-11-21): one by its walls («edge»: Torvald's camp by the Hall) is sought WITH that place — a
+    // spot is taken only where both fit, never one without the other; any other (the post, Eyvind's hut: hundreds of m off, another land) is sought
+    // AFTER it, by its own Seek with every pass and ring, and never moves it. One search at a time in a world (_seekingAny): the next one sees where
+    // the last one stands, so «apart:» and the circles hold between places sought in the same minute.
     internal sealed partial class Loc
     {
         // ---------------------------------------------------------------- the server: the place, once a world
@@ -19,8 +23,10 @@ namespace HuginWhispers
         private const float AwayFromPlaces = 20f;  // m between it and a place of the world (beyond that place's own radius)
         private const float AwayFromStory = 10f;   // m between it and another place of the story (beyond both footprints)
         private const int Tries = 3000, PerFrame = 50;
+        private const long FrameMs = 4;            // ms of one frame a search takes at most (a try that asks the world's objects, or the places by its walls, is dear: the frame ends early)
         private ZNet _world;
         private bool _seeking, _gaveUp;
+        private static bool _seekingAny; // session: one place sought at a time in a world — the next sees the last one's spot (apart, the circles)
         private float _nextSeek;
 
         private ZRoutedRpc _rpcOn; // (registered with this one: once a session)
@@ -152,7 +158,8 @@ namespace HuginWhispers
             if (_gaveUp) return; // (no place in this world: told once in the log; a restart tries again)
             Vector3 centre;
             if (!Centre(out centre)) return; // (round a place of the story that has no place yet: later)
-            _seeking = true;
+            if (_seekingAny) { _nextSeek = Time.time + 0.5f; return; } // (another place is being sought: this one right after it, knowing where that one stands — a new world's places by the start are wanted in its first minute)
+            _seeking = _seekingAny = true;
             Plugin.Instance.StartCoroutine(Seek(centre));
         }
 
@@ -173,26 +180,29 @@ namespace HuginWhispers
 
         private IEnumerator Seek(Vector3 centre)
         {
-            HashSet<string> no = Crossed();
+            List<Vector3> no = Crossed();
             System.Random rnd = new System.Random(WorldGenerator.instance.GetSeed() ^ Id.GetStableHashCode()); // (the same world, the same tries)
             int land = 0, uneven = 0, places = 0, built = 0, story = 0, crossed = 0, kin0 = 0, tried = 0;
             Vector3 found = Vector3.zero; float yaw = 0f; bool ok = false;
             string first = null; // (what the search with its room met, when it found nothing)
             ZNet world = ZNet.instance; // (the host may leave mid-search: nothing of this world written into the next)
-            List<Loc> kin = new List<Loc>(); foreach (Loc k in Locs.All) { Vector3 kat; Quaternion kr; if (k != this && k.Near == Id && !k.Built && !k.Where(out kat, out kr)) kin.Add(k); } // (the places that stand by it, no spot yet: sought with it, tight with it)
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew(); long msAll = 0, msWorst = 0; int frames = 1, looks0 = WorldSpot.BuiltLooks; // (what the search cost: its log says it)
+            List<Loc> kin = new List<Loc>(); foreach (Loc k in Locs.All) { Vector3 kat; Quaternion kr; if (k != this && k.Edge && k.Near == Id && !k.Built && !k.Where(out kat, out kr)) kin.Add(k); } // (the places that stand by its walls, no spot yet: sought with it, tight with it, in its land's pass)
             SetTight(kin, false); // (sought anew: with its room first)
             try
             {
-                for (int pass = 0; pass < 3 && !ok; pass++)
+                for (int pass = 0; pass < 4 && !ok; pass++)
                 {
-                    // the third pass: none of its own land within reach, with its room or without — any dry, even land (the user 2026-11-15: a place
-                    // the story leads to must stand in every world; a world with no Black Forest for three and a half km round the start still gets its barrow)
-                    if (pass == 2)
+                    // the last two passes: none of its own land within reach, with its room or without — first the calm lands (the Meadows and the Black
+                    // Forest, mixed too: the user 2026-11-21 — never a swamp or a mountain while those are there), then any dry, even land (the user
+                    // 2026-11-15: a place the story leads to must stand in every world; a world with no Black Forest for three and a half km round the
+                    // start still gets its barrow). The places by its walls go by the same pass (KinFit)
+                    if (pass >= 2)
                     {
-                        Log("no " + Biome + " for it within reach (tries " + tried + ", not " + Biome + " " + land + ", uneven/water " + uneven + ", a place of the world near " + places + "): sought once more in any land");
+                        Log("no " + (pass == 2 ? Biome.ToString() : "calm land") + " for it within reach (tries " + tried + ", not that land " + land + ", uneven/water " + uneven + ", a place of the world near " + places + "): sought once more in " + (pass == 2 ? "the Meadows and the Black Forest" : "any land"));
                         land = uneven = places = built = story = crossed = kin0 = tried = 0;
-                        _seekAnyLand = true;
-                        rnd = new System.Random(WorldGenerator.instance.GetSeed() ^ Id.GetStableHashCode() ^ 0xa11);
+                        _seekLand = pass - 1;
+                        rnd = new System.Random(WorldGenerator.instance.GetSeed() ^ Id.GetStableHashCode() ^ (pass == 2 ? 0xca1 : 0xa11));
                     }
                     if (pass == 1)
                     {
@@ -212,7 +222,13 @@ namespace HuginWhispers
                         if (ring[2] > 0f && (Near.Length > 0 || Nearest)) continue; // (beside a place of the story: its land is visited — no «nobody's been there» ring; «nearest» is the nearest such land, been to or not)
                         for (int i = 0; i < Tries && !ok; i++)
                         {
-                            if (++tried % PerFrame == 0) { yield return null; if (ZNet.instance != world || ZoneSystem.instance == null) yield break; }
+                            if (++tried % PerFrame == 0 || sw.ElapsedMilliseconds >= FrameMs)
+                            {
+                                long ms = sw.ElapsedMilliseconds; msAll += ms; if (ms > msWorst) msWorst = ms; frames++;
+                                yield return null;
+                                sw.Reset(); sw.Start();
+                                if (ZNet.instance != world || ZoneSystem.instance == null) yield break;
+                            }
                             float lo = ring[0], hi = ring[1];
                             if (by != null) { lo += own; hi += own + by.Reach(); }
                             float ang = (float)rnd.NextDouble() * Mathf.PI * 2f, r = lo + (Nearest ? (float)i / Tries : (float)rnd.NextDouble()) * (hi - lo); // («nearest»: outward step by step, a random side each — the first fit is about the nearest)
@@ -221,43 +237,48 @@ namespace HuginWhispers
                             Vector3 face = centre - c; face.y = 0f;
                             float y = Quaternion.LookRotation(face.normalized, Vector3.up).eulerAngles.y; // (its front to the start, or to the place it stands by: the way people come)
                             Quaternion q = Quaternion.Euler(0f, y, 0f);
-                            if (no.Contains(SpotId(c))) { crossed++; continue; }
+                            if (IsCrossed(no, c)) { crossed++; continue; }
                             if (!Land(c, q)) { land++; continue; }
                             if (!Even(c, q)) { uneven++; continue; }
                             if (ring[2] > 0f && !Fresh(c)) continue;
                             if (NearStory(c)) { story++; continue; }
                             if (NearPlace(c, q)) { places++; continue; }
-                            if (NearBuilding(c, q, true)) { built++; continue; }
+                            if (NearBuilding(c, q)) { built++; continue; }
                             if (!KinFit(c, q, rnd)) { kin0++; continue; }
                             found = c; yaw = y; ok = true;
                         }
                         if (ok) break;
                     }
                 }
+                msAll += sw.ElapsedMilliseconds; if (sw.ElapsedMilliseconds > msWorst) msWorst = sw.ElapsedMilliseconds;
+                string cost = "; cost: " + frames + " frames, " + msAll + " ms in all, the longest frame " + msWorst + " ms, zones looked through for buildings " + (WorldSpot.BuiltLooks - looks0);
                 if (first != null) Log("no place with its room (" + first + ")" + (ok ? ": it stands by its walls alone in this world" : ""));
                 if (ok && _seekTight) { ZoneSystem.instance.SetGlobalKey(KeyTight); foreach (Loc k in kin) ZoneSystem.instance.SetGlobalKey(k.KeyTight); }
                 if (!ok)
                 {
-                    // no room beside the place it stands by: that one, not built yet, moves (and this with it) — never one alone
-                    Loc o = Near.Length > 0 ? Locs.Get(Near) : null; Vector3 oat; Quaternion orot;
+                    // no room by the walls of the place it stands by: that one, not built yet, moves (and this with it) — never one alone. A place
+                    // sought after another (no «edge») never moves it: its own passes and rings were its every chance
+                    Loc o = Edge && Near.Length > 0 ? Locs.Get(Near) : null; Vector3 oat; Quaternion orot;
                     if (o != null && !o.Built && o.Where(out oat, out orot)) { o.CrossOut(oat, "no room for " + Id + " beside it"); yield break; }
                     _gaveUp = true;
                 }
-                if (!ok) { Log("no place (tries " + tried + ": not " + Biome + " " + land + ", uneven/water " + uneven + ", a place of the world near " + places + ", of the story " + story + ", a player's building near " + built + ", crossed out " + crossed + ", no room for the places beside it " + kin0 + ")"); yield break; }
+                if (!ok) { Log("no place (tries " + tried + ": not " + Biome + " " + land + ", uneven/water " + uneven + ", a place of the world near " + places + ", of the story " + story + ", a player's building near " + built + ", crossed out " + crossed + ", no room for the places beside it " + kin0 + ")" + cost); yield break; }
                 ZoneSystem.instance.SetGlobalKey(KeySpot + " " + F(found.x) + " " + F(found.z) + " " + F(yaw));
                 foreach (KeyValuePair<Loc, Vector3> k in _kinSpots) // (the places that stand by it: their room kept with it, set at once)
                 {
                     ZoneSystem.instance.SetGlobalKey(k.Key.KeySpot + " " + F(k.Value.x) + " " + F(k.Value.z) + " " + F(_kinYaw[k.Key]));
                     k.Key.Log("its place, with " + Id + ": " + Mathf.RoundToInt(k.Value.x) + " " + Mathf.RoundToInt(k.Value.z));
                 }
-                Log("its place: " + Mathf.RoundToInt(found.x) + " " + Mathf.RoundToInt(found.z) + ", " + Mathf.RoundToInt(Vector3.Distance(new Vector3(found.x, 0f, found.z), new Vector3(centre.x, 0f, centre.z))) + " m from " + (Near.Length > 0 ? Near : "the start") + " (tries " + tried + ")");
+                Log("its place: " + Mathf.RoundToInt(found.x) + " " + Mathf.RoundToInt(found.z) + ", " + Mathf.RoundToInt(Vector3.Distance(new Vector3(found.x, 0f, found.z), new Vector3(centre.x, 0f, centre.z))) + " m from " + (Near.Length > 0 ? Near : "the start") + " (tries " + tried + ")" + cost);
             }
-            finally { _seeking = _seekTight = _seekAnyLand = false; foreach (Loc k in kin) k._seekTight = false; } // (a world left, or a failure: nothing kept tight)
+            finally { _seeking = _seekingAny = _seekTight = false; _seekLand = 0; foreach (Loc k in kin) { k._seekTight = false; k._seekLand = 0; } } // (a world left, or a failure: nothing kept tight)
         }
 
-        // ---------------------------------------------------------------- the places that stand by it, sought with it
-        // A place round which others stand (the Hall: Torvald's stone) takes a spot only where there is room for each of
-        // them too (the user 2026-11-01: never one without the other); their spots are set with its own.
+        // ---------------------------------------------------------------- the places that stand by its walls, sought with it
+        // A place by whose walls others stand («edge» — the Hall: Torvald's stone) takes a spot only where there is room for each of
+        // them too (the user 2026-11-01: never one without the other); their spots are set with its own. They keep off one another as any two
+        // places do (Needs: the circles, «apart:»), and go by its pass of lands (_seekLand). A place «from» it with no «edge» is not of these:
+        // it is sought after it, on its own (the head of this file).
         // the search by walls alone, for it and the places that stand by it (their room left out too, or they would not fit in its tight pass); false: none tight
         private void SetTight(List<Loc> kin, bool on)
         {
@@ -276,33 +297,37 @@ namespace HuginWhispers
             foreach (Loc k in Locs.All)
             {
                 Vector3 at; Quaternion r;
-                if (k == this || k.Near != Id || !k.Shape() || k.Where(out at, out r)) continue; // (no blueprint yet, or placed already)
+                if (k == this || !k.Edge || k.Near != Id || !k.Shape() || k.Where(out at, out r)) continue; // (not by its walls, no blueprint yet, or placed already)
                 Vector3 kc; float ky;
-                if (!k.TryBeside(this, c, q, rnd, out kc, out ky)) return false;
+                k._seekLand = _seekLand; // (its pass of lands: a camp by a hall that stands in «any land» stands in it too)
+                if (!k.TryBeside(this, c, q, rnd, _kinSpots, out kc, out ky)) return false;
                 _kinSpots.Add(new KeyValuePair<Loc, Vector3>(k, kc));
                 _kinYaw[k] = ky;
             }
             return true;
         }
 
-        // a spot for this one beside «by», were «by» standing at (at, rot): its own rules, but no waiting for the other
-        internal bool TryBeside(Loc by, Vector3 at, Quaternion rot, System.Random rnd, out Vector3 found, out float yaw)
+        // a spot for this one by the walls of «by», were «by» standing at (at, rot): its own rules (its ring between the walls of the two, «nearest»
+        // from the inner edge out, as Seek), but no waiting for the other; «beside»: those picked by «by» in the same try already — kept off as any place
+        internal bool TryBeside(Loc by, Vector3 at, Quaternion rot, System.Random rnd, List<KeyValuePair<Loc, Vector3>> beside, out Vector3 found, out float yaw)
         {
             found = Vector3.zero; yaw = 0f;
-            HashSet<string> no = Crossed();
+            List<Vector3> no = Crossed();
             float own = Reach() - GroundMargin;
             for (int i = 0; i < KinTries; i++)
             {
-                float lo = Min, hi = Max;
-                if (Edge) { lo += own; hi += own + by.Reach(); }
-                float ang = (float)rnd.NextDouble() * Mathf.PI * 2f, r = lo + (float)rnd.NextDouble() * (hi - lo);
+                float lo = Min + own, hi = Max + own + by.Reach();
+                float ang = (float)rnd.NextDouble() * Mathf.PI * 2f, r = lo + (Nearest ? (float)i / KinTries : (float)rnd.NextDouble()) * (hi - lo);
                 Vector3 c = new Vector3(at.x + Mathf.Cos(ang) * r, 0f, at.z + Mathf.Sin(ang) * r);
-                if (Edge) { float gap = by.FromAt(c, at, rot) - own; if (gap < Min || gap > Max) continue; }
-                else { Vector3 d = c - at; d.y = 0f; if (d.magnitude < Reach() + by.Reach() + AwayFromStory) continue; }
+                float gap = by.FromAt(c, at, rot) - own;
+                if (gap < Min || gap > Max) continue;
+                bool taken = false;
+                foreach (KeyValuePair<Loc, Vector3> b in beside) { Vector3 d = b.Value - c; d.y = 0f; if (d.magnitude < Needs(b.Key)) { taken = true; break; } } // flat: two places of the land, on the map
+                if (taken) continue;
                 Vector3 face = at - c; face.y = 0f;
                 float y = Quaternion.LookRotation(face.normalized, Vector3.up).eulerAngles.y;
                 Quaternion q = Quaternion.Euler(0f, y, 0f);
-                if (no.Contains(SpotId(c)) || !Land(c, q) || !Even(c, q) || NearStory(c) || NearPlace(c, q) || NearBuilding(c, q, true)) continue;
+                if (IsCrossed(no, c) || !Land(c, q) || !Even(c, q) || NearStory(c) || NearPlace(c, q) || NearBuilding(c, q)) continue;
                 found = c; yaw = y;
                 return true;
             }
@@ -322,15 +347,16 @@ namespace HuginWhispers
         private const float GroundMargin = 6f; // (BlueprintGround eases the edge over 6 m: that land too)
 
         // all of it and its eased edge in its land (the corners first: most tries fail there)
-        private bool _seekAnyLand; // session: the last pass of the search is going on — any land will do
+        private int _seekLand; // session: the search's pass of lands — 0 its own land; 1 the calm ones (the Meadows and the Black Forest, mixed too); 2 any
+        private bool LandFits(Heightmap.Biome b) { return _seekLand == 0 ? b == Biome : b == Heightmap.Biome.Meadows || b == Heightmap.Biome.BlackForest; }
         private bool Land(Vector3 c, Quaternion q)
         {
-            if (_seekAnyLand) return true; // (dry and even is asked next: Even)
+            if (_seekLand >= 2) return true; // (dry and even is asked next: Even)
             float g = GroundMargin;
             BlueprintGround.Rect r = Room;
             Vector3[] corners = { new Vector3(r.X0 - g, 0f, r.Z0 - g), new Vector3(r.X1 + g, 0f, r.Z0 - g), new Vector3(r.X0 - g, 0f, r.Z1 + g), new Vector3(r.X1 + g, 0f, r.Z1 + g), Vector3.zero };
-            foreach (Vector3 k in corners) { Vector3 p = c + q * k; if (WorldGenerator.instance.GetBiome(p.x, p.z) != Biome) return false; }
-            foreach (Vector3 p in Points(c, q, g)) if (WorldGenerator.instance.GetBiome(p.x, p.z) != Biome) return false;
+            foreach (Vector3 k in corners) { Vector3 p = c + q * k; if (!LandFits(WorldGenerator.instance.GetBiome(p.x, p.z))) return false; }
+            foreach (Vector3 p in Points(c, q, g)) if (!LandFits(WorldGenerator.instance.GetBiome(p.x, p.z))) return false;
             return true;
         }
 
@@ -371,12 +397,25 @@ namespace HuginWhispers
                 Vector3 at; Quaternion r;
                 if (o == this || (Edge && o.Id == Near) || !o.Shape() || !o.Where(out at, out r)) continue; // (the one it stands by: kept by Edge's own count)
                 Vector3 d = at - c; d.y = 0f;
-                float apart, need = Reach() + o.Reach() + AwayFromStory;
-                if (Apart.TryGetValue(o.Id, out apart) || o.Apart.TryGetValue(Id, out apart)) need = Mathf.Max(need, apart); // (two the story keeps far apart: Munin's and Hugin's places)
-                if (d.magnitude < need) return true;
+                if (d.magnitude < Needs(o)) return true;
             }
+            if (_foundsAt != Time.frameCount) { _foundsAt = Time.frameCount; _founds.Clear(); StoryFound.AllFound(_founds); } // (once a frame: a seek asks it of many spots)
+            foreach (Vector3 f in _founds) { Vector3 d = f - c; d.y = 0f; if (d.magnitude < Reach() + AwayFromFound) return true; }
             return false;
         }
+        // how far its middle keeps from another place's: both circles and AwayFromStory, or what «apart:» says of the two, either way (two the
+        // story keeps far apart: Munin's and Hugin's places) — one rule for a place that stands (NearStory) and one picked in the same try (TryBeside)
+        private float Needs(Loc o)
+        {
+            float apart, need = Reach() + o.Reach() + AwayFromStory;
+            if (Apart.TryGetValue(o.Id, out apart) || o.Apart.TryGetValue(Id, out apart)) need = Mathf.Max(need, apart);
+            return need;
+        }
+        // a place the story found in the world already (a glade, a forest's edge: found.*) — a place placed later keeps off it too (the user 2026-11-18:
+        // «щоб всі наші локації не були в одній точці»; the glades keep StoryFound.BaseClear off the places the other way round)
+        private const float AwayFromFound = 60f;
+        private static readonly List<Vector3> _founds = new List<Vector3>(); // session: this frame's found places
+        private static int _foundsAt = -1;
 
         // a place of the world (a ruin, a crypt, a village, the start…) too near: only the zones round it are asked
         private bool NearPlace(Vector3 c, Quaternion q)
@@ -394,56 +433,53 @@ namespace HuginWhispers
         }
 
         // a player's building within Clear m of the footprint, from the server's own list of the world's objects (only
-        // the zones round it): a piece someone built has its creator. A blueprint's pieces (the story's) are not his
+        // the zones round it); what is «someone's» — the one answer for all who ask: WorldSpot.Someones
         private static readonly MethodInfo FindObjects = HarmonyLib.AccessTools.Method(typeof(ZDOMan), "FindObjects");
-        private static readonly Dictionary<int, bool> _isPiece = new Dictionary<int, bool>();
-        private bool NearBuilding(Vector3 c, Quaternion q, bool skipMarked)
+        private bool NearBuilding(Vector3 c, Quaternion q)
         {
-            if (FindObjects == null) return false;
             Quaternion inv = Quaternion.Inverse(q);
             BlueprintGround.Rect room = Room;
-            List<ZDO> all = new List<ZDO>();
             foreach (Vector2s z in Zones(c, Reach() + Clear))
-            {
-                all.Clear();
-                FindObjects.Invoke(ZDOMan.instance, new object[] { z, all, new HashSet<ZoneSystem.SectorIndex>() });
-                foreach (ZDO zdo in all)
+                foreach (Vector3 p in WorldSpot.BuiltIn(z)) // (kept for the frame: the tries of one frame share their zones)
                 {
-                    if (zdo == null || zdo.GetLong(ZDOVars.s_creator, 0L) == 0L || !Piece(zdo.GetPrefab())) continue;
-                    if (skipMarked && zdo.GetInt(Blueprint.Mark) == 1) continue;
-                    Vector3 d = zdo.GetPosition() - c; d.y = 0f;
+                    Vector3 d = p - c; d.y = 0f;
                     if (BlueprintGround.Outside(room, inv * d) < Clear) return true;
                 }
-            }
             return false;
         }
 
-        private static bool Piece(int hash)
+        // the crossed-out places («<key>_no x/z,x/z…»): a builder found a building or bad ground there. Each takes the land round it too
+        // (CrossedPart of its reach: the user 2026-11-21 — a spot a few m off stood on the same bad ground and was turned down the same way)
+        private const float CrossedPart = 0.5f;
+        private List<Vector3> Crossed()
         {
-            bool p;
-            if (_isPiece.TryGetValue(hash, out p)) return p;
-            GameObject pf = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(hash) : null;
-            p = pf == null || pf.GetComponent<global::Piece>() != null; // (unknown to this game: count it — better a wrong «no» than a hall on a house)
-            _isPiece[hash] = p;
-            return p;
-        }
-
-        // the crossed-out places («<key>_no x/z,x/z…»): a builder found a building or bad ground there
-        private HashSet<string> Crossed()
-        {
-            HashSet<string> set = new HashSet<string>();
+            List<Vector3> l = new List<Vector3>();
             string v;
-            if (ZoneSystem.instance.GetGlobalKey(KeyNo, out v)) foreach (string s in v.Split(',')) if (s.Length > 0) set.Add(s);
-            return set;
+            if (!ZoneSystem.instance.GetGlobalKey(KeyNo, out v) || v == null) return l;
+            foreach (string s in v.Split(','))
+            {
+                string[] xz = s.Split('/');
+                float x, z;
+                if (xz.Length == 2 && TryF(xz[0], out x) && TryF(xz[1], out z)) l.Add(new Vector3(x, 0f, z));
+            }
+            return l;
+        }
+        private bool IsCrossed(List<Vector3> no, Vector3 c)
+        {
+            float r = Reach() * CrossedPart;
+            foreach (Vector3 n in no) { float dx = n.x - c.x, dz = n.z - c.z; if (dx * dx + dz * dz < r * r) return true; }
+            return false;
         }
 
         private static string SpotId(Vector3 c) { return Mathf.RoundToInt(c.x) + "/" + Mathf.RoundToInt(c.z); }
 
         internal void CrossOut(Vector3 at, string why)
         {
-            HashSet<string> no = Crossed();
-            no.Add(SpotId(at));
-            ZoneSystem.instance.SetGlobalKey(KeyNo + " " + string.Join(",", new List<string>(no).ToArray()));
+            string was;
+            if (!ZoneSystem.instance.GetGlobalKey(KeyNo, out was) || was == null) was = "";
+            was = was.Trim();
+            if (Array.IndexOf(was.Split(','), SpotId(at)) < 0) was = was.Length > 0 ? was + "," + SpotId(at) : SpotId(at);
+            ZoneSystem.instance.SetGlobalKey(KeyNo + " " + was);
             ZoneSystem.instance.RemoveGlobalKey(KeySpot);
             ZoneSystem.instance.RemoveGlobalKey(KeyAgain);
             foreach (Loc k in Locs.All) if (k != this && k.Near == Id && !k.Built) ZoneSystem.instance.RemoveGlobalKey(k.KeySpot); // (the places beside it go with it)
@@ -454,13 +490,11 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the server builds it ahead of anyone
         internal static float BuildFrom = 500f;        // m from a player: he runs about a minute to get here, the building takes seconds
         private const float ZonesWait = 60f, ZonePad = 4f, RetryIn = 30f, HeightsOff = 12f;
-        private const int FramesAZone = 4;             // (frames between two zones made: the game itself makes one at a time)
-        private static readonly MethodInfo PokeZone = HarmonyLib.AccessTools.Method(typeof(ZoneSystem), "PokeLocalZone");
         private static bool _oneAtATime;               // session: one place going up in the world at a time
         private bool _building;
 
-        // the server's look every few seconds, one distance a player
-        private static bool SomeoneWithin(Vector3 at, float m)
+        // the server's look every few seconds, one distance a player (a place built ahead; a glade's land made ahead — StoryFound)
+        internal static bool SomeoneWithin(Vector3 at, float m)
         {
             Player me = Player.m_localPlayer;
             if (me != null && Utils.DistanceXZ(me.transform.position, at) < m) return true;
@@ -589,27 +623,17 @@ namespace HuginWhispers
             ZNet world = ZNet.instance;
             try
             {
-                if (PokeZone == null) { Log("the game changed (PokeLocalZone): it cannot be built"); _nextSeek = Time.time + RetryIn; yield break; }
-                if (!Again && NearBuilding(at, rot, true)) { CrossOut(at, "a player's building near"); yield break; } // (the server has every building of the world, loaded or not)
-                // its zones in, one every few frames, and kept in till the ground is levelled (the game lets a zone go 4 s after the last poke)
+                if (!Again && NearBuilding(at, rot)) { CrossOut(at, "a player's building near"); yield break; } // (the server has every building of the world, loaded or not)
+                // its zones in, and kept in till the ground is levelled (BlueprintGround.ZonesIn: the one way land is made far from every player)
                 List<Vector2s> zones = new List<Vector2s>(Zones(at, Reach() + ZonePad));
-                float giveUp = Time.time + ZonesWait;
-                while (true)
-                {
-                    if (ZNet.instance != world || ZoneSystem.instance == null) yield break;
-                    bool made = false, ready = true;
-                    foreach (Vector2s z in zones)
-                    {
-                        if ((bool)PokeZone.Invoke(ZoneSystem.instance, new object[] { z })) { made = true; ready = false; break; }
-                        if (!ZoneSystem.instance.IsZoneLoaded(z)) ready = false;
-                    }
-                    if (ready) break;
-                    if (Time.time > giveUp) { Log("its zones did not load in " + ZonesWait + " s: tried again later"); _nextSeek = Time.time + RetryIn; yield break; }
-                    for (int f = made ? FramesAZone : 1; f > 0; f--) yield return null;
-                }
+                int came = BlueprintGround.ZonesGone;
+                yield return BlueprintGround.ZonesIn(zones, ZonesWait, v => came = v);
+                if (came == BlueprintGround.ZonesNoGame) { Log("the game changed (PokeLocalZone): it cannot be built"); _nextSeek = Time.time + RetryIn; yield break; }
+                if (came == BlueprintGround.ZonesLate) { Log("its zones did not load in " + ZonesWait + " s: tried again later"); _nextSeek = Time.time + RetryIn; yield break; }
+                if (came != BlueprintGround.ZonesOk) yield break;
                 while (Blueprint.Placing) yield return null; // (the author's own going up)
                 if (ZNet.instance != world || ZoneSystem.instance == null) yield break;
-                foreach (Vector2s z in zones) PokeZone.Invoke(ZoneSystem.instance, new object[] { z });
+                BlueprintGround.KeepIn(zones);
                 BlueprintGround.Fit fit = BlueprintGround.Check(Room, at, rot);
                 if (!fit.Ok) { if (fit.Seen) CrossOut(at, "ground: " + fit.Why); else { Log("its ground not read yet: " + fit.Why); _nextSeek = Time.time + RetryIn; } yield break; }
                 float land = WorldGenerator.instance.GetHeight(at.x, at.z);

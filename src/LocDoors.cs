@@ -37,11 +37,23 @@ namespace HuginWhispers
         }
 
         // a player stands in the building of this place: on its floor and under its roof (not by it under the eaves). Rays straight
-        // up and down: two, asked of one player
-        internal static bool InsideOf(Player p, string place)
+        // up and down: two, asked of one player. «wider» m: or that far off it on any of eight sides (the user 2026-11-19, torv_back: the scene
+        // as one comes into the Hall, its round «1 m wider» — the gate's threshold counts); a spot off him looks down from higher and farther
+        // (a threshold's step stands higher than where he is) — up to eighteen rays then, only while he is not inside already
+        private static readonly Vector3[] Round = { new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, -1f), new Vector3(1f, 0f, 0f), new Vector3(-1f, 0f, 0f), new Vector3(0.7071f, 0f, 0.7071f), new Vector3(-0.7071f, 0f, 0.7071f), new Vector3(0.7071f, 0f, -0.7071f), new Vector3(-0.7071f, 0f, -0.7071f) };
+        internal static bool InsideOf(Player p, string place, float wider = 0f)
         {
             if (p == null) return false;
-            return OfPlace(new Ray(p.transform.position + Vector3.up * 0.5f, Vector3.down), 1.6f, place) && OfPlace(new Ray(Body.Head(p), Vector3.up), 8f, place);
+            Vector3 feet = p.transform.position;
+            float head = Body.Head(p).y - feet.y;
+            if (Within(feet, head, place, 0.5f, 1.6f)) return true;
+            if (wider <= 0f) return false;
+            foreach (Vector3 d in Round) if (Within(feet + d * wider, head, place, 1.2f, 2.5f)) return true;
+            return false;
+        }
+        private static bool Within(Vector3 feet, float head, string place, float from, float far)
+        {
+            return OfPlace(new Ray(feet + Vector3.up * from, Vector3.down), far, place) && OfPlace(new Ray(feet + Vector3.up * head, Vector3.up), 8f, place);
         }
 
         private static readonly int PieceMask = LayerMask.GetMask("piece", "piece_nonsolid", "Default", "static_solid");

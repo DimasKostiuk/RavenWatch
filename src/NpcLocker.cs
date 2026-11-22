@@ -195,6 +195,7 @@ namespace HuginWhispers
                     { NpcNews.KKeys, Kind.Int }, { NpcRequests.KAskNext, Kind.Long }, { NpcMind.KFought, Kind.Text }, { NpcTimbre.KTimbre, Kind.Text },
 #if RAVEN_STORY
                     { NpcRaven.KHeldUntil, Kind.Long }, // (the story's word to a person's raven)
+                    { StoryHold.KThere, Kind.Int }, // (it has taken the place its standing word names: changes when it comes and when it goes, a scene asks it before it begins)
 #endif
                 });
             }

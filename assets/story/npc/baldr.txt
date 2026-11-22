@@ -1,3 +1,9 @@
+# Незнайомець — Бальдр (story-lore.md «Бальдр»): тихий, добрий, без пам'яті; де він живе, там росте. Глава 1 — лише погляд біля будяка (сцена
+# ставить і забирає його сама); глава 2 (користувач 2026-11-18) — людина світу (people/baldr.txt): о 3-й ночі на вежі Торвальда приходить сам (здалеку біжить),
+# без сцени, стає поруч і б'ється (fight: defend — відбивається; unseen: no — мерці його бачать; безсмертний, як усі люди сюжету — лор «без див»);
+# у бою кидає нам кілька слів (cry: NpcCry). Вранці — сцена tower_morning: поранений, до Зали не йде, іде в ліс. Розмови з ним (E) нема.
+# Сокира — AxeBronze (користувач 2026-11-18: «сокира ок»; видно і в сцені глави 1). Вигляд — автора (F9 «Вигляд» → «Зберегти» пише сюди).
+# Рухи (shuns, lively) — типові: користувач вирішить пізніше («Бальдру поки не роби, потім доробимо»).
 [npc baldr]
 name: Незнайомець
 shuns: none   # docs/jobs/people-moves.md
@@ -7,8 +13,15 @@ skin: 0.93 0.86 0.8
 haircolor: 0.85 0.78 0.55
 hair: Hair5
 beard: Beard17
-gear: HelmetCelebration ArmorLeatherChest ArmorTrollLeatherLegs CapeDeerHide TrinketFlametalEitr
-fight: off
+gear: HelmetCelebration ArmorLeatherChest ArmorTrollLeatherLegs CapeDeerHide TrinketFlametalEitr AxeBronze
+fight: defend
+unseen: no
 walk: 0.9
 menu: no
+cry: Не дивись їм в очі. Бий.
+cry: Цей уже лягає. Ще трохи.
+cry: Ліворуч від тебе!
+cry: Не рахуй їх. Вони цього не люблять.
+cry: Ближче до мене. Удвох — то вже стіна.
+cry: Тихо, тихо… лягай.
 persona: chatty=0.25 bravery=0.3 curiosity=0.7 diligence=0.85 height=1.15 build=-0.25 lively=1

@@ -61,7 +61,7 @@ namespace HuginWhispers
 
         internal static void Play(List<CrossTalk.Who> whos, List<CrossTalk.Line> lines, bool mine)
         {
-            if (whos == null || lines == null || lines.Count == 0 || RavenSpeech.Host == null) return;
+            if (whos == null || lines == null || lines.Count == 0 || RavenSpeech.Host == null || RavenSpeech.Hushed()) return; // (a scene plays: no talk of the ravens over it)
             for (int i = Live.Count - 1; i >= 0; i--) // a talk with any of the same players ends the old one at once
             {
                 CrossBubble old = Live[i];

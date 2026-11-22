@@ -22,6 +22,9 @@ const RULES = [
   // needs it finds by the game's own objects (FeederUi.WindowOf) and guards at the game's own doors (GraveRavens.Keeps)
   { id: 'no-ui-mod-names', files: any, bad: /seneal/i,
     why: 'no other UI mod is named or reached into in the code: find it through the game\'s own objects (FeederUi.WindowOf), guard at the game\'s own doors (GraveRavens.Keeps)' },
+  // a quest's ring round the Hall came red: a map mod draws every EventArea pin as a raid, whatever colour was laid on it (2026-11-18)
+  { id: 'map-zone', files: any, bad: /PinType\.EventArea/,
+    why: 'a zone\'s ring on the map through ErrandMap.Zone (no fight: a ring on a «!» pin, coloured by its owner; a fight: the game\'s raid ring)', allow: ['ErrandMap.cs'] },
   { id: 'game-move', files: npc, bad: /(^|[^.\w])(MoveTo|MoveTowards)\(|\.MoveTo\(/,
     why: 'the game\'s walk halts on a bend over 10°; walk through NpcMind.Move → NpcWalk.Step → NpcMind.Steer' },
   // Shader.Find("Standard") is null in this game: the echo stayed flat, the heart's papers never showed, the shadow looked flat (2026-11-15)
@@ -71,6 +74,9 @@ const RULES = [
   // the map has roofs and upper floors too: a settler who could not reach his work was put on the roof over it, past a height check that compared the spot with itself (2026-11-09)
   { id: 'same-floor', files: f => /^(NpcBody|NpcMind\w*|NpcWalkStuck)\.cs$/.test(f), bad: /NpcKit\.Valid\(/,
     why: 'what puts a body somewhere takes a spot on its own floor: NpcKit.SameFloor (the map has roofs and upper floors too)' },
+  // the map's nearest spot with a growing reach is one spot every ring: on a workbench's top, the top itself — Eyvind stayed up there a whole evening, «no floor free beside it» 60 times (2026-11-20)
+  { id: 'floor-beside', files: f => /^(Npc|Story)\w*\.cs$/.test(f), bad: /NpcKit\.SameFloor\(out \w+, [^,]+, r\b/,
+    why: 'a spot for a body by a spot, ring by ring: NpcKit.FloorBeside (spots round it, each judged) — not NpcKit.SameFloor with a growing reach (the same nearest spot every time)' },
   // a person's name as shown is in the reader's language (2026-11-11: the names became translated): what is kept or compared is its source
   { id: 'kept-name', files: f => /^(Npc|Story)\w*\.cs$/.test(f), bad: /NpcMemory\.(Tell|Remember|TellHome)\([^;]*\.Name\)|\.What\s*==\s*[\w.]+\.Name\b|\b\w+\.Name\s*==\s*[\w.]+\.What\b/,
     why: 'a person\'s Name is shown (Lang.T, the reader\'s language): a memory keeps and a check compares its NpcActor.Key; a kept name is shown through NpcActor.Shown' },

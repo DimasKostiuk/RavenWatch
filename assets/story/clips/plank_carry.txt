@@ -1,0 +1,88 @@
+clip plank_carry
+length 4
+tone plain
+loop 1
+pivot 1.1
+curve ease
+vary 0.15
+fade 0.6 0.6
+carry yes
+
+say дошка на правому плечі, стоячи і в ході: дошка лежить уздовж ходи, передній кінець трохи нижче; права рука зігнута, долоня збоку на дошці перед плечем, пальці через її верх, лікоть донизу; ліва рука й ноги — гри
+want 0-4 hand right near 0.38 1.6 0.27 0.1
+want 0-4 palm right left
+
+# Дошка на плечі (користувач 2026-11-20, сцена hall_rises: «роби нову анімацію носіння дошок»): як guard_atgeir_carry — лише права рука,
+# хода, поворот і решта тіла — гри (carry yes: PAnimClip.HoldsWalk, ніг не чіпає). Дошку веде сам кліп (@Prop: сцена бере її словом
+# «prop take FineWood size … free»), кисть лежить на самій дошці (@RightHand.on, у системі дошки), тож не відстає від неї.
+# Петля 4 с: рука ледь дихає. Числа дошки (@Prop, @Prop.r) — чернетка до першого дубля: вісь моделі FineWood ще не міряна.
+
+# кисть на дошці: згори, перед плечем (точка, грань і пальці — у системі дошки; чернетка до першого дубля)
+
+0 @RightHand 0.38 1.6 0.27
+4 @RightHand 0.38 1.6 0.27
+
+0 @RightHand.w 1 0 0
+4 @RightHand.w 1 0 0
+
+0 @RightHand.f 0 1 0.1
+4 @RightHand.f 0 1 0.1
+
+0 @RightHand.n -1 0 0
+4 @RightHand.n -1 0 0
+
+0 @RightHand.p 0.3 -1 0.5
+
+0 @Prop 0.25 1.61 -0.05
+1 @Prop 0.25 1.6 -0.05
+2 @Prop 0.25 1.61 -0.05
+3 @Prop 0.25 1.6 -0.05
+4 @Prop 0.25 1.61 -0.05
+
+0 @Prop.r 8 0 0
+1 @Prop.r 9.5 0 0
+2 @Prop.r 8 0 0
+3 @Prop.r 9.5 0 0
+4 @Prop.r 8 0 0
+
+0 @Prop.w 1 0 0
+4 @Prop.w 1 0 0
+
+0 @RightHand.on 0.124 0 0.32
+
+0 @RightHand.on.f 0 1 0.1
+
+0 @RightHand.on.n -1 0 0
+
+0 @RightHand.on.w 1 0 0
+4 @RightHand.on.w 1 0 0
+
+0 RightHandThumb1 -28 -1 -53
+4 RightHandThumb1 -28 -1 -53
+
+0 RightHandThumb2 -5 0 0
+4 RightHandThumb2 -5 0 0
+
+0 RightHandIndex1 76 0 0
+4 RightHandIndex1 76 0 0
+
+0 RightHandIndex2 -54 0 0
+4 RightHandIndex2 -54 0 0
+
+0 RightHandMiddle1 65 0 0
+4 RightHandMiddle1 65 0 0
+
+0 RightHandMiddle2 -61 0 0
+4 RightHandMiddle2 -61 0 0
+
+0 RightHandRing1 63 0 0
+4 RightHandRing1 63 0 0
+
+0 RightHandRing2 -68 0 0
+4 RightHandRing2 -68 0 0
+
+0 RightHandPinky1 38 0 0
+4 RightHandPinky1 38 0 0
+
+0 RightHandPinky2 -69 0 0
+4 RightHandPinky2 -69 0 0

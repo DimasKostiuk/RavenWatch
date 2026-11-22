@@ -6,16 +6,18 @@ namespace HuginWhispers
 {
     // A person speaking and listening, with no voice (the user 2026-11-09: «make talk look like talk without the voice package»;
     // the body has no jaw and no face bones, only its head, neck and chest). One place for every line a person says:
-    //   over its head   NpcActor.Say → RPC_Say on every game (small talk, a scene, a greeting, one who butts in)
+    //   over its head   NpcActor.Say → RPC_Say on every game (small talk, a scene, a greeting, one who butts in); for this game's
+    //                   player alone — NpcActor.SayHere, no message (StoryRoad: a talk on the way, each player hears his own)
     //   in your talk    the talk window shows its lines one by one (RavenBookTalk → NpcTalk.LineShown → Window): one small message
     //                   to every game (NpcActor.Speak), no bubble, so those near see it speak to you
     // The line's words become its plan (Make): syllables at the person's own pace, its stressed words, a pause at each mark
     // (, . … ? !), a breath before each sentence. The plan moves the bodies:
     //   the speaker     its head and neck bob a little with its syllables (what a mouth would show from afar), nod on a stressed
     //                   word, dip at a full stop, tilt at a question, lean in at «!», look aside at «…», its chest rises with a breath;
-    //                   its head turns to the one it speaks to (named; else who spoke to it last; else the nearest person; else a player near)
+    //                   its head turns to the one it speaks to (named; else who spoke to it last; else the nearest person; else a player near) —
+    //                   unless that one stands past SpeakReach from where its body faces: then its body was turned elsewhere on purpose, the head stays
     //   the listeners   the nearest one or two people (and, in a scene, all its people however far: SceneOf; the hero's own lines
-    //                   in a scene too: HeroSaid) turn their heads to it while it speaks and ListenFor after; they nod at its full
+    //                   in a scene too: HeroSays) turn their heads to it while it speaks and ListenFor after; they nod at its full
     //                   stops, tilt at its question, draw back a little at «!»; the one spoken to «thinks» after the line before it
     //                   answers — a glance aside (Think: the same time on every game, and the small talk waits it out: NpcChatter)
     //   sounds          its wordless sounds, where a person would make them — the names on «speech_» of assets/story/sounds (none written:
@@ -36,11 +38,28 @@ namespace HuginWhispers
     //                   How often is the person's own (Ways: from its ways and age — the talkative agree aloud more, the curious wonder,
     //                   the timid say «ем…» where the bold hum, the old breathe and clear their throats more, the lazy sigh). Each is
     //                   decided from the line's words and the person's number (Roll): the same on every game, nothing sent
+    // Its head's own life in a talk (the user 2026-11-19: «оживити більше… щоб голови рухались гарніше або різноманітніше», Life):
+    //   what its words mean   «ні», «ніколи», «нема» (and now and then a bare «не») — its head shaken; «так,», «авжеж», «гаразд.» — a
+    //                         double nod; «мабуть», «здається», «не знаю» — its shoulders up and its head aside (Cue)
+    //   its eyes              it does not stare: at a comma, a stop, now and then, a glance away and back — the timid oftener and
+    //                         down, the bold seldom; never just before its own question (Glances); a listener glances away too
+    //   variety               each mark's move is one of three (a stop: a dip · a chin lifted · a dip with a tilt; a question: a tilt ·
+    //                         a tilt leaning in · a tilt chin up; «!»: a lean · a lean with a nod · a draw back first; «…»: aside ·
+    //                         down · up and aside), picked by the line itself
+    //   its manner            a timid one holds its chin lower, a bold one higher (Chin); a lively one moves more
+    //   between the lines     while it looks at someone its head and chest drift a little, slowly (Drift, on the world's clock)
+    //   a listener            a small nod at the speaker's comma now and then, leaning in through a long line
+    // All of it from the same words, the same seed and the world's clock: the same on every game. Off: LifeOn.
     // Every game makes the same plan from the same words and the person's seed and finds the same people round it, so nothing is
     // sent but the line. Its own layer of the pose (NpcPose, after the gait): small turns over what the game, the clips and the
     // gait left on the bones; a clip that holds the head (BodyAnimator.HeadFree) wins over it. The game's own look-at does not
     // turn a sitting person's head (CharacterAnimEvent: no weight for a non-player that cannot move), and most talks sit: hence ours.
-    // Hands: one gesture for a long line with no mark of its own (Hands, asked by NpcBody.Spoken), standing and empty-handed.
+    // A dvergr's head is ours alone, standing too: the game's look is off on that body (Npcs.BuildDvergr — it aimed tens of degrees astray).
+    // Hands: one gesture for a line with no mark of its own (Hands, asked by NpcBody.Spoken), empty-handed; on a bench — its talking hands
+    // over its knees at a long line (sit_talk_hands); standing — by what the
+    // line says: a hand waved off at a «no», its head scratched at a doubt, a fist in its palm at a firm «!», open arms at a question,
+    // else its talking hands at a long line; one that calls for your ear («слухай», «зауваж») — a finger raised; a line that speaks of itself («я», «мені») — a hand to its chest, a short plain one — a palm
+    // up, now and then; on a bench the seated ones of these; each through NpcMoves' gate (its body, what it shuns), never the same twice running.
     // Its pose (the user 2026-11-09, «both»): the nearest listener of a long line now and then takes its chin in its hand and holds it
     // while the line lasts (listen_chin.listen, with a term); one asked a question, with no pose on, thinks before it answers (think_chin
     // whole: the hand comes down as it begins). Standing, hands free, not in a scene or a fight, not again within PoseEvery; ordered
@@ -59,6 +78,8 @@ namespace HuginWhispers
         internal static float ThinkMin = 0.4f, ThinkMax = 1.2f, ThinkAside = 12f, ThinkChance = 0.6f; // s · degrees · how often the one spoken to glances aside
         internal static float ListenNear = 4f, ListenFor = 6f, ReplyWithin = 12f;       // m · s a listener keeps looking · s a reply looks back at the one before
         internal static float LookEase = 0.3f, LookYaw = 60f, LookPitch = 25f;          // s to turn · most degrees aside · up or down
+        internal static float SpeakReach = 75f; // the one it speaks to farther aside than this from where its body faces: its head is not turned to it (a scene sends its lines with no
+                                                // listener named: «npc lit say» to Eyvind had its head pulled toward the player beside it, 2026-11-20); one it listens to: 110
         internal static float GameShare = 0.5f; // standing, the game already turns the head toward where it looks (CharacterAnimEvent): this share of that turn is not added again (NOT measured: tune live)
         internal static float OnRate = 4f, SeenNear = 30f;                              // its speech eased in and out in a quarter of a second · m from the eye
         internal static float SoundVol = 0.5f, SoundRange = 8f, BreathChance = 0.25f, HmChance = 0.4f;
@@ -70,15 +91,37 @@ namespace HuginWhispers
         internal static int HandsWords = 7;                                             // words: a line this long may get its hands
         internal static float HandsChance = 0.5f;                                       // × (0.4 + chattiness)
         internal static bool Trace = false;                                             // (each line's plan into the log: raven npc tune NpcSpeech.Trace 1)
+        // its head's own life in a talk (the header's «Life»): degrees, seconds, chances
+        internal static bool LifeOn = true;
+        internal static float Shake = 6f, ShakeFor = 0.62f, NotChance = 0.35f, CueGap = 1.4f; // a «no»: degrees each way · s · how often a bare «не» · s between two such moves
+        internal static float DoubleNod = 5.2f, Shrug = 7f, ShrugTilt = 4f;                    // a «yes» · a doubt: its shoulders up, its head aside
+        internal static float GlanceChance = 0.3f, GlanceYaw = 11f, GlanceDown = 4f, GlanceFor = 0.55f, GlanceQuiet = 1.2f, GlanceGap = 2f; // a glance away at a mark · degrees aside · down · s held · none this long before its question · s between two
+        internal static float Chin = 2.5f;                                                     // degrees its chin is held down (timid) or up (bold) while it speaks
+        internal static float Drift = 2.2f, DriftRate = 0.13f, Sway = 1.2f;                    // between the lines: degrees its head drifts · how fast · degrees its chest sways
+        internal static float HeedComma = 0.3f, HeedLean = 2f, HeedLong = 4f, HeedGlance = 0.2f; // a listener: a nod at a comma (chance) · degrees it leans in · through a line this long (s) · a glance away at a stop (chance)
+        internal static int HandsSmall = 3;                                                    // words: a line this long may get a small gesture for what it says
+        internal static float HandsSmallChance = 0.45f;                                        // × (0.4 + chattiness) × liveliness
         internal const string SoundBreath = "speech_breath", SoundHm = "speech_hm", SoundEm = "speech_em", SoundUhu = "speech_uhu", SoundOh = "speech_oh", SoundHmAsk = "speech_hm_ask",
             SoundSigh = "speech_sigh", SoundKhm = "speech_khm", SoundChuckle = "speech_chuckle";
         internal const string ThinkClip = "think_chin", ListenClip = "listen_chin.listen", ListenSitClip = "listen_sit_chin.listen"; // (standing · on a bench: its own body there; on the ground — none)
         internal const string HandsClip = "talk_hands", AskHandsClip = "arms_open"; // (its hands with a long line · with a question or a trailing one)
-        internal static readonly string[] TalkClips = { HandsClip, AskHandsClip, ThinkClip, ListenClip, ListenSitClip }; // (what a talk's own body does: they fit a talk, NpcMoves.TalkFits)
+        internal const string HandsSitClip = "sit_talk_hands"; // (… on a bench: the user saw it on the mannequin 2026-11-19)
+        // the small gestures of one hand (the user took each on the mannequin, 2026-11-19): a palm up — «ну», «от» —, a hand to the chest — «я»,
+        // «мені» —, standing and on a bench; each list has another to take its turn (NpcMoves.Pick: never the same twice running)
+        private const string SmallHands = "palm_up", SelfHands = "hand_chest|palm_up";
+        // a finger raised — «слухай», «зауваж» (the user 2026-11-19: «з пальцем прикольна анімація… вставляй це у гру»): standing and on a bench, and not by a
+        // timid one (bravery under HeedBold) — a teaching gesture; a ghost and the Wanderer never make it (their templates' «never:»)
+        private const string HeedHands = "finger_up", SitHeedHands = "sit_finger_up"; // (… and on a bench: the user took it on the mannequin too)
+        internal static float HeedBold = 0.4f;
+        private const string SitLongHands = "sit_talk_hands|sit_palm_up", SitSmallHands = "sit_palm_up", SitSelfHands = "sit_hand_chest|sit_palm_up";
+        internal static float SelfChance = 0.5f, PlainChance = 0.3f; // of a line that speaks of itself · of a short line that says nothing of these (each × its small-gesture chance)
+        internal const string NoHandsClip = "wave_off", DoubtHandsClip = "scratch_head", FirmHandsClip = "fist_palm"; // (a «no» · a doubt · a firm «!»)
+        private const string NoHands = NoHandsClip + "|shrug_small", DoubtHands = DoubtHandsClip + "|shrug_small", FirmHands = FirmHandsClip + "|" + HandsClip; // (each with another to take its turn: NpcMoves.Pick never makes the same one twice running)
+        internal static readonly string[] TalkClips = { HandsClip, AskHandsClip, ThinkClip, ListenClip, ListenSitClip }; // (what a talk's own body does: they fit a talk, NpcMoves.TalkFits — the hands for what a line says are not of them: the line asks for those itself, its own life may not make them in a talk)
         internal static float ListenPoseMin = 2.5f, ListenPoseChance = 0.35f, ThinkPoseChance = 0.5f, ThinkPoseFrom = 0.7f, PoseEvery = 25f; // s of a line · × (0.5 + curiosity) · the same · s of thinking · s
 
         // ---------------------------------------------------------------- one line's plan
-        private struct Mark { public float T; public char Kind; } // '.', ',', '?', '!', '~' (… trailing off)
+        private struct Mark { public float T; public char Kind; public byte V; } // '.', ',', '?', '!', '~' (… trailing off); V: which of its three moves · a cue: 'n' a no, 'y' a yes, 'd' a doubt
         private sealed class Plan
         {
             public float Length, Rate, Phase, Side, Strength, Think;
@@ -91,7 +134,52 @@ namespace HuginWhispers
             public readonly List<float> Beats = new List<float>(), BeatK = new List<float>();
             public readonly List<float> Breaths = new List<float>();
             public readonly List<Mark> Marks = new List<Mark>();
+            public readonly List<Mark> Cues = new List<Mark>();         // (what its words mean: a no, a yes, a doubt)
+            public readonly List<Vector4> Glances = new List<Vector4>(); // (when · how long · aside, signed · down, signed)
+            public float ChinDown;                                       // (-1 bold … 1 timid)
+            public char Says1;                                           // (what the line mostly says, for its hands: 'n', 'd', 0)
         }
+
+        // what a word means for the head (0: nothing): a no, a yes (only where it stands by itself, with its mark: «Так,» — not «так само»),
+        // a doubt; «не знаю» is a doubt, not a no
+        private static char Cue(string core, bool marked, string prev, ref uint r)
+        {
+            switch (core)
+            {
+                case "ні": case "ніколи": case "нізащо": case "нема": case "немає": case "ніхто": case "нічого": case "ніщо": case "жоден": case "жодного": case "жодна":
+                case "no": case "never": case "nothing": case "nobody": case "none": case "nope": return 'n';
+                case "не": case "not": return Rnd(ref r) < NotChance ? 'n' : '\0';
+                case "так": case "авжеж": case "атож": case "еге": case "гаразд": case "добре": case "згода": case "звісно": case "звичайно":
+                case "yes": case "aye": case "sure": case "indeed": case "agreed": case "certainly": case "right": return marked ? 'y' : '\0';
+                case "мабуть": case "можливо": case "напевно": case "здається": case "хтозна": case "навряд": case "певно":
+                case "maybe": case "perhaps": case "probably": case "dunno": case "seems": return 'd';
+                case "може": return marked ? 'd' : '\0';
+                case "знаю": case "know": return prev == "не" || prev == "don't" || prev == "dont" || prev == "not" ? 'd' : '\0';
+            }
+            return '\0';
+        }
+        // a word that calls for the other's ear or teaches: «слухай», «зауваж», «запам'ятай», «знай»
+        private static bool Calls(string core)
+        {
+            switch (core)
+            {
+                case "слухай": case "слухайте": case "послухай": case "послухайте": case "зауваж": case "зауважте": case "запам'ятай": case "запам'ятайте": case "запам’ятай": case "запам’ятайте":
+                case "дивись": case "дивіться": case "знай": case "знайте": case "затям": case "затямте":
+                case "listen": case "mind": case "remember": case "mark": case "heed": return true;
+            }
+            return false;
+        }
+        // a word by which one speaks of oneself
+        private static bool Self(string core)
+        {
+            switch (core)
+            {
+                case "я": case "мені": case "мене": case "мною": case "мій": case "моя": case "моє": case "мої": case "мого": case "моєї": case "моїх":
+                case "i": case "me": case "my": case "mine": case "myself": return true;
+            }
+            return false;
+        }
+        private static readonly char[] WordEnds = { '.', ',', '!', '?', '…', ':', ';', '»', '"', '”', ')', '-', '—' }, WordStarts = { '«', '"', '\'', '(', '„', '“' };
 
         private const string Vowels = "аеєиіїоуюяaeiouyАЕЄИІЇОУЮЯAEIOUY";
         private static readonly string[] Laughter = { "ха-ха", "хе-хе", "ги-ги", "ha-ha", "haha", "he-he", "hehe" }; // (how a line's words laugh, in the languages the lines are written in)
@@ -119,6 +207,7 @@ namespace HuginWhispers
         }
 
         // the words with what is not said taken out: tags, a form's braces, a gesture's mark
+        internal static string Plain(string text) { return Clean(text).Trim(); } // (the words alone: no rich text, no «{…}»)
         private static string Clean(string text)
         {
             if (string.IsNullOrEmpty(text)) return "";
@@ -144,21 +233,24 @@ namespace HuginWhispers
         }
 
         private static uint SeedOf(NpcActor a) { ZDO z = a != null ? a.Zdo : null; return z != null ? NpcKit.Seed(z) : 0u; }
-        private static Plan PlanFor(NpcActor a, string text) { return Make(text, SeedOf(a), NpcPersona.Of(a).Chatty, RavenSpeech.Seconds(text, RavenSpeech.Pace.Bubble)); }
+        private static Plan PlanFor(NpcActor a, string text) { NpcPersona w = NpcPersona.Of(a); return Make(text, SeedOf(a), w.Chatty, RavenSpeech.Seconds(text, RavenSpeech.Pace.Bubble), 1f - w.Bravery, w.Lively); }
 
         // how long the one spoken to thinks after this line before it answers: the same on every game (NpcChatter waits it out)
         internal static float Think(string text) { return ThinkClean(Clean(text)); }
         private static float ThinkClean(string t) { uint r = (uint)Hash(t) ^ 0x9E3779B9u; return Mathf.Lerp(ThinkMin, ThinkMax, Rnd(ref r)); }
 
         // its plan: the same words and the same person give the same plan on every game
-        private static Plan Make(string text, uint seed, float chatty, float most)
+        // timid: 0 bold … 1 timid (its glances, its chin); lively: its liveliness (how much it moves) — one who is no person of ours (the hero): the middle
+        private static Plan Make(string text, uint seed, float chatty, float most, float timid = 0.5f, float lively = 1f)
         {
             string t = Clean(text);
             uint r = seed ^ (uint)Hash(t);
-            Plan p = new Plan { Rate = Syllables * Mathf.Lerp(0.85f, 1.15f, chatty), Phase = Rnd(ref r) * 6.283f, Side = Rnd(ref r) < 0.5f ? -1f : 1f, Strength = Mathf.Lerp(0.75f, 1.25f, chatty), Think = ThinkClean(t), Text = text, Key = (uint)Hash(t) };
+            Plan p = new Plan { Rate = Syllables * Mathf.Lerp(0.85f, 1.15f, chatty), Phase = Rnd(ref r) * 6.283f, Side = Rnd(ref r) < 0.5f ? -1f : 1f, Strength = Mathf.Lerp(0.75f, 1.25f, chatty) * Mathf.Clamp(0.75f + 0.25f * lively, 0.8f, 1.1f), Think = ThinkClean(t), Text = text, Key = (uint)Hash(t) };
             p.Thinks = Rnd(ref r) < ThinkChance;
+            p.ChinDown = Mathf.Lerp(-1f, 1f, Mathf.Clamp01(timid));
             float per = 1f / p.Rate, now = 0.25f;
             bool first = true;
+            string prev = ""; float cueAt = -99f; int nos = 0, doubts = 0, selfs = 0, heeds = 0;
             foreach (string word in t.Split(new[] { ' ', '\n', '\t' }, System.StringSplitOptions.RemoveEmptyEntries))
             {
                 int v = 0, digits = 0;
@@ -171,6 +263,16 @@ namespace HuginWhispers
                     string written = Written(word);
                     if (written != null) p.Says.Add(new KeyValuePair<float, string>(now, written));
                     float w = v * per;
+                    {
+                        // what the word means: a no, a yes, a doubt (Cue) — not two such moves on top of each other, but a doubt takes a «не» back
+                        string lw = word.TrimStart(WordStarts).ToLowerInvariant(), core = lw.TrimEnd(WordEnds);
+                        char cue = Cue(core, core.Length < lw.Length, prev, ref r);
+                        prev = core;
+                        if (Self(core)) selfs++; // (it speaks of itself: a hand to its chest may go with the line — Hands)
+                        if (Calls(core)) heeds++; // (it calls for the other's ear: a finger raised may go with it)
+                        if (cue == 'd' && p.Cues.Count > 0 && p.Cues[p.Cues.Count - 1].Kind == 'n' && now - p.Cues[p.Cues.Count - 1].T < 1f) { p.Cues.RemoveAt(p.Cues.Count - 1); nos--; cueAt = -99f; }
+                        if (cue != '\0' && now - cueAt >= CueGap) { p.Cues.Add(new Mark { T = now + w * 0.3f, Kind = cue }); cueAt = now; if (cue == 'n') nos++; else if (cue == 'd') doubts++; }
+                    }
                     if (first || (v >= 3 && Rnd(ref r) < 0.6f) || word.IndexOf('!') >= 0) { p.Beats.Add(now + w * 0.45f); p.BeatK.Add(word.IndexOf('!') >= 0 ? 1.3f : 0.7f + Rnd(ref r) * 0.3f); }
                     p.From.Add(now); p.To.Add(now + w);
                     now += w;
@@ -178,17 +280,33 @@ namespace HuginWhispers
                 }
                 string bare = word.TrimEnd('»', '"', '\'', ')', '”', '“');
                 char end = bare.Length > 0 ? bare[bare.Length - 1] : ' '; // (a sentence closed in quotes: «…кажу.» ends at its stop)
-                if (word.IndexOf('…') >= 0) { p.Marks.Add(new Mark { T = now, Kind = '~' }); now += TrailPause; first = true; }
-                else if (word.IndexOf('?') >= 0) { p.Marks.Add(new Mark { T = now, Kind = '?' }); now += StopPause; first = true; }
-                else if (end == '!') { p.Marks.Add(new Mark { T = now, Kind = '!' }); now += StopPause; first = true; }
-                else if (end == '.') { p.Marks.Add(new Mark { T = now, Kind = '.' }); now += StopPause; first = true; }
+                if (word.IndexOf('…') >= 0) { p.Marks.Add(new Mark { T = now, Kind = '~', V = Which(ref r) }); now += TrailPause; first = true; }
+                else if (word.IndexOf('?') >= 0) { p.Marks.Add(new Mark { T = now, Kind = '?', V = Which(ref r) }); now += StopPause; first = true; }
+                else if (end == '!') { p.Marks.Add(new Mark { T = now, Kind = '!', V = Which(ref r) }); now += StopPause; first = true; }
+                else if (end == '.') { p.Marks.Add(new Mark { T = now, Kind = '.', V = Which(ref r) }); now += StopPause; first = true; }
                 else if (end == ',' || end == ';' || end == ':' || word == "—" || word == "-") { p.Marks.Add(new Mark { T = now, Kind = ',' }); now += CommaPause; }
                 else now += per * 0.25f; // (between two words)
             }
             p.Length = Mathf.Min(now + 0.2f, most);
+            p.Says1 = nos > 0 && nos >= doubts ? 'n' : doubts > 0 ? 'd' : heeds > 0 ? 'a' : selfs > 0 ? 'i' : '\0';
+            // its eyes: a glance away at a comma or a stop within the line, now and then — the timid oftener; none just before its own question
+            // (one who asks looks at whom it asks), none right after another
+            float often = GlanceChance * Mathf.Lerp(0.6f, 1.6f, Mathf.Clamp01(timid)), last = -99f;
+            for (int i = 0; i < p.Marks.Count - 1; i++)
+            {
+                Mark m = p.Marks[i];
+                if ((m.Kind != ',' && m.Kind != '.') || Rnd(ref r) >= often || m.T - last < GlanceGap) continue;
+                bool asks = false;
+                for (int j = i + 1; j < p.Marks.Count; j++) if (p.Marks[j].Kind == '?' && p.Marks[j].T - m.T < GlanceQuiet + GlanceFor) asks = true;
+                if (asks) continue;
+                float down = timid > 0.6f ? 1f : Rnd(ref r) < 0.3f ? -0.5f : 0.3f; // (the timid look down; others aside, now and then up)
+                p.Glances.Add(new Vector4(m.T + 0.1f, GlanceFor * (0.8f + 0.6f * Rnd(ref r)), Rnd(ref r) < 0.5f ? -1f : 1f, down));
+                last = m.T;
+            }
             return p;
         }
 
+        private static byte Which(ref uint r) { return (byte)Mathf.Min(2, (int)(Rnd(ref r) * 3f)); } // (which of a mark's three moves)
         private static int Hash(string s) { int h = 17; foreach (char c in s) h = h * 31 + c; return h; }
 
         // a chance of this person at this place of this line: 0…1, the same on every game (the line's number, the person's, which chance)
@@ -241,8 +359,9 @@ namespace HuginWhispers
             a.Speak(text, you);
         }
 
-        // a person says this line, to «to» when it is known (your talk), else to whoever it finds near
-        internal static void Said(NpcActor a, string text, Character to)
+        // a person says this line, to «to» when it is known (your talk), else to whoever it finds near. talk: a line of your talk window —
+        // its plan (and its hum) about as long as it is read there (RavenSpeech.Pace.TalkHum), not as long as it would be said aloud
+        internal static void Said(NpcActor a, string text, Character to, bool talk = false)
         {
             if (a == null || string.IsNullOrEmpty(text)) return;
             NpcSpeech me = a.Speech;
@@ -261,7 +380,7 @@ namespace HuginWhispers
             if (Lately.Count > 32) Lately.RemoveAt(0);
             Camera cam = Camera.main;
             if (cam != null && (cam.transform.position - at).sqrMagnitude > SeenNear * SeenNear) return; // (nobody here sees it: its plan not even made)
-            Plan plan = PlanFor(a, text);
+            Plan plan = talk ? Make(text, SeedOf(a), NpcPersona.Of(a).Chatty, RavenSpeech.Seconds(text, RavenSpeech.Pace.TalkHum), 1f - NpcPersona.Of(a).Bravery, NpcPersona.Of(a).Lively) : PlanFor(a, text);
             me._plan = plan; me._start = now; me._prevT = -1f; me._heardCut = true; // (it speaks now: what it was listening to eases off, never snapped)
             me._ways = null; // (its card and ways anew for this line: MyWays)
             me._babbling = me.Babble(a, text, plan.Length, to); // (the line hummed in its voice: NpcBabble — its own short sounds keep out of it)
@@ -280,7 +399,7 @@ namespace HuginWhispers
             if (to == null && near != null) to = near.GetComponent<Character>();
             if (to == null) { Player p = Player.GetClosestPlayer(at, ListenNear); if (p != null) to = p; }
             float until = now + plan.Length;
-            me.LookAt(to, until + 1.5f);
+            me.LookAt(to, until + 1.5f, true);
             Character addressed = to;
             // the one it speaks to always hears it, nearest or not (by a fire they sit across it, up to 5 m: 2026-11-09, «heard by -»)
             NpcActor toPerson = to != null ? NpcActor.Of(to) : null;
@@ -312,19 +431,31 @@ namespace HuginWhispers
             return _inScene;
         }
 
-        // the hero says a line aloud in a scene (its step «player say»; his own hum is the step's, NpcBabble): the people of his scene hear it as
-        // a person's line — the head to him, the nods at its stops — and a reply looks back at him (Lately). Not in a scene: the nearest one or two.
-        // On the game that plays the scene (where its step runs); those near see the subtitle, not the heads (the step is the director's)
-        internal static void HeroSaid(Player p, string text, float seconds)
+        // The hero says a line aloud — the ONE way for both (the review 2026-11-18: two of them, each with its own length and tag stripping): a
+        // scene's step «player say», and your answer in a talk (NpcTalk.Pick). Hummed in his own voice, the «hero» timbre of his sex
+        // (NpcTimbre.OfHero, NpcBabble: clip — the name it goes by in the sound core, to be cut short), as long as RavenSpeech says for its kind;
+        // the people of his scene hear it as a person's line — the head to him, the nods at its stops — and a reply looks back at him (Lately);
+        // not in a scene: the nearest one or two. On his game (a scene: the director's — those near see the subtitle, not the heads). The
+        // seconds it is hummed (0: not hummed)
+        internal static float HeroSays(Player p, string text, float seconds, string clip, uint salt)
         {
-            if (p == null || string.IsNullOrEmpty(text)) return;
+            if (p == null || string.IsNullOrEmpty(text)) return 0f;
+            string said = Plain(text);
+            long id = p.GetPlayerID();
+            float hum = said.Length > 0 ? NpcBabble.Say(NpcTimbre.OfHero(p), HuginWhispers.Body.HeadBone(p), said, (uint)id ^ (uint)(id >> 32) ^ salt, seconds, true, clip) : 0f;
+            HeroSaid(p, said, seconds);
+            return hum;
+        }
+        private static void HeroSaid(Player p, string text, float seconds)
+        {
+            if (string.IsNullOrEmpty(text)) return;
             Vector3 at = p.transform.position;
             float now = Time.time;
             Lately.Add(new Spoke { Who = p, At = at, When = now });
             if (Lately.Count > 32) Lately.RemoveAt(0);
             long id = p.GetPlayerID();
             Plan plan = Make(text, (uint)id ^ (uint)(id >> 32), 1f, seconds);
-            List<NpcSpeech> heard = new List<NpcSpeech>(InScene(id, null));
+            List<NpcSpeech> heard = InScene(id, null); // (its list, filled anew: no list a line)
             if (heard.Count == 0)
                 foreach (NpcActor o in NpcActor.Live) // heavy: once a line of his, the people loaded here
                 {
@@ -391,27 +522,65 @@ namespace HuginWhispers
             return b == null || b.AttachedSeen != "attach_bed";
         }
 
+        // what the line mostly says ('n' a no, 'd' a doubt, 'a' a call for the ear, 'i' of itself, 0): the plan it speaks by, if this line's is
+        // made already — else made for this (once a line either way)
+        private static char Says(NpcActor a, string text)
+        {
+            NpcSpeech me = a.Speech;
+            return me != null && me._plan != null && me._plan.Text == text ? me._plan.Says1 : PlanFor(a, text).Says1;
+        }
+
         // a long line with no gesture of its own: its hands, now and then (NpcBody.Spoken, on the game that says it); "" — none
         internal static string Hands(NpcActor a, string text)
         {
             if (a == null || string.IsNullOrEmpty(text)) return "";
-            if (Clean(text).Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).Length < HandsWords) return "";
-            if (NpcMind.SeatedOf(a) || NpcMind.LayerNow(a) == NpcMind.Layer.Scene || NpcGear.HandsOf(a) != NpcGear.HandsFree) return ""; // (a scene says its own; a seat, a weapon: no)
+            int words = Clean(text).Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).Length;
+            if (words < (LifeOn ? HandsSmall : HandsWords)) return "";
+            if (NpcMind.LayerNow(a) == NpcMind.Layer.Scene || NpcGear.HandsOf(a) != NpcGear.HandsFree) return ""; // (a scene says its own; a weapon: no)
             NpcBody b = a.Body;
-            if (b == null || !b.ClipFree || Random.value > HandsChance * (0.4f + NpcPersona.Of(a).Chatty) * NpcPersona.Of(a).Lively) return "";
+            if (b == null || !b.ClipFree) return "";
+            NpcPersona w = NpcPersona.Of(a);
+            float small = HandsSmallChance * (0.4f + w.Chatty) * w.Lively;
+            if (NpcMind.SeatedOf(a)) // (seated: on a bench only — most talks sit; on the ground, in a bed: none yet)
+            {
+                if (!OnBench(a)) return "";
+                if (!LifeOn) return words >= HandsWords && Random.value <= HandsChance * (0.4f + w.Chatty) * w.Lively ? NpcMoves.Clip(a, HandsSitClip, true) : "";
+                string sit = "";
+                char said = Says(a, text);
+                if (said == 'a' && w.Bravery >= HeedBold && Random.value < small) sit = SitHeedHands;                    // (it calls for your ear: a finger raised)
+                else if (said == 'i' && Random.value < small * SelfChance) sit = SitSelfHands;                           // (of itself: a hand to its chest)
+                else if (words >= HandsWords) { if (Random.value <= HandsChance * (0.4f + w.Chatty) * w.Lively) sit = SitLongHands; } // (a long line: its talking hands, or a palm)
+                else if (Random.value < small * PlainChance) sit = SitSmallHands;                                        // (a short one: a palm up, now and then)
+                return sit.Length > 0 ? NpcMoves.Pick(a, sit, false, false, true) : ""; // (asked: the line asks for it; its gate, never the same twice running)
+            }
             string t = text.TrimEnd();
-            string h = t.EndsWith("?") || t.EndsWith("…") || t.EndsWith("...") ? AskHandsClip : HandsClip;
+            // what the line says picks its hands (the header's «Hands»): a «no» · a doubt · a firm «!» — a short line may have these; a
+            // question's open arms and its talking hands want a long one, as before
+            string h = "";
+            if (LifeOn)
+            {
+                char says = Says(a, text); // (the same reading of its words its head goes by)
+                if (says == 'n') h = NoHands; else if (says == 'd') h = DoubtHands; else if (t.EndsWith("!") && words >= 4) h = FirmHands;
+                if (h.Length > 0 && Random.value > small) h = "";
+                if (h.Length == 0 && says == 'a' && w.Bravery >= HeedBold && Random.value < small) h = HeedHands;            // (it calls for your ear: a finger raised)
+                if (h.Length == 0 && says == 'i' && Random.value < small * SelfChance) h = SelfHands;                     // (of itself: a hand to its chest)
+                if (h.Length == 0 && says == '\0' && words < HandsWords && Random.value < small * PlainChance) h = SmallHands; // (a short line that says none of these: a palm up, now and then)
+                if (h.Length > 0) { string own = NpcMoves.Pick(a, h, false, false, true); if (own.Length > 0) return own; } // (its gate — its body, what it shuns; asked: the line itself asks for it; not the same one twice running)
+            }
+            if (words < HandsWords || Random.value > HandsChance * (0.4f + w.Chatty) * w.Lively) return "";
+            h = t.EndsWith("?") || t.EndsWith("…") || t.EndsWith("...") ? AskHandsClip : HandsClip;
             return NpcMoves.Clip(a, h); // (its gate: its body's own of it, not one it never makes)
         }
 
         // ---------------------------------------------------------------- its body
         private Plan _plan; private float _start, _prevT = -1f;       // (what it says)
         private Plan _heard; private float _heardStart; private bool _addressed, _heardCut; private float _heardPrev = -1f; // (what it hears)
-        private Character _to; private float _toUntil;
+        private Character _to; private float _toUntil; private bool _toMine; // (_toMine: the one it speaks to, not the one it listens to)
         private float _yaw, _pitch, _aimOn, _on, _ear;
         private Humanoid _h;
         private Animator _anim;
-        private Transform _spine2, _neck, _head;
+        private Transform _spine2, _neck, _head, _lSh, _rSh, _lArm, _rArm; // (its shoulders and upper arms: a doubt's shrug)
+        private bool _armsFree = true; private float _lifeSeed = -1f;
         private Quaternion _wrote; private bool _wroteOn;
         private NpcTimbre.Card _card; private Ways _ways; // (its timbre and its ways with its sounds: worked out once a line it says or hears — a kept timbre that had not reached this game
                                                           // yet, a chance tuned by the author, its ways changed: all right from the next line on)
@@ -421,10 +590,10 @@ namespace HuginWhispers
 
         internal Humanoid Body { get { if (_h == null) _h = GetComponent<Humanoid>(); return _h; } } // (asked before its first frame of speech too)
 
-        private void LookAt(Character who, float until)
+        private void LookAt(Character who, float until, bool mine = false)
         {
             if (who == null || who == Body) return;
-            _to = who; _toUntil = until;
+            _to = who; _toUntil = until; _toMine = mine;
         }
 
         private void Hear(Character speaker, Plan p, float start, bool addressed)
@@ -458,6 +627,8 @@ namespace HuginWhispers
                 Transform v = _anim.transform;
                 _spine2 = BodyClips.SkeletonBone(this, v, "Spine2");
                 _neck = BodyClips.SkeletonBone(this, v, "Neck"); _head = BodyClips.SkeletonBone(this, v, "Head");
+                _lSh = BodyClips.SkeletonBone(this, v, "LeftShoulder"); _rSh = BodyClips.SkeletonBone(this, v, "RightShoulder");
+                _lArm = BodyClips.SkeletonBone(this, v, "LeftArm"); _rArm = BodyClips.SkeletonBone(this, v, "RightArm");
                 _wroteOn = false;
             }
             return _head != null && _neck != null;
@@ -506,14 +677,24 @@ namespace HuginWhispers
             me.Sound(sound, after);
         }
 
-        // the line as a wordless hum in its own voice (NpcBabble); false: not hummed (no voice for it, the voice package speaks, its files on their way)
+        // the line as a wordless hum in its own voice (NpcBabble); false: not hummed (no voice for it, the voice package speaks, its files on their way).
+        // Its hum goes by a name of its own person in the sound core (said to you: TalkClip, else «babble» — and the person's number). One mouth:
+        // a line it begins cuts its own hum still going (the user 2026-11-18 evening: the talk window comes at reading pace now, no longer waiting
+        // for a hum — a hum never lies over its own last one), and your answer cuts what it
+        // still hums to you (HushTalk)
+        internal const string TalkClip = "babble_talk";
         private bool _babbling;
+        private string _hum; // (the name its last hum goes by; null — none yet)
         private bool Babble(NpcActor a, string text, float seconds, Character to)
         {
             Ways w = MyWays();
             if (_head == null || w == null || _card == null) return false;
-            return NpcBabble.Say(_card, _head, text, SeedOf(a), seconds, to != null && to == Player.m_localPlayer) > 0f;
+            bool toYou = to != null && to == Player.m_localPlayer;
+            if (_hum != null) NpcBabble.Hush(_hum); // (its own last hum, if it still goes: eased off — nothing when it is over)
+            _hum = (toYou ? TalkClip : "babble") + "." + SeedOf(a);
+            return NpcBabble.Say(_card, _head, text, SeedOf(a), seconds, toYou, _hum) > 0f;
         }
+        internal static void HushTalk(NpcActor a) { NpcSpeech me = a != null ? a.Speech : null; if (me != null && me._hum != null) NpcBabble.Hush(me._hum); }
 
         private void Sound(string name, float after = 0f) // (after: seconds before it starts)
         {
@@ -602,7 +783,7 @@ namespace HuginWhispers
             bool near = cam == null || (cam.transform.position - transform.position).sqrMagnitude < SeenNear * SeenNear;
             if (_me == null) _me = NpcActor.Of(_h);
             NpcActor me = _me;
-            if (now >= _stateAt) { _stateAt = now + StateEvery; _upright = me == null || Free(me); _seatedK = NpcMind.SeatedOf(me) ? 0.85f : 1f; }
+            if (now >= _stateAt) { _stateAt = now + StateEvery; _upright = me == null || Free(me); _seatedK = NpcMind.SeatedOf(me) ? 0.85f : 1f; _armsFree = me == null || me.Body == null || me.Body.ClipFree; }
             bool may = near && _upright && !_h.IsDead() && !_h.InAttack();
             BodyAnimator clips = BodyAnimator.Of(_h);
             float w = 1f - (clips != null ? clips.HeadFree : 0f); // (a clip that holds the head: it says where it looks)
@@ -619,7 +800,7 @@ namespace HuginWhispers
                 Vector3 d = Quaternion.Inverse(body) * (_to.GetEyePoint() - _head.position);
                 float yaw = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;
                 if (seated >= 1f) { Vector3 g = GameLook(); if (g.sqrMagnitude > 0.01f) { Vector3 gl = Quaternion.Inverse(body) * g; yaw -= Mathf.Atan2(gl.x, gl.z) * Mathf.Rad2Deg * GameShare; } } // (standing: the game turns its head too; seated it does not)
-                if (Mathf.Abs(yaw) < 110f)
+                if (Mathf.Abs(yaw) < (_toMine ? SpeakReach : 110f)) // (the one it speaks to past its neck: its body was turned elsewhere on purpose — a scene's «face», its mind — and its head stays with it)
                 {
                     aim = true;
                     yawWant = Mathf.Clamp(yaw, -LookYaw, LookYaw);
@@ -630,7 +811,7 @@ namespace HuginWhispers
             _aimOn = Mathf.MoveTowards(_aimOn, aim ? 1f : 0f, dt * 2f);
             if (aim) { _yaw = Mathf.Lerp(_yaw, yawWant, k); _pitch = Mathf.Lerp(_pitch, pitchWant, k); }
 
-            float nod = 0f, roll = 0f, aside = 0f, lean = 0f, breath = 0f;
+            float nod = 0f, roll = 0f, aside = 0f, lean = 0f, breath = 0f, shrug = 0f, sway = 0f;
             // its own line this moment
             if (_plan != null && _on > 0f)
             {
@@ -659,17 +840,62 @@ namespace HuginWhispers
                     float x = t - m.T;
                     switch (m.Kind)
                     {
-                        case '.': n0 += Dip * Bump(x, 0.2f, 0.5f); break;
+                        // (each mark's move is one of three — m.V, the line's own pick; Life off: the first, as it was)
+                        case '.':
+                            {
+                                int v = LifeOn ? m.V : 0;
+                                if (v == 1) n0 -= Dip * 0.55f * Bump(x, 0.18f, 0.45f);                                       // (its chin lifted)
+                                else { float d = Bump(x, 0.2f, 0.5f); n0 += Dip * d; if (v == 2) r0 += Tilt * 0.35f * p.Side * d; } // (a dip · a dip with a tilt)
+                            }
+                            break;
                         case ',': n0 += Dip * 0.4f * Bump(x, 0.1f, 0.25f); break;
-                        case '?': { float h = Held(x, 0.2f, 0.7f, 0.4f); r0 += Tilt * p.Side * h; n0 -= 1.5f * h; } break;
-                        case '!': l0 += Lean * Bump(x + 0.3f, 0.2f, 0.4f); break;
+                        case '?':
+                            {
+                                float h = Held(x, 0.2f, 0.7f, 0.4f); r0 += Tilt * p.Side * h; n0 -= 1.5f * h;
+                                if (LifeOn && m.V == 1) l0 += Lean * 0.6f * h;        // (leaning in to its question)
+                                else if (LifeOn && m.V == 2) n0 -= 2.5f * h;         // (its chin up with it)
+                            }
+                            break;
+                        case '!':
+                            l0 += Lean * Bump(x + 0.3f, 0.2f, 0.4f);
+                            if (LifeOn && m.V == 1) n0 += Nod * Bump(x + 0.1f, 0.1f, 0.25f);          // (a nod with it)
+                            else if (LifeOn && m.V == 2) l0 -= Lean * 0.5f * Bump(x + 0.6f, 0.12f, 0.2f); // (drawn back a moment first)
+                            break;
                         case '~':
                             {
-                                float h = Held(x, 0.3f, 0.5f, 0.5f); a0 += Aside * p.Side * h; n0 += 2f * h;
+                                float h = Held(x, 0.3f, 0.5f, 0.5f);
+                                int v = LifeOn ? m.V : 0;
+                                if (v == 1) { a0 += Aside * 0.3f * p.Side * h; n0 += 6f * h; }      // (down, to itself)
+                                else if (v == 2) { a0 += Aside * p.Side * h; n0 -= 3f * h; }        // (up and aside)
+                                else { a0 += Aside * p.Side * h; n0 += 2f * h; }
                                 if (mine != null && !_babbling && _prevT < m.T + 0.15f && t >= m.T + 0.15f && Roll(p.Key + (uint)(m.T * 100f), mine.Seed, 7u) < mine.Sigh) Sound(SoundSigh); // (it trails off: a sigh)
                             }
                             break;
                     }
+                }
+                if (LifeOn)
+                {
+                    float sh0 = 0f;
+                    foreach (Mark c in p.Cues) // (what its words mean)
+                    {
+                        float x = t - c.T;
+                        if (x <= 0f || x > 1.5f) continue;
+                        switch (c.Kind)
+                        {
+                            case 'n': a0 += Shake * Bump(x, 0.12f, ShakeFor) * Mathf.Sin(x * 22f); break; // (a no: twice each way)
+                            case 'y': n0 += DoubleNod * (Bump(x, 0.1f, 0.17f) + 0.75f * Bump(x - 0.3f, 0.1f, 0.2f)); break;
+                            case 'd': { float h = Held(x, 0.2f, 0.45f, 0.4f); sh0 += h; r0 += ShrugTilt * p.Side * h; n0 += 1.5f * h; } break;
+                        }
+                    }
+                    foreach (Vector4 g in p.Glances) // (its eyes away and back)
+                    {
+                        float x = t - g.x;
+                        if (x <= 0f || x > g.y + 0.6f) continue;
+                        float h = Held(x, 0.18f, g.y, 0.28f);
+                        a0 += GlanceYaw * g.z * h; n0 += GlanceDown * g.w * h;
+                    }
+                    n0 += Chin * p.ChinDown; // (its manner: a timid chin down, a bold one up, while it speaks)
+                    shrug += sh0 * s;
                 }
                 _prevT = t;
                 nod += n0 * s; roll += r0 * s; aside += a0 * s; lean += l0 * s; breath += b0 * s;
@@ -681,13 +907,19 @@ namespace HuginWhispers
                 Plan p = _heard;
                 float t = now - _heardStart, s = Heed * _ear * seated;
                 if (_heardPrev < 0f && t > 0.3f) _heardPrev = t; // (the same for what it hears)
-                float n0 = 0f, r0 = 0f, l0 = 0f, think = 0f;
-                foreach (Mark m in p.Marks)
+                float n0 = 0f, r0 = 0f, l0 = 0f, think = 0f, a1 = 0f;
+                Ways heard = LifeOn ? MyWays() : null;
+                for (int mi = 0; mi < p.Marks.Count; mi++)
                 {
+                    Mark m = p.Marks[mi];
                     float x = t - m.T - 0.2f; // (a beat after it: it heard it)
                     switch (m.Kind)
                     {
-                        case '.': n0 += Dip * Bump(x, 0.18f, 0.4f); break;
+                        case '.':
+                            n0 += Dip * Bump(x, 0.18f, 0.4f);
+                            if (heard != null && mi < p.Marks.Count - 1 && Roll(p.Key + (uint)mi, heard.Seed, 12u) < HeedGlance) a1 += GlanceYaw * 0.8f * -p.Side * Held(x - 0.3f, 0.2f, 0.5f, 0.3f); // (its own eyes away a moment, mid-line)
+                            break;
+                        case ',': if (heard != null && Roll(p.Key + (uint)mi, heard.Seed, 11u) < HeedComma) n0 += Dip * 0.45f * Bump(x, 0.1f, 0.22f); break; // (a small nod: it follows)
                         case '?': r0 -= Tilt * p.Side * Held(x, 0.25f, 0.5f, 0.4f); break; // (the other way: as one answering a look)
                         case '!': l0 -= Lean * Bump(x, 0.15f, 0.4f); break;
                         case '~': n0 += Dip * 0.6f * Bump(x, 0.35f, 0.6f); break;
@@ -700,11 +932,29 @@ namespace HuginWhispers
                 }
                 for (int i = 0; i < _reacts.Count; i++) if (_heardPrev < _reacts[i].Key && t >= _reacts[i].Key) Sound(_reacts[i].Value);
                 _heardPrev = t;
-                nod += n0 * s - 2f * think * _ear; roll += r0 * s; lean += l0 * s; aside += ThinkAside * -p.Side * think * _ear;
+                nod += n0 * s - 2f * think * _ear; roll += r0 * s; lean += l0 * s; aside += ThinkAside * -p.Side * think * _ear + a1 * _ear * seated;
+                if (LifeOn && p.Length > HeedLong) lean += HeedLean * Held(t - 1f, 0.8f, p.Length - 2f, 0.6f) * _ear * seated; // (a long line: it leans in to it)
+            }
+            // between the lines, and under them: while it looks at someone its head and chest drift a little, slowly — on the world's clock
+            // and its own number, so every game shows the same; calmer under its own speaking and listening, which move it already
+            if (LifeOn && _aimOn > 0f)
+            {
+                if (_lifeSeed < 0f) { Ways mw = MyWays(); _lifeSeed = mw != null ? mw.Seed % 97u : 0f; }
+                float ck = (float)(SitNet.Seconds % 4096.0) * DriftRate, calm = _aimOn * (1f - 0.5f * Mathf.Max(_on, _ear));
+                aside += (Mathf.PerlinNoise(ck, _lifeSeed) - 0.5f) * 2f * Drift * calm;
+                nod += (Mathf.PerlinNoise(_lifeSeed, ck * 0.8f) - 0.5f) * 1.2f * Drift * calm;
+                roll += (Mathf.PerlinNoise(ck * 0.7f + 31f, _lifeSeed + 7f) - 0.5f) * Drift * calm;
+                sway = (Mathf.PerlinNoise(ck * 0.5f + 11f, _lifeSeed + 3f) - 0.5f) * 2f * Sway * _aimOn;
             }
 
             float yawNow = _yaw * _aimOn, pitchNow = _pitch * _aimOn;
-            BodyGait.Turn(_spine2, body, (lean - breath) * w, yawNow * 0.15f * w, 0f); // (not Spine1: the gait knows by it whether the game posed the bones)
+            BodyGait.Turn(_spine2, body, (lean - breath) * w, yawNow * 0.15f * w, sway * w); // (not Spine1: the gait knows by it whether the game posed the bones)
+            if (shrug > 0.01f && _armsFree) // (a doubt: its shoulders up, its arms left hanging — as the gait lifts them, BodyGait.Pose; not under a clip of its arms)
+            {
+                float up = Shrug * shrug * w;
+                BodyGait.Turn(_lSh, body, 0f, 0f, -up); BodyGait.Turn(_rSh, body, 0f, 0f, up);
+                BodyGait.Turn(_lArm, body, 0f, 0f, up); BodyGait.Turn(_rArm, body, 0f, 0f, -up);
+            }
             BodyGait.Turn(_neck, body, (pitchNow * 0.35f + nod * 0.3f - breath * 0.4f) * w, (yawNow * 0.35f + aside * 0.3f) * w, roll * 0.3f * w);
             BodyGait.Turn(_head, body, (pitchNow * 0.65f + nod * 0.7f) * w, (yawNow * 0.5f + aside * 0.7f) * w, roll * 0.7f * w);
             _wrote = _neck.localRotation; _wroteOn = true;
@@ -718,7 +968,7 @@ namespace HuginWhispers
         private Vector3 GameLook()
         {
             if (!_gameLooked) { _gameLooked = true; _game = GetComponentInChildren<CharacterAnimEvent>(); } // heavy: once a body, its first look
-            return _game != null && FHeadDir != null ? (Vector3)FHeadDir.GetValue(_game) : Vector3.zero;
+            return _game != null && _game.m_headRotation && FHeadDir != null ? (Vector3)FHeadDir.GetValue(_game) : Vector3.zero; // (its look off — the dvergr, Npcs.BuildDvergr: the field keeps the way it faced when made, not a look)
         }
 
         // what it does now, one line (the black box, raven npc gait)

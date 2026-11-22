@@ -76,7 +76,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
   const channels = new Set(), times = new Set();
   let length = 0, eased = false;
   const parts = [], rows = [], wants = [], keys = {};
-  let said = false, touches = false, toned = false;
+  let said = false, touches = false, toned = false, birded = false;
   for (const raw of fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/)) {
     const l = raw.trim();
     if (!l || l.startsWith('#')) continue;
@@ -100,6 +100,9 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
     else if (w[0] === 'tone') { toned = true; if (!['plain', 'loose', 'merry', 'drinks'].includes(w[1])) say(f, l + ': tone plain|loose|merry|drinks (NpcMoves.Tones)'); }
     else if (w[0] === 'carry') { if (w[1] !== 'yes' && w[1] !== 'no') say(f, l + ': carry yes|no'); }
     else if (w[0] === 'follow') { if (!/^@(Left|Right)(Hand|Foot)$/.test(w[1] || '') || !w[2]) say(f, l + ': follow @LeftHand|@RightHand|@LeftFoot|@RightFoot <bone> (Spine2, RightShoulder…)'); }
+    else if (w[0] === 'women') { if (w[1] !== 'fighters' || w.length !== 2) say(f, l + ': women fighters (on a woman only one who fights: NpcMoves.May)'); }
+    else if (w[0] === 'hero') { const bad = w.slice(1).filter(x => !['idle', 'rain', 'cold', 'night'].includes(x)); if (w.length < 2 || bad.length) say(f, l + ': hero idle|rain|cold|night … (the moments the player makes it of himself: Moments.Words)'); if (parts.length || /^(sit_|ground_|dv_)/.test(name)) say(f, l + ': the player makes of himself only a whole standing clip of a man\'s body (no parts, not sit_/ground_/dv_)'); }
+    else if (w[0] === 'bird') { birded = true; if ((w[1] !== 'right' && w[1] !== 'left') || w.length > 3 || (w[2] && !['Spine', 'Spine1', 'Neck', 'Head'].includes(w[2]))) say(f, l + ': bird right|left [Spine|Spine1|Neck|Head] (the raven of that side of the body and the bone of its skeleton the points are reckoned from: BodyAnimator.BirdAt)'); }
     else if (w[0] === 'cloth') { if (w[1] !== 'off' && w[1] !== 'on') say(f, l + ': cloth off|on'); }
     else if (w[0] === 'strength') { if (isNaN(+w[1]) || +w[1] < 0 || +w[1] > 1) say(f, l + ': strength 0..1'); }
     else if (!isNaN(+w[0]) && w.length >= 5) {
@@ -134,7 +137,12 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(
     if ((channels.has(h + '.f') || channels.has(h + '.n')) && !channels.has(h)) say(f, h + '.f/.n turn the hand by its target\'s weight: no ' + h + ', they do nothing');
     if (channels.has(h + '.on')) {
       if (!channels.has(h + '.on.w')) say(f, h + '.on has no ' + h + '.on.w: the hand would jump to the thing');
-      if (!channels.has(h + '.on.f') || !channels.has(h + '.on.n')) say(f, h + '.on needs ' + h + '.on.f and ' + h + '.on.n: without them the hand keeps the game\'s pose on the thing');
+      // (on a raven — «bird» — a clip may leave the hand as its own arm pose has it and only bring its end onto the bird: BodyClips' head, «Bird»)
+      if (!birded && (!channels.has(h + '.on.f') || !channels.has(h + '.on.n'))) say(f, h + '.on needs ' + h + '.on.f and ' + h + '.on.n: without them the hand keeps the game\'s pose on the thing');
+      // («.on.f» alone on a raven: the side the hand comes from — the wrist stays the hand's length off the point along it, the hand is not turned)
+      if (birded && channels.has(h + '.on.n') && !channels.has(h + '.on.f')) say(f, h + '.on.n needs ' + h + '.on.f');
+      // on a raven with a target of the hand's own beside it: that target's weight is the hand's whole weight — at 0 the bird's point does nothing
+      if (birded && channels.has(h) && !channels.has(h + '.w')) say(f, h + ' beside ' + h + '.on on a raven needs ' + h + '.w');
     }
   }
   // a weight is 0..1 (its first number); a hand's fingers and palm are directions: never zero, never the same line

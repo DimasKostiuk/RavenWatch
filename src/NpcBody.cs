@@ -46,9 +46,11 @@ namespace HuginWhispers
         }
 
         // its words with their marks taken out; the first mark's gesture sent to the game that runs it (once — whatever game says the words)
-        internal static string Spoken(NpcActor a, string text)
+        // play false: the marks only taken out, no clip sent (a line for one player alone — NpcActor.SayHere: a gesture goes to every game, the words would not)
+        internal static string Spoken(NpcActor a, string text, bool play = true)
         {
             if (string.IsNullOrEmpty(text)) return text;
+            if (!play) a = null; // (no body to move: Hands and the mark's clip both ask it)
             if (text.IndexOf("{~", System.StringComparison.Ordinal) < 0) { Hands(a, text); return text; } // (no mark: its hands now and then)
             string first = null;
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -68,7 +70,7 @@ namespace HuginWhispers
                 string clip = NpcMoves.Pick(a, seated && clips[1].Length > 0 ? clips[1] : seated ? "" : clips[0]); // (its gate: its body's, not one it never makes)
                 if (clip.Length > 0) a.Order("clip " + clip);
             }
-            else if (first != null) Npcs.Log((a != null ? a.Id : "?") + ": no gesture «" + first + "» (NpcBody.Words)");
+            else if (first != null && play) Npcs.Log((a != null ? a.Id : "?") + ": no gesture «" + first + "» (NpcBody.Words)");
             if (first == null) Hands(a, text); // (a broken mark: none of its own)
             return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), "  +", " ").Trim();
         }
@@ -108,6 +110,27 @@ namespace HuginWhispers
         }
 
         private void OnDestroy() { if (_c != null) Held.Remove(_c); }
+
+        // ---------------------------------------------------------------- people's bodies through each other
+        // People never push one another (the user 2026-11-18: «щоб нпс не могли пхати інших нпс … по можливості обходили одне одного, але якщо це
+        // неможливо, то просто йшли собі»): their capsules ignore each other's. Gone round where there is room — a walk keeps off others and goes
+        // round one in its way (NpcWalk.Apart), one standing about steps out of a walker's way (NpcMind.Aside); walked through where there is
+        // none (a doorway, a crowd by the fire); one that stands in another's body steps out of it (NpcMind.OutOf). A player's body still meets
+        // theirs: their feet keep off him (NpcWalk.NoPush, Yield). The pairs are set when a body wakes, against every body awake (a few dozen
+        // pairs at most, once a body); Unity drops a pair when a collider is switched off, so a body switched on again sets its pairs again.
+        private static readonly List<Collider> Bodies = new List<Collider>(); // session: the people's bodies awake now
+        private void OnEnable()
+        {
+            if (_me == null || !_me.enabled || Bodies.Contains(_me)) return; // (a switched-off capsule takes no pair: Unity refuses it)
+            for (int i = Bodies.Count - 1; i >= 0; i--)
+            {
+                Collider c = Bodies[i];
+                if (c == null) { Bodies.RemoveAt(i); continue; } // (a body gone without its OnDisable: let go)
+                if (c.enabled && c.gameObject.activeInHierarchy) Physics.IgnoreCollision(_me, c, true);
+            }
+            Bodies.Add(_me);
+        }
+        private void OnDisable() { if (_me != null) Bodies.Remove(_me); }
 
         // run by another game now: no seat held from here. Run here now: the sitting its last owner left in its ZDO (the game
         // syncs that animation and no one else would take it off) is taken off, unless it sits here already
@@ -238,7 +261,7 @@ namespace HuginWhispers
             ClipTerm();
             if (_clipPost != Post.None) PostWatch();
             MateLook();
-            if (Time.time >= _nextOurs) { _nextOurs = Time.time + 2f; KeepOurs(); }
+            if (Time.time >= _nextOurs) { _nextOurs = Time.time + 2f; KeepOurs(); OffFurniture(); }
             if (_sizing) Grow();
             if (_leftAnim.Length > 0 && Time.time >= _leftUntil) DropLeft(); // (no plan sat it on its seat: off)
         }
@@ -349,15 +372,38 @@ namespace HuginWhispers
             return false;
         }
 
+        // On a bench, a table, a stand — and not seated there: down beside it. The one net under every way a body may come to be up there that
+        // asks nobody here: the story's server puts a person at its word's place while nobody is near (StoryPeople: no piece is loaded then, nothing
+        // to ask — Sverre, 2026-11-20), a body loads where another game left it, the game's own physics. Every 2 s (Update's slow look), a short
+        // ray, only where it is run and stands free. Also asked by its mind at the moment it would sit on the ground there (NpcMind.Sitting):
+        // true — it is taken down (a held gesture — a sit on the ground up there — off first; its mind told: NpcMind.OffFurniture). No floor
+        // free beside it: looked for again only OffAgain s later (it was said in the log every 2 s, 2026-11-20: Eyvind on the Hall's workbench)
+        internal static float OffAgain = 20f;
+        private float _offAgainAt;
+        internal bool OffFurniture()
+        {
+            if (!Owned || Attached || _leaving || _c == null || Time.time < _offAgainAt || !NpcKit.OnFurniture(transform.position)) return false;
+            Vector3 v;
+            if (!NpcKit.FloorBeside(out v, transform.position, FireAway, s => !Burns(s))) { _offAgainAt = Time.time + OffAgain; Npcs.Log(Who + ": on furniture, no floor free within " + FireAway + " m — stays; looked again in " + OffAgain + " s"); return false; }
+            if (HeldGesture.Length > 0) Gesture("", false); // (sat on the ground up there, or a held gesture: up first)
+            Slide(v + Vector3.up * 0.05f, 0.6f, "зійшов з меблів");
+            NpcMind m = GetComponent<NpcMind>();
+            if (m != null) m.OffFurniture();
+            return true;
+        }
+        private string Who { get { NpcMind m = GetComponent<NpcMind>(); return m != null ? m.Name() : name; } } // (its name in the log: «RavenWatch_npc_human(Clone)» told nobody who)
+
+        // Nor onto a bench, a table, a workbench (the user 2026-11-20: Sverre stood on a stand in the Hall — come a long way out of sight, he was
+        // put at his goal, and a goal by a thing may lie over the thing's top): the same one way asks NpcKit.OnFurniture. The nearest spot of the
+        // floor beside it, clear of fire (NpcKit.FloorBeside: the one way); none near — put as asked (on a table is a fault, not there at all a worse one)
         private bool Unburnt(ref Vector3 to, string why)
         {
-            if (!Burns(to)) return true;
-            for (float r = 1f; r <= FireAway; r += 0.5f)
-            {
-                Vector3 v;
-                if (NpcKit.SameFloor(out v, to, r, NpcKit.Walker) && !Burns(v)) { Npcs.Log(name + ": «" + why + "» would have put it into a fire — " + Utils.DistanceXZ(to, v).ToString("0.0") + " m off it instead"); to = v + Vector3.up * 0.05f; return true; }
-            }
-            Npcs.Log(name + ": «" + why + "» would have put it into a fire, no spot clear of it near — left where it is");
+            bool fire = Burns(to), on = !fire && NpcKit.OnFurniture(to);
+            if (!fire && !on) return true;
+            Vector3 v;
+            if (NpcKit.FloorBeside(out v, to, FireAway, s => !Burns(s))) { Npcs.Log(Who + ": «" + why + "» would have put it " + (fire ? "into a fire" : "onto furniture") + " — " + Utils.DistanceXZ(to, v).ToString("0.0") + " m off it instead"); to = v + Vector3.up * 0.05f; return true; }
+            if (on) { Npcs.Log(Who + ": «" + why + "» puts it onto furniture, no floor free beside it — put as asked"); return true; }
+            Npcs.Log(Who + ": «" + why + "» would have put it into a fire, no spot clear of it near — left where it is");
             return false;
         }
 
@@ -437,10 +483,10 @@ namespace HuginWhispers
                     if (Mathf.Abs(p.y - off.y) < 1.2f && !Blocked(p) && !Physics.Linecast(off + Vector3.up * 0.9f, p + Vector3.up * 0.9f, Solid, QueryTriggerInteraction.Ignore)) return p + Vector3.up * 0.05f; // (not through a wall)
                 }
             Vector3 v; // (nowhere free round it: the nearest spot on the way finder's map — not left in a nook)
-            if (Pathfinding.instance != null && NpcKit.SameFloor(out v, off, 2.5f, NpcKit.Walker)) return v + Vector3.up * 0.05f;
+            if (Pathfinding.instance != null && NpcKit.SameFloor(out v, off, 2.5f, NpcKit.Walker) && !NpcKit.OnFurniture(v)) return v + Vector3.up * 0.05f; // (the map's nearest may be the bench's own top)
             return off;
         }
-        private static bool Blocked(Vector3 p) { return Physics.CheckCapsule(p + Vector3.up * 0.45f, p + Vector3.up * 1.5f, 0.3f, Solid, QueryTriggerInteraction.Ignore); }
+        private static bool Blocked(Vector3 p) { return Physics.CheckCapsule(p + Vector3.up * 0.45f, p + Vector3.up * 1.5f, 0.3f, Solid, QueryTriggerInteraction.Ignore) || NpcKit.OnFurniture(p); } // (the top of a bench or a table is free room for a capsule, and no place to stand)
 
         private void Ignore(bool on)
         {
@@ -480,8 +526,21 @@ namespace HuginWhispers
         private void Onto(out Vector3 at, out Quaternion turn)
         {
             float k = Blend();
-            at = k < 1f ? Vector3.Lerp(_from, _point.position, k) : _point.position;
+            Vector3 seat = _point.position + Vector3.up * SeatLift();
+            at = k < 1f ? Vector3.Lerp(_from, seat, k) : seat;
             turn = k < 1f ? Quaternion.Slerp(_fromTurn, _point.rotation, k) : _point.rotation;
+        }
+
+        // A body whose legs are not a person's, on a chair or a bench: the game's sitting is the player's, carried over to its skeleton (Npcs.BuildDvergr,
+        // HumanBase) — its hips land as much lower as its legs are shorter. Measured on the Hall's bench, 2026-11-20 («raven npc gait <who>»): a
+        // person's hips 0.50 m over the seat's point, the dvergr's 0.26 (the user: Lit «ну дуже криво сидить на лаві … вище підвинути»). Its size
+        // counted; a bed, the ground: none (not measured). Every game puts the body here (the owner's place goes to the others with its ZDO)
+        internal static float DvergrSeatLift = 0.24f; // m (tuned live: raven npc tune NpcBody.DvergrSeatLift <m>)
+        private float SeatLift()
+        {
+            if (_attachAnim != "attach_chair") return 0f;
+            if (_actor == null) _actor = GetComponent<NpcActor>();
+            return _actor != null && _actor.Def != null && _actor.Def.Dvergr ? DvergrSeatLift * transform.localScale.y : 0f;
         }
 
         // A glide onto a seat or off it put the body only in the physics steps: written there, so the rigidbody's smoothing is gone, and about one
@@ -561,12 +620,20 @@ namespace HuginWhispers
             Clip("");
         }
 
+        private readonly HashSet<string> _unfit = new HashSet<string>(); // (a clip not of its body: said once)
         internal bool Clip(string name, float seconds = 0f)
         {
             Humanoid h = _c as Humanoid;
             if (h == null || !Owned) return false;
             ZDO z = _nv.GetZDO();
             bool stop = string.IsNullOrEmpty(name) || name == "none";
+            if (!stop) // (the one way a clip goes on a person's body: its body's own — a man's clip on a dvergr is his «dv_» one or none (NpcMoves.Its), whoever asks: a place's
+            {           //  visit, a work loop, a carry — the review 2026-11-18 found three callers past the gate)
+                if (_actor == null) _actor = GetComponent<NpcActor>();
+                string own = _actor != null && _actor.Def != null ? NpcMoves.Its(_actor.Def, name) : name;
+                if (own.Length == 0) { if (_unfit.Add(name)) Npcs.Log(_c.m_name + ": clip «" + name + "» is not of its body — not played"); return false; }
+                name = own;
+            }
             PAnimClip c = stop ? null : BodyClips.Find(name);
             if (!stop && c == null) return false; // (no such clip: its caller says so)
             if (seconds <= 0f && NoEnd(c)) { seconds = LoopTerm; Npcs.Log(_c.m_name + ": clip «" + name + "» loops with no term — eased off after " + LoopTerm + " s"); }
@@ -574,7 +641,8 @@ namespace HuginWhispers
             if (z.GetLong(KClipUntil, 0L) != until) z.Set(KClipUntil, until);
             BodyAnimator on = stop ? null : BodyAnimator.Of(_c);
             if (on != null && NoEnd(c) && on.Holding(ClipSlot, name)) { _clipPost = PostNow(); return true; } // (the same one that does not end by itself, asked again: only its term is new — started over, its pose would jump; asked where it is now)
-            if (stop) { BodyClips.Stop(h, ClipSlot, ClipFade); MateSet(null, 0f); } else BodyClips.Play(h, ClipSlot, name, ClipFade, 1f); // (let go: its mate with it)
+            MateSet(null, 0f); // (let go, or another begins: the mate goes — a clip of two gets its own right after, the scene's step «… on npc.x»)
+            if (stop) BodyClips.Stop(h, ClipSlot, ClipFade); else BodyClips.Play(h, ClipSlot, name, ClipFade, 1f);
             _clipPost = stop ? Post.None : PostNow();
             return true;
         }
@@ -582,7 +650,7 @@ namespace HuginWhispers
         // A clip of two (BodyAnimator.Mate: its hands go to where the other body really stands) is seen alike by everyone near (the user 2026-11-14:
         // «щоб всі гравці бачили сцену однаково… рука на плечі у всіх»): whom it is played on is written on the person — «<the other's id> <m>», by its
         // owner (the act «mate», StoryScenes) — and every game sets its own picture's mate from it, looked at five times a second. Taken off when the
-        // clip is let go (Clip) or another one begins without it
+        // clip is let go or another begins (Clip), or it is over by itself (MateLook, where it is run)
         internal static readonly int KMate = "RavenWatch_npcMate".GetStableHashCode(); // string: «<user>:<id> <m>», «» — none
         private string _mateIs = ""; private bool _mateFound = true; private float _mateLook;
         internal void MateSet(string other, float far)
@@ -596,6 +664,7 @@ namespace HuginWhispers
             if (Time.time < _mateLook || _nv == null || !_nv.IsValid()) return;
             _mateLook = Time.time + 0.2f;
             string v = _nv.GetZDO().GetString(KMate, "");
+            if (v.Length > 0 && Owned && !ClipBusy) { MateSet(null, 0f); v = ""; } // (its clip of two over by itself: the mate goes with it, here where it is run — the review 2026-11-18: left on, it bent every later clip's hands towards the old partner)
             if (v == _mateIs && _mateFound) return;
             _mateIs = v; _mateFound = true;
             Humanoid h = _c as Humanoid;

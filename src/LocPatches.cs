@@ -12,6 +12,7 @@ namespace HuginWhispers
     // ItemStand.Interact: the user 2026-11-08 took things off the Hall's stands; MultiUserChest has its own on Container.Interact):
     //   an item stand of a place: what hangs there stays — but one the story wants touched now (LocTouch: Munin's shield) answers with the story's event
     //   a chest of a place that keeps them shut (Loc.LockChests): nobody opens it, the author neither (his own is open)
+    //   a chest of the story that holds all its stage wants (StoryChest.Locked): shut till the story has taken it, and it says so
     //   a bed given to a resident (NpcResident.GivenLine): no player takes it for a spawn point — but a bed the story waits to be looked at
     //     (StoryKeep.Use) answers with the story's event first
     // Quietly, with no «[E]» on it either (its hover: the patches below, last of all postfixes): just a thing standing there — the user 2026-11-01.
@@ -64,7 +65,11 @@ namespace HuginWhispers
                 // the bed kept is the one its person was given, still signed while he is away, and that guard took the press the hover promised (2026-11-14 review)
                 if (bed != null && !hold && StoryKeep.Use(bed, __instance)) { if (Anim != null) Anim.Invoke(__instance, new object[] { bed.gameObject }); return false; }
                 if (NpcResident.GivenLine(bed) != null) return false;
-                return !LocChestLock.Shut(go.GetComponentInParent<Container>());
+                Container chest = go.GetComponentInParent<Container>();
+#if RAVEN_STORY
+                if (chest != null && StoryChest.Locked(chest)) { if (!hold) StoryChest.SayShut(__instance); return false; } // (all its stage wants is in it: kept till the story takes it — StoryChest)
+#endif
+                return !LocChestLock.Shut(chest);
             }
             catch (System.Exception e) { PatchGuard.Fail("LocInteractPatch", e); return true; }
         }
@@ -230,6 +235,7 @@ namespace HuginWhispers
         {
             try
             {
+                if (ZNet.instance == null || ZNet.instance.IsDedicated()) return; // (a server has no loading screen: never its wait — the review 2026-11-18)
                 Player me = Player.m_localPlayer;
                 if (me != null && !me.IsTeleporting()) { _waitFrom = -1f; return; } // (in play: the game's own answer — and the next loading counts its wait anew)
                 if (!__result) return;

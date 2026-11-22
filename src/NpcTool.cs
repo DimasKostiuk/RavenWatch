@@ -245,7 +245,7 @@ namespace HuginWhispers
             m.ForceFight = w[1] == "fight"; // (the stage's look at its fight grip: held till another word)
             m.Order = w[1] == "hand" || w[1] == "fight" ? 1 : w[1] == "belt" ? 0 : -1;
             if (m.Order < 0) m.Next = Time.time + Random.Range(RollMin, RollMax);
-            if (w.Length > 2 && w[2] == "now" && m.Order >= 0 && a.Zdo != null) a.Zdo.Set(KTool, m.Order == 1); // (a scene that cuts to it: no clip)
+            if (w.Length > 2 && w[2] == "now" && m.Order >= 0 && a.Zdo != null) { m.SwapAt = 0f; a.Zdo.Set(KTool, m.Order == 1); } // (a scene that cuts to it: no clip — and none still on its way: a stow begun just before the scene took it put the thing back on the belt a moment later, and under the scene's clip it never came out again)
         }
 
         internal static string Cmd(NpcActor who, string[] a)

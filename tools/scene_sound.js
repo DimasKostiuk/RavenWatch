@@ -49,7 +49,7 @@ function bank() {
       const e = { files: [], game: [], sec: null };
       for (const t of w.slice(1)) {
         if (t.startsWith('file:')) e.files.push(t.slice(5));
-        else if (!t.includes('=') && t !== '2d' && t !== 'wet') e.game.push(t);
+        else if (!t.includes('=') && t !== '2d' && t !== 'wet' && t !== 'any') e.game.push(t);
       }
       const secs = e.files.map(x => oggSeconds(path.join(soundsDir, x))).filter(x => x !== null);
       if (secs.length) e.sec = Math.max(...secs);
@@ -176,7 +176,7 @@ function propose(id, sceneLines, clipOf) {
   const head = {};
   const steps = [];
   for (const x of sc.lines) {
-    const m = /^(roams|alone|aside|needs|check|test|place|guard):\s*(.*)$/.exec(x.line);
+    const m = /^(roams|alone|aside|needs|check|test|place|guard|camera):\s*(.*)$/.exec(x.line);
     if (m) { head[m[1]] = m[2]; continue; }
     let text = x.line; if (text.startsWith('if ')) text = text.slice(text.indexOf(':') + 1).trim();
     steps.push({ num: x.num, text, w: text.split(/\s+/) });

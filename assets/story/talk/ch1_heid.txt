@@ -33,23 +33,21 @@
 > Чому ти не ночуєш у Залі? => voices once ?!world heid_named_hel
 # після засідки — «як бачиш, ні», але не тоді, коли він сховався (етапи thistle_back, search: «його нема»)
 > Ти тут сама? => alone_old once ?world ketil_gone ?!step ch1 thistle_back ?!step ch1 search ?!step ch1 scroll_take ?!step ch1 brew
-# про ключ — уся глава
-?? wholechapter
-> Звідки в тебе ключ від брами? => key once
+# (питання «Звідки в тебе ключ від брами?» прибрано, користувач 2026-11-19: гравець ставить його сам у сцені прологу heid_opens — «Ключ? Знайшла»)
 # будяк зірвали й розгубили, а квест його ще чекає (користувач 2026-11-14: без софтлоку): поки в торбі менше чотирьох, вона нагадує, і кущики
-# на узліссі виростають знову — стільки, скільки зірвано (StoryFound.Replant: хоч питай щоразу, більше десяти там не стоятиме)
+# на узліссі й так виростають знову, щойно гравець туди прийде (рядок «stock:» етапів, StoryStock: більше десяти там не стоятиме)
 ?? step ch1 thistle
-> Нагадай, де та галявина з будяком? => ch1_thistle_again ?!item RavenWatch_item_budyak_heid 4
+> Нагадай, де та галявина з будяком? => ch1_thistle_again|ch1_thistle_again2 ?!item RavenWatch_item_budyak_heid 4
 ?? step ch1 thistle_more
-> Нагадай, де та галявина з будяком? => ch1_thistle_again ?!item RavenWatch_item_budyak_heid 4
+> Нагадай, де та галявина з будяком? => ch1_thistle_again|ch1_thistle_again2 ?!item RavenWatch_item_budyak_heid 4
 ?? step ch1 thistle_back
-> Нагадай, де та галявина з будяком? => ch1_thistle_again ?!item RavenWatch_item_budyak_heid 4
+> Нагадай, де та галявина з будяком? => ch1_thistle_again|ch1_thistle_again2 ?!item RavenWatch_item_budyak_heid 4
 ?? step ch1 search
-> Нагадай, де та галявина з будяком? => ch1_thistle_again ?!item RavenWatch_item_budyak_heid 4
+> Нагадай, де та галявина з будяком? => ch1_thistle_again|ch1_thistle_again2 ?!item RavenWatch_item_budyak_heid 4
 # старий удома, будяк — їй (етап brew чекає «heid_brew_given»: кінець цієї гілки; вікно закрили раніше — питання лишається)
 ?? step ch1 brew
 > Ось будяк. Чотири, як ти просила. => ch1_brew_give ?item RavenWatch_item_budyak_heid 4
-> Нагадай, де та галявина з будяком? => ch1_thistle_again ?!item RavenWatch_item_budyak_heid 4
+> Нагадай, де та галявина з будяком? => ch1_thistle_again|ch1_thistle_again2 ?!item RavenWatch_item_budyak_heid 4
 # Зала обжита (користувач 2026-11-15): вона тут м'якша — не чує голосу Хель; наостанок згадує, що старого давно нема, і просить пошукати
 # (етап heid_home чекає «heid_sent_torvald»; без «once»: закрите на півслові вікно не забирає питання, доки етап цей)
 ?? step ch1 heid_home
@@ -115,7 +113,11 @@
 @ch1_thistle_again
 {~shrug} Знову? Там само, де Луки сходяться з Чорним лісом. Будяк живучий: де рвали, там і знову лізе. Тільки цього разу донеси.
 ~hugin aside: «Знову лізе». Будяк так швидко не вміє. Але нам же краще.
-> Принесу. => start !replant found.ch1_thistle
+> Принесу. => start
+
+@ch1_thistle_again2
+{~nod} На узліссі, де Луки впираються в Чорний ліс. Казала ж. Там його хоч скільки рви — виросте. А от у тебе в торбі він чомусь не тримається.
+> Принесу. => start
 
 @ch1_brew_give
 {~nod} Давай сюди. Знайш{ов|ла} старого — добре. Без цього він ночами не спить і блукає. Дивись, як це робиться.

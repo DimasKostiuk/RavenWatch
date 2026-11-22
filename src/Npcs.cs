@@ -233,6 +233,12 @@ namespace HuginWhispers
                 if (pc != null) { h.m_walkSpeed = pc.m_walkSpeed * Stride; h.m_speed = pc.m_speed * Stride; h.m_runSpeed = pc.m_runSpeed * Stride; h.m_crouchSpeed = pc.m_crouchSpeed * Stride; h.m_turnSpeed = pc.m_turnSpeed; h.m_runTurnSpeed = pc.m_runTurnSpeed; }
                 basis = "the player's animations on its skeleton, walk " + h.m_walkSpeed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " run " + h.m_runSpeed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
             }
+            // The game's own look-at (its head and chest turned by the animator's look, CharacterAnimEvent) is off on this body: on the dvergr's
+            // skeleton it aimed 28–56° past what it looked at — head and chest together, the body itself turned right (measured by the studio run of
+            // eyvind_meet, 2026-11-20: straight only while a clip of ours held the head and HeadLookPatch eased the game's look off). Its head is
+            // ours alone, NpcSpeech, as it is already for anyone seated (the game turns no seated person's head); NpcSpeech.GameLook then says zero
+            CharacterAnimEvent look = go.GetComponentInChildren<CharacterAnimEvent>(true);
+            if (look != null) look.m_headRotation = false;
             Person(go, scene);
             StringBuilder sb = new StringBuilder();
             foreach (Component c in go.GetComponents<Component>()) if (c != null) sb.Append(c.GetType().Name).Append(' ');

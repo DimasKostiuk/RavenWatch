@@ -20,7 +20,7 @@ namespace HuginWhispers
     //                                        its own lasting «?!world …», or a later chapter's «?- <place> : <condition>»); N — no end yet, judged open at chapter N
     //   chfrom N                            the story's block going on now is N or a later one: put by NpcTalk.Parse on a «through» question — never written in data
     //   played N                             minutes of real play in this character (idle minutes do not count)
-    //   near <place> [metres=15]             standing that near (StoryWhere)
+    //   near <place> [metres=15]             standing that near (StoryWhere.Off: a named piece — from its nearest edge, not its root)
     //   before <thing> [metres=6] [half=2]   straight out before it, on its outer side, within half m of its middle line (a scene that walks you
     //                                        to a gate: from there nothing stands in the way; from the side, the stairs did)
     //   calm                                 a good moment for something to happen: alive, outdoors, awake, not
@@ -103,9 +103,8 @@ namespace HuginWhispers
                 Check = a => a.Length > 2 && Errands.I(a[2], -1) < 1 ? "near: метри — число від 1" : null,
                 Test = (p, a) =>
                 {
-                    Vector3 at;
-                    float r = a.Length > 2 ? Errands.I(a[2], 15) : 15f;
-                    return StoryWhere.Find(a[1], out at) && StoryWhere.Apart(at, p.transform.position) <= r;
+                    float r = a.Length > 2 ? Errands.I(a[2], 15) : 15f, off;
+                    return StoryWhere.Off(a[1], p.transform.position, out off) && off <= r; // (a named piece: from its edge — StoryWhere.Off)
                 } });
             StoryCond.Register("npcclip", new StoryCond.Kind { Dry = "free", Usage = "npcclip <хто> <кліп>   (цей кліп чи його частина зараз на людині)", Min = 2, Test = (p, a) => StoryHold.InClip(Npcs.Find(a[1]), a[2]) });
             StoryCond.Register("npcprop", new StoryCond.Kind { Dry = "free", Usage = "npcprop <хто>   (людина зараз тримає річ у руці чи на руці: своя річ або річ сцени; та, що лежить на землі, — ні)", Min = 1, Test = (p, a) => StoryProps.InHand(Npcs.Find(a[1])) });
@@ -113,17 +112,18 @@ namespace HuginWhispers
                 Check = a => a.Length > 2 && Errands.I(a[2], -1) < 1 ? "npcat: метри — число від 1" : null,
                 Test = (p, a) =>
                 {
-                    Vector3 at;
                     NpcActor him = NpcTalk.Him;
                     if (him == null) return false;
                     string piece;
                     Loc loc = StoryWhere.Place(a[1], out piece);
                     if (loc != null && piece.Length == 0 && a.Length <= 2) return loc.Holds(him.transform.position); // (the Hall's walls are no circle: a radius took in the yard outside its gate)
-                    return StoryWhere.Find(a[1], out at) && StoryWhere.Apart(at, him.transform.position) <= (a.Length > 2 ? Errands.I(a[2], 15) : 15f);
+                    float off;
+                    return StoryWhere.Off(a[1], him.transform.position, out off) && off <= (a.Length > 2 ? Errands.I(a[2], 15) : 15f);
                 } });
-            StoryCond.Register("calm", new StoryCond.Kind { Dry = "free", Usage = "calm   (жива, не в підземеллі, не спить, не б'ється, не на кораблі, не будує, не біля станка, не сидить, вікна закриті)", Test = (p, a) => Calm(p), Why = (p, a) => WhyNotCalm(p) });
-            StoryCond.Register("inside", new StoryCond.Kind { Dry = "at {1}", Usage = "inside <місце>   (гравець у будівлі цього місця: стоїть на її підлозі й під її дахом; поруч під виступом даху — ні)", Min = 1,
-                Test = (p, a) => Inside(p, a[1]) });
+            StoryCond.Register("calm", new StoryCond.Kind { Dry = "free", Usage = "calm   (жива, не в підземеллі, не спить, не б'ється, не на кораблі, не будує, не біля станка, не в ліжку, вікна закриті; сидіти можна — сцена з камерою сама підведе)", Test = (p, a) => Calm(p), Why = (p, a) => WhyNotCalm(p) });
+            StoryCond.Register("inside", new StoryCond.Kind { Dry = "at {1}", Usage = "inside <місце> [м]   (гравець у будівлі цього місця: стоїть на її підлозі й під її дахом; поруч під виступом даху — ні; м — чи на стільки метрів поза нею: поріг брами)", Min = 1,
+                Check = a => a.Length > 2 && Errands.F(a[2], -1f) <= 0f ? "inside: м — число більше нуля" : null,
+                Test = (p, a) => LocState.InsideOf(p, a[1], a.Length > 2 ? Errands.F(a[2], 0f) : 0f) });
             StoryCond.Register("touched", new StoryCond.Kind { Dry = "moment", Usage = "touched <місце.назва>   (гравець щойно натиснув E на цій сюжетній речі: сцена, що чекає дотику, «until touched …»)", Min = 1,
                 Test = (p, a) => LocTouch.UsedKey == a[1] && Time.time - LocTouch.UsedAt < 2f });
             StoryCond.Register("sky", new StoryCond.Kind { Dry = "free", Usage = "sky   (над головою небо: не під дахом, не в підземеллі)", Test = (p, a) => !Senses.Indoors && !Senses.Underground, Why = (p, a) => Senses.Underground ? "у підземеллі" : "під дахом" });
@@ -243,12 +243,6 @@ namespace HuginWhispers
             }
         }
 
-        // on a floor of that place and under a roof of it, by the pieces themselves (the game's shelter is true under the eaves outside too)
-        internal static bool Inside(Player p, string place)
-        {
-            return LocState.InsideOf(p, place);
-        }
-
         // a thing's front, kept BeforeEvery s (StoryWhere.Before reads its colliders; a gate swinging moves it, so not for good)
         internal static float BeforeEvery = 2f;
         private static string _beforeOf;
@@ -295,7 +289,7 @@ namespace HuginWhispers
             if (p.InCutscene()) return "сцена гри";
             if (p.InPlaceMode()) return "будує";
             if (p.GetCurrentCraftingStation() != null) return "біля станка";
-            if (p.IsAttached() || p.IsSitting()) return "сидить";
+            if (p.InBed()) return "у ліжку"; // (sitting on a bench or the ground is calm: a scene that takes him stands him up — StoryScenes.Play; the user 2026-11-20)
             if (InventoryGui.IsVisible() || StoreGui.IsVisible() || Minimap.IsOpen() || Menu.IsVisible() || TextInput.IsVisible() || Console.IsVisible() || (Chat.instance != null && Chat.instance.HasFocus())) return "відкрите вікно";
             if (Senses.Pressed(p))
             {

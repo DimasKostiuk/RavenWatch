@@ -12,6 +12,7 @@ namespace HuginWhispers
     // in one frame. The server sees the whole world this way; a client, what it has loaded.
     //   Of(prefab)    the last whole list (things gone since left out); a kind asked for the first time — at once, whole
     //   Added(z)      one just made: in the list now (no second one made before the next pass sees it)
+    //   Near(prefab, at, r)  not the census: what stands round one point now, from its zones' own lists (StoryStock's look at a place)
     // A kind nobody asked for in Forget s is let go.
     internal static class NpcCensus
     {
@@ -46,6 +47,27 @@ namespace HuginWhispers
             Out.Clear();
             if (k.Ready != null && ZDOMan.instance != null) foreach (ZDO z in k.Ready) if (z != null && z.IsValid() && z.GetPrefab() == hash) Out.Add(z); // (gone since: left out — and one the game's pool has given since to another thing: «valid» is only «in use», the review 2026-11-17)
             return new List<ZDO>(Out);
+        }
+
+        // what of a prefab stands within r m (flat) of a point NOW: read from the world's own lists of the zones round it, not the census (up to Every s
+        // old — a zone just made for the first time, Eyvind's cave 2026-11-20, had its mushrooms and troll in none of its lists yet). Light: the zones
+        // under that circle only (r 50: 3×3, of 64 m), for a look at one place
+        internal static List<ZDO> Near(string prefab, Vector3 at, float r)
+        {
+            List<ZDO> res = new List<ZDO>();
+            List<ZDO>[] sectors = ZDOMan.instance != null && BySector != null ? BySector.GetValue(ZDOMan.instance) as List<ZDO>[] : null;
+            if (sectors == null) return res;
+            int hash = prefab.GetStableHashCode();
+            Vector2s lo = ZoneSystem.GetZone(at - new Vector3(r, 0f, r)), hi = ZoneSystem.GetZone(at + new Vector3(r, 0f, r));
+            for (int x = lo.x; x <= hi.x; x++)
+                for (int y = lo.y; y <= hi.y; y++)
+                {
+                    uint i = ZoneSystem.SectorToIndex(x, y).Sector;
+                    List<ZDO> l = i < sectors.Length ? sectors[i] : null;
+                    if (l == null || (i == 0 && (x != -256 || y != -256))) continue; // (0 is also where a zone off the world's edge lands)
+                    foreach (ZDO z in l) if (z != null && z.GetPrefab() == hash && Utils.DistanceXZ(z.GetPosition(), at) <= r) res.Add(z); // flat: the circle of the zones read
+                }
+            return res;
         }
 
         // every person of ours, whatever its body (Npcs.PeoplePrefabs): the one ask for «the people» — a body kind named by itself misses the others

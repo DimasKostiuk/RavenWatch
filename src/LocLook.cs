@@ -28,12 +28,21 @@ namespace HuginWhispers
             int id = nv.GetInstanceID();
             if (held) { if (_held.Add(id)) Show(_hidden, nv, false); return; }
             if (!_held.Remove(id)) return;
-            Show(_hidden, nv, WantsShown(nv)); // (at once, this piece only: its look goes this same moment, so nothing blinks — and no place of 2000 pieces laid anew for it)
+            LookAgain(nv);
+        }
+
+        // this piece's look again at once, this piece only: its look goes this same moment, so nothing blinks — and no place of 2000 pieces
+        // laid anew for it (a prop let go; a chest emptied by StoryChest.Carry, which its layer hides now). In a hand: left hidden
+        internal static void LookAgain(ZNetView nv)
+        {
+            if (nv != null && nv.IsValid() && !_held.Contains(nv.GetInstanceID())) Show(_hidden, nv, WantsShown(nv));
         }
 
         // a piece of a place by its layer in that state — and a chest with things in it whatever its layer says (the user 2026-11-17: the Hall's
         // chest stood from 1.2 in 2.9 and now only in 1.4 «літ» — what a player put in it before is never hidden from him; emptied, it goes by its
-        // layer from the next time its place is laid: a change of state, the world loaded). Only its look: for the story and the people it is
+        // layer from the next time its place is laid: a change of state, the world loaded). A chest the story names has another of its name in
+        // the later state (the Hall's «skrynia»: plain in 1.4, the fine one from 2): its things go there, and it is hidden at once (StoryChest.Carry,
+        // the user 2026-11-18) — kept in sight only when there is no such chest or it is full. Only its look: for the story and the people it is
         // where its layer says (Absent — so «skrynia» of a later state is that state's chest, not the one kept for its things). Its things are
         // read from its ZDO, as the game's Container.Load reads them (every game the same; its own inventory fills a moment after it is laid):
         // «items» a byte array, Inventory.Save's version (int), then the count (ushort; an int before Version.Item.Smaller). Asked only of a

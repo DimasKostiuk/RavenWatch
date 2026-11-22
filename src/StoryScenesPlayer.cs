@@ -18,6 +18,20 @@ namespace HuginWhispers
         private static bool _emoteLoop;
         private static void StopEmote(Player p) { if (!_emoteLoop) return; _emoteLoop = false; if (p != null) Gestures.StopEmote(p); }
 
+        // The hero says a line aloud — the ONE way for a scene's «player say» and a talk on the way (StoryRoad, «hero:»): his words in his language
+        // and forms, a subtitle under his name on his screen (sub false: none — he has no bubble over his head), hummed in his own voice, and the
+        // people of his scene turn to him (NpcSpeech.HeroSays; out of a scene, those within NpcSpeech.ListenNear). The seconds it is said; said: the words
+        internal static float HeroLine(Player p, string words, bool sub, out string said)
+        {
+            said = Grammar.Fix(Lang.T(words), p);
+            float t = RavenSpeech.Seconds(said, RavenSpeech.Pace.Scene);
+            if (sub) StoryScreen.Sub(p.GetPlayerName(), said, t + 0.4f);
+#if RAVEN_NPC
+            NpcSpeech.HeroSays(p, said, t, "babble", 0x53434E45u);
+#endif
+            return t;
+        }
+
         private static StepKind PlayerKind()
         {
             return new StepKind(StepSeen.Own) { Min = 1, VerbAt = 1, Usage = PlayerUsage, Verbs = new Dictionary<string, StepVerb>
@@ -45,16 +59,10 @@ namespace HuginWhispers
                 { "say", new StepVerb(StepSeen.Shared) { Min = 1, // (Shared, as «sub»: those near get it even once the director has his own back — a server's scene, he was hit)
                     Begin = (p, st) =>
                     {
-                        string line = Grammar.Fix(Lang.T(Rest(st.Text, 2)), p), who = p.GetPlayerName();
-                        float t = RavenSpeech.Seconds(line, RavenSpeech.Pace.Scene);
+                        string line;
+                        float t = HeroLine(p, Rest(st.Text, 2), !_ownOff, out line); // (the director's screen taken back — a server's scene, he was hit: no subtitle of his own)
                         Hold(t);
-                        if (!_ownOff) StoryScreen.Sub(who, line, t + 0.4f); // (in a shot and out of one: the hero has no bubble over his head)
-                        StoryWatch.Line(who, line);
-#if RAVEN_NPC
-                        long id = p.GetPlayerID();
-                        NpcBabble.Say(NpcTimbre.OfHero(p), SitOn.HeadBone(p), line, (uint)id ^ (uint)(id >> 32) ^ 0x53434E45u, t, true);
-                        NpcSpeech.HeroSaid(p, line, t); // (the people of his scene turn to him: as to a person's line)
-#endif
+                        StoryWatch.Line(p.GetPlayerName(), line);
                     } } },
                 { "gait", new StepVerb(StepSeen.Own) { Min = 1, Begin = PlayerGait, Setup = PlayerGait, Busy = (p, st) => false } },
                 { "pace", new StepVerb(StepSeen.Own) { Min = 1, Begin = (p, st) => StoryWalk.Pace(st.W[2]), Busy = (p, st) => false } },

@@ -25,10 +25,13 @@ namespace HuginWhispers
     //   torvald: Ага.         names are there. The texts come from a module (More: assets/story/meets), and these people's own words are theirs:
     //                         one that says nothing of the common book (NpcVoice.OwnWordsOnly) speaks here all the same
     //   [pair lit torvald]    a pair's short exchanges (the user 2026-11-16: two of the story's people near each other outside a gathering — StoryMeets says
-    //                         when): written as a gathering's, its speakers only these two (the pair's key: PairKey, the two in any order)
+    //                         when): written as a gathering's, its speakers only these two (the pair's key: PairKey, the two in any order).
+    //                         A talk naming one that keeps quiet now (NpcActor.Hushed: not met yet, a scene near) is not picked: it would be heard by halves
     //   torvald: {told torvald story_}   a gathering's line that is a place of a talk the nearest player has not heard (Tells: a true tale by the fire —
     //                         StoryMeets), said with which it is, so those near have heard it (NpcActor.Told). Meet's «first»: a module's word
     //                         which talks go first (a player just sat down in the circle: «guest»)
+    //   [road torvald_home]   a person's talks to a player who walks with it (the user 2026-11-18: StoryRoad says when and runs them — not here):
+    //   torvald: …            written as a gathering's, «hero: …» a line of the player himself; read here (Road), said there
     // Who starts: the one of the two the game runs here with the lower id (never both); how often: their chattiness.
     // Light: a look round every few seconds per resident, none with no player in earshot; the lines are the actor's own Say
     // (one message each). A talk is not picked again soon (Lately); a talk the composer makes (its lines «{@q_food}»…) is picked first
@@ -38,7 +41,10 @@ namespace HuginWhispers
         internal static readonly List<Func<NpcActor, NpcActor, bool>> Shuns = new List<Func<NpcActor, NpcActor, bool>>(); // a module's word that these two do not talk now (NpcNeighbours: kept apart)
         internal static readonly List<Func<NpcActor, NpcActor, string, bool>> Spats = new List<Func<NpcActor, NpcActor, string, bool>>(); // a module's word on a spat beginning (the two, where: meet · table · fire — NpcNeighbours: a scuffle); true: its own quarrel instead of the table's (a pair quarrels once a day: NpcAttitude.QuarrelAct)
         private static bool Shunned(NpcActor a, NpcActor o) { foreach (Func<NpcActor, NpcActor, bool> f in Shuns) if (f(a, o)) return true; return false; }
-        private sealed class Chat { public string[] Said; public string[] By; public List<Cond> When; } // (By: who says each line — a gathering's talk; null: the two in turn)
+        internal sealed class Chat { public string[] Said; public string[] By; public List<Cond> When; } // (By: who says each line — a gathering's talk; null: the two in turn)
+        // a road's talks («[road <name>]», in the order written; StoryRoad says them): none — empty
+        private static readonly List<Chat> NoTalks = new List<Chat>();
+        internal static List<Chat> Road(string name) { Lines l = Of("road " + name); return l != null ? l.Talks : NoTalks; }
         // a module's own texts in this format, read with the built-in ones (the story's gatherings: StoryModules)
         internal static readonly List<Func<IEnumerable<string>>> More = new List<Func<IEnumerable<string>>>();
         private sealed class Lines { public readonly List<Chat> Talks = new List<Chat>(); public readonly List<string> One = new List<string>(); }
@@ -66,7 +72,7 @@ namespace HuginWhispers
             "- Драконицю колись бачити доводилось?\n- Раз. Більше не хочу.\n\n" +
             "- Добре, що в нас є дах.\n- І вогонь.\n- І ліжко. Ліжко — головне.\n\n" +
             "- Як твоя спина?\n- Як у старого віслюка. А твоя?\n- Як у віслюка, якого той віслюк возив.\n\n" +
-            "- Знаєш, чому ворони кружляють над базою?\n- Чому?\n- Рахують нас. Про всяк випадок.\n\n" +
+            "- Знаєш, чому ворони кружляють над нами?\n- Чому?\n- Рахують нас. Про всяк випадок.\n\n" +
             "? !raid\n- Тихо сьогодні.\n- Не кажи вголос, бо почують.\n\n" +
             "[say hungry]\n" +
             "Шлунок бурчить, як троль у печері.\nПоїсти б…\nХоч би сухарик якийсь.\nКоли вже вечеря?\nНа порожній шлунок і сокира важча.\n" +
@@ -268,9 +274,9 @@ namespace HuginWhispers
                     flush();
                     string[] w = line.Substring(1, line.Length - 2).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (w.Length < 2 || (w[0] == "pair" && w.Length < 3)) { cur = null; continue; }
-                    named = w[0] == "meet" || w[0] == "pair";
+                    named = w[0] == "meet" || w[0] == "pair" || w[0] == "road";
                     talks = w[0] == "chat" || named;
-                    string key = w[0] == "pair" ? PairKey(w[1], w[2]) : (named ? "meet " : talks ? "chat " : "say ") + w[1];
+                    string key = w[0] == "pair" ? PairKey(w[1], w[2]) : (w[0] == "road" ? "road " : named ? "meet " : talks ? "chat " : "say ") + w[1];
                     if (!_all.TryGetValue(key, out cur)) _all[key] = cur = new Lines();
                     continue;
                 }
@@ -448,7 +454,7 @@ namespace HuginWhispers
                 {
                     if (c.By == null || !StoryCond.All(null, c.When)) continue;
                     bool all = true;
-                    foreach (string id in c.By) all &= Named(there, id) != null;
+                    foreach (string id in c.By) { NpcActor o = Named(there, id); all &= o != null && (NpcActor.Hushed == null || !NpcActor.Hushed(o)); } // (one keeping quiet now — not met yet, a scene near — says no line: a talk naming it would be heard by halves, 2026-11-22)
                     if (all) pool.Add(c);
                 }
             }

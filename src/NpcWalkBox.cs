@@ -74,6 +74,7 @@ namespace HuginWhispers
                 Totals.Going > 0f ? Totals.Metres / Totals.Going : 0f, Totals.Micro, Totals.Metres > 0f ? Totals.Micro * 10f / Totals.Metres : 0f, Totals.Halts, Totals.Stood, Totals.Slides);
             int jumps = 0; foreach (int v in Totals.Jumps.Values) jumps += v;
             sb.Append("\n  ").Append(Links());
+            sb.Append("\n  карта людей без меблів: ").Append(NpcKit.FurnitureOffMap ? "так" : "НІ (карту будує гра: меблі на ній)").Append(", плиток збудовано ").Append(NpcKit.OwnTiles).Append(", меблів в останній ").Append(NpcKit.OwnTileFurniture);
             sb.Append("\n  ривки (перенесення тіла): ").Append(jumps);
             foreach (KeyValuePair<string, int> kv in Totals.Jumps) sb.Append(" · ").Append(kv.Key).Append(' ').Append(kv.Value);
             sb.Append("\n  стрибки пози: ").Append(Totals.Pops);
@@ -98,7 +99,25 @@ namespace HuginWhispers
             public string Why = ""; public float HaltSince = -1f; public string HaltWhy = ""; public Vector3 HaltAt;
             private Vector3 _last; private float _lastAt;
             public void Moving(NpcMind m) { Vector3 p = m.transform.position; if (_lastAt > 0f) Moved += Utils.DistanceXZ(p, _last); _last = p; _lastAt = Time.time; }
+            // its last metres (within EndZone of «there»): since when, and how long it did what there — the most of it is written
+            public float NearAt = -1f;
+            private readonly Dictionary<string, float> _end = new Dictionary<string, float>();
+            private static readonly char[] Digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+            public void EndNote(string doing, float dt, float now)
+            {
+                if (NearAt < 0f) NearAt = now;
+                int cut = doing.IndexOfAny(Digits); // (its words without their numbers: «its way ends 1.2 m short» is one doing, not one for each cm)
+                if (cut > 0) doing = doing.Substring(0, cut).TrimEnd(' ', '(');
+                float had; _end.TryGetValue(doing, out had); _end[doing] = had + dt;
+            }
+            public string EndMost(out float secs)
+            {
+                string most = "-"; secs = 0f;
+                foreach (KeyValuePair<string, float> k in _end) if (k.Value > secs) { secs = k.Value; most = k.Key; }
+                return most;
+            }
         }
+        internal static float EndZone = 3f; // m from «there»: the end of a walk, timed apart (the coming: NpcWalk.Go)
         private Trip _trip;
         private float _filmAt;
         private static int _films;
@@ -140,9 +159,11 @@ namespace HuginWhispers
             if (t == null) return;
             if (t.HaltSince >= 0f) { _trip = t; Flush(); _trip = null; }
             float took = Time.time - t.At, straight = Utils.DistanceXZ(t.From, t.To);
+            float endDid; string endMost = t.EndMost(out endDid);
+            float endTook = t.NearAt >= 0f ? Time.time - t.NearAt : 0f;
             Totals.Walks++; Totals.Metres += t.Moved; Totals.Took += took; Totals.Stood += t.Stood; Totals.Going += t.Going; Totals.Halts += t.Halts; Totals.Slides += t.Slides;
-            Write("walks.txt", string.Format(CultureInfo.InvariantCulture, "{0:HH:mm:ss}\t{1}\t{2}\t{3}\t{4:0.0} m\ttook {5:0.0}s\tstood {6:0.0}s ({7} halts)\twalked {8:0.0} m\tasks {9} fails {10} partial {11} rounds {12} bridges {16}/{17} widened {18} slides {19} turns {20} micro {21} jumps {22} speed {23:0.00} doors {24} shaped {25}\t{13}\t{14} → {15}",
-                DateTime.Now, _m.Name(), t.What, how, straight, took, t.Stood, t.Halts, t.Moved, t.Asks, t.Fails, t.Partial, t.Rounds, t.Why, Npcs.V(t.From), Npcs.V(t.To), t.Bridges, t.NoBridge, t.Widened, t.Slides, t.Turns, t.Micro, t.Jumps, t.Going > 0f ? t.Moved / t.Going : 0f, t.Doors, t.Shaped));
+            Write("walks.txt", string.Format(CultureInfo.InvariantCulture, "{0:HH:mm:ss}\t{1}\t{2}\t{3}\t{4:0.0} m\ttook {5:0.0}s\tstood {6:0.0}s ({7} halts)\twalked {8:0.0} m\tasks {9} fails {10} partial {11} rounds {12} bridges {16}/{17} widened {18} slides {19} turns {20} micro {21} jumps {22} speed {23:0.00} doors {24} shaped {25}\t{13}\t{14} → {15}\tend {26:0.0}s ({27} {28:0.0}s)",
+                DateTime.Now, _m.Name(), t.What, how, straight, took, t.Stood, t.Halts, t.Moved, t.Asks, t.Fails, t.Partial, t.Rounds, t.Why, Npcs.V(t.From), Npcs.V(t.To), t.Bridges, t.NoBridge, t.Widened, t.Slides, t.Turns, t.Micro, t.Jumps, t.Going > 0f ? t.Moved / t.Going : 0f, t.Doors, t.Shaped, endTook, endMost, endDid));
             if (t.Rounds >= 3 || took > 20f + straight || t.Moved > straight * 3f + 8f) Write("walks.txt", "\tits last way (" + _path.Count + " points, at " + _next + "): " + WayText()); // (a long one, or one far round: its way with heights — what it followed)
         }
 

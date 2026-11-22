@@ -590,7 +590,7 @@ def cmd_page(a):
                         opts.append(t)
                         if k in ('vol', 'pitch', 'spread'):
                             s[k] = float(val)
-                    elif t in ('2d', 'wet'):
+                    elif t in ('2d', 'wet', 'any'):
                         opts.append(t)
                     else:
                         s['game'].append(t)

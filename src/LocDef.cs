@@ -28,6 +28,8 @@ namespace HuginWhispers
         internal string Gate = "";                   // «gate: dveri_holovni»: its great door (a named piece) — shut and locked till the story opens it (LocState)
         internal bool Fog;                           // Hel's mist over it while a ruin (LocFog)…
         internal string FogWhile = "";               // …and while these hold («fog: hearth zala < 2»: the Watch's fire breaks Hel's hold) — world conditions
+        internal string Weather = "", WeatherWhile = ""; // «weather: <env> <m> <conditions>»: that weather on whoever is within m of it while these hold (StoryAir.Places; helmist — Hel's mist, ours) — world conditions
+        internal float WeatherReach;
         internal string ColdWhile = "";              // «cold: state zala < 1.2»: inside its building you are cold while these hold (LocCold) — world conditions
         internal bool Refuge;                        // «refuge: yes»: the ravens' home — the unhired go there to be hired again (NpcTravel; the Hall)
         internal string HearthShut = "Попіл не займається. Тут ще замкнено.";  // «hearthshut: <слова>»: its hearth when its great door is still locked

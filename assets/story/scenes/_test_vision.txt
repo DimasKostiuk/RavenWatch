@@ -9,27 +9,35 @@ check: hall.vohnyshche 4
 player go hall.vohnyshche 2.4
 player face hall.vohnyshche
 fade out 0.5
-npc _vartovyi_1 spawn zala at 2.6 0 -0.4 whole
+# (2026-11-20: Ейрік — біля лави, його двоколірний ворон сідає на лаву ще під чорним, щоб кадр «Ейрік і його ворон» був цілий; коло — п'ятеро)
+npc _eirik spawn zala at 2.6 0 -0.4 whole
+npc _vartovyi_1 spawn zala at -1.6 0 -2.2 whole
 npc _vartovyi_2 spawn zala at -2.2 0 0.9 whole
 npc _vartovyi_3 spawn zala at 0.4 0 2.0 whole
-npc _eirik spawn zala at -1.6 0 -2.2 whole
+npc _vartovyi_4 spawn zala at 0.6 0 -2.4 whole
+npc _vartovyi_5 spawn zala at 2.0 0 1.6 whole
+npc _eirik face hall.vohnyshche
 npc _vartovyi_1 face hall.vohnyshche
 npc _vartovyi_2 face hall.vohnyshche
 npc _vartovyi_3 face hall.vohnyshche
-npc _eirik face hall.vohnyshche
-wait 1.5
-fade in 0.5
-# 1 vartovi_vohon — коло людей біля вогню
-camera on hall.vohnyshche wide high cut
-wait 2
-# 2 eirik_voron — Ейрік, над ним його двоколірний ворон
-bird come 14 7 circle nowait
-camera on npc._eirik medium 25 cut
+npc _vartovyi_4 face hall.vohnyshche
+npc _vartovyi_5 face hall.vohnyshche
+bird come 4 1.5 at hall.lava look eirik nowait   # (зблизька: під дахом здалеку не долітав — чорний екран 25 с, 2026-11-20)
 wait 3
-# 3 ty_sered_nykh — ти серед них
-camera on player medium 30 cut
-wait 2
-camera two player npc._vartovyi_1 cut
-wait 2
+fade in 0.5
+# (2026-11-20, користувач: «мене не має бути видно… тільки інші вартові» — усі кадри очима: ні гравця, ні його воронів)
+# 1 vartovi_vohon — коло вартових довкола вогню, твоїми очима
+player look npc._vartovyi_3 0.1
+camera eyes cut
+wait 2.5
+# 2 eirik_voron — Ейрік і його двоколірний ворон, твоїми очима (очима вартового в кадр потрапляв гравець — 2026-11-20)
+player look npc._eirik 0.1
+wait 2.5
+# 3 ty_sered_nykh — ти серед них: твоїми очима на вартових поруч
+player look npc._vartovyi_5 0.1
+camera eyes cut
+wait 2.5
+player look npc._vartovyi_1 0.1
+wait 2.5
 bird leave up
 camera off blend 0.5

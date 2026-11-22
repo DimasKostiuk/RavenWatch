@@ -79,7 +79,7 @@ namespace HuginWhispers
         private static readonly List<Line> Lines = new List<Line>();
         private static Line _cur;
         private static string _playing;
-        private static bool _held, _trackDone;
+        private static bool _held, _trackDone, _trackFailed; // (_trackFailed: the track wanted never began — no such sound, nothing to play, its file not read in time: «done» with nothing heard)
         private static Run _run;
 
         // ---------------------------------------------------------------- music
@@ -121,6 +121,18 @@ namespace HuginWhispers
 
         internal static bool MusicWaiting { get { return _cur != null && _cur.Waiting; } }
 
+        // how far the music heard now is into its track, s, when it is this owner's (a scene's clock: StoryScenes «wait music»): the source's
+        // own time. Below zero: the music heard is not this owner's, it wants silence, or its track never began (no file, not read in time). 0: its file is still being read. float.MaxValue: its
+        // track is done (played out once) — nothing waits for it
+        internal static float MusicAt(string owner)
+        {
+            Want top = Top();
+            if (top == null || top.Owner != owner || top.Name == null) return -1f;
+            if (_trackFailed) return -1f; // (it never began: no clock of its own — whoever asks counts by his own)
+            if (_trackDone) return float.MaxValue;
+            return _cur != null && !_cur.Waiting && _cur.Src != null && _cur.Src.clip != null ? _cur.Src.time : 0f;
+        }
+
         private static float _nextFade = -1f;
         private static Want _topWas;
 
@@ -137,8 +149,8 @@ namespace HuginWhispers
             {
                 if (_cur != null) { FadeTo(_cur, 0f, fade); _cur = null; }
                 _playing = want;
-                _trackDone = false;
-                if (want != null) { _cur = Start(KindMusic, want, top.Owner, top.Vol, !top.Once, fade, top.Try != null ? new SoundAsk { Try = top.Try } : null, Vector3.zero); if (_cur == null) _trackDone = true; } // (nothing to play: not tried again each frame; the layer stays a silence till it is let go)
+                _trackDone = false; _trackFailed = false;
+                if (want != null) { _cur = Start(KindMusic, want, top.Owner, top.Vol, !top.Once, fade, top.Try != null ? new SoundAsk { Try = top.Try } : null, Vector3.zero); if (_cur == null) _trackDone = _trackFailed = true; } // (nothing to play: not tried again each frame; the layer stays a silence till it is let go)
             }
             else if (_cur != null && top != null) Takes(_cur, top); // (another layer wants the same track: it goes on, by that layer's words)
             if (top == null && _held) { _held = false; GameIn(); }
@@ -664,7 +676,7 @@ namespace HuginWhispers
             _nextFade = -1f;
             foreach (Line l in Lines) if (l.Live) Free(l);
             Later.Clear();
-            _cur = null; _playing = null; _trackDone = false; _airUntil = 0f; _topWas = null;
+            _cur = null; _playing = null; _trackDone = false; _trackFailed = false; _airUntil = 0f; _topWas = null;
             Claims.Clear();
             for (int i = 0; i < MixK.Length; i++) { MixRate[i] = 0f; }
             MixTick(0f);
@@ -777,7 +789,7 @@ namespace HuginWhispers
 
         private static void Free(Line l)
         {
-            if (l == _cur) { _cur = null; _trackDone = true; }
+            if (l == _cur) { _cur = null; _trackDone = true; _trackFailed = l.Waiting || l.Src == null || l.Src.clip == null; } // (let go before its clip ever came: it failed, it did not play out)
             l.Live = false; l.Waiting = false; l.Follow = null; l.Given = null; l.Try = null; l.FadeAt = 0f; l.AnyStart = false;
             if (l.Src != null) { l.Src.Stop(); l.Src.clip = null; }
         }

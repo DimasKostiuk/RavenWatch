@@ -27,7 +27,7 @@ namespace HuginWhispers
     //     state (Guides).
     // Its steps and followers are its own lines (locations.list «becomes:», «follows:»: the server, LocState below). Here: states, changes behind the scenes,
     // the author's console; LocLayers: a piece's layer; LocLook: laid on the pieces; LocDoors: its doors; LocPreview: the author's look; LocPatches: the game's hooks.
-    // The story never switches it in sight: it asks, and the change waits behind the scenes (below).
+    // The story never switches it in sight: it asks, and the change waits behind the scenes (below) — save the author's jump (AuthorJumped).
     // Every place of the story (Loc) has states the same way — its own count, names and sub-states, its own world keys;
     // the named layers (ruin, repaired, lived, fixed) mean states 1, 2, 3; any place may use them or «onlyN», «fromN». «Ruined» is the
     // place's own (Loc.RuinTo: the Hall 1).
@@ -99,12 +99,20 @@ namespace HuginWhispers
         //   or the safeguard (the user 2026-11-17: «якщо ніхто не відходить від зали дуже довгий час… механізм як запобіжник, який буде залу
         //   примусово оновлювати до того стану, який потрібен зараз по сюжету» — players living by it on a server that never restarts, never
         //   all asleep at once): it has waited MaxWaitDays game days (the world's clock: a server's restart does not start it again) — put
-        //   in sight. The story's state is never left behind for good.
+        //   in sight. The story's state is never left behind for good;
+        //   or the author's jump (StoryRebuild: the window «Сюжет», «→» by a stage): the server's next look at every place is as after a world
+        //   loaded — what the story's facts now ask is put at once, in sight (the user 2026-11-20: «хай стрибок одразу ставить стан Зали»; he
+        //   jumped to «rise» standing in the Hall, and its scene waited for the state 2.2 that waited for him to go 150 m off). A world key
+        //   (KeyJump), so a jump from any game reaches the server after its facts (the same channel, in order).
         // The server looks (it knows where everyone is); the waiting change is a world key «<place>_next <n>[.<k>] in|out <since>» (since: the world's
         // seconds it began to wait; a key from before without it starts its count at the server's next look).
         internal const float NearIn = 40f, NearOut = 150f, MaxWaitDays = 5f; // (5: the user 2026-11-18 — «за стільки днів ніхто не відійде, не посплять, не вийдуть — примусово, і пофіг»; was 2, then 7)
         private static readonly FieldInfo Sleeping = AccessTools.Field(typeof(Game), "m_sleeping");
         private static float _nextServer;
+        private const string KeyJump = "ravenwatch_loc_jump";
+        internal static float JumpFor = 10f; // s of the server's looks after the jump that put at once (a server quest's stage is set by the server's own turn: the fact «reached …» may come a look or two after the key)
+        private static float _jumpUntil = -1f;
+        internal static void AuthorJumped() { if (ZoneSystem.instance != null) ZoneSystem.instance.SetGlobalKey(KeyJump); }
 
         internal static bool Pending(Loc l, out int next, out int nextSub, out bool outside) { double since; return Pending(l, out next, out nextSub, out outside, out since); }
         private static bool Pending(Loc l, out int next, out int nextSub, out bool outside, out double since)
@@ -156,13 +164,15 @@ namespace HuginWhispers
             _nextServer = Time.time + 2f;
             if (ZNet.instance == null || !ZNet.instance.IsServer() || ZoneSystem.instance == null) return;
             if (ZNet.instance != _world) { _world = ZNet.instance; _looked.Clear(); }
+            if (ZoneSystem.instance.GetGlobalKey(KeyJump)) { ZoneSystem.instance.RemoveGlobalKey(KeyJump); _jumpUntil = Time.time + JumpFor; } // (the author's jump: AuthorJumped)
             foreach (Loc l in Locs.All) ServerOne(l);
         }
 
         private static void ServerOne(Loc l)
         {
             if (!l.Built) return;
-            bool first = _looked.Add(l.Id); // (its first look since the world loaded: nobody sees it yet)
+            bool jump = Time.time < _jumpUntil;
+            bool first = _looked.Add(l.Id) || jump; // (its first look since the world loaded: nobody sees it yet · or the author's jump: at once, in sight)
             Becomes(l); // (asked while a change waits too: the story gone on meanwhile moves the waiting change on with it)
             int next, nextSub; bool outside; double since;
             if (!Pending(l, out next, out nextSub, out outside, out since)) { Follow(l); if (!first || !Pending(l, out next, out nextSub, out outside, out since)) return; }
@@ -175,7 +185,7 @@ namespace HuginWhispers
             if (nearest < near && !asleep && !first && !overdue) return;
             Put(l, next, nextSub);
             ZoneSystem.instance.RemoveGlobalKey(l.KeyNext);
-            l.Log("became " + l.WordOf(next, nextSub) + (first ? " behind the scenes (the world just loaded)" : asleep ? " behind the scenes (everyone asleep)" : nearest >= near ? " behind the scenes (nearest " + (nearest == float.MaxValue ? "nobody" : Mathf.RoundToInt(nearest) + " m") + ")"
+            l.Log("became " + l.WordOf(next, nextSub) + (jump ? " at once (the author's jump)" : first ? " behind the scenes (the world just loaded)" : asleep ? " behind the scenes (everyone asleep)" : nearest >= near ? " behind the scenes (nearest " + (nearest == float.MaxValue ? "nobody" : Mathf.RoundToInt(nearest) + " m") + ")"
                 : " IN SIGHT — the safeguard: it waited " + ((WorldNow - since) / day).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " game days, someone always within " + Mathf.RoundToInt(near) + " m (nearest " + Mathf.RoundToInt(nearest) + " m)"));
         }
 
@@ -201,7 +211,12 @@ namespace HuginWhispers
             }
             int next, nextSub; bool outside;
             bool outward = to != null && Outward(l, to.State, to.Sub);
-            if (to == null || (Pending(l, out next, out nextSub, out outside) && next * 100 + nextSub >= want && (outside || !outward))) return; // (nothing new, or asked already — one asked before Outward
+            if (to == null) return;
+            if (Pending(l, out next, out nextSub, out outside) && next * 100 + nextSub >= want)
+            {
+                if (outside || !outward) return;
+                if (next * 100 + nextSub > want) { Request(l, next, nextSub, true); return; } // (a higher step waits already, asked as «in»: it only waits farther now — never put back to a lower one: the review 2026-11-18)
+            } // (nothing new, or asked already — one asked before Outward
             // waited for NearIn m only: asked again for NearOut, its count kept: Request)
             Request(l, to.State, to.Sub, outward);
             l.Log("becomes " + l.WordOf(to.State, to.Sub) + " (" + to.When + ") as soon as nobody is near");

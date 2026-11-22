@@ -20,14 +20,21 @@ carry: RavenWatch_item_koshyk_heid arm clip basket_carry set basket_set
 #   at: <набір> <від>-<до> sleep        — ніч: поки лише гачок, нічого не робить (користувач 2026-11-16: «поки сюжетні нехай не сплять»)
 #   spot: <набір> <місце> … [hours а-б] — вільний час: години, на які нема жодного at:
 #   … meet <назва>                      — збори: люди, чий день називає ту саму назву на ті самі години, сходяться там і говорять свої розмови (assets/story/meets)
+#   … when <умови світу>                — рядок лише на фазу сюжету; фаза з назвою — «when phase <назва>» (блоки [phase …] у people/phases.txt: там і «або»);
+#                                         ще: night, day, weather rain|storm|snow|fog|clear (погода — не в рядку походу)
+#   … over                              — рядок фази на всі свої години: поки діє, ні відступ (chance), ні звичайні рядки цих годин не діють, перерв нема
+#   … one <назва>                       — одне місце на день із блоку [one <назва>] (people/phases.txt): сьогодні вогонь, завтра стіл — те саме для всіх
+#   do: <назва> = <вид> <слова…>        — своя справа: далі в рядках назва стоїть замість виду й читається як ці слова
+#   Що діє на якому етапі, без гри: node tools/day.js heid [<квест> <етап>]
 # moves: її жести саме на цьому місці (здебільшого замість жестів виду): біля каменів — рука на серці (heid_heart, користувач 2026-11-15; потім і біля каменя з іменами в Залі)
 # Розклад — перший начерк (2026-11-16): години й місця править користувач. Подивитись у грі: raven npc day heid
 day: hall when state zala >= 1.3                                      # з обжитої Зали (як її live:) — день у Залі; доти — табір (home)
+do: search = tend clip heid_search.loop from heid_search.bends out heid_search.rises   # своя справа: нахиляється й порається (трави, прибирання)
 # --- табір біля могил вартових (home)
 at: home 6-10 torvald.kamin by torvald.stovp think moves heid_heart   # зранку — камені: Торвальдів і полеглих вартових, що доглядає
 at: home 6-10 torvald.imena_1 think moves heid_heart
 at: home 6-10 torvald.imena_2 think moves heid_heart
-at: home 11-17 torvald.lizhko by torvald.stovp tend clip heid_search.loop from heid_search.bends out heid_search.rises stay 30-60   # удень — трави біля ліжка
+at: home 11-17 torvald.lizhko by torvald.stovp search stay 30-60   # удень — трави біля ліжка
 at: home 11-17 torvald.lava seat sit stay 60-120
 spot: home torvald.vohnyshche fire sit want 0.2                       # вільний час (10–11, вечір, ніч): вогнище, лава, камені
 spot: home torvald.lava seat sit
@@ -35,14 +42,22 @@ spot: home torvald.imena_1 think moves heid_heart want 0.3
 spot: home torvald.imena_2 think moves heid_heart want 0.3
 # Після першого серця (стан Зали 1.1: «Гейд прибирає біля вогнища сліди того, що часто тут бувала») — іноді зранку прибирає в Залі. Не на етапах,
 # де квест чекає її в таборі (від «Розкажи Гейд про Кетіля» до кургану): правило користувача 2026-11-16 — що чекає етап, тримає квест, а розклад лише тло
-at: home 7-9 hall.vohnyshche tend clip heid_search.loop from heid_search.bends out heid_search.rises chance 0.6 say clean when state zala >= 1.1, !reached ch1 tell
-at: home 7-9 hall.vohnyshche tend clip heid_search.loop from heid_search.bends out heid_search.rises chance 0.6 say clean when reached ch1 crypt
+at: home 7-9 hall.vohnyshche search chance 0.6 say clean when phase heid_tidies   # (фаза — people/phases.txt)
 # --- Зала (hall)
 at: hall 6-10 hall.rizba think moves heid_heart stay 40-90            # зранку — різьба Ейріка: вартових Зали поминає, як і в таборі
-at: hall 10-17 hall.vohnyshche fire stay 60-120                       # удень — біля вогню Варти
-at: hall 10-17 hall.lava seat sit stay 90-180
-at: hall 10-12 found.travy tend clip heid_search.loop from heid_search.bends out heid_search.rises chance 0.35 say herbs   # іноді (користувач 2026-11-16: «Гейд іноді після того як заселилась у залу виходила збирала трави»): зранку на луки (found.travy: quests/ch1.txt, ember_scene) — далі 50 м, тож похід; слова — тема herbs
-at: hall 18-22 hall.vohnyshche fire sit meet evening stay 150-280     # вечір — збори «evening» біля вогню Варти: з Торвальдом і Літом (розмови: assets/story/meets/hall.txt)
+at: hall 6-10 hall.kamin think moves heid_heart stay 40-90 when state zala >= 2   # …і камінь пам'яті з їхніми іменами, що відтепер стоїть у Залі (користувач 2026-11-20): ходить між ним і різьбою; стерти їх вона не може
+# День у Залі — при ділі (користувач 2026-11-22: було сім годин біля вогню й на лаві): казан, трави біля кухні, тоді перепочинок
+do: stir = tend clip stir.loop from stir.in out stir.out              # мішає в казані (кліп stir — той самий, що на етапі «Відвар»)
+at: hall 10-13 hall.kazan stir stay 40-80                             # до полудня — казан на кухні…
+at: hall 10-13 hall.vohnyshche fire stay 60-120                       # …і вогонь Варти: ходить між ними
+at: hall 13-15 hall.kukhnia search stay 30-60                         # по обіді — трави біля кухонного вогнища
+at: hall 13-15 hall.lava seat sit stay 90-180
+at: hall 15-17 hall.vohnyshche fire stay 60-120                       # надвечір — біля вогню Варти, лава
+at: hall 15-17 hall.lava seat sit stay 90-180
+at: hall 10-12 found.travy search chance 0.35 say herbs   # іноді (користувач 2026-11-16: «Гейд іноді після того як заселилась у залу виходила збирала трави»): зранку на луки (found.travy: quests/ch1.txt, ember_scene) — далі 50 м, тож похід; слова — тема herbs
+at: hall 18-22 hall.vohnyshche fire sit meet evening one vechir stay 150-280     # вечір — збори «evening» з Торвальдом і Літом (розмови: assets/story/meets/hall.txt): сьогодні біля вогню Варти…
+at: hall 18-22 hall.stil table sit meet evening one vechir stay 150-280         # …а іншого дня за столом, якщо він є (one vechir — people/phases.txt; користувач 2026-11-22)
+at: hall 18-22 hall.kukhnia fire sit chance 0.2 stay 240-480 when phase heid_apart   # після першого листа (збрехала про підпис) іноді сидить увечері окремо, біля кухонного вогнища, і мовчить (кістяк глави 2; фаза — phases.txt); після ночі на вежі — знову з усіма
 # Ніч (користувач 2026-11-16: «замість сну — здебільшого сидять біля вогню, не тільки біля головного, а й біля великого біля кухні; можуть іноді вийти подихати,
 # але дуже рідко, або сісти десь в іншому кінці Зали»). Якорі — деталі, що стоять у кожному стані Зали (vohnyshche, kukhnia — вогнище кухні, kinets — колона
 # східного кінця); сидіння біля них у кожному стані свої: «sit» бере те, що є (перекинута лава закинутої Зали — не сидіння: NpcMind.Seatable), нема — на землю.
@@ -54,10 +69,13 @@ at: hall 4-6 torvald.imena_1 think clip remember_stone.loop from remember_stone.
 at: hall 22-4 hall.vohnyshche fire sit stay 240-480                  # ніч: біля вогню Варти…
 at: hall 22-4 hall.kukhnia fire sit stay 240-480                     # …чи біля великого вогнища кухні — ходить між ними
 at: hall 1-2 hall.kinets seat sit chance 0.15 stay 60-75             # іноді — сісти в іншому кінці Зали, самій
-at: hall 3-4 hall.dveri_holovni by hall.skhody think chance 0.07 say night_air   # зрідка — вийти подихати: за брамою, біля сходів
+at: hall 3-4 hall.pidloha_liva by hall.skhody think chance 0.07 say night_air   # зрідка — вийти подихати: за брамою, збоку від неї, не на порозі (користувач 2026-11-20: варта Торвальда стояла на порозі)
 spot: hall hall.vohnyshche fire want 0.2                              # вільний час: вечір і ніч біля вогню
 spot: hall hall.lava seat sit
 # --- Глава 2: КІСТЯК (користувач 2026-11-16: «заклади зараз, детально розробимо потім»; docs/plans/story-lore.md «Глава 2 — кістяк»). Рядки — з кроками глави:
-#   провина в розкладі: після того, як Літ помітив свіжо зрубаний рядок різьби (коло 2: користувач 2026-11-17 переніс із кроку 4) — не ходить до
-#     різьби, поминає лише біля каменів (рядок 6-10 різьби отримає «when !<факт>», новий — до каменів «when <факт>»); після першого листа слуги Хель (крок 5) — іноді ввечері сидить окремо
-#     від кола (chance); коли лікує незнайомця (крок 12) — щодня до нього (місце ще вирішити)
+#   провина в розкладі: після першого листа слуги Хель — іноді ввечері сидить окремо від кола: ЗРОБЛЕНО 2026-11-22 (рядок 18-22 hall.kukhnia вище,
+#     фаза heid_apart). «Після зрубаного рядка різьби не ходить до неї» — НЕ зроблено: цього кроку в готовій главі 2 нема (ні етапу, ні факту);
+#     з'явиться — рядок 6-10 різьби отримає «when !<факт>». Крок 12 «лікує незнайомця» викреслено (користувач 2026-11-18)
+#   Після ночі на вежі (сцена torv_back, факт torvald_wakes; користувач 2026-11-18): старий оживає, і вона менше поїть його травами — сама
+#     відчуває сенс, бо біля вогню менше чує Хель; з цієї миті не хоче їй служити (а то й думає обдурити). Поки — слова (words/heid.txt) і
+#     рідший відвар у розмовах зборів (meets/hall.txt: «? !world torvald_wakes»)

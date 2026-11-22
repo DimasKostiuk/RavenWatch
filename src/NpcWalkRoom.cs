@@ -198,7 +198,7 @@ namespace HuginWhispers
         {
             RaycastHit h;
             if (!Physics.CapsuleCast(me + Vector3.up * 0.65f, me + Vector3.up * 1.4f, 0.3f, dir, out h, Look, Things2, QueryTriggerInteraction.Ignore)) return false;
-            if (h.normal.y > 0.4f) return false; // (ground or a step it walks up)
+            if (h.normal.y > 0.4f && !NpcKit.Furniture(h.collider)) return false; // (ground or a step it walks up; the top edge of a bench is neither: low furniture is walked round, not climbed)
             Piece p = h.collider.GetComponentInParent<Piece>();
             if (p != null) { string n = p.gameObject.name; if (n.IndexOf("stair", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("ramp", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("ladder", StringComparison.OrdinalIgnoreCase) >= 0) return false; } // (walked on, not round)
             Door door = p != null ? p.GetComponentInChildren<Door>() : null;

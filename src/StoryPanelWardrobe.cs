@@ -64,10 +64,13 @@ namespace HuginWhispers
             GUILayout.Label("Пошук:", GUILayout.Width(52f));
             _wearFind = GUILayout.TextField(_wearFind, 40, GUILayout.Width(220f));
             if (GUILayout.Button("✕", GUILayout.Width(28f)) && _wearFind.Length > 0) { _wearFind = ""; GUIUtility.ExitGUI(); }
-            GUILayout.FlexibleSpace();
+            // (right by the search, never pushed to the row's far end: the column is wider than the window shows, and there the button stood
+            // out of sight — the user 2026-11-20: «щоб я міг знімати кнопкою якоюсь плащі … зараз наче як не можна»)
+            GUILayout.Space(10f);
             GUI.enabled = cur.Length > 0;
             if (GUILayout.Button("Зняти", GUILayout.Width(90f))) { Put(d, _wearSlot, cur, ""); GUIUtility.ExitGUI(); }
             GUI.enabled = true;
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             Shown();
@@ -89,7 +92,7 @@ namespace HuginWhispers
                     string id = _shown[k];
                     Rect at = GUILayoutUtility.GetRect(Cell, Cell, GUILayout.Width(Cell), GUILayout.Height(Cell));
                     bool on = id == cur;
-                    if (GUI.Button(at, GUIContent.none, on ? _sel : GUI.skin.button) && !on) { Put(d, _wearSlot, cur, id); GUIUtility.ExitGUI(); }
+                    if (GUI.Button(at, GUIContent.none, on ? _sel : GUI.skin.button)) { Put(d, _wearSlot, cur, on ? "" : id); GUIUtility.ExitGUI(); } // (a click on what is worn takes it off)
                     Sprite sp = _wearSlot == HatSlot ? HatIcon(id) : IconOf(id);
                     if (sp != null) { if (Event.current.type == EventType.Repaint) DrawSprite(new Rect(at.x + 4f, at.y + 4f, at.width - 8f, at.height - 8f), sp); }
                     else GUI.Label(at, Short(NameOf(_wearSlot, id)), _hint);
@@ -100,7 +103,7 @@ namespace HuginWhispers
             if (rows - last > 0) GUILayout.Space((rows - last) * RowH);
             GUILayout.EndScrollView();
             string say = hover.Length > 0 ? hover : cur;
-            GUILayout.Label(_shown.Count == 0 ? "Нічого не знайдено." : say.Length > 0 ? (say == cur ? "Вдягнуто: " : "") + NameOf(_wearSlot, say) + (_wearSlot == HatSlot ? "" : "  <color=#8a8a8a>" + say + "</color>") : _shown.Count + " речей. Наведи — побачиш назву, клікни — вдягне.", _hintRich, GUILayout.Height(36f)); // (a fixed height: the hover changes the text between events, not the layout)
+            GUILayout.Label(_shown.Count == 0 ? "Нічого не знайдено." : say.Length > 0 ? (say == cur ? "Вдягнуто: " : "") + NameOf(_wearSlot, say) + (_wearSlot == HatSlot ? "" : "  <color=#8a8a8a>" + say + "</color>") : _shown.Count + " речей. Наведи — побачиш назву, клікни на вдягнуте — зніме, клікни — вдягне.", _hintRich, GUILayout.Height(36f)); // (a fixed height: the hover changes the text between events, not the layout)
 
             if (_wearSlot == HatSlot && d.Hat.Length > 0) HatFit(d);
         }

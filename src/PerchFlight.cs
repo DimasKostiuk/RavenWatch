@@ -6,8 +6,8 @@ namespace HuginWhispers
     // ---------------------------------------------------------------- the flight to the perch
 
     // Off the shoulder and onto a perch by the raven's motor. Near (a hop, up to HopRange m): a push off, a low arc
-    // with a few beats, turning in the air to how it will sit, braking, and the game's landing. Farther: the motor flies
-    // to a point behind and above the seat on the side it comes from, then the final way in and the landing. It sits
+    // with a few beats, turning in the air to how it will sit, braking, and the game's landing. Farther: the motor's flight
+    // to a seat (RavenMotor.ToSeat: the way round, a point above the seat on its open side, the final way in) and the landing. It sits
     // facing the way it came (either way along the bar: the seat's Flip). The perch then draws its own sitting copy
     // there (PerchView.Landed) and this bird goes.
     internal class PerchFlight : MonoBehaviour, IRavenUser
@@ -20,11 +20,12 @@ namespace HuginWhispers
         internal ShoulderLife Life;
         internal RavenMotor Motor;
         internal float Wait;
-        internal static float PreBack = 1.6f, PreUp = 1.2f, GiveUp = 25f;
+        internal static float GiveUp = 25f;
         internal static float HopRange = 5f, HopSpeed = 3.2f, HopMin = 0.55f, HopMax = 1.6f, HopArc = 0.3f, HopArcPerM = 0.06f, HopArcMax = 0.6f;
         private float _t, _since;
         private bool _off, _flip, _hop;
-        private int _phase;     // 0 to the point before the seat (or the hop), 1 the final way in, 2 the landing
+        private int _phase;     // 0 in the air (the hop, or the motor's flight to the seat: its legs are the motor's), 2 the landing
+        private int _side = 1;  // the side of the seat it comes in from (RavenMotor.SeatSide: 1 behind it, -1 before it, 0 over it)
         private Vector3 _landOff, _p0, _p1;
         private Quaternion _landFromRot, _look0;
         private float _settle = -1f, _hopT, _hopLen;
@@ -91,7 +92,11 @@ namespace HuginWhispers
                 Transform launchSeat = Face;
                 Vector3 launchAim = LandPoint(launchSeat);
                 if (Vector3.Distance(transform.position, launchAim) > HopRange)
-                    launchAim = launchSeat.position - Flat(launchSeat.forward) * PreBack + Vector3.up * PreUp;
+                {
+                    // (a flight, not a hop: the side of the seat it comes in from, asked once — behind it unless a wall is there)
+                    _side = RavenMotor.SeatSide(launchSeat.position, Flat(launchSeat.forward));
+                    launchAim = RavenMotor.SeatPre(launchSeat.position, Flat(launchSeat.forward), _side);
+                }
                 Motor.Launch(Motor.TakeoffVelocity(launchAim, Vector3.zero, "на жердину"), "на жердину", 1f);
                 BeginHop();
             }
@@ -99,34 +104,11 @@ namespace HuginWhispers
             if (_phase == 2) { Land(s); return; }
             if (Motor.Body == null || Time.time - _since > GiveUp) { GiveUpNow(s); return; }
             if (_hop) { Hop(s, dt); return; }
-            Vector3 seat = s.position, front = Flat(s.forward);
-            // the seat out of sight (a table inside, a perch in another room): the way a man would walk, through the
-            // door, slower; stuck behind closed doors: a puff here and on the seat
-            Vector3 round;
-            if (Motor.Round(LandPoint(s), seat, out round))
-            {
-                if (_phase == 1 && Vector3.Distance(transform.position, seat) > 3f) { Motor.Body.Unfinal(); _phase = 0; }
-                Motor.Steer(round, Mathf.Min(Motor.Body.Style.Cruise, RavenMotor.DetourSpeed), false, 0f, dt, Vector3.zero, RavenMotor.DetourAvoid);
-                Motor.Finish(dt, 0f);
-                if (Motor.Stuck) GiveUpNow(s);
-                return;
-            }
-            if (_phase == 0)
-            {
-                // behind the seat on the side it sits facing from (it comes from there), not round the perch; above the
-                // seat and never below where it flies now by much, so a low perch is glided down to, a high one climbed to
-                Vector3 pre = seat - front * PreBack + Vector3.up * PreUp;
-                Motor.Steer(pre, Motor.Body.Style.Cruise, true, 0f, dt, Vector3.zero, 1f);
-                Motor.Finish(dt, 0f);
-                if (Vector3.Distance(transform.position, pre) < 1.2f || Vector3.Distance(transform.position, seat) < 2f) { Motor.Body.MarkFinal(); _phase = 1; }
-                return;
-            }
-            Vector3 aim = LandPoint(s);
-            float near = Vector3.Distance(transform.position, aim);
-            Motor.Body.FaceHint(front, 1f - Mathf.Min(near, RavenFlight.TurnFrom) / RavenFlight.TurnFrom);
-            float left = Motor.Steer(aim, Motor.Body.HomeSpeed(5f, Vector3.zero, 0f), true, near < 4f ? 2f : 0f, dt, Vector3.zero, 1f);
-            Motor.Finish(dt, Mathf.Clamp01(1f - near / Mathf.Max(0.5f, Motor.Landing().Flare)));
-            if (Motor.ReadyToLand(left, Vector3.zero)) BeginLand(s);
+            // the motor's flight to a seat (RavenMotor.ToSeat): the way round while the seat is out of sight (a table inside, a
+            // perch in another room), the point before it on its open side, the last way in; its turn to touch down by the
+            // other raven (Landings). Stuck behind closed doors: a puff here and on the seat
+            if (Motor.ToSeat(s.position, Flat(s.forward), _side, dt, true)) BeginLand(s);
+            else if (Motor.Stuck) GiveUpNow(s);
         }
 
         // ---- the hop: a short arc driven by hand through the motor (its wings beat by the speed)
@@ -209,6 +191,7 @@ namespace HuginWhispers
         internal static float GiveUpNear = 2f;
         private void GiveUpNow(Transform s)
         {
+            if (Motor != null) Motor.SeatEnd(Motor.Stuck ? "gave up, stuck out of its sight" : "gave up");
             if (s != null && Vector3.Distance(transform.position, s.position) > GiveUpNear)
             {
                 Raven tpl = Shoulder.Template(Munin);

@@ -100,6 +100,7 @@ namespace HuginWhispers
             public Vector3 To, Home;
             public bool Run;
             public bool Ease;        // go: at its ease, whatever layer it is on (the story's word: StoryHold — a guest walking in to the fire does not run; kept: «2» in Run's field)
+            public bool Hurry;       // go: in a hurry but never a sprint — a jog, a walk the last HurryWalk m (StoryHold «hurry»: the user 2026-11-18, Torvald left behind on the way home — «добігав, але не спринтом, аж до зали, і вже від неї собі йшов спокійно»; kept: «3»)
             public float Near = 1.2f, Keep = 3f, Radius = 6f;
             public ZDOID Who = ZDOID.None;
             public long Leader;      // follow: the player it follows by its own number (kept): its body's id is another after a death or a reload
@@ -129,7 +130,7 @@ namespace HuginWhispers
             internal string Code()
             {
                 CultureInfo ci = CultureInfo.InvariantCulture;
-                return Kind.ToString().ToLowerInvariant() + "|" + Npcs.V(To) + "|" + Npcs.V(Home) + "|" + (Run ? 1 : Ease ? 2 : 0) + "|" + Near.ToString("0.##", ci) + "|" + Keep.ToString("0.##", ci)
+                return Kind.ToString().ToLowerInvariant() + "|" + Npcs.V(To) + "|" + Npcs.V(Home) + "|" + (Run ? 1 : Ease ? 2 : Hurry ? 3 : 0) + "|" + Near.ToString("0.##", ci) + "|" + Keep.ToString("0.##", ci)
                     + "|" + Radius.ToString("0.##", ci) + "|" + NpcKit.Save(Who) + "|" + Pose + "|0|" + Leader.ToString(ci); // (the kind by its name: a kind added later does not turn old saves into another)
             }
 
@@ -144,7 +145,7 @@ namespace HuginWhispers
                 // read wrong (a way's word was read from its link's numbers, a follow's player lost after a reload)
                 int more = f[7].StartsWith("~", StringComparison.Ordinal) && f.Length >= 14 ? 5 : 0;
                 if (f.Length < 9 + more) return null;
-                Plan p = new Plan { Kind = kind, Run = f[3] == "1", Ease = f[3] == "2", Pose = f[8 + more] };
+                Plan p = new Plan { Kind = kind, Run = f[3] == "1", Ease = f[3] == "2", Hurry = f[3] == "3", Pose = f[8 + more] };
                 Vec(f[1].Split(' '), 0, out p.To);
                 Vec(f[2].Split(' '), 0, out p.Home);
                 p.Near = Errands.F(f[4], 1.2f); p.Keep = Errands.F(f[5], 3f); p.Radius = Errands.F(f[6], 6f);
@@ -252,10 +253,13 @@ namespace HuginWhispers
         // m_acceleration) stay — the same inertia as a player's. Tuned live: raven npc walk set turn|turnrun|slowfrom|slowto|slowmin.
         internal static float TurnWalk = 96f, TurnRun = 68f;             // °/s its way bends walking / running (true seconds since 2026-11-07: the 240 and 170 written before ran at 0.4 of a second's worth — Dt; these keep the turn the user saw and tuned)
         internal static float SlowFrom = 35f, SlowTo = 130f, SlowMin = 0.3f; // a bend sharper than SlowFrom slows it, to SlowMin at SlowTo
+        internal static float ArriveTurn = 2.5f; // × its turn on its last stretch to a goal (Steer «straight»: NpcWalk's coming)
         private Vector3 _heading;
         private float _headingAt = -10f;
 
-        internal void Steer(Vector3 dir, bool run, float pace = 1f) // (pace: a share of its speed — slowing as it comes to its goal: NpcWalk)
+        // straight: its last stretch to a goal (NpcWalk's coming) — it turns quicker and is not slowed for the bend: by a goal every step
+        // aside is a sharp bend, and a bend's slowing on top of its braking made the crawl (0.1 m/s) and a ring walked round the spot
+        internal void Steer(Vector3 dir, bool run, float pace = 1f, bool straight = false) // (pace: a share of its speed — slowing as it comes to its goal: NpcWalk)
         {
             dir.y = 0f;
             if (dir.sqrMagnitude < 1e-4f) { StopMoving(); return; }
@@ -267,13 +271,13 @@ namespace HuginWhispers
                 _heading = f.sqrMagnitude > 1e-4f ? f.normalized : dir;
             }
             _headingAt = Time.time;
-            _heading = Vector3.RotateTowards(_heading, dir, (run ? TurnRun : TurnWalk) * Mathf.Deg2Rad * dt, 0f);
+            _heading = Vector3.RotateTowards(_heading, dir, (run ? TurnRun : TurnWalk) * (straight ? ArriveTurn : 1f) * Mathf.Deg2Rad * dt, 0f);
             _heading.y = 0f;
             if (_heading.sqrMagnitude < 1e-4f) _heading = dir; else _heading.Normalize();
             float bend = Vector3.Angle(_heading, dir);
             float k = Mathf.InverseLerp(SlowFrom, SlowTo, bend); k = k * k * (3f - 2f * k);
             LookTowards(_heading);
-            m_character.SetMoveDir(_heading * Mathf.Lerp(1f, SlowMin, k) * pace);
+            m_character.SetMoveDir(_heading * (straight ? 1f : Mathf.Lerp(1f, SlowMin, k)) * pace);
             m_character.SetRun(run && bend < SlowFrom); // (no running through a sharp bend)
         }
 
@@ -598,6 +602,7 @@ namespace HuginWhispers
         }
 
         // on a seat or the ground, sitting (by the fire, at a table): for a chat (NpcChatter)
+        internal bool StandsFree { get { return _cur == null || _cur.Kind == Task.Idle; } } // (standing, no walk, no pose, no seat: its body turns to whatever it looks at — StoryScenes.Facing)
         internal bool SeatedNow { get { return _cur != null && (_cur.Kind == Task.Sit || _cur.Kind == Task.Eat) && _cur.Seated; } }
         // ...on any game: its own mind where it is run, else its body's sitting as its owner wrote it (a seat's attach, not its bed)
         internal static bool SeatedOf(NpcActor a)
@@ -636,10 +641,48 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the plans
         private void Idling(Plan p, float near)
         {
-            if (Aside()) return; // (someone walks at it: a step out of their way)
+            if (OutOf() || Aside()) return; // (it stands in someone: a step out of them · someone walks at it: a step out of their way)
             StopMoving();
             if (p != null && p.Looks) LookAt(p.Look); else LookAround(near);
             if (p != null && !p.Started) { p.Started = true; Status = Lang.K("стоїть"); }
+        }
+
+        // Standing in another person's body: people's bodies do not meet (NpcBody: nothing pushes two who stopped on one spot apart any more), so
+        // the one that stands steps out of the other — away from it, for half a second, looked at three times a second (both standing: each steps
+        // away from the other). Not on a seat or in a bed, not in a scene (it puts people where it wants them: a clip of two stands them 0.8 m apart,
+        // face to face — more than InsideAt), not while a clip plays on it; a «Стій» steps out too: two bodies in one is never meant. One walking
+        // through it is let pass (Aside steps out of its way). Nowhere free round it (NoRoom): it stays where it is, in the other.
+        internal static float InsideAt = 0.5f; // m between the middles of two standing bodies: in each other (each 0.4 m round: 0.8 — they only touch)
+        private float _outLook;
+        private bool OutOf()
+        {
+            float now = Time.time;
+            if (SeatedNow || Asleep || _curLayer == Layer.Scene || (Body != null && Body.Attached)) { _asideUntil = 0f; return false; } // (held where it is — as Aside is: a step begun, this one's or Aside's, which shares it, stops; a scene that took it mid-step gets it where it stood)
+            if (now < _asideUntil) { m_character.SetWalk(true); Steer(_asideDir, false); return true; } // (a step out, under way: Aside's or its own)
+            if (now < _outLook || (Body != null && Body.ClipBusy)) return false; // (a clip plays on it: no step of its own out — Aside still steps out of a walker's way, as before)
+            _outLook = now + 0.3f;
+            Vector3 me = transform.position;
+            foreach (NpcActor o in NpcActor.Live)
+            {
+                if (o == null || o.gameObject == gameObject) continue;
+                Vector3 d = me - o.transform.position;
+                if (Mathf.Abs(d.y) > 1f) continue;
+                d.y = 0f;
+                float m = d.magnitude;
+                if (m >= InsideAt) continue;
+                Character c = o.GetComponent<Character>();
+                if (c != null && c.GetVelocity().magnitude >= 0.5f) continue; // (walking through it: it passes on)
+                Vector3 dir = m > 0.05f ? d / m : (GetInstanceID() < o.GetInstanceID() ? Vector3.right : Vector3.left); // (on the very same spot: the two to opposite sides)
+                if (NoRoom(me + dir * 0.6f))
+                {
+                    Vector3 side = new Vector3(dir.z, 0f, -dir.x);
+                    if (!NoRoom(me + side * 0.6f)) dir = side; else if (!NoRoom(me - side * 0.6f)) dir = -side; else continue; // (no room any way: it stays)
+                }
+                _asideDir = dir; _asideUntil = now + 0.5f;
+                m_character.SetWalk(true); Steer(dir, false);
+                return true;
+            }
+            return false;
         }
 
         // whom/where it was told to look at, else a player close by (the first bit of a mind: it notices you)
@@ -763,7 +806,7 @@ namespace HuginWhispers
                 Move(dt, at, p.Keep, pace);
                 Status = Lang.K("іде слідом");
             }
-            else { StopMoving(); LookAt(Eye(who)); p.Best = d; p.BestAt = Time.time; Status = Lang.K("поруч"); }
+            else { p.Best = d; p.BestAt = Time.time; Status = Lang.K("поруч"); if (OutOf()) return; StopMoving(); LookAt(Eye(who)); } // (two come after one: out of each other's body)
         }
 
         private float _farTry, _leaderLook;
@@ -801,6 +844,7 @@ namespace HuginWhispers
             p.To = spot; p.Best = float.MaxValue; p.BestAt = Time.time;
         }
 
+        internal static float SeatStall = 1.2f, SeatFrom = 1.7f; // s with no half metre gained · m from its seat: it sits from there
         private void Sitting(float dt, Plan p)
         {
             if (!p.Started)
@@ -821,15 +865,21 @@ namespace HuginWhispers
             Vector3 goal = seat != null && p.HasSide ? p.Side : seat != null ? seat.position : p.To;
             float d = Utils.DistanceXZ(transform.position, goal);
             bool there = seat != null && p.HasSide ? d <= 0.5f || Utils.DistanceXZ(transform.position, seat.position) <= 0.9f : d <= 1.4f || AtSnap(goal, 1.4f); // (by its seat: at the side it came to, or right at it)
+            // by its seat and no nearer for a while — its back, its end, a table beside it stand between: it sits from where it is (the body glides onto
+            // it, as from the side it meant to come to). Till 2026-11-20 its feet «stepped up» onto the bench there and it sat from on top of it; now
+            // that nobody steps on furniture (NpcKit.Furniture), Eyvind pushed at his own bench for a minute («pushes, no move», halts.txt)
+            if (!there && seat != null && Time.time - p.BestAt > SeatStall && m_character.GetVelocity().magnitude < 0.15f && Utils.DistanceXZ(transform.position, seat.position) <= SeatFrom) there = true; // (standing against it: one still coming at its ease is let come)
             if (!there)
             {
                 if (d < p.Best - 0.5f) { p.Best = d; p.BestAt = Time.time; }
-                if (seat != null && _feet != null && _feet.CantReach(goal)) { NpcWalk.KeepOff(seat.position); Npcs.Log(Name() + ": no way to its seat — another"); p.Started = false; p.Seat = null; p.HasSide = false; return; } // (behind a table, up on a floor apart: it is kept off it a while — NpcWalk.Avoided)
+                if (seat != null && _feet != null && _feet.CantReach(goal)) { if (Body != null && Body.OffFurniture()) return; /* (no way from the top of a workbench it was put on: down first — not its seat kept off for everyone) */ NpcWalk.KeepOff(seat.position); Npcs.Log(Name() + ": no way to its seat — another"); p.Started = false; p.Seat = null; p.HasSide = false; return; } // (behind a table, up on a floor apart: it is kept off it a while — NpcWalk.Avoided)
                 if (seat == null && _feet != null && _feet.CantReach(goal)) there = true; // (its spot on the ground: here will do)
                 else if (Time.time - p.BestAt <= StuckSeconds) { Move(dt, goal, seat != null && p.HasSide ? 0.3f : 1f, PaceFor(d)); Status = Lang.K("іде сісти"); return; } // (to its side of the seat itself: it sits from half a metre — stopped a metre off, it stood «not there» till the stuck rule put it on)
                 if (seat != null && !Unstick(goal, "could not reach its seat", false, OwnGoal)) { seat = null; p.Seat = null; } // (seen: no jump onto it — it sits on the ground where it is)
             }
             StopMoving();
+            if (seat == null && Body != null && Body.Sliding) return; // (not sat down on the ground mid-slide: where the slide ends)
+            if (seat == null && Body != null && Body.OffFurniture()) { p.Started = false; return; } // (to sit on the ground where it stands — the top of a workbench it was put on, no way off it: 2026-11-20, Eyvind; down first, then it looks for its seat anew: OffFurniture below)
             p.Seated = true;
             if (_feet != null) _feet.There(seat != null ? "ok (seat)" : "ok (ground)");
             if (seat != null && Taken(seat, this)) { seat = null; Npcs.Log(Name() + ": its seat was taken — sits on the ground"); } // (someone sat there while it walked)
@@ -911,17 +961,18 @@ namespace HuginWhispers
             Pace want = PaceRule(dist);
             if (!ReferenceEquals(_cur, _pacePlan)) { _pacePlan = _cur; _pace = want; }
             else if (want > _pace) _pace = want;
-            else if (want < _pace && dist < 4f) _pace = want;
+            else if (want < _pace && (dist < 4f || (_cur != null && _cur.Hurry && dist < HurryWalk))) _pace = want; // (in a hurry: a walk already its last HurryWalk m)
             return _pace;
         }
 
+        internal static float HurryWalk = 16f; // (m from its goal one in a hurry walks: Plan.Hurry — inside the Hall, from its gate to the fire)
         private Pace PaceRule(float dist)
         {
             switch (_curLayer)
             {
                 case Layer.Fight: return Pace.Run;
                 case Layer.Scene: return Pace.Walk;                                                  // (a scene says «run» itself)
-                case Layer.Order: if (_cur != null && _cur.Ease) goto default; return dist > 30f ? Pace.Run : dist > 12f ? Pace.Jog : Pace.Walk;
+                case Layer.Order: if (_cur != null && _cur.Ease) goto default; if (_cur != null && _cur.Hurry) return dist > HurryWalk ? Pace.Jog : Pace.Walk; return dist > 30f ? Pace.Run : dist > 12f ? Pace.Jog : Pace.Walk;
                 default: return dist > 80f ? Pace.Jog : Pace.Walk;                                   // (at its ease and at its work: a walk — about its base never a run, the user 2026-11-08)
             }
         }
@@ -1688,7 +1739,7 @@ namespace HuginWhispers
                 case "go":
                     if (!Vec(w, 1, out v)) return;
                     int ni = Array.IndexOf(w, "near");
-                    Set(layer, new Plan { Kind = Task.Go, To = v, Run = Array.IndexOf(w, "run") > 0, Ease = Array.IndexOf(w, "ease") > 0, Exact = Array.IndexOf(w, "exact") > 0, Near = ni > 0 && w.Length > ni + 1 ? Mathf.Clamp(Errands.F(w[ni + 1], 1.2f), Array.IndexOf(w, "exact") > 0 ? 0.1f : 0.3f, 10f) : 1.2f });
+                    Set(layer, new Plan { Kind = Task.Go, To = v, Run = Array.IndexOf(w, "run") > 0, Ease = Array.IndexOf(w, "ease") > 0, Hurry = Array.IndexOf(w, "hurry") > 0, Exact = Array.IndexOf(w, "exact") > 0, Near = ni > 0 && w.Length > ni + 1 ? Mathf.Clamp(Errands.F(w[ni + 1], 1.2f), Array.IndexOf(w, "exact") > 0 ? 0.1f : 0.3f, 10f) : 1.2f });
                     break;
                 case "follow":
                     ZDOID who = Id(w, 1); if (who.IsNone()) return;
@@ -1860,18 +1911,23 @@ namespace HuginWhispers
             free.Add(new KeyValuePair<float, Chair>(d + (lean && me != null && me.Actor != null && SeatLean != null ? SeatLean(me.Actor, pt.position) : 0f), ch));
         }
 
-        // a spot of bare ground near this one: nothing built under it or round it (a bed, a table, a wall), else the spot
+        // its body was taken down off furniture (NpcBody.OffFurniture): a sit it was on its way to, or sat on the ground up there for want of a
+        // way to its seat, begins anew from the floor — its seat looked for again, its ground spot reckoned again (the way it had was from the top)
+        internal void OffFurniture()
+        {
+            Plan p = _cur;
+            if (p == null || p.Kind != Task.Sit || (p.Seated && p.OnPoint)) return; // (a meal's own steps are NpcMeals': its sitting goes through here again on its own)
+            p.Seated = false; p.Started = false; p.Seat = null; p.HasSide = false; p.Best = float.MaxValue; p.BestAt = Time.time;
+        }
+
+        // a spot of bare ground near this one: nothing built round it (a bed, a table, a wall), not the top of a thing of the house (its own look
+        // let the top of the Hall's workbench by: nothing built round a body up there — 2026-11-20), else the spot. The one way a body's spot is
+        // found by a spot: NpcKit.FloorBeside (the floor it is on — a paved yard, a deck — not the land under it, nor a workbench's top)
         private static Vector3 ClearGround(Vector3 at)
         {
             int built = LayerMask.GetMask("piece", "piece_nonsolid");
-            for (int ring = 0; ring <= 3; ring++)
-                for (int i = 0; i < (ring == 0 ? 1 : 8); i++)
-                {
-                    Vector3 p = NpcKit.Floor(at + Quaternion.Euler(0f, i * 45f + ring * 20f, 0f) * Vector3.forward * (ring * 1.2f)); // (the floor it is on — a paved yard, a deck — not the land under it: the capsule sat inside the paving and everything was «built»)
-                    if (Mathf.Abs(p.y - at.y) > 1.2f) continue;
-                    if (!Busy(p, built)) return p;
-                }
-            return at;
+            Vector3 v;
+            return NpcKit.FloorBeside(out v, at, 3.1f, p => !Busy(p, built)) ? v : at;
         }
 
         // sat on the ground by a fire: facing it, not its back to it

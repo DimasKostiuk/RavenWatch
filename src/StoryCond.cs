@@ -1,6 +1,7 @@
 #if RAVEN_ITEM && RAVEN_NPC
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using UnityEngine;
 
@@ -81,18 +82,48 @@ namespace HuginWhispers
             { "biome", new Kind { Dry = "free", Usage = "biome Meadows|BlackForest|Swamp|Mountain|Plains|Mistlands|AshLands|DeepNorth|Ocean", Min = 1,
                 Check = a => Enum.IsDefined(typeof(Heightmap.Biome), a[1]) ? null : "нема біому «" + a[1] + "»",
                 Test = (p, a) => string.Equals(p.GetCurrentBiome().ToString(), a[1], StringComparison.OrdinalIgnoreCase) } },
-            { "night", new Kind { Dry = "free", Usage = "night", Test = (p, a) => EnvMan.instance != null && EnvMan.IsNight() } },
-            { "day", new Kind { Dry = "free", Usage = "day", Test = (p, a) => EnvMan.instance != null && !EnvMan.IsNight() } },
-            { "item", new Kind { Dry = "free", Usage = "item <Prefab> [N]   (стільки в торбі, без N: хоч один)", Min = 1,
-                Check = a => a.Length > 2 && Errands.I(a[2], -1) < 1 ? "item: кількість — число від 1" : null,
+            // (the world's: the game's own night is one for every game — a person's day may ask it: StoryLife «… when night»)
+            { "night", new Kind { Dry = "free", Usage = "night", World = true, Test = (p, a) => EnvMan.instance != null && EnvMan.IsNight() } },
+            { "day", new Kind { Dry = "free", Usage = "day", World = true, Test = (p, a) => EnvMan.instance != null && !EnvMan.IsNight() } },
+            // the hour of the game's day (chapter 2, the user 2026-11-18: «старт завдання зробити в певній годині» — Torvald goes on his watch at evening);
+            // through midnight: «22-4». The world's own clock: the same on every game
+            { "hours", new Kind { Dry = "free", Usage = "hours <від>-<до>   (година дня гри, 0–24; через північ — 22-4)", Min = 1, World = true,
+                Check = a => { float f, t; return HoursOf(a[1], out f, out t) ? null : "hours <від>-<до>: дві години 0–24 через риску"; },
+                Test = (p, a) =>
+                {
+                    float f, t;
+                    if (EnvMan.instance == null || !HoursOf(a[1], out f, out t)) return false;
+                    float h = EnvMan.instance.GetDayFraction() * 24f;
+                    return f <= t ? h >= f && h < t : h >= f || h < t;
+                } } },
+            { "item", new Kind { Dry = "free", Usage = "item <Prefab> [N] [new]   (стільки в торбі, без N: хоч один; new — лише здобуте, відколи етап почався)", Min = 1,
+                Check = a => a.Length > 2 && a[2] != "new" && Errands.I(a[2], -1) < 1 ? "item: кількість — число від 1" : a.Length > 3 && a[3] != "new" ? "item <Prefab> [N] [new]" : null,
                 Test = (p, a) =>
                 {
                     GameObject g = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(a[1]) : null;
                     ItemDrop d = g != null ? g.GetComponent<ItemDrop>() : null;
-                    return d != null && p.GetInventory().CountItems(d.m_itemData.m_shared.m_name) >= (a.Length > 2 ? Errands.I(a[2], 1) : 1);
+                    if (d == null) return false;
+                    int have = p.GetInventory().CountItems(d.m_itemData.m_shared.m_name), n = a.Length > 2 && a[2] != "new" ? Errands.I(a[2], 1) : 1;
+                    return a[a.Length - 1] == "new" ? Gained(a, have) >= n : have >= n;
                 } } },
             { "errand", new Kind { Dry = "free", Usage = "errand   (є доручення з гнізда)", Test = (p, a) => Errands.Of(p) != null } },
         };
+
+        // «item <Prefab> [N] new»: what came into the bag since the stage began (the user 2026-11-20: a yellow mushroom left in the bag from before
+        // passed Eyvind's «find them in the cave» the moment he came near it). The bag as it was is kept by the condition itself (its words: one
+        // stage's line, asked twice a second while it stands) — first asked, or not asked for NewGap s (another stage stood meanwhile; a minute:
+        // a portal's loading or a world's is no new stage), it is taken anew; less in the bag since (eaten, put away) — counted from there
+        internal static float NewGap = 60f;
+        private sealed class Had { public int N; public float Asked; }
+        private static readonly Dictionary<string[], Had> _had = new Dictionary<string[], Had>(); // (by the line's own words: reference, not text)
+        private static int Gained(string[] a, int have)
+        {
+            Had h;
+            if (!_had.TryGetValue(a, out h) || Time.time - h.Asked > NewGap) _had[a] = h = new Had { N = have };
+            h.Asked = Time.time;
+            if (have < h.N) h.N = have;
+            return have - h.N;
+        }
 
         // another part adds its own kinds (NpcTalk: a person's hired / mine / resident / job)
         internal static void Register(string name, Kind k) { Kinds[name] = k; }
@@ -169,6 +200,15 @@ namespace HuginWhispers
         }
 
         internal static string CmpCheck(string[] a, int at) { string op; int n; return ReadCmp(a, at, out op, out n) ? null : "потрібне число (N, >= N, < N…)"; }
+
+        // «17-22» → 17, 22 (hours of the game's day, 0–24)
+        private static bool HoursOf(string s, out float from, out float to)
+        {
+            from = to = 0f;
+            string[] h = (s ?? "").Split('-');
+            return h.Length == 2 && float.TryParse(h[0], NumberStyles.Float, CultureInfo.InvariantCulture, out from) && float.TryParse(h[1], NumberStyles.Float, CultureInfo.InvariantCulture, out to)
+                && from >= 0f && from <= 24f && to >= 0f && to <= 24f && from != to;
+        }
 
         internal static bool Compare(int have, string[] a, int at)
         {

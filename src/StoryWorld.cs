@@ -111,7 +111,7 @@ namespace HuginWhispers
             SetText(name, at.x.ToString("0.#", CultureInfo.InvariantCulture) + " " + at.y.ToString("0.#", CultureInfo.InvariantCulture) + " " + at.z.ToString("0.#", CultureInfo.InvariantCulture));
         }
 
-        // A block of the story over (a quest's «scratch:», docs/jobs/story-data.md «Блоки сюжету»): its own keys taken away — a flag, number or text named
+        // A block of the story over (a quest's «scratch:», StoryQuests.CloseBefore, docs/jobs/story-data.md «Блоки сюжету»): its own keys taken away — a flag, number or text named
         // with one of the prefixes, or so named after the words of the kinds that keep such keys (ScratchKinds: a module adds its own — «t_» a day's mark,
         // «found_», «stash_»…): «ch1_x», «t_ch1_heart», «stashed_found_ch1_house». Nothing else is touched (a quest's state «q_…», a tale, a word to a
         // person): a quest named so keeps its state. Each key gone is one send of the list to every game: once a block. How many

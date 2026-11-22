@@ -16,16 +16,19 @@ day: hall when reached ch1 lit_duty                    # його день — �
 # Його власне життя в Залі (StoryLife; лише поки дім у Залі — hall.tron: на луках і на краю лісу місць нема, там — свої бази). Користувач 2026-11-15: «щоб він брав
 # молот і підходив до стіни, ніби бив по ній, щось лагодив» — tool: Лот у руку перед кліпом і на пояс, коли йде (NpcPlaces.ClipBegins/ClipEnds).
 # Його день (StoryLife; формат рядків — шапка people/heid.txt). Перший начерк (2026-11-16): години й місця править користувач. У грі: raven npc day lit
-at: hall 7-12 hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 30-60   # зранку лагодить стіну праворуч від брами (ліву бере сцена його приходу)
-at: hall 13-16 hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 30-60  # по обіді — стіна і трон із тавром свого майстра
+# Фази (lit_works, lit_evening) і місце вечора (one vechir) — people/phases.txt. Без гри: node tools/day.js lit ch2 work3
+do: hammer = tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool   # своя справа: Лот у руку, б'є по стіні (далі в рядках — одне слово)
+at: hall 6-7 hall.stina_prava think moves dv_measure|dv_survey stay 30-60   # на світанку, перш ніж узяти Лот, міряє й оглядає стіну (користувач 2026-11-22: урізноманітнити день)
+at: hall 7-12 hall.stina_prava hammer stay 30-60   # зранку лагодить стіну праворуч від брами (ліву бере сцена його приходу)
+at: hall 13-16 hall.stina_prava hammer stay 30-60  # по обіді — стіна і трон із тавром свого майстра
 at: hall 12-13 torvald.imena_1 think moves dv_read_names chance 0.3 say stones stay 40-70   # іноді (користувач 2026-11-16: «щоб іноді Літ міг відійти від шаблону і піти до каменів Гейд, постояти, щось сказати й піти назад»): опівдні до каменів полеглих біля колишнього табору; слова — тема stones (words/lit.txt)
 at: hall 13-16 hall.tron think moves dv_touch_mark|dv_survey stay 40-80   # біля трону: долоня на тавро майстра (dv_touch_mark, прийнято 2026-11-16), оглядає роботу
-at: hall 16-18 hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool meet wall stay 40-70   # надвечір біля стіни стоїть ще й Торвальд: збори «wall» (assets/story/meets/hall.txt)
-at: hall 18-22 hall.vohnyshche fire meet evening stay 120-240 when !step ch2 lot_ask, !step ch2 work1, !step ch2 call1, !reached ch2 torv_a
-at: hall 18-22 hall.vohnyshche fire meet evening stay 120-240 when reached ch2 seen2, !step ch2 work3                                                # вечір — збори «evening» біля вогню Варти: з Гейд і Торвальдом (стоїть)
+at: hall 16-18 hall.stina_prava hammer meet wall stay 40-70   # надвечір біля стіни стоїть ще й Торвальд: збори «wall» (assets/story/meets/hall.txt)
+at: hall 18-22 hall.vohnyshche fire meet evening one vechir stay 120-240 when phase lit_evening   # вечір — збори «evening»: з Гейд і Торвальдом; сьогодні біля вогню Варти (стоїть)…
+at: hall 18-22 hall.stil table sit meet evening one vechir stay 120-240 when phase lit_evening     # …а іншого дня за столом (one vechir: людям одне місце на день — phases.txt; користувач 2026-11-22)
 spot: hall hall.vohnyshche fire want 0.3                                                                      # вільний час (12–13, ніч): вогонь, трон, часом стіна
 spot: hall hall.tron think moves dv_touch_mark|dv_survey want 0.2
-spot: hall hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 30-60 hours 6-20 want 0.2
+spot: hall hall.stina_prava hammer stay 30-60 hours 6-20 want 0.2
 spot: hall hall.stina_liva think tool moves dv_look_lot stay 20-40 hours 6-20 want 0.15   # часом стає біля лівої стіни й оглядає Лот (dv_look_lot, прийнято 2026-11-17): Лот у руку на цей час
 # Ніч (користувач 2026-11-16: «замість сну — здебільшого сидять біля вогню, не тільки біля головного, а й біля великого біля кухні; можуть іноді вийти подихати,
 # але дуже рідко, або сісти десь в іншому кінці Зали»). Якорі — деталі, що стоять у кожному стані Зали (vohnyshche, kukhnia — вогнище кухні, kinets — колона
@@ -36,13 +39,14 @@ at: hall 22-6 hall.kukhnia fire sit stay 240-480
 at: hall 2-3 hall.kinets seat sit chance 0.15 stay 60-75
 at: hall 4-5 hall.dveri_holovni by hall.skhody think chance 0.07 say night_air
 # --- Глава 2 (користувач 2026-11-16: «заклади зараз, детально розробимо потім»; docs/plans/story-lore.md «Глава 2 — кістяк»)
-# «Вали звідси. Я займаюсь ділом»: поки працює (коло 1 — від «не заважай» до свого листа: work1, call1; далі work2/work3 квесту ch2) — цілий день біля стін із Лотом, у вечірнє коло не приходить (рядок 18-22 вище)
-at: hall 6-22 hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 60-120 when reached ch2 work1, !reached ch2 seen1
-at: hall 6-22 hall.stina_liva tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 60-120 when reached ch2 work1, !reached ch2 seen1
-at: hall 6-22 hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 60-120 when reached ch2 torv_a, !reached ch2 seen2   # коло 2: працює, щойно склали цвяхи й бронзу (go2 → torv_a), до «подивись» (огляд 2026-11-18: було від lot_ask — клепав і тоді, як «без цвяхів ані кроку»)
-at: hall 6-22 hall.stina_liva tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 60-120 when reached ch2 torv_a, !reached ch2 seen2
-at: hall 6-22 hall.stina_prava tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 60-120 when step ch2 work3
-at: hall 6-22 hall.stina_liva tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool stay 60-120 when step ch2 work3
+# «Вали звідси. Я займаюсь ділом»: поки працює (фаза lit_works — phases.txt: коло 1, коло 2, work3, work4) — цілий день біля стін із Лотом, у вечірнє
+# коло не приходить (lit_evening). «over»: у день такої роботи ні відступ до каменів, ні трон, ні скриня її не перебивають (користувач 2026-11-22);
+# дні роботи — з випадковими проміжками, як кожен рядок (не daily: користувач 2026-11-22 «роби випадковими по більшості»)
+at: hall 6-22 hall.stina_prava hammer stay 60-120 over when phase lit_works
+at: hall 6-22 hall.stina_liva hammer stay 60-120 over when phase lit_works
 # Після кола 1 він знає, що зі скрині зникає (лор: бачить і мовчить): іноді ввечері стоїть біля скрині й рахує — слова chest
-at: hall 19-20 hall.skrynia think tool moves dv_count|dv_look_lot chance 0.3 say chest when reached ch2 seen1   # рахує Лотом об долоню (dv_count, прийнято 2026-11-16)
-# Далі з кроками: «читає стіни» (крок 4) — свій рядок на чекання матеріалів; ніч тролів (крок 6) — сцена, не розклад
+at: hall 19-20 hall.skrynia think tool moves dv_count|dv_look_lot chance 0.3 say chest when reached ch2 seen1, !world torvald_wakes   # (після ночі на вежі не цупить ніхто — огляд 2026-11-19: «не сходиться» суперечило б його «Тепер не цупить ніхто»)  рахує Лотом об долоню (dv_count, прийнято 2026-11-16)
+# «Читає стіни», поки чекає матеріалів (фаза lit_waits — phases.txt: від «без цвяхів ані кроку» до складених цвяхів): не клепає — ходить уздовж
+# стін, міряє, оглядає Лот; over — молота в ці дні нема (користувач 2026-11-22). Ніч тролів (крок 6) — сцена, не розклад
+at: hall 7-18 hall.stina_prava think moves dv_measure|dv_survey stay 40-80 over when phase lit_waits
+at: hall 7-18 hall.stina_liva think tool moves dv_look_lot|dv_survey stay 40-80 over when phase lit_waits

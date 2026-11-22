@@ -28,7 +28,13 @@ namespace HuginWhispers
     //                       «_MetalColor» is a strong blue) in the same colour × CapeSheen
     //   tint_head: r g b    whatever is on its head (the game's helmet piece), the same way as the cape (the user 2026-11-14: the sisters' hood, the game's red
     //                       HelmetMage, in their capes' colour)
+    //   tint_chest: r g b   what it wears on its chest, tint_legs: r g b on its legs (the user 2026-11-20: «красити одяг який у грі»). The game draws
+    //                       a tunic and trousers not as things but as pictures laid over the body's own skin (the body material's «_ChestTex»,
+    //                       «_LegsTex»: VisEquipment.SetChestEquipped) — those pictures in that colour, in the body's block beside the eyes'; what
+    //                       the piece hangs on the body besides (a pauldron, a skirt: the game's lists of that slot) the same way as a cape. The
+    //                       whole piece comes out in the colour, its belts and metal with it. Nothing worn there: nothing painted
     // An echo (NpcFade) is not painted: its body's blocks are the fade's own.
+    // Also for others: Gray — a glow's picture in grey, made the same way (Hel's eyes on a creature of the game: HelEyes).
     internal static class BodyTint
     {
         internal static float EyePower = 2.6f;   // the glow's strength (the game's own blue is 2.62 at its strongest channel); tuned live: studio «set BodyTint.EyePower 2»
@@ -36,16 +42,18 @@ namespace HuginWhispers
         internal static float CapeSheen = 1.6f;  // a cape's sheen: its colour × this (NOT seen in the game yet: tune live, studio «set BodyTint.CapeSheen 1»)
         internal static float CapeFrom = 0.02f;  // a cape's pixel darker than this is the picture's empty black: left
         private const int Skin = 0, Hair = 1, Suit = 2, Person = 3, Cape = 4;
-        private static readonly int MainTex = Shader.PropertyToID("_MainTex"), Emission = Shader.PropertyToID("_EmissionColor"), MetalColor = Shader.PropertyToID("_MetalColor");
+        private static readonly int MainTex = Shader.PropertyToID("_MainTex"), Emission = Shader.PropertyToID("_EmissionColor"), MetalColor = Shader.PropertyToID("_MetalColor"), ChestTex = Shader.PropertyToID("_ChestTex"), LegsTex = Shader.PropertyToID("_LegsTex");
+        private static readonly System.Reflection.FieldInfo ChestThings = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_chestItemInstances"), LegThings = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_legItemInstances"); // (what the piece hangs on the body besides its picture)
+        private static readonly System.Reflection.FieldInfo ChestOn = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_currentChestItemHash"), LegsOn = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_currentLegItemHash"); // (0: nothing worn there — the body's picture there is the game's empty one)
         private static readonly System.Reflection.FieldInfo ShoulderThings = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_shoulderItemInstances"); // (the game's own list of what hangs on the shoulders)
         private static readonly System.Reflection.FieldInfo HeadThing = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_helmetItemInstance"); // (the game's own piece on the head)
         private static readonly Dictionary<string, Texture2D> Made = new Dictionary<string, Texture2D>();
         private static readonly Dictionary<Texture, Color32[]> Read = new Dictionary<Texture, Color32[]>();
         private static MaterialPropertyBlock _block;
 
-        internal sealed class Mark : MonoBehaviour { internal string Stamp = ""; internal NpcDef Def; internal Texture Skin; internal bool Eyes; internal readonly List<Renderer> Painted = new List<Renderer>(); } // (Painted: the cape's and the head's renderers given our colour)
+        internal sealed class Mark : MonoBehaviour { internal string Stamp = ""; internal NpcDef Def; internal Texture Skin; internal bool Eyes; internal string Laid = ""; internal readonly List<Renderer> Painted = new List<Renderer>(); } // (Painted: the cape's and the head's renderers given our colour)
 
-        private static string Stamp(NpcDef d) { return d.TintSkin.ToString("0.000") + d.TintHair.ToString("0.000") + d.TintSuit.ToString("0.000") + d.TintEyes.ToString("0.000") + d.TintCape.ToString("0.000") + d.TintHead.ToString("0.000") + EyePower.ToString("0.00") + SuitFrom.ToString("0.00") + CapeSheen.ToString("0.00") + CapeFrom.ToString("0.00"); }
+        private static string Stamp(NpcDef d) { return d.TintSkin.ToString("0.000") + d.TintHair.ToString("0.000") + d.TintSuit.ToString("0.000") + d.TintEyes.ToString("0.000") + d.TintCape.ToString("0.000") + d.TintHead.ToString("0.000") + d.TintChest.ToString("0.000") + d.TintLegs.ToString("0.000") + EyePower.ToString("0.00") + SuitFrom.ToString("0.00") + CapeSheen.ToString("0.00") + CapeFrom.ToString("0.00"); }
 
         // the picture the body's skin is drawn from now (a person's: the game gives the man's or the woman's when it sets the model — after our first look, maybe)
         private static Texture SkinOf(VisEquipment vis) { Material m = vis.m_bodyModel.sharedMaterial; return m != null && m.HasProperty(MainTex) ? m.GetTexture(MainTex) : null; }
@@ -56,7 +64,7 @@ namespace HuginWhispers
             if (vis == null || d == null || d.Odin || vis.m_bodyModel == null) return;
             if (!d.Dvergr && d.Echo > 0f) return; // (an echo's body: its blocks are the fade's own)
             Mark m = vis.GetComponent<Mark>();
-            bool any = d.Dvergr ? NpcDef.HasTint(d.TintSkin) || NpcDef.HasTint(d.TintHair) || NpcDef.HasTint(d.TintSuit) || NpcDef.HasTint(d.TintEyes) : NpcDef.HasTint(d.TintEyes) || NpcDef.HasTint(d.TintCape) || NpcDef.HasTint(d.TintHead);
+            bool any = d.Dvergr ? NpcDef.HasTint(d.TintSkin) || NpcDef.HasTint(d.TintHair) || NpcDef.HasTint(d.TintSuit) || NpcDef.HasTint(d.TintEyes) : NpcDef.HasTint(d.TintEyes) || NpcDef.HasTint(d.TintCape) || NpcDef.HasTint(d.TintHead) || NpcDef.HasTint(d.TintChest) || NpcDef.HasTint(d.TintLegs);
             if (m == null) { if (!any) return; m = vis.gameObject.AddComponent<Mark>(); } // (as the game made it: nothing made)
             string stamp = Stamp(d);
             Texture skin = d.Dvergr ? null : SkinOf(vis); // (a person: painted again when the game gives its body the other model's picture)
@@ -81,8 +89,21 @@ namespace HuginWhispers
             Texture src = SkinOf(vis);
             m.Skin = src;
             Texture2D pic = NpcDef.HasTint(d.TintEyes) && src != null ? Picture(src, Person, NpcDef.NoTint, d.TintEyes) : null;
-            if (pic != null) { _block.Clear(); body.GetPropertyBlock(_block); _block.SetTexture(MainTex, pic); body.SetPropertyBlock(_block, 0); m.Eyes = true; } // (what the body's own block says stays: ours is laid over its first material alone)
+            // the body's own block: its eyes, and the pictures of what it wears on its chest and its legs — one block, laid over its first material alone
+            // (what the body's own block says stays); none of the three: the block taken off
+            Material skin = body.sharedMaterial;
+            Texture2D chest = Worn(vis, skin, ChestOn, ChestTex, d.TintChest), legs = Worn(vis, skin, LegsOn, LegsTex, d.TintLegs);
+            if (pic != null || chest != null || legs != null)
+            {
+                _block.Clear(); body.GetPropertyBlock(_block);
+                if (pic != null) _block.SetTexture(MainTex, pic);
+                if (chest != null) _block.SetTexture(ChestTex, chest);
+                if (legs != null) _block.SetTexture(LegsTex, legs);
+                body.SetPropertyBlock(_block, 0); m.Eyes = true;
+            }
             else if (m.Eyes) { body.SetPropertyBlock(null, 0); m.Eyes = false; }
+            string laid = (pic != null ? "eyes " : "") + (chest != null ? "chest " : "") + (legs != null ? "legs " : "");
+            if (laid != m.Laid || say) { m.Laid = laid; if (Plugin.Instance != null && (laid.Length > 0 || say)) Plugin.Instance.Log("BodyTint: " + d.Id + ": on its body — " + (laid.Length > 0 ? laid.Trim() : "nothing") + (NpcDef.HasTint(d.TintChest) && chest == null ? "; chest asked, nothing worn there or its picture not read" : "") + (NpcDef.HasTint(d.TintLegs) && legs == null ? "; legs asked, nothing worn there or its picture not read" : "")); }
 
             foreach (Renderer was in m.Painted) if (was != null) for (int i = 0; i < was.sharedMaterials.Length; i++) was.SetPropertyBlock(null, i); // (painted before: as the game made it, then anew — the cape or the head's piece may be another one now)
             m.Painted.Clear();
@@ -92,12 +113,23 @@ namespace HuginWhispers
                 if (say && Plugin.Instance != null) Plugin.Instance.Log("BodyTint: " + d.Id + ": eyes " + (pic != null ? "painted" : "not painted") + ", things on its shoulders " + (things != null ? things.Count.ToString() : "unknown (no such list)")); // (when its colours are laid: the cape did not turn in the first run, 2026-11-14)
                 if (things != null) foreach (GameObject thing in things) PaintThing(thing, d.TintCape, "cape", d, m, say);
             }
+            if (NpcDef.HasTint(d.TintChest)) { List<GameObject> things = ChestThings != null ? ChestThings.GetValue(vis) as List<GameObject> : null; if (things != null) foreach (GameObject thing in things) PaintThing(thing, d.TintChest, "chest", d, m, say); }
+            if (NpcDef.HasTint(d.TintLegs)) { List<GameObject> things = LegThings != null ? LegThings.GetValue(vis) as List<GameObject> : null; if (things != null) foreach (GameObject thing in things) PaintThing(thing, d.TintLegs, "legs", d, m, say); }
             if (NpcDef.HasTint(d.TintHead))
             {
                 GameObject head = HeadThing != null ? HeadThing.GetValue(vis) as GameObject : null;
                 if (head == null && say && Plugin.Instance != null) Plugin.Instance.Log("BodyTint: " + d.Id + ": nothing on its head to paint");
                 PaintThing(head, d.TintHead, "head", d, m, say);
             }
+        }
+
+        // the picture of what is worn on the chest or the legs (the body material's own «_ChestTex» / «_LegsTex»), in that colour; null: no colour
+        // asked, nothing worn there, or no such picture
+        private static Texture2D Worn(VisEquipment vis, Material skin, System.Reflection.FieldInfo on, int prop, Vector3 c)
+        {
+            if (!NpcDef.HasTint(c) || skin == null || on == null || !skin.HasProperty(prop) || (int)on.GetValue(vis) == 0) return null;
+            Texture from = skin.GetTexture(prop);
+            return from != null ? Picture(from, Cape, c, NpcDef.NoTint) : null;
         }
 
         // a worn thing (the cape, the head's piece) in one colour: its picture as a dvergr's suit is, its sheen in the same colour × CapeSheen
@@ -201,11 +233,33 @@ namespace HuginWhispers
             return t;
         }
 
-        // the game's picture as it is stored (it cannot be read directly: drawn onto a card and read from there), once a picture
-        private static Color32[] Pixels(Texture src)
+        // a glow's picture in grey — each pixel as bright as its brightest channel, its colour taken out — so that a colour put on the glow
+        // (_EmissionColor) comes out as that colour, not mixed with the picture's own: the game's skeleton glows through a yellow picture, and Hel's
+        // blue-green × yellow stayed yellow (HelEyes, the user 2026-11-20). Once a picture, kept for all who share it (Made); null: it cannot be read
+        internal static Texture2D Gray(Texture src)
+        {
+            if (src == null) return null;
+            string key = src.GetInstanceID() + "|gray";
+            Texture2D t;
+            if (Made.TryGetValue(key, out t) && t != null) return t;
+            Color32[] px = Pixels(src, false); // (its pixels not kept: only the grey copy is ever needed — a creature's picture may be large)
+            if (px == null) return null;
+            for (int i = 0; i < px.Length; i++) { Color32 p = px[i]; byte v = (byte)Mathf.Max(p.r, Mathf.Max(p.g, p.b)); px[i] = new Color32(v, v, v, p.a); }
+            t = new Texture2D(src.width, src.height, TextureFormat.RGBA32, true, !Srgb(src)); // heavy: once a picture
+            t.name = src.name + "_rw_gray";
+            t.filterMode = src.filterMode; t.wrapMode = src.wrapMode; t.anisoLevel = src.anisoLevel;
+            t.SetPixels32(px);
+            t.Apply(true, true);
+            Made[key] = t;
+            return t;
+        }
+
+        // the game's picture as it is stored (it cannot be read directly: drawn onto a card and read from there), once a picture — kept for the
+        // next colour of the same picture; «keep» false: read for one copy only, nothing kept (Gray)
+        private static Color32[] Pixels(Texture src, bool keep = true)
         {
             Color32[] px;
-            if (Read.TryGetValue(src, out px)) return px;
+            if (Read.TryGetValue(src, out px)) return keep || px == null ? px : (Color32[])px.Clone(); // (a kept one is shared: a copy to write over)
             RenderTexture prev = RenderTexture.active, rt = null;
             try
             {
@@ -221,7 +275,7 @@ namespace HuginWhispers
             }
             catch (System.Exception e) { px = null; if (Plugin.Instance != null) Plugin.Instance.Log("BodyTint: the picture «" + src.name + "» could not be read: " + e.Message); }
             finally { RenderTexture.active = prev; if (rt != null) RenderTexture.ReleaseTemporary(rt); }
-            Read[src] = px; // (a picture that could not be read is not tried again)
+            if (keep || px == null) Read[src] = px; // (a picture that could not be read is not tried again)
             return px;
         }
 

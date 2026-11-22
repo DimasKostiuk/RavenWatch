@@ -2272,7 +2272,7 @@ namespace HuginWhispers
 Збулося! Я й не вірив|вірила, що так буде.
 Оце так день. Те, про що я стільки думав|думала, є!
 Нарешті. Тепер можна й про щось інше мріяти.
-~весел Ха! Вийшло! Сьогодні я найщасливіший|найщасливіша на базі!
+~весел Ха! Вийшло! Сьогодні я найщасливіший|найщасливіша в оселі!
 ~стар Дожив|Дожила і до цього. Дякую богам… і тобі.
 ~бурч Ну… добре. Справді добре. Тільки нікому не кажи, що я радів|раділа.
 
@@ -2853,10 +2853,11 @@ namespace HuginWhispers
             return !(Has(a, "hush") && NpcLevers.Flag(a, "hush"));
         }
 
-        // may it speak now, asked on any game (another player's talk: NpcTalkThird) — what its owner wrote: no talk holds it, not down, not in a fight or a scene, not in its bed
-        internal static bool FreeAnywhere(NpcActor a)
+        // may it speak now, asked on any game (another player's talk: NpcTalkThird; a talk on the way: StoryRoad) — what its owner wrote: no talk holds it, not down, not in a fight or a scene, not in its bed.
+        // own: words written for this very person (as in Free) — one that says nothing unasked says those
+        internal static bool FreeAnywhere(NpcActor a, bool own = false)
         {
-            if (a == null || a.Def == null || NpcVitals.IsDown(a) || NpcTalk.With == a || !NpcMind.HeldBy(a).IsNone() || Silent(a)) return false;
+            if (a == null || a.Def == null || NpcVitals.IsDown(a) || NpcTalk.With == a || !NpcMind.HeldBy(a).IsNone() || (!own && Silent(a))) return false;
             if (NpcMind.LayerNow(a) >= NpcMind.Layer.Fight) return false;
             return a.Body == null || a.Body.AttachedSeen != "attach_bed";
         }

@@ -26,6 +26,10 @@ namespace HuginWhispers
             float t = Mathf.Clamp01((Mathf.Max(1, level) - 1f) / Mathf.Max(1, Trust.MaxLevel - 1));
             return Mathf.Pow(Mathf.Clamp(SmallestShare, 0.1f, 1f), 1f - t);
         }
+        // how big this raven's picture is against a full-grown one (1: the top level of trust): read off the picture itself, whoever made it
+        // (the shoulder, a perch's sitter, a person's raven) — what a hand laid on it goes by (BodyAnimator.BirdAt)
+        internal static float SourceSize = 1f; // the game's raven as its prefab has it (noted where a picture is made from it: here and Perches.Sitter)
+        internal static float SizeOf(Transform bird) { return bird != null ? Mathf.Clamp(Mathf.Abs(bird.lossyScale.y) / Mathf.Max(0.0001f, SourceSize * Scale), 0.2f, 3f) : 1f; }
         internal static Vector3 Offset = new Vector3(0.14f, 0.05f, 0f);
         internal static Vector3 Rotation = new Vector3(0f, 180f, 0f); // the raven model faces the other way
         internal static float RideTilt = 0.3f, RideLift = 1.2f, RideMax = 12f, RideSettle = 6f, RideFollow = 14f; // riding the shoulder: share of its tip the bird takes, times the seat rides it, most degrees, seconds its usual pose takes to follow, ease 1/s
@@ -416,6 +420,7 @@ namespace HuginWhispers
 
             // Size, place and turn are set in the world, from the real raven and the character's facing:
             // a skeleton bone has its own scale and arbitrarily turned axes, so its local space is useless here.
+            SourceSize = source.m_visual.transform.lossyScale.y;
             Vector3 want = source.m_visual.transform.lossyScale * (Scale * SizeFor(level));
             Vector3 parent = go.transform.parent.lossyScale;
             go.transform.localScale = new Vector3(
@@ -573,9 +578,9 @@ namespace HuginWhispers
         // (the user 2026-11-12, the scene's bird landed on the bare bone: «сідає не на плече а майже на шию»).
         //   SeatOff     from the bone to the seat, in the world: Offset (Munin's mirrored) turned with the body and grown with it. The raven's own pin adds the
         //               shoulder's riding to it (ShoulderRaven: a breath, a shrug) and its own smoothed lift
-        //   SeatPoint   the seat itself for one who only lands there (StoryScenes «bird shoulder»): with what is worn on the shoulder (ShoulderFit.Lift, asked a
+        //   SeatPoint   the seat itself for one who only lands there (StoryScenes «bird shoulder»): with what is worn on the shoulder (ShoulderFit.Lift and Side, asked a
         //               frame as the pin asks it — its fit is kept a player) and the bent leg (PerchDrop), so the raven's own picture takes its place with no jump
-        internal static Vector3 SeatOff(Player pl, bool munin)
+        internal static Vector3 SeatOff(Character pl, bool munin) // (a player, or a person with a raven of its own: NpcRaven)
         {
             Vector3 fwd = Vector3.ProjectOnPlane(pl.transform.forward, Vector3.up);
             Quaternion facing = fwd.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(fwd.normalized, Vector3.up) : Quaternion.identity;
@@ -586,7 +591,8 @@ namespace HuginWhispers
         internal static Vector3 SeatPoint(Player pl, bool munin, Transform bone)
         {
             Vector3 at = bone.position + SeatOff(pl, munin);
-            return at + Vector3.up * (ShoulderFit.Lift(pl, munin, at) - PerchDrop);
+            float lift = ShoulderFit.Lift(pl, munin, at);
+            return at + ShoulderFit.Side(pl, munin) + Vector3.up * (lift - PerchDrop);
         }
 
         internal static Transform Bone(Player pl, bool munin) // (the load's ropes tie to it too: PairFx; a seat on it: SeatPoint, never the bone itself)
@@ -608,6 +614,45 @@ namespace HuginWhispers
         }
     }
 
+    // A shoulder's own move as a turn of the seat on it — one reckoning for whoever sits there: a player's raven (ShoulderPin), a person's (NpcRaven;
+    // the user 2026-11-18: «у нпс ворон скаче по плечу… іноді сидіти може криво» — its seat was a copy of its own that chased the bone a tenth of a
+    // second late and never turned with it).
+    // The collarbone turned from its usual pose (in the chest's frame, as a turn in the world): its usual pose follows slowly (a long hold — a raised
+    // shield — sinks in), so what shows is the move itself; eased a little (the bird rides it with its weight) and softly kept within Shoulder.RideMax.
+    internal sealed class ShoulderRide
+    {
+        private Quaternion _rest, _now = Quaternion.identity;
+        private bool _set;
+        internal float Angle; // degrees the seat is tipped now
+
+        internal Quaternion Step(Transform chest, Transform bone, float dt)
+        {
+            Quaternion rel = Quaternion.Inverse(chest.rotation) * bone.rotation;
+            if (!_set || dt <= 0f) { _rest = rel; _set = true; _now = Quaternion.identity; return _now; }
+            _rest = Quaternion.Slerp(_rest, rel, 1f - Mathf.Exp(-dt / Shoulder.RideSettle));
+            Quaternion move = chest.rotation * (rel * Quaternion.Inverse(_rest)) * Quaternion.Inverse(chest.rotation);
+            float ang; Vector3 axis;
+            move.ToAngleAxis(out ang, out axis);
+            if (ang > 180f) ang -= 360f;
+            float soft = Shoulder.RideMax * (float)System.Math.Tanh(ang / Shoulder.RideMax); // (no hard stop: it eases towards the limit)
+            Quaternion want = Mathf.Abs(ang) < 0.01f ? Quaternion.identity : Quaternion.AngleAxis(soft, axis);
+            _now = Quaternion.Slerp(_now, want, 1f - Mathf.Exp(-dt * Shoulder.RideFollow));
+            Angle = soft;
+            return _now;
+        }
+
+        internal void Reset() { _set = false; _now = Quaternion.identity; Angle = 0f; }
+
+        // the same turn, so many times over (the seat may ride more than the bone itself turns: the shoulder's top is further out than the bird's
+        // offset from the joint)
+        internal static Quaternion Gain(Quaternion q, float k)
+        {
+            float ang; Vector3 axis;
+            q.ToAngleAxis(out ang, out axis);
+            if (ang > 180f) ang -= 360f;
+            return Mathf.Abs(ang) < 0.001f ? Quaternion.identity : Quaternion.AngleAxis(ang * k, axis);
+        }
+    }
     // Leaving: a short moment on the shoulder with the wings opening, then a jump up and away, beating the wings,
     // and a puff of feathers once out of sight.
     internal class ShoulderFlyOff : MonoBehaviour
@@ -974,13 +1019,17 @@ namespace HuginWhispers
             transform.rotation = Quaternion.Slerp(Quaternion.identity, ride, Shoulder.RideTilt) * Quaternion.Euler(0f, _bodyYaw, 0f) * Quaternion.AngleAxis(tilt, Vector3.forward) * Quaternion.Euler(Shoulder.Rotation);
             float big = Player != null ? Player.transform.localScale.x : 1f; // (a grown body: «Звір Муніна»)
             Quaternion rideLift = RideGain(ride, Shoulder.RideLift);
-            transform.position = Bone.position + rideLift * Shoulder.SeatOff(Player, Munin); // (the seat's one place: the scene's bird lands on the same)
+            Vector3 seat0 = Bone.position + rideLift * Shoulder.SeatOff(Player, Munin); // (the seat's one place: the scene's bird lands on the same)
             // on what is worn: in the air no lift; the landing aims straight at the armour (measured as it begins,
             // in your pose then), so it sits down right onto it, nothing to settle afterwards
             bool busy = _airMode != 0 || _arriveStart >= 0f;
             long tf = Perf.On ? Perf.Now : 0;
-            float lift = busy ? 0f : ShoulderFit.Lift(Player, Munin, transform.position);
+            float lift = busy ? 0f : ShoulderFit.Lift(Player, Munin, seat0);
             if (Perf.On) Perf.Step("pin: ShoulderFit.Lift", tf);
+            // along the shoulder as what is worn asks (ShoulderFit.Side: off a helmet's horns, in from past a narrow shoulder's edge), eased as its lift is
+            Vector3 side = ShoulderFit.Side(Player, Munin);
+            _side = _liftSet ? Vector3.MoveTowards(_side, side, Time.deltaTime * (busy || _landOn ? 1f : 0.3f)) : side;
+            transform.position = seat0 + _side;
             _lift = _liftSet ? Mathf.MoveTowards(_lift, lift, Time.deltaTime * (busy || _landOn ? 1f : 0.6f)) : lift;
             _liftSet = true;
             transform.position += Vector3.up * (_lift - Shoulder.PerchDrop);
@@ -1091,6 +1140,7 @@ namespace HuginWhispers
         // by the raven's motor (RavenMotor): a take-off with speed and inertia, following you with banks when you
         // move, then home through the landing.
         private float _lift;
+        private Vector3 _side; // along the shoulder, as what is worn asks (ShoulderFit.Side), eased
         private bool _liftSet;
         private float _bodyYaw;
         private bool _met;
@@ -1168,42 +1218,19 @@ namespace HuginWhispers
 
         private Transform _chest;
         private float _chestCheck;
-        private Quaternion _rideRest, _rideNow = Quaternion.identity;
-        private bool _rideSet;
-        internal float RideAngle; // (the studio's report: how far the collarbone tips the seat now, degrees)
+        private readonly ShoulderRide _ride = new ShoulderRide();
+        internal float RideAngle { get { return _ride.Angle; } } // (the studio's report: how far the collarbone tips the seat now, degrees)
 
-        // the same turn, so many times over (the seat may ride more than the bone itself turns: the shoulder's top is
-        // further out than the bird's offset from the joint)
-        private static Quaternion RideGain(Quaternion q, float k)
-        {
-            float ang; Vector3 axis;
-            q.ToAngleAxis(out ang, out axis);
-            if (ang > 180f) ang -= 360f;
-            return Mathf.Abs(ang) < 0.001f ? Quaternion.identity : Quaternion.AngleAxis(ang * k, axis);
-        }
+        private static Quaternion RideGain(Quaternion q, float k) { return ShoulderRide.Gain(q, k); }
 
-        // the collarbone turned from its usual pose (in the chest's frame, as a turn in the world): its usual pose follows
-        // slowly (a long hold — a raised shield — sinks in), so what shows is the move itself; eased a little (the bird
-        // rides it with its weight) and softly kept within RideMax
+        // the collarbone's own move as a turn of the seat (ShoulderRide: one reckoning for a player's raven and a person's)
         private Quaternion Ride()
         {
             if (Bone == null || Player == null) return Quaternion.identity;
             if (_chest != null && Time.time >= _chestCheck) { _chestCheck = Time.time + 1f; if (!_chest.IsChildOf(Player.transform)) _chest = null; } // (a body made anew: looked up again)
             if (_chest == null) { Animator an = Player.GetComponentInChildren<Animator>(); _chest = BodyClips.SkeletonBone(Player, an != null ? an.transform : Player.transform, "Spine2"); }
             if (_chest == null) return Quaternion.identity;
-            Quaternion rel = Quaternion.Inverse(_chest.rotation) * Bone.rotation;
-            float dt = Time.deltaTime;
-            if (!_rideSet || dt <= 0f) { _rideRest = rel; _rideSet = true; _rideNow = Quaternion.identity; return _rideNow; }
-            _rideRest = Quaternion.Slerp(_rideRest, rel, 1f - Mathf.Exp(-dt / Shoulder.RideSettle));
-            Quaternion move = _chest.rotation * (rel * Quaternion.Inverse(_rideRest)) * Quaternion.Inverse(_chest.rotation);
-            float ang; Vector3 axis;
-            move.ToAngleAxis(out ang, out axis);
-            if (ang > 180f) ang -= 360f;
-            float soft = Shoulder.RideMax * (float)System.Math.Tanh(ang / Shoulder.RideMax); // (no hard stop: it eases towards the limit)
-            Quaternion want = Mathf.Abs(ang) < 0.01f ? Quaternion.identity : Quaternion.AngleAxis(soft, axis);
-            _rideNow = Quaternion.Slerp(_rideNow, want, 1f - Mathf.Exp(-dt * Shoulder.RideFollow));
-            RideAngle = soft;
-            return _rideNow;
+            return _ride.Step(_chest, Bone, Time.deltaTime);
         }
         private bool _bodyYawSet;
         private int _bodyYawFrame;

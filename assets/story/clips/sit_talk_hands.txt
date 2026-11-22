@@ -1,0 +1,80 @@
+clip sit_talk_hands
+length 3.5
+loop 0
+pivot 1.1
+curve ease
+fade 0.4 0.6
+tone plain
+mode Spine1 body
+mode Spine2 body
+say сидячи на лаві говорить і пояснює руками: долоні вгору над колінами, то права, то ліва подається вперед; невеликий жест під час розмови
+want 0.9-2.3 palm both up
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 3.2 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do sit_talk_hands "<t0>-<t1> reach right <x y z>; …".
+# scripted: @Look @Look.w
+
+0 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+0.8 @RightHand.w 1 0 0
+2.4 @RightHand.w 1 0 0
+3 @RightHand.w 0 0 0
+3.5 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.5 -1 -0.2
+
+0 @LeftHand.w 0 0 0
+0.4 @LeftHand.w 0 0 0
+0.9 @LeftHand.w 1 0 0
+2.4 @LeftHand.w 1 0 0
+3 @LeftHand.w 0 0 0
+3.5 @LeftHand.w 0 0 0
+
+0 @LeftHand.p -0.5 -1 -0.2
+
+0 Spine1 0 0 0
+0.5 Spine1 -1.5 0 0
+1 Spine1 4 2 0
+1.4 Spine1 6 3 -1
+1.8 Spine1 5 -2 1
+2.3 Spine1 5 1 0
+2.9 Spine1 1.5 0 0
+3.5 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.55 Spine2 -2 0 0
+1.05 Spine2 5 3 0
+1.45 Spine2 7.5 4 -1.5
+1.85 Spine2 6 -3 1.5
+2.35 Spine2 6 1 0
+2.95 Spine2 2 0 0
+3.5 Spine2 0 0 0
+
+0 @RightHand 0.29 0.71 0.29
+0.3 @RightHand 0.29 0.71 0.29
+0.8 @RightHand 0.17 0.9 0.4
+1.2 @RightHand 0.21 0.95 0.48
+1.6 @RightHand 0.16 0.89 0.4
+2.1 @RightHand 0.2 0.94 0.47
+2.7 @RightHand 0.26 0.78 0.33
+3.5 @RightHand 0.29 0.71 0.29
+
+0 @RightHand.f 0 0 1
+
+0 @RightHand.n -0.3 0.95 0
+
+0 @LeftHand -0.29 0.72 0.32
+0.4 @LeftHand -0.29 0.72 0.32
+0.9 @LeftHand -0.17 0.88 0.38
+1.5 @LeftHand -0.2 0.93 0.45
+2 @LeftHand -0.17 0.88 0.38
+2.7 @LeftHand -0.26 0.78 0.33
+3.5 @LeftHand -0.29 0.72 0.32
+
+0 @LeftHand.f 0 0 1
+
+0 @LeftHand.n 0.3 0.95 0

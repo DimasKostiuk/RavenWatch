@@ -18,6 +18,15 @@ namespace HuginWhispers
     internal static class RavenSpeech
     {
         internal static bool Enabled = true;
+
+        // The ravens keep quiet while a module says so (a story scene plays here or is watched: StoryModules sets QuietNow) — nothing of
+        // their own then, only the scene's lines (the user 2026-11-20: «ворони можуть говорити фрази звичайні… під час катсцен — треба їм
+        // заборонити це робити, щоб не перебивали»). The ONE gate of the ravens' words on this screen: every card (Show; ShowShoulder for your
+        // own) and every talk's bubble (TalkBubble, CrossBubble) asks Hushed, and so does your raven's line before it is said (RavenSkills.Speak).
+        // A scene's line goes through with SceneLine set round it (RavenSkills.StoryLine). Another player's shoulder raven is his game's to hush
+        internal static Func<bool> QuietNow;
+        internal static bool SceneLine;
+        internal static bool Hushed() { return !SceneLine && QuietNow != null && QuietNow(); }
         internal static readonly Color HuginFrame = new Color(0.30f, 0.62f, 0.95f, 1f);  // the glow and the picture's ring
         internal static readonly Color MuninFrame = new Color(0.90f, 0.22f, 0.20f, 1f);
         internal static readonly Color Edge = new Color(1f, 1f, 1f, 0.06f);            // the capsule's outline: barely there (design 5a)
@@ -56,7 +65,7 @@ namespace HuginWhispers
         // one along the voice (RavenVoice, WordReveal)
         internal static void Show(GameObject talker, Vector3 offset, float range, float seconds, bool munin, string name, string text, bool dockable)
         {
-            if (talker == null || string.IsNullOrEmpty(text)) return;
+            if (talker == null || string.IsNullOrEmpty(text) || Hushed()) return;
             bool copy;
             int voice = Shared.IsCopy(talker, out copy) ? RavenVoice.BigVoice(munin) : RavenVoice.VoiceOf(dockable ? Player.m_localPlayer : null, munin, talker); // (another player's big raven: the big raven's voice)
             SpeechCard card = null;
@@ -86,7 +95,7 @@ namespace HuginWhispers
         // A line's kind says its pace — the ravens' cards are read at ease while playing, a scene keeps its rhythm — and ReadScale is over
         // all of them, and over a time written in seconds (Hold: a setting, the game's own delay). Nothing shows a line by a time of its own.
         internal static float ReadScale = 1.1f;
-        internal enum Pace { Card, Shout, Scene, Bubble, Bird, Chatter }
+        internal enum Pace { Card, Shout, Scene, Bubble, Bird, Chatter, Talk, TalkCut, Hero, TalkHum }
         private struct Rate { public float From, Per, Least, Most; public Rate(float f, float p, float l, float m) { From = f; Per = p; Least = l; Most = m; } }
         private static readonly Rate[] Rates =
         {
@@ -96,6 +105,13 @@ namespace HuginWhispers
             new Rate(2f, 0.06f, 4f, 12f),      // Bubble  a person's words over its head
             new Rate(2.5f, 0.07f, 4f, 10f),    // Bird    the story's raven
             new Rate(2.5f, 0.06f, 3f, 6f),     // Chatter two people talking: a line each
+            // the talk window (RavenBookTalk): a line read before the next one comes in · before your raven's word or its thought in the margin.
+            // The user 2026-11-18 evening, «дуже довго»: quick, and the lines after the first quicker still (RavenBookTalk: Later)
+            new Rate(0f, 0.017f, 0.45f, 1.6f),     // Talk
+            new Rate(0f, 0.0115f, 0.6f, 1.05f),    // TalkCut
+            new Rate(0f, 0.02f, 0.35f, 12f),       // Hero    the hero says your answer aloud: as long as his hum is meant to last (the user 2026-11-18 evening: «дуже довго» — quick)
+            new Rate(0.3f, 0.02f, 1f, 3f),         // TalkHum how long a person hums a line in your talk (NpcSpeech.Said, talk): about as long as it is read, not as long as
+                                                   //         the line said aloud (6–8 s a long one: the user 2026-11-18, «дуже довго»)
         };
         internal static float Seconds(string text, Pace pace)
         {
@@ -120,7 +136,7 @@ namespace HuginWhispers
         // strike, hovering, flying off), and over the player when the raven cannot be seen
         internal static void ShowShoulder(Player who, bool munin, float seconds, string text)
         {
-            if (who == null || string.IsNullOrEmpty(text)) return;
+            if (who == null || string.IsNullOrEmpty(text) || (who == Player.m_localPlayer && Hushed())) return;
             SpeechCard card = null;
             bool voiced = RavenVoice.Say(who.gameObject, munin, RavenVoice.VoiceOf(who, munin, who.gameObject), text, s => Voiced(card, seconds, s));
             card = ShowShoulderNow(who, munin, seconds, text);

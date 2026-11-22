@@ -12,6 +12,13 @@ namespace HuginWhispers
     // another (an outing cut by a strike) does not stop it dead and push it off again. A new aim is eased in (no
     // sudden turn), each raven flies a little its own way (a stable personal touch, more restless at low trust), and
     // it keeps clear of the ground, walls and trees. Tuned in the test window, tab «Політ» (flight.txt).
+    // Under a roof it knows how much room it has (Sense: a few rays four times a second) and flies by it: no faster than it can
+    // turn in that room, its wide turns no wider than the room, no gusts, low over what stands on the floor, never swerving up
+    // into the ceiling for nothing; in the open nothing of this counts. The flight to a seat (a perch, a stone, a shoulder, a
+    // top of a piece) is one for every bird: ToSeat — the open side to come from, the way round, the last way in — and each such
+    // flight is written to the author's log in numbers (SeatLog). What is in its way it goes round on one side and keeps to that side till it
+    // is past (Avoid: KeepSide), and a bird that hardly moves though it has somewhere to go (Stalled) looks for a way through the air by
+    // one point between (AirWay) — the same way the way round asks first, before the walked one.
     internal sealed class RavenMotor
     {
         // ---------------------------------------------------------------- tuning (the «Політ» tab)
@@ -97,8 +104,8 @@ namespace HuginWhispers
         private bool LaunchNow(Vector3 vel, string plan, float accelMul)
         {
             bool fresh = !Airborne;
-            if (fresh) { Body = new FlightBody(_t, _life, _munin, vel, plan); _aimSet = false; _push = _pushWant = Vector3.zero; Flare = 0f; _sit = -2; _diving = false; _divingSince = _clock; if (_life != null && plan != "приліт") _life.PrepareTakeoff(); }
-            else Body.NewLeg();
+            if (fresh) { Body = new FlightBody(_t, _life, _munin, vel, plan); _aimSet = false; _push = _pushWant = Vector3.zero; Flare = 0f; _sit = -2; _diving = false; _divingSince = _clock; _roomSet = false; _roomAt = 0f; _viaOn = false; _stallAt = _clock; _stallPos = _t.position; _keepSide = 0; if (_life != null && plan != "приліт") _life.PrepareTakeoff(); }
+            else { Body.NewLeg(); if (_sOn) SeatEnd("cut by «" + plan + "»"); }
             LandNow = null; Body.Land = null; // a new way: its landing is picked afresh when it comes down
             Body.Style = Style();
             Body.Char = Char();
@@ -130,7 +137,7 @@ namespace HuginWhispers
         }
 
         // it sits (the landing took it): the next flight starts afresh
-        internal void Grounded() { _holdUntil = -1f; LandNow = null; Body = null; Plan = ""; Flare = 0f; _aimSet = false; _blendAt = -1f; _push = _pushWant = Vector3.zero; _sit = -2; _diving = false; if (_life != null) { _life.Mix.Clear(); _life.FinishTakeoff(); } }
+        internal void Grounded() { if (_sOn) SeatEnd(Time.frameCount - _sFrame <= 3 ? "landed" : "left off"); _roomSet = false; _in = 0f; _viaOn = false; _keepSide = 0; _holdUntil = -1f; LandNow = null; Body = null; Plan = ""; Flare = 0f; _aimSet = false; _blendAt = -1f; _push = _pushWant = Vector3.zero; _sit = -2; _diving = false; if (_life != null) { _life.Mix.Clear(); _life.FinishTakeoff(); } }
 
         private void TrackDive()
         {
@@ -228,6 +235,10 @@ namespace HuginWhispers
             Body.Drunk = Drunk();
             Direct();
             Body.Style = Effective();
+            Sense(dt);
+            Body.Indoor = _in; Body.Room = _roomR;
+            // under a roof: no faster than it can turn in the room it has (not a strike's dive at its prey, not a leg through a roof)
+            if (_in > 0.001f && !pursueTarget && !Through) speed = Mathf.Lerp(speed, Mathf.Min(speed, Mathf.Max(RoomSlow, _roomR * RoomPace)), _in);
             Vector3 use = aim;
             if (_blendAt >= 0f)
             {
@@ -272,6 +283,8 @@ namespace HuginWhispers
                 use += Separate();      // the other raven: not into it
                 use += Gusts(dt);       // the wind throws it about a little
             }
+            // hardly moving though it has somewhere to go: by a point through the air (Unstall); while on that way only a little swerving
+            if (Unstall(aim, pursueTarget)) { use = _viaAt; avoid = Mathf.Min(avoid, DetourAvoid); arrive = false; speed = Mathf.Min(speed, DetourSpeed); }
             use += Avoid(use, avoid, dt, pursueTarget);
             Vector3 from = _t.position;
             Body.Toward(use, speed, arrive, sharp, dt, carry);
@@ -281,9 +294,284 @@ namespace HuginWhispers
             {
                 _t.position = safe;
                 Body.Slide(normal); // on along the surface: what went into it is lost, the rest stays (no stop in mid-air)
+                _touchFrame = Time.frameCount;
             }
             KeepOutOfWater(dt);
             return Vector3.Distance(_t.position, aim);
+        }
+        private int _touchFrame = -100; // the frame it last met something solid (ClearMove): the seat flight's numbers count it
+
+        // ---------------------------------------------------------------- the room it has (under a roof)
+        // Four times a second, only near you and only while a driver steers it: one ray up — a roof within RoofReach m (held RoofHold s, so a hole in a roof is not the
+        // open sky) —, then four level rays along the world's axes: the room's narrower span, half of it its free radius (RoomReach
+        // at most). Indoor 0..1 and the radius are eased, so nothing changes at once; a new flight takes its first measure as it is.
+        // What reads it: the speed (Steer), the wide turns and the take-off's turn (FlightBody.Indoor, Room), the gusts, the height
+        // over what is under it and the swerve's way up (Avoid). Off (RoomOn, the «Політ» tab): as in the open everywhere.
+        internal static bool RoomOn = true;
+        internal static float RoomEvery = 0.25f, RoofReach = 30f, RoofHold = 1f, RoomReach = 12f;
+        internal static float RoomPace = 0.6f;   // 1/s: its speed under a roof is at most the free radius × this (the Hall, ~9 m of room: 5.4 m/s; 0.9 let it
+                                                 // reach 8.3 m/s there — the first run, 2026-11-19, tuned live to this)
+        internal static float RoomSlow = 3.5f;   // m/s: never capped below this
+        internal static float RoomClear = 0.5f;  // m it keeps over the floor and what stands on it under a roof (GroundClear in the open)
+        internal static float RoomCurve = 0.45f; // its wide turns: this share of the free radius at most
+        private float _in, _roomR = 12f, _roomWant = 12f, _roomAt, _roofUntil = -1f;
+        private bool _roomSet;
+        internal float Indoor { get { return _in; } }
+        private static readonly Vector3[] RoomAxes = { Vector3.right, Vector3.left, Vector3.forward, Vector3.back };
+        private readonly float[] _roomD = new float[4];
+        private void Sense(float dt)
+        {
+            if (!RoomOn || !AvoidOn || Through) { _in = Mathf.MoveTowards(_in, 0f, dt * 2f); return; }
+            if (Time.time >= _roomAt)
+            {
+                _roomAt = Time.time + RoomEvery;
+                Player me = Player.m_localPlayer;
+                Vector3 pos = _t.position;
+                if (me != null && (pos - me.transform.position).sqrMagnitude > FarProbe * FarProbe) _roofUntil = -1f; // nobody sees it closely
+                else
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(pos, Vector3.up, RoofReach, Mask, QueryTriggerInteraction.Ignore)) _roofUntil = Time.time + RoofHold; // heavy: one ray, RoomEvery, a bird in the air near you
+                    if (Time.time < _roofUntil)
+                    {
+                        for (int i = 0; i < 4; i++) _roomD[i] = Physics.Raycast(pos, RoomAxes[i], out hit, RoomReach, Mask, QueryTriggerInteraction.Ignore) ? hit.distance : RoomReach; // heavy: four rays, RoomEvery, only under a roof
+                        _roomWant = Mathf.Min(_roomD[0] + _roomD[1], _roomD[2] + _roomD[3]) * 0.5f;
+                    }
+                }
+                if (!_roomSet) { _roomSet = true; _in = Time.time < _roofUntil ? 1f : 0f; _roomR = _roomWant; }
+            }
+            _in = Mathf.MoveTowards(_in, Time.time < _roofUntil ? 1f : 0f, dt * 2f);
+            _roomR = Mathf.Lerp(_roomR, _roomWant, Mathf.Clamp01(dt * 4f));
+        }
+
+        // ---------------------------------------------------------------- the way through the air, and a bird that hardly moves
+        // AirWay: a point between two places with both legs clear for the bird's body (a little wider), the shortest of a fixed handful —
+        // over the middle and under it, over each end, to either side of the middle and of each end, and the place's own open point
+        // if its driver gave one (Hint: the middle under a hall's roof). A leg that starts inside something never passes: the first leg
+        // must reach the point from free air. Heavy: 17 points at most, each up to two sweeps with a ray (Shut), fewer as a short way is
+        // found early — once a second at most, after a search that found none only every AirAgain s, and only for a bird that is blind to
+        // its seat (Detour asks it before the walked way) or hardly moves (Unstall); never for a bird far from you.
+        // Stalled: it wants to go somewhere (its aim StallFar m off or more, not the last way in, not a strike) and has not left a
+        // ball of StallRoom m for StallSeconds — pressed into a corner, flapping at a wall, going back and forth before a post. Then:
+        // by the air way to its aim; none — to the most open place near it (a few sweeps round it), and from there once more.
+        // Off (AirWayOn, the «Політ» tab): no stall watch, the way round is the walked one alone.
+        internal static bool AirWayOn = true;
+        internal static float StallSeconds = 2f, StallRoom = 1.2f, StallFar = 1.5f, ViaMost = 4f, ViaAgain = 1f, ViaNear = 0.8f;
+        internal static float AirAgain = 3f; // s before the air is searched again after a search that found no way
+        internal Vector3 Hint; internal bool HintSet; // the open point of the place it lives in (StoryBird gives it: a place's raven — the middle under its roof)
+        private static readonly Vector3[] ViaOffs =
+        {
+            // (from the middle of the way — x: to its right, y: up)
+            new Vector3(0f, 1.5f, 0f), new Vector3(0f, 3f, 0f), new Vector3(0f, 5f, 0f), new Vector3(0f, -1.5f, 0f),
+            new Vector3(2f, 0f, 0f), new Vector3(-2f, 0f, 0f), new Vector3(4f, 0.5f, 0f), new Vector3(-4f, 0.5f, 0f),
+        };
+        // (the same from each end of the way)
+        private static readonly Vector3[] EndOffs = { new Vector3(0f, 2f, 0f), new Vector3(0f, 4f, 0f), new Vector3(3f, 0.5f, 0f), new Vector3(-3f, 0.5f, 0f) };
+        private bool AirWay(Vector3 from, Vector3 to, out Vector3 via)
+        {
+            via = Vector3.zero;
+            Vector3 d = to - from;
+            float len = d.magnitude;
+            if (len < 1f) return false;
+            Vector3 dir = d / len, right = Vector3.Cross(Vector3.up, dir);
+            if (right.sqrMagnitude < 0.01f) right = Vector3.right; else right.Normalize();
+            Vector3 mid = (from + to) * 0.5f;
+            float best = float.MaxValue;
+            if (HintSet) TryVia(from, to, Hint, ref best, ref via);
+            foreach (Vector3 o in ViaOffs) TryVia(from, to, mid + right * o.x + Vector3.up * o.y, ref best, ref via);
+            foreach (Vector3 o in EndOffs) { TryVia(from, to, from + right * o.x + Vector3.up * o.y, ref best, ref via); TryVia(from, to, to + right * o.x + Vector3.up * o.y, ref best, ref via); }
+            return best < float.MaxValue;
+        }
+        private void TryVia(Vector3 from, Vector3 to, Vector3 p, ref float best, ref Vector3 via)
+        {
+            float a = Vector3.Distance(from, p), b = Vector3.Distance(p, to);
+            if (a < 0.5f || b < 0.3f || a + b >= best) return;
+            if (Shut(from, (p - from) / a, a)) return; // heavy: the air way's sweeps — see AirWay
+            if (Shut(p, (to - p) / b, Mathf.Max(0.05f, b - 0.25f))) return; // (short of the end: a seat stands on something)
+            best = a + b; via = p;
+        }
+
+        // a way shut for the bird's body (a little wider than it): the sweep, and a ray with it — a sweep that starts touching a wall
+        // (a bird pressed to it) does not see that very wall, and went «clear» straight through it; the ray does
+        private bool Shut(Vector3 from, Vector3 dir, float len)
+        {
+            RaycastHit hit;
+            return Probe(from, dir, len, BodyRadius * 1.5f, _t, _owner != null ? _owner.transform : null, out hit)
+                || Physics.Raycast(from, dir, len, Mask, QueryTriggerInteraction.Ignore); // heavy: with the sweep it backs — see AirWay, Open, Avoid
+        }
+
+        private Vector3 _stallPos, _viaAt;
+        private float _stallAt, _viaUntil, _viaNext;
+        private bool _viaOn;
+        private int _vias; // air ways and ways out taken (the seat flight's numbers)
+        internal bool Stalled { get { return _clock - _stallAt > StallSeconds; } }
+        // true: this frame it flies to _viaAt instead of its aim
+        private bool Unstall(Vector3 aim, bool pursue)
+        {
+            Vector3 pos = _t.position;
+            if (!AirWayOn || !AvoidOn || Through || pursue || Body.Final) { _viaOn = false; _stallPos = pos; _stallAt = _clock; return false; }
+            if (_viaOn)
+            {
+                if (_clock > _viaUntil || (pos - _viaAt).sqrMagnitude < ViaNear * ViaNear) { _viaOn = false; _stallPos = pos; _stallAt = _clock; }
+                return _viaOn;
+            }
+            if ((pos - _stallPos).sqrMagnitude > StallRoom * StallRoom || (aim - pos).sqrMagnitude < StallFar * StallFar) { _stallPos = pos; _stallAt = _clock; return false; }
+            if (!Stalled || _clock < _viaNext) return false;
+            _viaNext = _clock + ViaAgain;
+            Player me = Player.m_localPlayer;
+            if (me != null && (pos - me.transform.position).sqrMagnitude > FarProbe * FarProbe) return false; // nobody sees it closely
+            Vector3 via;
+            bool way = AirWay(pos, aim, out via);
+            if (!way && !Open(pos, out via)) { _viaNext = _clock + AirAgain; return false; } // (nothing found: a pause, not the same search each second)
+            _viaOn = true; _viaAt = via; _viaUntil = _clock + ViaMost; _vias++;
+            _keepSide = 0; _push = _pushWant = Vector3.zero; // (a new way: what it swerved from is behind it)
+            if (AnimDirector.LogOn) AnimDirector.Note(_t.gameObject, "stalled " + (_clock - _stallAt).ToString("0.0") + " s: " + (way ? "by the air way" : "out to the open") + ", " + Vector3.Distance(pos, via).ToString("0.0") + " m");
+            return true;
+        }
+
+        // the most open place near it: the farthest it can go of ten ways round it (level, up and down at a slant), 3 m at most
+        private static readonly Vector3[] OpenDirs =
+        {
+            Vector3.forward, Vector3.back, Vector3.right, Vector3.left, Vector3.up, Vector3.down,
+            new Vector3(0.7f, 0.5f, 0.7f), new Vector3(-0.7f, 0.5f, 0.7f), new Vector3(0.7f, 0.5f, -0.7f), new Vector3(-0.7f, 0.5f, -0.7f),
+        };
+        private bool Open(Vector3 pos, out Vector3 at)
+        {
+            at = pos;
+            Transform own = _owner != null ? _owner.transform : null;
+            float best = 1f; // (less than a metre of room: no way out)
+            RaycastHit hit;
+            foreach (Vector3 o in OpenDirs)
+            {
+                Vector3 dir = o.normalized;
+                float free = Probe(pos, dir, 3f, BodyRadius * 1.5f, _t, own, out hit) ? hit.distance : 3f; // heavy: ten sweeps, only for a stalled bird with no air way, once a second at most
+                RaycastHit ray;
+                if (Physics.Raycast(pos, dir, out ray, free, Mask, QueryTriggerInteraction.Ignore)) free = ray.distance; // (the wall it is pressed to: the sweep does not see it — Shut)
+                if (free > best + 0.2f) { best = free; at = pos + dir * (free - 0.4f); }
+            }
+            return best > 1f;
+        }
+
+        // A ring under a roof (a bird circling over someone there: StoryBird): as wide and as high as the room round that head lets it —
+        // RingKeep m off the nearest wall at the ring's height, a metre under the ceiling, never tighter than RingLeast. 2026-11-19: Torvald
+        // stood 2 m from the Hall's wall, his raven's ring of 4.5 m took it out past the wall, and it never got back to his shoulder.
+        // Heavy: a ray up and eight level ones; its caller asks once a second, only while its bird is under a roof (Indoor).
+        internal static float RingKeep = 0.7f, RingLeast = 1.5f;
+        private static readonly Vector3[] RingDirs = { Vector3.forward, Vector3.back, Vector3.right, Vector3.left, new Vector3(0.7071f, 0f, 0.7071f), new Vector3(-0.7071f, 0f, 0.7071f), new Vector3(0.7071f, 0f, -0.7071f), new Vector3(-0.7071f, 0f, -0.7071f) };
+        internal static void RingRoom(Vector3 head, float r, float up, out float fitR, out float fitUp)
+        {
+            RaycastHit hit;
+            fitUp = Physics.Raycast(head + Vector3.up * 0.2f, Vector3.up, out hit, up + 1f, Mask, QueryTriggerInteraction.Ignore) ? Mathf.Clamp(hit.distance - 0.8f, 0.8f, up) : up; // heavy: see above
+            Vector3 mid = head + Vector3.up * fitUp;
+            float free = r + RingKeep;
+            foreach (Vector3 d in RingDirs)
+                if (Physics.Raycast(mid, d, out hit, free, Mask, QueryTriggerInteraction.Ignore)) free = hit.distance; // heavy: see above
+            fitR = Mathf.Clamp(free - RingKeep, RingLeast, r);
+        }
+
+        // ---------------------------------------------------------------- the flight to a seat
+        // One for every bird that flies to a place to sit on (a perch: PerchFlight; a bird of the story, a person's raven, a place's:
+        // StoryBird; the raven of a grave: GraveBird), called every frame of that flight till it says «down» (the caller's landing
+        // takes it from there) or the caller gives up:
+        //   - the seat out of sight: the way round (Round), slower; never nearer for long — Stuck (the caller's last resort; Unstick
+        //     once it has handled it);
+        //   - else to the point before the seat on its open side (SeatSide, asked once by the caller as the flight begins: behind it
+        //     as a rule, before it when a wall is behind, over it when both are shut), a little above;
+        //   - then the last way in, turning as it will sit, braking: «down» when it is near, slow and turned (pair: also its turn by
+        //     the other raven of its owner — Landings; else the landing's style is handed to the clip here).
+        // Which leg it is on is the body's own word (FlightBody.Final). front: the way it will face sitting, level. round: false — no way
+        // round and so no Stuck (a scene's bird: it comes in over open land as its scene was set, a hill or a trunk between for a moment
+        // must not send it low along the walked way; its own give-up stays).
+        internal static float SeatBack = 1.6f, SeatUp = 1.2f, SeatOver = 0.35f;
+        internal static int SeatSide(Vector3 seat, Vector3 front)
+        {
+            Vector3 over = seat + Vector3.up * SeatOver, up = Vector3.up * SeatUp;
+            if (!Physics.Linecast(over, seat - front * SeatBack + up, Mask, QueryTriggerInteraction.Ignore)) return 1;  // heavy: up to three rays, once a flight
+            if (!Physics.Linecast(over, seat + front * SeatBack + up, Mask, QueryTriggerInteraction.Ignore)) return -1;
+            if (!Physics.Linecast(over, seat + up, Mask, QueryTriggerInteraction.Ignore)) return 0;
+            return 1;
+        }
+        private static Vector3 SeatOff(Vector3 front, int side) { return side == 1 ? -front : side == -1 ? front : Vector3.zero; }
+        // the point before the seat it flies to first, and where the landing takes over
+        internal static Vector3 SeatPre(Vector3 seat, Vector3 front, int side) { return seat + SeatOff(front, side) * SeatBack + Vector3.up * SeatUp; }
+        internal static Vector3 SeatLand(Vector3 seat, Vector3 front, int side) { return seat + Vector3.up * FlightBody.LandAbove + SeatOff(front, side) * FlightBody.LandBehind; }
+
+        internal bool ToSeat(Vector3 seat, Vector3 front, int side, float dt, bool pair, bool round = true)
+        {
+            if (Body == null) return false;
+            Vector3 land = SeatLand(seat, front, side);
+            Vector3 way = Vector3.zero;
+            bool down = false, blind = round && Round(land, seat, out way);
+            if (blind)
+            {
+                // the way a man would walk, through the door, slower; on through each turn of it, only a little swerving
+                if (Body.Final && Vector3.Distance(_t.position, seat) > 3f) Body.Unfinal();
+                Steer(way, Mathf.Min(Body.Style.Cruise, DetourSpeed), false, 0f, dt, Vector3.zero, DetourAvoid);
+                Finish(dt, 0f);
+            }
+            else if (!Body.Final)
+            {
+                Vector3 pre = SeatPre(seat, front, side);
+                Steer(pre, Body.Style.Cruise, true, 0f, dt, Vector3.zero, 1f);
+                Finish(dt, 0f);
+                if (Vector3.Distance(_t.position, pre) < 1.2f || Vector3.Distance(_t.position, seat) < 2f) Body.MarkFinal();
+            }
+            else
+            {
+                float near = Vector3.Distance(_t.position, land);
+                Body.FaceHint(front, 1f - Mathf.Min(near, RavenFlight.TurnFrom) / RavenFlight.TurnFrom);
+                float left = Steer(land, Body.HomeSpeed(5f, Vector3.zero, 0f), true, near < 4f ? 2f : 0f, dt, Vector3.zero, 1f);
+                Finish(dt, Mathf.Clamp01(1f - near / Mathf.Max(0.5f, Landing().Flare)));
+                down = pair ? ReadyToLand(left, Vector3.zero) : Body.CanLand(left, Vector3.zero);
+                if (down && !pair && _life != null) _life.NextLand = Landing();
+            }
+            SeatWatch(seat, dt, blind);
+            return down;
+        }
+
+        // its last resort handled by the caller (another try, another seat): the watch for Stuck starts afresh
+        internal void Unstick() { _bestAt = _clock; _blindSince = _clock; }
+
+        // ---- the flight to a seat in numbers (the log: «Flight to a seat …»), to compare a change of the flight before and after:
+        // how long, how far it flew for how far it was, how often and how long it met something solid, how long it hardly moved, how
+        // long it went round, how much of it under a roof, its top speed — and how it ended (landed, cut, the caller's give-up).
+        // One line a flight, for the author: written where the Studio is awake (its folder — players never have it) or SeatLog is on
+        // (the «Політ» tab, flight.txt); a player's log gets none.
+        internal static bool SeatLog;
+        private bool _sOn, _sTouching;
+        private int _sFrame = -100, _sTouches, _sVias;
+        private float _sT, _sPath, _sStraight, _sRound, _sStall, _sIn, _sTouchT, _sTop;
+        private Vector3 _sPrev;
+        private void SeatWatch(Vector3 seat, float dt, bool round)
+        {
+            if (_sOn && Time.frameCount - _sFrame > 3) SeatEnd("left off");
+            if (!_sOn)
+            {
+                _sOn = true; _sTouching = false; _sTouches = 0; _sVias = _vias;
+                _sT = _sPath = _sRound = _sStall = _sIn = _sTouchT = _sTop = 0f;
+                _sStraight = Vector3.Distance(_t.position, seat); _sPrev = _t.position;
+            }
+            _sFrame = Time.frameCount;
+            _sT += dt;
+            _sPath += Vector3.Distance(_t.position, _sPrev); _sPrev = _t.position;
+            if (round) _sRound += dt;
+            _sIn += dt * _in;
+            float sp = Body != null ? Body.Speed : 0f;
+            if (sp > _sTop) _sTop = sp;
+            if (sp < 0.6f && !Holding && (Body == null || !Body.Final)) _sStall += dt;
+            bool touch = Time.frameCount - _touchFrame <= 1;
+            if (touch) { _sTouchT += dt; if (!_sTouching) _sTouches++; }
+            _sTouching = touch;
+        }
+        internal void SeatEnd(string how)
+        {
+            if (!_sOn) return;
+            _sOn = false;
+            if (!(SeatLog || Studio.On) || Plugin.Instance == null || _sT < 0.2f) return;
+            CultureInfo c = CultureInfo.InvariantCulture;
+            Plugin.Instance.Log("Flight to a seat (" + _t.name + (Plan.Length > 0 ? ", «" + Plan + "»" : "") + "): " + how + " in " + _sT.ToString("0.0", c) + " s, flew " + _sPath.ToString("0.0", c) + " m for " + _sStraight.ToString("0.0", c)
+                + " m straight (x" + (_sPath / Mathf.Max(0.5f, _sStraight)).ToString("0.00", c) + "), touched " + _sTouches + " times for " + _sTouchT.ToString("0.0", c) + " s, hardly moved " + _sStall.ToString("0.0", c)
+                + " s, the way round " + _sRound.ToString("0.0", c) + " s, air ways " + (_vias - _sVias) + ", under a roof " + Mathf.RoundToInt(_sIn / Mathf.Max(0.01f, _sT) * 100f) + "%, top " + _sTop.ToString("0.0", c) + " m/s (room " + (RoomOn ? "on" : "off") + ", round " + (DetourOn ? "on" : "off") + ", side " + (KeepSideOn ? "on" : "off") + ", air " + (AirWayOn ? "on" : "off") + ")");
         }
 
         // A frame of a way flown by hand (a figure, a hop to a perch): where it should be and how it faces ('look', the
@@ -445,7 +733,9 @@ namespace HuginWhispers
         private int _wayAt, _homeFrame = -100;
         private float _seeAt, _wayAskAt, _bestD, _bestAt, _blindSince;
         private bool _blind;
-        private Vector3 _wayAim;
+        private Vector3 _wayAim, _see;
+        private bool _wayAir; // the way it has is one through the air (AirWay), not the walked one
+        private float _airNext; // not before this is the air searched again (AirAgain after a search that found none)
         // true: out of sight of you, it has not come nearer for StuckSeconds (behind closed doors, in a hole); the
         // flight that drives it hands it to the pin's ComeBack (a puff, flown in again)
         internal bool Stuck { get { return _blind && Time.frameCount - _homeFrame <= 3 && _clock - Mathf.Max(_bestAt, _blindSince) > StuckSeconds && _bestD > 1.5f; } }
@@ -469,6 +759,7 @@ namespace HuginWhispers
         private bool Detour(Vector3 see, Vector3 walkTo, out Vector3 aim)
         {
             aim = Vector3.zero;
+            _see = see;
             if (!DetourOn || !AvoidOn) return false;
             Player me = Player.m_localPlayer;
             if (me == null || (_t.position - me.transform.position).sqrMagnitude > FarProbe * FarProbe) return false; // nobody sees it closely
@@ -485,7 +776,9 @@ namespace HuginWhispers
             if (_clock >= _wayAskAt)
             {
                 _wayAskAt = _clock + 1f;
-                AskWay(pos, walkTo);
+                // (an air way is kept while its point is still ahead and in sight: asked anew each second, the shortest would flip)
+                bool keep = _wayAir && _way.Count > 0 && _wayAt == 0 && (_way[0] - pos).sqrMagnitude > 1f && !Physics.Linecast(pos, _way[0], Mask, QueryTriggerInteraction.Ignore);
+                if (!keep) AskWay(pos, walkTo);
                 PickWayPoint(pos);
             }
             if (_way.Count == 0) return false; // no way known: straight on, by the walls (and Stuck if it never gets through)
@@ -495,7 +788,15 @@ namespace HuginWhispers
 
         private void AskWay(Vector3 pos, Vector3 to)
         {
-            _way.Clear(); _wayAt = 0;
+            _way.Clear(); _wayAt = 0; _wayAir = false;
+            // a bird's own way first: by one point through the air to what it must see (AirWay: over a wall, round a post, by the open
+            // middle of its place); the walked way through a door only when there is none
+            Vector3 via;
+            if (AirWayOn && _clock >= _airNext)
+            {
+                if (AirWay(pos, _see, out via)) { _way.Add(via); _way.Add(_see); _wayAir = true; _vias++; return; }
+                _airNext = _clock + AirAgain; // (none from here: the walked way meanwhile, the air again in a while)
+            }
             if (Pathfinding.instance == null) return;
             RaycastHit hit;
             Vector3 from = Physics.Raycast(pos, Vector3.down, out hit, 8f, Mask, QueryTriggerInteraction.Ignore) ? hit.point : pos; // the floor under it: where a walker would stand
@@ -690,6 +991,7 @@ namespace HuginWhispers
         {
             float gust = Mathf.Clamp01((Wind - WindFrom) / Mathf.Max(0.05f, 1f - WindFrom));
             if (_owner != null) gust *= Mathf.Clamp01(((_t.position - _owner.transform.position).magnitude - 1.5f) / 3f);
+            gust *= 1f - _in; // (under a roof the wind does not reach it)
             Body.Gust = gust;
             if (gust <= 0.01f) return Vector3.zero;
             float s0 = _munin ? 7.7f : 2.3f;
@@ -809,12 +1111,32 @@ namespace HuginWhispers
             Vector3 stop = from + move / distance * Mathf.Max(0f, hit.distance - 0.05f);
             Vector3 rest = Vector3.ProjectOnPlane(to - stop, normal);
             float rl = rest.magnitude;
-            if (rl < 0.001f || Probe(stop, rest / rl, rl, BodyRadius, _t, owner, out hit)) return stop;
-            return stop + rest;
+            if (rl < 0.001f) return stop;
+            if (!Probe(stop, rest / rl, rl, BodyRadius, _t, owner, out hit)) return stop + rest;
+            // a corner (a wall and a beam, a wall and the ceiling): on along the edge the two surfaces make, if that is clear —
+            // else it stood dead in the corner with its wings going
+            Vector3 edge = Vector3.Cross(normal, hit.normal);
+            if (!KeepSideOn || edge.sqrMagnitude < 0.01f) return stop;
+            edge.Normalize();
+            float el = Vector3.Dot(to - stop, edge);
+            if (Mathf.Abs(el) < 0.001f) return stop;
+            if (el < 0f) { edge = -edge; el = -el; }
+            return Probe(stop, edge, el, BodyRadius, _t, owner, out hit) ? stop : stop + edge * el;
         }
 
         internal static float ClearAvoid = 0.25f; // share of the swerving while the way to the aim is clear for its body
         private bool _clearAhead;
+        // The side it goes round on is kept (KeepSide): picked once as the thing comes into its way — the more open side —, then held
+        // till it has seen nothing ahead for SideHold s, unless that side shuts and the other is plainly open (SideSwap m more). Picked
+        // anew each look it flipped before a post, left, right, left. And while the straight way to its aim is still shut for its body
+        // (it slides along a wall and its look ahead, which goes with its speed, sees nothing), the last swerve holds on, fading, for
+        // HoldMost s at most: it goes on along the wall to its end instead of turning back into it. Off: KeepSideOn (the «Політ» tab).
+        internal static bool KeepSideOn = true;
+        internal static float SideHold = 1f, SideSwap = 1.5f, HoldMost = 4f, HoldShare = 0.6f;
+        private int _keepSide;          // 1 right, -1 left, 0 none
+        private bool _held;
+        private float _sideUntil, _evadeSince;
+        private Vector3 _evadeKept;
         private Vector3 Avoid(Vector3 aim, float weight, float dt, bool pursueTarget)
         {
             if (!AvoidOn || weight <= 0.001f) { _push = Vector3.MoveTowards(_push, Vector3.zero, dt * 6f); return _push; }
@@ -842,9 +1164,16 @@ namespace HuginWhispers
                     float rightClear = rightBlocked ? rightHit.distance : reach;
                     float upClear = upBlocked ? upHit.distance : reach;
                     bool preferRight = rightClear > leftClear + 0.15f || (Mathf.Abs(rightClear - leftClear) <= 0.15f && !_munin);
+                    if (KeepSideOn)
+                    {
+                        if (_keepSide == 0 || Time.time >= _sideUntil) { _keepSide = preferRight ? 1 : -1; _evadeSince = Time.time; }
+                        else if ((_keepSide > 0 ? leftClear - rightClear : rightClear - leftClear) > SideSwap) _keepSide = -_keepSide; // (its side shut, the other plainly open)
+                        preferRight = _keepSide > 0;
+                        _sideUntil = Time.time + SideHold;
+                    }
                     Vector3 side = preferRight ? right : -right;
                     Vector3 surface = Vector3.ProjectOnPlane(hit.normal, dir);
-                    if (surface.sqrMagnitude < 0.01f) surface = Vector3.up;
+                    if (surface.sqrMagnitude < 0.01f) surface = Vector3.Lerp(Vector3.up, side, _in); // (head on: up in the open; under a roof to its side — up is the ceiling)
                     Vector3 evade;
                     if (pursueTarget && upClear > Mathf.Max(leftClear, rightClear) + 0.5f)
                     {
@@ -852,10 +1181,14 @@ namespace HuginWhispers
                     }
                     else
                     {
-                        evade = (side + surface.normalized * 0.35f + Vector3.up * 0.35f).normalized;
+                        // up as well in the open; under a roof only when up is the most open way (else it climbs into the beams)
+                        float up = 0.35f * (1f - _in) + (upClear > Mathf.Max(leftClear, rightClear) + 0.5f ? 0.35f * _in : 0f);
+                        evade = (side + surface.normalized * 0.35f + Vector3.up * up).normalized;
                     }
                     _pushWant += evade * PushStrength * k;
+                    _evadeKept = evade;
                 }
+                else _held = KeepSideOn && _keepSide != 0 && Time.time < _sideUntil; // (nothing ahead now: held on below if the straight way is still shut)
                 // the way to the aim clear for the bird itself (its body, not the wide look ahead): it hardly swerves —
                 // the wide look sees a door frame in the way of a bird that fits through the door, and swerved it up and
                 // over the house
@@ -863,10 +1196,20 @@ namespace HuginWhispers
                 float dl = to.magnitude;
                 RaycastHit block;
                 _clearAhead = dl < 0.3f || !Probe(pos, to / dl, Mathf.Min(dl, ProbeMaxReach * 2f), BodyRadius * 1.5f, _t, _owner != null ? _owner.transform : null, out block);
+                // (pressed to a wall, the sweep starts inside it and called the way through it clear — and the swerve was let go: a ray too)
+                // — only for a bird that met something within the last half second: no other stands that near a wall
+                if (_clearAhead && KeepSideOn && dl >= 0.3f && Time.frameCount - _touchFrame <= 30 && Physics.Raycast(pos, to / dl, Mathf.Min(dl, ProbeMaxReach * 2f), Mask, QueryTriggerInteraction.Ignore)) _clearAhead = false; // heavy: one ray a look ahead, only just after a touch
+                if (_held)
+                {
+                    _held = false;
+                    if (_clearAhead || Time.time - _evadeSince > HoldMost) _keepSide = 0; // (past it, or along it long enough: the stall watch has the rest)
+                    else { _pushWant += _evadeKept * PushStrength * HoldShare; _sideUntil = Time.time + SideHold; }
+                }
                 // the ground (and the sea) under it
-                float floor = Floor(pos);
-                if (pos.y < floor + GroundClear) _pushWant += Vector3.up * Mathf.Min(PushStrength, (floor + GroundClear - pos.y) * 2f);
-                _aimFloor = Floor(aim) + GroundClear;
+                // (under a roof «the ground» is the floor, a table, a beam under it: low over them — RoomClear —, or it climbs to the ceiling)
+                float floor = Floor(pos), clear = Mathf.Lerp(GroundClear, Mathf.Min(GroundClear, RoomClear), _in);
+                if (pos.y < floor + clear) _pushWant += Vector3.up * Mathf.Min(PushStrength, (floor + clear - pos.y) * 2f);
+                _aimFloor = Floor(aim) + clear;
             }
             _push = Vector3.Lerp(_push, _pushWant * weight * (_clearAhead ? ClearAvoid : 1f), Mathf.Clamp01(dt * 5f));
             Vector3 lift = aim.y < _aimFloor ? Vector3.up * (_aimFloor - aim.y) * weight : Vector3.zero; // an aim in a hillside: over it
@@ -899,7 +1242,7 @@ namespace HuginWhispers
             Put(RavenFlight.Hugin, HuginBuilt); Put(RavenFlight.Munin, MuninBuilt);
             PutChar(RavenFlight.HuginChar, HuginCharBuilt); PutChar(RavenFlight.MuninChar, MuninCharBuilt); RavenFlight.CharVersion++;
             BlendSeconds = BuiltBlend; Spread = BuiltSpread; NervesWeight = BuiltNerves; AvoidOn = true;
-            LookAhead = BuiltLook; PushStrength = BuiltPush; GroundClear = BuiltClear; FlightBody.LaunchSeconds = 1.2f;
+            LookAhead = BuiltLook; PushStrength = BuiltPush; GroundClear = BuiltClear; FlightBody.LaunchSeconds = 1.2f; RoomOn = true; DetourOn = true; SeatLog = false; KeepSideOn = true; AirWayOn = true;
             FlightBody.BendLimit = true; FlightBody.Coast = 0.35f;
             Landings.MaxHold = 0.8f; Landings.TogetherChance = 0.25f; Landings.ApartMin = 0.25f; Landings.ApartMax = 0.7f; Landings.LeaveApartMin = 0.12f; Landings.LeaveApartMax = 0.4f; Landings.LandBeatHz = 5f; CrouchLean = 8f; DriveFollow = 7f; DriveAccel = 80f; DriveTurnIn = 0.4f;
             FlightTemplates.On = true; FlightTemplates.SwitchMin = 3f; FlightTemplates.SwitchMax = 8f; FlightTemplates.KeepChance = 0.35f; FlightTemplates.NoneWeight = 1f; FlightTemplates.BlendSeconds = 0.8f;
@@ -926,6 +1269,7 @@ namespace HuginWhispers
             lines.Add("nerves=" + NervesWeight.ToString("0.###", c)); lines.Add("launch=" + FlightBody.LaunchSeconds.ToString("0.###", c));
             lines.Add("avoid=" + (AvoidOn ? "1" : "0")); lines.Add("look=" + LookAhead.ToString("0.###", c));
             lines.Add("push=" + PushStrength.ToString("0.###", c)); lines.Add("clear=" + GroundClear.ToString("0.###", c));
+            lines.Add("room=" + (RoomOn ? "1" : "0")); lines.Add("round=" + (DetourOn ? "1" : "0")); lines.Add("seatlog=" + (SeatLog ? "1" : "0")); lines.Add("keepside=" + (KeepSideOn ? "1" : "0")); lines.Add("airway=" + (AirWayOn ? "1" : "0"));
             lines.Add("flyin.up=" + ShoulderPin.FlyInUp.ToString("0.###", c)); lines.Add("flyin.back=" + ShoulderPin.FlyInBack.ToString("0.###", c));
             lines.Add("flyin.side=" + ShoulderPin.FlyInSide.ToString("0.###", c)); lines.Add("flyin.speed=" + ShoulderPin.FlyInSpeed.ToString("0.###", c));
             lines.Add("tpl.on=" + (FlightTemplates.On ? "1" : "0")); lines.Add("tpl.min=" + FlightTemplates.SwitchMin.ToString("0.###", c)); lines.Add("tpl.max=" + FlightTemplates.SwitchMax.ToString("0.###", c));
@@ -978,6 +1322,7 @@ namespace HuginWhispers
                         case "blend": BlendSeconds = v; break; case "spread": Spread = v; break; case "nerves": NervesWeight = v; break;
                         case "launch": FlightBody.LaunchSeconds = v; break; case "avoid": AvoidOn = v > 0.5f; break; case "look": LookAhead = v; break;
                         case "push": PushStrength = v; break; case "clear": GroundClear = v; break;
+                        case "room": RoomOn = v > 0.5f; break; case "round": DetourOn = v > 0.5f; break; case "seatlog": SeatLog = v > 0.5f; break; case "keepside": KeepSideOn = v > 0.5f; break; case "airway": AirWayOn = v > 0.5f; break;
                         case "flyin.up": ShoulderPin.FlyInUp = v; break; case "flyin.back": ShoulderPin.FlyInBack = v; break; case "flyin.side": ShoulderPin.FlyInSide = v; break;
                         case "tpl.on": FlightTemplates.On = v > 0.5f; break; case "tpl.min": FlightTemplates.SwitchMin = v; break; case "tpl.max": FlightTemplates.SwitchMax = v; break;
                         case "tpl.keep": FlightTemplates.KeepChance = v; break; case "tpl.none": FlightTemplates.NoneWeight = v; break; case "tpl.blend": FlightTemplates.BlendSeconds = v; break;

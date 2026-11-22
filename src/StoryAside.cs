@@ -40,7 +40,7 @@ namespace HuginWhispers
             float near = far ? Quiet : Clear;
             Vector3 from = p.transform.position, at = a.transform.position, away = at - from;
             away.y = 0f;
-            if (away.sqrMagnitude > near * near) return;
+            if (StoryWhere.Apart(from, at) > near) return; // (a scene inside, hung over its door, does not send off those on the ground: the review 2026-11-18)
             away = away.sqrMagnitude > 0.01f ? away.normalized : -p.transform.forward;
             Vector3 to = from + away * (far ? Gone : To);
             _aside.Add(a);

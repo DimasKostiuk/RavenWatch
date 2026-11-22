@@ -490,6 +490,9 @@ namespace HuginWhispers
         private static readonly List<Floor> Floors = new List<Floor>(); // session: bubbles on screen now
         private string _waitText; private Player _waitTo; private float _waitUntil;
 
+        // how long its own last line holds the floor here (every game: Hold, at each line it gets) — 0 when it is quiet
+        internal float FloorUntil { get { Floor f = Floors.Find(x => x.Who == this); return f != null && f.Until > Time.time ? f.Until : 0f; } }
+
         // nobody but these two speaking in the ring round this point now
         internal static bool FloorFree(Vector3 at, NpcActor me, NpcActor with = null)
         {
@@ -540,13 +543,8 @@ namespace HuginWhispers
         // ...and the words as every game got them (null: nothing said) — the small talk times its next line by them (NpcSpeech.Seconds)
         internal string SayLine(string text, Player to, bool weighty = false, string told = null)
         {
-            if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text)) return null;
-            if (Hushed != null && Hushed(this)) return null;
-            text = NpcBody.Spoken(this, text); // (a gesture in its words: played, the mark taken out)
-            if (text.Length == 0) return null;
-            Player p = to ?? Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer;
-            text = Lang.T(text).Replace("{name}", p != null ? p.GetPlayerName() : "");
-            if (p != null) text = Grammar.Fix(text, p);
+            text = Prepared(text, to, true);
+            if (text == null) return null;
             Hold(text); // (at once here: the next one asking this frame already hears it)
             _nv.InvokeRPC(ZNetView.Everybody, RpcSay, (weighty ? Mark : "") + (told != null ? ToldMark + told + ToldMark : "") + text);
             return text;
@@ -572,7 +570,7 @@ namespace HuginWhispers
         private void RPC_Speak(long sender, string text, ZDOID to)
         {
             GameObject g = ZNetScene.instance != null ? ZNetScene.instance.FindInstance(to) : null;
-            NpcSpeech.Said(this, text, g != null ? g.GetComponent<Character>() : null);
+            NpcSpeech.Said(this, text, g != null ? g.GetComponent<Character>() : null, true); // (a talk window's line: hummed about as long as it is read there)
         }
 
         private void RPC_Say(long sender, string text)
@@ -583,8 +581,40 @@ namespace HuginWhispers
             int end = text.StartsWith(ToldMark, StringComparison.Ordinal) ? text.IndexOf(ToldMark, ToldMark.Length, StringComparison.Ordinal) : -1;
             if (end > 0) { told = text.Substring(ToldMark.Length, end - ToldMark.Length); text = text.Substring(end + ToldMark.Length); }
             if (told != null && Told != null) Told(this, told); // (a place of a talk: heard by whom it reaches here)
+            Heard(text, weighty, null);
+        }
+
+        // its line for this game's player alone (StoryRoad: a talk on the way — each player who walks with it hears his own, the user 2026-11-18):
+        // over its head here, its head and chest speak it to him — the same as a line every game gets (Heard), with no message to anyone.
+        // The words as said (null: nothing — hushed, empty)
+        internal string SayHere(string text, Player to)
+        {
+            if (to == null) return null;
+            text = Prepared(text, to, false); // (no gesture: its clip would go to every game, the words go to one)
+            if (text == null) return null;
+            Heard(text, false, to);
+            return text;
+        }
+
+        // the words of its line as said — the ONE preparation of both (SayLine for every game, SayHere for one): not held quiet, a gesture in
+        // its words played and the mark taken out (its hands now and then: NpcBody.Spoken; gestures: false — only taken out), its language, {name} and the forms of the one it is
+        // said to (none named: the player nearest it, not the player of the game that runs it). Null: nothing to say
+        private string Prepared(string text, Player to, bool gestures)
+        {
+            if (_nv == null || !_nv.IsValid() || string.IsNullOrEmpty(text)) return null;
+            if (Hushed != null && Hushed(this)) return null;
+            text = NpcBody.Spoken(this, text, gestures); // (a gesture in its words: played, the mark taken out)
+            if (text.Length == 0) return null;
+            Player p = to ?? Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer;
+            text = Lang.T(text).Replace("{name}", p != null ? p.GetPlayerName() : "");
+            return p != null ? Grammar.Fix(text, p) : text;
+        }
+
+        // a line reaching this game (its message, or one for this game alone: SayHere): the floor held, its head and chest speak it, its bubble
+        private void Heard(string text, bool weighty, Character to)
+        {
             Hold(text); // (every game knows who holds the floor)
-            NpcSpeech.Said(this, text); // (its head and chest speak it, those near turn to it: every game from the same words)
+            NpcSpeech.Said(this, text, to); // (its head and chest speak it, those near turn to it: every game from the same words)
             if (Chat.instance == null) return; // (no screen here: a server)
             float seen = 25f;
             for (int i = 0; i < HeardFrom.Count; i++) seen = Mathf.Max(seen, HeardFrom[i](this)); // (one lost and calling out: from far — a module's word)

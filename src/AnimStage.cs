@@ -902,7 +902,7 @@ namespace HuginWhispers
             string file = FileOf(c.Clip);
             top.Append(c.Clip).Append(", take ").Append(_take).Append(", ×").Append(F(_speed)).Append(", ").Append(c.Frames.ToString("0")).Append(" frames, file ").Append(File.Exists(file) ? Hash(File.ReadAllText(file, Encoding.UTF8)) + " saved " + File.GetLastWriteTime(file).ToString("yyyy-MM-dd HH:mm:ss") : "not a file (built in)").Append('\n');
             PAnimClip shown = BodyClips.Find(c.Clip), whole = BodyClips.Find(Whole(c.Clip));
-            if (whole != null && whole.Say.Length > 0) top.Append("said: ").Append(whole.Say).Append('\n');
+            if (whole != null && whole.Say.Length > 0) top.Append("said: ").Append(whole.Say.Replace("\n", " · ")).Append('\n'); // (several of the user's lines: one report line)
             string numbers = "pose: " + c.Body.Numbers() + "\n" + c.Body.TempoSaid(); // (the «pose:» line as it is: tools/take.js holds it against the last run's)
             s.Append(top.ToString()).Append(c.Said).Append(numbers);
             string keyHead = c.Views.Length > 0 ? "key frames: studio/out/stage_" + c.Clip + "_<view>.png, views " + c.Views + ", 4 a row\n" : "key frames (words only; sheets of the whole run on request: raven stage check <views>, node tools/anim.js clip " + c.Clip + " <views>; views the clip would take: " + ((shown ?? whole) != null ? AutoViews(shown ?? whole) : "-") + "):\n";

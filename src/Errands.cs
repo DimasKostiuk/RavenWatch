@@ -1169,10 +1169,7 @@ namespace HuginWhispers
             Vector3 at; float radius;
             if (!r.Current.Where(r, r.Step, out at, out radius)) return;
             string label = Lang.T(r.Def.Name);
-            Minimap.PinData area = Minimap.instance.AddPin(at, Minimap.PinType.EventArea, "", false, false, 0L, default(Splatform.PlatformUserID));
-            area.m_worldSize = radius * 2f;
-            area.m_icon = ErrandMap.GreyOf(area.m_icon); // (coloured blue by ErrandMap: not the red of raids)
-            _pins.Add(area);
+            _pins.Add(ErrandMap.Zone(at, radius)); // (coloured blue by ErrandMap: not the red of raids)
             Minimap.PinData mark = Minimap.instance.AddPin(at, Minimap.PinType.RandomEvent, label, false, false, 0L, default(Splatform.PlatformUserID));
             mark.m_animate = true;
             mark.m_icon = ErrandMap.GreyOf(mark.m_icon);

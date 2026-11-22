@@ -9,6 +9,7 @@ namespace HuginWhispers
     // The errands' marks on the map in their own colour — a cold blue, Odin's — not the game's red of raids and events:
     // the game's own pictures (the event's «!», its ring) made grey once, so a colour can be laid on them; the map gives
     // every mark white on each redraw, so ours are coloured again right after it (UpdatePins).
+    // A zone's ring (an errand's, a request's cache, a quest's mark: StoryMap) is made by Zone alone — see there why it is not the game's raid ring.
     internal static class ErrandMap
     {
         internal static readonly Color Mark = new Color(0.5f, 0.75f, 1f, 1f);     // the «!» and the name
@@ -16,6 +17,26 @@ namespace HuginWhispers
         private static readonly Dictionary<Sprite, Sprite> Grey = new Dictionary<Sprite, Sprite>();
         internal static readonly List<Minimap.PinData> Ours = new List<Minimap.PinData>();
         internal static readonly List<Minimap.PinData> Trees = new List<Minimap.PinData>(); // the raven trees' marks (RavenTree.MapTick), in their gold
+
+        // A zone's ring on the map. The game's EventArea pin is its raid's zone, and a map mod may draw every pin of that kind as a fight in a picture
+        // of its own, whatever colour we lay on it (the user 2026-11-18: a quest's ring round the Hall came red — «якщо це не бойова зона, робити
+        // золотисту»). So a zone that is no fight is the game's ring picture made grey on a pin of the «!» kind (RandomEvent: the game draws it the
+        // same way, sized by m_worldSize), coloured by its owner after each redraw (Tint, Requests.Tint, StoryMap.Tint: a ring is the pin with a
+        // size, IsZone); a fight's zone (fight: a stage of a fight — StageDef.Fight) is the game's own raid ring, red.
+        internal static Minimap.PinData Zone(Vector3 at, float radius, bool fight = false)
+        {
+            Minimap.PinData p = Minimap.instance.AddPin(at, fight ? Minimap.PinType.EventArea : Minimap.PinType.RandomEvent, "", false, false, 0L, default(Splatform.PlatformUserID));
+            p.m_worldSize = radius * 2f;
+            if (!fight) p.m_icon = GreyOf(RingPicture());
+            return p;
+        }
+        internal static bool IsZone(Minimap.PinData p) { return p.m_worldSize > 0f; }
+        private static Sprite _ring;
+        private static Sprite RingPicture()
+        {
+            if (_ring == null && Minimap.instance != null) _ring = Minimap.instance.m_icons.Find(x => x.m_name == Minimap.PinType.EventArea).m_icon; // (the game's picture: once)
+            return _ring;
+        }
 
         // a grey copy of a map picture (once per picture); the picture itself when it cannot be read
         internal static Sprite GreyOf(Sprite s)
@@ -72,7 +93,7 @@ namespace HuginWhispers
             {
                 Minimap.PinData p = Ours[i];
                 if (p == null) { Ours.RemoveAt(i); continue; }
-                Color c = p.m_type == Minimap.PinType.EventArea ? Ring : Mark;
+                Color c = IsZone(p) ? Ring : Mark;
                 if (p.m_iconElement != null && p.m_iconElement.color != c) p.m_iconElement.color = c;
                 if (p.m_NamePinData != null && p.m_NamePinData.PinNameText != null && p.m_NamePinData.PinNameText.color != c) p.m_NamePinData.PinNameText.color = c;
             }

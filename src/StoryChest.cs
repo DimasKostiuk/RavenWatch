@@ -18,14 +18,23 @@ namespace HuginWhispers
     //                                            and removes the word (Look). Fewer than N there (somebody took some out in between): what there is
     // Looked at, the chest says what the stage you stand on still wants in it (HoverOf, asked by LocChestHoverPatch: the hover of the game's chest,
     // our lines under it): «Сюди треба скласти:» and a line a thing, «have / need». Only for a stage that waits on «chest» — no such stage: one count.
-    // Cost: once in Every s the stages' few conditions and the world's word of each chest the data names (Known: a handful); the chest itself is
-    // looked up only when its word stands or it is hovered.
+    // One name over a place's states (the Hall's «skrynia»: a plain chest in 1.4 «літ», the fine one from 2 — the user 2026-11-18: «більша гарніша
+    // скриня по суті заміняє її»): what a player left in the chest its state no longer has goes into the chest of that name it has now, and the old
+    // one is hidden at once (Carry) — else LocState.PieceShows would keep it in sight for its things. The game that owns both does it, neither
+    // open; the new one full: what did not fit stays, and the old chest in sight with it.
+    // What is gathered is kept (the user 2026-11-18: «запобіжник для скрині… блокувати після цього взаємодію зі скринею, щоб інший гравець не зміг
+    // вийняти в цей момент звідти матеріали»): a chest that holds all its stage wants of it (a stage that waits for its chests alone: one that
+    // waits for more would keep a player's things shut away for long), or whose things the story is taking out (its word stands), is shut (Locked) —
+    // the places' guard of E says no and why (LocInteractPatch, before any mod's own Container.Interact): nobody opens it; one this game has open as it fills up is closed (Look, Shut). Open again once the stage has moved on and its things are taken.
+    // Cost: once in Every s the stages' few conditions, the world's word of each chest the data names (Known: a handful) and the pieces of each
+    // such name (LocParts.Named: kept per look, two or three); the chest itself is looked up only when its word stands, it is hovered or opened.
     internal static class StoryChest
     {
         internal const string Take = "chesttake_";
         internal static float Every = 1f;
-        private sealed class Want { public string Chest, Prefab; public int N; }
+        private sealed class Want { public string Name, Prefab; public int N; public bool Shuts; } // (Name: «<place id>.<piece>», as NameOf says a chest · Shuts: its stage waits on chests alone — full, it is shut)
         private static readonly List<Want> _want = new List<Want>();               // session: what the stages of this player wait for in chests, read again each Every s
+        private static readonly HashSet<string> _taking = new HashSet<string>();  // session: the chests («<place id>.<piece>») whose things the story is taking out now, read again each Every s
         private static readonly Dictionary<string, KeyValuePair<string, string>> Known = new Dictionary<string, KeyValuePair<string, string>>(); // session: the world's word → its chest and thing, for every «chest …» and «chesttake …» the data names (filled as the data is read)
         private static readonly Dictionary<string, string> _took = new Dictionary<string, string>(); // session: a word this game has acted on, till the world drops it (its removal comes back from the server a moment later)
         private static readonly Dictionary<int, string> _names = new Dictionary<int, string>();     // session: a chest hovered → its «<place id>.<piece>» («»: not a named piece of a place)
@@ -81,13 +90,16 @@ namespace HuginWhispers
             {
                 StoryQuests.StageDef s = StoryQuests.StageNow(p, q);
                 if (s == null || s.Wait == null) continue;
+                bool shuts = s.OnName.Length == 0 && s.Wait.TrueForAll(IsChest); // (a stage that waits for more than its chest — an event, a quest: its things not shut away for so long)
                 foreach (Cond c in s.Wait)
-                    if (!c.Not && c.A.Length >= 4 && c.A[0] == "chest") _want.Add(new Want { Chest = c.A[1], Prefab = c.A[2], N = Num(c.A[3]) });
+                    if (IsChest(c)) _want.Add(new Want { Name = DataName(c.A[1]), Prefab = c.A[2], N = Num(c.A[3]), Shuts = shuts });
             }
+            _taking.Clear();
             foreach (KeyValuePair<string, KeyValuePair<string, string>> k in Known)
             {
                 string word = StoryWorld.Text(k.Key), done;
                 if (word.Length == 0) { _took.Remove(k.Key); continue; }
+                _taking.Add(DataName(k.Value.Key));
                 if (_took.TryGetValue(k.Key, out done) && done == word) continue; // (taken by this game already: the world has not dropped the word yet)
                 Container c = Find(k.Value.Key);
                 ZNetView nv = c != null ? c.GetComponent<ZNetView>() : null;
@@ -96,6 +108,86 @@ namespace HuginWhispers
                 Story.Log("chest: " + k.Value.Key + ": taken out " + k.Value.Value + " " + TakeOut(c.GetInventory(), k.Value.Value, Num(word)) + "/" + word);
                 StoryWorld.Remove(k.Key);
             }
+            _carried.Clear();
+            foreach (KeyValuePair<string, string> k in Known.Values)
+                if (_carried.Add(k.Key)) { Carry(k.Key); Shut(p, k.Key); }
+        }
+
+        // a chest of that name this game has open (opened, the game gives its ZDO to the one who opened it) that is Locked now: closed, said why
+        private static void Shut(Player p, string chest)
+        {
+            if (InventoryGui.instance == null || !InventoryGui.IsVisible() || !InventoryGui.instance.IsContainerOpen()) return;
+            Container c = Find(chest);
+            ZNetView nv = c != null ? c.GetComponent<ZNetView>() : null;
+            if (nv == null || !nv.IsValid() || !nv.IsOwner() || !c.IsInUse() || !Locked(c)) return;
+            InventoryGui.instance.Hide();
+            SayShut(p);
+        }
+
+        internal static void SayShut(Player p) { if (p != null) p.Message(MessageHud.MessageType.Center, Gathered()); }
+        private static string Gathered() { return Lang.K("Зібрано все, що треба. Скриню зачинено, доки це не заберуть."); }
+
+        // shut: it holds all its stage wants of it, or the story is taking its things out (the head: «What is gathered is kept»). Asked by the
+        // places' guard of E (LocInteractPatch), the hover and Shut — a chest of no place's name answers at once
+        internal static bool Locked(Container c)
+        {
+            if (c == null) return false;
+            string name = NameOf(c);
+            if (name.Length == 0) return false;
+            if (_taking.Contains(name)) return true; // (being taken out: till the game by it has done it)
+            bool any = false;
+            foreach (Want w in _want)
+            {
+                if (w.Name != name) continue;
+                if (!w.Shuts || ItemMarks.InBag(c.GetInventory(), w.Prefab) < w.N) return false;
+                any = true;
+            }
+            return any;
+        }
+
+        private static bool IsChest(Cond c) { return !c.Not && c.A.Length >= 4 && c.A[0] == "chest"; }
+
+        // «<place>.<piece>» of the data (a place's alias too) as NameOf says a chest: «<place id>.<piece>» («»: no such place)
+        private static string DataName(string chest)
+        {
+            int dot = chest.IndexOf('.');
+            Loc l = dot > 0 ? Locs.Get(chest.Substring(0, dot)) : null;
+            return l != null ? l.Id + chest.Substring(dot) : "";
+        }
+
+        // the things of a chest of that name its place's state has not now into the one it has (the head: «One name over a place's states»)
+        private static readonly HashSet<string> _carried = new HashSet<string>(); // (one pass's: each name once)
+        private static readonly Dictionary<int, string> _tried = new Dictionary<int, string>(); // session: an old chest whose things did not all fit → both chests' counts then (tried again only when one changes)
+        private static void Carry(string chest)
+        {
+            Container to = Find(chest);
+            ZNetView tv = to != null ? to.GetComponent<ZNetView>() : null;
+            if (tv == null || !tv.IsOwner() || to.IsInUse()) return;
+            int dot = chest.IndexOf('.');
+            Loc l = Locs.Get(chest.Substring(0, dot));
+            foreach (ZNetView nv in LocParts.Named(l.Id, chest.Substring(dot + 1)))
+            {
+                if (nv == tv || !nv.IsValid() || !nv.IsOwner() || !LocState.Absent(nv)) continue; // (the game that owns both: no thing moved twice)
+                Container from = nv.GetComponent<Container>();
+                if (from == null || from.IsInUse()) continue; // (open: later)
+                int had = Things(from.GetInventory()), id = nv.GetInstanceID();
+                if (had == 0) { _tried.Remove(id); continue; } // (empty — or its inventory not filled yet: next time)
+                string counts = had + "/" + Things(to.GetInventory()), was;
+                if (_tried.TryGetValue(id, out was) && was == counts) continue; // (full last time, nothing changed since: no MoveAll and no log line a second)
+                to.GetInventory().MoveAll(from.GetInventory()); // (the game's own: what fits; each chest saves its ZDO as its owner)
+                int left = Things(from.GetInventory());
+                if (left > 0) _tried[id] = left + "/" + Things(to.GetInventory()); else _tried.Remove(id);
+                Story.Log("chest: " + chest + ": " + (had - left) + " of " + had + " thing(s) carried from the chest its state has not" + (left > 0 ? " — the rest has no room: that chest stays in sight" : ""));
+                LocState.LookAgain(nv); // (emptied: hidden by its layer this moment; what did not fit: still in sight)
+            }
+        }
+
+        // how many things an inventory holds (stacks summed: a stack topped up by MoveAll counts)
+        private static int Things(Inventory inv)
+        {
+            int n = 0;
+            foreach (ItemDrop.ItemData it in inv.GetAllItems()) n += it.m_stack;
+            return n;
         }
 
         // up to N of that thing out of the inventory; how many went
@@ -124,12 +216,11 @@ namespace HuginWhispers
             string lines = "";
             foreach (Want w in _want)
             {
-                int dot = w.Chest.IndexOf('.');
-                Loc l = Locs.Get(w.Chest.Substring(0, dot));
-                if (l == null || l.Id + "." + w.Chest.Substring(dot + 1) != name) continue;
+                if (w.Name != name) continue;
                 int have = Mathf.Min(ItemMarks.InBag(c.GetInventory(), w.Prefab), w.N);
                 lines += "\n" + ItemName(w.Prefab) + ": <color=" + (have >= w.N ? "#9BD08B" : "orange") + ">" + have + " / " + w.N + "</color>";
             }
+            if (lines.Length > 0 && Locked(c)) lines += "\n<color=#9BD08B>" + Gathered() + "</color>"; // (shut: why it does not open)
             return lines.Length == 0 ? "" : "\n" + Lang.K("Сюди треба скласти:") + lines;
         }
 

@@ -30,3 +30,33 @@
 [ketil:say_bye] До зустрічі.
 [ketil:say_bye] Бережи себе.
 [ketil:say_bye] Не йди нікуди без мене.
+# Слова Кетіля без питання (voice: own у шаблоні npc/ketil.txt; огляд 2026-11-22 — story-lore.md «Глава 1»: «втомлені репліки» біля серця).
+# Тихо, лагідно, майже до себе; лише те, що він каже в розмові (talk/ch1_ketil.txt): селище за пагорбами, бондар, чийсь сміх, тиша, що кличе.
+# Згасає за етапами: до намиста (bring) — утомлений; з намистом — тримає й не пам'ятає; на поляні (ketil_south) — уже «добре».
+[ketil:idle ?!reached ch1 bring] Тепло від нього. Від вогню, кажу.
+[ketil:idle ?!reached ch1 bring] Сиджу. Добре сидиться. Навіщо вставати — не знаю.
+[ketil:idle ?!reached ch1 bring] Руки самі шукають обруч. А обруча нема.
+[ketil:idle ?!reached ch1 bring] Там, за пагорбами, теж горів вогонь. Колись.
+[ketil:idle ?!reached ch1 bring] Добре тут. Тихо. Майже як удома. Майже.
+[ketil:idle ?reached ch1 bring, !world ketil_south] Бурштин теплий. Як мед на сонці. Чий же ти…
+[ketil:idle ?reached ch1 bring, !world ketil_south] Тримаю, а не пам'ятаю. Руки розумніші за мене.
+[ketil:idle ?reached ch1 bring, !world ketil_south] Хтось сміявся голосно. Аж собаки гавкали. Хто?
+[ketil:idle ?reached ch1 bring, !world ketil_south] А навіщо пам'ятати, якщо тебе не пам'ятає ніхто?
+[ketil:idle ?world ketil_south] Тут тепліше. На півдні завжди тепліше.
+[ketil:idle ?world ketil_south] Мені добре. Не треба нікуди. Уже майже.
+[ketil:idle ?world ketil_south] Хтось кликав. Добрим голосом. Ось-ось прийде.
+[ketil:see_player ?!world ketil_south] А… це знову ти. Добре.
+[ketil:see_player ?!world ketil_south] Сідай, якщо хочеш. Тут місця вистачить.
+[ketil:see_player ?!world ketil_south] Ти ходиш далеко. Я бачу по тобі.
+[ketil:see_player ?!world ketil_south] Ще тут. Поки що.
+[ketil:see_player ?!world ketil_south] Твій вогонь добре горить. Я дивлюсь за ним.
+[ketil:see_player ?!world ketil_south] Не хвилюйся за мене. Я просто втомився.
+[ketil:see_player ?world ketil_south] Ти хто? …Не пам'ятаю. Та й не треба.
+[ketil:see_player ?world ketil_south] Іди додому. Я вже майже вдома.
+[ketil:see_player ?world ketil_south] Не тримай мене. Мені добре.
+[ketil:night ?!world ketil_south] Тихо як. У такій тиші щось кличе. На ім'я.
+[ketil:night ?!world ketil_south] Не сплю. Слухаю. Нічого. Нічого ж?
+[ketil:night ?!world ketil_south] Голос як у матері. Добрий. Я не йду.
+[ketil:night ?!world ketil_south] Сни однакові. Дорога, і вся на південь.
+[ketil:night ?!world ketil_south] Посиджу біля вогню. Поки він горить, я тут.
+[ketil:night ?!world ketil_south] Зорі ті самі, що над селищем. Тільки селища нема.

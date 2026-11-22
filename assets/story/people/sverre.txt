@@ -1,0 +1,19 @@
+# Сверре — побратим Ейвінда (npc/sverre.txt). Людина світу з кінця глави 2 (користувач 2026-11-19): поки Гейд розповідала про старого, Ейвінд
+# пішов до своєї хатини в лісі (місце bad_house, користувач збудував 2026-11-20), а Сверре вже не було: двері відчинені, він пішов на
+# південь, куди кличе Хель. Ми знаходимо його далі в лісі (found.sverre_ide), відбиваємо від мерців і ведемо до вогню Зали — там він і живе далі,
+# в іншому кінці Зали, де Хель не чути. У лісі ним веде квест (hold); у Залі — свій день, нижче.
+
+[person sverre]
+npc: sverre
+after: reached ch2 eyv_gone
+live: hall.kinets when reached ch2 sverre_home           # у Залі, в її дальньому кінці (деталь, що є в кожному стані)
+live: found.sverre_ide when reached ch2 eyv_gone        # пішов із хатини на південь — бреде лісом
+# Його день у Залі (StoryLife; формат рядків — шапка people/heid.txt). Користувач 2026-11-22: «Сверре має бути відлюдником, бо він пустий; іноді кидає
+# короткі фрази, але по більшості сидить, як Ейвінд, іноді ходить туди-сюди». На збори не приходить; свої слова — words/sverre.txt (voice: own у шаблоні).
+# День — лише поки живе в Залі (як live: hall.kinets): у лісі ним веде квест. Без гри: node tools/day.js sverre
+day: hall when reached ch2 sverre_home
+at: hall 6-22 hall.kinets seat sit stay 180-360                   # сидить у дальньому кінці Зали, де тихо
+at: hall 11-13 hall.kukhnia roam every 2-4 group sverre_walk      # раз на кілька днів опівдні встає й ходить туди-сюди: кухня — стіл — своє місце (ті самі дні: group)
+at: hall 11-13 hall.stil roam every 2-4 group sverre_walk
+at: hall 22-6 hall.kinets seat sit stay 240-480                   # ніч — там само
+spot: hall hall.kinets seat sit want 0.8

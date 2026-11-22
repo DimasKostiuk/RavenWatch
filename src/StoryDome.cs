@@ -8,7 +8,7 @@ namespace HuginWhispers
     // raises it inside out (Dome.HoldOver: whoever stood inside stays inside, whoever stood outside stays out) and lowers it:
     //   dome on [<place>|player] [m=Radius]   over that spot (none, «player»: over the player who plays the scene); the step does not wait
     //   dome off                              it crumbles (its runes burst)
-    // A scene's end lowers it whatever happened (SceneEnd: StoryScenes.Ends). Every game near sees it by the dome's own message (StepSeen.World).
+    // A scene's end lowers it whatever happened (SceneEnd: StoryScenes.Holding). Every game near sees it by the dome's own message (StepSeen.World).
     internal static class StoryDome
     {
         internal static float Radius = 3.5f; // m: round the player, the one killed outside it a few steps off

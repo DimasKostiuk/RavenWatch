@@ -150,7 +150,11 @@ namespace HuginWhispers
             }
             foreach (Container k in UnityEngine.Object.FindObjectsOfType<Container>()) // heavy: the same once
             {
-                if (k == null || k.GetInventory() == null || Utils.DistanceXZ(k.transform.position, at) > r) continue;
+                #if RAVEN_STORY
+                if (k == null || k.GetInventory() == null || StoryWhere.Apart(at, k.transform.position) > r) continue; // (a chest inside, over its door, is not «near» one on the ground: the review 2026-11-18)
+#else
+                if (k == null || k.GetInventory() == null || Utils.DistanceXZ(k.transform.position, at) > r) continue; // flat: no insides without the story
+#endif
                 foreach (ItemDrop.ItemData it in k.GetInventory().GetAllItems()) if (it.m_dropPrefab != null && it.m_dropPrefab.name == prefab) n += it.m_stack;
             }
             return n;

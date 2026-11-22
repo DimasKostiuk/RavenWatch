@@ -28,6 +28,7 @@ namespace HuginWhispers
             Quests.Clear(); Errors.Clear();
             foreach (KeyValuePair<string, string> kv in StoryFiles.All(StoryFiles.Quests, Folder, Blueprint.On)) Parse(kv.Key, kv.Value); // (built in; the mod's own folder on the author's machine — StoryFiles)
             foreach (QuestDef q in Quests) Validate(q);
+            MarkFights(); // (a fight's stages: their ring on the map red — after every quest is read, a fight may be waited for in another stage than the one that starts it)
             StoryScenes.Load(); // (the scenes the stages name: checked against them)
             foreach (QuestDef q in Quests) ValidateRefs(q);
             foreach (string e in Errors) Story.Log("quests: " + e);
@@ -125,6 +126,11 @@ namespace HuginWhispers
                         {
                             string[] m = val.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
                             if (m.Length == 0) { Errors.Add(at + "mark: <місце> [радіус] <напис>"); break; }
+                            if (d.MarkAt.Length > 0) // (a second line: one more place to choose from — of the stage; a way has one)
+                            {
+                                if (w != null) { Errors.Add(at + "у шляху одна мітка"); break; }
+                                d = new StageDef { Id = s.Id + ".mark" + (s.Marks.Count + 2) }; s.Marks.Add(d);
+                            }
                             d.MarkAt = m[0];
                             int r = m.Length > 1 ? Errands.I(m[1], -1) : -1;
                             d.MarkRadius = r > 0 ? r : 0f;
@@ -135,6 +141,7 @@ namespace HuginWhispers
                     case "call": d.Call = val; break;
                     case "seek": d.Seek = val; break;
                     case "stock": { string why = StoryStock.Why(val); if (why == null) d.Stock.Add(val.Trim()); else Errors.Add(at + why); break; }
+                    case "road": { string why = StoryRoad.Why(val); if (why == null) d.Road = val.Trim(); else Errors.Add(at + why); break; }
                     case "lost": if (val.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length == 2) d.Lost.Add(val.Trim()); else Errors.Add(at + "lost: <предмет> <місце>"); break;
                     case "start": Actions(val, d.Start, at); break;
                     case "done": Actions(val, d.Done, at); break;
@@ -173,6 +180,30 @@ namespace HuginWhispers
             }
         }
 
+        // A fight's stages — their ring on the map is the game's red, not gold (StoryMap; the user 2026-11-18): one that starts a fight (an action of
+        // a fighting kind, StoryActions.Kind.Fight — «waves»: its first word names the fight, the fact made when its last foe falls) and one that waits
+        // for a fight's fact («wait: world <name>»: the fight a stage before it began goes on here — chapter 1: lit_meet starts it, lit_fight waits)
+        private static void MarkFights()
+        {
+            HashSet<string> names = new HashSet<string>();
+            foreach (QuestDef q in Quests) foreach (StageDef s in q.Stages) { Named(s.Start, names); Named(s.Done, names); foreach (StageDef w in s.Ways) { Named(w.Start, names); Named(w.Done, names); } }
+            foreach (QuestDef q in Quests) foreach (StageDef s in q.Stages) { s.Fight = IsFight(s, names); foreach (StageDef w in s.Ways) w.Fight = IsFight(w, names); }
+        }
+        // the fights these actions start, into names (null: only asked whether there is one); true: one at least
+        private static bool Named(List<string> acts, HashSet<string> names)
+        {
+            bool any = false;
+            foreach (string a in acts) { string[] w; StoryActions.Kind k = StoryActions.KindOf(a, out w); if (k != null && k.Fight && w.Length > 1) { if (names != null) names.Add(w[1]); any = true; } }
+            return any;
+        }
+        private static bool IsFight(StageDef s, HashSet<string> names)
+        {
+            if (Named(s.Start, null)) return true;
+            string[] w = s.WaitText.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries); // («!world» is another word: not a fight going on)
+            for (int i = 0; i + 1 < w.Length; i++) if (w[i] == "world" && names.Contains(w[i + 1])) return true;
+            return false;
+        }
+
         private static void Validate(QuestDef q)
         {
             string at = q.From + " [" + q.Id + "]: ";
@@ -189,6 +220,7 @@ namespace HuginWhispers
                 foreach (Fork f in s.Forks) if (f.To != "end" && q.Stage(f.To) == null) Errors.Add(at + s.Id + ": fork — нема етапу «" + f.To + "»");
                 foreach (string a in s.Start) StoryActions.CheckGoto(q, a, at + s.Id + ": ", Errors);
                 foreach (string a in s.Done) StoryActions.CheckGoto(q, a, at + s.Id + ": ", Errors);
+                if (s.Marks.Count > 0) ValidateChoice(s, at); // (the same rules: tools/storycheck.js, «places to choose from»)
                 if (s.Ways.Count > 0) { ValidateWays(q, s, at); continue; }
                 if (s.Goal.Length == 0) Errors.Add(at + s.Id + ": без goal (гравець не знатиме, що робити)");
             }
@@ -201,6 +233,24 @@ namespace HuginWhispers
             if (unnamed > 1) Errors.Add(at + "кілька етапів зі шляхами без choice: — назви кожен вибір");
         }
 
+        // places to choose from (several «mark:» lines): each place leads somewhere — its fork or the stage's «wait:» names it; no ways beside them
+        // (they would hide them), no «saga:» (it goes only to who passed by «next», never by a fork), no «seek:» (it knows the first place only)
+        private static void ValidateChoice(StageDef s, string at)
+        {
+            at += s.Id + ": ";
+            if (s.Ways.Count > 0) Errors.Add(at + "кілька mark: і шляхи разом — у шляху своя одна мітка");
+            if (s.Saga.Length > 0) Errors.Add(at + "saga: на етапі з місцями на вибір — запис лягає лише тим, хто пройшов його своїм next, не розвилкою: винеси saga в наступний етап");
+            if (s.Seek.Length > 0) Errors.Add(at + "seek: на етапі з кількома mark: — пошук знає лише перше місце");
+            List<string> places = new List<string> { s.MarkAt };
+            foreach (StageDef m in s.Marks) places.Add(m.MarkAt);
+            foreach (string place in places)
+            {
+                bool named = Names(s.WaitText, place);
+                foreach (Fork f in s.Forks) named |= Names(f.Text.Substring(0, Math.Max(0, f.Text.IndexOf("->", StringComparison.Ordinal))), place);
+                if (!named) Errors.Add(at + "місце на вибір «" + place + "» нікуди не веде: назви його у wait: чи fork: (near " + place + " …)");
+            }
+        }
+
         // what a stage names elsewhere: its scene, its marks' places (a typo there — a scene «played» at once, a mark nowhere)
         private static void ValidateRefs(QuestDef q)
         {
@@ -210,7 +260,7 @@ namespace HuginWhispers
             {
                 if (s.Scene.Length > 0 && StoryScenes.Find(s.Scene) == null) Errors.Add(at + s.Id + ": нема сцени «" + s.Scene + "» (зіграється одразу, нічого не показавши)");
                 if (s.Ways.Count == 0 && s.Scene.Length > 0 && s.OnName.Length > 0) Errors.Add(at + s.Id + ": і scene, і on — етап зі сценою проходить лише її кінцем, а його on забирав би E у речі (дошка серця, розмова) й нічого не робив; подію винеси в окремий етап перед сценою"); // (Passed: scene_done alone; Awaiting would still answer for its «on:»)
-                foreach (StageDef d in s.Ways.Count > 0 ? s.Ways : new List<StageDef> { s })
+                foreach (StageDef d in s.Ways.Count > 0 ? s.Ways : new List<StageDef>(s.Marks) { s })
                 {
                     string why = d.MarkAt.Length > 0 ? StoryWhere.Why(d.MarkAt) : null;
                     if (why != null) Errors.Add(at + d.Id + ": mark — " + why);

@@ -14,6 +14,9 @@ namespace HuginWhispers
     //                                              that order, each one only if that raven is on your shoulder, awake and yours — and the
     //                                              row stops at the first that is not (an answer is never said to a question nobody asked).
     //                                              Once a character (its flag «stranger_<who>»); none of the two there — said later, when one is
+    //   notalk: <world conditions>                 while they hold: no talk with it — E and Q open nothing, the hover is its name only; its own
+    //                                              words, a scene's, a road talk's (StoryRoad) go on as ever (the user 2026-11-20: Torvald on his
+    //                                              watch at the tower is not to be talked to)
     // The world's conditions: every game reads the same, the server keeps nothing of it. A scene that takes it says its lines (its quiet is only
     // for words of its own: StoryAside.InScene), under the name it is shown by — a scene where it gives its name sets the fact there («do world …»).
     // E on it that a stage waits for («on: npc_use <who>») is the stage's, as on anyone (StoryModules). Cost: its hover, E, Q and its own words ask one map lookup and a kept answer (its conditions asked once Every s);
@@ -38,8 +41,28 @@ namespace HuginWhispers
             NpcActor.HoverInstead.Add(a => { StoryPeople.Person x = Of(a); return x == null ? null : a.GetHoverName(); }); // (only its name: no «Говорити», no «Дії»)
             NpcActor.UseInstead.Add((a, p) => Of(a) != null && (p == null || !StoryQuests.Awaits(p, "npc_use", a.Def.Id)) ? (bool?)false : null); // (E: nothing — unless a stage waits for it)
             NpcMenu.KeyInstead.Add((a, p) => Of(a) != null ? (bool?)true : null);  // (Q: no ring)
+            NpcActor.HoverInstead.Add(a => NoTalkOf(a) != null ? a.GetHoverName() : null); // («notalk:» — its name, nothing to press)
+            NpcActor.UseInstead.Add((a, p) => NoTalkOf(a) != null && (p == null || !StoryQuests.Awaits(p, "npc_use", a.Def.Id)) ? (bool?)false : null);
+            NpcMenu.KeyInstead.Add((a, p) => NoTalkOf(a) != null ? (bool?)true : null);
             StoryQuests.Each.Add("strangers", Look);
         }
+
+        // the person of the story this one is, while its «notalk:» holds (a scene's own copy of it is not)
+        internal static StoryPeople.Person NoTalkOf(NpcActor a)
+        {
+            if (a == null || a.Def == null) return null;
+            Map();
+            StoryPeople.Person x;
+            if (!_noTalk.TryGetValue(a.Def.Id, out x) || a.Tag == StoryScenes.MadeTag) return null;
+            float at; bool was;
+            if (_ntAt.TryGetValue(x.Id, out at) && Time.time - at < Every && _nt.TryGetValue(x.Id, out was)) return was ? x : null;
+            bool now = StoryCond.Holds(null, x.NoTalk, e => Story.Log("people: " + x.Id + ": notalk " + e), true);
+            _ntAt[x.Id] = Time.time; _nt[x.Id] = now;
+            return now ? x : null;
+        }
+        private static readonly Dictionary<string, StoryPeople.Person> _noTalk = new Dictionary<string, StoryPeople.Person>(); // template → its person, only those with «notalk:»
+        private static readonly Dictionary<string, float> _ntAt = new Dictionary<string, float>(); // session: when its conditions were last asked
+        private static readonly Dictionary<string, bool> _nt = new Dictionary<string, bool>();      // session: … and what they said
 
         // the person of the story this one is, while it is still a stranger (a scene's own copy of it is not: StoryPeople.Of)
         internal static StoryPeople.Person Of(NpcActor a)
@@ -58,8 +81,12 @@ namespace HuginWhispers
         {
             List<StoryPeople.Person> all = StoryPeople.All;
             if (ReferenceEquals(all, _of)) return;
-            _of = all; _byNpc.Clear(); _askedAt.Clear(); _is.Clear(); _row = null;
-            foreach (StoryPeople.Person x in all) if (x.Stranger.Length > 0 && !_byNpc.ContainsKey(x.Npc)) _byNpc[x.Npc] = x;
+            _of = all; _byNpc.Clear(); _askedAt.Clear(); _is.Clear(); _row = null; _noTalk.Clear(); _ntAt.Clear(); _nt.Clear();
+            foreach (StoryPeople.Person x in all)
+            {
+                if (x.Stranger.Length > 0 && !_byNpc.ContainsKey(x.Npc)) _byNpc[x.Npc] = x;
+                if (x.NoTalk.Length > 0 && !_noTalk.ContainsKey(x.Npc)) _noTalk[x.Npc] = x;
+            }
         }
 
         private static bool Is(StoryPeople.Person x)

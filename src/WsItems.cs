@@ -56,7 +56,7 @@ namespace HuginWhispers
             if (_loaded) return;
             _loaded = true;
             Defs.Clear();
-            _story = null; // (the story's things read anew with them)
+            _story = null; _one = null; // (the story's things and the ones of a kind read anew with them)
             List<WsModel> models = new List<WsModel>();
             try
             {
@@ -87,7 +87,7 @@ namespace HuginWhispers
                     WsModel b = old.Model;
                     if (b.File.StartsWith("RavenWatch.", StringComparison.Ordinal) && !m.File.StartsWith("RavenWatch.", StringComparison.Ordinal))
                     {
-                        m.Name = b.Name; m.Note = b.Note; m.Story = b.Story; m.Pickup = b.Pickup;
+                        m.Name = b.Name; m.Note = b.Note; m.Story = b.Story; m.Pickup = b.Pickup; m.One = b.One; m.Wear = b.Wear; m.Dreams = b.Dreams;
                         Log("«" + m.File + "»: its look over the built-in «" + id + "»; the name, note and story rules are the mod's");
                     }
                 }
@@ -178,6 +178,18 @@ namespace HuginWhispers
             return null;
         }
 
+        // ---------------------------------------------------------------- one in the world (a model's «one: yes»: what keeps it one — StoryOne)
+        // its prefabs, once a load (asked of every item StoryOne looks at: a lookup); its prefab gets StoryOneDrop as it is made (Make)
+        private static HashSet<string> _one;
+        internal static bool IsOne(string prefab)
+        {
+            if (prefab == null) return false;
+            if (_one == null) { Load(); _one = new HashSet<string>(); foreach (Def d in Defs) if (!d.Replace && !d.Gear && d.Model.One) _one.Add(d.Prefab); }
+            return _one.Contains(prefab);
+        }
+        internal static IEnumerable<string> Ones() { IsOne(""); return _one; }
+        internal static bool AnyOne() { IsOne(""); return _one.Count > 0; }
+
         // ---------------------------------------------------------------- the new items' prefabs
 
         private static GameObject Make(Def d, Func<string, GameObject> find)
@@ -200,8 +212,11 @@ namespace HuginWhispers
             WsModel m = d.Model;
             sh.m_name = Lang.W(m.Name);
             sh.m_description = Lang.WordF("rw_ws_" + d.Prefab + "_desc", () => d.Gear ? RavenGear.Description(m) : SoldTop(m) + Lang.T(m.Note ?? ""));
-            sh.m_itemType = d.Gear ? ItemDrop.ItemData.ItemType.Misc : ItemDrop.ItemData.ItemType.Material;
-            sh.m_maxStackSize = d.Gear ? 1 : m.Stack > 0 ? m.Stack : 20;
+            sh.m_itemType = d.Gear ? ItemDrop.ItemData.ItemType.Misc : m.Wear == "trinket" ? ItemDrop.ItemData.ItemType.Trinket : ItemDrop.ItemData.ItemType.Material;
+            // («wear: trinket»: the game's trinket slot — no adrenaline of its own (none to fill, no power when full), nothing hung on the body: the
+            // game shows only an item's «attach_» children, ours has none — the user 2026-11-21: Sverre's ring worn as a trinket)
+            if (m.Wear == "trinket") { sh.m_maxAdrenaline = 0f; sh.m_fullAdrenalineSE = null; }
+            sh.m_maxStackSize = d.Gear || m.One ? 1 : m.Stack > 0 ? m.Stack : 20; // (one of a kind: never two in a stack — the game stacks with no look at an item's data)
             sh.m_weight = m.Weight > 0f ? m.Weight : 0.5f;
             sh.m_value = 0;
             sh.m_teleportable = true;
@@ -209,7 +224,10 @@ namespace HuginWhispers
             // a thing of the story («story:») never times out on the ground: the game's ItemDrop.TimedDestruction takes a dropped thing an hour
             // after it fell, outside a base — a scroll half left by Torvald's stash or the crypt, never picked up, was gone and its stage waited
             // for ever. The prefab's own, so every copy, and one loaded after a long time away too
-            if (!string.IsNullOrEmpty(m.Story)) drop.m_autoDestroy = false;
+            if (!string.IsNullOrEmpty(m.Story) || m.One) drop.m_autoDestroy = false; // (and one of a kind in the world: never gone by itself)
+#if RAVEN_STORY
+            if (m.One) go.AddComponent<StoryOneDrop>(); // (lying on the ground: an older or foreign copy crumbles, the live one is seen — StoryOne)
+#endif
             sh.m_questItem = false;
             sh.m_consumeStatusEffect = null;
             // the source's own glow and sparks (the thunderstone's) are not this item's
@@ -322,11 +340,11 @@ namespace HuginWhispers
         }
 
         // ---------------------------------------------------------------- a plant picked by hand («grows: <m>», the user 2026-11-14: the flower Heid asks for,
-        // ten of them set at the black forest's edge — StoryFound «plant»). The game's own thistle (GrowFrom: its picking, its sound, its colliders, the
+        // ten of them kept at the black forest's edge — a stage's «stock:», StoryStock). The game's own thistle (GrowFrom: its picking, its sound, its colliders, the
         // picked state everyone sees) with its look hidden and the model in its place, standing on its foot (the model's lowest point at the prefab's
         // root, as tall as «grows:» says); it gives this item, one, and never grows again (a story's plant: so many in the world, no more). Nothing
         // hidden when picked and no growing back: the game takes a picked one out of the world (Pickable.SetPicked) — no hidden bush left behind for
-        // ever, and a replant (StoryFound) counts only what stands
+        // ever, and StoryStock counts only what stands
         internal const string GrowPrefix = "RavenWatch_grow_";
         internal static string GrowFrom = "Pickable_Thistle";
         internal static string GrowOf(string itemPrefab) { return itemPrefab.StartsWith(PrefabPrefix, StringComparison.Ordinal) ? GrowPrefix + itemPrefab.Substring(PrefabPrefix.Length) : null; }

@@ -18,6 +18,9 @@ namespace HuginWhispers
     // a tree close by counted twice (the user 2026-11-07: a scene's shots there, trees must not cover it all).
     // At most Tries tries, each cheap but the loaded ones (a ray down, a sphere for the trees): once per pick, never a frame.
     // Open: the same land's tests where no player is asked (the server — a place of the world: the story's glade), by the world's numbers only.
+    // Someones / Settled: «is this someone's base» as the SERVER knows it (it sees no beds nor map marks of a player, but it holds every object of
+    // the world, loaded or not): a piece a player built. One answer for a place of the story (Loc.NearBuilding), a location of the game the story
+    // picks and a glade (StoryFound) — the user 2026-11-21: a base with no heart and no ward was no base to the last two.
     internal static class WorldSpot
     {
         internal static float Clear = 70f; // m from anything built, a bed, a mark of yours
@@ -289,6 +292,52 @@ namespace HuginWhispers
             return false;
         }
         private static readonly List<Piece> _pieces = new List<Piece>();
+
+#if RAVEN_NPC
+        // someone's: a piece a player built (it has its creator; a blueprint's pieces — the story's own — are not his). A prefab unknown to this
+        // game counts: better a wrong «no» than a hall on a house
+        private static readonly Dictionary<int, bool> _isPiece = new Dictionary<int, bool>();
+        internal static bool Someones(ZDO zdo)
+        {
+            if (zdo == null || zdo.GetLong(ZDOVars.s_creator, 0L) == 0L || zdo.GetInt(Blueprint.Mark) == 1) return false;
+            int hash = zdo.GetPrefab();
+            bool p;
+            if (_isPiece.TryGetValue(hash, out p)) return p;
+            GameObject pf = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(hash) : null;
+            p = pf == null || pf.GetComponent<Piece>() != null;
+            _isPiece[hash] = p;
+            return p;
+        }
+
+        // where someone's pieces stand in a zone, by the server's own list of the world's objects (a client holds only what is near it: the server
+        // asks). Kept for the frame: a pick asks many spots of the same few zones (a hall's tries and the camp's by it, a glade's candidates), and
+        // each zone is gone through once — its objects looked at one by one — however many ask. Nothing kept past the frame: a piece built next
+        // second is seen by the next pick
+        private static readonly Dictionary<Vector2s, List<Vector3>> _builtIn = new Dictionary<Vector2s, List<Vector3>>();
+        private static readonly List<ZDO> _around = new List<ZDO>();
+        private static int _builtFrame = -1;
+        internal static int BuiltLooks; // (zones gone through since the game began: a pick's log says how many it cost)
+        internal static List<Vector3> BuiltIn(Vector2s zone)
+        {
+            if (_builtFrame != Time.frameCount) { _builtFrame = Time.frameCount; _builtIn.Clear(); }
+            List<Vector3> l;
+            if (_builtIn.TryGetValue(zone, out l)) return l;
+            _builtIn[zone] = l = new List<Vector3>();
+            _around.Clear();
+            BlueprintGround.ObjectsOf(zone, _around);
+            BuiltLooks++;
+            foreach (ZDO z in _around) if (Someones(z)) l.Add(z.GetPosition());
+            return l;
+        }
+
+        // anything of someone's within m of a spot. Asked after the cheap tests of a spot, never of every try
+        internal static bool Settled(Vector3 at, float m)
+        {
+            foreach (Vector2s zone in BlueprintGround.ZonesOf(at, m))
+                foreach (Vector3 p in BuiltIn(zone)) if (Flat(p, at) < m) return true;
+            return false;
+        }
+#endif
 
         internal static bool NearPlace(Vector3 q)
         {

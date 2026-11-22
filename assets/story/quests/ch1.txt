@@ -100,24 +100,27 @@ goal: Розпитай Гейд про жінок-соколів
 mark: torvald 30 Табір Гейд
 call: heid
 on: heid_sent_thistle                     # «Принесу.» у її розмові (вузол ch1_send): закрите раніше вікно — питання лишається, доки етап цей
-done: pickglade ch1_thistle 14 near torvald ring 80 600 in BlackForest edge Meadows 40 wild; plant RavenWatch_item_budyak_heid found.ch1_thistle 10 14   # світ вибирає місце на краю Чорного лісу (Луки за 40 м), нічого там не вирубує, і садить десять кущиків будяка, щойно хтось поруч — кожен на землі під ним (користувач 2026-11-14)
+done: pickglade ch1_thistle 14 near torvald ring 80 600 in BlackForest edge Meadows 40 wild   # світ вибирає місце на краю Чорного лісу (Луки за 40 м), нічого там не вирубує (користувач 2026-11-14); кущики будяка — «stock:» етапів нижче
 
 [stage thistle]
 goal: Збери будяк на узліссі для Гейд
 mark: found.ch1_thistle 30 Узлісся
 scene: thistle_watch                      # перший зірваний будяк, гравець біля кущиків (needs сцени): хтось дивиться (користувач 2026-11-14)
+stock: found.ch1_thistle 14 RavenWatch_item_budyak_heid 10   # десять кущиків на узліссі, кожен на землі під ним (користувач 2026-11-14); зірване й розгублене виростає знову, щойно гравець прийде (StoryStock: без софтлоку), на кожному етапі, де будяк ще треба
 done: world heid_cauldron                 # у таборі над вогнищем з'являється казан (місце torvald, субстан 1.2; тривкий факт, без префікса глави)
 
 [stage thistle_more]
 goal: Збери будяк на узліссі для Гейд
 mark: found.ch1_thistle 30 Узлісся
 wait: item RavenWatch_item_budyak_heid 4   # чотири (користувач 2026-11-14)
+stock: found.ch1_thistle 14 RavenWatch_item_budyak_heid 10
 done: pickglade ch1_stash 6 near torvald ring 150 300 wild; world ch1_torvald_hid; npc torvald hold found.ch1_stash emote sit; lay ArrowWood found.ch1_stash; lay FishRaw found.ch1_stash; lay Raspberry found.ch1_stash; lay Feathers found.ch1_stash   # поки гравець збирав будяк, старий пішов до своєї схованки (світ вибирає місце неподалік табору, нічого не вирубує); купа поцупленого лягає там, щойно хтось поруч (користувач 2026-11-14: «світ вибирає»)
 
 [stage thistle_back]
 goal: Віднеси будяк Гейд
 mark: torvald 30 Табір Гейд
 scene: torvald_gone                       # за 14 м від табору: Торвальда нема, Гейд стривожена
+stock: found.ch1_thistle 14 RavenWatch_item_budyak_heid 10
 
 [stage search]
 goal: Знайди Торвальда
@@ -125,6 +128,7 @@ saga: Торвальд знайшовся у своїй схованці. Від
 mark: found.ch1_stash 90 Десь тут Торвальд
 seek: found.ch1_stash lost               # ворон на плечі — шукач: каркає, «тепліше / холодніше» своїми словами (StorySeek; користувач 2026-11-14: «як при пошуку скарбів, тільки фрази під цей квест інші»); коло на мапі не по центру
 scene: torvald_stash                      # за 7 м від нього: схованка, перша половина сувою
+stock: found.ch1_thistle 14 RavenWatch_item_budyak_heid 10
 done: world ch1_torvald_back; npc torvald free; npc torvald lever limp 4   # старий шкандибає додому, у табір (people/torvald.txt): чотири години гри кульгає (користувач 2026-11-15)
 
 # Сувій від старого (користувач 2026-11-16: «проміжне завдання забрати листа… щоб не прогавити»): сцена кладе його в торбу; не влізло — він біля ніг,
@@ -140,6 +144,7 @@ goal: Віддай будяк Гейд
 mark: torvald 30 Табір Гейд
 call: heid
 on: heid_brew_given                       # «Ось будяк» у її розмові (talk/ch1_heid.txt): чотири йдуть їй
+stock: found.ch1_thistle 14 RavenWatch_item_budyak_heid 10
 
 [stage brew_scene]
 # Гравець має бачити, що діється й чого чекати (користувач 2026-11-15: «варить вона, а шо далі?»): ціль каже чекати старого, Гейд помішує
@@ -386,3 +391,21 @@ call: lit
 on: lit_promised                          # «Прийду.» (talk/ch1_lit.txt: duty)
 start: wclock ch1_end                    # день на роздуми (з того, як він у Залі) — коли настане, тут почнеться глава 2; поки його нема, таймер нічого не запускає
 next: end                                 # кінець глави 1
+
+# Своя мить біля золотого вогню (користувач 2026-11-20): ОСОБИСТИЙ квест — кожен свій. Обряд (rite_end) — подія сервера, і хто його не жив
+# (прийшов на сервер пізніше чи був далеко), за весь акт ніде не чув, що він із Варти. Тож уперше біля золотого вогню — те саме видіння,
+# лише для нього (сцена hall_seen). Кого обряд застав поруч (lived ch1.rite_end), квест не веде. Стартує з етапу після обряду (heid_light): у
+# мить самого обряду вогонь уже золотий, і квест інакше почався б і в того, хто його саме проходить
+[quest ch1_seen]
+name: Вогонь Варти
+chapter: ch1
+who: quest prologue done, !lived ch1.rite_end
+starts: reached ch1 heid_light
+first: seen
+
+[stage seen]
+goal: Підійди до золотого вогню Зали
+mark: hall.vohnyshche 12 Вогонь Варти
+saga: Біля золотого вогню Зали на мить стояла стара Варта. І ти серед них.
+scene: hall_seen
+next: end

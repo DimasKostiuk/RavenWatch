@@ -123,6 +123,7 @@ namespace HuginWhispers
             { "follows", (d, v, w) => d.Follow = RuleOf(w, v) },
             { "statewhile", (d, v, w) => { if (w.Length >= 2) d.StateWhile.Add(new KeyValuePair<string, string>(w[0], After(v, w))); } },
             { "fog", (d, v, w) => { d.Fog = v != "no" && v != "ні" && v != "0"; d.FogWhile = d.Fog && !Yes(v) ? v : ""; } }, // (yes, or the conditions it hangs while)
+            { "weather", (d, v, w) => { float f; if (w.Length >= 2 && TryF(w[1], out f)) { d.Weather = w[0]; d.WeatherReach = f; d.WeatherWhile = After(After(v, w), new[] { w[1] }); } } }, // (<env> <m> <conditions>: StoryAir.Places)
             { "cold", (d, v, w) => d.ColdWhile = v },
             { "mapmark", (d, v, w) => d.MapMark = v },
             { "mappin", (d, v, w) => d.MapPin = v },

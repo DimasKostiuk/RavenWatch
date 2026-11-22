@@ -57,7 +57,11 @@ namespace HuginWhispers
                 StoryQuests.StageDef s = StoryQuests.StageNow(p, q);
                 if (s == null) continue;
                 if (s.Scene.Length > 0) { StoryScenes.SceneDef sc = StoryScenes.Find(s.Scene); if (sc != null && sc.Place.Length > 0 && sc != now) WantAt(q.Id + "." + s.Id, sc, sc.Place, p, false); }
-                if (s.Ways.Count == 0) { if (s.MarkAt.Length > 0) WantAt(q.Id + "." + s.Id + ".m", StoryQuests.Leads(q, s.Next), s.MarkAt, p, false); }
+                if (s.Ways.Count == 0)
+                {
+                    if (s.MarkAt.Length > 0) WantAt(q.Id + "." + s.Id + ".m", StoryQuests.Leads(q, s.Next), s.MarkAt, p, false);
+                    foreach (StoryQuests.StageDef m in s.Marks) WantAt(q.Id + "." + m.Id, StoryQuests.Leads(q, StoryQuests.Whither(s, m.MarkAt)), m.MarkAt, p, false); // (its other places to choose from: each where its own fork leads)
+                }
                 else foreach (StoryQuests.StageDef w in s.Ways) if (w.MarkAt.Length > 0) WantAt(q.Id + "." + s.Id + "." + w.Id, StoryQuests.Leads(q, w.Next), w.MarkAt, p, false);
             }
         }

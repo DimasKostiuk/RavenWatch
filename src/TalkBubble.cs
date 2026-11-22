@@ -44,7 +44,7 @@ namespace HuginWhispers
 
         internal static void PlayAt(PerchView v, List<Line> lines, bool mine)
         {
-            if (v == null || lines == null || lines.Count == 0) return;
+            if (v == null || lines == null || lines.Count == 0 || RavenSpeech.Hushed()) return; // (a scene plays: no talk of the ravens over it)
             TalkBubble old;
             if (ShownPerch.TryGetValue(v, out old) && old != null) Destroy(old.gameObject);
             GameObject go = new GameObject("RavenWatch_PerchTalk", typeof(RectTransform));
@@ -62,7 +62,7 @@ namespace HuginWhispers
 
         internal static void PlayCrowd(List<PerchView> perches, List<Line> lines, bool mine)
         {
-            if (perches == null || perches.Count == 0 || lines == null || lines.Count == 0) return;
+            if (perches == null || perches.Count == 0 || lines == null || lines.Count == 0 || RavenSpeech.Hushed()) return;
             foreach (PerchView v in perches) { TalkBubble old; if (v != null && ShownPerch.TryGetValue(v, out old) && old != null) Destroy(old.gameObject); }
             GameObject go = new GameObject("RavenWatch_PerchTalk", typeof(RectTransform));
             go.transform.SetParent(RavenSpeech.Host.transform, false);
@@ -104,7 +104,7 @@ namespace HuginWhispers
 
         internal static void Play(Player owner, List<Line> lines, bool local)
         {
-            if (owner == null || lines == null || lines.Count == 0) return;
+            if (owner == null || lines == null || lines.Count == 0 || RavenSpeech.Hushed()) return;
             TalkBubble old;
             if (Shown.TryGetValue(owner, out old) && old != null) Destroy(old.gameObject);
             GameObject go = new GameObject("RavenWatch_Talk", typeof(RectTransform));

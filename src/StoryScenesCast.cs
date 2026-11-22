@@ -15,8 +15,21 @@ namespace HuginWhispers
         private static readonly System.Reflection.FieldInfo Chest = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_chestItemInstances"), Legs = HarmonyLib.AccessTools.Field(typeof(VisEquipment), "m_legItemInstances");
         private VisEquipment _vis; private float _till;
         // Held: made beforehand for a scene and not to be seen yet («npc <who> ready»: making three people in the frame a falcon turns into them froze the
-        // picture — the user 2026-11-14) — nothing of it is drawn, clothes the game puts on meanwhile too, till Release shows it dressed
+        // picture — the user 2026-11-14) — nothing of it is drawn, clothes the game puts on meanwhile too, till Release shows it dressed. On EVERY game
+        // (the review 2026-11-18: the veil was the director's alone — a player beside him saw the sisters standing there before the falcon turned):
+        // its ZDO says so (KHeld, by its owner — the director who made it), each game holds it unseen while it does (Keep) and shows it when it no longer does
         internal bool Held;
+        internal static readonly int KHeld = "RavenWatch_veilHeld".GetStableHashCode();
+        private NpcActor _a;
+        internal static void Hold(NpcActor a, bool on) { ZDO z = a != null ? a.Zdo : null; if (z != null && z.IsOwner()) z.Set(KHeld, on); }
+        // every game, each of its turns (NpcActor.Everywhere): one its owner holds unseen — held here too (its ZDO read now and then, as NpcFade's)
+        internal static void Keep(NpcActor a)
+        {
+            if (a == null || Time.frameCount % 15 != 0) return;
+            ZDO z = a.Zdo;
+            if (z == null || !z.GetBool(KHeld, false) || a.GetComponent<NpcVeil>() != null) return;
+            a.gameObject.AddComponent<NpcVeil>().Held = true;
+        }
         private readonly HashSet<Renderer> _off = new HashSet<Renderer>(); private float _look;
         internal void Release()
         {
@@ -29,6 +42,7 @@ namespace HuginWhispers
         private void Awake()
         {
             _vis = GetComponent<VisEquipment>();
+            _a = GetComponent<NpcActor>();
             _till = Time.time + VeilMost;
             if (_vis == null || _vis.m_bodyModel == null) { Destroy(this); return; }
             _vis.m_bodyModel.enabled = false;
@@ -39,6 +53,8 @@ namespace HuginWhispers
             {
                 if (Time.time < _look) return;
                 _look = Time.time + 0.15f;
+                ZDO z = _a != null ? _a.Zdo : null;
+                if (z != null && !z.IsOwner() && !z.GetBool(KHeld, false)) { Release(); return; } // (its owner shows it now: here too)
                 foreach (Renderer r in GetComponentsInChildren<Renderer>(true)) if (r != null && r.enabled) { r.enabled = false; _off.Add(r); } // heavy: seven times a second, only while a person made beforehand waits unseen (a few seconds of a scene)
                 return;
             }
@@ -89,7 +105,7 @@ namespace HuginWhispers
                 if (z == null || Holder(a) != 0L) return;
                 // one made for a scene whose lock ran out: its scene ended without it (its zone let go before the scene's end — a jump, a portal: FreeCast found no
                 // body to fade). It has no day of its own to be let go into: it fades away, as its scene would have had it (the review 2026-11-14)
-                if (_now == null && z.GetString(KScene, "").Length > 0 && a.Tag == MadeTag) { /* no scene playing here: one still playing takes its body back when it loads again — Actor */ Npcs.Log(a.Id + ": made for a scene that is over — fades away"); Lock(a, false); NpcFade.Out(a, Fades.Person, "-"); return; }
+                if ((_now == null || LockOf(a) != Me || !Spawned(_now, a.Id)) && z.GetString(KScene, "").Length > 0 && a.Tag == MadeTag) { /* its own scene still playing here takes its body back when it loads again — Actor; another scene playing here is not its own (the review 2026-11-18: it was let go into the world) */ Npcs.Log(a.Id + ": made for a scene that is over — fades away"); Lock(a, false); NpcFade.Out(a, Fades.Person, "-"); return; }
                 if (z.GetString(KScene, "").Length > 0) { Npcs.Log(a.Id + ": its scene's lock ran out, nobody renews it — let go"); LetGo(a, LockOf(a)); return; } // (its player left, the game closed, its owner changed: nobody else would)
                 StoryActions.LeadWatch(a);
             };
@@ -202,6 +218,7 @@ namespace HuginWhispers
                     _ledWhenTaken[a] = StoryActions.LeadNow(a); // (the «follow» this scene cuts across: its end lets that one go, not one given meanwhile)
                 }
                 _cast[who] = a;
+                BusyLater(who, a); // (its work waits a moment after any order: a clip told now is not on the body yet)
                 verb(p, st, w, a);
             };
         }
@@ -209,7 +226,7 @@ namespace HuginWhispers
         private static StepKind NpcKind()
         {
             PersonVerb stay = (p, st, w, a) => a.Order("stay", NpcMind.Layer.Scene);
-            return new StepKind(StepSeen.World) { Min = 2, VerbAt = 2, Usage = "npc <хто> take|go|face|say|emote|sit|stay|free|spawn|fade|prop|clip|mark …", Verbs = new Dictionary<string, StepVerb>
+            return new StepKind(StepSeen.World) { Min = 2, VerbAt = 2, Usage = "npc <хто> take|go|face|say|emote|sit|stay|free|spawn|fade|prop|clip|busy|mark …", Verbs = new Dictionary<string, StepVerb>
             {
                 { "take", new StepVerb(StepSeen.World) { Begin = OnPerson(stay) } },
                 { "stay", new StepVerb(StepSeen.World) { Begin = OnPerson(stay) } },
@@ -236,6 +253,7 @@ namespace HuginWhispers
                         NpcVeil veil = a != null ? a.GetComponent<NpcVeil>() : null;
                         if (veil == null) return;
                         veil.Held = true;
+                        NpcVeil.Hold(a, true); // (unseen on every game, not on the director's alone)
                         _cast.Remove(w[1]); _ready[w[1]] = a; // (not in the scene yet: no step speaks to it, no shot finds it, till a falcon turns into it)
                     } } },
                 { "prop", new StepVerb(StepSeen.World) { Min = 1, PlaceAfter = "from", PlaceOf = w => StoryProps.PlaceOf(w, 3), // (the piece after «from»: the word storycheck reads here; the game asks PlaceOf — where a thing is thrown as well)
@@ -312,6 +330,16 @@ namespace HuginWhispers
                         int on = Array.IndexOf(w, "on");
                         Character other = on > 3 && w.Length > on + 1 && w[on + 1].StartsWith("npc.") ? CharOf(w[on + 1].Substring(4), p) : on > 3 && w.Length > on + 1 && w[on + 1] == "player" ? p : null;
                         if (on > 3 && other == null) Note("npc clip … on: нема «" + (w.Length > on + 1 ? w[on + 1] : "") + "» — кліп грає без прив'язки до другого тіла");
+                        // (still on the scene's way — its «arrive» cut off at its time, the spot not reached: a walk lets a clip that holds the walk go at once,
+                        //  NpcBody.ClipFirst, and the clip never played — the user 2026-11-19, torv_back: Heid's look-over and her pour, both «NO clip». It stops
+                        //  where it is and plays it there; a clip a walk may carry, a nod, plays on over the walk)
+                        PAnimClip asked = BodyClips.Find(w[3]);
+                        NpcMind.Plan way = a.Owned && a.Mind != null ? a.Mind.Of(NpcMind.Layer.Scene) : null; // (its plan is known where it is run, as «arrive» asks it)
+                        if (asked != null && asked.HoldsWalk && way != null && way.Kind == NpcMind.Task.Go && Utils.DistanceXZ(a.transform.position, way.To) > way.Near + 0.1f) // flat: a step on one floor
+                        {
+                            a.Order("stay", NpcMind.Layer.Scene);
+                            Note("npc clip: «" + w[1] + "» ще йшов (" + Utils.DistanceXZ(a.transform.position, way.To).ToString("0.0") + " м до точки) — став, де є, і грає «" + w[3] + "»"); // flat: the log's number
+                        }
                         a.Order("clip " + w[3] + (on < 0 && w.Length > 4 ? " " + w[4] : ""), NpcMind.Layer.Scene);
                         // (after the clip's own order — letting the last clip go takes its mate off —, written on the person where it is run: every game near sets its own picture by it)
                         ZNetView onNv = other != null ? other.GetComponent<ZNetView>() : null;
@@ -319,6 +347,16 @@ namespace HuginWhispers
                         if (mate.Length > 0 || (a.Zdo != null && a.Zdo.GetString(NpcBody.KMate, "").Length > 0)) a.Act("mate " + (mate.Length > 0 ? mate + " " + F(on > 3 && w.Length > on + 2 ? F(w[on + 2], 0.8f) : 0.8f) : ""));
                     }),
                     Done = (p, st) => st.W[3] == "none" ? null : ClipOn(CharOf(st.W[1], p), st.W[3]) } },
+                // npc <who> busy <clip>|none: its work in this scene — whenever nothing of the scene plays on its body and it does not walk, the clip
+                // begins again by itself (BusyTick; the user 2026-11-21: «щоб усі постійно були у русі»). «none» before a talk: it stands and listens
+                { "busy", new StepVerb(StepSeen.World) { Min = 1, Usage = "npc <хто> busy <кліп>|none   (її справа в сцені: щойно на тілі нічого не грає й вона не йде, кліп починається знову сам)",
+                    Check = st => st.W[3] != "none" && BodyClips.Find(st.W[3]) == null ? "npc <хто> busy: нема кліпу «" + st.W[3] + "»" : null,
+                    Begin = OnPerson((p, st, w, a) =>
+                    {
+                        _busyAsked.Remove(w[1]); _busyMiss.Remove(w[1]);
+                        if (w[3] != "none") { _busy[w[1]] = w[3]; return; }
+                        if (_busy.Remove(w[1])) a.Order("clip none", NpcMind.Layer.Scene); // (its work let go now, softly: it does not finish the round first)
+                    }) } },
                 { "tool", new StepVerb(StepSeen.World) { Min = 1, Usage = "npc <хто> tool hand|belt|auto [now]   (своя річ людини — в руку, на пояс чи як сама хоче: NpcTool; now — без кліпу, одразу)",
                     Check = st => st.W[3] != "hand" && st.W[3] != "belt" && st.W[3] != "auto" ? "npc <хто> tool hand|belt|auto [now]" : null,
                     Begin = OnPerson((p, st, w, a) => a.Act("tool " + w[3] + (Array.IndexOf(w, "now") > 3 ? " now" : ""))) } }, // (the user 2026-11-15: Lit shows his hammer — «а це Лот», a close shot of it: «camera on npc.lit.thing»)
@@ -337,11 +375,16 @@ namespace HuginWhispers
                         NpcFade.Out(a, s, w.Length > 4 ? w[4] : "-");
                         _waitFor = Time.time + s;
                     }) } },
+                // npc <who> leave: a person of the story goes out of the world the first moment nobody sees it, the scene's shot as the eyes
+                // (StoryPeople.LeaveUnseen; the user 2026-11-20, heid_tells: Eyvind stood in the shot «лава порожня»). Send it off first («go … nowait»)
+                { "leave", new StepVerb(StepSeen.World) { Begin = OnPerson((p, st, w, a) => a.Act("sceneleave")) } }, // (an act: on the game that runs it — its LeaveTick is there)
                 { "sit", new StepVerb(StepSeen.World) { Min = 1, PlaceAt = 3,
                     Begin = OnPerson((p, st, w, a) =>
                     {
                         Vector3 at;
-                        if (!Target(p, w[3], a.transform.position, out at)) { Note("npc sit: нема місця «" + w[3] + "» — крок пропущено"); return; }
+                        // (the seat nearest the THING itself, as the story's standing word finds it — StoryHold —, not nearest the spot one would walk up to it at: 1.2 m off the bench
+                        //  a chair by the gate was nearer, and Eyvind sat on it — the user 2026-11-21, the Hall's last scene)
+                        if (w[3] == "player" ? !Target(p, w[3], a.transform.position, out at) : !StoryWhere.Find(w[3], out at)) { Note("npc sit: нема місця «" + w[3] + "» — крок пропущено"); return; }
                         a.Order("sit " + V(at), NpcMind.Layer.Scene);
                     }) } },
             } };
@@ -355,14 +398,23 @@ namespace HuginWhispers
             _walkSaid = null;
             int bi = Array.IndexOf(w, "before");
             Vector3 mid = Vector3.zero, outOf = Vector3.zero;
-            bool square = bi > 0 && w.Length > bi + 1 && StoryWhere.Before(w[3], out mid, out outOf);
-            if (square) to = mid + outOf * F(w[bi + 1], 0.6f); // (asked once: it looks through all the thing's parts)
+            bool square = bi > 0 && w.Length > bi + 1 && StoryWhere.Before(w[3], a.transform.position, out mid, out outOf);
+            float face;
+            if (square) to = mid + outOf * ((StoryWhere.FaceEdge(w[3], mid, -outOf, out face) ? face : 0f) + F(w[bi + 1], 0.6f)); // (asked once: it looks through all the thing's parts) (m from its face, as the player's: StoryWhere.FaceEdge)
             else if (!Target(p, w[3], a.transform.position, out to)) { Note("npc go: нема місця «" + w[3] + "» — крок пропущено"); return; }
+            if (Array.IndexOf(w, "exact") > 3) square = true; // («exact»: to the very point of the word, no slack — a spot of the place's blueprint, «spot.…»: a clip that touches follows)
             int ni = Array.IndexOf(w, "near");
             float near = square ? BeforeNear : ni >= 0 && w.Length > ni + 1 ? F(w[ni + 1], 1.6f) : 1.6f;
             bool run = Array.IndexOf(w, "walk") < 0 && (Array.IndexOf(w, "run") > 0 || Utils.DistanceXZ(a.transform.position, to) > RunFrom); // (far off: it hurries — the user 2026-11-01; «walk»: never — one who has nowhere to hurry, Ketil 2026-11-14)
+            // Under the black a walk the scene waits for is not walked: nobody sees it, and the picture stays black till it ends (the user
+            // 2026-11-20, the Hall's last scene: 14 s of black — Lit took 7.6 s over his last 0.9 m to the wall). The person is put on the spot
+            // (its mind's «tp»: the floor there, by its owner's game — another player near sees a puff), and the same «go» finds it there. A walk
+            // with «nowait» is walked as ever: begun in the black to be seen as the picture comes back
+            bool waited = Array.IndexOf(w, "nowait") < 0;
+            float off = (a.transform.position - to).magnitude; // (in the round: a spot on another floor is not «there»)
+            if (waited && _line == _main && StoryScreen.Dark && off > BeforeNear) /* (a part's walk is walked whatever the screen: the black of the scene's end must not jump it) */ { a.Order("tp " + V(to), NpcMind.Layer.Scene); Story.Log("npc go: «" + a.Id + "» put on its spot under the black, " + off.ToString("0.0") + " m at once"); }
             a.Order("go " + V(to) + (run ? " run" : "") + " near " + F(near) + (square ? " exact" : ""), NpcMind.Layer.Scene); // (it stops that far off: its own Near; exact: no slack, a clip follows)
-            if (Array.IndexOf(w, "nowait") > 3) return; // (the scene goes on as it walks — it talks, the camera turns away; «npc <who> arrive» waits for it later)
+            if (!waited) return; // (the scene goes on as it walks — it talks, the camera turns away; «npc <who> arrive» waits for it later)
             _walker = a; _walkTo = to; _walkNear = square ? near : NpcMind.Reach(near);
             _walkFrom = a.transform.position; _walkBegan = Time.time; _walkRanAny = false; _walkWalkFrom = -1f;
             float way = Utils.DistanceXZ(a.transform.position, to);
@@ -432,6 +484,7 @@ namespace HuginWhispers
                     waiting.transform.position = at; waiting.transform.rotation = turn;
                     Rigidbody rb = waiting.GetComponent<Rigidbody>();
                     if (rb != null) { rb.position = at; rb.rotation = turn; rb.velocity = Vector3.zero; }
+                    NpcVeil.Hold(waiting, false); // (every game shows it: its veil reads this)
                     NpcVeil veil = waiting.GetComponent<NpcVeil>();
                     if (veil != null) veil.Release();
                     _cast[who] = waiting;
@@ -470,7 +523,10 @@ namespace HuginWhispers
             if (a != null) LetGo(a, _ledWhenTaken.TryGetValue(a, out led) ? led : 0L);
             if (a != null) _ledWhenTaken.Remove(a);
             _cast.Remove(who);
+            _busy.Remove(who); _busyAsked.Remove(who); _busyMiss.Remove(who);
             if (_walker == a) _walker = null;
+            if (_main.Walker == a) _main.Walker = null; // (a walk another line waits for: over with the person — else its «stay» would take the one let go back)
+            foreach (Part x in _parts) if (x.Walker == a) x.Walker = null;
         }
 
         // all a scene holds a person by, off: «free» takes its clip too
@@ -491,7 +547,7 @@ namespace HuginWhispers
             foreach (KeyValuePair<string, NpcActor> kv in new List<KeyValuePair<string, NpcActor>>(_cast)) Free(kv.Key, kv.Value);
             foreach (NpcActor a in _made) if (a != null) NpcFade.Out(a, Fades.Person, "-"); // (made for the scene: fades away with it — smooth by default; one faded already is gone already)
             _made.Clear(); _ready.Clear();
-            _cast.Clear(); _ledWhenTaken.Clear(); _walker = null;
+            _cast.Clear(); _ledWhenTaken.Clear(); _walker = null; _busy.Clear(); _busyAsked.Clear(); _busyMiss.Clear();
         }
     }
 }

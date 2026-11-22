@@ -63,6 +63,8 @@ if raven hugin: say hugin Це не наш.
 if raven munin: say munin Чужий. І старий.
 bars on
 sub …ти ж обіця{в|ла}.                       # (ворон кружляє: над птахом у польоті не прочитати)
+wait 0.6
+player say Що я обіця{в|ла}?             # (користувач 2026-11-19: не мовчати, коли до тебе звертаються; ворон не відповідає — говорить лише уламками)
 bars off
 wait 0.4
 bird leave me.call                      # у бік точки; мовчки: у польоті рядка не прочитати, кличе каркання
@@ -150,6 +152,8 @@ mix world 0.35 4                        # він тоне в щиті — і с�
 player look player.thing                # очі на щит
 player clip shield_kneel.lifts          # піднімає, бере у дві руки
 player clip shield_kneel.looks nowait   # дивиться на нього
+wait 1.5
+player say …Мій.                        # спогад приходить сам (користувач 2026-11-19): тихо, у тому ж кадрі збоку; «Що, впізнав?» ворона — уже відповідь на це
 if ownraven none: sound sfx_raven_flap prologue_munin.ogorozha vol 0.6 delay 5   # крила за спиною: чути раніше, ніж видно
 if ownraven none: bird come 30 10 at prologue_munin.ogorozha side 0.5 as munin   # тим часом за кадром сідає на праву частину каменя (крок чекає посадки, ~6.5 с)
 if ownraven any: wait 5                 # (свій уже сидить на камені)
@@ -209,8 +213,8 @@ bars on
 camera orbit player 3 0.6 40 8 blend 0   # повільний обліт, поки рука на стовпі
 fade in 0.8                             # уже стоїть біля знака
 player clip sign_touch                  # рука на стовп, тримає, опускає
-camera on player full high cut          # згори: малий біля знака. Нічого
-sub …
+camera on player full high cut          # згори: малий біля знака. Нічого (крупно тут не можна: стрілка без колайдера заступила б обличчя)
+player say …Показує не туди.            # упізнав знак із загадки ворона; «Ти просто дивився не туди» — відповідь на це (користувач 2026-11-19)
 player clip shrug_small nowait          # стримує жест гри на третину
 player emote shrug                      # нічого. Знизує плечима
 wait 1.6
@@ -274,6 +278,8 @@ bird over                               # чекає, поки він справ
 wait 1
 bars on
 sub …хата. Він чекав.                   # (ворон кружляє: над птахом у польоті не прочитати)
+wait 0.6
+player say Хто чекав?                   # ворон знову не відповідає: веде до хати (користувач 2026-11-19)
 bars off
 wait 3                                  # ще кружляє
 bird leave prologue_house               # тоді в бік хати
@@ -322,7 +328,9 @@ camera eyes cut                         # і знову очима: він та�
 wait 2
 camera shoulder npc.echo player cut     # через його плече — на нас
 npc echo say …ти.
-wait 1.5
+wait 1
+player say Хто ти?                      # у тому ж кадрі: через його плече видно наше обличчя (користувач 2026-11-19); його «…з каменя…» — перша відповідь, яку герой чує
+wait 0.8
 camera on npc.echo close cut push 0.2 5 # він крупно, повільний наїзд
 npc echo say …з каменя… ім'я… не моє…
 wait 2                                  # тиша — подія
@@ -413,12 +421,17 @@ player arrive                           # дійшов
 camera shot zala.gate_shut_1 cut
 player look hall.dveri_holovni          # лише тепер угору, на верх брами
 wait 1.5
+camera on player close low cut push 0.2 3   # його обличчя знизу, брама над ним: «зачинено» каже він сам, не ворон (користувач 2026-11-19)
+wait 0.5
+player say …Зачинено.
+wait 0.6
+camera shot zala.gate_shut_1 cut        # знову його кадр згори: малий перед брамою, ворон кружляє над ним
 do world heid_called
 do npc heid hold torvald.lizhko by torvald.stovp then torvald.kamin by torvald.stovp clip heid_search.loop from heid_search.bends out heid_search.rises   # з'являється в таборі: біля ліжка, нахилена, щось шукає
 bird come 15 6 land 3 nowait            # ворон летить сюди і не сідає (сісти біля брами нема куди: висів, зникав)
 bird circle 3 3.5 3                     # кружляє над ним; крок чекає 3 с
 player look bird
-bird say …зачинено. У неї ключ.
+sub …у неї ключ.                        # (ворон кружляє: над птахом у польоті не прочитати — як у raven_call)
 wait 1
 bird leave torvald                      # до могил вартових, де табір Гейд
 camera shot zala.gate_shut_2 cut
@@ -433,7 +446,7 @@ bars off
 # гравець питає сам у її розмові (ворон сказав йому біля брами: «У неї ключ») — тоді вона неохоче погоджується відчинити.
 # Ворон у гравця вже є (особистий пролог або купив обох): Гейд лише бачить його.
 [scene heid_meet]
-test: world heid_called; npc heid prop carry   # (перевірка студії: її створює сервер за цим словом; кошик знову на руці, як у гравця на цьому етапі — у світі автора після прологу він лежав, і «if npcprop» пропускав усе)
+test: world heid_called; npc heid at torvald.lizhko; npc heid prop carry   # (перевірка студії: біля ліжка в таборі, як ставить gate_shut; її створює сервер за цим словом; кошик знову на руці, як у гравця на цьому етапі — у світі автора після прологу він лежав, і «if npcprop» пропускав усе)
 check: torvald 4                           # (перевірка студії: за 4 м від табору — на відстані розмови; так користувач бачив і схвалив сцену 2026-11-11)
 needs: calm
 place: torvald
@@ -485,6 +498,7 @@ ear player 1                            # знову чуємо з місця г
 camera shoulder player npc.heid cut     # через плече гравця
 npc heid say Ти ж не пам'ятаєш… Тобто. Звідки б.
 camera on player medium cut             # гравець із вороном на плечі
+if !raven hugin: player say Чого не пам'ятаю?   # (без Гугіна обмовку ловить сам; вона не відповідає — одразу «Я Гейд»: користувач 2026-11-19)
 if raven hugin: say hugin Обмовилась. І зробила вигляд, що ні.
 if raven munin: say munin …Знайоме місце. А вона — ні. Чи да?
 wait 1.2
@@ -493,6 +507,10 @@ camera shoulder player npc.heid cut push 0.3 6
 npc heid say Я Гейд. Доглядаю ці камені. У тебе ворон — свій. Отже, ти з Варти. Як і я.
 wait 1.2
 camera two npc.heid player cut
+player say З Варти?..                     # (користувач 2026-11-20: гачок прологу — «я явно вартовий, але більше не пам'ятаю»)
+npc heid say Не пам'ятаєш. Тут ніхто не пам'ятає.
+if raven hugin: say hugin Вона сказала це так, ніби ми мали знати.
+wait 0.8
 npc heid say Якщо прийш{ов|ла} щось спитати — питай.   # (ні про Залу, ні про ключ: сама вона туди не кличе; про ключ питає гравець — talk/heid.txt, місце key_ask)
 camera off blend 1.5
 bars off
@@ -500,31 +518,90 @@ bars off
 do npc heid free                        # (більше не чекає там; останнім кроком: «do» робить сцену зіграною, удар посеред неї не має з'їсти знайомство)
 # ---------------------------------------------------------------- основний пролог: Зала
 # Біля брами: ключ «знайшла» (насправді дав Ейрік), сама спить на каменях, бо в Залі «голоси».
+# Під смугами, з кадрами (користувач 2026-11-19). Суть: Зала відчиняється — і вона одразу бреше,
+# звідки ключ. Кадри: вона на весь зріст (гравець ще може бути за 9 м: «two» не зняв би) → збоку ключ у замку → через його плече
+# стулки розходяться → через її плече на нього (питання) → вона крупно (брехня) → через його плече → обоє («Заходь»).
 [scene heid_opens]
 test: gate hall shut; wvar scene.heid_opens 0; world heid_called; npc heid at hall.dveri_holovni   # (перевірка студії: гравець телепортується, а табір за межами того, що гра симулює: вона б завмерла там)
 check: hall.dveri_holovni 6
 needs: calm
 place: zala
 npc heid take
-npc heid face player                    # чекала біля брами (етап with_heid: «hold … ahead»): обертається до того, хто підійшов
+bars on
+camera on npc.heid full blend 1.5       # чекала біля брами (етап with_heid: «hold … ahead»)
+player go hall.dveri_holovni 5 soft nowait   # на відстань розмови, зі свого боку брами (вона стане за 2.6 м від стулок: між ними ~2.4 м); ближчий за 5 м — відступає лицем до брами (з «before» розвертався б спиною: StoryWalk.Go)
+npc heid face player                    # обертається до того, хто підійшов
 wait 0.8
 npc heid go hall.dveri_holovni before 0.55   # навпроти середини брами, із зовнішнього боку: руки дістають дерева
 npc heid face hall.dveri_holovni
+player look npc.heid
+camera on npc.heid medium 60 cut        # збоку: долоня на дереві, ключ у замку
 npc heid clip key_turn                  # ліва долоня на дерево, ключ у замку — два оберти, поштовх (наш кліп)
 npc heid mark unlocked
 do gate hall open                       # відімкнено — для всього світу
+camera behind look hall.dveri_holovni cut   # через його плече: вона відходить, стулки розходяться, за ними темна Зала
 npc heid go hall.dveri_holovni before 2.6   # відходить від стулок: відчиняючись, вони штовхали її (стрибок тіла, 2026-11-04)
 npc heid face player
 until gate hall open | 3                 # ключ світу йде через сервер: брама відімкнена не одразу (інакше відчинялась на мить і зачинялась, 2026-11-04)
 door hall.dveri_holovni open
-wait 1
+wait 1.5                                # стулки розходяться: дивимось, як відчиняється
+camera shoulder npc.heid player cut     # через її плече — на нього
+player look npc.heid
+player say Звідки він у тебе?           # її «Ключ? Знайшла» — відповідь на це; про ночівлю пояснює сама, без питання: бреше більше, ніж питали (користувач 2026-11-19)
+wait 0.4
+camera on npc.heid close cut push 0.2 3 # крупно: бреше
 npc heid say Ключ? Знайшла. Тут усе чиєсь і нічиє.
 wait 0.8
+camera shoulder player npc.heid cut
 npc heid say Сама сплю на каменях. У Залі… голоси. Дивні.
 wait 0.8
+camera two npc.heid player cut          # обоє: пускає
 npc heid say Заходь. Подивись, що тут лишилось.
 wait 1
+camera off blend 1.5
+bars off
 do npc heid hold hall.vohnyshche stand  # далі вона в Залі, біля вогнища, поки сюжет її не відпустить
+
+# Перший погляд на Залу (користувач 2026-11-19): щойно переступив поріг (етап enter квесту prologue_main). Суть: Зала, яку ти колись стеріг,
+# тебе не впізнає — холод, туман Хели, тиша; а тіло пам'ятає тепло («За Варти він горів золотим» Гейд у blue_fire — те саме з її вуст).
+# Кадри: малий у брамі великої Зали → прийом «обличчя → очима»: огляд його очима (трон, різьба, галерея, де світиться лист, вона біля
+# холодного вогнища) → обличчя: «…Тут було тепло.» → з воронами — до пояса, їхні слова. Гейд іде до вогнища далі (етап після брами).
+[scene hall_first]
+test: gate hall open; npc heid at hall.vohnyshche
+check: hall.dveri_holovni 2 in          # (перевірка студії: щойно за порогом, як гравець заходить; «vohnyshche 7» ставило б з будь-якого боку вогнища)
+needs: inside zala 1, calm              # на 1 м ширше за підлогу: поріг брами теж
+place: zala
+npc heid take
+npc heid go hall.vohnyshche near 1.2 nowait   # ішла до вогнища — і йде далі (після сцени її тримає та сама команда квесту)
+player stop 0.6
+bars on
+mix world 0.6 2                         # Зала глуха: світ надворі лишився за брамою
+camera on player wide front blend 1.5   # перший кадр ширший: малий у брамі великої Зали
+player look hall.vohnyshche
+wait 2
+camera on player close 15 cut push 0.2 2.2   # прийом: обличчя крупно…
+player look hall.tron 2.5
+wait 2.2                                # (голова вже повертається — тоді склейка на його очі)
+camera eyes cut live 1                  # …і його очима: повільний огляд
+wait 1.6
+player look hall.rizba 2.5              # різьба на дальній стіні
+wait 2.8
+player look hall.lyst 2.5               # галерея: там щось слабко світиться
+wait 2.8
+player look npc.heid 2                  # і вона, біля холодного вогнища
+wait 2.4
+camera on player close cut push 0.3 3   # обличчя: спогад приходить сам
+wait 0.8
+player say …Тут було тепло.
+wait 1
+if raven any: camera on player medium front cut   # ворони на плечі
+if raven munin: say munin Я тут бував. Здається. Чи ні.
+if raven hugin: say hugin Пил, холод і жодної миші. Навіть миші звідси пішли.
+wait 0.8
+mix reset 2
+camera off blend 1.5
+bars off
+player look forward                     # катсцена скінчилась: голова знову його
 
 # Біля холодного вогнища: у Залі дуже холодно (тут Хель). Гейд певна, що воно не займеться.
 [scene cold_hall]
@@ -537,7 +614,9 @@ npc heid face player
 npc heid clip arms_cross.folds          # схрещує руки — холодно; лишаються складені (hold у етапах cold, fire_seen), поки не спитаєш про лист
 player clip rub_hands nowait            # тре руки (долоні разом)
 npc heid say Холодно, правда? Тут завжди так.
-wait 0.8
+wait 0.5
+player say …До кісток.                  # відповідь на її питання, поки тре руки (користувач 2026-11-19; сцена без камери)
+wait 0.6
 npc heid say Дрова в торбі є? Спробуй. Хоча… не старайся. Не загориться.
 wait 1
 
@@ -557,13 +636,18 @@ wait 0.6
 npc heid say …Воно горить.
 wait 1
 npc heid face player
+camera shoulder player npc.heid cut     # через плече гравця — на неї (користувач 2026-11-19: кадр на тому, хто каже, — і не завжди на гравцеві)
 npc heid say Воно не мало загорітись. Я пробувала. Роками.
 wait 0.8
+camera on player medium cut             # він із воронами на плечі: їхні слова чи його питання
 if raven munin: say munin Синє. Вогонь не буває синім.
 if raven hugin: say hugin Синій вогонь. І ти віриш, що це добрий знак?
+if !raven any: player say Чому він синій?   # (без воронів: що синій вогонь дивний — каже сам; її «золотим» тоді відповідь)
 wait 0.8
+camera on npc.heid close cut push 0.2 3 # крупно: «я пам'ятаю» — обмовка тієї, що прокинулась «пару років тому»
 npc heid say За Варти він горів золотим. Я пам'ятаю.
 wait 0.8
+camera two npc.heid player cut          # обоє: спроваджує
 npc heid say Не гріє. Нічого. Оглянься тут, а я приберу трохи.
 camera off blend 1.5
 bars off
@@ -587,7 +671,7 @@ if raven hugin: say hugin Креслення. Дерево, пір'я, ріг. �
 wait 0.8
 if raven munin: say munin Спитай ту жінку. Вона тут довше.
 if raven hugin: say hugin Сам{|а} ти це не прочитаєш. Іди до тієї, що «просто прибирає».
-if !raven any: player say Треба спитати Гейд.   # (без воронів: куди далі — каже сам)
+if !raven any: player say …Не розберу. Треба спитати Гейд.   # (без воронів: куди далі й чому — каже сам; прочитати не може, як і різьбу: користувач 2026-11-19)
 wait 1
 fade out 0.6                            # тримає лист у руках, поки темніє: на стіл не кладе (користувач 2026-11-07)
 do world letter_read                    # листа на столі більше нема для всіх на сервері (locations.list: hidewhile) — ще до того, як руки його віддадуть
@@ -612,5 +696,6 @@ heart flare 2.5
 wait 3
 if raven munin: say munin Не тримається. Чужий вогонь у ньому не живе.
 if raven hugin: say hugin Блимнуло й згасло. Йому бракує справжньої іскри.
+if !raven any: player say Спалахнуло — і згасло. Бракує йому справжнього вогню.   # (без воронів: гачок до іскри з Зали каже сам; кадр лишається на ліхтарі — тут не на ньому: користувач 2026-11-19)
 wait 1
 camera off blend 2

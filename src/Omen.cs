@@ -60,6 +60,7 @@ namespace HuginWhispers
         {
             if (!Enabled || p == null || p != Player.m_localPlayer || p.IsDead()) return false;
             ItemDrop.ItemData h = Trust.Worn(false);
+            if (RavenSpeech.Hushed()) return false; // (a scene plays: the morning's word waits for its end — said into the quiet it would be lost, the morning used up)
             return h != null && Trust.Active(h) && !Trust.Away(h) && !Trust.Stranger(h, p) && Trust.SettledLevel(h) >= UnlockLevel && Shoulder.Arrived(p, false);
         }
 

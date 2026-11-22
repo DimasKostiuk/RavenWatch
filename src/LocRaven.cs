@@ -25,7 +25,7 @@ namespace HuginWhispers
     // A seat it never gets to (StoryBird's Stuck): once more from the middle, then a puff and it sits there — and that seat is not chosen again
     // on this game (Bad, till its place's state changes); a point in the air it never gets to: on to its next leg. Lent to a scene and back:
     // StoryBird.ForScene / ForPlace.
-    // One mind: the game that owns the home piece's ZDO decides and writes the word there — KState «seat x y z yaw [hub]» · «head p <player
+    // One mind: the game that owns the home piece's ZDO (a scene that takes it out or gives it back takes the mind too: MarkOut, Back) decides and writes the word there — KState «seat x y z yaw [hub]» · «head p <player
     // id>» · «head n <person>» · «in» · «out <world time>», KSeq — and every game within DrawFar m of the home piece draws its own picture
     // from it (StoryBird), a new picture sitting where the word says (it was there before you came). Nobody near: nothing runs or is drawn.
     // Out on the story's errand (a scene's «bird come … from <place>», the letter: StoryScenesBird): where it is drawn, the scene takes its
@@ -45,6 +45,10 @@ namespace HuginWhispers
         internal static float CawMin = 40f, CawMax = 130f, HeadUp = 0.17f, SeatRoom = 0.7f, SeatLevel = 25f;
         internal static int Level = 4; // its size: as a raven of this trust level on a shoulder
         internal static bool Trace;    // (the author: its words and flights in the log — raven story placeraven; where it is: raven story npcravens)
+        // (the author's run for the flight's numbers — raven story placeraven hurry: it sits only a few seconds between its flights, so the log
+        // fills with «Flight to a seat …» lines in minutes; this game's mind only, nothing kept)
+        internal static bool Hurry;
+        internal static float HurryMin = 3f, HurryMax = 6f;
 
         private static readonly int KState = "RavenWatch_placeRaven".GetStableHashCode();
         private static readonly int KSeq = "RavenWatch_placeRavenSeq".GetStableHashCode();
@@ -259,6 +263,7 @@ namespace HuginWhispers
             r.Bird.TakeLook(look); // (its sparks, its hat)
             R mine = r;
             r.Bird.Stuck = () => OnStuck(mine);
+            r.Bird.ViaHint(Hub(r)); // (its way through the air round something tries the middle under the roof first: every seat is open to it — Reachable)
             r.NextCaw = Time.time + Random.Range(CawMin, CawMax);
             return true;
         }
@@ -429,7 +434,7 @@ namespace HuginWhispers
                 else if (s.Piece != null && s.Piece.IsValid() && !LocState.Absent(s.Piece) && !Occupied(s.At)) pieces.Add(s);
             }
             Character head = Random.value < HeadShare && !SceneNear() ? PickHead(r) : null;
-            r.NextDecide = Time.time + Random.Range(SitMin, SitMax);
+            r.NextDecide = Time.time + (Hurry ? Random.Range(HurryMin, HurryMax) : Random.Range(SitMin, SitMax));
             if (head != null)
             {
                 Player p = head as Player;
@@ -477,7 +482,7 @@ namespace HuginWhispers
             foreach (PerchView v in PerchView.All)
             {
                 if (v == null || !v.Valid || v.IsSpot || v.IsNest || !r.L.Holds(v.transform.position)) continue;
-                for (int i = 0; i < v.Count; i++) { Transform t = v.SeatT(i); if (!Reachable(hub, t.position)) { closed++; continue; } seats.Add(new Seat { At = t.position, Yaw = t.eulerAngles.y, Perch = v, I = i }); }
+                for (int i = 0; i < v.Count; i++) { Transform t = v.SeatT(i); if (!Reachable(hub, t.position, t.eulerAngles.y, v.transform)) { closed++; continue; } seats.Add(new Seat { At = t.position, Yaw = t.eulerAngles.y, Perch = v, I = i }); }
             }
             if (r.L.RavenSits.Length > 0)
                 foreach (ZNetView nv in all)
@@ -486,9 +491,10 @@ namespace HuginWhispers
                     looked++;
                     Vector3 top;
                     if (!TopOf(nv, out top) || !r.L.Holds(top)) continue;
-                    if (!Reachable(hub, top)) { closed++; continue; }
                     Vector3 face = hub - top; face.y = 0f;
-                    seats.Add(new Seat { At = top, Yaw = face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face.normalized).eulerAngles.y : Random.Range(0f, 360f), Piece = nv }); // (facing the middle of the place)
+                    float yaw = face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face.normalized).eulerAngles.y : Random.Range(0f, 360f); // (facing the middle of the place)
+                    if (!Reachable(hub, top, yaw, nv.transform)) { closed++; continue; }
+                    seats.Add(new Seat { At = top, Yaw = yaw, Piece = nv });
                 }
             r.Seats = seats;
             Story.Log("place raven: " + r.L.Id + ": " + seats.Count + " seats (" + looked + " pieces of its kinds looked at; " + closed + " out of its reach)");
@@ -505,11 +511,14 @@ namespace HuginWhispers
 
         // a seat it can fly to from inside (StoryBird.Open): from the open middle under the roof (the hub), or from the air over the place's
         // middle at its own height (a bench under a gallery). A top inside a wall, a beam under the eaves outside it, is none (2026-11-17, the
-        // user's shot: it took off, flew at such a seat and hung in the wall). Heavy: two rays a seat at most, only when its seats are looked over
+        // user's shot: it took off, flew at such a seat and hung in the wall) — nor a seat with no room for its body as it sits there facing the
+        // middle (StoryBird.Room: 2026-11-18, it sat half inside a wall, on a beam laid into the wall's plane). Heavy: a capsule and two rays a
+        // seat at most, only when its seats are looked over
         internal static float ReachSide = 1.2f;
-        private static bool Reachable(Vector3 hub, Vector3 seat)
+        private static bool Reachable(Vector3 hub, Vector3 seat, float yaw, Transform own)
         {
-            return StoryBird.Open(hub, seat) || StoryBird.Open(new Vector3(hub.x, seat.y + StoryBird.OpenOver + ReachSide, hub.z), seat);
+            return StoryBird.Room(seat, yaw, own, Shoulder.SizeFor(Level))
+                && (StoryBird.Open(hub, seat) || StoryBird.Open(new Vector3(hub.x, seat.y + StoryBird.OpenOver + ReachSide, hub.z), seat));
         }
 
         // the top of a piece it may sit on: the middle of its body from above, level enough, room over it (a ray down onto it, one up)
@@ -548,13 +557,14 @@ namespace HuginWhispers
         // a scene's bird comes from the place to «to»: its very picture where it is drawn (the scene drives it now) — one under its roof to
         // one outside goes up through the roof first, one over the roof to one inside comes down through it (StoryBird.Via), never through
         // a wall; not drawn here, or on its way off: null (the scene's own bird of its look comes from the place's side). «Out» for all
-        internal static StoryBird TakeOut(string place, Vector3 to)
+        // mine: the scene is this game's own (its director here; a mirror of another player's scene — not: it takes no mind)
+        internal static StoryBird TakeOut(string place, Vector3 to, bool mine)
         {
             R r = Known(place);
             if (r == null) return null;
-            MarkOut(r);
+            MarkOut(r, mine);
             StoryBird b = r.Drawn ? r.Bird : null;
-            if (b == null || Leaving(r)) { Away(place); return null; }
+            if (b == null || Leaving(r)) return null; // (not drawn here, or on its way off: «out» written above)
             Vector3 hub = Hub(r), above = Above(r, hub), at = b.transform.position;
             bool under = r.L.Holds(at) && at.y < above.y - AboveRoof, inside = r.L.Holds(to) && to.y < above.y - AboveRoof;
             r.Bird = null; r.Plan.Clear(); r.LegGoing = false;
@@ -572,24 +582,28 @@ namespace HuginWhispers
         {
             R r = Known(place);
             if (r == null) return;
-            MarkOut(r);
+            MarkOut(r, false);
             if (r.Drawn && r.Bird != null && !Leaving(r)) PlanOut(r);
         }
 
-        private static void MarkOut(R r)
+        // the scene's game takes the mind for its errand (the review 2026-11-18: a letter played on a game that did not own the home piece wrote
+        // nothing — the owner's mind kept its raven on a seat in the Hall while the scene's flew off with the letter: two ravens). The home piece's
+        // ZDO changes hands as the game's own do when players come and go; a mirror of his scene on another game takes nothing
+        private static bool TakeMind(R r, bool mine) { if (mine && !r.Home.IsOwner()) { r.Home.ClaimOwnership(); Log(r.L.Id + ": its mind taken by the scene's game"); } return r.Home.IsOwner(); }
+        private static void MarkOut(R r, bool mine)
         {
-            if (!r.Home.IsOwner()) return;
+            if (!TakeMind(r, mine)) return;
             Write(r.Home.GetZDO(), "out " + (WorldTime.Now + OutMost).ToString("0", Inv));
             r.Now = null;
         }
 
         // the scene's bird home again: «in» where its mind is; drawn here — its picture takes this very bird in through the roof (true).
         // False: not drawn here (the scene's bird flies off towards the place)
-        internal static bool Back(string place, StoryBird b)
+        internal static bool Back(string place, StoryBird b, bool mine)
         {
             R r = Known(place);
             if (r == null) return false;
-            if (r.Home.IsOwner()) { Write(r.Home.GetZDO(), "in"); r.InSince = Time.time; r.NextDecide = 0f; }
+            if (TakeMind(r, mine)) { Write(r.Home.GetZDO(), "in"); r.InSince = Time.time; r.NextDecide = 0f; }
             if (!r.Drawn) return false;
             if (b == null) return true;
             if (r.Bird != null) { Vector3 to; if (!StoryWhere.Find(place, out to)) to = r.Home.transform.position; b.Leave(to); return true; } // (it is drawn here already)
@@ -597,8 +611,9 @@ namespace HuginWhispers
             b.Adopt(); // (a mirror of another player's scene: his leaving the game no longer sends it off — it is the place's now)
             b.ForPlace("Raven of " + r.L.Id);
             r.NextCaw = Time.time + Random.Range(CawMin, CawMax);
-            R mine = r;
-            b.Stuck = () => OnStuck(mine);
+            R it = r;
+            b.Stuck = () => OnStuck(it);
+            b.ViaHint(Hub(r));
             PlanIn(r); // (its next word — «in», then a seat — goes on from here: the «out» it went with was read while the scene had it)
             Log(r.L.Id + ": home again from a scene");
             return true;

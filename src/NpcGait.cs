@@ -205,6 +205,9 @@ namespace HuginWhispers
 
         private void Awake() { _a = GetComponent<NpcActor>(); _c = GetComponent<Character>(); _body = GetComponent<NpcBody>(); if (_c != null) _b = new BodyGait(this, _c); }
 
+        // a clip of its own on it now moves its legs (looked up in its clips: BodyAnimator.LegsHeld)
+        private bool LegsHeld() { BodyAnimator a = BodyAnimator.Of(_c); return a != null && a.LegsHeld; }
+
         // its bones lost (BodyGait): for the other layers of its pose
         internal static bool Stale(Transform hips, Animator anim) { return BodyGait.Stale(hips, anim); }
 
@@ -217,7 +220,9 @@ namespace HuginWhispers
             bool off = (_body != null && ((_body.AttachedSeen.Length > 0 && !seat) || (_body.ClipBusy && !pose))) || _c.InAttack() || NpcVitals.IsDown(_a) || ((_fall != null || (_fall = GetComponent<NpcFall>()) != null) && _fall.Busy) || (_a.Zdo.GetString(ZDOVars.s_emote, "").Length > 0 && !seat) || _c.IsDead();
             State(_a, off);
             Ease(Time.deltaTime);
-            _b.Pose(s, NpcPersona.Of(_a).Walk * Mathf.Max(SlowestPace, s.Speed * _now.Speed), _now, off, seat || pose, pose);
+            // (on a bench or a chair, and no clip of its own moving its legs — leg over leg, a slap on a knee: its knees in, by its gait's «sitknees»)
+            bool bench = seat && _body.AttachedSeen == "attach_chair" && !LegsHeld(); // (any clip that moves its legs, a pose of its own or a gesture asked of it)
+            _b.Pose(s, NpcPersona.Of(_a).Walk * Mathf.Max(SlowestPace, s.Speed * _now.Speed), _now, off, seat || pose, pose, bench ? 1f : 0f, bench && !_body.ClipBusy); // (its hands on its knees go in with them, unless a clip of its own has its arms)
         }
 
         // the black box's look at it (NpcPoseWatch, on a jump of the pose)

@@ -168,6 +168,7 @@ namespace HuginWhispers
                     case "nlook": job = NpcLook(Arg(a, 1, "nlook"), Arg(a, 2, "near"), Arg(a, 3, "front,side,back")); break;
                     case "nprobe": job = NpcProbe(Arg(a, 1, "nprobe"), Arg(a, 2, "near"), Num(a, 3, 2f)); break;
                     case "nskin": job = NpcSkin(Arg(a, 1, "nskin"), Arg(a, 2, "near")); break;
+                    case "nprev": job = NpcPrev(Arg(a, 1, "nprev"), Arg(a, 2, ""), a); break;
                     case "nattach": Log(line, NpcAttach(Arg(a, 1, ""))); break;
                     case "hover": Log(line, Hover()); break;
                     case "nfilm": job = NpcFilm(Arg(a, 1, "nfilm"), Arg(a, 2, "near"), Num(a, 3, 4f), Num(a, 4, 2f), Arg(a, 5, "front,side")); break;

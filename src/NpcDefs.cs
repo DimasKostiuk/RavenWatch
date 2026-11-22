@@ -16,7 +16,7 @@ namespace HuginWhispers
     //                                 bone names of BodyClips.SkeletonBone; its look is its «gear:» alone — the game's own DvergerSuit…/DvergerHair… and
     //                                 a thing in its hand; no model, skin, hair, beard, build)
     //   tint_skin: 0.36 0.47 0.48     a dvergr's own colours (BodyTint): tint_skin, tint_hair, tint_suit, tint_eyes — r g b, none written: as the game made it
-    //   tint_eyes: 0.92 0.64 0.16     a person's own (BodyTint): its eyes, «tint_cape: r g b» whatever cape is on its shoulders, «tint_head: r g b» whatever is on its head; none written: as the game made it
+    //   tint_eyes: 0.92 0.64 0.16     a person's own (BodyTint): its eyes, «tint_cape: r g b» whatever cape is on its shoulders, «tint_head: r g b» whatever is on its head, «tint_chest: r g b» and «tint_legs: r g b» what it wears on its chest and its legs; none written: as the game made it
     //   model: 0                      0 man · 1 woman
     //   skin: 0.85 0.72 0.6           colours as the game keeps them
     //   haircolor: 0.62 0.28 0.12
@@ -99,7 +99,7 @@ namespace HuginWhispers
         // a dvergr's own colours (BodyTint); NoTint: as the game made it
         internal static readonly Vector3 NoTint = new Vector3(-1f, -1f, -1f);
         internal static bool HasTint(Vector3 v) { return v.x >= 0f; }
-        public Vector3 TintSkin = NoTint, TintHair = NoTint, TintSuit = NoTint, TintEyes = NoTint, TintCape = NoTint, TintHead = NoTint; // (a dvergr: skin, hair, suit, eyes · a person: eyes, cape, head)
+        public Vector3 TintSkin = NoTint, TintHair = NoTint, TintSuit = NoTint, TintEyes = NoTint, TintCape = NoTint, TintHead = NoTint, TintChest = NoTint, TintLegs = NoTint; // (a dvergr: skin, hair, suit, eyes · a person: eyes, cape, head, chest, legs)
         private static Vector3 Tint(string[] w) { return w.Length < 3 ? NoTint : Vec(w, Vector3.zero); }
         private static void TintLine(StringBuilder sb, string key, Vector3 v) { if (!HasTint(v)) return; System.Globalization.CultureInfo ci = System.Globalization.CultureInfo.InvariantCulture; sb.Append(key).Append(": ").Append(v.x.ToString("0.###", ci)).Append(' ').Append(v.y.ToString("0.###", ci)).Append(' ').Append(v.z.ToString("0.###", ci)).Append('\n'); }
 
@@ -140,7 +140,7 @@ namespace HuginWhispers
                 sb.Append("hair: ").Append(Hair.Length > 0 ? Hair : "none").Append('\n');
                 sb.Append("beard: ").Append(Beard.Length > 0 ? Beard : "none").Append('\n');
                 if (Gear.Count > 0) sb.Append("gear: ").Append(string.Join(" ", Gear.ToArray())).Append('\n');
-                TintLine(sb, "tint_eyes", TintEyes); TintLine(sb, "tint_cape", TintCape); TintLine(sb, "tint_head", TintHead);
+                TintLine(sb, "tint_eyes", TintEyes); TintLine(sb, "tint_cape", TintCape); TintLine(sb, "tint_head", TintHead); TintLine(sb, "tint_chest", TintChest); TintLine(sb, "tint_legs", TintLegs);
                 if (Hat.Length > 0) sb.Append("hat: ").Append(Hat).Append(' ').Append(HatFit.x.ToString("0.###", ci)).Append(' ').Append(HatFit.y.ToString("0.###", ci)).Append(' ').Append(HatFit.z.ToString("0.##", ci)).Append(' ').Append(HatFit.w.ToString("0.#", ci)).Append('\n');
             }
             foreach (string k in Keep) sb.Append(k).Append('\n');
@@ -188,6 +188,8 @@ namespace HuginWhispers
                     case "tint_eyes": cur.TintEyes = Tint(w); break;
                     case "tint_cape": cur.TintCape = Tint(w); break;
                     case "tint_head": cur.TintHead = Tint(w); break;
+                    case "tint_chest": cur.TintChest = Tint(w); break;
+                    case "tint_legs": cur.TintLegs = Tint(w); break;
                     case "health": cur.Health = Mathf.Max(1f, Errands.F(v, 200f)); break;
                     case "speed": cur.Speed = Mathf.Clamp(Errands.F(v, 1f), 0.2f, 3f); break;
                     case "walk": cur.Walk = Mathf.Clamp(Errands.F(v, 1f), 0.4f, 2f); break;
@@ -274,7 +276,7 @@ namespace HuginWhispers
         internal static void Reload() { _all = null; }
 
         // the template words read by the core (NpcDef above) and by the modules (theirs added in NpcModules: NpcRaven's raven…)
-        internal static readonly HashSet<string> Words = new HashSet<string> { "name", "body", "model", "skin", "haircolor", "hair", "beard", "gear", "hat", "tint_skin", "tint_hair", "tint_suit", "tint_eyes", "tint_cape", "tint_head", "health", "speed", "walk", "run", "turn", "menu", "echo", "mortal", "unseen", "armed", "greet", "interrupts", "interrupt", "cry", "talk", "voice", "persona", "gait", "timbre", "color", "stance", "story", "generated", "knack", "fight" };
+        internal static readonly HashSet<string> Words = new HashSet<string> { "name", "body", "model", "skin", "haircolor", "hair", "beard", "gear", "hat", "tint_skin", "tint_hair", "tint_suit", "tint_eyes", "tint_cape", "tint_head", "tint_chest", "tint_legs", "health", "speed", "walk", "run", "turn", "menu", "echo", "mortal", "unseen", "armed", "greet", "interrupts", "interrupt", "cry", "talk", "voice", "persona", "gait", "timbre", "color", "stance", "story", "generated", "knack", "fight" };
 
         // what is wrong in the templates as read (said once a reading, in the log; «raven npc self» lists them)
         internal static readonly List<string> Problems = new List<string>();

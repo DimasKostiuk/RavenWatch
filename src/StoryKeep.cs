@@ -42,7 +42,7 @@ namespace HuginWhispers
                     _next = 0f;
                     return null;
                 } });
-            StoryActions.Register("unkeep", new StoryActions.Kind { Dry = "unset world keep:{1}", Min = 1, Usage = "unkeep <назва>   (знову звичайна деталь)",
+            StoryActions.Register("unkeep", new StoryActions.Kind { Dry = "clear world keep:{1}", Min = 1, Usage = "unkeep <назва>   (знову звичайна деталь)",
                 Do = (p, q, w, rest) => { StoryWorld.Remove(Keep + w[1]); _next = 0f; return null; } });
             StoryCond.Register("kept", new StoryCond.Kind { Dry = "world keep:{1}", Usage = "kept <назва>   (світ тримає цілою деталь під цією назвою: keepbed)", Min = 1, World = true,
                 Test = (p, a) => StoryWorld.Text(Keep + a[1]).Length > 0 });

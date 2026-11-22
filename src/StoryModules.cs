@@ -15,6 +15,7 @@ namespace HuginWhispers
             p.Add("first heart", StoryHeart.ServerTick); // a world with a heart from before gets «heart_first», once
             p.Add("found", StoryFound.ServerTick); // «pickloc»: a place the world finds among the game's locations (only the server knows them all)
             p.Add("waves", StoryWaves.ServerTick); // «waves»: foes at a place of the story, wave after wave while a player is there (StoryWaves)
+            p.Add("posts", StoryPost.ServerTick); // «post»: a place the players must hold — nobody there, or the night slept through: its fact (StoryPost)
             p.Add("quest resume", StoryQuests.ServerResume); // a quest of the server ended by «next: end», told on in a newer version: on again from there
             return p;
         }
@@ -32,6 +33,7 @@ namespace HuginWhispers
             StoryChest.Actions();    // «chest <place>.<piece> <Prefab> <N>», «chesttake …»: a chest of a place the story fills (the Hall's, chapter 2)
             StoryFound.Actions();    // «pickloc», «stash», the place «found.<name>»: a location of the game the world picks, a thing put in its chest
             StoryWaves.Actions();    // «waves <name> <place> <m> …»: foes at a place, wave after wave; all down — the world fact <name>
+            StoryPost.Actions();     // «post <name> <place> <m>», «postoff»: a place the players must hold; left or slept through — the world fact <name>
             StoryPeople.Conds();     // «npcbed <who>»: a story person has a bed
             StorySpot.Actions();     // «spot <name> <min> <max>» and the place «me.<name>»: a spot of the player's own in the wild
             StoryTales.Register();   // «taleuntold», «{tale}», «!taletold»: what the people saw, told to one who missed it
@@ -41,13 +43,16 @@ namespace HuginWhispers
             WsItems.StoryOver = until => StoryCond.Holds(Player.m_localPlayer, until, Story.Log, true); // an item's «story: … until <the world's conditions>»: then an item as any
             StoryQuests.Each.Add("kept things", p => ItemMarks.Tick()); // the story's things that stay with you: one gone some other way (a bin) comes back       // «stash»: a thing put into a chest of a place loaded near you
             StoryQuests.Each.Add("chests", StoryChest.Look);       // «chest …»: what the stage still wants in a chest (its hover), «chesttake»: the things taken out by the game that holds it
+            StoryQuests.Each.Add("place weather", StoryAir.Places); // «weather: <env> <m> <conditions>» of a place: its weather round the player while they hold (StoryAir: the weather's one owner)
             StoryQuests.Each.Add("seek", StorySeek.Look);          // «seek: <place> <words>»: the raven on the shoulder as the finder of that place (HotCold)
             StoryQuests.Each.Add("seat words", LocSitSay.Look);    // «sitsay: <place> <tag> [conditions]»: sat on a seat there — the raven on the shoulder has its word (the barrow's throne)
             StorySceneRavens.Register();                            // a scene that speaks with your ravens fetches them: back from a shy flight, out of the bag for the scene
             StoryQuests.Each.Add("scene ravens", StorySceneRavens.Look); // …and a raven lent out of the bag goes back into it after the scene
             Senses.SceneNow = () => StoryScenes.Playing.Length > 0; // a scene plays here: no raven leaves the shoulder by itself (Trust.FreeToLeave, Outing)
             StoryQuests.Each.Add("stock", StoryStock.Look);        // «stock: <place> <m> <Prefab> <N> …»: what the stage sends you to find there is there when you come
+            StoryQuests.Each.Add("road talks", StoryRoad.Look);    // «road: <who> <m> <talks>»: a person talks to you on the way while you walk with it
             StoryQuests.Each.Add("lost things", StoryLost.Look);   // «lost: <item> <place>»: a thing the stage waits for, gone from the ground, laid there again
+            StoryQuests.Each.Add("one in the world", StoryOne.Tick); // an item's «one: yes» (the copies of Draupnir): one in the world — older and foreign copies crumble
             StoryQuests.Each.Add("call mark", StoryCallMark.Look); // «call: <who>»: a thread of gold over that person
             StoryQuests.Each.Add("been", StoryTrackConds.Been);    // «been <place>»: stood on its ground (written once)
             StoryQuests.Each.Add("heart known", StoryHeart.Look);  // the heart learnt in this world: its piece for this player
@@ -71,11 +76,11 @@ namespace HuginWhispers
             StoryAudio.Steps();    // «music», «bed», «mix», «mute», «ear», «sound»: what is heard
             StoryDome.Steps();     // «dome on|off»: Hugin's dome inside out over the player (the ambush)
             StoryBeasts.Steps();   // «beast <name> spawn|go|hunt|dead|stay|gone»: the game's own creatures in a scene (the skeleton and the boar)
-            StoryScenes.Ends.Add(StoryAudio.SceneEnd); // (a scene over: all it held of what is heard let go)
-            StoryScenes.Ends.Add(StoryOwn.SceneEnd);   // (… and your raven it left on a seat)
-            StoryScenes.Ends.Add(StoryDome.SceneEnd);  // (… and its dome lowered)
-            StoryScenes.OwnEnds.Add(StoryOwn.SceneEnd);
-            RavenSkills.Silence.Add(() => StoryScenes.Playing.Length > 0); // a scene playing: the ravens say only its lines
+            StoryScenes.Holding("what is heard", false, StoryAudio.SceneEnd); // (a scene over: all it held of what is heard let go)
+            StoryScenes.Holding("your raven on a seat", true, StoryOwn.SceneEnd); // (… and your raven it left on a seat: his own — given back too when a scene of the server goes on without him)
+            StoryScenes.Holding("its dome", false, StoryDome.SceneEnd); // (… and its dome lowered)
+            RavenSkills.Silence.Add(() => StoryScenes.Playing.Length > 0 || StoryWatch.Watching); // a scene playing here or watched: the ravens say only its lines
+            RavenSpeech.QuietNow = RavenSkills.Silenced; // … and that is the gate every raven's word on the screen asks (RavenSpeech.Hushed: cards, talks)
         }
 
         // the story's words to people where they are run (NpcModules.Wire: once, with the NPC modules)
@@ -85,6 +90,7 @@ namespace HuginWhispers
             NpcActor.Ticks.Add(StoryHold.Tick);        // a word of the story to a person: it stands till «free» or the next word
             NpcActor.Unloaded.Add(StoryHold.Forget);
             NpcActor.Ticks.Add(StoryPeople.LeaveTick); // a story person the server sends out of the world (away, or for good) goes the moment nobody sees it
+            NpcActor.Acts["sceneleave"] = (a, w) => StoryPeople.LeaveUnseen(a); // … and one a scene sends off («npc <who> leave»): on the game that runs it
             NpcActor.Unloaded.Add(StoryPeople.Forget);
             NpcActor.Ticks.Add(StoryTales.Tick);       // who saw a moment of the world's story
             NpcActor.Unloaded.Add(StoryTales.Forget);
@@ -109,11 +115,13 @@ namespace HuginWhispers
             NpcActor.Ticks.Add(StoryLife.Tick);        // …an outing reached: what it came to say is due at its next remark
             NpcActor.Unloaded.Add(StoryLife.Forget);
             Npcs.Commands["day"] = (p, who, a, aim) => StoryLife.Tell(who);
+            StoryPile.Wire();                          // what a story person laid down in its own life and left: a pile, for a while (StoryLife «haul … lays»)
             StoryMeets.Wire();                         // …and its gatherings: those whose days name the same one talk their own talks there
             NpcActor.Ticks.Add(StoryProps.Keep);       // a thing of its own on its arm: its loop kept on; what waits for a clip's moment (set down, taken up)
             NpcActor.Unloaded.Add(StoryProps.Forget);
             NpcPlaces.ClipBegins = (a, v) => StoryProps.SetDown(a, true, false) + (v.Tool ? NpcTool.Take(a, true) : 0f); // a visit with a clip of its own: the thing off its arm first, where it stands (its own doing: it goes back for it itself); its own tool into its hand where the place says «tool»
             NpcPlaces.ClipEnds = (a, v) => { if (v.Tool) NpcTool.Take(a, false); }; // …and back on its belt as it goes
+            NpcActor.Everywhere.Add(NpcVeil.Keep); // a scene's person made beforehand and held unseen by its director: unseen on every game
             // E on a person a stage waits for («on: npc_use <who>», chapter 1: Ketil by the heart — his scene, no talk window): the event, nothing else.
             // Only while a stage waits for it: after that E opens its talk as ever
             NpcActor.UseInstead.Add((a, p) =>

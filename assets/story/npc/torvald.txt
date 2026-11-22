@@ -16,7 +16,8 @@ gear: ArmorTunic6 ArmorLeatherLegs CapeLox
 fight: off
 # Його власні жести сидячи (NpcMoves «moves_sit:»; ground_… — лише на землі, sit_… — лише на лаві, NpcMoves.SeatFits): регоче й ляскає по коліні (користувач 2026-11-15).
 moves_sit: ground_torvald_slap|sit_torvald_slap
-walk: 0.75
+moves: neck_stretch                       # стоячи: розминає шию — старий, що вистоює варту (користувач 2026-11-18: кліпи розкинути за характерами)
+walk: 0.9                                 # (користувач 2026-11-19: було 0.75 — «надто помалу ходить», +20 %)
 menu: no
 talk: torvald
 voice: own                                # свої слова без питання (NpcVoice): лише власні теми assets/story/words/torvald.txt — idle, see_player, at_<вид місця> (StoryLife.Themes); спільна книга поселенців — ні (користувач 2026-11-16)

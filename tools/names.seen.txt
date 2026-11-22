@@ -1,3 +1,6 @@
+bad_house.names.txt	dveri wood_door -2.305 0.833 1.768
+bad_house.names.txt	lizhko bed 1.914 0.014 2.728
+bad_house.names.txt	stilets piece_chair02 1.715 -0.057 -0.418
 kurhan.names.txt	dveri dungeon_forestcrypt_door 0 0 0
 prologue_house.layers.txt	only1 woodwall -16.4 1.276 5.109
 prologue_house.layers.txt	only2 Candle_resin -3.122 0.716 1.163
@@ -634,6 +637,7 @@ zala.layers.txt	repaired piece_bench_runed 7.165 -1.118 4.495
 zala.layers.txt	repaired piece_bench_runed 8.543 5.979 -0.993
 zala.layers.txt	repaired piece_blackwood_bench01 -6.622 -1.11 -2.465
 zala.layers.txt	repaired piece_cauldron -13.386 -0.527 1.241
+zala.layers.txt	repaired piece_chest 0.021 -1.108 -8.134
 zala.layers.txt	repaired piece_cookingstation_iron -14.174 -0.527 0.308
 zala.layers.txt	repaired piece_dvergr_lantern 14.3 3.586 3.886
 zala.layers.txt	repaired piece_dvergr_lantern 2.219 1.955 8.241
@@ -838,6 +842,7 @@ zala.names.txt	dveri_holovni stave_gate -0.77 -1.11 7.935
 zala.names.txt	dveri_holovni stave_gate 1.23 -1.11 7.917
 zala.names.txt	kamin RavenWatch_story_kamin_pamiati 16.323 -1.11 1.881
 zala.names.txt	kamin RavenWatch_story_kamin_pamiati 16.62 -0.61 -0.2
+zala.names.txt	kazan piece_cauldron -13.386 -0.527 1.241
 zala.names.txt	kinets Piece_grausten_pillarbase_small 8.212 -1.11 5.856
 zala.names.txt	kukhnia hearth -14.185 -1.11 0.286
 zala.names.txt	lava piece_bench01 3.413 -1.118 -0.134
@@ -848,6 +853,7 @@ zala.names.txt	rizba RavenWatch_story_rizba_eirika 0.043 -0.181 -9.441
 zala.names.txt	skhody stone_stair -0.744 -2.11 10.935
 zala.names.txt	skrynia piece_chest 0.021 -1.108 -8.134
 zala.names.txt	skrynia piece_chest_wood -2.406 -1.11 -6.353
+zala.names.txt	stelia darkwood_beam4x4 0.151 14.64 -0.073
 zala.names.txt	stil piece_table_oak -8.37 -1.127 3.369
 zala.names.txt	stil piece_table_oak -9.718 -1.127 2.729
 zala.names.txt	stina_liva ashwood_wall_2x2 2.931 -0.11 7.195

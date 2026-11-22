@@ -47,6 +47,9 @@ namespace HuginWhispers
         //   presses to the wall: not taken), nothing close before the lens. None clear: an angle beside it, then nearer and nearer, at last
         //   another side or from above — and the log says which. on: «look bird|npc.x» aims at its real
         //   head; medium aims a little under the head (OnMediumDown), two a little under the middle (TwoDown)
+        //   still — on these three and «behind» (or the scene's «camera: still», all of them): full stillness — the spot is picked once as the
+        //           shot begins, by the same rule, and kept: neither someone walking past (the user 2026-11-18: Heid swung the shoulder shot
+        //           of eyvind_meet) nor the ones filmed moving pick it again; «track still» goes along at the same offset, never another side
         //   Read at load (CameraCheck): an unknown word, a word without its value, the angle twice, one named twice, wait with no push — an error
         private static void CameraStep(Player p, string[] w)
         {
@@ -73,6 +76,7 @@ namespace HuginWhispers
             if (w[1] == "on" || w[1] == "shoulder" || w[1] == "two")
             {
                 Framing f = ReadFraming(w);
+                if (_now != null && _now.Still) f.Still = true; // (the scene's «camera: still»: every shot of it)
                 Subject a, b = null;
                 if (!Who(p, f.A, out a) || (w[1] != "on" && !Who(p, f.B, out b))) { Note("camera " + w[1] + ": нема «" + (a == null ? f.A : f.B) + "» — крок пропущено"); return; }
                 Func<Vector3> spot, aim;
@@ -86,7 +90,7 @@ namespace HuginWhispers
                     spot = On(a, f, aim, Cast(a, at));
                     if (fov < 1f) fov = size == "close" ? FaceFov : size == "full" ? OnFullFov : size == "wide" ? OnWideFov : OnMediumFov;
                 }
-                else if (w[1] == "shoulder") { spot = OverShoulder(a.Head, b.Head, f.A, f.B, f.Side, Cast(a, b)); aim = b.Head; }
+                else if (w[1] == "shoulder") { spot = OverShoulder(a.Head, b.Head, f.A, f.B, f.Side, Cast(a, b), f.Still); aim = b.Head; }
                 else
                 {
                     bool tall = a.Tall || b.Tall;
@@ -140,7 +144,7 @@ namespace HuginWhispers
                 return;
             }
             Func<Vector3> from;
-            if (w[1] == "behind") from = what == "player" ? Fixed(p.transform.position - fwd * 6f + Vector3.up * 3f) : OverShoulder(Looker(p, "player", fwd), look, null, null, 0, new Character[] { p }); // (the player's shoulder, no line kept: as ever)
+            if (w[1] == "behind") from = what == "player" ? Fixed(p.transform.position - fwd * 6f + Vector3.up * 3f) : OverShoulder(Looker(p, "player", fwd), look, null, null, 0, new Character[] { p }, Array.IndexOf(w, "still") > 0 || (_now != null && _now.Still)); // (the player's shoulder, no line kept: as ever)
             else if (w[1] == "over") from = Fixed(p.transform.position - fwd * 3f + Vector3.up * 14f);
             else if (w[1] == "face")
             {
@@ -154,7 +158,8 @@ namespace HuginWhispers
             {
                 Vector3 start;
                 if (!StoryWhere.Find(w[1], out start)) { Note("camera: нема місця «" + w[1] + "» — крок пропущено"); return; }
-                from = Fixed(start + Vector3.up * 1.6f); // (a place is a spot on the ground: the camera at eye height over it)
+                int upAt = Array.IndexOf(w, "up"); // («camera <place> up <m>»: the lens that high over the place's point, not at eye height — on the very floor: a plank laid onto it, the user 2026-11-21)
+                from = Fixed(start + Vector3.up * (upAt > 1 && w.Length > upAt + 1 ? F(w[upAt + 1], 1.6f) : 1.6f)); // (a place is a spot on the ground: the camera at eye height over it)
             }
             StoryCamera.Shot(from, look, blend, fov);
         }
@@ -330,12 +335,24 @@ namespace HuginWhispers
                     RaycastHit floor;
                     if (up < 0f && Physics.Raycast(new Vector3(c.x, head.y, c.z), Vector3.down, out floor, OnGround - up, mask, QueryTriggerInteraction.Ignore)) c.y = floor.point.y + OnGround; // heavy: a low lens only, one ray a spot tried (the ground under it: the lens stays over it)
                     if (low && Physics.Raycast(c + Vector3.up * LowOver, Vector3.down, out floor, LowOver + OnGround, mask, QueryTriggerInteraction.Ignore)) c.y = Mathf.Max(c.y, floor.point.y + OnGround); // heavy: a shot of a held thing only, one ray a spot tried (it lies or falls to the ground: the lens stays over the ground there)
+                    OverGrass(ref c, mask);
                     if (!LensClear(c, mask, aim, head)) continue;
                     at = c;
                     return true;
                 }
             at = head + Vector3.up * FaceOver;
             return false;
+        }
+
+        // A lens over the open land keeps over its grass (the user 2026-11-18, the skeleton on the meadow: «камера якось надто низько, я не бачу нічого»
+        // — «low» put it OnGround over the land, the boar's shot at its head's height, and the game's grass has no collider: no rule above sees it).
+        // The land itself straight under the lens (not a floor of a piece: no grass grows on one) within GrassOver m: the lens that high over it
+        internal static float GrassOver = 1.2f;
+        private static void OverGrass(ref Vector3 c, int mask)
+        {
+            RaycastHit hit;
+            if (!Physics.Raycast(c + Vector3.up * 0.1f, Vector3.down, out hit, GrassOver + 0.1f, mask, QueryTriggerInteraction.Ignore)) return; // heavy: one ray a spot tried, as a shot begins
+            if ((Land & (1 << hit.collider.gameObject.layer)) != 0) c.y = Mathf.Max(c.y, hit.point.y + GrassOver);
         }
 
         // ---------------------------------------------------------------- shots told in words: on, shoulder, two
@@ -352,6 +369,17 @@ namespace HuginWhispers
         internal static float NpcEyesAhead = 0.22f; // m before a person's head point: its own head is drawn (not hidden as the player's is), so the lens stands out of it
         internal static float EyesAhead = 0.1f; // m before his head point the lens of a shot through his eyes stands (no inside of his own head in the picture)
         internal static float SkullUp = 0.08f; // m from a person's head bone up to its eyes (a first guess: tuned in game by a close shot)
+        // where a person faces, for a shot: a standing one told to look at someone turns its body there over a second or more, and a shot cut right
+        // at the order took its old way — «front» stood at its back (the user 2026-11-18, torv_change: Torvald «стоїть спиною, навіть не повертається»):
+        // where it is turning to (the game's look way), its body's own way otherwise (walking, seated, in a pose — or the player)
+        private static Vector3 Facing(Character c, NpcActor a)
+        {
+            Vector3 f = c.transform.forward;
+            if (a == null || a.Mind == null || !a.Mind.StandsFree) return f;
+            Vector3 l = c.GetLookDir(); l.y = 0f;
+            return l.sqrMagnitude > 0.01f ? l : f;
+        }
+
         private static bool Who(Player p, string word, out Subject s)
         {
             s = null;
@@ -376,7 +404,8 @@ namespace HuginWhispers
                 Animator an = me ? null : c.GetComponentInChildren<Animator>(); // heavy: once as a shot of a person begins
                 Transform skull = an != null ? BodyClips.SkeletonBone(c, an.transform, "Head") : null;
                 head = () => { if (c != null) last = me ? Body.Head(c) : skull != null ? skull.position + Vector3.up * SkullUp : Body.Eye(c); return last; }; // (gone in the middle of a shot: where it was)
-                front = () => { if (c != null) way = Flat(c.transform.forward); return way; };
+                NpcActor npc = me ? null : NpcActor.Of(c);
+                front = () => { if (c != null) way = Flat(Facing(c, npc)); return way; };
             }
             else
             {
@@ -400,6 +429,7 @@ namespace HuginWhispers
             public float Angle = float.NaN; // (on: degrees round it from where its body faces; none asked — the first clear)
             public int Side;                // (shoulder, two: 1 — left of the way A looks at B, -1 — right, 0 — none asked)
             public bool Track;
+            public bool Still;              // («still», or the scene's «camera: still»: the spot taken as it begins is kept — OverShoulder, On)
             public float PushM, PushS = PushSecs;
         }
         internal static readonly string[] OnSizes = { "close", "medium", "full", "wide" }, OnAngles = { "front", "right", "back", "left" };
@@ -418,6 +448,7 @@ namespace HuginWhispers
             {
                 string x = w[i]; float v = 0f; int k = -1;
                 if (x == "cut") continue;
+                if (x == "still") { f.Still = true; continue; }
                 if (x == "wait") { waits = true; continue; }
                 if (x == "blend" || x == "fov" || x == "live") // (a word with its number after it: CameraStep reads those)
                 {
@@ -491,7 +522,7 @@ namespace HuginWhispers
             return () =>
             {
                 Vector3 head = s.Head();
-                if (Time.time >= next)
+                if ((!f.Still || !have) && Time.time >= next) // (still: the offset it took is kept — never another spot as it walks past posts or people; none clear yet: looked for till found)
                 {
                     next = Time.time + RePick;
                     Vector3 front = s.Front();
@@ -599,32 +630,35 @@ namespace HuginWhispers
         {
             if (what == "player") return () => Player.m_localPlayer != null ? Body.Head(Player.m_localPlayer) : Vector3.zero;
             if (what == "sky") { Vector3 sky = Body.Head(p) + fwd * 30f + Vector3.up * 22f; return () => sky; } // (up before you: the storm, Thor)
+            Subject s; // (one aim for every shot: a person's skull, the bird's neck, a place's point over the ground — Who; the review 2026-11-18: «look npc.lit»
+                       // aimed at his feet + 1.2 m, over a dvergr's head)
+            if (Who(p, what, out s)) return s.Head;
+            Note("camera look: нема місця «" + what + "» — дивлюсь на гравця");
             Vector3 last = Body.Head(p);
-            Vector3 first;
-            float up = UpOf(what); // (a thing someone holds: the thing itself)
-            if (!StoryWhere.Find(what, out first)) Note("camera look: нема місця «" + what + "» — дивлюсь на гравця");
-            else last = first + Vector3.up * up;
-            if (!StoryWhere.Moves(what)) return () => last; // (a place stands still: found once, not each frame)
-            return () => { Vector3 at; if (StoryWhere.Find(what, out at)) last = at + Vector3.up * up; return last; }; // (it moves: where it is now)
+            return () => last;
         }
 
         // Over one's shoulder towards a target («behind look X»: the player's; «shoulder a b»: anyone's): a few angles tried (behind
         // it a little to either side, then wider), the first from which both heads are seen with nothing between (the game's own
         // camera-blocking layers) and that is not inside anything; tried again every RePick s, the camera easing there — never a rock
         // across the picture. a, b named («shoulder»): the side of their line — the one asked, else the scene's (LineOf), else the first
-        // clear — is what this shot keeps to as they move, and what the scene keeps after it (LineTook); null («behind»): no line, as ever
+        // clear — is what this shot keeps to as they move, and what the scene keeps after it (LineTook); null («behind»): no line, as ever.
+        // still: picked once as it begins and kept where it is, whoever walks between (CameraStep: «still», «camera: still»); found none clear
+        // then (one stood in the way at the cut): looked for till found, then kept
         internal static float ShoulderBack = 3f, ShoulderUp = 1.1f, RePick = 0.5f;
         private static readonly float[] Angles = { 25f, -25f, 45f, -45f, 70f, -70f, 0f, 110f, -110f }; // (over zero: the left shoulder)
-        private static Func<Vector3> OverShoulder(Func<Vector3> head, Func<Vector3> look, string a, string b, int asked, Character[] own)
+        private static Func<Vector3> OverShoulder(Func<Vector3> head, Func<Vector3> look, string a, string b, int asked, Character[] own, bool still)
         {
             Vector3 at = Vector3.zero, want = Vector3.zero, world = Vector3.zero; float next = 0f; bool first = true, line = a != null, keep = !_preview; // (keep: the scene's own step — it may write the scene's line, now and when it picks again)
             int held = -1; // (the spot it has, as ShoulderSpot numbers them: kept while it stays clear)
+            bool found = false; // (the last pick found a clear spot — still keeps only such a one: none clear yet, it is looked for till found)
             Action pick = () =>
             {
                 next = Time.time + RePick;
                 Vector3 h = head(), t = look(), way = Flat(t - h);
                 int side = !line ? 0 : !first ? SideOf(world, way) : asked != 0 ? asked : LineOf(a, b, way), took;
                 want = ShoulderSpot(h, t, side, line, out took, own, ref held);
+                found = !_noSpot;
                 if (_noSpot) next = Time.time + RePick * 4f; // (nowhere clear round it: 18 spots of casts are not tried again at once — as a track's)
                 if (!first)
                 {
@@ -638,7 +672,7 @@ namespace HuginWhispers
             if (line) pick(); // (a line to keep: picked as the step begins, so the scene's next shot of these two finds it — played, or set up from a later step)
             return () =>
             {
-                if (first || Time.time >= next) pick();
+                if (first || ((!still || !found) && Time.time >= next)) pick();
                 at = Vector3.Lerp(at, want, 1f - Mathf.Exp(-2.5f * Time.deltaTime));
                 return at;
             };

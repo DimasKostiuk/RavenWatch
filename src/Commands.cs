@@ -150,6 +150,7 @@ namespace HuginWhispers
                     case "perks": return Perks.ListIds();
                     case "wing": return WingCmd(p, a);
                     case "studio": return Studio.Describe();
+                    case "moment": return a.Length > 1 && a[1] == "now" ? Moments.Now(p) : Moments.Said(p); // (your own moves by the moment: what holds now, the clips with «hero»; «now» — one at once)
                     case "ready": RavenSkills.ResetCooldowns(); return "Перезарядки дарів і образи воронів (очікування, щоб знову посадити на плече) скинуто.";
                     case "trust": return TrustCmd(a);
                     case "train": return TrainCmd(a);

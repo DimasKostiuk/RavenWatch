@@ -9,6 +9,7 @@ namespace HuginWhispers
     // «Студія» on an NPC (story tests: its body, its gait, its sitting); its cameras (PlaceBody) are every body's, the player's in a scene check too:
     //   nlook <name> <who> [views]                 — the NPC as it stands now (who: id, tag or near)
     //   nfilm <name> <who> [sec=4] [fps=2] [views] — frames in time, one sheet per view; the report says what it was doing
+    //   nprev <name> <template> [cape=r,g,b] [head=…] [chest=…] [legs=…] [gear=A+B] — the window «Вигляд»'s own picture, as the file says and as asked
     //   nskin <name> <who>                          — its worn pieces' skins: the bones each is bound to, any outside its body or
     //                                                far from it (a strap stretched to the ground: what it is tied to)
     // Views: front (its face), back, side, left, top, three; close: hands (over the shoulder), handl, handr, chest, chestside, chestleft and chesttop
@@ -259,6 +260,55 @@ namespace HuginWhispers
             string s = t.name;
             for (Transform p = t.parent; p != null && s.Length < 160; p = p.parent) s = p.name + "/" + s;
             return s;
+        }
+
+        // nprev <name> <template> [cape=r,g,b] [head=r,g,b] [chest=r,g,b] [legs=r,g,b] [gear=A+B+C]
+        // The window «Вигляд»'s own picture of a template (NpcPreview), with no window and no hand: left as its file says, right with these colours
+        // (and these things worn instead of its own) — the template is put back after. The user 2026-11-20: «в ui змінював і змін не бачив»
+        private static IEnumerator NpcPrev(string name, string who, string[] a)
+        {
+            NpcDef d = NpcDefs.Find(who);
+            if (d == null) { Note(name, "no template «" + who + "» (raven npc list)"); yield break; }
+            Vector3 cape = d.TintCape, head = d.TintHead, chest = d.TintChest, legs = d.TintLegs;
+            List<string> gear = new List<string>(d.Gear);
+            Texture2D sheet = new Texture2D(NpcPreview.W * 2, NpcPreview.H, TextureFormat.RGB24, false);
+            string said = "";
+            try
+            {
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    if (pass == 1)
+                        for (int i = 3; i < a.Length; i++)
+                        {
+                            int eq = a[i].IndexOf('=');
+                            if (eq <= 0) continue;
+                            string key = a[i].Substring(0, eq), val = a[i].Substring(eq + 1);
+                            if (key == "gear") { d.Gear.Clear(); foreach (string g in val.Split('+')) if (g.Length > 0) d.Gear.Add(g); continue; }
+                            string[] n = val.Split(',');
+                            if (n.Length != 3) continue;
+                            Vector3 c = new Vector3(Errands.F(n[0], 0f), Errands.F(n[1], 0f), Errands.F(n[2], 0f));
+                            if (key == "cape") d.TintCape = c; else if (key == "head") d.TintHead = c; else if (key == "chest") d.TintChest = c; else if (key == "legs") d.TintLegs = c;
+                        }
+                    float until = Time.unscaledTime + 2f; // (its body made, dressed, its cape's cloth settled)
+                    while (Time.unscaledTime < until) { NpcPreview.Want(d); yield return null; }
+                    NpcPreview.Want(d);
+                    yield return new WaitForEndOfFrame();
+                    RenderTexture rt = NpcPreview.Picture as RenderTexture;
+                    if (rt == null) { said = "no picture: " + NpcPreview.Problem; break; }
+                    RenderTexture prev = RenderTexture.active;
+                    RenderTexture.active = rt;
+                    sheet.ReadPixels(new Rect(0, 0, NpcPreview.W, NpcPreview.H), pass * NpcPreview.W, 0);
+                    RenderTexture.active = prev;
+                }
+                sheet.Apply();
+                Save(name, sheet);
+            }
+            finally
+            {
+                d.TintCape = cape; d.TintHead = head; d.TintChest = chest; d.TintLegs = legs; d.Gear.Clear(); d.Gear.AddRange(gear);
+                Object.Destroy(sheet);
+            }
+            Note(name, said.Length > 0 ? said : who + ": left as its file says, right as asked; what was painted — the log's «BodyTint: " + who + "» lines");
         }
 
         private static IEnumerator NpcLook(string name, string who, string views)

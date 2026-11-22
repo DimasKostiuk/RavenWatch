@@ -38,5 +38,5 @@
 
 ## Сюжет
 
-- `story.md` · квести й світ: `StoryFound.cs`, `StoryMap.cs`, `StoryOwn.cs`, `StoryPlaces.cs`, `StoryQuestsRead.cs`, `StorySpot.cs`, `StoryTrackConds.cs`, `StoryWorld.cs`
+- `story.md` · квести й світ: `StoryFound.cs`, `StoryPost.cs`, `StoryMap.cs`, `StoryOwn.cs`, `StoryPlaces.cs`, `StoryQuestsRead.cs`, `StorySpot.cs`, `StoryTrackConds.cs`, `StoryWorld.cs`
 - `story.md` · сцена: `StoryAir.cs`, `StoryAside.cs`, `StoryWaves.cs`, `StoryHush.cs`, `StoryBeasts.cs`, `StoryScenesBird.cs`, `StoryScenesCamera.cs`, `StoryScenesCast.cs`, `StoryScenesKinds.cs`, `StoryScenesLane.cs`, `StoryScenesPlayer.cs`, `StoryScenesRead.cs`

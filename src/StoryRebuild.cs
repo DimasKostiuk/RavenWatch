@@ -18,7 +18,7 @@ namespace HuginWhispers
     //   1. every fact the quest's data names (its stages' actions, its scenes' «do» lines, what its waits and forks ask of the world) — off;
     //      the same for the quests that come after it (those whose «starts:» / «who:» name it), which are forgotten — and for those that begin at
     //      a stage of it («starts: reached <it> <stage>») when the jump goes back before that stage (StageStarted)
-    //   2. the quests it comes after (named by its «starts:» / «who:»: «quest prologue done») walked whole — their facts on, themselves done, their block's own keys («scratch:») off as at their real end (Scratched)
+    //   2. the quests it comes after (named by its «starts:» / «who:»: «quest prologue done») walked whole — their facts on, themselves done, their block's own keys («scratch:») off, as this one's beginning closes them (Scratched)
     //   3. the stages on the way to the target (its «next:» line; a fork only when no other way leads there; of a stage's ways the one chosen, else
     //      the first that leads there): their «start:», their scene's «do» lines, what their «wait:» asked of the world, their «done:» — on;
     //      and the target's own «start:», which then runs for real as on any entering
@@ -32,7 +32,8 @@ namespace HuginWhispers
     // in a row would end as «off». That is why the facts are reckoned first and written after.
     // What it does not turn back, and says so where it matters: things in the bag and in the world (the book, a raven, a heart built, a thing dropped),
     // what a character remembers of its talks (a branch asked «once»), the tales people tell (StoryTales). A place's own state (the Hall's «гейд»,
-    // «розпалена») is set to its first and its «becomes:» rules bring it on by the facts, behind the scenes as ever.
+    // «розпалена») is set to its first and its «becomes:» rules bring it on by the facts — at once, in sight (LocState.AuthorJumped; the user
+    // 2026-11-20: «хай стрибок одразу ставить стан Зали» — not behind the scenes as in play, where he stood in the Hall and its scene waited).
     // Cost: the author's click only — a pass over one quest's data, a few world keys written.
     internal static partial class StoryQuests
     {
@@ -74,7 +75,7 @@ namespace HuginWhispers
                 if (LocState.StateOf(l) == LocState.Abandoned && LocState.SubOf(l) == 0 && !LocState.ShutOf(l)) return null;
                 LocState.Put(l, LocState.Abandoned, 0);
                 ZoneSystem.instance.RemoveGlobalKey(l.KeyNext);
-                return "місце «" + l.Id + "»: стан повернуто до першого — далі його доведуть власні правила місця (becomes:), щойно поруч нікого не буде";
+                return "місце «" + l.Id + "»: стан повернуто до першого — далі його одразу доведуть власні правила місця (becomes:)";
             });
             Add("world wstamp", (p, q, n, w) => { StoryTrackConds.DayAgo(n, w.On ? w.Level : -1); return null; });
             Add("world wclock", (p, q, n, w) => { StoryTrackConds.ClockAgo(n, w.On ? w.Level : -1); return null; }); // («wsince x 5»: put five minutes back)
@@ -152,11 +153,13 @@ namespace HuginWhispers
             if (k == null || string.IsNullOrEmpty(k.Dry)) return false;
             string[] d = k.Dry.Split(' ');
             if (d[0] == "order" && d.Length >= 3) { fact = "order " + Fill(d[1], w); return true; }
-            if ((d[0] != "set" && d[0] != "clear") || d.Length < 3) return false;
-            on = d[0] == "set";
+            if ((d[0] != "set" && d[0] != "clear" && d[0] != "later") || d.Length < 3) return false;
+            on = d[0] != "clear";
             fact = Named(d[1], Fill(d[2], w), ref on);
             return true;
         }
+
+        private static bool Later(string act) { string[] w; StoryActions.Kind k = StoryActions.KindOf(act, out w); return k != null && k.Dry != null && k.Dry.StartsWith("later ", StringComparison.Ordinal); }
 
         // what a condition asks of the world or of the character (false: the player or time brings it about, or it asks the quests themselves)
         private static bool FactOf(Cond c, out string fact, out bool on)
@@ -190,7 +193,7 @@ namespace HuginWhispers
             return true;
         }
 
-        // A quest walked to its end forgets its block's own world keys, as its real end does (StoryQuestsServer: «scratch:» → StoryWorld.Forget):
+        // A quest walked to its end that this one begins after forgets its block's own world keys, as this one's real beginning closes it (StoryQuests.CloseBefore):
         // its facts named with one of its prefixes are off, not on (2026-11-17: a jump to chapter 2 walked chapter 1 whole and brought back ch1_home,
         // ch1_torv_home… that its end had taken away). Reckoned here, not forgotten after the writes: a game that is not the server sees its own
         // writes only when the server sends them round (the head of this file). The name as the key bears it after its kind's word: «world
@@ -226,6 +229,7 @@ namespace HuginWhispers
             {
                 string fact; bool on;
                 if (!FactOf(a, out fact, out on)) continue;
+                if (walked && Later(a)) continue; // (the game makes it in time — the fight's last wave: made only where a passed stage's wait asks it, Asks; review 2026-11-18: a jump to rite_fight skipped the fight)
                 Wished(want, fact, walked ? new Wish { On = on, Act = a } : new Wish());
             }
         }
@@ -344,6 +348,28 @@ namespace HuginWhispers
             return path;
         }
 
+        // the quests a stage passed on the way waits done («wait: quest ch2_eyvind done» of ch2 full1): walked whole, as the quests it comes after — the
+        // review 2026-11-18: a jump to ch2 walls left Eyvind's quest unbegun, and it began behind the player in circle 2. Its path is reckoned with no
+        // fact written (PathTo); a quest forgotten by this jump (after) is not one of them
+        private static void WaitedDone(Player p, QuestDef q, string target, List<QuestDef> before, List<QuestDef> after)
+        {
+            if (target.Length == 0) return;
+            List<Leg> path = PathTo(p, q, target, false);
+            if (path == null) return;
+            foreach (Leg l in path)
+            {
+                if (l.Via != null || l.S == null || l.S.Wait == null) continue; // (left by a fork: its wait was never passed)
+                foreach (Cond c in l.S.Wait)
+                {
+                    if (c.Not || c.A.Length < 2 || c.A[0] != "quest" || (c.A.Length > 2 && c.A[2] != "done")) continue;
+                    QuestDef d = Find(c.A[1]);
+                    if (d == null || d == q || before.Contains(d) || after.Contains(d)) continue;
+                    Before(d, before, 0);
+                    if (!before.Contains(d)) before.Add(d);
+                }
+            }
+        }
+
         // ---------------------------------------------------------------- the quests before and after
         private static void QuestsNamed(List<Cond> l, List<string> into)
         {
@@ -383,7 +409,8 @@ namespace HuginWhispers
 
         // the quests that begin at a stage of it («starts: reached ch2 lit_more»: Eyvind's beside Lit's, chapter 2) — and theirs after them: forgotten
         // too when the jump goes back before that stage (2026-11-18: a jump to ch2 lit_day left ch2_eyvind «done», so his mushrooms never came again).
-        // A jump to that stage or past it leaves them as they stand: one begun runs beside it, as in the game. Its order is the file's, as «reached» reckons
+        // A jump past that stage leaves them as they stand: one begun runs beside it, as in the game; one a passed stage waits done is walked whole
+        // (WaitedDone). Its order is the file's, as «reached» reckons
         private static void StageStarted(QuestDef q, string target, List<QuestDef> into)
         {
             if (!q.Server) return;
@@ -395,7 +422,7 @@ namespace HuginWhispers
                 {
                     if (c.Not || c.A.Length < 3 || (c.A[0] != "reached" && c.A[0] != "step") || c.A[1] != q.Id) continue;
                     StageDef s = q.Stage(c.A[2]);
-                    if (s != null && q.Stages.IndexOf(s) <= at) continue;
+                    if (s != null && q.Stages.IndexOf(s) < at) continue; // (a jump to that very stage: it begins anew, as it would there — the review 2026-11-18)
                     into.Add(d);
                     foreach (QuestDef e in After(d)) if (!into.Contains(e) && e != q) into.Add(e);
                     break;
@@ -443,7 +470,7 @@ namespace HuginWhispers
             if (ZNet.instance != null && !ZNet.instance.LocalPlayerIsAdminOrHost())
             {
                 bool world = q.Server;
-                List<QuestDef> near = new List<QuestDef>(); Before(q, near, 0); near.AddRange(After(q)); StageStarted(q, target, near);
+                List<QuestDef> near = new List<QuestDef>(); Before(q, near, 0); List<QuestDef> later = After(q); StageStarted(q, target, later); WaitedDone(p, q, target, near, later); near.AddRange(later);
                 foreach (QuestDef d in near) world |= d.Server;
                 if (world) { Note(q.Id + ": стрибок зачіпає сюжет сервера, а тебе нема в його adminlist.txt — сервер його не прийме; нічого не змінено"); return; }
             }
@@ -456,12 +483,13 @@ namespace HuginWhispers
                 Dictionary<string, Wish> want = new Dictionary<string, Wish>();
                 List<QuestDef> before = new List<QuestDef>(), after = After(q);
                 StageStarted(q, target, after);
-                if (target.Length > 0) Before(q, before, 0); // (forgotten: «as if it had never begun» — the quests before it stand as they are)
+                List<QuestDef> closed = new List<QuestDef>(); // (the quests it begins after: closed by its beginning, their keys gone — StoryQuests.CloseBefore)
+                if (target.Length > 0) { Before(q, before, 0); closed.AddRange(before); WaitedDone(p, q, target, before, after); } // (forgotten: «as if it had never begun» — the quests before it stand as they are)
                 foreach (QuestDef d in after) AllOff(p, d, want);
                 AllOff(p, q, want);
                 foreach (QuestDef b in before) AllOff(p, b, want);
                 Dictionary<QuestDef, List<Leg>> walked = new Dictionary<QuestDef, List<Leg>>();
-                foreach (QuestDef b in before) { walked[b] = Walk(p, b, "end", want, notes); Scratched(b, want); }
+                foreach (QuestDef b in before) { walked[b] = Walk(p, b, "end", want, notes); if (closed.Contains(b)) Scratched(b, want); } // (one a passed stage waits done ended by its own «next: end»: its keys stay)
                 List<Leg> path = target.Length > 0 ? Walk(p, q, target, want, notes) : null;
 
                 int made = 0, unmade = 0;
@@ -483,13 +511,16 @@ namespace HuginWhispers
                     if (State(p, b) == Story.Done) continue;
                     Unbegun(p, b);
                     Story.ForgetSaga(p, b.Id); Sagas(p, b, walked[b]);
-                    if (b.Server) Ask(b, At(p, b), "end", false, true);
+                    List<Leg> w = walked[b];
+                    Leg last = w != null && w.Count > 0 ? w[w.Count - 1] : null;
+                    if (b.Server) Ask(b, last != null && last.Via == null && last.S != null && last.S.Next == "end" ? last.S.Id : At(p, b), "end", false, true); // (ended by its own «next: end», as walked: told on later, its keys kept — the server's Asked)
                     else { Story.SetQuest(p, b.Id, Story.Done); Story.SetStage(p, b.Id, ""); }
                     notes.Add("квест «" + b.Id + "» перед цим вважається пройденим");
                 }
                 Note(q.Id + ": автор → " + (target.Length > 0 ? target : "(не почато)") + " · світ і персонаж як після пройденого: фактів увімкнено " + made + ", вимкнено " + unmade
                     + (after.Count > 0 ? ", квестів після нього стерто " + after.Count : ""));
                 foreach (string n in notes) Note("  · " + n);
+                LocState.AuthorJumped(); // (the places' states by the facts now — at once, in sight: not behind the scenes as in play)
 
                 if (target.Length == 0) { Blank(p, q); return; }
                 Unbegun(p, q);

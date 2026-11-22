@@ -338,7 +338,9 @@ namespace HuginWhispers
         private Transform _seat;
         private ShoulderLife _life;
         private RavenMotor _motor;
-        private int _state;         // 0 sits, 1 circles, 2 to the point before the stone, 3 the final way in, 4 the landing, 5 up and away
+        private int _state;         // 0 sits, 1 circles, 2 to the point before the stone, 3 the final way in (2 and 3: the motor's flight to a seat), 4 the landing, 5 up and away
+        private int _side = 1;      // the side of the stone it comes down from (RavenMotor.SeatSide), asked as it starts down
+        private bool _sideSet;
         private Vector3 _upAim;
         internal static float UpHeight = 40f, UpGone = 30f, UpSeconds = 9f;
         private float _since, _settle, _decideAt, _ring, _swoopUntil = -1f, _lostAt = -1f;
@@ -471,7 +473,7 @@ namespace HuginWhispers
             if (Munin) Hunt();
             bool sit = WantSit();
             if (_state == 0 && !sit) TakeOff();
-            else if (_state == 1 && sit && _swoopUntil < Time.time) { _state = 2; _since = Time.time; }
+            else if (_state == 1 && sit && _swoopUntil < Time.time) { _state = 2; _since = Time.time; _sideSet = false; }
         }
 
         private Player OwnerOrMe { get { Player o = PerchView.PlayerOf(Owner); return o != null ? o : Player.m_localPlayer; } }
@@ -566,26 +568,15 @@ namespace HuginWhispers
             }
             else if (_state == 2 || _state == 3)
             {
-                if (_motor.Body == null || Time.time - _since > GiveUp) { Feathers(transform.position); Feathers(_seat.position); SitDown(); return; } // never got there: a puff here and on the stone
+                // never got there (too long, or the motor's Stuck: out of its sight and no nearer for a while): a puff here and on the stone
+                if (_motor.Body == null || Time.time - _since > GiveUp || _motor.Stuck) { _motor.SeatEnd(_motor.Stuck ? "gave up, stuck out of its sight" : "gave up"); Feathers(transform.position); Feathers(_seat.position); SitDown(); return; }
+                // the motor's flight to a seat (RavenMotor.ToSeat): the way round, the point before the stone on its open side, the last way
+                // in (not the landing dispatcher: that is for the owner's shoulder pair, and this bird is not on them)
                 Vector3 seat = _seat.position, front = Flat(_seat.forward);
-                if (_state == 2)
-                {
-                    // behind the stone on the side it will face from, a little above: then the final way in
-                    Vector3 pre = seat - front * 1.6f + Vector3.up * 1.2f;
-                    _motor.Steer(pre, _motor.Body.Style.Cruise, true, 0f, dt, Vector3.zero, 1f);
-                    _motor.Finish(dt, 0f);
-                    if (Vector3.Distance(transform.position, pre) < 1.2f || Vector3.Distance(transform.position, seat) < 2f) { _motor.Body.MarkFinal(); _state = 3; }
-                }
-                else
-                {
-                    Vector3 aim = seat + Vector3.up * FlightBody.LandAbove - front * FlightBody.LandBehind;
-                    float near = Vector3.Distance(transform.position, aim);
-                    _motor.Body.FaceHint(front, 1f - Mathf.Min(near, RavenFlight.TurnFrom) / RavenFlight.TurnFrom);
-                    float left = _motor.Steer(aim, _motor.Body.HomeSpeed(5f, Vector3.zero, 0f), true, near < 4f ? 2f : 0f, dt, Vector3.zero, 1f);
-                    _motor.Finish(dt, Mathf.Clamp01(1f - near / Mathf.Max(0.5f, _motor.Landing().Flare)));
-                    // (not the landing dispatcher: that is for the owner's shoulder pair, and this bird is not on them)
-                    if (_motor.Body.CanLand(left, Vector3.zero)) { _life.NextLand = _motor.Landing(); BeginLand(); }
-                }
+                if (_state == 2 && !_sideSet) { _sideSet = true; _side = RavenMotor.SeatSide(seat, front); } // heavy: up to three rays, once a flight down
+                bool down = _motor.ToSeat(seat, front, _side, dt, false);
+                _state = _motor.Body != null && _motor.Body.Final ? 3 : 2;
+                if (down) BeginLand();
             }
             else if (_state == 4) { Land(); return; }
             if (this != null && _life != null && _state != 4) _life.Apply();

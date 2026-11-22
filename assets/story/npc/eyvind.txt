@@ -1,13 +1,5 @@
-# Ейвінд (story-lore.md «Глава 2 — кістяк», «Ейвінд»): новий персонаж глави 2. Чарівний і слизький: говорить багато й тепло, бреше легко
-# й без злості, ніколи не йде першим («я б і сам, та коліно»). Краде зі скрині Зали й наших скринь — годує побратима, якого тримає під замком
-# у хатині в Чорному лісі; сам у небезпечне не ходить (має останню смерть). Наприкінці глави лишається в Залі й дає доручення.
-# Перша поява — на самому початку глави 2 сидить на лаві під стіною Зали ліворуч від брами (people/eyvind.txt, hall.lavka). Воронів нема (як у всіх, хто не з Варти).
-# Вигляд — автора (F9 «Вигляд» → «Зберегти» пише сюди; коментарі при цьому зникають). Початковий одяг — з тимчасового шаблону 2026-11-14.
 [npc eyvind]
 name: Ейвінд
-shuns: none   # docs/jobs/people-moves.md
-stance: often                             # пози спокою (NpcStance), часто: і на лаві, де його тримає квест (hold … sit)
-poses: sit_eyvind_hands sit_eyvind_lounge # його власні: розвалився на лаві, нога на нозі — частіше руки на лаві, іноді складені; дуже часто й подовгу (NpcStance: Often, Long; користувач 2026-11-17)
 body: human
 model: 0
 skin: 0.88 0.76 0.66
@@ -15,12 +7,20 @@ haircolor: 0.2 0.16 0.12
 hair: Hair5
 beard: Beard3
 gear: ArmorTrollLeatherChest ArmorTrollLeatherLegs CapeTrollHide
+tint_cape: 0.071 0.329 0.617
+tint_chest: 0.102 0.149 0.201
+shuns: none
+stance: often
+poses: sit_eyvind_hands sit_eyvind_lounge
+moves: dust_off
 fight: off
 walk: 1
 menu: no
-talk: eyvind                              # розмова глави 2: talk/ch2_eyvind.txt (квест ch2_eyvind, користувач 2026-11-17)
+talk: eyvind
 greet: О, друже! Сідай. Ну, не сюди — тут я сиджу.
 greet: Слухаю. Уважно. Майже.
 greet: А, це ти. Я якраз про тебе думав. Добре думав.
 greet: Я тут. Я завжди тут. Коліно.
-persona: chatty=0.9 bravery=0.2 curiosity=0.8 diligence=0.3 lively=1
+persona: chatty=0.9 bravery=0.2 curiosity=0.8 diligence=0.3 lively=1 build=-0.3
+
+voice: own                                # свої слова без питання (NpcVoice): лише власні теми assets/story/words/eyvind.txt — idle, by_lit, at_watch (користувач 2026-11-22: день Ейвінда); до знайомства мовчить (stranger)

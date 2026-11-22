@@ -20,7 +20,7 @@ namespace HuginWhispers
             StoryTrackConds.Register(); // (the conditions and the modules' actions known before any «if»/«do» line is checked)
             Scenes.Clear(); Errors.Clear();
             foreach (KeyValuePair<string, string> kv in StoryFiles.All(StoryFiles.Scenes, Folder, Blueprint.On)) Parse(kv.Key, kv.Value); // (built in; the mod's own folder on the author's machine — StoryFiles)
-            foreach (SceneDef sc in Scenes) CheckPlaces(sc);
+            foreach (SceneDef sc in Scenes) { CheckPlaces(sc); CheckParts(sc); foreach (Step st in sc.Steps) if (st.W[0] == "camera" || st.W[0] == "bars" || st.W[0] == "fade") { sc.Cinema = true; break; } }
             foreach (string e in Errors) Story.Log("scenes: " + e);
             StoryShots.Again(); AudioBank.Again(); // (the author's shots and the story's sounds: from their files again too)
             Story.Log("scenes: " + Scenes.Count + " loaded" + (Errors.Count > 0 ? ", " + Errors.Count + " problems" : ""));
@@ -29,24 +29,47 @@ namespace HuginWhispers
         private static void Parse(string file, string text)
         {
             SceneDef s = null;
+            string part = null; // (the part the lines belong to now: «part <name>»; null — the scene's own line)
             foreach (KeyValuePair<int, string> ln in StoryFiles.Lines(text))
             {
                 string line = ln.Value, at = file + ":" + ln.Key + ": ";
                 if (line.StartsWith("[scene ") && line.EndsWith("]"))
                 {
                     string id = line.Substring(7, line.Length - 8).Trim();
+                    part = null;
                     if (!Story.GoodName(id)) { Errors.Add(at + "погана назва сцени"); s = null; continue; }
                     if (Find0(id) != null) { Errors.Add(at + "сцена «" + id + "» уже є — ця пропущена"); s = null; continue; }
                     s = new SceneDef { Id = id, From = file }; Scenes.Add(s);
                     continue;
                 }
                 if (s == null) { Errors.Add(at + "рядок поза сценою"); continue; }
+                if (line.StartsWith("part ") || line == "part")
+                {
+                    string name = line.Length > 5 ? line.Substring(5).Trim() : "";
+                    if (!Story.GoodName(name)) Errors.Add(at + "part <назва> | part main");
+                    else part = name == "main" ? null : name;
+                    continue;
+                }
                 if (line.StartsWith("roams:")) { string v = line.Substring(6).Trim(); s.Roams = v == "yes" || v == "так" || v == "1"; continue; }
                 if (line.StartsWith("alone:")) { string v = line.Substring(6).Trim(); s.Alone = v == "yes" || v == "так" || v == "1"; continue; }
                 if (line.StartsWith("aside:"))
                 {
                     string v = line.Substring(6).Trim();
                     if (v == "away") s.Away = true; else if (v != "step") Errors.Add(at + "aside: away | step");
+                    continue;
+                }
+                if (line.StartsWith("audience:"))
+                {
+                    foreach (string v in line.Substring(9).Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        float r = F(v, -1f);
+                        if (v == "seen") s.AudienceSeen = true; else if (r >= 5f && r <= StoryWatch.RadiusMost) s.Audience = r; else Errors.Add(at + "audience: <метрів 5–" + StoryWatch.RadiusMost.ToString("0") + "> [seen]");
+                    }
+                    continue;
+                }
+                if (line.StartsWith("camera:"))
+                {
+                    if (line.Substring(7).Trim() == "still") s.Still = true; else Errors.Add(at + "camera: still");
                     continue;
                 }
                 if (line.StartsWith("needs:")) { s.NeedsText = line.Substring(6).Trim(); s.Needs = Conds(s.NeedsText, at); continue; }
@@ -71,6 +94,8 @@ namespace HuginWhispers
                 st.W = st.Text.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 string why = Check(st);
                 if (why != null) { Errors.Add(at + why); continue; }
+                if (part != null && (st.W[0] == "parts" || (st.Kind != null && st.Kind.Lasting))) { Errors.Add(at + "у партії «" + part + "» не можна «" + st.W[0] + "»: такий крок стоїть лише у власній лінії сцени (part main)"); continue; }
+                st.Part = part;
                 if (st.W[0] == "npc" && st.W.Length > 2 && !st.Kind.NotCast && !s.Cast.Contains(st.W[1]) && !Spawned(s, st.W[1])) s.Cast.Add(st.W[1]); // (wanted from the world; its own «spawn» — the scene makes it: not waited for)
                 if (st.W[0] == "until") { int bar = st.Text.LastIndexOf('|'); st.Until = StoryCond.Parse(st.Text.Substring(5, bar - 5), null); st.UntilSec = F(st.Text.Substring(bar + 1).Trim(), 10f); }
                 s.Steps.Add(st);
@@ -98,6 +123,22 @@ namespace HuginWhispers
                 string why = StoryWhere.Why(place);
                 if (why != null) Errors.Add(s.From + ":" + st.Num + ": " + why);
             }
+        }
+
+        // a scene's parts and signs: parts need the «parts go» of its own line (else they never play), a sign waited for is given somewhere
+        private static void CheckParts(SceneDef s)
+        {
+            string at = s.From + " [" + s.Id + "]: ";
+            bool parts = false, go = false;
+            HashSet<string> given = new HashSet<string>();
+            foreach (Step st in s.Steps)
+            {
+                if (st.Part != null) parts = true;
+                if (st.W[0] == "parts") go = true;
+                if (st.W[0] == "cue") given.Add(st.W[1]);
+            }
+            if (parts && !go) Errors.Add(at + "сцена має партії, але у власній лінії нема кроку «parts go» — вони не зіграють");
+            foreach (Step st in s.Steps) if (st.W[0] == "wait" && st.W[1] == "cue" && !given.Contains(st.W[2])) Errors.Add(s.From + ":" + st.Num + ": wait cue «" + st.W[2] + "» — такого знаку («cue " + st.W[2] + "») у сцені ніхто не дає");
         }
 
         // made by the scene itself: «npc <who> spawn …», or a falcon that becomes it («falcon <f> become <who> [as …]») — never waited for from the

@@ -185,7 +185,7 @@ const setters = {}; // key → [{ where, value, quest, stage }]
 const noteAct = (act, where, quest, stage) => {
   const w = act.split(/\s+/), dry = w[0] === 'npc' ? actDry[w[2]] : actDry[w[0]];
   if (!dry) return;
-  const m = /^(set|clear) (me|world) (.+)$/.exec(dry);
+  const m = /^(set|clear|later) (me|world) (.+)$/.exec(dry);
   if (!m) return;
   const [key, value] = keyOf(m[3], w);
   (setters[key] = setters[key] || []).push({ where, value: m[1] === 'clear' ? false : value, quest, stage });
@@ -288,7 +288,7 @@ function walkQuest(q, world, label) {
     if (!dry) { say('NOT JUDGED', stage, 'the action «' + w[0] + (w[0] === 'npc' ? ' … ' + w[2] : '') + '» has no Dry line (src): what it leaves is unknown'); return null; }
     if (dry === 'go') return w[0] === 'end' ? 'end' : w[1];
     if (dry === 'scene' && scenes[w[1]]) { for (const a of scenes[w[1]].does) apply(a, st, stage); return null; }
-    let m = /^(set|clear) (me|world) (.+)$/.exec(dry);
+    let m = /^(set|clear|later) (me|world) (.+)$/.exec(dry);
     if (m) { const [key, value] = keyOf(m[3], w); st[m[2]][key] = m[1] === 'clear' ? false : value; return null; }
     if ((m = /^order (\S+) (\w+)$/.exec(dry))) { const who = fill(m[1], w); if (m[2] === 'free') delete st.orders[who]; else st.orders[who] = { verb: m[2], text: act, from: stage }; }
     return null;

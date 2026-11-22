@@ -1273,12 +1273,7 @@ namespace HuginWhispers
             Vector3 c = new Vector3(at.Cx, 0f, at.Cz);
             string label = at.Type == "cache" ? Lang.F("Схованка {0}", Plugin.RavenNameGen(munin)) : Lang.F("{0}: {1}", Plugin.RavenName(munin), Goal(at));
             if (at.Type == "cache")
-            {
-                Minimap.PinData area = Minimap.instance.AddPin(c, Minimap.PinType.EventArea, "", false, false, 0L, default(Splatform.PlatformUserID));
-                area.m_worldSize = CacheRing * 2f;
-                area.m_icon = ErrandMap.GreyOf(area.m_icon);
-                _pins.Add(area);
-            }
+                _pins.Add(ErrandMap.Zone(c, CacheRing));
             Minimap.PinData mark = Minimap.instance.AddPin(c, Minimap.PinType.RandomEvent, label, false, false, 0L, default(Splatform.PlatformUserID));
             mark.m_icon = ErrandMap.GreyOf(mark.m_icon);
             _pins.Add(mark);
@@ -1300,7 +1295,7 @@ namespace HuginWhispers
             {
                 Minimap.PinData pin = Ours[i];
                 if (pin == null) { Ours.RemoveAt(i); continue; }
-                Color k = pin.m_type == Minimap.PinType.EventArea ? new Color(c.r, c.g, c.b, 0.8f) : c;
+                Color k = ErrandMap.IsZone(pin) ? new Color(c.r, c.g, c.b, 0.8f) : c;
                 if (pin.m_iconElement != null && pin.m_iconElement.color != k) pin.m_iconElement.color = k;
                 if (pin.m_NamePinData != null && pin.m_NamePinData.PinNameText != null && pin.m_NamePinData.PinNameText.color != k) pin.m_NamePinData.PinNameText.color = k;
             }

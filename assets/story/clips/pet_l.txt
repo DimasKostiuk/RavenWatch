@@ -1,0 +1,417 @@
+clip pet_l
+length 3.6
+loop 0
+pivot 1.1
+curve ease
+fade 0.2 0.3
+tone plain
+bird left Neck
+mode Spine1 body
+mode Spine2 body
+mode LeftShoulder body
+mode LeftArm aim
+mode LeftForeArm aim
+mode Neck body
+mode Head body
+say гладить ворона на своєму плечі: рух руки старий, як був (користувач 2026-11-18: «залишити, яка була, просто підігнати під розмір ворона, врахувати, з якого він боку, голову повернути в його бік»)
+
+# Ключі кісток руки — ті самі, що були вбудовані в код (знято з нього скриптом, не правлено).
+# Додано лише: «bird» і точки «.on» — кінець руки ядро дотягує до спини самого ворона (його розмір, його кістка цього кадру);
+# кисть і лікоть лишаються, як їх тримає сама поза. Ворона нема — грає як написано. І погляд у бік ворона.
+
+0 Spine1 0 0 0
+0.3 Spine1 1 -2 -1
+0.32 Spine1 1 -2 -1
+0.34 Spine1 1 -2 -1
+0.36 Spine1 1 -2.1 -1.1
+0.37 Spine1 1.1 -2.1 -1.1
+0.4 Spine1 1.1 -2.3 -1.3
+0.41 Spine1 1.2 -2.3 -1.3
+0.75 Spine1 2 -4 -3
+0.77 Spine1 2 -4 -3
+0.79 Spine1 2 -4 -3
+0.81 Spine1 2 -4 -3
+0.82 Spine1 2 -4 -3
+0.85 Spine1 2 -4 -3
+0.86 Spine1 2 -4 -3
+1.25 Spine1 2 -4 -3
+1.27 Spine1 2 -4 -3
+1.29 Spine1 2 -4 -3
+1.31 Spine1 2 -4 -3
+1.32 Spine1 2 -4 -3
+1.35 Spine1 2 -4 -3
+1.36 Spine1 2 -4 -3
+1.75 Spine1 2 -4 -3
+1.77 Spine1 2 -4 -3
+1.79 Spine1 2 -4 -3
+1.81 Spine1 2 -4 -3
+1.82 Spine1 2 -4 -3
+1.85 Spine1 2 -4 -3
+1.86 Spine1 2 -4 -3
+2.25 Spine1 2 -4 -3
+2.27 Spine1 2 -4 -3
+2.29 Spine1 2 -4 -3
+2.31 Spine1 2 -4 -3
+2.32 Spine1 2 -4 -3
+2.35 Spine1 2 -4 -3
+2.36 Spine1 2 -4 -3
+2.7 Spine1 2 -4 -3
+2.72 Spine1 2 -4 -3
+2.74 Spine1 2 -4 -3
+2.76 Spine1 2 -3.9 -2.9
+2.77 Spine1 1.9 -3.9 -2.9
+2.8 Spine1 1.9 -3.7 -2.7
+2.81 Spine1 1.8 -3.7 -2.7
+3.15 Spine1 1 -2 -1
+3.17 Spine1 1 -2 -1
+3.19 Spine1 1 -2 -1
+3.21 Spine1 1 -1.9 -1
+3.22 Spine1 0.9 -1.9 -0.9
+3.25 Spine1 0.9 -1.7 -0.9
+3.26 Spine1 0.8 -1.7 -0.8
+3.6 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.3 Spine2 2 -3 -2
+0.32 Spine2 2 -3 -2
+0.34 Spine2 2 -3 -2
+0.36 Spine2 2 -3.1 -2.1
+0.37 Spine2 2 -3.1 -2.1
+0.4 Spine2 2.1 -3.3 -2.3
+0.41 Spine2 2.1 -3.3 -2.3
+0.75 Spine2 3 -6 -5
+0.77 Spine2 3 -6 -5
+0.79 Spine2 3 -6 -5
+0.81 Spine2 3 -6 -5
+0.82 Spine2 3 -6 -5
+0.85 Spine2 3 -6 -5
+0.86 Spine2 3 -6 -5
+1.25 Spine2 3 -6 -5
+1.27 Spine2 3 -6 -5
+1.29 Spine2 3 -6 -5
+1.31 Spine2 3 -6 -5
+1.32 Spine2 3 -6 -5
+1.35 Spine2 3 -6 -5
+1.36 Spine2 3 -6 -5
+1.75 Spine2 3 -6 -5
+1.77 Spine2 3 -6 -5
+1.79 Spine2 3 -6 -5
+1.81 Spine2 3 -6 -5
+1.82 Spine2 3 -6 -5
+1.85 Spine2 3 -6 -5
+1.86 Spine2 3 -6 -5
+2.25 Spine2 3 -6 -5
+2.27 Spine2 3 -6 -5
+2.29 Spine2 3 -6 -5
+2.31 Spine2 3 -6 -5
+2.32 Spine2 3 -6 -5
+2.35 Spine2 3 -6 -5
+2.36 Spine2 3 -6 -5
+2.7 Spine2 3 -6 -5
+2.72 Spine2 3 -6 -5
+2.74 Spine2 3 -6 -5
+2.76 Spine2 3 -5.9 -4.9
+2.77 Spine2 3 -5.9 -4.9
+2.8 Spine2 2.9 -5.7 -4.7
+2.81 Spine2 2.9 -5.7 -4.7
+3.15 Spine2 2 -3 -2
+3.17 Spine2 2 -3 -2
+3.19 Spine2 2 -3 -2
+3.21 Spine2 2 -2.9 -2
+3.22 Spine2 1.9 -2.9 -1.9
+3.25 Spine2 1.8 -2.7 -1.8
+3.26 Spine2 1.8 -2.7 -1.8
+3.6 Spine2 0 0 0
+
+0 LeftShoulder 0 0 0
+0.3 LeftShoulder -1 0 3.8
+0.32 LeftShoulder -1 0 4
+0.34 LeftShoulder -1 0 4
+0.36 LeftShoulder -1 0 4.1
+0.37 LeftShoulder -1 0 4.1
+0.4 LeftShoulder -1 0 4.4
+0.41 LeftShoulder -1.1 0 4.6
+0.75 LeftShoulder -2 0 12.8
+0.77 LeftShoulder -2 0 12.9
+0.79 LeftShoulder -2 0 13
+0.81 LeftShoulder -2 0 13
+0.82 LeftShoulder -2 0 13
+0.85 LeftShoulder -2 0 13
+0.86 LeftShoulder -2.1 0 13.1
+1.25 LeftShoulder -3 0 14
+1.27 LeftShoulder -3 0 14
+1.29 LeftShoulder -3 0 14
+1.31 LeftShoulder -3 0 14
+1.32 LeftShoulder -3 0 14
+1.35 LeftShoulder -3 0 14
+1.36 LeftShoulder -2.9 0 13.9
+1.75 LeftShoulder -2 0 13
+1.77 LeftShoulder -2 0 13
+1.79 LeftShoulder -2 0 13
+1.81 LeftShoulder -2 0 13
+1.82 LeftShoulder -2 0 13
+1.85 LeftShoulder -2 0 13
+1.86 LeftShoulder -2.1 0 13.1
+2.25 LeftShoulder -3 0 14
+2.27 LeftShoulder -3 0 14
+2.29 LeftShoulder -3 0 14
+2.31 LeftShoulder -3 0 14
+2.32 LeftShoulder -3 0 14
+2.35 LeftShoulder -3 0 14
+2.36 LeftShoulder -2.9 0 13.9
+2.7 LeftShoulder -2 0 13
+2.72 LeftShoulder -2 0 13
+2.74 LeftShoulder -2 0 13
+2.76 LeftShoulder -2 0 12.9
+2.77 LeftShoulder -2 0 12.9
+2.8 LeftShoulder -2 0 12.6
+2.81 LeftShoulder -1.9 0 12.4
+3.15 LeftShoulder -1 0 4.2
+3.17 LeftShoulder -1 0 4.1
+3.19 LeftShoulder -1 0 4
+3.21 LeftShoulder -1 0 4
+3.22 LeftShoulder -1 0 3.9
+3.25 LeftShoulder -0.9 0 3.8
+3.26 LeftShoulder -0.9 0 3.7
+3.6 LeftShoulder 0 0 0
+
+0 LeftArm -70 -101 0
+0.3 LeftArm -62.8 -45.7 0
+0.32 LeftArm -62.4 -43 0
+0.34 LeftArm -62.1 -41.1 0
+0.36 LeftArm -62 -40.1 0
+0.37 LeftArm -62 -40 0
+0.4 LeftArm -61.5 -40.3 0
+0.41 LeftArm -61.1 -40.4 0
+0.75 LeftArm -22.7 -58.7 0
+0.77 LeftArm -21.4 -59.3 0
+0.79 LeftArm -20.5 -59.7 0
+0.81 LeftArm -20.1 -60 0
+0.82 LeftArm -20 -60 0
+0.85 LeftArm -20 -59.9 0
+0.86 LeftArm -19.9 -59.9 0
+1.25 LeftArm -16.2 -52.4 0
+1.27 LeftArm -16.1 -52.2 0
+1.29 LeftArm -16 -52.1 0
+1.31 LeftArm -16 -52 0
+1.32 LeftArm -16 -52 0
+1.35 LeftArm -16 -52.1 0
+1.36 LeftArm -16.1 -52.1 0
+1.75 LeftArm -19.8 -59.6 0
+1.77 LeftArm -19.9 -59.8 0
+1.79 LeftArm -20 -59.9 0
+1.81 LeftArm -20 -60 0
+1.82 LeftArm -20 -60 0
+1.85 LeftArm -20 -59.9 0
+1.86 LeftArm -19.9 -59.9 0
+2.25 LeftArm -16.2 -52.4 0
+2.27 LeftArm -16.1 -52.2 0
+2.29 LeftArm -16 -52.1 0
+2.31 LeftArm -16 -52 0
+2.32 LeftArm -16 -52 0
+2.35 LeftArm -16.1 -52.1 0
+2.36 LeftArm -16.1 -52.2 0
+2.7 LeftArm -19.7 -59.5 0
+2.72 LeftArm -19.9 -59.7 0
+2.74 LeftArm -19.9 -59.9 0
+2.76 LeftArm -20 -60 0
+2.77 LeftArm -20 -60 0
+2.8 LeftArm -20.5 -59.7 0
+2.81 LeftArm -20.9 -59.6 0
+3.15 LeftArm -59.3 -41.3 0
+3.17 LeftArm -60.6 -40.7 0
+3.19 LeftArm -61.5 -40.3 0
+3.21 LeftArm -61.9 -40 0
+3.22 LeftArm -62 -40 0
+3.25 LeftArm -62.1 -41.1 0
+3.26 LeftArm -62.2 -41.9 0
+3.6 LeftArm -70 -101 0
+
+0 LeftForeArm -49 1 0
+0.3 LeftForeArm -29.3 -20.4 0
+0.32 LeftForeArm -28 -21.8 0
+0.34 LeftForeArm -26.9 -23 0
+0.36 LeftForeArm -26 -23.9 0
+0.37 LeftForeArm -25.6 -24.3 0
+0.4 LeftForeArm -25 -25 0
+0.41 LeftForeArm -25 -25 0
+0.75 LeftForeArm 52.3 -22.5 0
+0.77 LeftForeArm 56.5 -22.3 0
+0.79 LeftForeArm 60.1 -22.2 0
+0.81 LeftForeArm 62.9 -22.1 0
+0.82 LeftForeArm 64 -22.1 0
+0.85 LeftForeArm 65.9 -22 0
+0.86 LeftForeArm 66 -22 0
+1.25 LeftForeArm 69.5 -6.2 0
+1.27 LeftForeArm 69.7 -5.5 0
+1.29 LeftForeArm 69.8 -5 0
+1.31 LeftForeArm 69.9 -4.5 0
+1.32 LeftForeArm 69.9 -4.3 0
+1.35 LeftForeArm 70 -4 0
+1.36 LeftForeArm 70 -4 0
+1.75 LeftForeArm 66.5 -19.8 0
+1.77 LeftForeArm 66.3 -20.5 0
+1.79 LeftForeArm 66.2 -21 0
+1.81 LeftForeArm 66.1 -21.5 0
+1.82 LeftForeArm 66.1 -21.7 0
+1.85 LeftForeArm 66 -22 0
+1.86 LeftForeArm 66 -22 0
+2.25 LeftForeArm 69.5 -6.2 0
+2.27 LeftForeArm 69.7 -5.5 0
+2.29 LeftForeArm 69.8 -5 0
+2.31 LeftForeArm 69.9 -4.5 0
+2.32 LeftForeArm 69.9 -4.3 0
+2.35 LeftForeArm 70 -4 0
+2.36 LeftForeArm 70 -4 0
+2.7 LeftForeArm 66.6 -19.3 0
+2.72 LeftForeArm 66.4 -20.1 0
+2.74 LeftForeArm 66.3 -20.8 0
+2.76 LeftForeArm 66.1 -21.4 0
+2.77 LeftForeArm 66.1 -21.6 0
+2.8 LeftForeArm 66 -22 0
+2.81 LeftForeArm 66 -22 0
+3.15 LeftForeArm -11.3 -24.5 0
+3.17 LeftForeArm -15.5 -24.7 0
+3.19 LeftForeArm -19.1 -24.8 0
+3.21 LeftForeArm -21.9 -24.9 0
+3.22 LeftForeArm -23 -24.9 0
+3.25 LeftForeArm -24.9 -25 0
+3.26 LeftForeArm -25 -25 0
+3.6 LeftForeArm -49 1 0
+
+0 Neck 0 0 0
+0.3 Neck 0.9 -3.7 0
+0.32 Neck 1 -3.9 0
+0.34 Neck 1 -4 0
+0.36 Neck 1 -4 0
+0.37 Neck 1 -4 0
+0.4 Neck 1.1 -4.1 0
+0.41 Neck 1.1 -4.2 0
+0.75 Neck 3.9 -9.7 0
+0.77 Neck 3.9 -9.9 0
+0.79 Neck 4 -10 0
+0.81 Neck 4 -10 0
+0.82 Neck 4 -10 0
+0.85 Neck 4 -10 0
+0.86 Neck 4 -10 0
+1.25 Neck 4 -10 0
+1.27 Neck 4 -10 0
+1.29 Neck 4 -10 0
+1.31 Neck 4 -10 0
+1.32 Neck 4 -10 0
+1.35 Neck 4 -10 0
+1.36 Neck 4 -10 0
+1.75 Neck 4 -10 0
+1.77 Neck 4 -10 0
+1.79 Neck 4 -10 0
+1.81 Neck 4 -10 0
+1.82 Neck 4 -10 0
+1.85 Neck 4 -10 0
+1.86 Neck 4 -10 0
+2.25 Neck 4 -10 0
+2.27 Neck 4 -10 0
+2.29 Neck 4 -10 0
+2.31 Neck 4 -10 0
+2.32 Neck 4 -10 0
+2.35 Neck 4 -10 0
+2.36 Neck 4 -10 0
+2.7 Neck 4 -10 0
+2.72 Neck 4 -10 0
+2.74 Neck 4 -10 0
+2.76 Neck 4 -10 0
+2.77 Neck 4 -10 0
+2.8 Neck 3.9 -9.9 0
+2.81 Neck 3.9 -9.8 0
+3.15 Neck 1.1 -4.3 0
+3.17 Neck 1.1 -4.1 0
+3.19 Neck 1 -4 0
+3.21 Neck 1 -4 0
+3.22 Neck 1 -4 0
+3.25 Neck 1 -3.9 0
+3.26 Neck 1 -3.8 0
+3.6 Neck 0 0 0
+
+0 Head 0 0 0
+0.3 Head 3.4 -8.4 0
+0.32 Head 3.6 -9 0
+0.34 Head 3.8 -9.4 0
+0.36 Head 3.9 -9.7 0
+0.37 Head 3.9 -9.8 0
+0.4 Head 4 -10 0
+0.41 Head 4 -10 0
+0.75 Head 11 -24 0
+0.77 Head 11.3 -24.7 0
+0.79 Head 11.6 -25.2 0
+0.81 Head 11.8 -25.6 0
+0.82 Head 11.9 -25.8 0
+0.85 Head 12 -26 0
+0.86 Head 12 -26 0
+1.25 Head 12 -26.9 0
+1.27 Head 12 -26.9 0
+1.29 Head 12 -27 0
+1.31 Head 12 -27 0
+1.32 Head 12 -27 0
+1.35 Head 12 -27 0
+1.36 Head 12 -27 0
+1.75 Head 12 -26.1 0
+1.77 Head 12 -26.1 0
+1.79 Head 12 -26 0
+1.81 Head 12 -26 0
+1.82 Head 12 -26 0
+1.85 Head 12 -26 0
+1.86 Head 12 -26 0
+2.25 Head 12 -26.9 0
+2.27 Head 12 -26.9 0
+2.29 Head 12 -27 0
+2.31 Head 12 -27 0
+2.32 Head 12 -27 0
+2.35 Head 12 -27 0
+2.36 Head 12 -27 0
+2.7 Head 12 -26.1 0
+2.72 Head 12 -26.1 0
+2.74 Head 12 -26 0
+2.76 Head 12 -26 0
+2.77 Head 12 -26 0
+2.8 Head 12 -26 0
+2.81 Head 12 -26 0
+3.15 Head 5 -10.3 0
+3.17 Head 4.7 -9.5 0
+3.19 Head 4.4 -8.9 0
+3.21 Head 4.2 -8.4 0
+3.22 Head 4.1 -8.2 0
+3.25 Head 4 -8 0
+3.26 Head 4 -8 0
+3.6 Head 0 0 0
+
+
+
+
+
+
+
+
+
+
+0.9 @LeftHand.on -0.11 -0.04 0.03
+1.5 @LeftHand.on -0.11 0 0.024999999999999998
+1.8 @LeftHand.on -0.12 -0.02 0.04
+2 @LeftHand.on -0.11 -0.04 0.03
+2.6 @LeftHand.on -0.11 0 0.024999999999999998
+
+0 @LeftHand.on.f 0 0.8 -0.6
+
+0 @LeftHand.on.w 0 0 0
+0.45 @LeftHand.on.w 0 0 0
+0.9 @LeftHand.on.w 1 0 0
+2.6 @LeftHand.on.w 1 0 0
+3.1 @LeftHand.on.w 0 0 0
+3.6 @LeftHand.on.w 0 0 0
+
+0 @Look -0.9 1.62 0.8
+
+0 @Look.w 0 0 0
+0.3 @Look.w 0 0 0
+0.9 @Look.w 0.55 0 0
+2.6 @Look.w 0.55 0 0
+3.3 @Look.w 0 0 0
+3.6 @Look.w 0 0 0

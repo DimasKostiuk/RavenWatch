@@ -20,6 +20,8 @@ namespace HuginWhispers
     //                                                              side by side; its mind walks there and sits, NpcMind «sit»); no seat there: on the ground by it
     //   npc heid hold <place[.piece]> ahead …                      …she goes ahead of the player and waits there (the user 2026-11-16: «go after Heid to the Hall» — she
     //                                                              followed him instead): not at her ease but as one called — quick from far, a walk the last metres (NpcMind.PaceRule, Order)
+    //   npc heid hold <place[.piece]> hurry …                      …in a hurry, never a sprint: a jog from far, a walk its last metres (NpcMind.Plan.Hurry, HurryWalk m — the user
+    //                                                              2026-11-18: Torvald left behind on the way home hurries to the Hall, and walks calmly in it)
     //   npc heid free                                              «вільно»: its own day again (a scene's own step too)
     // Its own day says such a word too: an «at:» line whose place stands past its home's reach (StoryLife.Far — Torvald's watch on the edge of the
     // Meadows) is its word in those hours, while the story has none for it; the hours over, the word is gone and it is let go (home the long way, as
@@ -45,7 +47,30 @@ namespace HuginWhispers
         private static readonly Dictionary<NpcActor, State> States = new Dictionary<NpcActor, State>(); // session: a body's clock and what its clip is at
         private static string Key(string who) { return "hold_" + who; }
 
-        internal const string Usage = "npc <хто> hold <місце> [by <місце>] [then <місце> [by <місце>]]… [every <с>] [here] [ahead] [stand|sit|clip <кліп> [from <кліп>] [out <кліп>]|emote <жест>]";
+        // Is it THERE: where its word has it, as its word has it — stood at its spot, sat on its seat, in its clip (the user 2026-11-20: a scene
+        // began with its people on their way, 3–4 m off, by the author's «npcnear» alone). Kept in its locker (NpcLocker.Lives: it changes when it comes and goes, never while it walks), written by the game that runs it;
+        // read by every game: a scene waits for it (StoryScenes.Unset), the condition «npcset» asks it. No word: there
+        internal static readonly int KThere = "RavenWatch_npcThere".GetStableHashCode();
+        internal static bool There(ZDO z) { return z == null || Now(z).Length == 0 || NpcLocker.Flag(z, KThere); }
+        private static void Is(ZDO z, bool there) { if (there != NpcLocker.Flag(z, KThere)) NpcLocker.Put(z, KThere, there); } // (in its locker, written only when it changes — and never a «no» for one that has no «yes»: a person with no word is asked each pass, and a write makes its locker)
+        internal static float SpotApart = 0.7f; // m: two held people's spots nearer than this are one spot
+        // nobody else's spot: another held person stands (or is to stand) there
+        private static bool Untaken(NpcActor me, Vector3 s)
+        {
+            foreach (KeyValuePair<NpcActor, State> kv in States)
+                if (kv.Key != null && kv.Key != me && kv.Value.SpotFor.Length > 0 && (kv.Value.Spot - s).sqrMagnitude < SpotApart * SpotApart) return false; // (in the round: a spot on the floor above is another spot)
+            return true;
+        }
+        // where its word has it stand by that place, if its word names it and the spot is reckoned on this game (the studio's «npc <who> at»)
+        internal static bool SpotOf(NpcActor a, string place, out Vector3 at)
+        {
+            at = Vector3.zero; State st;
+            if (a == null || !States.TryGetValue(a, out st) || st.SpotFor.Length == 0 || st.Told == null) return false;
+            foreach (Spot s in st.Told.Spots) if (s.Thing == place.ToLowerInvariant()) { at = st.Spot; return true; }
+            return false;
+        }
+
+        internal const string Usage = "npc <хто> hold <місце> [by <місце>] [then <місце> [by <місце>]]… [every <с>] [here] [ahead] [hurry] [stand|sit|clip <кліп> [from <кліп>] [out <кліп>]|emote <жест>]";
         internal static string Set(string who, string text) { string why = Why(text); if (why != null) return why; StoryWorld.SetText(Key(who), text); return null; }
 
         // what is wrong with a word (the load check too), null: fine
@@ -90,7 +115,7 @@ namespace HuginWhispers
         }
 
         private sealed class Spot { public string Thing = "", By = ""; }
-        private sealed class Word { public bool Good, Here, Ahead; public string Text = "", Kind = "stand", Pose = "", From = "", Out = ""; public float Every; public readonly List<Spot> Spots = new List<Spot>(); }
+        private sealed class Word { public bool Good, Here, Ahead, Hurry; public string Text = "", Kind = "stand", Pose = "", From = "", Out = ""; public float Every; public readonly List<Spot> Spots = new List<Spot>(); }
         private static Word Parse(string text)
         {
             string[] w = (text ?? "").Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
@@ -110,6 +135,7 @@ namespace HuginWhispers
             if (i + 1 < w.Length && w[i] == "every") { if (!float.TryParse(w[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out r.Every) || r.Every <= 0f) return r; i += 2; }
             if (i < w.Length && w[i] == "here") { r.Here = true; i++; }
             if (i < w.Length && w[i] == "ahead") { r.Ahead = true; i++; } // (it leads the way: not at its ease)
+            if (i < w.Length && w[i] == "hurry") { r.Hurry = true; i++; } // (in a hurry, never a sprint: a jog, a walk the last metres — NpcMind.Plan.Hurry)
             if (w.Length == i || w[i] == "stand") { r.Good = true; return r; }
             if (w[i] == "sit") { r.Kind = "sit"; r.Good = w.Length == i + 1; return r; }
             if ((w[i] != "clip" && w[i] != "emote") || w.Length < i + 2) return r;
@@ -153,6 +179,7 @@ namespace HuginWhispers
             bool was = zdo.GetBool(KHeld, false);
             if (text.Length == 0)
             {
+                Is(zdo, false); st.SpotFor = ""; // (its spot is nobody's now: Untaken)
                 if (!was) return;
                 zdo.Set(KHeld, false);
                 if (held != null) a.Order("free", NpcMind.Layer.Order, Whose); // (its look at the spot goes with it: set by the same owner)
@@ -167,40 +194,49 @@ namespace HuginWhispers
             if (want != st.Place && (st.Place < 0 || !m.InTalk) && !Leave(a, st, word, want)) return; // (someone talks to it: its next place waits)
             Spot spot = word.Spots[Mathf.Min(st.Place, word.Spots.Count - 1)];
             Vector3 at;
-            if (!StoryWhere.Standing(spot.Thing, out at)) return; // (its place not standing yet: the word waits)
+            if (!StoryWhere.Standing(spot.Thing, out at)) { Is(zdo, false); return; } // (its place not standing yet: the word waits)
             if (word.Kind == "sit") // (its mind finds the seat round the thing, walks there and sits — told once; sat, nothing more; sat on the ground
             {                       //  for want of one and a seat free there now — the bench of a state that came later: told again, it gets up for it)
                 if (held == null || held.Kind != NpcMind.Task.Sit || (!scene && held.Seated && !held.OnPoint && Time.time >= st.Reseat && m.SeatNear(at))) { st.Reseat = Time.time + ReseatEvery; StoryProps.SetDown(a, false, true); a.Order("sit " + V(at), NpcMind.Layer.Order, Whose); }
+                Is(zdo, held != null && held.Kind == NpcMind.Task.Sit && held.Seated); // (sat: on its seat or, for want of one, on the ground by it)
                 return;
             }
             // by the thing, not in it: a step out from its edge on the side it comes from (a fire: she walked into it and burned; a bed: knelt on
             // it) — reckoned once a word, so it does not slide as she comes
-            if (st.SpotFor != text && (spot.Thing.IndexOf('.') < 0 || StoryWhere.Piece(spot.Thing) != null)) { Vector3 by; st.Spot = StoryWhere.StandBy(spot.Thing, Side(spot, a), at, word.Kind == "clip" && !word.Here, out by) ? by : at; st.SpotFor = text; } // (a clip there works with its hands: a step nearer) // (its piece loaded here: else its middle till it is)
+            if (st.SpotFor != text && (spot.Thing.IndexOf('.') < 0 || StoryWhere.Piece(spot.Thing) != null)) { Vector3 by; st.Spot = StoryWhere.StandBy(spot.Thing, Side(spot, a), at, word.Kind == "clip" && !word.Here, out by, word.Pose, s => Untaken(a, s)) ? by : at; st.SpotFor = text; } // (a clip there works with its hands: a step nearer) // (its piece loaded here: else its middle till it is)
             else if (st.SpotFor != text && StoryWhere.OfModule(spot.Thing)) { Vector3 d = a.transform.position - at; d.y = 0f; st.Spot = at + (d.sqrMagnitude > 0.01f ? d.normalized : Vector3.forward) * ModuleStep; st.SpotFor = text; } // (a module's place, «heart.first»: no edge known — a step off its middle on the side it comes from, never into the heart)
             Vector3 look = at + Vector3.up * 0.5f; // (it looks at the thing, not at the spot it stands on: it stared at its own feet, 2026-11-04)
             if (st.SpotFor == text) at = st.Spot;
             float far = Utils.DistanceXZ(a.transform.position, at);
             bool close = word.Kind == "clip" && !word.Here; // (its hands work on the thing: to the very spot)
-            if (far > (close ? ClipNear : Near))
+            // its «go» there ended as «there» by its feet's own rule (NpcWalk.By: to the surface of the thing its spot is in; the plan waits on
+            // as «idle» at that spot) — there, though further than Near as the crow flies: Sverre was told «go» every 2 s for an evening, 2.1 m
+            // off his spot by the Hall's pillar, and «came» in 0.0 s each time (walks.txt, 2026-11-20)
+            bool came = !close && held != null && held.Kind == NpcMind.Task.Idle && Utils.DistanceXZ(held.To, at) <= 0.3f && far <= Near * 2f; // flat: its plan's own goal and its word's spot, the same spot twice (as the «go» check below)
+            if (far > (close ? ClipNear : Near) && !came)
             {
+                Is(zdo, false);
                 if (word.Kind == "clip" && !scene && OfWord(word, ClipOn(a))) { st.Clip = st.Looping = false; a.Order("clip none", NpcMind.Layer.Order, Whose); } // (a clip brought back by its ZDO, its place another by now: it does not walk bent)
                 if (far > FarWalk) // (a long way: NpcTravel's — a leg at a time, and on out of sight when nobody is near; a plain «go» finds no way that far)
                 {
                     if (held == null || held.Kind != NpcMind.Task.Travel || (held.To - at).sqrMagnitude > 0.09f) a.Order("travel " + V(at) + " " + NpcTravel.ToWord, NpcMind.Layer.Order, Whose);
                     return;
                 }
-                if (held == null || held.Kind != NpcMind.Task.Go || Utils.DistanceXZ(held.To, at) > 0.3f) a.Order(Go(at, close, word.Ahead), NpcMind.Layer.Order, Whose);
+                if (held == null || held.Kind != NpcMind.Task.Go || Utils.DistanceXZ(held.To, at) > 0.3f || held.Hurry != word.Hurry || held.Ease != (!word.Ahead && !word.Hurry)) a.Order(Go(at, close, word.Ahead, word.Hurry), NpcMind.Layer.Order, Whose); // (its pace another now: the same place, told anew — he was walking home at his ease, then hurries)
                 return;
             }
             bool posing = held != null && held.Kind == NpcMind.Task.Pose;
-            if (word.Kind == "stand") { if (held == null || posing) a.Order(Go(at, close, word.Ahead), NpcMind.Layer.Order, Whose); return; } // (there: idle on its layer; out of the gesture of the word before)
+            bool still = held != null && held.Kind == NpcMind.Task.Idle; // (its walk there over: the plan waits on as «idle» at the spot)
+            if (word.Kind == "stand") { if (held == null || posing) a.Order(Go(at, close, word.Ahead, word.Hurry), NpcMind.Layer.Order, Whose); Is(zdo, still); return; } // (there: idle on its layer; out of the gesture of the word before)
             if (word.Kind == "emote")
             {
+                Is(zdo, posing);
                 if (held == null || held.Kind != NpcMind.Task.Pose) { StoryProps.SetDown(a, false, true); a.Order("lookat " + V(look), NpcMind.Layer.Order, Whose); a.Order("emote " + word.Pose + " loop", NpcMind.Layer.Order, Whose); } // (a thing of its own off its arm first, here where it stands)
                 return;
             }
             // our clip over an idle there (a body thing, not a plan): once, and again only a minute before its term
-            if (held == null || posing) a.Order(Go(at, close, word.Ahead), NpcMind.Layer.Order, Whose);
+            if (held == null || posing) a.Order(Go(at, close, word.Ahead, word.Hurry), NpcMind.Layer.Order, Whose);
+            Is(zdo, still); // (at its spot: what its hands do there is not asked — a talk lets them down, a scene gives it clips of its own, and a scene that begins as a talk ends must not wait for the clip's way in)
             if (scene) return; // (a scene has it: its own clips)
             if (m.InTalk && !NpcMoves.TalkFits(word.Pose)) // (someone talks to it: its hands' work — a stir, a look over the wall — out by its way out, asked again after the talk; arms folded stay: NpcMoves «a talk»)
             {
@@ -268,7 +304,7 @@ namespace HuginWhispers
         private static string ClipOn(NpcActor a) { BodyAnimator b = BodyAnimator.Of(a.GetComponent<Character>()); return b != null && b.Holding(NpcBody.ClipSlot, b.ClipIn(NpcBody.ClipSlot)) ? b.ClipIn(NpcBody.ClipSlot) : null; }
 
         // at its ease (NpcMind «go … ease»): the story's word is not a player calling it — a walk, a jog only from far (it ran in to the heart from 70 m, 2026-11-15)
-        private static string Go(Vector3 at, bool close, bool ahead) { return "go " + V(at) + (ahead ? "" : " ease") + (close ? " near 0.3 exact" : ""); } // (ahead: the word «ahead» — it leads someone there, quick from far)
+        private static string Go(Vector3 at, bool close, bool ahead, bool hurry = false) { return "go " + V(at) + (hurry ? " hurry" : ahead ? "" : " ease") + (close ? " near 0.3 exact" : ""); } // (ahead: the word «ahead» — it leads someone there, quick from far)
 
         private static string V(Vector3 v) { return v.x.ToString("0.00", CultureInfo.InvariantCulture) + " " + v.y.ToString("0.00", CultureInfo.InvariantCulture) + " " + v.z.ToString("0.00", CultureInfo.InvariantCulture); }
     }

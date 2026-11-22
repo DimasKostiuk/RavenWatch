@@ -89,6 +89,7 @@ namespace HuginWhispers
         internal static void Tick()
         {
             if (_until > 0f && Time.time >= _until) { _endedAt = _until; _until = -1f; }
+            LetGoAsHeSetsOff();
             Ask w = _wait;
             if (w == null) return;
             if (Time.time > w.Until) { _wait = null; return; }
@@ -98,6 +99,26 @@ namespace HuginWhispers
             if (a == null || (a.Playing(2) && (Time.time >= _until || w.Pri <= _cur))) return;
             _wait = null;
             Start(p, a, w.Munin, w.Clip, w.Pri, w.Sided);
+        }
+
+        // A gesture begun standing goes on for its seconds whatever he does next — and one that holds his legs or his whole body (PAnimClip.HoldsWalk:
+        // «fire_warm» keys both feet and shifts his weight) kept them while he ran off: the feet pulled back to where they stood (the user 2026-11-21:
+        // «коли ми гріємо руки біля вогню… коли біжимо швидко, то ноги чомусь себе дивно ведуть»). The one rule of it, asked by a person's walk and
+        // a scene's walk too (NpcBody.ClipFirst, StoryWalk): such a clip is let go as the walk starts; a stroke, a nod, a look play on over it. Here:
+        // his own gesture on the gesture layer, the moment he moves faster than SetOff. Not a scene's pose (the scene walks him itself: StoryWalk).
+        // Cost: one velocity a frame while a gesture of ours plays, the layers looked through only when he moves
+        internal static float SetOff = 0.6f;
+        private static void LetGoAsHeSetsOff()
+        {
+            if (_until <= 0f || _until == float.MaxValue) return;
+            Player p = Player.m_localPlayer;
+            if (p == null) return;
+            Vector3 v = p.GetVelocity(); v.y = 0f;
+            if (v.sqrMagnitude < SetOff * SetOff) return;
+            BodyAnimator a = BodyAnimator.Of(p);
+            if (a == null || a.HoldsWalk() == null) return;
+            BodyClips.Stop(p, 2, Fade);
+            _endedAt = Time.time; _until = -1f;
         }
 
         private static bool Start(Player p, BodyAnimator a, bool munin, string clip, Pri pri, bool sided)

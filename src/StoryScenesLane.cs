@@ -123,7 +123,8 @@ namespace HuginWhispers
             bool thing = StoryWhere.IsLow(who);
             float aimUp = thing ? 0f : PlaceUp;
             Vector3 seen = first, lens = Vector3.zero; bool begun = false; float wasAlong = from, moves = -1f; // (moves: which way along the lane the one filmed goes — toward its start till it is seen to go the other way)
-            Func<Vector3> aim = () => { Vector3 now; if (StoryWhere.Find(who, out now)) seen = now; return seen + Vector3.up * aimUp; };
+            Subject rs; Func<Vector3> body = !thing && Who(p, who, out rs) && rs.Body != null ? rs.Head : null; // (a body: its head, as every shot aims — Who; the review 2026-11-18)
+            Func<Vector3> aim = () => { Vector3 now; if (StoryWhere.Find(who, out now)) seen = now; return body != null ? body() : seen + Vector3.up * aimUp; };
             float f = fov > 1f ? fov : RailFov, near = side; int lensMask = LensMask;
             // (its own pose, not the shots' «nothing between the lens and its aim»: a trunk passing before a riding lens is a picture; the lens
             //  jumping in onto the bird to get round that trunk is not — the first run, 2026-11-14. What it does keep: never inside a trunk or a rock —

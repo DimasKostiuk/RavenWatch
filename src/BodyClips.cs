@@ -47,6 +47,16 @@ namespace HuginWhispers
     //             With no thing: «@LeftHand.f», «@RightHand.f» where its fingers go and «….n» where its palm faces, directions
     //             in the body's frame (x right, y up, z ahead), by the hand target's own weight: a palm flat on a door, a hand
     //             turned up for a key — not the wrist's angles, which lie on the game's pose (and differ left and right).
+    //   Bird    — «bird right|left» in a clip: the raven of that side of the body (a player's on its shoulder or its arm: Shoulder.ModelOf; a person's on
+    //             its shoulder: NpcRaven.BirdOn) is the thing its «….on» points lie on (the user 2026-11-18: «рука далеко від ворона… підлаштовувати під
+    //             розмір ворона»; the stroke was a baked arm pose that knew nothing of the bird). The frame is the bird's own: from its «Spine» bone, x to
+    //             its right, y up, z to its head, as it sits and leans this very frame («bird right Neck»: from that bone of its skeleton instead — its head,
+    //             wherever it turns and bows it: the user 2026-11-18 «можеш цю анімацію просто до скелету птаха привязати»); the metres are a full-grown raven's and shrink with the bird
+    //             (Shoulder.SizeOf), so one clip lies on a small bird and a big one. «….on.f», «….on.n» in the same frame. The point is where the
+    //             middle of the FINGERS lies (on a thing it is the wrist): the wrist is put back from it along the fingers by the hand's own length
+    //             (BodyAnimator.FingerReach), which does not shrink with the bird. A clip with «.on» alone (no «.on.f», no target of the hand's own,
+    //             no «.p») keeps its own arm pose: the fingers as its bones have them, the elbow bent the way it is, only the hand's end brought onto
+    //             the bird — and with no bird there (flown off) it plays as it is written.
     //   Parts   — «part <name> <from> <to> hold|loop|end» in a clip: a stretch of it that is a clip by itself, «<clip>.<name>»,
     //             for anything that plays a clip: played to its end and held there till the next one (hold), round and
     //             round (loop), or to its end and off (end). Two parts of a clip meet in a crossfade like any two clips;
@@ -128,9 +138,13 @@ namespace HuginWhispers
         public bool IsPart;                         // a part of another clip (the head of this file): made from it, never saved or edited
         public bool GroundFeet;                     // «feet ground» (the head of this file)
         public readonly Dictionary<string, string> Follow = new Dictionary<string, string>(); // «follow @RightHand Spine2»: a target riding on a bone (the head of this file)
+        public bool WomenFight;                     // «women fighters»: on a woman of people's own life only one who fights (Guard.Is: a guard, a fighter's template) — NpcMoves.May (the user 2026-11-18: rubbing her neck «для гейд точно не треба і для більшості жінок. Тільки бойовим жінкам»)
+        public string[] Hero = new string[0];       // «hero idle rain …»: the player does it of himself at those moments (Moments: its words); none — never of himself
+        public string BirdBone = "Spine";           // … and «bird right Neck»: the bone of the raven's own skeleton its points are reckoned from (none said: its back, Spine)
+        public int Bird;                            // «bird right|left»: 1 right, -1 left — the raven of that side of the body is what its «….on» points lie on (the head of this file)
         public float Strength = 1f;                 // «strength x» (the head of this file)
         public float In = -1f, Out = -1f;           // «fade <in> <out>», seconds (the head of this file); below zero: not said
-        public string Say = "", Touch = "";         // «say», «touch» (the head of this file)
+        public string Say = "", Touch = "";         // «say», «touch» (the head of this file); Say: every «say» line, '\n' between (the user's words over several looks — none lost when the clip is written again)
         public float Inertia = 1f;                  // «inertia 0..1»: a hand's target followed by a spring (it overshoots a little and settles, the arm trails) and, held, never
                                                     // quite still (BodyAnimator.Inertia; the user 2026-11-09: «a palm frozen in the air is ugly — every animation with inertia»); 0 — exact
         public float Vary;                          // «vary 0..1»: how far each play of it differs (BodyAnimator.Vary); 0 — always the same (a key in a lock)
@@ -222,7 +236,7 @@ namespace HuginWhispers
         internal PAnimClip Slice(PAnimPart p)
         {
             float from = Mathf.Clamp(p.From, 0f, Length), to = Mathf.Clamp(p.To, from + 0.05f, Length);
-            PAnimClip s = new PAnimClip { Name = Name + "." + p.Name, Length = to - from, Loop = p.How == "loop", Stays = p.How == "hold", IsPart = true,             Pivot = Pivot, Frozen = Frozen, Eased = Eased, GroundFeet = GroundFeet, Strength = Strength, In = In, Out = Out, Touch = Touch, ClothOff = ClothOff, Prop = Prop, PropHand = PropHand, PropScale = PropScale, Vary = Vary, Inertia = Inertia, Carried = Carried, Tone = Tone };
+            PAnimClip s = new PAnimClip { Name = Name + "." + p.Name, Length = to - from, Loop = p.How == "loop", Stays = p.How == "hold", IsPart = true,             Pivot = Pivot, Frozen = Frozen, Eased = Eased, GroundFeet = GroundFeet, Strength = Strength, In = In, Out = Out, Touch = Touch, ClothOff = ClothOff, Prop = Prop, PropHand = PropHand, PropScale = PropScale, Vary = Vary, Inertia = Inertia, Carried = Carried, Tone = Tone, Bird = Bird, BirdBone = BirdBone };
             foreach (KeyValuePair<string, string> f in Follow) s.Follow[f.Key] = f.Value; // (a part rides the same bones as its clip)
             s.Bones.AddRange(Bones);
             foreach (KeyValuePair<string, int> m in Modes) s.Modes[m.Key] = m.Value;
@@ -854,8 +868,10 @@ namespace HuginWhispers
             }
         }
 
+        internal static int Changes; // grows with every clip read or made anew: who keeps a list made from the clips makes it again (Moments)
         private static void Add(PAnimClip c)
         {
+            Changes++;
             Clips[c.Name] = c;
             foreach (PAnimPart p in c.Parts) { PAnimClip s = c.Slice(p); Clips[s.Name] = s; }
         }
@@ -902,7 +918,7 @@ namespace HuginWhispers
                     case "pivot": if (w.Length > 1 && Num(w[1], out f)) c.Pivot = Mathf.Clamp(f, -1f, 3f); continue;
                     case "base": if (w.Length > 1) c.Frozen = w[1] == "frozen"; continue;
                     case "strength": if (w.Length > 1 && Num(w[1], out f)) c.Strength = Mathf.Clamp01(f); continue;
-                    case "say": c.Say = l.Substring(3).Trim(); continue;
+                    case "say": { string s = l.Substring(3).Trim(); c.Say = c.Say.Length > 0 ? c.Say + "\n" + s : s; } continue; // (every line kept: the user's words over several looks)
                     case "want": c.Wants.Add(l.Substring(4).Trim()); continue;
                     case "touch": c.Touch = l.Substring(5).Trim(); continue;
                     case "cloth": if (w.Length > 1) c.ClothOff = w[1] == "off"; continue;
@@ -915,6 +931,9 @@ namespace HuginWhispers
                     case "tone": if (w.Length > 1) c.Tone = w[1]; continue;
                     case "feet": if (w.Length > 1) c.GroundFeet = w[1] == "ground"; continue;
                     case "follow": if (w.Length > 2) c.Follow[w[1]] = w[2]; continue;
+                    case "women": c.WomenFight = w.Length > 1 && w[1] == "fighters"; continue;
+                    case "hero": if (w.Length > 1) { c.Hero = new string[w.Length - 1]; Array.Copy(w, 1, c.Hero, 0, w.Length - 1); } continue;
+                    case "bird": if (w.Length > 1) { c.Bird = w[1] == "right" ? 1 : w[1] == "left" ? -1 : 0; if (w.Length > 2) c.BirdBone = w[2]; } continue;
                     case "fade": if (w.Length > 2 && Num(w[1], out f) && Num(w[2], out g)) { c.In = Mathf.Max(0f, f); c.Out = Mathf.Max(0f, g); } continue;
                     case "mark": if (w.Length > 2 && Num(w[1], out f)) c.Marks.Add(new PAnimEvent { T = Mathf.Max(0f, f), Sound = w[2] }); continue;
                     case "part":
@@ -963,8 +982,11 @@ namespace HuginWhispers
             if (c.Tone.Length > 0) sb.Append("tone ").Append(c.Tone).Append('\n');
             if (c.GroundFeet) sb.Append("feet ground\n");
             foreach (KeyValuePair<string, string> fo in c.Follow) sb.Append("follow ").Append(fo.Key).Append(' ').Append(fo.Value).Append('\n');
+            if (c.WomenFight) sb.Append("women fighters\n");
+            if (c.Hero.Length > 0) sb.Append("hero ").Append(string.Join(" ", c.Hero)).Append('\n');
+            if (c.Bird != 0) sb.Append("bird ").Append(c.Bird > 0 ? "right" : "left").Append(c.BirdBone != "Spine" ? " " + c.BirdBone : "").Append('\n');
             if (c.Strength < 1f) sb.Append("strength ").Append(N(c.Strength)).Append('\n');
-            if (c.Say.Length > 0) sb.Append("say ").Append(c.Say).Append('\n');
+            if (c.Say.Length > 0) foreach (string s in c.Say.Split('\n')) sb.Append("say ").Append(s).Append('\n'); // (each line as it was: written again, none lost)
             foreach (string want in c.Wants) sb.Append("want ").Append(want).Append('\n');
             if (c.Touch.Length > 0) sb.Append("touch ").Append(c.Touch).Append('\n');
             if (c.ClothOff) sb.Append("cloth off\n");
@@ -1137,6 +1159,22 @@ namespace HuginWhispers
             if (s == null) return false;
             Skills.SkillType k = s.m_skillType;
             return k == Skills.SkillType.Bows || k == Skills.SkillType.Crossbows || k == Skills.SkillType.ElementalMagic || k == Skills.SkillType.BloodMagic;
+        }
+
+        // the raven on that side of a body, for a clip that names it («bird»): a player's own on its shoulder or its arm, a person's on its shoulder
+        internal static GameObject BirdOf(Humanoid body, bool left)
+        {
+            Player p = body as Player;
+            if (p != null)
+            {
+                for (int i = 0; i < 2; i++) { GameObject g = Shoulder.ModelOf(p, i == 1); if (g != null && g.activeInHierarchy && Gestures.RightSide(p, i == 1) != left) return g; }
+                return null;
+            }
+#if RAVEN_STORY
+            return NpcRaven.BirdOn(body, left);
+#else
+            return null;
+#endif
         }
 
         internal static bool Gesture(Player p, bool munin, string clip) { return Gestures.Play(p, munin, clip, Gestures.Pri.Answer); }
@@ -1780,6 +1818,8 @@ namespace HuginWhispers
         private static readonly HashSet<string> Touched = new HashSet<string>();
 
         private bool AnyCode() { foreach (Layer l in _layers) if (l.From == Source.Code && l.Busy) return true; return false; }
+        // a clip played by code on it now moves its legs (PAnimClip.MovesLegs: feet, thighs, its hips): the gait's seated knees keep off them (NpcGait)
+        internal bool LegsHeld { get { foreach (Layer l in _layers) { PAnimClip c = l.Now.C; if (l.From == Source.Code && l.Target > 0f && c != null && c.MovesLegs) return true; } return false; } }
 
         // The game turns the head after where you look (your camera; the others' by their data: CharacterAnimEvent's
         // look-at, HeadLookPatch). While a clip played by code moves the head or the neck (a gesture, a reaction, the
@@ -2083,11 +2123,25 @@ namespace HuginWhispers
                 _missed.Remove(m.Name); _solved.Remove(m.Name);
                 bool aimed = Channel(m.Name, out at, out w);
                 Vector3 on; float ow = 0f;
-                if (_propOn && Channel(m.Name + ".on", out on, out ow))
+                bool keepBend = false;
+                Vector3 pp; Quaternion pr; float ps;
+                if (ThingAt(out pp, out pr, out ps) && Channel(m.Name + ".on", out on, out ow))
                 {
-                    Vector3 pp; Quaternion pr;
-                    PropAt(out pp, out pr);
-                    Vector3 onIt = root.InverseTransformPoint(pp + pr * on);
+                    Vector3 there = pp + pr * (on * ps);
+                    if (_onBird) // (on a raven the point is where the fingers lie, not the wrist: the hand's own length does not shrink with the bird)
+                    {
+                        // … along the fingers the clip says («.on.f»), else along the fingers as the pose under it has them: a clip that only brings its own
+                        // arm pose onto the bird (pet_r: the old stroke, kept — the user 2026-11-18 «треба було залишити, яка була, просто підігнати»)
+                        Vector3 fo, palmNow; float fow; Bone hb = BoneOf(m.End);
+                        bool left = m.Name == "@LeftHand";
+                        if (hb != null && Channel(m.Name + ".on.f", out fo, out fow) && fo.sqrMagnitude > 1e-6f) there -= (pr * fo).normalized * FingerReach(left, hb.T);
+                        else if (hb != null && HandFacing(left, hb.T, out fo, out palmNow) && fo.sqrMagnitude > 1e-6f) there -= fo.normalized * FingerReach(left, hb.T);
+                        keepBend = !aimed; // (no target of its own: the arm stays bent the way its pose has it, only its end comes to the bird)
+                        // a bird out of the arm's reach is not reached for (flying in, flown off mid-stroke: on 2026-11-18 the hand went after one 6 m away)
+                        Bone ub = BoneOf(m.Upper);
+                        if (ub != null) ow *= 1f - Mathf.Clamp01((Vector3.Distance(ub.T.position, there) - BirdReach) / BirdFade);
+                    }
+                    Vector3 onIt = root.InverseTransformPoint(there);
                     at = aimed ? Vector3.Lerp(at, onIt, ow) : onIt;
                     if (!aimed) { w = ow; aimed = true; }
                 }
@@ -2108,7 +2162,7 @@ namespace HuginWhispers
                 if (foot >= 0 && _poleK[foot] > 0f && _poleFrom[foot].sqrMagnitude > 0f) poleTo = Vector3.Slerp(poleTo, root.TransformDirection(_poleFrom[foot]), _poleK[foot]); // (from the way it pointed)
                 Vector3 chord = (under - up.T.position).normalized, bent = low.T.position - up.T.position;
                 bent -= chord * Vector3.Dot(bent, chord);
-                if (bent.magnitude > BodyClips.BentEnough) poleTo = Vector3.Slerp(bent.normalized, poleTo, w);
+                if (bent.magnitude > BodyClips.BentEnough) poleTo = keepBend ? bent.normalized : Vector3.Slerp(bent.normalized, poleTo, w);
                 Vector3 point = Vector3.Lerp(under, world, w);
                 Solve(up.T, low.T, end.T, point, poleTo);
                 if (w >= BodyClips.MissFrom) { _missed[m.Name] = Vector3.Distance(end.T.position, point); _solved[m.Name] = root.InverseTransformPoint(end.T.position); } // (one still on its way is not a miss)
@@ -2231,8 +2285,8 @@ namespace HuginWhispers
             Vector3 along, palm;
             if (!HandFacing(m.Name == "@LeftHand", hand, out along, out palm)) return;
             if (along.sqrMagnitude < 1e-6f || palm.sqrMagnitude < 1e-8f) return;
-            Vector3 pp; Quaternion pr;
-            PropAt(out pp, out pr);
+            Vector3 pp; Quaternion pr; float ps;
+            if (!ThingAt(out pp, out pr, out ps)) return;
             Quaternion turn = Quaternion.LookRotation(pr * f, pr * n) * Quaternion.Inverse(Quaternion.LookRotation(along, palm));
             hand.rotation = Quaternion.Slerp(Quaternion.identity, turn, w) * hand.rotation;
         }
@@ -2351,6 +2405,58 @@ namespace HuginWhispers
         private Quaternion _propRestTurn = Quaternion.identity;
         internal bool PropOn { get { return _propOn; } }
         internal void PropRest(bool on, Vector3 at, Quaternion turn) { _propOn = on; _propRestAt = at; _propRestTurn = turn; }
+
+        // what the hands' «….on» points lie on now: the raven a playing clip names («bird»), else the thing the clips move; size: what its metres are
+        // multiplied by (a thing: 1)
+        private bool ThingAt(out Vector3 at, out Quaternion turn, out float size)
+        {
+            _onBird = BirdAt(out at, out turn, out size);
+            if (_onBird) return true;
+            size = 1f;
+            if (!_propOn) return false;
+            PropAt(out at, out turn);
+            return true;
+        }
+
+        // «bird right|left» (the head of this file): the raven itself is asked for only every BirdLook s while such a clip plays (it may hop to the
+        // arm or fly off meanwhile), its bone found once a bird; nothing at all while no clip names one
+        internal static float BirdLook = 0.5f;
+        internal static float BirdReach = 0.62f, BirdFade = 0.25f; // m from the shoulder joint: the wrist's place on the bird within this is taken whole, let go softly over the next BirdFade
+        private bool _onBird;
+        // from the wrist to the middle of the fingers (the middle finger's second joint), m: where a hand laid on a raven touches it; measured once a hand
+        private readonly Dictionary<string, float> _reach = new Dictionary<string, float>();
+        private float FingerReach(bool left, Transform hand)
+        {
+            float r;
+            if (_reach.TryGetValue(hand.name, out r)) return r;
+            Transform m1 = Finger(left, hand, "Middle");
+            r = m1 != null ? Vector3.Distance(hand.position, m1.position) + (m1.childCount > 0 ? Vector3.Distance(m1.position, m1.GetChild(0).position) : 0f) : 0f;
+            _reach[hand.name] = r;
+            return r;
+        }
+        private GameObject _bird; private Transform _birdBack; private float _birdLookAt = -1f; private int _birdSide; private string _birdBone = "";
+        private bool BirdAt(out Vector3 at, out Quaternion turn, out float size)
+        {
+            at = Vector3.zero; turn = Quaternion.identity; size = 1f;
+            int side = 0; string bone = "Spine";
+            foreach (Layer l in _layers)
+            {
+                if (l.Now.C != null && l.Now.Weight > 0.001f && l.Now.C.Bird != 0) { side = l.Now.C.Bird; bone = l.Now.C.BirdBone; break; }
+                if (l.Was.C != null && l.Was.Weight > 0.001f && l.Was.C.Bird != 0) { side = l.Was.C.Bird; bone = l.Was.C.BirdBone; break; } // (fading out: the hand leaves it from where it is)
+            }
+            if (side == 0) { _bird = null; _birdBack = null; _birdSide = 0; return false; }
+            if (side != _birdSide || bone != _birdBone || Time.time >= _birdLookAt)
+            {
+                _birdSide = side; _birdLookAt = Time.time + BirdLook;
+                GameObject g = BodyClips.BirdOf(_body, side < 0);
+                if (g != _bird || _birdBack == null || bone != _birdBone) { _bird = g; _birdBone = bone; _birdBack = g != null ? RavenBones.Find(g.transform, bone) ?? RavenBones.Find(g.transform, "Spine") : null; } // heavy: its bones walked once a bird (and every BirdLook s on a model with no such bone), only while a clip names it
+            }
+            if (_bird == null || _birdBack == null) return false;
+            at = _birdBack.position;
+            turn = _bird.transform.rotation * Quaternion.Inverse(Quaternion.Euler(Shoulder.Rotation)); // (the model faces the other way)
+            size = Shoulder.SizeOf(_bird.transform);
+            return true;
+        }
 
         // where it is now, in the world: from where it lay to where the clip says, by «@Prop.w»
         internal void PropAt(out Vector3 at, out Quaternion turn)

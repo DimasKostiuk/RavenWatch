@@ -13,7 +13,7 @@ namespace HuginWhispers
     // AuthorRow — a row of buttons that never runs past its column:
     //     AuthorRow row = AuthorRow.Begin();            // (fill: the buttons of a row share its width; h: their height)
     //     if (row.Button("…", style)) …;                // as many as there are; row.Label(text, style, width) for a word among them
-    //     row.End();                                    // row.Extra: how much taller it came than one row (a window head that grew)
+    //     row.End();                                    // row.Extra: how much taller it came than one row (a window head that grew); row.Tall: all its rows
     // A button is as wide as its words (measured once a text and style); the row breaks before the one that would not fit; a button wider
     // than the whole column takes it whole and wraps its words. The column's width is measured where the row stands (the width its own
     // vertical got when drawn last), so no caller says a width: a fixed column, a stretching one, a scroll view all fit themselves. The width
@@ -40,6 +40,8 @@ namespace HuginWhispers
         internal int Rows { get { return _rows; } }
         // how much taller the rows came than the first alone (a window's head that grew by them)
         internal float Extra { get { return _tall - _firstH; } }
+        // how tall all its rows came (after End: what stands above a list that takes the rest — StoryPanel.Fill)
+        internal float Tall { get { return _tall; } }
 
         // a row at its place in the code (the file and line are its key: the same line in a loop is the same column)
         internal static AuthorRow Begin(bool fill = true, float h = 0f, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)

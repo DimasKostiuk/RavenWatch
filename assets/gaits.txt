@@ -6,6 +6,7 @@
 # swing — мах рук (×), sway — хитання стегон (°), bob — пружинить (м), limp — кульгає 0…1, back — шанс рук за спиною 0…1,
 # shoulders — плечі вперед (°, мінус — розправлені), shrug — плечі вгору (°), out — руки від тіла (°), toes — носки врозтіч (°),
 # twist — тіло крутиться за кроком (°), nod — голова киває за кроком (°), narrow — ступні ближче до однієї лінії (°, жіночий крок), spread — наскільки різні люди одного виду (0…1)
+# sitknees — на лаві коліна й ступні ближче одне до одного (°, кожне стегно всередину; гра садить усіх із широко розставленими ногами)
 # rest — стоячи вага на одній нозі: нахил таза (°), tilt — голова набік (°, бік і міра — свої в кожного), breath — дихання грудьми (°)
 # Рядки mood_<назва> — бажання постави (NpcGait.Moods: холод, переляк, смуток…): додаються за силою 0…1 поверх виду; speed і swing — множники, решта додається
 plain   speed=1    stoop=0     head=0   swing=1    sway=1   bob=0     limp=0   back=0   shoulders=0   shrug=0  out=0   toes=4   twist=2  nod=0  spread=0.3  rest=7 tilt=8 breath=1.6
@@ -18,7 +19,7 @@ meek    speed=0.86 stoop=0.55  head=18  swing=0.35 sway=0   bob=0     limp=0   b
 tired   speed=0.78 stoop=0.8   head=12  swing=0.4  sway=3   bob=0     limp=0   back=0   shoulders=12  shrug=0  out=0   toes=4   twist=0  nod=4  spread=0.2  rest=7 tilt=8 breath=2.4
 careful speed=0.82 stoop=0.35  head=10  swing=0.45 sway=0   bob=0     limp=0   back=0   shoulders=4   shrug=4  out=14  toes=0   twist=0  nod=0  spread=0.15  rest=3.5 tilt=6 breath=1.6
 # унікальні
-heid    speed=0.9  stoop=0.15  head=3   swing=0.3  sway=9   bob=0     limp=0   back=0   shoulders=4   shrug=-2 out=-10 toes=-2  twist=0  nod=2  narrow=5  spread=0  rest=7 tilt=4 breath=1.4
+heid    speed=0.9  stoop=0.15  head=3   swing=0.3  sway=9   bob=0     limp=0   back=0   shoulders=4   shrug=-2 out=-10 toes=-2  twist=0  nod=2  narrow=5  sitknees=18  spread=0  rest=7 tilt=4 breath=1.4
 # згаслий (Кетіль, акт 1; ті, хто продав пам'ять Хель): не старий і не втомлений — порожній: повільно, руки висять мертво й майже не махають, голова трохи вниз, ніякого хитання й кивка, ледь дихає. Числа на око, у грі ще не бачено.
 hollow  speed=0.72 stoop=0.45  head=14  swing=0.12 sway=0.5 bob=0     limp=0   back=0   shoulders=10  shrug=-3 out=-4  toes=2   twist=0  nod=0  spread=0  rest=3 tilt=10 breath=0.7
 # двергр (тіло гри на людській основі: Npcs.HumanBase): гордий — спина й плечі розправлені, підборіддя вгору, крок важкий; числа на око, у грі ще не підбирані.

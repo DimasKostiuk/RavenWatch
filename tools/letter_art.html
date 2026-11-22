@@ -5,7 +5,7 @@
        seal      220×240  the whole wax seal with its mark and drips          &who=<sender> (SEALS below; none: the post's own)
        seal_l / seal_r    its two halves once broken (same canvas: laid over each other they make the seal)
        paper     840×1120 the open sheet: torn edges, the fold across (no wax: that is «bits»)
-       bits      144×104  the bits of the seal left on the sheet, of the sender's wax: the sheet's pixels 320..464 × 396..500 only   &who=<sender>
+       bits0..bits4 180×120  the bits of the seal left on the sheet, of the sender's wax: five kinds, the fold across their middle row   &who=<sender>
      Rendered by tools/letter_art.ps1 into assets/book/letter_*.png (the post's own) and letter_*_<sender>.png. -->
 <html>
 <head>
@@ -244,21 +244,56 @@ function paper() {
   </g></svg>`;
 }
 
-// the bits of the seal left on the open sheet (as the design has them, at its fold), of this sender's wax: only the sheet's pixels round them —
-// x BX..BX+BW, y BY..BY+BH from its top (RavenBookLetter: BitsX, BitsY, BitsW, BitsH — the same numbers), with room for their shadow
-const BX = 320, BY = 396, BW = 144, BH = 104;
-function bits(who) {
-  const s = SEALS[who] || SEALS.post, fold = 446;
-  seed = 41;
-  const bit = [];
-  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.4, r = 30 + rnd() * 16; bit.push([380 + Math.cos(a) * r * 1.15, fold + Math.sin(a) * r * 0.85]); }
-  return `<svg width="${BW}" height="${BH}" viewBox="${BX} ${BY} ${BW} ${BH}"><defs>
-  <radialGradient id="wax" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="${s.wax[0]}"/><stop offset="1" stop-color="${s.wax[1]}"/></radialGradient>
-  <filter id="drop" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="#3a1408" flood-opacity=".45"/></filter></defs>
-  <g filter="url(#drop)">
-    <path d="${poly(bit)}" fill="url(#wax)" stroke="${s.edge}" stroke-width="1"/>
-    <rect x="436" y="${fold + 2}" width="15" height="40" rx="2" fill="${s.wax[1]}"/>
-  </g></svg>`;
+// the bits of the seal left on the open sheet, of this sender's wax: BITS kinds of them (the user 2026-11-20: «щоб кожен лист
+// виглядало по різному і не по центру постійно»), each its own picture bits<v> of BW×BH with the fold across its middle row (BH/2):
+// RavenBookLetter takes one at random for a letter and lays it somewhere along the fold, mirrored or not (its size read from the picture)
+const BITS = 5, BW = 180, BH = 120;
+// a chip of broken wax: a few sharp corners round (cx, cy)
+function chip(cx, cy, r) {
+  const n = 5 + Math.floor(rnd() * 3), turn = rnd() * 6.28, pts = [];
+  for (let i = 0; i < n; i++) { const a = turn + (i + (rnd() - 0.5) * 0.6) / n * Math.PI * 2, k = r * (0.55 + rnd() * 0.45); pts.push([cx + Math.cos(a) * k, cy + Math.sin(a) * k * 0.85]); }
+  return pts;
+}
+function bits(who, v) {
+  const s = SEALS[who] || SEALS.post, f = BH / 2, cx = BW / 2;
+  seed = 41 + v * 97 + [...who].reduce((a, c) => a + c.charCodeAt(0), 0) * 13;
+  const piece = (pts, light) => `<path d="${poly(pts)}" fill="url(#wax)" stroke="${s.edge}" stroke-width="1" stroke-linejoin="round"/>` +
+    (light ? `<path d="${poly(pts)}" fill="none" stroke="${s.light}" stroke-opacity=".35" stroke-width="1.4" transform="translate(-1,-1)"/>` : '');
+  const chips = (n, rx, ry, r0, r1) => { let o = ''; for (let i = 0; i < n; i++) o += piece(chip(cx + (rnd() - 0.5) * 2 * rx, f + (rnd() - 0.5) * 2 * ry, r0 + rnd() * (r1 - r0)), false); return o; };
+  let body = '', under = '';
+  if (v === 0) { // a torn arc of the seal's rim, two crumbs beside it
+    const R = 40 + rnd() * 6, r = R - 11 - rnd() * 3, a0 = Math.PI * (0.75 + rnd() * 0.3), a1 = a0 + Math.PI * (0.55 + rnd() * 0.2), ox = cx + 16, oy = f + 6 + rnd() * 10, pts = [];
+    for (let i = 0; i <= 14; i++) { const a = a0 + (a1 - a0) * i / 14, k = R + (rnd() - 0.5) * 3; pts.push([ox + Math.cos(a) * k, oy + Math.sin(a) * k * 0.9]); }
+    for (let i = 14; i >= 0; i--) { const a = a0 + (a1 - a0) * i / 14, k = r + (rnd() - 0.5) * 4; pts.push([ox + Math.cos(a) * k, oy + Math.sin(a) * k * 0.9]); }
+    body = piece(pts, true) + chips(2, 60, 22, 4, 8);
+  } else if (v === 1) { // the seal crumbled: one bigger chip and a scatter of small ones
+    body = piece(chip(cx + (rnd() - 0.5) * 30, f + (rnd() - 0.5) * 10, 15 + rnd() * 4), true) + chips(5, 66, 30, 3.5, 9);
+  } else if (v === 2) { // the seal came away whole: only its ghost on the paper (the wax's stain, the press's ring) and a crumb stuck in the fold
+    const sx = cx + (rnd() - 0.5) * 24, sr = 34 + rnd() * 6, st = [];
+    for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2, k = sr + (rnd() - 0.5) * 5; st.push([sx + Math.cos(a) * k, f + Math.sin(a) * k * 0.9]); }
+    under = `<path d="${poly(st)}" fill="${s.wax[1]}" fill-opacity=".2" stroke="${s.edge}" stroke-opacity=".25" stroke-width="1"/>` +
+      `<ellipse cx="${sx}" cy="${f}" rx="${sr - 9}" ry="${(sr - 9) * 0.9}" fill="none" stroke="${s.wax[2]}" stroke-opacity=".22" stroke-width="2"/>`;
+    body = piece(chip(sx + (rnd() - 0.5) * 30, f + 1, 6 + rnd() * 3), true);
+  } else if (v === 3) { // torn along the fold: two flat pieces, one either side of it, a little apart
+    const r = 26 + rnd() * 6, dx = 6 + rnd() * 8;
+    for (const up of [true, false]) {
+      const pts = [], ox = cx + (up ? -dx : dx), sgn = up ? -1 : 1;
+      for (let i = 0; i <= 12; i++) { const a = Math.PI * i / 12, k = r + (rnd() - 0.5) * 6; pts.push([ox + Math.cos(a) * k, f + sgn * (2 + Math.sin(a) * k * 0.62)]); }
+      for (let i = 1; i < 6; i++) pts.push([ox + r - (2 * r) * i / 6, f + sgn * (1 + rnd() * 3)]); // its torn edge along the fold
+      body += piece(pts, true);
+    }
+    body += chips(1, 50, 20, 3, 6);
+  } else { // a drip broken off at its top, a chip beside it
+    const x = cx + (rnd() - 0.5) * 40, w = 11 + rnd() * 4, h = 34 + rnd() * 10, y = f - 6, top = [];
+    for (let i = 0; i <= 4; i++) top.push(`${(x + w * i / 4).toFixed(1)},${(y + (rnd() - 0.5) * 5).toFixed(1)}`);
+    body = `<path d="M${top.join(' L')} L${x + w},${y + h - w / 2} A${w / 2},${w / 2} 0 0 1 ${x},${y + h - w / 2} Z" fill="url(#drip)" stroke="${s.edge}" stroke-width="1"/>` +
+      piece(chip(x + w + 14 + rnd() * 16, f - 4 + rnd() * 8, 8 + rnd() * 4), true) + chips(1, 60, 24, 3, 5);
+  }
+  return `<svg width="${BW}" height="${BH}" viewBox="0 0 ${BW} ${BH}"><defs>
+  <radialGradient id="wax" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="${s.wax[0]}"/><stop offset=".55" stop-color="${s.wax[1]}"/><stop offset="1" stop-color="${s.wax[2]}"/></radialGradient>
+  <linearGradient id="drip" x1="0" x2="1"><stop offset="0" stop-color="${s.wax[2]}"/><stop offset=".45" stop-color="${s.wax[0]}"/><stop offset="1" stop-color="${s.wax[2]}"/></linearGradient>
+  <filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#3a1408" flood-opacity=".45"/></filter></defs>
+  ${under}<g filter="url(#drop)">${body}</g></svg>`;
 }
 
 const who = new URLSearchParams(location.search).get('who') || 'post';
@@ -267,7 +302,7 @@ if (part === 'envelope') out.innerHTML = envelope();
 else if (part === 'seal') out.innerHTML = sealSvg(null, who);
 else if (part === 'seal_l') out.innerHTML = sealSvg(half(true), who);
 else if (part === 'seal_r') out.innerHTML = sealSvg(half(false), who);
-else if (part === 'bits') out.innerHTML = bits(who);
+else if (/^bits\d$/.test(part)) out.innerHTML = bits(who, +part.slice(4));
 else out.innerHTML = paper();
 </script>
 </body>

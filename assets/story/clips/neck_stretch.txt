@@ -1,0 +1,135 @@
+clip neck_stretch
+length 4.05
+loop 0
+pivot 1.1
+curve ease
+fade 0.4 0.6
+tone loose
+mode Spine1 body
+mode Spine2 body
+say розім'яти шию: рука на потилицю, голова вбік, потім в інший бік
+say для гейд точно не треба і для більшості жінок. Тільки бойовим жінкам
+hero idle
+women fighters
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 3.4 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do neck_stretch "<t0>-<t1> reach right <x y z>; …".
+# scripted: @LeftFoot @RightFoot @Look @Look.w @RightHand @RightHand.w @RightHand.p @RightHand.f @RightHand.n Spine1 Spine2 move @LeftHand @LeftHand.w @LeftHand.p
+# do 0.2-1.2 reach right nape
+# do 1.2-1.9 look left 35 down 12
+# do 1.9-2.7 look right 35 down 12
+# do 2.7-3.365 look ahead
+# do 2.8-4 rest right
+
+0 @LeftFoot -0.09 0.12 0.28
+
+0 @RightFoot 0.05 0.12 -0.3
+
+0 @Look 0 1.6 2
+1.2 @Look -1.122 1.184 1.603
+1.9 @Look -1.122 1.184 1.603
+2.4 @Look 1.122 1.184 1.603
+2.7 @Look 1.122 1.184 1.603
+3.3 @Look 1.122 1.184 1.603
+
+0 @Look.w 0 0 0
+1.2 @Look.w 0 0 0
+1.6 @Look.w 0.6 0 0
+1.9 @Look.w 0.6 0 0
+2.3 @Look.w 0.6 0 0
+2.7 @Look.w 0.6 0 0
+3.3 @Look.w 0 0 0
+
+0.2 @RightHand 0.32 0.99 -0.25
+0.7 @RightHand 0.258 1.208 0.179
+1.2 @RightHand 0.13 1.66 0.06
+2.8 @RightHand 0.13 1.66 0.06
+3.4 @RightHand 0.258 1.208 0.179
+4 @RightHand 0.32 0.99 -0.25
+
+0.2 @RightHand.w 0 0 0
+0.8 @RightHand.w 1 0 0
+2.8 @RightHand.w 1 0 0
+3.1 @RightHand.w 1 0 0
+4 @RightHand.w 0 0 0
+
+0.2 @RightHand.p 0.8 -0.6 0
+1.2 @RightHand.p 1 0 0.1
+2.8 @RightHand.p 1 0 0.1
+4 @RightHand.p 0.8 -0.6 0
+
+0.2 @RightHand.f 0 -1 0.1
+0.9 @RightHand.f -0.904 -0.169 0.392
+1.2 @RightHand.f -0.422 0.884 0.201
+2.8 @RightHand.f -0.422 0.884 0.201
+3.25 @RightHand.f -0.962 0.017 0.273
+4 @RightHand.f 0 -0.995 0.1
+
+0.2 @RightHand.n -1 0 0
+0.9 @RightHand.n -0.309 -0.373 -0.875
+1.2 @RightHand.n -0.907 -0.411 -0.094
+2.8 @RightHand.n -0.907 -0.411 -0.094
+3.25 @RightHand.n -0.211 -0.681 -0.701
+4 @RightHand.n -1 0 0
+
+0 Spine1 0 0 0
+0.35 Spine1 0 0 0
+0.7 Spine1 0 -1.6 0
+0.85 Spine1 0 -1.5 0.1
+1.15 Spine1 -0.2 -0.9 1.6
+1.35 Spine1 -0.2 -0.9 1.7
+2.65 Spine1 -0.2 -0.9 1.7
+3 Spine1 0 -1.3 0.2
+3.15 Spine1 0 -1.4 0
+3.3 Spine1 0 -1.2 0
+3.65 Spine1 0 0 0
+4.05 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.35 Spine2 0 -0.1 0
+0.7 Spine2 0 -1.9 0
+0.85 Spine2 0 -1.8 0.2
+1.15 Spine2 -0.2 -1.2 1.9
+1.35 Spine2 -0.3 -1.1 2.1
+2.65 Spine2 -0.2 -1.1 2
+3 Spine2 0 -1.6 0.2
+3.15 Spine2 0 -1.7 0
+3.3 Spine2 0 -1.4 0
+3.65 Spine2 0 0 0
+4.05 Spine2 0 0 0
+
+0 move 0 0 0
+0.6 move 0 -0.019 0
+1 move 0 -0.013 0
+1.15 move 0 -0.001 0
+1.25 move 0 0 0
+2.6 move 0 0 0
+2.75 move 0 -0.01 0
+3.05 move 0 -0.015 0
+4.05 move 0 0 0
+
+0 @LeftHand -0.34 0.98 0.22
+0.35 @LeftHand -0.34 0.98 0.219
+0.55 @LeftHand -0.342 0.983 0.212
+0.85 @LeftHand -0.35 0.994 0.179
+1 @LeftHand -0.355 1 0.17
+1.5 @LeftHand -0.363 1.01 0.176
+2.9 @LeftHand -0.363 1.01 0.176
+3.4 @LeftHand -0.354 0.999 0.173
+3.55 @LeftHand -0.35 0.994 0.181
+3.85 @LeftHand -0.343 0.984 0.206
+4.05 @LeftHand -0.341 0.981 0.216
+
+0 @LeftHand.w 0 0 0
+0.35 @LeftHand.w 0 0 0
+0.55 @LeftHand.w 0.021 0 0
+0.85 @LeftHand.w 0.285 0 0
+1 @LeftHand.w 0.358 0 0
+1.5 @LeftHand.w 0.4 0 0
+2.9 @LeftHand.w 0.4 0 0
+3.4 @LeftHand.w 0.397 0 0
+3.55 @LeftHand.w 0.33 0 0
+3.85 @LeftHand.w 0.082 0 0
+4.05 @LeftHand.w 0.019 0 0
+
+0 @LeftHand.p -0.8 -0.6 0

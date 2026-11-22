@@ -8,8 +8,9 @@
 # людина йде, відпускаються, тож жоден його кліп не зіграв; тепер ходи нема.
 # Суть: двоє дорослих пів дня не помічали чужинця, бо кожен думав, що він чийсь. Користувач 2026-11-17: ми підходимо до скрині разом із Літом; кашель —
 # кадр очима Ейвінда, ми обидва синхронно повертаємось до лави, тоді одне на одного: «Це хто? Він з тобою?» — «Я думав, це твій підмайстер», тоді «Ти хто такий?». Глядач бачить Ейвінда раніше за героїв: Літ рахує, знятий через
-# плече того, хто сидить на лаві. Числа: у скрині 48 дощок (квест кладе їх: stash … count 48); Літ рахує 46, Ейвінд виправляє «48» і сам себе
-# спростовує (дві тріснуті він би не рахував — то 46): точне число й тріснуті дошки знає той, хто їх тримав (перша зачіпка «хто краде зі скрині»).
+# плече того, хто сидить на лаві. Числа: у скрині 48 дощок (квест кладе їх: stash … count 48); Літ рахує всі 48, Ейвінд з лави виправляє «46»
+# (дві тріснуті він би не рахував; користувач 2026-11-18 — було навпаки, і поправка сама себе спростовувала): які дошки тріснуті, знає той, хто їх
+# тримав (перша зачіпка «хто краде зі скрині»). Літ уперто лишається при своїх 48, а в розмові (ch2_corner) йому застрягає Ейвіндове «сорок шість».
 # Міняєш 48 у quests/ch2.txt (lit_plan) — міняй числа тут і в talk/ch2_lit.txt (ch2_plan, ch2_corner).
 # Мешканці на час сцени йдуть із кадру (aside: away; користувач 2026-11-17). Музика (користувач 2026-11-17: «постав цю мелодію…»,
 # ~20:40 — «на початку сцени»): з першого кадру eyvind_accordion (Freesound 654167, LagMusics, CC0) замість музики гри, по колу до кінця сцени,
@@ -18,51 +19,61 @@
 [scene eyvind_meet]
 place: zala
 aside: away
+camera: still                            # повна статика (користувач 2026-11-18: Гейд пройшла повз — і кадр через плече перебіг на інше місце)
 check: hall.skrynia 5
 test: stash Wood zala.skrynia 4 count 48; npc lit at hall.skrynia; npc eyvind at hall.lavka
 needs: near hall.skrynia 12, npcnear lit hall.skrynia 4, calm   # Літ стоїть біля скрині (квест: hold), гравець підійшов до нього
+fade out 0.4                              # одразу після E (користувач 2026-11-20: «сцену в фейд, як тільки ми взаємодіяли з Літом»): повороти — під чорним
 npc lit take
 npc eyvind take
 npc eyvind sit hall.lavka                 # на тій самій лаві, що в команді квесту (NpcMind.StaysDown): сцена його не підводить
 npc lit face player
+player face npc.lit
 player look npc.lit
-music eyvind_accordion 1.5 keep 10        # акордеон з першого кадру (користувач 2026-11-17 ~20:40: «на початку сцени»): музика гри стихає за 1,5 с, разом із камерою
+music eyvind_accordion 1.5 keep 10        # акордеон з першого кадру (користувач 2026-11-17 ~20:40: «на початку сцени»): музика гри стихає за 1,5 с
 bars on
-camera two npc.lit player blend 1.5
 mix world 0.5 1.5                         # розмова: світ трохи тихший
-wait 0.6
+wait 1.4                                  # під чорним він устигає розвернутись (прогін 2026-11-20: 122° за 1,2 с — досі це було вже під першою реплікою: «дивиться кудись убік»)
+camera on npc.lit close front cut push 0.15 5   # перший кадр — Літ крупно (користувач 2026-11-20); кадр ставиться ПІСЛЯ повороту: «спереду» — уже до нас
+fade in 0.8
 npc lit say Прийш{ов|ла}. Добре. Я поміряв. Тричі.
 wait 0.4
-camera on npc.lit wide 35 cut             # ширше: за ним Зала, уже трохи підлатана (стан 1.4 «літ», worn:) — користувач 2026-11-17
-npc lit say Поки ти невідомо чим займа{вся|лася}, я дещо підлатав. Дещо. Решта — гірше.
+camera shoulder npc.lit player cut        # через його плече на нас: шпилька — а ми ніяково чухаємо потилицю (користувач 2026-11-20: «щоб не стояли як пень»)
+npc lit says Поки ти невідомо чим займа{вся|лася}, я дещо підлатав. Дещо. Решта — гірше.
+wait 2.6
+player clip scratch_head nowait
+wait said
 wait 0.6
-camera on npc.lit close cut push 0.2 4    # він знає — і це його гордість
+camera on npc.lit full low 30 cut push 0.3 5   # знизу, на весь зріст, за ним уже трохи підлатана Зала (1.4 «літ», worn:) — він знає, як її підняти, і це його гордість (wide low не влазив: за ним тісно, гра брала кадр згори — прогін 2026-11-20)
 npc lit say Знаю, як її підняти. Стіни стоятимуть, і дах не світитиметься наскрізь.
 wait 0.5
-camera shoulder player npc.lit cut        # (два довгі рядки під одним крупним — 12,9 с: другий через плече гравця)
+camera on npc.lit medium 30 cut
 npc lit say Але з повітря не кладуть. Треба дерево, камінь, цвяхи, бронза. Багато.
-wait 0.6
+camera on player medium 25 cut            # «Багато» — і ми знизуємо плечима: ну, то й що
+player clip shrug_small nowait
+wait 1.6
 camera on npc.lit medium cut
 npc lit say Ось. Дивись, що вже є.
 npc lit face hall.skrynia                 # повертається до скрині — тут же, нікуди не йде
-player go npc.lit 1.1 soft                # і ми підходимо до Літа біля скрині — стоїмо поруч (користувач 2026-11-17: тоді синхронний поворот до лави цікавіший; до самого Літа, не до скрині — лави між вогнем і скринею не стануть на дорозі)
+player go npc.lit 1.7 soft                # (було 1.1: у грі 2026-11-20 стали майже впритул — кадр «спереду» на Літа опинявся в герої, кадри через плече не читались) і ми підходимо до Літа біля скрині — стоїмо поруч (користувач 2026-11-17: тоді синхронний поворот до лави цікавіший; до самого Літа, не до скрині — лави між вогнем і скринею не стануть на дорозі)
 player look hall.skrynia
 npc eyvind face npc.lit                   # він дивиться, як Літ рахує
 npc lit tool hand now                     # Лот у руку: рахує ним об долоню
 camera shoulder npc.eyvind npc.lit cut    # через плече того, хто сидить на лаві: Літ рахує, а за ним хтось увесь час дивиться — глядач бачить його раніше за них
 npc lit clip dv_count
-npc lit say …Сорок чотири. Сорок п'ять. Сорок шість.
+npc lit say …Сорок шість. Сорок сім. Сорок вісім.
 npc lit clip none
 camera on npc.lit close cut push 0.25 3
-npc lit say Сорок шість. Для початку — мало.
+npc lit say Сорок вісім. Для початку — мало.
 npc lit tool auto
 mix world 0.2 0.8                         # рахунок скінчено — і тиша ще глибша: у ній і пролунає кашель
+camera on npc.lit wide high cut           # згори, широко: двоє біля скрині, порожня Зала — і десь у ній лава (користувач 2026-11-20: «урізноманітни, кінематографічніше»)
 wait 1.5                                  # тиша
 sound speech_khm npc.eyvind               # кашель з-під стіни — здалеку й раніше, ніж його видно
 wait 0.6
 camera eyes npc.eyvind look npc.lit cut   # його очима (користувач 2026-11-17): двоє біля скрині, до нього боком
 ear camera 1                              # його голос — біля самої лінзи
-npc eyvind says Сорок вісім. Якщо бути точним. Дві дошки тріснуті, я б їх не рахував.
+npc eyvind says Сорок шість. Якщо бути точним. Дві дошки тріснуті, я б їх не рахував.
 wait 2                                    # за 2 с від початку його слів (користувач 2026-11-17: «через 2 сек одразу повертати нас до нього»)
 npc lit face npc.eyvind                   # обоє разом, синхронно, повертаються до лави — і дивляться на нього (з його очей)
 player face npc.eyvind
@@ -80,6 +91,7 @@ camera shoulder player npc.lit cut
 npc lit say Це хто? Він з тобою?               # (було «Він не з тобою?» — користувач 2026-11-18, дослівно)
 wait 0.5
 camera shoulder npc.lit player cut
+player clip talk_hands nowait             # пояснює руками (користувач 2026-11-20: «трохи жвавості нам»)
 player say Я дума{в|ла}, це твій підмайстер.     # («він твій» — наче про собаку: користувач 2026-11-17)
 wait 2.2                                  # прочитати — і пауза: обоє повільно розуміють
 sound speech_oh npc.lit                   # Літ підскакує
@@ -123,7 +135,7 @@ wait 2
 camera on npc.lit close cut push 0.2 3
 wait 2                                    # Літ мовчки дивиться на лаву
 npc lit face player
-npc lit say Так. На чому я спинився… Сорок шість. Решту спитаєш — скажу.
+npc lit say Так. На чому я спинився… Сорок вісім. Решту спитаєш — скажу.
 wait 1
 if raven munin: camera on player medium 25 cut
 if raven munin: say munin Він знав, які дошки тріснуті. Не заглядаючи в скриню.
@@ -163,6 +175,7 @@ npc torvald take
 npc torvald sit npc.torvald               # сидить на землі біля вогню, як посадив квест (NpcMind.StaysDown)
 npc eyvind take
 npc eyvind sit hall.lavka                 # на своїй лаві: мовчить і слухає
+npc lit go hall.stina_prava before 0.65 walk   # перед лице стіни, на відстань удару (кліп: touch wall 0.65) — користувач 2026-11-20: стояв криво, бив у повітря
 npc lit tool hand now
 npc lit face hall.stina_prava
 player look npc.lit
@@ -385,6 +398,8 @@ needs: near hall.vohnyshche 20, npcnear lit hall.vohnyshche 25, npcnear eyvind h
 npc lit take
 npc eyvind take
 npc eyvind sit hall.lavka                 # на своїй лаві (NpcMind.StaysDown)
+npc lit go hall.stina_prava before 0.65 walk   # перед лице стіни, на відстань удару (кліп: touch wall 0.65) — користувач 2026-11-20: стояв криво, бив у повітря
+npc lit face hall.stina_prava
 npc lit tool hand now
 npc lit clip dv_hammer.loop               # клепає стіну
 player look npc.lit
@@ -483,6 +498,7 @@ camera two npc.eyvind npc.lit cut
 npc eyvind say Звісно, звісно.
 npc eyvind go hall.lavka near 1 walk nowait   # назад до своєї лави (сяде сам: квест тримає його там — hold hall.lavka sit)
 wait 1.5
+npc lit go hall.stina_prava before 0.65 walk   # перед лице стіни, на відстань удару (кліп: touch wall 0.65) — користувач 2026-11-20: стояв криво, бив у повітря
 npc lit face hall.stina_prava
 npc lit tool hand now
 npc lit clip dv_hammer.loop               # і знову до стіни
@@ -514,6 +530,19 @@ bird come 60 18 from hall hover
 letter lit :: Приходь. Стіни стоять.
 bird home hall
 
+# Голова обертом (етап walk_say, після останньої розмови з Торвальдом про цвяхи; користувач 2026-11-20: «текст для воронів, а коли їх нема —
+# ніби сам до себе говориш»; «тригер — коли виходимо за межі зали»): щойно гравець вийшов із Зали, без кадру (roams), керування в гравця.
+# Усі показують одне на одного, а цвяхів як не було
+[scene walk_dizzy]
+roams: yes
+guard: off
+needs: !inside zala, near hall.vohnyshche 60, calm   # (щойно за порогом: квест сервера за 20 с віддав би сцену будь-кому не в Залі — і за кілометр, у себе на базі)
+if raven hugin, raven munin: say hugin Літ — на старого. Старий — на Ейвінда. Ейвінд — на старого. Тепер старий — на Літа. Коло замкнулось.
+if raven hugin, raven munin: say munin А цвяхів як не було, так і нема. Ух, аж дихати легше стало.
+if raven hugin, !raven munin: say hugin Кожен показує на іншого, а цвяхів від того не більшає. Тут, на повітрі, хоч думається.
+if !raven hugin, raven munin: say munin Ух, нарешті повітря! Усі на всіх, а цвяхи — ні в кого.
+if !raven any: player say Усі на всіх… Хоч подихати.
+
 # Перший лист слуги Хель (етап bruni1; story-lore.md «Вартовий, що служить Хель»; користувач 2026-11-18: «як тільки відходимо від Зали — ворон,
 # лист від Бруні, підписаний пафосно, перший»). Летить ЙОГО ворон (вигляд bruni — ЗАГЛУШКА: вигляди двох воронів Бруні дає користувач) — не з
 # боку Зали, звідусіль; лише за 50 м від вогню Варти, під небом. Підпис — «Варта, що лишилась» (на конверті теж), печатка — його (letter_seal_bruni:
@@ -529,6 +558,81 @@ bird leave up
 if raven munin: say munin Шо за «Варта»? Ми ж і є Варта. Ну, ти. І ми.
 if raven hugin: say hugin Чужий ворон. Він знав, де тебе шукати.
 
+# Другий лист слуги Хель (етап bruni2; користувач 2026-11-18: «Шкода, що ви не послухали» — «і тут щось пафосно смішне треба додати далі»;
+# решта листа — моя). Той самий ворон, той самий підпис, той самий тон: чемний, пихатий, без злості — і пояснює, хто прийде. Через день після
+# доручення Ейвінда, подалі від вогню, і вже коли Зала 2.1 (лист не кличе туди, де ще нічого не змінилось). Наші ворони — після.
+[scene bruni_letter2]
+roams: yes
+guard: off
+needs: calm, sky, !near hall.vohnyshche 50, state zala >= 2.1
+bird come 60 18 hover look bruni
+letter Варта, що лишилась seal bruni :: Шкода, що ви не послухали.\nДоведеться пояснити інакше. Пояснювачі вже в дорозі.\nЗустріньте їх гідно: вони йшли здалеку й дуже втомились бути мертвими.\n\n— Варта, що лишилась
+bird leave up
+if raven munin: say munin «Пояснювачі». Красиво пише, падлюка.
+if raven hugin: say hugin «Втомились бути мертвими». Отже, мертві. І вже в дорозі.
+
+# Ейвінда нема (етап e_empty; користувач 2026-11-18: перша точка, до якої підійшли, порожня; друга зникає — з'являється інша, на початку
+# Чорного лісу). Без кадру (roams): ворони кажуть, що тут порожньо, і що тягне холодом від лісу — як від скелета з очима Хель на луках
+# (eyv_deer пройдено до цього в кожному світі). Куди далі — мусить почути кожен: тим вороном, що є, а без воронів — рядком на екрані.
+[scene eyv_not_here]
+roams: yes
+guard: off
+needs: calm
+if raven munin: say munin Нема. Ну й де цей гусак лапчастий?
+if raven hugin: say hugin Трава не прим'ята. Його тут і не було.
+if raven hugin: say hugin Зате від лісу тягне холодом. Як тоді, від скелета з синіми очима.
+if !raven hugin, raven munin: say munin О. Від лісу холодом тягне — як тоді від костяного з синіми очима. Нам туди, по-любому.
+if !raven any: msg Тут порожньо. А звідкись із лісу тягне холодом.
+
+# Ейвінд біжить повз (етап e_forest; користувач 2026-11-18: «Ми бачимо, як Ейвінд біжить на нас — нога вже не болить. Він пробігає мимо нас і
+# каже "привіт <ім'я>" і пробігає мимо, а ми бачимо, як на нас іде 5 скелетів з тими самими очима. Ейвінд біжить далі до Зали і там і
+# залишається, а у нас завдання відбитись від скелетів — по суті це якраз іде перша хвиля на Залу»). Суть: той, хто всю главу «не може — коліно»,
+# мчить як заєць, а за ним — те, від чого він мчить. Глядач бачить раніше за героя: хвиля стає одразу (do waves), і на кадрі Ейвінда спереду
+# в глибині лісу за ним уже горять сині очі; герой бачить їх лише тоді, коли обертається туди, звідки той біг. Скелети — хвиля квесту (StoryWaves:
+# rise … walk — «свої», не б'ють, і йдуть на гравця, аж до останнього кроку сцени «do wavesgo» (rise 45 — лише найбільше, якщо сцену обірвано; огляд 2026-11-18: довжина сцени наперед невідома); тоді бій), з боку, далекого від Зали (away hall). Ейвінд — людина самої сцени
+# (spawn: справжній поза світом, people/eyvind.txt), біжить до Зали далеко (lane.run@150) і зникає з кінцем сцени за спиною героя, що дивиться в ліс; у світ вертається на лаву.
+# Лінія — від поляни до Зали: гравець, що прийшов з боку лісу, побачить Ейвінда й скелетів збоку (не прогнано з різних боків).
+# Музика — гри. Кадри не прогнані.
+[scene eyv_runs]
+place: found.ch2_lis                      # (тиша сюжету довкола, поки етап чекає: ґрейдварфи узлісся не тримають «calm»)
+needs: near found.ch2_lis 22, calm
+check: found.ch2_lis 20
+lane run found.ch2_lis hall.vohnyshche clear 6
+player stop 0.4                           # ішов узліссям — і став: хтось ламає гілля
+player look lane.run@-20
+player face lane.run@-20                  # і тілом — до лісу (кадри «з-за спини» стоять за його тілом)
+bars on
+mix world 0.6 1
+camera on player full 25 high cut         # трохи згори: прислухається (у лісі на висоті голови кадр затуляють стовбури — користувач 2026-11-18: «камеру вище, щоб дивилась трохи зверху»)
+npc eyvind spawn lane.run@-10 whole       # (поки камера на обличчі: глибше в лісі, ще не в кадрі)
+do waves ch2_skel found.ch2_lis 30 rise 45 walk away hall hel Skeleton:5 / Skeleton:10   # (той самий рядок, що в етапі e_fight; 30 м, не 20 — користувач 2026-11-20: «надто близько зявляются»)
+wait 1.2
+npc eyvind go player near 3 run nowait    # біжить із лісу просто на нас
+camera on player wide back high look npc.eyvind cut   # згори з-за його спини: між деревами хтось біжить (було «очима» — стовбури впритул)
+wait 1.6
+camera on npc.eyvind full front high track cut   # Ейвінд. Біжить. Не кульгає. А в глибині, за ним, — сині очі
+wait 1.8
+if raven munin: say munin Це шо, Ейвінд? А коліно?!
+if !raven munin, raven hugin: say hugin А коліно, бачу, відпустило.
+npc eyvind arrive 8
+npc eyvind go lane.run@150 run nowait     # і повз нас — до Зали, далеко
+npc eyvind says Привіт, {name}!
+camera on player medium 25 high cut
+player look npc.eyvind
+wait 1.4
+player look lane.run@-20 1.2              # туди, звідки він біг
+wait 0.8
+camera on player wide back high look lane.run@-16 cut   # згори з-за його спини: між деревами — п'ятеро, очі синьо-зелені, ідуть на нас
+sound sfx_skeleton_alerted lane.run@-16
+wait 2.2
+camera on player medium 25 high cut push 0.3 2
+if raven hugin: say hugin П'ятеро. З тими самими очима. Ось тобі й «пояснювачі».
+if !raven hugin, raven munin: say munin Ейвінд, сука, привів хвоста й звалив!
+mix reset 2
+camera off blend 1
+bars off
+do wavesgo ch2_skel                       # тепер — бій
+
 # Скелет і кабан (етап eyv_deer; користувач 2026-11-18): Ейвінд знову дає мітку — на луках, ~300 м і від середини світу, і від Зали. Там — точка
 # тригера: «Ми йдемо і різко зупиняємось. Перед нами скелет. Він іде до нас здалеку, ми насторожуємось, але його раптом убиває кабан звичайний.
 # Теж комічна сценка… Після цього ми робимо невеликий жест — розводимо руками, мовляв, ну ок, не будемо з ним битись, — і кажемо фразу "Ну хоча
@@ -538,6 +642,7 @@ if raven hugin: say hugin Чужий ворон. Він знав, де тебе 
 # сцена веде його по прямій), кабан б'ється сам (його ціль — скелет); скелет — на один удар (hp 1). Сцена їх не вважає боєм (StoryScenes.Ours).
 # Кабан лишається у світі (keep): після сцени — звичайний кабан. Рядок гравця — дослівно користувача. Музика — гри. Кадри не прогнані.
 [scene skel_boar]
+place: found.ch2_luky                     # (тиша сюжету довкола, поки етап чекає)
 needs: near found.ch2_luky 30, calm
 check: found.ch2_luky 28
 lane meet player found.ch2_luky clear 40
@@ -553,7 +658,7 @@ camera eyes cut                           # його очима: далеко н
 sound sfx_skeleton_alerted beast.skel
 wait 1.6
 beast skel go player near 8 nowait        # іде до нас, не поспішаючи
-camera on beast.skel full low cut push 0.5 2.5   # знизу: кістки — і зеленувато-сині очі
+camera on beast.skel medium front low cut push 0.4 2.5   # знизу й спереду, до пояса: кістки — і зеленувато-сині очі (було full: очей не розгледіти — користувач 2026-11-18)
 wait 2.5
 if raven munin: camera on player medium 25 cut
 if raven munin: say munin Глянь на очі. Такий самий вогонь горів у Залі — синьо-зелений. Шо він тут робить?
@@ -582,3 +687,988 @@ wait 0.6
 mix reset 2
 camera off blend 1.5
 bars off
+
+# ---- коло 3 (користувач 2026-11-18): Літ не дорахувався дощок — «простеж за старим». Слова й кадри мої; кадри не прогнані.
+
+# Старий іде на свою «варту» (етап torv_leave): вечір, гравець біля вогню. Суть: старий іде так буденно, наче ходить так століттями (а так і є), а
+# ми мусимо вдавати, що нам байдуже. Ми не рушаємо з місця: він у глибині кадру йде до брами, ворон каже не йти впритул. Після сцени його нема у
+# світі (people/torvald.txt: away, з чорного кінця цієї сцени) — простежити можна лише слідами.
+[scene torv_leaves]
+place: zala
+needs: calm, near hall.vohnyshche 25, npcnear torvald hall.vohnyshche 12
+check: hall.vohnyshche 8
+test: npc torvald at hall.vohnyshche
+npc torvald take
+player look npc.torvald
+bars on
+camera on npc.torvald medium cut          # старий підводиться від вогню
+npc torvald says Сонце сіло. Зміна чекає.
+wait said
+npc torvald go hall.dveri_holovni nowait
+camera on player medium 25 cut            # ми на місці, проводжаємо поглядом; він у глибині — до брами
+player look npc.torvald
+wait 2
+if raven hugin: say hugin Не йди впритул. Побачить — забуде, куди йшов.
+if !raven hugin, raven munin: say munin Тихо. Дай дідові відійти, а то сяде байки травити.
+camera on npc.torvald full back cut       # спина старого в брамі
+npc torvald arrive 12
+npc torvald go hall.skhody nowait
+camera on player medium 25 cut            # ми стоїмо: хай відійде (користувач 2026-11-18: «ми трохи чекаємо, поки він відійде»)
+wait 2.5
+fade out 1.2                              # чорне — і в ньому старий зникає зі світу («він просто має різко зникнути»)
+do world ch2_torv_out                     # його «live: away» (people/torvald.txt); чорний екран нічого не бачить (StoryPeople.SeenNow)
+npc torvald free
+until !npcnear torvald hall.vohnyshche 80 | 4   # поки його не стало (гра, що його веде, бачить це сама: StoryPeople.AwayNow)
+camera off cut
+bars off
+fade in 1
+
+# За брамою його нема (етап torv_out; користувач 2026-11-18: «тільки ми виходимо за межі зали — монолог наш або воронів, старий швидкий, нема його»).
+# Без кадру (roams). Хто скаже: ворон, що є; без воронів — сам гравець. Куди далі — мітка першого сліду (torv_t1).
+[scene torv_gone]
+roams: yes
+guard: off
+needs: !inside zala, calm
+if raven hugin: say hugin Пішов. Мить тому був тут — а вже ні духу. Швидко ходить, як на свої літа.
+if !raven hugin, raven munin: say munin Та де він?! Щойно ж тут сопів. Дід, а бігає, як заєць.
+if raven hugin, raven munin: say munin Шукай сліди. Хоч щось він по собі та й лишає.
+if !raven any: player say Де він? Щойно ж ішов попереду.
+
+# Сліди (етапи torv_t1…t3): без кадру (roams). Що там лежить, поклав етап (lay): Літова дошка, малина, бронзовий цвях. Хто скаже: ворон, що є;
+# без воронів — сам гравець (користувач 2026-11-18: «фраза від нас або ворона відповідно»). Куди далі — мітка наступного сліду на мапі.
+[scene torv_track1]
+roams: yes
+guard: off
+needs: near found.ch2_slid1 10, calm
+if raven hugin: say hugin Дошка. Свіжа, з Літової скрині. Старий ішов тут.
+if !raven hugin, raven munin: say munin О, дошка! Дід упустив. Шо, сам не доніс?
+if !raven any: player say Дошка. Літова. Старий ішов тут.
+
+[scene torv_track2]
+roams: yes
+guard: off
+needs: near found.ch2_slid2 10, calm
+if raven hugin: say hugin Малина. Розсипана, ще не прим'ята. Він ішов і їв.
+if !raven hugin, raven munin: say munin Малина! Дід на варту з полуденком ходить. Красава.
+if !raven any: player say Малина розсипана. Ішов тут — і їв на ходу.
+
+[scene torv_track3]
+roams: yes
+guard: off
+needs: near found.ch2_slid3 10, calm
+if raven hugin: say hugin Цвях. Бронзовий. Один із Літових трьох.
+if raven hugin: say hugin А попереду, між деревами, щось височіє.
+if !raven hugin, raven munin: say munin Цвях! Ну все, дід спалився. О — а там шо стирчить між деревами?
+if !raven any: player say Бронзовий цвях. А попереду між деревами щось височіє.
+
+# Зміни мене (етап torv_post; story-lore.md «Глава 2 — кістяк», кроки 8–9): стара вежа в лісі, старий біля драбини, спиною до нас. Суть: той, кого
+# всі мають за злодія й дурня, сам-один тримає вежу і досі чекає зміни, якої не буде. Спершу смішно (зміна «була вища й з бородою»), тоді рівно:
+# дошки він брав, бо «варта на мокрій вежі — не варта», і рахує не цвяхи, а ночі, коли тут ніхто не стояв. Рівень Торвальда — «Плутає»
+# (лор «Торвальд»): у смішному проскакує правда. Кінець — «Стій, поки не змінять»; сама ніч — далі (ще не складено).
+[scene torv_change]
+place: torvald_post
+needs: near torvald_post 18, calm, npcnear torvald torvald_post 15
+check: torvald_post 18
+test: npc torvald at torvald_post.vezha
+npc torvald take
+player stop 0.4
+player look npc.torvald
+bars on
+mix world 0.6 1
+camera on npc.torvald wide cut            # стара вежа в лісі; старий біля драбини, спиною до нас
+wait 1.5
+npc torvald says Стій. Хто йде?
+wait said
+npc torvald face player
+camera on npc.torvald medium cut
+wait 0.8
+npc torvald say О! Зміна! Нарешті.
+camera on player close cut
+wait 1.5
+camera on npc.torvald close cut push 0.2 2
+npc torvald say …Ні. Ти не та зміна. Та була вища. І з бородою.
+wait 1
+camera on player full 25 track cut        # ми рушаємо до нього потроху й питаємо на ходу (користувач 2026-11-20: «підходили по трохи до нього, коли кажемо»)
+player go npc.torvald 7 soft nowait
+wait 0.8
+player say Ти брав дошки Літа?
+player arrive npc.torvald                 # (до 7 м: кадр двох — лише до 7 м між ними)
+camera two npc.torvald player
+npc torvald says Брав. Вежа текла. Варта на мокрій вежі — не варта, а дурість.
+player go npc.torvald 3.5 soft nowait     # …і ще ближче, поки він каже
+wait said
+npc torvald say Цвяхи теж брав. Три. Він рахує? Хай рахує. Я теж рахую: ночі, коли тут ніхто не стояв.
+player arrive npc.torvald
+wait 1.5
+camera on npc.torvald close cut
+npc torvald say Постій зі мною. Одну ніч. Стій, поки не змінять.
+wait 1.2
+if raven hugin: say hugin «Поки не змінять». Його вже ніхто не змінить.
+if !raven hugin, raven munin: say munin Ніч на вежі з дідом. Ну а шо — романтика.
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Сутінки на вежі (етап night_dusk; крок 10 «Ніч на вежі», користувач 2026-11-16/18). Суть: старий, що всю главу плутає, на мить — справжній вартовий.
+# Його слова — користувача, взято 2026-11-18: «Обличчям до курганів. Вогонь — за спиною.» Глядач бачить раніше: перша хвиля встає (do waves) з боку
+# курганів — далекого від Зали (смуга kurhany: від вежі до Зали, кургани — позаду, від'ємні метри), поки камера на обличчі героя. Очі в них —
+# Хели (користувач 2026-11-18: «скелети повинні бути ті, які нападають на нас, з очима Хели»; було — без них, мерці від золотого вогню). Музика — гри. Кадри не прогнані.
+[scene tower_dusk]
+place: torvald_post
+needs: near torvald_post 25, npcnear torvald torvald_post 15, night, calm
+check: torvald_post 15
+test: npc torvald at torvald_post.vezha
+lane kurhany torvald_post hall.vohnyshche clear 6
+npc torvald take
+player stop 0.4
+player look npc.torvald
+bars on
+mix world 0.5 1.5
+camera on npc.torvald wide cut            # ніч, стара вежа; старий біля драбини
+wait 1.5
+npc torvald face lane.kurhany@-30
+camera on npc.torvald medium cut
+npc torvald say Стемніло. Тепер — тихо.
+wait 1
+camera on npc.torvald close cut push 0.2 2
+npc torvald say Обличчям до курганів. Вогонь — за спиною.
+wait 1.2
+camera on player close cut
+player look lane.kurhany@-30 1.5
+wait 0.6
+do waves ch2_n1 torvald_post 30 rise 30 walk away hall hel Skeleton:1   # (той самий рядок, що в етапі night1)
+wait 1
+camera eyes cut                           # між деревами — один. Іде
+sound sfx_skeleton_alerted lane.kurhany@-30
+wait 2.2
+if raven hugin: say hugin Один. Поки що — один.
+if !raven hugin, raven munin: say munin Ну от. Дід не брехав: тут таки ходять.
+mix reset 2
+camera off blend 1
+bars off
+do wavesgo ch2_n1                         # тепер — бій
+
+# Повернення з вежі (етап hall_back; користувач 2026-11-18; слова мої). Суть: старий повернувся з варти іншим — і Гейд це побачила.
+# Переставлено того ж вечора (користувач: «більше кінематографічності»; «сцена запускається, коли всі по місцях: Гейд біля каміна, інші десь
+# стоять, Торвальд біля виходу й не заходить, доки ми в Залі; заходить — Гейд іде до нього, роздивляється його; потім іде до каміна, і далі майже
+# як було; до старого, поки він стоїть, підходить Літ — тоді він йому про те, що цупив; і детально, як Гейд виливає відвар: кухоль у руці — і в
+# той камін, що на кухні»). Хто де — тримає квест з torv_walk (старий — у брамі, Гейд — біля каміна на кухні, Літ — біля скрині).
+# Кадри: старий у брамі проти світла (знизу, з глибини Зали); її очима — як він заходить; двоє, поки вона його оглядає (кліп двох, руки до нього);
+# Літ підходить — спершу на всю постать, тоді двоє; ніж із руки в руку — на склейці; монолог біля вогню — вогонь у кадрі, вона в глибині біля
+# каміна; він іде до неї — через її плече; кухоль — збоку на тлі вогню, у мить, як ллється, — вогонь шипить і спалахує.
+# Звук: шипіння — поки чим є (sfx_cooking_station_burnt), справжнього «вода на жар» у палітрі нема. Музика — трек користувача torvald_watch з першого кадру (2026-11-20). Кадри не прогнані.
+# Переставлено 2026-11-19 (користувач після першого показу): тригер — ти в Залі, на 1 м ширше (`inside zala 1`: поріг брами теж); старий уже в самій
+# Залі, біля вогню з боку брами (його веде туди етап hall_back, щойно ти біля Зали), — сцена лише тоді; він сам іде до Гейд, вона — кілька кроків
+# назустріч; далі як було. Камера — статика всюди (`camera: still`, без `track` і наїздів). Гейд біля каміна — від його лиця, не на ньому.
+[scene torv_back]
+place: hall
+camera: still
+needs: inside zala 1, calm, npcnear torvald hall.vohnyshche 3, npcnear heid hall.kukhnia 3, npcnear lit hall.skrynia 3
+check: hall.vohnyshche 8
+test: npc heid at hall.kukhnia; npc torvald at hall.vohnyshche; npc lit at hall.skrynia
+npc heid take
+npc torvald take
+npc lit take
+player stop 0.4
+bars on
+mix world 0.6 1
+music torvald_watch 3 once keep 120 rest 30   # трек користувача (2026-11-20): з першого кадру, трек 53 с зациклено 4 рази в самому файлі (213 с), грає до кінця вже після сцени; тоді 30 с тиші й музика гри
+camera on npc.heid medium 35 cut          # біля каміна на кухні: так вона простояла всю ніч
+wait 1.6
+npc heid face npc.torvald                 # він уже в Залі
+wait 0.8
+camera on npc.torvald full front low cut  # стоїть біля вогню: живий
+player look npc.torvald
+wait 1.4
+npc torvald go npc.heid near 2.2 walk nowait   # іде до неї сам
+camera shoulder npc.heid npc.torvald cut # через її плече: живий, іде до неї
+npc torvald arrive 10
+npc torvald face npc.heid
+npc heid go npc.torvald near 0.8 walk     # вона — кілька кроків назустріч
+camera two npc.heid npc.torvald cut
+npc heid say Де ти був?
+npc torvald say На варті.
+camera on npc.heid close 25 cut
+npc heid say На якій варті? Ніч. Мерці. А в тебе ні меча, ні розуму.
+wait 0.4
+npc heid face npc.torvald                 # (кліп двох: обоє одне до одного — scene.md «Кліп двох»)
+camera on npc.heid full 70 cut            # збоку обоє: вона його оглядає — обличчя, руки, бік
+npc heid clip heid_look_over on npc.torvald 0.7
+npc heid mark done 8
+camera on npc.heid close 20 cut
+npc heid say …Цілий.
+wait 1
+npc heid go hall.kukhnia before 0.3 nowait   # назад до каміна, не озираючись — рівно перед ним (кухоль потім над жаром: scene.md «before»)
+camera on npc.torvald medium 30 cut       # він дивиться їй услід
+npc torvald face npc.heid
+wait 1.4
+npc lit go npc.torvald near 1.3 nowait    # Літ сам підходить до нього
+npc torvald face npc.lit
+camera on npc.lit wide 30 cut
+npc lit arrive 10
+camera two npc.torvald npc.lit cut
+npc torvald say А, Літе. Тут твоє.
+npc torvald prop take KnifeFlint
+npc torvald say Ніж. Дві ложки — то вже Гейдині. Шнурок твій, міряльний.
+camera on npc.lit close 20 cut            # на склейці ніж — уже в Літа
+npc torvald prop put
+npc lit prop take KnifeFlint
+npc lit say Ніж. Шнурок. Ложки не мої.
+npc lit say Брав ти більше.
+camera on npc.torvald medium 25 cut
+npc torvald say Решта — на вежі. Вежа тепер суха.
+camera on npc.lit close cut
+wait 1.2
+npc lit say …Хай.
+npc lit prop put
+wait 0.6
+camera on npc.torvald wide 60 cut  # монолог старого — біля вогню: іде до нього
+npc torvald go hall.vohnyshche near 1.6
+npc torvald face hall.vohnyshche
+wait 1.2
+camera on npc.torvald medium 20 low cut   # вогонь знизу в кадрі
+npc torvald say Знаєш, що я там думав? Сто років думав одне: от прийде зміна — і піду спати.
+camera on npc.torvald close 20 cut
+npc torvald say А вночі вони йшли, а я зміни не чекав. Я знав, що за спиною вогонь. Що біля нього хтось сидить. І стояти стало легко.
+wait 1
+npc heid prop take Tankard                # (поки він говорить, у неї в руці вже його кухоль — відвар на ранок)
+camera shoulder npc.torvald npc.heid cut  # через його плече: вона в глибині, біля каміна, з кухлем
+npc torvald say Варта — не щоб тебе змінили. Варта — щоб ті, хто за спиною, спали.
+wait 1.5
+npc torvald go npc.heid near 1.6 nowait   # іде до неї через Залу
+camera shoulder npc.heid npc.torvald cut  # через її плече: він підходить
+npc torvald arrive 10
+npc torvald face npc.heid
+npc torvald say Ти теж так стоїш. Скільки себе пам'ятаю — ти біля мене. З тим гірким. Не знаю, від чого ти мене стережеш.
+wait 0.8
+camera on npc.torvald close 25 cut
+npc torvald say Але дякую.
+camera on npc.heid close 20 cut   # мовчання, яке має щось сказати
+wait 3
+npc heid face hall.kukhnia
+npc heid arrive 6
+wait 0.9                                  # (обернулась до каміна — тоді кадр)
+camera on npc.heid full right cut         # збоку, на тлі вогню: кухоль над жаром
+npc heid clip heid_pour
+npc heid mark tilt 6
+sound sfx_cooking_station_burnt npc.heid  # ллється на жар — шипить
+npc heid mark pour 6
+sound sfx_FireAddFuel hall.kukhnia        # і вогонь спалахує
+camera on npc.heid.thing close cut        # порожній кухоль у її руці
+wait 1.2
+camera on npc.torvald medium 25 cut
+npc torvald say Ти чого? Воно ж помічне.
+camera on npc.heid close cut
+npc heid say Сьогодні — ні.
+npc heid prop put
+wait 1
+npc heid face hall.kukhnia
+npc heid say Хай думає, що ти спиш.
+camera on npc.torvald close cut
+npc torvald say Хто?
+camera on npc.heid close cut
+npc heid say Ніхто. Сідай.
+wait 1
+if raven munin: camera on player medium 25 cut
+if raven munin: say munin Відвар — у вогонь. Ти бачи{в|ла}? Оце я розумію — «пий, поки тепле».
+if !raven munin, raven hugin: camera on player close 25 cut
+if !raven munin, raven hugin: say hugin Вона ніколи не виливала його відвару. Ніколи.
+npc lit go npc.torvald near 2.4 nowait    # Літ уриває
+camera on npc.lit wide 30 cut
+npc lit arrive 8
+npc lit say Ну. Гарно. Всі живі, всі зворушені.
+camera on npc.lit close cut
+npc lit say А Зала сама себе не відбудує. Приходь пізніше — пришлю ворона. Скажу, що далі.
+wait 1
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Чому Гейд вилила відвар (етап heid_scene; користувач 2026-11-19; слова мої). Суть: вона каже півправди — і сама наводить нас на злодія трав;
+# а той, на кого ми подумаємо, саме цієї миті тихо йде з Зали. Статична, «розмова»: кілька коротких реплік гравця, він не стоїть статуєю (плечі,
+# потилиця); Гейд дивиться на нас, раз повертається до вогнища кухні й дивиться на нього, тоді знову на нас. Біля вогню Варти Хель не чує, тож
+# вона ближча до правди, ніж будь-де, але про Хель — ні слова. Ейвінд: чує, що мерці йшли з курганів цілу ніч, а його людина сама в лісі, — встає
+# й іде (глядач бачить це раніше за героя: окремий кадр на ньому, далі він іде в глибині); наприкінці ми озираємось — лава порожня.
+# Звук: світ тихіше під розмовою; музика — гри. Кадри не прогнані.
+[scene heid_tells]
+place: hall
+camera: still
+needs: inside zala, calm, npcnear heid hall.kukhnia 3, npcnear eyvind hall.lavka 3
+check: hall.kukhnia 4
+test: npc heid at hall.kukhnia; npc eyvind at hall.lavka
+npc heid take
+npc eyvind take
+npc eyvind sit hall.lavka                 # на своїй лаві (NpcMind.StaysDown): сцена його не підводить
+player stop 0.4
+player go npc.heid 1.8 soft
+npc heid face player
+player look npc.heid
+bars on
+mix world 0.6 1
+camera shoulder player npc.heid cut
+player say Навіщо ти вилила його відвар?
+wait 0.6
+camera on npc.heid medium 20 cut
+npc heid say Бо вранці відвару не п'ють. Вранці п'ють воду.
+wait 0.8
+camera two player npc.heid cut
+player clip shrug_small nowait
+player say Ти сказала: «Хай думає, що ти спиш». Хто?
+wait 0.5
+camera on npc.heid close 20 cut
+npc heid say …Старі слова. Так кажуть над колискою, щоб лихо думало, що дитина спить, і минало. Сама не знаю, звідки я їх пам'ятаю.
+wait 1
+camera on npc.heid medium 30 cut
+npc heid say Я нікому не бажаю лиха. Я лікую. Кому болить — трави. Кому не спиться — відвар. Отак і все.
+camera on player medium 25 cut
+player say А старий? Він хворий?
+camera on npc.heid medium 20 cut
+npc heid say Він… втомлений. Дуже давно.
+wait 1
+npc heid face hall.kukhnia                # раз — до вогнища: туди вона й дивиться, коли згадує
+wait 0.8
+camera on npc.heid full 80 cut            # збоку, вогнище в кадрі
+npc heid say Я знайшла його біля каменів, там, де потім був мій табір. Сидів і говорив до них, як до живих.
+camera on npc.heid close 70 cut           # ближче, той самий бік: вона й далі дивиться у вогнище
+npc heid say Щовечора вставав і йшов «міняти варту». У темряву, сам. Уперше я пішла слідом — думала, не вернеться.
+wait 0.6
+camera on npc.heid medium 60 cut
+npc heid say Вернувся. Під ранок, мокрий, злий і щасливий. Сказав: «Тихо було». І заснув просто на землі.
+wait 1
+camera on npc.eyvind medium 30 cut        # він слухає
+wait 1.4
+npc heid face player
+camera on npc.heid close 20 cut
+npc heid say Відтоді я біля нього. Не рік і не два. Варю, щоб уночі спав, а не ходив. Удень він смішний. Уночі — сумний. Сонний краще, ніж сумний.
+camera two player npc.heid cut
+player clip talk_hands nowait
+player say А сьогодні не дала.
+npc heid says Сьогодні він стояв цілу ніч. Мерці йшли з курганів до ранку, а він стояв. І вернувся живий. Хай побуде таким хоч до вечора.
+wait 2.4
+camera on npc.eyvind medium 30 cut        # «мерці з курганів до ранку» — а його людина сама в лісі
+wait said
+npc eyvind face hall.dveri_holovni
+wait 1.2
+npc eyvind go hall.skhody walk nowait   # тихо встає й іде за браму, на сходи (огляд 2026-11-19: у брамі він стояв би в кадрі «лава порожня»): далі — у глибині кадрів
+npc eyvind leave                         # і зникає зі світу в першу мить поза кадром (користувач 2026-11-20: стояв у кадрі «лава порожня», а після сцени пішов через усю Залу)
+camera on npc.heid medium 20 cut
+npc heid say Та й на завтра варити нема з чого. Будяку — жменя, а сон-трави ні листочка. Поцупили.
+camera on player close 25 cut
+player clip scratch_head nowait
+player say Торвальд?
+camera on npc.heid close 20 cut
+npc heid say Старий цупить усе, що не прибите: ложки, цвяхи, мої нитки. А трав не чіпав ніколи. Каже, вони гіркі навіть на дотик.
+wait 0.6
+npc heid say …Це вперше.
+wait 1.2
+camera on player medium 25 cut
+player look hall.lavka 2                  # озираємось — туди, де він сидів
+wait 1.6
+camera on hall.lavka wide cut             # лава порожня
+wait 2
+if raven munin: say munin Лава порожня. А він же не ходить. Коліно.
+if !raven munin, raven hugin: say hugin Ейвінда нема. Того, що з коліном.
+wait 1
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Хатина Ейвінда (етап khata; користувач 2026-11-19: не вночі — будь-коли приходиш; слова мої). Суть: той, хто завжди викручувався,
+# уперше каже правду — і просить. Хатина — місце bad_house (користувач збудував 2026-11-20): двері — брама місця, замкнені для всіх, поки етап khata
+# їх не відчинить (gate bad_house open) — Ейвінд усередині біля ліжка, виходить до нас, далі як було. Камера статична; у лісі — згори (стовбури впритул затуляють кадр,
+# користувач 2026-11-18). Кадри не прогнані.
+[scene eyv_khata]
+place: bad_house
+camera: still
+needs: near bad_house 18, npcnear eyvind bad_house 8, calm
+check: bad_house 14
+test: npc eyvind at bad_house.lizhko
+lane south found.sverre_ide bad_house   # (від місця, куди пішов Сверре, у бік хатини: від'ємні метри — далі на південь)
+npc eyvind take
+player stop 0.4
+player look bad_house.dveri
+npc eyvind go player near 4               # і виходить до нас крізь двері, щойно розчахнуті етапом (gate bad_house open) — без кроку door: той зробив би сцену зіграною з першого ж кроку
+player look npc.eyvind
+bars on
+mix world 0.6 1
+camera on npc.eyvind full 30 high cut     # перед хатиною: озирається
+npc eyvind face found.sverre_ide
+wait 1.6
+camera on player medium 25 high cut
+player say Ейвінде.
+npc eyvind face player
+wait 0.6
+camera on npc.eyvind medium 20 high cut
+npc eyvind say А. Ти. За запахом прийш{ов|ла}, так? Гейдина трава. Коли поспішаю, краду погано.
+wait 0.8
+camera two player npc.eyvind cut
+player clip talk_hands nowait
+player say А де ж твоє коліно?
+npc eyvind say Нема коліна. І не було.
+wait 1
+camera on npc.eyvind close 20 high cut
+npc eyvind say Тут живе Сверре. Мій побратим. Ми з ним стільки разів разом помирали, що я збився з ліку.
+npc eyvind say Перед тим, як я прийшов у Залу, він почав чути, як кличуть з півдня. Ти бачи{в|ла} таких. Ідуть — і не вертаються.
+wait 0.8
+camera on npc.eyvind medium 30 high cut
+npc eyvind say Я тримав його тут. Відвар на ніч, засув на двері. Дошки на засув — з Літової скрині. Трави — Гейдині. Їжа — звідусіль.
+npc eyvind say Тому я й прийшов у Залу. Почув, що там розпалили щось старе. Думав, хтось там знає, як від цього голосу лікують. Чув лише про трави.   # (користувач 2026-11-19: тримав його лише кілька днів — і прийшов у Залу шукати, як урятувати від голосів; не просив: ніколи нікого не просить, і порожнього чужим показати страшно — соколи)
+npc eyvind say І надворі — ніколи самого. Я бачив, що роблять із такими, як він, ті, що падають з неба.   # сестри-соколи (користувач 2026-11-19: «щоб про них не забувати — небезпека, яка десь ще є»; story-lore.md «Ейвінд»: бачив, що вони роблять із порожніми)
+wait 1
+camera on player medium 25 high cut
+if lived ch1.trail: player say Я теж бачи{в|ла}. З Кетілем.   # (лише той, хто сам стояв у куполі: lived — запис етапу засідки в тих, хто був поруч)
+if lived ch1.trail: wait 0.8
+player clip shrug_small nowait
+player say А тепер?
+camera on npc.eyvind close 20 high cut
+npc eyvind say Гейдину траву я взяв, а зварити не встиг. Сиджу в Залі, слухаю Гейд — а мерці, виходить, цілу ніч ішли з курганів. А він тут сам.
+npc eyvind say Прибіг — двері відчинені.
+wait 1.2
+npc eyvind face lane.south@-20
+wait 0.8
+camera on npc.eyvind full 60 high cut
+npc eyvind say Він іде на південь. Завжди на південь.
+wait 0.6
+npc eyvind face player
+camera on npc.eyvind medium 20 high cut
+npc eyvind say Я нікого ніколи не прошу. …Прошу.
+wait 1.5
+camera on player medium 25 high cut       # (ворон — якщо є; гравець і так відповідає)
+if raven hugin: say hugin Уперше чую його без жодного «та коліно».
+if !raven hugin, raven munin: say munin Злодюжка. А за свого — горою.
+player say Ходімо.
+mix reset 2
+camera off blend 1
+bars off
+
+# Сверре в лісі (етап sverre_found; користувач 2026-11-19; слова мої). Суть: порожній іде туди, куди кличе Хель, а вона приходить по своє. Він
+# говорить уві сні з відкритими очима — дурні сни від персня (коза співає, риба вчить рахувати: story-lore.md «Гачок на Драупнір»). Ейвінд бере його
+# за руку — і довкола із землі встають мерці з очима Хель (хвиля стає «своєю», do waves … rise, і йде в бій останнім кроком). Кадри не прогнані.
+[scene sverre_found]
+place: found.sverre_ide
+camera: still
+needs: near found.sverre_ide 22, npcnear sverre found.sverre_ide 6, npcnear eyvind found.sverre_ide 12, calm   # (Ейвінд ішов за гравцем: етап тримає його тут)
+check: found.sverre_ide 18
+test: npc sverre at found.sverre_ide; npc eyvind at found.sverre_ide
+lane south found.sverre_ide bad_house   # (від'ємні метри — далі на південь, куди він дивиться)
+npc sverre take
+npc eyvind take
+player stop 0.4
+player look npc.sverre
+bars on
+mix world 0.5 1
+npc sverre face lane.south@-20            # обличчям на південь
+camera on npc.sverre full 40 high cut     # серед дерев, спиною до нас
+wait 1.8
+npc sverre say Коза співала. Гарно співала. А риба вчила рахувати: раз, два… а далі вода.
+wait 0.8
+camera on player medium 25 high cut
+if raven munin: say munin Шо він несе? Коза… риба…
+if !raven munin, raven hugin: say hugin Говорить уві сні. З відкритими очима.
+npc eyvind go npc.sverre near 1 walk
+camera two npc.eyvind npc.sverre cut
+npc eyvind say Сверре. Це я. Ходімо додому.
+npc sverre say …Там кличуть.
+npc eyvind say Кличуть. А ти не йди. Ходімо, там тепло.
+wait 0.6
+do waves ch2_sv found.sverre_ide 22 rise 30 walk away bad_house hel Skeleton:3 / Skeleton:5   # (той самий рядок, що в етапі sverre_fight)
+sound sfx_skeleton_alerted lane.south@-12
+camera on npc.eyvind medium 25 high cut
+npc eyvind face lane.south@-12
+wait 1.8
+camera on player wide back high look lane.south@-12 cut   # згори з-за спини: із землі встають очі
+wait 2
+npc eyvind say Ось хто його кличе.
+camera on player medium 25 high cut
+if raven hugin: say hugin Синьо-зелені очі. Хель прийшла по своє.
+if !raven hugin, raven munin: say munin Знову ці зеленоокі. Короче, б'ємо.
+mix reset 2
+camera off blend 1
+bars off
+do wavesgo ch2_sv                         # тепер — бій
+
+# Відбились (етап sverre_after; користувач 2026-11-19: «чому раніше не спробував провести його до вогню? треба логічно підв'язати… може додати
+# ще одну сцену»; слова мої). Суть: він прийшов у Залу шукати, як урятувати побратима від голосу (тримав його під засувом лише кілька днів:
+# користувач 2026-11-19), сидів біля самого вогню — і не знав, що відповідь у ньому: голосу він сам не чує, тиші не помітив би. Знаємо це ми
+# (сувій глави 1). Ім'я Хель він не знає — «кличуть» (користувач 2026-11-19: множина, як у Сверре «Там кличуть»); ворони при ньому теж: «тих, хто кличе». Вести до Зали — наше слово. Камера статична, у лісі —
+# згори (як eyv_khata, sverre_found). Кадри не прогнані.
+[scene sverre_after]
+place: found.sverre_ide
+camera: still
+needs: near found.sverre_ide 25, npcnear sverre found.sverre_ide 8, npcnear eyvind found.sverre_ide 12, calm   # (після бою: обоє там, де їх тримає етап)
+check: found.sverre_ide 10
+test: world ch2_sv; npc sverre at found.sverre_ide; npc eyvind at found.sverre_ide
+npc sverre take
+npc eyvind take
+player stop 0.4
+player look npc.eyvind
+bars on
+mix world 0.6 1
+camera on npc.eyvind full 30 high cut     # він — до побратима: цілий?
+npc eyvind go npc.sverre near 1 walk     # (підійшов — тоді кадр двох: між ними після бою буває й 15 м, а «two» знімає лише ближчих за 7: scene.md)
+camera two npc.eyvind npc.sverre cut
+npc eyvind face npc.sverre
+npc eyvind say Ну от. Відбились. Тепер додому, у хатину. Засув я полагоджу.
+wait 0.8
+camera on player medium 25 high cut
+player say Засув його не втримав. Веди його до Зали — до вогню.
+npc eyvind face player
+wait 0.4
+camera on npc.eyvind medium 20 high cut
+npc eyvind say До вогню? Вогонь — то тепло. Від тепла він теж іде.
+wait 0.8
+camera on player medium 25 high cut       # ми знаємо те, чого не знав він
+if raven munin: say munin Не просто тепло. Вогонь Варти. Тих, хто його кличе, біля нього не чути — ми самі на сувої читали.
+if !raven munin, raven hugin: say hugin Не просто тепло — вогонь Варти. Тих, хто кличе, біля нього не чути. Так написано на сувої, який ми читали.
+if !raven any: player say Не будь-який вогонь. Вогонь Варти. Тих, хто кличе, біля нього не чути.
+wait 0.8
+camera on npc.eyvind close 20 high cut
+npc eyvind say …Не чути?
+wait 1.5                                  # мовчить: відповідь весь час була поруч
+npc eyvind say Я ж там сидів. Біля самого вогню. І не знав.
+wait 1
+npc eyvind face npc.sverre
+camera two npc.eyvind npc.sverre cut
+npc eyvind say Сверре. Ходімо. Там тепло.
+npc sverre say …Там кличуть.
+npc eyvind say Кажуть, там — ні. Ходімо. І швидко, поки над нами ніхто не кружляє.   # («кажуть»: ще не вірить; місток до розмови в дорозі: «Не дивись угору»)
+mix reset 2
+camera off blend 1
+bars off
+
+# Сверре біля вогню Варти (етап sverre_home; користувач 2026-11-19: Ейвінд віддає перстень наприкінці — за порятунок побратима; слова мої). Суть:
+# тут Хель не чути — порожній уперше говорить ясно; і «щось золоте» виявляється не монетами (омана «золоте → золото» розв'язана). Наприкінці Ейвінд
+# сам пропонує руки Літові — місток до сцени 2.2 (ще не складена). Камера статична. Кадри не прогнані.
+[scene sverre_fire]
+place: hall
+camera: still
+needs: inside zala, calm, npcnear sverre hall.vohnyshche 4, npcnear eyvind hall.vohnyshche 4
+check: hall.vohnyshche 6
+test: npc sverre at hall.vohnyshche; npc eyvind at hall.vohnyshche
+npc sverre take
+npc eyvind take
+player stop 0.4
+player go npc.eyvind 2 soft
+player look npc.sverre
+bars on
+mix world 0.5 1
+npc sverre face hall.vohnyshche
+camera on npc.sverre medium 30 cut        # дивиться у вогонь
+wait 2.2
+npc sverre say …Тут тихо.
+wait 1.5
+camera on npc.eyvind close 20 cut
+wait 1.2
+npc eyvind say Чуєш? Він давно цього не казав.
+camera on npc.sverre medium 30 cut
+npc sverre face npc.eyvind
+wait 0.6
+npc sverre say Ейвінде. Ти схуд.
+camera two npc.eyvind npc.sverre cut
+npc eyvind say Я? Я гарний. Це ти схуд.
+wait 1
+npc sverre say Мені більше не треба, щоб снилося дурне. Тут і так ніхто не кличе. Забери.
+wait 0.8
+npc eyvind face player
+camera on npc.eyvind medium 20 cut
+npc eyvind say Я тобі винен. За гриби, за шкури — за все, що дописував. Пам'ятаєш, що я обіцяв?
+npc eyvind say Щось золоте.
+do give RavenWatch_item_persten_sverre    # у торбу тому, хто в сцені (нема місця — до ніг)
+camera on player close 25 cut
+player clip scratch_head nowait
+player say Я дума{в|ла}, буде золото. Монети.
+camera on npc.eyvind close 20 cut
+npc eyvind say Я казав — щось золоте. А монети ти собі {сам|сама} придума{в|ла}.
+wait 0.8
+npc eyvind say …Ну, я трохи допоміг.
+wait 1
+camera on player medium 25 cut
+if raven munin: say munin Перстень. Від якого сняться кози. Дякую, блін, дуже.
+if !raven munin, raven hugin: say hugin Обіцяв «щось золоте» — і дав. Уперше в нього слово й діло збіглися.
+wait 0.6
+camera on npc.eyvind medium 25 cut
+npc eyvind say А тепер… Літові, кажуть, руки потрібні? Я вмію носити. Коліно, бач, відпустило.
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Лист Літа після вежі (етап call4; користувач 2026-11-18: «через 12 год. Він знову пришле ворона. В листі буде по факту — мені треба 42 цвяхи»):
+# ворон Зали, як у колі 1 (lit_called)
+[scene lit_called4]
+roams: yes
+guard: off
+needs: calm, sky
+bird come 60 18 from hall hover
+letter lit :: Мені треба сорок два цвяхи. Бронзові.
+bird home hall
+
+# Ранок на вежі (етап dawn; користувач 2026-11-18: «в кінці бою треба невеличку катсцену кінематографічну з гарними ракурсами, де ми пропонуємо
+# в залу, а він відмовляється й уходить собі»; він «без пам'яті, але багато знає про мертвих»; слова мої). Суть: він бився за нас — і йде, не
+# ставши своїм. Глядач бачить раніше: на першому широкому кадрі він уже стоїть до нас спиною, лицем до курганів, — він уже думає про них, не
+# про нас. Переставлено після прогону (користувач 2026-11-18: «дивні ракурси, не надто кінематографічні»; «в кінці він біжить, а камера за ним —
+# треба, щоб він швидкою ходою уходив у ліс, а камера була з наших плечей: видно нас і те, як він уходить»; «ми можемо бути де завгодно — поки
+# балакаємо, потроху зближати нас в одну вільну точку біля башти»). Точка — на смузі kurhany біля вежі: він на -8 (лицем до курганів), ми й старий
+# по боках на -4; ми йдемо туди, поки він стоїть і поки він говорить (player go … nowait → arrive). Ракурси: широкий згори з-за його спини (вежа,
+# кургани в тумані, ми підходимо); його постать знизу збоку; розмова — двоє збоку і через плече; поворот до курганів — профіль; наостанок з-за
+# нашого плеча, нерухомо (still): ми — і він, що йде в ліс, меншає між деревами. Шкандибає (важіль limp — етап dawn), рука на боці (back_ache).
+# Музика — гри. Кадри не прогнані.
+[scene tower_morning]
+place: torvald_post
+needs: near torvald_post 40, npcnear baldr torvald_post 40, npcnear torvald torvald_post 25, calm
+check: torvald_post 15
+test: npc torvald at torvald_post.vezha; npc baldr at torvald_post
+lane kurhany torvald_post hall.vohnyshche clear 6
+npc baldr take
+npc torvald take
+player stop 0.4
+bars on
+mix world 0.4 2
+npc baldr go lane.kurhany@-8 near 1
+npc baldr face lane.kurhany@-40
+npc torvald go lane.kurhany@-4@2.5 near 0.6 walk nowait   # старий підходить до нього збоку
+player go lane.kurhany@-4@-2.5 0.6 soft nowait            # і ми — з іншого боку (де б не стояли: сцена не чекає, зближаємось, поки він стоїть і говорить)
+camera on npc.baldr wide back high cut    # світанок згори з-за його спини: кургани в тумані, він — лицем до них; ми з воронами підходимо збоку
+wait 2.4
+npc baldr clip back_ache
+camera on npc.baldr full 35 low cut       # той, хто стояв: знизу, трохи збоку — вежа за ним
+wait 1.8
+player arrive lane.kurhany@-4@-2.5 6      # (до кінця кроків — уже поруч)
+player look npc.baldr
+player face npc.baldr
+player clip stretch_up nowait             # ніч минула: потягнутись (користувач 2026-11-18: «живості додати нам, бо стоїмо як стовп»)
+camera two player npc.baldr cut           # тепер обоє — збоку
+player arrive lane.kurhany@-4@-2.5 1
+wait 1
+player say Ти поранений.
+npc baldr face player
+wait 0.6                                  # (обернувся — тоді його відповідь)
+npc baldr say Пусте. На мені швидко заростає. Як трава.
+camera on npc.torvald medium 30 cut       # старий — трохи збоку, обличчям до нього
+npc torvald face npc.baldr
+npc torvald say Я ж тебе знаю. …Чи ні. Але стояв ти як свій.
+wait 0.8
+npc baldr face torvald_post.vezha          # (користувач 2026-11-20: «дивиться на вежу, хвалить старого за старання… і звертає увагу на стяг»)
+wait 0.9                                  # (обернувся — тоді кадр)
+camera on npc.baldr full 30 low cut       # знизу: вежа над ним
+npc baldr say Гарно латаєш, старий. Дошки свіжі, драбина ціла.
+npc baldr face torvald_post.prapor
+camera on torvald_post.prapor medium low cut   # стяг на вежі, знизу
+npc baldr say Навіть стяг свіжий повісив. Для кого?
+camera on npc.torvald close cut
+npc torvald face npc.baldr
+npc torvald say Для зміни. Щоб здалеку бачили, що пост стоїть.
+wait 1
+camera shoulder npc.baldr player cut      # через його плече — ми кличемо
+player clip talk_hands nowait             # кличе — руками
+player say Ходімо з нами до Зали. Там вогонь, і біля нього тихо. Там є цілителька — перев'яже.
+camera shoulder player npc.baldr cut      # через наше — його обличчя
+npc baldr say Тихо… Добре, коли десь тихо. Я радий, що вона є.
+wait 1
+npc baldr face lane.kurhany@-40
+wait 0.9                                  # (повернувся до курганів — тоді кадр: профіль)
+camera on npc.baldr close left cut push 0.15 2.5
+npc baldr say Та ні. Ще не всі лягли.
+camera shoulder npc.baldr player cut
+player clip shrug_small nowait
+player say Хто?
+camera on npc.baldr medium left high cut  # він дивиться на кургани, ми — за ним; трохи згори
+npc baldr say Вони. Їх треба покласти назад, як слід: обличчям до землі, руки під груди. Тоді вони не чують, коли кличуть.
+wait 0.8
+camera shoulder npc.baldr player cut
+player clip scratch_head nowait           # не вкладається в голові
+player say Звідки ти це знаєш?
+camera on npc.baldr close 20 cut push 0.2 2
+wait 1
+npc baldr say Не знаю. Руки знають.
+wait 1.2
+if raven hugin: say hugin Свого імені він не пам'ятає. А як класти мертвих — пам'ятає.
+if !raven hugin, raven munin: say munin Без пташок, без імені, а про жмуриків — усе. Дивний.
+npc baldr go lane.kurhany@-60 walk nowait # швидкою ходою — у ліс, туди, звідки вони йшли (walk: не біжить)
+player look npc.baldr
+wait 0.7                                  # (рушив — тоді склейка)
+camera shoulder player npc.baldr still cut   # з-за нашого плеча, нерухомо: ми — і він, що меншає між деревами
+wait 2.4
+player emote wave                         # махнути йому вслід
+wait 2.6
+camera on npc.torvald medium 30 cut
+npc torvald face player
+npc torvald say Ну. Ніч відстояли. Зміни так і не було.
+npc torvald say Я — до Зали. Гейд, мабуть, уже лаву протерла, чекаючи.
+camera two npc.torvald player cut
+npc torvald say Ходімо разом, як хочеш. Удвох дорога коротша.
+wait 0.8
+mix reset 2
+camera off blend 1.5
+bars off
+
+# Сліди холонуть (етап trail_cold; користувач 2026-11-18: не встиг до вежі до півночі). Без кадру (roams): ворони — хто є; без воронів — рядок на
+# екрані (мусить знати: старий відстояв сам, увечері — знову)
+[scene trail_cold]
+roams: yes
+guard: off
+msg Старого впущено: сліди охололи. Наступного вечора він знову піде на варту.   # (завжди, і з воронами: користувач 2026-11-20 не помітив, що слід охолов — репліка ворона загубилась у бою)
+if raven hugin: say hugin Сліди вже холодні. Старий, мабуть, відстояв сам. Увечері він піде знову — тоді й простежимо.
+if !raven hugin, raven munin: say munin Все, прогавили діда. Завтра ввечері знову за ним, але вже не ловимо ґав.
+
+# Пост покинуто (етап post_left; користувач 2026-11-18: «пост до 6:00, інакше наступна ніч»): усі пішли, загинули чи проспали. Без кадру (roams):
+# ворони — хто є; без воронів — рядок на екрані
+[scene post_left]
+roams: yes
+guard: off
+if raven hugin: say hugin Пост покинуто. Старий лишився там сам. Наступної ночі — знову з ним, до світанку.
+if !raven hugin, raven munin: say munin Дід там сам стоїть, а ми тут. Соромно. Наступної ночі вертаємось.
+if !raven any: msg Пост покинуто: старий лишився на вежі сам. Наступної ночі — знову з ним, до світанку.
+
+# Зала встала: кінець глави 2 (етап rise; користувач 2026-11-20). Суть: ми зайшли, а Зала вже стоїть відбудована (2.2 — за кадром ще до сцени),
+# і вона вперше жива: кожен при своїй справі, і ніхто не стоїть.
+# Переписано ВТРЕТЄ 2026-11-21, ПАРТІЯМИ (користувач про обидві перші версії: «все було погано… головна проблема цієї сцени — щоб усі постійно
+# були у русі. Тут треба чіткого режисера, який водить всіх по сцені і не зупиняє їх. І от тоді, коли ми всіх зробимо рухливими, камери можна
+# буде краще розставити»). Кожна людина має свою партію (`part <хто>`) і свою справу (`npc <хто> busy <кліп>`): між наказами вона працює, а
+# не стоїть; партії домовляються знаками (`cue`), а великі миті стоять на секундах треку (`wait music`). Його сценарій:
+#   - заходимо, дивимось по боках (його початок: кадр із балкону, тоді ж мелодія);
+#   - Літ біля стіни МІРЯЄ (не б'є молотом); повз проходить Ейвінд, Літ, не повертаючи голови, вказує йому рукою; Ейвінд іде туди й бере дошку
+#     за кадром;
+#   - Гейд мішає в казані (статичний кадр прямо на неї з боку стіни); до неї підходить Торвальд і стає поруч — це його місце до його репліки;
+#   - Ейвінд несе дошку й кладе її просто на камеру;
+#   - Торвальд каже Гейд смішне про будівництво, вона сміється; тим часом ми йдемо до Літа, а він до нас;
+#   - у провал музики (43,9) Літ каже: основне зроблено; Торвальд гукає його через Залу, Літ кричить у відповідь; тоді Літ нам — про старого і
+#     «ще поговоримо»; на повній силі (65,8) Літ іде до Торвальда;
+#   - Сверре всю сцену сидить у кутку під стіною й щось робить руками.
+# Репліки — мої слова за його змістом (він: «щось смішне про будівництво, може про минуле, але коротке»). Кінець (72–87 с, «якщо часу вистачає,
+# треба ще щось додати») — моя пропозиція, він не заперечив: Сверре вперше підводить голову на нас; Зала з балкону до обриву треку.
+# ЗАГЛУШКИ, поки нема своїх кліпів (кожен новий кліп — на його погляд, по одному): Літ вказує кліпом dv_point_at (той повертає голову; треба
+# «вбік, не дивлячись»); Торвальд гукає жестом гри wave; Сверре сидить із ground_knee (треба «копирсається
+# руками, повертає голову»). Камера — перший прохід за його описом; точні кадри (дошка на лінзу при самій підлозі, зсув кадру від Літа до
+# кухні) — етап після руху, його кадри з «Режисера».
+# Музика — трек користувача hall_rises («Delirium», Freesound 722639, Victor_Natas, CC BY 4.0; 87,8 с) з першого кадру до кінця, ніде не стихає.
+# Частини треку (виміряно 2026-11-20): 0–9,8 сама струнна мелодія; 9,8–10,8 майже тиша; 10,9 — бас, пульс ~1,4 с; 21,9 — повна сила; 43,5 —
+# обрив на 0,2 с, далі 43,9–65,7 тиха частина без басу (уся розмова); 65,8 — знову повна сила; 87,3 трек обривається.
+# Ходи й миті не прогнані в грі: числа `wait music` і місця правляться після репетиції («Подивитись збоку» в «Режисері»: люди й музика грають,
+# кадрів нема).
+[scene hall_rises]
+place: zala
+camera: still
+check: hall.dveri_holovni 3 in
+# МІСЦЯ (2026-11-21, після першого прогону — «жах»: я ставив людей за назвами речей, і кожен став не там): тепер точки підлоги за числами
+# креслення, `spot.zala@x@z`, перевірені пробами з кадрами. Літ — біля різьбленої стіни поруч із каменем Ейріка, НЕ біля брами (користувач:
+# «не став Літа біля брами, він там дуже часто вибирає точку й б'є молотом»). Гейд сцена не рухає: квест (`hold hall.kazan stand`) ставить її до
+# самого казана, а точка «перед казаном» лежить на кам'яній основі вогнища — туди не стати.
+test: npc lit at hall.skrynia; npc heid at hall.kazan; npc torvald at hall.vohnyshche; npc eyvind at hall.lavka; npc sverre at hall.kinets
+needs: inside zala 1, near hall.dveri_holovni 6, calm, state zala >= 2.2, npcnear lit hall.skrynia 6, npcnear heid hall.kazan 5, npcnear torvald hall.vohnyshche 5, npcnear eyvind hall.lavka 4, npcnear sverre hall.kinets 6
+# (near брами — огляд 2026-11-20: гравець, що вже стояв у Залі, коли настав етап чи коли запобіжник LocState зробив 2.2 на очах, — без цього
+#  сцена спалахнула б посеред Зали, і «назад на поріг» поставив би його не на поріг)
+fade out 0.4                              # щойно зайшли: решта ставиться під чорним
+npc lit take
+npc heid take
+npc torvald take
+npc eyvind take
+npc eyvind sit hall.lavka                 # на лаві під стіною ліворуч від брами (лави `lava` біля вогнища у відбудованій Залі вже нема: сів на землю — користувач, прогін 6)
+npc sverre take
+npc sverre go spot.zala@12.3@2.1 exact walk    # на вільну підлогу перед верстаком у східному кінці (стара точка була між лавою й верстаком: «застряг між лавами» — користувач, прогін 6)
+npc sverre face spot.zala@12.07@4         # лицем до верстака: щось майструє біля нього
+npc sverre emote sit loop                 # сідає на землю (сам крок: у пробному світі квест його не садить)
+player back 2.5                           # назад на поріг: з балкону видно, як ми заходимо
+player face hall.vohnyshche
+npc lit tool belt now                     # Лот на поясі: він міряє, не б'є
+npc lit go spot.zala@2.6@-9.05 exact walk     # під чорним — до різьбленої стіни праворуч від каменю Ейріка
+npc lit face spot.zala@2.6@-12
+npc heid face hall.kazan                  # стоїть, де поставив квест: біля самого казана
+npc torvald go hall.vohnyshche before 0.5 walk
+npc lit busy dv_measure                   # справа кожного: між наказами працює, а не стоїть
+npc heid busy stir.loop                   # сама петля помішування, без входу, пауз і виходу: мішає безперервно (користувач, прогін 5: «починає щось робити, коли камера на неї»)
+npc torvald busy feed_fire
+npc sverre busy ground_knee               # ЗАГЛУШКА: свій кліп «копирсається руками» ще не зроблено
+npc eyvind busy sit_eyvind_hands          # поки сидить на лаві — його власна сидяча поза, не стовп
+bars on
+mix world 0.7 1
+music hall_rises 0 once keep 30 rest 20   # з першого кадру, на повну; від нього йде годинник `wait music`
+camera shot zala.balkon_1 look player cut # 0,0 — згори вниз на браму
+fade in 0.6
+parts go
+wait music 86.4                           # власна лінія лише тримає сцену до кінця треку: усе діється в партіях
+fade out 0.8                              # у чорне на обриві треку (87,3)
+camera off cut
+bars off
+fade in 1
+
+# ми: заходимо помалу, дивимось угору й по боках; тоді — до Літа
+part player
+player gait careful                       # (не mood_awe: настрій — не хода, гра відкинула б усю сцену; огляд 2026-11-20)
+player go hall.vohnyshche 2.5 soft nowait # помалу вглиб Зали
+player look hall.stelia 2.5               # спершу вгору, на балки під дахом
+wait 3.6
+player look hall.kukhnia 1.5              # тоді по боках
+wait 2.4
+player look hall.kamin 1.5
+wait 2.4
+player look npc.lit 1.5
+wait music 19                             # не стоїмо каменем: кілька кроків убік, до кухні — дивимось на Гейд
+player gait none
+player go spot.zala@-1.6@3.2 0.3 soft nowait
+player look npc.heid 1.5
+wait music 25
+player look npc.eyvind 1                  # Ейвінд із дошкою
+player clip scratch_head nowait
+wait music 31.5
+player look npc.torvald 1                 # старий жартує
+wait music 35.5
+player clip shrug_small nowait
+wait music 37                             # старий пожартував, Гейд сміється — ми йдемо до Літа, він до нас
+player go spot.zala@1.9@1.4 0.3 soft nowait       # крок назустріч Літові (між вогнищем і лавою гравцеві проходу нема: прогін 2)
+wait cue torv_called 40                   # старий гукає через Залу: дивимось на нього
+player look npc.torvald 1
+wait cue torv_done 30
+player look npc.lit 1
+wait music 66.5                           # Літ пішов до старого: проводжаємо очима, ступаємо слідом
+player look npc.lit 1.5
+player go spot.zala@0.4@2.8 0.3 soft nowait
+wait music 70
+player clip hands_belt nowait
+wait music 74
+player look npc.sverre 1.5                # Сверре підвів голову — глянули на нього
+
+# Літ: міряє стіну; вказує Ейвіндові; йде нам назустріч; каже в провал музики; перегукується зі старим; іде до нього
+part lit
+wait cue eyv_pass 40
+npc lit clip dv_point_at                  # ЗАГЛУШКА: вказує рукою (свій кліп «вбік, не повертаючи голови» ще не зроблено)
+wait music 27.5                           # йому до нас 12 м довкола вогнища (15,5 с у прогоні): доходить під саму свою репліку, не стоїть перед нами мовчки
+npc lit busy none
+npc lit go player near 1.8 walk           # до нас, довкола вогнища
+npc lit face player
+wait music 43.9                           # провал музики
+npc lit clip dv_talk_hands
+npc lit say Основне зроблено. Стіни стоять, дах тримає.
+cue lit_said
+wait cue torv_called 30
+npc lit face npc.torvald
+npc lit clip dv_wave_off
+npc lit say Брама там, де ти показав!
+cue lit_answered
+wait cue torv_done 30
+npc lit face player
+npc lit say Старий. Пам'ятає все, крім учорашнього. Ще поговоримо.
+cue lit_done
+wait music 65.8                           # повна сила: Літ іде до старого через усю Залу
+npc lit go npc.torvald near 1.6 walk
+npc lit face npc.torvald
+npc lit clip dv_talk_hands
+
+# Ейвінд: встає з лави, іде повз Літа, куди той вказав, бере дошку (за кадром), несе й кладе біля стіни; і ще, і ще — до кінця сцени
+part eyvind
+wait music 6.5                            # від лави до Літа він іде 9,2 с (виміряно, прогін 7): порівнюється з ним посеред Літового кадру (~15,7), дошку бере на ~21,7 і кадр із підлоги (22,6) застає його на ходу до лінзи; з 0,5 він усе зробив ДО свого кадру
+npc eyvind busy none
+npc eyvind stay                           # встає
+npc eyvind go spot.zala@1.5@-6.9 near 0.4 walk nowait   # до Літа, з відкритого боку (за його спиною стіл: туди не пройти — прогін 2)
+until npcnear eyvind npc.lit 3.4 | 18     # знак не тримає сцену: не дійшов за 18 с — Літ вказує все одно
+cue eyv_pass                              # порівнявся з Літом — той вказує
+wait 0.9
+npc eyvind go spot.zala@-4.4@-2.6 near 0.4 walk   # не спинившись — далі, туди, куди вказано: до дощок на відкритій підлозі за вогнищем (з ніші до середини Зали шлях заступлено: прогін 2 — 4,2 м не дійшов)
+npc eyvind clip plank_carry               # дошка на плечі (спершу кліп, тоді річ: дошку веде кліп)
+npc eyvind prop take FineWood size 1.1 free
+cue plank_here
+npc eyvind go spot.zala@0.3@-3.6 near 0.4 walk    # іде ПРЯМО НА ЛІНЗУ й кладе дошку на неї з ходу, не обертаючись (користувач, прогін 4: «стояв на камері спиною, а потім повернувся»). Хода «near 0.4» кінчається за ~0,95 м до точки (так було в кожному прогоні), а дошка лягає за метр перед ним — тож лінза лежить у самій точці
+npc eyvind clip plank_put                 # знімає з плеча — дошка йде прямо на камеру
+npc eyvind mark cover 4
+cue plank_cover                           # дошка закрила кадр — склейка
+npc eyvind mark down 4
+npc eyvind prop drop                      # за кадром: дошка лягає й лежить до кінця сцени
+wait 1.2
+npc eyvind go spot.zala@-4.4@-2.6 near 0.4 walk   # по другу
+npc eyvind clip plank_carry
+npc eyvind prop take FineWood size 1.1 free
+npc eyvind go spot.zala@1.2@-3.3 near 0.4 walk
+npc eyvind face hall.vohnyshche
+npc eyvind clip plank_put
+npc eyvind mark down 4
+npc eyvind prop drop
+wait 1.2
+npc eyvind go spot.zala@-4.4@-2.6 near 0.4 walk   # по третю
+npc eyvind clip plank_carry
+npc eyvind prop take FineWood size 1.1 free
+npc eyvind go spot.zala@-0.6@-3.3 near 0.4 walk
+npc eyvind face hall.vohnyshche
+npc eyvind clip plank_put
+npc eyvind mark down 4
+npc eyvind prop drop
+wait 1.2
+npc eyvind go spot.zala@-4.4@-2.6 near 0.4 walk   # і по четверту: до кінця треку він у дорозі
+
+# Торвальд: годує вогнище; іде до Гейд і стає поруч; жартує; гукає Літа через Залу
+part torvald
+wait music 4                              # він іде поволі (0,7 м/с у прогоні), а до кухні 13 м
+npc torvald busy none
+npc torvald go spot.zala@-12.6@-0.3 near 0.3 walk # перед вогнищем кухні, поруч із Гейд: у її кадрі видно, як підходить
+npc torvald face npc.heid
+wait music 22
+wait cue plank_cover 12                   # жарт — у саму склейку з дошки на них двох: не стоїть мовчки в кадрі (і не довше 12 с чекання)
+npc torvald clip talk_hands
+npc torvald say Першу Залу ми ставили швидше. Правда, вона й упала швидше.
+cue torv_joke
+wait cue lit_said 40
+npc torvald face npc.lit
+npc torvald emote wave                    # ЗАГЛУШКА: гукає через Залу (свого кліпу ще нема)
+npc torvald say Літе! Брама знову не там!
+cue torv_called
+wait cue lit_answered 20
+npc torvald clip shrug_small
+npc torvald say То я показав не туди!
+cue torv_done
+npc torvald face npc.heid
+
+# Гейд: мішає в казані; сміється зі старого; мішає далі
+part heid
+wait cue torv_joke 70
+npc heid busy none
+npc heid face npc.torvald
+sound speech_chuckle npc.heid
+npc heid clip fire_laugh_r                # сміється (наш кліп сміху стоячи, з життя людей; 2,4 с)
+wait 3
+npc heid face hall.kazan
+npc heid busy stir.loop
+
+# Сверре: сидить у кутку, руки зайняті; наприкінці вперше підводить голову на нас
+part sverre
+wait music 73
+npc sverre busy none
+npc sverre face player
+wait 4.5
+npc sverre face spot.zala@12.07@4
+npc sverre busy ground_knee
+
+# камера: ПЕРШИЙ ПРОХІД за його описом — щоб було на що дивитись; розставляється наново, коли рух прийнято
+part camera
+wait music 10.9                           # бас: Літ міряє стіну; повз іде Ейвінд
+camera spot.zala@1.2@-6.2 up 1.5 look npc.lit cut fov 50   # з відкритого боку ніші: Літ біля різьбленої стіни, праворуч камінь Ейріка (авто-кадр став йому за спину)
+wait music 18.5                           # Гейд мішає; у глибині підходить старий
+camera hall.kazan up 1 look npc.heid cut fov 60   # «прямо на Гейд з боку стіни»: від казана, над самим варивом (авто-кадр сів у казан: 6 с юшки — прогін 3)
+wait music 22.6                           # кадр на Гейд — 4 с (користувач: «надто довга сцена» з Гейд); Ейвінд у цю мить бере дошку й рушає на лінзу
+camera spot.zala@0.3@-3.6 up 0.12 look npc.eyvind cut fov 70   # лінза на самій підлозі за метр перед місцем, де він стає: іде на нас із дошкою на плечі й кладе її просто на лінзу
+wait cue plank_cover 10
+camera spot.zala@-10.6@0.4 up 1.5 look npc.torvald cut fov 50   # дошка закрила кадр → старий і Гейд біля вогнища кухні
+wait music 38                             # ми й Літ зближаємось
+camera eyes cut live 0.6                  # нашими очима, з живою рукою: Літ іде до нас і каже; старий гукне — погляд сам переходить до кухні й назад (партія player), без склейок
+wait music 65.8                           # повна сила: Літ іде через Залу — уся Зала згори
+camera shot zala.balkon_1 look npc.lit cut
+wait music 73.5                           # Сверре підводить голову
+camera on npc.sverre medium cut
+wait music 78.5                           # останній кадр: вогнище посеред Зали, усі при справі; від'їзд до обриву треку
+camera on hall.vohnyshche wide cut push -2 7.5
+part main
+
+# Третій лист Бруні — останнє в главі 2 й в акті 1 (етап bruni3; користувач 2026-11-20: «тригер з вороном нехай працює, як тільки ми вийшли
+# із зали; поки ми будемо обдивлятись залу, ворон і прилетить»; лист — його вибір із трьох: коротший і пафосніший, кличе зустрітись). Без кадру
+# (roams): гравець сам роздивляється Залу ззовні, за кілька секунд прилітає той самий ворон, що й з двома першими листами. Після листа —
+# смішне (користувач: «так а це шо, було не запрошення? нащо він тоді писав? досить листів — то пришле ще один?» — коротше): воронами, а без них — сам гравець.
+# needs: near — щоб сцену квесту сервера не віддало будь-кому, хто не в Залі, хоч за кілометр (як walk_dizzy)
+[scene bruni_letter3]
+roams: yes
+guard: off
+needs: calm, sky, !inside zala, near hall.vohnyshche 60, state zala >= 2.2
+wait 4                                    # поки роздивляємось Залу
+bird come 60 18 hover look bruni
+letter Варта, що лишилась seal bruni :: Досить листів.\nВарта говорить із Вартою віч-на-віч.\nПриходьте, коли покличу.\n\n— Варта, що лишилась
+bird leave up
+if raven hugin, raven munin: say hugin Тобто це ще не запрошення?
+if raven munin: say munin «Досить листів» — пише він. У листі. Шо, чекаєм ще один.
+if raven hugin, !raven munin: say hugin «Досить листів» — у листі. І це навіть не запрошення.
+if !raven any: player say Досить листів… пише він у листі.

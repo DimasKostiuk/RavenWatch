@@ -15,7 +15,10 @@ namespace HuginWhispers
     // Only while the scene's camera holds a shot (StoryCamera.Active, not on its way back): the shot is what it keeps clean. A raven
     // circling over you with a line (raven_nudge, house_call: no shot) hides nobody — the user 2026-11-08 saw a friend vanish as they
     // walked out of the Hall, his own nudge had begun under the sky. Its camera leaving: they are back.
-    // Twice a second while such a shot holds (new players, new gear), the other players' renderers only.
+    // The same for a scene others watch (StoryWatch; the user 2026-11-20: the players who watch are not in the picture unless the scene says
+    // «audience: seen»): on its director's game every other player, on the game of one who watches whoever its rule names (Begin(hide): all but
+    // the director, himself too; in a shot through the director's eyes the director as well).
+    // Twice a second while such a shot holds (new players, new gear), the players' renderers only.
     internal static class StoryAlone
     {
         private static readonly List<Renderer> _off = new List<Renderer>();
@@ -23,11 +26,16 @@ namespace HuginWhispers
         private static float _next;
 
 
-        internal static void Begin() { _on = true; _next = 0f; Tick(); }
+        private static System.Func<Player, bool> _hide; // (who is put out; none: every player but this game's own)
+
+        internal static void Begin() { Begin(null); }
+        internal static void Begin(System.Func<Player, bool> hide) { Show(); _hide = hide; _on = true; _next = 0f; Tick(); }
+        // whom its rule names has changed (a shot through the director's eyes began or ended): looked at again now
+        internal static void Again() { if (!_on) return; Show(); _next = 0f; Tick(); } // (and put out again in the same breath: nobody shown for a frame)
 
         internal static void End()
         {
-            _on = false;
+            _on = false; _hide = null;
             Show();
         }
 
@@ -38,7 +46,8 @@ namespace HuginWhispers
         }
 
         // the others put out now: such a scene, and its shot holds (their bodies, ravens, names, chat — one answer for all)
-        internal static bool Hides(Character c) { return _on && c is Player && c != Player.m_localPlayer; } // (one the scene puts out while its shot holds: not in the picture, so not in a lens's way — StoryScenes.People)
+        internal static bool Hides(Character c) { Player o = c as Player; return _on && o != null && Hidden(o); }
+        private static bool Hidden(Player o) { return _hide != null ? _hide(o) : o != Player.m_localPlayer; } // (one the scene puts out while its shot holds: not in the picture, so not in a lens's way — StoryScenes.People)
         private static bool Hiding { get { return _on && StoryCamera.Active && !StoryCamera.Leaving; } }
 
         // from StoryScenes.Tick, every frame while it plays (the look itself: twice a second; the shot begun or ended: at once)
@@ -48,10 +57,9 @@ namespace HuginWhispers
             if (!Hiding) { if (_off.Count > 0) Show(); _next = 0f; return; }
             if (Time.time < _next) return;
             _next = Time.time + 0.5f;
-            Player me = Player.m_localPlayer;
             foreach (Player o in Player.GetAllPlayers())
             {
-                if (o == null || o == me) continue;
+                if (o == null || !Hidden(o)) continue;
                 Hide(o.gameObject);
                 Hide(Shoulder.DrawnOf(o, false)); Hide(Shoulder.DrawnOf(o, true)); // (their ravens, flown off the shoulder too)
             }
@@ -60,7 +68,7 @@ namespace HuginWhispers
         private static void Hide(GameObject g)
         {
             if (g == null) return;
-            foreach (Renderer r in g.GetComponentsInChildren<Renderer>(true)) // heavy: twice a second, only while a shot of a scene of one's own holds, the other players and their ravens only
+            foreach (Renderer r in g.GetComponentsInChildren<Renderer>(true)) // heavy: twice a second, only while a shot of a scene that hides players holds, the players and their ravens only
                 if (r.enabled) { r.enabled = false; _off.Add(r); }
         }
 

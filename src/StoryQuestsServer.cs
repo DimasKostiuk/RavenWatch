@@ -65,8 +65,14 @@ namespace HuginWhispers
         // is the way in for a point inside a dungeon of ours (by the barrow's chest nobody would be «near»), off the spot for a search, and set after this in a pass
         private static void Near(Player p, QuestDef q, StageDef s)
         {
+            if (s.Saga.Length == 0) return;
+            NearOne(p, q, s, s.MarkAt);
+            foreach (StageDef m in s.Marks) NearOne(p, q, s, m.MarkAt); // (its other places to choose from: by any of them)
+        }
+        private static void NearOne(Player p, QuestDef q, StageDef s, string place)
+        {
             Vector3 at;
-            if (s.Saga.Length == 0 || s.MarkAt.Length == 0 || !StoryWhere.Find(s.MarkAt, out at)) return;
+            if (place.Length == 0 || !StoryWhere.Find(place, out at)) return;
             if (StoryWhere.Apart(at, p.transform.position) <= SagaNear) { q.NearStage = s.Id; q.NearAt = Time.time; } // (the place itself: a search's wide ring is no nearness)
         }
 
@@ -106,10 +112,12 @@ namespace HuginWhispers
         // The condition «step»: standing at that stage — and not one already passed that only waits to move on: its event heard and its waits holding, the
         // pass not run yet (up to half a second), or a stage of the server's this game has passed and the server not answered yet (Latch). The user 2026-11-16:
         // Heid's «Хто були ті жінки?» (?step ch1 heid_ask) came again on the screen right after «Принесу.» had raised the stage's event, and a click gave «…»
+        // Asked by the world (no player: a person's day «when step ch2 work3», a place's rule — StoryCond.Holds(null, …)): a server's quest stands where
+        // the world says, whoever it leads (the review 2026-11-18: StageNow asks Leads, false with no player — such a «step» never held)
         internal static bool IsAt(Player p, string quest, string stage)
         {
             QuestDef q = Find(quest);
-            StageDef s = q != null ? StageNow(p, q) : null;
+            StageDef s = q == null ? null : p == null && q.Server ? (State(null, q) == Story.Active ? q.Stage(At(null, q)) : null) : StageNow(p, q);
             return s != null && s.Id == stage && !Passing(p, q, s);
         }
 
@@ -235,7 +243,10 @@ namespace HuginWhispers
             if (!force && Time.time < c.Until && c.Holder != sender) return; // (its scene plays: the stage is its player's)
             StageDef was = q.Stage(from), next = q.Stage(to);
             bool owed = to != "end" && ((ranDone && was != null && was.Done.Count > 0) || (next != null && next.Start.Count > 0));
-            StoryWorld.SetText(KeyOf(q), to == "end" ? DoneWord + (was != null && was.Next == "end" ? " " + was.Id : "") : owed ? to + " ! " + (from.Length > 0 ? from : "-") + " " + (ranDone ? "1" : "0") : to);
+            bool begins = to != "end" && State(null, q) != Story.Active, toldOn = to == "end" && was != null && was.Next == "end";
+            StoryWorld.SetText(KeyOf(q), to == "end" ? DoneWord + (toldOn ? " " + was.Id : "") : owed ? to + " ! " + (from.Length > 0 ? from : "-") + " " + (ranDone ? "1" : "0") : to);
+            if (to == "end" && !toldOn && q.Scratch.Length > 0) StoryWorld.Forget(q.Scratch); // (ended for good: its block's own keys go — CloseBefore says when else)
+            if (begins) CloseBefore(q, 0);
             c.Holder = 0L; c.Until = 0f; c.First = sender; c.EnteredAt = Time.time; c.ActHolder = sender; c.ActAt = Time.time;
             Grant(sender, id, from, to, ranDone);
         }
@@ -310,6 +321,33 @@ namespace HuginWhispers
             }
         }
 
+        // A block's own world keys («scratch:») and the end of a quest of the server (the review 2026-11-18: a chapter told on in a later version —
+        // act 2 after the release of act 1 — must find its marks still there; they went with its end). Ended by its last stage's own «next: end» it may be told on (ServerResume
+        // above): its keys stay. Ended any other way (a fork to «end», the author's) — they go at once (Asked). The story past it — a quest whose
+        // «starts:» asks it done begins (chapter 3 after chapter 2) — closes it for good: its keys go, it is told on no more («-done» without its
+        // stage), and so each quest done that began from it (its «starts:» names it: Eyvind's beside chapter 2). Every key costs a send to every game.
+        // The server, on a quest's beginning only
+        private static void CloseBefore(QuestDef q, int depth)
+        {
+            if (q.Starts == null || depth > 8) return;
+            foreach (Cond c in q.Starts)
+                if (!c.Not && c.A.Length > 1 && c.A[0] == "quest") { QuestDef b = Find(c.A[1]); if (b != null && b != q) Close(b, q, depth + 1); }
+        }
+
+        private static void Close(QuestDef b, QuestDef by, int depth)
+        {
+            if (!b.Server || depth > 8 || State(null, b) != Story.Done) return;
+            if (b.EndedAt.Length > 0) StoryWorld.SetText(KeyOf(b), DoneWord);
+            if (b.Scratch.Length > 0) StoryWorld.Forget(b.Scratch);
+            Story.Log("track: " + b.Id + ": closed — «" + by.Id + "» begins after it" + (b.Scratch.Length > 0 ? ", its keys «" + b.Scratch + "» gone" : ""));
+            foreach (QuestDef d in Quests)
+            {
+                if (d == b || d == by || d.Starts == null) continue;
+                foreach (Cond c in d.Starts)
+                    if (!c.Not && c.A.Length > 1 && c.A[1] == b.Id && (c.A[0] == "quest" || c.A[0] == "reached" || c.A[0] == "step")) { Close(d, by, depth + 1); break; }
+            }
+        }
+
         private static void OnUnclaim(long sender, string id)
         {
             Claim c;
@@ -357,7 +395,6 @@ namespace HuginWhispers
             if (to == "end")
             {
                 Note(q.Id + ": пройдено на цьому сервері");
-                if (q.Scratch.Length > 0) StoryWorld.Forget(q.Scratch); // (its block over: its own world keys go — every key costs a send to every game)
                 StoryBus.Raise("quest_" + Story.Done, q.Id, 0);
                 return;
             }

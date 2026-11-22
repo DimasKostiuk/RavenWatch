@@ -16,6 +16,8 @@ namespace HuginWhispers
     //                                               day till «free»; a scene that takes it lets it go at its end); whom it follows is
     //                                               the world's word (lead_<who>, as hold), so it may be given with the person far off
     //   gate <place> open|shut                      a place's great door unlocked for everyone, or locked again (LocState: its world key)
+    //   give <item> [N] · take <item> [N]           into the player's bag (no room: at his feet) / out of it — the story's own thing taken on
+    //                                               purpose (ItemMarks.Take: not put back as a loss; the feather into the fire of the rite)
     // The kinds are a registry (as StoryCond's and StoryScenes' steps): a new action is one entry, nothing else changes.
     // QuestOnly ones (goto, end) move a quest: a scene's «do» refuses them.
     internal static class StoryActions
@@ -25,8 +27,11 @@ namespace HuginWhispers
             public int Min;                       // words it needs after its own
             public string Usage;                  // how it is written (the errors)
             public bool QuestOnly;                // only in a quest's start:/done: (it moves the quest)
+            public bool Fight;                    // it sets foes on the player at a place, its first word the fight's name and fact: a stage that starts it or waits for that fact is a fight — its ring on the map the game's red, not gold (StageDef.Fight)
             // What it leaves behind, for a quest walked with no game (tools/quest_dry.js reads these lines, as StoryCond.Kind.Dry; in the game only the author's jump reads them — StoryQuests.Rebuild):
             //   set|clear me|world <fact>   a fact of the character or of the world made or taken away ({1}, {2}: the action's own words)
+            //   later me|world <fact>       a fact the game makes in time, not the action itself (the last wave fallen: «waves») — the dry walk counts it
+            //                               made; the jump makes it only where a passed stage's wait asked for it (a jump to the fight stage: the fight is fought)
             //   order {1} <verb>            a word to a person that stands after the stage
             //   go · raise · scene · none   moves the quest · an event on the bus · plays a scene (its «do» lines count) · leaves nothing
             public string Dry;
@@ -50,6 +55,8 @@ namespace HuginWhispers
                 Do = (p, q, w, rest) => { StoryQuests.Choose(p, w[1], w[2]); return null; } } },
             { "give", new Kind { Dry = "none", Min = 1, Usage = "give <предмет> [N]   (у торбу гравцеві; нема місця — до ніг)",
                 Do = (p, q, w, rest) => { Give(p, w[1], w.Length > 2 ? Errands.I(w[2], 1) : 1); return null; } } },
+            { "take", new Kind { Dry = "none", Min = 1, Usage = "take <предмет> [N]   (з торби гравця: сюжет забирає свою річ — не вертається, як загублена)",
+                Do = (p, q, w, rest) => { if (p != null && !ItemMarks.Take(p, w[1], w.Length > 2 ? Errands.I(w[2], 1) : 1)) Story.Log("take: no " + w[1] + " in the bag"); return null; } } },
             { "world", new Kind { Dry = "set world world:{1}", Min = 1, Usage = "world <назва>", Do = (p, q, w, rest) => { StoryWorld.SetFlag(w[1], true); return null; } } },
             { "unworld", new Kind { Dry = "clear world world:{1}", Min = 1, Usage = "unworld <назва>", Do = (p, q, w, rest) => { StoryWorld.SetFlag(w[1], false); return null; } } },
             { "wvar", new Kind { Dry = "set world wvar:{1}", Min = 2, Usage = "wvar <назва> N|+N|-N", Do = (p, q, w, rest) =>

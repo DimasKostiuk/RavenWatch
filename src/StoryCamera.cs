@@ -8,8 +8,8 @@ using UnityEngine;
 namespace HuginWhispers
 {
     // The scene's camera (story-tech: GameCamera.UpdateCamera is the one place the game sets its camera each frame —
-    // a prefix there owns it while a shot is on). Only this player's camera: the others near see the scene live, theirs
-    // is never taken. While a shot is on, or a scene holds the bars or the black over the picture (a cutscene with no shot of its
+    // a prefix there owns it while a shot is on). This player's camera; one who watches another's scene is shown its director's
+    // shots by the same way (StoryWatch: the pose comes over the network, Shot(pose)). While a shot is on, or a scene holds the bars or the black over the picture (a cutscene with no shot of its
     // own yet: TakesPlayer), the player does not move, look round or fight (PlayerController.TakeInput says no) and the
     // HUD is out of sight, and so are the names and bars over heads (StoryCameraNamesPatch); the world never pauses, and a scene that stops gives the camera back at once.
     //   Shot(from, look, blend, fov)   from a point (fixed) looking at a point that may move (followed each frame)
@@ -54,8 +54,9 @@ namespace HuginWhispers
         private static float _wasFov;
 
         internal static bool Active { get { return _on; } }
+        internal static int Cuts; // (how many shots began with a cut: one who watches eases between the poses sent him, and must not ease over a cut — StoryWatch)
         internal static bool Leaving { get { return _on && _leaving; } } // (on its way back to the game's camera: a new shot may take it from there)
-        internal static bool TakesPlayer { get { return (_on && !_leaving) || StoryScreen.Held || StoryWatch.Holds; } } // (StoryWatch: another's scene says «watchers take») (the keys are the scene's: the user 2026-11-04 fought and turned the camera in a scene with bars and no shot; easing back they are yours again: the way back follows you)
+        internal static bool TakesPlayer { get { return (_on && !_leaving) || StoryScreen.Held; } } // (one who watches another's scene: the same — its shots and bars are on his screen too, StoryWatch) (the keys are the scene's: the user 2026-11-04 fought and turned the camera in a scene with bars and no shot; easing back they are yours again: the way back follows you)
 
         // ---------------------------------------------------------------- the living camera
         internal static float Live; // (how much: 1 — a hand holding it)
@@ -104,6 +105,7 @@ namespace HuginWhispers
             _pose = pose;
             _blendFrom = StoryClock.Now; _blendFor = Mathf.Max(0f, blend);
             _on = true; _leaving = false;
+            if (_blendFor <= 0f) Cuts++;
             Eyes = false; // (a shot through his eyes says so after this: StoryScenesCamera)
         }
 
@@ -454,6 +456,7 @@ namespace HuginWhispers
 
         private void Update()
         {
+            if (Player.m_localPlayer == null) StoryWatch.NoBody(); // (no body in a world: what another's scene put on this screen goes with it)
             _barNow = Mathf.MoveTowards(_barNow, _bars ? 1f : 0f, StoryClock.Delta / Mathf.Max(0.05f, BarSeconds));
             _fadeNow = Mathf.MoveTowards(_fadeNow, _fadeTo, StoryClock.Delta / _fadeSec);
             _glowNow = Mathf.MoveTowards(_glowNow, _glowTo, StoryClock.Delta / _glowSec);

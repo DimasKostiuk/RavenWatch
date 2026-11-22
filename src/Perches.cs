@@ -63,6 +63,9 @@ namespace HuginWhispers
 #if RAVEN_ITEM && RAVEN_NPC
             { "hearth", g => g.AddComponent<LocHearth>() }, // (its fires: cold, Hel's, the Watch's — kept by its place)
 #endif
+#if RAVEN_ITEM && RAVEN_STORY
+            { "altar", g => g.AddComponent<StoryOneAltar>() }, // (the Altar of the Watch: a lost one of a kind given back — StoryOne)
+#endif
         };
 
         // a part of a building made a chest of the game (the heart's coin box, a story building's «script: chest»): only the nearest of the copied
@@ -651,6 +654,7 @@ namespace HuginWhispers
             r.transform.SetParent(parent, false);
             r.transform.localPosition = Vector3.zero;
             r.transform.localRotation = Quaternion.Euler(Shoulder.Rotation);
+            Shoulder.SourceSize = src.m_visual.transform.lossyScale.y;
             Vector3 want = src.m_visual.transform.lossyScale * size, ps = parent.lossyScale;
             r.transform.localScale = new Vector3(want.x / Mathf.Max(0.0001f, Mathf.Abs(ps.x)), want.y / Mathf.Max(0.0001f, Mathf.Abs(ps.y)), want.z / Mathf.Max(0.0001f, Mathf.Abs(ps.z)));
             foreach (Collider c in r.GetComponentsInChildren<Collider>(true)) UnityEngine.Object.Destroy(c);

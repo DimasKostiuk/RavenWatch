@@ -5,10 +5,40 @@
 # Поки ми не знайомі (сцена eyvind_meet ставить тривкий факт eyvind_met, щойно він назвався): для гравця він «Чужинець» — ні імені, ні розмови,
 # E нічого, мовчить (StoryStranger); ворони, коли вперше підходимо до нього: Гугін «Хто це?», Мунін «Мабуть, Літів» (той, якого нема на плечі,
 # мовчить; без Гугіна Мунін не відповідає на питання, якого ніхто не ставив).
-# Його день у Залі — далі з кроками глави (він підбивається до Літа, той проганяє): поки квест тримає його на лаві всю главу.
+# Його день у Залі — нижче (користувач 2026-11-22): квест тримає його на лаві лише на етапах, де він потрібен саме там (сцена з ним, розмова з міткою на лаві).
 [person eyvind]
 npc: eyvind
 after: reached ch2 lit_plan
+live: hall.lavka when reached ch2 sverre_home   # привів Сверре до Зали — і лишився (story-lore.md «Ейвінд»: відробляє борг)
+live: bad_house.lizhko when reached ch2 eyv_gone  # (користувач 2026-11-19: посеред сцени heid_tells встав і пішов до свого побратима; хатина — місце bad_house, збудував користувач 2026-11-20: у хатині, біля ліжка Сверре)
+live: away when reached ch2 bruni2, !reached ch2 e_fight   # кінець кола 2 (користувач 2026-11-18): з листа Бруні (за день після шкур) — і зник; Літ «пару годин не бачив», гравець шукає. Знайшовся на узліссі (сцена eyv_runs: там він — людина самої сцени, spawn) і біжить до Зали: з бою (e_fight) знову у світі, на лаві (квест: e_back hold)
 live: hall.lavka when reached ch2 lit_plan
 stranger: !world eyvind_met
 strangersay: hugin Хто це? / munin Мабуть, Літів.
+# Його день у Залі (StoryLife; формат рядків — шапка people/heid.txt; фази eyvind_in_hall, eyvind_lively і місце вечора one vechir — people/phases.txt).
+# Користувач 2026-11-22: «до того [поки Сверре не прийшов] по більшості сидить на лаві і дивиться, іноді підходить до Літа (але після знайомства
+# тільки). Після того як Сверре приходить, Ейвінд стає жвавішим і щось робить». Де етапові треба його саме на лаві (сцена з ним, розмова з міткою
+# на лаві) — квест тримає (quests/ch2.txt: npc eyvind hold hall.lavka sit … free), день — тло. Без гри: node tools/day.js eyvind ch2 fill1
+day: hall when phase eyvind_in_hall
+# Поки його власний квест чекає розмови на лаві (фаза eyvind_asked: етапи e_ask і e_give квесту ch2_eyvind, мітка «hall.lavka») — на лаві, і нічого
+# поверх: over. daily — бо це не справа дня, а очікування етапу (правило «що чекає етап, те тримають»; квест глави тут не тримає: огляд 2026-11-22)
+at: hall 0-24 hall.lavka seat sit over daily stay 240-480 when phase eyvind_asked
+# --- поки Сверре нема: лава
+at: hall 6-22 hall.lavka seat sit stay 180-360 when !phase eyvind_lively          # сидить і дивиться (його пози — шаблон npc/eyvind.txt: poses)
+at: hall 14-16 hall.stina_prava watch chance 0.3 say by_lit stay 40-80 when world eyvind_met, !phase eyvind_lively   # іноді підходить до Літа: стоїть біля стіни, дивиться під руку (слова — тема by_lit; їхні обміни — meets/hall.txt [pair eyvind lit])
+# --- відколи Сверре в Залі: при ділі (Літ: «Носить за двох. Скільки приніс — стільки й каже»)
+# Носить дошки (користувач 2026-11-22: «носить лише в кінці, коли ми його кореша до вогню забрали»; дошка «лежить купою біля стіни і зникає згодом»):
+# haul — дошка на плече біля скрині, до стіни, кладе; lays — лежить там купою (до шести, кожна хвилин п'ятнадцять: StoryPile)
+at: hall 7-12 hall.stina_prava watch haul hall.skrynia lays when phase eyvind_lively   # зранку — дошки до правої стіни, де клепає Літ…
+at: hall 7-12 hall.stina_prava watch stay 40-80 when phase eyvind_lively          # …і між дошками стоїть біля неї, дивиться під руку
+at: hall 12-14 hall.kinets table sit stay 90-180 when phase eyvind_lively         # опівдні підсідає до Сверре в дальній кінець Зали (вид table, не seat: seat — місце на одного, а там уже сидить Сверре)
+at: hall 14-17 hall.stina_liva watch haul hall.skrynia lays when phase eyvind_lively   # по обіді — до лівої стіни
+at: hall 14-17 hall.stina_liva watch stay 40-80 when phase eyvind_lively
+at: hall 17-18 hall.lavka seat sit stay 120-200 when phase eyvind_lively          # перед вечором — своя лава
+at: hall 18-22 hall.vohnyshche fire sit meet evening one vechir stay 150-280 when phase eyvind_lively   # вечір — тепер з усіма: вогонь Варти…
+at: hall 18-22 hall.stil table sit meet evening one vechir stay 150-280 when phase eyvind_lively       # …чи стіл (one vechir)
+# --- ніч і вільний час: лава, вогонь
+at: hall 22-6 hall.lavka seat sit stay 240-480
+at: hall 22-6 hall.vohnyshche fire sit stay 240-480
+spot: hall hall.lavka seat sit want 0.6
+spot: hall hall.vohnyshche fire sit want 0.2

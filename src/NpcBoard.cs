@@ -349,7 +349,7 @@ namespace HuginWhispers
             foreach (StoryQuests.Standing a in StoryQuests.NowAll(p)) // (the first quest he stands in whose mark is in this base: a quest beside the chapter's may be the one here)
             {
                 Vector3 at;
-                if (!StoryQuests.MarkAt(a.Quest, a.Stage, out at) || Utils.DistanceXZ(at, h.transform.position) > NpcBase.Reach) continue;
+                if (!StoryQuests.MarkNear(a.Quest, a.Stage, h.transform.position, out at) || Utils.DistanceXZ(at, h.transform.position) > NpcBase.Reach) continue; // (of several places, the one by this base)
                 string goal = StoryQuests.GoalText(a.Stage);
                 if (string.IsNullOrEmpty(goal)) continue;
                 return new RavenBook.BoardRow { Text = goal, Arrow = true, Click = ToSpot(at, Lang.T("Сюжет")) };

@@ -20,8 +20,10 @@ namespace HuginWhispers
     //                    plugins/sounds in the package
     // Several files in one line are its variants: one of them each time, by chance, never the one before («hm file:hm_1.ogg file:hm_2.ogg
     // file:hm_3.ogg»; a track or a bed: one of them when it starts). A game sound has its own variants already.
+    // «any»: all the line's names are its variants, not stand-ins — one of them each time, by chance, never the one before (Start); one the
+    // game lacks gives its turn to the next («hammer sfx_build_hammer_wood sfx_build_hammer_stone … any vol=0.5»: Lit's blows, 2026-11-18).
     // A line on «@» is no sound: a word of another reader of these files («@timbre <name> …»: a person's voice, NpcTimbre).
-    // Options: vol=0.8  pitch=0.9  spread=0.05  range=60  2d  wet. A name not in the files stands for itself. pitch counts for music and
+    // Options: vol=0.8  pitch=0.9  spread=0.05  range=60  2d  wet  any. A name not in the files stands for itself. pitch counts for music and
     // beds too; spread for one-shots (each time its pitch a little off, here ±5%: a sound heard often is not the same each time; on top of
     // any pitch, a person's own too); range, 2d, wet for sounds and beds that have a place (Audio.Bed).
     // A file is read when a scene that names it begins (Prepare), or when first asked: never twice, a failure not retried. A
@@ -41,8 +43,9 @@ namespace HuginWhispers
         {
             public string[] Tokens = new string[0];
             public float Vol = 1f, Pitch, Range, Spread;
-            public bool Flat, Wet;
+            public bool Flat, Wet, Any;
             internal int LastClip = -1; // (of its own files, the one played last: Shot.Pick)
+            internal int LastToken = -1; // (of an «any» line, the name played last: Start)
 
             // its line as the files write it, after the name
             internal string Words()
@@ -54,6 +57,7 @@ namespace HuginWhispers
                 if (Range > 0f) b.Append(" range=").Append(N(Range));
                 if (Flat) b.Append(" 2d");
                 if (Wet) b.Append(" wet");
+                if (Any) b.Append(" any");
                 return b.ToString();
             }
         }
@@ -147,11 +151,12 @@ namespace HuginWhispers
                         string t = w[i];
                         if (t == "2d") e.Flat = true;
                         else if (t == "wet") e.Wet = true;
+                        else if (t == "any") e.Any = true;
                         else if (t.StartsWith("vol=", StringComparison.Ordinal)) e.Vol = Errands.F(t.Substring(4), 1f);
                         else if (t.StartsWith("pitch=", StringComparison.Ordinal)) e.Pitch = Errands.F(t.Substring(6), 0f);
                         else if (t.StartsWith("range=", StringComparison.Ordinal)) e.Range = Errands.F(t.Substring(6), 0f);
                         else if (t.StartsWith("spread=", StringComparison.Ordinal)) e.Spread = Mathf.Clamp(Errands.F(t.Substring(7), 0f), 0f, 0.5f);
-                        else if (t.IndexOf('=') >= 0) LogOnce("option " + w[0] + t, "«" + w[0] + "»: no option «" + t + "» (vol= pitch= spread= range= 2d wet): left out");
+                        else if (t.IndexOf('=') >= 0) LogOnce("option " + w[0] + t, "«" + w[0] + "»: no option «" + t + "» (vol= pitch= spread= range= 2d wet any): left out");
                         else tokens.Add(t);
                     }
                     e.Tokens = tokens.ToArray();
@@ -196,23 +201,37 @@ namespace HuginWhispers
             clip = null;
             vol = e.Vol;
             bool files = false;
-            foreach (string t in e.Tokens)
+            int n = e.Tokens.Length, from = Start(e);
+            for (int k = 0; k < n; k++)
             {
+                int i = (from + k) % n;
+                string t = e.Tokens[i];
                 if (t.StartsWith("file:", StringComparison.Ordinal))
                 {
                     if (files) continue; // (all the line's files were looked at with its first)
                     files = true;
                     List<AudioClip> own;
                     if (!OwnFiles(e, true, out own)) return 0;
-                    if (own.Count > 0) { clip = own[UnityEngine.Random.Range(0, own.Count)]; return 1; }
+                    if (own.Count > 0) { clip = own[UnityEngine.Random.Range(0, own.Count)]; e.LastToken = i; return 1; }
                     continue;
                 }
                 MusicMan.NamedMusic m = Audio.GameTrack(GameName(t));
-                if (m != null) { clip = m.m_clips[UnityEngine.Random.Range(0, m.m_clips.Length)]; vol *= m.m_volume; return 1; }
+                if (m != null) { clip = m.m_clips[UnityEngine.Random.Range(0, m.m_clips.Length)]; vol *= m.m_volume; e.LastToken = i; return 1; }
                 List<Shot> shots = t.StartsWith("game:", StringComparison.Ordinal) ? null : TokenShots(t);
-                if (shots != null) foreach (Shot s in shots) { AudioClip c = s.Clips != null && s.Clips.Length > 0 ? s.Clips[0] : s.Like != null ? s.Like.clip : null; if (c != null) { clip = c; if (s.MaxVol > 0f) vol *= s.MaxVol; return 1; } }
+                if (shots != null) foreach (Shot s in shots) { AudioClip c = s.Clips != null && s.Clips.Length > 0 ? s.Clips[0] : s.Like != null ? s.Like.clip : null; if (c != null) { clip = c; if (s.MaxVol > 0f) vol *= s.MaxVol; e.LastToken = i; return 1; } }
             }
             return -1;
+        }
+
+        // the name of its line to try first: the first written; of an «any» line one by chance, not the one played last (its turn
+        // passes to the next when the game lacks it, so a missing name is never silence)
+        private static int Start(Entry e)
+        {
+            int n = e.Tokens.Length;
+            if (!e.Any || n < 2) return 0;
+            if (e.LastToken < 0 || e.LastToken >= n) return UnityEngine.Random.Range(0, n);
+            int i = UnityEngine.Random.Range(0, n - 1);
+            return i >= e.LastToken ? i + 1 : i;
         }
 
         // a line's own files, all of them: its variants (those that could be read). false: one is still on its way
@@ -245,26 +264,30 @@ namespace HuginWhispers
             return all;
         }
 
-        // a one-shot: the first of its tokens there is. Its files are one Shot with no source to copy from, each file a variant of it.
+        // a one-shot: the first of its tokens there is (of an «any» line: from one by chance, Start). Its files are one Shot with no
+        // source to copy from, each file a variant of it.
         // loading: a file is on the way (the sounds after it do not stand in: it will be there in a moment)
         internal static List<Shot> ShotsOf(Entry e, out bool loading)
         {
             loading = false;
             bool files = false;
-            foreach (string t in e.Tokens)
+            int n = e.Tokens.Length, from = Start(e);
+            for (int k = 0; k < n; k++)
             {
+                int i = (from + k) % n;
+                string t = e.Tokens[i];
                 if (t.StartsWith("file:", StringComparison.Ordinal))
                 {
                     if (files) continue; // (all the line's files were looked at with its first)
                     files = true;
                     List<AudioClip> own;
                     if (!OwnFiles(e, false, out own)) { loading = true; return null; }
-                    if (own.Count > 0) return new List<Shot> { new Shot { Clips = own.ToArray(), Room = RoomByDistance, Turns = e } };
+                    if (own.Count > 0) { e.LastToken = i; return new List<Shot> { new Shot { Clips = own.ToArray(), Room = RoomByDistance, Turns = e } }; }
                     continue;
                 }
                 if (t.StartsWith("game:", StringComparison.Ordinal)) continue;
                 List<Shot> s = TokenShots(t);
-                if (s != null) return s;
+                if (s != null) { e.LastToken = i; return s; }
             }
             return null;
         }

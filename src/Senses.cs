@@ -107,7 +107,7 @@ namespace HuginWhispers
                 float d = (c.transform.position - me).sqrMagnitude;
                 if (c.IsBoss()) { if (d <= BossRange * BossRange && boss == null) boss = c; }
                 if (d > FoeRange * FoeRange || !BaseAI.IsEnemy(p, c)) continue;
-                if (c.m_faction == Character.Faction.AnimalsVeg && !AfterYou(c, p)) continue; // (the game counts every deer a foe of yours: a grazing one is no fight)
+                if (c.m_faction == Character.Faction.AnimalsVeg && !(AfterYou(c, p) && Coming(c, p))) continue; // (the game counts every deer a foe of yours: a grazing one is no fight, nor one running off with you for its target)
                 near = true;
                 if (AfterYou(c, p)) hunts = true;
                 if (d < bestAny) { bestAny = d; any = c; }
@@ -116,8 +116,19 @@ namespace HuginWhispers
             FoeNear = near; Foe = foe; Boss = boss; NearestFoe = any; FoeHunts = hunts;
         }
 
-        // a beast of the meadows is a foe only once it comes for you (a boar, a neck at you; a deer never)
+        // one with you for its target (its mind's own word)
         private static bool AfterYou(Character c, Player p) { MonsterAI ai = c.GetBaseAI() as MonsterAI; return ai != null && ai.GetTargetCreature() == p; }
+
+        // a beast of the meadows is a foe only once it comes for you (a boar, a neck at you): moving your way, or standing right by you. A deer runs from
+        // you with you for its target too — away from you: no fight (the user 2026-11-20: a deer 8 m off held the trail's scene 71 s as «a foe near»)
+        internal static float ComingNear = 3f; // m: one standing this near, its target you, counts whichever way it faces
+        private static bool Coming(Character c, Player p)
+        {
+            Vector3 to = p.transform.position - c.transform.position, v = c.GetVelocity();
+            to.y = 0f; v.y = 0f;
+            if (v.sqrMagnitude < 0.25f) return to.sqrMagnitude < ComingNear * ComingNear;
+            return Vector3.Dot(v, to) > 0f;
+        }
 
         // something ahead of you within this distance (for the raven's scouting): the nearest enemy in front
         internal static Character Ahead(Player p, float range)

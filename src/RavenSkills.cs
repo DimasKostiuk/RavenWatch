@@ -735,7 +735,10 @@ namespace HuginWhispers
         internal static void StoryLine(bool munin, string line)
         {
             Player p = Player.m_localPlayer;
-            if (p != null && !string.IsNullOrEmpty(line)) Speak(p, munin, line);
+            if (p == null || string.IsNullOrEmpty(line)) return;
+            if (line.IndexOf("{name}", StringComparison.Ordinal) >= 0) line = line.Replace("{name}", p.GetPlayerName()); // (a scene's line by name, as a person's: StoryScenes.Spoken fills its subtitle the same)
+            RavenSpeech.SceneLine = true; // (the scene's own: through the ravens' quiet — RavenSpeech.Hushed)
+            try { Speak(p, munin, line); } finally { RavenSpeech.SceneLine = false; }
         }
 
         // Hugin about his dome, in the tone of his trust
@@ -754,6 +757,7 @@ namespace HuginWhispers
 
         private static void Speak(Player p, bool munin, string line)
         {
+            if (RavenSpeech.Hushed()) return; // (a scene plays: none of its own words, nor their voice, a turn of your head, a word to the others)
             line = Words.Season(p, munin, line); // now and then a word you taught it
             line = Mead.Slur(p, munin, line);    // tipsy: a hiccup into it
             Cozy.Quiet(SaySeconds(line)); // the other raven, and the fireside story, wait for these words

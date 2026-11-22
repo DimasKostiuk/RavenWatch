@@ -29,7 +29,7 @@
 //                                                               the length grows if a key goes past it); a moved key landing on one that stays replaces it
 //   hold <clip> <channel> <t0> <t1>                             the channel's value at t0 held till t1: a key at t1 with it, the keys between taken out
 //   copy <to> <from> <t0> <t1> <at> [ch,ch…]                    the keys of a checked clip in [t0, t1] put into another at «at» (its moves reused: a kneel, a step back)
-//   header <clip> <line>                                        a header line set («length 6», «fade 0.6 0.8», «part loop 1 4 loop», «mark 3.4 unlocked», «say …», «touch wall 0.55»); «want …» adds one
+//   header <clip> <line>                                        a header line set («length 6», «fade 0.6 0.8», «part loop 1 4 loop», «mark 3.4 unlocked», «touch wall 0.55»); «want …» and «say …» add one (the user's words: every look kept)
 //   unwant <clip> <words>                                       the «want» lines with those words taken out
 //   unline <clip> <start of the line>                           a head line taken out («part lowers», a note)
 //   batch <clip> "<op>; <op>; …"                                several of the above (set, del, move, hold, header, unwant, unline — without the clip's name) made
@@ -113,7 +113,12 @@ function setHeader(c, line) {
   const same = w[0] === 'part' || w[0] === 'mode' ? h => h.trim().split(/\s+/)[0] === w[0] && h.trim().split(/\s+/)[1] === w[1]
     : w[0] === 'mark' ? h => h.trim().split(/\s+/)[0] === 'mark' && h.trim().split(/\s+/)[2] === w[2] // (a mark is its name: its time is what changes)
     : h => h.trim().split(/\s+/)[0] === w[0];
-  const i = w[0] === 'want' ? -1 : c.head.findIndex(same);
+  if (w[0] === 'say') { // (the user's words over several looks: each kept, a line more after the others — 2026-11-18 a second «say» replaced the first)
+    if (c.head.some(h => h.trim() === line.trim())) return;
+    let last = -1; c.head.forEach((h, k) => { if (h.trim().split(/\s+/)[0] === 'say') last = k; });
+    if (last >= 0) { c.head.splice(last + 1, 0, line); return; }
+  }
+  const i = w[0] === 'want' || w[0] === 'say' ? -1 : c.head.findIndex(same);
   if (i >= 0) c.head[i] = line; else { let at = c.head.findIndex(h => h.trim().startsWith('#') || h.trim() === ''); if (at < 0) at = c.head.length; c.head.splice(at, 0, line); }
 }
 

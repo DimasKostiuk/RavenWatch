@@ -118,7 +118,7 @@ lived RavenWatch_story_zherdyna_varty -7.674 9.167 1.316
 lived RavenWatch_story_zherdyna_varty 8.002 7.014 -0.222
 lived RavenWatch_story_zherdyna_varty 8.039 7.172 4.038
 lived RavenWatch_story_zherdyna_varty 5.148 5.868 5.683
-fixed piece_chest 0.021 -1.108 -8.134
+repaired piece_chest 0.021 -1.108 -8.134
 lived RavenWatch_perch_vartova_zherdyna 3.763 -1.609 9.844
 fixed wood_fine_stack 9.281 -2.557 9.531
 fixed wood_fine_stack 6.309 -1.935 9.272

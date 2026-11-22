@@ -1,6 +1,7 @@
 #if RAVEN_ITEM && RAVEN_NPC
 // (the ground under a blueprint: from 2.9, with Blueprint)
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace HuginWhispers
     //   - undo: the terrain as it was (the trees and rocks taken stay gone);
     //   - here: the author's square round him flat at his feet (raven blueprint ground <half m> | undo), the same way.
     //   - a glade: trees/rocks/bushes taken away round a spot, the ground left as it is (ClearRound: the story's glade, StoryFound).
+    //   - land made far from every player (ZonesIn, KeepIn): the one way the server brings zones in ahead of anyone — a place of the story going
+    //     up (Loc.BuildAhead), a glade cleared before anyone can see its trees go (StoryFound).
     internal static class BlueprintGround
     {
         internal const float NoGround = -0.15f; // (a blueprint saved before «ground»: just under the floor)
@@ -300,19 +303,70 @@ namespace HuginWhispers
             return true;
         }
 
+        // ---------------------------------------------------------------- land made ahead of anyone
+        // The server makes zones only round its players. These, far from every one of them: the game's own PokeLocalZone (it makes a zone never made —
+        // its trees and stones into the world's list — and loads it), one zone every FramesAZone frames (the game itself makes one at a time), till
+        // all are in or «wait» s are over; done(ZonesOk | ZonesGone — the world was left | ZonesLate | ZonesNoGame — the game changed). The game
+        // lets a zone go 4 s after its last poke: who needs them longer pokes again (KeepIn). Cost: as the game's own coming to new land, once.
+        internal const int ZonesOk = 0, ZonesGone = 1, ZonesLate = 2, ZonesNoGame = 3;
+        private const int FramesAZone = 4;
+        private static readonly MethodInfo PokeZone = HarmonyLib.AccessTools.Method(typeof(ZoneSystem), "PokeLocalZone");
+
+        internal static List<Vector2s> ZonesOf(Vector3 centre, float r)
+        {
+            List<Vector2s> l = new List<Vector2s>();
+            Vector2s lo = ZoneSystem.GetZone(centre - new Vector3(r, 0f, r)), hi = ZoneSystem.GetZone(centre + new Vector3(r, 0f, r));
+            for (int x = lo.x; x <= hi.x; x++)
+                for (int y = lo.y; y <= hi.y; y++)
+                    l.Add(new Vector2s((short)x, (short)y));
+            return l;
+        }
+
+        internal static IEnumerator ZonesIn(List<Vector2s> zones, float wait, Action<int> done)
+        {
+            ZNet world = ZNet.instance;
+            if (PokeZone == null) { done(ZonesNoGame); yield break; }
+            float giveUp = Time.time + wait;
+            while (true)
+            {
+                if (ZNet.instance != world || ZoneSystem.instance == null) { done(ZonesGone); yield break; }
+                bool made = false, ready = true;
+                foreach (Vector2s z in zones)
+                {
+                    if ((bool)PokeZone.Invoke(ZoneSystem.instance, new object[] { z })) { made = true; ready = false; break; }
+                    if (!ZoneSystem.instance.IsZoneLoaded(z)) ready = false;
+                }
+                if (ready) break;
+                if (Time.time > giveUp) { done(ZonesLate); yield break; }
+                for (int f = made ? FramesAZone : 1; f > 0; f--) yield return null;
+            }
+            done(ZonesOk);
+        }
+
+        internal static void KeepIn(List<Vector2s> zones)
+        {
+            if (PokeZone == null || ZoneSystem.instance == null) return;
+            foreach (Vector2s z in zones) PokeZone.Invoke(ZoneSystem.instance, new object[] { z });
+        }
+
         // every object of the world's list in the zones within reach of it, loaded or not (the server holds them all; a client — what it has):
         // the one way for whoever must reach what nobody has loaded (Sweep; LocInside's «clear world»)
         internal static void ObjectsAround(Vector3 centre, float reach, List<ZDO> into)
         {
-            Vector2s lo = ZoneSystem.GetZone(centre - new Vector3(reach, 0f, reach)), hi = ZoneSystem.GetZone(centre + new Vector3(reach, 0f, reach));
             List<ZDO> one = new List<ZDO>();
-            for (int x = lo.x; x <= hi.x; x++)
-                for (int y = lo.y; y <= hi.y; y++)
-                {
-                    one.Clear();
-                    FindObjects.Invoke(ZDOMan.instance, new object[] { new Vector2s((short)x, (short)y), one, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a zone, when a place is levelled, a glade cleared, the author's clear
-                    into.AddRange(one);
-                }
+            foreach (Vector2s zone in ZonesOf(centre, reach))
+            {
+                one.Clear();
+                ObjectsOf(zone, one);
+                into.AddRange(one);
+            }
+        }
+
+        // the same of one zone (WorldSpot.BuiltIn keeps what it finds for the frame)
+        internal static void ObjectsOf(Vector2s zone, List<ZDO> into)
+        {
+            if (FindObjects == null || ZDOMan.instance == null) return;
+            FindObjects.Invoke(ZDOMan.instance, new object[] { zone, into, new HashSet<ZoneSystem.SectorIndex>() }); // heavy: once a zone, when a place is levelled, a glade cleared, the author's clear, a spot asked «built by a player?»
         }
 
         // what is wild and nobody's within reach of it, where «inside» says: away, by the world's list (Clear, ClearRound)

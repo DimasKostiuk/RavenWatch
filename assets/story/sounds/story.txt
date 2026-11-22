@@ -4,14 +4,17 @@
 #   game:<назва>     трек музики гри (для music і bed)
 #   file:<x.ogg>     наш файл, лежить у цій самій папці (.ogg .wav .mp3)
 # Кілька наших файлів в одному рядку — варіанти: щоразу грає інший, ніколи той самий двічі поспіль (hm file:hm_1.ogg file:hm_2.ogg file:hm_3.ogg).
-# Параметри: vol=0.8  pitch=0.9  spread=0.05  range=60  2d  wet. Приклад: hall_dark file:hall_dark.ogg vol=0.7
+# Параметри: vol=0.8  pitch=0.9  spread=0.05  range=60  2d  wet  any. Приклад: hall_dark file:hall_dark.ogg vol=0.7
 #   spread=0.05      щоразу тон трохи інший (±5%): для звуку, який чути часто (крок, «хм»)
+#   any              усі звуки рядка — варіанти, а не заміна один одному: щоразу один навмання, не той самий двічі поспіль (hammer_blow нижче)
+#   vol=0.5          від гучності самого звуку: звук гри вдвічі тихіший, ніж грає гра
 # Сирий файл (завантажений, записаний) сюди кладе інструмент: node tools/sound.js add <файл> <назва> [shot|voice|bed|music] --src "<звідки, чий, ліцензія>"
 # (обрізає тишу, рівняє гучність, пише .ogg і рядок із джерелом; --split ріже один запис із паузами на варіанти). Тоді на слух: вкладка «Звуки» (клік по назві).
 # Сцени: «music hall_dark 4», «bed wind_cave», «bed wind_cave hall 3 range 30», «sound whisper npc.echo», згасання людини: «npc echo fade 4 whisper» (шапка StoryAudio).
 whisper Ghost/idle Ghost/alert sfx_ghost_idle                 # шепіт: привид згасає (пролог) — і далі в інших сценах
 iron_far ShieldBanded/block ShieldIronSquare/block sfx_metalgate_close     # залізо десь далеко (пролог, щит Муніна) — спогад
 gate_stuck sfx_darkwood_door_close sfx_door_close pitch=0.7 vol=0.9 range=30   # стулки брами здригнулись і не піддались (пролог, Зала зачинена)
+hammer_blow sfx_build_hammer_crystal sfx_build_hammer_default sfx_build_hammer_ice sfx_build_hammer_metal sfx_build_hammer_stone sfx_build_hammer_wood any vol=0.5   # удар молота Літа (кліп dv_hammer): щоразу один зі звуків будування гри, вдвічі тихіше, щоб не випинався (користувач 2026-11-18)
 # Вигуки людей (хм, вдих, зітхання, смішок…): speech.txt
 # Соколи сестер (Falcon): сапсан, що кричить на ворона — National Park Service, Bryce Canyon, «Raven and Peregrine» (2018), суспільне надбання; на тон нижче (0.85) — більший і лютіший птах (користувач 2026-11-13)
 falcon_scream file:falcon_scream.ogg pitch=0.85 range=90 wet     # вереск: сокіл іде в кидок
@@ -24,3 +27,5 @@ eirik_memory file:eirik_memory.ogg   # спогад у хаті Ейріка (с
 echo_cello file:echo_cello.ogg   # хата Ейріка, пролог (сцена echo): з темряви на вході, грає через усю сцену, ~10 с після неї й згасає; джерело: Freesound 720336, «Ambient 19_Cello Song» by PodcastAC (https://freesound.org/s/720336/), CC BY 4.0 — credit PodcastAC; cut to its first 90 s
 hall_friends file:hall_friends.ogg   # Зала обжита (сцена lit_hall): з першого кадру, двоє приятелів біля вогню; тихе закінчення треку лягає на тавро, грає ще кілька секунд після сцени; джерело: Freesound 679053, «Relaxing Chiptune Music» by Migfus20 (https://freesound.org/s/679053/), CC BY 4.0 — credit Migfus20; shortened by whole phrases: 0–81.9 s + its own ending from 153.9 s
 eyvind_accordion file:eyvind_accordion.ogg   # Ейвінд і Літ (сцена eyvind_meet): з першого кадру, по колу до кінця сцени, ще трохи після неї; трек дав автор 2026-11-17; обрізано до кінця відзвуку (0–98,5 с), щоб повтор не мав паузи; джерело: Freesound 654167, «crazy accordions loop» by LagMusics (https://freesound.org/s/654167/), CC0 1.0
+torvald_watch file:torvald_watch.ogg   # повернення старого з вежі (сцена torv_back): з першого кадру, грає до кінця вже після сцени; трек 53 с, у файлі зациклено 4 рази (213 с; трек дав автор 2026-11-20); джерело: Freesound 838167, «Until Midnight [Looping Tune]» by ExpiredSoda (https://freesound.org/s/838167/), CC BY 4.0
+hall_rises file:hall_rises.ogg vol=1.2   # (vol=1.2: користувач 2026-11-21 — «музику голосніше на 20%»; гучніше за повзунок музики гравця на 100% не стане: тоді треба підняти сам файл) важка сцена кінця глави 2 (Зала стає 2.2): трек дав автор 2026-11-20, сцену ставити під нього; ще не в сцені; джерело: Freesound 722639, «Delirium» by Victor_Natas (https://freesound.org/s/722639/), CC BY 4.0 — credit Victor_Natas

@@ -15,7 +15,9 @@ namespace HuginWhispers
     //   Busy                            why an NPC cannot be changed from this game now (another game runs it), or null
     //   PrefabOf                        a thing's prefab name (what a memory keeps of it: NpcMemory.Thing)
     //   Floor                           the floor under a spot (a building's floor, the ground) — never the roof over it
-    //   SameFloor                       the walkable spot nearest a spot on that spot's own floor (where a body may be put)
+    //   FloorUnder                      the floor under a spot through the furniture over it (a body up on a workbench: the floor round it)
+    //   FloorBeside                     where a body may be put by a spot: rings round it, on the map, off furniture, no wall between, the asker's wants
+    //   SameFloor                       the walkable spot nearest a spot on that spot's own floor (the map's nearest: never alone where a body is put by a thing)
     //   FloorBy                         the walkable floor by a thing, even one standing higher than the floor (a chest on a dais)
     //   Days / OnDay                    days at random intervals, the same on every game: what people do is never every day of itself (the user 2026-11-16)
     internal static class NpcKit
@@ -457,6 +459,67 @@ namespace HuginWhispers
             catch (Exception e) { Npcs.Log("way finder: own kind of walker not made — the game's humanoid: " + e); }
         }
 
+        // The people's map never lies over furniture (the user 2026-11-20: in the Hall's last scene Sverre stood stuck 9 m from his goal, Heid 8 s by
+        // her cauldron, the old man twice by the hearth; halts.txt named what was in front each time — piece_table, piece_bench_runed, piece_table_oak,
+        // piece_chair). The cause: a walker that climbs WalkerClimb (0.55 m, for stairs and raised floors) takes a bench or a low thing for a step, so
+        // the game's map lay over it and the ways led across it — while a body never steps on furniture (Furniture above). So a tile of the people's
+        // own kind is built here, the game's way line for line (Pathfinding.BuildTile), with one thing more: every piece of furniture in it is marked
+        // «not walkable» (NavMeshBuildMarkup) — its top is no floor, and the floor by it is kept off by the walker's radius: the way goes round.
+        // The game's own kinds (its creatures) are not touched: their tiles the game builds itself. Off live: «raven npc tune
+        // NpcKit.FurnitureOffMap 0» — each tile of the people's is the game's again from its next build (a tile walked on is built anew every 5 s).
+        internal static bool FurnitureOffMap = true;
+        internal static int OwnTiles, OwnTileFurniture; // (session: tiles built here · pieces marked in the last one — raven npc walk report)
+        private static System.Reflection.FieldInfo _pfOp, _pfTile, _tileId, _tileCenter, _tileData, _allPieces;
+        private static readonly List<UnityEngine.AI.NavMeshBuildSource> TileSources = new List<UnityEngine.AI.NavMeshBuildSource>();
+        private static readonly List<UnityEngine.AI.NavMeshBuildMarkup> TileMarks = new List<UnityEngine.AI.NavMeshBuildMarkup>();
+        // true: the tile is the people's and its build is begun here (the game's method is skipped); false: the game builds it
+        internal static bool OwnTile(Pathfinding pf, object tile)
+        {
+            if (!FurnitureOffMap || pf == null || tile == null || !ReferenceEquals(pf, _walkerOf) || !OwnWalker) return false;
+            try
+            {
+                Type tt = tile.GetType();
+                if (_tileId == null || _tileId.DeclaringType != tt)
+                {
+                    _tileId = HarmonyLib.AccessTools.Field(tt, "m_tile"); _tileCenter = HarmonyLib.AccessTools.Field(tt, "m_center"); _tileData = HarmonyLib.AccessTools.Field(tt, "m_data");
+                    _pfOp = HarmonyLib.AccessTools.Field(typeof(Pathfinding), "m_buildOperation"); _pfTile = HarmonyLib.AccessTools.Field(typeof(Pathfinding), "m_buildTile");
+                    _allPieces = HarmonyLib.AccessTools.Field(typeof(Piece), "s_allPieces");
+                }
+                if (_tileId == null || _tileCenter == null || _tileData == null || _pfOp == null || _pfTile == null || _allPieces == null) return false;
+                Vector3Int id = (Vector3Int)_tileId.GetValue(tile);
+                if ((Pathfinding.AgentType)id.z != _walker) return false;
+                Vector3 center = (Vector3)_tileCenter.GetValue(tile);
+                float size = pf.m_tileSize, half = size * 0.5f + 1f; // (a metre over the edge: a bench that lies across it)
+                TileSources.Clear(); TileMarks.Clear();
+                List<Piece> all = _allPieces.GetValue(null) as List<Piece>;
+                if (all != null)
+                    for (int i = 0; i < all.Count; i++) // heavy: every piece of the session once a tile's build — a tile is built anew no oftener than the game's 5 s, one at a time
+                    {
+                        Piece pc = all[i];
+                        if (pc == null) continue;
+                        Vector3 at = pc.transform.position;
+                        if (Mathf.Abs(at.x - center.x) > half || Mathf.Abs(at.z - center.z) > half || !Furniture(pc)) continue;
+                        TileMarks.Add(new UnityEngine.AI.NavMeshBuildMarkup { root = pc.transform, overrideArea = true, area = 1, ignoreFromBuild = false }); // (area 1: the navmesh's «not walkable»)
+                    }
+                UnityEngine.AI.NavMeshBuilder.CollectSources(new Bounds(center, new Vector3(size, 6000f, size)), pf.m_layers.value, UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders, 0, TileMarks, TileSources);
+                object s = HarmonyLib.AccessTools.Method(typeof(Pathfinding), "GetSettings").Invoke(pf, new object[] { _walker });
+                UnityEngine.AI.NavMeshBuildSettings b = (UnityEngine.AI.NavMeshBuildSettings)HarmonyLib.AccessTools.Field(s.GetType(), "m_build").GetValue(s);
+                UnityEngine.AI.NavMeshData data = _tileData.GetValue(tile) as UnityEngine.AI.NavMeshData;
+                if (data == null) { data = new UnityEngine.AI.NavMeshData(); data.position = center; _tileData.SetValue(tile, data); }
+                _pfOp.SetValue(pf, UnityEngine.AI.NavMeshBuilder.UpdateNavMeshDataAsync(data, b, TileSources, new Bounds(Vector3.zero, new Vector3(size, 6000f, size))));
+                _pfTile.SetValue(pf, tile);
+                OwnTiles++; OwnTileFurniture = TileMarks.Count;
+                if (OwnTiles == 1) Npcs.Log("way finder: the people's tiles are built with furniture off the map (the first: " + TileMarks.Count + " piece(s) marked in it)");
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (FurnitureOffMap) Npcs.Log("way finder: a tile of the people's not built with furniture off — the game builds them from now on: " + e);
+                FurnitureOffMap = false;
+                return false;
+            }
+        }
+
         internal static string FootWhy = ""; // (test: why the last OnFoot found no way)
         internal static float OnFoot(Vector3 a, Vector3 b, float max)
         {
@@ -513,6 +576,39 @@ namespace HuginWhispers
             return NpcDoors.Toward(me, l[0], NpcKit.Walker) != null;
         }
 
+        // A thing of the house nobody stands on: a bench, a chair, a table, a chest, a bed (the user 2026-11-20: «нпс часто можуть стояти на лаві»;
+        // measured in halts.txt that day: 0.44–0.45 m «steps up» off the Hall's level floor, Lit, Heid and Torvald each — the step up a stair is
+        // taken by took a bench for one). The one answer for everyone who picks where a body goes or what it may step on: its feet's step up
+        // (NpcWalk.StepUp), its eyes ahead (RoundThings), the spots it is eased or put to, the spot it rises to off a seat (NpcBody.FreeAround).
+        // By the game's own word for the piece (its hammer's «Furniture» tab) or what it is for (a seat, a bed, a chest); what is walked on by
+        // its name is none (a floor, a stair, a ramp). Each piece asked once (session: by its instance)
+        private static readonly Dictionary<int, bool> FurnitureOf = new Dictionary<int, bool>(); // session: a piece's instance → is it furniture
+        internal static bool Furniture(Collider c) { return Furniture(c != null ? c.GetComponentInParent<Piece>() : null); }
+        internal static bool Furniture(Piece pc)
+        {
+            if (pc == null) return false;
+            int id = pc.GetInstanceID();
+            bool yes;
+            if (FurnitureOf.TryGetValue(id, out yes)) return yes;
+            string n = pc.gameObject.name;
+            bool walked = n.IndexOf("stair", System.StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("floor", System.StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("ramp", System.StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("rug", System.StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("carpet", System.StringComparison.OrdinalIgnoreCase) >= 0; // (a rug lies on the floor: walked on)
+            yes = !walked && (pc.m_category == Piece.PieceCategory.Crafting /* (a workbench's own stands and racks) */ || pc.m_category == Piece.PieceCategory.Furniture || pc.m_category == Piece.PieceCategory.Misc /* (a stack of wood, a torch, a sign: measured 2026-11-20, Torvald «stepped up 0.52 m on wood_stack») */ || pc.GetComponentInChildren<Chair>() != null || pc.GetComponentInChildren<Bed>() != null || pc.GetComponentInChildren<Container>() != null || pc.GetComponentInChildren<Fireplace>() != null || pc.GetComponentInChildren<CraftingStation>() != null); // (a hearth's kerb, a workbench: measured 2026-11-20 after the first build — Heid and Torvald still «stepped up 0.44 m» by the Hall's own hearth, a piece of ours the hammer's tab does not know)
+            if (FurnitureOf.Count > 40000) FurnitureOf.Clear(); // (pieces come and go with their zones: never without end. A tile's build asks every piece in it — NpcKit.OwnTile: one Hall is 2462 pieces, so the room is for a base's worth, an id and a yes each)
+            FurnitureOf[id] = yes;
+            return yes;
+        }
+
+        // the top of such a thing is what lies just under this spot: a body put here would stand on it
+        internal static bool OnFurniture(Vector3 spot)
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(spot + Vector3.up * 0.4f, Vector3.down, out hit, 0.8f, Floors, QueryTriggerInteraction.Ignore) && Furniture(hit.collider)) return true;
+            // a tall thing — a workbench, its top over the knee: the ray above begins INSIDE it and sees nothing, so a spot in its footprint read «free floor»
+            // (the user 2026-11-21: «Торвальд на станку кожен раз стоїть перед сценою» — held by the Hall's fire, put onto the workbench beside it). Looked
+            // at from a body's height too: furniture between the head and the knee is furniture one would stand on or in
+            return Physics.Raycast(spot + Vector3.up * 1.7f, Vector3.down, out hit, 1.3f, Floors, QueryTriggerInteraction.Ignore) && Furniture(hit.collider);
+        }
+
         // the surface just under the spot, looked for from a little above it (a floor, a path, the ground) — not the
         // highest thing over it (the game's «solid height» is a roof when there is one); nothing within reach: the land
         private static readonly int Floors = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain");
@@ -522,6 +618,68 @@ namespace HuginWhispers
             if (Physics.Raycast(p + Vector3.up * 1.2f, Vector3.down, out hit, 6f, Floors, QueryTriggerInteraction.Ignore)) return hit.point;
             if (ZoneSystem.instance != null) p.y = ZoneSystem.instance.GetGroundHeight(p);
             return p;
+        }
+
+        // the floor a thing of the house stands on, under a spot over it: through any furniture there (Floor takes the top of a workbench a
+        // body stands on for the floor). One ray down
+        private static readonly RaycastHit[] Downs = new RaycastHit[8];
+        internal static Vector3 FloorUnder(Vector3 p)
+        {
+            int n = Physics.RaycastNonAlloc(p + Vector3.up * 0.4f, Vector3.down, Downs, 4f, Floors, QueryTriggerInteraction.Ignore);
+            float best = float.MaxValue; Vector3 at = p;
+            for (int i = 0; i < n; i++) if (Downs[i].distance < best && !Furniture(Downs[i].collider)) { best = Downs[i].distance; at = Downs[i].point; }
+            return best < float.MaxValue ? at : Floor(p);
+        }
+
+        // The one way to find where a body may be put by a spot (the user 2026-11-20: Eyvind sat on the Hall's workbench — put up there by the
+        // story, nothing took him down): the spot itself, then rings of eight round it, nearest first, out to reach, on the floor under it
+        // (FloorUnder); each on the way finder's map right under it, not on furniture (OnFurniture), the same floor (no ledge, no stairwell), no
+        // wall between it and the spot (Walled), and what the asker wants of it (ok: no fire, room for a body, nobody there, a way to it).
+        // Not the map's own «nearest spot» with a growing reach: on a workbench's top that is the top itself, again and again — the old looks
+        // of NpcBody.Unburnt and NpcWalk.SafeBy said «no floor free beside it» 60 times a session for a body standing up there.
+        // heavy: at most 1 + 8 a ring of two short rays, a map look and a wall ray — only when a body is to be put (a safety, off furniture, a
+        // spot on the ground to sit), never each frame
+        internal static readonly float[] Rings = { 0f, 0.6f, 1.1f, 1.6f, 2.1f, 2.6f, 3.1f, 4f, 5f, 6f }; // (the far ones only for a body freed from inside a thing: NpcWalk.FreeReach)
+        internal const float RingRise = 0.6f; // m: a ring's spot higher or lower than the floor under the spot is another floor (a step at most)
+        internal static bool FloorBeside(out Vector3 v, Vector3 p, float reach, Func<Vector3, bool> ok = null)
+        {
+            v = p;
+            if (Pathfinding.instance == null) return false;
+            Vector3 low = FloorUnder(p);
+            foreach (float r in Rings)
+            {
+                if (r > reach + 0.01f) break;
+                float turn = r * 37f; // (each ring turned a little from the last: not all on eight lines)
+                for (int i = 0; i < (r <= 0f ? 1 : 8); i++)
+                {
+                    Vector3 q = r <= 0f ? low : Floor(low + Quaternion.Euler(0f, turn + i * 45f, 0f) * Vector3.forward * r);
+                    if (Mathf.Abs(q.y - low.y) > RingRise || OnFurniture(q)) continue;
+                    Vector3 s;
+                    if (!Valid(out s, q, 0.4f, Walker) || Utils.DistanceXZ(s, q) > 0.35f || Mathf.Abs(s.y - q.y) > 0.5f || OnFurniture(s)) continue;
+                    if (r > 0f && Walled(low, s)) continue;
+                    if (ok != null && !ok(s)) continue;
+                    v = s;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // room for a body to stand at a spot of the floor: nothing solid where its trunk and head would be (a wall, a post, a table's top, a
+        // chest) — the low half of its legs not asked, a kerb or a step is no wall. For whoever picks where a person is to stand
+        internal static bool Room(Vector3 p) { return !Physics.CheckCapsule(p + Vector3.up * 0.5f, p + Vector3.up * 1.5f, 0.3f, Walls, QueryTriggerInteraction.Ignore); } // heavy: one capsule a spot tried, only when a spot is picked
+
+        // something that is not furniture between two spots of one floor, at a body's chest (a wall, a post): a bench or a workbench between is
+        // no wall — a body is taken off it to its side
+        private static readonly RaycastHit[] Across = new RaycastHit[8];
+        private static readonly int Walls = LayerMask.GetMask("Default", "static_solid", "piece", "terrain");
+        private static bool Walled(Vector3 a, Vector3 b)
+        {
+            Vector3 from = a + Vector3.up * 1.2f, d = b + Vector3.up * 1.2f - from;
+            if (d.sqrMagnitude < 0.0001f) return false;
+            int n = Physics.RaycastNonAlloc(from, d.normalized, Across, d.magnitude, Walls, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++) if (!Furniture(Across[i].collider)) return true;
+            return false;
         }
 
         // a thing's prefab name (what is kept of it: NpcMemory.Thing — said in the reader's words where shown)
@@ -534,5 +692,12 @@ namespace HuginWhispers
             return a.Owned ? null : Lang.T("Його зараз веде інша гра — спробуй ще раз.");
         }
     }
+    // the people's own tiles are built by NpcKit.OwnTile (furniture off their map); every other kind's by the game
+    [HarmonyLib.HarmonyPatch(typeof(Pathfinding), "BuildTile")]
+    internal static class NpcOwnTilePatch
+    {
+        private static bool Prefix(Pathfinding __instance, object tile) { return !NpcKit.OwnTile(__instance, tile); }
+    }
+
 }
 #endif

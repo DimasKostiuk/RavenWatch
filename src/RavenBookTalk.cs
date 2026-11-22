@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace HuginWhispers
 {
     // A person's talk (NpcTalk): a scroll on the left of the screen, over every window (the user's mockup 2026-11-05,
-    // docs/plans/mockups/talk-scroll.html) — its name on the plaque under the rod, its words in the dark block, the answers to them,
+    // docs/plans/mockups/talk-scroll.html) — its name on the plaque under the roll, its words in the dark block, the answers to them,
     // the story's sealed card, a request's pinned scrap, «ще на думці», «твоє» as chips, the grey ones' why under them, how it is with you
     // on the margins and the rope (RavenBookTalkRel, the user's design docs/plans/mockups/talk-relation-2026-11-08.html). The mouse only, no numbers: Esc, the ✕ or walking off closes it. While it is open the game is held as for
     // the book (the cursor shows, the hero stands).
@@ -33,7 +33,6 @@ namespace HuginWhispers
         private static readonly Color TCutHugin = C("#a9c7e8"), TCutMunin = C("#e8b86a"), TAsideHugin = C("#2f4a68"), TAsideMunin = C("#6a4510");
 
         internal static bool TalkInstant; // (config «Instant talks»: no fades, no waits)
-        internal static float TalkPace = 1.15f; // (the user 2026-11-18: every line of a talk 15 % slower to come — its gap after the one before, its coming in; the hums are the sound's own. Live: raven npc tune RavenBook.TalkPace)
 
         // a settler's request on its pinned scrap (NpcTalk: NpcRequests) — the thing, the pay in coins, how long it waits, whether you promised
         internal sealed class TalkScrap { public string Item = "", Words = "", Pay = "", Left = ""; public bool Promised; }
@@ -73,14 +72,14 @@ namespace HuginWhispers
         // ---------------------------------------------------------------- the scroll (the user 2026-11-06, docs/plans/mockups/talk-flow.html)
         // One window a talk, kept while you talk to that person; a click does not draw it anew but moves it on (TalkFlow): what was there folds away (the line you picked lit a moment),
         // then two parts come in, each at its own pace — on top the talk: your line, its lines one by one (before your raven butts in, a short while to read the line before it;
-        // the raven's portrait and dots, then its words), on the bottom your answers one by one, once the last line said is whole (TalkPace: how slow the lines come); the answers to your raven in its frame, once it spoke.
-        // A click on the talk's part shows all of it at once; Esc and the ✕ close it as ever. «Instant talks» (TalkInstant): no fades, no waits.
+        // the raven's portrait and dots, then its words), on the bottom your answers one by one, once the last line said is whole (how long a line is read before the next: RavenSpeech, Pace.Talk / TalkCut — the one place; the lines after the first quicker, Later; no wait for a hum: the person's next line cuts its last, NpcSpeech.Babble); the answers to your raven in its frame, once it spoke.
+        // A left click anywhere on the paper brings the next thing now (TalkSkip → Rush); Esc and the ✕ close it as ever. «Instant talks» (TalkInstant): no fades, no waits.
         // Your raven aloud (the user 2026-11-08, «каша з діалогів»: A + В): one frame of its colour where it butts in — its words, the person's word to it (named), your answers to it
         // (a must: NpcTalkRaven.Lock) — the talk goes on above and under it. Two speak in a turn (your raven aloud, another person): every block has its speaker's name.
         // The first screen (menu): its worry with its answers on top, the rest (its request, its story, «на думці», «твоє») below.
         // Its pictures: BookArt.TalkPaper (each person its own torn bottom); its top — assets/book/talk_roll, talk_raven, talk_ring, talk_token, talk_seal, talk_strap, talk_rivet, talk_hook, talk_chain (tools/talk_top_art.html).
         private const float TalkW = 540f, TalkLeft = 40f, TalkTop = 84f, TalkLeast = 300f, TalkPaperW = TalkW - 52f;
-        private const float TalkHang = 14f, TalkPaperMin = 430f; // (a talk: its rod right under the screen's top, its ropes running off it; its paper this high at the least; more words make it taller, but the margins' lines and rope never: they hang from its top at their own length, RelMargins — the user 2026-11-08, «половину менше … смужки настрою ніколи не розширяются і мотузка теж»)
+        private const float TalkHang = 14f, TalkPaperMin = 430f; // (a talk: its roll right under the screen's top, its hooks' bars running off it; its paper this high at the least; more words make it taller, but the margins' lines and rope never: they hang from its top at their own length, RelMargins — the user 2026-11-08, «половину менше … смужки настрою ніколи не розширяются і мотузка теж»)
         private static readonly Color TBlock = C("#4b1c0d"), TBlockInk = C("#f6e9cc"), TPaper = C("#efe3c4"), TStoryInk = C("#7f4e04"), TStoryFill = C("#f6e1ad"),
             TStoryEdge = C("#b8893e"), TSeal = C("#9a2216"), TScrap = C("#f4e8cb"), TTime = C("#8a3416"), THave = C("#4f6a2a"), TMind = C("#8a3416");
         private static string _talkWho;
@@ -99,7 +98,7 @@ namespace HuginWhispers
             _talkFlow.Next(new TalkTurn { Lines = lines ?? Says(""), Rows = answers, Rel = rel, Scrap = scrap, Menu = menu, You = you }, fresh);
         }
 
-        // the scroll with nothing on it yet: the rod on two ropes, its plaque, the paper with its two parts
+        // the scroll with nothing on it yet: its top (ScrollShell), its plaque, the paper with its two parts
         private static void TalkShell(string who)
         {
             if (_talkRoot != null) UnityEngine.Object.Destroy(_talkRoot);
@@ -112,7 +111,7 @@ namespace HuginWhispers
             _talkPaper = paper;
             RectTransform said = Rect("Said", paper); VBox(said, 9f, TextAnchor.UpperLeft, 0, 0, 0, 0);
             Image si = said.gameObject.AddComponent<Image>(); si.color = new Color(1f, 1f, 1f, 0f);
-            said.gameObject.AddComponent<TalkSkip>(); // (a click on what is said: all of it at once)
+            paper.gameObject.AddComponent<TalkSkip>(); // (a left click anywhere on the paper: the next line now — what is said, the margins, between the answers)
             RectTransform low = Rect("Yours", paper); VBox(low, 10f, TextAnchor.UpperLeft, 0, 0, 0, 0);
             _talkSaid = said; _talkLow = low;
         }
@@ -261,9 +260,11 @@ namespace HuginWhispers
             return scroll;
         }
 
+        // a left click anywhere on the paper (the user 2026-11-18: «клік лівою кнопкою миші відразу відкриває наступний діалог по будь якому місцю на
+        // пергаменті»; was: on the said part only, and it showed all of it at once): an answer, a chip, a card take their own clicks first
         internal sealed class TalkSkip : MonoBehaviour, UnityEngine.EventSystems.IPointerClickHandler
         {
-            public void OnPointerClick(UnityEngine.EventSystems.PointerEventData e) { if (_talkFlow != null) _talkFlow.Rush(); }
+            public void OnPointerClick(UnityEngine.EventSystems.PointerEventData e) { if (_talkFlow != null && e.button == UnityEngine.EventSystems.PointerEventData.InputButton.Left) _talkFlow.Rush(); }
         }
 
         // ---------------------------------------------------------------- what is on the paper and when
@@ -274,8 +275,11 @@ namespace HuginWhispers
             private TalkTurn _next;
             private TalkRel _keptRel; // (this window's last: a new person, a new window)
             private float _buildAt;
-            private const float Lit = 0.14f, OutFor = 0.3f, InFor = 0.25f, AnsFor = 0.22f, AnsStart = 0.35f, AnsEvery = 0.09f, Dots = 0.7f,
-                GapMin = 0.6f, GapMax = 2f, PerChar = 0.022f, CutMin = 0.8f, CutMax = 1.4f, CutPerChar = 0.015f, HumAfter = 0.35f, AnsAfter = 0.3f;
+            // (the user 2026-11-18 evening, «дуже довго»: the answers, a line's coming in and a raven's dots quick — LineIn, Dots under RavenSpeech.Hold;
+            // Later: the lines after the first come at this share of their reading time — «перший … трохи швидше, всі наступні ще швидше». No wait
+            // for a person's hum: its next line cuts it, NpcSpeech.Babble)
+            private const float Lit = 0.14f, OutFor = 0.3f, InFor = 0.25f, AnsFor = 0.16f, AnsStart = 0.2f, AnsEvery = 0.06f, AnsAfter = 0.12f,
+                LineIn = 0.2f, Dots = 0.5f, Later = 0.75f;
 
             internal bool Folding { get { return _next != null; } }
             private static float Now { get { return Time.unscaledTime; } }
@@ -289,18 +293,28 @@ namespace HuginWhispers
                 foreach (Item i in _items) { i.Cg.blocksRaycasts = false; i.Out = true; i.Grow = false; i.Mask.enabled = true; i.From = Height(i); i.To = 0f; i.At = Now + Lit; i.Dur = OutFor; i.Done = false; i.SwapAt = -1f; i.Shown = null; } // (a line not come in yet is not spoken as it folds away)
             }
 
-            // a click on the talk: what is still to come, now
+            // a click on the paper (TalkSkip): the next thing still to come — a line, your raven's words for its dots, the answers — comes now, and
+            // what is after it keeps its pace from there (all of it moved as much earlier); the person speaks it, cutting its own hum before
             internal void Rush()
             {
                 enabled = true;
-                NpcTalk.YouCut(); // (the hero's line too: what it says comes now)
-                float now = Now;
+                NpcTalk.YouCut(); // (the hero's line: the person speaks now)
+                float now = Now, first = float.MaxValue;
                 foreach (Item i in _items)
                 {
                     if (i.Out) continue;
-                    if (i.SwapAt > now) i.SwapAt = now;
-                    if (!i.Done && i.At > now) { i.At = now; i.Dur = 0f; i.Shown = null; } // (all of it now: shown, not hummed — five hums at once)
-                    if (i.Swap != null && i.SwapAt > now) { Action swap = i.Swap; i.Swap = () => { NpcTalk.Hushed = true; try { swap(); } finally { NpcTalk.Hushed = false; } }; } // (its word to your raven too: shown, not hummed)
+                    if (!i.Done && i.At > now) first = Mathf.Min(first, i.At);
+                    if (i.SwapAt > now) first = Mathf.Min(first, i.SwapAt);
+                }
+                if (first < float.MaxValue)
+                {
+                    float early = first - now;
+                    foreach (Item i in _items)
+                    {
+                        if (i.Out) continue;
+                        if (!i.Done && i.At > now) i.At -= early;
+                        if (i.SwapAt > now) i.SwapAt -= early;
+                    }
                 }
                 NpcTalk.IdleStir();
             }
@@ -362,9 +376,8 @@ namespace HuginWhispers
                 }
                 at = Mathf.Max(at, NpcTalk.YouLeft); // (the hero is still saying his answer aloud: it hears him out — NpcTalk.Pick)
                 bool worry = false;
-                float humEnd = 0f; // (when the person's last hummed words end: its lines and its word to your raven)
                 float whole = -1f; // (when the last line is whole: the answers come only after it — the user 2026-11-18)
-                float pace = TalkPace, inFor = InFor * pace, dots = Dots * pace; // (each line comes in and waits for the one before it this much slower: TalkPace)
+                float inFor = RavenSpeech.Hold(LineIn), dots = RavenSpeech.Hold(Dots); // (how long a line is read: RavenSpeech, the one place)
                 int itsLast = t.Lines.FindLastIndex(x => x.Kind == SayPerson && !x.ToRaven); // (a reproach or a lead comes before its worry: the answers are to what it said last, 2026-11-08; not its word to your raven)
                 string named = t.Lines.Exists(x => x.Kind == SayRaven || x.Kind == SayOther) ? _talkWho : null; // (two speak: whose block is whose)
                 for (int k = 0; k < t.Lines.Count; k++)
@@ -372,9 +385,7 @@ namespace HuginWhispers
                     TalkSay l = t.Lines[k];
                     if (k > 0)
                     {
-                        int len = t.Lines[k - 1].Text.Length;
-                        at += pace * (l.Kind == SayRaven || l.Kind == SayAside ? Mathf.Clamp(len * CutPerChar, CutMin, CutMax) : Mathf.Clamp(len * PerChar, GapMin, GapMax));
-                        if (l.Kind != SayAside && humEnd > 0f) at = Mathf.Max(at, humEnd + HumAfter * pace); // (every hum before it heard out first, the user 2026-11-17: the hums lay over each other; your raven's thought in the margin needs no quiet)
+                        at += RavenSpeech.Seconds(t.Lines[k - 1].Text, l.Kind == SayRaven || l.Kind == SayAside ? RavenSpeech.Pace.TalkCut : RavenSpeech.Pace.Talk) * (k > 1 ? Later : 1f); // (the first line read as long as it is, the ones after quicker)
                     }
                     Item it = Add(_talkSaid);
                     if (l.Kind == SayRaven && raven.Count > 0 && k + 1 < t.Lines.Count && t.Lines[k + 1].ToRaven) // (the person answered it: the raven's frame, your answers in it — they come with its words)
@@ -393,7 +404,6 @@ namespace HuginWhispers
                         string w = l.Text;
                         string toRaven = reply.Text;
                         it.SwapAt = Now + S(at + dots); it.Swap = () => { said.text = "«" + w + "»"; after.gameObject.SetActive(true); NpcTalk.LineShown(toRaven); }; // (its word to your raven comes with it: it speaks it)
-                        humEnd = Mathf.Max(humEnd, at + dots + NpcTalk.HumFor(toRaven));
                         whole = Mathf.Max(whole, at + dots + inFor);
                         at += dots;
                         raven.Clear(); // (answered here, nowhere else)
@@ -416,7 +426,6 @@ namespace HuginWhispers
                     whole = Mathf.Max(whole, at + inFor);
                     if (l.Kind == SayOther) { When(it, at, inFor); continue; } // (not the one you talk to: its answers are not under these words; it says them over its head too)
                     string spoken = l.Text; it.Shown = () => NpcTalk.LineShown(spoken); // (its head and chest speak it as it comes in: NpcSpeech)
-                    humEnd = Mathf.Max(humEnd, at + NpcTalk.HumFor(spoken));
                     if (t.Menu && k == itsLast && under.Count > 0) // (the first screen: its worry's answers under its last words)
                     {
                         worry = true;
@@ -467,6 +476,7 @@ namespace HuginWhispers
                 float h0 = LayoutUtility.GetPreferredHeight(_talkScroll), room = 1080f - TalkHang - 20f, fit = h0 > room ? room / h0 : 1f;
                 _talkScroll.localScale = Vector3.one * fit;
                 if (t.Rel != null) RelMargins(_talkPaper, t.Rel, TalkLeft + TalkW * fit + 8f); // (how it is with you: the margins, RavenBookTalkRel)
+                if (TalkInstant) { Item last = null; foreach (Item i in _items) if (i.Shown != null) { if (last != null) last.Shown = null; last = i; } } // (all of it at once: only its last line spoken — not every hum in one frame)
                 Update();
             }
 
@@ -580,7 +590,7 @@ namespace HuginWhispers
 
         // ---------------------------------------------------------------- its words over the window: you said nothing for too long (NpcTalkIdle)
         // The user 2026-11-05: its words over the parchment, the parchment under them out of focus and its answers not to be clicked — for a few seconds and no more (so a click meant to
-        // wave it away does not pick «Бувай»). Esc and the ✕ work as ever: the ✕ is on the rod, not on the parchment.
+        // wave it away does not pick «Бувай»). Esc and the ✕ work as ever: the ✕ is on the roll's seal, not on the parchment.
         //   the limit    _alertUntil, a plain time asked at the click itself (TalkChoose): whatever becomes of the words, the answers come back by themselves
         //   its look     a canvas of its own with nothing in it to click (no raycaster), over the talk's, so the ✕ and the patience strip's tip still take the pointer. Its words: a block of the
         //                talk's own kind, in the middle of the parchment and narrower than it; the parchment under them darkened (AlertDim), its corners rounded as the parchment's

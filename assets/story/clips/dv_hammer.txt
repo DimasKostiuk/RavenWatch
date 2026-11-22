@@ -14,9 +14,13 @@ part out 6.3 7.9 end
 mode LeftArm aim
 mode LeftForeArm aim
 touch wall 0.65
+event 1.82 hammer_blow 1
+event 3.17 hammer_blow 1
+event 4.1 hammer_blow 0.7
 
 # 2026-11-17, the user: «виглядає дуже погано» — the arm alone struck (no weight, no turn of the shoulders, the wind-up in front of the face, the right hand hanging).
 # Keys by hand, the swing by bones (aim, docs/jobs/clip.md rule 7): poses wind → lead → hit → back → hold; the forearm goes over the top by its rise (140 → 0), never round the side. LeftHand 0 90 0 the whole time: y turns the hand about the forearm and holds Lot upright (measured with the hammer in hand). The blow LeftArm −74: at −80 Lot turned over (the user).
+# 2026-11-20, the user: «молот перевернутий догори дригом», «покрутити проти часової стрілки, вирівняти відносно моменту удару». Filmed close from his left: with the wrist stiff (LeftHand 0 90 0) Lot went round with the forearm — on the wind-up (forearm 140) its head hung down before his face, at the blow it leaned back at him. LeftHand z is the wrist in the swing plane, minus = the head back and up: −75 on the wind-up (the head up and back over the hand), −60 leading, −40 at the blow (Lot upright at the wall), −30 after it, −20 held. Seen in takes (chestleft); the user on the mannequin, 2026-11-20 10:00: «ок».
 
 0 @LeftFoot -0.06 0.13 0.22
 
@@ -143,22 +147,22 @@ touch wall 0.65
 
 0 LeftHand 0 0 0
 0.3 LeftHand 0 0 0
-1.5 LeftHand 0 90 0
-1.68 LeftHand 0 90 0
-1.82 LeftHand 0 90 0
-1.94 LeftHand 0 90 0
-2.25 LeftHand 0 90 0
-2.85 LeftHand 0 90 0
-3.03 LeftHand 0 90 0
-3.17 LeftHand 0 90 0
-3.29 LeftHand 0 90 0
-3.6 LeftHand 0 90 0
-3.95 LeftHand 0 90 0
-4.1 LeftHand 0 90 0
-4.22 LeftHand 0 90 0
-4.7 LeftHand 0 90 0
-5.35 LeftHand 0 90 0
-6.3 LeftHand 0 90 0
+1.5 LeftHand 0 90 -75
+1.68 LeftHand 0 90 -60
+1.82 LeftHand 0 90 -40
+1.94 LeftHand 0 90 -30
+2.25 LeftHand 0 90 -30
+2.85 LeftHand 0 90 -75
+3.03 LeftHand 0 90 -60
+3.17 LeftHand 0 90 -40
+3.29 LeftHand 0 90 -30
+3.6 LeftHand 0 90 -30
+3.95 LeftHand 0 90 -45
+4.1 LeftHand 0 90 -40
+4.22 LeftHand 0 90 -30
+4.7 LeftHand 0 90 -20
+5.35 LeftHand 0 90 -20
+6.3 LeftHand 0 90 -75
 7.4 LeftHand 0 0 0
 7.9 LeftHand 0 0 0
 

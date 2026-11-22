@@ -154,7 +154,8 @@ namespace HuginWhispers
     // A raven in the air as a body with speed: it speeds up and slows down, cannot turn on the spot at speed (so it
     // swings round in curves), banks into its turns by how hard it turns, lifts the nose climbing and drops it
     // diving. The wings follow what the body does: hard beats climbing or speeding up, slower beats in level flight,
-    // held in a dive. The model stays the shoulder raven (ShoulderLife).
+    // held in a dive. The model stays the shoulder raven (ShoulderLife). Under a roof (Indoor, Room: the motor's Sense)
+    // its wide turns are no wider than the room and its turn is free from the first stroke.
     internal sealed class FlightBody
     {
         private readonly Transform _t;
@@ -183,6 +184,8 @@ namespace HuginWhispers
         internal static float TurnBelow = 0.8f; // m/s: slower than this it turns to face your way for landing
         internal float Gust;           // 0..1 how hard the wind throws it about now (the motor sets it)
         internal float Drunk;          // 0..1 tipsy on its owner's mead (Mead; the motor sets it)
+        internal float Indoor;         // 0..1 under a roof, and the free radius of the room it has there, m (RavenMotor.Sense; the motor sets them):
+        internal float Room = 12f;     // its wide turns no wider than the room, its turn not held back at the take-off
         internal static float GustRoll = 6f; // ° it rolls in a full gale
         internal LandStyle Land;       // this landing's own way (Landings.Pick, set by the motor on the way home)
         internal FlightCharacter Char; // its character (RavenFlight.CharFor, set by the motor): how it turns, banks, swings round
@@ -289,6 +292,7 @@ namespace HuginWhispers
                 float targetSpeed = arrive ? desired.magnitude : Mathf.Max(desired.magnitude, currentSpeed * reversal);
                 float nextSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, (targetSpeed < currentSpeed && !arrive && sharp <= 0f ? maxA * Coast : maxA) * dt);
                 float radius = Mathf.Lerp(Char.CurveMin, Char.CurveMax, reversal) * _curveRadiusScale; // Hugin swings round wide, Munin tight
+                if (Indoor > 0f) radius = Mathf.Lerp(radius, Mathf.Min(radius, Mathf.Max(1.2f, Room * RavenMotor.RoomCurve)), Indoor); // (under a roof: no wider than the room lets it)
                 float curveRate = nextSpeed / Mathf.Max(0.1f, radius) * Mathf.Rad2Deg;
                 Vector3 direction = Vector3.RotateTowards(Vel.normalized, desired.normalized, curveRate * Mathf.Deg2Rad * dt, maxA * dt);
                 nv = direction * nextSpeed;
@@ -321,7 +325,7 @@ namespace HuginWhispers
         {
             float turn = _s.Turn * (1f + sharp) * Mathf.Lerp(2.5f, 1f, Mathf.InverseLerp(2f, _s.Top, sp)) * Mathf.Lerp(1f, AccelMul, 0.5f);
             float turnLimit = Mathf.Lerp(Char.TurnCap, Char.SharpCap, Mathf.Clamp01(sharp * 0.5f));
-            float takeoffEase = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_age / 0.85f));
+            float takeoffEase = Mathf.Max(Indoor, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_age / 0.85f))); // (under a roof it turns as it can from the first stroke: the wall is 2 m off)
             return Mathf.Min(turn * Mathf.Lerp(0.55f, 1f, takeoffEase), Mathf.Lerp(90f, turnLimit, takeoffEase));
         }
 

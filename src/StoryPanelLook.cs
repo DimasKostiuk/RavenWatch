@@ -68,11 +68,13 @@ namespace HuginWhispers
                 d.Hair = Pick("Зачіска", d.Hair, _hairs, true);
                 d.Beard = Pick("Борода", d.Beard, _beards, true);
                 d.HairColor = ColourRow(d.HairColor, HairPresets, HairNames);
-                GUILayout.Label("Очі, плащ і голова", _head);
+                GUILayout.Label("Очі й колір одягу", _head);
                 d.TintEyes = TintRow("Очі", d.TintEyes, EyePresets, EyeNames);
                 d.TintCape = TintRow("Плащ", d.TintCape, CapePresets, CapeNames);
                 d.TintHead = TintRow("На голові", d.TintHead, CapePresets, CapeNames);
-                GUILayout.Label("Плащ і те, що на голові: колір, яким виходить уся річ, хоч яка вона; світло, тінь і малюнок лишаються свої. Очі світяться лише у двергра.", _hint);
+                d.TintChest = TintRow("Груди", d.TintChest, CapePresets, CapeNames);
+                d.TintLegs = TintRow("Ноги", d.TintLegs, CapePresets, CapeNames);
+                GUILayout.Label("Колір, яким виходить уся річ у цьому слоті, хоч яка вона (з ременями й металом); світло, тінь і малюнок лишаються свої. Нічого не вдягнуто — нічого не фарбується. Очі світяться лише у двергра.", _hint);
 
                 Wardrobe(d); // (the slots and one grid of pictures: StoryPanelWardrobe.cs)
                 }
@@ -105,7 +107,6 @@ namespace HuginWhispers
             GUILayout.Label(
                 "• Розписи на тілі — бойова фарба, татуювання, шрами, бруд, попіл: своя копія текстури тіла з візерунками по зонах (голова, тулуб, руки, ноги), як «Фарби» воронів.\n" +
                 "• Очі — колір і світіння (відлуння, Гейд з подихом Хель, Бальдр).\n" +
-                "• Колір одягу — перефарбувати плащ і тканину, щоб однакова броня не робила близнюків.\n" +
                 "• Розмір і пропорції — 0.9–1.1, ширші плечі, згорблений старий (перевірити, щоб не ламало анімацій).\n" +
                 "• Постава й хода — наші власні анімації на NPC (кульгає, вальяжно, втомлено).\n" +
                 "• Наші речі з Meshy — сумка з травами, амулет, шапка — як спорядження воронів.\n" +

@@ -1,0 +1,17 @@
+[npc sverre]
+name: Сверре
+body: human
+model: 0
+skin: 0.9 0.82 0.74
+haircolor: 0.42 0.3 0.2
+hair: Hair3
+beard: Beard5
+gear: ArmorRagsChest ArmorRagsLegs
+tint_chest: 0.33 0.22 0.15
+shuns: drinks merry loose
+fight: off
+walk: 1
+menu: no
+persona: chatty=0.1 bravery=0.3 curiosity=0.2 diligence=0.5 height=1.05 build=0.1 lively=0.45
+
+voice: own                                # свої слова без питання (NpcVoice): короткі фрази — assets/story/words/sverre.txt (користувач 2026-11-22: «пустий, іноді кидає короткі фрази»)

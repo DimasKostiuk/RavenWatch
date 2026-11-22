@@ -1,4 +1,5 @@
 # the sub-states each place's state had at the last build (storycheck: a new one asks its marked pieces again)
+bad_house 1 0
 kurhan 1 0
 prologue_house 1 0
 prologue_house 2 0

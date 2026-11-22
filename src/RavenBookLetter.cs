@@ -14,8 +14,8 @@ namespace HuginWhispers
     // folded, which opens along its fold, and the words come up on it. «Скласти» folds it away; then the next one.
     // A letter of the story (a scene's step «letter»: Lit's, brought by the Hall's raven) opens here too, with no raven's slip (no line).
     // Its seal is its sender's own (the user 2026-11-17: «різні для кожного персонажа… і форму теж»): letter_seal_<seal>, its halves and the bits of
-    // its wax left on the sheet (letter_bits_<seal>), made by tools/letter_art.html (SEALS: its shape, wax, mark); a sender with none of his
-    // own, and the post between players, has the post's (letter_seal, letter_bits).
+    // its wax left on the sheet (letter_bits<v>_<seal>: kinds of them, one at random, anywhere along the fold), made by tools/letter_art.html (SEALS: its shape, wax, mark); a sender with none of his
+    // own, and the post between players, has the post's (letter_seal, letter_bits<v>).
     internal static partial class RavenBook
     {
         private sealed class Got { public string From, Text, Line, Seal; public bool Munin; }
@@ -126,20 +126,38 @@ namespace HuginWhispers
         private static string OwnName(string pic, string seal) { return !string.IsNullOrEmpty(seal) && BookArt.Texture(pic + "_" + seal) != null ? pic + "_" + seal : pic; }
         private static Sprite Own(string pic, string seal) { return BookArt.Picture(OwnName(pic, seal)); }
 
-        // the bits of the seal left on the sheet: a small picture of the sheet's pixels BitsX, BitsY (from its top), BitsW × BitsH — as
-        // tools/letter_art.html cuts it («bits»: the same numbers) — laid over a part of the sheet that holds its rows from..to: the share of it there
-        private const float BitsX = 320f, BitsY = 396f, BitsW = 144f, BitsH = 104f;
-        private static RawImage Bits(RectTransform part, Texture2D wax, float from, float to)
+        // the bits of the seal left on the sheet: one of the kinds tools/letter_art.html draws (letter_bits<v>, the sender's own
+        // letter_bits<v>_<seal>; the fold across the picture's middle row, its pixels the sheet's), taken at random for each letter and
+        // laid somewhere along the fold, mirrored or not (the user 2026-11-20: «щоб кожен лист виглядало по різному і не по центру постійно»)
+        private struct WaxBits { public Texture2D Tex; public float X, Y; public bool Flip; }
+        private const float BitsEdge = 40f; // (kept off the sheet's torn edges)
+        private static int _bitsKinds = -1;
+        private static WaxBits PickBits(string seal)
         {
-            float a = Mathf.Max(from, BitsY), b = Mathf.Min(to, BitsY + BitsH);
-            if (wax == null || b <= a) return null;
+            if (_bitsKinds < 0) { _bitsKinds = 0; while (BookArt.Texture("letter_bits" + _bitsKinds) != null) _bitsKinds++; } // (as many as are drawn)
+            WaxBits w = new WaxBits();
+            if (_bitsKinds == 0) return w;
+            w.Tex = BookArt.Texture(OwnName("letter_bits" + Random.Range(0, _bitsKinds), seal));
+            w.X = Random.Range(BitsEdge, PaperW - BitsEdge - w.Tex.width);
+            w.Y = FoldY - w.Tex.height * 0.5f + Random.Range(-10f, 10f);
+            w.Flip = Random.value < 0.5f;
+            return w;
+        }
+
+        // the bits laid over a part of the sheet that holds its rows from..to: the share of them there
+        private static RawImage Bits(RectTransform part, WaxBits w, float from, float to)
+        {
+            if (w.Tex == null) return null;
+            float bw = w.Tex.width, bh = w.Tex.height, a = Mathf.Max(from, w.Y), b = Mathf.Min(to, w.Y + bh);
+            if (b <= a) return null;
             RawImage img = Rect("Wax", part).gameObject.AddComponent<RawImage>();
-            img.texture = wax; img.raycastTarget = false;
-            img.uvRect = new Rect(0f, (BitsY + BitsH - b) / BitsH, 1f, (b - a) / BitsH); // (a texture's v runs up from its bottom)
+            img.texture = w.Tex; img.raycastTarget = false;
+            img.uvRect = new Rect(0f, (w.Y + bh - b) / bh, 1f, (b - a) / bh); // (a texture's v runs up from its bottom)
             RectTransform r = img.rectTransform;
             float h = to - from;
-            r.anchorMin = new Vector2(BitsX / PaperW, 1f - (b - from) / h); r.anchorMax = new Vector2((BitsX + BitsW) / PaperW, 1f - (a - from) / h);
+            r.anchorMin = new Vector2(w.X / PaperW, 1f - (b - from) / h); r.anchorMax = new Vector2((w.X + bw) / PaperW, 1f - (a - from) / h);
             r.offsetMin = r.offsetMax = Vector2.zero;
+            if (w.Flip) r.localScale = new Vector3(-1f, 1f, 1f); // (mirrored on its own middle: a Rect's negative width is not a flip)
             return img;
         }
 
@@ -159,7 +177,7 @@ namespace HuginWhispers
             _lOpenG = _lOpen.gameObject.AddComponent<CanvasGroup>();
             _lOpenG.alpha = 0f; _lOpenG.blocksRaycasts = false;
             Texture2D tex = BookArt.Texture("letter_paper");
-            Texture2D wax = BookArt.Texture(OwnName("letter_bits", g.Seal)); // (the bits of the seal on it, of the sender's wax; none — no bits)
+            WaxBits wax = PickBits(g.Seal); // (the bits of the seal on it, of the sender's wax; none drawn — no bits)
             float top = FoldY / PaperH; // the part above the fold (the one folded over)
 
             RawImage bottom = Rect("Lower", _lOpen).gameObject.AddComponent<RawImage>();

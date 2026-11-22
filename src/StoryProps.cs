@@ -482,6 +482,18 @@ namespace HuginWhispers
             foreach (StoryPeople.Person x in StoryPeople.All) if (x.Npc == a.Id) return x.Carry;
             return null;
         }
+        // a scene's kind of thing of a person (not its own) that lies now — let fall, thrown: what it is and where it lies (StoryLife «haul … lays»:
+        // the plank it put down goes onto its pile — StoryPile — before its hands take the next)
+        internal static bool Lain(NpcActor a, out string item, out float size, out Vector3 at, out Quaternion turn)
+        {
+            Held h = HeldBy(a);
+            item = ""; size = 0f; at = Vector3.zero; turn = Quaternion.identity;
+            if (h == null || Own(h) || h.Hand != "-" || !h.HasRest) return false;
+            item = h.Item; size = h.Size; at = h.RestAt; turn = h.RestTurn;
+            return true;
+        }
+        // a scene's kind of thing of that item is its now — in a hand, moved by a clip, or lying (never a thing of its own)
+        internal static bool HasOf(NpcActor a, string item) { Held h = HeldBy(a); return h != null && h.Live && !Own(h) && h.Item == item; }
         // a thing in its hand or on its arm now (the condition «npcprop <who>»); one lying on the ground: no
         internal static bool InHand(NpcActor a) { Held h = HeldBy(a); return h != null && h.Live && h.Hand != "-"; }
         // its own thing lies on the ground: where; left — by a word of the story (it waits for «prop fetch»), else by its own doing.

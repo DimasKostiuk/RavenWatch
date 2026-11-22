@@ -20,7 +20,8 @@ namespace HuginWhispers
     //   starts: hall                     conditions (StoryCond) — the quest starts by itself once they hold
     //   first: settle
     //   scratch: ch1_                   a quest of the server: the world keys of its own block (marks, finds, chests: their names begin so, or have it
-    //                                    after a word of their kind — t_ch1_heart, found_ch1_house) are taken away when it ends; what later blocks,
+    //                                    after a word of their kind — t_ch1_heart, found_ch1_house) are taken away when it is over: ended by its own «next: end» (it may be told
+    //                                    on: Resume) — once a quest begun after it begins (CloseBefore); ended any other way — at once; what later blocks,
     //                                    the people and the book ask is never named so (storycheck). docs/jobs/story-data.md «Блоки сюжету»
     //   nudge: raven_nudge 12            a stage with a mark standing this many minutes of real play: this scene plays (nothing is
     //                                    skipped, the scene only shows the way: place «goal.mark»), again after twice as long, then twice
@@ -30,7 +31,11 @@ namespace HuginWhispers
     //   goal: Освойся                    the line shown (the panel now, the tracker later)
     //   more: …                          a longer word on it, only in the book («Сага» → «Зараз», under the goal): why and how, where the goal is short
     //   fork: gate hall open -> inside   checked on entering and while waiting: holds → straight to that stage
-    //   mark: hall 30 Зала Варти         the golden «!» on the map while this stage lasts (place, ring metres, label)
+    //   mark: hall 30 Зала Варти         the golden «!» on the map while this stage lasts (place, ring metres, label). Several lines — several
+    //                                    marks at once, places to choose from (chapter 2, the user 2026-11-18: Eyvind gone, two places to look; the
+    //                                    first one come to is empty): «wait: near <a> 25» and «fork: near <b> 25 -> <stage>» say where each leads.
+    //                                    A label of its own, or the goal; «goal.mark» is the nearest of them. Its ring is gold; a stage that starts
+    //                                    a fight («waves») or waits for its end has the game's red raid ring (StageDef.Fight; the user 2026-11-18)
     //   start: msg …                     actions on entering, split by «;»
     //   wait: played 10, calm            passes once all hold …
     //   on: use eirik_carving            … or once this event comes (with wait: both)
@@ -43,6 +48,8 @@ namespace HuginWhispers
     //                                    stands off that place (SeekOff), so it says where to look, not where it is
     //   stock: found.ch2e_pechera 50 Troll 1 Pickable_Mushroom_yellow 1-4 what the stage sends you to find there is there when you come (StoryStock):
     //                                    a creature made at the game's own spawner, things to pick grown again or new round them
+    //   road: torvald 12 torvald_home   a person who talks to you on the way (StoryRoad): while the stage stands and you are within m of it, the talks
+    //                                    of «[road <name>]» (assets/story/meets) one after another, each once a character; who does not walk with it hears nothing
     //   lost: <item> found.ch1_stash    a thing of the story this stage waits for, on the ground there: gone (a server's cleaning, another mod) while you are
     //                                    near and do not carry it — laid there again (StoryLost); storycheck asks it of a stage that waits for a thing laid on the ground
     //   saga: Хтось тебе кликав.         the book's «Сага» entry once the stage is passed (not when a fork skips it): kept in
@@ -69,19 +76,22 @@ namespace HuginWhispers
         internal sealed class StageDef
         {
             public string Music = ""; // «music: off | <track> [vol V]»: while the stage stands, the player hears that (StoryStageMusic)
+            public string Road = ""; // «road: <who> <m> <talks>»: that person talks to you on the way while you are near it (StoryRoad)
             public string Id = "", Goal = "", More = "", Scene = "", Next = "", OnName = "", OnArgs = "", WaitText = "", MarkAt = "", MarkLabel = "", Choice = "", Saga = "", Call = "", Seek = "";
             public float MarkRadius;
+            public bool Fight; // (it starts a fight — StoryActions.Kind.Fight — or waits for one's end: its ring on the map is the game's red, not gold; read once: MarkFights, StoryQuestsRead.cs)
             public List<Cond> Wait;
             public readonly List<Fork> Forks = new List<Fork>();
             public readonly List<string> Start = new List<string>(), Done = new List<string>();
             public readonly List<string> Lost = new List<string>(); // «lost: <item> <place>»: the thing laid there again while this stage stands, if gone (StoryLost)
             public readonly List<string> Stock = new List<string>(); // «stock: <place> <m> <Prefab> <N> …»: at least that many there when you come (StoryStock: a troll cave's troll, its mushrooms)
             public readonly List<StageDef> Ways = new List<StageDef>(); // (a way is a small stage of its own: goal, mark, wait, on, done, next)
+            public readonly List<StageDef> Marks = new List<StageDef>(); // (its second «mark:» line and on: places to choose from, each its own mark — its wait and forks say where each leads; a quest of the server has no ways)
         }
 
         internal sealed class QuestDef
         {
-            public string Id = "", Name = "", First = "", StartsText = "", From = "", Chapter = "", NudgeScene = "", Scratch = ""; // (Scratch: «scratch:» — the prefixes of its own world keys, gone with its end: StoryWorld.Forget)
+            public string Id = "", Name = "", First = "", StartsText = "", From = "", Chapter = "", NudgeScene = "", Scratch = ""; // (Scratch: «scratch:» — the prefixes of its own world keys, gone when it is over: StoryQuests.CloseBefore)
             public int NudgeMinutes;
             public int Block; // (the story's block of its file, read once: StoryFiles.Block — ChapterNow)
             public List<Cond> Starts;
@@ -238,11 +248,40 @@ namespace HuginWhispers
             return (s.Goal.Length > 0 ? Lang.T(s.Goal) + "\n" : "") + string.Join("\n", l.ToArray());
         }
 
-        // where the quest's mark stands on the map now (its first way's when the stage has ways): false — no mark
+        // where the quest's mark stands on the map now — of several (its ways', its places to choose from), the one nearest the player: false — no mark
         internal static bool MarkAt(QuestDef q, StageDef s, out Vector3 at)
         {
-            return StoryMap.Where("story." + q.Id, out at) || (s.Ways.Count > 0 && StoryMap.Where("story." + q.Id + ".0", out at));
+            Player p = Player.m_localPlayer;
+            return MarkNear(q, s, p != null ? p.transform.position : Vector3.zero, out at);
         }
+        // … the one nearest that point (a heart's board: the place by this settlement — NpcBoard)
+        internal static bool MarkNear(QuestDef q, StageDef s, Vector3 from, out Vector3 at)
+        {
+            at = Vector3.zero;
+            List<StageDef> more = MoreMarks(s);
+            if (more == null || more.Count == 0) return StoryMap.Where("story." + q.Id, out at);
+            bool any = false;
+            float best = float.MaxValue;
+            for (int i = s.Ways.Count > 0 ? 0 : -1; i < more.Count; i++) // (-1: the stage's own mark, beside its second ones; ways have none of their own)
+            {
+                Vector3 m;
+                if (!StoryMap.Where("story." + q.Id + (i < 0 ? "" : "." + i), out m)) continue;
+                float d = Utils.DistanceXZ(m, from); // flat: marks on the map
+                if (d < best) { best = d; at = m; any = true; }
+            }
+            return any;
+        }
+
+        // the stage's other marks (its ways', else its second «mark:» lines and on): drawn as «story.<quest>.<n>»
+        private static List<StageDef> MoreMarks(StageDef s) { return s == null ? null : s.Ways.Count > 0 ? s.Ways : s.Marks; }
+
+        // where a place to choose from leads: the fork that names it (one word of its conditions), else the stage's own next (its «wait:»)
+        internal static string Whither(StageDef s, string place)
+        {
+            foreach (Fork f in s.Forks) if (Names(f.Text.Substring(0, Math.Max(0, f.Text.IndexOf("->", StringComparison.Ordinal))), place)) return f.To;
+            return s.Next;
+        }
+        internal static bool Names(string conds, string place) { return Array.IndexOf(conds.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries), place) >= 0; }
 
         // the goal lines on the screen (StoryScreen.Goal): the first active quest's stage — its ways side by side — and, under it and
         // paler, the one beside it (a third and more: only the book shows them, the screen keeps two)
@@ -261,9 +300,10 @@ namespace HuginWhispers
             string key = "story." + q.Id;
             StageDef s = StageNow(p, q);
             MarkOne(key, s);
-            int had, n = s != null ? s.Ways.Count : 0;
+            List<StageDef> more = MoreMarks(s);
+            int had, n = more != null ? more.Count : 0;
             _wayMarks.TryGetValue(q.Id, out had);
-            for (int i = 0; i < Mathf.Max(had, n); i++) MarkOne(key + "." + i, i < n ? s.Ways[i] : null);
+            for (int i = 0; i < Mathf.Max(had, n); i++) MarkOne(key + "." + i, i < n ? more[i] : null, s);
             if (had != n) _wayMarks[q.Id] = n;
         }
 
@@ -277,7 +317,7 @@ namespace HuginWhispers
             double a = r.NextDouble() * Math.PI * 2d, d = (SeekOffLeast + r.NextDouble() * (SeekOff - SeekOffLeast)) * radius;
             return new Vector3(at.x + (float)(Math.Cos(a) * d), at.y, at.z + (float)(Math.Sin(a) * d));
         }
-        private static void MarkOne(string key, StageDef s)
+        private static void MarkOne(string key, StageDef s, StageDef of = null) // (of: the stage whose way or place to choose from this is — its goal is the label where this has none)
         {
             Vector3 at;
             string where = s != null ? s.MarkAt : "";
@@ -295,7 +335,7 @@ namespace HuginWhispers
                 Player me = Player.m_localPlayer; // (in the search's ring: its ring alone, the «!» back once he leaves it)
                 bare = me != null && Utils.DistanceXZ(me.transform.position, at) <= radius;
             } // (a search: the ring off the spot, the same on every game; with no raven, narrowed as he comes — StorySeek)
-            StoryMap.Set(key, at, Lang.T(s.MarkLabel.Length > 0 ? s.MarkLabel : s.Goal), radius, bare);
+            StoryMap.Set(key, at, Lang.T(s.MarkLabel.Length > 0 ? s.MarkLabel : s.Goal.Length > 0 || of == null ? s.Goal : of.Goal), radius, bare, s.Fight || (of != null && of.Fight));
         }
 
         // only what some stage waits for (an «on:», a scene's end) is kept for the next pass: a fight's hundred kills cost nothing
@@ -401,17 +441,7 @@ namespace HuginWhispers
             Player p = Player.m_localPlayer;
             QuestDef q; StageDef s;
             if (p == null || !Now(p, out q, out s)) return false;
-            if (s.Ways.Count == 0) return StoryMap.Where("story." + q.Id, out at);
-            bool any = false;
-            float best = float.MaxValue;
-            for (int i = 0; i < s.Ways.Count; i++)
-            {
-                Vector3 m;
-                if (!StoryMap.Where("story." + q.Id + "." + i, out m)) continue;
-                float d = Utils.DistanceXZ(m, p.transform.position);
-                if (d < best) { best = d; at = m; any = true; }
-            }
-            return any;
+            return MarkNear(q, s, p.transform.position, out at);
         }
 
         // a way done: the choice kept (one way per choice — an older one of the same name goes), its done, the stage's done, on

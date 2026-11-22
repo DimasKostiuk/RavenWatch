@@ -26,7 +26,7 @@ namespace HuginWhispers
     // same point its look is laid on, not its object's root.
     // (Walking up it is its touch's middle instead, TouchMiddle: he stands the same way off what he reaches for, from any side.)
     // «before»: square before the thing's middle, on its outer side (StoryWhere.Before), wherever he comes from: a gate, a door. Its m is
-    // from the thing's face as a ray finds it (FaceEdge), not from its middle: a gate's leaves sit back in their frame, and a clip that
+    // from the thing's face as a ray finds it (StoryWhere.FaceEdge — a person's «npc go … before» too), not from its middle: a gate's leaves sit back in their frame, and a clip that
     // touches them is made «m from the surface» (the user 2026-11-04: the hands 0.4 m short of a gate set back in its frame).
     // Under the black (StoryScreen.Dark: a «fade out» before it) he is not walked at all: put on the spot at once (Put).
     // A «before» walk that is held (the side of a stair, the user 2026-11-05: he pushed the air 2.75 m short of the gate): the clip after it
@@ -91,7 +91,7 @@ namespace HuginWhispers
         {
             Vector3 at, outOf = Vector3.zero;
             ZNetView piece = StoryWhere.Piece(place);
-            if (before && StoryWhere.Before(place, out at, out outOf)) { }
+            if (before && StoryWhere.Before(place, p.transform.position, out at, out outOf)) { }
             else if (piece != null) at = TouchMiddle(piece);
             else if (!StoryWhere.Find(place, out at)) return "нема місця «" + place + "»";
             Vector3 from = at - p.transform.position; from.y = 0f;
@@ -100,7 +100,7 @@ namespace HuginWhispers
             dir.Normalize();
             _way = dir;
             float face;
-            if (before && outOf.sqrMagnitude > 0.01f && FaceEdge(place, at, dir, out face))
+            if (before && outOf.sqrMagnitude > 0.01f && StoryWhere.FaceEdge(place, at, dir, out face))
             {
                 _to = at - dir * (face + Mathf.Max(0.1f, within));
                 Story.Log("player go: before — its face " + face.ToString("0.00") + " m out of its middle, he stands " + within.ToString("0.00") + " m off the face");
@@ -174,6 +174,8 @@ namespace HuginWhispers
             float fade = LetFeetGo(p);
             _way = f; _from = p.transform.position; _to = _from - f * m;
             Outcome = null; _start = p.transform.position; _began = Time.time;
+            // (nobody sees a walk in the black — as «go» above: the Hall's last scene stood black 5.9 s while he stepped back 2.4 m, 2026-11-20)
+            if (StoryScreen.Dark) { Put(p, _to, f); Outcome = "put back under the black, " + m.ToString("0.0") + " m at once"; Story.Log("player back: " + Outcome); return; }
             _softTurn = _shuffle = _keep = _soft = _run = false; _haltAt = -1f; _back = true; _slow = true; _contact = false; _heldPutAt = -1f; // (nothing left of a «before» walk: held behind him, he would be put back there under a black)
             _goAt = Time.time + fade;
             _gainAt = _goAt + BlockedFor * 1.5f; _gainFar = m;
@@ -242,28 +244,6 @@ namespace HuginWhispers
             float need = edge + Body;
             if (need > within + 0.01f) Story.Log("player go: the thing's touch reaches " + edge.ToString("0.00") + " m his way: he stands at " + need.ToString("0.00") + " m, not " + within.ToString("0.00"));
             return need;
-        }
-
-        // how far out of its middle, towards him, the face of a thing is (all its pieces of that name: a gate's two halves): rays along his
-        // way at the height of hands, a little to each side (the middle may be the gap between two halves); the nearest face
-        internal static float FaceHigh = 1.3f, FaceAside = 0.35f;
-        private static bool FaceEdge(string place, Vector3 at, Vector3 dir, out float edge)
-        {
-            edge = 0f; bool any = false;
-            Vector3 side = Vector3.Cross(Vector3.up, dir);
-            foreach (ZNetView nv in StoryWhere.Pieces(place))
-                foreach (Collider c in nv.GetComponentsInChildren<Collider>()) // heavy: once when a scene's walk «before» starts
-                {
-                    if (!c.enabled || c.isTrigger) continue;
-                    foreach (float s in new[] { -FaceAside, 0f, FaceAside })
-                        foreach (float up in new[] { FaceHigh - 0.3f, FaceHigh })
-                        {
-                            Vector3 o = new Vector3(at.x, at.y + up, at.z) + side * s - dir * 3f;
-                            RaycastHit hit;
-                            if (c.Raycast(new Ray(o, dir), out hit, 6f)) { float e = 3f - hit.distance; if (!any || e > edge) edge = e; any = true; }
-                        }
-                }
-            return any;
         }
 
         // the middle of what can be touched of it, at its look's height (none: its look): a thing's look may lie off its touch
@@ -338,7 +318,7 @@ namespace HuginWhispers
                 Put(p, _to, _way);
                 Outcome += "; put on the spot under a moment of black, " + left.magnitude.ToString("0.0") + " m";
                 Story.Log("player go: put on the spot under the black, " + left.magnitude.ToString("0.0") + " m off");
-                StoryScreen.Fade(false, HeldBlack);
+                StoryScreen.Fade(false, HeldBlack); StoryWatch.Black(false, HeldBlack);
                 Done(p);
                 return;
             }
@@ -359,7 +339,7 @@ namespace HuginWhispers
                     Helds++;
                     Outcome = Went(p) + "; HELD, no way gained, " + far.ToString("0.00") + " m short";
                     Story.Log("player go: HELD, no way gained in " + BlockedFor.ToString("0.00") + " s, " + far.ToString("0.00") + " m short: " + (_contact ? "put there under a moment of black" : "stops here, the scene goes on"));
-                    if (_contact) { StoryScreen.Fade(true, HeldBlack); _heldPutAt = Time.time + HeldBlack; return; }
+                    if (_contact) { StoryScreen.Fade(true, HeldBlack); StoryWatch.Black(true, HeldBlack); _heldPutAt = Time.time + HeldBlack; return; }
                     Done(p);
                     return;
                 }

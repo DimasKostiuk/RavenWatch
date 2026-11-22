@@ -7,7 +7,7 @@ namespace HuginWhispers
     // One director over everything the ravens say on their own: the reactions to events (a quick raven, or a line from
     // the shoulder), the talks with each other, the fireside stories and the asking for food. Each of them still keeps
     // its own timer; before speaking it asks the director, and the director says no while
-    //   - someone is talking right now (yours or another player's raven, a gift's words too: Cozy.Quieted),
+    //   - someone is talking right now (yours or another player's raven, a gift's words too: Cozy.Quieted), or a story scene plays (RavenSpeech.Hushed),
     //   - too little time has passed since the last line said on their own (Gap; an event may come sooner: EventGap),
     //   - the ravens have already said enough lately (PerTenMinutes; events keep a little reserve).
     // A "no" is not lost: the asker simply tries again a little later. What answers your own doing (gifts, strikes, the
@@ -28,7 +28,7 @@ namespace HuginWhispers
         internal static bool May(Voice v)
         {
             float now = Time.time;
-            if (Cozy.Quieted) return false;
+            if (Cozy.Quieted || RavenSpeech.Hushed()) return false; // (a scene plays: its line would be hidden — RavenSpeech.Hushed — and lost with it; it waits)
             if (now < _freeAt + (v == Voice.Event ? EventGap : Gap)) return false;
             while (Said.Count > 0 && now - Said[0] > 600f) Said.RemoveAt(0);
             return Said.Count < PerTenMinutes + (v == Voice.Event ? EventReserve : 0);

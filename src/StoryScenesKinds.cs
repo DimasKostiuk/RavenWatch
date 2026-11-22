@@ -27,11 +27,12 @@ namespace HuginWhispers
         //   Verbs, VerbAt a step with verbs («player go», «npc heid go», «bird land»): the word at VerbAt picks its own entry (StepVerb), with all of the above
         // The clock (_waitFor, _until, _limit) is the step's own: cleared as each step starts.
         // who sees a step (StoryWatch), a word every step must give: its constructor has no other way
-        internal enum StepSeen { World, Shared, Own }
+        internal enum StepSeen { World, Shared, Screen, Own }
 
         internal class StepKind
         {
-            internal readonly StepSeen Seen; // World: the network shows it · Shared: it reaches every game near · Own: the director's own (his camera, his body), left out when he has given them back
+            internal readonly StepSeen Seen; // World: the network shows it · Shared: it reaches every game near · Screen: the picture and what is heard — the director's own and, by Watch, the same on the game of each one who watches · Own: the director's alone (his camera, whose pose goes to them; his body). Screen and Own are left out when he has given them back
+            public Action<Step, bool> Watch; // (Screen: the same thing on the game of one who watches — as it begins, or (true) put at once: he came in the middle. No scene plays there: nothing of the director's clocks, no Note, nothing sent on)
             internal StepKind(StepSeen seen) { Seen = seen; }
             public int Min;
             public string Usage = "";
@@ -73,12 +74,23 @@ namespace HuginWhispers
         }
 
         private static Dictionary<string, StepKind> _kinds;
-        private static Dictionary<string, StepKind> Kinds { get { if (_kinds == null) { _kinds = Builtin(); StoryModules.Steps(); } return _kinds; } } // (and the modules' own)
+        private static Dictionary<string, StepKind> Kinds { get { if (_kinds == null) { _kinds = Builtin(); StoryModules.Steps(); foreach (KeyValuePair<string, StepKind> e in _kinds) if (e.Value.Seen == StepSeen.Screen && e.Value.Watch == null) Story.Log("scenes: the step «" + e.Key + "» is of the screen and has no Watch: those who watch a scene will not get it"); } return _kinds; } } // (and the modules' own; a Screen step says what one who watches gets)
 
         // a module's own step (the same way as the ones below)
         internal static void Register(string word, StepKind k) { Kinds[word] = k; }
 
         private static void Hold(float seconds) { _waitFor = Time.time + seconds; }
+        // how far the scene's music is into its track, s («wait music»): the source's own time — what is heard, whatever the steps took. Its
+        // file still being read: 0 (the clock starts with the sound). The track done (played once): past any second. No music of the scene's
+        // at all: the seconds since the scene began, said once
+        internal static float MusicSlack = 20f;
+        private static float MusicClock()
+        {
+            float t = Audio.MusicAt(Audio.Scene);
+            if (t >= 0f) return t;
+            NoteOnce("music-clock", "wait music: сцена не має своєї музики — рахую секунди від її початку");
+            return Time.time - _sceneAt;
+        }
         private static float _saidUntil; // (when the line of the last «npc <who> says» is over: «wait said»)
 
         private static Dictionary<string, StepKind> Builtin()
@@ -97,7 +109,30 @@ namespace HuginWhispers
             };
             return new Dictionary<string, StepKind>
             {
-                { "wait", new StepKind(StepSeen.World) { Min = 1, Usage = "wait <секунд> | wait said", Begin = (p, st) => Hold(st.W[1] == "said" ? Mathf.Max(0f, _saidUntil - Time.time) : F(st.W[1], 1f)) } }, // («said»: till the line of «npc <who> says» is over)
+                // wait <s> · wait said (till the line of «npc <who> says» of this line of steps is over) · wait cue <name> [s=60] (till that sign is
+                // given: «cue») · wait music <s> (till the scene's music is that far into its track: MusicClock)
+                { "wait", new StepKind(StepSeen.World) { Min = 1, Usage = "wait <секунд> | wait said | wait cue <назва> [секунд=60] | wait music <секунда треку>",
+                    Check = st =>
+                    {
+                        float v;
+                        if (st.W[1] == "cue") return st.W.Length > 2 && Story.GoodName(st.W[2]) ? null : "wait cue <назва> [секунд]";
+                        if (st.W[1] == "music") return st.W.Length > 2 && float.TryParse(st.W[2], NumberStyles.Float, CultureInfo.InvariantCulture, out v) && v >= 0f ? null : "wait music <секунда треку>";
+                        return st.W[1] == "said" || float.TryParse(st.W[1], NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? null : "wait <секунд> | wait said | wait cue <назва> | wait music <секунда>";
+                    },
+                    Begin = (p, st) =>
+                    {
+                        if (st.W[1] == "cue") _limit = Time.time + (st.W.Length > 3 ? F(st.W[3], 60f) : 60f);
+                        else if (st.W[1] == "music") _limit = Time.time + Mathf.Max(0f, F(st.W[2], 0f) - Mathf.Min(MusicClock(), 3600f)) + MusicSlack; // (as long as the track needs to get there, and the time its file may take to be read)
+                        else Hold(st.W[1] == "said" ? Mathf.Max(0f, _saidUntil - Time.time) : F(st.W[1], 1f));
+                    },
+                    Busy = (p, st) => st.W[1] == "cue" ? !_cues.Contains(st.W[2]) : st.W[1] == "music" ? MusicClock() < F(st.W[2], 0f) : Time.time < _waitFor,
+                    Done = (p, st) => st.W[1] == "cue" ? (_cues.Contains(st.W[2]) ? "the sign came" : "the sign NEVER came") : st.W[1] == "music" ? "the track at " + (MusicClock() > 3600f ? "its end" : F(MusicClock()) + " s") : null } },
+                { "cue", new StepKind(StepSeen.World) { Min = 1, Usage = "cue <назва>   (знак на всю сцену: «wait cue <назва>» в іншій партії його чекає)",
+                    Check = st => Story.GoodName(st.W[1]) ? null : "cue <назва>",
+                    Begin = (p, st) => _cues.Add(st.W[1]), Setup = (p, st) => _cues.Add(st.W[1]) } },
+                { "parts", new StepKind(StepSeen.World) { Min = 1, Usage = "parts go   (усі партії сцени починаються, кожна зі свого першого кроку)",
+                    Check = st => st.W[1] != "go" ? "parts go" : null,
+                    Begin = (p, st) => PartsGo(), Setup = (p, st) => PartsGo() } }, // (played from a later step: the parts begin from their own first steps all the same)
                 { "until", new StepKind(StepSeen.World) { Usage = "until <умови> | <секунд>",
                     Check = st =>
                     {
@@ -112,9 +147,6 @@ namespace HuginWhispers
                     Done = (p, st) => StoryCond.All(p, st.Until) ? "its condition holds" : "its condition NEVER held in its " + F(st.UntilSec) + " s" } },
                 { "msg", new StepKind(StepSeen.Shared) { Min = 1, Usage = "msg <текст>",
                     Begin = (p, st) => { string line = Grammar.Fix(Lang.T(Rest(st.Text, 1)), p); if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, line); StoryWatch.Line(line); } } },
-                { "watchers", new StepKind(StepSeen.Shared) { Min = 1, Usage = "watchers take [camera] · watchers free   (забрати клавіші в тих, хто поруч, і дати їм камеру сцени; кінець сцени все повертає)",
-                    Check = st => st.W[1] != "free" && (st.W[1] != "take" || (st.W.Length > 2 && st.W[2] != "camera")) ? "watchers take [camera] · watchers free" : null,
-                    Begin = WatchersStep, Setup = WatchersStep } },
                 { "say", new StepKind(StepSeen.Own) { Min = 2, Usage = "say hugin|munin <текст>",
                     Check = st => st.W[1] != "hugin" && st.W[1] != "munin" ? "say hugin|munin <текст>" : null,
                     Begin = (p, st) =>
@@ -127,7 +159,7 @@ namespace HuginWhispers
                         Spoken(Plugin.RavenName(munin), line); // (in a shot the game's screen is hidden: its words as a subtitle)
                     } } },
                 // letter <від кого> :: <текст>: a letter on his screen (the post's window, RavenBook.ShowLetter: the envelope, the seal, the sheet), no
-                // raven's word on it; the step waits till he folds it (LetterMost s at most). Its words through Lang.T, «\n» a new line.
+                // raven's word on it; a bird that brings it is seen first (LetterSee s before him: LetterBirdBefore); the step waits till he folds it (LetterMost s at most). Its words through Lang.T, «\n» a new line.
                 // <від кого>: a story person's npc id («letter lit :: …») — his name on it (NpcDefs: name:) and his own seal (the user 2026-11-17:
                 // letter_seal_<id>, tools/letter_art.html); any other word — that word on it, and the post's seal; «<words> seal <id>» — those words on
                 // it and that sender's own seal, for one who writes but is no person of the world (the user 2026-11-18: Bruni signs «Варта, що лишилась»)
@@ -141,33 +173,50 @@ namespace HuginWhispers
                     },
                     Begin = (p, st) =>
                     {
-                        string[] lt = LetterParts(st.Text);
-                        NpcDef by = lt[2] == null ? NpcDefs.Find(lt[0]) : null;
-                        RavenBook.ShowLetter(Lang.T(by != null ? by.Name : lt[0]), false, Grammar.Fix(Lang.T(lt[1]), p).Replace("\\n", "\n"), null, by != null ? by.Id : lt[2]);
-                        if (_bird != null && _birdCarry.Length > 0) Act("drop", ""); // (the bird that brought it: out of its beak, on every game — StoryScenesBird.LetterAhead)
-                        _limit = Time.time + LetterMost;
+                        _letterGiven = false; _letterAt = -1f; _letterFrom = _letterAsked = Time.time;
+                        if (_bird == null || _birdCarry.Length == 0) { GiveLetter(p, st); return; }
+                        LetterBirdBefore(p);
+                        _limit = Time.time + StoryBird.GiveUp + HoverPassRoom + LetterSee + LetterMost;
                     },
-                    Busy = (p, st) => RavenBook.LetterOpen,
-                    Done = (p, st) => RavenBook.LetterOpen ? "the letter still open at the step's limit" : "the letter read and folded" } },
+                    Busy = (p, st) =>
+                    {
+                        if (!_letterGiven)
+                        {
+                            // the bird that brings it is seen first (the user 2026-11-20: «затримку хоча б у 5 сек… щоб ми вспіли побачити самого ворона»):
+                            // LetterSee s hanging before him, unbroken (a fight that took it off counts anew); one that never gets there gives it anyway.
+                            // Its clock of «never gets there» starts again after a pause (FightWait asks no step while it waits: the bird is coming back then)
+                            if (Time.time - _letterAsked > 1f) _letterFrom = Time.time;
+                            _letterAsked = Time.time;
+                            bool late = Time.time - _letterFrom > StoryBird.GiveUp + HoverPassRoom;
+                            if (_bird == null || late) { GiveLetter(p, st); return true; }
+                            if (!_bird.Settled) { _letterAt = -1f; return true; }
+                            if (_letterAt < 0f) _letterAt = Time.time + LetterSee;
+                            if (Time.time >= _letterAt) GiveLetter(p, st);
+                            return true;
+                        }
+                        return RavenBook.LetterOpen;
+                    },
+                    Done = (p, st) => !_letterGiven ? "the letter never given" : RavenBook.LetterOpen ? "the letter still open at the step's limit" : "the letter read and folded" } },
                 { "sub", new StepKind(StepSeen.Shared) { Min = 1, Usage = "sub <текст>",
                     Begin = (p, st) => { string line = Grammar.Fix(Lang.T(Rest(st.Text, 1)), p); float t = RavenSpeech.Seconds(line, RavenSpeech.Pace.Scene); Hold(t); if (!_ownOff) StoryScreen.Sub(line, t + 0.4f); StoryWatch.Line(line); } } },
-                { "bars", new StepKind(StepSeen.Own) { Min = 1, Usage = "bars on|off",
+                { "bars", new StepKind(StepSeen.Screen) { Min = 1, Usage = "bars on|off", Watch = (st, atOnce) => StoryScreen.Bars(st.W[1] == "on"),
                     Check = st => st.W[1] != "on" && st.W[1] != "off" ? "bars on|off" : null,
                     Begin = (p, st) => StoryScreen.Bars(st.W[1] == "on"), Setup = (p, st) => StoryScreen.Bars(st.W[1] == "on") } },
                 { "camera", new StepKind(StepSeen.Own) { Min = 1, PlaceAfter = "look", Usage = "camera <місце|behind|over|face [кут] [м]|follow [вбік] [вгору] [назад]|off> [look …] [blend N|cut] [fov N] [live N] · camera shot <кадр> · camera move <кадр> <кадр> <с> [ease …] [wait] · camera orbit <що> <радіус> <висота> <градусів> <с> [wait] · camera on <хто> [close|medium|full|wide] [front|left|right|back|<градусів>] [low|high] [track] [push <м> <с>] [look …] [wait] · camera shoulder|two <хто> <на кого> [left|right] [push <м> <с>] [wait]",
                     Check = CameraCheck, // (on, shoulder, two: who they are of, no unknown word)
                     Busy = (p, st) => Time.time < _waitFor, // (a move, an orbit or a push with «wait»)
                     Begin = (p, st) => CameraStep(p, st.W), Setup = (p, st) => CameraStep(p, st.W) } },
-                { "fade", new StepKind(StepSeen.Own) { Min = 1, Usage = "fade out|in [секунд]   (увесь кадр у чорне й назад; крок чекає, поки скінчиться)",
+                { "fade", new StepKind(StepSeen.Screen) { Min = 1, Usage = "fade out|in [секунд]   (увесь кадр у чорне й назад; крок чекає, поки скінчиться)",
                     Check = st => st.W[1] != "out" && st.W[1] != "in" ? "fade out|in [секунд]" : null,
-                    Begin = (p, st) => { float s = st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f; StoryScreen.Fade(st.W[1] == "out", s); Hold(s); } } },
-                { "glow", new StepKind(StepSeen.Own) { Min = 1, Usage = "glow <0..1> [секунд]   (світло спогаду: теплий край кадру, що повільно дихає; glow 0 — геть; кінець сцени гасить його сам за 1,5 с, обрив — одразу)",
+                    Begin = (p, st) => { float s = st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f; StoryScreen.Fade(st.W[1] == "out", s); Hold(s); },
+                    Watch = (st, atOnce) => StoryScreen.Fade(st.W[1] == "out", atOnce ? 0.05f : st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f) } },
+                { "glow", new StepKind(StepSeen.Screen) { Min = 1, Watch = (st, atOnce) => StoryScreen.Glow(F(st.W[1], 0f), atOnce ? 0.05f : st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f), Usage = "glow <0..1> [секунд]   (світло спогаду: теплий край кадру, що повільно дихає; glow 0 — геть; кінець сцени гасить його сам за 1,5 с, обрив — одразу)",
                     Check = st => { float v; return !float.TryParse(st.W[1], NumberStyles.Float, CultureInfo.InvariantCulture, out v) || v < 0f || v > 1f ? "glow <0..1> [секунд]" : null; },
                     Begin = (p, st) => StoryScreen.Glow(F(st.W[1], 0f), st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f), Setup = (p, st) => StoryScreen.Glow(F(st.W[1], 0f), 0.05f) } }, // (played from a later step: as strong at once)
-                { "dim", new StepKind(StepSeen.Own) { Min = 1, Usage = "dim <0..1> [секунд]   (кадр темнішає, не чорніє: тло видіння; dim 0 — назад; кінець сцени знімає сам)",
+                { "dim", new StepKind(StepSeen.Screen) { Min = 1, Watch = (st, atOnce) => StoryScreen.Dim(F(st.W[1], 0f), atOnce ? 0.05f : st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f), Usage = "dim <0..1> [секунд]   (кадр темнішає, не чорніє: тло видіння; dim 0 — назад; кінець сцени знімає сам)",
                     Check = st => { float v; return !float.TryParse(st.W[1], NumberStyles.Float, CultureInfo.InvariantCulture, out v) || v < 0f || v > 1f ? "dim <0..1> [секунд]" : null; },
                     Begin = (p, st) => StoryScreen.Dim(F(st.W[1], 0f), st.W.Length > 2 ? F(st.W[2], 1.5f) : 1.5f), Setup = (p, st) => StoryScreen.Dim(F(st.W[1], 0f), 0.05f) } },
-                { "memory", new StepKind(StepSeen.Own) { Min = 1, Usage = "memory <знімок> [x y] [ширина] [секунд]   (уривок пам'яті поверх кадру: прозорий знімок з assets/story/memories проступає, пливе й тане; x y — середина частками екрана (0.5 0.45), ширина — частка (0.5), секунд тримається (4); крок не чекає)",
+                { "memory", new StepKind(StepSeen.Screen) { Min = 1, Watch = (st, atOnce) => { if (!atOnce) StoryScreen.Memory(st.W[1], st.W.Length > 3 ? F(st.W[2], 0.5f) : 0.5f, st.W.Length > 3 ? F(st.W[3], 0.45f) : 0.45f, st.W.Length > 4 ? F(st.W[4], 0.5f) : 0.5f, st.W.Length > 5 ? F(st.W[5], 4f) : 4f); }, Usage = "memory <знімок> [x y] [ширина] [секунд]   (уривок пам'яті поверх кадру: прозорий знімок з assets/story/memories проступає, пливе й тане; x y — середина частками екрана (0.5 0.45), ширина — частка (0.5), секунд тримається (4); крок не чекає)",
                     Check = st => { for (int i = 2; i < st.W.Length; i++) { float v; if (!float.TryParse(st.W[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v) || v < 0f) return "memory <знімок> [x y] [ширина] [секунд]"; } return StoryScreen.HasMemory(st.W[1]) ? null : "нема знімка «" + st.W[1] + "» (assets/story/memories)"; },
                     Begin = (p, st) => { string why = StoryScreen.Memory(st.W[1], st.W.Length > 3 ? F(st.W[2], 0.5f) : 0.5f, st.W.Length > 3 ? F(st.W[3], 0.45f) : 0.45f, st.W.Length > 4 ? F(st.W[4], 0.5f) : 0.5f, st.W.Length > 5 ? F(st.W[5], 4f) : 4f); if (why != null) Note(why); } } },
                 { "player", PlayerKind() },
@@ -206,8 +255,6 @@ namespace HuginWhispers
                 { "npc", NpcKind() },
             };
         }
-
-        private static void WatchersStep(Player p, Step st) { StoryWatch.Take(st.W[1] == "take", st.W.Length > 2 && st.W[2] == "camera"); }
 
         private static string Check(Step st)
         {

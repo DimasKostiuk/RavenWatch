@@ -53,6 +53,7 @@ namespace HuginWhispers
         private float _vol = 1f, _pitch, _range, _voice = 1f;
         private float _spread; // (the line's «spread»: no slider of its own, kept so that «Зберегти» does not drop it)
         private bool _flat, _wet, _desk;
+        private bool _any; // (the line's «any»: no box of its own on screen, kept as it was when the line is saved)
 
         private static string ChosenFile { get { return Path.Combine(Path.Combine(Paths.ConfigPath, "RavenWatch"), "sounds_chosen.txt"); } }
 
@@ -320,7 +321,7 @@ namespace HuginWhispers
             AudioBank.Entry e = bank ? AudioBank.Find(s.Name) : new AudioBank.Entry { Tokens = new[] { s.Name } };
             _editName = bank ? s.Name : Suggest(s.Name);
             _editTokens = string.Join(" ", e.Tokens);
-            _vol = e.Vol; _pitch = e.Pitch; _range = e.Range; _flat = e.Flat; _wet = e.Wet; _spread = e.Spread;
+            _vol = e.Vol; _pitch = e.Pitch; _range = e.Range; _flat = e.Flat; _wet = e.Wet; _any = e.Any; _spread = e.Spread;
         }
 
         private static string Suggest(string name)
@@ -333,7 +334,7 @@ namespace HuginWhispers
 
         private AudioBank.Entry Edited()
         {
-            return new AudioBank.Entry { Tokens = _editTokens.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries), Vol = _vol, Pitch = _pitch, Range = _range, Spread = _spread, Flat = _flat, Wet = _wet };
+            return new AudioBank.Entry { Tokens = _editTokens.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries), Vol = _vol, Pitch = _pitch, Range = _range, Spread = _spread, Flat = _flat, Wet = _wet, Any = _any };
         }
 
         private static float Row(string title, float v, float min, float max, float step)

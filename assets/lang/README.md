@@ -39,6 +39,7 @@ side), `node tools/l10n.js check <Language>` lists what is missing or broken (bl
 ## 2. The people's words: `npc_patterns.txt`
 
 The same shape as the ravens' patterns, but a theme or a `@list` written here takes the place of the Ukrainian one and the rest stay Ukrainian, so it can be translated a theme at a time. Keep `[theme]`, `@list` and `~tone` names as they are. No marks `{~nod}` in it (a gesture goes into a talk).
+A theme's conditions (`[heid:idle ?world torvald_wakes]`) go with it: the translated theme replaces the Ukrainian one whole, so copy every `?…` as it stands (`l10n.js check --strict` stops on a theme whose conditions differ).
 
 ## 3. The ravens' words (phrase files)
 

@@ -279,6 +279,15 @@ namespace HuginWhispers
 
         // who «npc <who> at» was to put where: asked after the run has settled (land beyond what this game runs freezes a person, and the order goes nowhere)
         private static readonly Dictionary<NpcActor, Vector3> _putAt = new Dictionary<NpcActor, Vector3>();
+        private static string _stoodAtStart = ""; // (the last run's line: who stood how far off where it was put)
+        internal static float PutOff = 0.5f; // m off its spot at the scene's start: said as a problem of the run
+        // the people a run put and kept (Story.PutPerson «stays») that no scene took: let go, back to their own day — a scene's own people it lets go itself
+        private static void LetGo()
+        {
+            foreach (KeyValuePair<NpcActor, Vector3> put in _putAt)
+                if (put.Key != null && put.Key.Mind != null && put.Key.Mind.Of(NpcMind.Layer.Scene) != null) put.Key.Order("free", NpcMind.Layer.Scene);
+            _putAt.Clear();
+        }
 
         // the scene's «test:» lines: the story's own actions, and «npc <who> at <place>» (put there at once); what went wrong, null none
         private static readonly HashSet<string> _prepared = new HashSet<string>(); // (lines done in this run: asked again only the ones that failed — a «give» was done eight times)
@@ -293,7 +302,7 @@ namespace HuginWhispers
                 if (w.Length == 4 && w[0] == "npc" && w[2] == "at")
                 {
                     Vector3 at; NpcActor who;
-                    if (Story.PutPerson(p, w[1], w[3], out who, out at) != null) { bad.Add(a); continue; } // (beside it, not in it: Story.PutPerson)
+                    if (Story.PutPerson(p, w[1], w[3], out who, out at, true) != null) { bad.Add(a); continue; } // (beside it, not in it, and kept there till the scene takes it: Story.PutPerson)
                     _putAt[who] = at; _prepared.Add(a);
                     continue;
                 }
@@ -317,6 +326,7 @@ namespace HuginWhispers
             finally
             {
                 if (StoryScenes.Playing.Length > 0 && StoryScenes.Playing != before) StoryScenes.Stop("перевірка студії скінчилась"); // (never left playing under the world given back: its own, or the next one its quest went on to — echo_door played on after echo, 2026-11-07)
+                LetGo();
                 was.Back(Player.m_localPlayer);
                 if (was.Changed.Count > 0) NoteMore(name, "given back after the run: " + string.Join(", ", was.Changed.ToArray()));
             }
@@ -348,13 +358,25 @@ namespace HuginWhispers
             string prepared = null;
             if (s.Test.Length > 0)
             {
-                _putAt.Clear(); _prepared.Clear();
+                _putAt.Clear(); _prepared.Clear(); _stoodAtStart = "";
                 float tryUntil = Time.time + 8f; // (a person made by the same line's key comes a moment later: the server makes it)
                 prepared = Prepare(s, p);
                 while (prepared != null && Time.time < tryUntil) { float pause = Time.time; while (Time.time - pause < 1f) yield return null; prepared = Prepare(s, p); }
                 float settle = Time.time; while (Time.time - settle < 1.5f) yield return null;
                 foreach (KeyValuePair<NpcActor, Vector3> put in _putAt)
                     if (put.Key == null || Utils.DistanceXZ(put.Key.transform.position, put.Value) > 3f) prepared = (prepared != null ? prepared + " · " : "") + (put.Key != null ? put.Key.Id : "?") + " was not put there (its land is not run by this game: it stands frozen)";
+                // where each stood as the scene began, against where it was put (the run of 2026-11-20: who stood where was dug out of walks.txt by hand)
+                StringBuilder stood = new StringBuilder();
+                foreach (KeyValuePair<NpcActor, Vector3> put in _putAt)
+                {
+                    if (put.Key == null) continue;
+                    Vector3 at = put.Key.transform.position;
+                    float off = Utils.DistanceXZ(at, put.Value);
+                    bool onThing = NpcKit.OnFurniture(at);
+                    stood.Append(stood.Length > 0 ? " · " : "").Append(put.Key.Id).Append(' ').Append(off.ToString("0.0", CultureInfo.InvariantCulture)).Append(" m off its spot").Append(onThing ? ", ON FURNITURE" : "");
+                    if (off > PutOff || onThing) prepared = (prepared != null ? prepared + " · " : "") + put.Key.Id + " began " + off.ToString("0.0", CultureInfo.InvariantCulture) + " m off where it was put" + (onThing ? ", on furniture" : "");
+                }
+                _stoodAtStart = stood.ToString();
             }
             List<string> touched = new List<string>(); string touchWalk = null; int touchWalkAt = -1;
             if (StoryScenes.Broke.Count > 40) StoryScenes.Broke.RemoveRange(0, StoryScenes.Broke.Count - 40);
@@ -373,8 +395,10 @@ namespace HuginWhispers
             Dictionary<Character, Body> bodies = new Dictionary<Character, Body>();
             StringBuilder rows = new StringBuilder();
             if (onStage != null) rows.Append("0.0 s  (on its stage: ").Append(onStage).Append(")\n");
+            if (_stoodAtStart.Length > 0) rows.Append("0.0 s  (its people as it began: ").Append(_stoodAtStart).Append(")\n");
             List<Texture2D> frames = new List<Texture2D>(), stepFrames = new List<Texture2D>();
             List<StepRow> steps = new List<StepRow>(); // (each step as it began: the table on top of the report)
+            StepRow mainRow = null; int partSeen = 0; // (the row of the step the scene's own line is at; how many of its parts' steps have a row)
             List<float> lastKept = null;
             int sheet = 0, stepSheet = 0;
             bool stepShotDue = false;
@@ -392,7 +416,7 @@ namespace HuginWhispers
                     // (each step's outcome kept with its own row as the director says it: the story may begin the next scene while this one's tail is still
                     //  measured, and a scene's start clears the director's list — every step of «echo» read «not ended in the run» once «echo_door» began, 2026-11-12)
                     if (playing || string.IsNullOrEmpty(StoryScenes.Playing)) foreach (StepRow r in steps) { string c; if (r.Came == null && StoryScenes.Outcomes.TryGetValue(r.Index, out c)) r.Came = c; }
-                    if (!playing && tailUntil < 0f) { if (steps.Count > 0) steps[steps.Count - 1].T1 = t; tailUntil = Time.time + SceneTail; rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  (its end: measured on for ").Append(SceneTail.ToString("0.#", CultureInfo.InvariantCulture)).Append(" s)\n"); nextClose = t + StepShotAfter; nextShot = t; }
+                    if (!playing && tailUntil < 0f) { if (mainRow != null) mainRow.T1 = t; tailUntil = Time.time + SceneTail; rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  (its end: measured on for ").Append(SceneTail.ToString("0.#", CultureInfo.InvariantCulture)).Append(" s)\n"); nextClose = t + StepShotAfter; nextShot = t; }
                     else if (playing && Time.time - t0 > most) break;
                     string step = !playing ? "after its end" : StoryScenes.At >= 0 && StoryScenes.At < s.Steps.Count ? (StoryScenes.At + 1) + ". " + s.Steps[StoryScenes.At].Line : "-";
                     if (StoryScreen.Black >= 0.99f) { black += Time.unscaledDeltaTime; if (black > blackMost) { blackMost = black; blackStep = step; } } else black = 0f;
@@ -445,8 +469,18 @@ namespace HuginWhispers
                     bool stepBegun = step != lastStep;
                     if (stepBegun) stepAt = t;
                     else if (playing && StoryCamera.Active && !StoryScenes.Held && t - stepAt > stepLong) { stepLong = t - stepAt; longStep = step; }
-                    if (stepBegun && playing) { if (steps.Count > 0) steps[steps.Count - 1].T1 = t; steps.Add(new StepRow { Index = StoryScenes.At, Line = step, T0 = t }); rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  ").Append(step).Append('\n'); nextShot = Mathf.Min(nextShot, t + StepShotAfter); nextClose = t + StepShotAfter; stepShotDue = true; } // (a frame as each step begins, a moment in: what it does shows)
+                    if (stepBegun && playing) { if (mainRow != null) mainRow.T1 = t; steps.Add(mainRow = new StepRow { Index = StoryScenes.At, Line = step, T0 = t }); rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  ").Append(step).Append('\n'); nextShot = Mathf.Min(nextShot, t + StepShotAfter); nextClose = t + StepShotAfter; stepShotDue = true; } // (a frame as each step begins, a moment in: what it does shows)
                     lastStep = step;
+                    // the steps of the scene's parts (StoryScenes, «PARTS»): a row each as it begins, by its own number — what came of it is under it like any step's
+                    if (partSeen > StoryScenes.PartBegun.Count) partSeen = 0;
+                    for (; playing && partSeen < StoryScenes.PartBegun.Count; partSeen++)
+                    {
+                        int ix = StoryScenes.PartBegun[partSeen];
+                        if (ix < 0 || ix >= s.Steps.Count) continue;
+                        string partStep = (ix + 1) + ". [" + s.Steps[ix].Part + "] " + s.Steps[ix].Line;
+                        steps.Add(new StepRow { Index = ix, Line = partStep, T0 = t, T1 = t });
+                        rows.Append(t.ToString("0.0", CultureInfo.InvariantCulture)).Append(" s  ").Append(partStep).Append('\n');
+                    }
                     if (!bodies.ContainsKey(p)) { Body me = BodyOf("player", p); if (me != null) bodies[p] = me; }
                     foreach (KeyValuePair<string, NpcActor> c in StoryScenes.CastNow)
                     {

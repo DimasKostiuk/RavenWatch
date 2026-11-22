@@ -140,6 +140,7 @@ namespace HuginWhispers
         internal static readonly List<string> Errors = new List<string>();
 
         private static List<Chapter> All { get { if (_all == null) Load(); return _all; } }
+        internal static IList<Chapter> Chapters { get { return All.AsReadOnly(); } } // (the file's order, their acts with them: the story window groups its quests so — StoryPanelTrack)
         internal static void Reload() { _all = null; Load(); } // (at once, with the quests: a talk's places the entries ask for are noted before anyone talks)
         internal static bool HasChapter(string id) { return Find(id) != null; }
 

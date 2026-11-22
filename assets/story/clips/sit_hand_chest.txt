@@ -1,0 +1,57 @@
+clip sit_hand_chest
+length 3.5
+loop 0
+pivot 1.1
+curve ease
+fade 0.4 0.6
+tone plain
+mode Spine1 body
+mode Spine2 body
+say сидячи на лаві, невеликий жест у розмові: права долоня з коліна лягає на груди — «я», «мені», «моє» — мить тримає і вертається на коліно; тулуб іде за рукою із запізненням
+want 1.4-1.95 hand right on body 0.14
+
+# a new clip's frame (anim.js new): the game's stance at 0 and at 3.2 (the feet below), the look ahead, nothing else yet.
+# Add «want <t> …» lines as the user speaks (docs/jobs/clip.md), then its movements: node tools/anim.js do sit_hand_chest "<t0>-<t1> reach right <x y z>; …".
+# scripted: @Look @Look.w
+
+0 @Look 0 1.6 2
+
+0 @Look.w 0 0 0
+
+0 @RightHand 0.29 0.71 0.29
+0.3 @RightHand 0.29 0.71 0.29
+0.8 @RightHand 0.2 0.78 0.36
+1.25 @RightHand 0.03 0.88 0.265
+1.95 @RightHand 0.03 0.87 0.225
+2.5 @RightHand 0.22 0.78 0.34
+3 @RightHand 0.29 0.71 0.29
+3.5 @RightHand 0.29 0.71 0.29
+
+0 @RightHand.w 0 0 0
+0.3 @RightHand.w 0 0 0
+1 @RightHand.w 1 0 0
+2.1 @RightHand.w 1 0 0
+2.9 @RightHand.w 0 0 0
+3.5 @RightHand.w 0 0 0
+
+0 @RightHand.p 0.6 -1 -0.1
+
+0 @RightHand.f -1 0.1 0
+
+0 @RightHand.n 0 0 -1
+
+0 Spine1 0 0 0
+0.7 Spine1 3 0 0
+1.5 Spine1 -3 -3 1
+2.1 Spine1 -3.5 -3 1
+2.7 Spine1 2.5 1 0
+3.2 Spine1 0.8 0 0
+3.5 Spine1 0 0 0
+
+0 Spine2 0 0 0
+0.75 Spine2 4 0 0
+1.55 Spine2 -5 -5 1.5
+2.2 Spine2 -5 -5 1.5
+2.8 Spine2 3 1.5 0
+3.3 Spine2 1 0 0
+3.5 Spine2 0 0 0

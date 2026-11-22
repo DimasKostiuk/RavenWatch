@@ -17,7 +17,7 @@ namespace HuginWhispers
 
         private static StepKind BirdKind()
         {
-            Action<Player, Step> come = BirdCome, land = BirdLand, look = BirdLook, leave = BirdLeave, gone = (p, st) => { Act("gone", ""); _bird = null; };
+            Action<Player, Step> come = BirdCome, land = BirdLand, look = BirdLook, leave = BirdLeave, gone = (p, st) => { if (!BirdHomeAtEnd()) Act("gone", ""); _bird = null; }; // (a place's raven goes home, never puffed: its place would stand empty — the review 2026-11-18)
             return new StepKind(StepSeen.Shared) { Min = 1, VerbAt = 1, Usage = "bird come|land|look|say|circle|over|leave|gone|shoulder|wear …", Verbs = new Dictionary<string, StepVerb>
             {
                 { "come", new StepVerb(StepSeen.Shared) { PlaceAfter = "at", Begin = come, Setup = OnSeat(come), // (it is on its way with «nowait»: the next step may set it circling — gate_shut, the user 2026-11-04)
@@ -59,6 +59,7 @@ namespace HuginWhispers
         // walls, else one of its look from the place's side while it goes out through its roof)
         private static void BirdCome(Player p, Step st)
         {
+            BirdHomeAtEnd(); // (a place's raven lent to this scene, and now another bird comes: it goes home first, not puffed by «come»)
             string[] w = st.W;
             float from = w.Length > 2 ? F(w[2], 60f) : 60f, up = w.Length > 3 ? F(w[3], 18f) : 18f;
             int li = Array.IndexOf(w, "land");
@@ -107,6 +108,29 @@ namespace HuginWhispers
             return false;
         }
         internal static float HoverPassRoom = 20f;
+
+        // the «letter» step with a bird that brings it: first the bird before his eyes — where it hangs now unless that is off the air before
+        // his camera by over LetterOff m (it hung far behind one who walked on, or at his back: it comes round in front), then LetterSee s
+        // there, then the letter (GiveLetter: the window, out of its beak)
+        internal static float LetterSee = 5f, LetterOff = 3f;
+        private static bool _letterGiven;
+        private static float _letterAt, _letterFrom, _letterAsked;
+        private static void LetterBirdBefore(Player p)
+        {
+            Vector3 there = HoverBefore(p, Flat(GameCamera.instance != null ? GameCamera.instance.transform.forward : p.transform.forward));
+            if (Vector3.Distance(_bird.transform.position, there) <= LetterOff) return;
+            Act("hover", V(there));
+            Act("look", V(p.GetEyePoint()));
+        }
+        private static void GiveLetter(Player p, Step st)
+        {
+            _letterGiven = true;
+            string[] lt = LetterParts(st.Text);
+            NpcDef by = lt[2] == null ? NpcDefs.Find(lt[0]) : null;
+            RavenBook.ShowLetter(Lang.T(by != null ? by.Name : lt[0]), false, Grammar.Fix(Lang.T(lt[1]), p).Replace("\\n", "\n"), null, by != null ? by.Id : lt[2]);
+            if (_bird != null && _birdCarry.Length > 0) Act("drop", ""); // (the bird that brought it: out of its beak, on every game — LetterAhead)
+            _limit = Time.time + LetterMost;
+        }
 
         // the air before him where a bird hangs (bird come … hover; FightWait sends it back there): HoverAhead m ahead, over his head
         private static Vector3 HoverBefore(Player p, Vector3 fwd) { return p.transform.position + fwd * HoverAhead + Vector3.up * 2.2f; }
@@ -261,6 +285,7 @@ namespace HuginWhispers
         private static StoryBird Apply(StoryBird b, string what, string args, Player owner)
         {
             string[] a = args.Split(' ');
+            bool mine = owner != null && owner == Player.m_localPlayer; // (this game's own scene: a place's raven's mind is taken for it — LocRaven.TakeOut, Back)
             switch (what)
             {
                 case "come":
@@ -268,7 +293,7 @@ namespace HuginWhispers
                     if (a.Length < 7) return null;
                     {
                         string home = HomeOf(a);
-                        StoryBird took = home.Length > 0 ? LocRaven.TakeOut(home, PV(a, 3)) : null; // (the place's raven itself where it is drawn here — through its roof first to one outside; else a bird of its look)
+                        StoryBird took = home.Length > 0 ? LocRaven.TakeOut(home, PV(a, 3), mine) : null; // (the place's raven itself where it is drawn here — through its roof first to one outside; else a bird of its look)
                         bool hover = a.Length > 7 && a[7] == "1";
                         if (took != null) { if (hover) took.HoverAt(PV(a, 3)); else took.Land(PV(a, 3), F(a[6], 0f)); return took; }
                     }
@@ -277,8 +302,8 @@ namespace HuginWhispers
                 case "drop": if (b != null) b.Drop(); return b;
                 case "home": // (the place's raven back: its picture there takes this very bird, else it flies off towards the place)
                     if (b != null) b.Drop(); // (a letter not given — the scene cut off: not kept in the beak of the place's own raven)
-                    if (b != null && !LocRaven.Back(a[0], b)) { Vector3 to; if (!StoryWhere.Find(a[0], out to)) to = b.transform.position + b.transform.forward * 10f; b.Leave(to); }
-                    else if (b == null) LocRaven.Back(a[0], null);
+                    if (b != null && !LocRaven.Back(a[0], b, mine)) { Vector3 to; if (!StoryWhere.Find(a[0], out to)) to = b.transform.position + b.transform.forward * 10f; b.Leave(to); }
+                    else if (b == null) LocRaven.Back(a[0], null, mine);
                     return null;
                 case "land": if (b != null && a.Length >= 4) b.Land(PV(a, 0), F(a[3], 0f)); return b;
                 case "look": if (b != null && a.Length >= 3) b.Face(PV(a, 0)); return b;
@@ -310,7 +335,7 @@ namespace HuginWhispers
                 StoryBird b;
                 _mirrors.TryGetValue(who, out b);
                 if (b == null && what == "come" && Vector3.Distance(at, me.transform.position) > Seen) { string home = HomeOf(args.Split(' ')); if (home.Length > 0) LocRaven.Away(home); return; } // (too far to see it come; its place's raven out through its roof, if drawn here)
-                if (b == null && what == "home") { LocRaven.Back(args, null); return; } // (its place's raven: «in», where its mind is)
+                if (b == null && what == "home") { LocRaven.Back(args, null, false); return; } // (its place's raven: «in», where its mind is)
                 if (b == null && what != "come") return;
                 b = Apply(b, what, args, PerchView.PlayerOf(who));
                 if (b != null) { b.Owner = who; _mirrors[who] = b; } else _mirrors.Remove(who);

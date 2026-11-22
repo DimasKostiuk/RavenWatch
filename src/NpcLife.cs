@@ -11,7 +11,8 @@ namespace HuginWhispers
     //            a bed…; not in a player's own house: NpcPrivate) — on a free seat there now and then, a lazy one more often
     //            (the user 2026-11-03) —, a grumble once. A lazy or an old one nearly always; a
     //            diligent one at its work now and then works on wet (decided once a shower). Back to its day when it stops
-    //            (or after RainMost)
+    //            (or after RainMost). One it sent from the rain shakes the water off its face and hand once it stands there (Shake: the
+    //            clip «rain_shake» through its gate; not seated — the user 2026-11-18, the player's own move in the rain)
     //   raid     the game's raid round its base: a peaceful one (not a guard, not a fighter: Guard.Is) runs under a roof the
     //            same way — the doors it opens on its way it shuts behind it (NpcDoors). After it a sigh; whoever mends,
     //            mends (NpcWhims «mend»); a bold or grumpy fighter may hold it against one who hid (Blamed: NpcAttitude.Quarrel,
@@ -27,7 +28,7 @@ namespace HuginWhispers
         internal const string Rain = "rain", Raid = "raid", Back = "back", Morning = "morning";
         internal static float LookEvery = 3f, RainMost = 240f, RaidMost = 300f, GatherFor = 70f;
 
-        private sealed class State { public float Next; public NpcResident R; public int Shower = -1, Told = -1; public bool Hardy, InRaid, NoRoof; public long Gathered = -1; }
+        private sealed class State { public float Next; public NpcResident R; public int Shower = -1, Told = -1; public bool Hardy, InRaid, NoRoof, Wet; public long Gathered = -1; }
         private static readonly Dictionary<NpcActor, State> States = new Dictionary<NpcActor, State>(); // session: what it does now, off when it goes (Forget)
         private static int _shower; private static bool _wet; // (a shower counted: each one decided anew)
 
@@ -57,8 +58,23 @@ namespace HuginWhispers
             _wet = wet;
             if (RaidNow(s.R.Home)) { Hide(a, s, b); return; }
             if (s.InRaid) After(a, s);
-            if (RainHolds(a)) Shelter(a, s, b); else a.Mind.EndWhim(Rain);
+            if (RainHolds(a)) Shelter(a, s, b); else { a.Mind.EndWhim(Rain); s.Wet = false; } // (the rain over before it got there: nothing to shake off)
             Gather(a, s);
+        }
+
+        // under a roof out of the rain: the water off its face and hand (its own life's move: the gate — its body, «shuns:»). true: done with —
+        // shaken off, or it sat down there (no standing move on a seat); false: still on its feet coming, the next look
+        internal static string ShakeClip = "rain_shake";
+        internal static float ShakeNear = 1.5f;
+        private static bool Shake(NpcActor a)
+        {
+            NpcMind m = a.Mind;
+            if (m == null || a.Body == null || m.SeatedNow || m.NowLayer >= NpcMind.Layer.Fight) return true;
+            Character c = a.GetComponent<Character>();
+            if ((c != null && c.GetVelocity().magnitude > 0.3f) || !a.Body.ClipFree) return false;
+            string clip = NpcMoves.Pick(a, ShakeClip);
+            if (clip.Length > 0 && a.Body.Clip(clip)) Npcs.Log(a.Who + ": rain — shakes the water off");
+            return true;
         }
 
         // ---------------------------------------------------------------- a raid
@@ -112,7 +128,7 @@ namespace HuginWhispers
         {
             NpcMind m = a.Mind;
             NpcMind.Plan w = m.Of(NpcMind.Layer.Whim);
-            if (w != null && w.Whose == Rain) return; // (sheltering already)
+            if (w != null && w.Whose == Rain) { if (s.Wet && Utils.DistanceXZ(a.transform.position, w.To) < ShakeNear && Shake(a)) s.Wet = false; return; } // (sheltering already; come out of the rain and standing there: the water shaken off, once)
             if (m.NowLayer > NpcMind.Layer.Whim || m.Asleep || !m.WhimFree(Rain)) return; // (an order, a fight, a scene; in bed it stays)
             if (NpcToil.Roof(a.transform.position + Vector3.up * 1.6f)) { Why(a, s, "dry where it is"); return; } // (dry where it is; on a seat there too it sits on) // heavy: the game's cover rays, every LookEvery s a person — only in rain, only one out in it with its whim free
             if (s.Shower != _shower)
@@ -129,6 +145,7 @@ namespace HuginWhispers
             bool sit = seat && Random.value < 0.35f + NpcPersona.Of(a).Laziness * 0.5f; // (a seat under the roof: sits it out — the seat itself found free by «sit», else the ground by it)
             if (!m.TakeWhim(new NpcMind.Plan { Kind = sit ? NpcMind.Task.Sit : NpcMind.Task.Go, To = at, Near = 0.8f }, RainMost, Rain)) return;
             Npcs.Log(a.Who + ": rain — goes under a roof");
+            s.Wet = true; // (it walks there through the rain: wet)
             if (Random.value < 0.3f + NpcPersona.Of(a).Chatty * 0.5f) NpcPhrases.SayOr(a, "rain", a.Form(Lang.T("Знову ллє…")), null, NpcActor.Voice.Unasked); // (its words: the theme in NpcPhrases)
         }
 

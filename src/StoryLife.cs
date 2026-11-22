@@ -36,9 +36,14 @@ namespace HuginWhispers
     //             while one is on, the other lines of its set in those hours do not fit (Fits) — it goes there, then back to its day
     //     say     the theme of its own words it says there (assets/story/words «[lit:stones] …»; none: «at_<kind>»): at an outing, once a visit
     //             at its next look round (Tick → NpcActor.DueRemark)
+    //     (kind)  or a doing of its own instead of the kind: «do: <name> = <kind> <words…>» in its [person] above the line — the name stands
+    //             where the kind does and is read as those words (Lit's «hammer» = tend clip dv_hammer.loop from … tool): Doing
     //     when    (last, as in «day:»: «… when <world conditions>») only while these hold (the user 2026-11-16: one line of a phase — Torvald's watch
     //             from the crypt on, Heid tidying the Hall after the first heart, Lit's work on the walls in chapter 2 — not a set of its own each). The
-    //             world's conditions only; a stage of a server's quest — «step ch2 work1» — holds while it is on
+    //             world's conditions only; a stage of a server's quest — «step ch2 work1» — holds while it is on. A phase with a name of its own:
+    //             «phase <name>» ([phase <name>] with its «when:» lines — «or» — in assets/story/people: StoryPeople.Phase); the hour's
+    //             own: «night», «day»; «weather rain|storm|snow|fog|clear» — judged by the game that runs it (its player's sky), so never
+    //             on a far line (Local: a way out and back is not put off by rain, and the server has no sky to ask)
     //     days    only every n-th day of the game (the user 2026-11-16: Torvald goes to change the watch once in three days, not every evening):
     //             the world's day (EnvMan.GetDay) divisible by n — the same day on every game; hours across midnight count to the day they began
     //     (none)  an «at:» line with none of days, chance, daily acts at random intervals (the user 2026-11-16: «не кожен день… всі дії мають мати
@@ -48,6 +53,24 @@ namespace HuginWhispers
     //     daily   every day — only where the user asks for it
     //     group   «group <name>»: lines of different people with the same name act on the same days (Heid and Torvald by the stones of the
     //             fallen at dawn); lines of one gathering («meet») share their days by its name by themselves
+    //     one     «one <name>» (the user 2026-11-22: «сьогодні коло біля вогню, завтра всі за столом, якщо він є в цей момент»): of the lines of
+    //             that name one place a day. The places are said once for everyone, in a block of assets/story/people:
+    //               [one vechir]
+    //               place: hall.vohnyshche
+    //               place: hall.stil when state zala >= 2      (a place counts while its «when» holds and it stands in the place's state now)
+    //             each day one of those that count, at random, the same on every game and for every person (Picked: the name and the world's
+    //             day); the line's own «when» only says whether this person comes. Every day, no gaps: the day's choice is its variety.
+    //             With «meet» the same gathering's name on each line: its talks go where it is that day
+    //     over    a line of a phase that takes the whole of its hours (the user 2026-11-22; Lit's «не заважай» days): while it fits, no other
+    //             line of its set fits in those hours — no outing («chance»), no usual line — and no break is taken from it
+    //     haul    «haul <place[.piece]>» (the user 2026-11-22: Torvald «бере біля скрині, несе до вогню, дошка зникає»): an errand of two places —
+    //             it goes to that place first, takes a plank on its shoulder there (HaulCarry, the thing HaulItem: StoryProps, a scene's kind of
+    //             thing — with a term), carries it to the line's own place and puts it down there (HaulPut; at its mark HaulMark the plank is gone:
+    //             into the fire). One plank a visit (NpcPlaces: Place.Then, AtMark, Ends — an order, a scene, a talk, no way on: the plank is taken
+    //             off; the game that ran it gone mid-way, a reload: the next look of its day does it — HaulLeft, within TickEvery s);
+    //             not with sit, clip or tool, not for one who carries a thing of its own («carry:»). The pile not there: the line is a plain place.
+    //             «lays» after it (the user 2026-11-22: Eyvind's planks by the wall — «лежить купою біля стіни і зникає згодом»): at the mark the
+    //             plank is let fall, not gone, and stays there on a pile for HaulLies s (StoryPile: a look only, a few at most)
     //     meet    a gathering's name: the people whose days name the same one in the same hours are there together, and talk their own
     //             talks of it (StoryMeets; the talks: assets/story/meets, «[meet <name>]»)
     // A spot counts while it stands within Reach of its home now (an «at:» past it: Far) (its home moved with the story: StoryPeople «kindled»: the spots there
@@ -65,6 +88,8 @@ namespace HuginWhispers
         internal sealed class Spot
         {
             public string Set = "", Thing = "", By = "", Kind = "", Clip = "", From = "", Out = "", Moves = "";
+            public string Haul = ""; // «haul <place>»: it takes a plank there first and carries it here (Places: an errand of two places)
+            public bool Lays;        // «lays» (with «haul»): the plank put down stays on a pile for a while (StoryPile), not gone at once
             public string Meet = ""; // «meet <name>»: a gathering — those whose days name it at the same hours are there together (StoryMeets)
             public string Word = ""; // a line «at:» as a story's word (StoryHold), for when its place stands past its home's reach: Far
             public bool Sit, Tool;
@@ -78,11 +103,23 @@ namespace HuginWhispers
             public NpcKit.DayRun Days0; // (Acts: its run of days — made once, shared by the lines of its group or gathering)
             public float Chance; // «chance <p>»: an outing — on that part of the days (Lucky); 0: every day
             public string When = ""; // «… when <world conditions>»: the line only while they hold (Live)
+            public bool Over;    // «over»: while it fits, no other line of its set in those hours does (Fits), and no break from it
+            public string One = ""; // «one <name>»: one place a day of the lines of that name (Picked)
+            public Choice Pick;     // (its block «[one <name>]», found once the people are read: Bind; null — no such block, the line never fits)
+            public bool Local;   // its «when» asks the sky of the game that runs it («weather»): never a far line (FarNow)
             public string Say = "", Who = ""; // «say <theme>»: its words there (Themes) · whose line (the seed of its days: StoryPeople.Parse)
             public uint Seed; public bool Seeded; // (Lucky: from its owner, place and hour — made once, not a string a check)
             public Action<string> WhenLog; // (Live: made once — a check asks it every few seconds a person)
         }
         internal sealed class Day { public string Set = "", When = ""; }
+        // «[one <name>]»: the places one of which is the day's (Picked)
+        internal sealed class Choice
+        {
+            public string Name = "";
+            public readonly List<KeyValuePair<string, string>> Places = new List<KeyValuePair<string, string>>(); // a place → its «when» ("" always), in the file's order
+            public uint Seed; public int Day = int.MinValue; public float Until; public string Now = ""; // (the day's place, kept OneEvery s)
+            public Action<string> Log;
+        }
 
         // the set of places that is its now: the first «day:» that holds
         internal static string SetOf(StoryPeople.Person x)
@@ -128,22 +165,28 @@ namespace HuginWhispers
             else
             {
                 if (Array.IndexOf(w, "hours") >= 0) { why = "at: години вже сказано, «hours» зайве"; return null; }
-                s = Parse(w[0] + " " + string.Join(" ", w, 2, w.Length - 2), out why);
+                s = Read(w[0] + " " + string.Join(" ", w, 2, w.Length - 2), out why);
                 if (s == null) return null;
                 s.Word = s.Thing + (s.By.Length > 0 ? " by " + s.By : "") + (s.Sit ? " sit" : s.Clip.Length > 0 ? " clip " + s.Clip + (s.From.Length > 0 ? " from " + s.From : "") + (s.Out.Length > 0 ? " out " + s.Out : "") : " stand"); // (far: Far)
             }
-            s.Planned = true; s.HourFrom = a; s.HourTo = b; s.When = when;
+            s.Planned = true; s.HourFrom = a; s.HourTo = b; s.When = when; s.Local = AsksSky(when);
             return s;
         }
 
         // «<set> <place> [by <place>] <kind> [sit] [clip c [from c] [out c]] [hours a-b] [stay a-b] [want n]»; why: what is wrong, null fine
         internal static Spot Parse(string v, out string why)
         {
+            Spot s = Read(v, out why);
+            if (s != null && (s.Over || s.One.Length > 0)) { why = "over, one — слова рядка «at:» (день за годинами), не «spot:»"; return null; }
+            return s;
+        }
+        private static Spot Read(string v, out string why)
+        {
             why = null;
             string when = CutWhen(ref v);
             string[] w = v.Split(Spaces, StringSplitOptions.RemoveEmptyEntries);
             if (w.Length < 3) { why = "spot: <набір> <місце> <вид> …"; return null; }
-            Spot s = new Spot { Set = w[0], Thing = w[1], When = when };
+            Spot s = new Spot { Set = w[0], Thing = w[1], When = when, Local = AsksSky(when) };
             int i = 2;
             if (w[i] == "by" && i + 2 < w.Length) { s.By = w[i + 1]; i += 2; }
             s.Kind = w[i++];
@@ -153,6 +196,8 @@ namespace HuginWhispers
                 if (w[i] == "sit") { s.Sit = true; continue; }
                 if (w[i] == "tool") { s.Tool = true; continue; }
                 if (w[i] == "daily") { s.Daily = true; continue; }
+                if (w[i] == "over") { s.Over = true; continue; }
+                if (w[i] == "lays") { s.Lays = true; continue; }
                 if (i + 1 >= w.Length) { why = "«" + w[i] + "» без значення"; return null; }
                 string val = w[++i];
                 switch (w[i - 1])
@@ -162,6 +207,7 @@ namespace HuginWhispers
                     case "out": s.Out = val; break;
                     case "moves": s.Moves = val; break;
                     case "meet": s.Meet = val; break;
+                    case "haul": s.Haul = val; break;
                     case "hours": if (!Range(val, out s.HourFrom, out s.HourTo)) why = "погані години «" + val + "»"; break;
                     case "stay": if (!Range(val, out s.Min, out s.Max)) why = "поганий час «" + val + "»"; break;
                     case "want": if (!float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out s.Want)) why = "погане число «" + val + "»"; break;
@@ -170,12 +216,16 @@ namespace HuginWhispers
                     case "days": if (!int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out s.Days) || s.Days < 1) why = "days: ціле число від 1, «" + val + "»"; break;
                     case "every": { float a, b; if (!Range(val, out a, out b) || a < 1f || b < a || a != Mathf.Floor(a) || b != Mathf.Floor(b)) why = "every <a>-<b>: цілі дні від 1, a ≤ b, «" + val + "»"; else { s.GapFrom = (int)a; s.GapTo = (int)b; } break; }
                     case "group": s.Group = val; break;
+                    case "one": s.One = val; break;
                     default: why = "невідоме слово «" + w[i - 1] + "»"; break;
                 }
                 if (why != null) return null;
             }
             if (s.Sit && s.Clip.Length > 0) { why = "або sit, або clip"; return null; }
+            if (s.Haul.Length > 0 && (s.Sit || s.Clip.Length > 0 || s.Tool)) { why = "haul <місце> — несе дошку звідти сюди: не разом із sit, clip чи tool"; return null; }
+            if (s.Lays && s.Haul.Length == 0) { why = "lays — слово до haul <місце>: принесена дошка лишається купою"; return null; }
             if ((s.Daily || s.Group.Length > 0 || s.GapFrom != GapMin || s.GapTo != GapMax) && (s.Days > 1 || s.Chance > 0f)) { why = "daily, every, group — для рядка з випадковими проміжками: не разом із days чи chance"; return null; }
+            if (s.One.Length > 0 && (s.Daily || s.Group.Length > 0 || s.GapFrom != GapMin || s.GapTo != GapMax || s.Days > 1 || s.Chance > 0f)) { why = "one <назва> — одне з місць на день, щодня: не разом із daily, every, group, days чи chance"; return null; }
             return s;
         }
 
@@ -187,6 +237,71 @@ namespace HuginWhispers
             string c = v.Substring(at + 6).Trim();
             v = v.Substring(0, at);
             return c;
+        }
+
+        // its «when» asks the sky («weather …»): only a game with a player knows it (NpcVoice.Weather: the sky over this game's player)
+        private const string SkyWord = "weather";
+        private static bool AsksSky(string when)
+        {
+            if (when.Length == 0) return false;
+            foreach (string c in when.Split(',')) { string t = c.Trim().TrimStart('!').TrimStart(); if (t == SkyWord || t.StartsWith(SkyWord + " ", StringComparison.Ordinal)) return true; }
+            return false;
+        }
+
+        // «do: <name> = <kind> <words…>»: a doing of its own, for the lines below it (name → its words); why: what is wrong, null fine
+        internal static string ParseDo(string v, Dictionary<string, string> into)
+        {
+            int eq = v.IndexOf('=');
+            string name = eq > 0 ? v.Substring(0, eq).Trim() : "", words = eq > 0 ? v.Substring(eq + 1).Trim() : "";
+            if (name.Length == 0 || words.Length == 0 || name.IndexOfAny(Spaces) >= 0) return "do: <назва> = <вид> <слова…>";
+            if (NpcPlaces.Kinds.ContainsKey(name) || name == Sleep || name == "by") return "do: «" + name + "» — уже слово рядка (вид місця чи sleep)";
+            if (!NpcPlaces.Kinds.ContainsKey(words.Split(Spaces, StringSplitOptions.RemoveEmptyEntries)[0])) return "do: «" + name + "» має починатися з виду місця (NpcPlaces.Kinds)";
+            if (words.IndexOf(" when ", StringComparison.Ordinal) >= 0) return "do: без «when» — умови каже сам рядок";
+            into[name] = words;
+            return null;
+        }
+
+        // a line «at:» / «spot:» with its doing's name put as its words: the word where the kind stands (lead words before the place: 1 a spot's set,
+        // 2 an «at:»'s set and hours; after the place and its «by <place>»)
+        internal static string Doing(string v, Dictionary<string, string> doings, int lead)
+        {
+            if (doings.Count == 0) return v;
+            string when = "";
+            int at = v.IndexOf(" when ", StringComparison.Ordinal);
+            if (at >= 0) { when = v.Substring(at); v = v.Substring(0, at); }
+            string[] w = v.Split(Spaces, StringSplitOptions.RemoveEmptyEntries);
+            int i = lead + 1;
+            if (i + 2 < w.Length && w[i] == "by") i += 2;
+            string words;
+            if (i < w.Length && doings.TryGetValue(w[i], out words)) w[i] = words;
+            return string.Join(" ", w) + when;
+        }
+
+        // «place: <place[.piece]> [when <world conditions>]» of a block «[one <name>]»; why: what is wrong, null fine
+        internal static string ParsePlace(string v, Choice into)
+        {
+            string when = CutWhen(ref v);
+            v = v.Trim();
+            if (v.Length == 0 || v.IndexOfAny(Spaces) >= 0) return "place: <місце[.деталь]> [when <умови світу>]";
+            if (AsksSky(when)) return "place: без «weather» — місце дня одне для всіх ігор";
+            foreach (KeyValuePair<string, string> p in into.Places) if (p.Key == v) return "place: «" + v + "» уже є в «one " + into.Name + "»";
+            into.Places.Add(new KeyValuePair<string, string>(v, when));
+            return null;
+        }
+
+        // the people read: what a person's lines know — its «one» lines their blocks, whether any line is «over»
+        internal static void Bind(StoryPeople.Person x, Dictionary<string, Choice> ones)
+        {
+            x.Overs = false; x.Hauls = false;
+            foreach (Spot s in x.Spots)
+            {
+                x.Overs |= s.Over; x.Hauls |= s.Haul.Length > 0;
+                if (s.One.Length == 0) continue;
+                if (!ones.TryGetValue(s.One, out s.Pick)) { Story.Log("people: " + x.Id + ": «one " + s.One + "» — нема блоку [one " + s.One + "] (assets/story/people): рядок не діє ніколи"); continue; }
+                bool named = false;
+                foreach (KeyValuePair<string, string> p in s.Pick.Places) named |= p.Key == s.Thing;
+                if (!named) Story.Log("people: " + x.Id + ": «one " + s.One + "» — місця «" + s.Thing + "» нема в блоці [one " + s.One + "]: рядок не діє ніколи");
+            }
         }
 
         // its «when» holds now (the world's conditions: asked with no player, cached as read — StoryCond.Holds)
@@ -215,15 +330,39 @@ namespace HuginWhispers
         private static bool OnDay(Spot s, float hour)
         {
             bool gaps = Gaps(s);
-            if (s.Days <= 1 && s.Chance <= 0f && !gaps) return true;
+            if (s.Days <= 1 && s.Chance <= 0f && !gaps && s.One.Length == 0) return true;
             int day = EnvMan.instance != null ? EnvMan.instance.GetDay() : 0;
             if (hour < 0f) day--;
+            if (s.One.Length > 0) return Picked(s, day);
             if (gaps) return Acts(s, day);
             return (s.Days <= 1 || ((day % s.Days) + s.Days) % s.Days == 0) && (s.Chance <= 0f || Lucky(s, day));
         }
 
         // a line of its day by the hour that acts at random intervals: none of days, chance, daily (a free-time «spot:» is weighed, not planned)
-        private static bool Gaps(Spot s) { return s.Planned && !s.Sleeps && !s.Daily && s.Days <= 1 && s.Chance <= 0f; }
+        private static bool Gaps(Spot s) { return s.Planned && !s.Sleeps && !s.Daily && s.Days <= 1 && s.Chance <= 0f && s.One.Length == 0; }
+
+        // «one <name>»: the day's place of that name is this line's — one of the block's places that count now (its «when» holds, the place's
+        // state has the piece: a table only where there is one), from the name and the day alone: every game and every person of the name
+        // agree. The answer kept OneEvery s a block (a state may change under it; asked at each look of each of its people)
+        internal static float OneEvery = 5f;
+        private static readonly List<string> _ones = new List<string>();
+        private static bool Picked(Spot s, int day)
+        {
+            Choice c = s.Pick;
+            if (c == null) return false; // (no such block: said at Bind)
+            if (c.Day == day && Time.time < c.Until) return c.Now == s.Thing;
+            c.Day = day; c.Until = Time.time + OneEvery; c.Now = "";
+            if (c.Log == null) { c.Seed = (uint)("one|" + c.Name).GetStableHashCode(); c.Log = e => Story.Log("people: one " + c.Name + ": place … when " + e); }
+            _ones.Clear();
+            Vector3 at;
+            foreach (KeyValuePair<string, string> p in c.Places)
+                if ((p.Value.Length == 0 || StoryCond.Holds(null, p.Value, c.Log, true)) && StoryWhere.Standing(p.Key, out at) && !LocState.Absent(StoryWhere.Piece(p.Key))) _ones.Add(p.Key);
+            if (_ones.Count == 0) return false;
+            uint h = c.Seed ^ (uint)day * 2654435761u;
+            h ^= h >> 15; h *= 2246822519u; h ^= h >> 13;
+            c.Now = _ones[(int)(h % (uint)_ones.Count)];
+            return c.Now == s.Thing;
+        }
 
         // its days at random intervals (NpcKit.Days): its group's, its gathering's, else its own — made once a line
         private static bool Acts(Spot s, int day)
@@ -241,13 +380,27 @@ namespace HuginWhispers
             return (h & 0xFFFF) / 65535f < s.Chance;
         }
 
-        // the line fits now: of its set, in its hours and on its day, and no outing of its set on now over it (an outing's own lines fit)
+        // the line fits now: of its set, in its hours and on its day, and no «over» line nor outing of its set on now over it (their own lines fit)
         private static bool Fits(StoryPeople.Person x, Spot s, string set, float hour)
         {
             if (s.Set != set || !InHours(s, hour) || !Live(s)) return false;
-            if (s.Chance > 0f || !x.Outings) return true; // (no «chance» line of its own at all: nothing to look over)
-            foreach (Spot o in x.Spots) if (o.Chance > 0f && !o.Sleeps && o.Set == set && InHours(o, hour) && Live(o)) return false;
-            return true;
+            if (s.Over) return true;
+            if (!x.Overs && !x.Outings) return true; // (no «over» nor «chance» line of its own at all: nothing to look over)
+            Above(x, set, hour);
+            return !x.OverOn && (s.Chance > 0f || !x.OutingOn);
+        }
+
+        // what stands over its usual lines now: an «over» line, an outing («chance») of its set on in this hour. Fits asks it for every line of
+        // every look (its places, its far word, its gathering, its words): reckoned once a frame a person — for that set and hour — not once a line
+        private static void Above(StoryPeople.Person x, string set, float hour)
+        {
+            if (x.AboveFrame == Time.frameCount && x.AboveHour == hour && x.AboveSet == set) return;
+            x.AboveFrame = Time.frameCount; x.AboveHour = hour; x.AboveSet = set; x.OverOn = false; x.OutingOn = false;
+            foreach (Spot o in x.Spots)
+            {
+                if (o.Sleeps || (!o.Over && o.Chance <= 0f) || o.Set != set || !InHours(o, hour) || !Live(o)) continue;
+                if (o.Over) x.OverOn = true; else x.OutingOn = true;
+            }
         }
 
         // where it stands at a spot: by the thing, a step from its edge, never its middle (the thing's pieces are looked over: only for the one it goes to)
@@ -255,7 +408,7 @@ namespace HuginWhispers
         {
             Vector3 side = me, by;
             if (s.By.Length > 0 && StoryWhere.Find(s.By, out by)) side = by;
-            return StoryWhere.StandBy(s.Thing, side, at, clip, out by) ? by : NpcPlaces.Side(at, side, 1.5f);
+            return StoryWhere.StandBy(s.Thing, side, at, clip, out by, s.Clip) ? by : NpcPlaces.Side(at, side, 1.5f);
         }
 
         // the hour of its own day (an early bird's sooner: the same shift as a resident's day)
@@ -306,7 +459,7 @@ namespace HuginWhispers
             float hour = -1f;
             foreach (Spot s in x.Spots)
             {
-                if (!s.Planned || s.Sleeps || s.Set != set) continue;
+                if (!s.Planned || s.Sleeps || s.Local || s.Set != set) continue; // (Local: its «when» asks this game's sky — never a way out and back)
                 if (hour < 0f) hour = Hour(z, npc);
                 if (!Fits(x, s, set, hour) || !StoryWhere.Standing(s.Thing, out at) || Utils.DistanceXZ(at, home) <= Reach) continue; // flat: as Stands — its home and the place on the same ground
                 return s.Word;
@@ -339,7 +492,7 @@ namespace HuginWhispers
             {
                 if (!s.Planned || s.Sleeps) continue;
                 if (set == null) { set = SetOf(x); hour = Hour(a); }
-                if (Fits(x, s, set, hour) && Stands(s, NpcRules.Home(a), out at)) return s.Chance > 0f || !OnBreak(a); // (an outing: no break from it)
+                if (Fits(x, s, set, hour) && Stands(s, NpcRules.Home(a), out at)) return s.Chance > 0f || s.Over || !OnBreak(a); // (an outing, a line «over»: no break from it)
             }
             return false;
         }
@@ -373,7 +526,7 @@ namespace HuginWhispers
             Vector3 home = NpcRules.Home(a), me = a.transform.position;
             List<NpcPlaces.Place> all = NpcPlaces.Begin();
             _fit.Clear();
-            bool planned = false;
+            bool planned = false, over = false;
             foreach (Spot s in x.Spots)
             {
                 Vector3 at;
@@ -381,9 +534,9 @@ namespace HuginWhispers
                 if (s.Sleeps) continue; // sleep: the hook of its night — here it would lie down (its bed: StoryPeople «live … bed», NpcMind.Task.Sleep); till then these hours are its free ones
                 if (!Stands(s, home, out at)) continue;
                 _fit.Add(new KeyValuePair<Spot, Vector3>(s, at));
-                planned |= s.Planned;
+                planned |= s.Planned; over |= s.Over;
             }
-            bool free = !planned || OnBreak(a); // (its day says where it is: its free places only in a break)
+            bool free = !planned || (!over && OnBreak(a)); // (its day says where it is: its free places only in a break)
             foreach (KeyValuePair<Spot, Vector3> f in _fit)
             {
                 Spot s = f.Key; Vector3 at = f.Value;
@@ -401,6 +554,9 @@ namespace HuginWhispers
                 }
                 p.Shared = s.Meet.Length > 0; // (a gathering: those there are its company, not a crowd)
                 p.Sit = s.Sit; p.Extra = s.Want; p.Min = s.Min; p.Max = s.Max; p.Clip = s.Clip; p.From = s.From; p.Out = s.Out; p.Exact = clip; p.Moves = s.Moves; p.Tool = s.Tool;
+                Vector3 pile;
+                if (s.Haul.Length > 0 && x.Carry == null && StoryWhere.Standing(s.Haul, out pile) && !LocState.Absent(StoryWhere.Piece(s.Haul)) && Utils.DistanceXZ(pile, home) <= Reach) // flat: a place of its life round its home, as Stands
+                    Hauls(a, p, spot, thing, pile, me);
             }
             // its own thing (StoryProps «carry:») set down somewhere near its home by its own doing — it goes back for it first of all (set down by a
             // word of the story: it lies till «npc <who> prop fetch»). Nothing of its own anywhere: StoryProps.Keep puts it in her hand
@@ -417,6 +573,64 @@ namespace HuginWhispers
                 }
             }
             return all;
+        }
+
+        // «haul»: the line's place made an errand (NpcPlaces: Place.Then). The place of the list becomes the pile — it goes there, stands a moment,
+        // the plank comes onto its shoulder (the clip first, then the thing: the clip leads the plank) — and its Then is the line's own place,
+        // an object of its own: there the put-down clip, the plank gone at its mark, and at the visit's end however it came (nobody near to
+        // see the clip begin, a talk, an order) the plank and the carrying clip are taken off. The plank has its own term besides (StoryProps.NpcFor)
+        internal const string HaulItem = "FineWood", HaulCarry = "plank_carry", HaulPut = "plank_put", HaulMark = "down";
+        private static readonly int HaulKey = "haul".GetStableHashCode(); // (the pile's place is not the line's own: its own key — where it was lately, what it found no way to)
+        private static readonly Action<NpcActor> HaulGone = who => StoryProps.Put(who), HaulFalls = who => { StoryProps.Drop(who); }, HaulTaken = HaulTakes, HaulEnds = HaulOver, HaulEndsLaid = HaulLaid; // (made once: a place is made at every choice)
+        internal static float HaulSize = 1.1f, HaulTake = 1.5f, HaulFor = 180f, HaulLies = 900f; // m the plank is long (as the scene's) · s it stands by the pile · s the carrying clip is asked for at most · s a plank laid («lays») stays on its pile (some twelve hours of the game)
+        private static void Hauls(NpcActor a, NpcPlaces.Place p, Spot s, Vector3 thing, Vector3 pile, Vector3 me)
+        {
+            PAnimClip put = BodyClips.Find(HaulPut);
+            if (put == null || BodyClips.Find(HaulCarry) == null) return; // (no such clips: a plain place)
+            NpcPlaces.Place to = NpcPlaces.Apart(s.Kind, NpcPlaces.Side(thing, pile, 1.5f), thing + Vector3.up * 0.5f, thing);
+            to.Stand = () => Stand(s, thing, a.transform.position, true);
+            to.Clip = HaulPut; to.From = ""; to.Out = ""; to.Exact = true; to.Extra = s.Want;
+            to.Min = to.Max = put.Length * 1.6f + 1f; // (its stay is scaled by its ways — NpcPlaces.Go: never shorter than the clip)
+            to.MarkAt = put.Length * 0.7f;
+            foreach (PAnimEvent e in put.Marks) if (e.Sound == HaulMark) to.MarkAt = e.T;
+            if (s.Lays) { to.AtMark = HaulFalls; to.Ends = HaulEndsLaid; } // (let fall where the hands are: it lies — and at the visit's end goes onto the pile)
+            else { to.AtMark = HaulGone; to.Ends = HaulEnds; }
+            string from = s.Haul;
+            p.At = NpcPlaces.Side(pile, me, 1.5f); p.Look = pile + Vector3.up * 0.5f; p.Key ^= HaulKey;
+            p.Stand = () => { Vector3 by; return StoryWhere.StandBy(from, a.transform.position, pile, false, out by, "") ? by : NpcPlaces.Side(pile, a.transform.position, 1.5f); };
+            p.Clip = ""; p.From = ""; p.Out = ""; p.Exact = false; p.Moves = ""; p.Sit = false; p.Tool = false;
+            p.Min = p.Max = HaulTake;
+            p.There = HaulTaken;
+            p.Then = to;
+        }
+        private static void HaulTakes(NpcActor a)
+        {
+            if (a.Body == null || !a.Body.Clip(HaulCarry, HaulFor)) return; // (its body would not: no plank in the air)
+            string why = StoryProps.Take(a, new StoryProps.Ask { Item = HaulItem, Size = HaulSize, Free = true });
+            if (why != null) Story.Log("people: " + a.Id + ": haul: " + why);
+        }
+        private static void HaulLaid(NpcActor a)
+        {
+            string item; float size; Vector3 at; Quaternion turn;
+            if (StoryProps.Lain(a, out item, out size, out at, out turn)) StoryPile.Add(a, item, size, at, turn, HaulLies); // (still in its hands — the clip never came to its mark: no pile, HaulOver takes it off)
+            HaulOver(a);
+        }
+        private static void HaulOver(NpcActor a)
+        {
+            StoryProps.Put(a); // (a scene's kind of thing: off; nothing held — nothing done)
+            BodyAnimator b = BodyAnimator.Of(a.GetComponent<Character>());
+            string now = b != null ? b.ClipIn(NpcBody.ClipSlot) : null;
+            if (a.Body != null && now != null && (now == HaulCarry || now == HaulPut || now == NpcMoves.Its(a.Def, HaulCarry) || now == NpcMoves.Its(a.Def, HaulPut))) a.Body.Clip(""); // (the carrying clip still on with no plank: off; another body's own of the name — NpcBody.Clip)
+        }
+
+        // a plank on it with no errand to end it (the game that ran it changed mid-way, it came back into sight, the files were read anew): taken
+        // off. Not a scene's (the same thing and clips are a scene's too — StoryScenes.Holder), not under an order (NpcPlaces cuts its own errand
+        // there). Looked at with its outings, every TickEvery s a person that hauls at all
+        private static void HaulLeft(NpcActor a)
+        {
+            if (!a.Owned || !StoryProps.HasOf(a, HaulItem) || NpcPlaces.OnErrand(a) || StoryScenes.Holder(a) != 0L || (a.Mind != null && a.Mind.NowLayer > NpcMind.Layer.Whim)) return;
+            Story.Log("people: " + a.Id + ": a plank on it and no errand to end it — taken off");
+            HaulOver(a);
         }
 
         // what it is doing at a place of its day, for its words unasked (NpcVoice.Sources; the user 2026-11-16: «Літ щось робить і може про себе щось
@@ -453,7 +667,8 @@ namespace HuginWhispers
             if (Time.time < v.Next) return;
             v.Next = Time.time + TickEvery;
             StoryPeople.Person x = Of(a.Id);
-            if (x == null || !x.Outings) { v.Next = Time.time + 600f; return; } // (no outing of its own: nothing to look for — its file read anew makes a new body's look)
+            if (x != null && x.Hauls) HaulLeft(a);
+            if (x == null || !x.Outings) { if (x == null || !x.Hauls) v.Next = Time.time + 600f; return; } // (no outing of its own: nothing to look for — its file read anew makes a new body's look)
             string set = null; float hour = 0f; Vector3 at;
             foreach (Spot s in x.Spots)
             {
@@ -485,11 +700,11 @@ namespace HuginWhispers
             foreach (Spot s in x.Spots)
             {
                 if (s.Set != set) continue;
-                t.Append("\n").Append(s.Planned ? "at " : "spot ").Append(s.HourFrom < 0f ? "весь день" : s.HourFrom.ToString("0.#", ci) + "-" + s.HourTo.ToString("0.#", ci)).Append(" ").Append(s.Sleeps ? Sleep : s.Thing + " " + s.Kind + (s.Meet.Length > 0 ? " (збори «" + s.Meet + "»)" : ""));
+                t.Append("\n").Append(s.Planned ? "at " : "spot ").Append(s.HourFrom < 0f ? "весь день" : s.HourFrom.ToString("0.#", ci) + "-" + s.HourTo.ToString("0.#", ci)).Append(" ").Append(s.Sleeps ? Sleep : s.Thing + " " + s.Kind + (s.Meet.Length > 0 ? " (збори «" + s.Meet + "»)" : "") + (s.Haul.Length > 0 ? " (несе дошку від " + s.Haul + (s.Lays ? ", кладе купою" : "") + ")" : "") + (s.Over ? " (over)" : ""));
                 Vector3 at;
-                if (!InHours(s, hour)) t.Append((s.Days > 1 || s.Chance > 0f || Gaps(s)) && InHours(new Spot { HourFrom = s.HourFrom, HourTo = s.HourTo }, hour) ? ": не цей день (" + (Gaps(s) ? "раз на " + s.GapFrom + "–" + s.GapTo + " дні навмання" + (s.Group.Length > 0 ? ", разом з «" + s.Group + "»" : "") : s.Chance > 0f ? "іноді, " + Mathf.RoundToInt(s.Chance * 100f) + "% днів" : "раз на " + s.Days + " дні") + ")" : ": не ця година");
+                if (!InHours(s, hour)) t.Append((s.Days > 1 || s.Chance > 0f || Gaps(s) || s.One.Length > 0) && InHours(new Spot { HourFrom = s.HourFrom, HourTo = s.HourTo }, hour) ? ": не цей день (" + (s.One.Length > 0 ? "сьогодні інше місце з «one " + s.One + "»" : Gaps(s) ? "раз на " + s.GapFrom + "–" + s.GapTo + " дні навмання" + (s.Group.Length > 0 ? ", разом з «" + s.Group + "»" : "") : s.Chance > 0f ? "іноді, " + Mathf.RoundToInt(s.Chance * 100f) + "% днів" : "раз на " + s.Days + " дні") + ")" : ": не ця година");
                 else if (!Live(s)) t.Append(": не тепер (when " + s.When + ")");
-                else if (!Fits(x, s, set, hour)) t.Append(": сьогодні відступ (рядок з chance) замість нього");
+                else if (!Fits(x, s, set, hour)) t.Append(": зараз замість нього рядок з over чи відступ (chance)");
                 else if (s.Sleeps) t.Append(": сон ще не зроблено (вільний час)");
                 else if (!StoryWhere.Standing(s.Thing, out at)) t.Append(": місця нема у світі");
                 else if (Utils.DistanceXZ(at, NpcRules.Home(a)) > Reach) t.Append(s.Planned ? ": зараз, похід (далі " + Mathf.RoundToInt(Reach) + " м від дому: Far)" : ": далі " + Mathf.RoundToInt(Reach) + " м від дому"); // flat: as Places

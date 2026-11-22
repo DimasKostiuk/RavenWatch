@@ -15,6 +15,7 @@
 //   who       «ти … а|б» (the speaker's form said of you: {а|б}) or «я … {а|б}» (yours said of the speaker: а|б). Your own words to a person
 //             (themes say_*, lists «твоє_…»: NpcMoreSayPatterns) are read the other way round: «ти … {а|б}» and «я … а|б» are the errors there
 //   listener  a {а|б} form in the lines two people say to each other: it would be the player's, not the listener's
+//   gameword  «база» in people's words (and the built-in small talk and talk, the story's texts): the world says «оселя» (below, GameWord)
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), src = path.join(root, 'src');
 const MinVariants = 6, MinTale = 3;
@@ -122,6 +123,29 @@ for (const x of lines) {
     if (me && !you && player) say('who (я + твоя форма)', x);
   }
 }
+
+// gameword: a player's word of the game, not of the world, in what people (and you to them) say — «база» (the user 2026-11-20: Heid by the fire,
+// «…кружляють над базою?» — «яка база»); the world's is «оселя», English «settlement». Read: the phrase lists above, the built-in small talk and
+// talk (NpcChatter, NpcTalk: their Builtin), every text of assets/story with its comments cut off. Menus and the ravens' slang are not people's words
+const GameWord = /(^|[^а-яіїєґ'’])[Бб]аз(а|и|і|у|ою|ам|ами|ах)?(?![а-яіїєґ'’])/u;
+for (const x of lines) if (GameWord.test(strip(x.l))) say('gameword «база» (у словах людей — оселя)', x);
+for (const f of ['NpcChatter.cs', 'NpcTalk.cs']) {
+  const s = fs.readFileSync(path.join(src, f), 'utf8'), at = s.indexOf('Builtin =');
+  if (at < 0) { errors.push('gameword: no Builtin in ' + f + ' (the check reads its people\'s words there)'); continue; }
+  const end = s.slice(at).search(/("|})\s*;\s*\r?\n/);
+  for (const l of s.slice(at, end < 0 ? s.length : at + end).split(/\\n|\r?\n/)) if (GameWord.test(l)) say('gameword «база» (у словах людей — оселя)', { f, list: 'Builtin', l: l.trim() });
+}
+(function storyTexts(dir) {
+  for (const n of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, n.name);
+    if (n.isDirectory()) { storyTexts(p); continue; }
+    if (!n.name.endsWith('.txt')) continue;
+    for (const raw of fs.readFileSync(p, 'utf8').split(/\r?\n/)) {
+      const l = raw.replace(/(^|\s)#.*$/, '');
+      if (GameWord.test(l)) say('gameword «база» (у словах людей — оселя)', { f: path.relative(root, p), list: '', l: l.trim() });
+    }
+  }
+})(path.join(root, 'assets', 'story'));
 
 // the story's retellings
 const talesDir = path.join(root, 'assets', 'story', 'tales');

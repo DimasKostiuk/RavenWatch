@@ -24,13 +24,21 @@ namespace HuginWhispers
     //                                                            comes; it goes when nobody sees it, and comes back to its next home out of sight)
     // Going (away, or for good by «until»): nobody near and its body loaded nowhere — the server takes it at once. Someone near (the user 2026-11-16:
     // Torvald «on watch» sat on by his camp 77 m from the Hall, where the player lives — the server waited for nobody within 150 m, and that never
-    // came): the server says so in the world's key «leave_<npc>», and the game that runs its body takes it the first moment nobody sees it (LeaveTick:
-    // no player within SeenNear m, none with a clear line to it within SeenFar m, not on this game's own screen) — till then it walks off from them
+    // came): the server says so in the world's key «leave_<npc>» — and the game that runs its body reads its «live:» itself too (AwayNow: no wait for
+    // the server's look) — and that game takes it the first moment nobody sees it (LeaveTick:
+    // no player within SeenNear m, none with a clear line to it within SeenFar m, not on this game's own screen; this game's own player sees nothing
+    // while a scene holds his screen black — the user 2026-11-18: Torvald walks out of the Hall, the picture goes black, «він просто має різко
+    // зникнути»: StoryScreen.Black, BlackHides) — till then it walks off from them
     // at its ease (OffWalk m, the farthest way from them). Never in a scene, a talk, or against a story's word that holds it (that leads it; it only goes).
+// A scene's «npc <who> leave» (LeaveUnseen): out of the world the first moment it is out of the scene's shot — the shot is the eyes then (SeenNow).
     //   spot: home torvald.kamin think hours 6-11                a place of its own life between commands (StoryLife, its head)
     //   day: hall when state zala >= 1.3                         which set of its places is its now · at: hall 6-9 hall.rizba think — its day by the hour (StoryLife)
-    //   stranger: !world eyvind_met [:: Чужинець]                not met yet while these world conditions hold: no name, no talk, quiet (StoryStranger)
+    //   do: hammer = tend clip dv_hammer.loop from dv_hammer.in out dv_hammer.out tool   a doing of its own: the name stands for these words in its lines below (StoryLife.Doing)
+    //   [phase lit_works] + when: <world conditions>             a phase of the story with a name («or»: a line a way) — the condition «phase <name>» (Phase)
+    //   stranger: !world eyvind_met [:: Чужинець]               not met yet while these world conditions hold: no name, no talk, quiet (StoryStranger)
     //   strangersay: hugin Хто це? / munin Мабуть, Літів.        what your ravens say the first time you come near it then (StoryStranger)
+    //   notalk: reached ch2 tower_night, !reached ch2 dawn       no talk with it while these world conditions hold: E and Q open nothing, its name only —
+    //                                                            its own words, scenes and road talks go on (StoryStranger: Torvald on his watch)
     // A spot is «<place>.<named piece>» (the place's names: LocParts — loaded or not, Loc.NamedAt) or «<place>». It is born never on a piece itself
     // (a bench's seat, a fire): a step off its spawn towards its home, or — home there too, or no «spawn» — Aside, towards the place's middle.
     // Made as soon as its time and its home are there (looked at every Soon s while someone waits: the story's word must not leave the
@@ -62,9 +70,14 @@ namespace HuginWhispers
             public readonly List<StoryLife.Day> Days = new List<StoryLife.Day>();   // which set of them is its now («day:», in the file's order: the first that holds)
             public bool Planned; // it has a day by the hour (an «at:» other than sleep): only then StoryLife.Far looks for a far line
             public bool Outings; // it has a line «chance»: only then StoryLife looks over its outings (Fits, Tick)
+            public bool Overs;   // it has a line «over»: only then StoryLife looks over them (Fits; set by StoryLife.Bind)
+            public bool Hauls;   // it has a line «haul»: only then StoryLife looks for a plank left on it (Tick; set by StoryLife.Bind)
+            public int AboveFrame = -1; public float AboveHour; public string AboveSet; public bool OverOn, OutingOn; // (StoryLife.Above: what stands over its usual lines, reckoned once a frame)
+            public readonly Dictionary<string, string> Doings = new Dictionary<string, string>(); // («do: <name> = <kind> <words…>»: its own doings, for the lines below — StoryLife.Doing)
             public Action<string> DayLog, HomeLog; // (its conditions' log, made once: they are asked every few seconds)
             public StoryProps.Ask Carry; // a thing of its own it always carries (StoryProps «carry:»); null: none
             public string Stranger = "", StrangerName = ""; // («stranger: <world conditions> [:: <name>]»: not met yet while they hold — StoryStranger)
+            public string NoTalk = ""; // («notalk: <world conditions>»: no talk with it while they hold — its own words, scenes, road talks go on; StoryStranger)
             public readonly List<KeyValuePair<bool, string>> StrangerSay = new List<KeyValuePair<bool, string>>(); // («strangersay:»: munin?, the line — in its order)
             public float BornWait = -1f;
             public string Why = "";
@@ -133,6 +146,10 @@ namespace HuginWhispers
         // whose template opens that ring: «menu: home talk»). The world's (the server's census sees everyone; a client, those loaded near it)
         internal static void Conds()
         {
+            // a phase of the story by its name (Phase below). No Dry line on purpose: it is for people's days, words and talks — a quest that waited
+            // on one would be «not judged» by the dry walk and the author's jump, said aloud
+            StoryCond.Register("phase", new StoryCond.Kind { Usage = "phase <назва>   (фаза сюжету: блок [phase <назва>] у assets/story/people — поки справджується хоч один його рядок when:)", Min = 1, World = true,
+                Test = (p, a) => Phase(a[1]) });
             StoryCond.Register("npcbed", new StoryCond.Kind { Dry = "world npcbed:{1} : a player gives that person a bed (its round menu: «Оселя» → «Ліжко»)", Usage = "npcbed <хто>   (у людини сюжету є своє ліжко)", Min = 1, World = true,
                 Test = (p, a) =>
                 {
@@ -147,11 +164,19 @@ namespace HuginWhispers
                 Check = a => Errands.F(a[3], -1f) <= 0f ? "npcnear: м — число" : StoryWhere.Why(a[2]),
                 Test = (p, a) =>
                 {
-                    Vector3 at;
-                    if (!StoryWhere.Find(a[2], out at)) return false;
-                    float m = Errands.F(a[3], 10f);
+                    float m = Errands.F(a[3], 10f), off;
                     foreach (ZDO z in NpcCensus.People())
-                        if (Of(z, a[1]) && Utils.DistanceXZ(z.GetPosition(), at) <= m) return true;
+                        if (Of(z, a[1]) && StoryWhere.Off(a[2], z.GetPosition(), out off) && off <= m) return true; // (a named piece: from its edge, where a word «hold» stands one — StoryWhere.Off)
+                    return false;
+                } });
+            // the person of the world is where its standing word has it, as that word has it: stood at its spot, sat, in its clip (StoryHold.There —
+            // written by the game that runs it); no word: yes. A scene waits for this of its own people by itself (StoryScenes.Unset): the condition is
+            // for a stage's «wait:» or a talk that needs someone in place. Not in the world at all: false
+            StoryCond.Register("npcset", new StoryCond.Kind { Dry = "free", Usage = "npcset <хто>   (людина сюжету стала там, де її тримає слово: стоїть на місці, сидить, у своєму кліпі; слова нема — так)", Min = 1, World = true,
+                Test = (p, a) =>
+                {
+                    foreach (ZDO z in NpcCensus.People())
+                        if (Of(z, a[1])) return StoryHold.There(z);
                     return false;
                 } });
         }
@@ -160,24 +185,95 @@ namespace HuginWhispers
         {
             StoryTrackConds.Register(); // (their «after:» is conditions: known before they are read — the server reads its people first)
             _all = new List<Person>();
+            _phases = new Dictionary<string, List<string>>();
+            _noPhase.Clear(); _phaseKept.Clear();
+            _ones = new Dictionary<string, StoryLife.Choice>();
             foreach (KeyValuePair<string, string> f in StoryFiles.All(Kind, null, false)) Parse(f.Key, f.Value);
             _npcs = new HashSet<string>();
-            foreach (Person x in _all) _npcs.Add(x.Npc);
-            Story.Log("people: " + _all.Count + " read");
+            foreach (Person x in _all) { _npcs.Add(x.Npc); StoryLife.Bind(x, _ones); }
+            Story.Log("people: " + _all.Count + " read, phases: " + _phases.Count + ", choices of a day: " + _ones.Count);
+        }
+
+        // A phase of the story with a name of its own (the user 2026-11-22: «щоб в наступних актах ми просто додавали якісь умови легко»):
+        //   [phase lit_works]
+        //   when: reached ch2 work1, !reached ch2 seen1      it holds while any of its lines does («or»: a line a way; a new act adds a line here,
+        //   when: step ch2 work3                             and no person's day, word or talk that asks «phase lit_works» is touched)
+        // The world's conditions only, and no «phase» nor «weather» in them (storycheck). Asked as the condition «phase <name>» anywhere a
+        // condition is: a day's line «… when phase x», a word's theme «[lit:idle ?phase x]», a gathering's talk «? phase x»
+        private static Dictionary<string, List<string>> _phases;
+        private static Dictionary<string, StoryLife.Choice> _ones; // («[one <name>]» with its «place:» lines: the places one of which is the day's — StoryLife, the word «one»)
+        private static readonly HashSet<string> _noPhase = new HashSet<string>(); // session: names asked and not found, said once a reading
+        private static readonly Action<string> PhaseLog = e => Story.Log("people: phase … when " + e);
+        private static int _phaseDeep;
+        // its answer is kept PhaseEvery s (a phase stands on stages and facts of the world: it turns once in an hour of play, and a person's day asks
+        // it for every line of every look — a few lists of conditions each time otherwise)
+        internal static float PhaseEvery = 1f;
+        private sealed class PhaseKept { public float Until; public bool Yes; }
+        private static readonly Dictionary<string, PhaseKept> _phaseKept = new Dictionary<string, PhaseKept>(); // session: a phase → its answer, a second
+        internal static bool Phase(string name)
+        {
+            if (_all == null) Load();
+            PhaseKept k;
+            if (_phaseKept.TryGetValue(name, out k) && Time.time < k.Until) return k.Yes;
+            if (k == null) _phaseKept[name] = k = new PhaseKept();
+            k.Until = Time.time + PhaseEvery;
+            return k.Yes = PhaseNow(name);
+        }
+        private static bool PhaseNow(string name)
+        {
+            List<string> ways;
+            if (!_phases.TryGetValue(name, out ways)) { if (_noPhase.Add(name)) Story.Log("people: no phase «" + name + "» ([phase " + name + "] in assets/story/people): it never holds"); return false; }
+            if (_phaseDeep > 0) return false; // (a phase asking a phase: storycheck stops it; here it only never holds)
+            _phaseDeep++;
+            try { foreach (string w in ways) if (StoryCond.Holds(null, w, PhaseLog, true)) return true; }
+            finally { _phaseDeep--; }
+            return false;
         }
 
         private static void Parse(string file, string text)
         {
             Person cur = null;
+            List<string> phase = null;
+            StoryLife.Choice one = null;
             foreach (KeyValuePair<int, string> ln in StoryFiles.Lines(text))
             {
                 string line = ln.Value; int n = ln.Key;
-                if (line.StartsWith("[person ") && line.EndsWith("]")) { cur = new Person { Id = line.Substring(8, line.Length - 9).Trim(), File = file }; cur.Npc = cur.Id; _all.Add(cur); continue; }
+                if (line.StartsWith("[person ") && line.EndsWith("]")) { phase = null; one = null; cur = new Person { Id = line.Substring(8, line.Length - 9).Trim(), File = file }; cur.Npc = cur.Id; _all.Add(cur); continue; }
+                if (line.StartsWith("[phase ") && line.EndsWith("]"))
+                {
+                    cur = null; one = null;
+                    string name = line.Substring(7, line.Length - 8).Trim();
+                    if (!_phases.TryGetValue(name, out phase)) _phases[name] = phase = new List<string>();
+                    else Story.Log("people: " + file + ":" + n + ": фаза «" + name + "» уже є — рядки додано до неї");
+                    continue;
+                }
+                if (line.StartsWith("[one ") && line.EndsWith("]"))
+                {
+                    cur = null; phase = null;
+                    string name = line.Substring(5, line.Length - 6).Trim();
+                    if (!_ones.TryGetValue(name, out one)) _ones[name] = one = new StoryLife.Choice { Name = name };
+                    else Story.Log("people: " + file + ":" + n + ": «one " + name + "» уже є — місця додано до нього");
+                    continue;
+                }
                 int c = line.IndexOf(':');
+                if (one != null)
+                {
+                    string bad = c > 0 && line.Substring(0, c).Trim() == "place" ? StoryLife.ParsePlace(line.Substring(c + 1), one) : "у блоці [one …] лише рядки «place: <місце> [when <умови світу>]»";
+                    if (bad != null) Story.Log("people: " + file + ":" + n + ": " + bad);
+                    continue;
+                }
+                if (phase != null)
+                {
+                    if (c > 0 && line.Substring(0, c).Trim() == "when" && line.Substring(c + 1).Trim().Length > 0) phase.Add(line.Substring(c + 1).Trim());
+                    else Story.Log("people: " + file + ":" + n + ": у фазі лише рядки «when: <умови світу>»");
+                    continue;
+                }
                 if (cur == null || c <= 0) { Story.Log("people: " + file + ":" + n + ": не розумію «" + line + "»"); continue; }
                 string k = line.Substring(0, c).Trim(), v = line.Substring(c + 1).Trim();
+                if (k == "spot") v = StoryLife.Doing(v, cur.Doings, 1); else if (k == "at") v = StoryLife.Doing(v, cur.Doings, 2);
                 switch (k)
                 {
+                    case "do": { string bad = StoryLife.ParseDo(v, cur.Doings); if (bad != null) Story.Log("people: " + file + ":" + n + ": " + bad); break; }
                     case "npc": cur.Npc = v; break;
                     case "live": cur.Homes.Add(HomeOf(v)); break;
                     case "after": cur.After = v; break;
@@ -187,6 +283,7 @@ namespace HuginWhispers
                     case "day": { string bad; StoryLife.Day d = StoryLife.ParseDay(v, out bad); if (d != null) cur.Days.Add(d); else Story.Log("people: " + file + ":" + n + ": " + bad); break; }
                     case "carry": { string bad; cur.Carry = StoryProps.ReadCarry(v, out bad); if (cur.Carry == null) Story.Log("people: " + file + ":" + n + ": " + bad); break; }
                     case "stranger": { int sep = v.IndexOf("::", StringComparison.Ordinal); cur.Stranger = (sep >= 0 ? v.Substring(0, sep) : v).Trim(); cur.StrangerName = sep >= 0 ? v.Substring(sep + 2).Trim() : ""; break; }
+                    case "notalk": cur.NoTalk = v.Trim(); break;
                     case "strangersay":
                         foreach (string part in v.Split('/'))
                         {
@@ -449,6 +546,11 @@ namespace HuginWhispers
         // the server's word to the game that runs it: go the first moment nobody sees you (the world's key: every game reads it, written only when it changes)
         private static void Leaving(Person x, bool on) { StoryWorld.SetText(LeaveKey(x.Npc), on ? "1" : ""); }
 
+        // a scene's «npc <who> leave» (StoryScenesCast): this person goes out of the world the first moment nobody sees it — the shot counts as the eyes
+        // (SeenNow); kept till then, the scene over too (session: a world left, a game closed — it stays where it is, its life brings it on)
+        internal static readonly HashSet<string> SceneLeaves = new HashSet<string>();
+        internal static void LeaveUnseen(NpcActor a) { if (a != null && a.Def != null && !a.Def.Generated) SceneLeaves.Add(a.Id); }
+
         private sealed class Going { public float Next; public bool Walks; }
         private static readonly Dictionary<NpcActor, Going> Goers = new Dictionary<NpcActor, Going>(); // (session: the story's people run here — a handful; Forget as each is unloaded)
         internal static void Forget(NpcActor a) { Goers.Remove(a); }
@@ -463,7 +565,18 @@ namespace HuginWhispers
             if (!Goers.TryGetValue(a, out g)) Goers[a] = g = new Going();
             if (Time.time < g.Next) return;
             g.Next = Time.time + LeaveEvery;
-            if (StoryWorld.Text(LeaveKey(a.Id)).Length == 0)
+            if (SceneLeaves.Contains(a.Id)) // a scene's «npc <who> leave»: gone the first moment it is out of the shot — the scene walks it, nothing else moves it
+            {
+                ZDO sz = a.Zdo;
+                if (sz == null || a.Body == null || SeenNow(a)) return;
+                SceneLeaves.Remove(a.Id);
+                a.Body.Put(AwayAt, "сцена: іде зі світу поза кадром", false);
+                sz.SetPosition(AwayAt);
+                sz.Set(NpcRules.KHome, AwayAt);
+                Story.Log("people: " + a.Id + " out of the world in a scene — out of the shot"); // (its next home brings it back out of sight, as any away)
+                return;
+            }
+            if (StoryWorld.Text(LeaveKey(a.Id)).Length == 0 && !AwayNow(a.Id)) // (the server's word, or its own «live: away» holding now — read here from the same world: the server looks every Every s)
             {
                 if (g.Walks) { g.Walks = false; a.Order("free", NpcMind.Layer.Order, LeaveWhose); } // (its next home came first: its walk off ends here)
                 return;
@@ -490,20 +603,35 @@ namespace HuginWhispers
             Story.Log("people: " + a.Id + " to go — someone sees it: walks off " + Mathf.RoundToInt(Utils.DistanceXZ(a.transform.position, off)) + " m"); // flat: a log's number
         }
 
+        // its «live:» says away now (the world's conditions: the same on every game) — the game that runs it need not wait for the server's word
+        // (the user 2026-11-18: Torvald must be gone while the scene's screen is black, and the server looks at its people only every Every s)
+        private static bool AwayNow(string npc)
+        {
+            foreach (Person x in All) if (x.Npc == npc) { Home h = x.Now; return h != null && h.At == Away; }
+            return false;
+        }
+
         // someone sees it now: a player this game has loaded within SeenNear m; or within SeenFar m with a clear line to its head or chest — this game's
-        // own player only with it on the screen (a remote player's eyes are not known here: a clear line is enough). Two lines a near player: light
+        // own player only with it on the screen (a remote player's eyes are not known here: a clear line is enough). Two lines a near player: light.
+        // A scene's shot on this game's screen (StoryCamera.Active) is his eyes then — and the eyes of those watching it with him (within StoryWatch.Radius:
+        // they see that very shot): near is not «seen», only in the shot is (the user 2026-11-20: Eyvind left the bench in heid_tells and stood in the
+        // shot «лава порожня» — «мав зникнути в сцені, і щоб ми цього не бачили»)
+        internal static float BlackHides = 0.95f; // (how black a scene's screen hides all from this game's own player: StoryScreen.Black, 0…1)
         private static bool SeenNow(NpcActor a)
         {
             Vector3 head = a.transform.position + Vector3.up * 1.6f, mid = a.transform.position + Vector3.up * 1f;
             Camera cam = Utils.GetMainCamera();
+            bool black = StoryScreen.Black >= BlackHides, shot = StoryCamera.Active && cam != null;
+            Player me = Player.m_localPlayer;
             foreach (Player p in Player.GetAllPlayers())
             {
-                if (p == null) continue;
+                if (p == null || (black && p == me)) continue; // (a scene's black: he sees nothing, near or far)
+                bool byShot = shot && (p == me || (me != null && Vector3.Distance(p.transform.position, me.transform.position) <= StoryWatch.Radius)); // (in the scene's circle: its shot is what they see)
                 float d = Vector3.Distance(p.transform.position, mid);
-                if (d < SeenNear) return true;
+                if (d < SeenNear && !byShot) return true;
                 if (d > SeenFar) continue;
                 Vector3 eye = p.GetEyePoint();
-                if (p == Player.m_localPlayer && cam != null)
+                if ((p == me || byShot) && cam != null)
                 {
                     Vector3 v = cam.WorldToViewportPoint(mid);
                     if (v.z <= 0f || v.x < -0.1f || v.x > 1.1f || v.y < -0.1f || v.y > 1.1f) continue; // (not on its screen)

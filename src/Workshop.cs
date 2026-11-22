@@ -72,6 +72,9 @@ namespace HuginWhispers
         internal string Pickup = ""; // «pickup: hand»: an item lying in the world is taken only by E, never pulled into the bag as you pass (WsItems.Make: the necklace on Ketil's bed)
         internal float Grows; // «grows: 0.6»: it grows in the world too, a plant that tall (m) picked by hand (WsItems: its prefab RavenWatch_grow_<id>); 0 — it does not
         internal string Story = ""; // «story: для Кетіля [until <the world's conditions>]» (or «yes»): a thing of the story — its mark, kept on death, never dropped (WsItems.StoryMarks), till those conditions hold (WsItems.StoryOf); «» an item as any
+        internal string Wear = ""; // «wear: trinket»: worn in the game's trinket slot (WsItems.Make: the item's type), nothing of it seen on the body
+        internal List<string> Dreams = new List<string>(); // «dream: …» lines: while it is worn, every sleep dreams one of these and nothing else (WsDreams)
+        internal bool One; // «one: yes»: one in the world (StoryOne: the copies of Draupnir) — a generation in each, older and foreign ones crumble, a lost one the Altar of the Watch gives back
         internal string Mount = ""; // "wall": hung on a wall (origin = the point on the wall, the wall is the plane Z = 0, the model in front, +Z)
         internal bool Wall { get { return Mount == "wall"; } }
         // the raven's legs on the perch (PerchPose): left hip, knee, ankle, toes; right the same; the body's lean
@@ -135,6 +138,9 @@ namespace HuginWhispers
             if (m.Weight > 0f) sb.Append("weight: ").Append(F(m.Weight)).Append('\n');
             if (m.Sell > 0) sb.Append("sell: ").Append(m.Sell).Append(m.SellAfter.Length > 0 ? " " + m.SellAfter : "").Append('\n');
             if (!string.IsNullOrEmpty(m.Story)) sb.Append("story: ").Append(m.Story).Append('\n');
+            if (m.One) sb.Append("one: yes\n");
+            if (!string.IsNullOrEmpty(m.Wear)) sb.Append("wear: ").Append(m.Wear).Append('\n');
+            foreach (string dr in m.Dreams) sb.Append("dream: ").Append(dr).Append('\n');
             if (!string.IsNullOrEmpty(m.Hang)) sb.Append("hang: ").Append(m.Hang).Append('\n'); // (kept as written: a save from the Workshop does not lose them)
             if (!string.IsNullOrEmpty(m.Lies)) sb.Append("lies: ").Append(m.Lies).Append('\n');
             if (!string.IsNullOrEmpty(m.Falls)) sb.Append("falls: ").Append(m.Falls).Append('\n');
@@ -194,6 +200,9 @@ namespace HuginWhispers
                 if (line.StartsWith("perday:")) { float.TryParse(line.Substring(7).Trim(), NumberStyles.Float, C, out m.PerDay); continue; }
                 if (line.StartsWith("feed:")) { float.TryParse(line.Substring(5).Trim(), NumberStyles.Float, C, out m.Feed); continue; }
                 if (line.StartsWith("story:")) { m.Story = NoNote(line.Substring(6)); continue; }
+                if (line.StartsWith("one:")) { m.One = NoNote(line.Substring(4)) == "yes"; continue; }
+                if (line.StartsWith("wear:")) { m.Wear = NoNote(line.Substring(5)); continue; }
+                if (line.StartsWith("dream:")) { string dr = NoNote(line.Substring(6)); if (dr.Length > 0) m.Dreams.Add(dr); continue; }
                 if (line.StartsWith("hang:")) { m.Hang = NoNote(line.Substring(5)); continue; }
                 if (line.StartsWith("lies:")) { m.Lies = NoNote(line.Substring(5)); continue; }
                 if (line.StartsWith("falls:")) { m.Falls = NoNote(line.Substring(6)); continue; }

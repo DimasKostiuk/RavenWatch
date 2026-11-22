@@ -13,6 +13,12 @@ const lines = (dir, f) => fs.readFileSync(path.join(story, dir, f), 'utf8').spli
 const ownItems = new Set();
 for (const d of [path.join(story, '..', 'items'), path.join(story, 'items')]) for (const f of fs.existsSync(d) ? fs.readdirSync(d).filter(x => x.endsWith('.txt')) : []) { const m = /^id:\s*(\S+)/m.exec(fs.readFileSync(path.join(d, f), 'utf8')); if (m) ownItems.add(m[1]); }
 const itemWhy = item => item && item.startsWith('RavenWatch_item_') && !ownItems.has(item.slice(16)) ? 'no item «' + item + '» in assets/items or assets/story/items (by its «id:»)' : null;
+// the gaits (BodyGait's table: assets/gaits.txt, a line a gait; «mood_…» lines are moods laid over one, not gaits)
+const gaitKinds = new Set(fs.readFileSync(path.join(story, '..', 'gaits.txt'), 'utf8').split(/\r?\n/).map(l => l.trim().split(/\s+/)[0].toLowerCase()).filter(n => n && !n.startsWith('#') && !n.startsWith('mood_')));
+// the clips that touch what they work on («touch wall 0.65», BodyClips; StoryWhere.Touches): a scene stands the person «go <thing> before <m>»
+// first, or it plays in the air (the user 2026-11-20: Lit hammered the air in hall_rises — taken where the quest's «stand» left him, up to 4 m off)
+const touchClips = {};
+{ const cd = path.join(story, 'clips'); for (const f of fs.existsSync(cd) ? fs.readdirSync(cd).filter(x => x.endsWith('.txt')) : []) { const m = /^touch\s+(.+)$/m.exec(fs.readFileSync(path.join(cd, f), 'utf8')); if (m) touchClips[f.slice(0, -4)] = m[1].trim(); } }
 
 // places: blueprints/locations.list.txt, their pieces: blueprints/<place>.names.txt
 const places = {};
@@ -111,7 +117,7 @@ for (const f of roomFiles) if (f.endsWith('.own.txt') && !insides[f.slice(0, -8)
     if (/^inside:/.test(l) && !ins) say('blueprints/locations.list.txt', at + ': inside: <layout> [door <piece>]');
     if (ins && !insides[ins[1]]) say('blueprints/locations.list.txt', at + ': inside «' + ins[1] + '» has no layout assets/story/rooms/' + ins[1] + '.txt (node tools/rooms.js build ' + ins[1] + ')');
     if (ins && ins[2] && places[at] && !places[at].has(ins[2])) say('blueprints/locations.list.txt', at + ': inside: door «' + ins[2] + '» has no such name in ' + at + '.names.txt');
-    const rule = /^(lockdoors|shutdoors|litwhile|hidewhile|statewhile|touch|read|mapmark|becomes|follows|cold|fog|hearthwait|hearthgivewait|insideshut):\s*(.+)$/.exec(l);
+    const rule = /^(lockdoors|shutdoors|litwhile|hidewhile|statewhile|touch|read|mapmark|becomes|follows|cold|fog|weather|hearthwait|hearthgivewait|insideshut):\s*(.+)$/.exec(l);
     if (rule) placeRules.push([at, rule[1], rule[2]]);
     // «becomes:» steps are walked in the file's order and the walk stops at the first that does not hold (LocState.Becomes): a later step written
     // above an earlier one stops it for ever (2026-11-16: chapter 2's «becomes: 2 …» above «1.3» — the Hall would never have become 1.3)
@@ -246,16 +252,18 @@ for (const f of txt('sounds')) for (const l of lines('sounds', f)) {
   for (const t of w.slice(1)) {
     const opt = /^(\w+)=(.*)$/.exec(t);
     if (opt) {
-      if (!['vol', 'pitch', 'spread', 'range'].includes(opt[1])) say(at, 'no option «' + t + '» (vol= pitch= spread= range= 2d wet)');
+      if (!['vol', 'pitch', 'spread', 'range'].includes(opt[1])) say(at, 'no option «' + t + '» (vol= pitch= spread= range= 2d wet any)');
       else if (!(+opt[2] >= 0)) say(at, t + ': not a number');
       else e.flags.push(opt[1]);
-    } else if (t === '2d' || t === 'wet') e.flags.push(t);
+    } else if (t === '2d' || t === 'wet' || t === 'any') e.flags.push(t);
     else if (t.startsWith('file:')) { if (!soundFile.test(t)) say(at, t + ': .ogg, .wav or .mp3'); else if (!fs.existsSync(path.join(story, 'sounds', t.slice(5)))) say(at, 'no file ' + t.slice(5) + ' in assets/story/sounds'); e.tokens.push(t); }
     else e.tokens.push(t);
   }
   if (!e.tokens.length) say(at, 'no sound in it');
   // a game's sound under a wrong name is silence with no word: at least one of the line must be there (the others stand in on another version)
   if (haveList && e.tokens.length && !e.tokens.some(t => !t.startsWith('sfx_') || gameSfx.has(t))) say(at, 'none of ' + e.tokens.join(', ') + ' is in the game (tools/game_sounds.txt)');
+  // «any»: its names are variants, each meant to be heard — one the game lacks only gives its turn away (AudioBank.Start), so it is a slip
+  if (e.flags.includes('any')) { if (e.tokens.length < 2) say(at, '«any» with one sound: nothing to choose from'); if (haveList) for (const t of e.tokens) if (t.startsWith('sfx_') && !gameSfx.has(t)) say(at, '«any»: ' + t + ' is not in the game (tools/game_sounds.txt)'); }
   bank.set(w[0], e);
 }
 for (const [name, t] of timbres) if (t.of !== undefined) {
@@ -313,6 +321,8 @@ for (const f of txt('quests')) { let q = ''; for (const l of lines('quests', f))
     if (/\bWorld = true\b/.test(body)) worldWords.add(m[1]);
     if (/\bWorldIf = OfServer\b/.test(body)) questWorldWords.add(m[1]); // (Kind.WorldIf: the world's when its quest is the server's — StoryTrackConds.OfServer)
   });
+  // (the built-in table's own: «hours», «night», «day» — one line a kind there)
+  for (const m of ((/Dictionary<string, Kind> Kinds = new Dictionary<string, Kind>\s*\{([\s\S]*?)\n        \};/.exec(code.slice(code.indexOf('internal static class StoryCond'))) || [])[1] || '').matchAll(/\{ "(\w+)", new Kind \{[^\n]*\bWorld = true\b/g)) worldWords.add(m[1]);
 }
 // how a word is written, from its own «Usage» in the code: how many words it needs, and the words of a place that takes only a few («gate <місце> open|shut»)
 const usages = (text, cls) => {
@@ -346,15 +356,29 @@ const asked = { flag: [], world: [], var: [], wvar: [], stamp: [] }, setWords = 
 // the actions that make a fact of their own (StoryActions.Kind «Dry = "set world world:{N}"», as quest_dry reads it: its N-th word is the fact —
 // «waves <name> …»; «set me flag:{N}» the character's)
 const drySets = {};
-for (const m of code.matchAll(/"(\w+)",\s*new (?:StoryActions\.)?Kind\s*\{\s*Dry = "set (world world|me flag):\{(\d)\}"/g)) drySets[m[1]] = { kind: m[2] === 'me flag' ? 'flag' : 'world', at: +m[3] };
+for (const m of code.matchAll(/"(\w+)",\s*new (?:StoryActions\.)?Kind\s*\{\s*Dry = "(?:set|later) (world world|me flag):\{(\d)\}"/g)) drySets[m[1]] = { kind: m[2] === 'me flag' ? 'flag' : 'world', at: +m[3] };
+// every action's «Dry» line in the grammar its readers know (the head of StoryActions.Kind: set|clear|later me|world <fact> · order <who> <verb> ·
+// go · raise · scene · none) — the review 2026-11-18: «unkeep» said «unset world keep:{1}», which the jump and quest_dry read as nothing
+{
+  const actionsCs = fs.readFileSync(path.join(srcDir, 'StoryActions.cs'), 'utf8');
+  const dries = [...actionsCs.matchAll(/\{ "(\w+)", new Kind \{ Dry = "([^"]*)"/g), ...code.matchAll(/StoryActions\.Register\("(\w+)",\s*new StoryActions\.Kind\s*\{\s*Dry = "([^"]*)"/g)];
+  for (const m of dries) if (!/^((set|clear|later) (me|world) \S+|order \S+ \w+|go|raise|scene|none)$/.test(m[2]))
+    say('src', 'action «' + m[1] + '»: its Dry line «' + m[2] + '» is not in the grammar of StoryActions.Kind (set|clear|later me|world <fact> · order <who> <verb> · go · raise · scene · none)');
+}
 const noteAsked = (at, w) => { if (w[0] === 'since' && w[1]) asked.stamp.push([at, w[1]]); else if (asked[w[0]] && w[0] !== 'stamp' && w[1]) asked[w[0]].push([at, w[1]]); };
 const raisedInData = new Set();
+// phases of the story by name (assets/story/people: «[phase <name>]» with «when:» lines — StoryPeople.Phase): what is asked, what there is
+const phaseNames = new Set(), phaseAsked = [];
+// worldOnly: true — the server's own list; 'day' — a line of a story person's day («at:»/«spot:» … when): the one world list that may ask «weather»
+// (the sky over the game that runs the person: StoryLife.Spot.Local); the server has no sky
 const condsWhy = (at, text, worldOnly) => {
   if (!text) return;
   for (const c of text.split(',')) {
     const w = c.trim().replace(/^!/, '').split(/\s+/);
     if (!w[0]) continue;
     if (!condWords.has(w[0])) { say(at, 'no condition «' + w[0] + '» (StoryCond)'); continue; }
+    if (w[0] === 'phase' && w[1]) phaseAsked.push([at, w[1]]);
+    if (w[0] === 'weather' && worldOnly === true) say(at, '«weather» is the sky over one game\'s player: of the world\'s lists only a line of a story person\'s day may ask it («at:»/«spot:» … when weather rain)');
     if (worldOnly && !worldWords.has(w[0]) && !(questWorldWords.has(w[0]) && worldQuests.has(w[1]))) say(at, '«' + w[0] + '» asks a player, and the server asks this with none: only ' + [...worldWords].join(', ') + '; ' + [...questWorldWords].join(', ') + ' of a quest of the server (' + [...worldQuests].join(', ') + ')');
     if (condPlace[w[0]] && w[1]) { const why = placeWhy(w[1]); if (why) say(at, w[0] + ': ' + why); }
     wordsWhy(at, 'condition', condUsage[w[0]], w);
@@ -370,7 +394,7 @@ const actsWhy = (at, text) => {
     if (!actWords.has(w[0]) || actVerbs.has(w[0])) { say(at, 'no action «' + w[0] + '» (StoryActions)'); continue; }
     if (w[0] === 'npc' && !actVerbs.has(w[2])) { say(at, 'npc: no word «' + w[2] + '» (' + [...actVerbs].join(', ') + ')'); continue; }
     wordsWhy(at, 'action', actUsage[w[0]], w);
-    if (w[0] === 'give') { const why = itemWhy(w[1]); if (why) say(at, why); }
+    if (w[0] === 'give' || w[0] === 'take') { const why = itemWhy(w[1]); if (why) say(at, why); }
     if (setWords[w[0]] && w[1]) setWords[w[0]].add(w[1]);
     const ds = drySets[w[0]]; if (ds && w[ds.at]) setWords[ds.kind].add(w[ds.at]); // (an action that makes a fact of its own: its «Dry = "set world {N}"» in the code — waves)
     if (w[0] === 'raise' && w[1]) raisedInData.add(w[1].toLowerCase());
@@ -393,9 +417,10 @@ for (const [at, kind, val] of placeRules) {
   if (kind === 'fog' && /^(yes|no|так|ні|0|1)$/.test(val)) continue;
   const text = kind === 'litwhile' || kind === 'hidewhile' || kind === 'touch' ? val.split(/\s+/).slice(1).join(' ').replace(/^(anim |quiet )+/, '') :
                kind === 'statewhile' || kind === 'becomes' || kind === 'follows' ? val.split(/\s+/).slice(1).join(' ') :
+               kind === 'weather' ? val.split(/\s+/).slice(2).join(' ') : // («<env> <m> <conditions>»: StoryAir.Places)
                kind === 'read' ? (val.includes('::') ? val.slice(val.split(/\s+/)[0].length, val.indexOf('::')) : '') :
                kind === 'hearthwait' || kind === 'hearthgivewait' || kind === 'insideshut' ? (val.includes('::') ? val.slice(0, val.indexOf('::')) : val) : val;
-  if (text.trim() !== '-') condsWhy(where, text.trim(), kind === 'becomes' || kind === 'follows' || kind === 'cold' || kind === 'fog');
+  if (text.trim() !== '-') condsWhy(where, text.trim(), kind === 'becomes' || kind === 'follows' || kind === 'cold' || kind === 'fog' || kind === 'weather');
 }
 // «raven: <look> <piece> <conditions>» (LocRaven, the Hall's raven): its look is a file of looks, its piece a name of the place's blueprint, its
 // conditions words of the game; and a «ravenroof:» says where it goes out and in (without one it would go through the roof over its home piece)
@@ -433,7 +458,7 @@ for (const [at, kind, val] of placeRules) {
     for (const who of ['Hugin', 'Munin']) if (!new RegExp('internal static readonly string\\[\\] ' + who + ' =[^;]*"\\[' + s[2] + '\\]').test(code)) say(where, 'no tag «' + s[2] + '» in ' + who + '\'s words (src/*Patterns.cs)');
   }
 }
-// a step's second word, where its «Usage» allows only a few in every form («bars on|off», «watchers take … · watchers free»)
+// a step's second word, where its «Usage» allows only a few in every form («bars on|off», «fade out|in»)
 const stepSecond = {};
 for (const m of code.matchAll(/"(\w+)",\s*new (?:StoryScenes\.)?StepKind\([^)]*\)\s*\{[^"]*?Usage\s*=\s*"((?:[^"\\]|\\.)*)"/g)) {
   const words = new Set();
@@ -535,14 +560,20 @@ function stepPlace(w) {
 // scenes
 const scenes = new Set(), used = new Set();
 const sceneOwn = new Set(); // (a scene's own names for people it makes of another template: «falcon c become sestra_3 as sestra_2»)
+// people of this scene whose last walk was «go <thing> before <m>»: a clip that touches may follow — one «… nowait» only after its «npc <who>
+// arrive» (still walking, the clip step stops it where it is: StoryScenesCast «clip»); «spawn», «sit», another «go» take it off
+const stoodBefore = new Set(), walkingBefore = new Set();
 for (const f of txt('scenes')) {
   let at = f;
   for (const l of lines('scenes', f)) {
     if (!l) continue;
     const head = /^\[scene\s+(\S+)\]/.exec(l);
-    if (head) { if (scenes.has(head[1])) say(f, 'scene «' + head[1] + '» twice'); scenes.add(head[1]); at = f + ' [' + head[1] + ']'; sceneOwn.clear(); if (f.startsWith('_')) for (const n of authorNpcs) sceneOwn.add(n); continue; }
+    if (head) { if (scenes.has(head[1])) say(f, 'scene «' + head[1] + '» twice'); scenes.add(head[1]); at = f + ' [' + head[1] + ']'; sceneOwn.clear(); stoodBefore.clear(); walkingBefore.clear(); if (f.startsWith('_')) for (const n of authorNpcs) sceneOwn.add(n); continue; }
     const step = l.replace(/^if [^:]*:\s*/, '');
     const w = step.split(/\s+/);
+    // «part <name>» / «part main»: the lines after it are a part's — a line of steps played beside the scene's own (StoryScenes, its head). Its
+    // steps are ordinary steps and are checked below as ever; what may not stand in a part the game says at its load (StoryScenesRead)
+    if (w[0] === 'part') { if (!/^[a-z0-9_]+$/.test(w[1] || '') || w.length > 2) say(at, 'part <name> | part main'); continue; }
     if (w[0] === 'place:' || w[0] === 'check:') { const why = placeWhy(w[1]); if (why) say(at, w[0] + ' ' + why); continue; }
     if (w[0] === 'needs:') { condsWhy(at, step.slice(6).trim()); continue; }
     if (w[0] === 'test:') { for (const a of step.slice(5).split(';')) { const t = a.trim(); if (t && !t.startsWith('npc ') && !actWords.has(t.split(/\s+/)[0])) say(at, 'test: no action «' + t.split(/\s+/)[0] + '»'); } continue; }
@@ -560,7 +591,18 @@ for (const f of txt('scenes')) {
     if (w[0] === 'music' && w.includes('rest') && !w.includes('keep')) say(at, 'music … rest: works only with «keep N» (a scene\'s music ends with the scene: its silence would never come)');
     // a vision's picture (StoryScreen.Memory): the file is there, or the game drops the scene at its own check (2026-11-15)
     if (w[0] === 'memory' && w[1] && !['.png', '.jpg'].some(x => fs.existsSync(path.join(story, 'memories', w[1] + x)))) say(at, 'memory: no picture «' + w[1] + '» (assets/story/memories/<name>.png|.jpg)');
+    // the player's gait (StoryGait → BodyGait.Known): a gait of assets/gaits.txt or «none» — a «mood_…» is a mood laid over a gait, not one;
+    // the game's own check drops the whole scene for it (2026-11-20: hall_rises had «player gait mood_awe»)
+    if (w[0] === 'player' && w[1] === 'gait' && w[2] && w[2] !== 'none' && !gaitKinds.has(w[2].toLowerCase())) say(at, 'player gait: no gait «' + w[2] + '» (' + [...gaitKinds].join(', ') + '; «mood_…» are moods, not gaits): the game drops the scene');
     if (w[0] === 'npc' && w.length > 1 && !npcs.has(w[1]) && !sceneOwn.has(w[1])) say(at, 'no person «' + w[1] + '» in assets/story/npc');
+    if (w[0] === 'npc' && (w[2] === 'go' || w[2] === 'spawn' || w[2] === 'sit')) {
+      const said = step.replace(/\s#.*$/, '').split(/\s+/);
+      stoodBefore.delete(w[1]); walkingBefore.delete(w[1]);
+      if (w[2] === 'go' && said.includes('before')) (said.includes('nowait') ? walkingBefore : stoodBefore).add(w[1]);
+    }
+    if (w[0] === 'npc' && w[2] === 'arrive' && walkingBefore.delete(w[1])) stoodBefore.add(w[1]);
+    if (w[0] === 'npc' && w[2] === 'clip' && w[3] && w[3] !== 'none' && touchClips[w[3].split('.')[0]] && !stoodBefore.has(w[1]))
+      say(at, 'npc ' + w[1] + ' clip ' + w[3] + ': the clip touches («touch ' + touchClips[w[3].split('.')[0]] + '»), and no «npc ' + w[1] + ' go <thing> before <m>» stood it there first in this scene: it plays where it stands, in the air');
     const place = stepPlace(w);
     if (place) { const why = placeWhy(place); if (why) say(at, why); }
     const heard = w[0] === 'sound' && w[1] !== 'stop' ? w[1] : w[0] === 'npc' && w[2] === 'fade' ? w.find((x, i) => i > 2 && isNaN(Number(x))) : null;
@@ -586,7 +628,7 @@ const chapterWhy = (at, chapter, saga) => {
 // quests
 const questIds = new Set();
 for (const f of txt('quests')) for (const l of lines('quests', f)) { const m = /^\[quest\s+(\S+)\]/.exec(l); if (m) questIds.add(m[1]); }
-const personalActs = ['flag', 'unflag', 'var', 'stamp', 'spot', 'choose', 'goto', 'end', 'book', 'give'], serverScenes = new Set(), serverQuests = new Set();
+const personalActs = ['flag', 'unflag', 'var', 'stamp', 'spot', 'choose', 'goto', 'end', 'book', 'give', 'take'], serverScenes = new Set(), serverQuests = new Set();
 // the fields a quest file may have, as its reader knows them (StoryQuestsRead: an unknown one is only a line in the game's log)
 const questRead = fs.readFileSync(path.join(srcDir, 'StoryQuestsRead.cs'), 'utf8');
 const switches = questRead.split('switch (key)');
@@ -597,6 +639,7 @@ const wayFields = new Set([...((/if \(w != null && (key != [^\n]*?)\)\s*\n/.exec
 // cleaning or another mod may take them away, so a stage that waits for one has «lost:» (StoryLost) — the user 2026-11-16: «щоб не було софт локу»
 // Only one laid by that stage or one before it counts (Ketil's necklace waits in a chest at «house»; it is laid on his bed only at «night», later)
 const sceneLays = new Map(); // scene → [[item, where]]
+const roadUses = []; // «road: <who> <m> <talks>» of the stages (StoryRoad): checked once the meets are read (below)
 for (const f of txt('scenes')) { let sc = ''; lines('scenes', f).forEach((l, i) => { const h = /^\[scene\s+(\S+)\]/.exec(l); if (h) { sc = h[1]; return; } const m = /^(?:if [^:]*:\s*)?(?:drop|do\s+give)\s+(\S+)/.exec(l); if (m && sc) { if (!sceneLays.has(sc)) sceneLays.set(sc, []); sceneLays.get(sc).push([m[1], 'scenes/' + f + ':' + (i + 1)]); } }); }
 const laysIn = val => [...val.split(';')].map(a => /^\s*(?:lay|give)\s+(\S+)/.exec(a)).filter(Boolean).map(m => m[1]);
 for (const f of txt('quests')) {
@@ -639,6 +682,7 @@ for (const f of txt('quests')) {
     else if (key === 'mark') { const why = placeWhy(val.split(/\s+/)[0]); if (why) say(at, why); }
     else if (key === 'seek') { const sw = val.split(/\s+/); const why = placeWhy(sw[0]); if (why) say(at, why); if (sw.length < 2) say(at, 'seek: <місце> <слова пошуку>'); }
     else if (key === 'stock') { const sw = val.split(/\s+/); if (sw.length < 4 || sw.length % 2 !== 0 || !(+sw[1] > 0) || sw.slice(2).some((x, i) => i % 2 === 1 && !(/^\d+$/.test(x) ? +x >= 1 : /^(\d+)-(\d+)$/.test(x) && +x.split('-')[1] >= Math.max(1, +x.split('-')[0])))) say(at, 'stock: <місце> <м> <Prefab> <N|A-B> [<Prefab> <N|A-B> …]'); else { const why = placeWhy(sw[0]); if (why) say(at, 'stock: ' + why); } }
+    else if (key === 'road') { const rw = val.trim().split(/\s+/); if (rw.length !== 3 || !(+rw[1] > 0)) say(at, 'road: <хто> <м> <розмови>'); else roadUses.push({ at, who: rw[0], talks: rw[2] }); }
     else if (key === 'lost') { const lw = val.split(/\s+/); if (lw.length !== 2) say(at, 'lost: <предмет> <місце>'); else { const why = placeWhy(lw[1]) || itemWhy(lw[0]); if (why) say(at, 'lost: ' + why); if (stage && !way) (q.info[stage].lost = q.info[stage].lost || new Set()).add(lw[0]); } }
     else if (key === 'wait' || key === 'on' || key === 'start' || key === 'done') {
       if (key === 'start' && val.startsWith('msg ')) continue; // (free text)
@@ -689,6 +733,19 @@ for (const f of txt('quests')) {
       if (!reached.has(a)) say(f + ' [' + qu.id + '.' + a + ']', 'no stage leads here');
       if (!ends.has(a)) say(f + ' [' + qu.id + '.' + a + ']', 'never comes to the end: a player here is stuck for good');
     }
+    // places to choose from: several «mark:» lines on one stage (StoryQuestsRead.ValidateChoice — the same rules, the game says them in its log): each place
+    // named by the stage's «wait:» or a «fork:» (else it leads nowhere), no ways beside them, no «saga:» (it goes only to who passed by «next»), no «seek:»
+    for (const a of qu.order) {
+      const lines = qu.said.filter(x => !x[3] && x[0].endsWith('.' + a + ']'));
+      const marks = lines.filter(x => x[1] === 'mark').map(x => x[2].split(/\s+/)[0]);
+      if (marks.length < 2) continue;
+      const at = f + ' [' + qu.id + '.' + a + ']', has = k => lines.some(x => x[1] === k);
+      if (qu.info[a].ways.length) say(at, 'several «mark:» and ways together: a way has its one mark');
+      if (has('saga')) say(at, '«saga:» on a stage with places to choose from: it goes only to who passed it by its «next», never by a fork — put it on the next stage');
+      if (has('seek')) say(at, '«seek:» on a stage with several «mark:»: the search knows the first place only');
+      const named = lines.filter(x => x[1] === 'wait').map(x => x[2]).concat(lines.filter(x => x[1] === 'fork').map(x => x[2].slice(0, Math.max(0, x[2].lastIndexOf('->')))));
+      for (const m of marks) if (!named.some(t => t.split(/[\s,]+/).includes(m))) say(at, 'a place to choose from «' + m + '» leads nowhere: name it in «wait:» or a «fork:» (near ' + m + ' …)');
+    }
     // a quest of the server keeps nothing in a character, and its stage is one for the world (StoryQuestsServer)
     if (qu.server) {
       serverQuests.add(qu.id);
@@ -713,6 +770,32 @@ const placeKinds = new Set([...fs.readFileSync(path.join(srcDir, 'NpcPlaces.cs')
 const meetOf = {}; // a gathering's name → the people whose days name it («… meet <name>»)
 const personIds = new Set(); // the story's people («[person x]»: its template's id)
 const dayOf = { at: '', sets: new Set(), days: [] };
+// the day's places to choose from («[one <name>]» with «place:» lines) and who names them («… one <name>»: StoryLife.Picked)
+const oneOf = {}, oneAsked = [];
+const hauls = new Set(), carries = new Set(); // the people with a «haul» line · with a thing of their own («carry:»): one hand's work, not both
+for (const f of txt('people')) { // (read first: a person's line may name a block of another file)
+  let blk = null;
+  for (const l of lines('people', f)) {
+    const h = /^\[(\w+)\s+(\S+)\]/.exec(l);
+    if (h) { blk = h[1] === 'phase' || h[1] === 'one' ? h : null; if (h[1] === 'phase') phaseNames.add(h[2]); if (h[1] === 'one') oneOf[h[2]] = oneOf[h[2]] || new Set(); if (!['person', 'phase', 'one'].includes(h[1])) say(f, 'only «[person …]», «[phase …]» and «[one …]» blocks here, not «' + l + '»'); continue; }
+    if (!blk || !l) continue;
+    const at = f + ' [' + blk[1] + ' ' + blk[2] + ']';
+    if (blk[1] === 'phase') {
+      const m = /^when:\s*(\S.*)$/.exec(l);
+      if (!m) { say(at, 'a phase has only «when: <world conditions>» lines, not «' + l + '»'); continue; }
+      if (/(^|,)\s*!?\s*(phase|weather)\b/.test(m[1])) say(at, 'a phase asks no «phase» and no «weather» (StoryPeople.Phase)');
+      condsWhy(at, m[1], true);
+    } else {
+      const m = /^place:\s*(\S+)(?:\s+when\s+(\S.*))?$/.exec(l);
+      if (!m) { say(at, 'place: <place[.piece]> [when <world conditions>]'); continue; }
+      const why = placeWhy(m[1]); if (why) say(at, 'place ' + why);
+      if (oneOf[blk[2]].has(m[1])) say(at, 'place «' + m[1] + '» twice');
+      oneOf[blk[2]].add(m[1]);
+      if (m[2]) condsWhy(at, m[2], true);
+    }
+  }
+}
+for (const n of Object.keys(oneOf)) if (oneOf[n].size < 2) say('people', '«[one ' + n + ']» has fewer than two places: nothing to choose from');
 const dayEnd = () => {
   let open = false;
   for (const d of dayOf.days) {
@@ -724,12 +807,32 @@ const dayEnd = () => {
   dayOf.sets = new Set(); dayOf.days = [];
 };
 for (const f of txt('people')) {
-  let at = f;
-  for (const l of lines('people', f)) {
+  let at = f, inPerson = false, doings = {};
+  for (let l of lines('people', f)) {
     const head = /^\[person\s+(\S+)\]/.exec(l);
-    if (head) { dayEnd(); personIds.add(head[1]); at = dayOf.at = f + ' [' + head[1] + ']'; continue; }
+    if (head) { dayEnd(); personIds.add(head[1]); at = dayOf.at = f + ' [' + head[1] + ']'; inPerson = true; doings = {}; continue; }
+    if (/^\[/.test(l)) { inPerson = false; continue; } // («[phase …]», «[one …]»: read above)
+    if (!inPerson) continue;
+    const dm = /^do:\s*(.*)$/.exec(l); // («do: <name> = <kind> <words…>»: its own doing, for the lines below — StoryLife.ParseDo, Doing)
+    if (dm) {
+      const m = /^(\w+)\s*=\s*(\S.*)$/.exec(dm[1]);
+      if (!m) say(at, 'do: <name> = <kind> <words…>');
+      else if (placeKinds.has(m[1]) || m[1] === 'sleep' || m[1] === 'by') say(at, 'do: «' + m[1] + '» is a word of a line already (a kind of place, sleep)');
+      else if (!placeKinds.has(m[2].split(/\s+/)[0])) say(at, 'do: «' + m[1] + '» must begin with a kind of place (NpcPlaces.Kinds)');
+      else if (/\swhen\s/.test(m[2] + ' ')) say(at, 'do: no «when» in a doing — the line says its conditions');
+      else doings[m[1]] = { words: m[2], used: false };
+      continue;
+    }
+    if (/^(at|spot):/.test(l)) { // (a doing's name where the kind stands: after the place and its «by <place>»)
+      const wi = l.indexOf(' when '), headPart = wi >= 0 ? l.slice(0, wi) : l, w = headPart.split(/\s+/);
+      let i = /^at:/.test(l) ? 4 : 3;
+      if (w[i] === 'by' && i + 2 < w.length) i += 2;
+      if (doings[w[i]]) { doings[w[i]].used = true; w[i] = doings[w[i]].words; l = w.join(' ') + (wi >= 0 ? l.slice(wi) : ''); }
+    }
     const st = /^stranger:\s*(.*)$/.exec(l); // («stranger: <world conditions> [:: <name>]», «strangersay: hugin|munin <words> [/ …]»: StoryStranger)
     if (st) { const sep = st[1].indexOf('::'), c = (sep >= 0 ? st[1].slice(0, sep) : st[1]).trim(); if (!c) say(at, 'stranger: <world conditions> [:: <name>]'); else condsWhy(at, c, true); continue; }
+    const nt = /^notalk:\s*(.*)$/.exec(l); // («notalk: <world conditions>»: no talk with it while they hold — StoryStranger)
+    if (nt) { if (!nt[1].trim()) say(at, 'notalk: <world conditions>'); else condsWhy(at, nt[1].trim(), true); continue; }
     const ss = /^strangersay:\s*(.*)$/.exec(l);
     if (ss) { for (const part of ss[1].split('/')) if (!/^(hugin|munin)\s+\S/.test(part.trim())) say(at, 'strangersay: hugin|munin <words> [/ hugin|munin <words> …] (StoryStranger)'); continue; }
     const day = /^day:\s*(.*)$/.exec(l);
@@ -741,7 +844,7 @@ for (const f of txt('people')) {
       continue;
     }
     let lw = l; // («at:»/«spot:» … when <world conditions>: StoryLife — the conditions checked, the rest read as before)
-    { const wi = l.indexOf(' when '); if (/^(at|spot):/.test(l) && wi >= 0) { condsWhy(at, l.slice(wi + 6), true); lw = l.slice(0, wi); } }
+    { const wi = l.indexOf(' when '); if (/^(at|spot):/.test(l) && wi >= 0) { condsWhy(at, l.slice(wi + 6), 'day'); lw = l.slice(0, wi); } }
     let sp = /^spot:\s*(\S+)\s+(\S+)(.*)$/.exec(lw);
     const planned = /^at:\s*(\S+)\s+(\S+)\s+(\S+)(.*)$/.exec(lw); // «at: <set> <a>-<b> <place> …» — a spot whose hours are said first; «at: <set> <a>-<b> sleep» the hook of its night
     if (/^at:/.test(l) && !planned) { say(at, 'at: <set> <from>-<to> <place> <kind> … | at: <set> <from>-<to> sleep'); continue; }
@@ -765,15 +868,28 @@ for (const f of txt('people')) {
         if (has('daily') && (has('days') || has('chance'))) say(at, 'daily — or days, or chance, not together');
         if ((ei >= 0 || has('daily') || gi >= 0) && (has('days') || has('chance'))) say(at, 'every/daily/group are for a line at random intervals: not with days or chance');
         if ((ei >= 0 || has('daily') || gi >= 0) && !planned) say(at, 'every/daily/group are words of an «at:» line (its day by the hour), not of a «spot:»');
+        // («over»: the line of a phase that takes all its hours; «one <name>»: one place a day of the block «[one <name>]» — StoryLife.Fits, Picked)
+        const oi = w.indexOf('one');
+        if ((has('over') || oi >= 0) && !planned) say(at, 'over/one are words of an «at:» line (its day by the hour), not of a «spot:»');
+        if (oi >= 0) {
+          const name = w[oi + 1] || '';
+          if (ei >= 0 || has('daily') || gi >= 0 || has('days') || has('chance')) say(at, 'one <name>: a place a day, every day — not with daily, every, group, days or chance');
+          if (!oneOf[name]) say(at, 'one «' + name + '»: no block «[one ' + name + ']» in assets/story/people');
+          else { if (!oneOf[name].has(sp[2])) say(at, 'one «' + name + '»: its place «' + sp[2] + '» is not of the block «[one ' + name + ']»'); oneAsked.push([at, name, sp[2], planned ? planned[2] : '']); }
+        }
       }
       const rest = sp[3].trim().split(/\s+/);
       { const kind = rest[0] === 'by' ? rest[2] : rest[0]; if (!placeKinds.has(kind)) say(at, 'spot: no kind «' + kind + '» (NpcPlaces.Kinds)'); }
       rest.forEach((x, i) => { if (rest[i - 1] === 'by') { const w2 = placeWhy(x); if (w2) say(at, 'spot by ' + w2); } });
+      rest.forEach((x, i) => { if (rest[i - 1] === 'haul') { const w2 = placeWhy(x); if (w2) say(at, 'spot haul ' + w2); if (rest.includes('sit') || rest.includes('clip') || rest.includes('tool')) say(at, 'haul <place>: it carries a plank from there to here — not with sit, clip or tool (StoryLife)'); } });
+      if (rest.includes('lays') && !rest.includes('haul')) say(at, 'lays: a word of «haul <place>» (the plank brought stays on a pile)');
+      if (rest.includes('haul')) hauls.add(at);
       rest.forEach((x, i) => { if (rest[i - 1] === 'moves') for (const c of x.split('|')) if (!fs.existsSync(path.join(story, 'clips', c.split('.')[0] + '.txt'))) say(at, 'spot moves: no clip «' + c + '» (assets/story/clips)'); }); // (StoryLife «spot … moves»: the game would only log it)
       continue;
     }
     const carry = /^carry:\s*(\S+)(.*)$/.exec(l); // «carry: <item> [arm|left|right] [clip <clip>] [set <clip>]» (StoryProps.CarryLine)
     if (carry) {
+      carries.add(at);
       const w = itemWhy(carry[1]); if (w) say(at, 'carry: ' + w); else if (!carry[1].startsWith('RavenWatch_item_')) say(at, 'carry: «' + carry[1] + '» is not the mod\'s own item (RavenWatch_item_<id>)');
       const rest = carry[2].trim().split(/\s+/).filter(Boolean);
       for (let i = 0; i < rest.length; i++) {
@@ -796,6 +912,18 @@ for (const f of txt('people')) {
   }
 }
 dayEnd();
+for (const at of hauls) if (carries.has(at)) say(at, 'haul: this person carries a thing of its own («carry:») — the game makes such a line a plain place (StoryLife.Places)');
+// a person who names a choice of the day names every place of it (else on that place's day it has no line and is nowhere), at the same hours
+{
+  const by = {};
+  for (const [at, name, place, hours] of oneAsked) { const k = at + '\t' + name; (by[k] = by[k] || { at, name, places: new Set(), hours: new Set() }).places.add(place); by[k].hours.add(hours); }
+  for (const k of Object.keys(by)) {
+    const b = by[k];
+    for (const p of oneOf[b.name] || []) if (!b.places.has(p)) say(b.at, 'one «' + b.name + '»: no line for its place «' + p + '» — on that place\'s day this person has no line');
+    if (b.hours.size > 1) say(b.at, 'one «' + b.name + '»: its lines have different hours (' + [...b.hours].join(', ') + ')');
+  }
+  for (const n of Object.keys(oneOf)) if (!oneAsked.some(a => a[1] === n)) say('people', '«[one ' + n + ']»: no person\'s day names it («… one ' + n + '»)');
+}
 // the gatherings' talks (assets/story/meets, NpcChatter «[meet <name>]»): every gathering a day names has talks, every talk's speakers are people of
 // that gathering (a person's id is its template's: «[person x]» with «npc: x»), its conditions are known, and there are enough talks for it not to
 // say the same thing every evening (MeetFew; a talk of made phrases «{@theme}» is new each time and counts as three)
@@ -815,7 +943,7 @@ const meetTold = []; // «{told <talk> <place prefix>}» lines of the gatherings
         return;
       }
       const head = /^\[(\w+)\s+(\w+)\]$/.exec(l);
-      if (head) { end(); pair = null; if (head[1] !== 'meet') { say(at, 'only «[meet <name>]» and «[pair <a> <b>]» blocks here'); name = null; return; } name = head[2]; talks[name] = talks[name] || []; return; }
+      if (head) { end(); pair = null; if (head[1] !== 'meet' && head[1] !== 'road') { say(at, 'only «[meet <name>]», «[pair <a> <b>]» and «[road <name>]» blocks here'); name = null; return; } name = (head[1] === 'road' ? 'road ' : '') + head[2]; talks[name] = talks[name] || []; return; }
       if (!l) { end(); return; }
       if (!name) { if (!raw.trim().startsWith('#')) say(at, 'a line before any «[meet <name>]»'); return; }
       cur = cur || { by: [], made: false, at };
@@ -824,6 +952,8 @@ const meetTold = []; // «{told <talk> <place prefix>}» lines of the gatherings
       const m = /^(\w+):\s*(.+)$/.exec(l);
       if (!m) { say(at, 'a gathering\'s line is «<who>: <words>»'); return; }
       cur.by.push(m[1]);
+      if (cur.first === undefined) cur.first = m[2].trim(); // (a road's talk is known by its first line: StoryRoad.Flag)
+      if (name.startsWith('road ') && /\{told/.test(m[2])) say(at, '{told …} in a road\'s talk: StoryRoad says a line as it is — a true tale goes in a gathering\'s talk');
       if (/\{@\w+\}/.test(m[2])) cur.made = true;
       if (pair) { if (!pair.has(m[1])) say(at, '«' + m[1] + '» is not of the pair «' + name + '»'); return; }
       if (!meetOf[name]) return;
@@ -838,7 +968,27 @@ const meetTold = []; // «{told <talk> <place prefix>}» lines of the gatherings
     if (worth < MeetFew) say('meets', 'the gathering «' + name + '» has few talks (' + talks[name].length + '; at least ' + MeetFew + ', a made one counts as three): they would say the same every time');
     for (const t of talks[name]) if (new Set(t.by).size < 2) say(t.at, 'a talk of one speaker: a gathering\'s talk is between two or more');
   }
+  // a road's talks (the user 2026-11-18: a person talks to you on the way — StoryRoad): every stage's «road:» names a person of the story and a
+  // block «[road <name>]» whose lines are that person's or «hero» (the player) — and of one other person of the story a talk at most — with a line of the person in each talk; the person has its own
+  // «[<who>:road_back]» (what it says when you come back to it half way) in assets/story/words; a block no stage names stops too
+  const roadBack = new Set(); { const wd = path.join(story, 'words'); for (const f of fs.existsSync(wd) ? fs.readdirSync(wd).filter(x => x.endsWith('.txt')) : []) for (const m of fs.readFileSync(path.join(wd, f), 'utf8').matchAll(/^\[(\w+):road_back[\s\]]/gm)) roadBack.add(m[1]); }
+  const roadsNamed = new Set();
+  for (const u of roadUses) {
+    const name = 'road ' + u.talks; roadsNamed.add(name);
+    if (!personIds.has(u.who)) say(u.at, 'road: «' + u.who + '» is none of the story\'s people («[person ' + u.who + ']» in assets/story/people)');
+    if (!talks[name] || !talks[name].length) { say(u.at, 'road: no talks «[road ' + u.talks + ']» in assets/story/meets'); continue; }
+    if (!roadBack.has(u.who)) say(u.at, 'road: «' + u.who + '» has no «[' + u.who + ':road_back]» in assets/story/words (what it says when you come back half way; at least 6 lines, English in npc_patterns.txt)');
+    for (const t of talks[name]) { // (one other person of the story a talk may have — said only while it is near and free: StoryRoad.Other, the user 2026-11-18)
+      const others = [...new Set(t.by)].filter(b => b !== 'hero' && b !== u.who);
+      for (const b of others) if (!personIds.has(b)) say(t.at, '«' + b + '» in «[road ' + u.talks + ']»: a road\'s lines are «' + u.who + ':» (the stage names it), «hero:» or one other person of the story');
+      if (others.length > 1) say(t.at, 'a road\'s talk with two others (' + others.join(', ') + '): one other person a talk (StoryRoad.Other)');
+      if (!t.by.includes(u.who)) say(t.at, 'a road\'s talk with no line of «' + u.who + '»');
+    }
+  }
+  // two talks of one road never begin alike: a talk is heard by its first line (StoryRoad.Flag) — the second would be «heard» unsaid
+  for (const name of Object.keys(talks)) if (name.startsWith('road ')) { const firsts = new Map(); for (const t of talks[name]) { if (firsts.has(t.first)) say(t.at, 'the talk begins as the one at ' + firsts.get(t.first) + ': a road\'s talk is heard by its first line — begin it otherwise'); else firsts.set(t.first, t.at); } }
   for (const name of Object.keys(talks)) {
+    if (name.startsWith('road ')) { if (!roadsNamed.has(name)) say('meets', '«[' + name + ']»: no stage names it («road: <who> <m> ' + name.slice(5) + '» in assets/story/quests)'); continue; }
     if (name.startsWith('pair ')) {
       const worth = talks[name].reduce((n, t) => n + (t.made ? 3 : 1), 0);
       if (worth < MeetFew) say('meets', 'the pair «' + name + '» has few talks (' + talks[name].length + '; at least ' + MeetFew + ', a made one counts as three)');
@@ -1024,8 +1174,9 @@ for (const f of txt('npc')) for (const l of lines('npc', f)) { const m = /^talk:
 
 // a scene of a quest of the server: its «do» writes nothing into a character either. But «give»: a scene plays on the one game of its player (its claim),
 // so the thing goes to the one standing there — Torvald's scroll into the finder's bag, no room: at his feet (the user 2026-11-16: on the ground it was missed);
-// the stage then waits for it in anyone's bag, and «lost:» keeps one at the feet from being lost
-const sceneGives = new Set(['give']);
+// the stage then waits for it in anyone's bag, and «lost:» keeps one at the feet from being lost; «take» the same way back: out of the bag of the one
+// standing there (the feather of the rite, hall_rite — he throws it into the fire)
+const sceneGives = new Set(['give', 'take']);
 for (const f of txt('scenes')) {
   let sc = '';
   for (const l of lines('scenes', f)) {
@@ -1049,7 +1200,7 @@ for (const f of txt('scenes')) {
   const pieceWhy = word => { const [id, piece] = word.split('.'); const loc = aliasOf[id] || id; return !places[id] ? 'no place «' + id + '» in locations.list.txt' : readPieces.has(loc + '.' + piece) ? null : 'place «' + loc + '» has no «read: ' + piece + '» line: nothing to read there'; };
   // a book line stays once learnt: a condition of the moment (standing at a stage, where one is, what one carries) would take it out again —
   // Ketil's entry asked «asked ketil, step ch1 bed, quest ch1 done» (a comma is «and»: never all three) and was never in the book (2026-11-16)
-  const momentKinds = new Set(['step', 'npcat', 'near', 'before', 'item', 'raven', 'calm', 'night', 'day', 'biome', 'chnow', 'chfrom', 'through', 'inside', 'sky']);
+  const momentKinds = new Set(['step', 'npcat', 'near', 'before', 'item', 'raven', 'calm', 'night', 'day', 'hours', 'biome', 'chnow', 'chfrom', 'through', 'inside', 'sky']);
   const sagaConds = (at, text) => {
     for (const group of text.split('|')) {
       if (!group.trim()) { say(at, 'an empty condition beside «|» or before «::»'); continue; }
@@ -1127,6 +1278,9 @@ for (const f of txt('scenes')) {
   for (const [at, sec, id] of sagaAdds) if (sectionOf[id] !== sec) say(at, '[' + sec + ' ' + id + ' +]: no entry «' + id + '» in «' + sec + '» in any saga file');
   for (const [at, talk] of sagaAsked) if (sectionOf[talk] !== 'person') say(at, 'asked ' + talk + ': no «[person ' + talk + ']» entry in the saga — the book names who may tell more by the entry called as the talk (StorySaga.MoreOf)');
   for (const [at, w] of knowAsked) knowWhy(at, w); // (wherever they stand: the saga, a quest, a talk, a place's rule)
+  // a phase asked is a phase written, and a phase written is asked somewhere (StoryPeople.Phase: one not found never holds, said only in the log)
+  for (const [at, n] of phaseAsked) if (!phaseNames.has(n)) say(at, 'no phase «' + n + '»: «[phase ' + n + ']» in assets/story/people');
+  for (const n of phaseNames) if (!phaseAsked.some(a => a[1] === n)) say('people', '«[phase ' + n + ']»: nothing asks it («… when phase ' + n + '», «? phase ' + n + '»)');
 }
 // a word asked that nothing sets, an event waited for that nothing raises: the stage stands for ever and no check in the game says so
 const inCode = word => new RegExp('const string [^;]*"' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"').test(code); // (a module's own word, as a constant: any string in the code would let a typo through, «trial» is a console word)
@@ -1164,7 +1318,7 @@ for (const [what, found] of [['step option words (const string XStep, XFlags, XV
 //   1. a file asks the stage of a quest of its own block only («step|reached <quest> <stage>»: an earlier chapter's question ends with its chapter by itself): another block's talk with the same person is a file of
 //      that block adding to it («[talk heid +]»), not a «?? step» in the person's first file
 //   2. a quest's chapter, and a saga entry's, is its own block's; the chapters themselves all in saga/chapters.txt (their order is that file's), a chapter's own lines there of its chapter's block
-//   3. a quest's «scratch:» keys go when it ends (StoryWorld.Forget): no saga line, no person's «after:»/«until:», no place's rule, no other quest may ask one,
+//   3. a quest's «scratch:» keys go when it is over (StoryQuests.CloseBefore: the next chapter begins): no saga line, no person's «after:»/«until:», no place's rule, no other quest may ask one,
 //      and a person keeps one «live:» that holds without them («reached <quest> <stage>» stays)
 {
   const blockOf = file => { const m = /^ch(\d+)/.exec(file); return m ? 'ch' + Number(m[1]) : 'prologue'; }; // (as the game's StoryFiles.Block: «ch01» is chapter 1)
@@ -1193,8 +1347,39 @@ for (const [what, found] of [['step option words (const string XStep, XFlags, XV
     const m = /^chapter:\s*(\S+)/.exec(l);
     if (m && m[1] !== blockOf(file)) say(at, 'an entry of chapter «' + m[1] + '» in a file of block ' + blockOf(file) + ': a chapter\'s entries live in saga/' + m[1] + '.txt (more for one of another chapter: «[person <id> +]» there)');
   });
-  const named = l => [...l.matchAll(/\b(?:world|unworld|wvar|days|wstamp)\s+(\w+)/g)].map(m => m[1].toLowerCase()).concat([...l.matchAll(/\bfound\.(\w+)/g)].map(m => m[1].toLowerCase()));
-  const kinds = ['t_', 'found_', 'fw_', 'stash_', 'stashed_']; // (StoryWorld.ScratchKinds as the modules fill it: StoryTrackConds «t_», StoryFound)
+  // the words that name a world key a «scratch:» may take — every condition and action whose Dry names one (world, wvar, wstamp, wclock, keep): its
+  // N-th word is the key (the review 2026-11-18: «wsince», «wsecs», «wclock», «kept», «keepbed» were not looked at) — and «found.<name>»
+  const keyWords = {};
+  for (const m of code.matchAll(/(?:Register\(|\{ )"(\w+)",\s*new (?:StoryCond\.|StoryActions\.)?Kind\s*\{\s*Dry = "(?:(?:set|clear|later) )?world (?:world|wvar|wstamp|wclock|keep):\{(\d)\}/g)) keyWords[m[1]] = +m[2];
+  const named = l => {
+    const t = l.split(/[\s,]+/), out = [];
+    t.forEach((w, i) => { const n = keyWords[w.replace(/^[!?@]+/, '')]; if (n && t[i + n]) { const k = /^\w+/.exec(t[i + n]); if (k) out.push(k[0].toLowerCase()); } });
+    for (const m of l.matchAll(/\bfound\.(\w+)/g)) out.push(m[1].toLowerCase());
+    return out;
+  };
+  // the words of the kinds that keep such keys, as the modules fill StoryWorld.ScratchKinds — read from the code, not copied («tc_», «keep_» were missing)
+  const kinds = [];
+  for (const f of fs.readdirSync(srcDir).filter(f => f.endsWith('.cs'))) {
+    const cs = fs.readFileSync(path.join(srcDir, f), 'utf8');
+    const val = (e, depth) => {
+      e = e.trim(); let m;
+      if (depth > 4) return null;
+      if ((m = /^"([^"]*)"$/.exec(e))) return m[1];
+      if ((m = /^(\w+)$/.exec(e))) { const c = new RegExp('\\b' + m[1] + '\\s*=\\s*"([^"]*)"').exec(cs); return c ? c[1] : null; }
+      if ((m = /^(\w+)\((.*)\)$/.exec(e))) {
+        const fn = new RegExp('string ' + m[1] + '\\(string (\\w+)\\)\\s*\\{\\s*return ([^;]+);').exec(cs), arg = val(m[2], depth + 1);
+        if (!fn || arg === null) return null;
+        if (fn[2] === '"' + (/^"([^"]*)"/.exec(fn[2]) || ['', ''])[1] + '" + ' + fn[1]) return /^"([^"]*)"/.exec(fn[2])[1] + arg;
+        if (fn[2] === fn[1] + ".Replace('.', '_')") return arg.replace(/\./g, '_');
+        return null;
+      }
+      return null;
+    };
+    for (const m of cs.matchAll(/ScratchKinds\.Add(Range)?\((.*)\);/g)) {
+      const items = m[1] ? (/\{([^}]*)\}/.exec(m[2]) || ['', ''])[1].split(',') : [m[2]];
+      for (const it of items) { const v = val(it, 0); if (v === null) say('src/' + f, 'storycheck cannot read the StoryWorld.ScratchKinds entry «' + it.trim() + '» (it knows a const string, «"…" + arg», «.Replace(\'.\', \'_\')»)'); else kinds.push(v); }
+    }
+  }
   const isOf = (name, p) => { let b = name; for (let cut = true; cut; ) { cut = false; for (const k of kinds) if (b.startsWith(k)) { b = b.slice(k.length); cut = true; break; } } return b.startsWith(p); };
   const lasting = (at, l, own) => { for (const n of named(l)) for (const s of scratch) if (s.file !== own && isOf(n, s.p)) say(at, '«' + n + '» is a scratch key of quest «' + s.quest + '» («scratch: ' + s.p + '»): it goes when that quest ends — a lasting fact needs a name of its own, or ask the stage: «reached ' + s.quest + ' <stage>»'); };
   for (const file of txt('saga')) lines('saga', file).forEach((l, i) => lasting('saga/' + file + ':' + (i + 1), l, null));

@@ -17,6 +17,9 @@ namespace HuginWhispers
     //   falcon.<name>        a sister's falcon of the scene playing now, where it is — its own middle; turned into a person: hers (StoryScenes.FalconAt)
     //   beast.<name>         a creature of the game the scene playing now made (StoryBeasts: the skeleton, the boar), its middle
     //   lane.<name>@<m>[@<side>]   so many m along a lane of the scene playing now, so many to its right (StoryScenes.LaneAt)
+    //   spot.<place>@<x>@<z>[@<y>] a point of a place of the story in its blueprint's own frame (the numbers of its .txt and .names.txt), on the floor
+    //                        there (SpotAt): where a person of a scene stands exactly — a named piece gives only its edge, and which edge depends on
+    //                        where one comes from (the user 2026-11-21, the Hall's last scene: Heid 0.7 m off the cauldron, Torvald 8 m from her)
     //   npc.<who>.thing · player.thing   the thing that one holds (StoryProps; a person holding none — its own thing, NpcTool), where its look is now — in a hand, on the arm, lying, falling,
     //                        in flight: its own middle, not a spot on the ground (IsLow: what films or looks at it adds no height over it).
     //                        Not found while it holds nothing. Moves while it is held or on its way; lying still, it stands
@@ -32,6 +35,7 @@ namespace HuginWhispers
             { "falcon.", (string rest, out Vector3 at) => StoryScenes.FalconAt(rest, out at) }, // (a sister's falcon of the scene: StoryScenesFalcon)
             { "beast.", (string rest, out Vector3 at) => StoryBeasts.At(rest, out at) },        // (a creature of the game the scene made: StoryBeasts)
             { "lane.", (string rest, out Vector3 at) => StoryScenes.LaneAt(rest, out at) },     // (so far along a lane of the scene: StoryScenesLane)
+            { "spot.", (string rest, out Vector3 at) => SpotAt(rest, out at) },                                                                // (a point of a place in its blueprint's frame, on its floor)
             { "npc.", (string rest, out Vector3 at) => // (a person of the story where it stands now: StoryScenes.Actor; «npc.<who>.thing»: what it holds)
                 {
                     bool thing = rest.EndsWith(Thing);
@@ -40,6 +44,22 @@ namespace HuginWhispers
                     return a != null && (!thing || StoryProps.ThingAt(a.gameObject, out at) || NpcTool.LookAt(a, out at)); // (nothing of the story in its hands: its own thing — the dwarf's hammer, NpcTool)
                 } },
         };
+
+        // «spot.<place>@<x>@<z>[@<y>]»: that point of the place's blueprint, set on the floor under it (y: where to look for the floor from — none: 0,
+        // the ground floor of a place built round its own middle; a gallery: its own height). False: no such place here, or its numbers are not numbers
+        private static bool SpotAt(string rest, out Vector3 at)
+        {
+            at = Vector3.zero;
+            string[] w = rest.Split('@');
+            float x, z, y = 0f;
+            Loc loc = w.Length >= 3 ? Locs.Get(w[0]) : null;
+            if (loc == null || !float.TryParse(w[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out x) || !float.TryParse(w[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out z)) return false;
+            if (w.Length > 3 && !float.TryParse(w[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y)) return false;
+            if (!loc.ToWorld(new Vector3(x, y, z), out at)) return false;
+            RaycastHit hit;
+            if (Physics.Raycast(at + Vector3.up * 1.5f, Vector3.down, out hit, 4f, LayerMask.GetMask("piece", "Default", "static_solid", "terrain"), QueryTriggerInteraction.Ignore)) at.y = hit.point.y; // (asked when a step wants it: one ray)
+            return true;
+        }
 
         // a module's place the WORLD keeps (its prefix here: «heart.» — StoryHeart, «found.» — StoryFound), known with no player and no place of the
         // story: a person may live there (Standing), stand by it (StoryHold). Not «npc.», «falcon.», «me.»: those are a scene's or a player's
@@ -160,6 +180,49 @@ namespace HuginWhispers
         // ours hangs over its own door (LocInside), so by the map its grave and the grass over it are one spot
         internal static float Apart(Vector3 place, Vector3 who) { return Character.InInterior(place) != Character.InInterior(who) ? float.MaxValue : Utils.DistanceXZ(place, who); } // flat: the one measure itself, once the line is checked
 
+        // how far one is from a place by its word (the conditions near, npcat, npcnear): a named piece loaded here — from the nearest edge of its body
+        // (of several parts, the nearest part), as StandBy stands a person a step off that edge; a root is often at a big thing's far end (the user
+        // 2026-11-19: torv_back never began — Heid stood by the kitchen hearth as told, 6.4 m from its root, the scene asked 6). Anything else, or
+        // the piece not loaded here: from where its word says (Find). Each collider its own box (a rotated piece's one box took in its corners), the
+        // pieces its state has not (LocState.Absent — the Hall's chest of 1.4 beside the chest of 2: their hidden colliders are off, and an off one's
+        // box sat at the world's middle) left out. A door, a gate: from its word too — its leaves swing, so its body is no place (the prologue's
+        // «!near prologue_house.dveri 2», «not on the threshold», was set from its middle). A dedicated server has no pieces loaded: from its word
+        // there — its waits use wide rounds (10–16 m), the tight ones are a scene's needs, on the game that plays it. Its colliders read at most every
+        // EdgeEvery s a word. False: no such place here
+        internal static float EdgeEvery = 3f;
+        private sealed class Edges { public float At; public readonly List<Bounds> Bodies = new List<Bounds>(); }
+        private static readonly Dictionary<string, Edges> EdgesOf = new Dictionary<string, Edges>();
+        internal static bool Off(string name, Vector3 who, out float m)
+        {
+            m = float.MaxValue;
+            string piece;
+            if (Place(name, out piece) != null && piece.Length > 0)
+            {
+                Edges e;
+                if (!EdgesOf.TryGetValue(name, out e)) EdgesOf[name] = e = new Edges { At = float.MinValue };
+                if (Time.time - e.At >= EdgeEvery)
+                {
+                    e.At = Time.time; e.Bodies.Clear();
+                    foreach (ZNetView nv in Pieces(name))
+                    {
+                        if (nv == null || !nv.IsValid() || LocState.Absent(nv)) continue;
+                        if (nv.GetComponentInChildren<Door>() != null) { e.Bodies.Clear(); break; }
+                        foreach (Collider c in nv.GetComponentsInChildren<Collider>()) // heavy: every EdgeEvery s a word that a condition asks
+                            if (On(c)) e.Bodies.Add(c.bounds);
+                    }
+                }
+                if (e.Bodies.Count > 0)
+                {
+                    foreach (Bounds b in e.Bodies) m = Mathf.Min(m, Apart(b.ClosestPoint(new Vector3(who.x, b.center.y, who.z)), who));
+                    return true;
+                }
+            }
+            Vector3 at;
+            if (!Find(name, out at)) return false;
+            m = Apart(at, who);
+            return true;
+        }
+
         // where a place stands on the map: a module's own word for it (OnMap: a point inside one of our dungeons — the way into it on the land; by its
         // own spot the map showed «Скриня кургану» over the shore, 120 m off the barrow, the user 2026-11-15), else where it is
         internal static readonly Dictionary<string, FindFn> OnMap = new Dictionary<string, FindFn>();
@@ -214,11 +277,79 @@ namespace HuginWhispers
         // where a person stands by a thing: a step from its edge on the side «side» it comes from, never its middle (a fire: she walked into it and burned; a bed: knelt on
         // it); hands: a clip that works on the thing, ClipIn m nearer. False: nothing of it found. One rule for a word of the story (StoryHold) and its own life (StoryLife)
         internal static float ClipIn = 0.7f;
-        internal static bool StandBy(string thing, Vector3 side, Vector3 thingAt, bool hands, out Vector3 stand)
+        // A clip that touches what it works on says itself how far its face stands («touch wall 0.65», BodyClips): then the person stands square
+        // before the thing's middle, that far from its face, on the side it comes from — as a scene's «before» does (Before, FaceEdge). The user
+        // 2026-11-20: Lit «не підходить до стін іноді і б'є молотом просто в повітрі» — a step out of the nearest point of the wall's box put him
+        // by its end when he came along it, and never at his clip's own distance
+        // The spot is a place to STAND (the user 2026-11-20: «do people take their places before a scene rightly?» — read in the code: a step
+        // out of a thing's box was taken as it came, whatever stood there; the Hall's later state put a table and four benches by the pillar
+        // Sverre is told to stand at, and that morning the story had put Eyvind up on the workbench, 2026-11-20 11:57): a step
+        // out of a thing's edge is only where to look from — Free takes the floor nearest it that is no furniture, has room for a body and
+        // is not taken (free: the asker's own word — StoryHold: no other held person's spot). A clip that touches the thing keeps its own
+        // exact spot: its hands are reckoned from there
+        internal static bool StandBy(string thing, Vector3 side, Vector3 thingAt, bool hands, out Vector3 stand, string clip = null, System.Func<Vector3, bool> free = null)
         {
+            float touch = hands ? Touches(clip) : 0f;
+            Vector3 mid, way;
+            if (touch > 0f && Before(thing, side, out mid, out way))
+            {
+                float face;
+                stand = mid + way * ((FaceEdge(thing, mid, -way, out face) ? face : 0f) + touch);
+                return true;
+            }
             if (!Approach(thing, side, out stand)) return false;
+            stand = Free(stand, free);
             if (hands) { Vector3 to = thingAt - stand; to.y = 0f; if (to.magnitude > ClipIn) stand += to.normalized * ClipIn; }
             return true;
+        }
+
+        // the floor a body may stand on, nearest a spot (within FreeReach m): NpcKit.FloorBeside — the one way to find where a body may be put —
+        // with room for it and what the asker wants; none found, or no map here (a server with no pieces): the spot as it is
+        internal static float FreeReach = 1.6f;
+        internal static Vector3 Free(Vector3 spot, System.Func<Vector3, bool> free = null)
+        {
+            Vector3 v;
+            return NpcKit.FloorBeside(out v, spot, FreeReach, s => NpcKit.Room(s) && (free == null || free(s))) ? v : spot;
+        }
+
+        // how far before a body the face of what its clip touches stands (its «touch <what> … <m>»; a part of a clip: its whole clip's); 0: it touches nothing
+        internal static float Touches(string clip)
+        {
+            PAnimClip c = string.IsNullOrEmpty(clip) ? null : BodyClips.Find(clip);
+            if (c == null || c.Touch.Length == 0) return 0f;
+            string[] w = c.Touch.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            float m;
+            return w.Length > 1 && float.TryParse(w[w.Length - 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out m) && m > 0f && m < 3f ? m : 0f;
+        }
+
+        // how far out of its middle, towards one who comes along «dir», the face of a thing is (all its pieces of that name: a gate's two halves):
+        // rays along that way at the height of hands, a little to each side (the middle may be the gap between two halves) — none hit: at the shins
+        // (a low thing: the kitchen hearth); the nearest face. The m of «before» is from it, for the player (StoryWalk) and a person (StoryScenes
+        // NpcGo) alike — the user 2026-11-04: hands 0.4 m short of a gate set back in its frame; 2026-11-19: Heid «before 0.3» of the kitchen hearth
+        // stood on it (a person's m was from the middle)
+        internal static float FaceHigh = 1.3f, FaceAside = 0.35f, FaceLow = 0.3f;
+        internal static bool FaceEdge(string place, Vector3 at, Vector3 dir, out float edge)
+        {
+            edge = 0f; bool any = false;
+            Vector3 side = Vector3.Cross(Vector3.up, dir);
+            List<ZNetView> pieces = Pieces(place);
+            foreach (float[] ups in new[] { new[] { FaceHigh - 0.3f, FaceHigh }, new[] { FaceLow } })
+            {
+                foreach (ZNetView nv in pieces)
+                    foreach (Collider c in nv.GetComponentsInChildren<Collider>()) // heavy: once when a scene's walk «before» starts
+                    {
+                        if (!c.enabled || c.isTrigger) continue;
+                        foreach (float s in new[] { -FaceAside, 0f, FaceAside })
+                            foreach (float up in ups)
+                            {
+                                Vector3 o = new Vector3(at.x, at.y + up, at.z) + side * s - dir * 3f;
+                                RaycastHit hit;
+                                if (c.Raycast(new Ray(o, dir), out hit, 6f)) { float e = 3f - hit.distance; if (!any || e > edge) edge = e; any = true; }
+                            }
+                    }
+                if (any) return true;
+            }
+            return false;
         }
 
         // where a bird sits on it: on the named piece's own surface straight down over its middle (a gate's pivot is at its
@@ -276,7 +407,7 @@ namespace HuginWhispers
             List<ZNetView> l = Pieces(name);
             if (l.Count == 0) return false;
             Bounds b = new Bounds(l[0].transform.position, Vector3.zero);
-            foreach (ZNetView nv in l) foreach (Collider c in nv.GetComponentsInChildren<Collider>()) if (c != null && !c.isTrigger) b.Encapsulate(c.bounds); // heavy: once a step that asks
+            foreach (ZNetView nv in l) foreach (Collider c in nv.GetComponentsInChildren<Collider>()) if (On(c)) b.Encapsulate(c.bounds); // heavy: once a step that asks
             mid = new Vector3(b.center.x, b.min.y, b.center.z);
             Vector3 along = l.Count > 1 ? l[1].transform.position - l[0].transform.position : l[0].transform.right;
             along.y = 0f;
@@ -284,6 +415,18 @@ namespace HuginWhispers
             way = Vector3.Cross(Vector3.up, along).normalized;
             Vector3 at; Quaternion rot;
             if (loc != null && loc.Anchor(out at, out rot)) { Vector3 outward = mid - at; outward.y = 0f; if (Vector3.Dot(way, outward) < 0f) way = -way; }
+            return true;
+        }
+
+        // the same for one who walks up to it from «from» (a scene's «npc go … before», «player go … before»): on the side it comes from — the outer side
+        // only says which side a gate is opened from by one who stands outside; a thing inside by a wall (the kitchen hearth, the user 2026-11-19:
+        // Heid was sent between it and the wall, «stuck 2 m from its goal») is walked up to from the room. The condition «before» keeps the outer
+        // side: it asks where one stands before a gate, whoever comes
+        internal static bool Before(string name, Vector3 from, out Vector3 mid, out Vector3 way)
+        {
+            if (!Before(name, out mid, out way)) return false;
+            Vector3 to = from - mid; to.y = 0f;
+            if (Vector3.Dot(way, to) < 0f) way = -way;
             return true;
         }
 
@@ -298,17 +441,25 @@ namespace HuginWhispers
             return l;
         }
 
-        internal static ZNetView Piece(string name) { List<ZNetView> l = Pieces(name); return l.Count > 0 ? l[0] : null; }
+        // the first of them its world's state has (LocState.Absent: the Hall's chest of 1.4 and the chest of 2 share a name), else the first
+        internal static ZNetView Piece(string name)
+        {
+            List<ZNetView> l = Pieces(name);
+            foreach (ZNetView nv in l) if (nv.IsValid() && !LocState.Absent(nv)) return nv;
+            return l.Count > 0 ? l[0] : null;
+        }
 
+        // its body: the box of its colliders that are on (a hidden piece's are off, and an off one's box sits at the world's middle — the review 2026-11-19)
         private static bool Body(string name, out Bounds b)
         {
             ZNetView nv = Piece(name);
             b = new Bounds();
             if (nv == null) return false;
             b = new Bounds(nv.transform.position, Vector3.zero);
-            foreach (Collider c in nv.GetComponentsInChildren<Collider>()) if (c != null && !c.isTrigger) b.Encapsulate(c.bounds);
+            foreach (Collider c in nv.GetComponentsInChildren<Collider>()) if (On(c)) b.Encapsulate(c.bounds);
             return true;
         }
+        private static bool On(Collider c) { return c != null && c.enabled && !c.isTrigger && c.gameObject.activeInHierarchy; }
     }
 }
 #endif

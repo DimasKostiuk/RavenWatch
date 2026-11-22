@@ -160,7 +160,7 @@ namespace HuginWhispers
             // (the first screen, the user 2026-11-12: it stood at 11–14 rows. «Хто ти?» here only to one not yours yet; «Як справи?», «Хто ти?» to one of yours and
             // «Ти вільний…» are under «Поговорімо.» — the one row of yours that is never shut by asking again. The door still offers «Ти вільний…»: NpcTalkDoor)
             "> Хто ти? => who ?!hired\n" +
-            "> Живи на моїй базі й працюй зі мною. => hire ?!hired ?!npcflag inneed\n" +
+            "> Живи в моїй оселі й працюй зі мною. => hire ?!hired ?!npcflag inneed\n" +
             "> Тобі щось потрібно? => need ?hasneed\n" +
             "> Ось те, що ти просив|просила. => thanks ?hasrequest !giverequest\n" +
             "> Ось те, про що ти мріяв|мріяла. => goaldone ?goalitem !goalgive\n" +
@@ -198,7 +198,7 @@ namespace HuginWhispers
             "@recall\n{recall}\n> Таке не забувається. || Добре було. || Еге ж, було діло. => talk\n> Годі спогадів. => start\n" + // (NpcTalkRecall)
             "@passon\n{passon}\n> {@say_ok} => start\n> {@say_bye} => end\n" + // (NpcTalkAbout)
             "@wait\n{@rescue_wait}\n> Тримайся! || Я швидко. || Уже біжу. => end\n" +
-            "@saved\n{thanks}\n> Живи на моїй базі й працюй зі мною. => hire ?!hired\n> Хто ти? => who\n> Іди своєю дорогою, у мене нема для тебе місця. => end !goaway\n> {@say_bye} => end\n" +
+            "@saved\n{thanks}\n> Живи в моїй оселі й працюй зі мною. => hire ?!hired\n> Хто ти? => who\n> Іди своєю дорогою, у мене нема для тебе місця. => end !goaway\n> {@say_bye} => end\n" +
             "@guard\n{@rescue_guard}\n> Чекай тут, я швидко. => end !rescuewait\n> Сховайся — я покажу, де. => end !rescuehide\n> Ходімо зі мною, я тебе охоронятиму. => end !rescuefollow\n" +
             "@what\n{plea_more}\n> {@say_got} => start\n" +
             "@fire\n{@fire_ask}\n> Так. => end !unhire\n> Ні, лишайся. => start\n" +
@@ -539,8 +539,7 @@ namespace HuginWhispers
         internal static NpcActor With; // the person being talked to (for its conditions)
 
         // a line of the person's comes in on the scroll (RavenBookTalk): its head and chest speak it to you, seen by every game near (NpcSpeech)
-        internal static void LineShown(string text) { if (With != null && !Hushed) NpcSpeech.Window(With, text, Player.m_localPlayer); }
-        internal static bool Hushed; // (the window's «all of it now», RavenBookTalk.Rush: what comes in then is shown, not spoken)
+        internal static void LineShown(string text) { if (With != null) NpcSpeech.Window(With, text, Player.m_localPlayer); }
         internal static NpcActor Speaker; // a person whose made words are being picked (NpcPhrases: a line's conditions are about it)
         internal static NpcActor Him { get { return Speaker ?? With; } } // «he» of a person's conditions: the one speaking, else the one talked to
         private static bool _registered;
@@ -578,7 +577,9 @@ namespace HuginWhispers
             // the moment and its home (a chat of two asks them too: no player in them)
             Deeds["tone"] = Tone; // («!tone warm|cold|rude»: NpcTalkTone)
             StoryCond.Register("daypart", new StoryCond.Kind { Dry = "free", Usage = "daypart morning|day|evening|night", Min = 1, Test = (p, a) => NpcVoice.DayPart() == a[1] });
-            StoryCond.Register("weather", new StoryCond.Kind { Usage = "weather clear|rain|snow|storm|fog", Min = 1, Test = (p, a) => NpcVoice.Weather() == (a[1] == "clear" ? "" : a[1]) });
+            // (World: asked with no player in hand — but it is the sky over THIS game's player: where a list is the world's, only a line of a story
+            //  person's day may ask it («at:»/«spot:» … when weather rain — StoryLife.Spot.Local: never a far line, never the server's rule; storycheck))
+            StoryCond.Register("weather", new StoryCond.Kind { Usage = "weather clear|rain|snow|storm|fog", Min = 1, World = true, Test = (p, a) => NpcVoice.Weather() == (a[1] == "clear" ? "" : a[1]) });
             StoryCond.Register("folk", new StoryCond.Kind { Usage = "folk <id>   (в його оселі хтось має цю роботу)", Min = 1, Test = (p, a) => HomeHasJob(Him, a[1]) });
             StoryCond.Register("raid", new StoryCond.Kind { Usage = "raid   (набіг довкола його оселі)", Test = (p, a) => NpcNews.RaidNear(Him) });
             // its state now (a line's situation: NpcPhrases — any player hears these, they are its own, not a player's story)
@@ -746,36 +747,26 @@ namespace HuginWhispers
         private static string _youSaid; // (the answer you picked: your line over what it says next)
 
         // The hero says the answer you picked aloud, wordless, in his own voice (the user 2026-11-16: «щоб він теж бурмотів щось своїм голосом»):
-        // the «hero» timbre of his sex (NpcTimbre.OfHero), hummed as a person's line is (NpcBabble). The person hears him out: its sound to your
+        // the «hero» timbre of his sex (NpcTimbre.OfHero), hummed as a person's line is — the one way, NpcSpeech.HeroSays (its length: RavenSpeech,
+        // Pace.Hero), and the people near turn to him as a scene's do. What the person still hums of its own words is cut: he speaks now (HushTalk). The person hears him out: its sound to your
         // answer (NpcActor.React) and its next words (RavenBookTalk: YouLeft) wait till he is done. Heard on his game only (the talk is his window).
         // Not said: a worry of its own picked from «на думці» (not his words, as it is not shown as his line), an answer cut off (CutIn), one no longer holding,
         // nor with «Instant talks» on (no waits there: its words would come over his). A new answer, or a click that shows the rest at once (YouCut), stops his line.
-        internal static float HeroPerChar = 0.03f, HeroLeast = 0.5f, HeardOut = 0.12f, WordsAfter = 0.2f; // (the user 2026-11-17: its first words came too late — tuned live, halved) // s a letter of his line as it is meant to last · at least · s after him before its sound to it · and before its words (room for that sound; raven npc tune NpcTalk.<name>)
+        internal static float HeardOut = 0.12f, WordsAfter = 0.2f; // (the user 2026-11-17: its first words came too late — tuned live, halved) // s after him before its sound to it · and before its words (room for that sound; raven npc tune NpcTalk.<name>)
         private static float _youUntil; // (Time.unscaledTime its words may come: his line, then room for its sound to it)
         internal static float YouLeft { get { return Mathf.Max(0f, _youUntil - Time.unscaledTime); } }
 
-        private const string HeroClip = "babble_hero";
+        private const string HeroClip = "babble_hero"; // (his line's name in the sound core: cut short by name)
 
-        // how long the one you talk to hums this line of its (NpcSpeech: the plan its game makes for it), 0 when it is not hummed — the window
-        // brings its next words after it (RavenBookTalk: Build)
-        internal static float HumFor(string text) { return With != null && NpcBabble.On && !RavenVoice.Available && !RavenBook.TalkInstant ? NpcSpeech.Seconds(With, text) : 0f; } // (his line's name in the sound core: cut short by name)
-
-        // his line stopped: the window shows the rest at once (RavenBookTalk: Rush)
+        // his line stopped: a click brings the person's next words now (RavenBookTalk: Rush)
         internal static void YouCut() { if (_youUntil > Time.unscaledTime) NpcBabble.Hush(HeroClip); _youUntil = 0f; }
 
         private static float HeroSays(Player p, string text)
         {
             YouCut(); // (a second answer picked while he still says the first)
-            if (RavenBook.TalkInstant) return 0f;
-            NpcTimbre.Card card = NpcTimbre.OfHero(p);
-            Transform head = SitOn.HeadBone(p);
-            if (card == null || head == null || string.IsNullOrEmpty(text)) return 0f;
-            System.Text.StringBuilder plain = new System.Text.StringBuilder(text.Length);
-            int tag = 0;
-            foreach (char ch in text) { if (ch == '<') tag++; else if (ch == '>' && tag > 0) tag--; else if (tag == 0) plain.Append(ch); } // (a row's rich text: «<size=80%>» is no word)
-            string said = plain.ToString().Trim();
-            long id = p.GetPlayerID();
-            float s = NpcBabble.Say(card, head, said, (uint)id ^ (uint)(id >> 32) ^ 0x4E30B1D5u, Mathf.Max(HeroLeast, said.Length * HeroPerChar), true, HeroClip);
+            if (RavenBook.TalkInstant || string.IsNullOrEmpty(text)) return 0f;
+            NpcSpeech.HushTalk(With); // (the person's own words still hummed: he speaks now)
+            float s = NpcSpeech.HeroSays(p, text, RavenSpeech.Seconds(NpcSpeech.Plain(text), RavenSpeech.Pace.Hero), HeroClip, 0x4E30B1D5u); // (a row's rich text, «<size=80%>», is no word: Plain)
             if (s > 0f) _youUntil = Time.unscaledTime + s + HeardOut + WordsAfter;
             return s > 0f ? s + HeardOut : 0f;
         }

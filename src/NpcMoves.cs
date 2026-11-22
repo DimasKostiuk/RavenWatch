@@ -18,6 +18,8 @@ namespace HuginWhispers
     //              a clip says its kind itself, «tone <word>» in its file (Tones: loose — a stretch, a yawn, a scratch; merry — a laugh, a slap on the
     //              knee; drinks — a tankard, a toast; none: plain), a template says «shuns: drinks loose» — a new clip of that kind never reaches it, with
     //              no list to keep up. Its life only: a scene, a story word play what they name
+    //   women      a clip's «women fighters»: on a woman only one who fights (Guard.Is), settlers too (the user 2026-11-18, neck_stretch: «для гейд
+    //              точно не треба і для більшості жінок. Тільки бойовим жінкам») — a man's move said once in the clip, no list to keep
     //   never:     a template's «never: <clip> <prefix*> …»: never played on it by its own life — a pose by its name (arms_cross), a clip's parts with it
     //   moves:     a template's own short moves «moves: a|b|c», seated «moves_sit: a|b» (clips that end by themselves): where its life picks a move
     //              of its own at a place (Pick with own), one of these OwnEach of the time a move it may make now (Own at most), and no more often when the place has none for it (a dvergr at a man's place: its own now and then, not at every turn).
@@ -122,6 +124,7 @@ namespace HuginWhispers
         {
             if (a == null || a.Def == null || string.IsNullOrEmpty(clip) || clip == "none") return false;
             if (!BodyFits(a.Def, clip) || !SeatFits(a, clip)) return false;
+            { PAnimClip w = BodyClips.Find(clip); if (w != null && w.WomenFight && a.Female && !Guard.Is(a)) return false; } // (a man's move, or a fighting woman's: the clip says so — «women fighters»; settlers too, before their missing template)
             if (!asked && !TalkFits(clip) && Talking(a)) return false; // (in a talk: only what fits one)
             Set s = Of(a.Def);
             if (s == null) return true;

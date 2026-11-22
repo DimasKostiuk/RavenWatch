@@ -26,7 +26,8 @@ namespace HuginWhispers
     //                                                              its talk says the same sounds at half of that (NpcSpeech.SoundVol)
     // «all»: in every game of the world, round each player (let go when the scene ends; a game that never hears it: AirTerm).
     // A «sound» with a place is heard by whoever is within StoryScenes.Seen, unless the scene is «alone: yes», «sound stop» there
-    // too, and a scene cut off stops them there as here; music, beds and the mix are this player's own.
+    // too, and a scene cut off stops them there as here; music, beds, the mix, mutes and the ear are this player's own and, by the same
+    // word, of each one who watches the scene in its picture (StoryWatch, WatchStep).
     internal static class StoryAudio
     {
         private const string Rpc = "RavenWatch_Audio";
@@ -200,6 +201,15 @@ namespace HuginWhispers
             Do(Audio.Scene, Bare(st.W, out all), true);
         }
 
+        // the same word on the game of one who watches the scene (StoryWatch): held by «scene» there as here, let go when he is out of its picture.
+        // «all» is everyone's already (the air's way), and nothing is sent on from there. A place's word «player» is his own there
+        private static void WatchStep(StoryScenes.Step st, bool atOnce)
+        {
+            bool all;
+            string[] w = Bare(st.W, out all);
+            if (!all || w[0] == "ear") Do(Audio.Scene, w, atOnce);
+        }
+
         // the word of a «sound» that names a place (null: none — the storycheck reads it the same way)
         internal static string PlaceOf(string[] w)
         {
@@ -259,31 +269,31 @@ namespace HuginWhispers
 
         internal static void Steps()
         {
-            StoryScenes.Register("music", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
+            StoryScenes.Register("music", new StoryScenes.StepKind(StoryScenes.StepSeen.Screen)
             {
-                Min = 1, Usage = "music <назва> [с] [once] [keep N] [rest N] [vol V] [wait] [all] · music off|game [с] [all]",
+                Min = 1, Watch = WatchStep, Usage = "music <назва> [с] [once] [keep N] [rest N] [vol V] [wait] [all] · music off|game [с] [all]",
                 Begin = Step, Setup = SetupStep, Busy = (p, st) => Has(st.W, "wait") && Audio.MusicWaiting
             });
-            StoryScenes.Register("bed", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
+            StoryScenes.Register("bed", new StoryScenes.StepKind(StoryScenes.StepSeen.Screen)
             {
                 PlaceOf = BedPlaceOf,
-                Min = 1, Usage = "bed <назва> [місце|player|npc.x|bird] [с] [vol V] [range R] [pitch P] [2d] [wet] [follow] [all] · bed off [назва] [с] [all]",
+                Min = 1, Watch = WatchStep, Usage = "bed <назва> [місце|player|npc.x|bird] [с] [vol V] [range R] [pitch P] [2d] [wet] [follow] [all] · bed off [назва] [с] [all]",
                 Begin = Step, Setup = SetupStep, Busy = (p, st) => false
             });
-            StoryScenes.Register("mix", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
+            StoryScenes.Register("mix", new StoryScenes.StepKind(StoryScenes.StepSeen.Screen)
             {
-                Min = 1, Usage = "mix world|ambient|music|voice <0..1> [с] [all] · mix reset [с] [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
+                Min = 1, Watch = WatchStep, Usage = "mix world|ambient|music|voice <0..1> [с] [all] · mix reset [с] [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
                 Check = st => Array.IndexOf(new[] { "world", "ambient", "music", "voice", "reset" }, st.W[1]) < 0 ? "mix: невідоме «" + st.W[1] + "»" : st.W[1] != "reset" && (st.W.Length < 3 || !IsNum(st.W[2])) ? "mix " + st.W[1] + ": скільки? 0..1" : null
             });
-            StoryScenes.Register("mute", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
+            StoryScenes.Register("mute", new StoryScenes.StepKind(StoryScenes.StepSeen.Screen)
             {
-                Min = 1, Usage = "mute <шаблон: a, a*, *a, *a*> [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
+                Min = 1, Watch = WatchStep, Usage = "mute <шаблон: a, a*, *a, *a*> [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
                 Check = st => st.W[1].Trim('*').IndexOf('*') >= 0 ? "mute: зірочка лише на краях (a, a*, *a, *a*)" : null
             });
-            StoryScenes.Register("unmute", new StoryScenes.StepKind(StoryScenes.StepSeen.Own) { Min = 1, Usage = "unmute <шаблон>|all [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false }); // (the word written out, as every step's: storycheck reads the words from these lines)
-            StoryScenes.Register("ear", new StoryScenes.StepKind(StoryScenes.StepSeen.Own)
+            StoryScenes.Register("unmute", new StoryScenes.StepKind(StoryScenes.StepSeen.Screen) { Min = 1, Watch = WatchStep, Usage = "unmute <шаблон>|all [all]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false }); // (the word written out, as every step's: storycheck reads the words from these lines)
+            StoryScenes.Register("ear", new StoryScenes.StepKind(StoryScenes.StepSeen.Screen)
             {
-                Min = 1, Usage = "ear camera|player [с]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
+                Min = 1, Watch = WatchStep, Usage = "ear camera|player [с]", Begin = Step, Setup = SetupStep, Busy = (p, st) => false,
                 Check = st => st.W[1] != "camera" && st.W[1] != "player" ? "ear camera|player" : null
             });
             StoryScenes.Register("sound", new StoryScenes.StepKind(StoryScenes.StepSeen.Shared)

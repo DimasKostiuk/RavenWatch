@@ -242,12 +242,16 @@ namespace HuginWhispers
         // the author's test: a person of the story put at a place at once (beside it, not in it: a person put into the hearth burns) — the studio's
         // «npc <who> at <place>» (StudioScene) and the console «raven story put <who> <place>». Only a person loaded here (its body near the player):
         // its owner moves it, and the place may be far (Ketil from the heart to his glade, 2026-11-14). Null: done, else why not
-        internal static string PutPerson(Player p, string who, string place, out NpcActor a, out Vector3 at)
+        // «stays»: it stands there till a scene takes it (the studio's check: put and let go, the cast walked off on its own whims in the 15–20 s
+        // before the scene began — the run of 2026-11-20, Sverre and the old man on their way to a seat as it started); the caller lets it go after
+        internal static string PutPerson(Player p, string who, string place, out NpcActor a, out Vector3 at, bool stays = false)
         {
             a = Npcs.Find(who); at = Vector3.zero;
             if (a == null) return "нема «" + who + "» поруч (його тіло мусить бути завантажене: стань біля нього)";
-            if (!StoryWhere.Approach(place, p.transform.position, out at)) return "нема місця «" + place + "»";
-            a.Order("tp " + Npcs.V(at), NpcMind.Layer.Scene); a.Order("free", NpcMind.Layer.Scene);
+            // where its standing word has it stand, when it has one for this place (a quest's stage: the check begins as the game would) — else
+            // beside the place on free floor, on the player's side
+            if (!StoryHold.SpotOf(a, place, out at)) { if (!StoryWhere.Approach(place, p.transform.position, out at)) return "нема місця «" + place + "»"; at = StoryWhere.Free(at); }
+            a.Order("tp " + Npcs.V(at), NpcMind.Layer.Scene); a.Order(stays ? "stay" : "free", NpcMind.Layer.Scene);
             return null;
         }
 #endif
@@ -384,7 +388,9 @@ namespace HuginWhispers
                     }
                     return "Торкнувся «" + a[2] + "».";
                 case "npcravens": return NpcRaven.Describe() + LocRaven.Describe();
-                case "placeraven": LocRaven.Trace = !LocRaven.Trace; return "Ворон місця (Зали): його слова й польоти в лог — " + (LocRaven.Trace ? "так" : "ні");
+                case "placeraven":
+                    if (a.Length > 2 && a[2] == "hurry") { LocRaven.Hurry = !LocRaven.Hurry; return "Ворон місця (Зали) літає без довгих посиденьок (заміри польоту в лог): " + (LocRaven.Hurry ? "так" : "ні"); }
+                    LocRaven.Trace = !LocRaven.Trace; return "Ворон місця (Зали): його слова й польоти в лог — " + (LocRaven.Trace ? "так" : "ні");
                 case "raventrace": NpcRaven.Trace = !NpcRaven.Trace; return "Польоти воронів людей у лог: " + (NpcRaven.Trace ? "так" : "ні");
                 case "own":
                 case "unown":

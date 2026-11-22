@@ -46,9 +46,29 @@ namespace HuginWhispers
         // as a seat is chosen: LocRaven (its seats, from the middle under its roof), NpcRaven (a perch, from its person's head). Heavy: one ray
         internal static float OpenOver = 0.35f;
         internal static bool Open(Vector3 from, Vector3 seat) { return !Physics.Linecast(from, seat + Vector3.up * OpenOver, RavenMotor.Mask, QueryTriggerInteraction.Ignore); }
+        // room for its body on a seat, asked with Open by the same two (2026-11-18, the user's shot: the Hall's raven sat half inside a wall, on a
+        // woodiron_beam laid into the wall's own plane — a ray that starts inside a wall never sees it, and Open's line ends over the seat): nothing
+        // but the seat's own piece (own) within its body as it sits there facing yaw — a capsule from its tail to its breast, RoomUp over the seat,
+        // so the seat's top under it is not counted. The numbers are a full-grown raven's (Shoulder.Scale), times its size share (Shoulder.SizeFor);
+        // set by eye, not measured: the bird's real size is in «raven story npcravens» (Describe: «body»). Heavy: one capsule a seat, as seats are
+        // looked over (LocRaven) or one is chosen (NpcRaven)
+        internal static float RoomRadius = 0.12f, RoomBack = 0.3f, RoomFront = 0.15f, RoomUp = 0.2f;
+        private static readonly Collider[] _room = new Collider[16];
+        internal static bool Room(Vector3 seat, float yaw, Transform own, float share)
+        {
+            Vector3 fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward, mid = seat + Vector3.up * (RoomUp * share);
+            int n = Physics.OverlapCapsuleNonAlloc(mid - fwd * (RoomBack * share), mid + fwd * (RoomFront * share), RoomRadius * share, _room, RavenMotor.Mask, QueryTriggerInteraction.Ignore); // heavy: one capsule a seat, only as seats are looked over or one is chosen
+            for (int i = 0; i < n; i++)
+                if (_room[i] != null && (own == null || !_room[i].transform.IsChildOf(own))) return false;
+            return true;
+        }
         internal static float RingNear = 10f, RingFar = 25f; // (circling: the ring's slow glide within RingNear m of it, full cruise from RingFar)
         private const int Sits = 0, Flies = 2, Final = 3, Landing = 4, Away = 5, Hover = 6, Circles = 7, Passes = 8;
         internal System.Action Stuck; // (a place's raven: its seat out of reach — its place picks again; none: the puff, or a scene's hover)
+        // the open point of the place it lives in (a place's raven: the middle under its roof — LocRaven), given to its motor each flight
+        // as the first point its way through the air tries (RavenMotor.Hint)
+        private Vector3 _hint; private bool _hintSet;
+        internal void ViaHint(Vector3 at) { _hint = at; _hintSet = true; if (_motor != null) { _motor.Hint = at; _motor.HintSet = true; } }
         // the streak (the user 2026-11-02): thin, 30% fainter than it was, from its tail (not from under its feet), and
         // faint right at the bird — it grows out of nothing a little behind it, then fades away
         internal static float TrailSeconds = 1.6f, TrailWidth = 0.1f, TrailPeak = 0.6f, TrailRise = 0.14f;
@@ -56,6 +76,7 @@ namespace HuginWhispers
         private Transform _trail;
         private Character _around;
         private float _ringR = 4.5f, _ringUp = 3.5f, _ringPhase;
+        private float _fitAt, _fitR = 4.5f, _fitUp = 3.5f, _ringRNow, _ringUpNow; // (its ring as the room lets it: RavenMotor.RingRoom)
 
         private static readonly Dictionary<string, Look> _looks = new Dictionary<string, Look>();
         internal static void ForgetLooks() { _looks.Clear(); } // (the files read again: their colours too)
@@ -221,10 +242,10 @@ namespace HuginWhispers
             if (State == Hover) State = Flies; // (from the air to a seat: it lands now)
             _hover = false; // (told to land while still on its way to hang somewhere: it lands, not hangs over the seat)
             if (_motor != null) _motor.Through = false; // (told to land in the middle of a pass: walls count again)
-            _from = ComeFrom(seat, Flat(now.forward)); // (a side of the seat as it faces: it may turn with a body — a shoulder, a head)
+            _from = RavenMotor.SeatSide(seat, Flat(now.forward)); // (a side of the seat as it faces: it may turn with a body — a shoulder, a head)
             Seat = now;
             if (State == Sits) TakeOff(seat + Vector3.up * 2f); // (off the old seat: no longer its child)
-            else { if (_motor != null && _motor.Body != null) _motor.Body.NewLeg(); State = Flies; _since = Time.time; }
+            else { if (_motor != null && _motor.Body != null) { _motor.Body.NewLeg(); _motor.SeatEnd("another seat told"); } State = Flies; _since = Time.time; }
             if (_motor == null) SitDown(); // (no engine: straight onto the new seat)
             if (old != null) Destroy(old.gameObject);
         }
@@ -244,7 +265,7 @@ namespace HuginWhispers
             if (State == Landing) SitDown();
             _hover = true;
             if (State == Sits) TakeOff(at);
-            else { if (_motor != null && _motor.Body != null) _motor.Body.NewLeg(); State = Flies; _since = Time.time; }
+            else { if (_motor != null && _motor.Body != null) { _motor.Body.NewLeg(); _motor.SeatEnd("told to hang in the air"); } State = Flies; _since = Time.time; }
             if (_motor != null) _motor.Through = false;
             if (old != null) Destroy(old.gameObject);
         }
@@ -268,21 +289,11 @@ namespace HuginWhispers
             Outfits.Dress(gameObject, string.Join("|", slots).Trim('|').Length > 0 ? string.Join("|", slots) : ""); // (none: an old hat off; nothing worn — nothing done)
         }
 
-        // the side it comes in to a seat from: from behind it (it lands facing ahead), unless something is there — a seat facing the middle
-        // of a hall has the wall behind it (2026-11-17: the Hall's raven, its seats facing the middle, flew into the wall to get behind them) —,
-        // then from before it, then from straight over it, and if that is shut too, from behind as ever. Kept as the side of the seat as it
-        // faces (1 behind, -1 before, 0 over: Side), so a seat that turns with a body is come to as it faces now. Heavy: up to three rays, a landing
+        // the side it comes in to a seat from (RavenMotor.SeatSide, the one check for every bird's flight to a seat): from behind it (it lands
+        // facing ahead), unless something is there — a seat facing the middle of a hall has the wall behind it (2026-11-17: the Hall's raven, its
+        // seats facing the middle, flew into the wall to get behind them) —, then from before it, then from straight over it. Kept as the side of
+        // the seat as it faces (1 behind, -1 before, 0 over), so a seat that turns with a body is come to as it faces now
         private int _from = 1;
-        internal static float ComeBack = 1.6f, ComeUp = 1.2f;
-        private static int ComeFrom(Vector3 seat, Vector3 front)
-        {
-            Vector3 over = seat + Vector3.up * OpenOver, up = Vector3.up * ComeUp;
-            if (!Physics.Linecast(over, seat - front * ComeBack + up, RavenMotor.Mask, QueryTriggerInteraction.Ignore)) return 1;
-            if (!Physics.Linecast(over, seat + front * ComeBack + up, RavenMotor.Mask, QueryTriggerInteraction.Ignore)) return -1;
-            if (!Physics.Linecast(over, seat + up, RavenMotor.Mask, QueryTriggerInteraction.Ignore)) return 0;
-            return 1;
-        }
-        private Vector3 Side(Vector3 front) { return _from == 1 ? -front : _from == -1 ? front : Vector3.zero; }
 
         // from the air straight to a point through whatever is in the way (a roof), slowly: the motor neither swerves nor stops for this
         // leg (RavenMotor.Through); there it hangs. Off a seat it first flies up the usual way (HoverAt)
@@ -481,16 +492,28 @@ namespace HuginWhispers
         // where its tail ends, in its own frame: from its body's size (the model's pivot is between its feet)
         private Vector3 TailPoint()
         {
-            Bounds b = new Bounds(); bool any = false;
-            foreach (Renderer r in GetComponentsInChildren<Renderer>())
+            Bounds b;
+            if (!LocalBox(false, out b)) return new Vector3(0f, 0.2f, -0.25f); // (none seen yet: about a raven's)
+            return new Vector3(0f, b.center.y, b.center.z - b.extents.z * 0.85f); // (its middle height, at the back end)
+        }
+
+        // its body's box in its own frame (unscaled: as InverseTransformPoint gives it), from its meshes — the one place its size is read off the
+        // picture: the tail's streak (TailPoint), the author's look (BodySize). shown: only the renderers drawn now (a look's other mesh left out).
+        // Each world box taken into its frame by its eight corners. Heavy: a walk over its renderers, only as a streak is made or the author asks
+        private bool LocalBox(bool shown, out Bounds b)
+        {
+            b = new Bounds(); bool any = false;
+            foreach (Renderer r in GetComponentsInChildren<Renderer>()) // heavy: as the head says — a streak made, the author's look
             {
-                if (r == null || r is ParticleSystemRenderer || r is TrailRenderer) continue;
-                if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+                if (r == null || (shown && !r.enabled) || r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer) continue;
+                Bounds w = r.bounds;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 c = transform.InverseTransformPoint(new Vector3((i & 1) == 0 ? w.min.x : w.max.x, (i & 2) == 0 ? w.min.y : w.max.y, (i & 4) == 0 ? w.min.z : w.max.z));
+                    if (!any) { b = new Bounds(c, Vector3.zero); any = true; } else b.Encapsulate(c);
+                }
             }
-            if (!any) return new Vector3(0f, 0.2f, -0.25f); // (none seen yet: about a raven's)
-            Vector3 c = transform.InverseTransformPoint(b.center);
-            Vector3 e = transform.InverseTransformVector(b.extents); e = new Vector3(Mathf.Abs(e.x), Mathf.Abs(e.y), Mathf.Abs(e.z));
-            return new Vector3(0f, c.y, c.z - e.z * 0.85f); // (its middle height, at the back end)
+            return any;
         }
 
         // the streak's follower: at a point of the bird (its tail), never its child
@@ -522,6 +545,7 @@ namespace HuginWhispers
             _motor = RavenMotor.Of(gameObject, _munin, null);
             Paint();
             if (_motor == null) return;
+            if (_hintSet) { _motor.Hint = _hint; _motor.HintSet = true; }
             _motor.Launch(_motor.TakeoffVelocity(aim, Vector3.zero, Name), Name, 1f);
             State = Flies; _since = Time.time;
         }
@@ -568,8 +592,18 @@ namespace HuginWhispers
             {
                 if (_around == null || _motor.Body == null) { Leave(transform.position + transform.forward * 10f); return; }
                 float t = Time.time + _ringPhase;
-                Vector3 mid = Body.Head(_around) + Vector3.up * (_ringUp + Mathf.Sin(t * 0.5f) * 0.5f);
-                Vector3 aim = CirclePlan.Ring(transform.position, mid, Mathf.Lerp(_ringR * 0.85f, _ringR * 1.15f, Mathf.PerlinNoise(t * 0.12f, _ringPhase)), 34f, 1f);
+                // under a roof its ring is fitted to the room round that head (RavenMotor.RingRoom, asked once a second, eased): never out past a wall
+                Vector3 head = Body.Head(_around);
+                float ringR = _ringR, ringUp = _ringUp;
+                if (_motor.Indoor > 0.5f)
+                {
+                    if (Time.time >= _fitAt) { _fitAt = Time.time + 1f; RavenMotor.RingRoom(head, _ringR, _ringUp, out _fitR, out _fitUp); }
+                    ringR = Mathf.Min(ringR, _fitR); ringUp = Mathf.Min(ringUp, _fitUp);
+                }
+                if (_ringRNow <= 0f) { _ringRNow = ringR; _ringUpNow = ringUp; }
+                _ringRNow = Mathf.MoveTowards(_ringRNow, ringR, dt * 1.5f); _ringUpNow = Mathf.MoveTowards(_ringUpNow, ringUp, dt * 1.5f);
+                Vector3 mid = head + Vector3.up * (_ringUpNow + Mathf.Sin(t * 0.5f) * Mathf.Min(0.5f, _ringUpNow * 0.2f));
+                Vector3 aim = CirclePlan.Ring(transform.position, mid, Mathf.Lerp(_ringRNow * 0.85f, _ringRNow * 1.15f, Mathf.PerlinNoise(t * 0.12f, _ringPhase)), 34f, 1f);
                 // far from its ring (come from 60 m behind you): its full cruise, easing to the ring's slow glide as it nears (the user
                 // 2026-11-06: Eirik's raven took ages to come in over you at the glide)
                 float off = Vector3.Distance(transform.position, mid);
@@ -614,33 +648,25 @@ namespace HuginWhispers
             else if (State == Flies || State == Final)
             {
                 if (_motor.Body == null) { Perches.Puff(gameObject, _munin, "a story bird lost its wings"); return; }
-                if (Time.time - _since > GiveUp)
+                if (Time.time - _since > GiveUp || _motor.Stuck)
                 {
-                    // its seat out of reach (under a roof, behind a wall from where it came): a scene's bird hangs in the air
+                    // its seat out of reach (under a roof, behind a wall from where it came; the motor's Stuck: out of its sight and no nearer
+                    // for a while, on the way round or with none — it need not hang there the whole GiveUp): a scene's bird hangs in the air
                     // where it got to — the scene goes on with it there; a person's raven goes (NpcRaven brings it again)
+                    _motor.SeatEnd(_motor.Stuck ? "gave up, stuck out of its sight" : "gave up, not there in " + GiveUp.ToString("0") + " s");
+                    _motor.Unstick();
                     if (Stuck != null) { Note("its seat out of reach" + Blocked()); _since = Time.time; Stuck(); return; } // (a place's raven: its place picks again)
                     if (_npc) { Perches.Puff(gameObject, _munin, "a person's raven never got to its seat"); return; }
                     Note("its seat out of reach: it hangs in the air where it got to" + Blocked());
                     Seat.position = transform.position; _hover = true; State = Hover; _since = Time.time;
                     return;
                 }
-                Vector3 seat = Seat.position, front = Flat(Seat.forward);
-                if (State == Flies)
-                {
-                    Vector3 pre = seat + Side(front) * ComeBack + Vector3.up * ComeUp; // (behind it as a rule; the open side: ComeFrom)
-                    _motor.Steer(pre, _motor.Body.Style.Cruise, true, 0f, dt, Vector3.zero, 1f);
-                    _motor.Finish(dt, 0f);
-                    if (Vector3.Distance(transform.position, pre) < 1.2f || Vector3.Distance(transform.position, seat) < 2f) { _motor.Body.MarkFinal(); State = Final; }
-                }
-                else
-                {
-                    Vector3 aim = seat + Vector3.up * FlightBody.LandAbove + Side(front) * FlightBody.LandBehind;
-                    float near = Vector3.Distance(transform.position, aim);
-                    _motor.Body.FaceHint(front, 1f - Mathf.Min(near, RavenFlight.TurnFrom) / RavenFlight.TurnFrom);
-                    float left = _motor.Steer(aim, _motor.Body.HomeSpeed(5f, Vector3.zero, 0f), true, near < 4f ? 2f : 0f, dt, Vector3.zero, 1f);
-                    _motor.Finish(dt, Mathf.Clamp01(1f - near / Mathf.Max(0.5f, _motor.Landing().Flare)));
-                    if (_motor.Body.CanLand(left, Vector3.zero)) { _life.NextLand = _motor.Landing(); BeginLand(); }
-                }
+                // the motor's flight to a seat (RavenMotor.ToSeat): the way round while the seat is out of sight, the point before it on its
+                // open side (_from), the last way in; which leg it is on is the body's word
+                // (a scene's bird goes without the way round, as its scene was set; a person's raven and a place's — with it)
+                bool down = _motor.ToSeat(Seat.position, Flat(Seat.forward), _from, dt, false, _npc || Stuck != null);
+                State = _motor.Body != null && _motor.Body.Final ? Final : Flies;
+                if (down) BeginLand();
             }
             else if (State == Landing) { LandStep(); return; }
             if (this != null && _life != null && State != Landing) _life.Apply();
@@ -719,6 +745,15 @@ namespace HuginWhispers
 
         internal static string StateName(int s) { return s == Circles ? "circles" : s == Sits ? "sits" : s == Flies ? "flies in" : s == Final ? "final way in" : s == Landing ? "landing" : s == Away ? "away" : s == Hover ? "hangs in the air" : s == Passes ? "through the roof" : s.ToString(); }
 
+        // its body as drawn, in cm (LocalBox: wings folded as it sits), from its feet: what StoryBird.Room's numbers are checked against
+        private string BodySize()
+        {
+            Bounds b;
+            if (!LocalBox(true, out b)) return "-";
+            Vector3 s = Vector3.Scale(b.size, transform.lossyScale) * 100f, m = Vector3.Scale(b.min, transform.lossyScale) * 100f, x = Vector3.Scale(b.max, transform.lossyScale) * 100f;
+            return Mathf.RoundToInt(s.x) + "×" + Mathf.RoundToInt(s.y) + "×" + Mathf.RoundToInt(s.z) + " cm (back " + Mathf.RoundToInt(-m.z) + ", front " + Mathf.RoundToInt(x.z) + ", up " + Mathf.RoundToInt(x.y) + ")";
+        }
+
         // the author's look at it (raven story bird)
         internal string Describe()
         {
@@ -729,7 +764,7 @@ namespace HuginWhispers
             foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
                 if (r != null && !(r is ParticleSystemRenderer)) foreach (Material m in r.sharedMaterials) if (m != null) mats += " [" + r.name + ": " + m.name + " / " + (m.shader != null ? m.shader.name : "-") + (m.HasProperty("_Color") ? " a=" + m.color.a.ToString("0.00") : "") + "]";
             return StateName(State) + " at " + Where(transform.position) + (p != null ? ", " + Mathf.RoundToInt(Vector3.Distance(transform.position, p.transform.position)) + " m from you" : "")
-                + ", seat " + (Seat != null ? Where(Seat.position) : "-") + ", renderers " + on + "/" + all + ", painted " + (_paint != null) + mats;
+                + ", seat " + (Seat != null ? Where(Seat.position) : "-") + ", renderers " + on + "/" + all + ", painted " + (_paint != null) + ", body " + BodySize() + mats;
         }
 
         private void OnDestroy()

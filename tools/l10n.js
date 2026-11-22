@@ -108,13 +108,13 @@ function asked() {
       for (const k of [plain, bare]) { if (!out.has(k)) out.set(k, []); out.get(k).push("Abilities.cs (Plain/Bare of «" + name + "»)"); }
     }
   }
-  // the built-in models' own words (assets/gear, perches, items: «name:», «note:» and «story:» lines), shown through Lang
+  // the built-in models' own words (assets/gear, perches, items: «name:», «note:», «story:» and «dream:» lines — WsDreams), shown through Lang
   for (const sub of ["gear", "perches", "items", "story/perches", "story/items"]) {
     const d = path.join(root, "assets", sub);
     if (!fs.existsSync(d)) continue;
     for (const f of fs.readdirSync(d).filter(n => n.endsWith(".txt"))) {
       fs.readFileSync(path.join(d, f), "utf8").split(/\r?\n/).forEach((l, i) => {
-        const m = l.match(/^(name|note|story):\s*(.*\S)\s*$/);
+        const m = l.match(/^(name|note|story|dream):\s*(.*\S)\s*$/);
         if (!m) return;
         // («story: для Кетіля until world x   # …»: the text is the words before «until» and the note — WsItems.StoryOf; «story: yes»: a word, not a text)
         const text = m[1] === "story" ? m[2].replace(/\s+#.*$/, "").replace(/(^|\s+)until\s.*$/, "").trim() : m[2];
@@ -430,6 +430,11 @@ if (process.argv.includes("--strict")) {
   if (!all) say("NpcMorePatterns.cs: no «All = { … }» (tools/l10n.js reads the people's words in its order)");
   else for (const n of all[1].split(",").map(s => s.trim()).filter(Boolean)) { if (!where.has(n)) { say("NpcMorePatterns.All: «" + n + "» is no const string of an Npc*Patterns.cs"); continue; } uk = uk.concat(verb(where.get(n), n)); }
   const U = read(uk.join("\n").split("\n")), E = read(fs.existsSync(enFile) ? fs.readFileSync(enFile, "utf8").split(/\r?\n/) : []);
+  // a theme's conditions ([heid:idle ?world torvald_wakes]): the English theme takes the Ukrainian one's place whole, its «?…» too, so every
+  // condition one side has the other has (2026-11-22: three story themes kept conditions the Ukrainian had changed — Heid's «pinched again» after the tower)
+  const condsOf = lines => { const C = new Map(); for (let l of lines) { l = l.trim(); const m = l.match(/^\[([^\]]+)\]/); if (!m) continue; const h = m[1].trim(), q = h.indexOf(" ?"), th = q < 0 ? h : h.slice(0, q).trim(); if (!C.has(th)) C.set(th, new Set()); C.get(th).add(q < 0 ? "" : h.slice(q + 2).split(",").map(x => x.trim()).sort().join(", ")); } return C; };
+  const CU = condsOf(uk.join("\n").split("\n")), CE = condsOf(fs.existsSync(enFile) ? fs.readFileSync(enFile, "utf8").split(/\r?\n/) : []);
+  for (const [th, su] of CU) { const se = CE.get(th); if (!se) continue; const onlyU = [...su].filter(x => !se.has(x)), onlyE = [...se].filter(x => !su.has(x)); if (onlyU.length || onlyE.length) say("npc_patterns.txt: theme [" + th + "] has other conditions than the Ukrainian (copy its «?…» as they are):" + (onlyU.length ? " Ukrainian only «" + onlyU.map(x => x || "none").join("», «") + "»" : "") + (onlyE.length ? " " + language + " only «" + onlyE.map(x => x || "none").join("», «") + "»" : "")); }
   const noTheme = [...U.T].filter(x => !E.T.has(x)), short = [...U.L].filter(([n, c]) => (E.L.get(n) || 0) < c);
   noTheme.slice(0, 10).forEach(x => say("npc_patterns.txt: theme [" + x + "] has no " + language + " (its Ukrainian is said instead)"));
   short.slice(0, 10).forEach(([n, c]) => say("npc_patterns.txt: list @" + n + " has " + (E.L.get(n) || 0) + " " + language + " lines, the Ukrainian " + c + " (add the new ones)"));

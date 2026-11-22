@@ -40,7 +40,7 @@ namespace HuginWhispers
         internal static float OpenFrom = 1.4f;            // m over its person's feet a perch must be open to (StoryBird.Open)
         internal static float StayMin = 12f, StayMax = 35f, CircleR = 4.5f, CircleUp = 3.5f, FightR = 7f, FightUp = 6f;
         internal static int Level = 4;                    // its size: as a raven of this trust level on a shoulder
-        internal static Vector3 ShoulderOff = new Vector3(0.14f, 0.12f, 0f); // m from the shoulder bone (x mirrored for Munin)
+        internal static float SeatLift = 0f;             // m over where a player's raven would sit there (Shoulder.SeatOff + ShoulderFit, what the person wears measured): none — the 7 cm set by eye before the measuring had Heid's raven in the air over her cloak (the user's shot 2026-11-19; at 0 it stands on it); kept as the one number to tune it by
 
         private static readonly int KState = "RavenWatch_npcRaven".GetStableHashCode();
         private static readonly int KSeq = "RavenWatch_npcRavenSeq".GetStableHashCode();
@@ -307,7 +307,8 @@ namespace HuginWhispers
                 if (v == null || !v.Valid || v.IsSpot || v.IsNest || v.Gone) continue; // (Gone: a piece of a place its state has not now)
                 if (Vector3.Distance(v.transform.position, from) > r) continue;
                 for (int i = 0; i < v.Count; i++)
-                    if (v.At(i) == null && !v.Busy(i) && !TakenByPeople(v.SeatT(i).position, me) && StoryBird.Open(from + Vector3.up * OpenFrom, v.SeatT(i).position)) free.Add(new KeyValuePair<PerchView, int>(v, i)); // (heavy: a ray a free seat, as it chooses one)
+                    if (v.At(i) == null && !v.Busy(i) && !TakenByPeople(v.SeatT(i).position, me) && StoryBird.Open(from + Vector3.up * OpenFrom, v.SeatT(i).position)
+                        && StoryBird.Room(v.SeatT(i).position, v.SeatT(i).eulerAngles.y, v.transform, Shoulder.SizeFor(Level))) free.Add(new KeyValuePair<PerchView, int>(v, i)); // (heavy: a ray and a capsule a free seat, as it chooses one)
             }
             if (free.Count == 0) return false;
             KeyValuePair<PerchView, int> pick = free[Random.Range(0, free.Count)];
@@ -423,7 +424,7 @@ namespace HuginWhispers
             _left = false;
             Vector3 at; float yaw;
             bool perch = ParsePerch(st, out at, out yaw);
-            if (!perch) ShoulderPose(out at, out yaw);
+            if (!perch) ShoulderPose(Quaternion.identity, out at, out yaw); // (where to fly to: the seat's own ride comes with LateUpdate)
             if (_bird == null)
             {
                 string id;
@@ -440,40 +441,47 @@ namespace HuginWhispers
             if (mode == "circle") _bird.Circle(_body, w.Length > 1 ? Errands.F(w[1], CircleR) : CircleR, w.Length > 2 ? Errands.F(w[2], CircleUp) : CircleUp);
         }
 
-        // where it sits on the person: over its shoulder bone, upright, facing as the person does
-        private void ShoulderPose(out Vector3 at, out float yaw)
+        // where it sits on the person: the shoulder's one place, as a player's raven has it (Shoulder.SeatOff from the bone, turned and grown with the
+        // body, carried by the shoulder's own move: ride), SeatLift higher; upright, facing as the person does
+        private void ShoulderPose(Quaternion ride, out Vector3 at, out float yaw)
         {
-            if ((_bone == null || _anim == null || NpcGait.Stale(_bone, _anim)) && _spec != null) { _anim = _a.GetComponentInChildren<Animator>(); _bone = _anim != null ? BodyClips.SkeletonBone(this, _anim.transform, _spec.Munin ? "LeftShoulder" : "RightShoulder") : null; } // (the body's own shoulder: what it wears carries bones of the same names; looked up again on a body rebuilt by new clothes)
+            if ((_bone == null || _anim == null || NpcGait.Stale(_bone, _anim)) && _spec != null) // (the body's own shoulder: what it wears carries bones of the same names; looked up again on a body rebuilt by new clothes)
+            {
+                _anim = _a.GetComponentInChildren<Animator>();
+                _bone = _anim != null ? BodyClips.SkeletonBone(this, _anim.transform, _spec.Munin ? "LeftShoulder" : "RightShoulder") : null;
+                _chest = _anim != null ? BodyClips.SkeletonBone(this, _anim.transform, "Spine2") : null;
+                _ride.Reset();
+            }
             Vector3 fwd = Vector3.ProjectOnPlane(_a.transform.forward, Vector3.up);
             if (fwd.sqrMagnitude < 0.0001f) fwd = Vector3.forward;
-            Quaternion facing = Quaternion.LookRotation(fwd.normalized, Vector3.up);
-            yaw = facing.eulerAngles.y;
-            Vector3 off = _spec != null && _spec.Munin ? new Vector3(-ShoulderOff.x, ShoulderOff.y, ShoulderOff.z) : ShoulderOff;
-            at = (_bone != null ? _bone.position : _a.transform.position + Vector3.up * 1.5f) + facing * (off * _a.transform.localScale.x);
+            yaw = Quaternion.LookRotation(fwd.normalized, Vector3.up).eulerAngles.y;
+            bool munin = _spec != null && _spec.Munin;
+            Vector3 seat0 = (_bone != null ? _bone.position : _a.transform.position + Vector3.up * 1.5f) + ShoulderRide.Gain(ride, Shoulder.RideLift) * Shoulder.SeatOff(_body, munin);
+            // on what the person wears, as a player's raven sits on what he wears (ShoulderFit: up or down to the surface under it, along the
+            // shoulder off a hood or in from past its edge) — the user's shot 2026-11-19: Heid's raven sat beside her shoulder, not on it
+            float lift = ShoulderFit.Lift(_body, munin, seat0);
+            at = seat0 + ShoulderFit.Side(_body, munin) + Vector3.up * (lift + SeatLift * _a.transform.localScale.x);
         }
 
-        // the shoulder seat rides with the person (the bird sits on it, or flies to it) — the shoulder player ravens' way:
-        // its place eased in the person's own frame (the walk's shake of the bone smoothed away, the body's move kept
-        // whole) and its turn after the person's a moment late (Shoulder.TurnFollow*)
-        internal static float SeatEase = 10f;
-        private Vector3 _seatLocal; private float _seatYaw; private bool _seatSet;
+        // The shoulder seat rides with the person (the bird sits on it, or flies to it) the way a player's raven rides its shoulder (ShoulderPin.Place):
+        // ON the bone this very frame, the seat carried and tipped by the collarbone's own move (ShoulderRide), its turn after the person's a moment
+        // late (Shoulder.TurnFollow*). Till 2026-11-18 its place chased the bone with an ease of its own (a tenth of a second behind) and never
+        // turned with it: at a run the shoulder went up and down under a bird that stayed behind — «ворон скаче по плечу», the user.
+        private readonly ShoulderRide _ride = new ShoulderRide();
+        private Transform _chest;
+        private float _seatYaw; private bool _seatSet;
 
         private void LateUpdate()
         {
             if (_bird != null && (_a == null || Of(_a.Def) == null)) { Hide(); return; } // (its template changed: no raven now)
-            if (!_onShoulder || _bird == null || _bird.Seat == null) { _seatSet = false; return; }
-            Vector3 at; float yaw;
-            ShoulderPose(out at, out yaw);
-            Transform root = _a.transform;
-            Vector3 local = root.InverseTransformPoint(at);
+            if (!_onShoulder || _bird == null || _bird.Seat == null) { if (_seatSet) { _seatSet = false; _ride.Reset(); } return; }
             float dt = Time.deltaTime;
-            if (!_seatSet) { _seatLocal = local; _seatYaw = yaw; _seatSet = true; }
-            else
-            {
-                _seatLocal = Vector3.Lerp(_seatLocal, local, 1f - Mathf.Exp(-SeatEase * dt));
-                _seatYaw = Mathf.LerpAngle(_seatYaw, yaw, Mathf.Clamp01(dt * (_spec != null && _spec.Munin ? Shoulder.TurnFollowMunin : Shoulder.TurnFollowHugin)));
-            }
-            _bird.Seat.SetPositionAndRotation(root.TransformPoint(_seatLocal), Quaternion.Euler(0f, _seatYaw, 0f));
+            Quaternion ride = _bone != null && _chest != null ? _ride.Step(_chest, _bone, dt) : Quaternion.identity;
+            Vector3 at; float yaw;
+            ShoulderPose(ride, out at, out yaw);
+            if (!_seatSet) { _seatYaw = yaw; _seatSet = true; }
+            else _seatYaw = Mathf.LerpAngle(_seatYaw, yaw, Mathf.Clamp01(dt * (_spec != null && _spec.Munin ? Shoulder.TurnFollowMunin : Shoulder.TurnFollowHugin)));
+            _bird.Seat.SetPositionAndRotation(at, Quaternion.Slerp(Quaternion.identity, ride, Shoulder.RideTilt) * Quaternion.Euler(0f, _seatYaw, 0f));
         }
 
         private void Hide()
@@ -507,6 +515,13 @@ namespace HuginWhispers
             float roll = Random.value; // to the point (raven_answers), else a word (raven_speaks), else silence
             string end = roll < s.Answers ? RavenTalk.PersonReply : roll < s.Answers + s.Speaks ? RavenTalk.PersonWord : "";
             RavenTalk.Push(RavenTalk.PersonRaven + s.Talk + end, _a.Id, TalkWait);
+        }
+
+        // this person's raven sitting on that shoulder of it now (a clip that lays a hand on it: BodyClips.BirdOf), else null
+        internal static GameObject BirdOn(Humanoid body, bool left)
+        {
+            NpcRaven r = body != null ? body.GetComponent<NpcRaven>() : null; // heavy: one component of one body, twice a second while such a clip plays (BodyAnimator.BirdLook)
+            return r != null && r._bird != null && r._onShoulder && !r._left && r._spec != null && r._spec.Munin == left ? r._bird.gameObject : null;
         }
 
         // the picture of this person's raven here (another player's talk to it: its beak and voice on this game)

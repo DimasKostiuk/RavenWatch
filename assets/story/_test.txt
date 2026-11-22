@@ -52,5 +52,6 @@
 Глава 2 (квест) | Літ кличе: сцена з чужинцем (E на Літові) | story jump ch2 lit_plan
 Глава 2 (квест) | Ейвінд: знову «Чужинець» (і ворони скажуть ще раз) | story do unworld eyvind_met && story unflag stranger_eyvind
 Глава 2 (квест) | Коло 1: день «не заважай» минув | story do wvar t_ch2_work1 1
-Глава 2 (квест) | Коло 2: два дні минули | story do wvar t_ch2_work2 1
-Глава 2 (квест) | Коло 3: два дні минули | story do wvar t_ch2_work3 1
+Глава 2 (квест) | Коло 2: день «не заважай» минув (і два дні Літа) | story do wvar t_ch2_work2 1 && story do wvar t_ch2_quiet 1
+Глава 2 (квест) | Після вежі: 12 годин минули (лист Літа про цвяхи) | story do wvar tc_ch2_later4 1
+Глава 2 (квест) | Після вежі: день «не заважай» минув | story do wvar t_ch2_work4 1

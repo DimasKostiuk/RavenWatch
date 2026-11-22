@@ -41,6 +41,7 @@ namespace HuginWhispers
             public float Out;         // degrees its arms hang away from its body (below 0: close to it)
             public float Toes;        // degrees its feet turn out (below 0: in)
             public float Narrow;      // degrees each thigh comes in toward its middle as it walks: its feet nearer one line (a woman's step)
+            public float SitKnees;    // degrees each thigh comes in on a bench or a chair: its knees and feet nearer each other than the game seats them (the user 2026-11-19, Heid: «більш жіночну, щоб ноги так не розставляла»)
             public float Twist;       // degrees its body turns with each step
             public float Nod;         // degrees its head nods with each step
             public float Rest;        // degrees its hips tilt as it stands with its weight on one foot (its quiet life)
@@ -145,7 +146,7 @@ namespace HuginWhispers
                         case "speed": s.Speed = v; break; case "stoop": s.Stoop = v; break; case "head": s.Head = v; break;
                         case "swing": s.Swing = v; break; case "sway": s.Sway = v; break; case "bob": s.Bob = v; break;
                         case "limp": s.Limp = v; break; case "back": s.BackChance = v; break; case "shoulders": s.Shoulders = v; break;
-                        case "shrug": s.Shrug = v; break; case "out": s.Out = v; break; case "toes": s.Toes = v; break; case "narrow": s.Narrow = v; break;
+                        case "shrug": s.Shrug = v; break; case "out": s.Out = v; break; case "toes": s.Toes = v; break; case "narrow": s.Narrow = v; break; case "sitknees": s.SitKnees = v; break;
                         case "twist": s.Twist = v; break; case "nod": s.Nod = v; break; case "spread": s.Spread = v; break;
                         case "rest": s.Rest = v; break; case "tilt": s.Tilt = v; break; case "breath": s.Breath = v; break;
                         default: why = name + ": unknown «" + w[i] + "»"; return null;
@@ -179,7 +180,7 @@ namespace HuginWhispers
             {
                 Kind = b.Kind, Speed = 1f + (b.Speed - 1f) * m, Stoop = b.Stoop * m2 + (plain ? plainStoop : 0f), Head = b.Head * m + (plain ? (j - 0.5f) * 6f : 0f),
                 Swing = 1f + (b.Swing - 1f) * m2, Sway = b.Sway * m, Bob = b.Bob * m2, Limp = Mathf.Clamp01(b.Limp * m), ArmsBack = j2 < b.BackChance,
-                Shoulders = b.Shoulders * m, Shrug = b.Shrug * m2, Out = b.Out * m, Toes = b.Toes * m2, Narrow = b.Narrow * m, Twist = b.Twist * m, Nod = b.Nod * m2,
+                Shoulders = b.Shoulders * m, Shrug = b.Shrug * m2, Out = b.Out * m, Toes = b.Toes * m2, Narrow = b.Narrow * m, SitKnees = b.SitKnees, Twist = b.Twist * m, Nod = b.Nod * m2,
                 Rest = b.Rest * m, Breath = b.Breath * m2, Tilt = b.Tilt * (j3 < 0.5f ? -1f : 1f) * (0.5f + Mathf.Abs(j3 * 2f - 1f) * 0.5f), Seed = seed, // (its side, at least half of its kind's: a draw near the middle left Sigrid's head all but straight)
             };
         }
@@ -239,9 +240,33 @@ namespace HuginWhispers
         // how far down it put the head this frame, in degrees (its stoop and its head, as the head ends up): one that talks to someone lifts it (NpcSpeech)
         internal float HeadDown;
 
-        internal void Pose(Style s, float legs, Mix now, bool off, bool upper = false, bool arms = false)
+        // sit: 0…1 — it sits on a bench or a chair and no clip holds its legs: its knees come in by its style's SitKnees (eased here).
+        // Its own step, before the rest and whatever the rest does: the gait goes off under every gesture clip (off), and knees that went
+        // with it opened at each word said with the hands and closed again after (found in the review of 2026-11-19, before it was seen).
+        // Its own mark of «the game did not pose the bones this frame» too (the thigh as we left it): the gait's is on the spine, which it
+        // does not write while it is off — a body out of sight would have had its thighs turned again every frame.
+        private float _sitIn;
+        private Quaternion _kneeMine; private bool _kneeWrote;
+        // Its hands go with its knees (the user 2026-11-20, Heid on a bench: «руки їй клади на ноги»): the game's seat lays the hands on the knees
+        // where the game has them, wide; the knees brought in, the hands hung in the air beside the thighs. Each upper arm turns in with its thigh,
+        // KneeArms of the thigh's degrees — only while no clip of its own has its arms (hands: a pose of its ease, a gesture: theirs)
+        internal static float KneeArms = 0.9f;
+        private void Knees(Style s, float sit, float dt, bool hands)
+        {
+            _sitIn = Mathf.MoveTowards(_sitIn, sit, dt * 2f);
+            if (_lUp == null || _rUp == null || Mathf.Abs(s.SitKnees) < 0.01f || _sitIn < 0.01f) { _kneeWrote = false; return; }
+            if (_kneeWrote && _lUp.localRotation == _kneeMine) return; // (not posed by the game this frame: they still hold ours)
+            Quaternion body = _me.transform.rotation;
+            float k = s.SitKnees * _sitIn;
+            Turn(_lUp, body, 0f, k, 0f); Turn(_rUp, body, 0f, -k, 0f);
+            if (hands && _lArm != null && _rArm != null) { Turn(_lArm, body, 0f, k * KneeArms, 0f); Turn(_rArm, body, 0f, -k * KneeArms, 0f); }
+            _kneeMine = _lUp.localRotation; _kneeWrote = true;
+        }
+
+        internal void Pose(Style s, float legs, Mix now, bool off, bool upper = false, bool arms = false, float sit = 0f, bool sitHands = false)
         {
             HeadDown = 0f;
+            Knees(s, sit, Time.deltaTime, sitHands);
             if (now == null) now = Mix.None;
             float stoopNow = now.Stoop, headNow = now.Head, swingNow = now.Swing, bobNow = now.Bob, shrugNow = now.Shrug, outNow = now.Out;
             float limp = Mathf.Clamp01(s.Limp + now.Limp); // (its own spared leg, and a wish's on top)
@@ -287,6 +312,9 @@ namespace HuginWhispers
             if (!arms && Mathf.Abs(shrug) > 0.01f) { Turn(_lArm, body, 0f, 0f, shrug * _on); Turn(_rArm, body, 0f, 0f, -shrug * _on); }
             // its feet turned out (each thigh round the up axis): only as it walks, the game's stance standing
             if (Mathf.Abs(s.Toes) > 0.01f && _strolling > 0.01f) { Turn(_lUp, body, 0f, -s.Toes * _strolling * _on, 0f); Turn(_rUp, body, 0f, s.Toes * _strolling * _on, 0f); }
+
+            // (on a bench its knees nearer each other: Knees, at the top — each thigh round the up axis, in: seated the thigh lies forward, so
+            // this takes the knee and the foot across, the left one +; the game seats every body with its legs wide)
 
             // its feet nearer one line (each thigh round the forward axis, in: the left one +, as an arm's «out» is − on the left)
             if (Mathf.Abs(s.Narrow) > 0.01f && _strolling > 0.01f) { float n = s.Narrow * _strolling * _on; Turn(_lUp, body, 0f, 0f, n); Turn(_rUp, body, 0f, 0f, -n); }
