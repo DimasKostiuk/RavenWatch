@@ -54,13 +54,14 @@
 [heid:idle ?reached ch1 home_hall, !reached ch1 lit_walk] Без старого тихо. Аж надто.
 [heid:idle ?reached ch1 lit_duty] Двергр знову рахує. Я й не знала, що тут стільки каміння.
 [heid:idle ?reached ch1 lit_duty] Міряє стіни, ніби вони йому щось винні.
-[heid:idle ?reached ch1 lit_duty, !reached ch2 sverre_home] Тепер нас троє. Тісно не буде — Зала велика.
+[heid:idle ?reached ch1 lit_duty, !reached ch2 lit_plan] Тепер нас троє. Тісно не буде — Зала велика.
+[heid:idle ?reached ch2 lit_plan, !reached ch2 sverre_home] Тепер нас четверо. Той, з лави, теж рахується.
 [heid:see_player] Кажи, чого треба.
 [heid:see_player] Знову ти. Сідай, якщо вже прий{шов|шла}.
 [heid:see_player] Не тупцюй тут. Трави потопчеш.
 [heid:see_player] Ще {живий|жива}? Добре.
 [heid:see_player] Голодн{ий|а}? По очах бачу. Біля вогню є їжа.
-[heid:see_player ?world ketil_gone] Ідеш кудись? Іди. Тільки старого з собою не бери.
+[heid:see_player ?world ketil_gone, !reached ch2 torv_out] Ідеш кудись? Іди. Тільки старого з собою не бери.
 
 # herbs — Гейд іноді на луках по трави (people/heid.txt, chance, found.travy).
 [heid:herbs] Ось вона. Рано цього року.
@@ -112,7 +113,7 @@
 Сядь до вогню. Він не кривий.
 Дивись на стіни скільки хочеш. Мене не міряй.
 Ти говориш, як каміння падає: рідко й важко.
-Старого не свари. Він старший за твої стіни.
+Старого не свари. Він старший, ніж здається.
 
 @гейд_літ_ухил
 Я тут не господиня. Я тут лише мету.
@@ -292,7 +293,7 @@
 [heid:bye_back ?seated] Іди. Я ще посиджу.
 [heid:bye_back ?hurt] Іди. Подряпина. Заживе.
 [heid:bye_back ?npcattitude >= 60] Бережи себе. Я серйозно.
-[heid:bye_back ?world ketil_gone, !reached ch1 thistle] І вгору довго не дивись.
+[heid:bye_back ?reached ch1 heid_ask, !reached ch1 thistle] І вгору довго не дивись.
 [heid:bye_back ?reached ch1 thistle, !reached ch1 brew] Узлісся. Не сплутай.
 [heid:bye_back ?phase heid_apart] Іди вже. Мені треба подумати.
 [heid:bye_back ?world torvald_wakes, !reached ch2 later4] Іди. Старий удома — то й добре.
@@ -313,7 +314,7 @@
 [heid:idle ?world torvald_wakes, !reached ch2 later4] Обидва вернулися. Старий — навіть більше, ніж пішов.
 [heid:idle ?world torvald_wakes, !reached ch2 later4] Відвар вилила. Не питай. Так треба було.
 # Ейвінд і Сверре живуть у Залі (sverre_home); біля вогню Варти Хель не чути
-[heid:idle ?reached ch2 sverre_home] Було троє, тепер п'ятеро. Доведеться брати більший казан.
+[heid:idle ?reached ch2 sverre_home] Було четверо, тепер п'ятеро. Доведеться брати більший казан.
 [heid:idle ?reached ch2 sverre_home] Двоє нових. Один говорить за обох.
 [heid:idle ?reached ch2 sverre_home] Той, у кінці Зали, їсть, коли поставиш. Сам не просить.
 [heid:idle ?reached ch2 sverre_home] Біля вогню їх не чути. Хоч тут не чути.
@@ -337,7 +338,8 @@
 [heid:back] Тут нічого не змінилось. Хіба вогонь погас би, якби не я.
 [heid:back] Ходиш і ходиш. Сядь хоч раз, поки світло.
 [heid:back ?world ketil_gone, !reached ch1 home_hall] Старий питав про тебе. Тричі. Щоразу як уперше.
-[heid:back ?reached ch1 lit_walk] Старий питав про тебе. Тричі. Щоразу як уперше.
+[heid:back ?reached ch1 lit_walk, !world torvald_wakes] Старий питав про тебе. Тричі. Щоразу як уперше.
+[heid:back ?world torvald_wakes] Старий питав про тебе. «Де той, з вежі?» Уперше пам'ятав.
 [heid:you_wet] Мокр{ий|а}. До вогню, швидко.
 [heid:you_wet] З тебе капає. На мої трави.
 [heid:you_wet] Обсохни, бо зварю тобі гіркого. Від застуди.

@@ -1,20 +1,30 @@
 # Слова Сверре без питання (voice: own у шаблоні npc/sverre.txt; користувач 2026-11-22: «він пустий, іноді кидає короткі фрази»).
 # Короткі, рівні, без почуття: тіло вернулось, а решта ще йде (Літ). Лише те, що гравець уже чув: «Тут тихо», південь, що кликав, дурні сни.
 # Форми: {той|та} — твої (docs/jobs/words-people.md).
-[sverre:idle] Тихо тут.
-[sverre:idle] Я ще тут?
-[sverre:idle] Не кличе. Дивно.
-[sverre:idle] Вогонь. Так. Вогонь.
-[sverre:idle] Хтось казав сісти. Я сів.
-[sverre:idle] Південь… ні. Тихо.
-[sverre:idle] Руки є. Обидві.
-[sverre:idle] Колись снилося. Тепер ні.
+[sverre:idle ?reached ch2 sverre_home] Тихо тут.
+[sverre:idle ?reached ch2 sverre_home] Я ще тут?
+[sverre:idle ?reached ch2 sverre_home] Не кличе. Дивно.
+[sverre:idle ?reached ch2 sverre_home] Вогонь. Так. Вогонь.
+[sverre:idle ?reached ch2 sverre_home] Хтось казав сісти. Я сів.
+[sverre:idle ?reached ch2 sverre_home] Південь… ні. Тихо.
+[sverre:idle ?reached ch2 sverre_home] Руки є. Обидві.
+[sverre:idle ?reached ch2 sverre_home] Колись снилося. Тепер ні.
 [sverre:see_player] А. Ти.
-[sverre:see_player] Ти {той|та}, з лісу.
+[sverre:see_player ?reached ch2 sverre_home] Ти {той|та}, з лісу.
 [sverre:see_player] Треба щось сказати? Скажи.
-[sverre:see_player] Я сиджу. Можна?
-[sverre:see_player] Не кличе. Це ти зроби{в|ла}?
-[sverre:see_player] Добре. Тихо.
+[sverre:see_player ?reached ch2 sverre_home] Я сиджу. Можна?
+[sverre:see_player ?reached ch2 sverre_home] Не кличе. Це ти зроби{в|ла}?
+[sverre:see_player ?reached ch2 sverre_home] Добре. Тихо.
+# у лісі, до вогню (огляд 2026-11-24: досі «тихо, не кличе» звучало й там, де його саме кличе): поклик, південь, дурні сни
+[sverre:idle ?!reached ch2 sverre_home] Південь. Туди.
+[sverre:idle ?!reached ch2 sverre_home] Кличе. Чуєш? Ні?
+[sverre:idle ?!reached ch2 sverre_home] Коза співала. Гарно.
+[sverre:idle ?!reached ch2 sverre_home] Треба йти. Мене чекають.
+[sverre:idle ?!reached ch2 sverre_home] Холодно. Нічого. Там тепліше.
+[sverre:idle ?!reached ch2 sverre_home] Хтось кличе. Добрим голосом.
+[sverre:see_player ?!reached ch2 sverre_home] Ти не {той|та}, хто кличе.
+[sverre:see_player ?!reached ch2 sverre_home] Пусти. Мені туди.
+[sverre:see_player ?!reached ch2 sverre_home] Ти теж чуєш? Ні. Ти не чуєш.
 # Зала встала (rise_after; у сцені hall_rises він «щось майстрував у кутку»)
 [sverre:idle ?reached ch2 rise_after] Тепло. Стіни. Добре.
 [sverre:idle ?reached ch2 rise_after] Руки щось робили. Добре робили?

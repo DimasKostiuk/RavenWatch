@@ -112,8 +112,8 @@ mark: prologue_house 15 Поклик
 wait: near prologue_house 24
 
 [stage house]
-goal: Зазирни в покинуту хату
-mark: prologue_house 15 Покинута хата
+goal: Зазирни в хату                      # (не «покинуту»: поки Відлуння не згасло, у ній світло й вогонь — огляд 2026-11-24)
+mark: prologue_house 15 Хата
 wait: inside prologue_house, !near prologue_house.dveri 4   # уже в самій хаті: на її підлозі, під її дахом і не на порозі
 
 [stage echo]
@@ -129,6 +129,18 @@ wait: !inside prologue_house
 [stage door]
 goal: Ворон Ейріка
 scene: echo_door                          # ворон на стіні біля входу: «…Зала.» — і летить до неї (або «…далі — сам.»)
+next: hall_late
+
+# Прийшов на сервер, де основний пролог уже йде (брама, Гейд, лист…): квест сервера веде лише тих, хто пройшов свій, — тож до
+# Зали, куди щойно полетів ворон, веде ця мітка (огляд 2026-11-24: досі мітки не було). Першому у світі квест сервера ще не почався —
+# кінець одразу (його веде to_hall); серце вже стоїть — веде золотий знак місця (mapmark Зали).
+[stage hall_late]
+goal: Йди за вороном
+fork: world heart_first -> end
+fork: !reached prologue_main to_hall -> end
+fork: been zala -> end
+mark: hall 30 Поклик
+wait: near hall 40
 next: end
 
 [quest prologue_main]
@@ -167,7 +179,7 @@ wait: near torvald 14
 [stage meet_heid]
 goal: Біля каменів хтось є
 mark: torvald 20 Камені
-saga: Біля каменів тебе зустріла Гейд. Побачила твого ворона: «Отже, ти з Варти». А ти не пам'ятаєш ні Варти, ні себе в ній.   # «Мій шлях»: тим, хто був біля мітки етапу; зачіпка загадки «Варта» (saga/riddles.txt)
+saga: Біля каменів тебе зустріла Гейд. Сказала, що ти з Варти — як і вона. А ти не пам'ятаєш ні Варти, ні себе в ній.   # «Мій шлях»: тим, хто був біля мітки етапу; зачіпка загадки «Варта» (saga/riddles.txt)
 scene: heid_meet                         # Гейд бачить твого ворона — вартовий; ставить кошик; кличе до Зали
 next: ask_heid_camp
 
@@ -255,12 +267,12 @@ done: heartlearn
 
 [stage heart]
 goal: Збудуй серце оселі
-start: npc heid hold hall.vohnyshche stand  # (сюди можна прийти повз ask_heid_more, зі складеними руками; лишається біля вогнища до першого серця)
+start: npc heid free; npc heid prop fetch   # спровадила тебе — і сама йде: свій день, табір і кошик (огляд 2026-11-24: досі стояла біля вогнища вдень і вночі, поки хтось не збудує серце, — а сама каже «сплю на каменях, у Залі голоси»)
 wait: world heart_first                   # серце збудоване будь-ким: світ сам ставить heart_first
 next: lantern
 
 [stage lantern]
 goal: Серце оселі
-start: world heid_called; gate hall open; npc heid free; npc heid prop fetch   # сюжет її відпускає: далі свій день, і вона йде по кошик, поставлений у heid_meet; серце стало раніше брами: Зала й Гейд усе одно є
+start: world heid_called; gate hall open; npc heid free; npc heid prop fetch   # сюжет її відпускає (вже на етапі heart; тут — для світу, де серце стало раніше листа чи брами): далі свій день, і вона йде по кошик, поставлений у heid_meet; Зала й Гейд усе одно є
 scene: heart_lantern                      # у ліхтарі спалахує вогонь і гасне: гачок до іскри з Зали; грає той, хто біля серця
 next: end

@@ -52,7 +52,7 @@
 Посадив я якось ріпу, а виросла сокира.
 Позичив я колись туман у болота, щоб сховатись від Гейд.
 Учив я якось курку літати.
-Продав я колись свою тінь одному гномові, за три мідяки.
+Продав я колись свою тінь одному дверграві, за три мідяки.
 Грав я якось у кості з мерцем із кургану.
 Сховав я якось зиму в мішок, щоб не мерзнути.
 Пив я якось наввипередки з велетнем.
@@ -177,12 +177,29 @@
 [torvald:idle ?state zala >= 1.3, !world torvald_wakes] Зала велика. Є де сховати… тобто покласти.
 [torvald:idle ?reached ch1 lit_duty] Малий усе стукає. А стіна все стоїть.
 [torvald:idle ?reached ch1 lit_duty, !world torvald_wakes] У малого молот, якого не позичиш. Я пробував.
-[torvald:see_player] О, гість! Я Торвальд. А ти хто?
-[torvald:see_player] Ми знайомі? Ну, тепер точно.
+[torvald:see_player ?!world torvald_wakes] О, гість! Я Торвальд. А ти хто?
+[torvald:see_player ?!world torvald_wakes] Ми знайомі? Ну, тепер точно.
 [torvald:see_player] Ти ложки моєї не бачи{в|ла}?
 [torvald:see_player] А-а, ти! Чи не ти. Все одно привіт.
 [torvald:see_player] Ходи сюди, щось розкажу. Ні, потім. Забув.
-[torvald:see_player] Знову ти! Чи вперше? Я Торвальд.
+[torvald:see_player ?!world torvald_wakes] Знову ти! Чи вперше? Я Торвальд.
+# після ночі на вежі (world torvald_wakes; story-lore.md «Торвальд»: у главі 2 «впізнає з лиця») — не знайомиться наново
+[torvald:see_player ?world torvald_wakes] А, вартовий! З лиця знаю, імені — ні. Нагадаєш?
+[torvald:see_player ?world torvald_wakes] Ти з вежі! Ніч пам'ятаю. А ім'я — ні.
+[torvald:see_player ?world torvald_wakes] О, свій прийшов! Тебе я впізнав. Майже.
+# Привітання в розмові ({greet} шаблону npc/torvald.txt — greet: {@hello}): до ночі на вежі щоразу знайомиться наново, після — упізнає з лиця
+[torvald:hello ?!world torvald_wakes] О, гість! Я Торвальд. А тебе як звати?
+[torvald:hello ?!world torvald_wakes] Ми знайомі? Ні? Я Торвальд. Сідай, поки лава тепла.
+[torvald:hello ?!world torvald_wakes] Торвальд. Просто Торвальд. А ти, мабуть, новеньк{ий|а}.
+[torvald:hello ?!world torvald_wakes] Знову хтось прийшов! Чи вперше? Я Торвальд.
+[torvald:hello ?!world torvald_wakes] А-а, я тебе… ні, не знаю. Торвальд, до твоїх послуг.
+[torvald:hello ?!world torvald_wakes] Добре, що ти зайш{ов|ла}. Я Торвальд. Ти ложки моєї не бачи{в|ла}?
+[torvald:hello ?world torvald_wakes] А, вартовий! Сідай. Ім'я твоє забув, а лице — ні.
+[torvald:hello ?world torvald_wakes] О, з вежі! Ну, кажи, з чим прий{шов|шла}.
+[torvald:hello ?world torvald_wakes] Тебе я знаю. Звідки — то вже інша байка.
+[torvald:hello ?world torvald_wakes] Свій! Сідай, поки лава тепла.
+[torvald:hello ?world torvald_wakes] А-а, ти. Ми ж з тобою ніч стояли. Чи дві?
+[torvald:hello ?world torvald_wakes] Добре, що ти зайш{ов|ла}. Ложки моєї не бачи{в|ла}? Жартую. Кажи.
 
 # Смішні дрібниці за обставиною (користувач 2026-11-16: «окремі смішні невеликі фрази, щоб він щось вимовляв іноді при певних умовах»). Тему
 # дає ядро само (NpcVoice.Themes), Торвальд каже її лише цими словами: погода, ти мокрий, поранений, перевантажений, будуєш, стоїш мовчки поруч,
@@ -222,11 +239,13 @@
 [torvald:stare ?!world torvald_wakes] Ти мене змінювати прий{шов|шла}? Ні? Тоді чого стоїш?
 [torvald:stare] У мене щось на носі? Чи ти просто так?
 [torvald:stare] Стоїш, як вартовий. Хто тебе поставив?
-[torvald:stare] Я тебе знаю? Почекай, згадаю. …Ні.
+[torvald:stare ?!world torvald_wakes] Я тебе знаю? Почекай, згадаю. …Ні.
+[torvald:stare ?world torvald_wakes] Я тебе знаю. З вежі. Ім'я — на язиці.
 [torvald:back] О! Тебе давно не було. Чи було? Я рахував, але збився.
 [torvald:back] Верну{вся|лася}! А я вже думав, тебе змінили.
 [torvald:back] Де ти ход{ив|ила}? Я тут стеріг. Нічого не пропало. Майже.
-[torvald:back] Довго тебе не було. Я вже й забув, який ти на вигляд. Та й зараз не пригадаю.
+[torvald:back ?!world torvald_wakes] Довго тебе не було. Я вже й забув, який ти на вигляд. Та й зараз не пригадаю.
+[torvald:back ?world torvald_wakes] Довго тебе не було. А я тебе пам'ятаю. З вежі.
 [torvald:back] О, верну{вся|лася}. Щось мені прин{іс|есла}?
 [torvald:back] Знову ти! Тепер точно не забуду. До вечора.
 [torvald:night] Ніч. Варта не спить. Варта дрімає стоячи.
@@ -235,12 +254,12 @@
 [torvald:night] Гейд каже: спати. А я кажу: стерегти. Сперечаємось щоночі.
 [torvald:night] Зорі сьогодні не на своїх місцях. Чи то я.
 [torvald:night] Чуєш? Хтось хропе. Якщо не ти, то я.
-[torvald:raven] У тебе ворон. У мене теж був. Знав усі імена.
+[torvald:raven] У тебе ворон. У мене теж було двоє. Один знав усі імена — полетів.
 [torvald:raven] Гарна пташка. Мій мав гарний голос. Твій теж нічого.
 [torvald:raven] Ворон! Пильнуй, бо вони все запам'ятовують. І ябедничають.
 [torvald:raven ?!world torvald_wakes] Твій ворон дивиться на мою торбу. Скажи йому, там нічого нема.
 [torvald:raven] Мій був чорний. Чи сірий. Твій — як твій.
-[torvald:raven] Колись і в мене на плечі хтось сидів. Тепер тільки сніг.
+[torvald:raven] Колись у мене на плечі сиділо двоє. Тепер один, і той мовчить.
 [torvald:you_trophy ?!world torvald_wakes] Це в тебе {trophy}? Дай потримати. На хвилинку. На рік.
 [torvald:you_trophy] {trophy}? Я таке колись бачив. Більше. Удвічі.
 [torvald:you_trophy ?!world torvald_wakes] Звідки в тебе {trophy}? Я не питаю звідки. Я питаю, чи є ще.
@@ -444,9 +463,9 @@
 [torvald:say_shrug] Мир, Торвальде.
 [torvald:say_bye] Бувай, старий.
 [torvald:say_bye] Піду. Не загуби ложку.
-[torvald:say_bye] Ще побачимось. Якщо впізнаєш.
+[torvald:say_bye ?!world torvald_wakes] Ще побачимось. Якщо впізнаєш.
 [torvald:say_bye] Бувай. І не цупи нічого.
-[torvald:say_bye] Бувай, Торвальде. Наступного разу знову познайомимось.
+[torvald:say_bye ?!world torvald_wakes] Бувай, Торвальде. Наступного разу знову познайомимось.
 [torvald:say_bye] Піду. Розкажеш потім, як воно було. Чи як не було.
 # прощання за моментом (користувач 2026-11-24): рядок, чия умова справджується, випадає частіше (NpcPhrases.MomentWeight). Про «варту» — лише відколи
 # гравець про неї знає (Гейд: «Каже — на варту», Зала обжита), до ночі на вежі; після вежі — інші
@@ -477,7 +496,8 @@
 [torvald:talk_again] То на чому я спинився?
 [torvald:talk_again] Ще посидиш? Лава тепла.
 [torvald:talk_again] Питай, питай. Я все пам'ятаю. Майже.
-[torvald:talk_again] О! Ти ще тут. А ми знайомі?
+[torvald:talk_again ?!world torvald_wakes] О! Ти ще тут. А ми знайомі?
+[torvald:talk_again ?world torvald_wakes] Ти ще тут? Добре. Тебе я пам'ятаю — з лиця.
 [torvald:talk_again] Кажи, кажи. Я не поспішаю. Мені нікуди.
 [torvald:talk_again] А ложки моєї ти так і не бачи{в|ла}?
 [torvald:talk_again ?reached ch2 dawn] Кажи, вартовий.
@@ -489,7 +509,8 @@
 [torvald:talk_again ?reached ch2 torv_a, !reached ch2 torv_out] Про цвяхи? Ні-ні. Про щось інше питай.
 [torvald:talk_again ?npcattitude >= 60] А, це ти! Тебе я, здається, пам'ятаю.
 # Його слово на твоє прощання (NpcTalk.Parting: над головою, коли герой договорив; користувач 2026-11-24). Радий, плутає
-[torvald:bye_back] Бувай, бувай! …А ти хто {був|була}?
+[torvald:bye_back ?!world torvald_wakes] Бувай, бувай! …А ти хто {був|була}?
+[torvald:bye_back ?world torvald_wakes] Бувай, вартовий! Тебе я тепер упізнаю.
 [torvald:bye_back] Заходь іще! Я тобі про велетня розкажу.
 [torvald:bye_back] Ложки не бачи{в|ла}? Ну, іди вже.
 [torvald:bye_back] Іди, іди. Я тут постою.

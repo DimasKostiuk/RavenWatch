@@ -5967,7 +5967,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Кажуть, десь уже стоїть перше серце оселі.	They say the first Hearth of the Settlement already stands somewhere.
 Хтось кличе тебе	Someone is calling you
 Два сліди	Two trails
-Зазирни в покинуту хату	Look into the abandoned hut
+Зазирни в хату	Look into the hut
 Покинута хата	Abandoned hut
 Роздивись щит	Look at the shield
 Щит	Shield
@@ -6080,11 +6080,11 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Мунін знайшов тебе. Він ще спить: розбуди його біля Жертовних каменів.	Munin found you. He is still asleep: wake him at the Sacrificial stones.
 Хугін знайшов тебе. Він ще спить: розбуди його біля Жертовних каменів.	Hugin found you. He is still asleep: wake him at the Sacrificial stones.
 Що, впізна{в|ла}? Я тебе — ні. Щит той самий. А ти — гірш{ий|а}.	What, you know it? I don't know you. Same shield. Worse you.
-Я цей щит пам'ятаю. І тебе з ним. Тоді ти б{ув|ула} вищ{ий|а}.	I remember this shield. And you with it. You were taller then.
+Я цей щит пам'ятаю. Тільки не знаю звідки — то не моя пам'ять. Чиясь.	I remember this shield. Only I don't know from where — it's not my memory. Someone else's.
 Старе залізо, старі думки. Поклади, поки не згада{в|ла} щось зайве.	Old iron, old thoughts. Put it down before you remember something you shouldn't.
 Я тут сиджу від самого початку. Ти просто диви{вся|лась} не туди. Як завжди.	I've been sitting here all along. You were just looking the wrong way. As always.
 Отак і ходиш: торкнешся — і геть. А думати хто буде? Я?	That's you all over: touch it and walk off. And who does the thinking? Me?
-Я пам'ятаю цей знак. Він і тоді показував не туди. А ти й тоді піш{ов|ла}.	I remember this sign. It pointed the wrong way then too. And you walked off then too.
+Я пам'ятаю цей знак. Він і тоді показував не туди. …Тільки «тоді» — не моє. Чиєсь.	I remember this sign. It pointed the wrong way then too. …Only that "then" isn't mine. Someone else's.
 Не зараз: поруч ворог.	Not now: an enemy is near.
 іде лагодити	goes to repair
 лагодить	repairs
@@ -6267,9 +6267,9 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Спитай Гейд про лист	Ask Heid about the letter
 Гейд	Heid
 Спитай ту жінку. Вона тут довше.	Ask that woman. She has been here longer.
-Сам{|а} ти це не прочитаєш. Іди до тієї, що «просто прибирає».	You won't read this yourself. Go to the one who is "just tidying up".
-Каже правду. Але не всю.	She tells the truth. But not all of it.
-Щось вона дуже хоче, щоб ти піш{ов|ла}. Я б теж хотів, але в мене причини кращі.	She really wants you gone. So would I, but my reasons are better.
+Що будувати — видно. А що воно таке й навіщо — спитай ту, що «просто прибирає».	What to build is plain enough. What it is and what for — ask the one who is "just tidying up".
+Серце оселі… Тепло звучить. Мені подобається.	A hearth of the home… Sounds warm. I like it.
+Будувати подалі. Ну хоч не тут, у холоді, — і на тому дякую.	Build it far away. Well, at least not here in the cold — I'll take that.
 Браму Зали відчинили. Я стояв|стояла поруч — вона скрипіла так, ніби не хотіла пускати. Усередині холодно, як у могилі.	They opened the gate of the Hall. I was standing right there. It creaked as if it didn't want to let anyone in. Inside it's cold as a grave.
 Кажуть, браму Зали відчинили. Хто — не знаю. Я б туди не ходив|ходила.	They say the gate of the Hall was opened. Who did it, I don't know. I wouldn't go there.
 Вогнище в Залі спалахнуло. Синім. Я бачив|бачила це сам|сама — воно не гріє, лише світить.	The hearth in the Hall flared up. Blue. I saw it myself. It doesn't warm, it only shines.
@@ -6294,13 +6294,13 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Що таке серце оселі?	What is a hearth of a settlement?
 Чому б не збудувати його тут?	Why not build it here?
 Що за ріг на кресленні?	What is the horn on the drawing?
-Знову «не тут». Чим їй так муляє ця Зала?	Not here, again. What is it with her and this Hall?
+Олень, ріг, серце. Наче хтось склав цей світ за списком.	Stag, antler, hearth. As if someone put this world together from a list.
 Я вже вби{в|ла} того оленя. Ріг у мене.	I already killed that deer. I have the horn.
 Ти? …Ну, тоді й ріг твій. Кажуть, за тим, хто його вбив, люди підуть. Тільки будуй не тут. Подалі, де ліс і вода.	You? …Well, then the horn is yours. They say people follow the one who killed it. Just don't build here. Further off, where there's forest and water.
 Гаразд, збудую.	All right, I'll build it.
 Вогонь, біля якого живуть люди. Варта колись ставила такі там, де хтось лишався жити.	A fire that people live by. The Watch used to set them where someone stayed to live.
 Тут воно ні до чого. Сюди ніхто не прийде. Будуй подалі, де ліс і вода.	It's no use here. No one will come here. Build further off, where there's forest and water.
-Той олень біля каменів, сам{|а} знаєш. За тим, хто його вбив, люди підуть. Дурне правило, зате старе.	That deer by the stones, you know the one. People will follow whoever killed it. A stupid rule, but an old one.
+Той олень, що вирізаний на Жертовних каменях, сам{|а} знаєш. За тим, хто його вбив, люди підуть. Дурне правило, зате старе.	The stag carved on the Sacrificial Stones, you know the one. People will follow whoever killed it. A stupid rule, but an old one.
 Вартовий без людей — просто ще один камінь. Іди.	A watchman without people is just one more stone. Go.
 Що вони кажуть?	What do they say?
 Не знаю. Не дослуховуюсь. І тобі не раджу.	I don't know. I don't listen. I wouldn't advise you to either.
@@ -7096,7 +7096,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 ОБІЦЯНО	PROMISED
 зараз · {0}	now · {0}
 обірвано	cut short
-Книга Ейріка.	Eirik's Book.
+Книга воронів.	The Book of Ravens.
 Кошик Гейд	Heid's Basket
 Плетений кошик для трав.	A woven herb basket.
 Скручений аркуш із печаткою. Креслення серця оселі.	A rolled parchment with a seal. A blueprint for a Hearth of the Settlement.
@@ -7146,18 +7146,17 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Мені розповіли про перше серце оселі. Хтось вирішив осісти по-справжньому. Отже, можна.	I heard about the first Hearth of the Settlement. Someone decided to put down real roots. So it can be done.
 Подейкують про якесь серце оселі. Я не знаю, що воно таке, але звучить так, ніби варто мати.	There's talk of some kind of Hearth of the Settlement. I don't know what it is, but it sounds worth having.
 Кажуть, десь люди вже не тікають, а лишаються. І вогонь свій мають. Я б подивився|подивилася.	They say some people have stopped running and settled somewhere, with a fire of their own. I'd like to see that.
-Що це за Варта, про яку ти кажеш?	What is this Watch you keep talking about?
+Що це за Варта?	What is this Watch?
 Чому я нічого не пам'ятаю?	Why can't I remember anything?
-Звідки ти знаєш, що я з Варти?	How do you know I'm with the Watch?
-«Ми». Швидко вона тебе записала.	“Us.” She was quick to count you in.
-Стерегла. Від чого — не скаже. Удобно.	Keeping watch. Won't say what from. Convenient.
-Варта стерегла цей світ. Від чого — вже ніхто не скаже: ті, хто знав, лежать під цими каменями. Лишились ворони. І ми з тобою.	The Watch guarded this world. No one can say from what anymore; those who knew are buried beneath these stones. The ravens remain. And you and I.
+Чому ти певна, що я з Варти?	Why are you so sure I'm of the Watch?
+«Ми». Добре, що тут хоч хтось каже «ми».	"Us." Good that someone around here still says "us".
+Стерегла… Шось у мене від цього слова в грудях стискається. Не помню чого.	Guarded… Something in my chest goes tight at that word. Don't remember why.
+Варта стерегла цей світ. Від чого — вже ніхто не скаже: ті, хто знав, лежать під каменями біля мого табору. Лишились ворони. І ми з тобою.	The Watch guarded this world. No one can say from what anymore; those who knew lie under the stones by my camp. The ravens remain. And you and I.
 Порожньо. Це вона точно сказала.	Empty. She got that part right.
 Тут так з усіма. Встаєш — і порожньо. Потім дещо вертається. Не все, і не те, що хочеш.	It's like that for everyone here. You wake up empty. Then some things come back. Not everything, and not the things you want.
 «Теж». Її птах сидить осторонь і мовчить. Наші так не вміють.	“Me too.” Her bird sits apart and stays quiet. Ours can't do that.
 Ворон. Вони бувають не в усіх. У кого є — той колись був у Варті. Я теж.	Ravens. Not everyone has one. If you do, you were once in the Watch. I was, too.
-«Майже всі ні про що». Тобто всі прочитала.	“Almost all about nothing.” So she read every one.
-Дуже хоче, щоб ти {пішов|пішла} звідси.	She really wants you gone.
+Ліс і вода. Розумно. Шкода, що не моя ідея.	Woods and water. Sensible. Shame it wasn't my idea.
 Голоси… Шось таке вже було. Нє. Пусто.	Voices... Sounds familiar. Nah. Nothing.
 Голоси. Ночами там говорять ті, кого вже нема. Чи мені так здається. На каменях тихіше.	Voices. At night, the dead talk there. Or maybe it just seems that way to me. It's quieter among the stones.
 Трави. Тут кожну треба знати в обличчя, бо наступної зими можуть не вирости.	Herbs. You have to know each one by sight here; they might not grow back next winter.
@@ -8087,8 +8086,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 З нею ти знаєш, як говорити з вороном на плечі.	With it you know how to talk to the raven on your shoulder.
 Варта	The Watch
 Гейд: «Варта стерегла цей світ. Від чого — вже ніхто не скаже».	Heid: “The Watch guarded this world. No one can say from what anymore.”
-Поки в Залі горів вогонь, було кому сторожити.	While the fire burned in the Hall, there was someone to keep watch.
-Вартові, яких уже нема, лежать під каменями біля табору Гейд.	The watchmen who are gone lie under the stones by Heid's camp.
+Гейд: «Поки горів вогонь, було кому сторожити».	Heid: "While the fire burned, there was someone to keep watch."
+Гейд каже, що вартові, яких уже нема, лежать під каменями біля її табору.	Heid says the watchmen who are gone lie under the stones by her camp.
 Пам'ять	Memory
 Гейд: «Тут так з усіма. Встаєш — і порожньо. Потім дещо вертається. Не все, і не те, що хочеш».	Heid: “It's like that for everyone here. You wake up empty. Then some things come back. Not everything, and not the things you want.”
 Гейд: «Вогонь, біля якого живуть люди. Варта колись ставила такі там, де хтось лишався жити».	Heid: “A fire that people live by. The Watch used to set them where someone stayed to live.”
@@ -8125,7 +8124,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Гейд каже, що ночами в Залі чути голоси тих, кого вже нема.	Heid says that at night the voices of the dead are heard in the Hall.
 Різьба на стіні	The carving on the wall
 Камені біля табору	The stones by the camp
-могили вартових	graves of the watchmen
+Гейд каже — могили вартових	Heid says: the watchmen's graves
 Гейд: «Вартові. Ті, кого вже нема. Хтось же має чистити мох із їхніх імен».	Heid: “The watchmen. The ones who are gone. Someone has to clean the moss off their names.”
 Його креслення було в старому листі із Зали Варти.	Its drawing was in an old letter from the Hall of the Watch.
 каже, що теж із Варти	says she is of the Watch too
@@ -8214,7 +8213,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Цю траву приніс{|ла} ти. Запам'ятай це.	You brought this herb. Remember that.
 «Біля вогню Варти не чути Хель. Серця несуть його жарину».	"By the fire of the Watch, Hel cannot be heard. The hearts carry its ember."
 Того, хто пам'ятає? Я пам'ятаю все! …Ні, не це.	One who remembers? I remember everything! …No, not this.
-«…перо кидають у вогонь словами обітниці».	"…the feather is cast into the fire with the words of the oath."
+«…перо кидають у вогонь словами обітниці»: «Пам'ятаю за тих, хто забув. Вартую, поки горить вогонь. Стою між живими й холодом…»	"…the feather is cast into the fire with the words of the oath": "I remember for those who forgot. I keep watch while the fire burns. I stand between the living and the cold…"
 Тепер слова в нас є. Крім останнього рядка: він обгорів.	Now we have the words. All but the last line: it is burnt.
 Тепло. Я пам'ятаю це тепло.	Warm. I remember this warmth.
 Кружляють. А ближче за світло не сміють.	They circle. But they dare not come nearer than the light.
@@ -8254,7 +8253,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Я знайш{ов|ла} у скрині ось це.	I found this in the chest.
 Звідки ти прийшов?	Where did you come from?
 Що сталося з твоїм селищем?	What happened to your village?
-Що за перстень, про який ти казав?	What ring were you talking about?
+Що там за перстень, на півдні?	What's this ring down south?
 Ти був сам? У тебе хтось був?	Were you alone? Did you have anyone?
 Чим ти жив, поки був удома?	What did you do for a living back home?
 Ти бачив щось дивне дорогою?	Did you see anything strange on the way?
@@ -8333,20 +8332,13 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 А… це ти.	Ah… it's you.
 Сідай, як хочеш.	Sit down, if you like.
 Я тут. Нікуди не дівся.	I'm here. Haven't gone anywhere.
-О, гість! Я Торвальд. А тебе як звати?	Oh, a guest! I'm Torvald. And what's your name?
-Ми знайомі? Ні? Я Торвальд. Сідай, поки лава тепла.	Have we met? No? I'm Torvald. Sit down while the bench is warm.
-Торвальд. Просто Торвальд. А ти, мабуть, новенький.	Torvald. Just Torvald. And you must be new here.
-Знову хтось прийшов! Чи вперше? Я Торвальд.	Someone's come again! Or for the first time? I'm Torvald.
-А-а, я тебе… ні, не знаю. Торвальд, до твоїх послуг.	Ah, I know you… no, I don't. Torvald, at your service.
-Добре, що ти зайш{ов|ла}. Я Торвальд. Ти ложки моєї не бачи{в|ла}?	Good of you to drop by. I'm Torvald. You haven't seen my spoon, have you?
 Тримай щит вище, {name}.	Keep your shield higher, {name}.
 Мунін каже, ти б'єшся, як мокра курка. Я так не думаю. Поки що.	Munin says you fight like a wet hen. I don't think so. Not yet.
 Коло J — накази ворону: «Поруч», «Кружляй», «Облетіти», трюки й «Усіх назад».\n\n«Туди»: наведи приціл на гравця, тварину, річ чи будову, і ворон полетить туди.\n\nГолодний ворон наказів не слухає.	The J wheel — orders for your raven: “With Me”, “Circle”, “Survey”, tricks and “Recall all”.\n\n“There”: aim at a player, an animal, a thing or a building, and the raven flies there.\n\nA hungry raven won't obey orders.
-Намисто лишив. Як ті, з його селища: ні хліба, ні сокири — нічого не брали.	He left the necklace. Like the ones from his village: no bread, no axe — they took nothing.
+Намисто лишив. Останнє, що він ще тримав. Як ті, з його селища: ні хліба, ні сокири — нічого не брали.	He left the necklace. The last thing he still held on to. Like the ones from his village: no bread, no axe — they took nothing.
 Пішов і не попрощався. І намисто лишив: нічого не взяв, як ті, з його селища.	Gone without a goodbye. And he left the necklace: took nothing, like the ones from his village.
 Його нема. Пішов ще затемна й нічого не взяв.	He's gone. He left before dawn and took nothing.
 Зник. Люди так не зникають. І ворона в нього не було ніколи — таке чути.	Gone. People don't vanish like that. And he never had a raven — you can hear that.
-Старий ходить сам, а вона й не шукає. Странно.	The old man wanders off alone, and she doesn't even look for him. Funny, that.
 Не зовсім. Є ще старий… Знову кудись побрів, він таке любить. Вернеться. І ворон є, але він мовчить.	Not quite. There's an old man too… Wandered off again, he likes that. He'll be back. And there's a raven, but it keeps silent.
 Як бачиш, ні. Старий на моїх руках: без мене він і ложку свою не знайде. І ворон є, але він мовчить.	As you can see, no. The old man's in my care: without me he couldn't even find his own spoon. And there's a raven, but it keeps silent.
 Живе не сама: «Є ще старий… Знову кудись побрів». Має ворона, але той мовчить.	Doesn't live alone: "There's an old man too… Wandered off again." She has a raven, but it keeps silent.
@@ -8384,8 +8376,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Того, хто пам'ятає… Шо, знову не я? Ну зашибісь.	One who remembers… What, not me again? Just bloody great.
 Я обітниці не пам'ятаю. А той, двоколірний, — пам'ятає. По-любому.	I don't remember the oath. But that two-coloured one does. Bet on it.
 Мунін обітниці не пам'ятає. А той двоколірний, що тебе кликав, — пам'ятає, б'юсь об заклад.	Munin doesn't remember the oath. But the two-coloured one who called you does, I'd wager.
-О, глянь. На краю, де обірвано, — знак. Ворон у колі. Так пости Варти мітили.	Oh, look. On the edge where it's torn — a mark. A raven in a circle. That's how the Watch marked its posts.
-На краю, де обірвано, — знак. Ворон у колі: так мітили пости Варти.	On the edge where it's torn — a mark. A raven in a circle: the sign of the Watch's posts.
+О, глянь. На краю, де обірвано, — знак. Ворон у колі. Так мітив свої пости той, хто вів архіви Варти.	Oh, look. On the edge where it's torn — a mark. A raven in a circle. That's how the keeper of the Watch's records marked his posts.
+На краю, де обірвано, — знак. Ворон у колі: ним мітив свої пости той, хто вів архіви Варти.	On the edge where it's torn — a mark. A raven in a circle: the keeper of the Watch's records marked his posts with it.
 Його не загубили. Його розірвали — рівно, по згину. Хтось не хотів, щоб це прочитав не той.	It wasn't lost. It was torn — cleanly, along the fold. Someone didn't want the wrong one to read it.
 Хто писав, той і лежить на своєму посту. І друга половина там, по-любому. У Чорному лісі.	Whoever wrote it lies at his post. And the other half's there, for sure. In the Black Forest.
 Пост Варти в Чорному лісі. Там і друга половина, якщо пощастить.	A post of the Watch in the Black Forest. The other half is there too, if we're lucky.
@@ -8453,7 +8445,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Трав би назбирати на відвар. Без них йому що день, то гірше.	We should gather herbs for a brew. Without them he gets worse by the day.
 Хто були ті жінки? Вони обернулися соколами.	Who were those women? They turned into falcons.
 Оце так. Людину зарізали, а ми — по бур'ян.	Lovely. A man got his throat cut, and we go pick weeds.
-Годі про них. Кетілю вже не поможеш, а старому ще можна. Сходи на узлісся, де Луки сходяться з Чорним лісом, нарви будяка. Чотири головки, з коренем: без кореня він не діє.	Enough about them. Ketil is past helping, but the old man is not. Go to the forest's edge, where the Meadows meet the Black Forest, and pick some thistle. Four heads, with the root: without the root it does nothing.
+Годі про них. Кетілю вже не поможеш, а старому ще можна. Сходи на узлісся за табором, нарви будяка. Чотири головки, з коренем: без кореня він не діє.	Enough about them. Ketil is past helping, but the old man is not. Go to the forest's edge past the camp and pick some thistle. Four heads, with the root: without the root it does nothing.
 Ти бачив тут соколів?	Have you seen any falcons around here?
 Ну, і на шо ми це питали.	Well, and why did we even ask.
 Соколів? {~laugh} Аякже. Сокіл — то курка, що забагато про себе думає. Я одного раз переглядів: він перший кліпнув. Отже, я виграв.	Falcons? {~laugh} Of course. A falcon is a hen that thinks too much of itself. I once had a staring match with one: it blinked first. So I won.
@@ -8481,7 +8473,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ти — той, що кликав, а тоді сказав про серце. Чому ж одразу не сказав усього?	You're the one who called, and then told us about the heart. Why didn't you tell us everything at once?
 О, двоколірний. Шо ж ти тоді, з сувоєм, усього не сказав?	Oh, the two-coloured one. So why didn't you tell us everything back then, with the scroll?
 Посади на плече розбудженого ворона	Put an awakened raven on your shoulder
-Руни Варти читає лише ворон: людське око бачить тільки, як вони пливуть. Посади на плече свого ворона, і не сплячого, а розбудженого, — тоді піднеси сувій до серця оселі.	Only a raven reads the Watch's runes: a human eye sees them swim, nothing more. Put your raven on your shoulder — not a sleeping one, an awakened one — then bring the scroll to the heart of your home.
+Руни Варти читає лише ворон: людське око бачить тільки, як вони пливуть. Посади на плече свого ворона, і не сплячого, а розбудженого, — тоді піднеси сувій до серця оселі. Сплячого будять біля Жертовних каменів; нема свого — у Хальдора бувають.	Only a raven reads the Watch's runes: a human eye sees them swim, nothing more. Put your raven on your shoulder — not a sleeping one, an awakened one — then bring the scroll to the heart of your home. A sleeping one is woken at the Sacrificial Stones; if you have none of your own, Haldor has some now and then.
 І ворона свого візьми — розбудженого. Руни Варти читає ворон, не людина.	And take your raven along — an awakened one. A raven reads the Watch's runes, not a man.
 Скриня кургану	The barrow's chest
 Стара скриня в залі кургану.	An old chest in the barrow's hall.
@@ -8560,7 +8552,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Тобі тут добре.	You're happy here.
 Куди він ходить?	Where does he go?
 Добре. Не думала, що ще колись захочу десь лишитися.\n…Стривай. А де старий? Казав, що зараз повернеться. Давно вже мав би.	I am. I never thought I would want to stay anywhere again.\n…Wait. Where is the old man? He said he'd be right back. He should have been by now.
-На узлісся, де Луки сходяться з Чорним лісом. Каже — на варту. Варти нема вже стільки зим, а він раз на кілька днів іде її міняти. І приносить звідти все, що погано лежить.	To the forest's edge, where the Meadows meet the Black Forest. He says he keeps watch there. There has been no watch for so many winters, yet every few days he goes to change it. And brings back everything left lying about.
+На край лісу, недалеко від Зали, де Луки сходяться з Чорним лісом. Каже — на варту. Варти нема вже стільки зим, а він раз на кілька днів іде її міняти. І приносить звідти все, що погано лежить.	To the edge of the woods, not far from the Hall, where the Meadows meet the Black Forest. He says he keeps watch there. There has been no watch for so many winters, yet every few days he goes to change it. And brings back everything left lying about.
 Що ти робиш у цих краях?	What are you doing in these parts?
 Чому ти сам?	Why are you alone?
 Тут недалеко Зала Варти. Ходімо.	The Hall of the Watch is not far from here. Let's go.
@@ -8585,7 +8577,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Відбий Залу в холодних тіней	Take the Hall back from the cold shades
 Тіні	Shades
 Розкажи Гейд, що серце оселі горить	Tell Heid the settlement's heart is burning
-Серце оселі горить від вогню Варти. Гейд має знати — вона тепер у Залі: над нею дим, ворони кажуть, там хтось живе.	The settlement's heart burns with the Watch's fire. Heid should know — she is in the Hall now: there is smoke over it, the ravens say someone lives there.
+Серце оселі горить від вогню Варти. Гейд має знати. Біля золотого вогню тепер тихо — мабуть, вона вже там.	The settlement's heart burns with the Watch's fire. Heid should know. It's quiet by the golden fire now — she's probably there already.
 Ой. Це вже не обітниця.	Oh. That's no oath any more.
 Хель не віддає Залу. Бий!	Hel won't give up the Hall. Strike!
 …Горить. Золотим.	…It burns. Gold.
@@ -8594,12 +8586,12 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 «Свого». Звідки вона знає, що Хель вважає своїм?	"Hers." How does she know what Hel considers hers?
 Візьми з вогню жарину. Віднеси до свого серця оселі — хай і там горить.	Take an ember from the fire. Carry it to your settlement's heart — let it burn there too.
 Серце оселі горить. Вогнем Варти.	The settlement's heart is burning. With the Watch's fire.
-Знаю. Видно аж звідси.\nТихо тут. Уперше за довгий час — тихо. Не чути голосів.\nМи перебралися сюди. Старого самого в таборі не лишиш: він би й вогонь поцупив.	I know. You can see it from here.\nIt's quiet here. For the first time in a long while — quiet. No voices.\nWe moved here. You can't leave the old man alone in the camp: he would steal the fire itself.
+Знаю. Відчула.\nТихо тут. Уперше за довгий час — тихо. Не чути голосів.\nМи перебралися сюди. Старого самого в таборі не лишиш: він би й вогонь поцупив.	I know. I felt it.\nIt's quiet here. For the first time in a long while — quiet. No voices.\nWe moved here. You can't leave the old man alone in the camp: he would steal the fire itself.
 Ще нема жодного Серця оселі: Жарина знадобиться, коли збудуєш.	There is no Heart of home yet: the Ember will be needed once you build one.
 Усі серця оселі вже горять. Жарина знадобиться для нового.	Every heart of home is already burning. The Ember will be needed for a new one.
 Зайди до Зали	Enter the Hall
 Гусак — то інша історія. Гусак мене взагалі не слухав.	The goose is another story. The goose never listened to me at all.
-Ох, старий… Тихо тут. Я вже й забула, як це — коли тихо.	Oh, you old man… It is quiet here. I had forgotten what quiet is like.
+Ох, старий… Сто років так не сміялась.	Oh, you old man… I haven't laughed like this in a hundred years.
 О! Гейд, у нас гості.	Oh! Heid, we have guests.
 Не гості — свої. Сідай до вогню. Тепер він горить і для тебе.	Not guests — our own. Sit by the fire. It burns for you now too.
 Брама — на палець ліва. Поріг — на два.	The gate leans a finger to the left. The threshold, two.
@@ -8628,7 +8620,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Що мені робити з вогнем Варти?	What do I do with the Watch fire?
 Куди нести Жарину?	Where do I take the Ember?
 Вона знає, хто вони. І знала давно.	She knows who they are. And she has known for a long time.
-Ті, кого Зала тримала. Варта, що не дійшла ні до Хель, ні до Фрейї. Холод без імені.\nВогонь їх розбудив. А ти — покла{в|ла}.	The ones the Hall kept. The Watch that reached neither Hel nor Freyja. Cold without a name.\nThe fire woke them. And you laid them down.
+Холод. Те, що Зала тримала за дверима, поки горів її вогонь. Хель не віддає свого задарма.\nВогонь їх розбудив. А ти — покла{в|ла}.	Cold. What the Hall kept behind its doors while its fire burned. Hel gives nothing of hers away for free.\nThe fire woke them. And you laid them down.
 «Забула». Ага. Аж руки трусяться — так забула.	"Forgotten." Sure. Her hands are shaking, that's how forgotten.
 Бачила. Над Залою аж небо пожовкло. {~nod}\nДавно він такий не горів… Я вже й забула, яким він має бути.	I saw. The sky over the Hall turned yellow. {~nod}\nIt hasn't burned like that in a long while… I'd almost forgotten how it should look.
 Записано в книгу — {0}: {1}	Written in the book — {0}: {1}
@@ -8653,7 +8645,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Гейд про те, що обіцяє Хель: «Спокій. Не болить, не пам'ятаєш, не чекаєш».	Heid on what Hel promises: "Peace. No pain, no remembering, no waiting."
 Гейд каже, що Хель не бреше: «Я бачила тих, хто пішов до неї. Жоден не озирнувся».	Heid says Hel does not lie: "I have seen those who went to her. Not one looked back."
 Тіні з вогню	Shades from the Fire
-Гейд: «Ті, кого Зала тримала. Варта, що не дійшла ні до Хель, ні до Фрейї. Холод без імені».	Heid: "The ones the Hall kept. The Watch that reached neither Hel nor Freyja. Cold without a name."
+Гейд: «Холод. Те, що Зала тримала за дверима, поки горів її вогонь».	Heid: "Cold. What the Hall kept behind its doors while its fire burned."
 Байки Торвальда	Torvald's Tall Tales
 Про велетня в кайданах: «Він чхнув — і сто років ішов сніг».	About a giant in chains: "He sneezed — and it snowed for a hundred years."
 Про бабу, що загасила вогонь водою з дірки в землі: «Вода була мокра, але неправильно».	About a woman who put out a fire with water from a hole in the ground: "The water was wet, but wrong."
@@ -8682,7 +8674,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 На Північ, кораблями… Шось таке я вже чув. Чи бачив. Нє, чув.	To the North, by ship… I've heard something like that. Or seen it. Nah, heard.
 Пливли ми колись на Північ, усі разом, на кораблях. Бо пішки далеко, а ми поспішали: треба було стерегти одного, що спав. Половина там і лишилась його колисати. Досі колишуть, мабуть. Я б теж лишився, та в мене мерзли вуха.	We sailed to the North once, all of us together, on ships. Because it's far on foot, and we were in a hurry: there was one who slept, and he had to be guarded. Half of us stayed there to rock him. Still rocking, I suppose. I'd have stayed too, but my ears were freezing.
 «Усі на камені, а я так». Не подобається мені це, і я не знаю чому.	"All on the stone, and I just walk about." I don't like that, and I don't know why.
-Вирізали ми якось свої імена на одному камені, щоб не загубились. Усі вирізали! А я не встиг: ходив у справах. Тепер усі на камені, а я так ходжу. {~shrug} Зате легкий.	We once carved our names on a stone, so we wouldn't get lost. Everyone carved theirs! But I didn't make it: I was off on business. Now they're all on the stone, and I just walk about. {~shrug} Lighter, though.
+Вирізали ми якось свої імена на одному камені, щоб не загубились. Усі вирізали! А я подумав-подумав… та й не став. Чого — не пам'ятаю. Тепер усі на камені, а я так ходжу. {~shrug} Зате легкий.	We once carved our names on a stone, so we wouldn't get lost. Everyone carved theirs! But I thought it over… and didn't. Why — I don't remember. Now they're all on the stone, and I just walk about. {~shrug} Lighter, though.
 Вогонь, біля якого ніхто не шепоче. Запам'ятай це.	A fire where nobody whispers. Remember that.
 Був у нас вогонь, такий, що не гас. Дров не просив, а грів. І коло нього було тихо-тихо: ніхто в голові не шепотів. А потім… щось було потім. Забув. Мабуть, хтось чхнув.	We had a fire once, one that never went out. Asked for no firewood, and kept us warm. And near it, it was quiet-quiet: nobody whispered in your head. And then… something happened then. Forgot. Someone sneezed, I suppose.
 Полягали спати… і не встали. Ой. А звідки я це знаю?	Lay down to sleep… and never got up. Oh. And how do I know that?
@@ -8717,7 +8709,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Той, хто чекав у хаті, мав ім'я: Ейрік. Ворон — його, і досі кличе тих, хто встає.	The one who waited in the house had a name: Eirik. The raven is his, and it still calls those who rise.
 Ейрік	Eirik
 Ім'я з різьби Зали ти впізна{в|ла}: Ейрік. Так звали того, хто чекав на тебе в покинутій хаті.	You knew the name from the Hall's carving: Eirik. That was the name of the one who waited for you in the abandoned house.
-Він лишився останнім із Варти й пам'ятав усіх.	He was the last of the Watch left, and he remembered them all.
+На різьбі він пише, що лишився сам і ще пам'ятає всіх.	In the carving he writes that he was left alone and still remembers them all.
 Хата Ейріка	Eirik's House
 Біля вогню вона говорила інакше.	By the fire she spoke differently.
 {~shrug} Про той вогонь я нічого не знаю. Ти його розпали{в|ла} — тобі й видніше.	{~shrug} I know nothing about that fire. You lit it — you would know better.
@@ -8759,7 +8751,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Дійшла чутка про золотий вогонь у якійсь Залі. Кажуть, хтось склав там стару обітницю.	A rumour came about a golden fire in some Hall. They say someone swore an old oath there.
 Серце оселі розпалено Жариною з вогню Варти. Його ліхтар горить.	The Hearth of the Settlement has been lit with an Ember from the Watch's fire. Its lantern burns.
 Кажуть, ліхтар першого серця оселі знову світиться.	They say the lantern of the first Hearth of the Settlement is shining again.
-Серце оселі горить. Вогнем Варти. Видно аж звідси.	The Hearth of the Settlement burns. With the Watch's fire. You can see it from here.
+Серце оселі горить. Вогнем Варти. Тут, у Залі, стало ще тихіше — я відчула.	The Hearth of the Settlement burns. With the Watch's fire. Here, in the Hall, it got even quieter — I felt it.
 Я бачив|бачила, як у ліхтар серця поклали жарину. Він спалахнув і вже не згас. Першого разу, пам'ятаю, згас одразу.	I saw them put an ember into the Hearth's lantern. It flared and this time it did not go out. The first time, I remember, it went out at once.
 Я стояв|стояла біля серця, коли воно загорілось. Від жарини, малої, як горіх. А світить тепер на всю оселю.	I was standing by the Hearth when it caught. From an ember no bigger than a nut. And now it lights the whole settlement.
 На моїх очах ліхтар серця оселі ожив. Угорі тоді пролетіли соколи. Покружляли здалеку й подались геть.	I watched the lantern of the Hearth of the Settlement come alive. Falcons flew over just then. They circled far off and left.
@@ -8843,7 +8835,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Хто там?	Who's there?
 Не знаю.	I don't.
 Друга половина. Край сходиться з першою.	The second half. The edge meets the first.
-Руни пливуть — без ворона не прочитати. Той двоколірний зі старої хати біля каменів їх знає.	The runes swim — no reading them without a raven. The two-coloured one from the old house by the stones knows them.
+Останній рядок випалено. Той двоколірний зі старої хати біля каменів, мабуть, його знає.	The last line is burned out. The two-coloured one from the old house by the stones probably knows it.
 Я її не пам'ятаю.	I don't remember it.
 …Не віддам нікого нікому. Ні Хель, ні богам.	…I will give no one to anyone. Not to Hel, not to the gods.
 Не віддам нікого нікому: ні Хель, ні богам.	I will give no one to anyone: not to Hel, not to the gods.
@@ -9051,7 +9043,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 О, друже! Сідай. Ну, не сюди — тут я сиджу.	Oh, friend! Sit down. Well, not here — this is where I sit.
 Слухаю. Уважно. Майже.	I'm listening. Closely. Almost.
 А, це ти. Я якраз про тебе думав. Добре думав.	Ah, it's you. I was just thinking about you. Thinking well.
-Я тут. Я завжди тут. Коліно.	I'm here. I'm always here. The knee.
+Я тут. Я завжди тут. Ну, майже.	I'm here. I'm always here. Well, almost.
 Про себе: «Такий самий, як ти. Тільки без воронів. І з коліном». Прокинувся колись на луках, як усі.	Of himself: "The same as you. Only without ravens. And with a knee." Woke up on the meadows once, like everyone.
 Коліно болить «на погоду, на дощ, на роботу». Показав спершу на ліве, потім на праве.	His knee hurts "with the weather, with the rain, with work". He pointed at the left one first, then at the right.
 Попросив п'ять жовтих грибів із печери в Чорному лісі — «для коліна, відвар». Сам іти не схотів: «Я б і сам. Та коліно».	Asked for five yellow mushrooms from a cave in the Black Forest — "for the knee, a brew". Would not go himself: "I would myself. But the knee."
@@ -9128,7 +9120,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Торвальде. Ну хоч щось.	Torvald. Anything at all.
 …Щось було. Кругле.	…There was something. Round.
 Ні. То не діло. Розставлю все на свій розсуд. Отут буде великий стіл. Новий.	No. This is no good. I'll set it all out my own way. A big table goes here. A new one.
-Не буде. Там стоїть старий. Дуб із Чорного лісу, Ейрік сам вибирав. Його не міняють. Його відмивають.	It won't. The old one stands there. Oak from the Black Forest, Eirik chose it himself. You don't replace it. You scrub it.
+Не буде. Там стоїть старий. Дуб із Лук, з найстаршого гаю, Ейрік сам вибирав. Його не міняють. Його відмивають.	It won't. The old one stands there. Oak from the Meadows, from the oldest grove, Eirik chose it himself. You don't replace it. You scrub it.
 Лави — уздовж стін, щоб спиною до каменю. Зброя — на стовпах, щоб рука вночі знала, куди йти.	Benches along the walls, so your back is to the stone. Weapons on the posts, so your hand knows where to go at night.
 Там вівтар. До нього йшли, коли губили щось золоте. Він вертав.	There's the altar. You went to it when you lost something golden. It gave it back.
 А там камінь. Хто вписав своє ім'я, той лишався. Я не вписав.	And there's the stone. Whoever wrote his name in, stayed. I didn't.
@@ -9141,7 +9133,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Скільки тому столу? Шо, сотні років? Та ну… А Гейд чого перестала сміятись?	As old as the table? What, hundreds of years? No way… And why did Heid stop laughing?
 Літ просив кілька днів на роздуми	Lit asked for a few days to think
 Літ сказав, що поміряє, подумає й покличе сам.	Lit said he would measure, think it over and call for you himself.
-Ти бачи{в|ла} тавро. Руку майстра я знаю: такою самою кували Лот.	You saw the mark. I know the master's hand: the same hand forged Lot.
+Тавро на троні бачи{в|ла}? Руку майстра я знаю: такою самою кували Лот.	Did you see the mark on the throne? I know the master's hand: the same hand forged Lot.
 Лишити її отак — сором. Відновити Залу — мій обов'язок. Святий.	Leaving it like this is a shame. Restoring the Hall is my duty. A sacred one.
 Я знаю як. Але не з наскоку: дай мені кілька днів — поміряю, подумаю. Покличу.	I know how. But not in a rush: give me a few days — I'll measure, I'll think. I'll call for you.
 То це робота твого роду?	So this is the work of your kin?
@@ -9225,14 +9217,14 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Тоді ти питав про цвяхи. Я відповідав про цвяхи. Я ж вихований: на що питають, про те й кажу.\nА ти не питав, чи мені щось треба. Ніхто не питає.	Then you asked about nails. I answered about nails. I'm well brought up: what I'm asked, I answer.\nAnd you didn't ask whether I needed anything. Nobody asks.
 Навіщо коліну чорниці? Шо, воно їх їсть?	What does a knee want with blueberries? What, does it eat them?
 Уперше він подякував і нічого не додав. Ну, майже.	For the first time he said thanks and added nothing. Well, almost.
-Глянь на цей лист. Підписано: «Варта, що лишилась». Знаєш, хто це?	Look at this letter. It's signed "The Watch That Remains". Do you know who that is?
+Нам прийшов лист. Підписано: «Варта, що лишилась». Знаєш, хто це?	We got a letter. It's signed "The Watch That Remains". Do you know who that is?
 А вогонь? Він просить загасити.	And the fire? It asks us to put it out.
 Шось вона дуже швидко порадила спалити.	She was awful quick to say burn it.
 Залишу. Може, Ейвінд щось знає.	I'll keep it. Maybe Eyvind knows something.
 Стіни стоять. А далі що?	The walls stand. What next?
 Цвяхи й бронза в скрині.	The nails and the bronze are in the chest.
-Мені прийшов лист. Чужий ворон приніс. Підписано: «Варта, що лишилась».	I got a letter. A strange raven brought it. It's signed "The Watch That Remains".
-Знаю. Стіл — дуб із Чорного лісу. Такий дуб тут рубали, коли ці камені ще були молоді.\nА старий каже: Ейрік сам його вибирав.	I know. The table is Black Forest oak. Oak like that was felled here when these stones were still young.\nAnd the old man says Eirik chose it himself.
+Нам прийшов лист. Чужий ворон приніс. Підписано: «Варта, що лишилась».	We got a letter. A strange raven brought it. It's signed "The Watch That Remains".
+Знаю. Стіл — дуб із Лук. Такий дуб тут рубали, коли ці камені ще були молоді.\nА старий каже: Ейрік сам його вибирав.	I know. The table is Meadows oak. Oak like that was felled here when these stones were still young.\nAnd the old man says Eirik chose it himself.
 Або старий бреше, або йому стільки ж, скільки тому столу.\n…Не бреше. Сидить криво, а не бреше.	Either the old man lies, or he is as old as that table.\n…He doesn't lie. He sits crooked, but he doesn't lie.
 А тепер вали звідси. Я займаюсь ділом. Під руками не крутись.\nПідлатаю більше — пришлю ворона. Тоді й прийдеш.	Now clear off. I've work to do. Don't hang about under my hands.\nWhen I've mended more — I'll send a raven. Come then.
 То старий бреше?	So the old man lies?
@@ -9245,7 +9237,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ейвінд каже, ти щось будуєш. Цвяхами Літа.	Eyvind says you're building something. With Lit's nails.
 Кістяний цвях. Шо кусається. Ну звісно.	A bone nail. That bites. Sure.
 Я не про кістяні. Про бронзові, з Літової скрині.	I don't mean bone ones. Bronze ones, from Lit's chest.
-Цвяхи? {~nod} Знаю цвяхи. Залізні, бронзові, кістяні — були в нас і кістяні, а потім один із них укусив Ульфа, і ми перестали.	Nails? {~nod} I know nails. Iron, bronze, bone — we had bone ones too, and then one of them bit Ulf, and we stopped.
+Цвяхи? {~nod} Знаю цвяхи. Залізні, бронзові, кістяні — були в нас і кістяні, а потім один із них укусив кухаря, і ми перестали.	Nails? {~nod} I know nails. Iron, bronze, bone — we had bone ones too, and then one of them bit the cook, and we stopped.
 Він не сказав «ні». Він двічі не сказав «ні».	He didn't say "no". Twice he didn't say "no".
 Торвальде. Цвяхи. Ти. Брав?	Torvald. Nails. You. Took?
 А-а, скриня! Гарна скриня. Колись у мене теж була. Я поклав туди ложку, а дістав… теж ложку. Але іншу. Скриня, вона така: що покладеш, те й мовчить.	Ah, the chest! A fine chest. I had one too, once. I put a spoon in and took out… a spoon as well. But a different one. A chest is like that: what you put in, it keeps quiet about.
@@ -9255,7 +9247,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Він уміє не відповідати так, що аж заслухаєшся.	He can not-answer so well you just keep listening.
 Торвальде, мені не до чобота. Ейвінд каже, ти носиш цвяхи в ліс.	Torvald, I don't care about the boot. Eyvind says you carry nails into the forest.
 Будую? Я? Я вже збудував. Двері, з чобота, пам'ятаєш? Добрі двері. От тільки чобіт тепер один, і ходжу я всюди трохи по колу.	Building? Me? I've built already. A door, out of a boot, remember? A good door. Only now I've one boot, and I walk everywhere a bit in circles.
-Стоп. Яка варта? Він шо, і досі стоїть десь?	Wait. What watch? What, is he still standing somewhere?
+Знову про свою варту. Тільки на узліссі ми його тоді не знайшли — там був Літ.	His watch again. Only we didn't find him at the forest edge back then — Lit was there.
 То ти таки брав цвяхи?	So you did take the nails?
 У ліс… {~nod} У лісі гарно. Ліс тихий. Ліс завжди тихий перед тим, як…	Into the forest… {~nod} It's nice in the forest. The forest is quiet. The forest is always quiet before…
 Варту треба нести. Сказали — стій, поки не змінять. А на варті все сиплеться: дошка відстає, кілок хилиться. Ніхто ж не лагодить, крім того, хто стоїть.\n…{~laugh} Що це я? Варта — то давно. То в іншій байці.	The watch must be kept. They said — stand till you're relieved. And on a watch everything falls apart: a board comes loose, a stake leans. Nobody mends it but the one who stands there.\n…{~laugh} What am I saying? The watch — that was long ago. That's another tale.
@@ -9285,7 +9277,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Дев'яносто сім.	Ninety-seven.
 Цвяхів. Було сто.	Nails. There were a hundred.
 Крутився? Я не кручусь. Я рахую. Звичка така: бачу — рахую. Дошки, цвяхи, ложки, людей біля вогню.	Hanging around? I don't hang around. I count. It's a habit: I see — I count. Boards, nails, spoons, people by the fire.
-Сто цвяхів поклали, так? А старий щовечора ходить повз скриню з порожніми рукавами, а вертається — з повними. Я не кажу, що він. Я кажу, що бачу.	A hundred nails went in, right? And the old man walks past the chest every evening with empty sleeves and comes back with full ones. I'm not saying it's him. I'm saying what I see.
+Сто цвяхів поклали, так? А старий надвечір ходить повз скриню з порожніми рукавами, а вертається — з повними. Я не кажу, що він. Я кажу, що бачу.	A hundred nails went in, right? And towards evening the old man walks past the chest with empty sleeves and comes back with full ones. I'm not saying it's him. I'm saying what I see.
 І скажу тобі: старий щось будує. Цвях там, дошка тут. Хто бере по одному, той не продає — той лагодить.	And I'll tell you: the old man is building something. A nail here, a board there. Who takes them one by one isn't selling — he's mending.
 І що ж ти там нарахував?	And what did you count?
 Бачиш — то й кажи прямо.	If you see it, say it plainly.
@@ -9298,7 +9290,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Дай-но.\n…\nНі. Не знаю.\nВартою тепер хто хоче, той і зветься: Залу видно здалеку, а вогонь у ній — ще далі.\nХтось жартує. Або лякає.	Give it here.\n…\nNo. I don't know.\nAnyone who likes calls himself the Watch now: the Hall can be seen from afar, and its fire from farther still.\nSomeone's joking. Or trying to scare us.
 Не гаси. {~shrug} Хто просить листом, той сам прийти не наважується.\nВикинь його. Або в піч — хай хоч тепло буде.	Don't put it out. {~shrug} Whoever asks by letter doesn't dare come himself.\nThrow it away. Or in the stove — at least it'll give some warmth.
 Три цвяхи. Він помітив три цвяхи зі ста. Добре, що ми не брали.	Three nails. He noticed three nails out of a hundred. Good thing we didn't take any.
-Сто. Перерахував двічі.\n…Дев'яносто сім. Учора ввечері було сто, я сам рахував. А зранку — дев'яносто сім.	A hundred. Counted twice.\n…Ninety-seven. Last night there were a hundred, I counted myself. And by morning — ninety-seven.
+Сто. Перерахував двічі.\n…Дев'яносто сім. Поки ти до мене дійш{ов|ла} — уже дев'яносто сім.	A hundred. Counted twice.\n…Ninety-seven. By the time you walked over to me — already ninety-seven.
 Старий. Більше нікому: тягне все, що блищить і погано лежить.\nПочну з того, що є. А ти піди спитай його, навіщо йому мої цвяхи. Мене він слухати не буде.	The old man. Nobody else would: he drags off everything that shines and isn't nailed down.\nI'll start with what there is. And you go ask him what he wants my nails for. He won't listen to me.
 Куди ж поділись три?	Where did the three go?
 Чужий ворон, чужий лист. Мені своїх стін досить.\nЯ ж казав: не крутись під руками. Казав?\n…Гейд спитай. Вона тут усіх знає. І тих, кого краще б не знала.	A stranger's raven, a stranger's letter. My own walls are enough for me.\nI told you: don't hang about under my hands. Did I tell you?\n…Ask Heid. She knows everyone here. Even the ones she'd better not.
@@ -9396,9 +9388,9 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Сонце сіло. Зміна чекає.	Sun's down. The watch is waiting.
 Не йди впритул. Побачить — забуде, куди йшов.	Don't follow too close. If he sees you, he'll forget where he was going.
 Тихо. Дай дідові відійти, а то сяде байки травити.	Easy. Let the old fart get ahead, or he'll sit down and start spinning yarns.
-Дошка. Свіжа, з Літової скрині. Старий ішов тут.	A plank. Fresh, from Lit's chest. The old man came this way.
-О, дошка! Дід упустив. Шо, сам не доніс?	Ha, a plank! Gramps dropped it. Couldn't even carry it, huh?
-Дошка. Літова. Старий ішов тут.	A plank. Lit's. The old man came this way.
+Дошка. Свіжа, з Літової скрині. Старий ішов тут — і не на те узлісся, де ми шукали його тоді. Глибше в ліс.	A plank. Fresh, from Lit's chest. The old man came this way — and not to the forest edge where we looked for him back then. Deeper into the woods.
+О, дошка! Дід упустив. І йшов не туди, де ми його тоді шукали, — глибше в ліс.	Ha, a plank! Gramps dropped it. And he went somewhere else than where we looked for him back then — deeper into the woods.
+Дошка. Літова. Старий ішов тут — і не на те узлісся. Глибше в ліс.	A plank. Lit's. The old man came this way — and not to that forest edge. Deeper into the woods.
 Малина. Розсипана, ще не прим'ята. Він ішов і їв.	Raspberries. Spilled, not yet trampled. He was eating as he walked.
 Малина! Дід на варту з полуденком ходить. Красава.	Raspberries! Gramps takes a snack to his watch. Legend.
 Малина розсипана. Ішов тут — і їв на ходу.	Spilled raspberries. He came this way — eating as he went.
@@ -9419,8 +9411,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Знову?	Again?
 Добра деревина. Суха. Хтось тут таки вміє вибирати.\nСорок. …Тридцять вісім.	Fine wood. Dry. Someone here knows how to pick it after all.\nForty. ...Thirty-eight.
 Ну все, діду. Ми йдемо по твою душу. Тихесенько.	That's it, gramps. We're coming for you. Nice and quiet.
-Знову. І цього разу не Ейвінд: той цілий день сидів на лаві в мене перед очима.\nСтарий. Учора надвечір поніс щось під пахвою за браму. Я бачив, та руки були зайняті.	Again. And this time not Eyvind: he sat on the bench before my eyes all day.\nThe old man. Last evening he carried something out the gate under his arm. I saw, but my hands were full.
-Він щовечора ходить на свою «варту». Сьогодні піди за ним. Тихо: побачить — забуде, куди йшов, і сяде байки травити.\nА я займусь ділом. Вали.	Every evening he goes on his "watch". Tonight, follow him. Quietly: if he sees you, he'll forget where he was going and sit down to spin yarns.\nAnd I'll get on with the work. Off you go.
+Знову. І цього разу не Ейвінд: той цілий день сидів на лаві в мене перед очима.\nСтарий. Надвечір він виносить щось під пахвою за браму. Я бачив, та руки були зайняті.	Again. And this time not Eyvind: he sat on the bench before my eyes all day.\nThe old man. Towards evening he carries something out the gate under his arm. I saw, but my hands were full.
+Він надвечір ходить на свою «варту». Сьогодні піди за ним. Тихо: побачить — забуде, куди йшов, і сяде байки травити.\nА я займусь ділом. Вали.	Towards evening he goes on his "watch". Tonight, follow him. Quietly: if he sees you, he'll forget where he was going and sit down to spin yarns.\nAnd I'll get on with the work. Off you go.
 І що, мені його схопити?	What, should I grab him?
 Стій на вежі з Торвальдом	Stand on the tower with Torvald
 Ніч. Старий дивиться в бік курганів.	Night. The old man is looking towards the barrows.
@@ -9512,14 +9504,14 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Тихо. Скоро світатиме.	Quiet. Dawn is coming soon.
 Їх забагато. Але з лісу хтось іде — не мрець.	Too many of them. But someone is coming out of the forest — not one of the dead.
 Мерці лягли. Ще трохи — і світанок.	The dead have lain down. A little longer — and it's dawn.
-Пусте. На мені швидко заростає. Як трава.	It's nothing. Things heal fast on me. Like grass.
+Пусте. Заросте. Як трава заростає.	It's nothing. It'll heal. The way grass grows back.
 Ходімо з нами до Зали. Там вогонь, і біля нього тихо. Там є цілителька — перев'яже.	Come with us to the Hall. There's a fire, and it's quiet by it. There's a healer there — she'll bandage you.
 Тихо… Добре, коли десь тихо. Я радий, що вона є.	Quiet… It's good when somewhere is quiet. I'm glad it exists.
 Та ні. Ще не всі лягли.	But no. Not all of them have lain down yet.
 Вони. Їх треба покласти назад, як слід: обличчям до землі, руки під груди. Тоді вони не чують, коли кличуть.	Them. They must be laid back properly: face to the earth, hands under the chest. Then they don't hear when they're called.
 Звідки ти це знаєш?	How do you know that?
 Не знаю. Руки знають.	I don't know. My hands know.
-Без пташок, без імені, а про жмуриків — усе. Дивний.	No birds, no name, but knows everything about stiffs. Weird one.
+Воронів у нього не було ніколи — це чути. А про жмуриків знає все. Дивний.	He never had ravens — you can feel it. Yet knows everything about stiffs. Weird one.
 Сліди вже холодні. Старий, мабуть, відстояв сам. Увечері він піде знову — тоді й простежимо.	The tracks have gone cold. The old man must have stood the watch alone. He'll go again in the evening — we'll follow him then.
 Все, прогавили діда. Завтра ввечері знову за ним, але вже не ловимо ґав.	That's it, we lost gramps. Tomorrow evening after him again, and no gawking this time.
 Пост покинуто. Старий лишився там сам. Наступної ночі — знову з ним, до світанку.	The post was abandoned. The old man was left there alone. Next night — with him again, till dawn.
@@ -9531,7 +9523,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Не рахуй їх. Вони цього не люблять.	Don't count them. They don't like it.
 Ближче до мене. Удвох — то вже стіна.	Closer to me. Two of us — that's a wall.
 Тихо, тихо… лягай.	Easy, easy… lie down.
-Поранений, а каже: «Пусте». На ньому, каже, все швидко заростає. Як трава.	Wounded, yet he says: "It's nothing." Things heal fast on him, he says. Like grass.
+Поранений, а каже: «Пусте. Заросте. Як трава заростає».	Wounded, yet he says: "It's nothing. It'll heal. The way grass grows back."
 До Зали не пішов: «Ще не всі лягли». Мертвих, каже, треба покласти назад, як слід: обличчям до землі, руки під груди, — тоді вони не чують, коли кличуть.	He didn't come to the Hall: "Not all of them have lain down yet." The dead, he says, must be laid back properly: face to the earth, hands under the chest — then they don't hear when they're called.
 Хто він — не знає. Звідки знає про мертвих — теж: «Руки знають». І пішов у ліс, у бік курганів.	Who he is — he doesn't know. How he knows about the dead — he doesn't know either: "My hands know." And he went into the forest, towards the barrows.
 Бачи{в|ла}? Один. Завжди спершу один.	See that? One. Always one first.
@@ -9541,7 +9533,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ти ж сам просив постояти.	You asked me to stand with you yourself.
 Я? …А, так. Просив. Добре, що ти слухаєш. Я сам себе не слухаю.	Me? …Ah, yes. I did. Good that you listen. I don't listen to myself.
 Слухай. А коли ти своє ім'я на камінь вписа{в|ла}?	Listen. When did you carve your name on the stone?
-На який камінь? Я не знаю, про що ти.	What stone? I don't know what you mean.
+Я? …Не пам'ятаю, щоб вписува{в|ла}. Там, у Залі, одне ім'я й не прочитати.	Me? …I don't remember carving it. There, in the Hall, one name can't be read at all.
 Не пам'ятаєш?	You don't remember?
 Не пам'ятаю. Багато чого не пам'ятаю.	I don't. There's a lot I don't remember.
 Правда? …Добре тобі. А я от пам'ятаю, що не вписався. Тільки не пам'ятаю — чому.	Really? …Lucky you. Now me, I remember I didn't put my name there. Only I don't remember why.
@@ -9555,7 +9547,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Звідки ти все це знаєш?	How do you know all this?
 Не знаю. Ноги знають, де стати. А голова — то вже як вийде.	I don't. My feet know where to stand. As for my head — that's as it goes.
 Зібрано все, що треба. Скриню зачинено, доки це не заберуть.	All that was needed is here. The chest is shut until it is taken.
-Чув щось про «Варту, що лишилась»? Хтось так підписав мені листа.	Heard anything of "The Watch That Remains"? Someone signed a letter to me that way.
+Чув щось про «Варту, що лишилась»? Хтось так підписав нам листа.	Heard anything of "The Watch That Remains"? Someone signed a letter to us that way.
 Літ каже, Ейвінд питав, де ви з Літом уперше бились («цікаво глянути»), і хвалився луками, куди слав тебе по шкури.	Lit says Eyvind asked where you and Lit first fought ("curious to have a look"), and bragged about the meadow where he sent you for hides.
 Ейвінд там, де бились із Літом?	Eyvind where you fought beside Lit?
 Ейвінд там, де олені?	Eyvind where the deer graze?
@@ -9591,8 +9583,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 А тебе як звати, перехожий?	And what's your name, passer-by?
 …Не пам'ятаю. Та й не до того зараз.	…I don't remember. And it's not the time for it.
 О. Ще один такий. Ласкаво просимо на варту.	Oh. Another one like that. Welcome to the watch.
-Нас тут уже троє таких.	That makes three of us like that.
-Троє — то вже не варта. То хата.	Three isn't a watch anymore. That's a household.
+Ще один, хто не пам'ятає. Тут усі такі.	Another one who doesn't remember. Everyone here is like that.
+Коли всі такі — то вже не варта. То хата.	When everyone's like that, it isn't a watch anymore. That's a household.
 Старий вийшов за браму в бік Чорного лісу. Шукай, де він ішов. Поки не минула північ — сліди ще теплі.	The old man went out the gate towards the Black Forest. Look for where he walked. Until midnight the tracks are still warm.
 Старий пішов далеко, а вже за північ: слідів не знайти. Наступного вечора він знову піде на варту.	The old man has gone far, and it is past midnight: the tracks are lost. Next evening he will go on watch again.
 Дочекайся старого в Залі	Wait for the old man in the Hall
@@ -9621,7 +9613,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 А старий? Він хворий?	And the old man? Is he ill?
 Він… втомлений. Дуже давно.	He's… tired. For a very long time.
 Я знайшла його біля каменів, там, де потім був мій табір. Сидів і говорив до них, як до живих.	I found him by the stones, where my camp stood later. He sat there talking to them as if they were alive.
-Щовечора вставав і йшов «міняти варту». У темряву, сам. Уперше я пішла слідом — думала, не вернеться.	Every evening he got up and went to "change the watch". Into the dark, alone. The first time I followed him — I thought he wouldn't come back.
+Вечорами вставав і йшов «міняти варту». У темряву, сам. Уперше я пішла слідом — думала, не вернеться.	In the evenings he got up and went to "change the watch". Into the dark, alone. The first time I followed him — I thought he wouldn't come back.
 Вернувся. Під ранок, мокрий, злий і щасливий. Сказав: «Тихо було». І заснув просто на землі.	He came back. Towards morning, wet, angry and happy. He said: "It was quiet." And fell asleep right there on the ground.
 Відтоді я біля нього. Не рік і не два. Варю, щоб уночі спав, а не ходив. Удень він смішний. Уночі — сумний. Сонний краще, ніж сумний.	Since then I've been by him. Not a year, not two. I brew so he sleeps at night instead of walking. By day he's funny. At night — sad. Sleepy is better than sad.
 А сьогодні не дала.	And today you didn't give it to him.
@@ -9634,7 +9626,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Ейвінда нема. Того, що з коліном.	Eyvind's gone. The one with the knee.
 У Гейд поцупили сонні трави. Старий «трав не чіпав ніколи» — це вперше. А поки вона говорила, Ейвінд тихо пішов із Зали.	Someone pinched Heid's sleeping herbs. The old man "never touched herbs" — this is the first time. And while she was talking, Eyvind quietly left the Hall.
 Чому вилила відвар: «Вранці відвару не п'ють». «Хай думає, що ти спиш» — «старі слова, над колискою». Каже, що нікому не бажає лиха: «Я лікую».	Why she poured out the brew: "Nobody drinks brew in the morning." "Let them think you're asleep" — "old words, over a cradle". Says she wishes no one harm: "I heal."
-Старого знайшла колись біля каменів, де потім був її табір: щовечора він ішов «міняти варту». Відтоді біля нього, «не рік і не два». Варить, щоб уночі спав: «Сонний краще, ніж сумний».	She found the old man long ago by the stones, where her camp stood later: every evening he went to "change the watch". She has been by him since, "not a year, not two". She brews so he sleeps at night: "Sleepy is better than sad."
+Старого знайшла колись біля каменів, де потім був її табір: вечорами він ішов «міняти варту». Відтоді біля нього, «не рік і не два». Варить, щоб уночі спав: «Сонний краще, ніж сумний».	She found the old man long ago by the stones, where her camp stood later: in the evenings he went to "change the watch". She has been by him since, "not a year, not two". She brews so he sleeps at night: "Sleepy is better than sad."
 Гейд не дала старому відвару, бо він «стояв цілу ніч… і вернувся живий». Вона його береже не перший рік: знайшла колись біля каменів, коли він ходив уночі «міняти варту». Варити їй однаково нема з чого — сонні трави поцупили. А старий трав не бере ніколи.	Heid didn't give the old man his brew because he "stood all night… and came back alive". She has guarded him for years: found him once by the stones, when he went out at night to "change the watch". She has nothing to brew with anyway — the sleeping herbs were pinched. And the old man never takes herbs.
 Перстень Сверре	Sverre's ring
 Золотий, теплий, наче щойно з чиєїсь руки. Від нього сняться дурні сни.	Golden and warm, as if just taken off someone's hand. It gives you silly dreams.
@@ -9683,7 +9675,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 побратим Ейвінда	Eyvind's sworn brother
 Ейвінд ховав його в хатині в Чорному лісі й поїв сонним відваром з крадених трав, щоб він не йшов. «Ми з ним стільки разів разом помирали, що я збився з ліку».	Eyvind hid him in a hut in the Black Forest and gave him a sleeping brew of stolen herbs so he wouldn't walk off. "We've died together so many times I've lost count."
 У лісі стояв обличчям на південь і говорив уві сні з відкритими очима: коза співала, риба вчила рахувати.	In the forest he stood facing south and talked in his sleep with his eyes open: a goat sang, a fish taught counting.
-Біля вогню вперше сказав ясно: «Тут тихо». І віддав свій перстень: «Мені більше не треба, щоб снилося дурне».	By the fire he said something clear for the first time: "It's quiet here." And gave away his ring: "I don't need silly dreams any more."
+Біля вогню вперше сказав ясно: «Тут тихо». І пообіцяв спробувати заснути без персня.	By the fire he said something clear for the first time: "It's quiet here." And promised to try sleeping without the ring.
 Ми з ним прокинулись в один день. На тих самих луках. Він подав мені руку, я — йому. Відтоді так і ходимо.	He and I woke up on the same day. In the same meadows. He gave me a hand, I gave him one. We've walked together ever since.
 Скільки ви вже разом?	How long have you been together?
 Не рахував. Я рахую лише чуже.	Never counted. I only count other people's things.
@@ -9701,12 +9693,12 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 «Навіть те, чого вона не каже». Цікаво, що ж вона не каже.	"Even what she doesn't say." I wonder what she isn't saying.
 Піду за запахом.	I'll follow the smell.
 Сон-трава пахне, як ніщо інше: мед і пил. Хто ніс її за пазухою, того цілий день чути.	Sleepwort smells like nothing else: honey and dust. Whoever carried it under their shirt can be smelled all day.
-Твої ворони почують. Вони чують навіть те, чого я не кажу.\nІ ще. Якщо це він — не кричи на нього. Хто краде сон, той когось присипляє.	Your ravens will catch it. They hear even what I don't say.\nAnd one more thing. If it's him — don't shout at him. Whoever steals sleep is putting someone to sleep.
+Ворони почують — вони чують навіть те, чого я не кажу. А й без них не сплутаєш.\nІ ще. Якщо це він — не кричи на нього. Хто краде сон, той когось присипляє.	Ravens will catch it — they hear even what I don't say. And even without them you won't mistake it.\nAnd one more thing. If it's him — don't shout at him. Whoever steals sleep is putting someone to sleep.
 Я ж не собака, щоб винюхувати.	I am no dog, to sniff things out.
 А. Ти. За запахом прийш{ов|ла}, так? Гейдина трава. Коли поспішаю, краду погано.	Ah. You. Followed the smell, did you? Heid's herb. When I'm in a hurry, I steal badly.
 Старий повернувся з вежі іншим. Біля вогню сказав: «Варта — не щоб тебе змінили. Варта — щоб ті, хто за спиною, спали». А Гейд уперше не дала йому відвару: вилила його у вогонь.	The old man came back from the tower changed. By the fire he said: "A watch isn't for being relieved. A watch is so that those behind you can sleep." And for the first time Heid didn't give him his brew: she poured it into the fire.
 Відвар — у вогонь. Ти бачи{в|ла}? Оце я розумію — «пий, поки тепле».	The brew — into the fire. Did you see that? Now that's what I call "drink it while it's warm".
-Гейдину траву я взяв, а зварити не встиг. Сиджу в Залі, слухаю Гейд — а мерці, виходить, цілу ніч ішли з курганів. А він тут сам.	I took Heid's herb, but didn't get to brew it. I'm sitting in the Hall, listening to Heid — and it turns out the dead walked from the barrows all night. And he was here alone.
+Гейдину траву я взяв, а зварити не встиг. Сиджу в Залі, слухаю старого — а мерці, виходить, цілу ніч ішли. А він тут сам.	I took Heid's herb, but didn't get to brew it. I'm sitting in the Hall, listening to the old man — and it turns out the dead were walking all night. And he was here alone.
 Я казав — щось золоте. А монети ти собі {сам|сама} придума{в|ла}.	I said something golden. The coins you made up yourself.
 Побратим Ейвінда. Щось кличе його на південь, і він іде, як уві сні.	Eyvind's sworn brother. Something calls him south, and he walks as if asleep.
 Біля вогню Зали — тихо, і там він лишився.	By the Hall's fire it is quiet, and there he stayed.
@@ -9730,12 +9722,12 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 …Тут було тепло.	…It used to be warm here.
 Я тут бував. Здається. Чи ні.	I've been here. I think. Or not.
 Пил, холод і жодної миші. Навіть миші звідси пішли.	Dust, cold, and not one mouse. Even the mice have left.
-…Не розберу. Треба спитати Гейд.	…I can't make it out. I should ask Heid.
+…Креслення. А що воно таке й навіщо — треба спитати Гейд.	…A plan. But what it is and what for — I should ask Heid.
 Сиди. Скільки треба.	Sit. As long as you need.
 Кетілю?	Ketil?
 Ні!	No!
 Знайду.	I'll find him.
-Мунінова справа, та гаразд. «…перо кидають у вогонь словами обітниці».	Munin's job, but fine. "…the feather is cast into the fire with the words of the oath."
+Мунінова справа, та гаразд. «…перо кидають у вогонь словами обітниці»: «Пам'ятаю за тих, хто забув. Вартую, поки горить вогонь. Стою між живими й холодом…»	Munin's job, but fine. "…the feather is cast into the fire with the words of the oath": "I remember for those who forgot. I keep watch while the fire burns. I stand between the living and the cold…"
 Навіщо ти це зробив?	Why did you do that?
 Кружляють… А ближче не підлітають.	Circling… But they won't come closer.
 …Горить, Кетілю.	…It's burning, Ketil.
@@ -9761,7 +9753,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Перед тим, як я прийшов у Залу, він почав чути, як кличуть з півдня. Ти бачи{в|ла} таких. Ідуть — і не вертаються.	Just before I came to the Hall, he started hearing them call from the south. You've seen people like that. They go — and don't come back.
 Не просто тепло. Вогонь Варти. Тих, хто його кличе, біля нього не чути — ми самі на сувої читали.	Not just warmth. The fire of the Watch. Those who call him can't be heard by it — we read it on the scroll ourselves.
 Не просто тепло — вогонь Варти. Тих, хто кличе, біля нього не чути. Так написано на сувої, який ми читали.	Not just warmth — the fire of the Watch. Those who call can't be heard by it. That's what the scroll we read says.
-Не будь-який вогонь. Вогонь Варти. Тих, хто кличе, біля нього не чути.	Not just any fire. The fire of the Watch. Those who call can't be heard by it.
+Не будь-який вогонь. Вогонь Варти. Так кажуть її руни: тих, хто кличе, біля нього не чути.	Not just any fire. The fire of the Watch. So its runes say: those who call can't be heard by it.
 Поруч іде сцена. Esc — дивитись своїми очима.	A scene is playing nearby. Esc — look with your own eyes.
 {pool zala.kamin 30}\n\nОдне ім'я ніяк не прочитати: руни пливуть перед очима.	{pool zala.kamin 30}\n\nOne name will not be read: the runes swim before your eyes.
 Альрек, Аудун, Бьярні, Бьорґольв, Вермунд, Ґейрмунд, Ґрімкель, Ґуторм, Ерлінґ, Гаук, Гельґі, Гйорлейв, Ісольв, Кольґрім, Мар, Ормар, Рандвер, Сіґтриґ, Скеґґі, Снебйорн, Стюр, Сварт, Торвід, Торлейк, Ульв, Вальді, Вестар, Альфгільд, Асвьор, Бера, Вальґерд, Ґейрлауґ, Ґюрід, Гердіс, Гальфрід, Ідунн, Йоргільд, Раґнфрід, Тора, Торунн, Ульвгільд	Alrek, Audun, Bjarni, Bjorgolf, Vermund, Geirmund, Grimkel, Guttorm, Erling, Hauk, Helgi, Hjorleif, Isolf, Kolgrim, Mar, Ormar, Randver, Sigtrygg, Skeggi, Snaebjorn, Styr, Svart, Thorvid, Thorleik, Ulf, Valdi, Vestar, Alfhild, Asvor, Bera, Valgerd, Geirlaug, Gyrid, Herdis, Halfrid, Idunn, Jorhild, Ragnfrid, Thora, Thorunn, Ulfhild
@@ -9792,12 +9784,12 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Стоїть. Ще дах над кухнею й поріг — тоді скажу «відбудована». Поки що «майже».\nМайстри кажуть «майже» до самої смерті.	It stands. The roof over the kitchen and the threshold yet — then I'll say "rebuilt". For now, "almost".\nMasters say "almost" till the day they die.
 А Сверре?	And Sverre?
 Не думав, що скажу. Носить за двох. Скільки приніс — стільки й каже.\nРаз приніс більше, ніж я просив. Я двічі перерахував. Язик у нього гірший за руки. А руки добрі.	Never thought I'd say it. Carries for two. Says exactly as much as he brought.\nOnce he brought more than I asked for. I counted twice. His tongue is worse than his hands. But his hands are good.
-Його роками кликало на південь.	Something called him south for years.
-Сверре. Поставиш — стоїть. Даси цвях — тримає. До вечора.\nНе сідає, поки не скажеш. Не їсть, поки не скажеш. Не мерзне.\nЯ на вежі мерців бачив. У них більше запалу.	Sverre. Put him somewhere — he stands. Hand him a nail — he holds it. Till evening.\nDoesn't sit till you tell him. Doesn't eat till you tell him. Doesn't feel the cold.\nI saw the dead at the tower. They had more fire in them.
+Його кликало на південь. Ейвінд тримав його під засувом.	Something called him south. Eyvind kept him behind a bolt.
+Сверре. Поставиш — стоїть. Даси цвях — тримає. До вечора.\nНе сідає, поки не скажеш. Не їсть, поки не скажеш. Не мерзне.\nСтарий на вежі мерців бачив. Каже, в них більше запалу.	Sverre. Put him somewhere — he stands. Hand him a nail — he holds it. Till evening.\nDoesn't sit till you tell him. Doesn't eat till you tell him. Doesn't feel the cold.\nThe old man saw the dead at the tower. Says they had more fire in them.
 Ага. Ходив-ходив — і, схоже, частину себе там лишив. Тіло вернулось, а решта ще йде.\nХай Гейд на нього гляне. Вона таких… знає.\nА тепер вийди надвір. Стань на сходах і озирнись. Зсередини вона — дошки й цвяхи. Ззовні — Зала.	Aye. Walked and walked — and seems he left part of himself out there. The body came back; the rest is still walking.\nLet Heid take a look at him. She knows… the type.\nNow go outside. Stand on the steps and look back. From inside it's boards and nails. From outside, it's the Hall.
 Підійди до золотого вогню Зали	Come to the golden fire of the Hall
 Біля золотого вогню Зали на мить стояла стара Варта. І ти серед них.	For a moment, the old Watch stood by the golden fire of the Hall. And you among them.
-Біля каменів тебе зустріла Гейд. Побачила твого ворона: «Отже, ти з Варти». А ти не пам'ятаєш ні Варти, ні себе в ній.	By the stones Heid met you. She saw your raven: "So you're of the Watch." And you remember neither the Watch nor yourself in it.
+Біля каменів тебе зустріла Гейд. Сказала, що ти з Варти — як і вона. А ти не пам'ятаєш ні Варти, ні себе в ній.	By the stones Heid met you. She said you're of the Watch — like her. And you remember neither the Watch nor yourself in it.
 …Я бу{в|ла} серед них.	…I was among them.
 Тепло. Я пам'ятаю це тепло. І їх — ні. Ще ні.	Warm. I remember this warmth. And them — no. Not yet.
 Тепер ясно, чому нас тягнуло сюди.	Now it's clear why we were drawn here.
@@ -9806,7 +9798,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Вона сказала це так, ніби ми мали знати.	She said it as if we were supposed to know.
 Кетіль чув у своєму селищі від того, хто жив там довше за всіх: колись тут ходили люди з воронами на плечах, і де вони ставили вогонь, там можна було жити. «Кажуть, вони не вмирають до кінця».	Ketil heard it in his village from the one who had lived there longest: once people walked here with ravens on their shoulders, and where they set a fire, people could live. "They say they don't die all the way."
 На сувої — руни Варти. Читає їх ворон, не людина. На краю — знак: ворон у колі; так мітили пости Варти.	The scroll bears the runes of the Watch. A raven reads them, not a man. At the edge, a sign: a raven in a circle — that is how the Watch marked its posts.
-Перо Варти лягло в синій вогонь, і ти сказа{в|ла} обітницю: «Пам'ятаю за тих, хто забув. Вартую, поки горить вогонь. Не віддам нікого нікому: ні Хель, ні богам». На мить біля золотого вогню стояла стара Варта. І ти серед них.	The Watch's feather fell into the blue fire, and you spoke the oath: "I remember for those who forgot. I keep watch while the fire burns. I will give no one to anyone: not to Hel, not to the gods." For a moment the old Watch stood by the golden fire. And you among them.
+Перо Варти лягло в синій вогонь, і ти сказа{в|ла} обітницю: «Пам'ятаю за тих, хто забув. Вартую, поки горить вогонь. Стою між живими й холодом. Не віддам нікого нікому: ні Хель, ні богам». На мить біля золотого вогню стояла стара Варта. І ти серед них.	The Watch's feather fell into the blue fire, and you spoke the oath: "I remember for those who forgot. I keep watch while the fire burns. I stand between the living and the cold. I will give no one to anyone: not to Hel, not to the gods." For a moment the old Watch stood by the golden fire. And you among them.
 Різьба Ейріка: «Коли повернеться сік, встануть ті, чиї імена тут. Вони не згадають нас. Не кажіть їм, ким вони були».	Eirik's carving: "When the sap returns, those whose names are here will rise. They will not remember us. Do not tell them who they were."
 Торвальд: «Вирізали ми якось свої імена на одному камені… Тепер усі на камені, а я так ходжу».	Torvald: "Once we carved our names on one stone, so they wouldn't get lost… Now everyone's on the stone, and I just walk about."
 Ейвінд упізнав у тобі вартового за воронами: «У нас казали: у вартових ворони замість пам'яті. Я думав — байка».	Eyvind knew you for a watchman by your ravens: "Where I'm from they said: watchmen have ravens instead of memory. I thought it was a tale."
@@ -9814,11 +9806,11 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Торвальд після ночі на вежі: «Варта — не щоб тебе змінили. Варта — щоб ті, хто за спиною, спали».	Torvald after the night on the tower: "A watch isn't so that someone relieves you. A watch is so that those behind your back can sleep."
 «Варта, що лишилась» пише тобі: «Варта говорить із Вартою віч-на-віч». Для нього ти — Варта.	"The Watch That Remains" writes to you: "The Watch speaks with the Watch face to face." To him, you are the Watch.
 Чужий ворон сказав: «…ти ж обіця{в|ла}». Що і кому — не пам'ятаєш.	A strange raven said: "…you promised." What and to whom — you don't remember.
-Гейд побачила твого ворона: «Отже, ти з Варти». І одразу: «Не пам'ятаєш. Тут ніхто не пам'ятає».	Heid saw your raven: "So you're of the Watch." And right away: "You don't remember. Nobody here remembers."
+Гейд сказала, що ти з Варти: «Як і я». І одразу: «Не пам'ятаєш. Тут ніхто не пам'ятає».	Heid said you're of the Watch: "Like me." And right away: "You don't remember. Nobody here remembers."
 Гейд: «У кого є ворон — той колись був у Варті. Я теж».	Heid: "Whoever has a raven was once in the Watch. Me too."
 Ти чув колись про Варту?	Have you ever heard of the Watch?
 Чув. У нашому селищі був один — жив там довше за всіх. Казав: колись тут ходили люди з воронами на плечах. Де вони ставили вогонь — там можна було жити.\nЩе казав — вони не вмирають до кінця. Ми сміялись. Він — ні.\n…У тебе ж теж ворон.	I have. In our village there was one — lived there longer than anyone. He said: once people walked here with ravens on their shoulders. Wherever they set a fire, people could live.\nHe also said they don't die all the way. We laughed. He didn't.\n…You've got a raven too.
-Я? Ейвінд. Я ж казав. …А, ти про те, хто я взагалі.\nТакий самий, як ти. Тільки без воронів. І з коліном. Прокинувся колись на луках — порожньо в голові, небо над головою. Відтоді ходжу, дивлюся, допомагаю добрим людям.\nА ти, бачу, з тих — із воронами. Вартовий?	Me? Eyvind. I said so. …Ah, you mean who I am at all.\nThe same as you. Only without ravens. And with a knee. I woke up on the meadows once — empty in the head, the sky over it. Since then I walk about, look around, help good people.\nAnd you, I see, are one of those — with ravens. A watchman?
+Я? Ейвінд. Я ж казав. …А, ти про те, хто я взагалі.\nТакий самий, як ти. Тільки без воронів. І з коліном. Прокинувся колись на луках — порожньо в голові, небо над головою. Відтоді ходжу, дивлюся, допомагаю добрим людям.\nА ти, кажуть, із тих — вартових?	Me? Eyvind. I said so. …Ah, you mean who I am at all.\nThe same as you. Only without ravens. And with a knee. I woke up on the meadows once — empty in the head, the sky over it. Since then I walk about, look around, help good people.\nAnd you, they say, are one of those — the watchmen?
 Ото й воно. У нас казали: у вартових ворони замість пам'яті. Я думав — байка.	That's the thing. Where I'm from they said: watchmen have ravens instead of memory. I thought it was a tale.
 Кажуть, що так. Сам{|а} не пам'ятаю.	So they say. I don't remember myself.
 «Досить листів» — пише він. У листі. Шо, чекаєм ще один.	"Enough letters," he writes. In a letter. So, waiting for the next one, eh.
@@ -9870,17 +9862,17 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Подейкують, ніби десь на узліссі мертві встають. Раніше лежали спокійно.	Rumour has it the dead are rising somewhere at the forest edge. They used to lie quietly.
 Перехожі казали, що в Чорному лісі земля ворушиться ночами. Може, й брешуть.	Passers-by said the earth stirs at night in the Black Forest. Could be lies.
 Дійшла чутка про мерців із синіми очима. Хтось їх відбив. Хто — кажуть по-різному.	Word came about the dead with blue eyes. Someone beat them off. Who — the stories differ.
-Цілу ніч старий Торвальд тримав свою вежу на узліссі. Мерці йшли з боку курганів, дедалі більше; під ранок із лісу вийшов незнайомець і бився поруч. Вежа встояла.	All night old Torvald held his tower at the forest edge. The dead came from the barrows, more and more; towards morning a stranger came out of the forest and fought beside him. The tower held.
+Цілу ніч старий Торвальд тримав свою вежу в Чорному лісі. Мерці йшли з боку курганів, дедалі більше; під ранок із лісу вийшов незнайомець і бився поруч. Вежа встояла.	All night old Torvald held his tower in the Black Forest. The dead came from the barrows, more and more; towards morning a stranger came out of the forest and fought beside him. The tower held.
 Кажуть, у лісі хтось цілу ніч тримав якусь вежу.	They say someone held some tower in the forest all night long.
 Він мені нічого не сказав. Пішов увечері — вернувся вранці. Живий. Більше мені знати не треба.	He told me nothing. Left in the evening — came back in the morning. Alive. I don't need to know more.
 Я був|була на тій вежі. Цілу ніч. Старий стояв і не рухався: «Обличчям до курганів». А вони все йшли.	I was on that tower. All night. The old man stood without moving: "Face to the barrows." And still they came.
-Я бачив|бачила, як під ранок із лісу вийшов чоловік і став поруч зі старим. Ні слова не сказав. Просто бився.	I saw a man come out of the forest towards morning and stand beside the old man. Not a word. He just fought.
+Я бачив|бачила, як під ранок із лісу вийшов чоловік і став поруч зі старим. Говорив мало й тихо. Просто бився.	I saw a man come out of the forest towards morning and stand beside the old man. Spoke little and quietly. He just fought.
 На моїх очах старий тримав вежу до світанку. Я думав|думала, він ледве ходить. Помилявся|помилялась.	I saw the old man hold the tower till dawn with my own eyes. I thought he could barely walk. I was wrong.
 Кажуть, старий Торвальд цілу ніч стояв на якійсь вежі. І мерці до нього йшли. А він — стояв.	They say old Torvald stood all night on some tower. And the dead kept coming at him. And he — stood.
-Чув|Чула, що на узліссі тримали вежу до ранку. З ними ще був якийсь незнайомець, що прийшов із лісу.	I heard they held a tower at the forest edge till morning. There was some stranger with them too, who came out of the forest.
+Чув|Чула, що в Чорному лісі тримали вежу до ранку. З ними ще був якийсь незнайомець, що прийшов із лісу.	I heard they held a tower in the Black Forest till morning. There was some stranger with them too, who came out of the forest.
 Наші кажуть, старий таки не брехав про свою варту. Є вона. І вежа є.	Our folk say the old man wasn't lying about his watch after all. It's real. And so is the tower.
 Подейкують, ніби в лісі стоїть вежа, яку хтось тримає від мертвих. Чия — невідомо.	Rumour has it there's a tower in the forest that someone holds against the dead. Whose — nobody knows.
-Перехожі казали, що вночі на узліссі світилось і дзвеніло залізо до самого ранку. Може, й брешуть.	Passers-by said at night the forest edge glowed and iron rang till morning. Could be lies.
+Перехожі казали, що вночі в Чорному лісі світилось і дзвеніло залізо до самого ранку. Може, й брешуть.	Passers-by said at night the Black Forest glowed and iron rang till morning. Could be lies.
 Дійшла чутка про якогось старого на вежі. Кажуть, він чекає, поки його змінять. Уже дуже давно.	Word came about some old man on a tower. They say he's waiting to be relieved. For a very long time now.
 До вогню Зали привели Сверре, побратима Ейвінда. Біля вогню він уперше сказав ясно: «Тут тихо».	Sverre, Eyvind's sworn brother, was brought to the fire of the Hall. By the fire, for the first time, he said clearly: "It's quiet here."
 Кажуть, у Залі тепер живе ще один — тихий, що ходить уві сні.	They say one more lives in the Hall now — a quiet one who walks in his sleep.
@@ -9912,13 +9904,13 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Про Залу, коли вона встала: «Поки що „майже". Майстри кажуть „майже" до самої смерті».	On the Hall, once it stood: "For now, 'almost'. Masters say 'almost' till the day they die."
 Про Ейвінда: «Носить за двох… Язик у нього гірший за руки. А руки добрі».	On Eyvind: "Carries for two… His tongue is worse than his hands. But his hands are good."
 той, хто цілу ніч тримав свою вежу	the one who held his tower all night
-Цілу ніч тримав вежу на узліссі. Мерці йшли з боку курганів, дедалі більше; під ранок із лісу прийшов незнайомець і став поруч.	Held the tower at the forest edge all night. The dead came from the barrows, more and more; towards morning a stranger came out of the forest and stood beside him.
+Цілу ніч тримав вежу в Чорному лісі. Мерці йшли з боку курганів, дедалі більше; під ранок із лісу прийшов незнайомець і став поруч.	Held the tower in the Black Forest all night. The dead came from the barrows, more and more; towards morning a stranger came out of the forest and stood beside him.
 той, хто ховав у лісі побратима	the one who hid his sworn brother in the forest
 Пів дня сидів на лаві під стіною Зали, і ніхто його не питав: Літ думав, що він твій, а ти — що Літів.	Sat half a day on the bench by the wall of the Hall, and nobody asked him anything: Lit thought he was yours, and you thought he was Lit's.
 Упізнав у тобі вартового за воронами: «Вартовий?» І чув про таких: «У вартових ворони замість пам'яті».	Knew you for a watchman by your ravens: "A watchman?" And he'd heard of such: "Watchmen have ravens instead of memory."
 У хатині в Чорному лісі ховав Сверре, свого побратима: засув — із Літових дощок, сонний відвар — із Гейдиних трав. Без жодного коліна й без жодного жарту.	Hid Sverre, his sworn brother, in a hut in the Black Forest: the bolt — from Lit's boards, the sleeping brew — from Heid's herbs. No knee at all, and no joke at all.
 Біля вогню Зали віддав тобі «щось золоте» — перстень Сверре. За порятунок побратима.	By the fire of the Hall he gave you "something golden" — Sverre's ring. For saving his sworn brother.
-Коли Зала вставала, носив дошки сам. Доки не помітив, що Гейд дивиться, — тоді згадав про коліно.	When the Hall was rising, he carried boards himself. Until he noticed Heid watching — then he remembered his knee.
+Коли Зала вставала, носив дошки сам — і ні слова про коліно.	When the Hall was rising, he carried boards himself — and not a word about the knee.
 «Щось золоте» — перстень Сверре, його побратима. Ейвінд віддав його тобі біля вогню Зали, за порятунок Сверре: «Я казав — щось золоте. А монети ти собі {сам|сама} придума{в|ла}».	"Something golden" — the ring of Sverre, his sworn brother. Eyvind gave it to you by the fire of the Hall, for saving Sverre: "I said something golden. The coins you made up yourself."
 Біля вогню Зали йому тихо — там він і лишився.	By the fire of the Hall it's quiet for him — and there he stayed.
 Літ: «Поставиш — стоїть. Даси цвях — тримає. До вечора. Не сідає, поки не скажеш. Не їсть, поки не скажеш».	Lit: "Put him somewhere — he stands. Hand him a nail — he holds it. Till evening. Doesn't sit till you tell him. Doesn't eat till you tell him."
@@ -9932,8 +9924,8 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Біля вогню Зали Сверре вперше сказав ясно: «Тут тихо».	By the fire of the Hall Sverre said clearly for the first time: "It's quiet here."
 Зала встала ціла. Працювали всі — навіть Ейвінд.	The Hall rose whole. Everyone worked — even Eyvind.
 вежа, що встояла до світанку	a tower that held till dawn
-невелика вежа на узліссі	a small tower at the forest edge
-Невелика вежа на узліссі Чорного лісу, обличчям до курганів. Сюди старий щовечора ходить «міняти варту».	A small tower at the edge of the Black Forest, facing the barrows. Every evening the old man walks here "to change the watch".
+невелика вежа в Чорному лісі	a small tower in the Black Forest
+Невелика вежа в Чорному лісі, обличчям до курганів. Сюди старий надвечір ходить «міняти варту» — не на те узлісся, де його колись шукали.	A small tower in the Black Forest, facing the barrows. Towards evening the old man walks here "to change the watch" — not to the forest edge where he was once looked for.
 Цілу ніч старий тримав тут вежу: мерці йшли з боку курганів, а під ранок із лісу вийшов незнайомець і бився поруч. Вежа встояла.	All night the old man held the tower here: the dead came from the barrows, and towards morning a stranger came out of the forest and fought beside him. The tower held.
 Дошки й цвяхи, що зникали зі скрині Літа, — тут: «Решта — на вежі. Вежа тепер суха».	The boards and nails that kept vanishing from Lit's chest are here: "The rest is on the tower. The tower's dry now."
 Хатина в лісі	A hut in the forest
@@ -9952,7 +9944,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 З неї Гейд варить старому сонний відвар. Цього разу варити не було з чого: трави поцупили.	Heid brews the old man's sleeping brew from it. This time there was nothing to brew with: the herbs had been stolen.
 Ейвінд поїв нею Сверре, щоб той уночі не йшов на південь.	Eyvind fed it to Sverre so he wouldn't walk south at night.
 Після вежі Гейд уперше не дала старому відвару — вилила у вогонь.	After the tower, for the first time, Heid didn't give the old man his brew — she poured it into the fire.
-У Сверре теж був золотий перстень. Від нього сняться дурні сни: кози співають, риби вчать рахувати. «Мені більше не треба, щоб снилося дурне», — і віддав. Той це перстень, про який кажуть на півдні, чи інший — невідомо.	Sverre had a golden ring too. It brings silly dreams: goats sing, fish teach counting. "I don't need silly dreams anymore," he said — and gave it away. Whether it's the ring they speak of in the south, or another — nobody knows.
+У Сверре теж був золотий перстень — Ейвінд колись виміняв його «з чуток». Від нього сняться дурні сни: кози співають, риби вчать рахувати, — зате крізь них не чути, як кличуть. Біля вогню Ейвінд віддав його тобі. Той це перстень, про який кажуть на півдні, чи інший — невідомо.	Sverre had a golden ring too — Eyvind once traded for it "on a rumour". It brings silly dreams: goats sing, fish teach counting — but through them you can't hear the calling. By the fire Eyvind gave it to you. Whether it's the ring they speak of in the south or another — no one knows.
 Під ранок, коли мерців на вежу йшло забагато, вийшов із лісу, став поруч і бився до світанку. У бою казав: «Не рахуй їх. Вони цього не люблять».	Towards morning, when too many dead were coming at the tower, he came out of the forest, stood beside you and fought till dawn. In battle he said: "Don't count them. They don't like it."
 Вогонь Варти горить золотим. Жарина з нього — у ліхтарі серця.	The fire of the Watch burns golden. An ember of it is in the lantern of the Hearth.
 Зала встала. А «Варта, що лишилась» обіцяла покликати.	The Hall has risen. And "The Watch That Remains" promised to call.
@@ -9960,7 +9952,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 На узліссі Чорного лісу з землі встали мерці з очима зеленувато-синіми, як той синій вогонь, що колись горів у Залі: п'ятеро, а тоді ще десятеро. Їх відбили.	At the edge of the Black Forest the dead rose out of the earth, their eyes greenish-blue like the blue fire that once burned in the Hall: five, and then ten more. They were beaten off.
 На луках, куди послав Ейвінд, назустріч ішов скелет з очима зеленувато-синіми — як той синій вогонь, що колись горів у Залі. Дійти не встиг: його розірвав кабан.	On the meadows where Eyvind sent you, a skeleton came walking — eyes greenish-blue, like the blue fire that once burned in the Hall. It never got there: a boar tore it apart.
 Гейд: пахне медом і пилом — хто ніс її за пазухою, того цілий день чути.	Heid: it smells of honey and dust — whoever carried it in their shirt can be smelled all day.
-«Твої ворони почують. Вони чують навіть те, чого я не кажу».	"Your ravens will smell it. They hear even what I don't say."
+«Ворони почують — вони чують навіть те, чого я не кажу».	"Ravens will catch it — they hear even what I don't say."
 Ти поверну{вся|лася} до Зали, а вона вже стояла. І кожен був при ділі: Літ міряв стіну, Гейд мішала в казані, старий годував вогнище, Сверре щось майстрував у кутку. Навіть Ейвінд носив дошки сам. Літ сказав: основне зроблено. Старий гукнув через усю Залу, що брама знову не там, — і Літ крикнув, що вона там, де старий сам показав.	You came back to the Hall, and it was already standing. And everyone was at work: Lit measured a wall, Heid stirred the cauldron, the old man fed the hearth, Sverre tinkered with something in the corner. Even Eyvind carried planks by himself. Lit said the main work was done. The old man called across the whole Hall that the gate was in the wrong place again — and Lit shouted back that it stood where the old man himself had shown.
 Основне зроблено. Стіни стоять, дах тримає.	The main work is done. The walls stand, the roof holds.
 Брама там, де ти показав!	The gate is where you showed!
@@ -10223,7 +10215,7 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Валявся під порогом, у попелі. Зігнутий, руна ледь видна. Вирівняв, почистив, повісив.	It lay under the threshold, in the ashes. Bent, the rune barely showing. I straightened it, cleaned it, hung it up.
 По-моєму, йому там і місце.	If you ask me, that's where it belongs.
 Як на тому пері.	Like on that feather.
-Руна… я її знаю. Не пам'ятаю звідки.	That rune… I know it. Don't remember from where.
+Руна з пера, ага. А я її знаю ще звідкись — раніше. Не пам'ятаю звідки.	The rune from the feather, yeah. But I know it from somewhere else too — earlier. Don't remember where.
 Виспався весело. Тримається, поки ти відпочилий і не зняв цю річ.	A merry night's sleep. Lasts while you are rested and keep this thing on.
 Будяк, з коренем. Принесу.	Thistle, roots and all. I'll bring it.
 Принесу. Цього разу донесу.	I'll bring it. This time I'll get it here.
@@ -10247,10 +10239,57 @@ I — сильніший: {0} +{1}%\nII — {2}; і −{3}% сили й пере
 Добре, половина. Другу я знайду сам{|а}.	Fine, half. I'll find the other half myself.
 Ходімо. Подивлюсь — а тоді вирішу, чи піду.	Let's go. I'll look — and then decide whether I leave.
 Іду. Шукати, де ліс і вода.	Going. To look for where there's forest and water.
-# no longer in the code (kept for a while):
-#Іду.	I'm going.
-#Дивлюсь.	I'm watching.
-#Пошукаю його.	I'll look for him.
-#Прийду.	I'll come.
-#Спитаю.	I'll ask.
-#Простежу.	I'll follow him.
+На, ковтни. Трави — зігріють трохи. Не дивись так, не отруйні.	Here, take a sip. Herbs — they'll warm you a little. Don't look at me like that, they're not poison.
+Я Гейд. Доглядаю ці камені. Ти з Варти — це видно. Як і я.	I'm Heid. I tend these stones. You're of the Watch — it shows. Like me.
+Хата	Hut
+Видно. Хто був у Варті, той і стоїть інакше, і дивиться. Я таких бачила. Я теж звідти.	It shows. Those who were in the Watch stand differently, look differently. I've seen their kind. I'm from there too.
+Каже, що теж була у Варті. Що ти звідти, каже, видно: «Я таких бачила».	Says she was in the Watch too. That you're from there, she says, shows: "I've seen their kind."
+Гейд: «Хто був у Варті, той і стоїть інакше. Я таких бачила».	Heid: "Those who were in the Watch stand differently. I've seen their kind."
+Вона й не спитала, хто такий Кетіль і як помер. Наче й так знала.	She didn't even ask who Ketil was or how he died. As if she already knew.
+Розкажи про себе.	Tell me about yourself.
+Стривай. Такий самий знак — на камені кургану, повз який ми ходили. Ото він і є.	Wait. The same mark is on the stone of that barrow we walked past. That's the one.
+Такий самий знак я бачив на камені кургану в Чорному лісі. Ото він і є.	I saw the same mark on the stone of a barrow in the Black Forest. That's the one.
+Руни пливуть… А ці слова я наче знаю й так: «Пам'ятаю за тих, хто забув. Вартую, поки горить вогонь. Стою між живими й холодом…»	The runes swim… But these words I seem to know anyway: "I remember for those who forgot. I keep watch while the fire burns. I stand between the living and the cold…"
+Нема при тобі розбудженого? Розбуди свого біля Жертовних каменів. А нема й свого — у Хальдора бувають.	No awakened one with you? Wake yours at the Sacrificial Stones. And if you have none of your own — Haldor has some now and then.
+Горить. Шкода, що Кетіль цього не побачив. Він прийшов на такий вогонь, коли той був темний.	It burns. A pity Ketil didn't see it. He came to a fire like this when it was still dark.
+…Горить. Хай би Кетіль це бачив.	…It burns. I wish Ketil could see it.
+Піду по старого. Сам він сюди не дійде.	I'll go fetch the old man. He won't make it here on his own.
+Глянь, що мені Ейвінд дав. Перстень.	Look what Eyvind gave me. A ring.
+Золоте? {~nod} …Сховай.\nЗолоте кусається. Мене колись укусило — ось тут досі пече. Не пам'ятаю, де й коли. А пече.\nНе шукай такого. Чуєш? Не шукай.	Golden? {~nod} …Put it away.\nGold bites. It bit me once — still burns right here. Don't remember where or when. But it burns.\nDon't go looking for that kind. Hear me? Don't look.
+Він сховав руку за спину. Уперше за весь час він не жартує.	He hid his hand behind his back. For the first time he isn't joking.
+Добре, сховаю.	All right, I'll put it away.
+Як Сверре?	How's Sverre?
+Ти казав, що завжди віддаєш борги. Ми квити?	You said you always pay your debts. Are we even?
+Ти ж ходив за ним на південь. Далеко?	You went after him to the south. How far?
+Спить. Уночі. Уперше за… не знаю, за скільки.\nА зранку сказав мені: «Ти схуд». Двічі. Я рахував.	He sleeps. At night. For the first time in… I don't know how long.\nAnd in the morning he told me: "You've grown thin." Twice. I counted.
+Він рахує навіть це. Ну, хоч щось у світі стале.	He counts even that. Well, at least something in the world stays put.
+Квити? {~laugh} Ти привів його до вогню. Такого не віддаси ні грибами, ні шкурами.\nТож я тобі винен. Надовго. Звикай: я борги віддаю. Іноді пізно.	Even? {~laugh} You brought him to the fire. You don't pay that back with mushrooms or hides.\nSo I owe you. For a long while. Get used to it: I pay my debts. Sometimes late.
+Далеко. Аж туди, де Чорний ліс рідшає й земля починає чвакати. Далі я його не пускав — і сам не йшов.\nТам болото. А в болоті, кажуть, щось дихає. Холодом.\nКоли треба буде туди — клич. Дорогу я знаю. Ноги пам'ятають, де він звертав.	Far. All the way to where the Black Forest thins out and the ground starts to squelch. I didn't let him go further — and didn't go myself.\nThere's a swamp there. And in the swamp, they say, something breathes. Cold.\nWhen you need to go there — call me. I know the way. My feet remember where he turned.
+Болото, що дихає холодом. Запам'ятай.	A swamp that breathes cold. Remember that.
+Знаєш, чого вони всі пруть через мою вежу? Вона стоїть на дорозі. Від курганів — до вогню.	Know why they all come through my tower? It stands on the road. From the barrows — to the fire.
+До Зали?	To the Hall?
+Мертві завжди йдуть на світло. А в Залі тепер таке світло, що аж небо жовте. От і повставали.	The dead always go towards light. And now there's such a light in the Hall the sky's gone yellow. So up they got.
+Колись у кожному кургані сидів наш і стеріг, щоб лежали. Тепер нема кому. Лишився я. Ну, і ти.	Once one of ours sat in every barrow and kept them lying down. Now there's no one. Just me left. Well, and you.
+Перстень на ньому — теж я. Виміняв давно, за три шкури. Казали — той самий, що вертає додому.	The ring on him — that was me too. Traded for it long ago, three hides. They said it's the one that brings you home.
+І що, вертає?	And does it?
+Брехня. Від нього тільки сни дурні: то коза співає, то риба рахувати вчить. Зате крізь той галас він не чув, як кличуть.	Lies. All it gives is silly dreams: a goat singing, a fish teaching sums. But through that racket he couldn't hear the calling.
+Там, на узліссі, — то я так, щоб Гейд не лаялась. Справжня варта — тут.	That spot at the forest edge — that's just so Heid won't scold. The real watch is here.
+І ще. На різьбі біля трону один рядок зрубано. Свіжо. Сокирою, не часом.	One more thing. On the carving by the throne one row has been hacked off. Freshly. With an axe, not by time.
+Хтось не хотів, щоб той рядок читали.	Someone didn't want that row read.
+Зрубано? Хто ж це рубав… і нащо.	Hacked off? Who did that… and why.
+…Ото де мій шнур. А я казав — мені не треба.	…So that's where my cord went. And I said I didn't need it.
+Тільки хай від вогню далеко не ходить. Ясного його… видно здалеку.	Only he shouldn't go far from the fire. Clear-headed, he's… seen from afar.
+Стривай. Це ж той, що стояв за нами біля будяка. Тоді дивився — тепер став поруч.	Wait. That's the one who stood behind us by the thistles. Back then he watched — now he stood with us.
+О. Та це ж той, шо в спину нам дивився біля будяка. По-любому він.	Oh. That's the one who was staring at our backs by the thistles. Definitely him.
+Ще одне. Мені сниться щось кругле. Тепле, золоте — і капає. Побачиш таке — скажи.	One more thing. I dream of something round. Warm, golden — and it drips. If you see such a thing — tell me.
+Що воно таке?	What is it?
+Не знаю. Прокидаюсь — а в долоні порожньо.	I don't know. I wake up — and my palm is empty.
+Золоте кусається. Не шукай.	Gold bites. Don't look for it.
+Глянь — дід руку за спину сховав. Ту, з опіком.	Look — gramps hid his hand behind his back. The burned one.
+Старий сховав руку за спину. І вперше не жартує.	The old man hid his hand behind his back. And for once he isn't joking.
+Кругле, золоте… Як тому незнайомцеві з вежі снилось. Тільки не капає.	Round, golden… Like the stranger from the tower dreamed. Only it doesn't drip.
+О, свій! Сідай. Тебе я пам'ятаю.	Oh, one of ours! Sit. You I remember.
+Він тепер пам'ятає. Сама не вірю.	He remembers now. I can't believe it myself.
+Я й раніше пам'ятав. Просто перевіряв.	I remembered before too. I was just checking.
+Коли незнайомець розповів про золоте зі сну, сховав руку за спину: «Золоте кусається. Не шукай».	When the stranger told of the gold from his dream, he hid his hand behind his back: "Gold bites. Don't look for it."
+Сниться йому щось кругле, тепле й золоте — і капає. Прокидається, а в долоні порожньо.	He dreams of something round, warm and golden — and it drips. He wakes, and his palm is empty.

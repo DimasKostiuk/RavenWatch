@@ -6,7 +6,7 @@ note: Пожовклий пергамент, розірваний навпіл �
 use: item
 id: suvii_varty_1
 cost: none
-story: yes
+story: yes until reached ch1 rite_end
 stack: 1
 weight: 0.1
 part asset/Предмети/WatchScroll1 pos 0 0 0 rot 0 0 0 scale 0.12 0.12 0.12  # сувій автора, синя стрічка: 0,24 м завдовжки

@@ -14219,7 +14219,7 @@ I went for firewood once and came back for water.
 I planted a turnip once, and an axe grew.
 I once borrowed fog from the bog to hide from Heid.
 I once taught a hen to fly.
-I once sold my shadow to a gnome, for three coppers.
+I once sold my shadow to a dvergr, for three coppers.
 I once played dice with a dead man from a barrow.
 I once hid winter in a sack so I wouldn't freeze.
 I once had a drinking race with a giant.
@@ -14484,7 +14484,7 @@ Everyone sat at one table then. That doesn't happen often.
 [lit:idle] The elders didn't trust measures. I do. That's why I'm here.
 [lit:idle ?reached ch1 lit_lead, !reached ch1 lit_duty] Still far? I'm counting steps.
 [lit:idle ?reached ch1 lit_lead, !reached ch1 lit_duty] The forest is crooked. The trees grow as they please.
-[lit:idle ?reached ch1 lit_lead, !reached ch1 lit_duty] Your Hall. We'll see how straight it is.
+[lit:idle ?reached ch1 lit_walk, !reached ch1 lit_duty] Your Hall. We'll see how straight it is.
 [lit:idle ?reached ch1 lit_duty] The fire burns straight. At least something here is straight.
 [lit:see_player] Ah. You.
 [lit:see_player] Don't stand under my arm.
@@ -14536,13 +14536,14 @@ Everyone sat at one table then. That doesn't happen often.
 [heid:idle ?reached ch1 home_hall, !reached ch1 lit_walk] Quiet without the old man. Too quiet.
 [heid:idle ?reached ch1 lit_duty] The dvergr is counting again. I never knew there was so much stone here.
 [heid:idle ?reached ch1 lit_duty] He measures the walls as if they owed him something.
-[heid:idle ?reached ch1 lit_duty, !reached ch2 sverre_home] There are three of us now. It won't be crowded — the Hall is big.
+[heid:idle ?reached ch1 lit_duty, !reached ch2 lit_plan] There are three of us now. It won't be crowded — the Hall is big.
+[heid:idle ?reached ch2 lit_plan, !reached ch2 sverre_home] Four of us now. The one on the bench counts too.
 [heid:see_player] Say what you need.
 [heid:see_player] You again. Sit, since you're here.
 [heid:see_player] Don't stamp about. You'll trample the herbs.
 [heid:see_player] Still alive? Good.
 [heid:see_player] Hungry? I can see it in your eyes. There's food by the fire.
-[heid:see_player ?world ketil_gone] Going somewhere? Go. Just don't take the old man with you.
+[heid:see_player ?world ketil_gone, !reached ch2 torv_out] Going somewhere? Go. Just don't take the old man with you.
 
 # torvald: свої слова без питання (2026-11-16)
 [torvald:at_post ?!world torvald_wakes] Standing. Guarding. Till they relieve me.
@@ -14578,12 +14579,27 @@ Everyone sat at one table then. That doesn't happen often.
 [torvald:idle ?state zala >= 1.3, !world torvald_wakes] The Hall is big. Plenty of places to hide… to put things, I mean.
 [torvald:idle ?reached ch1 lit_duty] The little one keeps knocking. And the wall keeps standing.
 [torvald:idle ?reached ch1 lit_duty, !world torvald_wakes] The little one has a hammer you can't borrow. I tried.
-[torvald:see_player] Oh, a guest! I'm Torvald. And who are you?
-[torvald:see_player] Have we met? Well, now we have.
+[torvald:see_player ?!world torvald_wakes] Oh, a guest! I'm Torvald. And who are you?
+[torvald:see_player ?!world torvald_wakes] Have we met? Well, now we have.
 [torvald:see_player] Have you seen my spoon?
 [torvald:see_player] Ah, you! Or not you. Hello anyway.
 [torvald:see_player] Come here, I'll tell you something. No, later. Forgot.
-[torvald:see_player] You again! Or is it the first time? I'm Torvald.
+[torvald:see_player ?!world torvald_wakes] You again! Or is it the first time? I'm Torvald.
+[torvald:see_player ?world torvald_wakes] Ah, the watchman! I know the face, not the name. Remind me?
+[torvald:see_player ?world torvald_wakes] You're from the tower! I remember the night. Not the name.
+[torvald:see_player ?world torvald_wakes] Oh, one of ours! I know you. Almost.
+[torvald:hello ?!world torvald_wakes] Oh, a guest! I'm Torvald. And what's your name?
+[torvald:hello ?!world torvald_wakes] Have we met? No? I'm Torvald. Sit, while the bench is warm.
+[torvald:hello ?!world torvald_wakes] Torvald. Just Torvald. And you must be new.
+[torvald:hello ?!world torvald_wakes] Someone else has come! Or is it the first time? I'm Torvald.
+[torvald:hello ?!world torvald_wakes] Ah, I know you… no, I don't. Torvald, at your service.
+[torvald:hello ?!world torvald_wakes] Good that you came in. I'm Torvald. Have you seen my spoon?
+[torvald:hello ?world torvald_wakes] Ah, the watchman! Sit. Forgot your name, but not your face.
+[torvald:hello ?world torvald_wakes] Oh, from the tower! Well, say what brings you.
+[torvald:hello ?world torvald_wakes] I know you. From where — that's another story.
+[torvald:hello ?world torvald_wakes] One of ours! Sit, while the bench is warm.
+[torvald:hello ?world torvald_wakes] Ah, you. We stood a night together, didn't we? Or two?
+[torvald:hello ?world torvald_wakes] Good that you came in. Have you seen my spoon? Joking. Go on.
 [torvald:weather] The weather's like my memory: now it's there, now it's gone.
 [torvald:weather] The sky is up to something again. So am I. But I forgot what.
 [torvald:weather ?!world torvald_wakes] Good weather for sitting by the fire. And quietly borrowing things.
@@ -14619,11 +14635,13 @@ Everyone sat at one table then. That doesn't happen often.
 [torvald:stare ?!world torvald_wakes] Have you come to relieve me? No? Then why are you standing there?
 [torvald:stare] Something on my nose? Or just looking?
 [torvald:stare] You stand like a guard. Who posted you?
-[torvald:stare] Do I know you? Wait, I'll remember. …No.
+[torvald:stare ?!world torvald_wakes] Do I know you? Wait, I'll remember. …No.
+[torvald:stare ?world torvald_wakes] I know you. From the tower. The name's on the tip of my tongue.
 [torvald:back] Oh! You've been gone a long time. Or have you? I was counting, but lost track.
 [torvald:back] You're back! I thought they'd relieved you.
 [torvald:back] Where have you been? I stood guard here. Nothing went missing. Almost.
-[torvald:back] You were gone so long I forgot what you look like. Still can't recall.
+[torvald:back ?!world torvald_wakes] You were gone so long I forgot what you look like. Still can't recall.
+[torvald:back ?world torvald_wakes] You were gone a long time. But I remember you. From the tower.
 [torvald:back] Oh, you're back. Brought me anything?
 [torvald:back] You again! I won't forget you now. Till evening.
 [torvald:night] Night. The Watch doesn't sleep. The Watch dozes standing up.
@@ -14632,12 +14650,12 @@ Everyone sat at one table then. That doesn't happen often.
 [torvald:night] Heid says: sleep. I say: guard. We argue every night.
 [torvald:night] The stars aren't in their places tonight. Or I'm not.
 [torvald:night] Hear that? Someone's snoring. If it's not you, it's me.
-[torvald:raven] You have a raven. I had one too. Knew all the names.
+[torvald:raven] You have a raven. I had two. One knew all the names — flew off.
 [torvald:raven] Pretty bird. Mine had a lovely voice. Yours isn't bad either.
 [torvald:raven] A raven! Careful, they remember everything. And tell tales.
 [torvald:raven ?!world torvald_wakes] Your raven is looking at my bag. Tell it there's nothing in there.
 [torvald:raven] Mine was black. Or grey. Yours is — well, yours.
-[torvald:raven] Someone used to sit on my shoulder too. Now it's only snow.
+[torvald:raven] Once two sat on my shoulder. Now just one, and it keeps quiet.
 [torvald:you_trophy ?!world torvald_wakes] Is that {trophy}? Let me hold it. For a minute. For a year.
 [torvald:you_trophy] {trophy}? I saw one of those once. Bigger. Twice as big.
 [torvald:you_trophy ?!world torvald_wakes] Where'd you get {trophy}? I'm not asking where. I'm asking if there are more.
@@ -14683,7 +14701,7 @@ Everyone sat at one table then. That doesn't happen often.
 [lit:chest] The chest doesn't lie. Someone does.
 [lit:chest] Counting again. It doesn't add up.
 [lit:chest] Keeping quiet. For now.
-[lit:chest] Nails don't walk off by themselves.
+[lit:chest ?reached ch2 fill2] Nails don't walk off by themselves.
 [lit:chest] I finished my part. But I remember.
 
 # night: night_air (2026-11-16)
@@ -14831,7 +14849,7 @@ You look at the fire longer than it takes to warm your hands.
 @літ_гейд_сліди
 Someone swept this floor before me. Carefully. Why?
 You walk this Hall as if at home. Been here long?
-One row of the carving is newer than the rest. You don't know why?
+One row of the carving has been hacked off. Freshly. You don't know who?
 Stone doesn't lie. People — sometimes.
 The tracks are old, but the sweeping is fresh.
 I don't ask. I measure. But there's a question.
@@ -14864,7 +14882,7 @@ This is no forge. Quieter.
 Sit by the fire. It isn't crooked.
 Look at the walls all you like. Don't measure me.
 You talk the way stones fall: seldom and heavy.
-Don't scold the old man. He's older than your walls.
+Don't scold the old man. He's older than he looks.
 
 @гейд_літ_ухил
 I'm not the mistress here. I only sweep.
@@ -15048,7 +15066,7 @@ Or was I standing in the wrong place?
 [eyvind:say_bye] Sit tight. I've got things to do.
 [eyvind:say_bye] See you. You're not going anywhere anyway.
 [eyvind:say_bye ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Off for your mushrooms. You get that golden something ready.
-[eyvind:say_bye ?quest ch2_eyvind done, !reached ch2 later4] I'm off. Gold doesn't spoil, right?
+[eyvind:say_bye ?quest ch2_eyvind done, !reached ch2 sverre_home] I'm off. Gold doesn't spoil, right?
 [eyvind:say_bye ?quest ch2_eyvind done] I'm off, before you find me another errand.
 [eyvind:say_bye ?step ch2 eyv_get] Off for the hides. I hope the mark's right this time.
 [eyvind:say_bye ?reached ch2 sverre_home] Bye. Look after Sverre.
@@ -15057,7 +15075,7 @@ Or was I standing in the wrong place?
 [eyvind:say_bye ?asked eyvind chest_me, !reached ch2 torv_b] Off to the old man. You keep counting.
 [eyvind:say_bye ?step ch2 eyv_get] Five hides, twenty blueberries. And not a word about the knee.
 [eyvind:say_bye ?asked eyvind ran_sus_b, !reached ch2 lit_next3] Off to Lit. Let him judge.
-[eyvind:say_bye ?reached ch2 later4] Bye. And thanks for telling the truth. At last.
+[eyvind:say_bye ?reached ch2 sverre_home] Bye. And thanks for telling the truth. At last.
 [eyvind:say_bye ?daypart morning, weather clear] Sit, the sun's warm. Bye.
 [eyvind:say_bye ?daypart evening] Evening. Don't sit through supper.
 [eyvind:say_bye ?weather rain] Stay dry. The knee, right?
@@ -15077,13 +15095,13 @@ Or was I standing in the wrong place?
 [eyvind:say_bye_debt] Yeah. Sometimes late. Sometimes never.
 [eyvind:say_bye_debt] Gold doesn't spoil. Promises do.
 [eyvind:say_bye_debt] I'll wait. Just not till I'm dead.
-[eyvind:talk_again] Anything else? I'm in no hurry. The knee.
+[eyvind:talk_again ?!reached ch2 khata] Anything else? I'm in no hurry. The knee.
 [eyvind:talk_again] Go on, go on. I'm all ears.
 [eyvind:talk_again] Well? I'm all yours. Almost.
 [eyvind:talk_again] Sit where you like. Just not in my spot.
 [eyvind:talk_again] Another errand? I love errands. Other people's.
 [eyvind:talk_again] Ask. I don't charge for questions.
-[eyvind:talk_again ?quest ch2_eyvind done, !reached ch2 later4] About the gold? Not yet.
+[eyvind:talk_again ?quest ch2_eyvind done, !reached ch2 sverre_home] About the gold? Not yet.
 [eyvind:talk_again ?daypart morning] Morning. Best time for doing nothing. Speak.
 [eyvind:talk_again ?daypart evening] Evening. Just the time for a talk.
 [eyvind:talk_again ?weather rain] Rain. Sit under the roof, let's talk.
@@ -15098,7 +15116,7 @@ Or was I standing in the wrong place?
 [eyvind:bye_back] Go. The bench isn't going anywhere. Neither am I.
 [eyvind:bye_back] Good luck. And don't listen to what Lit says about me.
 [eyvind:bye_back ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Five, remember! Yellow ones!
-[eyvind:bye_back ?quest ch2_eyvind done, !reached ch2 later4] The gold is waiting. Patiently.
+[eyvind:bye_back ?quest ch2_eyvind done, !reached ch2 sverre_home] The gold is waiting. Patiently.
 [eyvind:bye_back ?step ch2 eyv_get] The deer are where the mark is. For sure this time.
 [eyvind:bye_back ?reached ch2 sverre_home] Go. Sverre and I will sit a while.
 [eyvind:bye_back ?reached ch2 sverre_home] Thank you. Well, you know what for.
@@ -15285,7 +15303,7 @@ Or was I standing in the wrong place?
 [heid:bye_back ?seated] Go. I'll sit a while longer.
 [heid:bye_back ?hurt] Go. A scratch. It'll heal.
 [heid:bye_back ?npcattitude >= 60] Take care of yourself. I mean it.
-[heid:bye_back ?world ketil_gone, !reached ch1 thistle] And don't look up for long.
+[heid:bye_back ?reached ch1 heid_ask, !reached ch1 thistle] And don't look up for long.
 [heid:bye_back ?reached ch1 thistle, !reached ch1 brew] The forest edge. Don't mix it up.
 [heid:bye_back ?phase heid_apart] Go now. I need to think.
 [heid:bye_back ?world torvald_wakes, !reached ch2 later4] Go. The old man's home — that's good.
@@ -15323,9 +15341,9 @@ Or was I standing in the wrong place?
 [torvald:say_shrug] Peace, Torvald.
 [torvald:say_bye] Bye, old man.
 [torvald:say_bye] I'm off. Don't lose the spoon.
-[torvald:say_bye] See you again. If you recognise me.
+[torvald:say_bye ?!world torvald_wakes] See you again. If you recognise me.
 [torvald:say_bye] Bye. And don't pinch anything.
-[torvald:say_bye] Bye, Torvald. Next time we'll get acquainted all over again.
+[torvald:say_bye ?!world torvald_wakes] Bye, Torvald. Next time we'll get acquainted all over again.
 [torvald:say_bye] I'm off. Tell me later how it was. Or how it wasn't.
 [torvald:say_bye ?reached ch1 home_hall, !reached ch2 dawn] Don't stand watch till morning.
 [torvald:say_bye ?!quota torvald_tales 3] Gather some more tales. I'll be back.
@@ -15352,7 +15370,8 @@ Or was I standing in the wrong place?
 [torvald:talk_again] So where was I?
 [torvald:talk_again] Staying a while? The bench is warm.
 [torvald:talk_again] Ask, ask. I remember everything. Almost.
-[torvald:talk_again] Oh! You're still here. Have we met?
+[torvald:talk_again ?!world torvald_wakes] Oh! You're still here. Have we met?
+[torvald:talk_again ?world torvald_wakes] Still here? Good. You I remember — by the face.
 [torvald:talk_again] Go on, go on. I'm in no hurry. Nowhere to go.
 [torvald:talk_again] And you still haven't seen my spoon?
 [torvald:talk_again ?reached ch2 dawn] Speak, watchman.
@@ -15363,7 +15382,8 @@ Or was I standing in the wrong place?
 [torvald:talk_again ?!quota torvald_tales 3] No tales left. But I can still listen.
 [torvald:talk_again ?reached ch2 torv_a, !reached ch2 torv_out] About nails? No, no. Ask about something else.
 [torvald:talk_again ?npcattitude >= 60] Ah, it's you! You I think I remember.
-[torvald:bye_back] Bye, bye! …Who were you, again?
+[torvald:bye_back ?!world torvald_wakes] Bye, bye! …And who were you?
+[torvald:bye_back ?world torvald_wakes] Bye, watchman! I'll know you now.
 [torvald:bye_back] Come again! I'll tell you about the giant.
 [torvald:bye_back] Haven't seen my spoon? Well, off you go.
 [torvald:bye_back] Go, go. I'll stand here.
@@ -15497,20 +15517,29 @@ Or was I standing in the wrong place?
 [eyvind:at_watch] The dvergr says "level". I say "it stands".
 
 # Sverre's own words unasked (assets/story/words/sverre.txt, 2026-11-22)
-[sverre:idle] Quiet here.
-[sverre:idle] Am I still here?
-[sverre:idle] It doesn't call. Strange.
-[sverre:idle] Fire. Yes. Fire.
-[sverre:idle] Someone said sit. I sat.
-[sverre:idle] South… no. Quiet.
-[sverre:idle] Hands are there. Both.
-[sverre:idle] I used to dream. Not now.
+[sverre:idle ?reached ch2 sverre_home] Quiet here.
+[sverre:idle ?reached ch2 sverre_home] Am I still here?
+[sverre:idle ?reached ch2 sverre_home] It doesn't call. Strange.
+[sverre:idle ?reached ch2 sverre_home] Fire. Yes. Fire.
+[sverre:idle ?reached ch2 sverre_home] Someone said sit. I sat.
+[sverre:idle ?reached ch2 sverre_home] South… no. Quiet.
+[sverre:idle ?reached ch2 sverre_home] Hands are there. Both.
+[sverre:idle ?reached ch2 sverre_home] I used to dream. Not now.
 [sverre:see_player] Ah. You.
-[sverre:see_player] You're the one from the forest.
+[sverre:see_player ?reached ch2 sverre_home] You're the one from the forest.
 [sverre:see_player] Should I say something? Tell me.
-[sverre:see_player] I'm sitting. May I?
-[sverre:see_player] It doesn't call. Was that you?
-[sverre:see_player] Good. Quiet.
+[sverre:see_player ?reached ch2 sverre_home] I'm sitting. May I?
+[sverre:see_player ?reached ch2 sverre_home] It doesn't call. Was that you?
+[sverre:see_player ?reached ch2 sverre_home] Good. Quiet.
+[sverre:idle ?!reached ch2 sverre_home] South. That way.
+[sverre:idle ?!reached ch2 sverre_home] It calls. Hear it? No?
+[sverre:idle ?!reached ch2 sverre_home] The goat was singing. Nicely.
+[sverre:idle ?!reached ch2 sverre_home] Must go. They're waiting for me.
+[sverre:idle ?!reached ch2 sverre_home] Cold. Never mind. It's warmer there.
+[sverre:idle ?!reached ch2 sverre_home] Someone's calling. In a kind voice.
+[sverre:see_player ?!reached ch2 sverre_home] You're not the one who calls.
+[sverre:see_player ?!reached ch2 sverre_home] Let me go. I need to go there.
+[sverre:see_player ?!reached ch2 sverre_home] You hear it too? No. You don't.
 
 # ---- Story people's words unlocked by the story, and their own words by the moment (review 2026-11-22: assets/story/words)
 [torvald:at_post ?world torvald_wakes] I stand here. Not to be relieved. So those in the Hall can sleep.
@@ -15607,7 +15636,7 @@ Nothing went missing today. I counted twice.
 [heid:idle ?world torvald_wakes, !reached ch2 later4] I watched the door all night. I don't want that again.
 [heid:idle ?world torvald_wakes, !reached ch2 later4] Both came back. The old man — even more than he left.
 [heid:idle ?world torvald_wakes, !reached ch2 later4] I poured the brew out. Don't ask. It had to be.
-[heid:idle ?reached ch2 sverre_home] There were three, now five. I'll need a bigger pot.
+[heid:idle ?reached ch2 sverre_home] There were four, now there are five. I'll need a bigger pot.
 [heid:idle ?reached ch2 sverre_home] Two new ones. One talks for both.
 [heid:idle ?reached ch2 sverre_home] The one at the far end eats if you set it down. Never asks.
 [heid:idle ?reached ch2 sverre_home] By the fire you can't hear them. Here at least you can't.
@@ -15628,7 +15657,8 @@ Nothing went missing today. I counted twice.
 [heid:back] Nothing changed here. Except the fire would've gone out without me.
 [heid:back] Walking and walking. Sit for once, while it's light.
 [heid:back ?world ketil_gone, !reached ch1 home_hall] The old man asked about you. Three times. Each time like the first.
-[heid:back ?reached ch1 lit_walk] The old man asked about you. Three times. Each time like the first.
+[heid:back ?reached ch1 lit_walk, !world torvald_wakes] The old man asked about you. Three times. Each time like the first.
+[heid:back ?world torvald_wakes] The old man asked about you. "Where's the one from the tower?" First time he remembered.
 [heid:you_wet] You're wet. To the fire, quick.
 [heid:you_wet] You're dripping. On my herbs.
 [heid:you_wet] Dry off, or I'll brew you something bitter. For the cold.
@@ -15645,14 +15675,14 @@ Nothing went missing today. I counted twice.
 [eyvind:idle ?reached ch2 rise_after] I laid some too. Two boards. Well, three.
 [eyvind:idle ?reached ch2 rise_after] The Hall stands, and I'm part of it. Who'd have thought.
 [eyvind:see_player ?phase eyvind_in_hall] You again. I was starting to miss you. Almost.
-[eyvind:see_player ?phase eyvind_in_hall] Come, come. I don't bite. The knee might.
+[eyvind:see_player ?!phase eyvind_lively, phase eyvind_in_hall] Come, come. I don't bite. The knee might.
 [eyvind:see_player ?phase eyvind_in_hall] Ah, it's you. I thought it was Lit come to count me.
 [eyvind:see_player ?!phase eyvind_lively, phase eyvind_in_hall] Oh, friend. I'm not in the way. See, I'm sitting.
 [eyvind:see_player ?!phase eyvind_lively, phase eyvind_in_hall] Don't look at me like that. I touched nothing here. This time.
 [eyvind:see_player ?phase eyvind_lively] See? I'm carrying. Don't tell anyone — they won't believe it.
 [eyvind:see_player ?phase eyvind_lively] Friend! Don't just stand there — grab a board. Joking. Stand.
 [eyvind:heavy ?phase eyvind_in_hall] Whoa, so many goods. Let me help. With half.
-[eyvind:heavy ?phase eyvind_in_hall] I'd carry it. But the knee. I can look, though.
+[eyvind:heavy ?!phase eyvind_lively, phase eyvind_in_hall] I'd carry it. But the knee. I can look, though.
 [eyvind:heavy ?phase eyvind_in_hall] You haul like Lit with boards. Only Lit doesn't groan.
 [eyvind:heavy ?phase eyvind_in_hall] Drop something. Not for me. Just drop it.
 [eyvind:heavy ?!phase eyvind_lively, phase eyvind_in_hall] That's a load for two. I'm the second. In spirit.

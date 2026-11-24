@@ -44,5 +44,6 @@ at: hall 18-22 hall.stil table sit meet evening one vechir stay 150-280 when pha
 # --- ніч і вільний час: лава, вогонь
 at: hall 22-6 hall.lavka seat sit stay 240-480
 at: hall 22-6 hall.vohnyshche fire sit stay 240-480
+at: hall 23-4 bad_house.lizhko watch when phase eyvind_in_hall, !phase eyvind_lively   # уночі, не щоночі (проміжки ядра) — до хатини: відвар і засув для Сверре (огляд 2026-11-24, story-lore.md «Ейвінд»: «утримати порожнього дорого»; його «я тут завжди» — брехня, яку видно)
 spot: hall hall.lavka seat sit want 0.6
 spot: hall hall.vohnyshche fire sit want 0.2

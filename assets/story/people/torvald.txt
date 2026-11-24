@@ -24,7 +24,8 @@ at: home 17-19 found.dozor by zala post days 3 when reached ch1 crypt   # з т�
 # --- Зала (hall)
 at: hall 6-11 hall.pidloha_liva by hall.skhody post stay 90-180 when !weather rain, !weather storm, !weather snow   # (у дощ, бурю й сніг за браму не стає — ці години вільні: вогонь, лава; користувач 2026-11-22) зранку «на варті» (старий досі вважає, що стоїть на варті): ззовні, трохи далі від брами й ліворуч від неї, біля вартової жердини, обличчям до сходів — не на самому порозі (користувач 2026-11-20: «стоїть на порозі… нехай стоїть далі від входу трохи та лівіше або правіше»)
 at: hall 12-14 hall.rizba think                                     # опівдні — біля різьби Ейріка (щось пам'ятає?)
-at: hall 14-16 hall.vohnyshche fire haul hall.skrynia                # далі — годує вогонь Варти (користувач 2026-11-22: «бере біля скрині, несе до вогню, дошка зникає»): слово haul — дошка на плече біля скрині (plank_carry), до вогню, кладе (plank_put), дошки нема; одна дошка за раз
+at: hall 14-16 hall.vohnyshche fire haul hall.skrynia when !reached ch2 lit_plan     # далі — годує вогонь Варти (користувач 2026-11-22: «бере біля скрині, несе до вогню, дошка зникає»); не, поки Літ рахує в цій скрині матеріали глави 2 (огляд 2026-11-24: старий «нічого не бере» — і носив би дошку на очах)
+at: hall 14-16 hall.vohnyshche fire haul hall.skrynia when reached ch2 rise_after
 at: hall 14-16 hall.vohnyshche fire stay 60-120                     # …і між дошками стоїть біля вогню, гріє руки (2026-11-22: було чотири години біля різьби)
 at: hall 12-14 torvald.kamin think chance 0.3 say own_stone stay 40-80   # іноді (користувач 2026-11-16: «можна йому ще додати якийсь варіант»): опівдні замість різьби — до свого каменя з одним ім'ям, де був табір; слова — тема own_stone
 at: hall 16-17 hall.stina_prava watch meet wall stay 120-200        # по обіді — дивиться під руку і «стереже» стіну, яку лагодить Літ: збори «wall» (assets/story/meets/hall.txt)

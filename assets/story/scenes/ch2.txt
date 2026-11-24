@@ -333,7 +333,7 @@ wait 0.4
 camera on npc.torvald close cut
 npc torvald face npc.lit
 mix music 0 3                             # старий починає згадувати, що де стояло — музика плавно стихає, далі без неї
-npc torvald say Не буде. Там стоїть старий. Дуб із Чорного лісу, Ейрік сам вибирав. Його не міняють. Його відмивають.
+npc torvald say Не буде. Там стоїть старий. Дуб із Лук, з найстаршого гаю, Ейрік сам вибирав. Його не міняють. Його відмивають.
 mix world 0.2 0.8                         # усі дивляться на нього й мовчать
 wait 1.2
 camera on npc.lit close cut
@@ -412,8 +412,15 @@ wait 0.8
 camera on player close 25 cut
 player say Як на тому пері.
 wait 0.6
-if raven munin: say munin Руна… я її знаю. Не пам'ятаю звідки.
+if raven munin: say munin Руна з пера, ага. А я її знаю ще звідкись — раніше. Не пам'ятаю звідки.
 if raven munin: wait 0.8
+camera on npc.lit close 25 cut
+npc lit say І ще. На різьбі біля трону один рядок зрубано. Свіжо. Сокирою, не часом.   # (огляд 2026-11-24, story-lore.md «Будівельник Зали»: зрубаний рядок помічає Літ — тихий гачок на Гейд; досі лише у випадкових розмовах)
+wait 0.6
+camera on player close 25 cut
+if raven hugin: say hugin Хтось не хотів, щоб той рядок читали.
+if !raven hugin, raven munin: say munin Зрубано? Хто ж це рубав… і нащо.
+if !raven any: player say Хтось не хотів, щоб той рядок читали.
 npc lit go hall.stina_prava walk nowait   # до своєї стіни: там його й застане lot_ask
 mix reset 2
 camera off blend 1
@@ -780,9 +787,9 @@ if !raven any: player say Де він? Щойно ж ішов попереду.
 roams: yes
 guard: off
 needs: near found.ch2_slid1 10, calm
-if raven hugin: say hugin Дошка. Свіжа, з Літової скрині. Старий ішов тут.
-if !raven hugin, raven munin: say munin О, дошка! Дід упустив. Шо, сам не доніс?
-if !raven any: player say Дошка. Літова. Старий ішов тут.
+if raven hugin: say hugin Дошка. Свіжа, з Літової скрині. Старий ішов тут — і не на те узлісся, де ми шукали його тоді. Глибше в ліс.   # (огляд 2026-11-24: варту старого гравець знає з глави 1 — тут ясно, що вона інша)
+if !raven hugin, raven munin: say munin О, дошка! Дід упустив. І йшов не туди, де ми його тоді шукали, — глибше в ліс.
+if !raven any: player say Дошка. Літова. Старий ішов тут — і не на те узлісся. Глибше в ліс.
 
 [scene torv_track2]
 roams: yes
@@ -804,7 +811,7 @@ if !raven any: player say Бронзовий цвях. А попереду мі�
 # Зміни мене (етап torv_post; story-lore.md «Глава 2 — кістяк», кроки 8–9): стара вежа в лісі, старий біля драбини, спиною до нас. Суть: той, кого
 # всі мають за злодія й дурня, сам-один тримає вежу і досі чекає зміни, якої не буде. Спершу смішно (зміна «була вища й з бородою»), тоді рівно:
 # дошки він брав, бо «варта на мокрій вежі — не варта», і рахує не цвяхи, а ночі, коли тут ніхто не стояв. Рівень Торвальда — «Плутає»
-# (лор «Торвальд»): у смішному проскакує правда. Кінець — «Стій, поки не змінять»; сама ніч — далі (ще не складено).
+# (лор «Торвальд»): у смішному проскакує правда. Кінець — «Стій, поки не змінять»; сама ніч — далі (tower_dusk і хвилі етапів night_*).
 [scene torv_change]
 place: torvald_post
 needs: near torvald_post 18, calm, npcnear torvald torvald_post 15
@@ -838,6 +845,7 @@ npc torvald says Брав. Вежа текла. Варта на мокрій в�
 player go npc.torvald 3.5 soft nowait     # …і ще ближче, поки він каже
 wait said
 npc torvald say Цвяхи теж брав. Три. Він рахує? Хай рахує. Я теж рахую: ночі, коли тут ніхто не стояв.
+npc torvald say Там, на узліссі, — то я так, щоб Гейд не лаялась. Справжня варта — тут.   # (огляд 2026-11-24: у главі 1 його «варта» — узлісся біля Зали)
 player arrive npc.torvald
 wait 1.5
 camera on npc.torvald close cut
@@ -956,6 +964,7 @@ camera on npc.lit close 20 cut            # на склейці ніж — уж�
 npc torvald prop put
 npc lit prop take KnifeFlint
 npc lit say Ніж. Шнурок. Ложки не мої.
+npc lit say …Ото де мій шнур. А я казав — мені не треба.   # (lot_ask: «А шнура я в тебе не бачив» — «Шнур — для тих, хто не бачить»)
 npc lit say Брав ти більше.
 camera on npc.torvald medium 25 cut
 npc torvald say Решта — на вежі. Вежа тепер суха.
@@ -1071,7 +1080,7 @@ wait 0.8
 camera on npc.heid full 80 cut            # збоку, вогнище в кадрі
 npc heid say Я знайшла його біля каменів, там, де потім був мій табір. Сидів і говорив до них, як до живих.
 camera on npc.heid close 70 cut           # ближче, той самий бік: вона й далі дивиться у вогнище
-npc heid say Щовечора вставав і йшов «міняти варту». У темряву, сам. Уперше я пішла слідом — думала, не вернеться.
+npc heid say Вечорами вставав і йшов «міняти варту». У темряву, сам. Уперше я пішла слідом — думала, не вернеться.
 wait 0.6
 camera on npc.heid medium 60 cut
 npc heid say Вернувся. Під ранок, мокрий, злий і щасливий. Сказав: «Тихо було». І заснув просто на землі.
@@ -1086,6 +1095,7 @@ player clip talk_hands nowait
 player say А сьогодні не дала.
 npc heid says Сьогодні він стояв цілу ніч. Мерці йшли з курганів до ранку, а він стояв. І вернувся живий. Хай побуде таким хоч до вечора.
 wait said
+npc heid say Тільки хай від вогню далеко не ходить. Ясного його… видно здалеку.   # (огляд 2026-11-24: її страх — порожній старий Хель не цікавий, ясний — так; story-lore.md «Драупнір і Торвальд»; після «wait said»: «says» вище не чекає кінця репліки)
 camera on npc.heid medium 20 cut
 npc heid say Та й на завтра варити нема з чого. Будяку — жменя, а сон-трави ні листочка. Поцупили.
 camera on player close 25 cut
@@ -1158,7 +1168,7 @@ if lived ch1.trail: wait 0.8
 player clip shrug_small nowait
 player say А тепер?
 camera on npc.eyvind close 20 cut
-npc eyvind say Гейдину траву я взяв, а зварити не встиг. Сиджу в Залі, слухаю Гейд — а мерці, виходить, цілу ніч ішли з курганів. А він тут сам.
+npc eyvind say Гейдину траву я взяв, а зварити не встиг. Сиджу в Залі, слухаю старого — а мерці, виходить, цілу ніч ішли. А він тут сам.
 npc eyvind say Прибіг — двері відчинені.
 wait 1.2
 npc eyvind face lane.south@-20
@@ -1257,7 +1267,7 @@ wait 0.8
 camera on player close 25 cut             # ми знаємо те, чого не знав він
 if raven munin: say munin Не просто тепло. Вогонь Варти. Тих, хто його кличе, біля нього не чути — ми самі на сувої читали.
 if !raven munin, raven hugin: say hugin Не просто тепло — вогонь Варти. Тих, хто кличе, біля нього не чути. Так написано на сувої, який ми читали.
-if !raven any: player say Не будь-який вогонь. Вогонь Варти. Тих, хто кличе, біля нього не чути.
+if !raven any: player say Не будь-який вогонь. Вогонь Варти. Так кажуть її руни: тих, хто кличе, біля нього не чути.
 wait 0.8
 camera on npc.eyvind close 20 cut
 npc eyvind say …Не чути?
@@ -1277,7 +1287,7 @@ bars off
 
 # Сверре біля вогню Варти (етап sverre_home; користувач 2026-11-19: Ейвінд віддає перстень наприкінці — за порятунок побратима; слова мої). Суть:
 # тут Хель не чути — порожній уперше говорить ясно; і «щось золоте» виявляється не монетами (омана «золоте → золото» розв'язана). Наприкінці Ейвінд
-# сам пропонує руки Літові — місток до сцени 2.2 (ще не складена). Камера статична. Кадри не прогнані.
+# сам пропонує руки Літові — місток до сцени 2.2 (hall_rises). Камера статична. Кадри не прогнані.
 [scene sverre_fire]
 place: hall
 camera: still
@@ -1341,6 +1351,7 @@ wait 1
 camera on player medium 25 cut
 if raven munin: say munin Перстень. Від якого сняться кози. Дякую, блін, дуже.
 if !raven munin, raven hugin: say hugin Обіцяв «щось золоте» — і дав. Уперше в нього слово й діло збіглися.
+if raven hugin, lived ch2.dawn: say hugin Кругле, золоте… Як тому незнайомцеві з вежі снилось. Тільки не капає.   # (огляд 2026-11-24: нитка «щось золоте» — сон Бальдра в tower_morning; lived — лише той, хто був на вежі вранці)
 wait 0.6
 camera on npc.eyvind medium 25 cut
 npc eyvind say А тепер… Літові, кажуть, руки потрібні? Я вмію носити. Коліно, бач, відпустило.
@@ -1398,7 +1409,7 @@ wait 1
 player say Ти поранений.
 npc baldr face player
 wait 0.6                                  # (обернувся — тоді його відповідь)
-npc baldr say Пусте. На мені швидко заростає. Як трава.
+npc baldr say Пусте. Заросте. Як трава заростає.
 camera on npc.torvald medium 30 cut       # старий — трохи збоку, обличчям до нього
 npc torvald face npc.baldr
 npc torvald say Я ж тебе знаю. …Чи ні. Але стояв ти як свій.
@@ -1438,7 +1449,30 @@ wait 1
 npc baldr say Не знаю. Руки знають.
 wait 1.2
 if raven hugin: say hugin Свого імені він не пам'ятає. А як класти мертвих — пам'ятає.
-if !raven hugin, raven munin: say munin Без пташок, без імені, а про жмуриків — усе. Дивний.
+if !raven hugin, raven munin: say munin Воронів у нього не було ніколи — це чути. А про жмуриків знає все. Дивний.   # (не «без пташок»: ворони не прикмета для людей — story-lore.md «Глава 2 — кістяк»)
+# Упізнання й мета (огляд 2026-11-24; story-lore.md «Бальдр», «Гачок на Драупнір»): той, хто дивився біля будяка; сон про щось кругле й золоте — і старий ховає руку з опіком
+if raven hugin: say hugin Стривай. Це ж той, що стояв за нами біля будяка. Тоді дивився — тепер став поруч.
+if !raven hugin, raven munin: say munin О. Та це ж той, шо в спину нам дивився біля будяка. По-любому він.
+wait 0.6
+npc baldr face player
+camera shoulder player npc.baldr cut      # обернувся до нас: з-за нашого плеча (кадри нових реплік — огляд 2026-11-24)
+npc baldr say Ще одне. Мені сниться щось кругле. Тепле, золоте — і капає. Побачиш таке — скажи.
+wait 0.6
+camera shoulder npc.baldr player cut
+player say Що воно таке?
+camera on npc.baldr close 20 cut push 0.2 2
+wait 0.8
+npc baldr say Не знаю. Прокидаюсь — а в долоні порожньо.
+wait 0.8
+npc torvald face npc.baldr
+camera on npc.torvald medium 30 cut      # старий: рука за спину — його видно до пояса
+npc torvald clip hands_back.in nowait      # ховає руку з опіком за спину
+wait 0.6
+npc torvald say Золоте кусається. Не шукай.
+wait 0.6
+if raven munin: say munin Глянь — дід руку за спину сховав. Ту, з опіком.
+if !raven munin, raven hugin: say hugin Старий сховав руку за спину. І вперше не жартує.
+npc torvald clip hands_back.out nowait
 npc baldr go lane.kurhany@-60 walk nowait # швидкою ходою — у ліс, туди, звідки вони йшли (walk: не біжить)
 player look npc.baldr
 wait 0.7                                  # (рушив — тоді склейка)

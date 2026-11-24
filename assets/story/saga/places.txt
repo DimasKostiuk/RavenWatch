@@ -53,7 +53,7 @@ map: been zala :: hall
 chapter: prologue
 shown: been torvald
 name: Камені біля табору
-about: asked heid stones :: могили вартових
+about: asked heid stones :: Гейд каже — могили вартових
 line: Кілька каменів з іменами.
 line: asked heid stones :: Гейд: «Вартові. Ті, кого вже нема. Хтось же має чистити мох із їхніх імен».
 map: torvald

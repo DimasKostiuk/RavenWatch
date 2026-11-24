@@ -20,15 +20,16 @@
 # з розмови з Гейд, обряду чи видіння біля золотого вогню (ch1_seen)
 [riddle r_watch]
 chapter: prologue
-shown: lived prologue.call | asked heid watch_me | asked heid watch_what | lived prologue_main.meet_heid | lived ch1.rite_end | lived ch1_seen.seen
+shown: lived prologue.call | asked heid watch_me | asked heid watch_me_none | asked heid watch_what | lived prologue_main.meet_heid | lived ch1.rite_end | lived ch1_seen.seen
 name: Варта
 about: ти з неї — і нічого про неї не пам'ятаєш
 line: lived prologue.call :: Чужий ворон сказав: «…ти ж обіця{в|ла}». Що і кому — не пам'ятаєш.
-line: lived prologue_main.meet_heid :: Гейд побачила твого ворона: «Отже, ти з Варти». І одразу: «Не пам'ятаєш. Тут ніхто не пам'ятає».
+line: lived prologue_main.meet_heid :: Гейд сказала, що ти з Варти: «Як і я». І одразу: «Не пам'ятаєш. Тут ніхто не пам'ятає».
 line: asked heid watch_me :: Гейд: «У кого є ворон — той колись був у Варті. Я теж».
+line: asked heid watch_me_none :: Гейд: «Хто був у Варті, той і стоїть інакше. Я таких бачила».
 line: asked heid watch_what :: Гейд: «Варта стерегла цей світ. Від чого — вже ніхто не скаже».
-line: asked heid hall_what :: Поки в Залі горів вогонь, було кому сторожити.
-line: asked heid stones :: Вартові, яких уже нема, лежать під каменями біля табору Гейд.
+line: asked heid hall_what :: Гейд: «Поки горів вогонь, було кому сторожити».
+line: asked heid stones :: Гейд каже, що вартові, яких уже нема, лежать під каменями біля її табору.
 
 [riddle r_raven]
 chapter: prologue

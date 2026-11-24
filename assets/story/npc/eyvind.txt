@@ -20,7 +20,7 @@ talk: eyvind
 greet: О, друже! Сідай. Ну, не сюди — тут я сиджу.
 greet: Слухаю. Уважно. Майже.
 greet: А, це ти. Я якраз про тебе думав. Добре думав.
-greet: Я тут. Я завжди тут. Коліно.
+greet: Я тут. Я завжди тут. Ну, майже.
 persona: chatty=0.9 bravery=0.2 curiosity=0.8 diligence=0.3 lively=1 build=-0.3
 
 voice: own                                # свої слова без питання (NpcVoice): лише власні теми assets/story/words/eyvind.txt — idle, by_lit, at_watch (користувач 2026-11-22: день Ейвінда); до знайомства мовчить (stranger)
