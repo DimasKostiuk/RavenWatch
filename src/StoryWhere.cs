@@ -265,6 +265,13 @@ namespace HuginWhispers
         {
             at = Vector3.zero; zdo = null; loc = null;
             if (OfModule(spot)) return Find(spot, out at) ? null : "«" + spot + "» is not in this world yet"; // (a module's place the world keeps: «heart.first», «found.<name>»)
+            if (spot.StartsWith("spot.", System.StringComparison.Ordinal)) // (a point of a place: a story's word may hold one there too — Lit on the porch, 2026-11-23: «hold spot.zala@…» found no place, and he never went)
+            {
+                int cut = spot.IndexOf('@');
+                loc = cut > 5 ? Locs.Get(spot.Substring(5, cut - 5)) : null;
+                if (loc == null) return "no place «" + spot + "»";
+                return SpotAt(spot.Substring(5), out at) ? null : loc.Id + " does not stand in this world yet";
+            }
             string piece;
             loc = Place(spot, out piece);
             if (loc == null) return "no place «" + spot + "»";

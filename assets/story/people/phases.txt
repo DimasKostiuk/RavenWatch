@@ -20,6 +20,13 @@ when: reached ch2 torv_a, !reached ch2 seen2    # коло 2: щойно скл�
 when: step ch2 work3
 when: step ch2 work4                            # після вежі: 42 цвяхи — день роботи (користувач 2026-11-18)
 
+# Гравець носить у скриню Зали, що Літ назвав (глава 2): прощання з Літом «піду носити» (words/lit.txt, користувач 2026-11-24)
+[phase lit_fill]
+when: step ch2 fill1
+when: step ch2 fill2
+when: step ch2 fill3
+when: step ch2 fill4
+
 # Літ приходить на вечірні збори: не на кроках, де він при ділі чи чекає матеріалів
 [phase lit_evening]
 when: !step ch2 lot_ask, !step ch2 work1, !step ch2 call1, !reached ch2 torv_a

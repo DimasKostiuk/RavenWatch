@@ -27,9 +27,63 @@
 [ketil:say_bye] Бувай, Кетілю.
 [ketil:say_bye] Відпочинь. Я ще прийду.
 [ketil:say_bye] Тримайся тут.
-[ketil:say_bye] До зустрічі.
 [ketil:say_bye] Бережи себе.
-[ketil:say_bye] Не йди нікуди без мене.
+[ketil:say_bye] Посидь біля вогню. Він гріє.
+[ketil:say_bye] Якщо щось згадаєш — розкажеш.
+# прощання за моментом (користувач 2026-11-24): рядок, чия умова справджується, випадає частіше (NpcPhrases.MomentWeight). «Не йди нікуди» — лише
+# після того, як він сказав, що вночі його кличуть
+[ketil:say_bye ?step ch1 bed] Буде тобі ліжко. Не на землі ж спати.
+[ketil:say_bye ?step ch1 house] Знайду твою хату. Чекай тут.
+[ketil:say_bye ?asked ketil thing_his] Тримай його ближче. Хай руки пам'ятають.
+[ketil:say_bye ?asked ketil whisper] Не йди нікуди без мене.
+[ketil:say_bye ?asked ketil whisper, daypart night] Спи, Кетілю. І не відгукуйся, хто б не кликав.
+# ...ще (користувач 2026-11-24: «урізноманітнити»): пора дня, небо, як він зараз, твої ворони, як він до тебе, і те, що він розповів
+[ketil:say_bye ?asked ketil whisper] Як покличуть — клич мене.
+[ketil:say_bye ?asked ketil south] Твоє селище… Я пам'ятатиму за тебе.
+[ketil:say_bye ?asked ketil wife] Її сміх бережи. Хоч його.
+[ketil:say_bye ?asked ketil craft] Бочки ще почекають, бондарю.
+[ketil:say_bye ?daypart morning, weather clear] Посидь на сонці, Кетілю.
+[ketil:say_bye ?daypart evening] Вечір. Тримайся ближче до вогню.
+[ketil:say_bye ?daypart night] Добраніч, Кетілю.
+[ketil:say_bye ?weather rain] Не мокни, Кетілю. Сядь під дах.
+[ketil:say_bye ?seated] Сиди, не вставай.
+[ketil:say_bye ?raven any] Ворони за тобою приглянуть, поки мене нема.
+[ketil:say_bye ?raven any] Ворони тебе пам'ятатимуть, Кетілю.
+[ketil:say_bye ?npcattitude >= 60] Я ще прийду, Кетілю. Обіцяю.
+[ketil:say_bye ?npcattitude >= 60] Ти мені вже як свій, Кетілю. Бувай.
+# Його слова, коли розмова вертається на перший екран після твоєї відповіді (NpcTalk.Again; своїх нема — «…»). Тихо, втомлено
+[ketil:talk_again] Я тут.
+[ketil:talk_again] Ще щось?
+[ketil:talk_again] Посидь, якщо хочеш.
+[ketil:talk_again] Кажи. Я слухаю… здається.
+[ketil:talk_again] Тихо тут. Говори.
+[ketil:talk_again] Я ще пам'ятаю, про що ми. Здається.
+[ketil:talk_again ?daypart morning] Ранок… Добре спалося. Здається.
+[ketil:talk_again ?daypart evening] Вечір. Сідай ближче до вогню.
+[ketil:talk_again ?seated] Сідай поруч.
+[ketil:talk_again ?raven any] Твій птах тихий. Як я.
+[ketil:talk_again ?asked ketil thing_his] Намисто в руках теплішає. Кажи.
+[ketil:talk_again ?asked ketil whisper] Тихо тут… Ти теж чуєш? Ні? Добре.
+[ketil:talk_again ?npcattitude >= 60] Добре, що ти тут. Кажи.
+# Його слово на твоє прощання (NpcTalk.Parting: над головою, коли герой договорив; користувач 2026-11-24). Тихо, вдячно
+[ketil:bye_back] Іди. Я тут.
+[ketil:bye_back] Бувай… Приходь.
+[ketil:bye_back] Добре, що ти зайш{ов|ла}.
+[ketil:bye_back] Я посиджу ще. Тепло.
+[ketil:bye_back] Іди. Тільки… повертайся.
+[ketil:bye_back] Я запам'ятаю, що ти приходи{в|ла}. Спробую.
+[ketil:bye_back ?step ch1 bed] Та я й на землі… Але дякую.
+[ketil:bye_back ?step ch1 house] Як знайдеш хату — розкажеш, яка вона.
+[ketil:bye_back ?asked ketil thing_his] Я його потримаю. Руки знають.
+[ketil:bye_back ?asked ketil whisper, daypart night] Я не піду. Поки що.
+[ketil:bye_back ?asked ketil whisper] Я тут буду. Не піду.
+[ketil:bye_back ?asked ketil south] Побачиш пагорби — привітай їх від мене.
+[ketil:bye_back ?daypart morning] Іди. Гарний ранок.
+[ketil:bye_back ?daypart evening] Іди. Скоро смеркне.
+[ketil:bye_back ?weather rain] Іди. Дощ — то нічого.
+[ketil:bye_back ?raven any] І птахам твоїм… щасти.
+[ketil:bye_back ?seated] Я посиджу. Мені тут добре.
+[ketil:bye_back ?npcattitude >= 60] Ти {добрий|добра}. Я пам'ятатиму.
 # Слова Кетіля без питання (voice: own у шаблоні npc/ketil.txt; огляд 2026-11-22 — story-lore.md «Глава 1»: «втомлені репліки» біля серця).
 # Тихо, лагідно, майже до себе; лише те, що він каже в розмові (talk/ch1_ketil.txt): селище за пагорбами, бондар, чийсь сміх, тиша, що кличе.
 # Згасає за етапами: до намиста (bring) — утомлений; з намистом — тримає й не пам'ятає; на поляні (ketil_south) — уже «добре».

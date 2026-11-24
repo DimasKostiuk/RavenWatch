@@ -506,13 +506,15 @@ namespace HuginWhispers
         }
     }
 
-    // no enemy health bar over a person who cannot be hurt
+    // no game's plate (a name and a health bar) over any person — the Dverger's showed one over Lit, who fights (the user 2026-11-23: «зробимо
+    // напис над Літом невидимим… щоб не було явного поділу») — save one in need: its bar is its blows left (NpcRescueHits). Not m_hideHud on
+    // the bodies: that one the game reads before this, and the bar of one in need was gone too (the review of 2026-11-23)
     [HarmonyPatch(typeof(EnemyHud), "TestShow")]
     internal static class NpcHudPatch
     {
         private static void Postfix(Character c, ref bool __result)
         {
-            try { if (__result && c != null && NpcActor.Live.Count > 0 && NpcActor.Immortal(c) && !(NpcRescueHits.InNeed(NpcActor.Of(c)) && !NpcVitals.IsDown(c))) __result = false; }
+            try { NpcActor a; if (__result && c != null && NpcActor.Live.Count > 0 && (a = NpcActor.Of(c)) != null && !(NpcRescueHits.InNeed(a) && !NpcVitals.IsDown(c))) __result = false; }
             catch (Exception e) { PatchGuard.Fail("NpcHudPatch", e); } // (one in need: its bar is its blows left)
         }
     }

@@ -8,9 +8,16 @@
 #                whether it ends rising. A manner is nobody's voice: all the readings serve every voice.
 #                  @mannerstep <seconds a frame>
 #                  @manner <syllables> <0|1 ends rising> <frames: two hex bytes each — pitch (00: no voice; else 0.80 + (n-1)/254*0.45), loudness (n/255*1.6)>
-#   the hums     where in each file of a voice's wordless sounds (hm, hm_ask, uhu, em, chuckle, sigh — every timbre's own files, as they are
+#   the hums     where in each file of a voice's wordless sounds (hm, hm_ask, uhu, em, and the open «о» — every timbre's own files, as they are
 #                shipped) there is a stretch of steady voice long enough to hum with, and its pitch:
 #                  @hum <file> <kind> <first sample> <samples> <Hz>
+#                Not a chuckle, not a sigh (the user 2026-11-23: «рандомних звуків по типу смішка, який взагалі не йде голосом цього нпс» —
+#                measured that day: a piece of a chuckle stood in 33–94% of the lines of a voice, of a sigh in up to 100%; they are what a
+#                person feels, not how it talks, and stay its short sounds alone). And only what is IN the voice: a stretch whose pitch
+#                stands outside FIT of the voice's middle (the median of its hm, em, uhu stretches — the game takes the same middle:
+#                NpcBabble.Level) is not written — the game plays a hum at the voice's pitch but never far from its own speed, so such a
+#                one stays off the voice (a squeaked «хм» of rec2's women at 340–380 Hz in a voice of 200). FIT is a number chosen by that
+#                measure, not by the ear. The open «о» has a wider one (FIT_OPEN): past the speed's limit it sounds a little above the voice.
 # A new voice or new timbres (sound.js voice, timbres): run this again. Needs librosa (the pitch of the readings).
 import os
 import re
@@ -24,7 +31,10 @@ RATE = 22050          # (the analysis; a file's own rate is kept for its samples
 HOP = 220             # ~10 ms
 BEND = 0.4            # the share of the pitch's movement kept
 LEAST = 0.25          # s: a stretch of hum shorter than this is not written
-KINDS = [('speech_hm_ask_', 'ask'), ('speech_hm_', 'hm'), ('speech_uhu_', 'uhu'), ('speech_em_', 'em'), ('speech_chuckle_', 'chu'), ('speech_sigh_', 'sig')]
+KINDS = [('speech_hm_ask_', 'ask'), ('speech_hm_', 'hm'), ('speech_uhu_', 'uhu'), ('speech_em_', 'em'), ('speech_oh_', 'oh')]  # (as NpcBabble.Sounds: the files the game hums with)
+MIDDLE = ('hm', 'em', 'uhu')   # the kinds a voice's middle pitch is taken from: said level, not asked
+FIT = (0.75, 1.33)             # a stretch's pitch against that middle: outside it is not written (the game plays a hum no farther than 0.78…1.28 of its own speed)
+FIT_OPEN = (0.75, 1.55)        # the same for the open «о» (a word's first sound in the game): it is called out higher than a voice talks — measured ×1.25–1.49 on the takes
 
 
 def manner_of(x, say):
@@ -140,7 +150,7 @@ def cmd_babble(sound, root):
     if count == 0:
         sound.fail('no reading found (voice-proto/rec/voices/<who>/голос*.m4a): the manner of the talk is taken from one')
     files = stretches = 0
-    by_voice = {}
+    by_voice = {}  # voice → its stretches: (file, kind, first sample, samples, Hz, seconds)
     for name in sorted(os.listdir(sounds)):
         if not name.endswith('.ogg'):
             continue
@@ -149,16 +159,24 @@ def cmd_babble(sound, root):
             continue
         got, rate = hums_of(os.path.join(sounds, name))
         m = re.search(r'__(\w+)\.ogg$', name)
-        voice = m.group(1) if m else 'own'
-        v = by_voice.setdefault(voice, [0, 0.0])
-        for first, n, hz in got:
+        by_voice.setdefault(m.group(1) if m else 'own', []).extend((name, kind, first, n, hz, n / rate) for first, n, hz in got)
+        files += 1
+    told = []
+    for voice in sorted(by_voice):
+        all_ = by_voice[voice]
+        level = [s[4] for s in all_ if s[1] in MIDDLE] or [s[4] for s in all_]
+        middle = float(np.median(level)) if level else 0.0
+        kept = [s for s in all_ if middle > 0 and (FIT_OPEN if s[1] == 'oh' else FIT)[0] <= s[4] / middle <= (FIT_OPEN if s[1] == 'oh' else FIT)[1]]
+        out_ = [s for s in all_ if s not in kept]
+        for name, kind, first, n, hz, _ in kept:
             lines.append('@hum %s %s %d %d %.1f' % (name, kind, first, n, hz))
-            v[0] += 1; v[1] += n / rate
-        files += 1; stretches += len(got)
+        stretches += len(kept)
+        told.append('  %-8s %3d stretches, %4.1f s, middle %3.0f Hz%s' % (voice, len(kept), sum(s[5] for s in kept), middle,
+                    ' · out of the voice, not written: ' + ', '.join('%s %.0f Hz ×%.2f' % (s[1], s[4], s[4] / middle) for s in out_) if out_ else ''))
     out = os.path.join(sounds, 'babble.txt')
     with open(out, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lines) + '\n')
     print('babble: the manner — %d phrases; the hums — %d stretches in %d files' % (count, stretches, files))
-    for voice in sorted(by_voice):
-        print('  %-8s %3d stretches, %.1f s' % (voice, by_voice[voice][0], by_voice[voice][1]))
+    for t in told:
+        print(t)
     print('  → %s (%.0f KB)' % (out, os.path.getsize(out) / 1024))

@@ -87,7 +87,7 @@ namespace HuginWhispers
                     WsModel b = old.Model;
                     if (b.File.StartsWith("RavenWatch.", StringComparison.Ordinal) && !m.File.StartsWith("RavenWatch.", StringComparison.Ordinal))
                     {
-                        m.Name = b.Name; m.Note = b.Note; m.Story = b.Story; m.Pickup = b.Pickup; m.One = b.One; m.Wear = b.Wear; m.Dreams = b.Dreams;
+                        m.Name = b.Name; m.Note = b.Note; m.Story = b.Story; m.Pickup = b.Pickup; m.One = b.One; m.Wear = b.Wear; m.Dreams = b.Dreams; m.Morning = b.Morning; m.MorningStamina = b.MorningStamina;
                         Log("«" + m.File + "»: its look over the built-in «" + id + "»; the name, note and story rules are the mod's");
                     }
                 }

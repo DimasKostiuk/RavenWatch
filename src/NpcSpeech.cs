@@ -378,6 +378,8 @@ namespace HuginWhispers
             }
             Lately.Add(new Spoke { Who = c, At = at, When = now });
             if (Lately.Count > 32) Lately.RemoveAt(0);
+            long scene = SceneOf != null ? SceneOf(a) : 0L;
+            if (scene != 0L) TurnToSpeaker(a, c, scene, (talk ? RavenSpeech.Seconds(text, RavenSpeech.Pace.TalkHum) : RavenSpeech.Seconds(text, RavenSpeech.Pace.Scene)) + 1.5f); // (before the eye's look below: who turns is not this game's camera's business)
             Camera cam = Camera.main;
             if (cam != null && (cam.transform.position - at).sqrMagnitude > SeenNear * SeenNear) return; // (nobody here sees it: its plan not even made)
             Plan plan = talk ? Make(text, SeedOf(a), NpcPersona.Of(a).Chatty, RavenSpeech.Seconds(text, RavenSpeech.Pace.TalkHum), 1f - NpcPersona.Of(a).Bravery, NpcPersona.Of(a).Lively) : PlanFor(a, text);
@@ -395,6 +397,7 @@ namespace HuginWhispers
                 if (os == null || !Free(o)) continue;
                 if (d < d1) { l2 = l1; d2 = d1; l1 = os; d1 = d; near = o; } else { l2 = os; d2 = d; }
             }
+            if (to == null && scene != 0L) to = Faced(a, c, scene); // (a scene's line: to the one the scene turned it to — before «who spoke last»)
             if (to == null) to = back;
             if (to == null && near != null) to = near.GetComponent<Character>();
             if (to == null) { Player p = Player.GetClosestPlayer(at, ListenNear); if (p != null) to = p; }
@@ -407,7 +410,6 @@ namespace HuginWhispers
             if (toEar != null && toEar != l1 && toEar != l2) { l2 = l1; l1 = toEar; near = toPerson; }
             if (l1 != null) l1.Hear(c, plan, now, l1.Body == addressed);
             if (l2 != null) l2.Hear(c, plan, now, l2.Body == addressed);
-            long scene = SceneOf != null ? SceneOf(a) : 0L;
             if (scene != 0L) foreach (NpcSpeech w in InScene(scene, a)) if (w != l1 && w != l2) w.Hear(c, plan, now, w.Body == addressed); // (its scene's people, however far)
             Pose(a, c, near, to, plan);
             if (Trace) Npcs.Log(a.Id + " speaks " + plan.Length.ToString("0.0") + " s: " + plan.From.Count + " words, " + plan.Beats.Count + " beats, marks «" + Marks(plan) + "», to " + (to != null ? to.GetHoverName() : "-") + ", heard by " + (l1 != null ? l1.name : "-") + (l2 != null ? ", " + l2.name : "") + (plan.Thinks ? ", thinks " + plan.Think.ToString("0.0") + " s" : ""));
@@ -417,6 +419,55 @@ namespace HuginWhispers
         // lock, StoryScenes.Holder — the player whose scene it is; 0 none; null in a build with no story). They hear one another, and the hero's
         // lines (HeroSaid), at any distance, as a listener ever does: the head to the speaker, its nods and sounds
         internal static System.Func<NpcActor, long> SceneOf;
+
+        // A scene's line, from its first word (the user 2026-11-23: «бачу, як персонажі і наш повертаються до того, хто говорив, надто пізно, ніби
+        // після того, як той договорив… якщо хтось до когось звертається, по можливості відразу повертатись до того, хто говорить»): every person
+        // of the scene who stands free (no walk, no seat, no clip or work on its body: Working — a scene's «busy» between its rounds too) and has the
+        // speaker farther than TurnPast deg off its front turns its body to it at once, for the line and a moment after, then back to what the scene
+        // had it face (the order «hear»: NpcMind.Hear decides where the person is run); within that, its head alone, as before. Told by the
+        // scene's director's game alone (scene = his player's id: his game plays it and knows its works), sent to each one's owner (NpcActor.Order).
+        // The hero: HeroHears (StoryLook — his head at once, his body when the speaker is behind him)
+        internal static float TurnPast = 60f;
+        internal static System.Action<Character, long> HeroHears;
+        internal static System.Func<NpcActor, bool> Working; // (the story: a scene's «busy» on it)
+        private static void TurnToSpeaker(NpcActor speaker, Character c, long scene, float seconds)
+        {
+            Player me = Player.m_localPlayer;
+            if (c == null || me == null || me.GetPlayerID() != scene) return;
+            string order = "hear " + NpcKit.Ref(c.GetZDOID()) + " " + seconds.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            foreach (NpcActor o in NpcActor.Live) // heavy: once a line of a scene, the people loaded here (its own scene's few are told)
+            {
+                if (o == null || o == speaker || SceneOf(o) != scene || (Working != null && Working(o))) continue;
+                Vector3 to = c.transform.position - o.transform.position; to.y = 0f;
+                if (to.sqrMagnitude < 0.04f || Vector3.Angle(o.transform.forward, to) < TurnPast) continue; // (a first look here; its owner looks again: NpcMind.Hear)
+                o.Order(order, NpcMind.Layer.Scene);
+            }
+            if (HeroHears != null) HeroHears(c, scene);
+        }
+
+        // whom a scene's line is said to: of its people and its player, the one nearest the way the speaker's body faces (the scene turned it
+        // there: «face»), within half of SpeakReach; none — null (then as ever: who spoke to it last, the nearest). Read from bodies: the same on every game
+        private static Character Faced(NpcActor a, Character c, long scene)
+        {
+            Vector3 fwd = c.transform.forward; fwd.y = 0f;
+            Character best = null; float bestDeg = SpeakReach * 0.5f;
+            foreach (NpcActor o in NpcActor.Live) // heavy: once a line of a scene (the same pass as InScene's)
+            {
+                if (o == null || o == a || SceneOf(o) != scene || o.Speech == null) continue;
+                Character oc = o.Speech.Body;
+                if (oc == null) continue;
+                Vector3 d = oc.transform.position - c.transform.position; d.y = 0f;
+                float deg = Vector3.Angle(fwd, d);
+                if (d.sqrMagnitude > 0.04f && deg < bestDeg) { bestDeg = deg; best = oc; }
+            }
+            foreach (Player pl in Player.GetAllPlayers())
+            {
+                if (pl == null || pl.GetPlayerID() != scene) continue;
+                Vector3 d = pl.transform.position - c.transform.position; d.y = 0f;
+                if (d.sqrMagnitude > 0.04f && Vector3.Angle(fwd, d) < bestDeg) best = pl;
+            }
+            return best;
+        }
         private static readonly List<NpcSpeech> _inScene = new List<NpcSpeech>();
         private static List<NpcSpeech> InScene(long scene, NpcActor not)
         {
@@ -437,12 +488,13 @@ namespace HuginWhispers
         // the people of his scene hear it as a person's line — the head to him, the nods at its stops — and a reply looks back at him (Lately);
         // not in a scene: the nearest one or two. On his game (a scene: the director's — those near see the subtitle, not the heads). The
         // seconds it is hummed (0: not hummed)
-        internal static float HeroSays(Player p, string text, float seconds, string clip, uint salt)
+        // scene: said in a scene — hummed quieter than his answer in a plain talk (NpcBabble.VolOf)
+        internal static float HeroSays(Player p, string text, float seconds, string clip, uint salt, bool scene = false)
         {
             if (p == null || string.IsNullOrEmpty(text)) return 0f;
             string said = Plain(text);
             long id = p.GetPlayerID();
-            float hum = said.Length > 0 ? NpcBabble.Say(NpcTimbre.OfHero(p), HuginWhispers.Body.HeadBone(p), said, (uint)id ^ (uint)(id >> 32) ^ salt, seconds, true, clip) : 0f;
+            float hum = said.Length > 0 ? NpcBabble.Say(NpcTimbre.OfHero(p), HuginWhispers.Body.HeadBone(p), said, (uint)id ^ (uint)(id >> 32) ^ salt, seconds, NpcBabble.VolOf(true, scene), clip) : 0f;
             HeroSaid(p, said, seconds);
             return hum;
         }
@@ -465,6 +517,7 @@ namespace HuginWhispers
                     if (heard.Count >= 2) break;
                 }
             foreach (NpcSpeech w in heard) w.Hear(p, plan, now, false);
+            TurnToSpeaker(null, p, id, seconds + 1.5f); // (his scene's people turn to him at his first word too: his own game is his scene's director)
         }
         private static string Marks(Plan p) { System.Text.StringBuilder sb = new System.Text.StringBuilder(); foreach (Mark m in p.Marks) sb.Append(m.Kind); return sb.ToString(); }
 
@@ -692,7 +745,8 @@ namespace HuginWhispers
             bool toYou = to != null && to == Player.m_localPlayer;
             if (_hum != null) NpcBabble.Hush(_hum); // (its own last hum, if it still goes: eased off — nothing when it is over)
             _hum = (toYou ? TalkClip : "babble") + "." + SeedOf(a);
-            return NpcBabble.Say(_card, _head, text, SeedOf(a), seconds, toYou, _hum) > 0f;
+            bool scene = SceneOf != null && SceneOf(a) != 0L; // (a line said in a scene: quieter than a plain talk — NpcBabble.VolOf)
+            return NpcBabble.Say(_card, _head, text, SeedOf(a), seconds, NpcBabble.VolOf(toYou, scene), _hum) > 0f;
         }
         internal static void HushTalk(NpcActor a) { NpcSpeech me = a != null ? a.Speech : null; if (me != null && me._hum != null) NpcBabble.Hush(me._hum); }
 

@@ -11,7 +11,7 @@
 #   node tools/sound.js talk --mark     the copy's mark written anew (see below) — only once this file plays what the game does
 #
 # A COPY of the game's rules (src/NpcBabble.cs, from «the line's rules» to their end: Line, Steady, PhraseOf, H, ClausesOf, Render, Pick,
-# Tidy, Sounds_, At, Need), line by line in Python; its numbers it reads from the game's own source each run (NpcBabble's fields, the
+# Said, Sounds_, At, Need), line by line in Python; its numbers it reads from the game's own source each run (NpcBabble's fields, the
 # length a person's line is shown from NpcSpeech.Make, the hero's pause from NpcTalk), so a number changed there is heard here at once.
 # Outside the guarded block and copied by hand: how a voice's hums are loaded (NpcBabble.Read, VoiceOf) — change those, change Rules.voice.
 # What it is not: the game's sound core (no place, no distance, no Vol between people: every line as said to you), a person's chattiness
@@ -19,7 +19,7 @@
 # (tools/arch_check.js «babble-copy») till this file plays the same and «--mark» writes the new mark into RULES_OF below.
 import os, re, sys, math, hashlib, numpy as np
 
-RULES_OF = '9c44910ddc9b9605'  # the mark of the game's rules this copy plays (rules_mark): written by «talk --mark»
+RULES_OF = '12992276a01bbd4a'  # the mark of the game's rules this copy plays (rules_mark): written by «talk --mark»
 
 M32 = 0xFFFFFFFF
 TALK = [  # the talk said when no --lines: questions, a «…», a «!», short and long, commas (each rule of the line is heard)
@@ -49,7 +49,7 @@ def rules_mark(root):
 
 
 def numbers(root):
-    """the game's numbers of the talk, read from its source: {'NpcBabble.Calm': 0.5, …, 'NpcBabble.Speeds': [...], …}"""
+    """the game's numbers of the talk, read from its source: {'NpcBabble.Calm': 0.5, …, 'NpcBabble.Sounds': [...], …}"""
     out = {}
     for cls, f in (('NpcBabble', 'NpcBabble.cs'), ('NpcSpeech', 'NpcSpeech.cs'), ('NpcTalk', 'NpcTalk.cs'), ('NpcTimbre', 'NpcTimbre.cs')):
         with open(os.path.join(root, 'src', f), encoding='utf-8') as h:
@@ -65,16 +65,21 @@ def numbers(root):
         for m in re.finditer(r'static readonly (float|string)\[\] (\w+) = \{([^}]*)\};', t):
             items = [x.strip() for x in m.group(3).split(',') if x.strip()]
             out[cls + '.' + m.group(2)] = [float(x.rstrip('f')) for x in items] if m.group(1) == 'float' else [x.strip('"') for x in items]
-        m = re.search(r'const string Vowels = "([^"]+)"', t)
-        if m:
-            out[cls + '.Vowels'] = m.group(1)
+        for m in re.finditer(r'const string (Vowels|Open) = "([^"]+)"', t):
+            out[cls + '.' + m.group(1)] = m.group(2)
     return out
 
 
 def share(x):
     """(uint)(x * 100f) as the game reckons it: its field is a float32 (0.57 is 0.5699999928), multiplied — so Mono does — in double: 56.
-    NOT measured in the game; Python's own 0.57 * 100 would be 57. The numbers in use now (0.5, 0.3) come out the same either way"""
+    NOT measured in the game; Python's own 0.57 * 100 would be 57. Used for Calm alone now (0.5: the same either way); the chances of the
+    words (Third, Skip) are rounded to whole percents on both sides — pct"""
     return int(float(np.float32(x)) * 100.0)
+
+
+def pct(x):
+    """a chance as whole percents, as the game rounds it (Mathf.RoundToInt(x * 100f)): the same however the product is reckoned"""
+    return int(round(float(np.float32(x)) * 100.0))
 
 
 def lerp(a, b, t):
@@ -137,9 +142,10 @@ class Rules:
                     if n < r // 8:
                         continue
                     hums.append(dict(X=self.steady(buf, s['First'], n, ch), Hz=s['Hz'], Kind=s['Kind']))
-                    hz.append(s['Hz'])
+                    if s['Kind'] in self.N['NpcBabble.Level']:
+                        hz.append(s['Hz'])  # (its middle pitch is where it talks: a «хм?» is asked higher, an «о» called out higher)
                     rate = r
-        if len(hums) < 4:
+        if len(hums) < 4 or not hz:
             return dict(Hums=[], Hz=0.0, Rate=rate, Few=len(hums))
         hz.sort()
         return dict(Hums=hums, Hz=hz[len(hz) // 2], Rate=rate, Few=0)
@@ -231,8 +237,8 @@ class Rules:
         clauses = self.clauses_of(text)
         if not clauses:
             return None
-        parts, used, last_kind = [], [], ['']
-        step_s = self.step * v['Rate']
+        parts, said, part = [], dict(At={}, Times={}, Kinds=[], Prev=-1, LastKind=''), 0
+        self.said = said  # (the measure looks at it)
         for syl, mark, key in clauses:
             chunks = [syl] if syl <= self.most_hills * 1.25 else [syl - syl // 2, syl // 2]
             for ci, m in enumerate(chunks):
@@ -244,11 +250,10 @@ class Rules:
                 scale = clamp(m / p['Hills'], 0.75, 1.3) / max(0.5, tempo) * (self.n('SlowBy') if slow else 1)
                 L = len(p['F'])
                 frames = max(4, int(L * scale))
-                on, ff, ee = [False] * frames, [0.0] * frames, [0.0] * frames
+                ff, ee = [0.0] * frames, [0.0] * frames
                 for i in range(frames):
                     src = i * (L - 1) / (frames - 1)
                     a = int(src); b = min(L - 1, a + 1); t = src - a
-                    on[i] = p['V'][min(L - 1, round(src))]
                     ff[i] = lerp(p['F'][a], p['F'][b], t)
                     ee[i] = lerp(p['E'][a], p['E'][b], t)
                 if want_rise and not p['Rising']:
@@ -258,8 +263,9 @@ class Rules:
                 if mark == '!' and last:
                     for i in range(frames):
                         ff[i] *= 1.03; ee[i] *= 1.15
-                self.tidy(on, ee, 11 if slow else 3, 10 if slow else 4)
-                parts.append(self.sounds_(on, ff, ee, frames, step_s, v, pitch, seed, key, ci, slow, used, last_kind))
+                silent = part > 0 and self.H(seed, key, ci, 0, 8) % 100 < pct(self.n('Skip'))
+                parts.append(np.zeros(int(frames * self.step * v['Rate'])) if silent else self.sounds_(ff, ee, frames, v, pitch, seed, key, ci, m, mark if last else ',', slow, said))
+                part += 1
                 pause = (0.14 if not last else 0.75 if mark == '~' else 0.24 if mark == ',' else 0.5) * (1.6 if slow else 1)
                 parts.append(np.zeros(int(pause * v['Rate'])))
         line = np.concatenate(parts)
@@ -276,135 +282,105 @@ class Rules:
         return self.manner[best[self.H(seed, key, ci, 0, 1) % n][1]]
 
     @staticmethod
-    def tidy(on, ee, join, least):
-        n, i, last_end = len(on), 0, -1
-        while i < n:
-            if not on[i]:
-                i += 1; continue
-            if last_end >= 0 and i - last_end < join:
-                for k in range(last_end, i):
-                    on[k] = True
-            while i < n and on[i]:
-                i += 1
-            last_end = i
-        i = 0
-        while i < n:
-            if not on[i]:
-                i += 1; continue
-            a, top = i, 0.0
-            while i < n and on[i]:
-                top = max(top, ee[i]); i += 1
-            if i - a < least:
-                for k in range(a, i):
-                    on[k] = False
-                continue
-            for k in range(a, i):
-                ee[k] = max(ee[k], 0.45 * top)
-
-    @staticmethod
     def at(a, fr):
         i = int(fr)
         if i >= len(a) - 1:
             return a[-1]
         return lerp(a[i], a[i + 1], fr - i)
 
-    def need(self, h, v, ff, i0, i1, step_s, speed, lo, hi):
-        k = speed * (v['Hz'] / h['Hz']) ** self.n('Together')
-        f0, f1 = int(i0 / step_s), min(len(ff) - 1, int(i1 / step_s))
-        s = sum(clamp(k * ff[f], lo, hi) for f in range(f0, f1 + 1))
-        return s * step_s * (i1 - i0) / max(1.0, (f1 - f0 + 1) * step_s)
-
-    def sounds_(self, on, ff, ee, frames, step_s, v, pitch, seed, key, ci, slow, used, last_kind):
-        H, at, N = self.H, self.at, self.n
-        speeds, rests, rare = N('Speeds'), N('Rests'), N('Rare')
-        rate = v['Rate']
-        n = int(frames * step_s)
+    def sounds_(self, ff, ee, frames, v, pitch, seed, key, ci, m, mark, slow, said):
+        H, N = self.H, self.n
+        rate, hums = v['Rate'], v['Hums']
+        words = max(1, int(round(m / N('WordEvery'))))
+        groups = [min(max(1, m), 2 + (1 if H(seed, key, ci, b, 36) % 100 < pct(N('Third')) else 0)) for b in range(words)]
+        D = frames * self.step
+        gaps = [(N('GapLeast') + (H(seed, key, ci, g, 32) % 1000) / 1000 * N('GapSpan')) * (1.5 if slow else 1) for g in range(words - 1)]
+        syl = min(N('HumMost') * (1.25 if slow else 1), max(N('HumLeast'), (D - sum(gaps)) / sum(groups)))
+        lens = []
+        for gi, g in enumerate(groups):
+            for s in range(g):
+                d = syl * (0.85 + (H(seed, key, ci * 64 + gi, s, 33) % 30) / 100)
+                if gi == words - 1 and s == g - 1:
+                    d *= N('LastLonger')
+                lens.append(d)
+        whole = sum(gaps) + 0.05 + sum(lens)
+        if D > whole:
+            gaps = [g + (D - whole) / len(gaps) for g in gaps]
+            whole = D
+        n = int(whole * rate)
         y = np.zeros(n)
-        fr_, to_ = [], []
-        f, region, last_speed = 0, 0, -1
         lo, hi = N('SpeedLow') * pitch, N('SpeedHigh') * pitch
-        hums = v['Hums']
-        while f < frames:
-            if not on[f]:
-                f += 1; continue
-            g = f
-            while g < frames and on[g]:
-                g += 1
-            sp = H(seed, key, ci, region, 3) % len(speeds)
-            if sp == last_speed:
-                sp = (sp + 2) % len(speeds)
-            last_speed = sp
-            if (g - f) * self.step > N('ShortOver') and H(seed, key, ci, region, 4) % 100 < share(N('ShortChance')):
-                cut = f + int((g - f) * N('ShortTo'))
-                for q in range(cut, g):
-                    on[q] = False
-                g = cut
-            if (g - f) * self.step >= N('LeastSound'):
-                i0, i1 = int(f * step_s), min(n, int(g * step_s))
-                best, best_score, longest = -1, float('inf'), 0
+        top = max(ee) if ee else 0.0
+        fx = np.arange(frames)
+        t, idx = 0.0, 0
+        for gi, g in enumerate(groups):
+            if gi > 0:
+                t += gaps[gi - 1]
+            fin = gi == words - 1
+            a_, b_ = ((1.05, 0.88) if mark == '.' else (0.96, 1.20) if mark == '?' else (1.14, 0.94) if mark == '!' else (1.0, 0.93) if mark == '~' else (0.98, 1.06)) if fin else (1.03, 0.97)
+            own = 1 + ((H(seed, key, ci, gi, 37) % 60) - 30) / 1000
+            for s in range(g):
+                d, t0 = lens[idx], t
+                cnt, i0 = int((d + (N('Run') if s < g - 1 else 0)) * rate), int(t0 * rate)
+                t += d
+                at_idx = idx
+                idx += 1
+                if cnt < 8:
+                    continue
+                ar = np.arange(cnt)
+                mel = np.sqrt(np.interp((ar / rate + t0) / whole * (frames - 1), fx, ff)) * (a_ + (b_ - a_) * ((s + ar / cnt) / g)) * own
+                e = max(self.at(ee, (t0 + d / 2) / whole * (frames - 1)), 0.55 * top) * ((1.18 if s == 0 else 0.9) if g > 1 else 1)
+                best, best_score = -1, float('inf')
                 for r, hm in enumerate(hums):
-                    if len(hm['X']) > len(hums[longest]['X']):
-                        longest = r
-                    if len(hm['X']) < self.need(hm, v, ff, i0, i1, step_s, speeds[sp] * pitch, lo, hi) + 8:
+                    need = self.need(mel, pitch * v['Hz'] / hm['Hz'], lo, hi)
+                    if len(hm['X']) < need:
                         continue
-                    score = (8 if r in used else 0) + (2 if hm['Kind'] == last_kind[0] else 0) + (H(seed, key, ci * 64 + region, r, 5) % 1000) / 1000
-                    is_rare = hm['Kind'] in rare
-                    for u in used:
-                        if hums[u]['Kind'] == hm['Kind']:
-                            score += 12 if is_rare else 1
+                    score = 3 * said['Times'].get(r, 0) + (6 if r == said['Prev'] else 0) + (2 if hm['Kind'] == said['LastKind'] else 0) + (H(seed, key, ci * 64 + at_idx, r, 34) % 1000) / 1000
+                    if hm['Kind'] in N('Rare') and hm['Kind'] in said['Kinds']:
+                        score += 4
+                    if said['At'].get(r, 0.0) + need > len(hm['X']):
+                        score += 5
+                    if hm['Kind'] == N('Open') and (s != 0 or N('Open') in said['Kinds']):
+                        score += 100
                     if score < best_score:
                         best_score, best = score, r
-                if best < 0:
-                    best = longest
-                    room0 = len(hums[best]['X']) - 8; pos0 = 0.0; s0 = i0
-                    k0 = speeds[sp] * pitch * (v['Hz'] / hums[best]['Hz']) ** N('Together')
-                    while s0 < i1 and pos0 < room0:
-                        pos0 += clamp(k0 * at(ff, s0 / step_s), lo, hi); s0 += 1
-                    i1 = s0
-                    g = max(f + 1, math.ceil(i1 / step_s))
-                h = hums[best]
-                X = h['X']
-                k = speeds[sp] * pitch * (v['Hz'] / h['Hz']) ** N('Together')
-                room = int(len(X) - self.need(h, v, ff, i0, i1, step_s, speeds[sp] * pitch, lo, hi) - 8)
-                pos = float(H(seed, key, ci * 64 + region, 0, 6) % (room + 1)) if room > 0 else 0.0
-                ln = i1 - i0
-                fin, fout = min(ln // 3, int(N('FadeIn') * rate)), min(ln // 2, int(N('FadeOut') * rate))
-                for s in range(ln):
-                    fr = (i0 + s) / step_s
-                    pos += clamp(k * at(ff, fr), lo, hi)
-                    a = int(pos)
-                    if a >= len(X) - 1:
-                        if s < ln - fout and s > 0 and abs(y[i0 + s - 1]) > 0.02:
-                            self.cuts += 1  # (the measure: the hum ran out before its fade — the sound stops dead)
-                        break
-                    x = (X[a] + (X[a + 1] - X[a]) * (pos - a)) * at(ee, fr)
-                    if s < fin:
-                        x *= s / fin
-                    elif s >= ln - fout:
-                        d = (ln - s) / fout
-                        x *= d * math.sqrt(d)
-                    y[i0 + s] = x
-                used.append(best); last_kind[0] = h['Kind']
-                fr_.append(i0); to_.append(i1)
-                rest = int(rests[H(seed, key, ci * 64 + region, 0, 7) % len(rests)] * (1.4 if slow else 1) / self.step)
-                for q in range(g, min(g + rest, frames)):
-                    on[q] = False
-            region += 1
-            f = max(g, f + 1)
-        if not slow or len(fr_) < 2:
-            return y
-        g1 = g2 = -1
-        for i in range(1, len(fr_)):
-            w = fr_[i] - to_[i - 1]
-            if g1 < 0 or w > fr_[g1] - to_[g1 - 1]:
-                g2, g1 = g1, i
-            elif g2 < 0 or w > fr_[g2] - to_[g2 - 1]:
-                g2 = i
-        later = max(g1, g2); earlier = -1 if g2 < 0 else min(g1, g2)
-        add_l = int(0.32 * rate); add_e = 0 if earlier < 0 else int(0.2 * rate)
-        mid_l = (to_[later - 1] + fr_[later]) // 2
-        mid_e = 0 if earlier < 0 else (to_[earlier - 1] + fr_[earlier]) // 2
-        return np.concatenate([y[:mid_e], np.zeros(add_e), y[mid_e:mid_l], np.zeros(add_l), y[mid_l:]])
+                if best < 0:  # (no hum so long: its longest one, and the sound as long as that allows)
+                    best = max(range(len(hums)), key=lambda r: (len(hums[r]['X']), -r))
+                    cnt = int(cnt * (len(hums[best]['X']) - 16) / self.need(mel, pitch * v['Hz'] / hums[best]['Hz'], lo, hi))
+                    if cnt < 8:
+                        continue
+                    mel = mel[:cnt]
+                    said['At'].pop(best, None)
+                h = hums[best]; X = h['X']
+                k = pitch * v['Hz'] / h['Hz']
+                room = self.need(mel, k, lo, hi)
+                pos = said['At'].get(best, 0.0)
+                if pos + room > len(X):
+                    free = int(len(X) - room)
+                    pos = float(H(seed, key, ci * 64 + at_idx, 0, 35) % (free + 1)) if free > 0 else 0.0
+                fade_in, fade_out = min(cnt // 3, int(N('FadeIn') * rate)), min(cnt // 2, int((N('FadeOut') if s < g - 1 else N('FadeLast')) * rate))
+                where = pos + np.cumsum(np.clip(k * mel, lo, hi))
+                ran = np.flatnonzero(where.astype(int) >= len(X) - 1)
+                ok = max(0, min(cnt, n - i0, int(ran[0]) if len(ran) else cnt))
+                if len(ran) and ok < cnt - fade_out:
+                    self.cuts += 1  # (the measure: the hum ran out before its fade — the sound stops dead)
+                a = where[:ok].astype(int)
+                x = (X[a] + (X[np.minimum(a + 1, len(X) - 1)] - X[a]) * (where[:ok] - a)) * e
+                env = np.ones(cnt)
+                if fade_in > 0:
+                    env[:fade_in] = 0.5 - 0.5 * np.cos(np.pi * np.arange(fade_in) / fade_in)
+                if fade_out > 0:
+                    env[cnt - fade_out:] = 0.5 + 0.5 * np.cos(np.pi * np.arange(fade_out) / fade_out)
+                y[i0:i0 + ok] += x * env[:ok]
+                said['At'][best] = float(where[ok - 1]) if ok > 0 else pos
+                said['Times'][best] = said['Times'].get(best, 0) + 1
+                said['Prev'], said['LastKind'] = best, h['Kind']
+                said['Kinds'].append(h['Kind'])
+        return y
+
+    @staticmethod
+    def need(mel, k, lo, hi):
+        return float(np.sum(np.clip(k * mel, lo, hi))) + 8
 
 
 def shown_for(text, N):

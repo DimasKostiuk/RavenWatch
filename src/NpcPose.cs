@@ -10,7 +10,9 @@ namespace HuginWhispers
     //   gait   its own carriage and step (NpcGait) — eased in and out, never snapped; it gives way while a clip plays
     //   speech its head, neck and chest as it speaks a line and as it listens (NpcSpeech) — small turns over the gait; a clip that holds the head wins
     //   turn   turning where it stands: foot to foot (BodyTurn)
-    //   fall   lying senseless, the fall, the getting up (NpcFall) — over the gait
+    //   fall   lying senseless, the fall, the getting up (NpcFall) — over the gait. While it falls its body is limp (NpcFall.Limp: the physics
+    //          has its bones, its animator is off): no other layer writes a bone then — each adds its turn to what the game posed this frame,
+    //          and with nothing posed it would add it again every frame
     //   meal   the bite raised to its mouth (NpcEat) — the last, its hand and head where the rest left them
     // Before this every layer had its own end of the frame in no set order, and what read a bone (a raven on a shoulder)
     // read it before some of them: a shoulder that jumped. Whatever reads the pose runs after this (a later order:
@@ -40,6 +42,7 @@ namespace HuginWhispers
         {
             if (!_looked) { _looked = true; _gait = GetComponent<NpcGait>(); _speech = GetComponent<NpcSpeech>(); _fall = GetComponent<NpcFall>(); _eat = GetComponent<NpcEat>(); _body = GetComponent<Humanoid>(); _nv = GetComponent<ZNetView>(); _bodyOf = GetComponent<NpcBody>(); } // (on the body made: all its parts there by now)
             if (_bodyOf != null) _bodyOf.Glide(); // (its body where its glide onto a seat is this frame, before any layer stands on it)
+            if (_fall != null && _fall.Limp) { _fall.Pose(); return; } // (limp in its fall: the fall alone, watching for its landing)
             long t0 = NpcPerf.Now();
             if (!MuteClips) Clips();
             long t1 = NpcPerf.Now(); NpcPerf.Add(PerfClips, t0);

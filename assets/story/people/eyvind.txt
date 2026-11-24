@@ -11,9 +11,13 @@ npc: eyvind
 after: reached ch2 lit_plan
 live: hall.lavka when reached ch2 sverre_home   # привів Сверре до Зали — і лишився (story-lore.md «Ейвінд»: відробляє борг)
 live: bad_house.lizhko when reached ch2 eyv_gone  # (користувач 2026-11-19: посеред сцени heid_tells встав і пішов до свого побратима; хатина — місце bad_house, збудував користувач 2026-11-20: у хатині, біля ліжка Сверре)
+live: away when reached ch2 heid_why, !reached ch2 eyv_gone   # (користувач 2026-11-23) старий вернувся (torv_back) — і поки ми йдемо до Гейд, Ейвінд встає з лави й виходить за браму (квест: hold hall.skhody); зникає, щойно ніхто не бачить, а хто йде слідом — однаково за 90 с (StoryPeople.LeaveCap). З eyv_gone він біля своєї хатини
 live: away when reached ch2 bruni2, !reached ch2 e_fight   # кінець кола 2 (користувач 2026-11-18): з листа Бруні (за день після шкур) — і зник; Літ «пару годин не бачив», гравець шукає. Знайшовся на узліссі (сцена eyv_runs: там він — людина самої сцени, spawn) і біжить до Зали: з бою (e_fight) знову у світі, на лаві (квест: e_back hold)
 live: hall.lavka when reached ch2 lit_plan
 stranger: !world eyvind_met
+notalk: reached ch2 heid_why, !reached ch2 eyv_gone   # поки йде — не говорить (користувач 2026-11-23); на E лише кидає, що поспішає:
+notalksay: hurry
+fight: defend when reached ch2 sverre_fight   # (користувач 2026-11-23) з бою за Сверре він відбивається (вороги його бачать), а до того — ні, як шаблон (npc/eyvind.txt: fight: off)
 strangersay: hugin Хто це? / munin Мабуть, Літів.
 # Його день у Залі (StoryLife; формат рядків — шапка people/heid.txt; фази eyvind_in_hall, eyvind_lively і місце вечора one vechir — people/phases.txt).
 # Користувач 2026-11-22: «до того [поки Сверре не прийшов] по більшості сидить на лаві і дивиться, іноді підходить до Літа (але після знайомства

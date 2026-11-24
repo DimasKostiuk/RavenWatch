@@ -29,6 +29,20 @@ namespace HuginWhispers
         // where his head looks now, as it turns (a shot through his eyes: «camera eyes» — the picture turns as his head does)
         internal static Vector3 Dir(Player p) { return _on != null ? _dir : p.GetLookDir(); }
 
+        // a line begun in his scene by someone else (NpcSpeech.HeroHears): his head on the speaker at once — unless the scene itself told him where
+        // to look less than OwnWordHolds s ago (its word wins: a slow look round the Hall). True: turned (the user 2026-11-23: «наш повертається
+        // до того, хто говорив, надто пізно»)
+        internal static float OwnWordHolds = 2.5f;
+        private static float _aimSetAt = -100f;
+        internal static bool Speaker(Character who)
+        {
+            if (who == null || StoryCamera.Eyes || Time.time - _aimSetAt < Mathf.Max(OwnWordHolds, _ease + 1f)) return false; // (a slow «player look … 2.5» holds till it is round, and a moment)
+            _ease = Ease;
+            Vector3 seen = who.GetEyePoint();
+            _aim = () => { if (who != null) seen = who.GetEyePoint(); return seen; };
+            return true;
+        }
+
         // a talk opened with this person (NpcTalk.Open): the head on its eyes till TalkEnd
         internal static void Talk(Character who)
         {
@@ -45,6 +59,7 @@ namespace HuginWhispers
         // a note when there is no such place, else null. forward: straight before him
         internal static string At(string what, float ease = 0f)
         {
+            _aimSetAt = Time.time;
             _ease = ease > 0f ? ease : Ease;
             if (what == "forward") { _aim = null; return null; }
             Vector3 at;

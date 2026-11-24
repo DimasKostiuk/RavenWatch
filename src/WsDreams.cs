@@ -42,6 +42,50 @@ namespace HuginWhispers
         }
     }
 
+    // What a worn thing leaves in the morning (an item's «morning: stamina 20»; the user 2026-11-23: Sverre's ring — after a sleep with it, stamina
+    // comes back 20% faster, nothing else). The player woke with it worn (the game's own waking, Player.SetSleeping: SleepPatch in Diary.cs, right after
+    // the game gave «Rested») — the effect is on him while «Rested» lasts and the thing stays worn (WsMorningSE.IsDone, asked by the game's SEMan each
+    // frame: two cheap looks, no clock of ours). No sleep — no effect; put on again after taking off — none till the next morning. The game saves no
+    // status effects: after a new login it is gone together with «Rested». The number is the game's own kind («Stamina regen +20%», added to the
+    // multiplier as every SE_Stats does), and the game writes that line in the tooltip itself.
+    internal static class WsMorning
+    {
+        private const string EffectName = "RavenWatch_Morning";
+        private static readonly int Hash = EffectName.GetStableHashCode();
+        private static WsMorningSE _template;
+
+        internal static void Woke(Player p)
+        {
+            foreach (ItemDrop.ItemData it in p.GetInventory().GetEquippedItems())
+            {
+                WsModel m = it.m_dropPrefab != null ? WsItems.ModelOf(it.m_dropPrefab.name) : null;
+                if (m == null || m.MorningStamina <= 0f) continue; // (a line not read was told in the log with its file)
+                SEMan sm = p.GetSEMan();
+                sm.RemoveStatusEffect(Hash, true); // (yesterday's still on: this morning's anew, with this thing)
+                WsMorningSE se = RavenFx.Template(ref _template, EffectName);
+                se.m_name = it.m_shared.m_name;
+                se.m_tooltip = Lang.T("Виспався весело. Тримається, поки ти відпочилий і не зняв цю річ.");
+                se.m_icon = it.GetIcon();
+                se.m_staminaRegenMultiplier = 1f + m.MorningStamina / 100f;
+                WsMorningSE on = sm.AddStatusEffect(se, true, 0, 0f, 0) as WsMorningSE;
+                if (on != null) on.Worn = it;
+                return; // (one morning effect: the first worn thing that has one)
+            }
+        }
+    }
+
+    // the morning effect itself: over when «Rested» is over or its thing is no longer worn; shows the time «Rested» has left
+    internal class WsMorningSE : SE_Stats
+    {
+        internal ItemDrop.ItemData Worn; // session: the worn item this morning's effect came from (a status effect is not saved)
+
+        private StatusEffect Rested { get { return m_character != null ? m_character.GetSEMan().GetStatusEffect(SEMan.s_statusEffectRested) : null; } }
+
+        public override bool IsDone() { return Worn == null || !Worn.m_equipped || Rested == null; }
+
+        public override string GetIconText() { StatusEffect r = Rested; return r != null ? r.GetIconText() : ""; }
+    }
+
     [HarmonyPatch(typeof(DreamTexts), "GetRandomDreamText")]
     internal static class WsDreamsPatch
     {

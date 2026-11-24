@@ -1957,6 +1957,16 @@ It was too quiet without you.
 [you_remember] {m_starved}I remember when we had nothing to eat. Though it probably wasn't your fault.
 
 [talk_again] {ще_щось}
+[talk_again ?daypart morning] {ще_щось_ранок}
+[talk_again ?daypart evening] {ще_щось_вечір}
+[talk_again ?daypart night] {ще_щось_ніч}
+[talk_again ?working] {ще_щось_робота}
+[talk_again ?tired] {ще_щось_втома}
+[talk_again ?hungry] {ще_щось_голод}
+[talk_again ?weather rain] {ще_щось_дощ}
+[talk_again ?raven any] {ще_щось_ворон}
+[talk_again_warm] {ще_щось_тепле}
+[talk_again_close] {ще_щось_близьке}
 @ще_щось
 Anything else?
 I'm listening.
@@ -13575,8 +13585,32 @@ Stay. Let's talk.
 [say_bye ?daypart night] {твоє_бувай_ніч}
 [say_bye ?tired] {твоє_бувай_втома}
 [say_bye ?weather rain] {твоє_бувай_дощ}
+[say_bye ?daypart morning] {твоє_бувай_ранок}
+[say_bye ?daypart evening] {твоє_бувай_вечір}
+[say_bye ?weather snow] {твоє_бувай_сніг}
+[say_bye ?weather storm] {твоє_бувай_буря}
+[say_bye ?weather fog] {твоє_бувай_туман}
+[say_bye ?hungry] {твоє_бувай_голод}
+[say_bye ?hurt] {твоє_бувай_рана}
+[say_bye ?seated] {твоє_бувай_сидить}
+[say_bye ?mood low] {твоє_бувай_сум}
+[say_bye ?mood high] {твоє_бувай_радість}
+[say_bye ?feel fright] {твоє_бувай_страх}
+[say_bye ?feel grief] {твоє_бувай_горе}
+[say_bye ?raid] {твоє_бувай_набіг}
+[say_bye ?raven any] {твоє_бувай_ворон}
+[say_bye ?job cook, working] {твоє_бувай_кухар}
+[say_bye ?job guard, working] {твоє_бувай_вартовий}
+[say_bye ?job lumber, working] {твоє_бувай_лісоруб}
+[say_bye ?job miner, working] {твоє_бувай_рудокоп}
+[say_bye ?job smelter, working] {твоє_бувай_плавильник}
+[say_bye ?job stoker, working] {твоє_бувай_палій}
+[say_bye ?job gatherer, working] {твоє_бувай_збирач}
+[say_bye ?job servant, working] {твоє_бувай_слуга}
+[say_bye ?job cleaner, working] {твоє_бувай_прибиральник}
 [say_bye_cold] {твоє_бувай_сухо}
 [say_bye_hostile] {твоє_бувай_сухо}
+[say_bye_warm] {твоє_бувай_тепло}
 [say_bye_close] {твоє_бувай_близько}
 
 @твоє_бувай
@@ -13615,11 +13649,13 @@ It's late. Good night.
 Go and rest. Farewell.
 Take a breather. See you.
 Don't wear yourself out. Farewell.
+Rest, you've earned it.
 
 @твоє_бувай_дощ
 Don't get soaked out here. Farewell.
 Get under a roof. See you.
 Farewell. And don't stand in the rain.
+A dry roof to you. Farewell.
 
 @твоє_бувай_сухо
 Farewell.
@@ -15011,12 +15047,69 @@ Or was I standing in the wrong place?
 [eyvind:say_bye] Well, I'm going. Count the planks without me.
 [eyvind:say_bye] Sit tight. I've got things to do.
 [eyvind:say_bye] See you. You're not going anywhere anyway.
-[eyvind:say_bye_cold] Uh-huh. I'll wait. A long time, probably.
-[eyvind:say_bye_cold] Sure. He pays his debts.
-[eyvind:say_bye_cold] Bye. I'll count your "someday"s.
+[eyvind:say_bye ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Off for your mushrooms. You get that golden something ready.
+[eyvind:say_bye ?quest ch2_eyvind done, !reached ch2 later4] I'm off. Gold doesn't spoil, right?
+[eyvind:say_bye ?quest ch2_eyvind done] I'm off, before you find me another errand.
+[eyvind:say_bye ?step ch2 eyv_get] Off for the hides. I hope the mark's right this time.
+[eyvind:say_bye ?reached ch2 sverre_home] Bye. Look after Sverre.
+[eyvind:say_bye ?reached ch2 sverre_home] You're not alone on that bench now.
+[eyvind:say_bye ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] You'll get your mushrooms. If the cave's where you say.
+[eyvind:say_bye ?asked eyvind chest_me, !reached ch2 torv_b] Off to the old man. You keep counting.
+[eyvind:say_bye ?step ch2 eyv_get] Five hides, twenty blueberries. And not a word about the knee.
+[eyvind:say_bye ?asked eyvind ran_sus_b, !reached ch2 lit_next3] Off to Lit. Let him judge.
+[eyvind:say_bye ?reached ch2 later4] Bye. And thanks for telling the truth. At last.
+[eyvind:say_bye ?daypart morning, weather clear] Sit, the sun's warm. Bye.
+[eyvind:say_bye ?daypart evening] Evening. Don't sit through supper.
+[eyvind:say_bye ?weather rain] Stay dry. The knee, right?
+[eyvind:say_bye ?raven any] Come on, birds. Eyvind still has sitting to do.
+[eyvind:say_bye ?raven any] Birds, don't look at Eyvind like that. He's good. Almost.
+[eyvind:say_bye ?npcattitude >= 60] Bye, Eyvind. You're not so bad after all.
+[eyvind:say_bye ?npcattitude >= 60] Bye, Eyvind. At least it's never dull with you.
 [eyvind:say_bye_cold] I'll remember. All of it.
-[eyvind:say_bye_cold] Yeah. Sometimes late. Sometimes never.
 [eyvind:say_bye_cold] Enough of your promises. Bye.
+[eyvind:say_bye_cold] Uh-huh. Bye.
+[eyvind:say_bye_cold] I'm off. No jokes today, Eyvind.
+[eyvind:say_bye_cold] I have to go. You sit.
+[eyvind:say_bye_cold] Listening to you is a waste of time. Bye.
+[eyvind:say_bye_debt] Uh-huh. I'll wait. A long time, probably.
+[eyvind:say_bye_debt] Sure. He pays his debts.
+[eyvind:say_bye_debt] Bye. I'll count your "someday"s.
+[eyvind:say_bye_debt] Yeah. Sometimes late. Sometimes never.
+[eyvind:say_bye_debt] Gold doesn't spoil. Promises do.
+[eyvind:say_bye_debt] I'll wait. Just not till I'm dead.
+[eyvind:talk_again] Anything else? I'm in no hurry. The knee.
+[eyvind:talk_again] Go on, go on. I'm all ears.
+[eyvind:talk_again] Well? I'm all yours. Almost.
+[eyvind:talk_again] Sit where you like. Just not in my spot.
+[eyvind:talk_again] Another errand? I love errands. Other people's.
+[eyvind:talk_again] Ask. I don't charge for questions.
+[eyvind:talk_again ?quest ch2_eyvind done, !reached ch2 later4] About the gold? Not yet.
+[eyvind:talk_again ?daypart morning] Morning. Best time for doing nothing. Speak.
+[eyvind:talk_again ?daypart evening] Evening. Just the time for a talk.
+[eyvind:talk_again ?weather rain] Rain. Sit under the roof, let's talk.
+[eyvind:talk_again ?raven any] Your bird's giving me the eye. Speak before it pecks.
+[eyvind:talk_again ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Mushrooms? No? Then what else?
+[eyvind:talk_again ?reached ch2 sverre_home] Speak quietly. Sverre's listening.
+[eyvind:talk_again ?npcattitude >= 60] For you — anything. Almost.
+[eyvind:bye_back] Go, go. I'll sit here. For both of us.
+[eyvind:bye_back] Bye, friend. Drop by when you feel like doing something for me again.
+[eyvind:bye_back] Careful out there. Mind your knees.
+[eyvind:bye_back] I'll remember you. Kindly. Mostly.
+[eyvind:bye_back] Go. The bench isn't going anywhere. Neither am I.
+[eyvind:bye_back] Good luck. And don't listen to what Lit says about me.
+[eyvind:bye_back ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Five, remember! Yellow ones!
+[eyvind:bye_back ?quest ch2_eyvind done, !reached ch2 later4] The gold is waiting. Patiently.
+[eyvind:bye_back ?step ch2 eyv_get] The deer are where the mark is. For sure this time.
+[eyvind:bye_back ?reached ch2 sverre_home] Go. Sverre and I will sit a while.
+[eyvind:bye_back ?reached ch2 sverre_home] Thank you. Well, you know what for.
+[eyvind:bye_back ?reached ch2 sverre_home] Sverre, say bye. …Well, he's saying it.
+[eyvind:bye_back ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] It's quiet there. I think.
+[eyvind:bye_back ?step ch2 eyv_get] And pick ripe blueberries! Not green ones.
+[eyvind:bye_back ?daypart morning, weather clear] Go, go. The sun shines on me without you.
+[eyvind:bye_back ?daypart evening] Don't be late. Supper won't eat itself.
+[eyvind:bye_back ?weather rain] Don't get wet. Nobody thanks the wet ones.
+[eyvind:bye_back ?raven any] And hello to the birds. They don't like me.
+[eyvind:bye_back ?npcattitude >= 60] Take care. I still need you.
 [lit:say_got] Clear.
 [lit:say_got] Got it. Short and straight.
 [lit:say_got] Heard. No need to say it twice.
@@ -15026,9 +15119,80 @@ Or was I standing in the wrong place?
 [lit:say_bye] I won't get in the way. Measure.
 [lit:say_bye] I'm off. Don't lose count.
 [lit:say_bye] Bye, Lit.
-[lit:say_bye] Going, going. Not watching over your shoulder.
-[lit:say_bye] Fine, out of here. The way you like it.
 [lit:say_bye] Bye. And my regards to Lot.
+[lit:say_bye] Bye. I don't say it twice.
+[lit:say_bye] Going. Short, the way you like it.
+[lit:say_bye ?asked lit go, !reached ch1 lit_hall] Go on alone. I walk crooked, after all.
+[lit:say_bye ?quest ch1 done, !reached ch2 lit_plan] Measure, think. I'll wait.
+[lit:say_bye ?phase lit_works] Going, going. Not watching over your shoulder.
+[lit:say_bye ?phase lit_works] Fine, out of here. The way you like it.
+[lit:say_bye ?phase lit_works] I was never here. Keep counting.
+[lit:say_bye ?phase lit_works, asked lit ch2_busy1] Leaving quietly. So the beam doesn't hear.
+[lit:say_bye ?phase lit_fill] Off to carry. You measure.
+[lit:say_bye ?phase lit_fill] The chest won't fill itself. Bye.
+[lit:say_bye ?daypart night, reached ch2 go2, !reached ch2 ask42] Get some sleep. Count the nails in the morning — if they're still there.
+[lit:say_bye ?reached ch2 rise_after] Bye, master.
+[lit:say_bye ?reached ch2 rise_after] When you say "rebuilt", I'll come to hear it.
+[lit:say_bye ?asked lit go, !reached ch1 lit_hall] The Hall's not far. You won't get lost.
+[lit:say_bye ?quest ch1 done, !reached ch2 lit_plan] Think longer. The Hall will wait.
+[lit:say_bye ?reached ch2 lit_day, !reached ch2 lit_plan] No hurry. Call when it's ready.
+[lit:say_bye ?phase lit_works] Don't count me — I'm already gone.
+[lit:say_bye ?phase lit_fill] The chest will tell me how much more. Bye.
+[lit:say_bye ?reached ch2 go2, !reached ch2 ask42] Count the nails again. Just in case.
+[lit:say_bye ?reached ch2 e_seek, !reached ch2 lit_next3] Off to look for Eyvind. You hold the walls.
+[lit:say_bye ?reached ch2 torv_out, !reached ch2 dawn] Off after the old man. Quietly, as you said.
+[lit:say_bye ?reached ch2 sverre_home] Don't rush Sverre. He's trying as it is.
+[lit:say_bye ?reached ch2 rise_after] The Hall stands. Now you sit a while too.
+[lit:say_bye ?daypart morning, weather clear] Good morning. Measure while it's light.
+[lit:say_bye ?daypart evening] Evening. Don't measure in the dark.
+[lit:say_bye ?weather rain] Rain. Put the line away.
+[lit:say_bye ?weather snow] Snow. Don't freeze, Lit.
+[lit:say_bye ?seated] Sit. You've earned it.
+[lit:say_bye ?hurt] Bandage your hand, Lit. The hammer can wait.
+[lit:say_bye ?raven any] Come on, birds. The master's counting.
+[lit:say_bye ?raven any] Birds, don't peck the line. Let's go.
+[lit:say_bye ?npcattitude >= 60] Bye, Lit. Good that you're here.
+[lit:say_bye ?npcattitude >= 60] Bye, Lit. Without you everything here would stand crooked.
+[lit:talk_again] More?
+[lit:talk_again] Speak. Short.
+[lit:talk_again] Well?
+[lit:talk_again] What else. One word.
+[lit:talk_again] Listening. Don't make me lose count.
+[lit:talk_again] Next.
+[lit:talk_again ?!quest ch1 done] Speak. The sap won't wait.
+[lit:talk_again ?phase lit_works] You're still here?
+[lit:talk_again ?phase lit_works] You again. Quickly.
+[lit:talk_again ?daypart morning] Morning. Short.
+[lit:talk_again ?daypart evening] Little light left. Speak.
+[lit:talk_again ?seated] I'm sitting. So you have a minute.
+[lit:talk_again ?raven any] Keep the bird off the line. Speak.
+[lit:talk_again ?phase lit_fill] Seen the chest? What else?
+[lit:talk_again ?reached ch2 go2, !reached ch2 ask42] Anything else? Just not about nails.
+[lit:talk_again ?reached ch2 rise_after] Speak. I have time now. A little.
+[lit:talk_again ?npcattitude >= 60] Speak. I listen to you longer.
+[lit:bye_back] Mm-hm.
+[lit:bye_back] Go. Straight.
+[lit:bye_back] Good. I have work.
+[lit:bye_back] Short. That's good.
+[lit:bye_back] Go. Watch your feet.
+[lit:bye_back] Hear that, Lot? Gone.
+[lit:bye_back ?!quest ch1 done] Go. I'll measure some more.
+[lit:bye_back ?phase lit_works] At last.
+[lit:bye_back ?phase lit_works] Shut the door. The draught sways the line.
+[lit:bye_back ?phase lit_fill] Carry. I'll count.
+[lit:bye_back ?reached ch2 rise_after] Come again. There's somewhere to come to now.
+[lit:bye_back ?daypart night] Sleep. Tomorrow we count.
+[lit:bye_back ?daypart morning] Go. Daylight is dear.
+[lit:bye_back ?daypart evening] Go. It'll be dark soon.
+[lit:bye_back ?weather rain] Rain. Cover the planks on your way out.
+[lit:bye_back ?raven any] And take the bird. It pecks the line.
+[lit:bye_back ?seated] I'll sit. The count won't run off.
+[lit:bye_back ?npcattitude >= 60] Go. But come back.
+[lit:bye_back ?asked lit go, !reached ch1 lit_hall] I'll find the Hall myself. Go.
+[lit:bye_back ?phase lit_works] Two don't measure. Go.
+[lit:bye_back ?phase lit_fill] Carry more, talk less. Go.
+[lit:bye_back ?reached ch2 go2, !reached ch2 ask42] See the old man with full sleeves — tell me.
+[lit:bye_back ?reached ch2 sverre_home] Let Sverre sit. Less trouble for me.
 [heid:say_got] I see.
 [heid:say_got] Thank you, Heid.
 [heid:say_got] I'll remember.
@@ -15043,10 +15207,89 @@ Or was I standing in the wrong place?
 [heid:say_ok] So be it.
 [heid:say_bye] Bye, Heid.
 [heid:say_bye] I'm off. Keep the fire.
-[heid:say_bye] See you.
 [heid:say_bye] I'll come again.
 [heid:say_bye] Get some rest. Bye.
-[heid:say_bye] All right, I'll go.
+[heid:say_bye] I won't keep you from your herbs.
+[heid:say_bye] No more questions today.
+[heid:say_bye ?!quest prologue_main done] Going, going. I can see you're not one for guests.
+[heid:say_bye ?!quest prologue_main done] Don't look at me like that. I'm leaving.
+[heid:say_bye ?reached ch1 thistle, !reached ch1 brew] Off for the thistle. Roots and all, I remember.
+[heid:say_bye ?step ch1 torvald_seek] I'll find the old man. Don't worry.
+[heid:say_bye ?reached ch1 home_hall, !reached ch2 ask_heid] It's warm here now. Bye, Heid.
+[heid:say_bye ?asked heid ch2_letter_fire, !world torvald_wakes] I'm off. But I won't burn the letter.
+[heid:say_bye ?asked heid ch2_letter_fire, !world torvald_wakes] If you remember who signed it, tell me.
+[heid:say_bye ?world torvald_wakes] Rest, Heid. You can't watch over the old man forever.
+[heid:say_bye ?daypart night] Good night, Heid.
+[heid:say_bye ?daypart night] Go to bed. The herbs won't run off before morning.
+[heid:say_bye ?weather rain] Keep the herbs out of the rain. Bye.
+[heid:say_bye ?!quest prologue_main done] Fine. I won't bother you any more.
+[heid:say_bye ?world ketil_gone, !reached ch1 thistle] Take care here. The falcons are still circling.
+[heid:say_bye ?reached ch1 thistle, !reached ch1 brew] Thistle it is. I'll be back soon.
+[heid:say_bye ?reached ch1 rite_end, !reached ch1 home_hall] The Hall shines now. Bye.
+[heid:say_bye ?step ch1 torvald_seek] Don't worry about the old man. He's seen worse.
+[heid:say_bye ?reached ch1 home_hall, !reached ch2 ask_heid] Stay in the warm, Heid.
+[heid:say_bye ?phase heid_apart] Don't worry. A letter is only paper.
+[heid:say_bye ?phase heid_apart] I'm off. Take a rest from letters.
+[heid:say_bye ?world torvald_wakes, !reached ch2 later4] The old man's home. You can breathe out.
+[heid:say_bye ?reached ch2 sverre_home] Look in on Sverre when you have time.
+[heid:say_bye ?reached ch2 rise_after] The Hall stands, Heid. Bye.
+[heid:say_bye ?daypart morning] I'm off. Have an easy day, Heid.
+[heid:say_bye ?daypart evening] I'm off before it gets dark.
+[heid:say_bye ?weather storm] Stay under the roof, Heid. It's a storm.
+[heid:say_bye ?weather snow] Keep warm. The snow won't stop till morning.
+[heid:say_bye ?weather fog] Fog. Don't go after herbs today.
+[heid:say_bye ?seated] Sit, sit. Don't get up.
+[heid:say_bye ?hurt] Bandage that, Heid. You're the healer.
+[heid:say_bye ?raven any] Come on, wings. Heid has things to do.
+[heid:say_bye ?raven any] Birds, leave Heid's herbs alone. Let's go.
+[heid:say_bye ?npcattitude >= 60] It's good talking to you, Heid. Bye.
+[heid:say_bye ?npcattitude >= 60] Take care, Heid. You're needed here.
+[heid:talk_again] Well? What else?
+[heid:talk_again] Out with it.
+[heid:talk_again] I'm listening.
+[heid:talk_again] Ask. Just not for long.
+[heid:talk_again] Anything else, or are you going?
+[heid:talk_again] Listening. The herbs are waiting.
+[heid:talk_again ?!quest prologue_main done] Haven't you left yet?
+[heid:talk_again ?reached ch1 home_hall, !reached ch2 ask_heid] Sit closer to the fire. What else?
+[heid:talk_again ?phase heid_apart] Questions again. Go on.
+[heid:talk_again ?daypart night] It's night out. Say what you wanted.
+[heid:talk_again ?daypart morning] Morning. Speak while my hands are free.
+[heid:talk_again ?daypart evening] It's getting dark. What else?
+[heid:talk_again ?seated] I'm sitting, you're standing. Speak.
+[heid:talk_again ?weather rain] Rain. Speak before the herbs get wet.
+[heid:talk_again ?raven any] Your bird is eyeing my herbs. Be quick.
+[heid:talk_again ?reached ch1 thistle, !reached ch1 brew] The thistle won't pick itself. What else?
+[heid:talk_again ?world torvald_wakes, !reached ch2 later4] The old man's home. So I'm listening.
+[heid:talk_again ?npcattitude >= 60] Speak. You may.
+[heid:bye_back] Go on, then.
+[heid:bye_back] Mm-hm.
+[heid:bye_back] Take care of yourself. A little.
+[heid:bye_back] Go. Herbs don't like being stood over.
+[heid:bye_back] Don't linger outside after dark.
+[heid:bye_back] And put a hat on.
+[heid:bye_back ?!quest prologue_main done] Good. Go.
+[heid:bye_back ?!quest prologue_main done] Don't come back here without a reason.
+[heid:bye_back ?reached ch1 thistle, !reached ch1 brew] Roots and all. Don't forget.
+[heid:bye_back ?step ch1 torvald_seek] Find him. He doesn't wander far… I think.
+[heid:bye_back ?reached ch1 home_hall, !reached ch2 ask_heid] Come back to the fire. There's something to come back to now.
+[heid:bye_back ?phase heid_apart] Go. And don't ask about that letter again.
+[heid:bye_back ?world torvald_wakes, !reached ch2 later4] Go. I'll sleep tonight. Maybe.
+[heid:bye_back ?daypart night] Go to bed. Night's not for talking.
+[heid:bye_back ?weather rain] Don't get soaked for nothing.
+[heid:bye_back ?daypart morning] Go. Mornings are short.
+[heid:bye_back ?daypart evening] Be back while it's light.
+[heid:bye_back ?weather storm] Under a roof. Quickly.
+[heid:bye_back ?weather snow] Keep your feet warm.
+[heid:bye_back ?raven any] And feed your birds.
+[heid:bye_back ?seated] Go. I'll sit a while longer.
+[heid:bye_back ?hurt] Go. A scratch. It'll heal.
+[heid:bye_back ?npcattitude >= 60] Take care of yourself. I mean it.
+[heid:bye_back ?world ketil_gone, !reached ch1 thistle] And don't look up for long.
+[heid:bye_back ?reached ch1 thistle, !reached ch1 brew] The forest edge. Don't mix it up.
+[heid:bye_back ?phase heid_apart] Go now. I need to think.
+[heid:bye_back ?world torvald_wakes, !reached ch2 later4] Go. The old man's home — that's good.
+[heid:bye_back ?reached ch2 sverre_home] Leave the new one be. Let him sit.
 [torvald:say_got] Uh-huh.
 [torvald:say_got] Well, so be it.
 [torvald:say_got] Clear… I think.
@@ -15080,10 +15323,66 @@ Or was I standing in the wrong place?
 [torvald:say_shrug] Peace, Torvald.
 [torvald:say_bye] Bye, old man.
 [torvald:say_bye] I'm off. Don't lose the spoon.
-[torvald:say_bye] See you, Torvald.
 [torvald:say_bye] See you again. If you recognise me.
-[torvald:say_bye] Don't stand watch till morning.
 [torvald:say_bye] Bye. And don't pinch anything.
+[torvald:say_bye] Bye, Torvald. Next time we'll get acquainted all over again.
+[torvald:say_bye] I'm off. Tell me later how it was. Or how it wasn't.
+[torvald:say_bye ?reached ch1 home_hall, !reached ch2 dawn] Don't stand watch till morning.
+[torvald:say_bye ?!quota torvald_tales 3] Gather some more tales. I'll be back.
+[torvald:say_bye ?!quota torvald_tales 3] Give your tongue a rest, old man.
+[torvald:say_bye ?reached ch2 torv_a, !reached ch2 torv_out] Bye. The spoons are yours, the nails are Lit's.
+[torvald:say_bye ?reached ch2 dawn] Bye, watchman.
+[torvald:say_bye ?reached ch2 dawn] Next night on the tower — together again?
+[torvald:say_bye ?reached ch2 dawn] Don't stand on the tower alone. Call me.
+[torvald:say_bye ?!reached ch1 home_hall] I'm off. And don't anger Heid.
+[torvald:say_bye ?world torvald_covered, !quest ch1 done] Don't worry. I told Heid nothing.
+[torvald:say_bye ?world torvald_told_on, !quest ch1 done] Sorry about the scroll, old man.
+[torvald:say_bye ?!quota torvald_tales 3] Out of tales? Never mind, more will grow by tomorrow.
+[torvald:say_bye ?reached ch2 torv_a, !reached ch2 torv_out] Nails for Lit, tales for me. Deal?
+[torvald:say_bye ?reached ch2 dawn] Bye. And thanks for that night.
+[torvald:say_bye ?daypart morning] Good morning, old man. Well, I'm off.
+[torvald:say_bye ?daypart evening] It's getting dark. Stay by the fire, old man.
+[torvald:say_bye ?weather rain] Get out of the rain, old man.
+[torvald:say_bye ?weather storm] A storm. Sit by the fire.
+[torvald:say_bye ?seated] Sit, sit. The bench is warm.
+[torvald:say_bye ?raven any] The ravens say bye to you. In their own way.
+[torvald:say_bye ?raven any] Ravens, say bye to the old man. …Well, caw at least.
+[torvald:say_bye ?npcattitude >= 60] Bye, old man. Good that you're around.
+[torvald:say_bye ?npcattitude >= 60] Bye, old man. I'll remember you, even if you don't remember me.
+[torvald:talk_again] So where was I?
+[torvald:talk_again] Staying a while? The bench is warm.
+[torvald:talk_again] Ask, ask. I remember everything. Almost.
+[torvald:talk_again] Oh! You're still here. Have we met?
+[torvald:talk_again] Go on, go on. I'm in no hurry. Nowhere to go.
+[torvald:talk_again] And you still haven't seen my spoon?
+[torvald:talk_again ?reached ch2 dawn] Speak, watchman.
+[torvald:talk_again ?daypart morning] Morning! Good of you to drop by. Or have you been already?
+[torvald:talk_again ?daypart evening, reached ch1 home_hall] Getting dark… My watch soon. So what else?
+[torvald:talk_again ?seated] Sit by me. The bench fits two.
+[torvald:talk_again ?raven any] Oh, the bird's here too! Shall I tell the bird as well?
+[torvald:talk_again ?!quota torvald_tales 3] No tales left. But I can still listen.
+[torvald:talk_again ?reached ch2 torv_a, !reached ch2 torv_out] About nails? No, no. Ask about something else.
+[torvald:talk_again ?npcattitude >= 60] Ah, it's you! You I think I remember.
+[torvald:bye_back] Bye, bye! …Who were you, again?
+[torvald:bye_back] Come again! I'll tell you about the giant.
+[torvald:bye_back] Haven't seen my spoon? Well, off you go.
+[torvald:bye_back] Go, go. I'll stand here.
+[torvald:bye_back] Bye, friend. Probably friend.
+[torvald:bye_back] Oh, what a talk. My tongue's tired.
+[torvald:bye_back ?reached ch1 home_hall, !reached ch2 dawn, daypart night] I'll be off to my watch soon.
+[torvald:bye_back ?!quota torvald_tales 3] Come later. The tales aren't ripe yet.
+[torvald:bye_back ?reached ch2 torv_a, !reached ch2 torv_out] And don't tell Lit I… that you saw me.
+[torvald:bye_back ?reached ch2 dawn] Bye, watchman. A watch is a watch.
+[torvald:bye_back ?reached ch2 dawn] Go. I'll see if everyone's asleep.
+[torvald:bye_back ?reached ch2 dawn] Go. I'll keep watch.
+[torvald:bye_back ?daypart morning] Go! I'll nap a bit more. Just a bit.
+[torvald:bye_back ?daypart evening, reached ch1 home_hall] Go. And I'm off to my watch… well, soon.
+[torvald:bye_back ?weather rain] And don't get wet! A wet watchman is half a watchman.
+[torvald:bye_back ?seated] Go. I'll stay a bit here on the bench.
+[torvald:bye_back ?raven any] And look after your raven! Mine flew off.
+[torvald:bye_back ?npcattitude >= 60] Bye, friend. No, really friend.
+[torvald:bye_back ?!quota torvald_tales 3] Come tomorrow. Maybe I'll remember something. Or make it up.
+[torvald:bye_back ?world torvald_covered, !quest ch1 done] Shh. We had a deal.
 [ketil:say_got] I understand.
 [ketil:say_got] Clear.
 [ketil:say_got] I hear you.
@@ -15111,9 +15410,58 @@ Or was I standing in the wrong place?
 [ketil:say_bye] Bye, Ketil.
 [ketil:say_bye] Rest. I'll come again.
 [ketil:say_bye] Hold on here.
-[ketil:say_bye] See you.
 [ketil:say_bye] Take care of yourself.
-[ketil:say_bye] Don't go anywhere without me.
+[ketil:say_bye] Sit by the fire. It's warm.
+[ketil:say_bye] If you remember something, tell me.
+[ketil:say_bye ?step ch1 bed] You'll have a bed. No sleeping on the ground.
+[ketil:say_bye ?step ch1 house] I'll find your house. Wait here.
+[ketil:say_bye ?asked ketil thing_his] Keep it close. Let your hands remember.
+[ketil:say_bye ?asked ketil whisper] Don't go anywhere without me.
+[ketil:say_bye ?asked ketil whisper, daypart night] Sleep, Ketil. And don't answer, whoever calls.
+[ketil:say_bye ?asked ketil whisper] If they call — call me.
+[ketil:say_bye ?asked ketil south] Your village… I'll remember it for you.
+[ketil:say_bye ?asked ketil wife] Keep her laugh. That at least.
+[ketil:say_bye ?asked ketil craft] The barrels can wait, cooper.
+[ketil:say_bye ?daypart morning, weather clear] Sit in the sun, Ketil.
+[ketil:say_bye ?daypart evening] Evening. Stay close to the fire.
+[ketil:say_bye ?daypart night] Good night, Ketil.
+[ketil:say_bye ?weather rain] Don't get wet, Ketil. Sit under the roof.
+[ketil:say_bye ?seated] Stay seated, don't get up.
+[ketil:say_bye ?raven any] The ravens will look after you while I'm away.
+[ketil:say_bye ?raven any] The ravens will remember you, Ketil.
+[ketil:say_bye ?npcattitude >= 60] I'll come again, Ketil. I promise.
+[ketil:say_bye ?npcattitude >= 60] You're like family to me now, Ketil. Bye.
+[ketil:talk_again] I'm here.
+[ketil:talk_again] Anything else?
+[ketil:talk_again] Sit, if you like.
+[ketil:talk_again] Go on. I'm listening… I think.
+[ketil:talk_again] It's quiet here. Speak.
+[ketil:talk_again] I still remember what we were talking about. I think.
+[ketil:talk_again ?daypart morning] Morning… I slept well. I think.
+[ketil:talk_again ?daypart evening] Evening. Sit closer to the fire.
+[ketil:talk_again ?seated] Sit by me.
+[ketil:talk_again ?raven any] Your bird is quiet. Like me.
+[ketil:talk_again ?asked ketil thing_his] The necklace gets warmer in my hands. Speak.
+[ketil:talk_again ?asked ketil whisper] It's quiet here… Do you hear it too? No? Good.
+[ketil:talk_again ?npcattitude >= 60] Good that you're here. Speak.
+[ketil:bye_back] Go. I'm here.
+[ketil:bye_back] Bye… Come again.
+[ketil:bye_back] Good of you to come.
+[ketil:bye_back] I'll sit a while longer. It's warm.
+[ketil:bye_back] Go. Only… come back.
+[ketil:bye_back] I'll remember you came. I'll try.
+[ketil:bye_back ?step ch1 bed] I could sleep on the ground… But thank you.
+[ketil:bye_back ?step ch1 house] When you find the house, tell me what it's like.
+[ketil:bye_back ?asked ketil thing_his] I'll hold on to it. My hands know.
+[ketil:bye_back ?asked ketil whisper, daypart night] I'm not going. Not yet.
+[ketil:bye_back ?asked ketil whisper] I'll be here. I won't go.
+[ketil:bye_back ?asked ketil south] If you see the hills — greet them for me.
+[ketil:bye_back ?daypart morning] Go. A fine morning.
+[ketil:bye_back ?daypart evening] Go. It'll be dusk soon.
+[ketil:bye_back ?weather rain] Go. Rain is nothing.
+[ketil:bye_back ?raven any] And to your birds… good luck.
+[ketil:bye_back ?seated] I'll sit. I'm fine here.
+[ketil:bye_back ?npcattitude >= 60] You're kind. I'll remember.
 [eyvind:road_back] So, where was I…
 [eyvind:road_back] You're falling behind. And I'd only just got talking.
 [eyvind:road_back] Oh, you're here. Listen on, while I'm in a good mood.
@@ -15313,6 +15661,12 @@ Nothing went missing today. I counted twice.
 [eyvind:you_trophy ?phase eyvind_in_hall] Is that {trophy}? I wouldn't show it around. All sorts here. Me, for instance.
 [eyvind:you_trophy ?phase eyvind_in_hall] {trophy}… Won it yourself? Or, like me, found it?
 [eyvind:you_trophy ?phase eyvind_in_hall] Now that's {trophy}! Tell me how it went? I'll retell it later. Better.
+[eyvind:hurry] Later, later. Someone's waiting for me.
+[eyvind:hurry] Not now. Business.
+[eyvind:hurry] The knee aches, but I have to go. We'll talk later.
+[eyvind:hurry] I'm already gone. You didn't see me.
+[eyvind:hurry] In a hurry. Don't tell the old man anything.
+[eyvind:hurry] Don't hold me back. I can barely hold myself up.
 [eyvind:you_trophy ?phase eyvind_in_hall] I had something like that once. Well, held it. Briefly.
 [eyvind:you_trophy ?phase eyvind_in_hall] {trophy}. Lovely. If you tire of it — you know where my bench is.
 
@@ -15346,3 +15700,363 @@ Nothing went missing today. I counted twice.
 [ketil:night ?!world ketil_south] The same dreams. A road, and all of it south.
 [ketil:night ?!world ketil_south] I'll sit by the fire. While it burns, I'm here.
 [ketil:night ?!world ketil_south] The same stars as over the village. Only the village is gone.
+
+# ---- settlers' farewells by the moment (2026-11-24): your goodbye, its «anything else?», its word to your goodbye
+@твоє_бувай_тепло
+Farewell. It's good talking to you.
+I'll drop by again. Farewell.
+Look after yourself. See you.
+Glad we talked. Farewell.
+~весел Farewell! It's fun with you.
+~стар Farewell, and good health to you.
+~бурч Farewell. Don't grumble without me.
+@твоє_бувай_ранок
+Have a good day.
+An easy day to you.
+Morning. May the day go easy.
+The day's only begun. Farewell.
+~бурч Don't grumble from the very morning. Farewell.
+~весел Have a good day! Keep smiling!
+~стар An easy day. Don't hurry.
+~мол Have a good day! Don't get bored.
+@твоє_бувай_вечір
+Have a good evening.
+It's getting dark. Rest.
+I'll go before it gets dark.
+Evening is for rest. Farewell.
+~стар Sit by the fire. Have a good evening.
+~весел Have a good evening! Don't be sad.
+~бурч It's evening already. Rest, don't grumble.
+@твоє_бувай_сніг
+Keep warm. Farewell.
+Look how it snows. Stay by the warmth.
+Don't freeze out here. Farewell.
+~стар Keep your bones from the cold. Farewell.
+@твоє_бувай_буря
+A storm. Stay under a roof.
+Take cover while the storm lasts. Farewell.
+Don't stick your head out while it blows like this.
+~боязк Don't fear the thunder. It'll pass.
+@твоє_бувай_туман
+Fog. Don't wander far.
+Don't get lost in the fog. Farewell.
+In fog like this it's better to stay home.
+Keep to the path. Farewell.
+@твоє_бувай_голод
+Eat something. Farewell.
+Eat when you can.
+Don't go hungry.
+~бурч Eat — and you'll grumble less.
+~мол Eat properly. Farewell.
+@твоє_бувай_рана
+Bind the wound. Farewell.
+Look after yourself. A wound is no joke.
+Lie down a while. Farewell.
+Let it heal. See you.
+~смілив Don't go into a fight till it heals.
+~стар Lie down, rest. Farewell.
+@твоє_бувай_сидить
+Sit, sit. Don't get up.
+Sit a while longer. Farewell.
+Rest. I'll go.
+Sit and rest. See you.
+~стар Don't get up, no need. Farewell.
+@твоє_бувай_сум
+Don't be sad. It'll pass.
+Hold on. I'll come again.
+Don't fret. Farewell.
+Chin up. See you.
+~боязк It'll be all right, you hear? Farewell.
+~бурч Don't sulk. Farewell.
+@твоє_бувай_радість
+Farewell! Keep that mood.
+It's good to see you like this. Farewell.
+Don't lose that smile. Farewell.
+~весел Farewell! Even more laughter to you.
+@твоє_бувай_страх
+Don't be afraid. I'm near.
+Sit down, catch your breath. I'm not far.
+It's safe here. Rest.
+~боязк Breathe easy. I'm not far.
+@твоє_бувай_горе
+Hold on. I'm near.
+I'm sorry. Farewell.
+Don't be alone with it. Come by.
+Stay in the warm. Farewell.
+@твоє_бувай_набіг
+Hold on! I'm off to fight.
+Hide. I'll deal with it.
+Keep your head down while they fight.
+~смілив Be ready. I'm off to fight.
+@твоє_бувай_ворон
+Come on, wings. Farewell.
+The ravens say farewell. In their own way.
+Farewell. The birds remember you.
+The ravens say you're kind.
+Farewell. My raven bows to you.
+@твоє_бувай_кухар
+Don't oversalt it. Farewell.
+Smells good. I'll go before I eat it all.
+A good fire under your pot.
+Thanks for the stew. Farewell.
+@твоє_бувай_вартовий
+Keep watch. Farewell.
+A good watch to you.
+Don't fall asleep at your post.
+Thanks for keeping guard. Farewell.
+@твоє_бувай_лісоруб
+Chop straight. Farewell.
+Mind your feet with that axe.
+May the trees fall where they should.
+Don't strain yourself. There'll be more trees.
+@твоє_бувай_рудокоп
+Mind your head. Farewell.
+May the ore come easy.
+Don't strain yourself. Farewell.
+Thanks for the ore. Farewell.
+@твоє_бувай_плавильник
+Don't get burnt. Farewell.
+May the metal run smooth.
+Don't breathe the smoke. Farewell.
+Good heat in the furnace.
+@твоє_бувай_палій
+May the fire never go out. Farewell.
+Keep your hands from the heat.
+Enough firewood? Well, farewell.
+Thanks for keeping us warm. Farewell.
+@твоє_бувай_збирач
+A rich harvest. Farewell.
+A full basket of berries to you.
+Don't get lost in the bushes.
+Thanks for the berries. Farewell.
+@твоє_бувай_слуга
+Thanks for keeping the house in order. Farewell.
+Don't overwork. Farewell.
+May the house stay warm.
+Rest when you're done.
+@твоє_бувай_прибиральник
+Thanks for tidying up. Farewell.
+Don't overstrain. Farewell.
+May everything stay in its place. Farewell.
+You keep everything in order here.
+@ще_щось_ранок
+Morning. Say what you need.
+It's early yet. What is it?
+~бурч Haven't even had breakfast, and already questions.
+~весел A fine morning for a talk! What else?
+Morning. What have you got?
+@ще_щось_вечір
+It's getting dark. What else?
+Speak before it gets dark.
+~стар Evening is the time to talk. Go on.
+~бурч Well, what else this late in the day?
+Evening. Go on, I'm listening.
+@ще_щось_ніч
+It's late. What else?
+It's night out. Keep it short.
+~бурч Night, and you with your questions.
+It's night. What else, while I'm awake?
+@ще_щось_робота
+Speak, but quickly. The work's waiting.
+Anything else? My hands are busy.
+~бурч Well? The work won't do itself.
+~весел Ask away, my hands work and my tongue's free!
+Speak, and I'll keep working meanwhile.
+@ще_щось_втома
+Anything else? I can barely stand.
+Speak. Just not for long: I'm tired.
+~стар Oh… Go on, go on.
+What else? Just slowly.
+@ще_щось_голод
+Anything else? My stomach's rumbling.
+Speak, and I'll think about food.
+~бурч A hungry man's no talker. Well?
+Anything else? About food, maybe?
+@ще_щось_дощ
+Rain. Might as well talk. What else?
+It's raining. Speak before we're soaked.
+The rain's loud. Speak up.
+~бурч What weather. What else?
+@ще_щось_ворон
+Your bird is looking at me. What else?
+Speak. And hold on to your bird.
+~мол Does your raven talk? Well, go on.
+Speak. Your raven's listening too.
+@ще_щось_тепле
+Speak, I'm glad to listen.
+What else? I have time for you.
+Go on, go on. It's a pleasure.
+Glad to see you. What else?
+~весел Ask, ask!
+~стар Sit, talk with me a while.
+@ще_щось_близьке
+Speak, my friend.
+For you — always. What else?
+I'm listening. For you — always.
+Say what you need. I'll do anything.
+~бурч For you — fine. Speak.
+~весел Oh, how I love talking with you! More?
+[bye_back] {у_відповідь_бувай}
+[bye_back ?daypart morning] {у_відповідь_ранок}
+[bye_back ?daypart evening] {у_відповідь_вечір}
+[bye_back ?daypart night] {у_відповідь_ніч}
+[bye_back ?weather rain] {у_відповідь_дощ}
+[bye_back ?weather snow] {у_відповідь_сніг}
+[bye_back ?weather storm] {у_відповідь_буря}
+[bye_back ?working] {у_відповідь_робота}
+[bye_back ?tired] {у_відповідь_втома}
+[bye_back ?hungry] {у_відповідь_голод}
+[bye_back ?hurt] {у_відповідь_рана}
+[bye_back ?seated] {у_відповідь_сидить}
+[bye_back ?mood low] {у_відповідь_сум}
+[bye_back ?mood high] {у_відповідь_радість}
+[bye_back ?raid] {у_відповідь_набіг}
+[bye_back ?raven any] {у_відповідь_ворон}
+[bye_back ?job cook, working] {у_відповідь_кухар}
+[bye_back ?job guard, working] {у_відповідь_вартовий}
+[bye_back_cold] {у_відповідь_сухо}
+[bye_back_hostile] {у_відповідь_вороже}
+[bye_back_warm] {у_відповідь_тепло}
+[bye_back_close] {у_відповідь_близько}
+[bye_back_need] {у_відповідь_біда}
+@у_відповідь_бувай
+Farewell.
+Farewell, {name}.
+Go well.
+See you.
+Come again.
+Mm-hm. Farewell.
+All right. Go.
+Well, farewell.
+~бурч Go on, go.
+~бурч Quiet at last.
+~весел Farewell! Don't forget us!
+~стар Go in peace.
+~стар Look after yourself, child.
+~мол Farewell! We'll talk again!
+~боязк You'll come back, won't you?
+~смілив Farewell. Watch yourself.
+@у_відповідь_ранок
+Have a good day.
+Go. The day is long.
+~весел Have a good day!
+Go while the morning's fresh.
+~бурч Go on. Mornings aren't for chatter.
+@у_відповідь_вечір
+Have a good evening.
+Don't linger till dark.
+~стар A quiet evening to you.
+Go. It's a quiet evening.
+~бурч Well, at least the evening will be quiet.
+@у_відповідь_ніч
+Good night.
+Sleep well.
+A quiet night.
+~бурч Sleep at last.
+Go to sleep. It's late.
+@у_відповідь_дощ
+Don't get soaked.
+Wait out the rain if you're in no hurry.
+You could use a cloak.
+~бурч Don't stand in the rain, go on.
+@у_відповідь_сніг
+Don't freeze.
+Dress warmer.
+Go. The snow won't stop till morning.
+~стар Keep your feet from the cold.
+@у_відповідь_буря
+Careful, it's a storm.
+Wait it out under a roof.
+Don't go far while it blows.
+~боязк Oh, the thunder… Be careful.
+@у_відповідь_робота
+All right. I'm working.
+Go, I'll work a bit more.
+~бурч Go, don't get in the way.
+Go. I've a lot still to do.
+~весел Go! I'll keep at it a bit longer.
+@у_відповідь_втома
+Go. I'll sit a while.
+Oh… Farewell.
+Go. I'll take a breather.
+~стар Oh, my bones… Farewell.
+@у_відповідь_голод
+Farewell. Maybe I'll find something to eat.
+If you're by the larder — think of me.
+Farewell. I'm so hungry…
+~бурч Go. And bring something if you have it.
+@у_відповідь_рана
+Go. I'll lie down.
+It'll heal. Farewell.
+Go. I need to lie down.
+~смілив It's nothing. It'll heal in no time.
+@у_відповідь_сидить
+Go. I'll sit a while longer.
+Farewell. I'm fine here.
+Go. I'll stay here a bit.
+~стар I'll sit and think. Farewell.
+@у_відповідь_сум
+Farewell… Thanks for coming by.
+Go. I'll sit alone.
+Farewell… Come again, it helps.
+~боязк You'll come again?
+@у_відповідь_радість
+Farewell! I feel good today!
+Go with a smile!
+Farewell! All's well with me!
+~весел Bye-bye! Ha!
+@у_відповідь_набіг
+Watch yourself out there!
+Beat them!
+~боязк Come back alive!
+Don't get hit!
+@у_відповідь_ворон
+And farewell to your birds.
+Look after your bird.
+Let your raven watch out too.
+~мол Wave a wing at me! …Your raven, I mean.
+@у_відповідь_кухар
+Come and eat when it's cooked.
+Don't go hungry.
+Go. The pot's waiting.
+~весел Supper will be finger-licking!
+@у_відповідь_вартовий
+I'm on watch. Go easy.
+Go. The settlement's watched.
+I'm here. Nobody gets past.
+~смілив Go. Just let someone try.
+@у_відповідь_сухо
+Mm-hm.
+Go.
+Go, then.
+At last.
+Farewell already.
+Yeah.
+@у_відповідь_вороже
+And don't come back.
+Get out.
+Good riddance.
+Gone at last.
+Don't come again.
+Good that you're going.
+@у_відповідь_тепло
+Come again, you hear?
+Good that you came by.
+Farewell! Come when you have time.
+Look after yourself, {name}.
+~весел Farewell! It's dull without you!
+~стар Good luck to you, child.
+@у_відповідь_близько
+Farewell, my friend.
+Look after yourself, you hear?
+Come back soon.
+It's dull here without you. Come by.
+Come back alive, you hear?
+~бурч Go on. …But come back.
+@у_відповідь_біда
+You'll come back for me, won't you?
+Don't leave me here!
+Hurry, please…
+I'll wait. Just not long.
+Don't forget about me!
+~боязк I'm scared… Come back.

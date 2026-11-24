@@ -6,7 +6,7 @@ skin: 0.88 0.76 0.66
 haircolor: 0.2 0.16 0.12
 hair: Hair5
 beard: Beard3
-gear: ArmorTrollLeatherChest ArmorTrollLeatherLegs CapeTrollHide
+gear: ArmorTrollLeatherChest ArmorTrollLeatherLegs CapeTrollHide KnifeCopper   # кинджал (користувач 2026-11-23): поза боєм — на поясі/спині (NpcGear), б'ється ним із бою за Сверре (people/eyvind.txt fight:)
 tint_cape: 0.071 0.329 0.617
 tint_chest: 0.102 0.149 0.201
 shuns: none

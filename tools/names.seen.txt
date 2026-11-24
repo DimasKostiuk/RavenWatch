@@ -863,3 +863,4 @@ zala.names.txt	tron piece_moose_throne 9.881 -0.61 -4.1
 zala.names.txt	vivtar RavenWatch_story_vivtar_varty 10.048 -1.112 -1.715
 zala.names.txt	vivtar RavenWatch_story_vivtar_varty 13.069 -1.112 -5.148
 zala.names.txt	vohnyshche RavenWatch_story_vohnyshche_varty 0.176 -0.609 -0.072
+zala.names.txt	znak RavenWatch_story_znak_varty 0.141 4.802 8.536

@@ -8,4 +8,4 @@ npc: baldr
 after: reached ch2 baldr_come
 live: away when reached ch2 torv_walk          # пішов своїм: більше в главі 2 його не видно
 live: torvald_post when reached ch2 baldr_come # біля вежі: з 3-ї (користувач 2026-11-18: «на годину раніше»), бій під ранок і ранок
-live: away when !reached ch2 baldr_come        # ніч зірвано (post_left — перед tower_night у файлі): поза світом до наступного світанку
+# ніч зірвано (post_left — перед tower_night у файлі): «after:» знову не справджується — він поза світом сам, як за «live: away» (StoryPeople.Person.OutNow), до наступної 3-ї ночі

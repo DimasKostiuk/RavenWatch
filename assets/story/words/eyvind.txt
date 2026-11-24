@@ -19,12 +19,75 @@
 [eyvind:say_bye] Ну, я піш{ов|ла}. Рахуй дошки без мене.
 [eyvind:say_bye] Сиди вже. Я по справах.
 [eyvind:say_bye] Ще побачимось. Ти ж нікуди не дінешся.
-[eyvind:say_bye_cold] Угу. Чекатиму. Довго, мабуть.
-[eyvind:say_bye_cold] Ну-ну. Борги він віддає.
-[eyvind:say_bye_cold] Бувай. Рахуватиму твої «колись».
+# прощання за моментом (користувач 2026-11-24): рядок, чия умова справджується, випадає частіше (NpcPhrases.MomentWeight)
+[eyvind:say_bye ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Піду по твої гриби. А ти готуй щось золоте.
+[eyvind:say_bye ?quest ch2_eyvind done, !reached ch2 later4] Піду. Золото ж не псується, правда?
+[eyvind:say_bye ?quest ch2_eyvind done] Піду, поки ти мені ще щось не доручив.
+[eyvind:say_bye ?step ch2 eyv_get] Піду по шкури. Сподіваюсь, мітка цього разу точна.
+[eyvind:say_bye ?reached ch2 sverre_home] Бувай. Пригляди за Сверре.
+[eyvind:say_bye ?reached ch2 sverre_home] Ти тепер не сам на лаві.
+# ...ще (користувач 2026-11-24: «урізноманітнити»): пора дня, небо, твої ворони, як він до тебе, і більше на кожен час сюжету
+[eyvind:say_bye ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Гриби будуть. Якщо печера там, де ти кажеш.
+[eyvind:say_bye ?asked eyvind chest_me, !reached ch2 torv_b] Піду до старого. А ти рахуй далі.
+[eyvind:say_bye ?step ch2 eyv_get] П'ять шкур, двадцять чорниць. І ні слова про коліно.
+[eyvind:say_bye ?asked eyvind ran_sus_b, !reached ch2 lit_next3] Піду до Літа. Хай він розсудить.
+[eyvind:say_bye ?reached ch2 later4] Бувай. І дякую, що сказав правду. Нарешті.
+[eyvind:say_bye ?daypart morning, weather clear] Сиди, сонце гріє. Бувай.
+[eyvind:say_bye ?daypart evening] Вечір. Не просидь вечерю.
+[eyvind:say_bye ?weather rain] Сиди в сухому. Коліно ж.
+[eyvind:say_bye ?raven any] Ходімо, птахи. Ейвіндові ще сидіти.
+[eyvind:say_bye ?raven any] Птахи, не дивіться так на Ейвінда. Він хороший. Майже.
+[eyvind:say_bye ?npcattitude >= 60] Бувай, Ейвінде. Ти не такий уже й поганий.
+[eyvind:say_bye ?npcattitude >= 60] Бувай, Ейвінде. З тобою хоч не нудно.
+# холодне прощання: і коли він охолов до тебе (NpcAttitude.Variant), і будь-коли — тож без його боргу (той — say_bye_debt нижче)
 [eyvind:say_bye_cold] Я запам'ятаю. Усе.
-[eyvind:say_bye_cold] Ага. Іноді пізно. Іноді ніколи.
 [eyvind:say_bye_cold] Годі з мене твоїх обіцянок. Бувай.
+[eyvind:say_bye_cold] Угу. Бувай.
+[eyvind:say_bye_cold] Піду. Без жартів сьогодні, Ейвінде.
+[eyvind:say_bye_cold] Мені пора. Сиди собі.
+[eyvind:say_bye_cold] Слухати тебе — тільки час гаяти. Бувай.
+# після «Я завжди віддаю борги. Іноді пізно» (talk/ch2_eyvind.txt, give_gold) — лише там
+[eyvind:say_bye_debt] Угу. Чекатиму. Довго, мабуть.
+[eyvind:say_bye_debt] Ну-ну. Борги він віддає.
+[eyvind:say_bye_debt] Бувай. Рахуватиму твої «колись».
+[eyvind:say_bye_debt] Ага. Іноді пізно. Іноді ніколи.
+[eyvind:say_bye_debt] Золото не псується. А обіцянки — ще й як.
+[eyvind:say_bye_debt] Почекаю. Тільки не до самої смерті.
+# Його слова, коли розмова вертається на перший екран після твоєї відповіді (NpcTalk.Again; своїх нема — «…»). Тепло й слизько
+[eyvind:talk_again] Ще щось? Я нікуди не поспішаю. Коліно.
+[eyvind:talk_again] Кажи, кажи. Я слухаю обома вухами.
+[eyvind:talk_again] Ну? Я весь твій. Майже.
+[eyvind:talk_again] Сідай, як хочеш. Тільки не на моє місце.
+[eyvind:talk_again] Ще справа? Я люблю справи. Чужі.
+[eyvind:talk_again] Питай. За питання я грошей не беру.
+[eyvind:talk_again ?quest ch2_eyvind done, !reached ch2 later4] Про золото? Ще не час.
+[eyvind:talk_again ?daypart morning] Ранок. Найкращий час, щоб нічого не робити. Кажи.
+[eyvind:talk_again ?daypart evening] Вечір. Саме час для розмов.
+[eyvind:talk_again ?weather rain] Дощ. Сідай під дах, поговоримо.
+[eyvind:talk_again ?raven any] Птах твій на мене косо дивиться. Кажи, поки не дзьобнув.
+[eyvind:talk_again ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Гриби? Ні? То що ще?
+[eyvind:talk_again ?reached ch2 sverre_home] Кажи тихіше. Сверре слухає.
+[eyvind:talk_again ?npcattitude >= 60] Для тебе — що завгодно. Майже.
+# Його слово на твоє прощання (NpcTalk.Parting: над головою, коли герой договорив; користувач 2026-11-24). Тепло й слизько
+[eyvind:bye_back] Іди, іди. Я тут посиджу. За обох.
+[eyvind:bye_back] Бувай, друже. Заходь, як знов захочеш щось для мене зробити.
+[eyvind:bye_back] Обережно там. Коліна бережи.
+[eyvind:bye_back] Я тебе згадуватиму. Добрим словом. Здебільшого.
+[eyvind:bye_back] Іди. Лава нікуди не дінеться. І я теж.
+[eyvind:bye_back] Щасти. І не слухай, що про мене Літ каже.
+[eyvind:bye_back ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] П'ять, пам'ятай! Жовтих!
+[eyvind:bye_back ?quest ch2_eyvind done, !reached ch2 later4] Золото чекає. Терпляче.
+[eyvind:bye_back ?step ch2 eyv_get] Олені — там, де мітка. Цього разу точно.
+[eyvind:bye_back ?reached ch2 sverre_home] Іди. Ми зі Сверре посидимо.
+[eyvind:bye_back ?reached ch2 sverre_home] Дякую. Ну, ти знаєш за що.
+[eyvind:bye_back ?reached ch2 sverre_home] Сверре, скажи «бувай». …Ну, він каже.
+[eyvind:bye_back ?reached ch2_eyvind e_cave, !reached ch2_eyvind e_give] Там тихо. Здається.
+[eyvind:bye_back ?step ch2 eyv_get] І чорниці бери стиглі! Не зелені.
+[eyvind:bye_back ?daypart morning, weather clear] Іди, іди. Сонце мені й без тебе світить.
+[eyvind:bye_back ?daypart evening] Не барися. Вечеря сама себе не з'їсть.
+[eyvind:bye_back ?weather rain] Не мокни. Мокрим ніхто не дякує.
+[eyvind:bye_back ?raven any] І птахам привіт. Вони мене не люблять.
+[eyvind:bye_back ?npcattitude >= 60] Бережи себе. Ти мені ще {потрібен|потрібна}.
 
 # Дорога до Зали зі Сверре (етап sverre_home, meets/ch2_road.txt [road eyvind_home]): відстав — наздогнав
 [eyvind:road_back] Так от, про що це я…
@@ -85,6 +148,13 @@
 [eyvind:heavy ?phase eyvind_lively] Давай сюди. Я тепер ношу. Сам не вірю.
 # Трофей на тобі ({trophy})
 [eyvind:you_trophy ?phase eyvind_in_hall] {trophy}? Гарна річ. Продати можна дорого. Я просто кажу.
+# Поспішає (people/eyvind.txt «notalksay: hurry»; користувач 2026-11-23): після повернення старого він іде з Зали, і на E лише кидає одне з цього
+[eyvind:hurry] Потім, потім. Мене чекають.
+[eyvind:hurry] Не зараз. Справи.
+[eyvind:hurry] Коліно ниє, а йти треба. Потім поговоримо.
+[eyvind:hurry] Я вже пішов. Ти мене не бачи{в|ла}.
+[eyvind:hurry] Поспішаю. Старому нічого не кажи.
+[eyvind:hurry] Не тримай мене. Я й сам себе ледве тримаю.
 [eyvind:you_trophy ?phase eyvind_in_hall] Це в тебе {trophy}? Я б не показував. Тут люди всякі. Я, наприклад.
 [eyvind:you_trophy ?phase eyvind_in_hall] {trophy}… {Сам|Сама} здобу{в|ла}? Чи, як я, знайш{ов|ла}?
 [eyvind:you_trophy ?phase eyvind_in_hall] Оце {trophy}! Розкажеш, як було? Я потім перекажу. Краще.

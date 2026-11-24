@@ -13,7 +13,8 @@ namespace HuginWhispers
     // and their moods: left as it is). The same file shape:
     //   [idle] {вигук?} {думка}            a theme's template; {part?} only sometimes; plain text as it is
     //   [torvald:idle] Ноги вже не ті.      a story person's own (its template id): mixed with the common ones — written
-    //                                       lines and put-together ones side by side (the user); your own words to it (say_*: [eyvind:say_bye])
+    //                                       lines and put-together ones side by side (the user) — but a person of its own words («voice: own»,
+    //                                       NpcVoice.OwnWordsOnly) says its own alone, its feeling's variants too; your own words to it (say_*: [eyvind:say_bye])
     //                                       are its own alone when it has them that fit now — the common ones are a settler's (2026-11-17)
     //   [torvald:idle ?quest q1 done, !boss moder] Тепер я знаю.   only while these hold (StoryCond, as in its talk:
     //                                       flag, var, quest, boss… and the person's — hired, job, npcflag — about the one
@@ -247,11 +248,11 @@ namespace HuginWhispers
 
         private static string ComposeOnce(NpcActor a, string theme, Player to, Dictionary<string, string> extra)
         {
-            bool ownYours = Yours(theme) && HasOwn(a, theme); // (your words to a story person that has its own: a variant only of its own too — the common say_ok_cold is a settler's)
+            bool ownOnly = HasOwn(a, theme) && (Yours(theme) || NpcVoice.OwnWordsOnly(a)); // (your words to a story person, or a person of its own words: a variant only of its own too — the common say_ok_cold, talk_again_cold, see_player_cold are a settler's)
             foreach (Func<NpcActor, Player, string, string> v in Variants) // (another theme for this person and player now — its feeling to you: see_player_cold… — tried first)
             {
                 string alt = v(a, to, theme);
-                if (string.IsNullOrEmpty(alt) || alt == theme || (ownYours && !HasOwn(a, alt))) continue;
+                if (string.IsNullOrEmpty(alt) || alt == theme || (ownOnly && !HasOwn(a, alt))) continue;
                 string got = One(a, alt, to, extra);
                 if (got != null) return got;
             }
@@ -263,23 +264,25 @@ namespace HuginWhispers
             List<string> own = null, common;
             if (a.Def != null) B.Templates.TryGetValue(a.Def.Id + ":" + theme, out own);
             B.Templates.TryGetValue(theme, out common);
+            if (own != null && own.Count > 0 && NpcVoice.OwnWordsOnly(a)) common = null; // (a person of its own words never says the common book's, not even beside its own: docs/jobs/story-data.md «Слова без питання»)
             if ((own == null || own.Count == 0) && (common == null || common.Count == 0)) return null;
             HashSet<string> tones = Tones(a);
             HashSet<string> toned = new HashSet<string>(); // (the templates of its own tone, of either list)
-            List<string> ownFit = Fitting(own, a, tones, to, toned), commonFit = Fitting(common, a, tones, to, toned);
+            HashSet<string> moment = own != null && own.Count > 0 && ForMoment(theme) ? new HashSet<string>() : null; // (its own words of a talk written for this moment — a template with conditions that hold now: MomentWeight)
+            List<string> ownFit = Fitting(own, a, tones, to, toned, moment), commonFit = Fitting(common, a, tones, to, toned); // (the common book's moment needs no weight: its template is a whole list, already one draw against the plain one)
             bool mine = ownFit.Count > 0 && (commonFit.Count == 0 || Yours(theme) || Next() < 0.6); // (a story person: its own words more often, the common ones too; your words to it (say_*) only its own when it has them — a settler's «Гаразд, не буду заважати» in a story talk, the user 2026-11-17)
             if (ownFit.Count == 0 && commonFit.Count == 0) return null;
             Dictionary<string, string> values = Values(a, to);
             if (extra != null) foreach (KeyValuePair<string, string> e in extra) values[e.Key] = e.Value;
-            return Pick(a, mine ? own : common, mine ? ownFit : commonFit, tones, values, to, toned)
-                ?? Pick(a, mine ? common : own, mine ? commonFit : ownFit, tones, values, to, toned); // (none of those fits now: the others)
+            return Pick(a, mine ? own : common, mine ? ownFit : commonFit, tones, values, to, toned, moment)
+                ?? Pick(a, mine ? common : own, mine ? commonFit : ownFit, tones, values, to, toned, moment); // (none of those fits now: the others)
         }
 
-        private static string Pick(NpcActor a, List<string> templates, List<string> fit, HashSet<string> tones, Dictionary<string, string> values, Player to, HashSet<string> toned)
+        private static string Pick(NpcActor a, List<string> templates, List<string> fit, HashSet<string> tones, Dictionary<string, string> values, Player to, HashSet<string> toned, HashSet<string> moment = null)
         {
             for (int attempt = 0; attempt < 40 && fit.Count > 0; attempt++)
             {
-                string pick = Fresh(templates, fit, toned.Count > 0 ? toned : null);
+                string pick = Fresh(templates, fit, toned.Count > 0 ? toned : null, moment != null && moment.Count > 0 ? moment : null);
                 string s = Expand(Unmark(pick), tones, values);
                 if (s != null) s = Fill(s, values);
                 if (s == null) { fit.Remove(pick); continue; } // (it wants what is not there now: the next one)
@@ -297,18 +300,20 @@ namespace HuginWhispers
         // the speaker's and the world's own conditions: a line's situation, heard by any player (not only by one whose story is on this game)
         internal static readonly HashSet<string> Situations = new HashSet<string> { "daypart", "weather", "raid", "folk", "job", "hired", "resident", "mood", "hungry", "tired", "seated", "working", "feel", "friendnear", "npcflag", "npcvar", "npcremembers", "night", "day", "angry", "nature", "fact", "hasjob" };
 
-        private static List<string> Fitting(List<string> templates, NpcActor a, HashSet<string> tones, Player to, HashSet<string> toned)
+        private static List<string> Fitting(List<string> templates, NpcActor a, HashSet<string> tones, Player to, HashSet<string> toned, HashSet<string> moment = null)
         {
             List<string> fit = new List<string>();
             if (templates == null) return fit;
             foreach (string t in templates)
             {
                 string x = t;
+                bool asks = x.Length > 0 && x[0] == Mark; // (written for a moment: its conditions)
                 if (!Holds(ref x, a, to)) continue;
                 bool marked = x.Length > 0 && x[0] == '~';
                 if (!Tone(ref x, tones)) continue;
                 fit.Add(x);
                 if (marked) toned.Add(x);
+                if (asks && moment != null) moment.Add(x);
             }
             return fit;
         }
@@ -491,8 +496,19 @@ namespace HuginWhispers
         // a line marked with a tone of this person («~бурч …») is drawn ToneWeight times as often as a plain one. 1: as any line. Never in a steady draw
         // (a story stays the story it was). Tune live: raven npc tune NpcPhrases.ToneWeight
         internal static float ToneWeight = 3f;
+        // Words of a talk written for a moment (the user 2026-11-24: farewells fit to the scene, not a bare «Бувай»): a story person's own template of ForMoment
+        // whose conditions hold now («[lit:say_bye ?phase lit_works] …», one line each) is drawn MomentWeight times as often as a plain one, or it is lost among
+        // them. Not the common book's: there a template is a list («[say_bye ?working] {твоє_бувай_робота}»), already one draw against the plain list. Tune live as above
+        internal static float MomentWeight = 3f;
+        // ...which themes: your words to it (say_*), its word as the talk comes back to the first screen (talk_again, NpcTalk.Again), its word to your goodbye (bye_back, NpcTalk.Parting)
+        internal static bool ForMoment(string theme) { return Yours(theme) || theme == "talk_again" || theme == "bye_back"; }
 
-        private static string Fresh(List<string> owner, List<string> fit, HashSet<string> own = null)
+        private static float Weight(string x, HashSet<string> own, HashSet<string> moment)
+        {
+            return (own != null && own.Contains(x) ? ToneWeight : 1f) * (moment != null && moment.Contains(x) ? MomentWeight : 1f);
+        }
+
+        private static string Fresh(List<string> owner, List<string> fit, HashSet<string> own = null, HashSet<string> moment = null)
         {
             if (_steady != null)
             {
@@ -508,11 +524,11 @@ namespace HuginWhispers
             foreach (string x in fit) if (!recent.Contains(x)) pool.Add(x);
             if (pool.Count == 0) pool = fit;
             string pick = null;
-            if (own != null && ToneWeight > 1f)
+            if ((own != null && ToneWeight > 1f) || (moment != null && MomentWeight > 1f))
             {
-                double sum = 0; foreach (string x in pool) sum += own.Contains(x) ? ToneWeight : 1f;
+                double sum = 0; foreach (string x in pool) sum += Weight(x, own, moment);
                 double at = Rng.NextDouble() * sum;
-                foreach (string x in pool) { at -= own.Contains(x) ? ToneWeight : 1f; if (at <= 0) { pick = x; break; } }
+                foreach (string x in pool) { at -= Weight(x, own, moment); if (at <= 0) { pick = x; break; } }
             }
             if (pick == null) pick = pool[Rng.Next(pool.Count)];
             recent.Add(pick);
@@ -2412,6 +2428,240 @@ namespace HuginWhispers
 Ти ж допоможеш, правда?
 Скажи, що не кинеш мене тут.
 Часу в мене небагато.
+[talk_again ?daypart morning] {ще_щось_ранок}
+[talk_again ?daypart evening] {ще_щось_вечір}
+[talk_again ?daypart night] {ще_щось_ніч}
+[talk_again ?working] {ще_щось_робота}
+[talk_again ?tired] {ще_щось_втома}
+[talk_again ?hungry] {ще_щось_голод}
+[talk_again ?weather rain] {ще_щось_дощ}
+[talk_again ?raven any] {ще_щось_ворон}
+[talk_again_warm] {ще_щось_тепле}
+[talk_again_close] {ще_щось_близьке}
+@ще_щось_ранок
+Ранок. Кажи, що треба.
+Рано ще. Що там?
+~бурч Ще й не поснідав|поснідала, а вже питання.
+~весел Гарний ранок для розмов! Що ще?
+Ранок. Що там у тебе?
+@ще_щось_вечір
+Вечоріє. Що ще?
+Кажи, поки не стемніло.
+~стар Вечір — час поговорити. Кажи.
+~бурч Ну, що ще під вечір?
+Вечір. Кажи, я слухаю.
+@ще_щось_ніч
+Пізно вже. Що ще?
+Ніч на дворі. Кажи коротко.
+~бурч Ніч, а ти з питаннями.
+Ніч уже. Що ще, поки не сплю?
+@ще_щось_робота
+Кажи, тільки швидко. Робота стоїть.
+Ще щось? Руки зайняті.
+~бурч Ну? Робота сама себе не зробить.
+~весел Питай, руки працюють, а язик вільний!
+Кажи, а я тим часом попрацюю.
+@ще_щось_втома
+Ще щось? Я ледве на ногах.
+Кажи. Тільки недовго: я втомився|втомилася.
+~стар Ох… Кажи, кажи.
+Що ще? Тільки повільно.
+@ще_щось_голод
+Ще щось? У животі бурчить.
+Кажи, а я про їжу думатиму.
+~бурч Голодному не до розмов. Ну?
+Що ще? Може, про їжу?
+@ще_щось_дощ
+Дощ. Можна й поговорити. Що ще?
+Дощить. Кажи, поки не змокли.
+Дощ шумить. Говори голосніше.
+~бурч Ну й погода. Що ще?
+@ще_щось_ворон
+Твій птах на мене дивиться. Що ще?
+Кажи. І птаха свого тримай.
+~мол А ворон твій розмовляє? Ну, кажи.
+Кажи. Твій ворон теж слухає.
+@ще_щось_тепле
+Кажи, я радий|рада слухати.
+Що ще? Для тебе час є.
+Кажи, кажи. Мені приємно.
+Радий|рада тебе бачити. Що ще?
+~весел Питай, питай!
+~стар Посидь, поговори зі мною.
+@ще_щось_близьке
+Кажи, {друже|подруго}.
+Для тебе — завжди. Що ще?
+Слухаю. Тебе — завжди.
+Кажи, чого треба. Усе зроблю.
+~бурч Тобі — можна. Кажи.
+~весел Ох, і люблю я з тобою говорити! Ще?
+
+// ---- її слово на твоє прощання (NpcTalk.Parting: над головою, коли герой договорив; користувач 2026-11-24). Ставлення — NpcAttitude.Variant,
+// у біді — bye_back_need (як talk_again_need)
+[bye_back] {у_відповідь_бувай}
+[bye_back ?daypart morning] {у_відповідь_ранок}
+[bye_back ?daypart evening] {у_відповідь_вечір}
+[bye_back ?daypart night] {у_відповідь_ніч}
+[bye_back ?weather rain] {у_відповідь_дощ}
+[bye_back ?weather snow] {у_відповідь_сніг}
+[bye_back ?weather storm] {у_відповідь_буря}
+[bye_back ?working] {у_відповідь_робота}
+[bye_back ?tired] {у_відповідь_втома}
+[bye_back ?hungry] {у_відповідь_голод}
+[bye_back ?hurt] {у_відповідь_рана}
+[bye_back ?seated] {у_відповідь_сидить}
+[bye_back ?mood low] {у_відповідь_сум}
+[bye_back ?mood high] {у_відповідь_радість}
+[bye_back ?raid] {у_відповідь_набіг}
+[bye_back ?raven any] {у_відповідь_ворон}
+[bye_back ?job cook, working] {у_відповідь_кухар}
+[bye_back ?job guard, working] {у_відповідь_вартовий}
+[bye_back_cold] {у_відповідь_сухо}
+[bye_back_hostile] {у_відповідь_вороже}
+[bye_back_warm] {у_відповідь_тепло}
+[bye_back_close] {у_відповідь_близько}
+[bye_back_need] {у_відповідь_біда}
+@у_відповідь_бувай
+Бувай.
+Бувай, {name}.
+Іди {здоровий|здорова}.
+Побачимось.
+Заходь ще.
+Угу. Бувай.
+Добре. Іди.
+Ну, бувай.
+~бурч Іди вже, іди.
+~бурч Нарешті тиша.
+~весел Бувай! Не забувай про нас!
+~стар Іди з добром.
+~стар Бережи себе, дитино.
+~мол Бувай! Ще поговоримо!
+~боязк Ти ж повернешся?
+~смілив Бувай. Пильнуй себе.
+@у_відповідь_ранок
+Гарного дня.
+Іди. День довгий.
+~весел Гарного дня тобі!
+Іди, поки ранок свіжий.
+~бурч Іди вже. Ранок не для балачок.
+@у_відповідь_вечір
+Гарного вечора.
+Не барися до темряви.
+~стар Тихого вечора.
+Іди. Вечір тихий.
+~бурч Ну, хоч увечері тиша буде.
+@у_відповідь_ніч
+Добраніч.
+Спи спокійно.
+Тихої ночі.
+~бурч Нарешті спати.
+Іди спати. Пізно.
+@у_відповідь_дощ
+Не змокни.
+Пережди дощ, якщо не поспішаєш.
+Плащ би тобі.
+~бурч Не стій під дощем, іди вже.
+@у_відповідь_сніг
+Не змерзни.
+Тепліше вдягайся.
+Іди. Сніг до ранку не вщухне.
+~стар Бережи ноги від холоду.
+@у_відповідь_буря
+Обережно, буря.
+Перечекай під дахом.
+Не ходи далеко, поки дме.
+~боязк Ой, як гримить… Обережно.
+@у_відповідь_робота
+Добре. Працюю.
+Іди, а я ще попрацюю.
+~бурч Іди, не заважай.
+Іди. Мені ще багато.
+~весел Іди! А я ще трохи покручусь.
+@у_відповідь_втома
+Іди. А я посиджу трохи.
+Ох… Бувай.
+Іди. А я перепочину.
+~стар Ох, кістки… Бувай.
+@у_відповідь_голод
+Бувай. Може, щось поїсти знайду.
+Будеш біля комори — згадай про мене.
+Бувай. Їсти хочеться…
+~бурч Іди. І принеси щось, як матимеш.
+@у_відповідь_рана
+Іди. А я полежу.
+Заживе. Бувай.
+Іди. Мені треба полежати.
+~смілив Пусте. Заживе швидко.
+@у_відповідь_сидить
+Іди. Я ще посиджу.
+Бувай. Мені й тут добре.
+Іди. А я ще трохи тут.
+~стар Посиджу, подумаю. Бувай.
+@у_відповідь_сум
+Бувай… Дякую, що {зайшов|зайшла}.
+Іди. Я посиджу сам|сама.
+Бувай… Заходь ще, мені легше.
+~боязк Ти ж прийдеш ще?
+@у_відповідь_радість
+Бувай! Добре мені сьогодні!
+Іди з усмішкою!
+Бувай! Усе в мене гаразд!
+~весел Бувай-бувай! Ха!
+@у_відповідь_набіг
+Бережися там!
+Бий їх!
+~боязк Повертайся {живим|живою}!
+Не підставляйся!
+@у_відповідь_ворон
+І птахам твоїм бувай.
+Птаха свого бережи.
+Ворон твій хай теж бережеться.
+~мол Помахай мені крилом! …Тобто ворон.
+@у_відповідь_кухар
+Приходь їсти, як зварю.
+Не ходи {голодним|голодною}.
+Іди. Казан чекає.
+~весел Вечеря буде — пальчики оближеш!
+@у_відповідь_вартовий
+Я пильную. Іди спокійно.
+Іди. Оселя під наглядом.
+Я тут. Нікого не пропущу.
+~смілив Іди. Хай лише хтось сунеться.
+@у_відповідь_сухо
+Угу.
+Іди.
+Ну й іди.
+Нарешті.
+Бувай уже.
+Ага.
+@у_відповідь_вороже
+І не вертайся.
+Іди геть.
+Скатертю дорога.
+Нарешті {пішов|пішла}.
+Не приходь більше.
+Добре, що йдеш.
+@у_відповідь_тепло
+Заходь ще, чуєш?
+Добре, що ти {зайшов|зайшла}.
+Бувай! Приходь, як матимеш час.
+Бережи себе, {name}.
+~весел Бувай! Без тебе нудно!
+~стар Хай тобі щастить, дитино.
+@у_відповідь_близько
+Бувай, {друже|подруго}.
+Бережи себе, чуєш?
+Приходь скоріше.
+Без тебе тут нудно. Заходь.
+Повертайся {живим|живою}, чуєш?
+~бурч Іди вже. …Але повертайся.
+@у_відповідь_біда
+Ти ж повернешся по мене?
+Не кидай мене тут!
+Швидше, прошу…
+Я чекатиму. Тільки недовго.
+Не забувай про мене!
+~боязк Мені страшно… Повертайся.
 
 [hire_yes ?!npcremembers fired me] {найм_згода}
 [hire_yes ?npcremembers fired me] {найм_знову}

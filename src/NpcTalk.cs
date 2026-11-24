@@ -1096,10 +1096,25 @@ namespace HuginWhispers
             if (!a.Acts.Exists(x => x.StartsWith("sway ", StringComparison.Ordinal))) _sway = null; // (talking it round is the answer right after its no: NpcTalkSway)
             bool warmed = WarmedToday(a, ring, from, p);
             foreach (string act in a.Acts) if (!warmed || !Warms(act)) Do(act, p);
-            if (With != null) With.React(NpcSpeech.ReactionTo(a.Acts, to == "end"), heard); // (what it makes of your answer, aloud and wordless: glad, kind, sour — now and then your goodbye)
+            string parting = to == "end" ? Parting(a, p) : null; // (your goodbye: its own word back over its head, once the hero has said it)
+            if (With != null) With.React(NpcSpeech.ReactionTo(a.Acts, to == "end" && parting == null), heard); // (what it makes of your answer, aloud and wordless: glad, kind, sour — now and then your goodbye, when it has no word for it)
+            if (parting != null) With.SayAfter(parting, p, heard + PartingAfter);
             if (Minded && (counted || ring == 1) && to != "end" && Bond(p, "life") <= 0 && NpcPatience.ToYou(With, p) < NpcPatience.Out && UnityEngine.Random.value < WalksOff) { _instead = null; _prefix = null; Show(Out, p); return; } // (its patience to you at the bottom — not its bad day: it may end it; never to one who saved its life)
             if (back != null) _prefix = _prefix != null ? back + " " + _prefix : back;
             Show(to, p);
+        }
+
+        // Its word to your goodbye (the user 2026-11-24: a word of its own, not only a wordless «угу»): your plain goodbye — a made «{@say_bye…} => end» with no deed —
+        // gets, PartingChance of the times, a line of its theme bye_back said over its head PartingAfter seconds after the hero's (NpcActor.SayAfter).
+        // Its own words of the moment weigh more (NpcPhrases.ForMoment), how it is with you picks bye_back_cold… (NpcAttitude.Variant), one in trouble
+        // that you leave says bye_back_need (as Again: talk_again_need). Not on an answer that does something or is a line of its own («Ходімо.», «!raise»):
+        // there the story speaks next. A person with no bye_back keeps its sound. Tune live: raven npc tune NpcTalk.PartingChance
+        internal static float PartingChance = 0.8f, PartingAfter = 0.3f;
+        private static string Parting(Answer a, Player p)
+        {
+            if (With == null || a.Acts.Count > 0 || !a.Text.StartsWith("{@say_bye", StringComparison.Ordinal) || UnityEngine.Random.value >= PartingChance) return null;
+            string state = NpcRescueTalk.State(With);
+            return NpcPhrases.Compose(With, state != null && state != "saved" ? "bye_back_need" : "bye_back", p); // (a scene near or the story's hush when it is said: nothing — NpcActor.Prepared; NpcVoice.Free is no ask here: the talk still holds it)
         }
 
         // a kind answer to a worry (its «!tone warm», «!attitude +N», «!patience +N») warms it once a game day a worry: its worry's own places only (the opening's answers, one picked from «ще на думці»). Said again the same day: the words, nothing more

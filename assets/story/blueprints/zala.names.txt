@@ -23,3 +23,4 @@ kamin RavenWatch_story_kamin_pamiati 16.323 -1.11 1.881
 kamin RavenWatch_story_kamin_pamiati 16.62 -0.61 -0.2
 stelia darkwood_beam4x4 0.151 14.64 -0.073
 kazan piece_cauldron -13.386 -0.527 1.241
+znak RavenWatch_story_znak_varty 0.141 4.802 8.536

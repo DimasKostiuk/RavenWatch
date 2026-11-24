@@ -174,8 +174,9 @@ namespace HuginWhispers
             bool jump = Time.time < _jumpUntil;
             bool first = _looked.Add(l.Id) || jump; // (its first look since the world loaded: nobody sees it yet · or the author's jump: at once, in sight)
             Becomes(l); // (asked while a change waits too: the story gone on meanwhile moves the waiting change on with it)
+            Follow(l);  // (the same: a change it asked that the world has turned back from is taken back)
             int next, nextSub; bool outside; double since;
-            if (!Pending(l, out next, out nextSub, out outside, out since)) { Follow(l); if (!first || !Pending(l, out next, out nextSub, out outside, out since)) return; }
+            if (!Pending(l, out next, out nextSub, out outside, out since)) return;
             if (since <= 0d) { Request(l, next, nextSub, outside); since = WorldNow; } // (a key from before the safeguard: its count begins now — the world's first look still puts it at once)
             float near = outside ? NearOut : NearIn, nearest = float.MaxValue;
             foreach (ZDO z in ZNet.instance.GetAllCharacterZDOS()) if (z != null) nearest = Mathf.Min(nearest, l.From(z.GetPosition()));
@@ -232,11 +233,22 @@ namespace HuginWhispers
             return state != now || state >= Repaired || l.WornShare(state, sub) >= 0f || l.WornShare(now, nowSub) >= 0f;
         }
 
+        // Asked at every look, a change waiting or not (the gap of 2026-11-18: the author put the Hall back to 1 and on again — the camp's «come
+        // back», asked in between, kept waiting and brought the camp back beside a kindled Hall). A change waiting for that state (or a step of it
+        // its own «becomes:» asks) stays; one for another state is taken back — or asked anew, its count from now
         private static void Follow(Loc l)
         {
             if (l.Follow == null) return;
             int want = StoryCond.Holds(null, l.Follow.When, e => l.Log("follows: " + e), true) ? Mathf.Clamp(l.Follow.State, Abandoned, l.Last) : Abandoned; // (clamped as its state reads: never asked for ever)
-            if (StateOf(l) == want) return;
+            int next, nextSub; bool outside;
+            bool waits = Pending(l, out next, out nextSub, out outside);
+            if (waits && next == want) return;
+            if (waits) ZoneSystem.instance.RemoveGlobalKey(l.KeyNext);
+            if (StateOf(l) == want)
+            {
+                if (waits) l.Log("follows: the change to " + l.WordOf(next, nextSub) + " taken back — " + l.WordOf(want) + " is what «" + l.Follow.When + "» asks again");
+                return;
+            }
             Request(l, want, 0, true);
             l.Log("follows: " + l.WordOf(want) + " (" + l.Follow.When + (want == Abandoned ? " — no longer" : "") + ") as soon as nobody sees it");
         }

@@ -101,7 +101,10 @@ namespace HuginWhispers
             //   «!world <name>»  a fact of this world (a server's story writes no character: chapter 1 — what you told Heid of the scroll, a fork later); the
             //                    talk runs on your game, the world key goes to everyone as any other
             //   «!spend <name> <hours>»  one more of a few at a time (condition «quota»: Torvald's tall tales, three, then a rest)
-            NpcVitals.StoryOwn = StoryPeople.Wears;    // the story's people: no monster sees them unless their template says «unseen: no»
+            NpcVitals.StoryOwn = StoryPeople.Hidden;   // the story's people: no monster sees them unless their template says «unseen: no» — or a «fight:» line of theirs holds now
+            NpcNature.StoryFight = StoryPeople.FightOf; // …its way of fighting (weapons, mind, foes: all read NpcNature.Manner)
+            NpcActor.Ticks.Add(StoryPeople.FightTick); // …put on its mind where it is run
+            NpcActor.Unloaded.Add(StoryPeople.FightForget);
             NpcMap.Hidden = StorySeek.Hides;           // a search on: the one it is for has no mark on the map (StorySeek)
             NpcActor.Ticks.Add(StoryAside.Tick);       // a scene plays: the people not in it step out of its frame (StoryAside)…
             NpcActor.Unloaded.Add(StoryAside.Forget);

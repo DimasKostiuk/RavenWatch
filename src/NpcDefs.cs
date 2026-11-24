@@ -32,7 +32,7 @@ namespace HuginWhispers
     //                                 same (NpcVitals.UnseenBy, the user 2026-11-15) — «unseen: no» where its story wants monsters on it
     //   speed: 1                      how fast it walks and runs (×)
     //   walk: 1                       its own stroll, on top of that (×): 0.75 an old man's, 1.15 a brisk youth's
-    //   turn: 80                      how fast it turns (deg/s), eased in and out, its feet stepping one by one (BodyTurn); none: the game's own
+    //   turn: 80                      how fast it turns (deg/s), eased in and out, its feet stepping one by one (BodyTurn); none: the game's own pace, eased quickly (NpcMind.QuickIn)
     //   menu: no                      no round menu on Q, for an admin neither
     //   menu: home talk               a round menu on Q for anyone, of these parts of the main ring only (NpcMenu.Button.Part: orders, talk, home, work,
     //                                 gear, profile) — a story person given a bed by a player (chapter 1: Ketil), never ordered about
@@ -67,7 +67,7 @@ namespace HuginWhispers
         public string Hat = "";        // «hat:» a raven's hat of ours (its Workshop id): NpcHat
         public Vector4 HatFit = new Vector4(0f, 0f, 1f, 0f); // its fit: up, forward (m), size (×), tilt (°)
         public float Health = 200f, Speed = 1f, Walk = 1f, Run = 1f; // (Run: × its run only — a body is the player's, and runs as he sprints: Heid ran 13 m/s, 2026-11-04)
-        public float Turn;             // «turn: 80»: deg/s it turns at, eased in and out (NpcMind.TurnPace); 0 — the game's own quick turn
+        public float Turn;             // «turn: 80»: deg/s it turns at, eased in and out (NpcMind.TurnPace); 0 — the game's own pace, eased quickly
         public bool NoMenu;            // «menu: no»: no round menu on Q, for an admin neither (a story person: talked to, or not at all)
         public HashSet<string> MenuParts; // «menu: home talk»: its ring for anyone, these parts only (null: all of them, for the hired and an admin)
         public float Echo;             // «echo: 0.4»: only half there, see-through (NpcFade: the prologue's «Відлуння»); 0 — a body as any

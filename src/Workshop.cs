@@ -74,6 +74,8 @@ namespace HuginWhispers
         internal string Story = ""; // «story: для Кетіля [until <the world's conditions>]» (or «yes»): a thing of the story — its mark, kept on death, never dropped (WsItems.StoryMarks), till those conditions hold (WsItems.StoryOf); «» an item as any
         internal string Wear = ""; // «wear: trinket»: worn in the game's trinket slot (WsItems.Make: the item's type), nothing of it seen on the body
         internal List<string> Dreams = new List<string>(); // «dream: …» lines: while it is worn, every sleep dreams one of these and nothing else (WsDreams)
+        internal string Morning = ""; // «morning: stamina 20»: woken with it worn — its effect while the game's «Rested» lasts and it stays worn (WsMorning, WsDreams.cs); kept as written
+        internal float MorningStamina; // its stamina regen, percent, read once with the file (0: none or not read — the log says; storycheck stops a bad line)
         internal bool One; // «one: yes»: one in the world (StoryOne: the copies of Draupnir) — a generation in each, older and foreign ones crumble, a lost one the Altar of the Watch gives back
         internal string Mount = ""; // "wall": hung on a wall (origin = the point on the wall, the wall is the plane Z = 0, the model in front, +Z)
         internal bool Wall { get { return Mount == "wall"; } }
@@ -140,6 +142,7 @@ namespace HuginWhispers
             if (!string.IsNullOrEmpty(m.Story)) sb.Append("story: ").Append(m.Story).Append('\n');
             if (m.One) sb.Append("one: yes\n");
             if (!string.IsNullOrEmpty(m.Wear)) sb.Append("wear: ").Append(m.Wear).Append('\n');
+            if (!string.IsNullOrEmpty(m.Morning)) sb.Append("morning: ").Append(m.Morning).Append('\n');
             foreach (string dr in m.Dreams) sb.Append("dream: ").Append(dr).Append('\n');
             if (!string.IsNullOrEmpty(m.Hang)) sb.Append("hang: ").Append(m.Hang).Append('\n'); // (kept as written: a save from the Workshop does not lose them)
             if (!string.IsNullOrEmpty(m.Lies)) sb.Append("lies: ").Append(m.Lies).Append('\n');
@@ -202,6 +205,14 @@ namespace HuginWhispers
                 if (line.StartsWith("story:")) { m.Story = NoNote(line.Substring(6)); continue; }
                 if (line.StartsWith("one:")) { m.One = NoNote(line.Substring(4)) == "yes"; continue; }
                 if (line.StartsWith("wear:")) { m.Wear = NoNote(line.Substring(5)); continue; }
+                if (line.StartsWith("morning:"))
+                {
+                    m.Morning = NoNote(line.Substring(8));
+                    string[] mw = m.Morning.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (mw.Length != 2 || mw[0] != "stamina" || !float.TryParse(mw[1], NumberStyles.Float, C, out m.MorningStamina) || m.MorningStamina <= 0f)
+                    { m.MorningStamina = 0f; Log("«" + m.Name + "»: «morning: " + m.Morning + "» not read (morning: stamina <percent>)"); }
+                    continue;
+                }
                 if (line.StartsWith("dream:")) { string dr = NoNote(line.Substring(6)); if (dr.Length > 0) m.Dreams.Add(dr); continue; }
                 if (line.StartsWith("hang:")) { m.Hang = NoNote(line.Substring(5)); continue; }
                 if (line.StartsWith("lies:")) { m.Lies = NoNote(line.Substring(5)); continue; }

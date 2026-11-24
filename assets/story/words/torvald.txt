@@ -444,10 +444,71 @@
 [torvald:say_shrug] Мир, Торвальде.
 [torvald:say_bye] Бувай, старий.
 [torvald:say_bye] Піду. Не загуби ложку.
-[torvald:say_bye] До зустрічі, Торвальде.
 [torvald:say_bye] Ще побачимось. Якщо впізнаєш.
-[torvald:say_bye] Не стій на варті до ранку.
 [torvald:say_bye] Бувай. І не цупи нічого.
+[torvald:say_bye] Бувай, Торвальде. Наступного разу знову познайомимось.
+[torvald:say_bye] Піду. Розкажеш потім, як воно було. Чи як не було.
+# прощання за моментом (користувач 2026-11-24): рядок, чия умова справджується, випадає частіше (NpcPhrases.MomentWeight). Про «варту» — лише відколи
+# гравець про неї знає (Гейд: «Каже — на варту», Зала обжита), до ночі на вежі; після вежі — інші
+[torvald:say_bye ?reached ch1 home_hall, !reached ch2 dawn] Не стій на варті до ранку.
+[torvald:say_bye ?!quota torvald_tales 3] Набирайся байок. Я ще прийду.
+[torvald:say_bye ?!quota torvald_tales 3] Відпочинь язиком, старий.
+[torvald:say_bye ?reached ch2 torv_a, !reached ch2 torv_out] Бувай. Ложки — твої, цвяхи — Літові.
+[torvald:say_bye ?reached ch2 dawn] Бувай, вартовий.
+[torvald:say_bye ?reached ch2 dawn] Наступну ніч на вежі — знову разом?
+[torvald:say_bye ?reached ch2 dawn] Не стій на вежі сам. Клич мене.
+# ...ще (користувач 2026-11-24: «урізноманітнити»): пора дня, небо, як він зараз, твої ворони, як він до тебе, і більше на кожен час сюжету
+[torvald:say_bye ?!reached ch1 home_hall] Піду. А ти Гейд не сердь.
+[torvald:say_bye ?world torvald_covered, !quest ch1 done] Не бійся. Я Гейд нічого не {сказав|сказала}.
+[torvald:say_bye ?world torvald_told_on, !quest ch1 done] Вибач за сувій, старий.
+[torvald:say_bye ?!quota torvald_tales 3] Байки скінчились? Нічого, до завтра наростуть.
+[torvald:say_bye ?reached ch2 torv_a, !reached ch2 torv_out] Цвяхи — Літові, байки — мені. Домовились?
+[torvald:say_bye ?reached ch2 dawn] Бувай. І дякую за ту ніч.
+[torvald:say_bye ?daypart morning] Доброго ранку, старий. Ну, я піш{ов|ла}.
+[torvald:say_bye ?daypart evening] Вечоріє. Тримайся вогню, старий.
+[torvald:say_bye ?weather rain] Сховайся від дощу, старий.
+[torvald:say_bye ?weather storm] Буря. Сиди біля вогню.
+[torvald:say_bye ?seated] Сиди, сиди. Лава тепла.
+[torvald:say_bye ?raven any] Ворони кажуть тобі «бувай». Ну, по-своєму.
+[torvald:say_bye ?raven any] Ворони, скажіть старому «бувай». …Ну, кракніть хоч.
+[torvald:say_bye ?npcattitude >= 60] Бувай, старий. Добре, що ти є.
+[torvald:say_bye ?npcattitude >= 60] Бувай, старий. Я тебе пам'ятатиму, навіть як ти мене — ні.
+# Його слова, коли розмова вертається на перший екран після твоєї відповіді (NpcTalk.Again; своїх нема — «…»). Плутає, але радий
+[torvald:talk_again] То на чому я спинився?
+[torvald:talk_again] Ще посидиш? Лава тепла.
+[torvald:talk_again] Питай, питай. Я все пам'ятаю. Майже.
+[torvald:talk_again] О! Ти ще тут. А ми знайомі?
+[torvald:talk_again] Кажи, кажи. Я не поспішаю. Мені нікуди.
+[torvald:talk_again] А ложки моєї ти так і не бачи{в|ла}?
+[torvald:talk_again ?reached ch2 dawn] Кажи, вартовий.
+[torvald:talk_again ?daypart morning] Ранок! Добре, що ти зайш{ов|ла}. Чи ти вже заходи{в|ла}?
+[torvald:talk_again ?daypart evening, reached ch1 home_hall] Вечоріє… Мені скоро на варту. То що ще?
+[torvald:talk_again ?seated] Сідай поруч. Лава на двох.
+[torvald:talk_again ?raven any] О, і птах тут! Птахові теж розповісти?
+[torvald:talk_again ?!quota torvald_tales 3] Байок нема. Але слухати я ще можу.
+[torvald:talk_again ?reached ch2 torv_a, !reached ch2 torv_out] Про цвяхи? Ні-ні. Про щось інше питай.
+[torvald:talk_again ?npcattitude >= 60] А, це ти! Тебе я, здається, пам'ятаю.
+# Його слово на твоє прощання (NpcTalk.Parting: над головою, коли герой договорив; користувач 2026-11-24). Радий, плутає
+[torvald:bye_back] Бувай, бувай! …А ти хто {був|була}?
+[torvald:bye_back] Заходь іще! Я тобі про велетня розкажу.
+[torvald:bye_back] Ложки не бачи{в|ла}? Ну, іди вже.
+[torvald:bye_back] Іди, іди. Я тут постою.
+[torvald:bye_back] Бувай, друже. Мабуть, друже.
+[torvald:bye_back] Ох, і поговорили. Аж язик утомився.
+[torvald:bye_back ?reached ch1 home_hall, !reached ch2 dawn, daypart night] А мені вже на варту скоро.
+[torvald:bye_back ?!quota torvald_tales 3] Приходь пізніше. Байки ще не дозріли.
+[torvald:bye_back ?reached ch2 torv_a, !reached ch2 torv_out] І не кажи Літові, що я… що ти мене бачи{в|ла}.
+[torvald:bye_back ?reached ch2 dawn] Бувай, вартовий. Варта — то варта.
+[torvald:bye_back ?reached ch2 dawn] Іди. А я гляну, чи всі сплять.
+[torvald:bye_back ?reached ch2 dawn] Іди. Я посторожу.
+[torvald:bye_back ?daypart morning] Іди! А я ще подрімаю. Трішки.
+[torvald:bye_back ?daypart evening, reached ch1 home_hall] Іди. А мені на варту… ну, скоро.
+[torvald:bye_back ?weather rain] І не мокни! Мокрий вартовий — пів вартового.
+[torvald:bye_back ?seated] Іди. А я ще трохи тут, на лаві.
+[torvald:bye_back ?raven any] І ворона свого бережи! Мій от полетів.
+[torvald:bye_back ?npcattitude >= 60] Бувай, друже. Ні, точно друже.
+[torvald:bye_back ?!quota torvald_tales 3] Приходь завтра. Я, може, щось згадаю. Або вигадаю.
+[torvald:bye_back ?world torvald_covered, !quest ch1 done] Тс-с. Ми ж домовились.
 # ---------------------------------------------------------------- після ночі на вежі (огляд 2026-11-22; користувач: «старий після вежі не цупить»)
 # Рядки про крадіжку й про «не змінили» вище мають кінець !world torvald_wakes; ці — замість них. Він той самий: смішний, трохи плутає, але руки
 # тепер тримає при собі (свербить — і не бере), а варту стоїть, як сказав біля вогню: «щоб ті, хто за спиною, спали».

@@ -210,6 +210,8 @@ namespace HuginWhispers
         internal Plan Current { get { return _cur; } }
         private bool Runs { get { return _fight == Fight.Flee || _fight == Fight.Wary; } } // (its first answer to a foe: away)
         internal bool Fighter { get { return _fight == Fight.Defend || _fight == Fight.Hunt; } } // (a guard's job is for these)
+        internal string OwnWay { get { return _fightSet[(int)Layer.Routine] ? _fightBy[(int)Layer.Routine].ToString().ToLowerInvariant() : ""; } } // (its own way, the one kept: not a scene's, not an order's)
+        internal bool Ready { get { return Loaded(); } } // (its kept plans read: a word before them would be overwritten by the kept one — the review of 2026-11-23)
 
         // its way in a fight on every game (the owner's own; elsewhere as kept in its ZDO) — for its card
         internal Fight Style
@@ -455,20 +457,25 @@ namespace HuginWhispers
         internal void Still(float seconds) { _stillUntil = Mathf.Max(_stillUntil, Time.time + seconds); }
 
         // its own pace of turning (a template's «turn:»): up to it softly, down from it softly as it comes round, so the turn starts and
-        // ends in its body and its feet (BodyTurn) keep up; the game's own turn comes all at once
+        // ends in its body and its feet (BodyTurn) keep up. With no «turn:» — the game's own pace of its body, eased the same way but quickly
+        // (the user 2026-11-23: «щоб всі нпс повертались трошки плавніше, при тому не збільшуючи надто час повороту» — Heid turning to the
+        // kitchen hearth in torv_back snapped round): its top speed is the game's, only the start and the end are soft (90° ≈ 0.65 s)
         internal static float TurnIn = 0.7f, TurnOut = 1.5f, TurnLeast = 12f; // s up to its pace · deg/s per deg left · deg/s at the least
-        private float _turnNow;
+        internal static float QuickIn = 0.18f, QuickOut = 8f; // the same for the game's own pace: s up to it · deg/s per deg left
+        private float _turnNow, _gameTurn = -1f, _gameRunTurn;
         private void TurnPace(float dt)
         {
+            if (_gameTurn < 0f) { _gameTurn = m_character.m_turnSpeed; _gameRunTurn = m_character.m_runTurnSpeed; } // (the body's own, read before it is first written here)
             NpcActor me = Actor;
-            float pace = me != null && me.Def != null ? me.Def.Turn : 0f;
+            float pace = me != null && me.Def != null ? me.Def.Turn : 0f, rise = TurnIn, fall = TurnOut, run = 1f;
+            if (pace <= 0f) { pace = _gameTurn; rise = QuickIn; fall = QuickOut; run = _gameTurn > 0f ? _gameRunTurn / _gameTurn : 1f; }
             if (pace <= 0f) return;
             Vector3 want = m_character.GetLookDir(), now = transform.forward;
             want.y = 0f; now.y = 0f;
             float left = Vector3.Angle(now, want);
-            _turnNow = left < 1.5f ? TurnLeast : Mathf.MoveTowards(_turnNow, pace, pace / TurnIn * dt);
-            float speed = Mathf.Clamp(Mathf.Min(_turnNow, left * TurnOut), TurnLeast, pace);
-            m_character.m_turnSpeed = speed; m_character.m_runTurnSpeed = speed;
+            _turnNow = left < 1.5f ? TurnLeast : Mathf.MoveTowards(_turnNow, pace, pace / rise * dt);
+            float speed = Mathf.Clamp(Mathf.Min(_turnNow, left * fall), TurnLeast, pace);
+            m_character.m_turnSpeed = speed; m_character.m_runTurnSpeed = speed * run;
         }
 
         internal static Action<NpcActor> SceneWatch;
@@ -719,9 +726,29 @@ namespace HuginWhispers
 
         // a look at someone (E, Q, a «near» rule, an order) lasts this long after the last word, then it is let go
         private const float LookFor = 8f;
+
+        // «hear <who> <s>» (NpcSpeech.TurnToSpeaker: a scene's line from past its shoulder): its body to the speaker for those seconds, over every
+        // layer's look, then the look its layers had comes back by itself — a scene's «face» is not lost (the review of 2026-11-23: a «keep» look
+        // left it facing the last speaker till the next «face»). Only standing free with nothing in its hands and not seated, and only if the
+        // speaker really is past NpcSpeech.TurnPast from its front here, where it is run
+        private ZDOID _hearWho = ZDOID.None; private float _hearTill;
+        private void Hear(string[] w)
+        {
+            NpcActor me = Actor;
+            if (w.Length < 3 || !StandsFree || me == null || (me.Body != null && !me.Body.ClipFree) || SeatedOf(me)) return;
+            ZDOID id = Id(w, 1);
+            GameObject g = Find(id);
+            if (g == null) return;
+            Vector3 d = g.transform.position - transform.position; d.y = 0f;
+            if (d.sqrMagnitude < 0.04f || Vector3.Angle(transform.forward, d) < NpcSpeech.TurnPast) return;
+            float s;
+            if (!float.TryParse(w[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out s)) return;
+            _hearWho = id; _hearTill = Time.time + Mathf.Clamp(s, 0.5f, 30f);
+        }
         private float _glanceUntil, _nextGlance;
         private void LookAround(float near)
         {
+            if (Time.time < _hearTill) { GameObject h = Find(_hearWho); if (h != null) { LookAt(Eye(h)); return; } } // (a line heard: Hear)
             for (int i = Layers - 1; i >= 0; i--) // (the highest layer's look: a scene's over a talk's over its raven's)
             {
                 if (_lookPtOn[i]) { LookAt(_lookPt[i]); return; }
@@ -1782,8 +1809,9 @@ namespace HuginWhispers
                     Character c = go != null ? go.GetComponent<Character>() : null;
                     if (c != null && !c.IsDead()) StartFight(c);
                     break;
-                case "look": { int i = (int)layer; _lookWho[i] = w.Length > 1 && w[1] == "none" ? ZDOID.None : Id(w, 1); _lookPtOn[i] = false; _lookOwner[i] = _doWhose; _lookTill[i] = Array.IndexOf(w, "keep") > 1 ? float.MaxValue : Time.time + LookFor; break; } // (a look at someone is a while, not for good: «keep» — a scene's; on its layer)
-                case "lookat": if (Vec(w, 1, out v)) { int i = (int)layer; _lookPt[i] = v; _lookPtOn[i] = true; _lookWho[i] = ZDOID.None; _lookOwner[i] = _doWhose; } break;
+                case "look": { if (layer == Layer.Scene) _hearTill = 0f; int i = (int)layer; _lookWho[i] = w.Length > 1 && w[1] == "none" ? ZDOID.None : Id(w, 1); _lookPtOn[i] = false; _lookOwner[i] = _doWhose; _lookTill[i] = Array.IndexOf(w, "keep") > 1 ? float.MaxValue : Time.time + LookFor; break; } // (a look at someone is a while, not for good: «keep» — a scene's; on its layer)
+                case "lookat": if (Vec(w, 1, out v)) { int i = (int)layer; _lookPt[i] = v; _lookPtOn[i] = true; _lookWho[i] = ZDOID.None; _lookOwner[i] = _doWhose; if (layer == Layer.Scene) _hearTill = 0f; } break;
+                case "hear": Hear(w); break;
                 case "tp": if (Vec(w, 1, out v)) Unstick(v, "told to step", true); break;
                 case "fight":
                     string fw = w.Length > 1 ? w[1] : "flee";

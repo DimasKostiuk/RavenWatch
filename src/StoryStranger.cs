@@ -17,6 +17,8 @@ namespace HuginWhispers
     //   notalk: <world conditions>                 while they hold: no talk with it — E and Q open nothing, the hover is its name only; its own
     //                                              words, a scene's, a road talk's (StoryRoad) go on as ever (the user 2026-11-20: Torvald on his
     //                                              watch at the tower is not to be talked to)
+    //   notalksay: <theme>                         …and E on it says a line of its own theme «[<who>:<theme>]» (Hurry; the user 2026-11-23: Eyvind
+    //                                              leaving the Hall — «просто має сказати якусь фразу, що спішить»)
     // The world's conditions: every game reads the same, the server keeps nothing of it. A scene that takes it says its lines (its quiet is only
     // for words of its own: StoryAside.InScene), under the name it is shown by — a scene where it gives its name sets the fact there («do world …»).
     // E on it that a stage waits for («on: npc_use <who>») is the stage's, as on anyone (StoryModules). Cost: its hover, E, Q and its own words ask one map lookup and a kept answer (its conditions asked once Every s);
@@ -42,9 +44,28 @@ namespace HuginWhispers
             NpcActor.UseInstead.Add((a, p) => Of(a) != null && (p == null || !StoryQuests.Awaits(p, "npc_use", a.Def.Id)) ? (bool?)false : null); // (E: nothing — unless a stage waits for it)
             NpcMenu.KeyInstead.Add((a, p) => Of(a) != null ? (bool?)true : null);  // (Q: no ring)
             NpcActor.HoverInstead.Add(a => NoTalkOf(a) != null ? a.GetHoverName() : null); // («notalk:» — its name, nothing to press)
-            NpcActor.UseInstead.Add((a, p) => NoTalkOf(a) != null && (p == null || !StoryQuests.Awaits(p, "npc_use", a.Def.Id)) ? (bool?)false : null);
+            NpcActor.UseInstead.Add((a, p) =>
+            {
+                StoryPeople.Person x = NoTalkOf(a);
+                if (x == null || (p != null && StoryQuests.Awaits(p, "npc_use", a.Def.Id))) return null;
+                if (x.NoTalkSay.Length > 0) Hurry(a, x, p); // («notalksay:» — a line instead of nothing)
+                return false;
+            });
             NpcMenu.KeyInstead.Add((a, p) => NoTalkOf(a) != null ? (bool?)true : null);
             StoryQuests.Each.Add("strangers", Look);
+        }
+
+        // «notalksay: <theme>»: E while no talk with it — a line of its own theme, said as any line of its (Eyvind leaving the Hall: the user 2026-11-23),
+        // not oftener than SayEvery s (E held or pressed again and again)
+        internal static float SayEvery = 4f;
+        private static readonly Dictionary<string, float> _saidAt = new Dictionary<string, float>(); // session: when it last said one
+        private static void Hurry(NpcActor a, StoryPeople.Person x, Player p)
+        {
+            float at;
+            if (_saidAt.TryGetValue(x.Id, out at) && Time.time - at < SayEvery) return;
+            _saidAt[x.Id] = Time.time;
+            if (!NpcPhrases.Has(a, x.NoTalkSay)) { Story.Log("people: " + x.Id + ": notalksay — no words «" + x.NoTalkSay + "» of its own"); return; }
+            a.SayLine(a.Form(NpcPhrases.Inline(a, "{@" + x.NoTalkSay + "}", p)), p); // (a theme mark only: its words come in this game's language by themselves)
         }
 
         // the person of the story this one is, while its «notalk:» holds (a scene's own copy of it is not)

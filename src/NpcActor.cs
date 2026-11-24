@@ -278,6 +278,7 @@ namespace HuginWhispers
         {
             if (Time.time >= _hatAt && _def != null) { _hatAt = Time.time + 1f; if (_visL == null) _visL = GetComponent<VisEquipment>(); NpcHat.Wear(_visL, transform, _def); }
             if (_waitText != null && Owned) SayWaiting();
+            if (_soonText != null && Time.time >= _soonAt) { string soon = _soonText; _soonText = null; SayLine(soon, _soonTo); _soonTo = null; }
             if (_waiting.Count > 0) SendWaiting();
             if (_paid.Count > 0) PaidTick();
             ZDO zo = Zdo; long owner = zo != null ? zo.GetOwner() : 0L; // (one field read: who ran it before, for an act sent on — FromOwner)
@@ -533,6 +534,15 @@ namespace HuginWhispers
             SayLine(text, to, weighty || how == Voice.Event);
         }
 
+        // its line after so many seconds, sent from this game whoever runs it (SayLine reaches every game): its parting word to your goodbye, once the
+        // hero has said it (NpcTalk.Pick, theme bye_back; the user 2026-11-24). A newer one takes its place; a scene or a hush then — nothing (Prepared)
+        private string _soonText; private Player _soonTo; private float _soonAt;
+        internal void SayAfter(string text, Player to, float after)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            _soonText = text; _soonTo = to; _soonAt = Time.time + Mathf.Clamp(after, 0f, 30f);
+        }
+
         // its line to someone: {name} and «ходив|ходила» of that one — the one it speaks to, else the player nearest it (not
         // the player of the game that runs it: a host's or a server's game — a friend was called by the host's name, 2026-11-01)
         internal void Say(string text, Player to) { SayLine(text, to); }
@@ -605,7 +615,7 @@ namespace HuginWhispers
             if (Hushed != null && Hushed(this)) return null;
             text = NpcBody.Spoken(this, text, gestures); // (a gesture in its words: played, the mark taken out)
             if (text.Length == 0) return null;
-            Player p = to ?? Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer;
+            Player p = to != null ? to : Player.GetClosestPlayer(transform.position, 20f) ?? Player.m_localPlayer; // (Unity's != : one gone since the line was queued — SayWaiting, SayAfter — is a destroyed object, which «??» takes for alive)
             text = Lang.T(text).Replace("{name}", p != null ? p.GetPlayerName() : "");
             return p != null ? Grammar.Fix(text, p) : text;
         }

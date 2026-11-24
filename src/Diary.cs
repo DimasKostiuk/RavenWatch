@@ -954,7 +954,15 @@ namespace HuginWhispers
     [HarmonyPatch(typeof(Player), "SetSleeping")]
     internal static class SleepPatch
     {
-        private static void Postfix(Player __instance, bool sleep) { if (sleep && __instance == Player.m_localPlayer) Diary.Add(Ev.Sleep, "", 0); }
+        // (the game's one door into sleep and out of it; a call that changes nothing — the one already awake told «wake» — is no event: __state)
+        private static void Prefix(Player __instance, out bool __state) { __state = __instance.IsSleeping(); }
+        private static void Postfix(Player __instance, bool sleep, bool __state)
+        {
+            if (__state == sleep || __instance != Player.m_localPlayer) return;
+            if (sleep) { Diary.Add(Ev.Sleep, "", 0); return; }
+            try { WsMorning.Woke(__instance); } // (the game has just given «Rested»: what a worn thing leaves in the morning — WsDreams.cs)
+            catch (Exception e) { PatchGuard.Fail("SleepPatch", e); }
+        }
     }
 
     [HarmonyPatch(typeof(Pickable), "Interact")]

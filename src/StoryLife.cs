@@ -454,7 +454,7 @@ namespace HuginWhispers
             Vector3 home = z.GetVec3(NpcRules.KHome, z.GetPosition()), at;
             if ((home - StoryPeople.AwayAt).sqrMagnitude < StoryPeople.Moved * StoryPeople.Moved) return ""; // (away, or back from it with its home not written anew yet: every line would be «far» from the world's corner — the review of 2026-11-16)
             StoryPeople.Home h = x.Now;
-            if (h == null || h.At == StoryPeople.Away) return ""; // (out of the world for a while: its «home» is the world's far corner)
+            if (h == null || x.OutNow(h)) return ""; // (out of the world for a while: its «home» is the world's far corner)
             string set = SetOf(x);
             float hour = -1f;
             foreach (Spot s in x.Spots)

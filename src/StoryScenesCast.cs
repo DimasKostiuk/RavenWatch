@@ -90,6 +90,7 @@ namespace HuginWhispers
         internal static float LockFor = 15f, LockRenew = 5f;
         private static float _renewAt;
         private static bool _wired;
+        internal static float HeroTurnPast = 100f; // deg behind his front a speaker of his scene must be for his body to turn to it, not his head alone (NpcSpeech.HeroHears)
 
         private static void Wire()
         {
@@ -97,6 +98,14 @@ namespace HuginWhispers
             _wired = true;
             StoryProps.Wire();   // («prop»: a thing in a person's hand)
             NpcSpeech.SceneOf = Holder; // (a scene's people hear every line said in it, however far: NpcSpeech)
+            NpcSpeech.Working = a => { if (a == null) return false; foreach (string k in _busy.Keys) { NpcActor x; if (_cast.TryGetValue(k, out x) && x == a) return true; } return false; }; // (its «busy» work — kept by its word in the scene: it does not turn from it to a speaker)
+            NpcSpeech.HeroHears = (c, scene) => // (a line of his scene by someone else: his head to it at once; his body too when it is behind him and he stands)
+            {
+                Player me = Player.m_localPlayer;
+                if (me == null || c == me || me.GetPlayerID() != scene || Playing.Length == 0 || !StoryCamera.TakesPlayer || Watching || !StoryLook.Speaker(c)) return; // (keys his own: his head too — the review of 2026-11-23)
+                Vector3 way = c.transform.position - me.transform.position; way.y = 0f;
+                if (!StoryWalk.On && !me.IsAttached() && !me.InEmote() && !me.IsSitting() && Vector3.Angle(me.transform.forward, way) > HeroTurnPast) StoryWalk.Face(me, way); // (seated on the ground, on a bench, in bed: his head alone — ch1 «сидячи, озирається на голос»)
+            };
             NpcActor.Acts["scenelock"] = (a, w) => { ZDO z = a.Zdo; if (z != null) z.Set(KScene, w.Length > 1 ? w[1] : ""); }; // (where it is run: its owner writes)
             NpcActor.Acts["mate"] = (a, w) => { NpcBody body = a.GetComponent<NpcBody>(); if (body != null) body.MateSet(w.Length > 1 ? w[1] : null, w.Length > 2 ? F(w[2], 0.8f) : 0.8f); }; // (a clip of two: whom it is played on — NpcBody.MateLook, every game)
             NpcMind.SceneWatch = a =>

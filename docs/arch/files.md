@@ -30,7 +30,7 @@
 
 ## Люди
 
-- `npc-core.md` · тіло, річ у руці, шлях, мапа: `HandLook.cs`, `HeadLook.cs`, `NpcCloth.cs`, `NpcFade.cs`, `NpcFall.cs`, `NpcMap.cs`, `NpcNav.cs`
+- `npc-core.md` · тіло, річ у руці, шлях, мапа: `HandLook.cs`, `HeadLook.cs`, `NpcCloth.cs`, `NpcFade.cs`, `NpcFall.cs`, `NpcRagdoll.cs`, `NpcMap.cs`, `NpcNav.cs`
 - `npc-core.md` · звички й важелі сюжету: `NpcLevers.cs`, `NpcRules.cs`
 - `npc-talk.md` · розмова: `NpcFireside.cs`, `NpcRescueTalk.cs`
 - `npc-life.md` · оселя й побут: `NpcChores.cs`, `NpcHew.cs`, `NpcHouse.cs`, `NpcHunger.cs`, `NpcPrivate.cs`, `NpcTidy.cs`

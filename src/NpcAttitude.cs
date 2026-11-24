@@ -448,7 +448,7 @@ namespace HuginWhispers
             if (theme.StartsWith("how_", StringComparison.Ordinal)) return level == "hostile" || level == "cold" ? "how_" + level : null; // (warm or dear: its plain how is warm enough)
             switch (theme)
             {
-                case "see_player": case "back": case "about_you": case "talk_invite": case "talk_again": case "hire_yes": case "fire_ask": case "request_thanks": return theme + "_" + level; // (no words for this level: the plain theme)
+                case "see_player": case "back": case "about_you": case "talk_invite": case "talk_again": case "bye_back": case "hire_yes": case "fire_ask": case "request_thanks": return theme + "_" + level; // (no words for this level: the plain theme)
                 default: return null;
             }
         }

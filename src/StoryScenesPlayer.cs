@@ -27,7 +27,7 @@ namespace HuginWhispers
             float t = RavenSpeech.Seconds(said, RavenSpeech.Pace.Scene);
             if (sub) StoryScreen.Sub(p.GetPlayerName(), said, t + 0.4f);
 #if RAVEN_NPC
-            NpcSpeech.HeroSays(p, said, t, "babble", 0x53434E45u);
+            NpcSpeech.HeroSays(p, said, t, "babble", 0x53434E45u, Playing.Length > 0); // (in a scene quieter than in a plain talk; a talk on the way is no scene)
 #endif
             return t;
         }

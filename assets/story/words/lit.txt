@@ -177,9 +177,85 @@
 [lit:say_bye] Не заважатиму. Міряй.
 [lit:say_bye] Піду. Не збийся з рахунку.
 [lit:say_bye] Бувай, Літе.
-[lit:say_bye] Іду, іду. Під руку не дивлюся.
-[lit:say_bye] Гаразд, звідси. Як ти любиш.
 [lit:say_bye] Бувай. І Лотові привіт.
+[lit:say_bye] Бувай. Двічі не прощаюсь.
+[lit:say_bye] Іду. Коротко, як ти любиш.
+# прощання за моментом (користувач 2026-11-24): рядок, чия умова справджується, випадає частіше (NpcPhrases.MomentWeight). «Звідси» й «під руку» — лише
+# відколи він сам так каже (глава 2, вали звідси), не на луках глави 1
+[lit:say_bye ?asked lit go, !reached ch1 lit_hall] Іди сам. Я ж ходжу криво.
+[lit:say_bye ?quest ch1 done, !reached ch2 lit_plan] Міряй, думай. Я почекаю.
+[lit:say_bye ?phase lit_works] Іду, іду. Під руку не дивлюся.
+[lit:say_bye ?phase lit_works] Гаразд, звідси. Як ти любиш.
+[lit:say_bye ?phase lit_works] Мене тут не було. Рахуй далі.
+[lit:say_bye ?phase lit_works, asked lit ch2_busy1] Тихо йду. Щоб балка не почула.
+[lit:say_bye ?phase lit_fill] Піду носити. Ти ж міряєш.
+[lit:say_bye ?phase lit_fill] Скриня сама не наповниться. Бувай.
+[lit:say_bye ?daypart night, reached ch2 go2, !reached ch2 ask42] Поспи. А цвяхи порахуєш зранку — якщо будуть.
+[lit:say_bye ?reached ch2 rise_after] Бувай, майстре.
+[lit:say_bye ?reached ch2 rise_after] Скажеш «відбудована» — прийду послухати.
+# ...ще (користувач 2026-11-24: «урізноманітнити»): пора дня, небо, як він зараз, твої ворони, як він до тебе, і більше на кожен час сюжету
+[lit:say_bye ?asked lit go, !reached ch1 lit_hall] Зала тут недалеко. Не загубишся.
+[lit:say_bye ?quest ch1 done, !reached ch2 lit_plan] Думай довше. Зала почекає.
+[lit:say_bye ?reached ch2 lit_day, !reached ch2 lit_plan] Не поспішай. Клич, як буде готово.
+[lit:say_bye ?phase lit_works] Мене не рахуй — я вже {пішов|пішла}.
+[lit:say_bye ?phase lit_fill] Скриня скаже, скільки ще. Бувай.
+[lit:say_bye ?reached ch2 go2, !reached ch2 ask42] Цвяхи перерахуй ще раз. Про всяк випадок.
+[lit:say_bye ?reached ch2 e_seek, !reached ch2 lit_next3] Піду шукати Ейвінда. Ти стіни тримай.
+[lit:say_bye ?reached ch2 torv_out, !reached ch2 dawn] Піду за старим. Тихо, як ти казав.
+[lit:say_bye ?reached ch2 sverre_home] Сверре не підганяй. Він і так старається.
+[lit:say_bye ?reached ch2 rise_after] Зала стоїть. Тепер і ти посидь.
+[lit:say_bye ?daypart morning, weather clear] Гарний ранок. Міряй, поки світло.
+[lit:say_bye ?daypart evening] Вечір. Не міряй потемки.
+[lit:say_bye ?weather rain] Дощ. Сховай шнур.
+[lit:say_bye ?weather snow] Сніг. Не мерзни, Літе.
+[lit:say_bye ?seated] Сиди. Ти заслужив.
+[lit:say_bye ?hurt] Перев'яжи руку, Літе. Молот почекає.
+[lit:say_bye ?raven any] Ходімо, птахи. Майстер рахує.
+[lit:say_bye ?raven any] Птахи, не дзьобайте шнур. Ходімо.
+[lit:say_bye ?npcattitude >= 60] Бувай, Літе. Добре, що ти тут.
+[lit:say_bye ?npcattitude >= 60] Бувай, Літе. Без тебе тут усе криво стояло б.
+# Його слова, коли розмова вертається на перший екран після твоєї відповіді (NpcTalk.Again; своїх нема — «…»). Коротко
+[lit:talk_again] Ще?
+[lit:talk_again] Кажи. Коротко.
+[lit:talk_again] Ну?
+[lit:talk_again] Що ще. Одним словом.
+[lit:talk_again] Слухаю. Рахунок не збивай.
+[lit:talk_again] Далі.
+[lit:talk_again ?!quest ch1 done] Кажи. Сік не чекає.
+[lit:talk_again ?phase lit_works] Ти ще тут?
+[lit:talk_again ?phase lit_works] Знову ти. Швидко.
+[lit:talk_again ?daypart morning] Ранок. Коротко.
+[lit:talk_again ?daypart evening] Світла мало. Кажи.
+[lit:talk_again ?seated] Сиджу. Тож маєш хвилину.
+[lit:talk_again ?raven any] Птаха прибери від шнура. Кажи.
+[lit:talk_again ?phase lit_fill] Скриню {бачив|бачила}? Що ще?
+[lit:talk_again ?reached ch2 go2, !reached ch2 ask42] Ще щось? Тільки не про цвяхи.
+[lit:talk_again ?reached ch2 rise_after] Кажи. Тепер маю час. Трохи.
+[lit:talk_again ?npcattitude >= 60] Кажи. Тебе слухаю довше.
+# Його слово на твоє прощання (NpcTalk.Parting: над головою, коли герой договорив; користувач 2026-11-24). Коротко
+[lit:bye_back] Угу.
+[lit:bye_back] Іди. Рівно.
+[lit:bye_back] Добре. Мені працювати.
+[lit:bye_back] Коротко. Це добре.
+[lit:bye_back] Іди. Під ноги дивись.
+[lit:bye_back] Чуєш, Лоте? {Пішов|Пішла}.
+[lit:bye_back ?!quest ch1 done] Іди. Я ще поміряю.
+[lit:bye_back ?phase lit_works] Нарешті.
+[lit:bye_back ?phase lit_works] Двері зачини. Протяг шнур хитає.
+[lit:bye_back ?phase lit_fill] Носи. Я рахуватиму.
+[lit:bye_back ?reached ch2 rise_after] Приходь. Тепер тут є куди.
+[lit:bye_back ?daypart night] Спати. Завтра рахуватимемо.
+[lit:bye_back ?daypart morning] Іди. Світло дороге.
+[lit:bye_back ?daypart evening] Іди. Скоро стемніє.
+[lit:bye_back ?weather rain] Дощ. Дошки накрий, як ітимеш.
+[lit:bye_back ?raven any] І птаха забери. Шнур дзьобає.
+[lit:bye_back ?seated] Я посиджу. Рахунок не втече.
+[lit:bye_back ?npcattitude >= 60] Іди. Але приходь.
+[lit:bye_back ?asked lit go, !reached ch1 lit_hall] Залу сам знайду. Іди.
+[lit:bye_back ?phase lit_works] Двоє не міряють. Іди.
+[lit:bye_back ?phase lit_fill] Більше носиш — менше говориш. Іди.
+[lit:bye_back ?reached ch2 go2, !reached ch2 ask42] Побачиш старого з повними рукавами — скажи.
+[lit:bye_back ?reached ch2 sverre_home] Сверре хай сидить. Мені менше клопоту.
 # ---------------------------------------------------------------- що сюжет відкриває згодом (огляд 2026-11-22). Кінець кожного — його умова.
 # Свіжа ніч на вежі (до листа «сорок два цвяхи»: later4)
 [lit:idle ?world torvald_wakes, !reached ch2 later4] Старий стояв до ранку. Рівно стояв.

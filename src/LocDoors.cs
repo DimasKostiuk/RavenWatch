@@ -41,6 +41,9 @@ namespace HuginWhispers
         // as one comes into the Hall, its round «1 m wider» — the gate's threshold counts); a spot off him looks down from higher and farther
         // (a threshold's step stands higher than where he is) — up to eighteen rays then, only while he is not inside already
         private static readonly Vector3[] Round = { new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, -1f), new Vector3(1f, 0f, 0f), new Vector3(-1f, 0f, 0f), new Vector3(0.7071f, 0f, 0.7071f), new Vector3(-0.7071f, 0f, 0.7071f), new Vector3(0.7071f, 0f, -0.7071f), new Vector3(-0.7071f, 0f, -0.7071f) };
+        // RoofFar: how far up its roof may be (the user 2026-11-23: he ran into the Hall ahead of Sverre and the scene never came — under the Hall's
+        // high middle the roof is more than 8 m over his head, so «inside zala» held only by the gate, under the balcony; he had to walk back there)
+        internal static float RoofFar = 40f;
         internal static bool InsideOf(Player p, string place, float wider = 0f)
         {
             if (p == null) return false;
@@ -53,7 +56,7 @@ namespace HuginWhispers
         }
         private static bool Within(Vector3 feet, float head, string place, float from, float far)
         {
-            return OfPlace(new Ray(feet + Vector3.up * from, Vector3.down), far, place) && OfPlace(new Ray(feet + Vector3.up * head, Vector3.up), 8f, place);
+            return OfPlace(new Ray(feet + Vector3.up * from, Vector3.down), far, place) && OfPlace(new Ray(feet + Vector3.up * head, Vector3.up), RoofFar, place);
         }
 
         private static readonly int PieceMask = LayerMask.GetMask("piece", "piece_nonsolid", "Default", "static_solid");

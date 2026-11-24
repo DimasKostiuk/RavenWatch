@@ -10,7 +10,8 @@ namespace HuginWhispers
     //   who         from its seed, the same on every game after any restart: nothing is sent, nothing is kept (Born; a written «persona: nature=<id>» or
     //               the story's «trait nature <id>» wins). Only settlers get one by birth; a person written by hand has none (NpcPersona.Nature null)
     //   its traits  ranges over the ones it rolled (Shape), so all that already reads NpcPersona (flight, whims, work, words, poses, places) follows by itself
-    //   its fight   Manner: the one answer to «how does this person fight», a settler's by its nature (plain: by its bravery); Fighter: it goes out to
+    //   its fight   Manner: the one answer to «how does this person fight», a settler's by its nature (plain: by its bravery), one written by hand by its
+    //               template — or its story's «fight: … when …» line now (StoryFight: Eyvind from the fight for Sverre); Fighter: it goes out to
     //               a raid. Guard.Is stays what it was: a guard by its job, or by its template
     //   its work    WontTake, asked through NpcWorker.WhyNot by the job's button and by SetJob: a nature's own refusals (Wont), then what is true of
     //               anyone: its nerve, its age, a lame leg, its pride; good terms with the player change nothing. What its hands know (a knack of its
@@ -134,13 +135,16 @@ namespace HuginWhispers
         internal static string Manner(NpcActor a)
         {
             if (a == null || a.Def == null) return "flee";
-            if (!a.Def.Generated) return a.Def.Fight; // (one written by hand: as written)
+            if (!a.Def.Generated) { string s = StoryFight != null ? StoryFight(a) : null; return string.IsNullOrEmpty(s) ? a.Def.Fight : s; } // (one written by hand: as written — or as its story says now, StoryFight)
             NpcPersona p = NpcPersona.Of(a);
             if (p.Nature == null) return a.Def.Fight; // (no body to read yet: NpcPersona.Average)
             if (p.Nature.Fight.Length > 0) return p.Nature.Fight;
             return p.Bravery >= FightFrom ? "defend" : p.Bravery < RunBelow ? "flee" : "wary";
         }
         internal static bool Fighter(NpcActor a) { string m = Manner(a); return m == "defend" || m == "hunt"; }
+        // the story's word on how one of its people fights now (StoryPeople.FightOf: its «fight: … when …» line that holds; null or "" — its template's).
+        // Through Manner everything follows it: its weapons taken up (NpcGear.CanFight, its re-dress), its mind's way (StoryPeople.FightTick), its foes (NpcVitals.StoryOwn)
+        internal static System.Func<NpcActor, string> StoryFight;
 
         // what its mind should hold now: on guard it fights, else its manner
         internal static string FightNow(NpcActor a) { return Guard.Hired(a) ? "defend" : Manner(a); }

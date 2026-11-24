@@ -528,6 +528,19 @@ function optionsWhy(at, all) {
     });
   }
 }
+// a worn thing's morning («morning: stamina <percent>», WsMorning in WsDreams.cs; the user 2026-11-23: Sverre's ring): the game reads it with the file and
+// passes over a line it cannot read, saying so only in its log — and a thing that is never worn («wear:») never wakes anyone with it
+for (const [d, name] of [[path.join(story, '..', 'items'), 'items'], [path.join(story, 'items'), 'story/items']]) for (const f of fs.existsSync(d) ? fs.readdirSync(d).filter(x => x.endsWith('.txt')) : []) {
+  const ls = fs.readFileSync(path.join(d, f), 'utf8').split(/\r?\n/).map(l => l.replace(/\s+#.*$/, '').trim());
+  const worn = ls.some(l => /^wear:\s*\S/.test(l));
+  ls.forEach((l, n) => {
+    const k = /^morning:\s*(.*)$/.exec(l);
+    if (!k) return;
+    const at = name + '/' + f + ':' + (n + 1), w = k[1].split(/\s+/).filter(Boolean);
+    if (w.length !== 2 || w[0] !== 'stamina' || !(Number(w[1]) > 0)) say(at, 'morning: «' + k[1] + '»: write «morning: stamina <percent above 0>», the only kind the game reads');
+    if (!worn) say(at, '«morning:» on a thing with no «wear:»: it is never worn, nobody wakes with it');
+  });
+}
 // the words after a sound's name and place (StoryAudio reads these and passes over any other without a word)
 const audioWords = {
   sound: { flags: ['2d', 'wet', 'follow', 'wait'], valued: ['vol', 'range', 'pitch', 'delay', 'fadein', 'skip'] },
@@ -806,6 +819,8 @@ const dayEnd = () => {
   for (const s of dayOf.sets) if (s !== 'home' && !dayOf.days.some(d => d.set === s)) say(dayOf.at, 'the set «' + s + '» is nobody\'s day: give it «day: ' + s + ' when <world conditions>» (StoryLife)');
   dayOf.sets = new Set(); dayOf.days = [];
 };
+let _ownThemes = null; // «who:theme» of every person's own words (assets/story/words), read once
+function ownThemes() { if (!_ownThemes) { _ownThemes = new Set(); const wd = path.join(story, 'words'); for (const f of fs.existsSync(wd) ? fs.readdirSync(wd).filter(x => x.endsWith('.txt')) : []) for (const m of fs.readFileSync(path.join(wd, f), 'utf8').matchAll(/^\[(\w+):(\w+)[\s\]]/gm)) _ownThemes.add(m[1] + ':' + m[2]); } return _ownThemes; }
 for (const f of txt('people')) {
   let at = f, inPerson = false, doings = {};
   for (let l of lines('people', f)) {
@@ -833,6 +848,10 @@ for (const f of txt('people')) {
     if (st) { const sep = st[1].indexOf('::'), c = (sep >= 0 ? st[1].slice(0, sep) : st[1]).trim(); if (!c) say(at, 'stranger: <world conditions> [:: <name>]'); else condsWhy(at, c, true); continue; }
     const nt = /^notalk:\s*(.*)$/.exec(l); // («notalk: <world conditions>»: no talk with it while they hold — StoryStranger)
     if (nt) { if (!nt[1].trim()) say(at, 'notalk: <world conditions>'); else condsWhy(at, nt[1].trim(), true); continue; }
+    const fg = /^fight:\s*(.*)$/.exec(l); // («fight: <way> [when <world conditions>]»: its way of fighting by the story — StoryPeople.FightNow)
+    if (fg) { const wi = fg[1].indexOf(' when '), way = (wi >= 0 ? fg[1].slice(0, wi) : fg[1]).trim(); if (!['off', 'flee', 'wary', 'defend', 'hunt'].includes(way)) say(at, 'fight: off|flee|wary|defend|hunt [when <world conditions>]'); else if (wi >= 0) condsWhy(at, fg[1].slice(wi + 6).trim(), true); continue; }
+    const ns = /^notalksay:\s*(.*)$/.exec(l); // («notalksay: <theme>»: its line on E while «notalk:» holds — StoryStranger.Hurry; the theme is its own, «[<who>:<theme>]»)
+    if (ns) { const who = (/\[(\S+)\]$/.exec(at) || [])[1], th = ns[1].trim(); if (!/^\w+$/.test(th)) say(at, 'notalksay: <theme>'); else if (!ownThemes().has(who + ':' + th)) say(at, 'notalksay: no «[' + who + ':' + th + ']» in assets/story/words (at least 6 lines, English in npc_patterns.txt)'); continue; }
     const ss = /^strangersay:\s*(.*)$/.exec(l);
     if (ss) { for (const part of ss[1].split('/')) if (!/^(hugin|munin)\s+\S/.test(part.trim())) say(at, 'strangersay: hugin|munin <words> [/ hugin|munin <words> …] (StoryStranger)'); continue; }
     const day = /^day:\s*(.*)$/.exec(l);
@@ -1050,6 +1069,15 @@ const lastingFact = c => { const w = c.trim().split(/\s+/); return !c.startsWith
 // your words to a story person ({@say_*} in its talk) are its own — [<who>:say_*] in assets/story/words/<who>.txt (NpcPhrases: they win over the common
 // ones); none: the settler's «Гаразд, не буду заважати» in a story talk (the user 2026-11-17). Checked in the loop below, line by line.
 const ownSay = new Set(); { const wordsDir = path.join(story, 'words'); for (const f of fs.existsSync(wordsDir) ? fs.readdirSync(wordsDir).filter(x => x.endsWith('.txt')) : []) for (const m of fs.readFileSync(path.join(wordsDir, f), 'utf8').matchAll(/^\[(\w+):(say_\w+)/gm)) ownSay.add(m[1] + ':' + m[2]); }
+// a story person's own theme asks the story too («[lit:say_bye ?phase lit_works] …», NpcPhrases.Holds — StoryCond): a word, a stage or a phase that is not
+// there only turns the line off in the game, silently — checked as a talk's are; a phase asked here counts as asked
+for (const f of txt('words')) lines('words', f).forEach((l, i) => {
+  const m = /^\[\w+:\w+\s+\?([^\]]+)\]/.exec(l);
+  if (!m) return;
+  const at = 'words/' + f + ':' + (i + 1);
+  condsWhy(at, m[1], false);
+  for (const c of m[1].split(',')) { const w = c.trim().replace(/^!/, '').split(/\s+/); if ((w[0] === 'step' || w[0] === 'reached') && (!stagesOf[w[1]] || !stagesOf[w[1]].has(w[2]))) say(at, 'no stage «' + w[2] + '» in quest «' + w[1] + '»'); }
+});
 // a talk's places are all its files' together, as the game reads them: a chapter's «[talk heid +]» may lead to a place of the prologue's file (checked after all are read)
 const talkPlaces = {}, talkTo = [], placeLines = {}, firstQs = []; // (placeLines «talk:place» → its lines; firstQs: the first screen's questions — «heard, it comes back» below)
 for (const f of txt('talk')) {

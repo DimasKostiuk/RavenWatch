@@ -16,7 +16,9 @@ namespace HuginWhispers
     //   live: hall.vohnyshche when state zala >= 1.2             home (where it appears, its bed: «spawn», «bed») while the world's conditions
     //   live: torvald.vohnyshche spawn torvald.lava bed torvald.lizhko   hold — the first line that holds; the last, with no «when», otherwise
     //   after: world heid_called                                 not in the world at all till these hold (the world's
-    //                                                            conditions only: the server keeps them, it has no player)
+    //                                                            conditions only: the server keeps them, it has no player);
+    //                                                            came, and they no longer hold (a jump back, a night begun anew) —
+    //                                                            out of the world as by «live: away» (Person.OutNow)
     //   until: world ketil_gone                                  gone for good once these hold (its story's block is over: chapter 1 — Ketil killed
     //                                                            in the ambush): taken away where nobody sees it (a scene that faded it
     //                                                            out took it already), never made again. The world's conditions only
@@ -29,7 +31,7 @@ namespace HuginWhispers
     // no player within SeenNear m, none with a clear line to it within SeenFar m, not on this game's own screen; this game's own player sees nothing
     // while a scene holds his screen black — the user 2026-11-18: Torvald walks out of the Hall, the picture goes black, «він просто має різко
     // зникнути»: StoryScreen.Black, BlackHides) — till then it walks off from them
-    // at its ease (OffWalk m, the farthest way from them). Never in a scene, a talk, or against a story's word that holds it (that leads it; it only goes).
+    // at its ease (OffWalk m, the farthest way from them); one who keeps it in sight keeps it LeaveCap s at most, then it goes in sight all the same. Never in a scene, a talk, or against a story's word that holds it (that leads it; it only goes).
 // A scene's «npc <who> leave» (LeaveUnseen): out of the world the first moment it is out of the scene's shot — the shot is the eyes then (SeenNow).
     //   spot: home torvald.kamin think hours 6-11                a place of its own life between commands (StoryLife, its head)
     //   day: hall when state zala >= 1.3                         which set of its places is its now · at: hall 6-9 hall.rizba think — its day by the hour (StoryLife)
@@ -39,6 +41,13 @@ namespace HuginWhispers
     //   strangersay: hugin Хто це? / munin Мабуть, Літів.        what your ravens say the first time you come near it then (StoryStranger)
     //   notalk: reached ch2 tower_night, !reached ch2 dawn       no talk with it while these world conditions hold: E and Q open nothing, its name only —
     //                                                            its own words, scenes and road talks go on (StoryStranger: Torvald on his watch)
+    //   fight: defend when reached ch2 sverre_fight              its way of fighting while these world conditions hold (the first line that holds; none:
+    //                                                            its template's «fight:»), and while it fights (defend, hunt, wary) monsters see it — a
+    //                                                            story person is unseen by them otherwise (Hidden, NpcVitals.StoryOwn). The user
+    //                                                            2026-11-23: «щоб Ейвінд теж міг битись, але лише в кінці 2 глави… просто нпс можуть або
+    //                                                            не можуть відбиватись». Put on its mind where it is run (FightTick), each FightEvery s
+    //   notalksay: hurry                                         …and on E it says a line of its own theme «[<who>:hurry]» instead (StoryStranger.Hurry:
+    //                                                            Eyvind leaving the Hall, the user 2026-11-23 — «просто має сказати якусь фразу, що спішить»)
     // A spot is «<place>.<named piece>» (the place's names: LocParts — loaded or not, Loc.NamedAt) or «<place>». It is born never on a piece itself
     // (a bench's seat, a fire): a step off its spawn towards its home, or — home there too, or no «spawn» — Aside, towards the place's middle.
     // Made as soon as its time and its home are there (looked at every Soon s while someone waits: the story's word must not leave the
@@ -74,10 +83,27 @@ namespace HuginWhispers
             public bool Hauls;   // it has a line «haul»: only then StoryLife looks for a plank left on it (Tick; set by StoryLife.Bind)
             public int AboveFrame = -1; public float AboveHour; public string AboveSet; public bool OverOn, OutingOn; // (StoryLife.Above: what stands over its usual lines, reckoned once a frame)
             public readonly Dictionary<string, string> Doings = new Dictionary<string, string>(); // («do: <name> = <kind> <words…>»: its own doings, for the lines below — StoryLife.Doing)
-            public Action<string> DayLog, HomeLog; // (its conditions' log, made once: they are asked every few seconds)
+            public Action<string> DayLog, HomeLog, AfterLog; // (its conditions' log, made once: they are asked every few seconds)
+            // its time has come: its «after:» holds (none: always). Once it came and this no longer holds it is out of the world as by «live: away» (OutNow)
+            internal bool Came
+            {
+                get
+                {
+                    if (After.Length == 0) return true;
+                    if (AfterLog == null) { string id = Id; AfterLog = e => Story.Log("people: " + id + ": after " + e); }
+                    return StoryCond.Holds(null, After, AfterLog, true);
+                }
+            }
+            // out of the world now: its «live:» says away, or its «after:» no longer holds though it came — the author's jump back before its coming
+            // (the gap of 2026-11-18: Eyvind stayed in a Hall jumped back to before him), and a story that goes back past it in play (Baldr: a night on
+            // the tower begun anew, its quest back before «baldr_come»). Parked, not taken for good: its next home brings it back out of sight
+            internal bool OutNow(Home h) { return !Came || h != null && h.At == Away; }
             public StoryProps.Ask Carry; // a thing of its own it always carries (StoryProps «carry:»); null: none
             public string Stranger = "", StrangerName = ""; // («stranger: <world conditions> [:: <name>]»: not met yet while they hold — StoryStranger)
             public string NoTalk = ""; // («notalk: <world conditions>»: no talk with it while they hold — its own words, scenes, road talks go on; StoryStranger)
+            public string NoTalkSay = ""; // («notalksay: <theme>»: what it says on E meanwhile — a line of «[<who>:<theme>]»; none: silent)
+            public readonly List<KeyValuePair<string, string>> Fights = new List<KeyValuePair<string, string>>(); // («fight: <way> [when <world conditions>]»: its way, the conditions; in the file's order)
+            public float FightAt = -1f; public string FightWay = ""; // (FightNow reckoned at most every FightEvery s: IsEnemy asks it of every pair a monster looks at)
             public readonly List<KeyValuePair<bool, string>> StrangerSay = new List<KeyValuePair<bool, string>>(); // («strangersay:»: munin?, the line — in its order)
             public float BornWait = -1f;
             public string Why = "";
@@ -95,7 +121,7 @@ namespace HuginWhispers
         private static List<Person> _all;
         internal static List<Person> All { get { if (_all == null) Load(); return _all; } }
 
-        internal static void Reload() { _all = null; _npcs = null; _afterOf = null; }
+        internal static void Reload() { _all = null; _npcs = null; _afterOf = null; _byNpc = null; }
         // a template one of them wears (NpcVitals.StoryOwn: no monster sees them unless the template says «unseen: no»)
         private static HashSet<string> _npcs;
         internal static bool Wears(string npc) { if (_all == null) Load(); return _npcs != null && _npcs.Contains(npc); }
@@ -284,6 +310,15 @@ namespace HuginWhispers
                     case "carry": { string bad; cur.Carry = StoryProps.ReadCarry(v, out bad); if (cur.Carry == null) Story.Log("people: " + file + ":" + n + ": " + bad); break; }
                     case "stranger": { int sep = v.IndexOf("::", StringComparison.Ordinal); cur.Stranger = (sep >= 0 ? v.Substring(0, sep) : v).Trim(); cur.StrangerName = sep >= 0 ? v.Substring(sep + 2).Trim() : ""; break; }
                     case "notalk": cur.NoTalk = v.Trim(); break;
+                    case "notalksay": cur.NoTalkSay = v.Trim(); break;
+                    case "fight":
+                        {
+                            int wi = v.IndexOf(" when ", StringComparison.Ordinal);
+                            string way = (wi >= 0 ? v.Substring(0, wi) : v).Trim().ToLowerInvariant();
+                            if (Array.IndexOf(FightWays, way) < 0) { Story.Log("people: " + file + ":" + n + ": fight: off|flee|wary|defend|hunt [when <умови світу>]"); break; }
+                            cur.Fights.Add(new KeyValuePair<string, string>(way, wi >= 0 ? v.Substring(wi + 6).Trim() : ""));
+                            break;
+                        }
                     case "strangersay":
                         foreach (string part in v.Split('/'))
                         {
@@ -358,24 +393,26 @@ namespace HuginWhispers
                 Why(x, "gone for good: until " + x.Until);
                 return;
             }
-            if (npc == null && x.After.Length > 0 && !StoryCond.Holds(null, x.After, e => Story.Log("people: " + x.Id + ": after " + e), true)) { Why(x, "not yet in the world: after " + x.After); return; } // (its time not come: the world's conditions — the server has no player)
+            bool came = x.Came;
+            if (npc == null && !came) { Leaving(x, false); Why(x, "not yet in the world: after " + x.After); return; } // (its time not come: the world's conditions — the server has no player)
 
-            Home h = x.Now;
+            Home h = came ? x.Now : null;
             // «live: away when …» (the user 2026-11-15: Torvald, gone «to keep watch», stood by the road the player took to look for him): out of the
             // world for a while, whole — its ZDO, its locker, its memories kept — parked at AwayAt, where nobody ever comes; it goes when nobody sees it
             // (someone near: the game that runs it takes it out of their sight — LeaveTick), and its next home takes it back as a move from there (below:
-            // never a walk from the world's edge)
-            if (h != null && h.At == Away)
+            // never a walk from the world's edge). The same for one that came and whose «after:» no longer holds (Person.OutNow)
+            if (x.OutNow(h))
             {
-                if (npc == null) { Leaving(x, false); Why(x, "away: not in the world now"); return; }
-                if (Parked(npc)) { Leaving(x, false); Why(x, "away"); return; }
-                if (Watched(npc)) { Leaving(x, true); Why(x, "away — someone near: it goes the first moment nobody sees it"); return; }
+                string gone = came ? "away" : "out of the world: its «after: " + x.After + "» no longer holds";
+                if (npc == null) { Leaving(x, false); Why(x, gone + ": not in the world now"); return; }
+                if (Parked(npc)) { Leaving(x, false); Why(x, gone); return; }
+                if (Watched(npc)) { Leaving(x, true); Why(x, gone + " — someone near: it goes the first moment nobody sees it"); return; }
                 Own(npc);
                 npc.SetPosition(AwayAt);
                 npc.Set(NpcRules.KHome, AwayAt);
                 Leaving(x, false);
-                Story.Log("people: " + x.Id + " away — out of the world till its next home");
-                Why(x, "away");
+                Story.Log("people: " + x.Id + " " + gone + " — out of the world till its next home");
+                Why(x, gone);
                 return;
             }
             Leaving(x, false); // (here to live: no word to go left behind — its next home came before it got out of sight)
@@ -551,7 +588,55 @@ namespace HuginWhispers
         internal static readonly HashSet<string> SceneLeaves = new HashSet<string>();
         internal static void LeaveUnseen(NpcActor a) { if (a != null && a.Def != null && !a.Def.Generated) SceneLeaves.Add(a.Id); }
 
-        private sealed class Going { public float Next; public bool Walks; }
+        // ---------------------------------------------------------------- its way of fighting by the story («fight: … when …»)
+        internal static readonly string[] FightWays = { "off", "flee", "wary", "defend", "hunt" };
+        internal static float FightEvery = 1f;
+        // its way now by its lines ("" — none holds, or it has none: its template's). The world's conditions: the same on every game
+        internal static string FightNow(Person x)
+        {
+            if (x.Fights.Count == 0) return "";
+            if (Time.time < x.FightAt) return x.FightWay;
+            x.FightAt = Time.time + FightEvery;
+            x.FightWay = "";
+            foreach (KeyValuePair<string, string> f in x.Fights)
+                if (f.Value.Length == 0 || StoryCond.Holds(null, f.Value, e => Story.Log("people: " + x.Id + ": fight when " + e), true)) { x.FightWay = f.Key; break; }
+            return x.FightWay;
+        }
+        private static Dictionary<string, Person> _byNpc; // (template → its person: made with the list)
+        private static Person ByNpc(string npc) { if (_all == null) Load(); if (_byNpc == null) { _byNpc = new Dictionary<string, Person>(); foreach (Person x in _all) if (!_byNpc.ContainsKey(x.Npc)) _byNpc[x.Npc] = x; } Person p; return _byNpc.TryGetValue(npc ?? "", out p) ? p : null; }
+        // no monster sees it (NpcVitals.StoryOwn): one of the story's people — while it does not fight by its «fight:» lines
+        internal static bool Hidden(string npc)
+        {
+            if (!Wears(npc)) return false;
+            Person x = ByNpc(npc);
+            string way = x != null ? FightNow(x) : "";
+            return way.Length == 0 || way == "off" || way == "flee";
+        }
+        // its story's way now, for NpcNature.Manner (null: no «fight:» line of its own — its template's; "": none holds now — its template's too)
+        internal static string FightOf(NpcActor a) { Person x = a != null ? ByNpc(a.Id) : null; return x == null || x.Fights.Count == 0 ? null : FightNow(x); }
+        // where it is run (NpcActor.Ticks), each FightEvery s, once its kept plans are read (Ready): its own way on its mind made what Manner says now
+        // — compared with the mind itself, not with what was sent (the review of 2026-11-23: a word before its plans were read was lost to the kept one)
+        private static readonly Dictionary<NpcActor, float> _fightLook = new Dictionary<NpcActor, float>(); // session: its next look (FightForget as it is unloaded)
+        internal static void FightTick(NpcActor a)
+        {
+            if (a == null || a.Def == null || a.Def.Generated || !a.Owned || a.Mind == null) return;
+            Person x = ByNpc(a.Id);
+            if (x == null || x.Fights.Count == 0) return;
+            float at;
+            if (_fightLook.TryGetValue(a, out at) && Time.time < at) return;
+            _fightLook[a] = Time.time + FightEvery;
+            if (!a.Mind.Ready) return;
+            string way = NpcNature.Manner(a);
+            if (a.Mind.OwnWay == way) return;
+            a.Mind.Do("fight " + way, NpcMind.Layer.Routine);
+            Story.Log("people: " + x.Id + " fights now: " + way);
+        }
+        internal static void FightForget(NpcActor a) { _fightLook.Remove(a); }
+
+        // the safeguard (the user 2026-11-23: «автоматично зникнути через якийсь час як запобіжник»): one who keeps it in sight — follows it, stands
+        // and watches — does not keep it in the world for ever: LeaveCap s after its word to go it is gone all the same, in sight
+        internal static float LeaveCap = 90f;
+        private sealed class Going { public float Next, Since = -1f; public bool Walks; }
         private static readonly Dictionary<NpcActor, Going> Goers = new Dictionary<NpcActor, Going>(); // (session: the story's people run here — a handful; Forget as each is unloaded)
         internal static void Forget(NpcActor a) { Goers.Remove(a); }
 
@@ -578,19 +663,23 @@ namespace HuginWhispers
             }
             if (StoryWorld.Text(LeaveKey(a.Id)).Length == 0 && !AwayNow(a.Id)) // (the server's word, or its own «live: away» holding now — read here from the same world: the server looks every Every s)
             {
+                g.Since = -1f;
                 if (g.Walks) { g.Walks = false; a.Order("free", NpcMind.Layer.Order, LeaveWhose); } // (its next home came first: its walk off ends here)
                 return;
             }
             NpcMind m = a.Mind;
             ZDO z = a.Zdo;
-            if (m == null || z == null || a.Body == null || !Of(z, a.Id) || m.Of(NpcMind.Layer.Scene) != null || m.InTalk) return; // (a scene's copy is the scene's; a scene or a talk has it now: it waits)
-            if (!SeenNow(a))
+            if (m == null || z == null || a.Body == null || !Of(z, a.Id) || m.Of(NpcMind.Layer.Scene) != null || m.InTalk) { g.Since = -1f; return; } // (a scene's copy is the scene's; a scene or a talk has it now: it waits — and the safeguard's count with it)
+            if (g.Since < 0f) g.Since = Time.time;
+            bool capped = Time.time - g.Since >= LeaveCap;
+            if (!SeenNow(a) || capped)
             {
                 if (g.Walks) { g.Walks = false; a.Order("free", NpcMind.Layer.Order, LeaveWhose); } // (its walk off is not kept for its coming back)
-                a.Body.Put(AwayAt, "сюжет: іде зі світу поза очима", false);
+                a.Body.Put(AwayAt, capped ? "сюжет: іде зі світу — запобіжник" : "сюжет: іде зі світу поза очима", false);
                 z.SetPosition(AwayAt);
                 z.Set(NpcRules.KHome, AwayAt);
-                Story.Log("people: " + a.Id + " out of the world — nobody saw it go");
+                g.Since = -1f;
+                Story.Log("people: " + a.Id + " out of the world — " + (capped ? "still seen after " + LeaveCap + " s: gone all the same (the safeguard)" : "nobody saw it go"));
                 return;
             }
             if (StoryHold.Now(z).Length > 0) return; // (a story's word leads it: it goes from wherever that has it, unseen)
@@ -607,7 +696,7 @@ namespace HuginWhispers
         // (the user 2026-11-18: Torvald must be gone while the scene's screen is black, and the server looks at its people only every Every s)
         private static bool AwayNow(string npc)
         {
-            foreach (Person x in All) if (x.Npc == npc) { Home h = x.Now; return h != null && h.At == Away; }
+            foreach (Person x in All) if (x.Npc == npc) return x.OutNow(x.Came ? x.Now : null);
             return false;
         }
 
@@ -672,7 +761,7 @@ namespace HuginWhispers
             {
                 if (only.Length > 0 && x.Id != only) continue;
                 Home h = x.Now;
-                sb.Append("\n").Append(x.Id).Append(" (").Append(x.File).Append("): живе ").Append(h != null ? h.At + (h.When.Length > 0 ? " (бо " + h.When + ")" : "") : "—");
+                sb.Append("\n").Append(x.Id).Append(" (").Append(x.File).Append("): ").Append(!x.Came ? "поза світом (after: " + x.After + " не справджується)" : "живе " + (h != null ? h.At + (h.When.Length > 0 ? " (бо " + h.When + ")" : "") : "—"));
                 int n = 0;
                 foreach (ZDO z in NpcCensus.People())
                 {

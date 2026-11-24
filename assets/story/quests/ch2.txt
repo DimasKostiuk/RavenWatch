@@ -140,16 +140,16 @@ scene: lit_called
 # Приходимо — а Зала вже інша. Квест тримає Літа біля правої стіни (він клепає: сцена lot_ask), Ейвінд і так на своїй лаві (з lit_plan)
 [stage seen1]
 goal: Подивись, що зробив Літ
-mark: hall.vohnyshche 15 Зала Варти
-start: npc lit hold hall.stina_prava by hall.vohnyshche stand
-wait: state zala >= 2, near hall.vohnyshche 12
+mark: hall.dveri_holovni 15 Зала Варти
+start: npc lit hold spot.zala@2.4@9.6 stand   # (користувач 2026-11-23) чекає нас надворі, на ґанку біля брами: над брамою ззовні висить знак Варти — сцена lit_sign
+scene: lit_sign
 
 # Лот (користувач 2026-11-17; 2026-11-18 — сюди, щойно Зала стала 2: «кат сцена з тим, як Ейвінд розпитує Літа про молот, входить у довіру…
 # гарно й кінематографічно; у кінці Літ посилає Ейвінда зайнятись чимось корисним, щиро не розуміє, що він тут забув і чого хоче, але каже, що
 # поважає його цікавість до будівництва»). Відповідь не вся — загадка «Лот» (saga/ch2.txt). Етап не перейменовано, але він тепер РАНІШЕ: тестовий світ, що стояв на ньому за старого порядку (між go2 і work2), пройде lit_next і fill2 ще раз — стрибни автором («→») на потрібний етап
 [stage lot_ask]
 goal: Подивись, що зробив Літ
-start: npc eyvind hold hall.lavka sit   # сцена з ним: на лаву
+start: npc lit hold hall.stina_prava by hall.vohnyshche stand; npc eyvind hold hall.lavka sit   # Літ — знов до своєї стіни (з ґанку, після lit_sign); Ейвінд — сцена з ним: на лаву
 saga: Зала стоїть — Літ своє слово тримає. Поки він клепав, Ейвінд підійшов до нього й розпитував про Лота: чому молот схожий на сокиру і звідки в нього ім'я. Літ спершу відповідав, а тоді відіслав його «зайнятись чимось корисним».   # «Мій шлях»: тим, хто був біля мітки етапу
 mark: hall.vohnyshche 20 Зала Варти
 scene: lot_ask
@@ -646,7 +646,7 @@ done: world torvald_wakes; npcraven torvald dim 0.7; npc baldr free; npc heid fr
 goal: Спитай Гейд, навіщо вона вилила відвар
 mark: hall.kukhnia 8 Гейд
 call: heid
-start: npc heid hold hall.kukhnia stand; npc eyvind hold hall.lavka sit; pickglade sverre_ide 14 near bad_house ring 150 300 south in BlackForest apart torvald_post 200 wild   # (місце кінця глави — наперед: Ейвінд піде посеред сцени до своєї хатини — місце bad_house, користувач 2026-11-20; користувач 2026-11-19: «не напихуй усі локації в одне місце»)
+start: npc heid hold hall.kukhnia stand; npc eyvind hold hall.skhody stand; pickglade sverre_ide 14 near bad_house ring 150 300 south in BlackForest apart torvald_post 200 wild   # (місце кінця глави — наперед: Ейвінд піде посеред сцени до своєї хатини — місце bad_house, користувач 2026-11-20; користувач 2026-11-19: «не напихуй усі локації в одне місце»)
 on: npc_use heid                          # E на ній — лише сцена (StoryModules: UseInstead)
 
 [stage heid_scene]
@@ -659,7 +659,7 @@ scene: heid_tells
 # Гейд (користувач 2026-11-19: ведуть сонні трави): сон-трава пахне так, що ворони почують (talk/ch2_heid.txt: ch2_herbs)
 [stage eyv_gone]
 goal: Ейвінд зник
-more: Поки Гейд говорила, Ейвінд тихо встав із лави й пішов. Той, що «не ходить — коліно». А в Гейд поцупили сон-траву.
+more: Поки ти говори{в|ла} з Гейд, Ейвінд тихо встав із лави й пішов. Той, що «не ходить — коліно». А в Гейд поцупили сон-траву.
 call: heid
 start: npc heid free; npc eyvind free
 on: herbs_smell
@@ -693,7 +693,7 @@ wait: near found.sverre_ide 20
 [stage sverre_found]
 goal: Сверре
 mark: found.sverre_ide 30 Сверре
-start: npc eyvind free; npc eyvind hold found.sverre_ide stand   # (за гравцем він більше не йде — і не вертається до хатини: стоїть біля Сверре)
+start: npc eyvind free; npc eyvind hold found.sverre_ide ahead stand   # (ahead: біжить, як покликаний, а не бреде — користувач 2026-11-23: «надто помалу») (за гравцем він більше не йде — і не вертається до хатини: стоїть біля Сверре)
 scene: sverre_found                       # сцена сама починає хвилі (do waves), той самий рядок і тут нижче
 
 [stage sverre_fight]
